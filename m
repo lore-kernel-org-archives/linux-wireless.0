@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:46847 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965275Ab3E2KPo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 06:15:44 -0400
-Received: by mail-pa0-f50.google.com with SMTP id fb11so7749582pad.37
-        for <linux-wireless@vger.kernel.org>; Wed, 29 May 2013 03:15:44 -0700 (PDT)
-From: Sachin Kamat <sachin.kamat@linaro.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, chunkeey@googlemail.com,
-	linville@tuxdriver.com, davem@davemloft.net,
-	sachin.kamat@linaro.org
-Subject: [PATCH 2/2] net: wireless: p54spi: Fix commenting style
-Date: Wed, 29 May 2013 15:31:41 +0530
-Message-Id: <1369821701-4867-2-git-send-email-sachin.kamat@linaro.org> (sfid-20130529_121553_844685_68342F5F)
-In-Reply-To: <1369821701-4867-1-git-send-email-sachin.kamat@linaro.org>
-References: <1369821701-4867-1-git-send-email-sachin.kamat@linaro.org>
+Received: from mout.gmx.net ([212.227.17.20]:61836 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932243Ab3EBRc6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 May 2013 13:32:58 -0400
+Received: from mailout-de.gmx.net ([10.1.76.33]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MUzZb-1V6OPd1hef-00YUDy for
+ <linux-wireless@vger.kernel.org>; Thu, 02 May 2013 19:32:56 +0200
+Message-ID: <5182A341.8050704@rempel-privat.de> (sfid-20130502_193302_645844_C81ADC0F)
+Date: Thu, 02 May 2013 19:32:49 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Adrian Chadd <adrian@freebsd.org>
+CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath9k_htc: add STBC TX support
+References: <1367482308-9882-1-git-send-email-linux@rempel-privat.de> <1367482308-9882-2-git-send-email-linux@rempel-privat.de> <CAJ-Vmo=rZrHmXD0Os-Mb40jSEywbO-7GHSqL=7iMbkzAfS=+UQ@mail.gmail.com>
+In-Reply-To: <CAJ-Vmo=rZrHmXD0Os-Mb40jSEywbO-7GHSqL=7iMbkzAfS=+UQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the commenting style consistent with networking block comment
-style as suggested by checkpatch.
+Am 02.05.2013 18:55, schrieb Adrian Chadd:
+> On 2 May 2013 01:11, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>
+>> +#define WLAN_RC_TX_STBC_FLAG 0x20 /* TX STBC */
+>> +#define WLAN_RC_RX_STBC_FLAG 0xC0 /* RX STBC ,2 bits */
+>
+> I thought we covered this; why are you marking two bits here?
 
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
----
- drivers/net/wireless/p54/p54spi.c |   15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+becouse firmware checks for two bits (and then use it as bool ;)), so i 
+pass what firmware can handle.
 
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index 146e653..7fc46f2 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -42,8 +42,7 @@
- 
- MODULE_FIRMWARE("3826.arm");
- 
--/*
-- * gpios should be handled in board files and provided via platform data,
-+/* gpios should be handled in board files and provided via platform data,
-  * but because it's currently impossible for p54spi to have a header file
-  * in include/linux, let's use module paramaters for now
-  */
-@@ -191,8 +190,7 @@ static int p54spi_request_eeprom(struct ieee80211_hw *dev)
- 	const struct firmware *eeprom;
- 	int ret;
- 
--	/*
--	 * allow users to customize their eeprom.
-+	/* allow users to customize their eeprom.
- 	 */
- 
- 	ret = request_firmware(&eeprom, "3826.eeprom", &priv->spi->dev);
-@@ -285,8 +283,7 @@ static void p54spi_power_on(struct p54s_priv *priv)
- 	gpio_set_value(p54spi_gpio_power, 1);
- 	enable_irq(gpio_to_irq(p54spi_gpio_irq));
- 
--	/*
--	 * need to wait a while before device can be accessed, the length
-+	/* need to wait a while before device can be accessed, the length
- 	 * is just a guess
- 	 */
- 	msleep(10);
-@@ -365,7 +362,8 @@ static int p54spi_rx(struct p54s_priv *priv)
- 	/* Firmware may insert up to 4 padding bytes after the lmac header,
- 	 * but it does not amend the size of SPI data transfer.
- 	 * Such packets has correct data size in header, thus referencing
--	 * past the end of allocated skb. Reserve extra 4 bytes for this case */
-+	 * past the end of allocated skb. Reserve extra 4 bytes for this case
-+	 */
- 	skb = dev_alloc_skb(len + 4);
- 	if (!skb) {
- 		p54spi_sleep(priv);
-@@ -383,7 +381,8 @@ static int p54spi_rx(struct p54s_priv *priv)
- 	}
- 	p54spi_sleep(priv);
- 	/* Put additional bytes to compensate for the possible
--	 * alignment-caused truncation */
-+	 * alignment-caused truncation
-+	 */
- 	skb_put(skb, 4);
- 
- 	if (p54_rx(priv->hw, skb) == 0)
+> Atheros 11n hardware only supports 1-stream STBC RX.
+
+Did you got my email with lots of assumptions and questions?
+What do you mean by 1-stream STBC RX? After i did some home work on STBC 
+i see that it encoded from at least two spatial streams.
+Is
+1-stream STBC RX = 2 spatial streams with mirrored data?
+and
+2-stream STBC RX = 4 spatial streams with mirrored data?
+
+or
+
+1-stream STBC RX = compatibility mode for one stream hardware(so only of 
+two streams received)?
+That would make sense for 1x1:1 hardware, but if you say all atheros N 
+hardware support only 1-stream STBC RX, will mean that STBC is useless 
+on this hardware.
+
+> Have you verified that we're actually negotiating 1-stream STBC RX
+> with a peer? (Ie, by looking at packet captures?)
+
+Yes, i wrote this too :) I verified it, we negotiate only 1-stream STBC RX.
+
 -- 
-1.7.9.5
-
+Regards,
+Oleksij
