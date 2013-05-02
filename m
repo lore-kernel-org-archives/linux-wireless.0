@@ -1,125 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:49023 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932197Ab3EOO5g (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37306 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932825Ab3EBT1a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:57:36 -0400
-Subject: [PATCH 29/29] ath10k: add Kconfig and Makefile
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Wed, 15 May 2013 17:46:58 +0300
-Message-ID: <20130515144658.4492.16855.stgit@localhost6.localdomain6> (sfid-20130515_165741_127972_62FD1D28)
-In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 2 May 2013 15:27:30 -0400
+Message-ID: <1367522831.11375.1.camel@jlt4.sipsolutions.net> (sfid-20130502_212733_796665_D0FAA635)
+Subject: Re: Linux summit this year ?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Matt Chen <machen@suse.com>, joeyli <jlee@suse.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 02 May 2013 21:27:11 +0200
+In-Reply-To: <1361892097.3902.34.camel@aeonflux> (sfid-20130226_162150_769129_63838BFF)
+References: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>
+	 <20130225143201.GA6455@tuxdriver.com> <1361809785.3902.19.camel@aeonflux>
+	 <512BAED0.2000507@lwfinger.net> <20130225211207.GE6455@tuxdriver.com>
+	 <1361892097.3902.34.camel@aeonflux> (sfid-20130226_162150_769129_63838BFF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/Kconfig         |    1 +
- drivers/net/wireless/ath/Makefile        |    1 +
- drivers/net/wireless/ath/ath10k/Kconfig  |   39 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/Makefile |   20 +++++++++++++++
- 4 files changed, 61 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/Kconfig
- create mode 100644 drivers/net/wireless/ath/ath10k/Makefile
+On Tue, 2013-02-26 at 07:21 -0800, Marcel Holtmann wrote:
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index 2c02b4e..7f2a160 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -27,6 +27,7 @@ config ATH_DEBUG
- 
- source "drivers/net/wireless/ath/ath5k/Kconfig"
- source "drivers/net/wireless/ath/ath9k/Kconfig"
-+source "drivers/net/wireless/ath/ath10k/Kconfig"
- source "drivers/net/wireless/ath/carl9170/Kconfig"
- source "drivers/net/wireless/ath/ath6kl/Kconfig"
- source "drivers/net/wireless/ath/ar5523/Kconfig"
-diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
-index 97b964d..fb05cfd 100644
---- a/drivers/net/wireless/ath/Makefile
-+++ b/drivers/net/wireless/ath/Makefile
-@@ -4,6 +4,7 @@ obj-$(CONFIG_CARL9170)		+= carl9170/
- obj-$(CONFIG_ATH6KL)		+= ath6kl/
- obj-$(CONFIG_AR5523)		+= ar5523/
- obj-$(CONFIG_WIL6210)		+= wil6210/
-+obj-$(CONFIG_ATH10K)		+= ath10k/
- 
- obj-$(CONFIG_ATH_COMMON)	+= ath.o
- 
-diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
-new file mode 100644
-index 0000000..cde58fe
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/Kconfig
-@@ -0,0 +1,39 @@
-+config ATH10K
-+        tristate "Atheros 802.11ac wireless cards support"
-+        depends on MAC80211
-+	select ATH_COMMON
-+        ---help---
-+          This module adds support for wireless adapters based on
-+          Atheros IEEE 802.11ac family of chipsets.
-+
-+          If you choose to build a module, it'll be called ath10k.
-+
-+config ATH10K_PCI
-+	tristate "Atheros ath10k PCI support"
-+	depends on ATH10K && PCI
-+	---help---
-+	  This module adds support for PCIE bus
-+
-+config ATH10K_DEBUG
-+	bool "Atheros ath10k debugging"
-+	depends on ATH10K
-+	---help---
-+	  Enables debug support
-+
-+	  If unsure, say Y to make it easier to debug problems.
-+
-+config ATH10K_DEBUGFS
-+	bool "Atheros ath10k debugfs support"
-+	depends on ATH10K
-+	---help---
-+	  Enabled debugfs support
-+
-+	  If unsure, say Y to make it easier to debug problems.
-+
-+config ATH10K_TRACING
-+	bool "Atheros ath10k tracing support"
-+	depends on ATH10K
-+	depends on EVENT_TRACING
-+	---help---
-+	  Select this to ath10k use tracing infrastructure.
-+
-diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
-new file mode 100644
-index 0000000..a4179f4
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/Makefile
-@@ -0,0 +1,20 @@
-+obj-$(CONFIG_ATH10K) += ath10k_core.o
-+ath10k_core-y += mac.o \
-+		 debug.o \
-+		 core.o \
-+		 htc.o \
-+		 htt.o \
-+		 htt_rx.o \
-+		 htt_tx.o \
-+		 txrx.o \
-+		 wmi.o \
-+		 bmi.o
-+
-+ath10k_core-$(CONFIG_ATH10K_TRACING) += trace.o
-+
-+obj-$(CONFIG_ATH10K_PCI) += ath10k_pci.o
-+ath10k_pci-y += pci.o \
-+		ce.o
-+
-+# for tracing framework to find trace.h
-+CFLAGS_trace.o := -I$(src)
+> > I would still like to do New Orleans.  I'm just not sure if we can
+> > fit it in.  I don't suppose that someone would like to propose it as
+> > a mini-conference for LPC?  Do we know what we want to discuss?
+> 
+> I am checking with Angela right now. Lets see what we can work out. I do
+> believe we should have it in North America this time.
+
+Any results on that?
+
+I was looking into things and the Graphics & Display uconf
+(http://wiki.linuxplumbersconf.org/2013:graphics_and_display) is
+proposing to talk about wireless display technologies, so it might be a
+really good thing to combine forces with them for some parts.
+
+IOW I think we should do New Orleans, if only for that combination.
+
+johannes
 
