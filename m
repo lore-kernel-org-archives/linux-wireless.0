@@ -1,152 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:48283 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763363Ab3ECThl (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58673 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755656Ab3EBAAd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 15:37:41 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 14/14] cw1200: v6:  Kbuild integration and MAINTAINERS entry (v2)
-Date: Fri,  3 May 2013 15:37:29 -0400
-Message-Id: <1367609849-3602-1-git-send-email-pizza@shaftnet.org> (sfid-20130503_213745_415747_A9E85C28)
-In-Reply-To: <1367090847-11937-15-git-send-email-pizza@shaftnet.org>
-References: <1367090847-11937-15-git-send-email-pizza@shaftnet.org>
+	Wed, 1 May 2013 20:00:33 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r4200WLo024833
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 1 May 2013 17:00:33 -0700
+Message-ID: <5181ACA0.808@candelatech.com> (sfid-20130502_020047_306084_9B21A3B6)
+Date: Wed, 01 May 2013 17:00:32 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: iw: BUG:  Lists more than one phy in info request.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- MAINTAINERS                          |  5 ++++
- drivers/net/wireless/Kconfig         |  1 +
- drivers/net/wireless/Makefile        |  3 +++
- drivers/net/wireless/cw1200/Kconfig  | 46 ++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/Makefile | 25 ++++++++++++++++++++
- 5 files changed, 80 insertions(+)
- create mode 100644 drivers/net/wireless/cw1200/Kconfig
- create mode 100644 drivers/net/wireless/cw1200/Makefile
+When running this command on a system with two wiphy devices
+(renamed from phy0, phy1), the command below dumps info for
+both wiphy0 and wiphy1
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ea8f65f..b1f7285 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2269,6 +2269,11 @@ M:	Jaya Kumar <jayakumar.alsa@gmail.com>
- S:	Maintained
- F:	sound/pci/cs5535audio/
- 
-+CW1200 WLAN driver
-+M:     Solomon Peachy <pizza@shaftnet.org>
-+S:     Maintained
-+F:     drivers/net/wireless/cw1200/
-+
- CX18 VIDEO4LINUX DRIVER
- M:	Andy Walls <awalls@md.metrocast.net>
- L:	ivtv-devel@ivtvdriver.org (moderated for non-subscribers)
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index f8f0156..200020e 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -280,5 +280,6 @@ source "drivers/net/wireless/rtlwifi/Kconfig"
- source "drivers/net/wireless/ti/Kconfig"
- source "drivers/net/wireless/zd1211rw/Kconfig"
- source "drivers/net/wireless/mwifiex/Kconfig"
-+source "drivers/net/wireless/cw1200/Kconfig"
- 
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 67156ef..56532fa 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -57,3 +57,6 @@ obj-$(CONFIG_MWIFIEX)	+= mwifiex/
- 
- obj-$(CONFIG_BRCMFMAC)	+= brcm80211/
- obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
-+
-+obj-$(CONFIG_CW1200)	+= cw1200/
-+
-diff --git a/drivers/net/wireless/cw1200/Kconfig b/drivers/net/wireless/cw1200/Kconfig
-new file mode 100644
-index 0000000..2d2d480
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/Kconfig
-@@ -0,0 +1,46 @@
-+config CW1200
-+	tristate "CW1200 WLAN support"
-+	depends on MAC80211 && CFG80211
-+	--help--
-+	  This is a driver for the ST-E CW1100 & CW1200 WLAN chipsets.
-+	  This option just enables the driver core, see below for
-+	  specific bus support.
-+
-+if CW1200
-+
-+config CW1200_WLAN_SDIO
-+	tristate "Support SDIO platforms"
-+	depends on CW1200 && MMC
-+	--help--
-+	  Enable support for the CW1200 connected via an SDIO bus.
-+
-+config CW1200_WLAN_SPI
-+	tristate "Support SPI platforms"
-+	depends on CW1200 && SPI
-+	--help--
-+	  Enables support for the CW1200 connected via a SPI bus.
-+
-+config CW1200_WLAN_SAGRAD
-+	tristate "Support Sagrad SG901-1091/1098 modules"
-+	depends on CW1200_WLAN_SDIO
-+	--help--
-+	  This provides the platform data glue to support the
-+	  Sagrad SG901-1091/1098 modules in their standard SDIO EVK.
-+	  It also includes example SPI platform data.
-+
-+menu "Driver debug features"
-+	depends on CW1200 && DEBUGFS
-+
-+config CW1200_ETF
-+	bool "Enable CW1200 Engineering Test Framework hooks"
-+	--help--
-+	  If you don't know what this is, just say N.
-+
-+config CW1200_ITP
-+	bool "Enable ITP access"
-+	--help--
-+	  If you don't know what this is, just say N.
-+
-+endmenu
-+
-+endif
-diff --git a/drivers/net/wireless/cw1200/Makefile b/drivers/net/wireless/cw1200/Makefile
-new file mode 100644
-index 0000000..a92a87d
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/Makefile
-@@ -0,0 +1,25 @@
-+cw1200_core-y := \
-+		fwio.o \
-+		txrx.o \
-+		main.o \
-+		queue.o \
-+		hwio.o \
-+		bh.o \
-+		wsm.o \
-+		sta.o \
-+		scan.o \
-+		pm.o \
-+		debug.o
-+cw1200_core-$(CONFIG_CW1200_ITP)	+= itp.o
-+
-+# CFLAGS_sta.o += -DDEBUG
-+
-+cw1200_wlan_sdio-y := cw1200_sdio.o
-+cw1200_wlan_spi-y := cw1200_spi.o
-+cw1200_wlan_sagrad-y := cw1200_sagrad.o
-+
-+obj-$(CONFIG_CW1200) += cw1200_core.o
-+obj-$(CONFIG_CW1200_WLAN_SDIO) += cw1200_wlan_sdio.o
-+obj-$(CONFIG_CW1200_WLAN_SPI) += cw1200_wlan_spi.o
-+obj-$(CONFIG_CW1200_WLAN_SAGRAD) += cw1200_wlan_sagrad.o
-+
+iw phy wiphy1 info
+
+iw version is latest from git.
+
+kernel is 3.9.0+
+
+Using the 'standard' iw on Fedora 14 (version 0.9.22)
+it behaves as I expected and only dumps info for wiphy1.
+
+
+Thanks,
+Ben
+
+
 -- 
-1.8.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
