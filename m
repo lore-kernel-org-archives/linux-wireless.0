@@ -1,67 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:38573 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751767Ab3EEPn0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 May 2013 11:43:26 -0400
-Received: by mail-oa0-f52.google.com with SMTP id h2so1438015oag.11
-        for <linux-wireless@vger.kernel.org>; Sun, 05 May 2013 08:43:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com>
-References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
-	<CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com>
-Date: Sun, 5 May 2013 17:43:25 +0200
-Message-ID: <CACna6rwk0akD0x+sWTmjDDoaQqF0Y=NQ58rzqgZH92GCug6CeQ@mail.gmail.com> (sfid-20130505_174329_013526_1820F9C7)
-Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Thommy Jakobsson <thommyj@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, m@bues.ch, piotras@gmail.com,
-	Larry.Finger@lwfinger.net
-Content-Type: text/plain; charset=UTF-8
+Received: from arrakis.dune.hu ([78.24.191.176]:46283 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755077Ab3EBMaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 May 2013 08:30:12 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 06/14] rt2x00: add queue_init callback to rt2x00_ops
+Date: Thu,  2 May 2013 14:30:21 +0200
+Message-Id: <1367497829-7672-7-git-send-email-juhosg@openwrt.org> (sfid-20130502_143103_493366_E7EACFAB)
+In-Reply-To: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
+References: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/5/5 Rafał Miłecki <zajec5@gmail.com>:
-> 2013/4/23 Thommy Jakobsson <thommyj@gmail.com>:
->> Add handling of rx descriptor underflow. This fixes a fault that could
->> happen on slow machines, where data is received faster than the CPU can
->> handle. In such a case the device will use up all rx descriptors and
->> refuse to send any more data before confirming that it is ok. This
->> patch enables necessary interrupt to discover such a situation and will
->> handle them by dropping everything in the ring buffer.
->
-> Thommy: does it mean firmware actually ignores what we write to the
-> B43_DMA64_RXINDEX (recently renamed to the B43_DMA64_RXSTOPINDEX)? Is
-> our set_current_rxslot and op64_set_current_rxslot (same for 32bit
-> version) useless in this situation?
+The driver uses static data structures for initializing
+specific fields of a given data queue. These static
+queue data descriptor structures are containing values
+which related to a given chipset.
 
-I've also grab some old logs from BCM4311 from wl driver.
+Even though the values are chip specific, the actual
+selection of the used structure is based on device
+specific vendor/product identifiers. This approach works,
+but it is not always reliable. Sometimes the vendor and/or
+device IDs of the PCI and USB devices contains improper
+values which makes it impossible to select the correct
+structure for such devices.
 
-DMA setup:
-write32 0xfaafc210 <- 0x0000083d	B43_DMA32_RXCTL
-write32 0xfaafc214 <- 0x5581e000	B43_DMA32_RXRING
-write32 0xfaafc218 <- 0x00000100	B43_DMA32_RXINDEX
+The patch adds a new callback to tr2x00_ops which
+is called after the chipset detection is finished.
+This allows the drivers to do dynamic initialization
+of the data_queue structure for a given queue based
+on the actual chipset.
 
-While running:
+After each driver implements the queue_init callback,
+the data_queue_desc structure will be removed.
 
- read32 0xfaafc21c -> 0x02001018	B43_DMA32_RXSTATUS
- read32 0xfaafc21c -> 0x02001018	B43_DMA32_RXSTATUS
- read32 0xfaafc180 -> 0x0006230f	
- read32 0xfaafc184 -> 0x00000000	
-write32 0xfaafc218 <- 0x00000118	B43_DMA32_RXINDEX
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h      |    1 +
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   22 +++++++++++++---------
+ 2 files changed, 14 insertions(+), 9 deletions(-)
 
-(...)
-
- read32 0xfaafc21c -> 0x02801020	B43_DMA32_RXSTATUS
- read32 0xfaafc21c -> 0x02801020	B43_DMA32_RXSTATUS
- read32 0xfaafc180 -> 0x00064c28	
- read32 0xfaafc184 -> 0x00000000	
-write32 0xfaafc218 <- 0x00000120	B43_DMA32_RXINDEX
-
-Interesting part is that they write amount of slots + slot index to
-the B43_DMA32_RXINDEX (like 0x120 instead of 0x20). May be worth
-investigating.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 7510723..2d2db64 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -653,6 +653,7 @@ struct rt2x00_ops {
+ 	const struct data_queue_desc *tx;
+ 	const struct data_queue_desc *bcn;
+ 	const struct data_queue_desc *atim;
++	void (*queue_init)(struct data_queue *queue);
+ 	const struct rt2x00lib_ops *lib;
+ 	const void *drv;
+ 	const struct ieee80211_ops *hw;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 3ae2264..2a99ff1 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -1306,8 +1306,6 @@ rt2x00queue_get_qdesc_by_qid(struct rt2x00_dev *rt2x00dev,
+ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
+ 			     struct data_queue *queue, enum data_queue_qid qid)
+ {
+-	const struct data_queue_desc *qdesc;
+-
+ 	mutex_init(&queue->status_lock);
+ 	spin_lock_init(&queue->tx_lock);
+ 	spin_lock_init(&queue->index_lock);
+@@ -1319,14 +1317,20 @@ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
+ 	queue->cw_min = 5;
+ 	queue->cw_max = 10;
+ 
+-	qdesc = rt2x00queue_get_qdesc_by_qid(rt2x00dev, qid);
+-	BUG_ON(!qdesc);
++	if (rt2x00dev->ops->queue_init) {
++		rt2x00dev->ops->queue_init(queue);
++	} else {
++		const struct data_queue_desc *qdesc;
++
++		qdesc = rt2x00queue_get_qdesc_by_qid(rt2x00dev, qid);
++		BUG_ON(!qdesc);
+ 
+-	queue->limit = qdesc->entry_num;
+-	queue->data_size = qdesc->data_size;
+-	queue->desc_size = qdesc->desc_size;
+-	queue->winfo_size = qdesc->winfo_size;
+-	queue->priv_size = qdesc->priv_size;
++		queue->limit = qdesc->entry_num;
++		queue->data_size = qdesc->data_size;
++		queue->desc_size = qdesc->desc_size;
++		queue->winfo_size = qdesc->winfo_size;
++		queue->priv_size = qdesc->priv_size;
++	}
+ 
+ 	queue->threshold = DIV_ROUND_UP(queue->limit, 10);
+ }
 -- 
-Rafał
+1.7.10
+
