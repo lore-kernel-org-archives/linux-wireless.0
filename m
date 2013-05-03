@@ -1,43 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33772 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758925Ab3ECRfr (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:48283 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763363Ab3ECThl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 13:35:47 -0400
-Date: Fri, 3 May 2013 13:35:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Thommy Jakobsson <thommyj@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	m@bues.ch, piotras@gmail.com, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
-Message-ID: <20130503173537.GK2069@tuxdriver.com> (sfid-20130503_193553_116529_943FF204)
-References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
- <CACna6rx1zeBDBC-wq+LMWcB1tupe6bs8Z4_JGdnd6vQNomzFnQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rx1zeBDBC-wq+LMWcB1tupe6bs8Z4_JGdnd6vQNomzFnQ@mail.gmail.com>
+	Fri, 3 May 2013 15:37:41 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 14/14] cw1200: v6:  Kbuild integration and MAINTAINERS entry (v2)
+Date: Fri,  3 May 2013 15:37:29 -0400
+Message-Id: <1367609849-3602-1-git-send-email-pizza@shaftnet.org> (sfid-20130503_213745_415747_A9E85C28)
+In-Reply-To: <1367090847-11937-15-git-send-email-pizza@shaftnet.org>
+References: <1367090847-11937-15-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 24, 2013 at 09:00:59AM +0200, Rafał Miłecki wrote:
-> 2013/4/23 Thommy Jakobsson <thommyj@gmail.com>:
-> > From: Thommy Jakobsson <thommyj@gmail.com>
-> >
-> > Add handling of rx descriptor underflow. This fixes a fault that could
-> > happen on slow machines, where data is received faster than the CPU can
-> > handle. In such a case the device will use up all rx descriptors and
-> > refuse to send any more data before confirming that it is ok. This
-> > patch enables necessary interrupt to discover such a situation and will
-> > handle them by dropping everything in the ring buffer.
-> 
-> Thanks for working on this, I didn't really got enough time to follow
-> your active discussion actively.
-> 
-> I'll try to test this patch on my devices over the next weekend.
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+---
+ MAINTAINERS                          |  5 ++++
+ drivers/net/wireless/Kconfig         |  1 +
+ drivers/net/wireless/Makefile        |  3 +++
+ drivers/net/wireless/cw1200/Kconfig  | 46 ++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/cw1200/Makefile | 25 ++++++++++++++++++++
+ 5 files changed, 80 insertions(+)
+ create mode 100644 drivers/net/wireless/cw1200/Kconfig
+ create mode 100644 drivers/net/wireless/cw1200/Makefile
 
-Any word on this testing?  Should this go to 3.10?
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ea8f65f..b1f7285 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2269,6 +2269,11 @@ M:	Jaya Kumar <jayakumar.alsa@gmail.com>
+ S:	Maintained
+ F:	sound/pci/cs5535audio/
+ 
++CW1200 WLAN driver
++M:     Solomon Peachy <pizza@shaftnet.org>
++S:     Maintained
++F:     drivers/net/wireless/cw1200/
++
+ CX18 VIDEO4LINUX DRIVER
+ M:	Andy Walls <awalls@md.metrocast.net>
+ L:	ivtv-devel@ivtvdriver.org (moderated for non-subscribers)
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f8f0156..200020e 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -280,5 +280,6 @@ source "drivers/net/wireless/rtlwifi/Kconfig"
+ source "drivers/net/wireless/ti/Kconfig"
+ source "drivers/net/wireless/zd1211rw/Kconfig"
+ source "drivers/net/wireless/mwifiex/Kconfig"
++source "drivers/net/wireless/cw1200/Kconfig"
+ 
+ endif # WLAN
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 67156ef..56532fa 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -57,3 +57,6 @@ obj-$(CONFIG_MWIFIEX)	+= mwifiex/
+ 
+ obj-$(CONFIG_BRCMFMAC)	+= brcm80211/
+ obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
++
++obj-$(CONFIG_CW1200)	+= cw1200/
++
+diff --git a/drivers/net/wireless/cw1200/Kconfig b/drivers/net/wireless/cw1200/Kconfig
+new file mode 100644
+index 0000000..2d2d480
+--- /dev/null
++++ b/drivers/net/wireless/cw1200/Kconfig
+@@ -0,0 +1,46 @@
++config CW1200
++	tristate "CW1200 WLAN support"
++	depends on MAC80211 && CFG80211
++	--help--
++	  This is a driver for the ST-E CW1100 & CW1200 WLAN chipsets.
++	  This option just enables the driver core, see below for
++	  specific bus support.
++
++if CW1200
++
++config CW1200_WLAN_SDIO
++	tristate "Support SDIO platforms"
++	depends on CW1200 && MMC
++	--help--
++	  Enable support for the CW1200 connected via an SDIO bus.
++
++config CW1200_WLAN_SPI
++	tristate "Support SPI platforms"
++	depends on CW1200 && SPI
++	--help--
++	  Enables support for the CW1200 connected via a SPI bus.
++
++config CW1200_WLAN_SAGRAD
++	tristate "Support Sagrad SG901-1091/1098 modules"
++	depends on CW1200_WLAN_SDIO
++	--help--
++	  This provides the platform data glue to support the
++	  Sagrad SG901-1091/1098 modules in their standard SDIO EVK.
++	  It also includes example SPI platform data.
++
++menu "Driver debug features"
++	depends on CW1200 && DEBUGFS
++
++config CW1200_ETF
++	bool "Enable CW1200 Engineering Test Framework hooks"
++	--help--
++	  If you don't know what this is, just say N.
++
++config CW1200_ITP
++	bool "Enable ITP access"
++	--help--
++	  If you don't know what this is, just say N.
++
++endmenu
++
++endif
+diff --git a/drivers/net/wireless/cw1200/Makefile b/drivers/net/wireless/cw1200/Makefile
+new file mode 100644
+index 0000000..a92a87d
+--- /dev/null
++++ b/drivers/net/wireless/cw1200/Makefile
+@@ -0,0 +1,25 @@
++cw1200_core-y := \
++		fwio.o \
++		txrx.o \
++		main.o \
++		queue.o \
++		hwio.o \
++		bh.o \
++		wsm.o \
++		sta.o \
++		scan.o \
++		pm.o \
++		debug.o
++cw1200_core-$(CONFIG_CW1200_ITP)	+= itp.o
++
++# CFLAGS_sta.o += -DDEBUG
++
++cw1200_wlan_sdio-y := cw1200_sdio.o
++cw1200_wlan_spi-y := cw1200_spi.o
++cw1200_wlan_sagrad-y := cw1200_sagrad.o
++
++obj-$(CONFIG_CW1200) += cw1200_core.o
++obj-$(CONFIG_CW1200_WLAN_SDIO) += cw1200_wlan_sdio.o
++obj-$(CONFIG_CW1200_WLAN_SPI) += cw1200_wlan_spi.o
++obj-$(CONFIG_CW1200_WLAN_SAGRAD) += cw1200_wlan_sagrad.o
++
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.1.4
+
