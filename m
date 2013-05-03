@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4118 "EHLO mms2.broadcom.com"
+Received: from mout.gmx.net ([212.227.17.21]:56086 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756554Ab3E0TKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 15:10:16 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for 3.10 0/7] brcmfmac: AP and P2P mode fixes
-Date: Mon, 27 May 2013 21:09:52 +0200
-Message-ID: <1369681799-3163-1-git-send-email-arend@broadcom.com> (sfid-20130527_211026_303923_D0A9D4FC)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S934031Ab3ECTyK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 May 2013 15:54:10 -0400
+Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0MEphU-1UoKcc2Z7C-00Fz7D for
+ <linux-wireless@vger.kernel.org>; Fri, 03 May 2013 21:54:08 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	radiotap@NetBSD.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: Patches for STBC Standartisation
+Date: Fri,  3 May 2013 21:53:52 +0200
+Message-Id: <1367610836-3303-1-git-send-email-linux@rempel-privat.de> (sfid-20130503_215414_035108_E46048E4)
+In-Reply-To: <1367527479.11375.19.camel@jlt4.sipsolutions.net>
+References: <1367527479.11375.19.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here a couple of fixes for brcmfmac. AP mode was already
-added since v3.7 so it is tagged for stable. The majority
-of P2P fixes are solving issues with creation and deletion
-of the P2P interfaces, ie. P2P_DEVICE, P2P_CLIENT, P2P_GO.
+Here are two series of patches. First are kernel patches
+and ath9k driver patch.
+Second, is patch for tcpdump.
 
-This series applies to the master branch of the wireless
-repository.
+All of them was tested for 1,2 and 3 stream scenarious.
+Sinse i do not have hardware which can recive more than 1 STBC
+stream, i did some hacks to to produce this kind of captures.
 
-Arend van Spriel (3):
-  brcmfmac: add additional parameter to brcmf_free_vif()
-  brcmfmac: free net device when registration fails
-  brcmfmac: use struct net_device::destructor to remove interfaces
+Oleksij Rempel (3):
+  mac80211: add STBC flag for radiotap
+  ath9k: remove useless flag conversation.
+  ath9k: check for Rx-STBC flag and pass it to ieee80211
 
-Hante Meuleman (4):
-  brcmfmac: Turn off ARP offloading when configured for AP.
-  brcmfmac: Fix p2p setup when connected to ap on 5G.
-  brcmfmac: Add multi channel support for P2P.
-  brcmfmac: Disable powersave mode for P2P link.
-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   18 ----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   16 ++--
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |    3 +-
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |    6 ++
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |   74 +++++++++++-----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   89 +++++++++++++++++---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    3 +-
- 7 files changed, 149 insertions(+), 60 deletions(-)
 
 -- 
-1.7.10.4
-
+1.8.1.2
 
