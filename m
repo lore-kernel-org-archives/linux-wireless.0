@@ -1,136 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49747 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752213Ab3EPLB6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 07:01:58 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 04/18] mac80211: fix various components for the new 5 and 10 MHz widths
-Date: Thu, 16 May 2013 13:00:31 +0200
-Message-Id: <1368702045-27598-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130220_978881_213D9FD0)
-In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mout.gmx.net ([212.227.17.21]:52729 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934204Ab3ECTyL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 May 2013 15:54:11 -0400
+Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MCNrj-1UhSj50IzJ-0098hx for
+ <linux-wireless@vger.kernel.org>; Fri, 03 May 2013 21:54:10 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	radiotap@NetBSD.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 1/3] mac80211: add STBC flag for radiotap
+Date: Fri,  3 May 2013 21:53:53 +0200
+Message-Id: <1367610836-3303-2-git-send-email-linux@rempel-privat.de> (sfid-20130503_215415_428092_2340CE9D)
+In-Reply-To: <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
+References: <1367527479.11375.19.camel@jlt4.sipsolutions.net>
+ <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a collection of minor fixes:
- * don't allow HT IEs in IBSS for 5/10 MHz
- * don't allow HT IEs in Mesh for 5/10 MHz
- * consider 5 and 10 MHz channels when downgrading
- * don't try HT rates for 5 and 10 MHz channels when selecting rates
-
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- net/mac80211/ibss.c       |    2 ++
- net/mac80211/mesh.c       |    4 +++-
- net/mac80211/mesh_plink.c |    8 +++++++-
- net/mac80211/mlme.c       |   12 ++++++++++++
- net/mac80211/rate.c       |    8 +++++++-
- 5 files changed, 31 insertions(+), 3 deletions(-)
+ include/net/ieee80211_radiotap.h | 7 +++++++
+ include/net/mac80211.h           | 4 ++++
+ net/mac80211/main.c              | 3 ++-
+ net/mac80211/rx.c                | 4 ++++
+ net/mac80211/status.c            | 3 ++-
+ 5 files changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 170f9a7..4e1fb81 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -176,6 +176,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index c399963..c6d07cb 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -269,6 +269,7 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_HAVE_GI		0x04
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FMT		0x08
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FEC		0x10
++#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	0x20
  
- 	/* add HT capability and information IEs */
- 	if (chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
-+	    chandef.width != NL80211_CHAN_WIDTH_5 &&
-+	    chandef.width != NL80211_CHAN_WIDTH_10 &&
- 	    sband->ht_cap.ht_supported) {
- 		pos = ieee80211_ie_build_ht_cap(pos, &sband->ht_cap,
- 						sband->ht_cap.cap);
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 6952760..5227b73 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -417,7 +417,9 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
+ #define IEEE80211_RADIOTAP_MCS_BW_MASK		0x03
+ #define		IEEE80211_RADIOTAP_MCS_BW_20	0
+@@ -278,6 +279,12 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_SGI		0x04
+ #define IEEE80211_RADIOTAP_MCS_FMT_GF		0x08
+ #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
++#define IEEE80211_RADIOTAP_MCS_STBC_MASK	0x60
++#define		IEEE80211_RADIOTAP_MCS_STBC_1	1
++#define		IEEE80211_RADIOTAP_MCS_STBC_2	2
++#define		IEEE80211_RADIOTAP_MCS_STBC_3	3
++
++#define IEEE80211_RADIOTAP_MCS_STBC_SHIFT	5
  
- 	sband = local->hw.wiphy->bands[band];
- 	if (!sband->ht_cap.ht_supported ||
--	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT)
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
- 		return 0;
+ /* For IEEE80211_RADIOTAP_AMPDU_STATUS */
+ #define IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN		0x0001
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 04c2d46..2b8faeb 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -805,6 +805,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	on this subframe
+  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+  *	is stored in the @ampdu_delimiter_crc field)
++ * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3 
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -832,8 +833,11 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_80MHZ			= BIT(23),
+ 	RX_FLAG_80P80MHZ		= BIT(24),
+ 	RX_FLAG_160MHZ			= BIT(25),
++	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
+ };
  
- 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 09bebed..02c05fa 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -154,8 +154,14 @@ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
- 	u16 ht_opmode;
- 	bool non_ht_sta = false, ht20_sta = false;
++#define RX_FLAG_STBC_SHIFT		26
++
+ /**
+  * struct ieee80211_rx_status - receive status
+  *
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 8a7bfc4..44191a3 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -589,7 +589,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
+ 	local->hw.radiotap_mcs_details = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
+ 					 IEEE80211_RADIOTAP_MCS_HAVE_GI |
+-					 IEEE80211_RADIOTAP_MCS_HAVE_BW;
++					 IEEE80211_RADIOTAP_MCS_HAVE_BW |
++					 IEEE80211_RADIOTAP_MCS_HAVE_STBC;
+ 	local->hw.radiotap_vht_details = IEEE80211_RADIOTAP_VHT_KNOWN_GI |
+ 					 IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
+ 	local->hw.uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c8447af..c6b3c62 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -258,6 +258,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	pos += 2;
  
--	if (sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT)
-+	switch (sdata->vif.bss_conf.chandef.width) {
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+	case NL80211_CHAN_WIDTH_5:
-+	case NL80211_CHAN_WIDTH_10:
- 		return 0;
-+	default:
-+		break;
-+	}
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 29620bf..0eaee23 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -224,6 +224,12 @@ static u32 chandef_downgrade(struct cfg80211_chan_def *c)
- 		c->width = NL80211_CHAN_WIDTH_20_NOHT;
- 		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
- 		break;
-+	case NL80211_CHAN_WIDTH_5:
-+	case NL80211_CHAN_WIDTH_10:
-+		WARN_ON_ONCE(1);
-+		/* keep c->width */
-+		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
-+		break;
+ 	if (status->flag & RX_FLAG_HT) {
++		unsigned int stbc = status->flag & RX_FLAG_STBC_MASK;
+ 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
+ 		*pos++ = local->hw.radiotap_mcs_details;
+ 		*pos = 0;
+@@ -267,6 +268,9 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
+ 		if (status->flag & RX_FLAG_HT_GF)
+ 			*pos |= IEEE80211_RADIOTAP_MCS_FMT_GF;
++		if (stbc)
++			*pos |= (stbc >> RX_FLAG_STBC_SHIFT)
++					<< IEEE80211_RADIOTAP_MCS_STBC_SHIFT;
+ 		pos++;
+ 		*pos++ = status->rate_idx;
  	}
- 
- 	WARN_ON_ONCE(!cfg80211_chandef_valid(c));
-@@ -3809,6 +3815,12 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 	 */
- 	ret = ieee80211_vif_use_channel(sdata, &chandef,
- 					IEEE80211_CHANCTX_SHARED);
-+
-+	/* don't downgrade for 5 and 10 MHz channels, though. */
-+	if (chandef.width == NL80211_CHAN_WIDTH_5 ||
-+	    chandef.width == NL80211_CHAN_WIDTH_10)
-+		return ret;
-+
- 	while (ret && chandef.width != NL80211_CHAN_WIDTH_20_NOHT) {
- 		ifmgd->flags |= chandef_downgrade(&chandef);
- 		ret = ieee80211_vif_use_channel(sdata, &chandef,
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 8b95819..118e47b 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -397,8 +397,14 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
- 			return;
- 
- 		/* if HT BSS, and we handle a data frame, also try HT rates */
--		if (chan_width == NL80211_CHAN_WIDTH_20_NOHT)
-+		switch (chan_width) {
-+		case NL80211_CHAN_WIDTH_20_NOHT:
-+		case NL80211_CHAN_WIDTH_5:
-+		case NL80211_CHAN_WIDTH_10:
- 			return;
-+		default:
-+			break;
-+		}
- 
- 		alt_rate.idx = 0;
- 		/* keep protection flags */
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 4343920..41143f8 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -312,7 +312,8 @@ static void ieee80211_add_tx_radiotap_header(struct ieee80211_supported_band
+ 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
+ 		pos[0] = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
+ 			 IEEE80211_RADIOTAP_MCS_HAVE_GI |
+-			 IEEE80211_RADIOTAP_MCS_HAVE_BW;
++			 IEEE80211_RADIOTAP_MCS_HAVE_BW |
++			 IEEE80211_RADIOTAP_MCS_HAVE_STBC;
+ 		if (info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
+ 			pos[1] |= IEEE80211_RADIOTAP_MCS_SGI;
+ 		if (info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
 -- 
-1.7.10.4
+1.8.1.2
 
