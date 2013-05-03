@@ -1,73 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:45543 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758590Ab3EGCvU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 22:51:20 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
-	Tim Shepard <shep@laptop.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.10] mwifiex: fix memory leak issue when driver unload
-Date: Mon, 6 May 2013 19:46:54 -0700
-Message-ID: <1367894814-6677-2-git-send-email-bzhao@marvell.com> (sfid-20130507_045123_930474_49267029)
-In-Reply-To: <1367894814-6677-1-git-send-email-bzhao@marvell.com>
-References: <1367894814-6677-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:48762 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933135Ab3ECIBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 May 2013 04:01:10 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 3.10] mac80211: fix spurious RCU warning and update documentation
+Date: Fri,  3 May 2013 10:01:03 +0200
+Message-Id: <1367568063-24859-1-git-send-email-nbd@openwrt.org> (sfid-20130503_100114_389997_C5F4C681)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Document rx vs tx status concurrency requirements.
 
-After unregister_netdevice() call the request is queued and
-reg_state is changed to NETREG_UNREGISTERING.
-As we check for NETREG_UNREGISTERED state, free_netdev() never
-gets executed causing memory leak.
-
-Initialize "dev->destructor" to free_netdev() to free device
-data after unregistration.
-
-Cc: <stable@vger.kernel.org>
-Reported-by: Daniel Drake <dsd@laptop.org>
-Tested-by: Daniel Drake <dsd@laptop.org>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |    3 ---
- drivers/net/wireless/mwifiex/main.c     |    1 +
- 2 files changed, 1 insertions(+), 3 deletions(-)
+ include/net/mac80211.h | 12 ++++++++----
+ net/mac80211/rate.c    |  9 ++++++++-
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index a0cb077..636145d 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2234,9 +2234,6 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	if (wdev->netdev->reg_state == NETREG_REGISTERED)
- 		unregister_netdevice(wdev->netdev);
- 
--	if (wdev->netdev->reg_state == NETREG_UNREGISTERED)
--		free_netdev(wdev->netdev);
--
- 	/* Clear the priv in adapter */
- 	priv->netdev = NULL;
- 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 121443a..2eb88ea 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -655,6 +655,7 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
- 						struct net_device *dev)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 04c2d46..885898a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3043,7 +3043,8 @@ void ieee80211_napi_complete(struct ieee80211_hw *hw);
+  * This function may not be called in IRQ context. Calls to this function
+  * for a single hardware must be synchronized against each other. Calls to
+  * this function, ieee80211_rx_ni() and ieee80211_rx_irqsafe() may not be
+- * mixed for a single hardware.
++ * mixed for a single hardware. Must not run concurrently with
++ * ieee80211_tx_status() or ieee80211_tx_status_ni().
+  *
+  * In process context use instead ieee80211_rx_ni().
+  *
+@@ -3059,7 +3060,8 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb);
+  * (internally defers to a tasklet.)
+  *
+  * Calls to this function, ieee80211_rx() or ieee80211_rx_ni() may not
+- * be mixed for a single hardware.
++ * be mixed for a single hardware.Must not run concurrently with
++ * ieee80211_tx_status() or ieee80211_tx_status_ni().
+  *
+  * @hw: the hardware this frame came in on
+  * @skb: the buffer to receive, owned by mac80211 after this call
+@@ -3073,7 +3075,8 @@ void ieee80211_rx_irqsafe(struct ieee80211_hw *hw, struct sk_buff *skb);
+  * (internally disables bottom halves).
+  *
+  * Calls to this function, ieee80211_rx() and ieee80211_rx_irqsafe() may
+- * not be mixed for a single hardware.
++ * not be mixed for a single hardware. Must not run concurrently with
++ * ieee80211_tx_status() or ieee80211_tx_status_ni().
+  *
+  * @hw: the hardware this frame came in on
+  * @skb: the buffer to receive, owned by mac80211 after this call
+@@ -3196,7 +3199,8 @@ void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
+  * This function may not be called in IRQ context. Calls to this function
+  * for a single hardware must be synchronized against each other. Calls
+  * to this function, ieee80211_tx_status_ni() and ieee80211_tx_status_irqsafe()
+- * may not be mixed for a single hardware.
++ * may not be mixed for a single hardware. Must not run concurrently with
++ * ieee80211_rx() or ieee80211_rx_ni().
+  *
+  * @hw: the hardware the frame was transmitted by
+  * @skb: the frame that was transmitted, owned by mac80211 after this call
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 0d51877..923f85b 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -688,8 +688,15 @@ int rate_control_set_rates(struct ieee80211_hw *hw,
+ 			   struct ieee80211_sta *pubsta,
+ 			   struct ieee80211_sta_rates *rates)
  {
- 	dev->netdev_ops = &mwifiex_netdev_ops;
-+	dev->destructor = free_netdev;
- 	/* Initialize private structure */
- 	priv->current_key_index = 0;
- 	priv->media_connected = false;
+-	struct ieee80211_sta_rates *old = rcu_dereference(pubsta->rates);
++	struct ieee80211_sta_rates *old;
+ 
++	/*
++	 * mac80211 guarantees that this function will not be called
++	 * concurrently, so the following RCU access is safe, even outside
++	 * of a rcu_read_lock section. This can not be checked easily, so
++	 * we just set the condition to true
++	 */
++	old = rcu_dereference_protected(pubsta->rates, true);
+ 	rcu_assign_pointer(pubsta->rates, rates);
+ 	if (old)
+ 		kfree_rcu(old, rcu_head);
 -- 
-1.7.0.2
+1.8.0.2
 
