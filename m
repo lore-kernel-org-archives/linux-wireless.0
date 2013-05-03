@@ -1,48 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db8lp0185.outbound.messaging.microsoft.com ([213.199.154.185]:28726
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753879Ab3EKUWU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 May 2013 16:22:20 -0400
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Mike Miller <mike.miller@hp.com>,
-	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
-	Guo-Fu Tseng <cooldavid@cooldavid.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"nic_swsd@realtek.com" <nic_swsd@realtek.com>,
-	"aacraid@adaptec.com" <aacraid@adaptec.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: is L1 really disabled in iwlwifi
-Date: Sat, 11 May 2013 20:22:11 +0000
-Message-ID: <1368303730.2425.47.camel@x230> (sfid-20130511_222240_228391_E98DD77F)
-References: <CANUX_P2Hy02SnyYS24dyUGLv3wB3L5xkXt8Y1s+8_RG9d5ReAw@mail.gmail.com>
-	 <CAErSpo6OCyTy19u6Xaf=xr0TSDriwCD3n-oMc7eJyLzuJ9d60g@mail.gmail.com>
-	 <20130510225257.GA10847@google.com> <1725435.3DlCxYF2FV@vostro.rjw.lan>
-In-Reply-To: <1725435.3DlCxYF2FV@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mout.gmx.net ([212.227.17.22]:54311 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934209Ab3ECTyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 May 2013 15:54:15 -0400
+Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0LiZta-1U0Okc2GtA-00ceWd for
+ <linux-wireless@vger.kernel.org>; Fri, 03 May 2013 21:54:14 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	radiotap@NetBSD.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH] tcpdump: add STBC Rx support
+Date: Fri,  3 May 2013 21:53:56 +0200
+Message-Id: <1367610836-3303-5-git-send-email-linux@rempel-privat.de> (sfid-20130503_215419_326499_CC4CF831)
+In-Reply-To: <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
+References: <1367527479.11375.19.camel@jlt4.sipsolutions.net>
+ <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU2F0LCAyMDEzLTA1LTExIGF0IDIyOjI2ICswMjAwLCBSYWZhZWwgSi4gV3lzb2NraSB3cm90
-ZToNCj4gT24gRnJpZGF5LCBNYXkgMTAsIDIwMTMgMDQ6NTI6NTcgUE0gQmpvcm4gSGVsZ2FhcyB3
-cm90ZToNCj4gPiBJIHByb3Bvc2UgdGhlIGZvbGxvd2luZyBwYXRjaC4gIEFueSBjb21tZW50cz8N
-Cj4gDQo+IEluIG15IG9waW5pb24gdGhpcyBpcyBkYW5nZXJvdXMsIGJlY2F1c2UgaXQgb3BlbnMg
-dXMgdG8gYnVncyB0aGF0IHJpZ2h0IG5vdw0KPiBhcmUgcHJldmVudGVkIGZyb20gaGFwcGVuaW5n
-IGR1ZSB0byB0aGUgd2F5IHRoZSBjb2RlIHdvcmtzLg0KDQpSaWdodCwgSSdtIGFsc28gbm90IGVu
-dGlyZWx5IGNvbWZvcnRhYmxlIHdpdGggdGhpcy4gVGhlIGN1cnJlbnQNCmJlaGF2aW91ciBtYXkg
-YmUgY29uZnVzaW5nLCBidXQgd2UgY291bGQgcmVkdWNlIHRoYXQgYnkgcmVuYW1pbmcgdGhlDQpm
-dW5jdGlvbnMuIEknbSBzdGlsbCBub3QgY2xlYXIgb24gd2hldGhlciBhbnlvbmUncyBhY3R1YWxs
-eSBzZWVpbmcNCnByb2JsZW1zIGNhdXNlZCBieSB0aGUgZXhpc3RpbmcgYmVoYXZpb3VyLg0KDQot
-LSANCk1hdHRoZXcgR2FycmV0dCB8IG1qZzU5QHNyY2YudWNhbS5vcmcNCg==
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ ieee802_11_radio.h | 6 ++++++
+ print-802_11.c     | 5 +++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/ieee802_11_radio.h b/ieee802_11_radio.h
+index 5aff137..65c25df 100644
+--- a/ieee802_11_radio.h
++++ b/ieee802_11_radio.h
+@@ -277,6 +277,7 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_GUARD_INTERVAL_KNOWN	0x04
+ #define IEEE80211_RADIOTAP_MCS_HT_FORMAT_KNOWN		0x08
+ #define IEEE80211_RADIOTAP_MCS_FEC_TYPE_KNOWN		0x10
++#define IEEE80211_RADIOTAP_MCS_STBC_KNOWN		0x20
+ 
+ /* For IEEE80211_RADIOTAP_MCS flags */
+ #define IEEE80211_RADIOTAP_MCS_BANDWIDTH_MASK	0x03
+@@ -287,5 +288,10 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_SHORT_GI		0x04 /* short guard interval */
+ #define IEEE80211_RADIOTAP_MCS_HT_GREENFIELD	0x08
+ #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
++#define IEEE80211_RADIOTAP_MCS_STBC_MASK	0x60
++#define		IEEE80211_RADIOTAP_MCS_STBC_1	1
++#define		IEEE80211_RADIOTAP_MCS_STBC_2	2
++#define		IEEE80211_RADIOTAP_MCS_STBC_3	3
++#define IEEE80211_RADIOTAP_MCS_STBC_SHIFT	5
+ 
+ #endif /* _NET_IF_IEEE80211RADIOTAP_H_ */
+diff --git a/print-802_11.c b/print-802_11.c
+index 97badb9..5f65752 100644
+--- a/print-802_11.c
++++ b/print-802_11.c
+@@ -2184,6 +2184,11 @@ print_radiotap_field(struct cpack_state *s, u_int32_t bit, u_int8_t *flags,
+ 				(u2.u8 & IEEE80211_RADIOTAP_MCS_FEC_LDPC) ?
+ 				"LDPC" : "BCC");
+ 		}
++		if (u.u8 & IEEE80211_RADIOTAP_MCS_STBC_KNOWN) {
++			printf("RX-STBC%u ",
++				(u2.u8 & IEEE80211_RADIOTAP_MCS_STBC_MASK) >> IEEE80211_RADIOTAP_MCS_STBC_SHIFT);
++		}
++	
+ 		break;
+ 		}
+ 	}
+-- 
+1.8.1.2
 
