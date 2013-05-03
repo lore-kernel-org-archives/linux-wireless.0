@@ -1,112 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:45625 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648Ab3EUOJu (ORCPT
+Received: from mailout4.w1.samsung.com ([210.118.77.14]:55425 "EHLO
+	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754943Ab3ECMsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 May 2013 10:09:50 -0400
-Message-ID: <519B8021.6030002@gmail.com> (sfid-20130521_161011_681418_45C0F1BF)
-Date: Tue, 21 May 2013 16:09:37 +0200
-From: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
-Reply-To: kkhere.geo+suse@gmail.com
-MIME-Version: 1.0
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-CC: gregkh@kroah.com
-Subject: [v3.9.x stable regression, bisected] iwlwifi/iwldvm has a 30s delay
- in EAP authentication
-Content-Type: text/plain; charset=UTF-8
+	Fri, 3 May 2013 08:48:13 -0400
+Received: from eucpsbgm1.samsung.com (unknown [203.254.199.244])
+ by mailout4.w1.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0MM800AJ63JX6O90@mailout4.w1.samsung.com> for
+ linux-wireless@vger.kernel.org; Fri, 03 May 2013 13:48:11 +0100 (BST)
+Received: from CAMNPWMFITZJOH ([106.1.222.14])
+ by eusync1.samsung.com (Oracle Communications Messaging Server 7u4-23.01
+ (7.0.4.23.0) 64bit (built Aug 10 2011))
+ with ESMTPA id <0MM80017T3K8GZ70@eusync1.samsung.com> for
+ linux-wireless@vger.kernel.org; Fri, 03 May 2013 13:48:11 +0100 (BST)
+Reply-to: m.fitzjohn@samsung.com
+From: Mark Fitzjohn <m.fitzjohn@samsung.com>
+To: linux-wireless@vger.kernel.org
+Subject: RE: Does mac80211 support use of WIPHY_FLAG_SUPPORTS_FW_ROAM?
+Date: Fri, 03 May 2013 13:48:08 +0100
+Message-id: <006d01ce47fc$76a61690$63f243b0$%fitzjohn@samsung.com> (sfid-20130503_144817_713432_206EE938)
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi,
 
-I am currently running the openSUSE Tumbleweed distribution and have a
-problem starting with the kernel v3.9.1 and also with kernel v3.9.2.
+we'd like to support roaming in our firmware and currently have a mac80211
+driver.
 
-The iwldvm driver has an artificial delay of 30s when authenticating
-with a radius server using EAP-TLS. This was not the case using kernel
-v3.9.
+I know that we need to set the WIPHY_FLAG_SUPPORTS_FW_ROAMING but I'm not
+sure if anything else needs to be signalled (called) in to mac80211?
 
-I bisected the problem using local builds of the tumbleweed desktop
-configuration. This is the result:
+I've seen calls to cfg80211_roamed_bss which gets the roamed indication out
+to the user space but do we need to use this as well?
 
-c30f37f8f1f8d06c142d67ba74955fd48b5cf5a4 is the first bad commit
-commit c30f37f8f1f8d06c142d67ba74955fd48b5cf5a4
-Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date:   Wed Apr 17 09:47:00 2013 +0300
+Can anyone explain?
 
-    iwlwifi: dvm: don't send zeroed LQ cmd
-
-    commit 63b77bf489881747c5118476918cc8c29378ee63 upstream.
-
-    When the stations are being restored because of unassoc
-    RXON, the LQ cmd may not have been initialized because it
-    is initialized only after association.
-    Sending zeroed LQ_CMD makes the fw unhappy: it raises
-    SYSASSERT_2078.
-
-    Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-    Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-    [move zero_lq and make static const]
-    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-    Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
-:040000 040000 fb6795b349a1765f357df8fcdf309e6e2613230b
-5e542c8aef84287968515803efd193462c4a0d6b M      drivers
-
-Reverting the above commit on top of kernel v3.9.3 fixes this 30s delay
-but I've never seen a firmware restart of the iwldvm/iwlwifi driver in
-my logs that would suggest that the SYSASSERT mentioned in the commit
-message is happening. My hardware is Intel Centrino Advanced-N 6200 (rev
-35) (pci_id 8086:422c).
-
-I'll be happy to send any further information if required (Please CC me
-in replies).
-
-Thanks and regards.
-Kshitij
-
-The full log of the bisection is as follows:
-
-[kulshres@apollo 3.9.y]$ git bisect log
-# bad: [57049bb1dd0461d8423c3feceea36148d4335317] Linux 3.9.2
-# good: [c1be5a5b1b355d40e6cf79cc979eb66dafa24ad1] Linux 3.9
-git bisect start 'HEAD' 'v3.9'
-# bad: [50f3a76bf2179283bba925a84839f23fcb42cd92] wireless: regulatory:
-fix channel disabling race condition
-git bisect bad 50f3a76bf2179283bba925a84839f23fcb42cd92
-# bad: [5504e82764f41969a5f4e29af9f950f79ec3538a] crypto: crc32-pclmul -
-Use gas macro for pclmulqdq
-git bisect bad 5504e82764f41969a5f4e29af9f950f79ec3538a
-# bad: [ad3b8a5451b342d58c16806dc6c0f750973c169b] USB: ftdi_sio: correct
-ST Micro Connect Lite PIDs
-git bisect bad ad3b8a5451b342d58c16806dc6c0f750973c169b
-# good: [efaa9d79ccb5491181ea100dc6a9c575f626ef5a] powerpc: Add isync to
-copy_and_flush
-git bisect good efaa9d79ccb5491181ea100dc6a9c575f626ef5a
-# bad: [af1f921702d4074dd61da0d4a2974d51ecd9c05d] mwifiex: Use
-pci_release_region() instead of a pci_release_regions()
-git bisect bad af1f921702d4074dd61da0d4a2974d51ecd9c05d
-# good: [1a36af179e195ab85e1444cc760fd7a620289fa6] powerpc/spufs:
-Initialise inode->i_ino in spufs_new_inode()
-git bisect good 1a36af179e195ab85e1444cc760fd7a620289fa6
-# bad: [c30f37f8f1f8d06c142d67ba74955fd48b5cf5a4] iwlwifi: dvm: don't
-send zeroed LQ cmd
-git bisect bad c30f37f8f1f8d06c142d67ba74955fd48b5cf5a4
-# good: [34e3e78befc3c6f65f3e7ce70f0367745cd550b0] iwlwifi: fix freeing
-uninitialized pointer
-git bisect good 34e3e78befc3c6f65f3e7ce70f0367745cd550b0
+Thanks
+Mark
 
 
--- 
-Dr. Kshitij Kulshreshtha
-
-Institut für Mathematik,
-Universität Paderborn,
-Warburger Straße 100,
-33098 Paderborn.
-
-Büro: A3.235
-
-Privatanschrift:
-Arnikaweg 62
-33100 Paderborn.
