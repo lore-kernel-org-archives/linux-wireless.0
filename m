@@ -1,42 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:49442 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758315Ab3ETVMi (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:38281 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760354Ab3ECTMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 May 2013 17:12:38 -0400
-Received: by mail-bk0-f44.google.com with SMTP id jk14so2110266bkc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 20 May 2013 14:12:37 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 20 May 2013 17:12:37 -0400
-Message-ID: <CAKb7UvhBS6G=1Burf6MfekEnT5vhiy8BKijJ27Fpd=9yBDy9Ng@mail.gmail.com> (sfid-20130520_231244_289559_C8DD3342)
-Subject: iwlwifi dmar errors in 3.9.2
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 3 May 2013 15:12:23 -0400
+Received: by mail-pa0-f53.google.com with SMTP id kq12so1069673pab.26
+        for <linux-wireless@vger.kernel.org>; Fri, 03 May 2013 12:12:23 -0700 (PDT)
+From: Colleen Twitty <colleen@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: open80211s <devel@lists.open80211s.org>,
+	linux-wirelss <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] mac80211: enable Auth Protocol Identifier on mesh config.
+Date: Fri,  3 May 2013 12:11:48 -0700
+Message-Id: <1367608308-588-2-git-send-email-colleen@cozybit.com> (sfid-20130503_211227_624177_5F41C55C)
+In-Reply-To: <1367608308-588-1-git-send-email-colleen@cozybit.com>
+References: <1367608308-588-1-git-send-email-colleen@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Previously the mesh_auth_id was disabled.  Instead set the
+correct mesh authentication bit based on the mesh setup.
 
-I recently upgraded to 3.9.2 from 3.7.10, and have begun to see some
-DMAR errors in my log. Here are a bunch of them:
-http://pastebin.com/wgq0JW0S
+Signed-off-by: Colleen Twitty <colleen@cozybit.com>
+---
+ net/mac80211/cfg.c  |    1 +
+ net/mac80211/mesh.c |    1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
 
-This does not seem to negatively affect wifi -- it seems to work just
-fine without any extra cajoling, but thought this might be worth
-reporting. I also don't know exactly what's triggering the issue.
-Hopefully the logs provide the necessary info though.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1f51bdf..65b9cab 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1746,6 +1746,7 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
+ 	ifmsh->mesh_pp_id = setup->path_sel_proto;
+ 	ifmsh->mesh_pm_id = setup->path_metric;
+ 	ifmsh->user_mpm = setup->user_mpm;
++	ifmsh->mesh_auth_id = setup->auth_id;
+ 	ifmsh->security = IEEE80211_MESH_SEC_NONE;
+ 	if (setup->is_authenticated)
+ 		ifmsh->security |= IEEE80211_MESH_SEC_AUTHED;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 6952760..c13db9a 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -748,7 +748,6 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_configure_filter(local);
+ 
+ 	ifmsh->mesh_cc_id = 0;	/* Disabled */
+-	ifmsh->mesh_auth_id = 0;	/* Disabled */
+ 	/* register sync ops from extensible synchronization framework */
+ 	ifmsh->sync_ops = ieee80211_mesh_sync_ops_get(ifmsh->mesh_sp_id);
+ 	ifmsh->adjusting_tbtt = false;
+-- 
+1.7.9.5
 
-# lspci -nn -s 03:00.0
-03:00.0 Network controller [0280]: Intel Corporation Centrino
-Ultimate-N 6300 [8086:4238] (rev 3e)
-
-The machine is a Thinkpad T420s. I've only recently enabled VT-d (and
-thus IOMMU), which is perhaps why these didn't happen before... not
-sure of the exact timing vs the kernel upgrade.
-
-Let me know if there's any additional info you'd like to get from me.
-
-Thanks,
-
-  -ilia
