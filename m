@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:57705 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752445Ab3EVIMd (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:49358 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760627Ab3ECTcz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 May 2013 04:12:33 -0400
-Message-ID: <1369210344.8207.0.camel@jlt4.sipsolutions.net> (sfid-20130522_101238_000776_19338BA3)
-Subject: Re: [PATCH 2/2] cfg80211/nl80211: Add coalesce support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Wed, 22 May 2013 10:12:24 +0200
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430E0ADCE97D@SC-VEXCH1.marvell.com>
-References: <1369099918-4921-1-git-send-email-bzhao@marvell.com>
-	 <1369099918-4921-2-git-send-email-bzhao@marvell.com>
-	 <20130521232303.GX6529@pogo>
-	 <477F20668A386D41ADCC57781B1F70430E0ADCE97D@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 3 May 2013 15:32:55 -0400
+Date: Fri, 3 May 2013 15:32:47 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH 14/14] cw1200: v6: Kbuild integration and MAINTAINERS
+ entry
+Message-ID: <20130503193246.GA10116@shaftnet.org> (sfid-20130503_213258_836472_206DE56A)
+References: <1367090847-11937-1-git-send-email-pizza@shaftnet.org>
+ <1367090847-11937-15-git-send-email-pizza@shaftnet.org>
+ <20130503175412.GL2069@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sm4nu43k4a2Rpi4c"
+In-Reply-To: <20130503175412.GL2069@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-05-21 at 16:59 -0700, Bing Zhao wrote:
 
-> "packet coalesce" will reuse the pattern structure (and its enum definitions) defined for
-> WoWLAN. It's renamed so that both WoWLAN and Coalesce can make use of it.
+--sm4nu43k4a2Rpi4c
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Before you make any changes (I didn't get around to commenting on your
-patches yesterday), I think you have to be more careful with the renames
-to not break the API. Please provide defines or so to not break
-compilation in the rename.
+On Fri, May 03, 2013 at 01:54:13PM -0400, John W. Linville wrote:
+> This Kconfig file looks a bit whitespace-challenged...
 
-johannes
+So it is.  Sigh.
 
+I've fixed it up to match what I see under net/drivers/wireless/=20
+
+Should I just re-send this patch?
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--sm4nu43k4a2Rpi4c
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iD8DBQFRhBDePuLgii2759ARAg+vAJ0X5kYK4n++9YaaiITMbapiKRsORwCgmdUE
+z071POTrSeKjvohDtCHmMKo=
+=yimu
+-----END PGP SIGNATURE-----
+
+--sm4nu43k4a2Rpi4c--
