@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:33958 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758001Ab3EWJkY (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:45408 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759559Ab3ECPmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 05:40:24 -0400
-Message-ID: <1369302019.12002.0.camel@jlt4.sipsolutions.net> (sfid-20130523_114037_785508_3FE25E66)
-Subject: Re: [RFC v4] cfg80211: Android P2P-Device workaround
-From: Johannes Berg <johannes@sipsolutions.net>
-To: YanBo <dreamfly281@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 23 May 2013 11:40:19 +0200
-In-Reply-To: <CAFuUQkgTbf0959=xCUCA1AR-Vxv7Cj90GC4Ae7+BQUqme70ksQ@mail.gmail.com> (sfid-20130523_051808_029519_4702FCA4)
-References: <1367238384-26722-1-git-send-email-johannes@sipsolutions.net>
-	 <51823A0E.8020005@broadcom.com>
-	 <1367489163.8298.2.camel@jlt4.sipsolutions.net>
-	 <5182BBD4.9010701@broadcom.com>
-	 <1367922058.8328.2.camel@jlt4.sipsolutions.net>
-	 <CAFuUQkgTbf0959=xCUCA1AR-Vxv7Cj90GC4Ae7+BQUqme70ksQ@mail.gmail.com>
-	 (sfid-20130523_051808_029519_4702FCA4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 3 May 2013 11:42:07 -0400
+Received: by mail-ie0-f169.google.com with SMTP id u16so625562iet.14
+        for <linux-wireless@vger.kernel.org>; Fri, 03 May 2013 08:42:07 -0700 (PDT)
+Date: Fri, 3 May 2013 11:41:02 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: devel@lists.open80211s.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wirelss <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 00/12] MBSS sharing across multiple interfaces
+Message-ID: <20130503154102.GB1438@localhost> (sfid-20130503_174212_650865_49478675)
+References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
+ <BD54DDEB2546894FAB0731EA7B0EDF8D07C5C070@RockMX01.rock.corp>
+ <20130503143509.GA1438@localhost>
+ <CAEFj986Avr_C5Hm4uRs0oP2ZRa-jnn6eRCJH71jkehcCuQ7iGQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAEFj986Avr_C5Hm4uRs0oP2ZRa-jnn6eRCJH71jkehcCuQ7iGQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-23 at 11:18 +0800, YanBo wrote:
-> After create the p2p0  wireless device. When call the
-> cfg80211_conn_work
+On Fri, May 03, 2013 at 11:01:48PM +0800, Yeoh Chun-Yeow wrote:
+> Hi, Bob
+> 
+> If we have two mesh interfaces which MBSS sharing is turned on and one
+> Ethernet interface in the same host, can we use the brctl to add the mesh
+> interfaces and Ethernet interface together, like the following?
+> 
+> brctl add br-lan mesh0
+> brctl add br-lan mesh1
+> brctl add br-lan eth0
 
-How is that getting called in the first place? I'm not saying there's no
-bug, but your suggested fix is completely pointless, we shouldn't get
-there.
+So in the patch, the frames are already forwarded between the
+mesh interfaces, so we've at least tested the case like this:
 
-johannes
+mesh0/mesh1 shared
+brctl addif br-lan mesh1
+brctl addif br-lan eth0
 
+Then frames destined for mesh1/eth0 that arrive at mesh0 will be
+forwarded to the other devices and vice-versa.  I imagine some
+frame duplication would happen if both mesh devices were in the
+bridge, but I haven't tried.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
