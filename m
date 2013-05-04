@@ -1,307 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:46688 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757402Ab3EUBdd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 May 2013 21:33:33 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] cfg80211/nl80211: rename packet pattern related structures and enums
-Date: Mon, 20 May 2013 18:31:57 -0700
-Message-ID: <1369099918-4921-1-git-send-email-bzhao@marvell.com> (sfid-20130521_033336_761760_85650CEA)
+Received: from mout.gmx.net ([212.227.15.18]:53140 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756395Ab3EDL2R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 May 2013 07:28:17 -0400
+Received: from mailout-de.gmx.net ([10.1.76.27]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0M8npK-1UiT4N3hhk-00C9ex for
+ <linux-wireless@vger.kernel.org>; Sat, 04 May 2013 13:28:15 +0200
+Message-ID: <5184F0CC.3070208@rempel-privat.de> (sfid-20130504_132831_114543_2AC2F53A)
+Date: Sat, 04 May 2013 13:28:12 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Adrian Chadd <adrian@freebsd.org>, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH 1/2] ath9k_htc: add STBC TX support
+References: <1367482308-9882-1-git-send-email-linux@rempel-privat.de> <1367482308-9882-2-git-send-email-linux@rempel-privat.de> <CAJ-Vmo=rZrHmXD0Os-Mb40jSEywbO-7GHSqL=7iMbkzAfS=+UQ@mail.gmail.com> <5182A341.8050704@rempel-privat.de> <5182A9DC.6030203@openwrt.org> <CAJ-Vmo=XYK=Jkc40U_vJO03n+tiA_LDpw8e1QKYRX6-+E9o4fA@mail.gmail.com> <5184AFC2.8060101@rempel-privat.de> <5184DCCF.9010009@openwrt.org> <5184EC19.9060206@rempel-privat.de> <5184EE0B.1030605@openwrt.org>
+In-Reply-To: <5184EE0B.1030605@openwrt.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Am 04.05.2013 13:16, schrieb Felix Fietkau:
+> On 2013-05-04 1:08 PM, Oleksij Rempel wrote:
+>> Am 04.05.2013 12:02, schrieb Felix Fietkau:
+>>> On 2013-05-04 8:50 AM, Oleksij Rempel wrote:
+>>>> Am 02.05.2013 22:15, schrieb Adrian Chadd:
+>>>>> Well, let's dig into the firmware a bit more and tidy up how STBC is handled.
+>>>>
+>>>> Does it mean, i should change this patch and provide a patch for
+>>>> firmware too?
+>>>> I still do not think, changing peer caps i a good idea in any case.
+>>>> I mena this part of patch:
+>>>> +               if (sta->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC)
+>>>> +                       caps |= WLAN_RC_TX_STBC_FLAG;
+>>>>
+>>>>
+>>>> Behaviour with this patch will be fallowing:
+>>>> - peer provide caps, even if it is RX-STBC12
+>>>> - we pass this information to firmware and ratecontroller of FW, do
+>>>> right decision based on hardware it has.
+>>>>
+>>>> You suggestion, if i understand it correctly, is to filter caps:
+>>>> - if peer provide more than we can, we should tell firmware the value
+>>>> what we can. So, if peer say it can RX-STBC12, we should tell firmware
+>>>> that peer is RX-STBC1.
+>>>> In my opinion, this kind of filter is a source for hidden errors.
+>>> I think the discussion regarding RX-STBC12 vs RX-STBC1 is purely
+>>> hypothetical. The hardware that this firmware was designed for only
+>>> supports sending STBC for MCS0-7. This will not change.
+>>>
+>>> Also, there's no reason to tell the firmware about both rx and tx STBC
+>>> capabilities, the only thing it needs to know is what tells the rate
+>>> control part to enable/disable STBC.
+>>
+>> As you can see, in version 2 of this path there was no more discussion
+>> about it. I just did it.
+>>
+>>> In addition to that, using the WLAN_RC_* flags is wrong, you need to use
+>>> the ATH_RC_* flags, as this is what ath_rate_newassoc_11n checks for in
+>>> the firmware.
+>>
+>> Renamed.
+>>
+>>> The only STBC related flag that actually gets used (when
+>>> passed from the driver) is ATH_RC_RX_STBC_FLAG.
+>>
+>> Well, may be it is not used at the end. But it is present on some places
+>> in the firmware.
+>> For example here:
+>> void
+>> rcSibUpdate_11n(struct ath_softc_tgt *sc, struct ath_node_target *pSib,
+>>                   A_UINT32 capflag, A_BOOL keepState, struct
+>> ieee80211_rate  *pRateSet)
+>> {
+>>           rcSibUpdate_ht(sc,
+>>                          pSib,
+>>                          ((capflag & ATH_RC_DS_FLAG)   ? WLAN_RC_DS_FLAG
+>>    : 0) |
+>>                          ((capflag & ATH_RC_HT40_SGI_FLAG)  ?
+>> WLAN_RC_HT40_SGI_FLAG : 0) |
+>>                          ((capflag & ATH_RC_HT_FLAG)   ? WLAN_RC_HT_FLAG
+>>    : 0) |
+>>                          ((capflag & ATH_RC_CW40_FLAG) ? WLAN_RC_40_FLAG
+>>    : 0) |
+>>                          ((capflag & ATH_RC_TX_STBC_FLAG)   ?
+>> WLAN_RC_STBC_FLAG  : 0),
+>>                          keepState,
+>>                          pRateSet);
+>>
+>>
+>>
+>> So, should i remove ATH_RC_TX_STBC_FLAG from my patch?
+> I extensively reviewed this part, and it's really crazy. Here's what
+> happens:
+>
+> ath_rate_newassoc_11n takes ATH_RC_* flags, converts them to WLAN_RC_*.
+> rcSibUpdate_11n interprets the WLAN_RC_* flags as ATH_RC_* and converts
+> them to WLAN_RC_* again. For most flags this is pretty much a no-op
+> because the definitions are identical.
+> For STBC the result 'accidentally' still contains WLAN_RC_STBC_FLAG, but
+> only because ath_rate_newassoc_11n converts ATH_RC_RX_STBC_FLAG to
+> WLAN_RC_STBC_FLAG and WLAN_RC_STBC_FLAG overlaps with ATH_RC_TX_STBC_FLAG.
+> In the end it doesn't matter anymore, because nothing in the code takes
+> the STBC info from the capflags.
+>
+> STBC is used if ATH_NODE_ATHEROS(an)->stbc is non-zero, and this gets
+> set by ath_rate_newassoc_11n before all of those incredibly moronic
+> conversions happen.
 
-Packet patterns provided by user are matched with received packets
-for WoWLAN feature. Rename these structures and enums so that they
-will be available for new feature.
+Ok, thx.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/ath/ath9k/main.c   |  2 +-
- drivers/net/wireless/mwifiex/cfg80211.c |  3 +--
- drivers/net/wireless/ti/wlcore/main.c   | 10 ++++-----
- include/net/cfg80211.h                  |  6 +++---
- include/uapi/linux/nl80211.h            | 36 ++++++++++++++++-----------------
- net/wireless/nl80211.c                  | 34 +++++++++++++++----------------
- 6 files changed, 44 insertions(+), 47 deletions(-)
+I'll remove it from my patch. And will remove it from firmware.
+Even if you wont to remove bigger part of firmware, i thing it wont 
+happen this year?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6963862..57e290e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2123,7 +2123,7 @@ static void ath9k_wow_add_pattern(struct ath_softc *sc,
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath9k_wow_pattern *wow_pattern = NULL;
--	struct cfg80211_wowlan_trig_pkt_pattern *patterns = wowlan->patterns;
-+	struct cfg80211_pkt_pattern *patterns = wowlan->patterns;
- 	int mask_len;
- 	s8 i = 0;
- 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index d3c8ece..7a06f51 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2250,8 +2250,7 @@ EXPORT_SYMBOL_GPL(mwifiex_del_virtual_intf);
- 
- #ifdef CONFIG_PM
- static bool
--mwifiex_is_pattern_supported(struct cfg80211_wowlan_trig_pkt_pattern *pat,
--			     s8 *byte_seq)
-+mwifiex_is_pattern_supported(struct cfg80211_pkt_pattern *pat, s8 *byte_seq)
- {
- 	int j, k, valid_byte_cnt = 0;
- 	bool dont_care_byte = false;
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 953111a..db3653f 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1328,7 +1328,7 @@ static struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
- 
- #ifdef CONFIG_PM
- static int
--wl1271_validate_wowlan_pattern(struct cfg80211_wowlan_trig_pkt_pattern *p)
-+wl1271_validate_wowlan_pattern(struct cfg80211_pkt_pattern *p)
- {
- 	int num_fields = 0, in_field = 0, fields_size = 0;
- 	int i, pattern_len = 0;
-@@ -1471,9 +1471,9 @@ void wl1271_rx_filter_flatten_fields(struct wl12xx_rx_filter *filter,
-  * Allocates an RX filter returned through f
-  * which needs to be freed using rx_filter_free()
-  */
--static int wl1271_convert_wowlan_pattern_to_rx_filter(
--	struct cfg80211_wowlan_trig_pkt_pattern *p,
--	struct wl12xx_rx_filter **f)
-+static int
-+wl1271_convert_wowlan_pattern_to_rx_filter(struct cfg80211_pkt_pattern *p,
-+					   struct wl12xx_rx_filter **f)
- {
- 	int i, j, ret = 0;
- 	struct wl12xx_rx_filter *filter;
-@@ -1575,7 +1575,7 @@ static int wl1271_configure_wowlan(struct wl1271 *wl,
- 
- 	/* Translate WoWLAN patterns into filters */
- 	for (i = 0; i < wow->n_patterns; i++) {
--		struct cfg80211_wowlan_trig_pkt_pattern *p;
-+		struct cfg80211_pkt_pattern *p;
- 		struct wl12xx_rx_filter *filter = NULL;
- 
- 		p = &wow->patterns[i];
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 32a2f1b..4585b63 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1661,7 +1661,7 @@ struct cfg80211_pmksa {
- };
- 
- /**
-- * struct cfg80211_wowlan_trig_pkt_pattern - packet pattern
-+ * struct cfg80211_pkt_pattern - packet pattern
-  * @mask: bitmask where to match pattern and where to ignore bytes,
-  *	one bit per byte, in same format as nl80211
-  * @pattern: bytes to match where bitmask is 1
-@@ -1671,7 +1671,7 @@ struct cfg80211_pmksa {
-  * Internal note: @mask and @pattern are allocated in one chunk of
-  * memory, free @mask only!
-  */
--struct cfg80211_wowlan_trig_pkt_pattern {
-+struct cfg80211_pkt_pattern {
- 	u8 *mask, *pattern;
- 	int pattern_len;
- 	int pkt_offset;
-@@ -1733,7 +1733,7 @@ struct cfg80211_wowlan {
- 	bool any, disconnect, magic_pkt, gtk_rekey_failure,
- 	     eap_identity_req, four_way_handshake,
- 	     rfkill_release;
--	struct cfg80211_wowlan_trig_pkt_pattern *patterns;
-+	struct cfg80211_pkt_pattern *patterns;
- 	struct cfg80211_wowlan_tcp *tcp;
- 	int n_patterns;
- };
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 0632071..000dd1d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3041,11 +3041,11 @@ enum nl80211_tx_power_setting {
- };
- 
- /**
-- * enum nl80211_wowlan_packet_pattern_attr - WoWLAN packet pattern attribute
-- * @__NL80211_WOWLAN_PKTPAT_INVALID: invalid number for nested attribute
-- * @NL80211_WOWLAN_PKTPAT_PATTERN: the pattern, values where the mask has
-+ * enum nl80211_packet_pattern_attr - packet pattern attribute
-+ * @__NL80211_PKTPAT_INVALID: invalid number for nested attribute
-+ * @NL80211_PKTPAT_PATTERN: the pattern, values where the mask has
-  *	a zero bit are ignored
-- * @NL80211_WOWLAN_PKTPAT_MASK: pattern mask, must be long enough to have
-+ * @NL80211_PKTPAT_MASK: pattern mask, must be long enough to have
-  *	a bit for each byte in the pattern. The lowest-order bit corresponds
-  *	to the first byte of the pattern, but the bytes of the pattern are
-  *	in a little-endian-like format, i.e. the 9th byte of the pattern
-@@ -3056,23 +3056,23 @@ enum nl80211_tx_power_setting {
-  *	Note that the pattern matching is done as though frames were not
-  *	802.11 frames but 802.3 frames, i.e. the frame is fully unpacked
-  *	first (including SNAP header unpacking) and then matched.
-- * @NL80211_WOWLAN_PKTPAT_OFFSET: packet offset, pattern is matched after
-+ * @NL80211_PKTPAT_OFFSET: packet offset, pattern is matched after
-  *	these fixed number of bytes of received packet
-- * @NUM_NL80211_WOWLAN_PKTPAT: number of attributes
-- * @MAX_NL80211_WOWLAN_PKTPAT: max attribute number
-+ * @NUM_NL80211_PKTPAT: number of attributes
-+ * @MAX_NL80211_PKTPAT: max attribute number
-  */
--enum nl80211_wowlan_packet_pattern_attr {
--	__NL80211_WOWLAN_PKTPAT_INVALID,
--	NL80211_WOWLAN_PKTPAT_MASK,
--	NL80211_WOWLAN_PKTPAT_PATTERN,
--	NL80211_WOWLAN_PKTPAT_OFFSET,
-+enum nl80211_packet_pattern_attr {
-+	__NL80211_PKTPAT_INVALID,
-+	NL80211_PKTPAT_MASK,
-+	NL80211_PKTPAT_PATTERN,
-+	NL80211_PKTPAT_OFFSET,
- 
--	NUM_NL80211_WOWLAN_PKTPAT,
--	MAX_NL80211_WOWLAN_PKTPAT = NUM_NL80211_WOWLAN_PKTPAT - 1,
-+	NUM_NL80211_PKTPAT,
-+	MAX_NL80211_PKTPAT = NUM_NL80211_PKTPAT - 1,
- };
- 
- /**
-- * struct nl80211_wowlan_pattern_support - pattern support information
-+ * struct nl80211_pattern_support - packet pattern support information
-  * @max_patterns: maximum number of patterns supported
-  * @min_pattern_len: minimum length of each pattern
-  * @max_pattern_len: maximum length of each pattern
-@@ -3082,7 +3082,7 @@ enum nl80211_wowlan_packet_pattern_attr {
-  * that is part of %NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED in the
-  * capability information given by the kernel to userspace.
-  */
--struct nl80211_wowlan_pattern_support {
-+struct nl80211_pattern_support {
- 	__u32 max_patterns;
- 	__u32 min_pattern_len;
- 	__u32 max_pattern_len;
-@@ -3108,7 +3108,7 @@ struct nl80211_wowlan_pattern_support {
-  *	pattern matching is done after the packet is converted to the MSDU.
-  *
-  *	In %NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED, it is a binary attribute
-- *	carrying a &struct nl80211_wowlan_pattern_support.
-+ *	carrying a &struct nl80211_pattern_support.
-  *
-  *	When reporting wakeup. it is a u32 attribute containing the 0-based
-  *	index of the pattern that caused the wakeup, in the patterns passed
-@@ -3265,7 +3265,7 @@ struct nl80211_wowlan_tcp_data_token_feature {
-  * @NL80211_WOWLAN_TCP_WAKE_PAYLOAD: wake packet payload, for advertising a
-  *	u32 attribute holding the maximum length
-  * @NL80211_WOWLAN_TCP_WAKE_MASK: Wake packet payload mask, not used for
-- *	feature advertising. The mask works like @NL80211_WOWLAN_PKTPAT_MASK
-+ *	feature advertising. The mask works like @NL80211_PKTPAT_MASK
-  *	but on the TCP payload only.
-  * @NUM_NL80211_WOWLAN_TCP: number of TCP attributes
-  * @MAX_NL80211_WOWLAN_TCP: highest attribute number
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5f10f7a..5f640de 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1014,7 +1014,7 @@ static int nl80211_send_wowlan(struct sk_buff *msg,
- 		return -ENOBUFS;
- 
- 	if (dev->wiphy.wowlan.n_patterns) {
--		struct nl80211_wowlan_pattern_support pat = {
-+		struct nl80211_pattern_support pat = {
- 			.max_patterns = dev->wiphy.wowlan.n_patterns,
- 			.min_pattern_len = dev->wiphy.wowlan.pattern_min_len,
- 			.max_pattern_len = dev->wiphy.wowlan.pattern_max_len,
-@@ -7570,12 +7570,11 @@ static int nl80211_send_wowlan_patterns(struct sk_buff *msg,
- 		if (!nl_pat)
- 			return -ENOBUFS;
- 		pat_len = rdev->wowlan->patterns[i].pattern_len;
--		if (nla_put(msg, NL80211_WOWLAN_PKTPAT_MASK,
--			    DIV_ROUND_UP(pat_len, 8),
-+		if (nla_put(msg, NL80211_PKTPAT_MASK, DIV_ROUND_UP(pat_len, 8),
- 			    rdev->wowlan->patterns[i].mask) ||
--		    nla_put(msg, NL80211_WOWLAN_PKTPAT_PATTERN,
--			    pat_len, rdev->wowlan->patterns[i].pattern) ||
--		    nla_put_u32(msg, NL80211_WOWLAN_PKTPAT_OFFSET,
-+		    nla_put(msg, NL80211_PKTPAT_PATTERN, pat_len,
-+			    rdev->wowlan->patterns[i].pattern) ||
-+		    nla_put_u32(msg, NL80211_PKTPAT_OFFSET,
- 				rdev->wowlan->patterns[i].pkt_offset))
- 			return -ENOBUFS;
- 		nla_nest_end(msg, nl_pat);
-@@ -7915,7 +7914,7 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 		struct nlattr *pat;
- 		int n_patterns = 0;
- 		int rem, pat_len, mask_len, pkt_offset;
--		struct nlattr *pat_tb[NUM_NL80211_WOWLAN_PKTPAT];
-+		struct nlattr *pat_tb[NUM_NL80211_PKTPAT];
- 
- 		nla_for_each_nested(pat, tb[NL80211_WOWLAN_TRIG_PKT_PATTERN],
- 				    rem)
-@@ -7934,26 +7933,25 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 
- 		nla_for_each_nested(pat, tb[NL80211_WOWLAN_TRIG_PKT_PATTERN],
- 				    rem) {
--			nla_parse(pat_tb, MAX_NL80211_WOWLAN_PKTPAT,
--				  nla_data(pat), nla_len(pat), NULL);
-+			nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
-+				  nla_len(pat), NULL);
- 			err = -EINVAL;
--			if (!pat_tb[NL80211_WOWLAN_PKTPAT_MASK] ||
--			    !pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN])
-+			if (!pat_tb[NL80211_PKTPAT_MASK] ||
-+			    !pat_tb[NL80211_PKTPAT_PATTERN])
- 				goto error;
--			pat_len = nla_len(pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN]);
-+			pat_len = nla_len(pat_tb[NL80211_PKTPAT_PATTERN]);
- 			mask_len = DIV_ROUND_UP(pat_len, 8);
--			if (nla_len(pat_tb[NL80211_WOWLAN_PKTPAT_MASK]) !=
--			    mask_len)
-+			if (nla_len(pat_tb[NL80211_PKTPAT_MASK]) != mask_len)
- 				goto error;
- 			if (pat_len > wowlan->pattern_max_len ||
- 			    pat_len < wowlan->pattern_min_len)
- 				goto error;
- 
--			if (!pat_tb[NL80211_WOWLAN_PKTPAT_OFFSET])
-+			if (!pat_tb[NL80211_PKTPAT_OFFSET])
- 				pkt_offset = 0;
- 			else
- 				pkt_offset = nla_get_u32(
--					pat_tb[NL80211_WOWLAN_PKTPAT_OFFSET]);
-+					pat_tb[NL80211_PKTPAT_OFFSET]);
- 			if (pkt_offset > wowlan->max_pkt_offset)
- 				goto error;
- 			new_triggers.patterns[i].pkt_offset = pkt_offset;
-@@ -7967,11 +7965,11 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 			new_triggers.patterns[i].pattern =
- 				new_triggers.patterns[i].mask + mask_len;
- 			memcpy(new_triggers.patterns[i].mask,
--			       nla_data(pat_tb[NL80211_WOWLAN_PKTPAT_MASK]),
-+			       nla_data(pat_tb[NL80211_PKTPAT_MASK]),
- 			       mask_len);
- 			new_triggers.patterns[i].pattern_len = pat_len;
- 			memcpy(new_triggers.patterns[i].pattern,
--			       nla_data(pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN]),
-+			       nla_data(pat_tb[NL80211_PKTPAT_PATTERN]),
- 			       pat_len);
- 			i++;
- 		}
+
 -- 
-1.8.0
-
+Regards,
+Oleksij
