@@ -1,177 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rrcs-24-73-230-86.se.biz.rr.com ([24.73.230.86]:39189 "EHLO
-	stuffed.shaftnet.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754647Ab3EYAFj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 20:05:39 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 13/14] cw1200: v7: Module containing platform data for Sagrad SG901-1091/1098 devices
-Date: Fri, 24 May 2013 20:04:50 -0400
-Message-Id: <1369440291-8961-14-git-send-email-pizza@shaftnet.org> (sfid-20130525_022936_439386_71A3753F)
-In-Reply-To: <1369440291-8961-1-git-send-email-pizza@shaftnet.org>
-References: <1369440291-8961-1-git-send-email-pizza@shaftnet.org>
+Received: from mout.gmx.net ([212.227.17.22]:52207 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751000Ab3EDGWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 May 2013 02:22:09 -0400
+Received: from mailout-de.gmx.net ([10.1.76.24]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0ME0gb-1UncI30bRX-00HMfs for
+ <linux-wireless@vger.kernel.org>; Sat, 04 May 2013 08:22:08 +0200
+Message-ID: <5184A90D.4080205@rempel-privat.de> (sfid-20130504_082217_202001_0078CA68)
+Date: Sat, 04 May 2013 08:22:05 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	radiotap@NetBSD.org
+Subject: Patch for radiotap library
+References: <1367527479.11375.19.camel@jlt4.sipsolutions.net> <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
+In-Reply-To: <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
+Content-Type: multipart/mixed;
+ boundary="------------040800000308070105090202"
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/cw1200/cw1200_sagrad.c | 145 ++++++++++++++++++++++++++++
- 1 file changed, 145 insertions(+)
- create mode 100644 drivers/net/wireless/cw1200/cw1200_sagrad.c
+This is a multi-part message in MIME format.
+--------------040800000308070105090202
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/net/wireless/cw1200/cw1200_sagrad.c b/drivers/net/wireless/cw1200/cw1200_sagrad.c
-new file mode 100644
-index 0000000..a5ada0e
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/cw1200_sagrad.c
-@@ -0,0 +1,145 @@
-+/*
-+ * Platform glue data for ST-Ericsson CW1200 driver
-+ *
-+ * Copyright (c) 2013, Sagrad, Inc
-+ * Author: Solomon Peachy <speachy@sagrad.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/cw1200_platform.h>
-+
-+MODULE_AUTHOR("Solomon Peachy <speachy@sagrad.com>");
-+MODULE_DESCRIPTION("ST-Ericsson CW1200 Platform glue driver");
-+MODULE_LICENSE("GPL");
-+
-+/* Define just one of these.  Feel free to customize as needed */
-+#define SAGRAD_1091_1098_EVK_SDIO
-+/* #define SAGRAD_1091_1098_EVK_SPI */
-+
-+#ifdef SAGRAD_1091_1098_EVK_SDIO
-+#if 0
-+static struct resource cw1200_href_resources[] = {
-+	{
-+		.start = 215,  /* fix me as appropriate */
-+		.end = 215,    /* ditto */
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_reset",
-+	},
-+	{
-+		.start = 216,  /* fix me as appropriate */
-+		.end = 216,    /* ditto */
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_powerup",
-+	},
-+	{
-+		.start = NOMADIK_GPIO_TO_IRQ(216), /* fix me as appropriate */
-+		.end = NOMADIK_GPIO_TO_IRQ(216),   /* ditto */
-+		.flags = IORESOURCE_IRQ,
-+		.name = "cw1200_wlan_irq",
-+	},
-+};
-+#endif
-+
-+static int cw1200_power_ctrl(const struct cw1200_platform_data_sdio *pdata,
-+			     bool enable)
-+{
-+	/* Control 3v3 and 1v8 to hardware as appropriate */
-+	/* Note this is not needed if it's controlled elsewhere or always on */
-+
-+	/* May require delay for power to stabilize */
-+	return 0;
-+}
-+
-+static int cw1200_clk_ctrl(const struct cw1200_platform_data_sdio *pdata,
-+			   bool enable)
-+{
-+	/* Turn CLK_32K off and on as appropriate. */
-+	/* Note this is not needed if it's always on */
-+
-+	/* May require delay for clock to stabilize */
-+	return 0;
-+}
-+
-+static struct cw1200_platform_data_sdio cw1200_platform_data = {
-+	.ref_clk = 38400,
-+	.have_5ghz = false,
-+#if 0
-+	.reset = &cw1200_href_resources[0],
-+	.powerup = &cw1200_href_resources[1],
-+	.irq = &cw1200_href_resources[2],
-+#endif
-+	.power_ctrl = cw1200_power_ctrl,
-+	.clk_ctrl = cw1200_clk_ctrl,
-+/*	.macaddr = ??? */
-+	.sdd_file = "sdd_sagrad_1091_1098.bin",
-+};
-+#endif
-+
-+#ifdef SAGRAD_1091_1098_EVK_SPI
-+/* Note that this is an example of integrating into your board support file */
-+static struct resource cw1200_href_resources[] = {
-+	{
-+		.start = GPIO_RF_RESET,
-+		.end = GPIO_RF_RESET,
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_reset",
-+	},
-+	{
-+		.start = GPIO_RF_POWERUP,
-+		.end = GPIO_RF_POWERUP,
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_powerup",
-+	},
-+};
-+
-+static int cw1200_power_ctrl(const struct cw1200_platform_data_spi *pdata,
-+			     bool enable)
-+{
-+	/* Control 3v3 and 1v8 to hardware as appropriate */
-+	/* Note this is not needed if it's controlled elsewhere or always on */
-+
-+	/* May require delay for power to stabilize */
-+	return 0;
-+}
-+static int cw1200_clk_ctrl(const struct cw1200_platform_data_spi *pdata,
-+			   bool enable)
-+{
-+	/* Turn CLK_32K off and on as appropriate. */
-+	/* Note this is not needed if it's always on */
-+
-+	/* May require delay for clock to stabilize */
-+	return 0;
-+}
-+
-+static struct cw1200_platform_data_spi cw1200_platform_data = {
-+	.ref_clk = 38400,
-+	.spi_bits_per_word = 16,
-+	.reset = &cw1200_href_resources[0],
-+	.powerup = &cw1200_href_resources[1],
-+	.power_ctrl = cw1200_power_ctrl,
-+	.clk_ctrl = cw1200_clk_ctrl,
-+/*	.macaddr = ??? */
-+	.sdd_file = "sdd_sagrad_1091_1098.bin",
-+};
-+static struct spi_board_info myboard_spi_devices[] __initdata = {
-+	{
-+		.modalias = "cw1200_wlan_spi",
-+		.max_speed_hz = 10000000, /* 52MHz Max */
-+		.bus_num = 0,
-+		.irq = WIFI_IRQ,
-+		.platform_data = &cw1200_platform_data,
-+		.chip_select = 0,
-+	},
-+};
-+#endif
-+
-+
-+const void *cw1200_get_platform_data(void)
-+{
-+	return &cw1200_platform_data;
-+}
-+EXPORT_SYMBOL_GPL(cw1200_get_platform_data);
+Am 03.05.2013 21:53, schrieb Oleksij Rempel:
+> Here are two series of patches. First are kernel patches
+> and ath9k driver patch.
+> Second, is patch for tcpdump.
+>
+> All of them was tested for 1,2 and 3 stream scenarious.
+> Sinse i do not have hardware which can recive more than 1 STBC
+> stream, i did some hacks to to produce this kind of captures.
+>
+> Oleksij Rempel (3):
+>    mac80211: add STBC flag for radiotap
+>    ath9k: remove useless flag conversation.
+>    ath9k: check for Rx-STBC flag and pass it to ieee80211
+
+One more patch for radiotap lib.
+
 -- 
-1.8.1.4
+Regards,
+Oleksij
 
+--------------040800000308070105090202
+Content-Type: text/x-patch;
+ name="0001-radiotap-add-STBC-Rx-fields.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-radiotap-add-STBC-Rx-fields.patch"
+
+>From cf3cea707b5766d822ae595cc75849efa78cdb1e Mon Sep 17 00:00:00 2001
+From: Oleksij Rempel <linux@rempel-privat.de>
+Date: Sat, 4 May 2013 08:19:07 +0200
+Subject: [PATCH] radiotap: add STBC Rx fields.
+
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ radiotap.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/radiotap.h b/radiotap.h
+index a566024..2538433 100644
+--- a/radiotap.h
++++ b/radiotap.h
+@@ -267,6 +267,7 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_HAVE_GI		0x04
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FMT		0x08
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FEC		0x10
++#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	0x20
+ 
+ #define IEEE80211_RADIOTAP_MCS_BW_MASK		0x03
+ #define		IEEE80211_RADIOTAP_MCS_BW_20	0
+@@ -276,5 +277,10 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_SGI		0x04
+ #define IEEE80211_RADIOTAP_MCS_FMT_GF		0x08
+ #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
++#define IEEE80211_RADIOTAP_MCS_STBC_MASK	0x60
++#define		IEEE80211_RADIOTAP_MCS_STBC_1	1
++#define		IEEE80211_RADIOTAP_MCS_STBC_2	2
++#define		IEEE80211_RADIOTAP_MCS_STBC_3	3
++#define IEEE80211_RADIOTAP_MCS_STBC_SHIFT	5
+ 
+ #endif				/* IEEE80211_RADIOTAP_H */
+-- 
+1.8.1.2
+
+
+--------------040800000308070105090202--
