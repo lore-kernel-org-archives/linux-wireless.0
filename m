@@ -1,83 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f172.google.com ([209.85.216.172]:64068 "EHLO
-	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753365Ab3EUMyT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 May 2013 08:54:19 -0400
-Received: by mail-qc0-f172.google.com with SMTP id z1so304595qcx.3
-        for <linux-wireless@vger.kernel.org>; Tue, 21 May 2013 05:54:18 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, IvDoorn@gmail.com, gwingerde@gmail.com,
-	stf_xl@wp.pl, Helmut Schaa <helmut.schaa@googlemail.com>,
-	Alessandro Lannocca <alessandro.lannocca@gmail.com>,
-	Bruno Randolf <br1@thinktube.com>
-Subject: [PATCH] mac80211: Allow single vif mac address change with addr_mask
-Date: Tue, 21 May 2013 14:54:53 +0200
-Message-Id: <1369140893-22622-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20130521_145422_616063_3B409A2A)
+Received: from mout.gmx.net ([212.227.17.21]:61392 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753576Ab3EDHdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 May 2013 03:33:13 -0400
+Received: from mailout-de.gmx.net ([10.1.76.30]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MYqOT-1V4AjD0qJ9-00Vjcc for
+ <linux-wireless@vger.kernel.org>; Sat, 04 May 2013 09:33:12 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2] ath9k_htc: add STBC TX support
+Date: Sat,  4 May 2013 09:33:06 +0200
+Message-Id: <1367652786-6282-1-git-send-email-linux@rempel-privat.de> (sfid-20130504_093328_175185_F4A33824)
+In-Reply-To: <CAJ-Vmo=XYK=Jkc40U_vJO03n+tiA_LDpw8e1QKYRX6-+E9o4fA@mail.gmail.com>
+References: <CAJ-Vmo=XYK=Jkc40U_vJO03n+tiA_LDpw8e1QKYRX6-+E9o4fA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When changing the MAC address of a single vif mac80211 will check if the new
-address fits into the address mask specified by the driver. This only needs
-to be done when using multiple BSSIDs. Hence, check the new address only
-against all other vifs.
+current firmware will enable STBC_TX, only if other peer support it.
+This patch provide ht_peer_caps to firmware.
+FW versions 1.3, 1.4 should be able to work with it.
+Tested on ar7010+ar9280 and ar7010+ar9287.
 
-Resolves:
-https://bugzilla.kernel.org/show_bug.cgi?id=57371
+- v2. Use one bit instead of two for RX STBC flags.
 
-Reported-by: Alessandro Lannocca <alessandro.lannocca@gmail.com>
-Cc: Alessandro Lannocca <alessandro.lannocca@gmail.com>
-Cc: Bruno Randolf <br1@thinktube.com>
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- net/mac80211/iface.c |   16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          | 3 +++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 3 +++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
+ 3 files changed, 10 insertions(+)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 60f1ce5..c1a8c79 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -159,9 +159,10 @@ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index d3b099d..037e9b8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -142,6 +142,9 @@ struct ath9k_htc_target_aggr {
+ #define WLAN_RC_40_FLAG  0x02
+ #define WLAN_RC_SGI_FLAG 0x04
+ #define WLAN_RC_HT_FLAG  0x08
++#define WLAN_RC_TX_STBC_FLAG 0x20 /* TX STBC */
++/* RX STBC. Warning! FW checks for 0xC0. But we support only 1 stream anyway */
++#define WLAN_RC_RX_STBC_FLAG 0x40
  
--static int ieee80211_verify_mac(struct ieee80211_local *local, u8 *addr)
-+static int ieee80211_verify_mac(struct ieee80211_sub_if_data *sdata, u8 *addr)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_sub_if_data *iter;
- 	u64 new, mask, tmp;
- 	u8 *m;
- 	int ret = 0;
-@@ -181,11 +182,14 @@ static int ieee80211_verify_mac(struct ieee80211_local *local, u8 *addr)
+ struct ath9k_htc_rateset {
+ 	u8 rs_nrates;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index a47f5e0..c79c5ac 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -517,6 +517,9 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
+ 	ath_dbg(common, CONFIG, "TX streams %d, RX streams: %d\n",
+ 		tx_streams, rx_streams);
  
- 
- 	mutex_lock(&local->iflist_mtx);
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
-+	list_for_each_entry(iter, &local->interfaces, list) {
-+		if (iter == sdata)
-+			continue;
++	if (tx_streams >= 2)
++		ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
 +
-+		if (iter->vif.type == NL80211_IFTYPE_MONITOR)
- 			continue;
+ 	if (tx_streams != rx_streams) {
+ 		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
+ 		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 0743a47..af08b4a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -623,6 +623,10 @@ static void ath9k_htc_setup_rate(struct ath9k_htc_priv *priv,
+ 		trate->rates.ht_rates.rs_nrates = j;
  
--		m = sdata->vif.addr;
-+		m = iter->vif.addr;
- 		tmp =	((u64)m[0] << 5*8) | ((u64)m[1] << 4*8) |
- 			((u64)m[2] << 3*8) | ((u64)m[3] << 2*8) |
- 			((u64)m[4] << 1*8) | ((u64)m[5] << 0*8);
-@@ -209,7 +213,7 @@ static int ieee80211_change_mac(struct net_device *dev, void *addr)
- 	if (ieee80211_sdata_running(sdata))
- 		return -EBUSY;
- 
--	ret = ieee80211_verify_mac(sdata->local, sa->sa_data);
-+	ret = ieee80211_verify_mac(sdata, sa->sa_data);
- 	if (ret)
- 		return ret;
- 
+ 		caps = WLAN_RC_HT_FLAG;
++		if (sta->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC)
++			caps |= WLAN_RC_RX_STBC_FLAG;
++		if (sta->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC)
++			caps |= WLAN_RC_TX_STBC_FLAG;
+ 		if (sta->ht_cap.mcs.rx_mask[1])
+ 			caps |= WLAN_RC_DS_FLAG;
+ 		if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
 -- 
-1.7.10.4
+1.8.1.2
 
