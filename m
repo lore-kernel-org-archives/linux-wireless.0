@@ -1,94 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:45042 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750825Ab3E3Wwj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 18:52:39 -0400
-Date: Thu, 30 May 2013 19:52:32 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2013-05-30
-Message-ID: <20130530225232.GB14083@joana> (sfid-20130531_005300_871639_E6D9FF8C)
+Received: from mout.gmx.net ([212.227.17.22]:58509 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753829Ab3EDLIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 May 2013 07:08:14 -0400
+Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0M6hJq-1UK5px0WUG-00wW0g for
+ <linux-wireless@vger.kernel.org>; Sat, 04 May 2013 13:08:13 +0200
+Message-ID: <5184EC19.9060206@rempel-privat.de> (sfid-20130504_130826_353696_59EF1C3A)
+Date: Sat, 04 May 2013 13:08:09 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ZPt4rx8FFjLCG7dd"
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Adrian Chadd <adrian@freebsd.org>, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH 1/2] ath9k_htc: add STBC TX support
+References: <1367482308-9882-1-git-send-email-linux@rempel-privat.de> <1367482308-9882-2-git-send-email-linux@rempel-privat.de> <CAJ-Vmo=rZrHmXD0Os-Mb40jSEywbO-7GHSqL=7iMbkzAfS=+UQ@mail.gmail.com> <5182A341.8050704@rempel-privat.de> <5182A9DC.6030203@openwrt.org> <CAJ-Vmo=XYK=Jkc40U_vJO03n+tiA_LDpw8e1QKYRX6-+E9o4fA@mail.gmail.com> <5184AFC2.8060101@rempel-privat.de> <5184DCCF.9010009@openwrt.org>
+In-Reply-To: <5184DCCF.9010009@openwrt.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am 04.05.2013 12:02, schrieb Felix Fietkau:
+> On 2013-05-04 8:50 AM, Oleksij Rempel wrote:
+>> Am 02.05.2013 22:15, schrieb Adrian Chadd:
+>>> Well, let's dig into the firmware a bit more and tidy up how STBC is handled.
+>>
+>> Does it mean, i should change this patch and provide a patch for
+>> firmware too?
+>> I still do not think, changing peer caps i a good idea in any case.
+>> I mena this part of patch:
+>> +               if (sta->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC)
+>> +                       caps |= WLAN_RC_TX_STBC_FLAG;
+>>
+>>
+>> Behaviour with this patch will be fallowing:
+>> - peer provide caps, even if it is RX-STBC12
+>> - we pass this information to firmware and ratecontroller of FW, do
+>> right decision based on hardware it has.
+>>
+>> You suggestion, if i understand it correctly, is to filter caps:
+>> - if peer provide more than we can, we should tell firmware the value
+>> what we can. So, if peer say it can RX-STBC12, we should tell firmware
+>> that peer is RX-STBC1.
+>> In my opinion, this kind of filter is a source for hidden errors.
+> I think the discussion regarding RX-STBC12 vs RX-STBC1 is purely
+> hypothetical. The hardware that this firmware was designed for only
+> supports sending STBC for MCS0-7. This will not change.
+>
+> Also, there's no reason to tell the firmware about both rx and tx STBC
+> capabilities, the only thing it needs to know is what tells the rate
+> control part to enable/disable STBC.
 
---ZPt4rx8FFjLCG7dd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+As you can see, in version 2 of this path there was no more discussion 
+about it. I just did it.
 
-Hi John,
+> In addition to that, using the WLAN_RC_* flags is wrong, you need to use
+> the ATH_RC_* flags, as this is what ath_rate_newassoc_11n checks for in
+> the firmware.
 
-The following patches are important bug fixes for 3.10, plus the support for a
-new device. We do have three fixes from Johan. The first one is a fix to avoid
-LE-only devices to rely on the (inexistent) extended features data. The second
-patch fixes length checks on incoming L2CAP signalling PDUs so we can discard
-PDU whose size doesn't match the one reported in the header.
-The last one fixes the handling of power on failures, we now report proper
-errors to mgmt when hci_dev_open().
+Renamed.
 
-Please pull or let me know of any issues! Thanks.
+> The only STBC related flag that actually gets used (when
+> passed from the driver) is ATH_RC_RX_STBC_FLAG.
 
-	Gustavo
-
----
-
-The following changes since commit f942d116b80feb3ae618a0d8ce2df6e853526d3c:
-
-  brcmsmac: fix regression observed in 3.10-rc1 (2013-05-29 14:46:51 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-
-for you to fetch changes up to 0f9e216b0e12971af8a1d39c98c353c76533283b:
-
-  Bluetooth: Fix mgmt handling of power on failures (2013-05-30 18:36:08 -0300)
-
-----------------------------------------------------------------
-Bing Zhao (1):
-      Bluetooth: btmrvl: support Marvell Bluetooth device SD8897
-
-Johan Hedberg (3):
-      Bluetooth: Fix checks for LE support on LE-only controllers
-      Bluetooth: Fix missing length checks for L2CAP signalling PDUs
-      Bluetooth: Fix mgmt handling of power on failures
-
- drivers/bluetooth/Kconfig        |  4 +--
- drivers/bluetooth/btmrvl_sdio.c  | 28 ++++++++++++++++++
- include/net/bluetooth/hci_core.h |  1 +
- include/net/bluetooth/mgmt.h     |  1 +
- net/bluetooth/hci_core.c         |  6 +++-
- net/bluetooth/l2cap_core.c       | 70 ++++++++++++++++++++++++++++++++------------
- net/bluetooth/mgmt.c             | 23 ++++++++++++++-
- net/bluetooth/smp.c              |  4 +--
- 8 files changed, 113 insertions(+), 24 deletions(-)
+Well, may be it is not used at the end. But it is present on some places 
+in the firmware.
+For example here:
+void
+rcSibUpdate_11n(struct ath_softc_tgt *sc, struct ath_node_target *pSib,
+                 A_UINT32 capflag, A_BOOL keepState, struct 
+ieee80211_rate  *pRateSet)
+{
+         rcSibUpdate_ht(sc,
+                        pSib,
+                        ((capflag & ATH_RC_DS_FLAG)   ? WLAN_RC_DS_FLAG 
+  : 0) |
+                        ((capflag & ATH_RC_HT40_SGI_FLAG)  ? 
+WLAN_RC_HT40_SGI_FLAG : 0) |
+                        ((capflag & ATH_RC_HT_FLAG)   ? WLAN_RC_HT_FLAG 
+  : 0) |
+                        ((capflag & ATH_RC_CW40_FLAG) ? WLAN_RC_40_FLAG 
+  : 0) |
+                        ((capflag & ATH_RC_TX_STBC_FLAG)   ? 
+WLAN_RC_STBC_FLAG  : 0),
+                        keepState,
+                        pRateSet);
 
 
---ZPt4rx8FFjLCG7dd
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRp9gwAAoJEPs3PUX4s20ozpEP/0rBewYThcZk/uSEA2lu1011
-eOaj7LXxiMKVKesNGrpbmDyPiVwy5MiQUthPt3DOGt9TSwHOO3zndlt9mCJtuqeg
-/yyhT2ApNyLN58sGfsg2mFYuq4TAlKjLOgjJxGdq0zLQo5Ip+T4dagFmdeYaMEgG
-agH+aIbmrBqU5/rz3YsTvDFbK4ww0roLuHtthVP7W4iFd5JwETSGn/u2xGbH3z7p
-X1p/3JvrGmen/fuTIhS1kfCeigKob9c/tXjTyjpS4pFzBZq4BIYxRYJmhnlri0Hv
-+8JKvfDA6cxyZ7Hsnr9W/ZkKPQmQw5xmqL7b+Ui2jnxf0HKnDYxd6aY62r1kELFZ
-cJfO6VicQXNcUbwuCnR/28DRJ2giKa7pZOzY9dq2r1OH0DJYn65+b4XetUBAD1Kk
-8gUFxks5/rYKNRt2tTEa6ZPFzcm0JqMEoZTpI1d2UDRvMKQoQiuytfLqGSW+5mAB
-wAArBED1kv6qxkpXUq1KPeWbQ3r4TpUZk38NhDqAn00BOWb4FMvNRwcqoPoq/iVS
-n2+CZw7tDqi192nWCrqSELkLRkP+03eh07XMzahDThk7lr32KFkJlJlJO1YbLa7z
-Zf/72A4BfKfUV4hJT2nppD42Ju6WVSkRvnI7ygGafinUIEVS8X079VOeuDUrAQSY
-xsSGZBcu3YAkwt/PHMso
-=hu5I
------END PGP SIGNATURE-----
-
---ZPt4rx8FFjLCG7dd--
+So, should i remove ATH_RC_TX_STBC_FLAG from my patch?
+-- 
+Regards,
+Oleksij
