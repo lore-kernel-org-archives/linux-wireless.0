@@ -1,116 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:50360 "EHLO mout.gmx.net"
+Received: from bues.ch ([80.190.117.144]:56707 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934031Ab3ECTyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 15:54:12 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0LtC3J-1USpUO00C3-012sm3 for
- <linux-wireless@vger.kernel.org>; Fri, 03 May 2013 21:54:11 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	radiotap@NetBSD.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 2/3] ath9k: remove useless flag conversation.
-Date: Fri,  3 May 2013 21:53:54 +0200
-Message-Id: <1367610836-3303-3-git-send-email-linux@rempel-privat.de> (sfid-20130503_215417_315707_54C3A125)
-In-Reply-To: <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
-References: <1367527479.11375.19.camel@jlt4.sipsolutions.net>
- <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
+	id S1751296Ab3EEN4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 May 2013 09:56:42 -0400
+Date: Sun, 5 May 2013 15:56:19 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Thommy Jakobsson <thommyj@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	piotras@gmail.com, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
+Message-ID: <20130505155619.1f316a6b@milhouse> (sfid-20130505_155656_381655_041128EA)
+In-Reply-To: <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com>
+References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
+	<CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/z6/NQOpPMHu/kVznsO3vy0S"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-some flags used only outside of ath9k - In this case we can use
-"enum mac80211_rx_flags" and pass it upstream without extra
-conversation.
+--Sig_/z6/NQOpPMHu/kVznsO3vy0S
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |  5 +++--
- drivers/net/wireless/ath/ath9k/mac.c        | 11 +++++++----
- drivers/net/wireless/ath/ath9k/mac.h        |  1 +
- drivers/net/wireless/ath/ath9k/recv.c       |  5 +----
- 4 files changed, 12 insertions(+), 10 deletions(-)
+On Sun, 5 May 2013 14:44:14 +0200
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 301bf72..5163abd 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -469,6 +469,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 
- 	rxs->rs_status = 0;
- 	rxs->rs_flags =  0;
-+	rxs->flag =  0;
- 
- 	rxs->rs_datalen = rxsp->status2 & AR_DataLen;
- 	rxs->rs_tstamp =  rxsp->status3;
-@@ -493,8 +494,8 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 	rxs->rs_isaggr = (rxsp->status11 & AR_RxAggr) ? 1 : 0;
- 	rxs->rs_moreaggr = (rxsp->status11 & AR_RxMoreAggr) ? 1 : 0;
- 	rxs->rs_antenna = (MS(rxsp->status4, AR_RxAntenna) & 0x7);
--	rxs->rs_flags  = (rxsp->status4 & AR_GI) ? ATH9K_RX_GI : 0;
--	rxs->rs_flags  |= (rxsp->status4 & AR_2040) ? ATH9K_RX_2040 : 0;
-+	rxs->flag  |= (rxsp->status4 & AR_GI) ? RX_FLAG_SHORT_GI : 0;
-+	rxs->flag  |= (rxsp->status4 & AR_2040) ? RX_FLAG_40MHZ : 0;
- 
- 	rxs->evm0 = rxsp->status6;
- 	rxs->evm1 = rxsp->status7;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 498fee0..a52081d 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -547,6 +547,7 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 
- 	rs->rs_status = 0;
- 	rs->rs_flags = 0;
-+	rs->flag = 0;
- 
- 	rs->rs_datalen = ads.ds_rxstatus1 & AR_DataLen;
- 	rs->rs_tstamp = ads.AR_RcvTimestamp;
-@@ -586,10 +587,12 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 	rs->rs_moreaggr =
- 		(ads.ds_rxstatus8 & AR_RxMoreAggr) ? 1 : 0;
- 	rs->rs_antenna = MS(ads.ds_rxstatus3, AR_RxAntenna);
--	rs->rs_flags =
--		(ads.ds_rxstatus3 & AR_GI) ? ATH9K_RX_GI : 0;
--	rs->rs_flags |=
--		(ads.ds_rxstatus3 & AR_2040) ? ATH9K_RX_2040 : 0;
-+
-+	/* directly mapped flags for ieee80211_rx_status */
-+	rs->flag |=
-+		(ads.ds_rxstatus3 & AR_GI) ? RX_FLAG_SHORT_GI : 0;
-+	rs->flag |=
-+		(ads.ds_rxstatus3 & AR_2040) ? RX_FLAG_40MHZ : 0;
- 
- 	if (ads.ds_rxstatus8 & AR_PreDelimCRCErr)
- 		rs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 5865f92..3f1e775 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -149,6 +149,7 @@ struct ath_rx_status {
- 	u32 evm2;
- 	u32 evm3;
- 	u32 evm4;
-+	u32 flag; /* see enum mac80211_rx_flags */
- };
- 
- struct ath_htc_rx_status {
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 8be2b5d..b4b758d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -868,10 +868,7 @@ static int ath9k_process_rate(struct ath_common *common,
- 	if (rx_stats->rs_rate & 0x80) {
- 		/* HT rate */
- 		rxs->flag |= RX_FLAG_HT;
--		if (rx_stats->rs_flags & ATH9K_RX_2040)
--			rxs->flag |= RX_FLAG_40MHZ;
--		if (rx_stats->rs_flags & ATH9K_RX_GI)
--			rxs->flag |= RX_FLAG_SHORT_GI;
-+		rxs->flag |= rx_stats->flag;
- 		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
- 		return 0;
- 	}
--- 
-1.8.1.2
+> 2013/4/23 Thommy Jakobsson <thommyj@gmail.com>:
+> > Add handling of rx descriptor underflow. This fixes a fault that could
+> > happen on slow machines, where data is received faster than the CPU can
+> > handle. In such a case the device will use up all rx descriptors and
+> > refuse to send any more data before confirming that it is ok. This
+> > patch enables necessary interrupt to discover such a situation and will
+> > handle them by dropping everything in the ring buffer.
+>=20
+> Thommy: does it mean firmware actually ignores what we write to the
+> B43_DMA64_RXINDEX (recently renamed to the B43_DMA64_RXSTOPINDEX)? Is
+> our set_current_rxslot and op64_set_current_rxslot (same for 32bit
+> version) useless in this situation?
+>=20
+> Could this be a off-by-one issue? Maybe we're writing a value too low
+> by a one and firmware believes the whole ring is empty while it's
+> full?
 
+The ring looks the same if it's full or empty. We can only know that it is
+full when this interrupt fires, which happens as the indexes collide.
+
+--=20
+Michael
+
+--Sig_/z6/NQOpPMHu/kVznsO3vy0S
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRhmUDAAoJEPUyvh2QjYsOcRkP/jvbvHqTZrO8mnSGa8uiuNjY
+33b+P/iTGhzWfSlpIyNtP9JVdyJTpgirUwK8qYnBt1kAxtzih6/Q+0BnrHCyuXwF
++NrLY4DjgT+2egw4dkHj1Ig7TR8adOs0B4acmx0UJSje6juOmRnGUNQCRXNz9NkP
+o7crh6xpz6W3v2Oo0PEM8bV3PYfRYMRmczZ9YrzZzw8XEYGHixB3X6uUH47RpbM1
+jf2yffHxOcmX23YOwVAX6jfFWke/l3h7rkswzeoQ0X/dUOZiN33RnXor9EL1W64H
+3CX++pq0exR/WP61yUWAkljQiMxNVA1slk8iUxtL5FxRKTHyfe+Wse3OI4vdZnjb
+auxo3/arCdEDITpMkz2z9c+N/3VCS8G92zDZRfGTL3SIHxitqZBe5wTuLXCHlHh3
+MeP+1ptoJ/W7LJ7dOIwwvh4NcrR0bLQWATd6qT8heXIQX+Jl2c7ddeOFhG3UgyNz
+48I4ZxMsuo0FTJunQMAn0+Dyym6GOoZP6+g0h4efn3qeIOux5TW4VPOpy3t6tKYC
+FnXLAF+H5z+MkbAB6wHF9lduAwhDqhZQkkRK7bXG9lT3zjAAKSRehVN3ZsF9K9Vz
+WPpK/SM9VIQPBrQxAwDJsoxij8ZVtnx42qR2zjpDlDUcvO9xydCmB7uab9EUHLY5
+3J5AGMbOVauOF7tS0xgw
+=l2pC
+-----END PGP SIGNATURE-----
+
+--Sig_/z6/NQOpPMHu/kVznsO3vy0S--
