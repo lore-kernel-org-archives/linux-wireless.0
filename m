@@ -1,104 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:48374 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554Ab3EaCJh (ORCPT
+Received: from mail-la0-f47.google.com ([209.85.215.47]:61487 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065Ab3EETJ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 22:09:37 -0400
-Received: by mail-pd0-f181.google.com with SMTP id bv13so1371384pdb.26
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:09:37 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 00/40] crda: reglib enhancements
-Date: Thu, 30 May 2013 19:08:49 -0700
-Message-Id: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_040942_650620_C8749B0F)
+	Sun, 5 May 2013 15:09:57 -0400
+Received: by mail-la0-f47.google.com with SMTP id fh20so2733986lab.6
+        for <linux-wireless@vger.kernel.org>; Sun, 05 May 2013 12:09:55 -0700 (PDT)
+Date: Sun, 5 May 2013 21:09:47 +0200 (CEST)
+From: Thommy Jakobsson <thommyj@gmail.com>
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, m@bues.ch, piotras@gmail.com,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
+In-Reply-To: <CACna6rwc-XPXJcbk=oEJh=+nTaQrV3-UPwfsNODQpB9gtkktkg@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1305052104410.1284@kelly.ryd.net> (sfid-20130505_211012_303942_BBB86FA3)
+References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net> <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com> <CACna6rwc-XPXJcbk=oEJh=+nTaQrV3-UPwfsNODQpB9gtkktkg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-I've hinted I've been working towards a regdb regulatory
-library. This pushes that idea further as I was inclined
-recently to develop a union algorithm and saw we still
-had quite a bit of work to be able to share more consistently.
 
-I'll likely be using the intersection code as basis for this
-and as such I've cleaned that up and also ran valgrind over
-most of the code. I believe I've fixed all reglib memory
-related issues the rest of things valgrind bitches about
-are due to netlink.
+On Sun, 5 May 2013, Rafa? Mi?ecki wrote:
 
-mcgrof@frijol ~ $ cat .valgrindrc 
---memcheck:leak-check=full
---memcheck:leak-resolution=high
---memcheck:show-reachable=yes
---memcheck:num-callers=50
+> 2013/5/5 Rafa? Mi?ecki <zajec5@gmail.com>:
+> > 2013/4/23 Thommy Jakobsson <thommyj@gmail.com>:
+> >> Add handling of rx descriptor underflow. This fixes a fault that could
+> >> happen on slow machines, where data is received faster than the CPU can
+> >> handle. In such a case the device will use up all rx descriptors and
+> >> refuse to send any more data before confirming that it is ok. This
+> >> patch enables necessary interrupt to discover such a situation and will
+> >> handle them by dropping everything in the ring buffer.
+> >
+> > Thommy: does it mean firmware actually ignores what we write to the
+> > B43_DMA64_RXINDEX (recently renamed to the B43_DMA64_RXSTOPINDEX)? Is
+> > our set_current_rxslot and op64_set_current_rxslot (same for 32bit
+> > version) useless in this situation?
+> 
+> I've done some tests with this register. First I've added simple debugging:
+> 
+> [  326.496207] [DBG] old current:0      new current:1
+> [  326.496215] [DBG] reading slot 0
+> [  326.496237] [DBG] writing stop slot 1
+> 
+> [  326.921657] [DBG] old current:1      new current:2
+> [  326.921665] [DBG] reading slot 1
+> [  326.921691] [DBG] writing stop slot 2
+> 
+> I'm not sure how does it work. If we write 1 to RXSTOPINDEX it means
+> firmware should not use slot "1", right? But then it'll IRQ and
+> "current" will be 2 meaning there is a packet on slot 1.
+> So I'm not sure anymore meaning of that index register.
 
-If this looks OK I'll next start working towards the union
-code. The purpose of this is two fold:
+See that this got stuck in my outbox, sorry. Michael already answered the 
+question I think, but I send it anyway.
 
-Help build regulatory domains out of arbitrary custom
-regulatory definitions and to also allow us to build
-more thorough world regulatory domains that have passive
-scan flags on regulatory rules that are do not fit the
-intersection.
 
-Luis R. Rodriguez (40):
-  crda: make reg_rules_intersect() style match Linux
-  crda: port over Linux is_valid_reg_rule() change bd05f28e
-  crda: remove verbose errors out of regdom_intersect()
-  crda: constify usage of struct ieee80211_regdomain
-  crda: remove unused BUG_ON() from intersect.c
-  crda: move regdom_intersect() to reglib
-  crda: fix regression when using reglib_for_each_country()
-  crda: move intersection if first attempt failed
-  crda: do not double count on reglib_for_each_country()
-  crda: annotate intersection worst case scenerio
-  crda: fix intersect.c memory management
-  crda: explicitly munmap() on reglib_get_rd_alpha2()
-  crda: explicitly close file descriptor and munmap() on failures
-  crda: separate crda_verify_db_signature() implementations
-  crda: use gcry_sexp_release() on crda_verify_db_signature()
-  crda: explicitly use close() and munmap() on reglib_get_rd_alpha2()
-  crda: use gcry_mpi_release() when using gcry_mpi_scan()
-  crda: rename world and prev_world on intersect.c
-  crda: remove verbosity out of intersect.c
-  crda: rename regdom_intersect() to reglib_intersect_rds()
-  crda: rename crda_get_file_ptr() to reglib_get_file_ptr()
-  crda: rename crda_verify_db_signature() to
-    reglib_verify_db_signature()
-  crda: rename print_regdom() to reglib_print_regdom()
-  crda: add regdb_dfs_regions
-  crda: make print-regdom use internal flags
-  crda: move reg print helpers to reglib
-  crda: rename is_world_regdom() to reglib_is_world_regdom()
-  crda: rename isalpha_upper() to reglib_isalpha_upper()
-  crda: rename is_alpha2() to reglib_is_alpha2()
-  crda: rename is_valid_regdom() to reglib_is_valid_regdom()
-  crda: rename max() to reglib_max()
-  crda: rename min() to reglib_min()
-  crda: fix spacing on reglib_for_each_country()
-  crda: clarify intersect.c only computes an intersection
-  crda: separate intersecting a full db into a helper
-  crda: move reglib_intersect_regdb() to reglib
-  crda: move regdbprint to its own helper
-  crda: add reglib regdb context helpers:
-    reglib_(malloc|free)_regdb_ctx()
-  crda: pass struct reglib_regdb_ctx to country2rd()
-  crda: make reglib_for_each_country() use the reglib context
+If we write 1 to rxstopindex it means stop when you reach that index. The 
+difference in the normal loop is that the device has already marked what 
+we write to RXSTOPINDEX as current. One cannot remove a slot from the 
+firmware.
 
- Makefile       |    4 +-
- crda.c         |   14 +-
- intersect.c    |  264 ++---------------------------
- print-regdom.c |   81 ---------
- regdb.h        |   24 ++-
- regdbdump.c    |   30 +++-
- reglib.c       |  518 +++++++++++++++++++++++++++++++++++++++++++++-----------
- reglib.h       |  125 +++++++++++---
- 8 files changed, 589 insertions(+), 471 deletions(-)
- delete mode 100644 print-regdom.c
+//Thommy
 
--- 
-1.7.10.4
 
