@@ -1,44 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:34666 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753785Ab3EaUwM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 May 2013 16:52:12 -0400
-Received: by mail-ob0-f178.google.com with SMTP id fb19so3832072obc.23
-        for <linux-wireless@vger.kernel.org>; Fri, 31 May 2013 13:52:11 -0700 (PDT)
-Date: Fri, 31 May 2013 16:51:17 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: Another try at getting pktgen to work with wifi.
-Message-ID: <20130531205117.GA27551@localhost> (sfid-20130531_225216_006753_CFFCBFBF)
-References: <51A79E4A.7000609@candelatech.com>
- <51A7B049.9090201@openwrt.org>
- <51A7BA63.4080403@candelatech.com>
- <51A857BF.7070008@openwrt.org>
- <51A8DC1C.1040908@candelatech.com>
- <1370021846.14117.13.camel@jlt4.sipsolutions.net>
- <51A8E53E.8030101@candelatech.com>
- <1370025698.14117.15.camel@jlt4.sipsolutions.net>
- <51A8F141.5050804@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51A8F141.5050804@candelatech.com>
+Received: from bues.ch ([80.190.117.144]:56819 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752023Ab3EET6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 May 2013 15:58:19 -0400
+Date: Sun, 5 May 2013 21:58:00 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Thommy Jakobsson <thommyj@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	piotras@gmail.com, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
+Message-ID: <20130505215800.65ae7aea@milhouse> (sfid-20130505_215822_945607_4A8C695A)
+In-Reply-To: <CACna6rz+PsN1GyniJL7JZJmb7T6Fnk_g101M8DeePr29LsAXaA@mail.gmail.com>
+References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
+	<CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com>
+	<CACna6rwk0akD0x+sWTmjDDoaQqF0Y=NQ58rzqgZH92GCug6CeQ@mail.gmail.com>
+	<CACna6ry+F45PhCXahPpJtzu-w+vLE29ksHo9njXfTcfY3Av6LA@mail.gmail.com>
+	<20130505192405.0cf4350e@milhouse>
+	<CACna6rz+PsN1GyniJL7JZJmb7T6Fnk_g101M8DeePr29LsAXaA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/AmY5NkYK6eft/GXb_OHDW/6"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 31, 2013 at 11:51:45AM -0700, Ben Greear wrote:
-> cfg80211_classify8021d uses it to determine the queue in if skb->priority is
-> set to a special range (hard coded un-documented hack from hell, it appears).
-> 
-> I didn't go looking to find out where those magic values might be set.
+--Sig_/AmY5NkYK6eft/GXb_OHDW/6
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Actually, this hard coded hack from hell is documented :)
+On Sun, 5 May 2013 21:50:33 +0200
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-http://wireless.kernel.org/en/developers/Documentation/mac80211/queues?highlight=%28so_priority%29
+> 2013/5/5 Michael B=C3=BCsch <m@bues.ch>:
+> > On Sun, 5 May 2013 18:31:20 +0200
+> > Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+> >
+> >> Still worth considering is my previous e-mail. Why writing (for
+> >> example) 1 to RXSTOPINDEX doesn't stop firmware from using slot 1?
+> >
+> > What makes you think this register does not work?
+>=20
+> Take a look at this:
+>=20
+> [  327.224976] [DBG] old current:5      new current:6
+> [  327.224982] [DBG] reading slot 5
+> [  327.224997] [DBG] writing stop slot 6
+>=20
+> In above ring->slot was 5, but IRQ was generated, and we read new
+> "current" using get_current_rxslot. It appeared to be 6. So we read
+> packet from slot 5 and then called
+> ops->set_current_rxslot(ring, 6);
+> AFAIU hardware shouldn't use slot 6, right? But take a look at what
+> happens next:
+>=20
+> [  327.319582] [DBG] old current:6      new current:7
+> [  327.319590] [DBG] reading slot 6
+> [  327.319619] [DBG] writing stop slot 7
+>=20
+> Hardware generated IRQ and we get_current_rxslot returned 7. It means
+> we're allowed to read slots up to 7 (excluding). It other words it
+> means firmware used slot 6... but 100ms earlier we forbid firmware to
+> use slot 6!
 
--- 
-Bob Copeland %% www.bobcopeland.com
+I'd rather say that this is a race condition between your testing code
+and the firmware.
+
+--=20
+Michael
+
+--Sig_/AmY5NkYK6eft/GXb_OHDW/6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRhrnIAAoJEPUyvh2QjYsOjeIP/jrcdjx0HTjWRZLOn4Vv0u97
+eAJPWY4PSrqynfNEH+J01YDOyqASkw+yCjCKcyhzZMgHWcLIJe7gJNmURKVEO4Fu
+1Q+bn9CcWwcUzyGOPM5zQlm3daKGm1Ax8jKg8VYipaV+fe/hfS+F1K0C8e6+vw7K
+F3Lr6VcJsNqp2mZO5Hb4klnSSyZeKRcTvUop3Po5F2aKaYnHq+qjzbhIvMNPEayX
+aUMmu6Lvy/zAyhUQ+c905iDDJ3waVqHgcPLmoA3BS2lWm3XxCdVUAM2IY4fduzbL
+263TXlbgh0F8QQKUG7A2mwwTfe51aGtdr5zDJd0O9FDaxA1nHKkifKJWNrnrjxvv
+SJiel1HVwiZjOo2QMB3c7VlZYl7cxryGo8DXHXTQek/4qANYc8l/g5JbBLAFaR0W
+/+D+qXUkydSOfY4BKKqtKxmXBy82CKUQd6AyClS9M2vL7FKq1iuEMCcnqYTZyYYl
+IGNdBcI7k7n6zkqmzDlf9aDt4NSi4M/yVZSR2E1WlZLTPIyZRmvbPuoxcbJfDkLm
+n9ni8gQWGkzvl6PQLwqNguF8XnvKTVequ63c1qSQGOGj8j7bWq0uJbIssYMzpnJa
+Zel8FioPRG1HdF++daUQ7+MT6OC610uFhjeqMBvQXlzD1DQiRWp8xV0ALSd2jt2+
+H/8NGcOiaZHZal3pFWJ+
+=D1Z2
+-----END PGP SIGNATURE-----
+
+--Sig_/AmY5NkYK6eft/GXb_OHDW/6--
