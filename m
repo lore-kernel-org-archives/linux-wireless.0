@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:36137 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932596Ab3EOOTf (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:38573 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767Ab3EEPn0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:19:35 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2 10/18] nl80211: allow 5 and 10 MHz channels for IBSS
-Date: Wed, 15 May 2013 16:19:01 +0200
-Message-Id: <1368627549-22518-11-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_162936_139311_38FAB3FF)
-In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Sun, 5 May 2013 11:43:26 -0400
+Received: by mail-oa0-f52.google.com with SMTP id h2so1438015oag.11
+        for <linux-wireless@vger.kernel.org>; Sun, 05 May 2013 08:43:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com>
+References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
+	<CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com>
+Date: Sun, 5 May 2013 17:43:25 +0200
+Message-ID: <CACna6rwk0akD0x+sWTmjDDoaQqF0Y=NQ58rzqgZH92GCug6CeQ@mail.gmail.com> (sfid-20130505_174329_013526_1820F9C7)
+Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Thommy Jakobsson <thommyj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, m@bues.ch, piotras@gmail.com,
+	Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whether the wiphy supports it or not is already checked, so what is left
-is to enable these channel types.
+2013/5/5 Rafał Miłecki <zajec5@gmail.com>:
+> 2013/4/23 Thommy Jakobsson <thommyj@gmail.com>:
+>> Add handling of rx descriptor underflow. This fixes a fault that could
+>> happen on slow machines, where data is received faster than the CPU can
+>> handle. In such a case the device will use up all rx descriptors and
+>> refuse to send any more data before confirming that it is ok. This
+>> patch enables necessary interrupt to discover such a situation and will
+>> handle them by dropping everything in the ring buffer.
+>
+> Thommy: does it mean firmware actually ignores what we write to the
+> B43_DMA64_RXINDEX (recently renamed to the B43_DMA64_RXSTOPINDEX)? Is
+> our set_current_rxslot and op64_set_current_rxslot (same for 32bit
+> version) useless in this situation?
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/wireless/nl80211.c |    2 ++
- 1 file changed, 2 insertions(+)
+I've also grab some old logs from BCM4311 from wl driver.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 75070da..a5f281a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6297,6 +6297,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 
- 	switch (ibss.chandef.width) {
-+	case NL80211_CHAN_WIDTH_5:
-+	case NL80211_CHAN_WIDTH_10:
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 		break;
- 	case NL80211_CHAN_WIDTH_20:
+DMA setup:
+write32 0xfaafc210 <- 0x0000083d	B43_DMA32_RXCTL
+write32 0xfaafc214 <- 0x5581e000	B43_DMA32_RXRING
+write32 0xfaafc218 <- 0x00000100	B43_DMA32_RXINDEX
+
+While running:
+
+ read32 0xfaafc21c -> 0x02001018	B43_DMA32_RXSTATUS
+ read32 0xfaafc21c -> 0x02001018	B43_DMA32_RXSTATUS
+ read32 0xfaafc180 -> 0x0006230f	
+ read32 0xfaafc184 -> 0x00000000	
+write32 0xfaafc218 <- 0x00000118	B43_DMA32_RXINDEX
+
+(...)
+
+ read32 0xfaafc21c -> 0x02801020	B43_DMA32_RXSTATUS
+ read32 0xfaafc21c -> 0x02801020	B43_DMA32_RXSTATUS
+ read32 0xfaafc180 -> 0x00064c28	
+ read32 0xfaafc184 -> 0x00000000	
+write32 0xfaafc218 <- 0x00000120	B43_DMA32_RXINDEX
+
+Interesting part is that they write amount of slots + slot index to
+the B43_DMA32_RXINDEX (like 0x120 instead of 0x20). May be worth
+investigating.
+
 -- 
-1.7.10.4
-
+Rafał
