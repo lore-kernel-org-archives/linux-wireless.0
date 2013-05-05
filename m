@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:36668 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757340Ab3EBPBx (ORCPT
+Received: from mail-qc0-f169.google.com ([209.85.216.169]:63330 "EHLO
+	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065Ab3EEUag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 11:01:53 -0400
-Received: by mail-ob0-f177.google.com with SMTP id un3so554444obb.36
-        for <linux-wireless@vger.kernel.org>; Thu, 02 May 2013 08:01:53 -0700 (PDT)
-Message-ID: <51827FDF.3060406@lwfinger.net> (sfid-20130502_170157_385010_8FF5350B)
-Date: Thu, 02 May 2013 10:01:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 5 May 2013 16:30:36 -0400
+Received: by mail-qc0-f169.google.com with SMTP id p9so1465492qca.14
+        for <linux-wireless@vger.kernel.org>; Sun, 05 May 2013 13:30:35 -0700 (PDT)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
-CC: Thommy Jakobsson <thommyj@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
-References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net> <20130502150603.2ac36385@milhouse>
-In-Reply-To: <20130502150603.2ac36385@milhouse>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CACaajQsf8cgG9DQ-QuWY5EqeUNq4RgX9CMgQ8bZi7s8UJzCE_g@mail.gmail.com>
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+ <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+ <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
+ <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
+ <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
+ <517199D4.9070702@broadcom.com> <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
+ <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com>
+ <517A427E.3010809@broadcom.com> <CACaajQsf8cgG9DQ-QuWY5EqeUNq4RgX9CMgQ8bZi7s8UJzCE_g@mail.gmail.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Mon, 6 May 2013 00:30:20 +0400
+Message-ID: <CACaajQuk359fYap=547qQ0r128bdCuzFCzR=iXgHNaaR_eTtow@mail.gmail.com> (sfid-20130505_223040_693087_1AB263EF)
+Subject: Re: very bad work of wl (bcm 43228)
+To: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Larry Finger <larry.finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2013 08:06 AM, Michael Büsch wrote:
-> On Tue, 23 Apr 2013 21:45:11 +0200 (CEST)
-> Thommy Jakobsson <thommyj@gmail.com> wrote:
->
->> From: Thommy Jakobsson <thommyj@gmail.com>
+2013/4/27 Vasiliy Tolstov <v.tolstov@selfip.ru>:
+> 2013/4/26 Arend van Spriel <arend@broadcom.com>:
+>> Not really. You could try disabling powersave. I am not very familiar with
+>> wl driver.
 >>
->> Add handling of rx descriptor underflow. This fixes a fault that could
->> happen on slow machines, where data is received faster than the CPU can
->> handle. In such a case the device will use up all rx descriptors and
->> refuse to send any more data before confirming that it is ok. This
->> patch enables necessary interrupt to discover such a situation and will
->> handle them by dropping everything in the ring buffer.
+>> $ iw dev wlanX power_save off
 >>
->> Reviewed-by: Michael Buesch <m@bues.ch>
->> Signed-off-by: Thommy Jakobsson <thommyj@gmail.com>
->> Cc: stable <stable@vger.kernel.org>
->
-> Anybody interested in porting this to b43legacy (and testing)?
-
-Michael,
-
-I will take care of that. It may take a while due to other projects.
-
-Larry
+>> Can you still provide lsusb and lspci for all devices?
+>>
+>> Gr. AvS
 
 
+Any news?
+
+--
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
