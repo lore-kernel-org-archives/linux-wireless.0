@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37876 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753858Ab3EJVZd (ORCPT
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:50540 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225Ab3EEMoQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 17:25:33 -0400
-Message-ID: <1368221128.8390.47.camel@jlt4.sipsolutions.net> (sfid-20130510_232536_076472_227AC420)
-Subject: Re: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting
- station.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 10 May 2013 23:25:28 +0200
-In-Reply-To: <518D64E6.8000102@candelatech.com>
-References: <5182C38B.7060107@candelatech.com>
-	   (sfid-20130502_215043_578677_76592D19) <1367526288.11375.2.camel@jlt4.sipsolutions.net>
-	  <5182D078.4020605@candelatech.com> <518A7AD4.2060100@candelatech.com>
-	 <1368035937.8279.25.camel@jlt4.sipsolutions.net>
-	 <518A9618.1020107@candelatech.com> <518D64E6.8000102@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 5 May 2013 08:44:16 -0400
+Received: by mail-oa0-f45.google.com with SMTP id o17so2761493oag.4
+        for <linux-wireless@vger.kernel.org>; Sun, 05 May 2013 05:44:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
+References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
+Date: Sun, 5 May 2013 14:44:14 +0200
+Message-ID: <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com> (sfid-20130505_144430_841385_78EBBC0C)
+Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Thommy Jakobsson <thommyj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, m@bues.ch, piotras@gmail.com,
+	Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-05-10 at 14:21 -0700, Ben Greear wrote:
+2013/4/23 Thommy Jakobsson <thommyj@gmail.com>:
+> Add handling of rx descriptor underflow. This fixes a fault that could
+> happen on slow machines, where data is received faster than the CPU can
+> handle. In such a case the device will use up all rx descriptors and
+> refuse to send any more data before confirming that it is ok. This
+> patch enables necessary interrupt to discover such a situation and will
+> handle them by dropping everything in the ring buffer.
 
-> void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
-> 			struct net_device *dev)
-> {
-> 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> 	struct cfg80211_deauth_request req;
-> 	u8 bssid[ETH_ALEN];
-> 
-> 	ASSERT_WDEV_LOCK(wdev);
-> 
-> 	printk("mlme_down: %s: type: %i  sme_state: %i current-bss: %p\n",
->                 dev->name, (int)(wdev->iftype), (int)(wdev->sme_state),
-> 	       wdev->current_bss);
-> 
-> I see this printout for the stuck station (this is dmesg | grep sta74,
-> so it skips errors about other interfaces that are also hung).
-> 
-> I am guessing we should never be calling mlme_down with state
-> of CFG80211_SME_CONNECTED when bss is NULL?
+Thommy: does it mean firmware actually ignores what we write to the
+B43_DMA64_RXINDEX (recently renamed to the B43_DMA64_RXSTOPINDEX)? Is
+our set_current_rxslot and op64_set_current_rxslot (same for 32bit
+version) useless in this situation?
 
-We should _never_ be in a state where current_bss is NULL but the state
-is != IDLE. The question I can't seem to find an answer for is how we
-got into that state, that we're in the state in down() is really less
-interesting.
+Could this be a off-by-one issue? Maybe we're writing a value too low
+by a one and firmware believes the whole ring is empty while it's
+full?
 
-Since you seem to be able to reproduce this, maybe it'd help to mark all
-state transitions and current_bss assignments, and then backtrack them
-after the fact.
+I think we may want turning this interrupt anyway, but I wonder if
+there is another issue we just hide a bit better.
 
-johannes
-
+-- 
+Rafał
