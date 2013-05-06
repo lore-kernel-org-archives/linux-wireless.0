@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:50773 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965404Ab3E2KPl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 06:15:41 -0400
-Received: by mail-pa0-f44.google.com with SMTP id wp1so6500325pac.31
-        for <linux-wireless@vger.kernel.org>; Wed, 29 May 2013 03:15:41 -0700 (PDT)
-From: Sachin Kamat <sachin.kamat@linaro.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, chunkeey@googlemail.com,
-	linville@tuxdriver.com, davem@davemloft.net,
-	sachin.kamat@linaro.org
-Subject: [PATCH 1/2] net: wireless: p54spi: Use module_spi_driver macro
-Date: Wed, 29 May 2013 15:31:40 +0530
-Message-Id: <1369821701-4867-1-git-send-email-sachin.kamat@linaro.org> (sfid-20130529_121547_794280_AFA10948)
+Received: from arrakis.dune.hu ([78.24.191.176]:56295 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754312Ab3EFTQK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 May 2013 15:16:10 -0400
+Message-ID: <5188017D.10201@openwrt.org> (sfid-20130506_211614_709960_78E16532)
+Date: Mon, 06 May 2013 21:16:13 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
+MIME-Version: 1.0
+To: Jakub Kicinski <kubakici@wp.pl>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [RFC 12/14] rt2x00: rt61pci: implement queue_init
+ callback
+References: <1367497829-7672-1-git-send-email-juhosg@openwrt.org> <1367497829-7672-13-git-send-email-juhosg@openwrt.org> <20130506180624.07b47b86@north>
+In-Reply-To: <20130506180624.07b47b86@north>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-module_spi_driver() eliminates some boiler plate and makes code
-simpler.
+> On Thu,  2 May 2013 14:30:27 +0200, Gabor Juhos wrote:
+>> The generic rt2x00 code has been changed to allow the
+>> drivers toimplement dynamic data_queue initialization.
+>>
+>> Remove the static data queue descriptor structures
+>> and implement the queue_init callback instead.
+>>
+>> Compile tested only.
+>>
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> 
+> Seems to work on rt61pci as well ;)
 
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
----
- drivers/net/wireless/p54/p54spi.c |   22 +---------------------
- 1 file changed, 1 insertion(+), 21 deletions(-)
+Thanks for testing!
 
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index 978e7eb..146e653 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -713,27 +713,7 @@ static struct spi_driver p54spi_driver = {
- 	.remove		= p54spi_remove,
- };
- 
--static int __init p54spi_init(void)
--{
--	int ret;
--
--	ret = spi_register_driver(&p54spi_driver);
--	if (ret < 0) {
--		printk(KERN_ERR "failed to register SPI driver: %d", ret);
--		goto out;
--	}
--
--out:
--	return ret;
--}
--
--static void __exit p54spi_exit(void)
--{
--	spi_unregister_driver(&p54spi_driver);
--}
--
--module_init(p54spi_init);
--module_exit(p54spi_exit);
-+module_spi_driver(p54spi_driver);
- 
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Christian Lamparter <chunkeey@web.de>");
--- 
-1.7.9.5
+> Feel free to remove "Compile tested only." and/or add:
+> 
+> Tested-by: Jakub Kicinski <kubakici@wp.pl>
 
+I will add your Tested-by tag when I will send the series as formal patches.
+
+-Gabor
