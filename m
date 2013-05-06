@@ -1,35 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:36196 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755217Ab3EYJJj convert rfc822-to-8bit (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:35091 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753161Ab3EFN0h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 May 2013 05:09:39 -0400
-MIME-Version: 1.0
-Date: Sat, 25 May 2013 11:09:38 +0200
-Message-ID: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com> (sfid-20130525_111005_833824_A78E43A2)
-Subject: [v3.10-rc2] iwlwifi regression
-From: =?UTF-8?Q?J=C3=B6rg_Otte?= <jrg.otte@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 6 May 2013 09:26:37 -0400
+Message-ID: <1367846711.32148.22.camel@cumari.coelho.fi> (sfid-20130506_152640_519262_86A50048)
+Subject: Re: linux-firmware: pull-request TI wireless firmwares 2012-04-29
+From: Luciano Coelho <coelho@ti.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 06 May 2013 16:25:11 +0300
+In-Reply-To: <1367846698.4131.65.camel@deadeye.wl.decadent.org.uk>
+References: <1367229856.30716.22.camel@cumari.coelho.fi>
+	 <1367811576.4131.39.camel@deadeye.wl.decadent.org.uk>
+	 <1367821181.23730.5.camel@cumari.coelho.fi>
+	 <1367846698.4131.65.camel@deadeye.wl.decadent.org.uk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If iwlwifi/iwldvm are built into the kernel (no loadable modules)
-following error is written to console and syslog since v3.10-rc:
+On Mon, 2013-05-06 at 14:24 +0100, Ben Hutchings wrote:
+> On Mon, 2013-05-06 at 09:19 +0300, Luciano Coelho wrote:
+> > On Mon, 2013-05-06 at 04:39 +0100, Ben Hutchings wrote:
+> > > On Mon, 2013-04-29 at 13:04 +0300, Luciano Coelho wrote:
+> > > > Hi Ben,
+> > > > 
+> > > > Here are some updates to our wireless firmwares.  Updated the firmwares
+> > > > for WiLink 6 and 7 and added a new version of the firmware for WiLink 8
+> > > > and a binary configuration file.  Also updated the WHENCE file
+> > > > accordingly.
+> > > > 
+> > > > Please let me know if there are any more problems.
+> > > [...]
+> > > > diff --git a/WHENCE b/WHENCE
+> > > > index 4726742..257f24e 100644
+> > > > --- a/WHENCE
+> > > > +++ b/WHENCE
+> > > > @@ -1681,11 +1681,11 @@ Version: 6.5.2.0.15 (Multi-role)
+> > > >  File: ti-connectivity/wl127x-fw-4-plt.bin
+> > > >  Version: 6.3.5.0.98 (PLT-only)
+> > > >  File: ti-connectivity/wl127x-fw-5-sr.bin
+> > > > -Version: 6.3.10.2.115 (Single-role)
+> > > > +Version: 6.3.10.0.133 (Single-role)
+> > > >  File: ti-connectivity/wl127x-fw-5-mr.bin
+> > > > -Version: 6.5.7.0.27 (Multi-role)
+> > > > +Version: 6.5.7.0.42 (Multi-role)
+> > > >  File: ti-connectivity/wl127x-fw-5-plt.bin
+> > > > -Version: 6.3.10.2.115 (PLT-only)
+> > > > +Version: 6.3.10.0.133 (PLT-only)
+> > > >  
+> > > >  File: ti-connectivity/wl128x-fw.bin
+> > > >  Version: 7.1.5.50.74 (STA-only)
+> > > > @@ -1702,11 +1702,11 @@ Version: 7.5.2.0.15 (Multi-role)
+> > > >  File: ti-connectivity/wl128x-fw-4-plt.bin
+> > > >  Version: 7.3.5.0.98 (PLT)
+> > > >  File: ti-connectivity/wl128x-fw-5-sr.bin
+> > > > -Version: 7.3.10.2.115 (Single-role)
+> > > > +Version: 7.3.10.0.133 (Single-role)
+> > > >  File: ti-connectivity/wl128x-fw-5-mr.bin
+> > > > -Version: 7.5.7.0.27 (Multi-role)
+> > > > +Version: 7.5.7.0.42 (Multi-role)
+> > > >  File: ti-connectivity/wl128x-fw-5-plt.bin
+> > > > -Version: 7.3.10.2.115 (PLT-only)
+> > > > +Version: 7.3.10.2.133 (PLT-only)
+> > > >  
+> > > >  File: ti-connectivity/wl127x-nvs.bin
+> > > >  File: ti-connectivity/wl128x-nvs.bin
+> > > [...]
+> > > 
+> > > The commit message for this bit says:
+> > > 
+> > >     Update the wl127x and wl128x firmwares to *.3.10.0.133 for single-role
+> > >     and *.5.7.0.42 for multi-role.
+> > > 
+> > > But for ti-connectivity/wl127x-fw-5-sr.bin,
+> > > ti-connectivity/wl127x-fw-5-plt.bin and
+> > > ti-connectivity/wl128x-fw-5-sr.bin this means the version is now *lower*
+> > > than before.  For ti-connectivity/wl128x-fw-5-plt.bin the version is
+> > > incremented to end in 2.133, but this is contrary to the commit message.
+> > > 
+> > > Are some of these firmware images being downgraded?  Should the version
+> > > numbers really end in 2.133 or 0.133?
+> > 
+> > No, they are not being downgraded.  They are actually being upgraded.
+> > The firmware versioning is rather weird.  The second last value is not
+> > incremental, it specifies a project.  0 is the multichannel support
+> > project.
+> >
+> > The driver was changed a while back to take this version structure into
+> > consideration.  Take a look at this patch:
+> > 
+> > af4e94c wlcore: change way of checking the firmware version
+> > 
+> > I hope this clarifies.
+> 
+> OK, I've pulled these changes.  But I think it would be helpful to
+> change that project code to be non-numeric, to avoid such confusion.
 
-iwlwifi 0000:08:00.0: failed to load module iwldvm (error -38), is
-dynamic loading enabled?
+Thanks, Ben!
 
-reverting
-commit 1618b2b02a3a0ee7a6863fed4b0d22e697e7e97c
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Thu Apr 4 10:35:23 2013 +0200
-    iwlwifi: print warning on request_module failure
+I'll talk with the firmware team to see if they can change the project
+code, as you suggested.
 
-fixes the problem for me.
+--
+Cheers,
+Luca.
 
-Jörg
-
-I'm not subscribed,please CC me in answeres
