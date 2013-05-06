@@ -1,140 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32500 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193Ab3E0PYH (ORCPT
+Received: from mail-qe0-f49.google.com ([209.85.128.49]:61641 "EHLO
+	mail-qe0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752939Ab3EFKqN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 11:24:07 -0400
-Date: Mon, 27 May 2013 18:24:02 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] cfg80211: Allow TDLS peer AID to be configured for VHT
-Message-ID: <20130527152402.GC12369@jouni.qca.qualcomm.com> (sfid-20130527_172411_839026_215404AF)
-References: <20130516171108.GA27497@jouni.qca.qualcomm.com>
- <1369427943.13623.8.camel@johannes>
+	Mon, 6 May 2013 06:46:13 -0400
+Received: by mail-qe0-f49.google.com with SMTP id 7so1932020qeb.8
+        for <linux-wireless@vger.kernel.org>; Mon, 06 May 2013 03:46:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1369427943.13623.8.camel@johannes>
+In-Reply-To: <5186D7AD.1070702@lwfinger.net>
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+ <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+ <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
+ <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
+ <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
+ <517199D4.9070702@broadcom.com> <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
+ <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com>
+ <517A427E.3010809@broadcom.com> <CACaajQsf8cgG9DQ-QuWY5EqeUNq4RgX9CMgQ8bZi7s8UJzCE_g@mail.gmail.com>
+ <CACaajQuk359fYap=547qQ0r128bdCuzFCzR=iXgHNaaR_eTtow@mail.gmail.com> <5186D7AD.1070702@lwfinger.net>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Mon, 6 May 2013 14:45:57 +0400
+Message-ID: <CACaajQuSU4H0rdn9j7dFYB+Yh2WLsejocDfE+PX1eFQOUqWcgw@mail.gmail.com> (sfid-20130506_124617_214668_0B2E336D)
+Subject: Re: very bad work of wl (bcm 43228)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VHT uses peer AID in the PARTIAL_AID field in TDLS frames. The current
-design for TDLS is to first add a dummy STA entry before completing TDLS
-Setup and then update information on this STA entry based on what was
-received from the peer during the setup exchange.
-
-In theory, this could use NL80211_ATTR_STA_AID to set the peer AID just
-like this is used in AP mode to set the AID of an association station.
-However, existing cfg80211 validation rules prevent this attribute from
-being used with set_station operation. To avoid interoperability issues
-between different kernel and user space version combinations, introduce
-a new nl80211 attribute for the purpose of setting TDLS peer AID. This
-attribute can be used in both the new_station and set_station
-operations. It is not supposed to be allowed to change the AID value
-during the lifetime of the STA entry, but that validation is left for
-drivers to do in the change_station callback.
-
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- include/uapi/linux/nl80211.h |    7 +++++++
- net/wireless/nl80211.c       |   17 +++++++++++++----
- 2 files changed, 20 insertions(+), 4 deletions(-)
-
-v2:
-- reject NL80211_ATTR_PEER_AID if not TDLS STA in nl80211_new_station()
-- prefer NL80211_ATTR_PEER_AID in nl80211_new_station()
+2013/5/6 Larry Finger <Larry.Finger@lwfinger.net>:
+> You are using a closed-source driver. None of us know what is in the code,
+> thus there is very little help we can give you other than to give general
+> suggestions. If you were using b43 or brcmsmac, the situation would be
+> different.
 
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d1e48b5..a061437 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1429,6 +1429,11 @@ enum nl80211_commands {
-  * @NL80211_ATTR_MAX_CRIT_PROT_DURATION: duration in milliseconds in which
-  *      the connection should have increased reliability (u16).
-  *
-+ * @NL80211_ATTR_PEER_AID: Association ID for the peer TDLS station (u16).
-+ *	This is similar to @NL80211_ATTR_STA_AID but with a difference of being
-+ *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
-+ *	update a TDLS peer STA entry.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1727,6 +1732,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_CRIT_PROT_ID,
- 	NL80211_ATTR_MAX_CRIT_PROT_DURATION,
- 
-+	NL80211_ATTR_PEER_AID,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index dfdb5e6..2963b8d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -378,6 +378,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_MDID] = { .type = NLA_U16 },
- 	[NL80211_ATTR_IE_RIC] = { .type = NLA_BINARY,
- 				  .len = IEEE80211_MAX_DATA_LEN },
-+	[NL80211_ATTR_PEER_AID] = { .type = NLA_U16 },
- };
- 
- /* policy for the key attributes */
-@@ -3834,6 +3835,8 @@ static int nl80211_set_station_tdls(struct genl_info *info,
- 				    struct station_parameters *params)
- {
- 	/* Dummy STA entry gets updated once the peer capabilities are known */
-+	if (info->attrs[NL80211_ATTR_PEER_AID])
-+		params->aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
- 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
- 		params->ht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
-@@ -3974,7 +3977,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	if (!info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES])
- 		return -EINVAL;
- 
--	if (!info->attrs[NL80211_ATTR_STA_AID])
-+	if (!info->attrs[NL80211_ATTR_STA_AID] &&
-+	    !info->attrs[NL80211_ATTR_PEER_AID])
- 		return -EINVAL;
- 
- 	mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
-@@ -3985,7 +3989,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	params.listen_interval =
- 		nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
- 
--	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
-+	if (info->attrs[NL80211_ATTR_PEER_AID])
-+		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
-+	else
-+		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
- 	if (!params.aid || params.aid > IEEE80211_MAX_AID)
- 		return -EINVAL;
- 
-@@ -4037,7 +4044,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
- 
- 		/* TDLS peers cannot be added */
--		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
-+		if ((params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) ||
-+		    info->attrs[NL80211_ATTR_PEER_AID])
- 			return -EINVAL;
- 		/* but don't bother the driver with it */
- 		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
-@@ -4063,7 +4071,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
- 			return -EINVAL;
- 		/* TDLS peers cannot be added */
--		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
-+		if ((params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) ||
-+		    info->attrs[NL80211_ATTR_PEER_AID])
- 			return -EINVAL;
- 		break;
- 	case NL80211_IFTYPE_STATION:
--- 
-1.7.9.5
+Yes, but on last message i get response from broadcom and expect to
+see his answers.
+May be broadcom has own mailing list for bad things in their drivers?
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+
+--
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
