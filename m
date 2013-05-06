@@ -1,40 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38876 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932918Ab3ECGlH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 02:41:07 -0400
-Message-ID: <1367563264.9430.5.camel@jlt4.sipsolutions.net> (sfid-20130503_084112_197918_DCED24AB)
-Subject: Re: [PATCH] mac80211: clean up mesh RCU warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Date: Fri, 03 May 2013 08:41:04 +0200
-In-Reply-To: <1367536279-14241-1-git-send-email-thomas@cozybit.com> (sfid-20130503_011325_779040_E2BD5BC1)
-References: <1367536279-14241-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20130503_011325_779040_E2BD5BC1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx3.wp.pl ([212.77.101.7]:60864 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756807Ab3EFW3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 May 2013 18:29:10 -0400
+From: Jakub Kicinski <kubakici@wp.pl>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, Jakub Kicinski <kubakici@wp.pl>
+Subject: [PATCH] rt2x00pci: Use PCI MSIs whenever possible
+Date: Tue,  7 May 2013 00:28:50 +0200
+Message-Id: <1367879330-5718-1-git-send-email-kubakici@wp.pl> (sfid-20130507_002916_422034_6EC728F9)
+In-Reply-To: <1349292758-20045-1-git-send-email-kubakici@wp.pl>
+References: <1349292758-20045-1-git-send-email-kubakici@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-02 at 16:11 -0700, Thomas Pedersen wrote:
-> When running a kernel with CONFIG_PROVE_RCU, the minstrel
-> rate update code would complain about being called without
-> the RCU read lock held. This is because
-> mesh_sta_info_init() may or may not have been called under
-> RCU read lock. Perform some bureaucratic critical section
-> toggling to always call mesh_sta_info_init() under RCU,
-> and silence this warning.
+All PCIe devices must support MSIs, make use of them.
 
-This was discussed in another thread a while ago, but unfortunately
-nothing came out of it. I really don't think this is the right solution,
-since the code that this calls doesn't even use rcu_dereference()
-properly.
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00pci.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-Felix, please come up with a proper fix soon, otherwise I'm going to
-revert your changes for 3.10.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+index dc49e52..76d95de 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -105,11 +105,13 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
+ 		goto exit_release_regions;
+ 	}
 
-johannes
++	pci_enable_msi(pci_dev);
++
+ 	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
+ 	if (!hw) {
+ 		rt2x00_probe_err("Failed to allocate hardware\n");
+ 		retval = -ENOMEM;
+-		goto exit_release_regions;
++		goto exit_disable_msi;
+ 	}
 
+ 	pci_set_drvdata(pci_dev, hw);
+@@ -150,6 +152,9 @@ exit_free_reg:
+ exit_free_device:
+ 	ieee80211_free_hw(hw);
+
++exit_disable_msi:
++	pci_disable_msi(pci_dev);
++
+ exit_release_regions:
+ 	pci_release_regions(pci_dev);
+
+@@ -174,6 +179,8 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
+ 	rt2x00pci_free_reg(rt2x00dev);
+ 	ieee80211_free_hw(hw);
+
++	pci_disable_msi(pci_dev);
++
+ 	/*
+ 	 * Free the PCI device data.
+ 	 */
+--
+1.8.1.4
