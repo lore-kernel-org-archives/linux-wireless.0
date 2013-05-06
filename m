@@ -1,94 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:58509 "EHLO mout.gmx.net"
+Received: from tex.lwn.net ([70.33.254.29]:46450 "EHLO vena.lwn.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753829Ab3EDLIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 May 2013 07:08:14 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0M6hJq-1UK5px0WUG-00wW0g for
- <linux-wireless@vger.kernel.org>; Sat, 04 May 2013 13:08:13 +0200
-Message-ID: <5184EC19.9060206@rempel-privat.de> (sfid-20130504_130826_353696_59EF1C3A)
-Date: Sat, 04 May 2013 13:08:09 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Adrian Chadd <adrian@freebsd.org>, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH 1/2] ath9k_htc: add STBC TX support
-References: <1367482308-9882-1-git-send-email-linux@rempel-privat.de> <1367482308-9882-2-git-send-email-linux@rempel-privat.de> <CAJ-Vmo=rZrHmXD0Os-Mb40jSEywbO-7GHSqL=7iMbkzAfS=+UQ@mail.gmail.com> <5182A341.8050704@rempel-privat.de> <5182A9DC.6030203@openwrt.org> <CAJ-Vmo=XYK=Jkc40U_vJO03n+tiA_LDpw8e1QKYRX6-+E9o4fA@mail.gmail.com> <5184AFC2.8060101@rempel-privat.de> <5184DCCF.9010009@openwrt.org>
-In-Reply-To: <5184DCCF.9010009@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1754210Ab3EFPVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 May 2013 11:21:45 -0400
+Date: Mon, 6 May 2013 09:21:43 -0600
+From: Jake Edge <jake@lwn.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to
+ 1672c0e3
+Message-ID: <20130506092143.58a7713f@chukar.edge2.net> (sfid-20130506_172200_403526_E0F83792)
+In-Reply-To: <1367853112.8434.6.camel@jlt4.sipsolutions.net>
+References: <20130505143803.7e46e4c6@chukar.edge2.net>
+	<1367853112.8434.6.camel@jlt4.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 04.05.2013 12:02, schrieb Felix Fietkau:
-> On 2013-05-04 8:50 AM, Oleksij Rempel wrote:
->> Am 02.05.2013 22:15, schrieb Adrian Chadd:
->>> Well, let's dig into the firmware a bit more and tidy up how STBC is handled.
->>
->> Does it mean, i should change this patch and provide a patch for
->> firmware too?
->> I still do not think, changing peer caps i a good idea in any case.
->> I mena this part of patch:
->> +               if (sta->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC)
->> +                       caps |= WLAN_RC_TX_STBC_FLAG;
->>
->>
->> Behaviour with this patch will be fallowing:
->> - peer provide caps, even if it is RX-STBC12
->> - we pass this information to firmware and ratecontroller of FW, do
->> right decision based on hardware it has.
->>
->> You suggestion, if i understand it correctly, is to filter caps:
->> - if peer provide more than we can, we should tell firmware the value
->> what we can. So, if peer say it can RX-STBC12, we should tell firmware
->> that peer is RX-STBC1.
->> In my opinion, this kind of filter is a source for hidden errors.
-> I think the discussion regarding RX-STBC12 vs RX-STBC1 is purely
-> hypothetical. The hardware that this firmware was designed for only
-> supports sending STBC for MCS0-7. This will not change.
->
-> Also, there's no reason to tell the firmware about both rx and tx STBC
-> capabilities, the only thing it needs to know is what tells the rate
-> control part to enable/disable STBC.
+On Mon, 06 May 2013 17:11:52 +0200 Johannes Berg wrote:
+> Hi Jake,
+> 
+> > commit 1672c0e31917f49d31d30d79067103432bc20cc7
+> > Author: Johannes Berg <johannes.berg@intel.com>
+> > Date:   Tue Jan 29 15:02:27 2013 +0100
+> > 
+> >     mac80211: start auth/assoc timeout on frame status
+> > 
+> > but I can't (easily) revert that in 3.9 (maybe I can in -rc1 or
+> > something?  haven't tried that)
+> > 
+> > What more information is needed from me?  I may still mess around
+> > with trying to revert that patch just to nail it down for sure, but
+> > two separate bisection exercises ended up at the same place.
+> 
+> Thanks for the report. Is the AP on a passive channel by any chance (5
+> GHz, or channels 12/13)?
 
-As you can see, in version 2 of this path there was no more discussion 
-about it. I just did it.
+No, from what I can see on my router, it is using channel 36 (5.180
+GHz) for the SSID in question (and channel 11 2.462 GHz for the other
+SSID) ... but Stanislaw seems to have pinpointed the issue.
 
-> In addition to that, using the WLAN_RC_* flags is wrong, you need to use
-> the ATH_RC_* flags, as this is what ath_rate_newassoc_11n checks for in
-> the firmware.
+thanks,
 
-Renamed.
+jake
 
-> The only STBC related flag that actually gets used (when
-> passed from the driver) is ATH_RC_RX_STBC_FLAG.
-
-Well, may be it is not used at the end. But it is present on some places 
-in the firmware.
-For example here:
-void
-rcSibUpdate_11n(struct ath_softc_tgt *sc, struct ath_node_target *pSib,
-                 A_UINT32 capflag, A_BOOL keepState, struct 
-ieee80211_rate  *pRateSet)
-{
-         rcSibUpdate_ht(sc,
-                        pSib,
-                        ((capflag & ATH_RC_DS_FLAG)   ? WLAN_RC_DS_FLAG 
-  : 0) |
-                        ((capflag & ATH_RC_HT40_SGI_FLAG)  ? 
-WLAN_RC_HT40_SGI_FLAG : 0) |
-                        ((capflag & ATH_RC_HT_FLAG)   ? WLAN_RC_HT_FLAG 
-  : 0) |
-                        ((capflag & ATH_RC_CW40_FLAG) ? WLAN_RC_40_FLAG 
-  : 0) |
-                        ((capflag & ATH_RC_TX_STBC_FLAG)   ? 
-WLAN_RC_STBC_FLAG  : 0),
-                        keepState,
-                        pRateSet);
-
-
-
-So, should i remove ATH_RC_TX_STBC_FLAG from my patch?
 -- 
-Regards,
-Oleksij
+Jake Edge - LWN - jake@lwn.net - http://lwn.net
