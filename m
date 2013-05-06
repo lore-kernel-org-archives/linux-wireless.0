@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:56265 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756515Ab3EHRSz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 13:18:55 -0400
-Received: by mail-pd0-f176.google.com with SMTP id x10so1383019pdj.35
-        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2013 10:18:55 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: ath9k <ath9k-devel@lists.ath9k.org>,
-	linux-wirelss <linux-wireless@vger.kernel.org>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH 2/3] ath9k_htc: Claim support for mgmt frame protection
-Date: Wed,  8 May 2013 10:16:47 -0700
-Message-Id: <1368033408-3994-2-git-send-email-thomas@cozybit.com> (sfid-20130508_191858_622127_456BF9CA)
-In-Reply-To: <1368033408-3994-1-git-send-email-thomas@cozybit.com>
-References: <1368033408-3994-1-git-send-email-thomas@cozybit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36502 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753087Ab3EFMgi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 May 2013 08:36:38 -0400
+Date: Mon, 6 May 2013 14:38:06 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jake Edge <jake@lwn.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to
+ 1672c0e3
+Message-ID: <20130506123805.GA1602@redhat.com> (sfid-20130506_143705_071628_C7696639)
+References: <20130505143803.7e46e4c6@chukar.edge2.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130505143803.7e46e4c6@chukar.edge2.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Sun, May 05, 2013 at 02:38:03PM -0600, Jake Edge wrote:
+> 
+> After building 3.9 for my HP/Compaq 2510p laptop, the wireless (iwl4965)
+> would seemingly no longer connect.  Actually, it seems that it *will*
+> eventually, where that is somewhere between 4 and 21+ retries (from KDE
+> network manager).  Going back to 3.8 (and earlier) and the problem goes
+> away.  (All on Fedora 18, fwiw, but I don't think that's significant).
+> 
+> I bisected the problem to:
+> 
+> commit 1672c0e31917f49d31d30d79067103432bc20cc7
+> Author: Johannes Berg <johannes.berg@intel.com>
+> Date:   Tue Jan 29 15:02:27 2013 +0100
+> 
+>     mac80211: start auth/assoc timeout on frame status
+> 
+> but I can't (easily) revert that in 3.9 (maybe I can in -rc1 or
+> something?  haven't tried that)
+> 
+> What more information is needed from me?  I may still mess around with
+> trying to revert that patch just to nail it down for sure, but two
+> separate bisection exercises ended up at the same place.
 
-Advertise support for management frame protection in hardware.
+Below patch should restore old mac80211 behaviour, by stop
+telling mac that 4965 supports TX ACK status. Does it help?
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 6eb4199..59f6436 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -722,6 +722,7 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 		IEEE80211_HW_SUPPORTS_PS |
- 		IEEE80211_HW_PS_NULLFUNC_STACK |
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-+		IEEE80211_HW_MFP_CAPABLE |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING;
- 
- 	hw->wiphy->interface_modes =
--- 
-1.7.10.4
-
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index b8f82e6..eaa756d 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -5741,7 +5741,7 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
+ 	hw->flags =
+ 	    IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_AMPDU_AGGREGATION |
+ 	    IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC | IEEE80211_HW_SPECTRUM_MGMT |
+-	    IEEE80211_HW_REPORTS_TX_ACK_STATUS | IEEE80211_HW_SUPPORTS_PS |
++	    IEEE80211_HW_SUPPORTS_PS |
+ 	    IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
+ 	if (il->cfg->sku & IL_SKU_N)
+ 		hw->flags |=
+  
