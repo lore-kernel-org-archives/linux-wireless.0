@@ -1,216 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51400 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753379Ab3EZOFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 May 2013 10:05:13 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 2/3] mac80211: support active monitor interfaces
-Date: Sun, 26 May 2013 16:05:06 +0200
-Message-Id: <1369577107-87931-2-git-send-email-nbd@openwrt.org> (sfid-20130526_160534_566142_6E571774)
-In-Reply-To: <1369577107-87931-1-git-send-email-nbd@openwrt.org>
-References: <1369577107-87931-1-git-send-email-nbd@openwrt.org>
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:40617 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761752Ab3EFXta (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 May 2013 19:49:30 -0400
+Received: by mail-pb0-f41.google.com with SMTP id mc17so2266148pbc.28
+        for <linux-wireless@vger.kernel.org>; Mon, 06 May 2013 16:49:29 -0700 (PDT)
+From: Colleen Twitty <colleen@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: open80211s <devel@lists.open80211s.org>,
+	linux-wirelss <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/2] cfg80211: Userspace may inform kernel of mesh auth method.
+Date: Mon,  6 May 2013 16:49:23 -0700
+Message-Id: <1367884164-15953-1-git-send-email-colleen@cozybit.com> (sfid-20130507_014941_459596_6487DCC0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support them only if the driver advertises support for them via
-IEEE80211_HW_SUPPORTS_ACTIVE_MONITOR. Unlike normal monitor interfaces,
-they are added to the driver, along with their MAC address.
+Authentication takes place in userspace, but the beacon is
+generated in the kernel.  Allow userspace to inform the
+kernel of the authentication method so the appropriate
+mesh config IE can be set prior to beacon generation when
+joining the MBSS.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Colleen Twitty <colleen@cozybit.com>
 ---
- include/net/mac80211.h     |  5 +++++
- net/mac80211/cfg.c         | 11 +++++++----
- net/mac80211/driver-ops.h  |  3 ++-
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/iface.c       | 33 ++++++++++++++++++++++++++-------
- net/mac80211/util.c        |  6 ++++++
- 6 files changed, 47 insertions(+), 13 deletions(-)
+    Check userspace is handling MPM instead of checking if setup is secure and
+    authenticated.  (Johannes)
+	
+ include/linux/ieee80211.h    |   20 ++++++++++++++++++++
+ include/net/cfg80211.h       |    2 ++
+ include/uapi/linux/nl80211.h |    4 ++++
+ net/wireless/mesh.c          |    1 +
+ net/wireless/nl80211.c       |   16 ++++++++++++++++
+ 5 files changed, 43 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 885898a..b80c5cd 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1455,6 +1455,10 @@ struct ieee80211_tx_control {
-  *
-  * @IEEE80211_HW_TIMING_BEACON_ONLY: Use sync timing from beacon frames
-  *	only, to allow getting TBTT of a DTIM beacon.
-+ *
-+ * @IEEE80211_HW_SUPPORTS_ACTIVE_MONITOR: Device supports an active monitor
-+ *	interface that responds to unicast packets directed at its MAC
-+ *	address.
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -1484,6 +1488,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_RC_TABLE			= 1<<24,
- 	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
- 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
-+	IEEE80211_HW_SUPPORTS_ACTIVE_MONITOR		= 1<<27,
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 06b0ed0..e3b9509 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1899,6 +1899,26 @@ enum {
  };
  
  /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1a89c80..7f73859 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -73,16 +73,19 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 		struct ieee80211_local *local = sdata->local;
- 
- 		if (ieee80211_sdata_running(sdata)) {
-+			u32 mask = MONITOR_FLAG_COOK_FRAMES |
-+				   MONITOR_FLAG_ACTIVE;
++ * enum mesh_config_auth_proto - mesh authentication protocol identifier
++ *
++ * Ref IEEE 802.11-2012 8.4.2.100.6 Authentication Protocol Identifier
++ *
++ * This field indicates the type of authentication protocol used to secure the
++ * MBSS.
++ *
++ * @IEEE80211_AUTH_PROTO_NONE: the default mesh authentication protocol,
++ *	no authentication is required to establish peering within the MBSS
++ * @IEEE80211_AUTH_PROTO_SAE: SAE authentication
++ * @IEEE80211_AUTH_PROTO_8021X : IEEE 802.1X authentication
++ *
++ */
++enum mesh_config_auth_proto {
++	IEEE80211_AUTH_PROTO_NONE =		0x0,
++	IEEE80211_AUTH_PROTO_SAE =		0x1,
++	IEEE80211_AUTH_PROTO_8021X =		0x2,
++};
 +
- 			/*
--			 * Prohibit MONITOR_FLAG_COOK_FRAMES to be
--			 * changed while the interface is up.
-+			 * Prohibit MONITOR_FLAG_COOK_FRAMES and
-+			 * MONITOR_FLAG_ACTIVE to be changed while the
-+			 * interface is up.
- 			 * Else we would need to add a lot of cruft
- 			 * to update everything:
- 			 *	cooked_mntrs, monitor and all fif_* counters
- 			 *	reconfigure hardware
- 			 */
--			if ((*flags & MONITOR_FLAG_COOK_FRAMES) !=
--			    (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES))
-+			if ((*flags & mask) != (sdata->u.mntr_flags & mask))
- 				return -EBUSY;
++/**
+  * enum ieee80211_root_mode_identifier - root mesh STA mode identifier
+  *
+  * These attribute are used by dot11MeshHWMPRootMode to set root mesh STA mode
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 26e9113..072e424 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1161,6 +1161,7 @@ struct mesh_config {
+  * @sync_method: which synchronization method to use
+  * @path_sel_proto: which path selection protocol to use
+  * @path_metric: which metric to use
++ * @auth_id: which authentication method this mesh is using
+  * @ie: vendor information elements (optional)
+  * @ie_len: length of vendor information elements
+  * @is_authenticated: this mesh requires authentication
+@@ -1179,6 +1180,7 @@ struct mesh_setup {
+ 	u8 sync_method;
+ 	u8 path_sel_proto;
+ 	u8 path_metric;
++	enum mesh_config_auth_proto auth_id;
+ 	const u8 *ie;
+ 	u8 ie_len;
+ 	bool is_authenticated;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b484307..408bb56 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2645,6 +2645,9 @@ enum nl80211_meshconf_params {
+  * @NL80211_MESH_SETUP_USERSPACE_MPM: Enable this option if userspace will
+  *	implement an MPM which handles peer allocation and state.
+  *
++ * @NL80211_MESH_SETUP_AUTH_PROTOCOL: Inform the kernel of the authentication
++ *	method.
++ *
+  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
+  *
+  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
+@@ -2658,6 +2661,7 @@ enum nl80211_mesh_setup_params {
+ 	NL80211_MESH_SETUP_USERSPACE_AMPE,
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_SYNC,
+ 	NL80211_MESH_SETUP_USERSPACE_MPM,
++	NL80211_MESH_SETUP_AUTH_PROTOCOL,
  
- 			ieee80211_adjust_monitor_flags(sdata, -1);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 169664c..5844f68 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -146,7 +146,8 @@ static inline int drv_add_interface(struct ieee80211_local *local,
+ 	/* keep last */
+ 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 0bb93f3..53bfe0e 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -82,6 +82,7 @@ const struct mesh_setup default_mesh_setup = {
+ 	.sync_method = IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET,
+ 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
+ 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
++	.auth_id = IEEE80211_AUTH_PROTO_NONE,
+ 	.ie = NULL,
+ 	.ie_len = 0,
+ 	.is_secure = false,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9cdcd9e..5795617 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4672,6 +4672,7 @@ static const struct nla_policy
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_USERSPACE_AUTH] = { .type = NLA_FLAG },
++	[NL80211_MESH_SETUP_AUTH_PROTOCOL] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_USERSPACE_MPM] = { .type = NLA_FLAG },
+ 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
+ 				    .len = IEEE80211_MAX_DATA_LEN },
+@@ -4857,6 +4858,21 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
+ 	if (setup->is_secure)
+ 		setup->user_mpm = true;
  
- 	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
- 		    (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
--		     !(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF))))
-+		     !(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF) &&
-+			 !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))))
- 		return -EINVAL;
- 
- 	trace_drv_add_interface(local, sdata);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 44be28c..280170a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -892,7 +892,7 @@ struct ieee80211_local {
- 	spinlock_t queue_stop_reason_lock;
- 
- 	int open_count;
--	int monitors, cooked_mntrs;
-+	int monitors, cooked_mntrs, active_mntrs;
- 	/* number of interfaces with corresponding FIF_ flags */
- 	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll,
- 	    fif_probe_req;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 60f1ce5..234503f 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -209,9 +209,11 @@ static int ieee80211_change_mac(struct net_device *dev, void *addr)
- 	if (ieee80211_sdata_running(sdata))
- 		return -EBUSY;
- 
--	ret = ieee80211_verify_mac(sdata->local, sa->sa_data);
--	if (ret)
--		return ret;
-+	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-+		ret = ieee80211_verify_mac(sdata->local, sa->sa_data);
-+		if (ret)
-+			return ret;
++	if (tb[NL80211_MESH_SETUP_AUTH_PROTOCOL]) {
++		if (!setup->user_mpm)
++			return -EINVAL;
++		switch (nla_get_u8(tb[NL80211_MESH_SETUP_AUTH_PROTOCOL])) {
++		case NL80211_AUTHTYPE_SAE:
++			setup->auth_id = IEEE80211_AUTH_PROTO_SAE;
++			break;
++		case NL80211_AUTHTYPE_OPEN_SYSTEM:
++			setup->auth_id = IEEE80211_AUTH_PROTO_NONE;
++			break;
++		default:
++			return -EINVAL;
++		}
 +	}
- 
- 	ret = eth_mac_addr(dev, sa);
- 
-@@ -479,9 +481,13 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 	case NL80211_IFTYPE_AP:
- 		sdata->bss = &sdata->u.ap;
- 		break;
-+	case NL80211_IFTYPE_MONITOR:
-+		if ((sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) &&
-+		    !(local->hw.flags & IEEE80211_HW_SUPPORTS_ACTIVE_MONITOR))
-+			return -EOPNOTSUPP;
-+		break;
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		/* no special treatment */
-@@ -538,7 +544,13 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 			break;
- 		}
- 
--		if (local->monitors == 0 && local->open_count == 0) {
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
-+			res = drv_add_interface(local, sdata);
-+			if (res)
-+				goto err_stop;
 +
-+			local->active_mntrs++;
-+		} else if (local->monitors == 0 && local->open_count == 0) {
- 			res = ieee80211_add_virtual_monitor(local);
- 			if (res)
- 				goto err_stop;
-@@ -831,6 +843,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 			break;
- 		}
+ 	return 0;
+ }
  
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE)
-+			local->active_mntrs--;
-+
- 		local->monitors--;
- 		if (local->monitors == 0) {
- 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
-@@ -912,7 +927,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		mutex_lock(&local->mtx);
- 		ieee80211_recalc_idle(local);
- 		mutex_unlock(&local->mtx);
--		break;
-+
-+		if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+			break;
-+
-+		/* fall through */
- 	default:
- 		if (going_down)
- 			drv_remove_interface(local, sdata);
-@@ -1061,7 +1080,7 @@ static const struct net_device_ops ieee80211_monitorif_ops = {
- 	.ndo_start_xmit		= ieee80211_monitor_start_xmit,
- 	.ndo_set_rx_mode	= ieee80211_set_multicast_list,
- 	.ndo_change_mtu 	= ieee80211_change_mtu,
--	.ndo_set_mac_address 	= eth_mac_addr,
-+	.ndo_set_mac_address 	= ieee80211_change_mac,
- 	.ndo_select_queue	= ieee80211_monitor_select_queue,
- };
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 27e0715..7cbe0db 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -560,6 +560,9 @@ void ieee80211_iterate_active_interfaces(
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_MONITOR:
-+			if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+				continue;
-+			break;
- 		case NL80211_IFTYPE_AP_VLAN:
- 			continue;
- 		default:
-@@ -598,6 +601,9 @@ void ieee80211_iterate_active_interfaces_atomic(
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_MONITOR:
-+			if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+				continue;
-+			break;
- 		case NL80211_IFTYPE_AP_VLAN:
- 			continue;
- 		default:
 -- 
-1.8.0.2
+1.7.9.5
 
