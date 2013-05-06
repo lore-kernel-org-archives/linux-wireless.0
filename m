@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tex.lwn.net ([70.33.254.29]:46500 "EHLO vena.lwn.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754515Ab3EFP3M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 11:29:12 -0400
-Date: Mon, 6 May 2013 09:29:10 -0600
-From: Jake Edge <jake@lwn.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:50953 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495Ab3EFPMA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 May 2013 11:12:00 -0400
+Message-ID: <1367853112.8434.6.camel@jlt4.sipsolutions.net> (sfid-20130506_171221_462059_3EEF5B8E)
 Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to
  1672c0e3
-Message-ID: <20130506092910.080f96cd@chukar.edge2.net> (sfid-20130506_172941_036969_272BB6FD)
-In-Reply-To: <1367853859.8434.11.camel@jlt4.sipsolutions.net>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jake Edge <jake@lwn.net>
+Cc: linux-wireless@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+Date: Mon, 06 May 2013 17:11:52 +0200
+In-Reply-To: <20130505143803.7e46e4c6@chukar.edge2.net> (sfid-20130505_223826_138840_12AE724B)
 References: <20130505143803.7e46e4c6@chukar.edge2.net>
-	<1367853112.8434.6.camel@jlt4.sipsolutions.net>
-	<20130506092143.58a7713f@chukar.edge2.net>
-	<1367853859.8434.11.camel@jlt4.sipsolutions.net>
+	 (sfid-20130505_223826_138840_12AE724B)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 06 May 2013 17:24:19 +0200 Johannes Berg wrote:
-> On Mon, 2013-05-06 at 09:21 -0600, Jake Edge wrote:
+Hi Jake,
+
+> commit 1672c0e31917f49d31d30d79067103432bc20cc7
+> Author: Johannes Berg <johannes.berg@intel.com>
+> Date:   Tue Jan 29 15:02:27 2013 +0100
 > 
-> > > Thanks for the report. Is the AP on a passive channel by any
-> > > chance (5 GHz, or channels 12/13)?
-> > 
-> > No, from what I can see on my router, it is using channel 36 (5.180
-> > GHz) for the SSID in question
+>     mac80211: start auth/assoc timeout on frame status
 > 
-> So yes, that is a passive channel for the 4965 device :-)
-
-oops, sorry :)  (obviously I don't know what a passive channel is :)
-
-> > but Stanislaw seems to have pinpointed the issue.
+> but I can't (easily) revert that in 3.9 (maybe I can in -rc1 or
+> something?  haven't tried that)
 > 
-> Yeah that was a workaround, but I'm not sure we'd really want to do
-> that. I'd rather see what really caused this issue. I have a feeling
-> it's the passive-no-RX workaround, or lack thereof maybe? I need to
-> look a bit closer.
+> What more information is needed from me?  I may still mess around with
+> trying to revert that patch just to nail it down for sure, but two
+> separate bisection exercises ended up at the same place.
 
-Ok, I'm happy to test things out at this end ... change channels on the
-router, build new kernels, etc.
+Thanks for the report. Is the AP on a passive channel by any chance (5
+GHz, or channels 12/13)?
 
-thanks,
+johannes
 
-jake
-
--- 
-Jake Edge - LWN - jake@lwn.net - http://lwn.net
