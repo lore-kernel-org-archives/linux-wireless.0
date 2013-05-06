@@ -1,170 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40459 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222Ab3EISSf (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:49890 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755658Ab3EFTOJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 May 2013 14:18:35 -0400
-Date: Thu, 9 May 2013 20:18:27 +0200
+	Mon, 6 May 2013 15:14:09 -0400
 From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k:  Disable spectral scan code to fix crash on
- rmmod.
-Message-ID: <20130509181827.GA22871@pandem0nium> (sfid-20130509_201838_923107_57C3ADBD)
-References: <1368050908-7554-1-git-send-email-greearb@candelatech.com>
- <20875.13834.615920.337442@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
-In-Reply-To: <20875.13834.615920.337442@gargle.gargle.HOWL>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [RFC 0/4] add master channel switch announcement support
+Date: Mon,  6 May 2013 21:13:51 +0200
+Message-Id: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130506_211415_896123_FFF4F9E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is an early RFC of a possible channel switch announcement infrastructure.
+It adds CSA/ECSA handling support for AP. This is required for DFS operation
+(e.g. Wi-Fi Alliance requires this for 802.11h certification). This will also
+be required for IBSS-DFS later.
 
---k+w/mQv8wyuph6w0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I'd like to discuss if this design approach is going in the right direction.
+What is currently working:
 
-On Thu, May 09, 2013 at 11:07:14AM +0530, Sujith Manoharan wrote:
-> greearb@candelatech.com wrote:
-> > From: Ben Greear <greearb@candelatech.com>
-> >=20
-> > With CONFIG_ATH9K_DEBUGFS enabled, and slub memory poisoning
-> > enabled, I see this crash on rmmod of ath9k.  I'm not sure how
-> > to fix this properly, but in the meantime, this patch to disable
-> > the spectral scan code works around the problem for me.
-> >=20
-> > With memory poisoning and the verify_mem_not_deleted code
-> > below added, the crash looks as follows...  The dentry
-> > is not *always* freed at this point, probably because rcu
-> > callbacks haven't completed.  You still get a crash soon
-> > after, however.
->=20
-> The relay file should probably be closed before calling ieee80211_unregis=
-ter_hw().
-> The ath9k debugfs directory is created inside the phy#/ directory and tha=
-t would
-> get cleaned up when the wiphy is unregistered.
->=20
-> Does this help ?
+ * channels are announced by adding IEs (CSA and Extended CSA) in beacons
+ * after some (configurable) time, the channel is switched
+ * with the channel switch, CSA/ECSA IEs are removed and channel information
+   is updated.
+ * Userspace calls a new command NL80211_CMD_CHANNEL_SWITCH along with channel info
+   (freq + width), whether traffic should be blocked and timing information
+ * it currently works for me [TM] on my ath9k based machine
 
-Looks good to me, moving the closing of the relayfs file before the unregis=
-tering. Thanks
-a lot for fixing my bugs, Sujith. :)
+Questions:
 
-Acked-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+ * We already have NL80211_CMD_CH_SWITCH_NOTIFY which is only used for notification.
+   Maybe we can rename that and re-use it instead of adding a new command
+   NL80211_CMD_CHANNEL_SWITCH?
+ * Changes from HT20/NOHT to HT20/NOHT are handled with normal Channel Switch
+   Announcements, everything else (for 40 MHz) is done with Extended Channel Switch
+   Announcements. As far as I read the spec, we can't  use the secondary channel
+   offset IE in beacons, but maybe I'm wrong here?
+ * could other drivers (next to ath9k) work with this API?
 
-(BTW, would you mind sending this as proper [PATCH] again?)
+Limitations:
+ * only works for single interfaces (no plan to change that, due to lack of good concept)
+ * Only changes in the same band (e.g. 2GHz -> 2GHz or 5GHz -> 5 GHz) and same
+   operation mode (HT->HT or NOHT->NOHT) are supported. Especially the first
+   restriction would be troublesome when rewriting the beacon (not only channel
+   info has to be changed, but also basic rates, country information, etc ...).
+   => What do you think about this approach?
+   => (An alternative would be to require userspace to supply the next beacon too)
+ * probe responses are not handled yet (have to look into it)
+ * user notification is missing (we should send an event after this is finished)
+ * locking and many corner cases are still broken (will fix that later)
 
+As always, any comments are appreciated.
 
->=20
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireles=
-s/ath/ath9k/debug.c
-> index 4101c4a..cecbe1f 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.c
-> +++ b/drivers/net/wireless/ath/ath9k/debug.c
-> @@ -1684,6 +1684,14 @@ void ath9k_get_et_stats(struct ieee80211_hw *hw,
->  	WARN_ON(i !=3D ATH9K_SSTATS_LEN);
->  }
-> =20
-> +void ath9k_deinit_debug(struct ath_softc *sc)
-> +{
-> +	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
-> +		relay_close(sc->rfs_chan_spec_scan);
-> +		sc->rfs_chan_spec_scan =3D NULL;
-> +	}
-> +}
-> +
->  int ath9k_init_debug(struct ath_hw *ah)
->  {
->  	struct ath_common *common =3D ath9k_hw_common(ah);
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireles=
-s/ath/ath9k/debug.h
-> index 62da19c..223418d 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.h
-> +++ b/drivers/net/wireless/ath/ath9k/debug.h
-> @@ -297,6 +297,7 @@ struct ath9k_debug {
->  };
-> =20
->  int ath9k_init_debug(struct ath_hw *ah);
-> +void ath9k_deinit_debug(struct ath_softc *sc);
-> =20
->  void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int statu=
-s);
->  void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
-> @@ -332,6 +333,10 @@ static inline int ath9k_init_debug(struct ath_hw *ah)
->  	return 0;
->  }
-> =20
-> +static inline void ath9k_deinit_debug(struct ath_softc *sc)
-> +{
-> +}
-> +
->  static inline void ath_debug_stat_interrupt(struct ath_softc *sc,
->  					    enum ath9k_int status)
->  {
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless=
-/ath/ath9k/init.c
-> index c7b888f..c0aa4ff 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -903,7 +903,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
->  	if (!ath_is_world_regd(reg)) {
->  		error =3D regulatory_hint(hw->wiphy, reg->alpha2);
->  		if (error)
-> -			goto unregister;
-> +			goto debug_cleanup;
->  	}
-> =20
->  	ath_init_leds(sc);
-> @@ -911,6 +911,8 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
-> =20
->  	return 0;
-> =20
-> +debug_cleanup:
-> +	ath9k_deinit_debug(sc);
->  unregister:
->  	ieee80211_unregister_hw(hw);
->  rx_cleanup:
-> @@ -939,11 +941,6 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
->  		sc->dfs_detector->exit(sc->dfs_detector);
-> =20
->  	ath9k_eeprom_release(sc);
-> -
-> -	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
-> -		relay_close(sc->rfs_chan_spec_scan);
-> -		sc->rfs_chan_spec_scan =3D NULL;
-> -	}
->  }
-> =20
->  void ath9k_deinit_device(struct ath_softc *sc)
-> @@ -957,6 +954,7 @@ void ath9k_deinit_device(struct ath_softc *sc)
-> =20
->  	ath9k_ps_restore(sc);
-> =20
-> +	ath9k_deinit_debug(sc);
->  	ieee80211_unregister_hw(hw);
->  	ath_rx_cleanup(sc);
->  	ath9k_deinit_softc(sc);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+	Simon 
 
---k+w/mQv8wyuph6w0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Simon Wunderlich (4):
+  cfg80211: add chandef to operating class conversion
+  nl80211/cfg80211: add channel switch command
+  mac80211: add channel switch command and beacon callbacks
+  ath9k: enable CSA functionality in ath9k
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+ drivers/net/wireless/ath/ath9k/main.c |    6 +
+ include/linux/ieee80211.h             |    9 ++
+ include/net/cfg80211.h                |   15 ++
+ include/net/mac80211.h                |   21 +++
+ include/uapi/linux/nl80211.h          |   20 +++
+ net/mac80211/cfg.c                    |  262 +++++++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h             |   11 ++
+ net/mac80211/ieee80211_i.h            |    9 ++
+ net/mac80211/iface.c                  |    2 +
+ net/mac80211/trace.h                  |   20 +++
+ net/mac80211/tx.c                     |   59 ++++++++
+ net/mac80211/util.c                   |  210 ++++++++++++++++++++++++++
+ net/wireless/nl80211.c                |   76 +++++++++-
+ net/wireless/util.c                   |  193 ++++++++++++++++++++++++
+ 14 files changed, 912 insertions(+), 1 deletion(-)
 
-iEYEARECAAYFAlGL6HMACgkQrzg/fFk7axYhjgCgqmozBcxiAf+utZZfQPGCRfS9
-+SQAnjhDQH+U+UYt3iVBzMBqf1Ox0jhF
-=g1ec
------END PGP SIGNATURE-----
+-- 
+1.7.10.4
 
---k+w/mQv8wyuph6w0--
