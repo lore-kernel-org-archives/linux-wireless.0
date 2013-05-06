@@ -1,65 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36364 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530Ab3EJMIQ (ORCPT
+Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:59904 "EHLO
+	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754882Ab3EFSrN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 08:08:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: greearb@candelatech.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/4] cfg80211: use atomic_t for wiphy counter
-Date: Fri, 10 May 2013 14:08:07 +0200
-Message-Id: <1368187689-29706-3-git-send-email-johannes@sipsolutions.net> (sfid-20130510_140822_948929_361493F6)
-In-Reply-To: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
-References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 6 May 2013 14:47:13 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Mon, 6 May 2013 11:42:36 -0700
+Subject: RE: Memory leak in mwifiex_cfg80211_scan
+Message-ID: <477F20668A386D41ADCC57781B1F70430DD2C9FC92@SC-VEXCH1.marvell.com> (sfid-20130506_204717_551671_9677380A)
+References: <CAMLZHHSVd6GpmqTQyJmbsheH1utZh8mNW8d4zLtjwoONaGwbNA@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E0579DB@SC-VEXCH1.marvell.com>
+	<CAMLZHHQ=BNuD0UmcV8pv=6phW=W-C5C7Af6n8tLWTrzyuzPQow@mail.gmail.com>
+	<CAMLZHHQXY3OuWKr_K1B9-NmZFwCcQFPNTBoOkpvT9kxWJ=ixqQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E14FF4C@SC-VEXCH1.marvell.com>
+	<CAMLZHHSHG2ySmW0ac6+M-7fOgNFrqXBf7=SXFFkWDrhwGwYKXQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E150221@SC-VEXCH1.marvell.com>
+	<CAMLZHHThUxB_Vj4eOjq+61osUQ3CQ5UGgvrgZXE33oDD1N=YtA@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E150A22@SC-VEXCH1.marvell.com>
+	<CAMLZHHTNPBh3LDD0F2+zqSvUPmT6bhA8HLZvc1dTJmHGR8eVJg@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E232E33@SC-VEXCH1.marvell.com>
+ <CAMLZHHS7DOfRfpd-W2hVeJSvxVHNjm7SrxGXH=qLqaFt2sB+BA@mail.gmail.com>
+In-Reply-To: <CAMLZHHS7DOfRfpd-W2hVeJSvxVHNjm7SrxGXH=qLqaFt2sB+BA@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_003_477F20668A386D41ADCC57781B1F70430DD2C9FC92SCVEXCH1marve_"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+--_003_477F20668A386D41ADCC57781B1F70430DD2C9FC92SCVEXCH1marve_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-There's no need to lock, we can just use an atomic_t.
+Hi Daniel,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+> I haven't tested it yet, but it doesn't look like a fix to me.
+>=20
+> Surely the crash here is that the timer_fn is running and using data
+> that has been freed, like the netdev and the workqueue.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 4e0b52f..875d79a 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -289,7 +289,7 @@ static void cfg80211_event_work(struct work_struct *work)
- 
- struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- {
--	static int wiphy_counter;
-+	static atomic_t wiphy_counter = ATOMIC_INIT(0);
- 
- 	struct cfg80211_registered_device *rdev;
- 	int alloc_size;
-@@ -311,20 +311,15 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	rdev->ops = ops;
- 
--	mutex_lock(&cfg80211_mutex);
--
--	rdev->wiphy_idx = wiphy_counter++;
-+	rdev->wiphy_idx = atomic_inc_return(&wiphy_counter);
- 
- 	if (unlikely(rdev->wiphy_idx < 0)) {
--		wiphy_counter--;
--		mutex_unlock(&cfg80211_mutex);
- 		/* ugh, wrapped! */
-+		atomic_dec(&wiphy_counter);
- 		kfree(rdev);
- 		return NULL;
- 	}
- 
--	mutex_unlock(&cfg80211_mutex);
--
- 	/* give it a proper name */
- 	dev_set_name(&rdev->wiphy.dev, PHY_NAME "%d", rdev->wiphy_idx);
- 
--- 
-1.8.0
+Please try attached patches instead.
 
+> mwifiex_free_adapter() is called at the end of mwifiex_remove_card(),
+> after it has freed a whole load of that stuff. If you are trying to
+> stop the timer at this point, you are way too late.
+
+There are two different static mwifiex_free_adapter() functions which cause=
+ confusion.
+The 1/2 patch renames the one in init.c to mwifiex_adapter_cleanup().
+
+Thanks,
+Bing
+
+>=20
+> Daniel
+
+--_003_477F20668A386D41ADCC57781B1F70430DD2C9FC92SCVEXCH1marve_
+Content-Type: application/octet-stream;
+	name="0001-mwifiex-rename-mwifiex_free_adapter-routine.patch"
+Content-Description: 0001-mwifiex-rename-mwifiex_free_adapter-routine.patch
+Content-Disposition: attachment;
+	filename="0001-mwifiex-rename-mwifiex_free_adapter-routine.patch"; size=2088;
+	creation-date="Mon, 06 May 2013 18:38:05 GMT";
+	modification-date="Mon, 06 May 2013 18:38:05 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbSAyNjAxNjFlNGYzZWYyMjk1YTI3OTQ1ZDc4MDNjMjZmZGEwNmM2YmM0IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
+PgpEYXRlOiBUdWUsIDcgTWF5IDIwMTMgMTk6MjI6MjAgKzA1MzAKU3ViamVjdDogW1BBVENIIDEv
+Ml0gbXdpZmlleDogcmVuYW1lIG13aWZpZXhfZnJlZV9hZGFwdGVyKCkgcm91dGluZQoKV2UgaGF2
+ZSB0d28gZGlmZmVyZW50IHN0YXRpYyByb3V0aW5lcyB3aXRoIG5hbWUKbXdpZmlleF9mcmVlX2Fk
+YXB0ZXIoKS4gVGhlIHJvdXRpbmUgaW4gbWFpbi5jIGFjdHVhbGx5IGZyZWVzCnRoZSBhZGFwdGVy
+IHN0cnVjdHVyZS4KV2Ugd2lsbCByZW5hbWUgb3RoZXIgcm91dGluZSB0byBtd2lmaWV4X2FkYXB0
+ZXJfY2xlYW51cCgpIHRvCmF2b2lkIGNvbmZ1c2lvbi4KClNpZ25lZC1vZmYtYnk6IEFtaXRrdW1h
+ciBLYXJ3YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+Ci0tLQogZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+bXdpZmlleC9pbml0LmMgfCAgIDE4ICsrKysrKysrLS0tLS0tLS0tLQogMSBmaWxlcyBjaGFuZ2Vk
+LCA4IGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL213aWZpZXgvaW5pdC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
+eC9pbml0LmMKaW5kZXggZDc1MDI4Ni4uYmNhNTAwYSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvbXdpZmlleC9pbml0LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
+eC9pbml0LmMKQEAgLTQ0MSwxNyArNDQxLDE2IEBAIHN0YXRpYyB2b2lkIG13aWZpZXhfZnJlZV9s
+b2NrX2xpc3Qoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikKIH0KIAogLyoKLSAqIFRo
+aXMgZnVuY3Rpb24gZnJlZXMgdGhlIGFkYXB0ZXIgc3RydWN0dXJlLgorICogVGhpcyBmdW5jdGlv
+biBwZXJmb3JtcyBjbGVhbnVwIGZvciBhZGFwdGVyIHN0cnVjdHVyZS4KICAqCi0gKiBUaGUgZnJl
+ZWluZyBvcGVyYXRpb24gaXMgZG9uZSByZWN1cnNpdmVseSwgYnkgY2FuY2VsaW5nIGFsbAotICog
+cGVuZGluZyBjb21tYW5kcywgZnJlZWluZyB0aGUgbWVtYmVyIGJ1ZmZlcnMgcHJldmlvdXNseQot
+ICogYWxsb2NhdGVkIChjb21tYW5kIGJ1ZmZlcnMsIHNjYW4gdGFibGUgYnVmZmVyLCBzbGVlcCBj
+b25maXJtCi0gKiBjb21tYW5kIGJ1ZmZlciksIHN0b3BwaW5nIHRoZSB0aW1lcnMgYW5kIGNhbGxp
+bmcgdGhlIGNsZWFudXAKLSAqIHJvdXRpbmVzIGZvciBldmVyeSBpbnRlcmZhY2UsIGJlZm9yZSB0
+aGUgYWN0dWFsIGFkYXB0ZXIKLSAqIHN0cnVjdHVyZSBpcyBmcmVlZC4KKyAqIFRoZSBjbGVhbnVw
+IGlzIGRvbmUgcmVjdXJzaXZlbHksIGJ5IGNhbmNlbGluZyBhbGwgcGVuZGluZworICogY29tbWFu
+ZHMsIGZyZWVpbmcgdGhlIG1lbWJlciBidWZmZXJzIHByZXZpb3VzbHkgYWxsb2NhdGVkCisgKiAo
+Y29tbWFuZCBidWZmZXJzLCBzY2FuIHRhYmxlIGJ1ZmZlciwgc2xlZXAgY29uZmlybSBjb21tYW5k
+CisgKiBidWZmZXIpLCBzdG9wcGluZyB0aGUgdGltZXJzIGFuZCBjYWxsaW5nIHRoZSBjbGVhbnVw
+IHJvdXRpbmVzCisgKiBmb3IgZXZlcnkgaW50ZXJmYWNlLgogICovCiBzdGF0aWMgdm9pZAotbXdp
+ZmlleF9mcmVlX2FkYXB0ZXIoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikKK213aWZp
+ZXhfYWRhcHRlcl9jbGVhbnVwKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpCiB7CiAJ
+aWYgKCFhZGFwdGVyKSB7CiAJCXByX2VycigiJXM6IGFkYXB0ZXIgaXMgTlVMTFxuIiwgX19mdW5j
+X18pOwpAQCAtNzI3LDggKzcyNiw3IEBAIG13aWZpZXhfc2h1dGRvd25fZHJ2KHN0cnVjdCBtd2lm
+aWV4X2FkYXB0ZXIgKmFkYXB0ZXIpCiAJCX0KIAl9CiAKLQkvKiBGcmVlIGFkYXB0ZXIgc3RydWN0
+dXJlICovCi0JbXdpZmlleF9mcmVlX2FkYXB0ZXIoYWRhcHRlcik7CisJbXdpZmlleF9hZGFwdGVy
+X2NsZWFudXAoYWRhcHRlcik7CiAKIAlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhZGFwdGVyLT5t
+d2lmaWV4X2xvY2ssIGZsYWdzKTsKIAotLSAKMS43LjMuNAoK
+
+--_003_477F20668A386D41ADCC57781B1F70430DD2C9FC92SCVEXCH1marve_
+Content-Type: application/octet-stream;
+	name="0002-mwifiex-scan-delay-timer-cleanup-in-unload-path.patch"
+Content-Description: 0002-mwifiex-scan-delay-timer-cleanup-in-unload-path.patch
+Content-Disposition: attachment;
+	filename="0002-mwifiex-scan-delay-timer-cleanup-in-unload-path.patch";
+	size=1483; creation-date="Mon, 06 May 2013 18:38:26 GMT";
+	modification-date="Mon, 06 May 2013 18:38:26 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbSA2ZWFkNzBhN2M4ODZkNjYxZmU2N2U4ZGUxMjA5N2QyMjM4NTM3MTgyIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
+PgpEYXRlOiBUdWUsIDcgTWF5IDIwMTMgMTk6MjM6MDYgKzA1MzAKU3ViamVjdDogW1BBVENIIDIv
+Ml0gbXdpZmlleDogc2NhbiBkZWxheSB0aW1lciBjbGVhbnVwIGluIHVubG9hZCBwYXRoCgpSZXR1
+cm4gZnJvbSBzY2FuIGRlbGF5IHRpbWVyIHJvdXRpbmUgaWYgc3VycHJpc2VfcmVtb3ZlZCBmbGFn
+CmlzIHRydWUuIEFsc28sIGNhbmNlbCB0aGUgdGltZXIgaW4gdW5sb2FkIHBhdGguCgpTaWduZWQt
+b2ZmLWJ5OiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29tPgotLS0KIGRyaXZl
+cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvaW5pdC5jIHwgICAxMCArKysrKysrKysrCiAxIGZpbGVz
+IGNoYW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9pbml0LmMgYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9td2lmaWV4L2luaXQuYwppbmRleCBiY2E1MDBhLi40YWZhZDhiIDEwMDY0NAotLS0gYS9kcml2
+ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2luaXQuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9td2lmaWV4L2luaXQuYwpAQCAtNTksNiArNTksOSBAQCBzdGF0aWMgdm9pZCBzY2FuX2RlbGF5
+X3RpbWVyX2ZuKHVuc2lnbmVkIGxvbmcgZGF0YSkKIAlzdHJ1Y3QgY21kX2N0cmxfbm9kZSAqY21k
+X25vZGUsICp0bXBfbm9kZTsKIAl1bnNpZ25lZCBsb25nIGZsYWdzOwogCisJaWYgKGFkYXB0ZXIt
+PnN1cnByaXNlX3JlbW92ZWQpCisJCXJldHVybjsKKwogCWlmIChhZGFwdGVyLT5zY2FuX2RlbGF5
+X2NudCA9PSBNV0lGSUVYX01BWF9TQ0FOX0RFTEFZX0NOVCkgewogCQkvKgogCQkgKiBBYm9ydCBz
+Y2FuIG9wZXJhdGlvbiBieSBjYW5jZWxsaW5nIGFsbCBwZW5kaW5nIHNjYW4KQEAgLTQ1MiwxMSAr
+NDU1LDE4IEBAIHN0YXRpYyB2b2lkIG13aWZpZXhfZnJlZV9sb2NrX2xpc3Qoc3RydWN0IG13aWZp
+ZXhfYWRhcHRlciAqYWRhcHRlcikKIHN0YXRpYyB2b2lkCiBtd2lmaWV4X2FkYXB0ZXJfY2xlYW51
+cChzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVyKQogeworCWludCBpOworCiAJaWYgKCFh
+ZGFwdGVyKSB7CiAJCXByX2VycigiJXM6IGFkYXB0ZXIgaXMgTlVMTFxuIiwgX19mdW5jX18pOwog
+CQlyZXR1cm47CiAJfQogCisJZm9yIChpID0gMDsgaSA8IGFkYXB0ZXItPnByaXZfbnVtOyBpKysp
+IHsKKwkJaWYgKGFkYXB0ZXItPnByaXZbaV0pCisJCQlkZWxfdGltZXIoJmFkYXB0ZXItPnByaXZb
+aV0tPnNjYW5fZGVsYXlfdGltZXIpOworCX0KKwogCW13aWZpZXhfY2FuY2VsX2FsbF9wZW5kaW5n
+X2NtZChhZGFwdGVyKTsKIAogCS8qIEZyZWUgbG9jayB2YXJpYWJsZXMgKi8KLS0gCjEuNy4zLjQK
+Cg==
+
+--_003_477F20668A386D41ADCC57781B1F70430DD2C9FC92SCVEXCH1marve_--
