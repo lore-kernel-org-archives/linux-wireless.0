@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [78.193.33.39] ([78.193.33.39]:46326 "EHLO qult.net"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1758992Ab3EOOMW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:12:22 -0400
-Date: Wed, 15 May 2013 15:42:58 +0200
-From: Ignacy Gawedzki <i@lri.fr>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: ath9k_htc: Target is unresponsive
-Message-ID: <20130515134258.GA9033@zenon.in.qult.net> (sfid-20130515_161226_309821_857B3691)
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:52614 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753607Ab3EFO6Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 May 2013 10:58:16 -0400
+Received: by mail-wi0-f182.google.com with SMTP id m6so2641621wiv.3
+        for <linux-wireless@vger.kernel.org>; Mon, 06 May 2013 07:58:14 -0700 (PDT)
+Message-ID: <5187C502.10407@gmail.com> (sfid-20130506_165825_154851_3FA53302)
+Date: Mon, 06 May 2013 16:58:10 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: wnewbie72@gmail.com,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RT5390 rev 0503 problems
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+wireless newbie wrote:
 
-This is an old issue, about which it seems the first posts date back to 2009.
-With the latest possible version of the firmware for AR9271 and the latest
-possible wireless drivers, the issue is still there.  Whether this is still
-the exact same problem every time remains to be checked, but it is annoying
-enough to deserve some consideration.
+> Has anyone experience with Ralink RT5390 chip with revision 0503? I
+> have that chip on my wireless usb module (WPER-172gn). I'm able to use
+> only one antenna with it but it has very poor rx signal level that
+> way. Adding second antenna for testing purposes clearly improves rx
+> level but that is no option for me.
+> 
+> I noticed in the list that someone had same sort of problem with
+> rt5390 rev 1502. Problem was hardware antenna diversity that wasn't
+> handled properly on the driver. Driver patch was provided to fix that.
+> I applied those same changes for rev 0503 and that solved my rx level
+> problem too.
 
-The problem is that the driver can't talk to the device if the following
-conditions are met:
-
- - The system cold boots with the USB dongle inserted or the USB dongle is
-   inserted on a running system.
-
- - The interface is *not* brought up.
-
- - The system (warm) reboots.
-
-Then the driver complains about the target being unresponsive after uploading
-the firmware.  Apparently the only way to make it work again is to unplug and
-then plug the USB dongle back, physically.  It seems that if the USB port is
-not powered down during reboot (which happens with at least two different
-setups that I've tested it with), the device is left in a broken state.
-
-I would gladly help in tracing down this bug if only I knew where to start.
-
-Thanks for any suggestion.
-
-Ignacy
-
--- 
-A person is shit's way of making more shit.
-		-- S. Barnett, anthropologist.
+is it like this ?
+http://marc.info/?l=linux-wireless&m=134136097328697
