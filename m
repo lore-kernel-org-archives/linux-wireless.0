@@ -1,32 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46672 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753070Ab3EMJmo (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:51166 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755688Ab3EFTOK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 05:42:44 -0400
-Message-ID: <1368438160.8300.11.camel@jlt4.sipsolutions.net> (sfid-20130513_114249_029259_9C6EC440)
-Subject: Re: [PATCH 2/3] cfg80211: Allow ieee80211g mandatory rate sets in
- 2.4GHz band
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Date: Mon, 13 May 2013 11:42:40 +0200
-In-Reply-To: <1368233453-10581-2-git-send-email-ashok@cozybit.com> (sfid-20130511_025108_024609_B2866B0C)
-References: <1368233453-10581-1-git-send-email-ashok@cozybit.com>
-	 <1368233453-10581-2-git-send-email-ashok@cozybit.com>
-	 (sfid-20130511_025108_024609_B2866B0C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 6 May 2013 15:14:10 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [RFC 4/4] ath9k: enable CSA functionality in ath9k
+Date: Mon,  6 May 2013 21:13:55 +0200
+Message-Id: <1367867635-3459-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130506_211419_430799_258FEDBD)
+In-Reply-To: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-05-10 at 17:50 -0700, Ashok Nagarajan wrote:
-> This patch assumes 11g support
-> implies a 11g operation and returns the appropriate mandatory rates.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Which is a problem, because it means that by default we'll create IBSS
-networks that are not compatible with 11b devices.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a383483..e68f62f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2341,6 +2341,11 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
+ 	sc->scanning = 0;
+ }
+ 
++static void ath9k_channel_switch_beacon(struct ieee80211_vif *vif)
++{
++	vif->csa_active = 1;
++}
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2388,4 +2393,5 @@ struct ieee80211_ops ath9k_ops = {
+ #endif
+ 	.sw_scan_start	    = ath9k_sw_scan_start,
+ 	.sw_scan_complete   = ath9k_sw_scan_complete,
++	.channel_switch_beacon     = ath9k_channel_switch_beacon,
+ };
+-- 
+1.7.10.4
 
