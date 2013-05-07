@@ -1,63 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:53930 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753143Ab3EHJ4V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 05:56:21 -0400
-From: Luciano Coelho <coelho@ti.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:33289 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756001Ab3EGMA7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 May 2013 08:00:59 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, <arik@wizery.com>, <eliad@wizery.com>
-Subject: [PATCH v2] wl18xx: use locally administered MAC address if not available from fuse
-Date: Wed, 8 May 2013 12:54:56 +0300
-Message-ID: <1368006896-24468-1-git-send-email-coelho@ti.com> (sfid-20130508_115625_865216_E38344F7)
+Subject: Q: how to control aggregation parameters
+Date: Tue, 7 May 2013 15:00:53 +0300
+Message-ID: <4435058.lvXA3rBapG@lx-vladimir> (sfid-20130507_140104_003103_48B12470)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some R&D chips, the device may be left untrimmed and with the MAC
-address missing from fuse ROM.  In order to support those devices,
-apply a random locally administered MAC address instead.
+Do we have some way to control aggregation from user space:
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
+- enable/disable A-MSDU aggregation
+- enable/disable A-MPDU aggregation (per RAxTID,
+  set agg_wsize and other ADDBA params)
+- parameters for A-MPDU on recipient side (accept/reject,
+  max agg_wsize, etc.)
 
-In v2:
-
-* use eth_random_addr() to generate the locally assigned address,
-  instead of hardcoding it. (thanks Johannes)
-
- drivers/net/wireless/ti/wl18xx/main.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index ae85ae4..7aa0eb8 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -23,6 +23,7 @@
- #include <linux/platform_device.h>
- #include <linux/ip.h>
- #include <linux/firmware.h>
-+#include <linux/etherdevice.h>
- 
- #include "../wlcore/wlcore.h"
- #include "../wlcore/debug.h"
-@@ -1318,6 +1319,16 @@ static int wl18xx_get_mac(struct wl1271 *wl)
- 		((mac1 & 0xff000000) >> 24);
- 	wl->fuse_nic_addr = (mac1 & 0xffffff);
- 
-+	if (!wl->fuse_oui_addr && !wl->fuse_nic_addr) {
-+		u8 mac[ETH_ALEN];
-+
-+		eth_random_addr(mac);
-+
-+		wl->fuse_oui_addr = (mac[0] << 16) + (mac[1] << 8) + mac[2];
-+		wl->fuse_nic_addr = (mac[3] << 16) + (mac[4] << 8) + mac[5];
-+		wl1271_warning("MAC address from fuse not available, using random locally administered addresses.");
-+	}
-+
- 	ret = wlcore_set_partition(wl, &wl->ptable[PART_DOWN]);
- 
- out:
--- 
-1.7.10.4
-
+I mean, who defines policy for ADDBA flows?
