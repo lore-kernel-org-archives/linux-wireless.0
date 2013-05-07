@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:40246 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964Ab3EIPgu (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54376 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933442Ab3EGNoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 May 2013 11:36:50 -0400
-Message-ID: <518BC290.2040306@lwfinger.net> (sfid-20130509_173720_224963_3CDA7434)
-Date: Thu, 09 May 2013 10:36:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Norbert Preining <preining@logic.at>
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	hostap@lists.shmoo.com
-Subject: Re: RTL driver for RTL8191SEvB and/or wpa-supplicant really broken
- at times
-References: <20130509115630.GC5111@gamma.logic.tuwien.ac.at>
-In-Reply-To: <20130509115630.GC5111@gamma.logic.tuwien.ac.at>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 7 May 2013 09:44:04 -0400
+Message-ID: <1367934240.8328.22.camel@jlt4.sipsolutions.net> (sfid-20130507_154411_203642_40B10317)
+Subject: Re: [RFC 00/12] MBSS sharing across multiple interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>, me@bobcopeland.com,
+	open80211s <devel@lists.open80211s.org>
+Date: Tue, 07 May 2013 15:44:00 +0200
+In-Reply-To: <1367548442-8229-1-git-send-email-thomas@cozybit.com> (sfid-20130503_043611_905025_22468B9A)
+References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20130503_043611_905025_22468B9A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2013 06:56 AM, Norbert Preining wrote:
+On Thu, 2013-05-02 at 19:33 -0700, Thomas Pedersen wrote:
+> This patchset enables multiple interfaces on the same host to share mesh path
+> selection and frame forwarding duties. The peering state machine remains
+> per-interface.
 
-> in the current state, that is release 3.9.0, but the same happened
-> in earlier kernels, this driver and/or NM is completely useless
-> at times. At times it just works, at times it does nothing.
-> In this case, now the 5th day in series ...
+Generally, this looks pretty good. The one thing I didn't see (maybe I
+missed it) is how you handle different headroom/tailroom/crypto
+requirements for different devices?
 
-Nice long rant. Too bad we don't have a soapbox.
-
-With all the information you provided, you forgot one detail that is absolutely 
-critical, namely the PCI ID. There are at least three varieties of RTL8191SE 
-chip, and I have no idea which one you have.
-
-I also recommend that you try either the wireless-testing git repo or the 
-mainline git repo. There are a lot of changes that cannot be backported.
-
-Larry
-
-
+johannes
 
