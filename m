@@ -1,125 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:33884 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755166Ab3EMUID (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:59829 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413Ab3EGQJI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 16:08:03 -0400
-Received: by mail-ea0-f176.google.com with SMTP id h14so3793159eak.7
-        for <linux-wireless@vger.kernel.org>; Mon, 13 May 2013 13:08:02 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] bcma: don't hardcode SPROM length
-Date: Mon, 13 May 2013 22:07:51 +0200
-Message-Id: <1368475673-27587-1-git-send-email-zajec5@gmail.com> (sfid-20130513_220809_136165_35848E60)
+	Tue, 7 May 2013 12:09:08 -0400
+Received: by mail-qc0-f174.google.com with SMTP id m16so389569qcq.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 May 2013 09:09:07 -0700 (PDT)
+Message-ID: <51892720.3010505@gmail.com> (sfid-20130507_180911_704722_5FC29213)
+Date: Tue, 07 May 2013 12:09:04 -0400
+From: Jonathan Bither <jonbither@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Oleksij Rempel <linux@rempel-privat.de>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>, radiotap@netbsd.org
+Subject: Re: Standardisation - adding 2 bit STBC and Ness to MCS
+References: <518127ED.9060900@rempel-privat.de> <1367527479.11375.19.camel@jlt4.sipsolutions.net> <5188AFFE.6070804@rempel-privat.de> <1367934867.8328.31.camel@jlt4.sipsolutions.net> <1367934904.8328.32.camel@jlt4.sipsolutions.net> <518916D1.4070902@gmail.com> <518917C4.9090607@rempel-privat.de>
+In-Reply-To: <518917C4.9090607@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass it as an argument to all functions. This is requires as newer SPROM
-revisions have different lengths.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/sprom.c |   30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index 8934298..5386cdd 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -72,12 +72,12 @@ fail:
-  * R/W ops.
-  **************************************************/
- 
--static void bcma_sprom_read(struct bcma_bus *bus, u16 offset, u16 *sprom)
-+static void bcma_sprom_read(struct bcma_bus *bus, u16 offset, u16 *sprom,
-+			    size_t words)
- {
- 	int i;
--	for (i = 0; i < SSB_SPROMSIZE_WORDS_R4; i++)
--		sprom[i] = bcma_read16(bus->drv_cc.core,
--				       offset + (i * 2));
-+	for (i = 0; i < words; i++)
-+		sprom[i] = bcma_read16(bus->drv_cc.core, offset + (i * 2));
- }
- 
- /**************************************************
-@@ -124,29 +124,29 @@ static inline u8 bcma_crc8(u8 crc, u8 data)
- 	return t[crc ^ data];
- }
- 
--static u8 bcma_sprom_crc(const u16 *sprom)
-+static u8 bcma_sprom_crc(const u16 *sprom, size_t words)
- {
- 	int word;
- 	u8 crc = 0xFF;
- 
--	for (word = 0; word < SSB_SPROMSIZE_WORDS_R4 - 1; word++) {
-+	for (word = 0; word < words - 1; word++) {
- 		crc = bcma_crc8(crc, sprom[word] & 0x00FF);
- 		crc = bcma_crc8(crc, (sprom[word] & 0xFF00) >> 8);
- 	}
--	crc = bcma_crc8(crc, sprom[SSB_SPROMSIZE_WORDS_R4 - 1] & 0x00FF);
-+	crc = bcma_crc8(crc, sprom[words - 1] & 0x00FF);
- 	crc ^= 0xFF;
- 
- 	return crc;
- }
- 
--static int bcma_sprom_check_crc(const u16 *sprom)
-+static int bcma_sprom_check_crc(const u16 *sprom, size_t words)
- {
- 	u8 crc;
- 	u8 expected_crc;
- 	u16 tmp;
- 
--	crc = bcma_sprom_crc(sprom);
--	tmp = sprom[SSB_SPROMSIZE_WORDS_R4 - 1] & SSB_SPROM_REVISION_CRC;
-+	crc = bcma_sprom_crc(sprom, words);
-+	tmp = sprom[words - 1] & SSB_SPROM_REVISION_CRC;
- 	expected_crc = tmp >> SSB_SPROM_REVISION_CRC_SHIFT;
- 	if (crc != expected_crc)
- 		return -EPROTO;
-@@ -154,16 +154,16 @@ static int bcma_sprom_check_crc(const u16 *sprom)
- 	return 0;
- }
- 
--static int bcma_sprom_valid(const u16 *sprom)
-+static int bcma_sprom_valid(const u16 *sprom, size_t words)
- {
- 	u16 revision;
- 	int err;
- 
--	err = bcma_sprom_check_crc(sprom);
-+	err = bcma_sprom_check_crc(sprom, words);
- 	if (err)
- 		return err;
- 
--	revision = sprom[SSB_SPROMSIZE_WORDS_R4 - 1] & SSB_SPROM_REVISION_REV;
-+	revision = sprom[words - 1] & SSB_SPROM_REVISION_REV;
- 	if (revision != 8 && revision != 9) {
- 		pr_err("Unsupported SPROM revision: %d\n", revision);
- 		return -ENOENT;
-@@ -589,13 +589,13 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, false);
- 
- 	bcma_debug(bus, "SPROM offset 0x%x\n", offset);
--	bcma_sprom_read(bus, offset, sprom);
-+	bcma_sprom_read(bus, offset, sprom, SSB_SPROMSIZE_WORDS_R4);
- 
- 	if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4331 ||
- 	    bus->chipinfo.id == BCMA_CHIP_ID_BCM43431)
- 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, true);
- 
--	err = bcma_sprom_valid(sprom);
-+	err = bcma_sprom_valid(sprom, SSB_SPROMSIZE_WORDS_R4);
- 	if (err) {
- 		bcma_warn(bus, "invalid sprom read from the PCIe card, try to use fallback sprom\n");
- 		err = bcma_fill_sprom_with_fallback(bus, &bus->sprom);
--- 
-1.7.10.4
+On Tue 07 May 2013 11:03:32 AM EDT, Oleksij Rempel wrote:
+> Am 07.05.2013 16:59, schrieb Jonathan Bither:
+>>
+>>
+>> On 05/07/2013 09:55 AM, Johannes Berg wrote:
+>>> On Tue, 2013-05-07 at 15:54 +0200, Johannes Berg wrote:
+>>>> On Tue, 2013-05-07 at 09:40 +0200, Oleksij Rempel wrote:
+>>>>> Am 02.05.2013 22:44, schrieb Johannes Berg:
+>>>>>> On Wed, 2013-05-01 at 16:34 +0200, Oleksij Rempel wrote:
+>>>>>>
+>>>>>>>> With this I believe we have everything needed to start the 3 week
+>>>>>>>> comment period.
+>>>>>>
+>>>>>> Yeah, I guess there was plenty of time. I would have preferred a
+>>>>>> separate thread, but I guess there's little enough traffic on this
+>>>>>> list
+>>>>>> so it doesn't really matter.
+>>>>>>
+>>>>>>> There is a bit more then 3 week now. I would like to have this
+>>>>>>> approved :)
+>>>>>>> Are there any thing needed to finish this?
+>>>>>>
+>>>>>> http://www.radiotap.org/Standardisation
+>>>>>>
+>>>>>> johannes
+>>>>>>
+>>>>>
+>>>>> ping.
+>>>>>
+>>>>> Johannes, are you the one who says last word on standardisation for
+>>>>> radiotap?
+>>>>
+>>>> No? I thought the link made that pretty clear.
+>>>>
+>>>> But since nobody poked holes in this and it's been a long time, I
+>>>> think
+>>>> you should probably just post "this has been adopted now" ...
+>>>
+>>> Or actually, go to step 5, preferably reposting it as a separate
+>>> thread.
+>> It looks as if someone already proposed this as a suggested field on
+>> '2012-05-14 23:49:35' without any replies as far as I can tell.
+>> http://www.radiotap.org/suggested-fields/MCS%20extension%20for%20STBC%20and%20Ness
+>>
+>
+> Yes, Simon did it last year. I send this link on my first email...
+> In my opinion, this should be just ACKed. Every thing what was needed
+> to do, is already done.
+>
 
+Whoops, one of those days I guess. Sorry for the noise.
