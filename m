@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35126 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:54437 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758788Ab3EWQIM (ORCPT
+	with ESMTP id S932821Ab3EGNzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 12:08:12 -0400
-Message-ID: <1369325287.12002.32.camel@jlt4.sipsolutions.net> (sfid-20130523_180815_791873_7D477806)
-Subject: Re: [RFC v4] cfg80211: Android P2P-Device workaround
+	Tue, 7 May 2013 09:55:17 -0400
+Message-ID: <1367934904.8328.32.camel@jlt4.sipsolutions.net> (sfid-20130507_155533_874944_759AA609)
+Subject: Re: Standardisation - adding 2 bit STBC and Ness to MCS
 From: Johannes Berg <johannes@sipsolutions.net>
-To: YanBo <dreamfly281@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 23 May 2013 18:08:07 +0200
-In-Reply-To: <CAFuUQkiVHPNzRNdAnLnRkE0_w2ZERu_S4++3PcD504KCL8NBdA@mail.gmail.com> (sfid-20130523_164054_044965_7DFBA23C)
-References: <1367238384-26722-1-git-send-email-johannes@sipsolutions.net>
-	 <51823A0E.8020005@broadcom.com>
-	 <1367489163.8298.2.camel@jlt4.sipsolutions.net>
-	 <5182BBD4.9010701@broadcom.com>
-	 <1367922058.8328.2.camel@jlt4.sipsolutions.net>
-	 <CAFuUQkgTbf0959=xCUCA1AR-Vxv7Cj90GC4Ae7+BQUqme70ksQ@mail.gmail.com>
-	 <1369302019.12002.0.camel@jlt4.sipsolutions.net>
-	 <CAFuUQkiVHPNzRNdAnLnRkE0_w2ZERu_S4++3PcD504KCL8NBdA@mail.gmail.com>
-	 (sfid-20130523_164054_044965_7DFBA23C)
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: radiotap@NetBSD.org, simon@superduper.net,
+	Adrian Chadd <adrian@freebsd.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 07 May 2013 15:55:04 +0200
+In-Reply-To: <1367934867.8328.31.camel@jlt4.sipsolutions.net>
+References: <518127ED.9060900@rempel-privat.de>
+	 (sfid-20130501_163425_421280_1DE3F635) <1367527479.11375.19.camel@jlt4.sipsolutions.net>
+	 <5188AFFE.6070804@rempel-privat.de>
+	 (sfid-20130507_094050_709302_8E653F0F) <1367934867.8328.31.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-23 at 22:40 +0800, YanBo wrote:
-> It do make crash in my test. and the crash point to this sentence,
-> after apply this patch, the crash gone.
+On Tue, 2013-05-07 at 15:54 +0200, Johannes Berg wrote:
+> On Tue, 2013-05-07 at 09:40 +0200, Oleksij Rempel wrote:
+> > Am 02.05.2013 22:44, schrieb Johannes Berg:
+> > > On Wed, 2013-05-01 at 16:34 +0200, Oleksij Rempel wrote:
+> > >
+> > >>> With this I believe we have everything needed to start the 3 week
+> > >>> comment period.
+> > >
+> > > Yeah, I guess there was plenty of time. I would have preferred a
+> > > separate thread, but I guess there's little enough traffic on this list
+> > > so it doesn't really matter.
+> > >
+> > >> There is a bit more then 3 week now. I would like to have this approved :)
+> > >> Are there any thing needed to finish this?
+> > >
+> > > http://www.radiotap.org/Standardisation
+> > >
+> > > johannes
+> > >
+> > 
+> > ping.
+> > 
+> > Johannes, are you the one who says last word on standardisation for 
+> > radiotap?
 > 
-> Step in my test to reproduce this crash (on one android phone )
+> No? I thought the link made that pretty clear.
 > 
-> 1: Create the p2p devices
-> 2: Wake up both p2p0 and wlan0.
-> 3: iw wlan0 scan to get the scan AP
-> 4: iw wlan0 connect SSID freq macaddress to connect a open AP
-> normally the crash will happened after step 4
+> But since nobody poked holes in this and it's been a long time, I think
+> you should probably just post "this has been adopted now" ...
 
-Ok yeah I can reproduce this, it's entirely unrelated to this particular
-patch but even upstream -- the function is missing a check
-"wdev->netdev". I'll send a patch.
+Or actually, go to step 5, preferably reposting it as a separate thread.
 
 johannes
 
