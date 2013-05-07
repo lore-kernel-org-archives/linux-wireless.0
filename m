@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37460 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562Ab3EBUZI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 16:25:08 -0400
-Message-ID: <1367526288.11375.2.camel@jlt4.sipsolutions.net> (sfid-20130502_222515_334807_C9046FF0)
-Subject: Re: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting
- station.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 02 May 2013 22:24:48 +0200
-In-Reply-To: <5182C38B.7060107@candelatech.com> (sfid-20130502_215043_578677_76592D19)
-References: <5182C38B.7060107@candelatech.com>
-	 (sfid-20130502_215043_578677_76592D19)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.15.18]:63762 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756891Ab3EGHku (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 May 2013 03:40:50 -0400
+Received: from mailout-de.gmx.net ([10.1.76.17]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0LwCv2-1UUZAt00Ok-0186BB for
+ <linux-wireless@vger.kernel.org>; Tue, 07 May 2013 09:40:49 +0200
+Message-ID: <5188AFFE.6070804@rempel-privat.de> (sfid-20130507_094054_625799_40248504)
+Date: Tue, 07 May 2013 09:40:46 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: radiotap@NetBSD.org, simon@superduper.net,
+	Adrian Chadd <adrian@freebsd.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Standardisation - adding 2 bit STBC and Ness to MCS
+References: <518127ED.9060900@rempel-privat.de>  (sfid-20130501_163425_421280_1DE3F635) <1367527479.11375.19.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1367527479.11375.19.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-02 at 12:50 -0700, Ben Greear wrote:
-> Kernel is hacked 3.9.0+
+Am 02.05.2013 22:44, schrieb Johannes Berg:
+> On Wed, 2013-05-01 at 16:34 +0200, Oleksij Rempel wrote:
+>
+>>> With this I believe we have everything needed to start the 3 week
+>>> comment period.
+>
+> Yeah, I guess there was plenty of time. I would have preferred a
+> separate thread, but I guess there's little enough traffic on this list
+> so it doesn't really matter.
+>
+>> There is a bit more then 3 week now. I would like to have this approved :)
+>> Are there any thing needed to finish this?
+>
+> http://www.radiotap.org/Standardisation
+>
+> johannes
+>
 
-Clearly :)
+ping.
 
-> I've been seeing this problem for a while (and posted about it previously).  The problem
-> is that a station appears to associate fine, but never actually 'connects'.  This problem
-> is not easy to reproduce...
+Johannes, are you the one who says last word on standardisation for 
+radiotap?
 
-It would be useful to know what you added ... the message you point to
-(invalid wds/flush whatever) doesn't exist upstream.
-
-johannes
-
-
+-- 
+Regards,
+Oleksij
