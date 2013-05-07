@@ -1,38 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1900 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753858Ab3ESIcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 May 2013 04:32:06 -0400
-Message-ID: <51988DF8.9000308@broadcom.com> (sfid-20130519_103212_914594_32835F0A)
-Date: Sun, 19 May 2013 10:31:52 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Jonas Gorski" <jogo@openwrt.org>
-cc: "Hauke Mehrtens" <hauke@hauke-m.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Subject: Re: REGRESSION: v3.10-rc1: [PATCH 04/15] brcmsmac: remove
- brcms_bss_cfg->associated
-References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
- <1364085963-25940-5-git-send-email-hauke@hauke-m.de>
- <5197DC4F.7030503@broadcom.com>
- <CAOiHx=nJ=2zeN1wb=GTzk+hr=vYXAUvxpVAK7rt7M40PrvvBDg@mail.gmail.com>
-In-Reply-To: <CAOiHx=nJ=2zeN1wb=GTzk+hr=vYXAUvxpVAK7rt7M40PrvvBDg@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from s72.web-hosting.com ([198.187.29.21]:39180 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759Ab3EGXgB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 May 2013 19:36:01 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] ath9k: Fix TID locking
+Date: Wed,  8 May 2013 05:03:33 +0530
+Message-Id: <1367969613-1867-4-git-send-email-sujith@msujith.org> (sfid-20130508_013607_632326_153467D6)
+In-Reply-To: <1367969613-1867-1-git-send-email-sujith@msujith.org>
+References: <1367969613-1867-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/19/2013 01:34 AM, Jonas Gorski wrote:
-> Hauke's change made it possible for the code to return true, which
-> looks at a first glance what might have been originally intended here,
-> and the bug is somewhere else. But what do I know, I'm no Broadcom
-> engineer;-)
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Point taken :-) The function seems rather useless in brcmsmac, but I 
-would like to keep it so we can use internal driver source as reference 
-when adding power-save support.
+The TID state is accessed from various contexts without any
+protection. Use the TX queue lock associated with the AC
+to make sure that the TID data is locked properly.
 
-Regards,
-Arend
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c   | 12 ++++++++----
+ drivers/net/wireless/ath/ath9k/xmit.c | 37 ++++++++++++++++++++---------------
+ 2 files changed, 29 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index aa4d368..aa1b63f 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1221,15 +1221,19 @@ static bool ath_tx_aggr_check(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 			      u8 tidno)
+ {
+ 	struct ath_node *an = (struct ath_node *)sta->drv_priv;
+-	struct ath_atx_tid *txtid;
++	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tidno);
++	struct ath_txq *txq = txtid->ac->txq;
+ 
+ 	if (!sta->ht_cap.ht_supported)
+ 		return false;
+ 
+-	txtid = ATH_AN_2_TID(an, tidno);
++	ath_txq_lock(sc, txq);
++	if (!(txtid->state & (AGGR_ADDBA_COMPLETE | AGGR_ADDBA_PROGRESS))) {
++		ath_txq_unlock(sc, txq);
++		return true;
++	}
++	ath_txq_unlock(sc, txq);
+ 
+-	if (!(txtid->state & (AGGR_ADDBA_COMPLETE | AGGR_ADDBA_PROGRESS)))
+-			return true;
+ 	return false;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index eab0fcb..655057d 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -131,16 +131,13 @@ static void ath_tx_resume_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 
+ 	WARN_ON(!tid->paused);
+ 
+-	ath_txq_lock(sc, txq);
+ 	tid->paused = false;
+ 
+ 	if (skb_queue_empty(&tid->buf_q))
+-		goto unlock;
++		return;
+ 
+ 	ath_tx_queue_tid(txq, tid);
+ 	ath_txq_schedule(sc, txq);
+-unlock:
+-	ath_txq_unlock_complete(sc, txq);
+ }
+ 
+ static struct ath_frame_info *get_frame_info(struct sk_buff *skb)
+@@ -1224,15 +1221,17 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 		      u16 tid, u16 *ssn)
+ {
+-	struct ath_atx_tid *txtid;
+-	struct ath_node *an;
++	struct ath_node *an = (struct ath_node *)sta->drv_priv;
++	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tid);
++	struct ath_txq *txq = txtid->ac->txq;
+ 	u8 density;
+ 
+-	an = (struct ath_node *)sta->drv_priv;
+-	txtid = ATH_AN_2_TID(an, tid);
++	ath_txq_lock(sc, txq);
+ 
+-	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE))
++	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE)) {
++		ath_txq_unlock(sc, txq);
+ 		return -EAGAIN;
++	}
+ 
+ 	/* update ampdu factor/density, they may have changed. This may happen
+ 	 * in HT IBSS when a beacon with HT-info is received after the station
+@@ -1253,6 +1252,8 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 	memset(txtid->tx_buf, 0, sizeof(txtid->tx_buf));
+ 	txtid->baw_head = txtid->baw_tail = 0;
+ 
++	ath_txq_unlock(sc, txq);
++
+ 	return 0;
+ }
+ 
+@@ -1262,15 +1263,19 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ 	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tid);
+ 	struct ath_txq *txq = txtid->ac->txq;
+ 
+-	if (txtid->state & AGGR_CLEANUP)
++	ath_txq_lock(sc, txq);
++
++	if (txtid->state & AGGR_CLEANUP) {
++		ath_txq_unlock(sc, txq);
+ 		return;
++	}
+ 
+ 	if (!(txtid->state & AGGR_ADDBA_COMPLETE)) {
+ 		txtid->state &= ~AGGR_ADDBA_PROGRESS;
++		ath_txq_unlock(sc, txq);
+ 		return;
+ 	}
+ 
+-	ath_txq_lock(sc, txq);
+ 	txtid->paused = true;
+ 
+ 	/*
+@@ -1351,16 +1356,16 @@ void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
+ 
+ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ {
+-	struct ath_atx_tid *txtid;
+-	struct ath_node *an;
+-
+-	an = (struct ath_node *)sta->drv_priv;
++	struct ath_node *an = (struct ath_node *)sta->drv_priv;
++	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tid);
++	struct ath_txq *txq = txtid->ac->txq;
+ 
+-	txtid = ATH_AN_2_TID(an, tid);
++	ath_txq_lock(sc, txq);
+ 	txtid->baw_size = IEEE80211_MIN_AMPDU_BUF << sta->ht_cap.ampdu_factor;
+ 	txtid->state |= AGGR_ADDBA_COMPLETE;
+ 	txtid->state &= ~AGGR_ADDBA_PROGRESS;
+ 	ath_tx_resume_tid(sc, txtid);
++	ath_txq_unlock_complete(sc, txq);
+ }
+ 
+ /********************/
+-- 
+1.8.2.2
 
