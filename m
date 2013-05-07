@@ -1,35 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36382 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718Ab3EJMJ1 (ORCPT
+Received: from mail-gg0-f170.google.com ([209.85.161.170]:48000 "EHLO
+	mail-gg0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756766Ab3EGDLy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 08:09:27 -0400
-Message-ID: <1368187764.8390.14.camel@jlt4.sipsolutions.net> (sfid-20130510_140930_964596_EA99F585)
-Subject: Re: [RFC 0/4] cfg80211/mac80211: simplify locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: greearb@candelatech.com
-Date: Fri, 10 May 2013 14:09:24 +0200
-In-Reply-To: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net> (sfid-20130510_140823_865843_217BECE5)
-References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130510_140823_865843_217BECE5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 6 May 2013 23:11:54 -0400
+Message-ID: <51886FAF.1030801@lwfinger.net> (sfid-20130507_051212_785834_D4BC17E9)
+Date: Mon, 06 May 2013 22:06:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Randy Dunlap <rdunlap@infradead.org>
+CC: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev@lists.infradead.org
+Subject: Re: linux-next: Tree for May 6 (b43/bcma)
+References: <20130506144207.c812a0227d7763d26e5fec80@canb.auug.org.au> <5187EB95.2060605@infradead.org>
+In-Reply-To: <5187EB95.2060605@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-05-10 at 14:08 +0200, Johannes Berg wrote:
-> I got a little fed up with all the locking, and decided to simplify.
-> 
-> This should still work, but I've only done some very simple tests.
-> I'm hoping it'll fix some of the weird corner cases that Ben and
-> others have found, which may be due to different locks in different
-> cases and things racing against each other ... I'm not convinced it
-> really will though, but hey, who knows :)
+On 05/06/2013 12:42 PM, Randy Dunlap wrote:
+>
+> on x86_64:
+>
+> drivers/built-in.o: In function `b43_gpio_cleanup.isra.40':
+> main.c:(.text+0x1b425b): undefined reference to `bcma_chipco_gpio_control'
+> drivers/built-in.o: In function `b43_wireless_core_reset':
+> (.text+0x1b5fb6): undefined reference to `bcma_core_set_clockmode'
+> drivers/built-in.o: In function `b43_wireless_core_reset':
+> (.text+0x1b6058): undefined reference to `bcma_core_pll_ctl'
+> drivers/built-in.o: In function `b43_chip_init':
+> main.c:(.text+0x1b8444): undefined reference to `bcma_chipco_gpio_control'
+> drivers/built-in.o: In function `b43_wireless_core_init':
+> main.c:(.text+0x1b887b): undefined reference to `bcma_core_pci_irq_ctl'
+> drivers/built-in.o: In function `b43_bus_bcma_device_disable':
+> bus.c:(.text+0x1b9d46): undefined reference to `bcma_core_disable'
+> drivers/built-in.o: In function `b43_bus_bcma_device_enable':
+> bus.c:(.text+0x1b9d55): undefined reference to `bcma_core_enable'
+> drivers/built-in.o: In function `b43_bus_bcma_device_is_enabled':
+> bus.c:(.text+0x1b9d64): undefined reference to `bcma_core_is_enabled'
+> drivers/built-in.o: In function `b43_nphy_channel_setup':
+> phy_n.c:(.text+0x1c8fe5): undefined reference to `bcma_pmu_spuravoid_pllupdate'
+> drivers/built-in.o: In function `b43_phy_initn':
+> phy_n.c:(.text+0x1cb853): undefined reference to `bcma_chipco_gpio_control'
+> drivers/built-in.o: In function `b43_dma_init':
+> (.text+0x1d5790): undefined reference to `bcma_core_dma_translation'
+> drivers/built-in.o: In function `b43_init':
+> main.c:(.init.text+0xa07a): undefined reference to `__bcma_driver_register'
+> main.c:(.init.text+0xa09f): undefined reference to `bcma_driver_unregister'
+> drivers/built-in.o: In function `b43_exit':
+> main.c:(.exit.text+0x153a): undefined reference to `bcma_driver_unregister'
+>
+>
+> Probably mostly due to B43=y and BCMA=m.
 
-Of course, this is also always a good thing:
+Does any Kconfig wizard know the magic incantation to accomplish the following:
 
- 24 files changed, 322 insertions(+), 803 deletions(-)
+1. Ensure that if SSB and BMCA are both selected, then both are either "m" or "y"
 
-johannes
+2. Ensure that BRCMSMAC is not "y" if BMCA is "m".
+
+3. Ensure that B43 is not "y" if SSB and/or BCMA is "m".
+
+Thanks,
+
+Larry
+
 
