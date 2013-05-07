@@ -1,116 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46878 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752713Ab3EFDjr (ORCPT
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:58001 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753857Ab3EGOcq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 May 2013 23:39:47 -0400
-Message-ID: <1367811576.4131.39.camel@deadeye.wl.decadent.org.uk> (sfid-20130506_053951_318896_2066C1C1)
-Subject: Re: linux-firmware: pull-request TI wireless firmwares 2012-04-29
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Luciano Coelho <coelho@ti.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 06 May 2013 04:39:36 +0100
-In-Reply-To: <1367229856.30716.22.camel@cumari.coelho.fi>
-References: <1367229856.30716.22.camel@cumari.coelho.fi>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-7F8M3+KUx5mD+mradcRm"
-Mime-Version: 1.0
+	Tue, 7 May 2013 10:32:46 -0400
+Received: by mail-qc0-f173.google.com with SMTP id c11so319908qcv.4
+        for <linux-wireless@vger.kernel.org>; Tue, 07 May 2013 07:32:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5188B732.3010403@broadcom.com>
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+ <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+ <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
+ <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
+ <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
+ <517199D4.9070702@broadcom.com> <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
+ <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com>
+ <517A427E.3010809@broadcom.com> <CACaajQsf8cgG9DQ-QuWY5EqeUNq4RgX9CMgQ8bZi7s8UJzCE_g@mail.gmail.com>
+ <CACaajQuk359fYap=547qQ0r128bdCuzFCzR=iXgHNaaR_eTtow@mail.gmail.com>
+ <5186D7AD.1070702@lwfinger.net> <CACaajQuSU4H0rdn9j7dFYB+Yh2WLsejocDfE+PX1eFQOUqWcgw@mail.gmail.com>
+ <5187CCCB.1080500@lwfinger.net> <5188B732.3010403@broadcom.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Tue, 7 May 2013 18:32:28 +0400
+Message-ID: <CACaajQtuQaP=Xt1wzGCr4UkG8mvctW2iot1MZi+Ya1obZ+f4Aw@mail.gmail.com> (sfid-20130507_163301_453595_49FBAB5A)
+Subject: Re: very bad work of wl (bcm 43228)
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2013/5/7 Arend van Spriel <arend@broadcom.com>:
+> The only specific suggestion given by me was to turn off powersave, but that
+> was already tried. My knowledge of wl linux-sta driver is limited.
+>
+>
+>> I am not aware of any mailing list for complaints about wl, but I never
+>> use it.
+>
+>
+> Actually, there is: linux-wlan-client-support-list@broadcom.com
+>
+> It can be found on the web page [1].
+>
+> Regards,
+> Arend
+>
+> [1] http://www.broadcom.com/support/802.11/linux_sta.php
 
---=-7F8M3+KUx5mD+mradcRm
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2013-04-29 at 13:04 +0300, Luciano Coelho wrote:
-> Hi Ben,
->=20
-> Here are some updates to our wireless firmwares.  Updated the firmwares
-> for WiLink 6 and 7 and added a new version of the firmware for WiLink 8
-> and a binary configuration file.  Also updated the WHENCE file
-> accordingly.
->=20
-> Please let me know if there are any more problems.
-[...]
-> diff --git a/WHENCE b/WHENCE
-> index 4726742..257f24e 100644
-> --- a/WHENCE
-> +++ b/WHENCE
-> @@ -1681,11 +1681,11 @@ Version: 6.5.2.0.15 (Multi-role)
->  File: ti-connectivity/wl127x-fw-4-plt.bin
->  Version: 6.3.5.0.98 (PLT-only)
->  File: ti-connectivity/wl127x-fw-5-sr.bin
-> -Version: 6.3.10.2.115 (Single-role)
-> +Version: 6.3.10.0.133 (Single-role)
->  File: ti-connectivity/wl127x-fw-5-mr.bin
-> -Version: 6.5.7.0.27 (Multi-role)
-> +Version: 6.5.7.0.42 (Multi-role)
->  File: ti-connectivity/wl127x-fw-5-plt.bin
-> -Version: 6.3.10.2.115 (PLT-only)
-> +Version: 6.3.10.0.133 (PLT-only)
-> =20
->  File: ti-connectivity/wl128x-fw.bin
->  Version: 7.1.5.50.74 (STA-only)
-> @@ -1702,11 +1702,11 @@ Version: 7.5.2.0.15 (Multi-role)
->  File: ti-connectivity/wl128x-fw-4-plt.bin
->  Version: 7.3.5.0.98 (PLT)
->  File: ti-connectivity/wl128x-fw-5-sr.bin
-> -Version: 7.3.10.2.115 (Single-role)
-> +Version: 7.3.10.0.133 (Single-role)
->  File: ti-connectivity/wl128x-fw-5-mr.bin
-> -Version: 7.5.7.0.27 (Multi-role)
-> +Version: 7.5.7.0.42 (Multi-role)
->  File: ti-connectivity/wl128x-fw-5-plt.bin
-> -Version: 7.3.10.2.115 (PLT-only)
-> +Version: 7.3.10.2.133 (PLT-only)
-> =20
->  File: ti-connectivity/wl127x-nvs.bin
->  File: ti-connectivity/wl128x-nvs.bin
-[...]
+Thanks, i'm try in broadcom list.
 
-The commit message for this bit says:
-
-    Update the wl127x and wl128x firmwares to *.3.10.0.133 for single-role
-    and *.5.7.0.42 for multi-role.
-
-But for ti-connectivity/wl127x-fw-5-sr.bin,
-ti-connectivity/wl127x-fw-5-plt.bin and
-ti-connectivity/wl128x-fw-5-sr.bin this means the version is now *lower*
-than before.  For ti-connectivity/wl128x-fw-5-plt.bin the version is
-incremented to end in 2.133, but this is contrary to the commit message.
-
-Are some of these firmware images being downgraded?  Should the version
-numbers really end in 2.133 or 0.133?
-
-Ben.
-
---=20
-Ben Hutchings
-If God had intended Man to program,
-we'd have been born with serial I/O ports.
-
---=-7F8M3+KUx5mD+mradcRm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUYcl+Oe/yOyVhhEJAQpD3Q/9GUzfWJYaIFHjGAscCa0gZt1HntHQA9Vg
-YfJSHJGZ4vpBDJEuBVGm3wJy6HJ5f+9ukdWHCOvz/0UnhwFiGRd+lrVjwSCKOs/J
-zPf78Jiylv597dBbQ43eqermRUJI3HDajmPbjRt1y5POxpokK1jhXVVzkeSbtoVT
-rvtWlultoxMwU1UFiwsZqbbeV/6/IKehAW/ptdqwlBZ2NJQAwrD2LYO67l6mSTQv
-p+aiG0u6HXBtrdCkZy5CUwvKbtsoN5PE90zE0I6MatQJ9a8kQAuZnteC1Omr+HQ6
-ISISoDwzSWBgjqokDUpTc24kj7MRWrCkiABQUnuWROlSdTmDXWjC+viNDkggbCA3
-oepIROhKuFkMabe1FRBIHUgE0Yu0BnxI+tU1TyZRLz3ajwtoNbiRlfz5HiNWJRJv
-xEXYcYaY07S8xBpxvJQwmrSYGbI+uNPwnuDVKT4AjqJhI2cyNB8gEW9dhBh6mx03
-nfSh/F+VfazYd6LfUB6ZMonVf3ddGHASLGrOxHojgMfq6i1wiTqEE57lcFgu7/wD
-qnD7hznr4fSzHzeXSrpwsDgiVE16Yg9TD+L0srzHVgPP0CC5+3k5m3ug8G5PbceH
-EtOuh61rzUVAQ6aXIyzJ1ZXrjE36zSXai0CU9hymmdtUCk8jv57A++wgfGHUSiQ+
-ULEDhckDGzo=
-=wwrh
------END PGP SIGNATURE-----
-
---=-7F8M3+KUx5mD+mradcRm--
+--
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
