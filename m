@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40199 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932905Ab3ECOxU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 10:53:20 -0400
-Message-ID: <1367592778.13104.37.camel@jlt4.sipsolutions.net> (sfid-20130503_165323_357244_9C760870)
-Subject: Re: Linux summit this year ?
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:21973 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753413Ab3EGQFq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 May 2013 12:05:46 -0400
+Date: Tue, 7 May 2013 18:07:06 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Matt Chen <machen@suse.com>, joeyli <jlee@suse.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 03 May 2013 16:52:58 +0200
-In-Reply-To: <20130503144947.GF2069@tuxdriver.com>
-References: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>
-	 <20130225143201.GA6455@tuxdriver.com> <1361809785.3902.19.camel@aeonflux>
-	 <512BAED0.2000507@lwfinger.net> <20130225211207.GE6455@tuxdriver.com>
-	 <1361892097.3902.34.camel@aeonflux>
-	 <1367522831.11375.1.camel@jlt4.sipsolutions.net>
-	 <20130502194308.GC2050@tuxdriver.com>
-	 <1367568670.9430.7.camel@jlt4.sipsolutions.net>
-	 <20130503144947.GF2069@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Jake Edge <jake@lwn.net>, linux-wireless@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 3.10] iwl4965: workaround connection regression on passive
+ channel
+Message-ID: <20130507160705.GC1576@redhat.com> (sfid-20130507_180604_916621_BC6BDC5E)
+References: <20130505143803.7e46e4c6@chukar.edge2.net>
+ <20130506123805.GA1602@redhat.com>
+ <20130506083759.556dac76@chukar.edge2.net>
+ <20130506153044.GB1602@redhat.com>
+ <1367854279.8434.13.camel@jlt4.sipsolutions.net>
+ <1367855046.8434.16.camel@jlt4.sipsolutions.net>
+ <20130507084241.GA1581@redhat.com>
+ <1367934810.8328.30.camel@jlt4.sipsolutions.net>
+ <20130507153525.GB1576@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130507153525.GB1576@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-05-03 at 10:49 -0400, John W. Linville wrote:
+Jake reported that since commit 1672c0e31917f49d31d30d79067103432bc20cc7
+"mac80211: start auth/assoc timeout on frame status", he is unable to
+connect to his AP, which is configured to use passive channel.
 
-> > Sounds good to me. If it overlaps LPC, which one are people going to
-> > have to register for (if not going to both anyway)?
-> 
-> I would presume that if you want to got to LPC sessions then you
-> would have to register for LPC.  Generally we have required Wireless
-> Summit attendees to register for LinuxCon, and I presume that would
-> be required this time (so both LinuxCon and LPC if you want the
-> LPC sessions).
+After switch to passive channel 4965 firmware drops any TX packet until
+it receives beacon. Before commit 1672c0e3 we waited on channel and
+retransmit packet after 200ms, that makes we receive beacon on the
+meantime and association process succeed. New mac80211 behaviour cause
+that any ASSOC frame fail immediately on iwl4965 and we can not
+associate.
 
-That's what I figured, would just be good to announce it (you're going
-to send an invitation email once plans are finalized, right? :) )
+This patch restore old mac80211 behaviour for iwl4965, by removing
+IEEE80211_HW_REPORTS_TX_ACK_STATUS feature. This feature will be
+added again to iwl4965 driver, when different, more complex
+workaround for this firmware issue, will be added to the driver.
 
-> Alternatively, probably we could have a separate Wireless Summit
-> registration -- not sure what that will cost, but it probably won't
-> be zero.
+Cc: stable@vger.kernel.org # 3.9
+Bisected-by: Jake Edge <jake@lwn.net>
+Reported-and-tested-by: Jake Edge <jake@lwn.net>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/4965-mac.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-That seems far too much overhead, and people who are there likely want
-to attend some other sessions anyway.
- 
-> Probably can have an easel w/ a big note pad
-
-Sure, that's almost equivalent and much easier I guess. No need to
-inquire otherwise.
-
-johannes
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index b8f82e6..9a95045 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -5741,8 +5741,7 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
+ 	hw->flags =
+ 	    IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_AMPDU_AGGREGATION |
+ 	    IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC | IEEE80211_HW_SPECTRUM_MGMT |
+-	    IEEE80211_HW_REPORTS_TX_ACK_STATUS | IEEE80211_HW_SUPPORTS_PS |
+-	    IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
++	    IEEE80211_HW_SUPPORTS_PS | IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
+ 	if (il->cfg->sku & IL_SKU_N)
+ 		hw->flags |=
+ 		    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+-- 
+1.7.11.7
 
