@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3720 "EHLO mms1.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:20124 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752149Ab3EJMWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 08:22:46 -0400
-Message-ID: <518CE683.2040402@broadcom.com> (sfid-20130510_142249_383263_5C34BF35)
-Date: Fri, 10 May 2013 14:22:27 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1753756Ab3EGPd6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 May 2013 11:33:58 -0400
+Date: Tue, 7 May 2013 17:35:25 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jake Edge <jake@lwn.net>, linux-wireless@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to
+ 1672c0e3
+Message-ID: <20130507153525.GB1576@redhat.com> (sfid-20130507_173419_750052_F297744B)
+References: <20130505143803.7e46e4c6@chukar.edge2.net>
+ <20130506123805.GA1602@redhat.com>
+ <20130506083759.556dac76@chukar.edge2.net>
+ <20130506153044.GB1602@redhat.com>
+ <1367854279.8434.13.camel@jlt4.sipsolutions.net>
+ <1367855046.8434.16.camel@jlt4.sipsolutions.net>
+ <20130507084241.GA1581@redhat.com>
+ <1367934810.8328.30.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	"Johannes Berg" <johannes.berg@intel.com>
-Subject: Re: [RFC 4/4] cfg80211/mac80211: use cfg80211 wdev mutex in
- mac80211
-References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
- <1368187689-29706-5-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1368187689-29706-5-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1367934810.8328.30.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/10/2013 02:08 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Using separate locks in cfg80211 and mac80211 has always
-> caused issues, for example having to unlock in places in
-> mac80211 to call cfg80211, which even needed a framework
-> to make cfg80211 calls after some functions returned etc.
->
-> Additionally, I suspect some issues people have reported
-> with the cfg80211 state getting confused could be due to
-> such issues, when cfg80211 is asking mac80211 to change
-> state but mac80211 is in the process of telling cfg80211
-> that the state changed (in another way.)
+On Tue, May 07, 2013 at 03:53:30PM +0200, Johannes Berg wrote:
+> > > I think the best way to solve this would be to do such a thing in
+> > > iwlegacy as well, but until then and for stable maybe we should
+> > > introduce another HW flag to restore the previous mac80211 behaviour?
+> > 
+> > I'm not sure if I like to add passive_no_rx to iwlegacy. Stopping queues
+> > and waiting for beacon looks sticky, what happen if beacon will not be
+> > received?
+> 
+> Good question, do we get stuck? I was assuming we'd time out, but maybe
+> that's not the case?
 
-I guess this change affects fullmac drivers like brcmfmac, right?
+AFICT, we wake queues only if beacon arrives or mac80211 call drv_config
+with BSS_CHANGED_IDLE. I'm not sure if the latter prevent stuck. 
 
-Gr. AvS
+> > Perhaps I will just remove IEEE80211_HW_REPORTS_TX_ACK_STATUS from 4965,
+> > it's simpler workaround ?
+> 
+> Sure, but maybe that loses other semantics that you want?
+> 
+> And anyway it's not complete. If you have a very long beacon interval
+> (say 1 second) then this could still lead to all probe/auth retries
+> going out inbetween two beacons since the timeout is just 3*100ms.
 
+Let's make that change as temporary regression workaround, I'll add
+passive_no_rx workaround latter. I'll also think if it can stuck or
+not.
+
+Stanislaw
