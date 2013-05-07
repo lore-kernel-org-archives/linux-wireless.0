@@ -1,91 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:19644 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755231Ab3ERMDS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 May 2013 08:03:18 -0400
-Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:03:16 +0200
-From: stf_xl@wp.pl
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 30/32] rt2800: move 3352 specific bbp initialization
-Date: Sat, 18 May 2013 14:03:53 +0200
-Message-Id: <1368878635-4455-31-git-send-email-stf_xl@wp.pl> (sfid-20130518_142938_185300_034C278C)
-In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
-References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+Received: from mail.candelatech.com ([208.74.158.172]:39117 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572Ab3EGRCY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 May 2013 13:02:24 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r47H2Nls009105
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 7 May 2013 10:02:23 -0700
+Message-ID: <5189339E.7090502@candelatech.com> (sfid-20130507_190242_020907_DD70AF69)
+Date: Tue, 07 May 2013 10:02:22 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Cannot set frequency on phy device in 3.9.0+ ??
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+Seems like this used to work.  NIC is ath9k_htc driver, configured with one
+VAP and one station.  Both are admin down, but still get EBUSY when trying
+to set the frequency.  Seems like this used to work (on ath9k driver, at least).
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   42 ++++++++++++++----------------
- 1 files changed, 20 insertions(+), 22 deletions(-)
+[root@lec2010-ath9k-1 lanforge]# ifconfig wlan1
+wlan1     Link encap:Ethernet  HWaddr A0:F3:C1:24:61:2B
+           inet addr:11.97.2.5  Bcast:11.97.255.255  Mask:255.255.0.0
+           BROADCAST MULTICAST  MTU:1500  Metric:1
+           RX packets:761 errors:0 dropped:0 overruns:0 frame:0
+           TX packets:402 errors:0 dropped:0 overruns:0 carrier:0
+           collisions:0 txqueuelen:1000
+           RX bytes:129222 (126.1 KiB)  TX bytes:74364 (72.6 KiB)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index bb0ed3d..ad191d5 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4182,6 +4182,26 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 120, 0x50);
- 
- 	rt2800_bbp_write(rt2x00dev, 137, 0x0f);
-+
-+	rt2800_bbp_write(rt2x00dev, 163, 0xbd);
-+	/* Set ITxBF timeout to 0x9c40=1000msec */
-+	rt2800_bbp_write(rt2x00dev, 179, 0x02);
-+	rt2800_bbp_write(rt2x00dev, 180, 0x00);
-+	rt2800_bbp_write(rt2x00dev, 182, 0x40);
-+	rt2800_bbp_write(rt2x00dev, 180, 0x01);
-+	rt2800_bbp_write(rt2x00dev, 182, 0x9c);
-+	rt2800_bbp_write(rt2x00dev, 179, 0x00);
-+	/* Reprogram the inband interface to put right values in RXWI */
-+	rt2800_bbp_write(rt2x00dev, 142, 0x04);
-+	rt2800_bbp_write(rt2x00dev, 143, 0x3b);
-+	rt2800_bbp_write(rt2x00dev, 142, 0x06);
-+	rt2800_bbp_write(rt2x00dev, 143, 0xa0);
-+	rt2800_bbp_write(rt2x00dev, 142, 0x07);
-+	rt2800_bbp_write(rt2x00dev, 143, 0xa1);
-+	rt2800_bbp_write(rt2x00dev, 142, 0x08);
-+	rt2800_bbp_write(rt2x00dev, 143, 0xa2);
-+
-+	rt2800_bbp_write(rt2x00dev, 148, 0xc8);
- }
- 
- static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
-@@ -4465,28 +4485,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		rt2800_bbp_write(rt2x00dev, 3, value);
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT3352)) {
--		rt2800_bbp_write(rt2x00dev, 163, 0xbd);
--		/* Set ITxBF timeout to 0x9c40=1000msec */
--		rt2800_bbp_write(rt2x00dev, 179, 0x02);
--		rt2800_bbp_write(rt2x00dev, 180, 0x00);
--		rt2800_bbp_write(rt2x00dev, 182, 0x40);
--		rt2800_bbp_write(rt2x00dev, 180, 0x01);
--		rt2800_bbp_write(rt2x00dev, 182, 0x9c);
--		rt2800_bbp_write(rt2x00dev, 179, 0x00);
--		/* Reprogram the inband interface to put right values in RXWI */
--		rt2800_bbp_write(rt2x00dev, 142, 0x04);
--		rt2800_bbp_write(rt2x00dev, 143, 0x3b);
--		rt2800_bbp_write(rt2x00dev, 142, 0x06);
--		rt2800_bbp_write(rt2x00dev, 143, 0xa0);
--		rt2800_bbp_write(rt2x00dev, 142, 0x07);
--		rt2800_bbp_write(rt2x00dev, 143, 0xa1);
--		rt2800_bbp_write(rt2x00dev, 142, 0x08);
--		rt2800_bbp_write(rt2x00dev, 143, 0xa2);
--
--		rt2800_bbp_write(rt2x00dev, 148, 0xc8);
--	}
--
- 	if (rt2x00_rt(rt2x00dev, RT5390) ||
- 	    rt2x00_rt(rt2x00dev, RT5392)) {
- 		int ant, div_mode;
+[root@lec2010-ath9k-1 lanforge]# ifconfig vap1
+vap1      Link encap:Ethernet  HWaddr 00:A0:00:00:00:90
+           inet addr:10.99.1.1  Bcast:10.99.255.255  Mask:255.255.0.0
+           BROADCAST MULTICAST  MTU:1500  Metric:1
+           RX packets:16435018 errors:0 dropped:0 overruns:0 frame:0
+           TX packets:9082445 errors:0 dropped:0 overruns:0 carrier:0
+           collisions:0 txqueuelen:1000
+           RX bytes:2204413501 (2.0 GiB)  TX bytes:1451899217 (1.3 GiB)
+
+[root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy1 set freq 2437
+command failed: Device or resource busy (-16)
+
+Thanks,
+Ben
+
 -- 
-1.7.4.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
