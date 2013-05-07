@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay02.solcon.nl ([212.45.32.108]:39040 "EHLO
-	mailrelay02.solcon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932490Ab3EOMy3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54367 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933468Ab3EGNml (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 08:54:29 -0400
-Message-ID: <5193857D.4060809@solcon.nl> (sfid-20130515_145448_620626_1CC8A5F6)
-Date: Wed, 15 May 2013 14:54:21 +0200
-From: Albert Pool <albertpool@solcon.nl>
-MIME-Version: 1.0
-To: larry.finger@lwfinger.net, chaoming_li@realsil.com.cn
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] rtlwifi: rtl8192cu: Add new USB ID
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 7 May 2013 09:42:41 -0400
+Message-ID: <1367934155.8328.21.camel@jlt4.sipsolutions.net> (sfid-20130507_154313_642769_CE86151A)
+Subject: Re: [RFC 06/12] mac80211: notify bridge when leaving mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>, me@bobcopeland.com,
+	open80211s <devel@lists.open80211s.org>
+Date: Tue, 07 May 2013 15:42:35 +0200
+In-Reply-To: <1367548442-8229-7-git-send-email-thomas@cozybit.com> (sfid-20130503_043625_267018_84D610F4)
+References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
+	 <1367548442-8229-7-git-send-email-thomas@cozybit.com>
+	 (sfid-20130503_043625_267018_84D610F4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the USB ID of the On Networks N300MA, clone of Netgear WNA3100M.
+On Thu, 2013-05-02 at 19:33 -0700, Thomas Pedersen wrote:
+> After turning carrier off, any parent bridge interface
+> needs to be notified. Otherwise we would see a panic when
+> attempting to transmit frames on a mesh interface which
+> hadn't yet been put down.
+> 
+> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+> ---
+>  net/mac80211/mesh.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+> index eac9988..271ddc9 100644
+> --- a/net/mac80211/mesh.c
+> +++ b/net/mac80211/mesh.c
+> @@ -993,6 +993,9 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+>  	struct beacon_data *bcn;
+>  
+>  	netif_carrier_off(sdata->dev);
+> +	if (sdata->dev->priv_flags & IFF_BRIDGE_PORT)
+> +		/* stop bridge transmissions */
+> +		call_netdevice_notifiers(NETDEV_CHANGE, sdata->dev);
 
-Signed-off-by: Albert Pool<albertpool@solcon.nl>
-Reported-by: Ana Rey<Anazul77@hotmail.com>
----
-  drivers/net/wireless/rtlwifi/rtl8192cu/sw.c |    1 +
-  1 file changed, 1 insertion(+)
+Err, this seems like a really bad hack? I don't really think drivers
+should call that?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index 23d640a..0b593de 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -349,6 +349,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
-  	{RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
-  	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
-  	{RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, /*Netgear-Sercomm*/
-+	{RTL_USB_DEVICE(0x0846, 0xf001, rtl92cu_hal_cfg)}, /*Netgear-On Networks*/
-  	{RTL_USB_DEVICE(0x0b05, 0x17ab, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
-  	{RTL_USB_DEVICE(0x0bda, 0x8186, rtl92cu_hal_cfg)}, /*Realtek 92CE-VAU*/
-  	{RTL_USB_DEVICE(0x0df6, 0x0061, rtl92cu_hal_cfg)}, /*Sitecom-Edimax*/
--- 
-1.7.9.5
+johannes
 
