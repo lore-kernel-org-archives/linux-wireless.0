@@ -1,85 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:34600 "EHLO
-	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752067Ab3ENBPW (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:59170 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752012Ab3EGXgA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 21:15:22 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
-	Tim Shepard <shep@laptop.org>,
-	Jason Abele <jabele@chromium.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 01/17] mwifiex: rename mwifiex_free_adapter() routine in init.c
-Date: Mon, 13 May 2013 18:14:45 -0700
-Message-ID: <1368494101-23651-2-git-send-email-bzhao@marvell.com> (sfid-20130514_031526_821440_F783EC86)
-In-Reply-To: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
-References: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 7 May 2013 19:36:00 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] ath9k: Do not use local_bh_disable in ampdu_action
+Date: Wed,  8 May 2013 05:03:32 +0530
+Message-Id: <1367969613-1867-3-git-send-email-sujith@msujith.org> (sfid-20130508_013605_226831_9E5EC61B)
+In-Reply-To: <1367969613-1867-1-git-send-email-sujith@msujith.org>
+References: <1367969613-1867-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-We have two different static routines with name
-mwifiex_free_adapter(). The routine in main.c actually frees the
-adapter structure.
+This was added during the early conversion of ampdu_action
+to a sleeping callback. There is no need to do this - instead,
+use the normal mutex that is acquired for all callbacks.
 
-We will rename other routine in init.c to mwifiex_adapter_cleanup()
-to avoid confusion.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/init.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 9f44fda..58e151e 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -447,17 +447,16 @@ static void mwifiex_free_lock_list(struct mwifiex_adapter *adapter)
- }
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 74a0482..a1630d1 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1688,7 +1688,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 	struct ath_softc *sc = hw->priv;
+ 	int ret = 0;
  
- /*
-- * This function frees the adapter structure.
-+ * This function performs cleanup for adapter structure.
-  *
-- * The freeing operation is done recursively, by canceling all
-- * pending commands, freeing the member buffers previously
-- * allocated (command buffers, scan table buffer, sleep confirm
-- * command buffer), stopping the timers and calling the cleanup
-- * routines for every interface, before the actual adapter
-- * structure is freed.
-+ * The cleanup is done recursively, by canceling all pending
-+ * commands, freeing the member buffers previously allocated
-+ * (command buffers, scan table buffer, sleep confirm command
-+ * buffer), stopping the timers and calling the cleanup routines
-+ * for every interface.
-  */
- static void
--mwifiex_free_adapter(struct mwifiex_adapter *adapter)
-+mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
- {
- 	if (!adapter) {
- 		pr_err("%s: adapter is NULL\n", __func__);
-@@ -733,8 +732,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
- 		}
+-	local_bh_disable();
++	mutex_lock(&sc->mutex);
+ 
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_RX_START:
+@@ -1719,7 +1719,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 		ath_err(ath9k_hw_common(sc->sc_ah), "Unknown AMPDU action\n");
  	}
  
--	/* Free adapter structure */
--	mwifiex_free_adapter(adapter);
-+	mwifiex_adapter_cleanup(adapter);
+-	local_bh_enable();
++	mutex_unlock(&sc->mutex);
  
- 	spin_unlock_irqrestore(&adapter->mwifiex_lock, flags);
- 
+ 	return ret;
+ }
 -- 
-1.8.2.3
+1.8.2.2
 
