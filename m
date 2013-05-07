@@ -1,37 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52504 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933730Ab3E1MSG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 08:18:06 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 0/2] wil6210: fix for wdev->sme_state
-Date: Tue, 28 May 2013 15:17:51 +0300
-Message-ID: <1369743473-7243-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130528_141810_449300_CB490EF4)
+Received: from mout.gmx.net ([212.227.17.21]:51542 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751599Ab3EGPDg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 May 2013 11:03:36 -0400
+Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MMZH6-1UdZBQ3XZu-008KJH for
+ <linux-wireless@vger.kernel.org>; Tue, 07 May 2013 17:03:34 +0200
+Message-ID: <518917C4.9090607@rempel-privat.de> (sfid-20130507_170339_496415_8B6284C7)
+Date: Tue, 07 May 2013 17:03:32 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jonathan Bither <jonbither@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>, radiotap@NetBSD.org
+Subject: Re: Standardisation - adding 2 bit STBC and Ness to MCS
+References: <518127ED.9060900@rempel-privat.de>  (sfid-20130501_163425_421280_1DE3F635) <1367527479.11375.19.camel@jlt4.sipsolutions.net>  <5188AFFE.6070804@rempel-privat.de>  (sfid-20130507_094050_709302_8E653F0F) <1367934867.8328.31.camel@jlt4.sipsolutions.net> <1367934904.8328.32.camel@jlt4.sipsolutions.net> <518916D1.4070902@gmail.com>
+In-Reply-To: <518916D1.4070902@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here goes patch that Johannes asked for, where wil6210 stop using
-wdev->sme_state. Also, included is small patch fixing wrong channel
-when starting AP
+Am 07.05.2013 16:59, schrieb Jonathan Bither:
+>
+>
+> On 05/07/2013 09:55 AM, Johannes Berg wrote:
+>> On Tue, 2013-05-07 at 15:54 +0200, Johannes Berg wrote:
+>>> On Tue, 2013-05-07 at 09:40 +0200, Oleksij Rempel wrote:
+>>>> Am 02.05.2013 22:44, schrieb Johannes Berg:
+>>>>> On Wed, 2013-05-01 at 16:34 +0200, Oleksij Rempel wrote:
+>>>>>
+>>>>>>> With this I believe we have everything needed to start the 3 week
+>>>>>>> comment period.
+>>>>>
+>>>>> Yeah, I guess there was plenty of time. I would have preferred a
+>>>>> separate thread, but I guess there's little enough traffic on this
+>>>>> list
+>>>>> so it doesn't really matter.
+>>>>>
+>>>>>> There is a bit more then 3 week now. I would like to have this
+>>>>>> approved :)
+>>>>>> Are there any thing needed to finish this?
+>>>>>
+>>>>> http://www.radiotap.org/Standardisation
+>>>>>
+>>>>> johannes
+>>>>>
+>>>>
+>>>> ping.
+>>>>
+>>>> Johannes, are you the one who says last word on standardisation for
+>>>> radiotap?
+>>>
+>>> No? I thought the link made that pretty clear.
+>>>
+>>> But since nobody poked holes in this and it's been a long time, I think
+>>> you should probably just post "this has been adopted now" ...
+>>
+>> Or actually, go to step 5, preferably reposting it as a separate thread.
+> It looks as if someone already proposed this as a suggested field on
+> '2012-05-14 23:49:35' without any replies as far as I can tell.
+> http://www.radiotap.org/suggested-fields/MCS%20extension%20for%20STBC%20and%20Ness
 
-Vladimir Kondratiev (2):
-  wil6210: channel off by 1
-  wil6210: Don't use wdev->sme_state
-
- drivers/net/wireless/ath/wil6210/cfg80211.c |  4 ++++
- drivers/net/wireless/ath/wil6210/main.c     | 17 ++++++-----------
- drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
- drivers/net/wireless/ath/wil6210/wmi.c      |  5 +++--
- 4 files changed, 14 insertions(+), 13 deletions(-)
+Yes, Simon did it last year. I send this link on my first email...
+In my opinion, this should be just ACKed. Every thing what was needed to 
+do, is already done.
 
 -- 
-1.8.1.2
-
+Regards,
+Oleksij
