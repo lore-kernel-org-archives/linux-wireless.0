@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f65.google.com ([209.85.160.65]:46642 "EHLO
-	mail-pb0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696Ab3EVSY1 (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:45744 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757559Ab3EGMuy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 May 2013 14:24:27 -0400
-Received: by mail-pb0-f65.google.com with SMTP id xb12so852008pbc.8
-        for <linux-wireless@vger.kernel.org>; Wed, 22 May 2013 11:24:26 -0700 (PDT)
-Received: from [192.168.1.2] ([59.177.207.232])
-        by mx.google.com with ESMTPSA id ya4sm8173887pbb.24.2013.05.22.11.24.19
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Wed, 22 May 2013 11:24:25 -0700 (PDT)
-Message-ID: <519D0D44.1040901@pdm.ac.in> (sfid-20130522_202430_562339_9D8EDA9B)
-Date: Wed, 22 May 2013 23:54:04 +0530
-From: Mohit <mt1037ag11@pdm.ac.in>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Ralink RT3290 proprietary drivers causing kernel panic
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+	Tue, 7 May 2013 08:50:54 -0400
+Message-ID: <1367930971.32148.85.camel@cumari.coelho.fi> (sfid-20130507_145058_020244_08591F4A)
+Subject: Re: [PATCH 1/3] wlcore: allow TX BA on all TIDs
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 07 May 2013 15:49:31 +0300
+In-Reply-To: <1367930469-29826-1-git-send-email-eliad@wizery.com>
+References: <1367930469-29826-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi Eliad,
 
-           I am on openSUSE 12.3 with kernel 3.7.10-1.4-desktop, i 
-wanted to try out the proprietary drivers for Ralink RT3290 so i 
-downloaded the drivers from 
-http://www.mediatek.com/_en/07_downloads/01_windows.php?sn=501 and 
-compiled the drivers as mentioned on my thread here : 
-https://forums.opensuse.org/english/get-technical-help-here/wireless/486975-rt3290-wireless-proprietary-drivers-not-working.html#post2557514. 
-Everything compiled fine, openSUSE was able to scan and connect to 
-access points after installation, but when i access the internet a 
-kernel panic occurs after ~5sec (time varies based on the data usage). 
-So i humbly request you to please provide the solution for the same, you 
-can reach me through email or reply to my thread (probably faster as i 
-don't check my email everyday).
+On Tue, 2013-05-07 at 15:41 +0300, Eliad Peller wrote:
+> Previous fw limitation prevented us from from doing
+> TX BA on TIDs 6/7. However, this restriction no
+> longer exists, so enable TX BA on all TIDs.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/conf.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+> index 2b96ff8..80c1ac1 100644
+> --- a/drivers/net/wireless/ti/wlcore/conf.h
+> +++ b/drivers/net/wireless/ti/wlcore/conf.h
+> @@ -590,8 +590,8 @@ struct conf_tx_ac_category {
+>  
+>  #define CONF_TX_MAX_TID_COUNT 8
+>  
+> -/* Allow TX BA on all TIDs but 6,7. These are currently reserved in the FW */
+> -#define CONF_TX_BA_ENABLED_TID_BITMAP 0x3F
+> +/* Allow TX BA on all TIDs */
+> +#define CONF_TX_BA_ENABLED_TID_BITMAP 0xFF
+>  
+>  enum {
+>  	CONF_CHANNEL_TYPE_DCF = 0,   /* DC/LEGACY*/
 
-Thank You!
+What happened with this?
 
--- 
-
-
-
-
-
-
-
-
+https://patchwork.kernel.org/patch/1802841/
 
 --
-******************************************************************************************************************************************************************
-"This e-Mail may contain proprietary and confidential information and is 
-sent for the intended  recipient(s) only. If, by an addressing or 
-transmission error, this mail has been misdirected to you, you are 
-requested to delete this mail immediately.You are also hereby notified that 
-any use, any form of reproduction, dissemination, copying, disclosure, 
-modification, distribution and/or publication of this e-mail 
-message,contents or its attachment(s) other than by its intended 
-recipient(s) is strictly prohibited.Any opinions expressed in this email 
-are those of the individual and not necessarily of the organization.Before 
-opening attachment(s), please scan for viruses."
-**********************************************************************************************************************************************************************
+Luca.
 
