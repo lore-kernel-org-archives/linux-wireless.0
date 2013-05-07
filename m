@@ -1,36 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:38232 "EHLO
-	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752937Ab3EUSx4 (ORCPT
+Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:37195 "EHLO
+	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757559Ab3EGCwo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 May 2013 14:53:56 -0400
+	Mon, 6 May 2013 22:52:44 -0400
 From: Bing Zhao <bzhao@marvell.com>
-To: Shuah Khan <shuah.kh@samsung.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"shuahkhan@gmail.com" <shuahkhan@gmail.com>
-Date: Tue, 21 May 2013 11:49:33 -0700
-Subject: RE: [RFC PATCH] net/wireless/mwifiex/pcie: Convert to dev_pm_ops
- from legacy pm ops
-Message-ID: <477F20668A386D41ADCC57781B1F70430E0ADCE838@SC-VEXCH1.marvell.com> (sfid-20130521_205420_097473_51C3E2BF)
-References: <1369103589.12093.4.camel@lorien>
-In-Reply-To: <1369103589.12093.4.camel@lorien>
-Content-Type: text/plain; charset="utf-8"
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
+	Tim Shepard <shep@laptop.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.10] mwifiex: clear is_suspended flag when interrupt is received early
+Date: Mon, 6 May 2013 19:46:53 -0700
+Message-ID: <1367894814-6677-1-git-send-email-bzhao@marvell.com> (sfid-20130507_045248_571661_7614D6F2)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgU2h1YWgsDQoNCj4gQ29udmVydCB0aGUgZHJpdmVyIHRvIHVzZSBkZXZfcG1fb3BzIGZvciBw
-b3dlciBtYW5hZ2VtZW50IGFuZCByZW1vdmUgTGVnYWN5IFBNDQo+IGhhbmRsaW5nLiBUaGlzIGNo
-YW5nZSByZS11c2VzIGV4aXN0aW5nIHN1c3BlbmQgYW5kIHJlc3VtZSBpbnRlcmZhY2VzIGZvcg0K
-PiBkZXZfcG1fb3BzLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogU2h1YWggS2hhbiA8c2h1YWgua2hA
-c2Ftc3VuZy5jb20+DQo+IENjOiBTaHVhaCBLaGFuIDxzaHVhaGtoYW5AZ21haWwuY29tPg0KPiBT
-dWdnZXN0ZWQtYnk6IHJhZmFlbC5qLnd5c29ja2lAaW50ZWwuY29tDQoNCkFja2VkLWJ5OiBCaW5n
-IFpoYW8gPGJ6aGFvQG1hcnZlbGwuY29tPg0KDQpUaGFua3MsDQpCaW5nDQoNCj4gLS0tDQo+IA0K
-PiBSYWZhZWwsDQo+IA0KPiBUaGlzIGlzIHRoZSBmaXJzdCBkcml2ZXIgcGF0Y2ggdG8gY29udmVy
-dCBkcml2ZXJzIHRvIHVzZSBkZXZfcG1fb3BzIGZvcg0KPiBwb3dlciBtYW5hZ2VtZW50LiBQbGVh
-c2UgcmV2aWV3IGZvciB0aGUgYXBwcm9hY2ggYW5kIG1ha2Ugc3VnZ2VzdGlvbnMgZm9yDQo+IGlt
-cHJvdmVtZW50Lg0KPiANCj4gdGhhbmtzLA0KPiAtLSBTaHVhaA0K
+When the XO-4 with 8787 wireless is woken up due to wake-on-WLAN
+mwifiex is often flooded with "not allowed while suspended" messages
+and the interface is unusable.
+
+[  202.171609] int: sdio_ireg = 0x1
+[  202.180700] info: mwifiex_process_hs_config: auto cancelling host
+               sleep since there is interrupt from the firmware
+[  202.201880] event: wakeup device...
+[  202.211452] event: hs_deactivated
+[  202.514638] info: --- Rx: Data packet ---
+[  202.514753] data: 4294957544 BSS(0-0): Data <= kernel
+[  202.514825] PREP_CMD: device in suspended state
+[  202.514839] data: dequeuing the packet ec7248c0 ec4869c0
+[  202.514886] mwifiex_write_data_sync: not allowed while suspended
+[  202.514886] host_to_card, write iomem (1) failed: -1
+[  202.514917] mwifiex_write_data_sync: not allowed while suspended
+[  202.514936] host_to_card, write iomem (2) failed: -1
+[  202.514949] mwifiex_write_data_sync: not allowed while suspended
+[  202.514965] host_to_card, write iomem (3) failed: -1
+[  202.514976] mwifiex_write_data_async failed: 0xFFFFFFFF
+
+This can be readily reproduced when putting the XO-4 in a loop where
+it goes to sleep due to inactivity, but then wakes up due to an
+incoming ping. The error is hit within an hour or two.
+
+This issue happens when an interrupt comes in early while host sleep
+is still activated. Driver handles this case by auto cancelling host
+sleep. However is_suspended flag is still set which prevents any cmd
+or data from being sent to firmware. Fix it by clearing is_suspended
+flag in this path.
+
+Cc: <stable@vger.kernel.org>
+Reported-by: Daniel Drake <dsd@laptop.org>
+Tested-by: Daniel Drake <dsd@laptop.org>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 74db0d2..26755d9 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1191,6 +1191,7 @@ mwifiex_process_hs_config(struct mwifiex_adapter *adapter)
+ 	adapter->if_ops.wakeup(adapter);
+ 	adapter->hs_activated = false;
+ 	adapter->is_hs_configured = false;
++	adapter->is_suspended = false;
+ 	mwifiex_hs_activated_event(mwifiex_get_priv(adapter,
+ 						    MWIFIEX_BSS_ROLE_ANY),
+ 				   false);
+-- 
+1.7.0.2
+
