@@ -1,122 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m1plsmtpa01-01.prod.mesa1.secureserver.net ([64.202.165.173]:57079
-	"EHLO m1plsmtpa01-01.prod.mesa1.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966032Ab3E2Tdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 15:33:33 -0400
-From: "Mark A. Greer" <mgreer@animalcreek.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
-	"Mark A. Greer" <mgreer@animalcreek.com>
-Subject: [PATCH] mwifiex: debugfs: Fix out of bounds array access
-Date: Wed, 29 May 2013 12:25:34 -0700
-Message-Id: <1369855534-20897-1-git-send-email-mgreer@animalcreek.com> (sfid-20130529_213400_601638_69176ABF)
+Received: from mail1.windriver.com ([147.11.146.13]:61409 "EHLO
+	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753269Ab3EHIrx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 May 2013 04:47:53 -0400
+Message-ID: <518A112F.3070903@windriver.com> (sfid-20130508_104758_591796_45C6F48D)
+Date: Wed, 8 May 2013 16:47:43 +0800
+From: wyang1 <Wei.Yang@windriver.com>
+Reply-To: <Wei.Yang@windriver.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <wei.wyang@windriver.com>
+Subject: Re: [PATCH] mac80211: refine ieee80211_rx() context requirement
+References: <1368001892-18068-1-git-send-email-Wei.Yang@windriver.com>  <1368002161.8279.14.camel@jlt4.sipsolutions.net>  (sfid-20130508_103612_210241_E3587283) <1368002236.8279.15.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1368002236.8279.15.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Mark A. Greer" <mgreer@animalcreek.com>
+On 05/08/2013 04:37 PM, Johannes Berg wrote:
+> On Wed, 2013-05-08 at 10:36 +0200, Johannes Berg wrote:
+>> On Wed, 2013-05-08 at 16:31 +0800, Wei.Yang@windriver.com wrote:
+>>> From: Wei Yang <Wei.Yang@windriver.com>
+>>>
+>>> In case of RT kernel, the return value of softirq_count() always
+>>> equal to 0, we need to use in_serving_softirq to decide whether
+>>> the current context is in softirq context.
+>>> -	WARN_ON_ONCE(softirq_count() == 0);
+>>> +	WARN_ON_ONCE(!in_serving_softirq());
+>> As I understand the code, I don't believe this change to be correct. The
+>> function can happily run with softirqs disabled (e.g.
+>> local_bh_disable()), for example by being called via ieee80211_rx_ni().
+>> As I understand in_serving_softirq(), it checks that it's actually
+>> inside handling a softirq, no?
+> Arguably, it should be
+> 	WARN_ON_ONCE(!in_softirq());
+>
+> but that's equivalent:
 
-When reading the contents of '/sys/kernel/debug/mwifiex/p2p0/info',
-the following panic occurs:
+Yeah, but the softirq is threaded in rt kernel, the softirq_count always 
+return 0. The warning should always happen with rt kernel.
 
-$ cat /sys/kernel/debug/mwifiex/p2p0/info
-Unable to handle kernel paging request at virtual address 74706164
-pgd = de530000
-[74706164] *pgd=00000000
-Internal error: Oops: 5 [#1] SMP ARM
-Modules linked in: phy_twl4030_usb omap2430 musb_hdrc mwifiex_sdio mwifiex
-CPU: 0 PID: 1635 Comm: cat Not tainted 3.10.0-rc1-00010-g1268390 #1
-task: de16b6c0 ti: de048000 task.ti: de048000
-PC is at strnlen+0xc/0x4c
-LR is at string+0x3c/0xf8
-pc : [<c02c123c>]    lr : [<c02c2d1c>]    psr: a0000013
-sp : de049e10  ip : c06efba0  fp : de6d2092
-r10: bf01a260  r9 : ffffffff  r8 : 74706164
-r7 : 0000ffff  r6 : ffffffff  r5 : de6d209c  r4 : 00000000
-r3 : ff0a0004  r2 : 74706164  r1 : ffffffff  r0 : 74706164
-Flags: NzCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
-Control: 10c5387d  Table: 9e530019  DAC: 00000015
-Process cat (pid: 1635, stack limit = 0xde048240)
-Stack: (0xde049e10 to 0xde04a000)
-9e00:                                     de6d2092 00000002 bf01a25e de6d209c
-9e20: de049e80 c02c438c 0000000a ff0a0004 ffffffff 00000000 00000000 de049e48
-9e40: 00000000 2192df6d ff0a0004 ffffffff 00000000 de6d2092 de049ef8 bef3cc00
-9e60: de6b0000 dc358000 de6d2000 00000000 00000003 c02c45a4 bf01790c bf01a254
-9e80: 74706164 bf018698 00000000 de59c3c0 de048000 de049f80 00001000 bef3cc00
-9ea0: 00000008 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-9ec0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-9ee0: 00000000 00000000 00000000 00000001 00000000 00000000 6669776d 20786569
-9f00: 20302e31 2e343128 392e3636 3231702e 00202933 00000000 00000003 c0294898
-9f20: 00000000 00000000 00000000 00000000 de59c3c0 c0107c04 de554000 de59c3c0
-9f40: 00001000 bef3cc00 de049f80 bef3cc00 de049f80 00000000 00000003 c0108a00
-9f60: de048000 de59c3c0 00000000 00000000 de59c3c0 00001000 bef3cc00 c0108b60
-9f80: 00000000 00000000 00001000 bef3cc00 00000003 00000003 c0014128 de048000
-9fa0: 00000000 c0013f80 00001000 bef3cc00 00000003 bef3cc00 00001000 00000000
-9fc0: 00001000 bef3cc00 00000003 00000003 00000001 00000001 00000001 00000003
-9fe0: 00000000 bef3cbdc 00011984 b6f1127c 60000010 00000003 18dbdd2c 7f7bfffd
-[<c02c123c>] (strnlen+0xc/0x4c) from [<c02c2d1c>] (string+0x3c/0xf8)
-[<c02c2d1c>] (string+0x3c/0xf8) from [<c02c438c>] (vsnprintf+0x1e8/0x3e8)
-[<c02c438c>] (vsnprintf+0x1e8/0x3e8) from [<c02c45a4>] (sprintf+0x18/0x24)
-[<c02c45a4>] (sprintf+0x18/0x24) from [<bf01790c>] (mwifiex_info_read+0xfc/0x3e8 [mwifiex])
-[<bf01790c>] (mwifiex_info_read+0xfc/0x3e8 [mwifiex]) from [<c0108a00>] (vfs_read+0xb0/0x144)
-[<c0108a00>] (vfs_read+0xb0/0x144) from [<c0108b60>] (SyS_read+0x44/0x70)
-[<c0108b60>] (SyS_read+0x44/0x70) from [<c0013f80>] (ret_fast_syscall+0x0/0x30)
-Code: e12fff1e e3510000 e1a02000 0a00000d (e5d03000)
----[ end trace ca98273dc605a04f ]---
-
-The panic is caused by the mwifiex_info_read() routine assuming that
-there can only be four modes (0-3) which is an invalid assumption.
-For example, when testing P2P, the mode is '8' (P2P_CLIENT) so the
-code accesses data beyond the bounds of the bss_modes[] array which
-causes the panic.  Fix this by updating bss_modes[] to support the
-current list of modes and adding a check to prevent the out-of-bounds
-access from occuring in the future when more modes are added.
-
-Signed-off-by: Mark A. Greer <mgreer@animalcreek.com>
----
- drivers/net/wireless/mwifiex/debugfs.c | 22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
-index 753b568..a5f9875 100644
---- a/drivers/net/wireless/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/mwifiex/debugfs.c
-@@ -26,10 +26,17 @@
- static struct dentry *mwifiex_dfs_dir;
- 
- static char *bss_modes[] = {
--	"Unknown",
--	"Ad-hoc",
--	"Managed",
--	"Auto"
-+	"UNSPECIFIED",
-+	"ADHOC",
-+	"STATION",
-+	"AP",
-+	"AP_VLAN",
-+	"WDS",
-+	"MONITOR",
-+	"MESH_POINT",
-+	"P2P_CLIENT",
-+	"P2P_GO",
-+	"P2P_DEVICE",
- };
- 
- /* size/addr for mwifiex_debug_info */
-@@ -200,7 +207,12 @@ mwifiex_info_read(struct file *file, char __user *ubuf,
- 	p += sprintf(p, "driver_version = %s", fmt);
- 	p += sprintf(p, "\nverext = %s", priv->version_str);
- 	p += sprintf(p, "\ninterface_name=\"%s\"\n", netdev->name);
--	p += sprintf(p, "bss_mode=\"%s\"\n", bss_modes[info.bss_mode]);
-+
-+	if (info.bss_mode >= ARRAY_SIZE(bss_modes))
-+		p += sprintf(p, "bss_mode=\"%d\"\n", info.bss_mode);
-+	else
-+		p += sprintf(p, "bss_mode=\"%s\"\n", bss_modes[info.bss_mode]);
-+
- 	p += sprintf(p, "media_state=\"%s\"\n",
- 		     (!priv->media_connected ? "Disconnected" : "Connected"));
- 	p += sprintf(p, "mac_address=\"%pM\"\n", netdev->dev_addr);
--- 
-1.7.12
+Wei
+>
+> include/linux/hardirq.h
+>
+>   * in_softirq - Are we currently processing softirq or have bh disabled?
+>
+>   #define in_softirq()           (softirq_count())
+>
+> johannes
+>
+>
+>
 
