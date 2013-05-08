@@ -1,77 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:53384 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932623Ab3EOUYm (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:38974 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752490Ab3EHWpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 16:24:42 -0400
-Date: Wed, 15 May 2013 22:24:35 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv2 00/18] Add support for 5 and 10 MHz channels
-Message-ID: <20130515202435.GB23922@pandem0nium> (sfid-20130515_222445_989046_6A5C2E26)
-References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 8 May 2013 18:45:11 -0400
+Received: by mail-wi0-f178.google.com with SMTP id hm14so2466742wib.17
+        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2013 15:45:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="6sX45UoQRIJXqkqR"
-In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+In-Reply-To: <518A784A.6040704@candelatech.com>
+References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de>
+	<517D1B45.9020302@openwrt.org>
+	<517D3840.2060000@candelatech.com>
+	<517D3B50.6070806@openwrt.org>
+	<20873.58246.410990.985421@gargle.gargle.HOWL>
+	<518A784A.6040704@candelatech.com>
+Date: Wed, 8 May 2013 15:45:10 -0700
+Message-ID: <CAJ-VmomWu2LD253YQ9Xy9bZzXCHNSAw27oahoi5tY_DyjGcpxQ@mail.gmail.com> (sfid-20130509_004518_028008_2BD8C40A)
+Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
+ and Rx-STBC packets
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 8 May 2013 09:07, Ben Greear <greearb@candelatech.com> wrote:
 
---6sX45UoQRIJXqkqR
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> I think it's good to keep global counters too..otherwise it is going to be
+> a lot of work to gather per NIC stats, and since you would have to read for
+> each
+> station, your stats might not be quite as atomic as they used to be.
+>
+> But, I'm fine with adding per-station counters on top of the global
+> stats.
 
-On Wed, May 15, 2013 at 04:18:51PM +0200, Simon Wunderlich wrote:
-> This patchset adds support for 5 and 10 MHz in nl80211/cfg80211/mac80211
-> and enables support in ath5k and ath9k, which already support this feature
-> on the driver side. 5 and 10 MHz wide channels might be useful for:
->=20
->  * long shot links, as the transmissions are more robust
->  * future support for 802.11y which allows some 5 and 10 MHz channels in
->    3.6 GHz range
->  * future support for 802.11p which uses 10 MHz in 5.9 GHz range
->  * ... and more "special" applications.
->=20
-> This patchset enables 5 and 10 MHz channels only for OFDM, and without
-> HT/MIMO/aggregation (for now). Support may be added later.
->=20
-> Changes to PATCHv1:
->  * the actual datarates are handled, not the corresponding 20MHz rates
->    as before. This should make it compatible to freebsd, although I was
->    informed that some other implementors might still use the corresponding
->    20MHz rates. Anyway, from looking at the standard using the actual rat=
-es
->    should be the right thing to do.
+As a reference point, one of my in-progress hacks in FreeBSD is to add
+some macros to the ath(4) driver to keep per-state and global stats,
+using the same sample pointers.
 
-Johannes and me agreed that these bitrates tables are rather ugly, and I'll
-rework the patchset to use rate flags instead of these bitrate_half/bitrate=
-_quarter
-tables as introduced in this patchset. This will not neccesarily make the m=
-ac80211
-changes smaller but should avoid this bloat and make the driver implementat=
-ions
-nicer too. I'll post PATCHv3 soon.
+So, a macro would look like this:
 
-Cheers,
-	Simon
+ATH_STAT_INC(sc, ath_node, stat_name, 1);
 
---6sX45UoQRIJXqkqR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+* if I've enabled global stat counting, the sc->sc_stats.sc_stat_name
+stat would be bumped.
+* if I've enabled node stat counting, the
+ath_node->an_stats.an_stat_name would be bumped.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+I have similar ideas with net80211 - right now there's some per-node
+stats, but lots of stats are per-VAP. I'm going to do the same thing -
+take the vap and the node as part of the stat macro, and bump the
+per-node and per-VAP stats. Again, leaving it as a build-time option.
 
-iEYEARECAAYFAlGT7wIACgkQrzg/fFk7axYhowCdHGu0MzO4fG1/eg04pJVsbjUo
-XggAoNbdLDwww3VM+SyAaOu/f55HrtRP
-=yyuT
------END PGP SIGNATURE-----
+I've found both global device / VAP stats _and_ per-node stats equally
+useful for debugging. They're good for debugging different sets of
+issues - I use the global stats for figuring out what is breaking
+things, and I use the per-node stats to try and understand how the AP
+is "viewing" a particular station, separate from all the other
+stations currently chatting.
 
---6sX45UoQRIJXqkqR--
+Stats are hard. Let's go shopping. :-)
+
+
+
+Adrian
+
+
+
+Adrian
