@@ -1,98 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51435 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761892Ab3EBTuh (ORCPT
+Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:54704 "EHLO
+	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757596Ab3EHR7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 15:50:37 -0400
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r42Joai6030494
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 2 May 2013 12:50:36 -0700
-Message-ID: <5182C38B.7060107@candelatech.com> (sfid-20130502_215043_578677_76592D19)
-Date: Thu, 02 May 2013 12:50:35 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 8 May 2013 13:59:16 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Wed, 8 May 2013 10:58:38 -0700
+Subject: RE: Memory leak in mwifiex_cfg80211_scan
+Message-ID: <477F20668A386D41ADCC57781B1F70430DD2CA03F7@SC-VEXCH1.marvell.com> (sfid-20130508_195920_297150_33847CE3)
+References: <CAMLZHHSVd6GpmqTQyJmbsheH1utZh8mNW8d4zLtjwoONaGwbNA@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E0579DB@SC-VEXCH1.marvell.com>
+	<CAMLZHHQ=BNuD0UmcV8pv=6phW=W-C5C7Af6n8tLWTrzyuzPQow@mail.gmail.com>
+	<CAMLZHHQXY3OuWKr_K1B9-NmZFwCcQFPNTBoOkpvT9kxWJ=ixqQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E14FF4C@SC-VEXCH1.marvell.com>
+	<CAMLZHHSHG2ySmW0ac6+M-7fOgNFrqXBf7=SXFFkWDrhwGwYKXQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E150221@SC-VEXCH1.marvell.com>
+	<CAMLZHHThUxB_Vj4eOjq+61osUQ3CQ5UGgvrgZXE33oDD1N=YtA@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E150A22@SC-VEXCH1.marvell.com>
+	<CAMLZHHTNPBh3LDD0F2+zqSvUPmT6bhA8HLZvc1dTJmHGR8eVJg@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E232E33@SC-VEXCH1.marvell.com>
+	<CAMLZHHS7DOfRfpd-W2hVeJSvxVHNjm7SrxGXH=qLqaFt2sB+BA@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430DD2C9FC92@SC-VEXCH1.marvell.com>
+ <CAMLZHHQdBuy=7bBsifA4i5ZKQcjnEhKZqVumRE=qu+Jkn3dZug@mail.gmail.com>
+In-Reply-To: <CAMLZHHQdBuy=7bBsifA4i5ZKQcjnEhKZqVumRE=qu+Jkn3dZug@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_002_477F20668A386D41ADCC57781B1F70430DD2CA03F7SCVEXCH1marve_"
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting station.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernel is hacked 3.9.0+
+--_002_477F20668A386D41ADCC57781B1F70430DD2CA03F7SCVEXCH1marve_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-I've been seeing this problem for a while (and posted about it previously).  The problem
-is that a station appears to associate fine, but never actually 'connects'.  This problem
-is not easy to reproduce...
+Hi Daniel,
 
-I added printouts in the connect logic to help debug this..for instance, here is an
-interface that worked:
+> I think you should use del_timer_sync() though, for the SMP case where
+> the timer may be running on a different processor.
 
+Thanks for the comment. Please find attached updated patch.
 
-May  2 12:03:37 localhost kernel: [88122.116646] wiphy0: start_sw_scan: running-other-vifs: 1  running-station-vifs: 21, associated-stations: 20 scanning 
-current channel: 2437 MHz
-May  2 12:03:37 localhost kernel: [88122.149736] wiphy0: start_sw_scan: running-other-vifs: 2  running-station-vifs: 42, associated-stations: 40 scanning 
-current channel: 2437 MHz
-May  2 12:03:38 localhost kernel: [88122.218702] sta17: authenticate with 80:01:02:03:04:05
-May  2 12:03:38 localhost kernel: [88122.246420] sta17: send auth to 80:01:02:03:04:05 (try 1/3)
-May  2 12:03:38 localhost kernel: [88122.315220] sta17: authenticated
-May  2 12:03:38 localhost kernel: [88122.329509] sta17: associate with 80:01:02:03:04:05 (try 1/3)
-May  2 12:03:38 localhost kernel: [88122.350295] sta17: RX AssocResp from 80:01:02:03:04:05 (capab=0x401 status=0 aid=21)
-May  2 12:03:38 localhost kernel: [88122.364322] IPv6: ADDRCONF(NETDEV_CHANGE): sta17: link becomes ready
-May  2 12:03:38 localhost kernel: [88122.376190] sta17: associated
-May  2 12:03:38 localhost kernel: [88122.388795] nl80211_send_connect_result, dev: sta17  status: 0
-May  2 12:03:38 localhost kernel: [88122.400701] nl80211_send_connect_result, dev: sta17  sending msg...
+Regards,
+Bing
 
-Here is the stuck one (sta4).  What may be of interest is that the Invalid WDS/flush state shows up in
-these logs.  Any idea if this could somehow cause the 'connect' logic to not be
-called?
+>=20
+> Daniel
 
-May  2 12:36:37 localhost kernel: [90101.873677] sta4: authenticated
-May  2 12:36:37 localhost kernel: [90101.891233] sta4: associate with 80:01:02:03:04:05 (try 1/3)
-May  2 12:36:37 localhost kernel: [90101.908620] sta4: RX AssocResp from 80:01:02:03:04:05 (capab=0x401 status=0 aid=19)
-May  2 12:36:37 localhost kernel: [90101.922494] IPv6: ADDRCONF(NETDEV_CHANGE): sta4: link becomes ready
-May  2 12:36:37 localhost kernel: [90101.935228] sta4: associated
-May  2 12:36:42 localhost ntpd[1243]: Listen normally on 935 sta4 fe80::2ab:cdff:feef:105 UDP 123
-May  2 12:37:50 localhost kernel: [90174.724370] sta4: Invalid WDS/flush state, type: 2  WDS: 5  flushed: 1
-May  2 12:37:51 localhost ntpd[1243]: Deleting interface #935 sta4, fe80::2ab:cdff:feef:105#123, interface stats: received=0, sent=0, dropped=0, active_time=69 secs
-May  2 12:37:55 localhost kernel: [90179.828649] IPv6: ADDRCONF(NETDEV_UP): sta4: link is not ready
-May  2 12:37:55 localhost kernel: [90179.844669] wiphy0: start_sw_scan: running-other-vifs: 1  running-station-vifs: 21, associated-stations: 20 scanning 
-current channel: 2437 MHz
-May  2 12:37:55 localhost kernel: [90179.870926] wiphy0: start_sw_scan: running-other-vifs: 2  running-station-vifs: 42, associated-stations: 40 scanning 
-current channel: 2437 MHz
-May  2 12:37:55 localhost kernel: [90180.012706] IPv6: ADDRCONF(NETDEV_UP): sta4: link is not ready
-May  2 12:37:55 localhost kernel: [90180.098460] sta4: authenticate with 80:01:02:03:04:05
-May  2 12:37:55 localhost kernel: [90180.116506] sta4: send auth to 80:01:02:03:04:05 (try 1/3)
-May  2 12:37:55 localhost kernel: [90180.144183] sta4: authenticated
-May  2 12:37:55 localhost kernel: [90180.155081] sta4: associate with 80:01:02:03:04:05 (try 1/3)
-May  2 12:37:55 localhost kernel: [90180.171836] sta4: RX AssocResp from 80:01:02:03:04:05 (capab=0x401 status=0 aid=19)
-May  2 12:37:56 localhost kernel: [90180.192507] IPv6: ADDRCONF(NETDEV_CHANGE): sta4: link becomes ready
-May  2 12:37:56 localhost kernel: [90180.196250] sta4: associated
-May  2 12:38:00 localhost ntpd[1243]: Listen normally on 936 sta4 fe80::2ab:cdff:feef:105 UDP 123
-May  2 12:38:38 localhost kernel: [90222.695314] sta4: Invalid WDS/flush state, type: 2  WDS: 5  flushed: 1
-May  2 12:38:38 localhost kernel: [90222.728069] IPv6: ADDRCONF(NETDEV_UP): sta4: link is not ready
-May  2 12:38:38 localhost kernel: [90222.746386] wiphy0: start_sw_scan: running-other-vifs: 1  running-station-vifs: 21, associated-stations: 20 scanning 
-current channel: 2437 MHz
-May  2 12:38:38 localhost kernel: [90222.772198] wiphy0: start_sw_scan: running-other-vifs: 2  running-station-vifs: 42, associated-stations: 40 scanning 
-current channel: 2437 MHz
-May  2 12:38:38 localhost kernel: [90222.862226] sta4: authenticate with 80:01:02:03:04:05
-May  2 12:38:38 localhost kernel: [90222.880675] sta4: send auth to 80:01:02:03:04:05 (try 1/3)
-May  2 12:38:38 localhost kernel: [90222.898643] sta4: deauthenticating from 80:01:02:03:04:05 by local choice (reason=3)
-May  2 12:38:38 localhost kernel: [90222.943259] sta4: authenticate with 80:01:02:03:04:05
-May  2 12:38:38 localhost kernel: [90222.956498] sta4: send auth to 80:01:02:03:04:05 (try 1/3)
-May  2 12:38:38 localhost kernel: [90222.994180] sta4: authenticated
-May  2 12:38:38 localhost kernel: [90223.004165] sta4: associate with 80:01:02:03:04:05 (try 1/3)
-May  2 12:38:38 localhost kernel: [90223.022441] sta4: RX AssocResp from 80:01:02:03:04:05 (capab=0x401 status=0 aid=19)
-May  2 12:38:38 localhost kernel: [90223.041723] IPv6: ADDRCONF(NETDEV_CHANGE): sta4: link becomes ready
-May  2 12:38:38 localhost kernel: [90223.060054] sta4: associated
-May  2 12:38:39 localhost ntpd[1243]: Deleting interface #936 sta4, fe80::2ab:cdff:feef:105#123, interface stats: received=0, sent=0, dropped=0, active_time=39 secs
-May  2 12:38:43 localhost ntpd[1243]: Listen normally on 937 sta4 fe80::2ab:cdff:feef:105 UDP 123
+--_002_477F20668A386D41ADCC57781B1F70430DD2CA03F7SCVEXCH1marve_
+Content-Type: application/octet-stream;
+	name="v2_0001-mwifiex-scan-delay-timer-cleanup-in-unload-path.patch"
+Content-Description: v2_0001-mwifiex-scan-delay-timer-cleanup-in-unload-path.patch
+Content-Disposition: attachment;
+	filename="v2_0001-mwifiex-scan-delay-timer-cleanup-in-unload-path.patch";
+	size=1769; creation-date="Wed, 08 May 2013 17:56:10 GMT";
+	modification-date="Wed, 08 May 2013 17:56:10 GMT"
+Content-Transfer-Encoding: base64
 
+RnJvbSA0ZmM4MGRkYTUwZDYyOTYwZjI4MjM4OTEzNTVhNWY1MzgyZjRjZTY3IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
+PgpEYXRlOiBNb24sIDYgTWF5IDIwMTMgMTc6Mjg6NDQgLTA3MDAKU3ViamVjdDogW1BBVENIXSBt
+d2lmaWV4OiBzY2FuIGRlbGF5IHRpbWVyIGNsZWFudXAgaW4gdW5sb2FkIHBhdGgKClJldHVybiBm
+cm9tIHNjYW4gZGVsYXkgdGltZXIgcm91dGluZSBpZiBzdXJwcmlzZV9yZW1vdmVkIGZsYWcKaXMg
+dHJ1ZS4gQWxzbywgY2FuY2VsIHRoZSB0aW1lciBpbiB1bmxvYWQgcGF0aC4KClRoaXMgZml4ZXMg
+YSBjcmFzaCB3aGVuIHNjYW4gZGVsYXkgdGltZXIgYWNjZXNzZXMgc3RydWN0dXJlcwp0aGF0IGhh
+dmUgYmVlbiBmcmVlZCBhbHJlYWR5LgoKVGVzdGVkIHdpdGggIml3bGlzdCBtbGFuMCBzY2FuICYg
+c2xlZXAgMTsgcm1tb2QgbXdpZmlleF9zZGlvIgoKUmVwb3J0ZWQtYnk6IERhbmllbCBEcmFrZSA8
+ZHNkQGxhcHRvcC5vcmc+ClRlc3RlZC1ieTogRGFuaWVsIERyYWtlIDxkc2RAbGFwdG9wLm9yZz4K
+U2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4KU2ln
+bmVkLW9mZi1ieTogQmluZyBaaGFvIDxiemhhb0BtYXJ2ZWxsLmNvbT4KLS0tCiBkcml2ZXJzL25l
+dC93aXJlbGVzcy9td2lmaWV4L2luaXQuYyB8ICAgMTAgKysrKysrKysrKwogMSBmaWxlcyBjaGFu
+Z2VkLCAxMCBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvaW5pdC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdp
+ZmlleC9pbml0LmMKaW5kZXggYmNhNTAwYS4uMTM0MzcyNWYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL213aWZpZXgvaW5pdC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213
+aWZpZXgvaW5pdC5jCkBAIC01OSw2ICs1OSw5IEBAIHN0YXRpYyB2b2lkIHNjYW5fZGVsYXlfdGlt
+ZXJfZm4odW5zaWduZWQgbG9uZyBkYXRhKQogCXN0cnVjdCBjbWRfY3RybF9ub2RlICpjbWRfbm9k
+ZSwgKnRtcF9ub2RlOwogCXVuc2lnbmVkIGxvbmcgZmxhZ3M7CiAKKwlpZiAoYWRhcHRlci0+c3Vy
+cHJpc2VfcmVtb3ZlZCkKKwkJcmV0dXJuOworCiAJaWYgKGFkYXB0ZXItPnNjYW5fZGVsYXlfY250
+ID09IE1XSUZJRVhfTUFYX1NDQU5fREVMQVlfQ05UKSB7CiAJCS8qCiAJCSAqIEFib3J0IHNjYW4g
+b3BlcmF0aW9uIGJ5IGNhbmNlbGxpbmcgYWxsIHBlbmRpbmcgc2NhbgpAQCAtNDUyLDExICs0NTUs
+MTggQEAgc3RhdGljIHZvaWQgbXdpZmlleF9mcmVlX2xvY2tfbGlzdChzdHJ1Y3QgbXdpZmlleF9h
+ZGFwdGVyICphZGFwdGVyKQogc3RhdGljIHZvaWQKIG13aWZpZXhfYWRhcHRlcl9jbGVhbnVwKHN0
+cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpCiB7CisJaW50IGk7CisKIAlpZiAoIWFkYXB0
+ZXIpIHsKIAkJcHJfZXJyKCIlczogYWRhcHRlciBpcyBOVUxMXG4iLCBfX2Z1bmNfXyk7CiAJCXJl
+dHVybjsKIAl9CiAKKwlmb3IgKGkgPSAwOyBpIDwgYWRhcHRlci0+cHJpdl9udW07IGkrKykgewor
+CQlpZiAoYWRhcHRlci0+cHJpdltpXSkKKwkJCWRlbF90aW1lcl9zeW5jKCZhZGFwdGVyLT5wcml2
+W2ldLT5zY2FuX2RlbGF5X3RpbWVyKTsKKwl9CisKIAltd2lmaWV4X2NhbmNlbF9hbGxfcGVuZGlu
+Z19jbWQoYWRhcHRlcik7CiAKIAkvKiBGcmVlIGxvY2sgdmFyaWFibGVzICovCi0tIAoxLjcuMy40
+Cgo=
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+--_002_477F20668A386D41ADCC57781B1F70430DD2CA03F7SCVEXCH1marve_--
