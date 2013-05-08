@@ -1,247 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:51173 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753332Ab3ERAun (ORCPT
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:45809 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752473Ab3EHDwb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 20:50:43 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 06/17] mwifiex: add del_station handler
-Date: Fri, 17 May 2013 17:50:23 -0700
-Message-ID: <1368838234-32585-7-git-send-email-bzhao@marvell.com> (sfid-20130518_025046_559675_F2DEEFB6)
-In-Reply-To: <1368838234-32585-1-git-send-email-bzhao@marvell.com>
-References: <1368838234-32585-1-git-send-email-bzhao@marvell.com>
+	Tue, 7 May 2013 23:52:31 -0400
+Received: by mail-qa0-f49.google.com with SMTP id bs12so826953qab.1
+        for <linux-wireless@vger.kernel.org>; Tue, 07 May 2013 20:52:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Tue, 7 May 2013 23:52:30 -0400
+Message-ID: <CA++BO6SfpV_7pimE=-TUcbXRX9Xgd8v69B5AQzPQ2g1b82e0FA@mail.gmail.com> (sfid-20130508_055234_675978_74AB68CD)
+Subject: ath9k_htc works poorly in 3.9
+From: Corey Richardson <corey@octayn.net>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Initially, I can associate and everything works fine, but after an
+hour or maybe a few, I get deauthenticated, with:
 
-This patch adds cfg80211 del_station handler for mwifiex.
-If bss is not started or there are no stations in associated
-stations list, no action is taken. If argument received is
-null/broadcast mac, all stations in associated station list are
-deauthenticated.
+[ 3115.047842] cfg80211: Calling CRDA for country: US
+[ 3116.383330] wlan0: authenticate with 00:14:c2:ae:e1:c0
+[ 3116.480597] wlan0: send auth to 00:14:c2:ae:e1:c0 (try 1/3)
+[ 3119.526272] wlan0: send auth to 00:14:c2:ae:e1:c0 (try 2/3)
+[ 3121.485530] wlan0: deauthenticating from 00:14:c2:ae:e1:c0 by local
+choice (reason=3)
+[ 3123.386841] wlan0: authenticate with 00:14:c2:ae:e1:c0
+[ 3123.483019] wlan0: send auth to 00:14:c2:ae:e1:c0 (try 1/3)
+[ 3126.528663] wlan0: send auth to 00:14:c2:ae:e1:c0 (try 2/3)
+[ 3128.486335] wlan0: deauthenticating from 00:14:c2:ae:e1:c0 by local
+choice (reason=3)
+[ 3130.879429] wlan0: authenticate with 00:14:c2:ae:e1:c0
+[ 3130.976309] wlan0: send auth to 00:14:c2:ae:e1:c0 (try 1/3)
+[ 3130.976512] wlan0: deauthenticating from 00:14:c2:ae:e1:c0 by local
+choice (reason=3)
 
-Patch also deletes related RxReorder stream and TxBA stream tables
-for related station.
+in dmesg and
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c    | 46 ++++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
- drivers/net/wireless/mwifiex/fw.h          |  7 +++++
- drivers/net/wireless/mwifiex/main.h        |  2 ++
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
- drivers/net/wireless/mwifiex/uap_cmd.c     | 21 ++++++++++++++
- drivers/net/wireless/mwifiex/uap_event.c   | 16 +++++++++++
- 7 files changed, 95 insertions(+)
+May 07 23:32:57 roger NetworkManager[317]: <warn> Connection
+disconnected (reason -4)
+May 07 23:32:57 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: completed -> disconnected
+May 07 23:32:58 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: disconnected -> scanning
+May 07 23:32:59 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: scanning -> authenticating
+May 07 23:32:59 roger NetworkManager[317]: <info> (wlan0): roamed from
+BSSID 00:14:C2:AE:E1:C0 (home1) to (none) ((none))
+May 07 23:33:04 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: authenticating -> disconnected
+May 07 23:33:04 roger NetworkManager[317]: <warn> Connection
+disconnected (reason -3)
+May 07 23:33:05 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: disconnected -> scanning
+May 07 23:33:06 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: scanning -> authenticating
+May 07 23:33:11 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: authenticating -> disconnected
+May 07 23:33:11 roger NetworkManager[317]: <warn> Connection
+disconnected (reason -3)
+May 07 23:33:12 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: disconnected -> scanning
+May 07 23:33:13 roger NetworkManager[317]: <warn> (wlan0): link timed out.
+May 07 23:33:13 roger NetworkManager[317]: <info> (wlan0): device
+state change: activated -> failed (reason 'SSID not found') [100 120
+53]
+May 07 23:33:13 roger NetworkManager[317]: <warn> Activation (wlan0)
+failed for connection 'home1'
+May 07 23:33:13 roger NetworkManager[317]: <info> (wlan0): device
+state change: failed -> disconnected (reason 'none') [120 30 0]
+May 07 23:33:13 roger NetworkManager[317]: <info> (wlan0):
+deactivating device (reason 'none') [0]
+May 07 23:33:13 roger NetworkManager[317]: <info> (wlan0): canceled
+DHCP transaction, DHCP client pid 527
+May 07 23:33:14 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: scanning -> authenticating
+May 07 23:33:14 roger NetworkManager[317]: <warn> Connection
+disconnected (reason -3)
+May 07 23:33:14 roger NetworkManager[317]: <info> (wlan0): supplicant
+interface state: authenticating -> disconnected
+May 07 23:33:14 roger NetworkManager[317]: <warn> Connection
+disconnected (reason -3)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index e493f89..00a8281 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1231,6 +1231,51 @@ static int mwifiex_cfg80211_change_beacon(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+/* cfg80211 operation handler for del_station.
-+ * Function deauthenticates station which value is provided in mac parameter.
-+ * If mac is NULL/broadcast, all stations in associated station list are
-+ * deauthenticated. If bss is not started or there are no stations in
-+ * associated stations list, no action is taken.
-+ */
-+static int
-+mwifiex_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
-+			     u8 *mac)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	struct mwifiex_sta_node *sta_node;
-+	unsigned long flags;
-+
-+	if (list_empty(&priv->sta_list) || !priv->bss_started)
-+		return 0;
-+
-+	if (!mac || is_broadcast_ether_addr(mac)) {
-+		wiphy_dbg(wiphy, "%s: NULL/broadcast mac address\n", __func__);
-+		list_for_each_entry(sta_node, &priv->sta_list, list) {
-+			if (mwifiex_send_cmd_sync(priv,
-+						  HostCmd_CMD_UAP_STA_DEAUTH,
-+						  HostCmd_ACT_GEN_SET, 0,
-+						  sta_node->mac_addr))
-+				return -1;
-+			mwifiex_uap_del_sta_data(priv, sta_node);
-+		}
-+	} else {
-+		wiphy_dbg(wiphy, "%s: mac address %pM\n", __func__, mac);
-+		spin_lock_irqsave(&priv->sta_list_spinlock, flags);
-+		sta_node = mwifiex_get_sta_entry(priv, mac);
-+		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
-+		if (sta_node) {
-+			if (mwifiex_send_cmd_sync(priv,
-+						  HostCmd_CMD_UAP_STA_DEAUTH,
-+						  HostCmd_ACT_GEN_SET, 0,
-+						  sta_node->mac_addr))
-+				return -1;
-+			mwifiex_uap_del_sta_data(priv, sta_node);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int
- mwifiex_cfg80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
- {
-@@ -2422,6 +2467,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.change_beacon = mwifiex_cfg80211_change_beacon,
- 	.set_cqm_rssi_config = mwifiex_cfg80211_set_cqm_rssi_config,
- 	.set_antenna = mwifiex_cfg80211_set_antenna,
-+	.del_station = mwifiex_cfg80211_del_station,
- #ifdef CONFIG_PM
- 	.suspend = mwifiex_cfg80211_suspend,
- 	.resume = mwifiex_cfg80211_resume,
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 26755d9..2d76147 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -570,6 +570,7 @@ int mwifiex_send_cmd_async(struct mwifiex_private *priv, uint16_t cmd_no,
- 		case HostCmd_CMD_UAP_SYS_CONFIG:
- 		case HostCmd_CMD_UAP_BSS_START:
- 		case HostCmd_CMD_UAP_BSS_STOP:
-+		case HostCmd_CMD_UAP_STA_DEAUTH:
- 			ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
- 						      cmd_oid, data_buf,
- 						      cmd_ptr);
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 1f7578d..d3c1e01 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -279,6 +279,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
- #define HostCmd_CMD_UAP_BSS_START                     0x00b1
- #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
-+#define HostCmd_CMD_UAP_STA_DEAUTH                    0x00b5
- #define HostCmd_CMD_11N_CFG                           0x00cd
- #define HostCmd_CMD_11N_ADDBA_REQ                     0x00ce
- #define HostCmd_CMD_11N_ADDBA_RSP                     0x00cf
-@@ -1197,6 +1198,11 @@ struct host_cmd_ds_amsdu_aggr_ctrl {
- 	__le16 curr_buf_size;
- } __packed;
- 
-+struct host_cmd_ds_sta_deauth {
-+	u8 mac[ETH_ALEN];
-+	__le16 reason;
-+} __packed;
-+
- struct mwifiex_ie_types_wmm_param_set {
- 	struct mwifiex_ie_types_header header;
- 	u8 wmm_ie[1];
-@@ -1630,6 +1636,7 @@ struct host_cmd_ds_command {
- 		struct host_cmd_ds_802_11_eeprom_access eeprom;
- 		struct host_cmd_ds_802_11_subsc_evt subsc_evt;
- 		struct host_cmd_ds_sys_config uap_sys_config;
-+		struct host_cmd_ds_sta_deauth sta_deauth;
- 		struct host_cmd_11ac_vht_cfg vht_cfg;
- 	} params;
- } __packed;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 81251d9..9cf6852 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1115,6 +1115,8 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
- 			 struct cfg80211_beacon_data *data);
- int mwifiex_del_mgmt_ies(struct mwifiex_private *priv);
- u8 *mwifiex_11d_code_2_region(u8 code);
-+void mwifiex_uap_del_sta_data(struct mwifiex_private *priv,
-+			      struct mwifiex_sta_node *node);
- 
- extern const struct ethtool_ops mwifiex_ethtool_ops;
- 
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 9f990e1..c710a1b 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -978,6 +978,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 	case HostCmd_CMD_UAP_BSS_STOP:
- 		priv->bss_started = 0;
- 		break;
-+	case HostCmd_CMD_UAP_STA_DEAUTH:
-+		break;
- 	case HostCmd_CMD_MEF_CFG:
- 		break;
- 	default:
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index b04b1db..2de882d 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -689,6 +689,23 @@ mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd, u16 cmd_action,
- 	return 0;
- }
- 
-+/* This function prepares AP specific deauth command with mac supplied in
-+ * function parameter.
-+ */
-+static int mwifiex_cmd_uap_sta_deauth(struct mwifiex_private *priv,
-+				      struct host_cmd_ds_command *cmd, u8 *mac)
-+{
-+	struct host_cmd_ds_sta_deauth *sta_deauth = &cmd->params.sta_deauth;
-+
-+	cmd->command = cpu_to_le16(HostCmd_CMD_UAP_STA_DEAUTH);
-+	memcpy(sta_deauth->mac, mac, ETH_ALEN);
-+	sta_deauth->reason = cpu_to_le16(WLAN_REASON_DEAUTH_LEAVING);
-+
-+	cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_sta_deauth) +
-+				S_DS_GEN);
-+	return 0;
-+}
-+
- /* This function prepares the AP specific commands before sending them
-  * to the firmware.
-  * This is a generic function which calls specific command preparation
-@@ -710,6 +727,10 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 		cmd->command = cpu_to_le16(cmd_no);
- 		cmd->size = cpu_to_le16(S_DS_GEN);
- 		break;
-+	case HostCmd_CMD_UAP_STA_DEAUTH:
-+		if (mwifiex_cmd_uap_sta_deauth(priv, cmd, data_buf))
-+			return -1;
-+		break;
- 	default:
- 		dev_err(priv->adapter->dev,
- 			"PREP_CMD: unknown cmd %#x\n", cmd_no);
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 77fb533..7180665 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -292,3 +292,19 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 
- 	return 0;
- }
-+
-+/* This function deletes station entry from associated station list.
-+ * Also if both AP and STA are 11n enabled, RxReorder tables and TxBA stream
-+ * tables created for this station are deleted.
-+ */
-+void mwifiex_uap_del_sta_data(struct mwifiex_private *priv,
-+			      struct mwifiex_sta_node *node)
-+{
-+	if (priv->ap_11n_enabled && node->is_11n_enabled) {
-+		mwifiex_11n_del_rx_reorder_tbl_by_ta(priv, node->mac_addr);
-+		mwifiex_del_tx_ba_stream_tbl_by_ra(priv, node->mac_addr);
-+	}
-+	mwifiex_del_sta_entry(priv, node->mac_addr);
-+
-+	return;
-+}
--- 
-1.8.2.3
 
+in the journal.
+
+Removing and reinserting the USB stick allows me to reassociate about
+50% of the time; others need a reboot.
+
+This is a regression from 3.8. It was present in the earlier 3.9 RC's
+after Johannes' fix for idle sequence handling, but not before the
+changes that broke ath9k_htc, so I think something between the patch
+that broke the driver and the patch that fixed it is to blame.
