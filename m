@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:50081 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752347Ab3EPLCC (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:58412 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755717Ab3EHQXx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 07:02:02 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 13/18] ath9k: report 5/10 MHz channels
-Date: Thu, 16 May 2013 13:00:40 +0200
-Message-Id: <1368702045-27598-14-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130238_991176_46D954C5)
-In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 8 May 2013 12:23:53 -0400
+Date: Wed, 8 May 2013 09:23:50 -0700
+From: Greg KH <gregkh@linux-foundation.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Dan Williams <dcbw@redhat.com>,
+	'George0505' <george0505@realtek.com>,
+	Joon Ro <joonhyoung.ro@gmail.com>
+Subject: Re: Linux driver for Realtek RTL8723AU devices with USB ID 0bda:1724
+ such as found in Lenovo IdeaPad Yoga 13
+Message-ID: <20130508162350.GC28080@kroah.com> (sfid-20130508_182414_643553_92A586B1)
+References: <5159B52D.3050601@lwfinger.net>
+ <5189B939.4010905@zytor.com>
+ <518A7814.1070604@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <518A7814.1070604@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/recv.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+On Wed, May 08, 2013 at 11:06:44AM -0500, Larry Finger wrote:
+> On 05/07/2013 09:32 PM, H. Peter Anvin wrote:
+> >
+> >So I can verify that this driver works against 3.8.11 (not against
+> >current -linus because of a build failure), and yes, there is Bluetooth
+> >in this device.  In fact, it seems to work better than some in-tree
+> >drivers I have seen in the past.
+> >
+> >However, I'm confused as to the above and what it implies for the
+> >purpose of the staging tree.  Wasn't the whole point of the staging tree
+> >to have a working-but-ugly driver upstream and have the work to clean it
+> >up happen in the mainline tree instead of off somewhere.
+> 
+> Yes, but even staging has some standards.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 8be2b5d..fe97818 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -865,6 +865,17 @@ static int ath9k_process_rate(struct ath_common *common,
- 	band = hw->conf.chandef.chan->band;
- 	sband = hw->wiphy->bands[band];
- 
-+	switch (hw->conf.chandef.width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		rxs->flag |= RX_FLAG_5MHZ;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		rxs->flag |= RX_FLAG_10MHZ;
-+		break;
-+	default:
-+		break;
-+	}
-+
- 	if (rx_stats->rs_rate & 0x80) {
- 		/* HT rate */
- 		rxs->flag |= RX_FLAG_HT;
--- 
-1.7.10.4
+I have standards?  That's a first :)
 
+> For example, they frown on inclusion of firmware in a massive data
+> block in a file in the driver - it should be in a separate file the
+> /lib/firmware/ tree.
+
+Sure, that would be "nice", but it's not something that I should reject
+a driver for, have I done that?
+
+> In addition, the mainline drivers/net/wireless/ tree is only available
+> to devices that use mac80211 for the software-based MAC layer. That
+> conversion is a serious effort that may never be done, thus the
+> 8723au driver may never leave staging.
+
+That's a bigger deal, but note, some drivers have done it, it is not
+impossible.
+
+thanks,
+
+greg k-h
