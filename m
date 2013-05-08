@@ -1,79 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:61392 "EHLO mout.gmx.net"
+Received: from comal.ext.ti.com ([198.47.26.152]:43312 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753576Ab3EDHdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 May 2013 03:33:13 -0400
-Received: from mailout-de.gmx.net ([10.1.76.30]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0MYqOT-1V4AjD0qJ9-00Vjcc for
- <linux-wireless@vger.kernel.org>; Sat, 04 May 2013 09:33:12 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2] ath9k_htc: add STBC TX support
-Date: Sat,  4 May 2013 09:33:06 +0200
-Message-Id: <1367652786-6282-1-git-send-email-linux@rempel-privat.de> (sfid-20130504_093328_175185_F4A33824)
-In-Reply-To: <CAJ-Vmo=XYK=Jkc40U_vJO03n+tiA_LDpw8e1QKYRX6-+E9o4fA@mail.gmail.com>
-References: <CAJ-Vmo=XYK=Jkc40U_vJO03n+tiA_LDpw8e1QKYRX6-+E9o4fA@mail.gmail.com>
+	id S1750772Ab3EHIqB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 May 2013 04:46:01 -0400
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id r488k0l1015582
+	for <linux-wireless@vger.kernel.org>; Wed, 8 May 2013 03:46:00 -0500
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id r488k0nl002151
+	for <linux-wireless@vger.kernel.org>; Wed, 8 May 2013 03:46:00 -0500
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>
+Subject: [PATCH] wl18xx: use locally administered MAC address if not available from fuse
+Date: Wed, 8 May 2013 11:44:37 +0300
+Message-ID: <1368002677-16772-1-git-send-email-coelho@ti.com> (sfid-20130508_104610_134725_81F885B6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-current firmware will enable STBC_TX, only if other peer support it.
-This patch provide ht_peer_caps to firmware.
-FW versions 1.3, 1.4 should be able to work with it.
-Tested on ar7010+ar9280 and ar7010+ar9287.
+In some R&D chips, the device may be left untrimmed and with the MAC
+address missing from fuse ROM.  In order to support those devices,
+apply a locally administered MAC address instead and generate print
+out a message to warn the user.
 
-- v2. Use one bit instead of two for RX STBC flags.
+Based on the original patch by Victor Goldenshtein.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          | 3 +++
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 3 +++
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
- 3 files changed, 10 insertions(+)
+ drivers/net/wireless/ti/wl18xx/main.c   |    6 ++++++
+ drivers/net/wireless/ti/wl18xx/wl18xx.h |    9 +++++++++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index d3b099d..037e9b8 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -142,6 +142,9 @@ struct ath9k_htc_target_aggr {
- #define WLAN_RC_40_FLAG  0x02
- #define WLAN_RC_SGI_FLAG 0x04
- #define WLAN_RC_HT_FLAG  0x08
-+#define WLAN_RC_TX_STBC_FLAG 0x20 /* TX STBC */
-+/* RX STBC. Warning! FW checks for 0xC0. But we support only 1 stream anyway */
-+#define WLAN_RC_RX_STBC_FLAG 0x40
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index ae85ae4..e296f34 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1318,6 +1318,12 @@ static int wl18xx_get_mac(struct wl1271 *wl)
+ 		((mac1 & 0xff000000) >> 24);
+ 	wl->fuse_nic_addr = (mac1 & 0xffffff);
  
- struct ath9k_htc_rateset {
- 	u8 rs_nrates;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a47f5e0..c79c5ac 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -517,6 +517,9 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
- 	ath_dbg(common, CONFIG, "TX streams %d, RX streams: %d\n",
- 		tx_streams, rx_streams);
- 
-+	if (tx_streams >= 2)
-+		ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
++	if (!wl->fuse_oui_addr && !wl->fuse_nic_addr) {
++		wl->fuse_oui_addr = WL18XX_DEFAULT_LOCAL_OUI;
++		wl->fuse_nic_addr = WL18XX_DEFAULT_LOCAL_NIC;
++		wl1271_warning("MAC address from fuse ROM not available, using locally administered addresses.");
++	}
 +
- 	if (tx_streams != rx_streams) {
- 		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
- 		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 0743a47..af08b4a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -623,6 +623,10 @@ static void ath9k_htc_setup_rate(struct ath9k_htc_priv *priv,
- 		trate->rates.ht_rates.rs_nrates = j;
+ 	ret = wlcore_set_partition(wl, &wl->ptable[PART_DOWN]);
  
- 		caps = WLAN_RC_HT_FLAG;
-+		if (sta->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC)
-+			caps |= WLAN_RC_RX_STBC_FLAG;
-+		if (sta->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC)
-+			caps |= WLAN_RC_TX_STBC_FLAG;
- 		if (sta->ht_cap.mcs.rx_mask[1])
- 			caps |= WLAN_RC_DS_FLAG;
- 		if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
+ out:
+diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+index 9204e07..e76bfc7 100644
+--- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
++++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+@@ -42,6 +42,15 @@
+ 
+ #define WL18XX_RX_BA_MAX_SESSIONS 5
+ 
++/*
++ * Locally administered MAC address to be used when unavailable in
++ * fuse ROM.  This is TI's 08:00:28 OUI with the locally administered
++ * bit set.  Note that this is actually the assigned BDADDR, the WLAN
++ * MAC addresses are generated incrementally from this one.
++ */
++#define WL18XX_DEFAULT_LOCAL_OUI	(0x0a0028)
++#define WL18XX_DEFAULT_LOCAL_NIC	(0x000000)
++
+ struct wl18xx_priv {
+ 	/* buffer for sending commands to FW */
+ 	u8 cmd_buf[WL18XX_CMD_MAX_SIZE];
 -- 
-1.8.1.2
+1.7.10.4
 
