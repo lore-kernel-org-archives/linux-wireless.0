@@ -1,230 +1,281 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:40544 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755620Ab3ENBSA (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:36115 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398Ab3EHJds (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 21:18:00 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
-	Tim Shepard <shep@laptop.org>,
-	Jason Abele <jabele@chromium.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 03/17] mwifiex: remove global user_scan_cfg variable
-Date: Mon, 13 May 2013 18:14:47 -0700
-Message-ID: <1368494101-23651-4-git-send-email-bzhao@marvell.com> (sfid-20130514_031805_559817_48CAB484)
-In-Reply-To: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
-References: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 8 May 2013 05:33:48 -0400
+Received: by mail-ea0-f175.google.com with SMTP id q10so784596eaj.6
+        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2013 02:33:46 -0700 (PDT)
+From: wilocity.git@gmail.com
+To: qca_vkondrat@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Erez Kirshenbaum <erezk@wilocity.com>,
+	Wilocity Git <wilocity.git@gmail.com>
+Subject: [PATCH 1/3] wil6210: TCP/UDP checksum offloading support
+Date: Wed,  8 May 2013 11:32:51 +0300
+Message-Id: <1368001971-11551-1-git-send-email-wilocity.git@gmail.com> (sfid-20130508_113352_854222_D24E2EE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Erez Kirshenbaum <erezk@wilocity.com>
 
-As the variable is used only for preparation of internal scan
-commands, we don't need to keep it allocated until the entire
-scan completes. We will define it as a local variable and free
-immediately after it's use.
+Add TCP/UDP checksum hardware offloading, configure hw and set the corresponding offloading bits in the
+DMA descriptors.
 
-New flag 'scan_aborting' is added to handle race between
-mwifiex_close() and scan handler. Previously user_scan_cfg
-pointer used to take care of this.
-
-This patch fixes a memory leak in mwifiex_cfg80211_scan after
-running "iwlist mlan0 scan & sleep 1; rmmod mwifiex_sdio".
-
-Reported-by: Daniel Drake <dsd@laptop.org>
-Tested-by: Daniel Drake <dsd@laptop.org>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Erez Kirshenbaum <erezk@wilocity.com>
+Signed-off-by: Wilocity Git <wilocity.git@gmail.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 31 +++++++++++++++++--------------
- drivers/net/wireless/mwifiex/init.c     | 20 +++++++-------------
- drivers/net/wireless/mwifiex/main.c     |  1 +
- drivers/net/wireless/mwifiex/main.h     |  2 +-
- drivers/net/wireless/mwifiex/scan.c     | 22 ++++++++--------------
- 5 files changed, 34 insertions(+), 42 deletions(-)
+ drivers/net/wireless/ath/wil6210/netdev.c | 24 ++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.c   | 77 +++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/txrx.h   | 28 +++++++++--
+ drivers/net/wireless/ath/wil6210/wmi.c    |  8 ++++
+ 4 files changed, 130 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index e42b266..e493f89 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1859,6 +1859,7 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- 	int i, offset, ret;
- 	struct ieee80211_channel *chan;
- 	struct ieee_types_header *ie;
-+	struct mwifiex_user_scan_cfg *user_scan_cfg;
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 098a8ec..4f2a61f 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -32,12 +32,34 @@ static int wil_stop(struct net_device *ndev)
+ 	return wil_down(wil);
+ }
  
- 	wiphy_dbg(wiphy, "info: received scan request on %s\n", dev->name);
- 
-@@ -1869,20 +1870,22 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- 		return -EBUSY;
- 	}
- 
--	if (priv->user_scan_cfg) {
-+	/* Block scan request if scan operation or scan cleanup when interface
-+	 * is disabled is in process
-+	 */
-+	if (priv->scan_request || priv->scan_aborting) {
- 		dev_err(priv->adapter->dev, "cmd: Scan already in process..\n");
- 		return -EBUSY;
- 	}
- 
--	priv->user_scan_cfg = kzalloc(sizeof(struct mwifiex_user_scan_cfg),
--				      GFP_KERNEL);
--	if (!priv->user_scan_cfg)
-+	user_scan_cfg = kzalloc(sizeof(*user_scan_cfg), GFP_KERNEL);
-+	if (!user_scan_cfg)
- 		return -ENOMEM;
- 
- 	priv->scan_request = request;
- 
--	priv->user_scan_cfg->num_ssids = request->n_ssids;
--	priv->user_scan_cfg->ssid_list = request->ssids;
-+	user_scan_cfg->num_ssids = request->n_ssids;
-+	user_scan_cfg->ssid_list = request->ssids;
- 
- 	if (request->ie && request->ie_len) {
- 		offset = 0;
-@@ -1902,25 +1905,25 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- 	for (i = 0; i < min_t(u32, request->n_channels,
- 			      MWIFIEX_USER_SCAN_CHAN_MAX); i++) {
- 		chan = request->channels[i];
--		priv->user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
--		priv->user_scan_cfg->chan_list[i].radio_type = chan->band;
-+		user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
-+		user_scan_cfg->chan_list[i].radio_type = chan->band;
- 
- 		if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
--			priv->user_scan_cfg->chan_list[i].scan_type =
-+			user_scan_cfg->chan_list[i].scan_type =
- 						MWIFIEX_SCAN_TYPE_PASSIVE;
- 		else
--			priv->user_scan_cfg->chan_list[i].scan_type =
-+			user_scan_cfg->chan_list[i].scan_type =
- 						MWIFIEX_SCAN_TYPE_ACTIVE;
- 
--		priv->user_scan_cfg->chan_list[i].scan_time = 0;
-+		user_scan_cfg->chan_list[i].scan_time = 0;
- 	}
- 
--	ret = mwifiex_scan_networks(priv, priv->user_scan_cfg);
-+	ret = mwifiex_scan_networks(priv, user_scan_cfg);
-+	kfree(user_scan_cfg);
- 	if (ret) {
- 		dev_err(priv->adapter->dev, "scan failed: %d\n", ret);
-+		priv->scan_aborting = false;
- 		priv->scan_request = NULL;
--		kfree(priv->user_scan_cfg);
--		priv->user_scan_cfg = NULL;
- 		return ret;
- 	}
- 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 71bbf12..1343725f 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -81,19 +81,13 @@ static void scan_delay_timer_fn(unsigned long data)
- 		adapter->empty_tx_q_cnt = 0;
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
- 
--		if (priv->user_scan_cfg) {
--			if (priv->scan_request) {
--				dev_dbg(priv->adapter->dev,
--					"info: aborting scan\n");
--				cfg80211_scan_done(priv->scan_request, 1);
--				priv->scan_request = NULL;
--			} else {
--				dev_dbg(priv->adapter->dev,
--					"info: scan already aborted\n");
--			}
--
--			kfree(priv->user_scan_cfg);
--			priv->user_scan_cfg = NULL;
-+		if (priv->scan_request) {
-+			dev_dbg(adapter->dev, "info: aborting scan\n");
-+			cfg80211_scan_done(priv->scan_request, 1);
-+			priv->scan_request = NULL;
-+		} else {
-+			priv->scan_aborting = false;
-+			dev_dbg(adapter->dev, "info: scan already aborted\n");
- 		}
- 		goto done;
- 	}
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 2eb88ea..4e7270c 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -436,6 +436,7 @@ mwifiex_close(struct net_device *dev)
- 		dev_dbg(priv->adapter->dev, "aborting scan on ndo_stop\n");
- 		cfg80211_scan_done(priv->scan_request, 1);
- 		priv->scan_request = NULL;
-+		priv->scan_aborting = true;
- 	}
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 4ef67fc..81251d9 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -492,7 +492,6 @@ struct mwifiex_private {
- 	struct semaphore async_sem;
- 	u8 report_scan_result;
- 	struct cfg80211_scan_request *scan_request;
--	struct mwifiex_user_scan_cfg *user_scan_cfg;
- 	u8 cfg_bssid[6];
- 	struct wps wps;
- 	u8 scan_block;
-@@ -510,6 +509,7 @@ struct mwifiex_private {
- 	u8 ap_11ac_enabled;
- 	u32 mgmt_frame_mask;
- 	struct mwifiex_roc_cfg roc_cfg;
-+	bool scan_aborting;
++static netdev_features_t wil_fix_features(struct net_device *netdev,
++			netdev_features_t features)
++{
++	return features;
++}
++
++static int wil_set_features(struct net_device *netdev,
++			netdev_features_t features)
++{
++	struct wil6210_priv *wil = ndev_to_wil(netdev);
++	netdev_features_t changed = features ^ netdev->features;
++
++	wil_info(wil, "wil_set_features: %x\n", (unsigned int)features);
++	if (changed & NETIF_F_HW_CSUM)
++		wil_info(wil, "Tx checksum offloading changed\n");
++	else if (changed & NETIF_F_RXCSUM)
++		wil_info(wil, "Rx checksum offloading changed\n");
++	return 0;
++}
++
+ static const struct net_device_ops wil_netdev_ops = {
+ 	.ndo_open		= wil_open,
+ 	.ndo_stop		= wil_stop,
+ 	.ndo_start_xmit		= wil_start_xmit,
+ 	.ndo_set_mac_address	= eth_mac_addr,
+ 	.ndo_validate_addr	= eth_validate_addr,
++	.ndo_fix_features	= wil_fix_features,
++	.ndo_set_features	= wil_set_features,
  };
  
- enum mwifiex_ba_status {
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 9cf5d8f..7b2566b 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1784,22 +1784,16 @@ check_next_scan:
- 		if (priv->report_scan_result)
- 			priv->report_scan_result = false;
+ void *wil_if_alloc(struct device *dev, void __iomem *csr)
+@@ -78,6 +100,8 @@ void *wil_if_alloc(struct device *dev, void __iomem *csr)
  
--		if (priv->user_scan_cfg) {
--			if (priv->scan_request) {
--				dev_dbg(priv->adapter->dev,
--					"info: notifying scan done\n");
--				cfg80211_scan_done(priv->scan_request, 0);
--				priv->scan_request = NULL;
--			} else {
--				dev_dbg(priv->adapter->dev,
--					"info: scan already aborted\n");
--			}
+ 	ndev->netdev_ops = &wil_netdev_ops;
+ 	ndev->ieee80211_ptr = wdev;
++	ndev->hw_features = NETIF_F_HW_CSUM | NETIF_F_RXCSUM;
++	ndev->features |= NETIF_F_HW_CSUM | NETIF_F_RXCSUM;
+ 	SET_NETDEV_DEV(ndev, wiphy_dev(wdev->wiphy));
+ 	wdev->netdev = ndev;
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 7970245..3f44a6c 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -18,6 +18,9 @@
+ #include <net/ieee80211_radiotap.h>
+ #include <linux/if_arp.h>
+ #include <linux/moduleparam.h>
++#include <linux/ip.h>
++#include <linux/ipv6.h>
++#include <net/ipv6.h>
+ 
+ #include "wil6210.h"
+ #include "wmi.h"
+@@ -391,7 +394,16 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
+ 		 */
+ 		wil_swap_ethaddr(skb->data);
+ 	}
 -
--			kfree(priv->user_scan_cfg);
--			priv->user_scan_cfg = NULL;
-+		if (priv->scan_request) {
-+			dev_dbg(adapter->dev, "info: notifying scan done\n");
-+			cfg80211_scan_done(priv->scan_request, 0);
-+			priv->scan_request = NULL;
-+		} else {
-+			priv->scan_aborting = false;
-+			dev_dbg(adapter->dev, "info: scan already aborted\n");
- 		}
- 	} else {
--		if (priv->user_scan_cfg && !priv->scan_request) {
-+		if (priv->scan_aborting && !priv->scan_request) {
- 			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
- 					       flags);
- 			adapter->scan_delay_cnt = MWIFIEX_MAX_SCAN_DELAY_CNT;
++	/* Check checksum-offload status */
++	if (ndev->features & NETIF_F_RXCSUM) {
++		if (d->dma.status & RX_DMA_STATUS_L4_IDENT) {
++			/* L4 protocol identified, csum calculated */
++			if ((d->dma.error & RX_DMA_ERROR_L4_ERR) == 0)
++				skb->ip_summed = CHECKSUM_UNNECESSARY;
++			else
++				wil_err(wil, "Incorrect checksum reported\n");
++		}
++	}
+ 	return skb;
+ }
+ 
+@@ -605,9 +617,7 @@ static int wil_tx_desc_map(volatile struct vring_tx_desc *d,
+ {
+ 	d->dma.addr_low = lower_32_bits(pa);
+ 	d->dma.addr_high = (u16)upper_32_bits(pa);
+-	d->dma.ip_length = 0;
+-	/* 0..6: mac_length; 7:ip_version 0-IP6 1-IP4*/
+-	d->dma.b11 = 0/*14 | BIT(7)*/;
++	d->dma.offload_cfg = 0;
+ 	d->dma.error = 0;
+ 	d->dma.status = 0; /* BIT(0) should be 0 for HW_OWNED */
+ 	d->dma.length = len;
+@@ -630,6 +640,7 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 			struct sk_buff *skb)
+ {
+ 	struct device *dev = wil_to_dev(wil);
++	struct net_device *ndev = wil_to_ndev(wil);
+ 	volatile struct vring_tx_desc *d;
+ 	u32 swhead = vring->swhead;
+ 	int avail = wil_vring_avail_tx(vring);
+@@ -638,6 +649,8 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	int vring_index = vring - wil->vring_tx;
+ 	uint i = swhead;
+ 	dma_addr_t pa;
++	int is_ip4 = 0, is_ip6 = 0, is_tcp = 0, is_udp = 0;
++
+ 
+ 	wil_dbg_txrx(wil, "%s()\n", __func__);
+ 
+@@ -665,6 +678,62 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 		return -EINVAL;
+ 	/* 1-st segment */
+ 	wil_tx_desc_map(d, pa, skb_headlen(skb));
++	/*
++	 * Process offloading
++	 */
++	if ((skb->ip_summed == CHECKSUM_PARTIAL) &&
++		(ndev->features & NETIF_F_HW_CSUM))  {
++		if (skb->protocol == htons(ETH_P_IP)) {
++			is_ip4 = 1;
++		if (ip_hdr(skb)->protocol == IPPROTO_TCP)
++			is_tcp = 1;
++		else if (ip_hdr(skb)->protocol == IPPROTO_UDP)
++			is_udp = 1;
++		} else if (skb->protocol == htons(ETH_P_IPV6)) {
++			unsigned int offset = 0;
++			int ipv6hdr =  ipv6_find_hdr(skb,
++						&offset, -1, NULL, NULL);
++			is_ip6 = 1;
++			if (ipv6hdr == NEXTHDR_TCP)
++				is_tcp = 1;
++			else if (ipv6hdr == NEXTHDR_UDP)
++				is_udp = 1;
++		}
++	}
++
++
++	if (is_ip4 || is_ip6) {
++		if (is_ip4)
++			d->dma.offload_cfg |=
++				BIT(DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_POS);
++		d->dma.offload_cfg |=
++			(skb_network_header_len(skb) &
++			DMA_CFG_DESC_TX_OFFLOAD_CFG_IP_LEN_MSK);
++		d->dma.offload_cfg |=
++			(0x0e << DMA_CFG_DESC_TX_OFFLOAD_CFG_MAC_LEN_POS);
++		if (is_tcp || is_udp) {
++			/* Enable TCP/UDP checksum */
++			d->dma.d0 |=
++				BIT(DMA_CFG_DESC_TX_0_TCP_UDP_CHECKSUM_EN_POS);
++			/* Calculate pseudo-header */
++			d->dma.d0 |=
++			   BIT(DMA_CFG_DESC_TX_0_PSEUDO_HEADER_CALC_EN_POS);
++			if (is_tcp)  {
++				d->dma.d0 |=
++					(2 << DMA_CFG_DESC_TX_0_L4_TYPE_POS);
++			/* L4 header len: TCP header length */
++				d->dma.d0 |=
++					(tcp_hdrlen(skb) &
++					DMA_CFG_DESC_TX_0_L4_LENGTH_MSK);
++			} else  {
++				/* L4 header len: UDP header length */
++				d->dma.d0 |=
++					(sizeof(struct udphdr) &
++					DMA_CFG_DESC_TX_0_L4_LENGTH_MSK);
++			}
++		}
++	}
++
+ 	d->mac.d[2] |= ((nr_frags + 1) <<
+ 		       MAC_CFG_DESC_TX_2_NUM_OF_DESCRIPTORS_POS);
+ 	/* middle segments */
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index adef12f..da22a93 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -209,7 +209,21 @@ struct vring_tx_mac {
+ 
+ #define DMA_CFG_DESC_TX_0_L4_TYPE_POS 30
+ #define DMA_CFG_DESC_TX_0_L4_TYPE_LEN 2
+-#define DMA_CFG_DESC_TX_0_L4_TYPE_MSK 0xC0000000
++#define DMA_CFG_DESC_TX_0_L4_TYPE_MSK 0xC0000000 /* L4 type: 0-UDP, 2-TCP */
++
++/* TX DMA Dword 2 */
++/* Offload bits in offload_cfg field */
++#define DMA_CFG_DESC_TX_OFFLOAD_CFG_IP_LEN_POS 0
++#define DMA_CFG_DESC_TX_OFFLOAD_CFG_IP_LEN_LEN 8
++#define DMA_CFG_DESC_TX_OFFLOAD_CFG_IP_LEN_MSK 0x00FF /* IP hdr len */
++
++#define DMA_CFG_DESC_TX_OFFLOAD_CFG_MAC_LEN_POS 8
++#define DMA_CFG_DESC_TX_OFFLOAD_CFG_MAC_LEN_LEN 7
++#define DMA_CFG_DESC_TX_OFFLOAD_CFG_MAC_LEN_MSK 0x7F00 /* MAC hdr len */
++
++#define DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_POS 15
++#define DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_LEN 1
++#define DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_MSK 0x8000 /* 1-IPv4, 0-IPv6 */
+ 
+ 
+ #define TX_DMA_STATUS_DU         BIT(0)
+@@ -218,8 +232,7 @@ struct vring_tx_dma {
+ 	u32 d0;
+ 	u32 addr_low;
+ 	u16 addr_high;
+-	u8  ip_length;
+-	u8  b11;       /* 0..6: mac_length; 7:ip_version */
++	u16 offload_cfg;
+ 	u8  error;     /* 0..2: err; 3..7: reserved; */
+ 	u8  status;    /* 0: used; 1..7; reserved */
+ 	u16 length;
+@@ -309,8 +322,17 @@ struct vring_rx_mac {
+ 
+ #define RX_DMA_D0_CMD_DMA_IT     BIT(10)
+ 
++/* Error field, offload bits */
++#define RX_DMA_ERROR_L3_ERR   BIT(4)
++#define RX_DMA_ERROR_L4_ERR   BIT(5)
++
++
++/* Status field */
+ #define RX_DMA_STATUS_DU         BIT(0)
+ #define RX_DMA_STATUS_ERROR      BIT(2)
++
++#define RX_DMA_STATUS_L3_IDENT   BIT(4)
++#define RX_DMA_STATUS_L4_IDENT   BIT(5)
+ #define RX_DMA_STATUS_PHY_INFO   BIT(6)
+ 
+ struct vring_rx_dma {
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 45b04e3..dc0aa8a 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -932,6 +932,14 @@ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
+ 		struct wmi_cfg_rx_chain_done_event evt;
+ 	} __packed evt;
+ 	int rc;
++	u8 csum_enabled = 0;
++
++	/* Initialize offload. Linux always calculates IP checksum */
++	cmd.l3_l4_ctrl |= (0 << L3_L4_CTRL_IPV4_CHECKSUM_EN_POS);
++	/* Enable/disable TCP/UDP checksum */
++	if (ndev->features & NETIF_F_RXCSUM)
++		csum_enabled = 1;
++	cmd.l3_l4_ctrl |= (csum_enabled << L3_L4_CTRL_TCPIP_CHECKSUM_EN_POS);
+ 
+ 	if (wdev->iftype == NL80211_IFTYPE_MONITOR) {
+ 		struct ieee80211_channel *ch = wdev->preset_chandef.chan;
 -- 
-1.8.2.3
+1.7.11.7
 
