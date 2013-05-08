@@ -1,333 +1,513 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dovecot.logic.tuwien.ac.at ([128.130.175.61]:37438 "EHLO
-	mail.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754625Ab3EIMDn (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32415 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121Ab3EHITc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 May 2013 08:03:43 -0400
-Date: Thu, 9 May 2013 20:56:30 +0900
-From: Norbert Preining <preining@logic.at>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	hostap@lists.shmoo.com
-Subject: RTL driver for RTL8191SEvB and/or wpa-supplicant really broken at
-	times
-Message-ID: <20130509115630.GC5111@gamma.logic.tuwien.ac.at> (sfid-20130509_140401_898272_B4F41A35)
+	Wed, 8 May 2013 04:19:32 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v7] cfg80211: P2P find phase offload
+Date: Wed, 8 May 2013 11:19:08 +0300
+Message-ID: <1368001148-3619-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130508_101947_116510_B6B32916)
+In-Reply-To: <1368001148-3619-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1368001148-3619-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+Allow to implement P2P find phase in the driver/firmware.
 
-here is a short status report on my experiences with:
-	kernel 3.9.0
-	wpa_supplicant 1.0
-	hardware RTL191SEvB
-	Debian/sid
+Offload scheme designed as follows:
 
-Short summary: broken to the degree that internet connection is impossible
+- Driver provide methods start_p2p_find and stop_p2p_find in the cfg80211_ops;
+- Driver indicate firmware or driver responds to the probe requests by setting
+  feature NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD
+- wpa_supplicant analyses methods supported to discover p2p offload support;
+- wpa_supplicant analyses feature flags to discover p2p probe response
+  offload support;
+to perform p2p scan, wpa_supplicant:
+- perform legacy scan, through driver's cfg80211_ops 'scan' method
+- configure rx management filter to get probe-request and probe-response frames
+- start p2p find via driver's cfg80211_ops start_p2p_find method
+- driver start p2p find with hardware and notify wpa_supplicant with
+  cfg80211_p2p_find_notify_start()
+- driver/firmware toggle search/listen states. Received probe-request and
+  probe-response frames passed to the wpa_supplicant via cfg80211_rx_mgmt
+- when wpa_supplicant wants to stop p2p find, it calls driver's
+  cfg80211_ops stop_p2p_find method. Alternatively, driver/firmware may decide
+  to stop p2p find. In all cases, driver notifies wpa_supplicant using
+  cfg80211_p2p_find_notify_end()
 
-Sorry for the long mail, I tried to reduce to the essentials only.
+All driver to user space communication done through nl80211 layer.
 
-Contents:
-=========
-0) hardware and software description
-1) during connection permanent break off
-2) connection seems established according to kernel and NM, but nothing works
-3) if connection is working, ping times are crazy and connection breaks down suddenly
-4) conclusion
+Offloaded P2P find does not support variations like progressive scan.
 
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ include/net/cfg80211.h       |  65 ++++++++++++++++
+ include/uapi/linux/nl80211.h |  13 ++++
+ net/wireless/nl80211.c       | 175 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |  19 +++++
+ net/wireless/trace.h         |  42 +++++++++++
+ 5 files changed, 314 insertions(+)
 
-0) hardware and software description
-====================================
-Hardware:
-Lenovo Thinkpad Edge
-WLAN:
-03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller (rev 10)
-	Subsystem: Realtek Semiconductor Co., Ltd. Device e020
-	Flags: bus master, fast devsel, latency 0, IRQ 17
-	I/O ports at 2000 [size=256]
-	Memory at f0500000 (32-bit, non-prefetchable) [size=16K]
-	Capabilities: [40] Power Management version 3
-	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-	Capabilities: [70] Express Legacy Endpoint, MSI 00
-	Capabilities: [100] Advanced Error Reporting
-	Capabilities: [140] Virtual Channel
-	Capabilities: [160] Device Serial Number 88-55-22-fe-ff-4c-e0-00
-	Kernel driver in use: rtl8192se
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 26b5b69..96172ae 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1780,6 +1780,34 @@ struct cfg80211_update_ft_ies_params {
+ };
+ 
+ /**
++ * struct cfg80211_p2p_find_params - parameters for P2P find
++ * @probe_ie: extra IE's for probe frames
++ * @probe_ie_len: length, bytes, of @probe_ie
++ * @probe_resp_ie: extra IE's for probe response frames
++ * @probe_resp_ie_len: length, bytes, of @probe_resp_ie
++ *	Driver/firmware may add additional IE's as well as modify
++ *	provided ones; typical IE's to be added are
++ *	WLAN_EID_EXT_SUPP_RATES, WLAN_EID_DS_PARAMS,
++ *	WLAN_EID_HT_CAPABILITY.
++ * @min_discoverable_interval: and
++ * @max_discoverable_interval: min/max for random multiplier of 100TU's
++ *	for the listen state duration
++ * @n_channels: number of channels to operate on
++ * @channels: channels to operate on
++ */
++struct cfg80211_p2p_find_params {
++	const u8 *probe_ie;
++	size_t probe_ie_len;
++	const u8 *probe_resp_ie;
++	size_t probe_resp_ie_len;
++	u32 min_discoverable_interval;
++	u32 max_discoverable_interval;
++
++	int n_channels;
++	struct ieee80211_channel **channels;
++};
++
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -2008,6 +2036,17 @@ struct cfg80211_update_ft_ies_params {
+  *	driver can take the most appropriate actions.
+  * @crit_proto_stop: Indicates critical protocol no longer needs increased link
+  *	reliability. This operation can not fail.
++ *
++ * start_p2p_find: start P2P find phase
++ *	Parameters include IEs for probe/probe-resp frames;
++ *	and channels to operate on.
++ *	Parameters are not retained after call, driver need to copy data if
++ *	it need it later.
++ *	P2P find can't run concurrently with ROC or scan, and driver should
++ *	check this.
++ * stop_p2p_find: stop P2P find phase
++ *	After stopping p2p find, driver should call
++ *	cfg80211_p2p_find_notify_end() to inform upper layers
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -2243,6 +2282,12 @@ struct cfg80211_ops {
+ 				    u16 duration);
+ 	void	(*crit_proto_stop)(struct wiphy *wiphy,
+ 				   struct wireless_dev *wdev);
++
++	int	(*start_p2p_find)(struct wiphy *wiphy,
++				  struct wireless_dev *wdev,
++				  struct cfg80211_p2p_find_params *params);
++	void	(*stop_p2p_find)(struct wiphy *wiphy,
++				 struct wireless_dev *wdev);
+ };
+ 
+ /*
+@@ -4160,6 +4205,26 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
+  */
+ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
+ 
++/**
++ * cfg80211_p2p_find_notify_start - report p2p find phase started
++ * @wdev: the wireless device reporting the event
++ * @gfp: allocation flags
++ */
++void cfg80211_p2p_find_notify_start(struct wireless_dev *wdev, gfp_t gfp);
++
++/**
++ * cfg80211_p2p_find_notify_end - report p2p find phase ended
++ * @wdev: the wireless device reporting the event
++ * @gfp: allocation flags
++ *
++ * p2p find phase may be ended either unsolicited or in response to
++ * ops->stop_p2p_find
++ *
++ * In any case, if @start_p2p_find from driver's struct cfg80211_ops called,
++ * @cfg80211_p2p_find_notify_end should be eventually called
++ */
++void cfg80211_p2p_find_notify_end(struct wireless_dev *wdev, gfp_t gfp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index d1e48b5..5fe3ec6 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -808,6 +808,9 @@ enum nl80211_commands {
+ 	NL80211_CMD_CRIT_PROTOCOL_START,
+ 	NL80211_CMD_CRIT_PROTOCOL_STOP,
+ 
++	NL80211_CMD_START_P2P_FIND,
++	NL80211_CMD_STOP_P2P_FIND,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1429,6 +1432,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_MAX_CRIT_PROT_DURATION: duration in milliseconds in which
+  *      the connection should have increased reliability (u16).
+  *
++ * @NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL:
++ * @NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL: min/max discoverable interval
++ *	for the p2p find, multiple of 100 TUs, represented as u32
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1727,6 +1734,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_CRIT_PROT_ID,
+ 	NL80211_ATTR_MAX_CRIT_PROT_DURATION,
+ 
++	NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL,
++	NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3556,6 +3566,8 @@ enum nl80211_ap_sme_features {
+  *	Peering Management entity which may be implemented by registering for
+  *	beacons or NL80211_CMD_NEW_PEER_CANDIDATE events. The mesh beacon is
+  *	still generated by the driver.
++ * @NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD: When in P2P find phase,
++ *	the device responds to probe-requests in hardware.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3575,6 +3587,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
+ 	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 15,
+ 	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
++	NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD		= 1 << 17,
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index afa2838..bd33a6a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -378,6 +378,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_MDID] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_IE_RIC] = { .type = NLA_BINARY,
+ 				  .len = IEEE80211_MAX_DATA_LEN },
++	[NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL] = { .type = NLA_U32 },
++	[NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -1427,6 +1429,8 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
+ 		if (split) {
+ 			CMD(crit_proto_start, CRIT_PROTOCOL_START);
+ 			CMD(crit_proto_stop, CRIT_PROTOCOL_STOP);
++			CMD(start_p2p_find, START_P2P_FIND);
++			CMD(stop_p2p_find, STOP_P2P_FIND);
+ 		}
+ 
+ #ifdef CONFIG_NL80211_TESTMODE
+@@ -8278,6 +8282,121 @@ static int nl80211_crit_protocol_stop(struct sk_buff *skb,
+ 	return 0;
+ }
+ 
++static int nl80211_start_p2p_find(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++	struct wiphy *wiphy = &rdev->wiphy;
++	/*
++	 * Defaults, as defined in the spec
++	 * Ref: Wi-Fi Peer-to-Peer (P2P) Technical Specification v1.1
++	 * Clause: 3.1.2.1.3 Find Phase
++	 */
++	struct cfg80211_p2p_find_params params = {
++		.min_discoverable_interval = 1,
++		.max_discoverable_interval = 3,
++	};
++	struct nlattr *attr_freq = info->attrs[NL80211_ATTR_SCAN_FREQUENCIES];
++	struct nlattr *attr;
++	int err, tmp, n_channels, i = 0;
++	struct ieee80211_channel **channels = NULL;
++
++	if (wdev->iftype != NL80211_IFTYPE_P2P_DEVICE)
++		return -EOPNOTSUPP;
++
++	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
++		return -EINVAL;
++
++	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE_PROBE_RESP]))
++		return -EINVAL;
++
++	if (!rdev->ops->start_p2p_find || !rdev->ops->stop_p2p_find)
++		return -EOPNOTSUPP;
++
++	if (rdev->scan_req)
++		return -EBUSY;
++
++	if (attr_freq) {
++		n_channels = validate_scan_freqs(attr_freq);
++		if (!n_channels)
++			return -EINVAL;
++
++		channels = kzalloc(n_channels * sizeof(*channels), GFP_KERNEL);
++		if (!channels)
++			return -ENOMEM;
++
++		/* user specified, bail out if channel not found */
++		nla_for_each_nested(attr, attr_freq, tmp) {
++			struct ieee80211_channel *chan;
++
++			chan = ieee80211_get_channel(wiphy, nla_get_u32(attr));
++
++			if (!chan) {
++				err = -EINVAL;
++				goto out_free;
++			}
++
++			/* ignore disabled channels */
++			if (chan->flags & IEEE80211_CHAN_DISABLED)
++				continue;
++
++			params.channels[i] = chan;
++			i++;
++		}
++		if (!i) {
++			err = -EINVAL;
++			goto out_free;
++		}
++
++		params.n_channels = i;
++		params.channels = channels;
++	}
++
++
++	attr = info->attrs[NL80211_ATTR_IE];
++	if (attr) {
++		params.probe_ie_len = nla_len(attr);
++		params.probe_ie = nla_data(attr);
++	}
++
++	attr = info->attrs[NL80211_ATTR_IE_PROBE_RESP];
++	if (attr) {
++		params.probe_resp_ie_len = nla_len(attr);
++		params.probe_resp_ie = nla_data(attr);
++	}
++
++	attr = info->attrs[NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL];
++	if (attr)
++		params.min_discoverable_interval = nla_get_u32(attr);
++
++	attr = info->attrs[NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL];
++	if (attr)
++		params.max_discoverable_interval = nla_get_u32(attr);
++
++	err = rdev_start_p2p_find(rdev, wdev, &params);
++
++out_free:
++	kfree(channels);
++
++	return err;
++}
++
++static int nl80211_stop_p2p_find(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++
++	if (wdev->iftype != NL80211_IFTYPE_P2P_DEVICE)
++		return -EOPNOTSUPP;
++
++	if (!rdev->ops->start_p2p_find || !rdev->ops->stop_p2p_find)
++		return -EOPNOTSUPP;
++
++	rdev_stop_p2p_find(rdev, wdev);
++
++	return 0;
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -8955,6 +9074,22 @@ static struct genl_ops nl80211_ops[] = {
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
++		.cmd = NL80211_CMD_START_P2P_FIND,
++		.doit = nl80211_start_p2p_find,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
++		.cmd = NL80211_CMD_STOP_P2P_FIND,
++		.doit = nl80211_stop_p2p_find,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
+ 		.cmd = NL80211_CMD_GET_PROTOCOL_FEATURES,
+ 		.doit = nl80211_get_protocol_features,
+ 		.policy = nl80211_policy,
+@@ -10645,6 +10780,46 @@ void cfg80211_tdls_oper_request(struct net_device *dev, const u8 *peer,
+ }
+ EXPORT_SYMBOL(cfg80211_tdls_oper_request);
+ 
++static
++void cfg80211_p2p_find_notify(struct wireless_dev *wdev, int cmd, gfp_t gfp)
++{
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct sk_buff *msg;
++	void *hdr;
++
++	trace_cfg80211_p2p_find_notify(wdev, cmd);
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, cmd);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_scan_mcgrp.id, GFP_KERNEL);
++}
++
++void cfg80211_p2p_find_notify_start(struct wireless_dev *wdev, gfp_t gfp)
++{
++	cfg80211_p2p_find_notify(wdev, NL80211_CMD_START_P2P_FIND, gfp);
++}
++EXPORT_SYMBOL(cfg80211_p2p_find_notify_start);
++
++void cfg80211_p2p_find_notify_end(struct wireless_dev *wdev, gfp_t gfp)
++{
++	cfg80211_p2p_find_notify(wdev, NL80211_CMD_STOP_P2P_FIND, gfp);
++}
++EXPORT_SYMBOL(cfg80211_p2p_find_notify_end);
++
+ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				  unsigned long state,
+ 				  void *_notify)
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 9f15f0a..94ff98a 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -923,4 +923,23 @@ static inline void rdev_crit_proto_stop(struct cfg80211_registered_device *rdev,
+ 	trace_rdev_return_void(&rdev->wiphy);
+ }
+ 
++static inline int rdev_start_p2p_find(struct cfg80211_registered_device *rdev,
++				      struct wireless_dev *wdev,
++				      struct cfg80211_p2p_find_params *params)
++{
++	int ret;
++	trace_rdev_start_p2p_find(&rdev->wiphy, wdev, params);
++	ret = rdev->ops->start_p2p_find(&rdev->wiphy, wdev, params);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
++static inline void rdev_stop_p2p_find(struct cfg80211_registered_device *rdev,
++				      struct wireless_dev *wdev)
++{
++	trace_rdev_stop_p2p_find(&rdev->wiphy, wdev);
++	rdev->ops->stop_p2p_find(&rdev->wiphy, wdev);
++	trace_rdev_return_void(&rdev->wiphy);
++}
++
+ #endif /* __CFG80211_RDEV_OPS */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index ecd4fce..266c911 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1841,6 +1841,34 @@ TRACE_EVENT(rdev_crit_proto_stop,
+ 		  WIPHY_PR_ARG, WDEV_PR_ARG)
+ );
+ 
++TRACE_EVENT(rdev_start_p2p_find,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
++		 struct cfg80211_p2p_find_params *params),
++	TP_ARGS(wiphy, wdev, params),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++		__field(u32, min_di)
++		__field(u32, max_di)
++		__field(int, n_channels)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++		__entry->min_di = params->min_discoverable_interval;
++		__entry->max_di = params->max_discoverable_interval;
++		__entry->n_channels = params->n_channels;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", disc. int. [%d..%d], n_channels %d",
++		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->min_di, __entry->max_di,
++		  __entry->n_channels)
++);
++
++DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_p2p_find,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
++	TP_ARGS(wiphy, wdev)
++);
++
+ /*************************************************************
+  *	     cfg80211 exported functions traces		     *
+  *************************************************************/
+@@ -2495,6 +2523,20 @@ TRACE_EVENT(cfg80211_ft_event,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(target_ap))
+ );
+ 
++TRACE_EVENT(cfg80211_p2p_find_notify,
++	TP_PROTO(struct wireless_dev *wdev, int cmd),
++	TP_ARGS(wdev, cmd),
++	TP_STRUCT__entry(
++		WDEV_ENTRY
++		__field(int, cmd)
++	),
++	TP_fast_assign(
++		WDEV_ASSIGN;
++		__entry->cmd = cmd;
++	),
++	TP_printk(WDEV_PR_FMT ", cmd: %d", WDEV_PR_ARG, __entry->cmd)
++);
++
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
+-- 
+1.8.1.2
 
-Debian unstable up to date
-kernel 3.9.0
-# wpa_supplicant -v
-wpa_supplicant v1.0
-Copyright (c) 2003-2012, Jouni Malinen <j@w1.fi> and contributors
-
-Debian version: 1.0-3+b2
-
-Please note: during all the following experiments at times
-two other computers (iPhone, WinXP) very connected without
-any problems (of course on different IPs).
-
-
-ad 1) during connection permanent break off
-============================================
-
-typical dmesg output:
-many times:
-May  8 20:54:59 tofuschnitzel NetworkManager[4878]: <info> (wlan0): supplicant interface state: disconnected -> scanning
-May  8 20:54:59 tofuschnitzel wpa_supplicant[5513]: wlan0: SME: Trying to authenticate with 00:3a:9d:b4:54:5a (SSID='norbujp' fr
-eq=2447 MHz)
-kernel: [19070.021021] wlan0: authenticate with 00:3a:9d:b4:54:5a
-NetworkManager[4878]: <info> (wlan0): supplicant interface state: scanning -> authenticating
-kernel: [19070.040313] wlan0: send auth to 00:3a:9d:b4:54:5a (try 1/3)
-kernel: [19070.144143] wlan0: send auth to 00:3a:9d:b4:54:5a (try 2/3)
-kernel: [19070.248113] wlan0: send auth to 00:3a:9d:b4:54:5a (try 3/3)
-wpa_supplicant[5513]: wlan0: Trying to associate with 00:3a:9d:b4:54:5a (SSID='norbujp' freq=2447 MHz)
-kernel: [19070.286906] wlan0: authenticated
-kernel: [19070.288224] wlan0: associate with 00:3a:9d:b4:54:5a (try 1/3)
-NetworkManager[4878]: <info> (wlan0): supplicant interface state: authenticating -> associating
-kernel: [19070.392185] wlan0: associate with 00:3a:9d:b4:54:5a (try 2/3)
-kernel: [19070.496204] wlan0: associate with 00:3a:9d:b4:54:5a (try 3/3)
-kernel: [19070.600253] wlan0: association with 00:3a:9d:b4:54:5a timed out
-NetworkManager[4878]: <info> (wlan0): supplicant interface state: associating -> disconnected
-
-after several of these I get one of the following:
-kernel: [19073.340075] wlan0: associated
-kernel: [19073.340155] cfg80211: Calling CRDA for country: JP
-NetworkManager[4878]: <info> (wlan0): supplicant interface state: associating -> 4-way handshake
-kernel: [19073.347635] cfg80211: Regulatory domain changed to country: JP
-kernel: [19073.347643] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-kernel: [19073.347648] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-kernel: [19073.347652] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-kernel: [19073.347656] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-...
-dbus[4074]: [system] Activating service name='org.freedesktop.PackageKit' (using servicehelper)
-dbus[4074]: [system] Successfully activated service 'org.freedesktop.PackageKit'
-kernel: [19077.405951] wlan0: deauthenticated from 00:3a:9d:b4:54:5a (Reason: 2)
-wpa_supplicant[5513]: wlan0: WPA: 4-Way Handshake failed - pre-shared key may be incorrect
-wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-kernel: [19077.416143] cfg80211: Calling CRDA to update world regulatory domain
-NetworkManager[4878]: <info> (wlan0): supplicant interface state: 4-way handshake -> disconnected
-NetworkManager[4878]: <info> Activation (wlan0/wireless): disconnected during association, asking for new key.
-
-but it is the correct key! Anyway, then the above game restarts ...
-
-sometimes, after many many many tries, the kernel/NM seems to believe
-it got a connection:
-
-2) connection seems established according to kernel and NM, but nothing works
-=============================================================================
-it starts as before, but then succeeds - in some way:
-wpa_supplicant[5513]: wlan0: WPA: Key negotiation completed with 00:3a:9d:b4:54:5a [PTK=CCMP GTK=CCMP]
-wpa_supplicant[5513]: wlan0: CTRL-EVENT-CONNECTED - Connection to 00:3a:9d:b4:54:5a completed (reauth) [id=0 id_str=]
-NetworkManager[4878]: <info> (wlan0): supplicant interface state: 4-way handshake -> completed
-NetworkManager[4878]: <info> Activation (wlan0/wireless) Stage 2 of 5 (Device Configure) successful.  Connected to wireless network 'norbujp'.
-NetworkManager[4878]: <info> Activation (wlan0) Stage 3 of 5 (IP Configure Start) scheduled.
-NetworkManager[4878]: <info> Activation (wlan0) Stage 3 of 5 (IP Configure Start) started...
-NetworkManager[4878]: <info> (wlan0): device state change: config -> ip-config (reason 'none') [50 70 0]
-NetworkManager[4878]: <info> Activation (wlan0) Beginning DHCPv4 transaction (timeout in 45 seconds)
-NetworkManager[4878]: <info> dhclient started with pid 30807
-NetworkManager[4878]: nm_utils_do_sysctl: assertion `path != NULL' failed
-NetworkManager[4878]: <info> Activation (wlan0) Beginning IP6 addrconf.
-NetworkManager[4878]: <warn> sysctl: failed to open '/proc/sys/net/ipv6/conf/wlan0/disable_ipv6': (2) No such file or directory
-NetworkManager[4878]: <warn> sysctl: failed to open '/proc/sys/net/ipv6/conf/wlan0/disable_ipv6': (2) No such file or directory
-NetworkManager[4878]: <info> Activation (wlan0) Stage 3 of 5 (IP Configure Start) complete.
-dhclient: Internet Systems Consortium DHCP Client 4.2.4
-dhclient: Copyright 2004-2012 Internet Systems Consortium.
-dhclient: All rights reserved.
-dhclient: For info, please visit https://www.isc.org/software/dhcp/
-dhclient: 
-NetworkManager[4878]: <info> (wlan0): DHCPv4 state changed nbi -> preinit
-dhclient: Listening on LPF/wlan0/88:9f:fa:f9:07:28
-dhclient: Sending on   LPF/wlan0/88:9f:fa:f9:07:28
-dhclient: Sending on   Socket/fallback
-dhclient: DHCPREQUEST on wlan0 to 255.255.255.255 port 67
-dhclient: DHCPACK from 192.168.0.1
-dhclient: bound to 192.168.0.5 -- renewal in 37312 seconds.
-NetworkManager[4878]: <info> (wlan0): DHCPv4 state changed preinit -> reboot
-NetworkManager[4878]: <info>   address 192.168.0.5
-NetworkManager[4878]: <info>   prefix 24 (255.255.255.0)
-NetworkManager[4878]: <info>   gateway 192.168.0.1
-NetworkManager[4878]: <info>   nameserver '192.168.0.1'
-NetworkManager[4878]: <info> Activation (wlan0) Stage 5 of 5 (IPv4 Configure Commit) scheduled...
-NetworkManager[4878]: <info> Activation (wlan0) Stage 5 of 5 (IPv4 Commit) started...
-NetworkManager[4878]: <info> (wlan0): device state change: ip-config -> secondaries (reason 'none') [70 90 0]
-NetworkManager[4878]: <info> Activation (wlan0) Stage 5 of 5 (IPv4 Commit) complete.
-NetworkManager[4878]: <info> (wlan0): device state change: secondaries -> activated (reason 'none') [90 100 0]
-NetworkManager[4878]: <info> Policy set 'Auto norbujp' (wlan0) as default for IPv4 routing and DNS.
-NetworkManager[4878]: <info> Activation (wlan0) successful, device activated.
-dbus[4074]: [system] Activating service name='org.freedesktop.nm_dispatcher' (using servicehelper)
-dbus[4074]: [system] Successfully activated service 'org.freedesktop.nm_dispatcher'
-ntpd[4779]: Listen normally on 5 wlan0 192.168.0.5 UDP 123
-ntpd[4779]: peers refreshed
-nm-dispatcher.action: Script '/etc/NetworkManager/dispatcher.d/01ifupdown' took too long; killing it.
-May  8 20:45:22 tofuschnitzel NetworkManager[4878]: <warn> Dispatcher script timed out: Script '/etc/NetworkManager/dispatcher.d/01ifupdown' timed out.
-May  8 20:45:37 tofuschnitzel NetworkManager[4878]: <info> (wlan0): IP6 addrconf timed out or failed.
-May  8 20:45:37 tofuschnitzel NetworkManager[4878]: <info> Activation (wlan0) Stage 4 of 5 (IPv6 Configure Timeout) scheduled...
-May  8 20:45:37 tofuschnitzel NetworkManager[4878]: <info> Activation (wlan0) Stage 4 of 5 (IPv6 Configure Timeout) started...
-May  8 20:45:37 tofuschnitzel NetworkManager[4878]: <info> Activation (wlan0) Stage 4 of 5 (IPv6 Configure Timeout) complete.
-
-But although both kernel as well as NM believe that all is fine:
-$ ifconfig wlan0
-wlan0     Link encap:Ethernet  HWaddr 88:9f:fa:f9:07:28  
-          inet addr:192.168.0.5  Bcast:192.168.0.255  Mask:255.255.255.0
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:205848 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:4519 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:44049656 (42.0 MiB)  TX bytes:750906 (733.3 KiB)
-$ iwconfig wlan0
-wlan0     IEEE 802.11bgn  ESSID:"norbujp"  
-          Mode:Managed  Frequency:2.447 GHz  Access Point: 00:3A:9D:B4:54:5A   
-          Bit Rate=150 Mb/s   Tx-Power=20 dBm   
-          Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
-          Power Management:off
-          Link Quality=70/70  Signal level=-35 dBm  
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:6   Missed beacon:0
-
-absolutely nothing works: Examples:
-[~] ping 192.168.0.1
-PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
->From 192.168.0.5 icmp_seq=1 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=2 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=5 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=7 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=39 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=40 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=41 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=42 Destination Host Unreachable
-...
---- 192.168.0.1 ping statistics ---
-88 packets transmitted, 0 received, +43 errors, 100% packet loss, time 87233ms pipe 4
-
-absolutely nothing goes out - at least it seems so.
-
-
-Sometimes, though, whoever decided to speak to me, and pings started
-to get returned, but then ...
-
-3) if connection is working, ping times are crazy and connection breaks down suddenly
-=====================================================================================
-
-pinging my own gateway results in things like:
-64 bytes from 192.168.0.1: icmp_req=35 ttl=255 time=119395 ms
-
-or
->From 192.168.0.5 icmp_seq=118 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=119 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=120 Destination Host Unreachable
-64 bytes from 192.168.0.1: icmp_req=31 ttl=255 time=91863 ms
-64 bytes from 192.168.0.1: icmp_req=32 ttl=255 time=91151 ms
->From 192.168.0.5 icmp_seq=121 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=122 Destination Host Unreachable
-
-or
-[~] ping 192.168.0.1
-PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
-64 bytes from 192.168.0.1: icmp_req=3 ttl=255 time=44447 ms
-64 bytes from 192.168.0.1: icmp_req=7 ttl=255 time=41123 ms
-64 bytes from 192.168.0.1: icmp_req=11 ttl=255 time=55627 ms
-64 bytes from 192.168.0.1: icmp_req=14 ttl=255 time=69027 ms
-64 bytes from 192.168.0.1: icmp_req=15 ttl=255 time=68046 ms
-64 bytes from 192.168.0.1: icmp_req=19 ttl=255 time=75636 ms
-64 bytes from 192.168.0.1: icmp_req=24 ttl=255 time=109967 ms
-....
-
-big up and down in ping times:
-4 bytes from 192.168.0.1: icmp_req=442 ttl=255 time=1.51 ms
-64 bytes from 192.168.0.1: icmp_req=443 ttl=255 time=1.61 ms
-64 bytes from 192.168.0.1: icmp_req=444 ttl=255 time=2.77 ms
-64 bytes from 192.168.0.1: icmp_req=445 ttl=255 time=37.0 ms
-64 bytes from 192.168.0.1: icmp_req=446 ttl=255 time=1.53 ms
-64 bytes from 192.168.0.1: icmp_req=447 ttl=255 time=469 ms
-64 bytes from 192.168.0.1: icmp_req=448 ttl=255 time=116 ms
-64 bytes from 192.168.0.1: icmp_req=449 ttl=255 time=1.73 ms
-64 bytes from 192.168.0.1: icmp_req=450 ttl=255 time=1.58 ms
-64 bytes from 192.168.0.1: icmp_req=451 ttl=255 time=6916 ms
-64 bytes from 192.168.0.1: icmp_req=452 ttl=255 time=6632 ms
-64 bytes from 192.168.0.1: icmp_req=453 ttl=255 time=5654 ms
-64 bytes from 192.168.0.1: icmp_req=454 ttl=255 time=4716 ms
-64 bytes from 192.168.0.1: icmp_req=455 ttl=255 time=3896 ms
-64 bytes from 192.168.0.1: icmp_req=456 ttl=255 time=2897 ms
-64 bytes from 192.168.0.1: icmp_req=457 ttl=255 time=1899 ms
-64 bytes from 192.168.0.1: icmp_req=458 ttl=255 time=901 ms
-64 bytes from 192.168.0.1: icmp_req=459 ttl=255 time=1.25 ms
-64 bytes from 192.168.0.1: icmp_req=460 ttl=255 time=116 ms
-64 bytes from 192.168.0.1: icmp_req=461 ttl=255 time=1.48 ms
-...
-64 bytes from 192.168.0.1: icmp_req=483 ttl=255 time=1.24 ms
-64 bytes from 192.168.0.1: icmp_req=485 ttl=255 time=10910 ms
-64 bytes from 192.168.0.1: icmp_req=486 ttl=255 time=9913 ms
-64 bytes from 192.168.0.1: icmp_req=487 ttl=255 time=8913 ms
-64 bytes from 192.168.0.1: icmp_req=488 ttl=255 time=7913 ms
-64 bytes from 192.168.0.1: icmp_req=489 ttl=255 time=6913 ms
-...
-64 bytes from 192.168.0.1: icmp_req=494 ttl=255 time=1915 ms
-64 bytes from 192.168.0.1: icmp_req=495 ttl=255 time=915 ms
->From 192.168.0.5 icmp_seq=530 Destination Host Unreachable
->From 192.168.0.5 icmp_seq=531 Destination Host Unreachable
-...
->From 192.168.0.5 icmp_seq=581 Destination Host Unreachable
-64 bytes from 192.168.0.1: icmp_req=497 ttl=255 time=87064 ms
->From 192.168.0.5 icmp_seq=582 Destination Host Unreachable
-...
->From 192.168.0.5 icmp_seq=598 Destination Host Unreachable
-64 bytes from 192.168.0.1: icmp_req=498 ttl=255 time=105208 ms
-ping: sendmsg: No buffer space available
->From 192.168.0.5 icmp_seq=623 Destination Host Unreachable
-...
-
-
-Looking into the reasons why disconnects happen I see:
-[~] grep reason= /var/log/syslog
-May  8 20:43:57 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:44:04 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:45:02 tofuschnitzel kernel: [18472.914329] wlan0: deauthenticating from 00:3a:9d:b4:54:5a by local choice (reason=3)
-May  8 20:45:02 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:00:00:00:00:00 reason=3
-May  8 20:47:34 tofuschnitzel kernel: [18624.597387] wlan0: deauthenticating from 00:3a:9d:b4:54:5a by local choice (reason=3)
-May  8 20:47:34 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:00:00:00:00:00 reason=3
-May  8 20:48:27 tofuschnitzel kernel: [18677.928400] wlan0: deauthenticating from 00:3a:9d:b4:54:5a by local choice (reason=3)
-May  8 20:48:27 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:00:00:00:00:00 reason=3
-May  8 20:48:36 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:48:52 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:49:15 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:49:25 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:49:41 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:49:50 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:49:57 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:53:20 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:53:30 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:53:51 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:54:01 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:54:27 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:54:45 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:55:07 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 20:55:36 tofuschnitzel kernel: [19106.844710] wlan0: deauthenticating from 00:3a:9d:b4:54:5a by local choice (reason=3)
-May  8 20:55:36 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=3
-May  8 21:10:07 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-May  8 21:10:58 tofuschnitzel kernel: [20029.040231] wlan0: deauthenticating from 00:3a:9d:b4:54:5a by local choice (reason=3)
-May  8 21:10:58 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:00:00:00:00:00 reason=3
-May  8 21:23:20 tofuschnitzel wpa_supplicant[5513]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:3a:9d:b4:54:5a reason=2
-
-
-My feeling is also that things like
-wpa_supplicant[5513]: wlan0: WPA: Key negotiation completed with 00:3a:9d:b4:54:5a [PTK=CCMP GTK=CCMP]
-have a strong effect on the actual connection.
-
-
-4) conclusion
-=============
-
-in the current state, that is release 3.9.0, but the same happened
-in earlier kernels, this driver and/or NM is completely useless
-at times. At times it just works, at times it does nothing.
-In this case, now the 5th day in series ...
-
-
-Norbert
-
-------------------------------------------------------------------------
-PREINING, Norbert                               http://www.preining.info
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
