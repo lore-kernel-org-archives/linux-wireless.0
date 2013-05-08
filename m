@@ -1,116 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:60022 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755255Ab3ERMC4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 May 2013 08:02:56 -0400
-Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:54 +0200
-From: stf_xl@wp.pl
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 18/32] rt2800: initialize BBP_R91 on all subroutines (except 5592)
-Date: Sat, 18 May 2013 14:03:41 +0200
-Message-Id: <1368878635-4455-19-git-send-email-stf_xl@wp.pl> (sfid-20130518_142937_797522_36F01A75)
-In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
-References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:37187 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753328Ab3EHWqZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 May 2013 18:46:25 -0400
+Received: by mail-wi0-f179.google.com with SMTP id l13so2471505wie.6
+        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2013 15:46:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1368015905.17674.11.camel@bigdick-desktop>
+References: <1368015905.17674.11.camel@bigdick-desktop>
+Date: Wed, 8 May 2013 15:46:24 -0700
+Message-ID: <CAJ-Vmonq1YN2NoWFMXtqVYr16eTD=mZ0n74CCEhMHK=05M1xyQ@mail.gmail.com> (sfid-20130509_004628_879229_4923CD6B)
+Subject: Re: atheros AR5B22, using ath9k, can't switch between inscure and WEP/WPA
+From: Adrian Chadd <adrian@freebsd.org>
+To: Wally <wally.yeh@a-trust.com.tw>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+.. AR5B22? Which chip does that probe as?
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   18 ++++++++++++++++--
- 1 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 6d0e810..03145f7 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3975,6 +3975,8 @@ static void rt2800_init_bbp_305x_soc(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 84, 0x99);
- 
- 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
-+
-+	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- }
- 
- static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
-@@ -4004,6 +4006,8 @@ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
- 		rt2800_bbp_write(rt2x00dev, 84, 0x99);
- 
- 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
-+
-+	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- }
- 
- static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
-@@ -4027,6 +4031,8 @@ static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 84, 0x99);
- 
- 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
-+
-+	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- }
- 
- static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
-@@ -4061,6 +4067,8 @@ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 84, 0x9a);
- 
- 	rt2800_bbp_write(rt2x00dev, 86, 0x38);
-+
-+	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- }
- 
- static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
-@@ -4099,6 +4107,8 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 86, 0x38);
- 
- 	rt2800_bbp_write(rt2x00dev, 88, 0x90);
-+
-+	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- }
- 
- static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
-@@ -4122,6 +4132,8 @@ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 84, 0x99);
- 
- 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
-+
-+	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- }
- 
- static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
-@@ -4147,6 +4159,8 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 84, 0x99);
- 
- 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
-+
-+	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- }
- 
- static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
-@@ -4183,6 +4197,8 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- 
- 	if (rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 88, 0x90);
-+
-+	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- }
- 
- static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
-@@ -4301,8 +4317,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		return;
- 	}
- 
--	rt2800_bbp_write(rt2x00dev, 91, 0x04);
--
- 	if (rt2x00_rt(rt2x00dev, RT3290) ||
- 	    rt2x00_rt(rt2x00dev, RT3352) ||
- 	    rt2x00_rt(rt2x00dev, RT5390) ||
--- 
-1.7.4.4
 
+Adrian
+
+
+On 8 May 2013 05:25, Wally <wally.yeh@a-trust.com.tw> wrote:
+> Hi, guys:
+>     Recently I got a atheros mini-PCIE wifi module AR5B22, so I download
+> the latest version of compat-driver(compat-drivers-2013-03-28.tar.gz),
+> and build it for armel on my arm board, it works great but with one
+> little problem:
+>
+> If I connect to an inscure AP then change to a WEP/WPA AP, I can't
+> connect the inscure one again, I have to run "modprobe -r ath9k;
+> modprobe ath9k" to connect the inscure AP.
+>
+>     I think this may be a bug in the ath9k driver, I also search this
+> bug on web but without an answer, so I send this letter for help.
+>
+>     Any advice would be grateful, thanks.
+>
+> Wally
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
