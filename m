@@ -1,86 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.sisa.samsung.com ([63.166.156.249]:47317 "EHLO
-	mx1.sisa.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754105Ab3EUCwI (ORCPT
+Received: from mail-da0-f47.google.com ([209.85.210.47]:33742 "EHLO
+	mail-da0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515Ab3EHRSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 May 2013 22:52:08 -0400
-From: Shuah Khan <shuah.kh@samsung.com>
-To: "bzhao@marvell.com" <bzhao@marvell.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"shuahkhan@gmail.com" <shuahkhan@gmail.com>,
-	Shuah Khan <shuah.kh@samsung.com>
-Subject: [RFC PATCH] net/wireless/mwifiex/pcie: Convert to dev_pm_ops from
- legacy pm ops
-Date: Tue, 21 May 2013 02:33:09 +0000
-Message-ID: <1369103589.12093.4.camel@lorien> (sfid-20130521_045215_902873_EBC698F6)
-Reply-To: Shuah Khan <shuah.kh@samsung.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 8 May 2013 13:18:53 -0400
+Received: by mail-da0-f47.google.com with SMTP id k13so1098631dae.20
+        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2013 10:18:53 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: ath9k <ath9k-devel@lists.ath9k.org>,
+	linux-wirelss <linux-wireless@vger.kernel.org>,
+	Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 1/3] ath9k_htc: Add support for mesh interfaces
+Date: Wed,  8 May 2013 10:16:46 -0700
+Message-Id: <1368033408-3994-1-git-send-email-thomas@cozybit.com> (sfid-20130508_191857_542947_5935F1F5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Q29udmVydCB0aGUgZHJpdmVyIHRvIHVzZSBkZXZfcG1fb3BzIGZvciBwb3dlciBtYW5hZ2VtZW50
-IGFuZCByZW1vdmUgTGVnYWN5IFBNDQpoYW5kbGluZy4gVGhpcyBjaGFuZ2UgcmUtdXNlcyBleGlz
-dGluZyBzdXNwZW5kIGFuZCByZXN1bWUgaW50ZXJmYWNlcyBmb3IgDQpkZXZfcG1fb3BzLg0KDQpT
-aWduZWQtb2ZmLWJ5OiBTaHVhaCBLaGFuIDxzaHVhaC5raEBzYW1zdW5nLmNvbT4NCkNjOiBTaHVh
-aCBLaGFuIDxzaHVhaGtoYW5AZ21haWwuY29tPg0KU3VnZ2VzdGVkLWJ5OiByYWZhZWwuai53eXNv
-Y2tpQGludGVsLmNvbQ0KLS0tDQoNClJhZmFlbCwNCg0KVGhpcyBpcyB0aGUgZmlyc3QgZHJpdmVy
-IHBhdGNoIHRvIGNvbnZlcnQgZHJpdmVycyB0byB1c2UgZGV2X3BtX29wcyBmb3INCnBvd2VyIG1h
-bmFnZW1lbnQuIFBsZWFzZSByZXZpZXcgZm9yIHRoZSBhcHByb2FjaCBhbmQgbWFrZSBzdWdnZXN0
-aW9ucyBmb3INCmltcHJvdmVtZW50Lg0KDQp0aGFua3MsDQotLSBTaHVhaA0KDQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbXdpZmlleC9wY2llLmMgfCAgIDMzICsrKysrKysrKysrKysrKysrKysrKysr
-KysrKy0tLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCAyNyBpbnNlcnRpb25zKCspLCA2IGRlbGV0aW9u
-cygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9wY2llLmMg
-Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3BjaWUuYw0KaW5kZXggMjBjOWM0Yy4uYTI3
-MWM2NCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvcGNpZS5jDQor
-KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3BjaWUuYw0KQEAgLTg1LDcgKzg1LDcg
-QEAgc3RhdGljIGJvb2wgbXdpZmlleF9wY2llX29rX3RvX2FjY2Vzc19odyhzdHJ1Y3QgbXdpZmll
-eF9hZGFwdGVyICphZGFwdGVyKQ0KICAqIElmIGFscmVhZHkgbm90IHN1c3BlbmRlZCwgdGhpcyBm
-dW5jdGlvbiBhbGxvY2F0ZXMgYW5kIHNlbmRzIGEgaG9zdA0KICAqIHNsZWVwIGFjdGl2YXRlIHJl
-cXVlc3QgdG8gdGhlIGZpcm13YXJlIGFuZCB0dXJucyBvZmYgdGhlIHRyYWZmaWMuDQogICovDQot
-c3RhdGljIGludCBtd2lmaWV4X3BjaWVfc3VzcGVuZChzdHJ1Y3QgcGNpX2RldiAqcGRldiwgcG1f
-bWVzc2FnZV90IHN0YXRlKQ0KK3N0YXRpYyBpbnQgX19td2lmaWV4X3BjaWVfc3VzcGVuZChzdHJ1
-Y3QgcGNpX2RldiAqcGRldikNCiB7DQogCXN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXI7
-DQogCXN0cnVjdCBwY2llX3NlcnZpY2VfY2FyZCAqY2FyZDsNCkBAIC0xMTIsNiArMTEyLDEzIEBA
-IHN0YXRpYyBpbnQgbXdpZmlleF9wY2llX3N1c3BlbmQoc3RydWN0IHBjaV9kZXYgKnBkZXYsIHBt
-X21lc3NhZ2VfdCBzdGF0ZSkNCiAJcmV0dXJuIDA7DQogfQ0KIA0KK3N0YXRpYyBpbnQgbXdpZmll
-eF9wY2llX3N1c3BlbmQoc3RydWN0IGRldmljZSAqZGV2KQ0KK3sNCisJc3RydWN0IHBjaV9kZXYg
-KnBkZXYgPSB0b19wY2lfZGV2KGRldik7DQorDQorCXJldHVybiBfX213aWZpZXhfcGNpZV9zdXNw
-ZW5kKHBkZXYpOw0KK30NCisNCiAvKg0KICAqIEtlcm5lbCBuZWVkcyB0byBzdXNwZW5kIGFsbCBm
-dW5jdGlvbnMgc2VwYXJhdGVseS4gVGhlcmVmb3JlIGFsbA0KICAqIHJlZ2lzdGVyZWQgZnVuY3Rp
-b25zIG11c3QgaGF2ZSBkcml2ZXJzIHdpdGggc3VzcGVuZCBhbmQgcmVzdW1lDQpAQCAtMTIwLDcg
-KzEyNyw3IEBAIHN0YXRpYyBpbnQgbXdpZmlleF9wY2llX3N1c3BlbmQoc3RydWN0IHBjaV9kZXYg
-KnBkZXYsIHBtX21lc3NhZ2VfdCBzdGF0ZSkNCiAgKiBJZiBhbHJlYWR5IG5vdCByZXN1bWVkLCB0
-aGlzIGZ1bmN0aW9uIHR1cm5zIG9uIHRoZSB0cmFmZmljIGFuZA0KICAqIHNlbmRzIGEgaG9zdCBz
-bGVlcCBjYW5jZWwgcmVxdWVzdCB0byB0aGUgZmlybXdhcmUuDQogICovDQotc3RhdGljIGludCBt
-d2lmaWV4X3BjaWVfcmVzdW1lKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQ0KK3N0YXRpYyBpbnQgX19t
-d2lmaWV4X3BjaWVfcmVzdW1lKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQ0KIHsNCiAJc3RydWN0IG13
-aWZpZXhfYWRhcHRlciAqYWRhcHRlcjsNCiAJc3RydWN0IHBjaWVfc2VydmljZV9jYXJkICpjYXJk
-Ow0KQEAgLTE1MCw2ICsxNTcsMTMgQEAgc3RhdGljIGludCBtd2lmaWV4X3BjaWVfcmVzdW1lKHN0
-cnVjdCBwY2lfZGV2ICpwZGV2KQ0KIA0KIAlyZXR1cm4gMDsNCiB9DQorDQorc3RhdGljIGludCBt
-d2lmaWV4X3BjaWVfcmVzdW1lKHN0cnVjdCBkZXZpY2UgKmRldikNCit7DQorCXN0cnVjdCBwY2lf
-ZGV2ICpwZGV2ID0gdG9fcGNpX2RldihkZXYpOw0KKw0KKwlyZXR1cm4gX19td2lmaWV4X3BjaWVf
-cmVzdW1lKHBkZXYpOw0KK30NCiAjZW5kaWYNCiANCiAvKg0KQEAgLTIxMyw3ICsyMjcsNyBAQCBz
-dGF0aWMgdm9pZCBtd2lmaWV4X3BjaWVfcmVtb3ZlKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQ0KIAlp
-ZiAodXNlcl9ybW1vZCkgew0KICNpZmRlZiBDT05GSUdfUE0NCiAJCWlmIChhZGFwdGVyLT5pc19z
-dXNwZW5kZWQpDQotCQkJbXdpZmlleF9wY2llX3Jlc3VtZShwZGV2KTsNCisJCQlfX213aWZpZXhf
-cGNpZV9yZXN1bWUocGRldik7DQogI2VuZGlmDQogDQogCQlmb3IgKGkgPSAwOyBpIDwgYWRhcHRl
-ci0+cHJpdl9udW07IGkrKykNCkBAIC0yNDksNiArMjYzLDEzIEBAIHN0YXRpYyBERUZJTkVfUENJ
-X0RFVklDRV9UQUJMRShtd2lmaWV4X2lkcykgPSB7DQogDQogTU9EVUxFX0RFVklDRV9UQUJMRShw
-Y2ksIG13aWZpZXhfaWRzKTsNCiANCisjaWZkZWYgQ09ORklHX1BNDQorLyogUG93ZXIgTWFuYWdl
-bWVudCBIb29rcyAqLw0KK3N0YXRpYyBjb25zdCBzdHJ1Y3QgZGV2X3BtX29wcyBtd2lmaWV4X3Bj
-aWVfcG1fb3BzID0gew0KKwlTRVRfU1lTVEVNX1NMRUVQX1BNX09QUyhtd2lmaWV4X3BjaWVfc3Vz
-cGVuZCwgbXdpZmlleF9wY2llX3Jlc3VtZSkNCit9Ow0KKyNlbmRpZg0KKw0KIC8qIFBDSSBEZXZp
-Y2UgRHJpdmVyICovDQogc3RhdGljIHN0cnVjdCBwY2lfZHJpdmVyIF9fcmVmZGF0YSBtd2lmaWV4
-X3BjaWUgPSB7DQogCS5uYW1lICAgICA9ICJtd2lmaWV4X3BjaWUiLA0KQEAgLTI1Niw5ICsyNzcs
-OSBAQCBzdGF0aWMgc3RydWN0IHBjaV9kcml2ZXIgX19yZWZkYXRhIG13aWZpZXhfcGNpZSA9IHsN
-CiAJLnByb2JlICAgID0gbXdpZmlleF9wY2llX3Byb2JlLA0KIAkucmVtb3ZlICAgPSBtd2lmaWV4
-X3BjaWVfcmVtb3ZlLA0KICNpZmRlZiBDT05GSUdfUE0NCi0JLyogUG93ZXIgTWFuYWdlbWVudCBI
-b29rcyAqLw0KLQkuc3VzcGVuZCAgPSBtd2lmaWV4X3BjaWVfc3VzcGVuZCwNCi0JLnJlc3VtZSAg
-ID0gbXdpZmlleF9wY2llX3Jlc3VtZSwNCisJLmRyaXZlciAgID0gew0KKwkJLnBtID0gJm13aWZp
-ZXhfcGNpZV9wbV9vcHMsDQorCX0sDQogI2VuZGlmDQogfTsNCiANCi0tIA0KMS43LjEwLjQNCg0K
-DQo=
+From: Javier Cardona <javier@cozybit.com>
+
+More specifically, enable AP-style beaconing on mesh
+ifaces and change the hw capabilities to reflect mesh
+support.
+
+Coexistence with a virtual STA interface was tested as
+working fine.
+
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+[rebase, add iface combinations]
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h            |    7 ++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    5 +++-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   |    6 +++--
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   29 ++++++++++++++++-------
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |    2 +-
+ 5 files changed, 37 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index d3b099d..0085e64 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -208,6 +208,9 @@ struct ath9k_htc_target_rx_stats {
+ 		case NL80211_IFTYPE_AP:		\
+ 			_priv->num_ap_vif++;	\
+ 			break;			\
++		case NL80211_IFTYPE_MESH_POINT:	\
++			_priv->num_mbss_vif++;	\
++			break;			\
+ 		default:			\
+ 			break;			\
+ 		}				\
+@@ -224,6 +227,9 @@ struct ath9k_htc_target_rx_stats {
+ 		case NL80211_IFTYPE_AP:		\
+ 			_priv->num_ap_vif--;	\
+ 			break;			\
++		case NL80211_IFTYPE_MESH_POINT:	\
++			_priv->num_mbss_vif--;	\
++			break;			\
+ 		default:			\
+ 			break;			\
+ 		}				\
+@@ -450,6 +456,7 @@ struct ath9k_htc_priv {
+ 	u8 sta_slot;
+ 	u8 vif_sta_pos[ATH9K_HTC_MAX_VIF];
+ 	u8 num_ibss_vif;
++	u8 num_mbss_vif;
+ 	u8 num_sta_vif;
+ 	u8 num_sta_assoc_vif;
+ 	u8 num_ap_vif;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index f13f458..e0c03bd 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -28,7 +28,8 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
+ 
+ 	ath9k_hw_get_txq_props(ah, priv->beaconq, &qi);
+ 
+-	if (priv->ah->opmode == NL80211_IFTYPE_AP) {
++	if (priv->ah->opmode == NL80211_IFTYPE_AP ||
++	    priv->ah->opmode == NL80211_IFTYPE_MESH_POINT) {
+ 		qi.tqi_aifs = 1;
+ 		qi.tqi_cwmin = 0;
+ 		qi.tqi_cwmax = 0;
+@@ -628,6 +629,7 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
+ 		break;
++	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_AP:
+ 		ath9k_htc_beacon_config_ap(priv, cur_conf);
+ 		break;
+@@ -649,6 +651,7 @@ void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv)
+ 	case NL80211_IFTYPE_ADHOC:
+ 		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
+ 		break;
++	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_AP:
+ 		ath9k_htc_beacon_config_ap(priv, cur_conf);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index a47f5e0..6eb4199 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -698,7 +698,8 @@ static const struct ieee80211_iface_limit if_limits[] = {
+ 	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
+ 				 BIT(NL80211_IFTYPE_P2P_CLIENT) },
+ 	{ .max = 2,	.types = BIT(NL80211_IFTYPE_AP) |
+-				 BIT(NL80211_IFTYPE_P2P_GO) },
++				 BIT(NL80211_IFTYPE_P2P_GO) |
++				 BIT(NL80211_IFTYPE_MESH_POINT) },
+ };
+ 
+ static const struct ieee80211_iface_combination if_comb = {
+@@ -728,7 +729,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 		BIT(NL80211_IFTYPE_ADHOC) |
+ 		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_P2P_GO) |
+-		BIT(NL80211_IFTYPE_P2P_CLIENT);
++		BIT(NL80211_IFTYPE_P2P_CLIENT) |
++		BIT(NL80211_IFTYPE_MESH_POINT);
+ 
+ 	hw->wiphy->iface_combinations = &if_comb;
+ 	hw->wiphy->n_iface_combinations = 1;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 0743a47..2a67b57 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -113,7 +113,9 @@ static void ath9k_htc_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 	struct ath9k_htc_priv *priv = data;
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 
+-	if ((vif->type == NL80211_IFTYPE_AP) && bss_conf->enable_beacon)
++	if ((vif->type == NL80211_IFTYPE_AP ||
++	     vif->type == NL80211_IFTYPE_MESH_POINT) &&
++	    bss_conf->enable_beacon)
+ 		priv->reconfig_beacon = true;
+ 
+ 	if (bss_conf->assoc) {
+@@ -180,6 +182,8 @@ static void ath9k_htc_set_opmode(struct ath9k_htc_priv *priv)
+ 		priv->ah->opmode = NL80211_IFTYPE_ADHOC;
+ 	else if (priv->num_ap_vif)
+ 		priv->ah->opmode = NL80211_IFTYPE_AP;
++	else if (priv->num_mbss_vif)
++		priv->ah->opmode = NL80211_IFTYPE_MESH_POINT;
+ 	else
+ 		priv->ah->opmode = NL80211_IFTYPE_STATION;
+ 
+@@ -1052,6 +1056,9 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 	case NL80211_IFTYPE_AP:
+ 		hvif.opmode = HTC_M_HOSTAP;
+ 		break;
++	case NL80211_IFTYPE_MESH_POINT:
++		hvif.opmode = HTC_M_WDS;	/* close enough */
++		break;
+ 	default:
+ 		ath_err(common,
+ 			"Interface type %d not yet supported\n", vif->type);
+@@ -1084,6 +1091,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 	INC_VIF(priv, vif->type);
+ 
+ 	if ((vif->type == NL80211_IFTYPE_AP) ||
++	    (vif->type == NL80211_IFTYPE_MESH_POINT) ||
+ 	    (vif->type == NL80211_IFTYPE_ADHOC))
+ 		ath9k_htc_assign_bslot(priv, vif);
+ 
+@@ -1134,6 +1142,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
+ 	DEC_VIF(priv, vif->type);
+ 
+ 	if ((vif->type == NL80211_IFTYPE_AP) ||
++	     vif->type == NL80211_IFTYPE_MESH_POINT ||
+ 	    (vif->type == NL80211_IFTYPE_ADHOC))
+ 		ath9k_htc_remove_bslot(priv, vif);
+ 
+@@ -1525,9 +1534,10 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) && !bss_conf->enable_beacon) {
+ 		/*
+ 		 * Disable SWBA interrupt only if there are no
+-		 * AP/IBSS interfaces.
++		 * concurrent AP/mesh or IBSS interfaces.
+ 		 */
+-		if ((priv->num_ap_vif <= 1) || priv->num_ibss_vif) {
++		if ((priv->num_ap_vif + priv->num_mbss_vif <= 1) ||
++		     priv->num_ibss_vif) {
+ 			ath_dbg(common, CONFIG,
+ 				"Beacon disabled for BSS: %pM\n",
+ 				bss_conf->bssid);
+@@ -1538,12 +1548,15 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	if (changed & BSS_CHANGED_BEACON_INT) {
+ 		/*
+-		 * Reset the HW TSF for the first AP interface.
++		 * Reset the HW TSF for the first AP or mesh interface.
+ 		 */
+-		if ((priv->ah->opmode == NL80211_IFTYPE_AP) &&
+-		    (priv->nvifs == 1) &&
+-		    (priv->num_ap_vif == 1) &&
+-		    (vif->type == NL80211_IFTYPE_AP)) {
++		if (priv->nvifs == 1 &&
++		    ((priv->ah->opmode == NL80211_IFTYPE_AP &&
++		      vif->type == NL80211_IFTYPE_AP &&
++		      priv->num_ap_vif == 1) ||
++		    (priv->ah->opmode == NL80211_IFTYPE_MESH_POINT &&
++		      vif->type == NL80211_IFTYPE_MESH_POINT &&
++		      priv->num_mbss_vif == 1))) {
+ 			set_bit(OP_TSF_RESET, &priv->op_flags);
+ 		}
+ 		ath_dbg(common, CONFIG,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 6bd0e92..e602c95 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -887,7 +887,7 @@ u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv)
+ 	if (priv->rxfilter & FIF_PSPOLL)
+ 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
+ 
+-	if (priv->nvifs > 1)
++	if (priv->nvifs > 1 || priv->rxfilter & FIF_OTHER_BSS)
+ 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
+ 
+ 	return rfilt;
+-- 
+1.7.10.4
+
