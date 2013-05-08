@@ -1,338 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:36111 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759140Ab3EOOTe (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:39465 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413Ab3EHURa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:19:34 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2 04/18] mac80211: fix timing for 5 MHz and 10 MHz channels
-Date: Wed, 15 May 2013 16:18:55 +0200
-Message-Id: <1368627549-22518-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_162020_096606_BE1D33E3)
-In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 8 May 2013 16:17:30 -0400
+Message-ID: <518AB2D6.1050909@lwfinger.net> (sfid-20130508_221750_859656_FF380060)
+Date: Wed, 08 May 2013 15:17:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "H. Peter Anvin" <hpa@zytor.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Dan Williams <dcbw@redhat.com>,
+	'George0505' <george0505@realtek.com>,
+	Joon Ro <joonhyoung.ro@gmail.com>,
+	Greg KH <gregkh@linux-foundation.org>
+Subject: Re: Linux driver for Realtek RTL8723AU devices with USB ID 0bda:1724
+ such as found in Lenovo IdeaPad Yoga 13
+References: <5159B52D.3050601@lwfinger.net> <5189B939.4010905@zytor.com> <518A7814.1070604@lwfinger.net> <518A7D56.3050502@zytor.com>
+In-Reply-To: <518A7D56.3050502@zytor.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-according to IEEE 802.11-2012 section 18, various timings change
-when using 5 MHz and 10 MHz. Reflect this by using a "divisor" when
-calculating durations.
+On 05/08/2013 11:29 AM, H. Peter Anvin wrote:
+> On 05/08/2013 09:06 AM, Larry Finger wrote:
+>> On 05/07/2013 09:32 PM, H. Peter Anvin wrote:
+>>>
+>>> So I can verify that this driver works against 3.8.11 (not against
+>>> current -linus because of a build failure), and yes, there is Bluetooth
+>>> in this device.  In fact, it seems to work better than some in-tree
+>>> drivers I have seen in the past.
+>>>
+>>> However, I'm confused as to the above and what it implies for the
+>>> purpose of the staging tree.  Wasn't the whole point of the staging tree
+>>> to have a working-but-ugly driver upstream and have the work to clean it
+>>> up happen in the mainline tree instead of off somewhere.
+>>
+>> Yes, but even staging has some standards. For example, they frown on
+>> inclusion of firmware in a massive data block in a file in the driver -
+>> it should be in a separate file the /lib/firmware/ tree. In addition,
+>> the mainline drivers/net/wireless/ tree is only available to devices
+>> that use mac80211 for the software-based MAC layer. That conversion is a
+>> serious effort that may never be done, thus the 8723au driver may never
+>> leave staging.
+>>
+>> What are the details of the build failure on the mainline tree? It
+>> builds fine here. One possibility is that your source tree has a
+>> leftover copy of include/linux/version.h that contains a stale coded
+>> value of the kernel version. I just pushed a Makefile fix that causes
+>> the compiler to look in the new location for version.h first. If that
+>> doesn't work, please post the error.
+>>
+>
+> Unlikely, since the kernel source tree is clean.
+>
+> The error is on os_dep/os_intfs.c:
+>
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c: In function ‘rtw_proc_init_one’:
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:315:3: error: implicit declaration
+> of function ‘create_proc_entry’ [-Werror=implicit-function-declaration]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:315:11: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:322:3: error: implicit declaration
+> of function ‘create_proc_read_entry’ [-Werror=implicit-function-declaration]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:322:9: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:333:21: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:364:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:370:7: error: dereferencing pointer
+> to incomplete type
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:372:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:378:7: error: dereferencing pointer
+> to incomplete type
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:381:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:389:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:397:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:405:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:412:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:419:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:426:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:433:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:440:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:447:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:454:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:461:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:468:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:475:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:482:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:489:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:496:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:505:9: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:512:9: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:522:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:539:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:545:7: error: dereferencing pointer
+> to incomplete type
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:547:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:553:7: error: dereferencing pointer
+> to incomplete type
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:555:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:561:7: error: dereferencing pointer
+> to incomplete type
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:563:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:569:7: error: dereferencing pointer
+> to incomplete type
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:572:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:576:8: warning: assignment makes
+> pointer from integer without a cast [enabled by default]
+> /home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:582:7: error: dereferencing pointer
+> to incomplete type
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/mac80211/ieee80211_i.h         |   42 +++++++++++++++++++++++++++++++++++-
- net/mac80211/rc80211_minstrel.c    |   14 +++++++-----
- net/mac80211/rc80211_minstrel_ht.c |    8 ++++---
- net/mac80211/tx.c                  |   10 ++++++---
- net/mac80211/util.c                |   39 ++++++++++++++++++++++-----------
- 5 files changed, 88 insertions(+), 25 deletions(-)
+I just pushed a "fix" that will allow the driver to build on kernel 3.10-rc0 
+(aka 3.9-git). This one removes all the procfs stuff. It will be added back in 
+/sysfs later.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 158e6eb..0e8f2d0 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -793,6 +793,45 @@ ieee80211_get_sdata_band(struct ieee80211_sub_if_data *sdata)
- 	return band;
- }
- 
-+static inline int
-+ieee80211_vif_get_divisor(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_chanctx_conf *chanctx_conf;
-+	int divisor = 1;
-+
-+	rcu_read_lock();
-+	chanctx_conf = rcu_dereference(vif->chanctx_conf);
-+	if (chanctx_conf) {
-+		switch (chanctx_conf->def.width) {
-+		case NL80211_CHAN_WIDTH_5:
-+			divisor = 4;
-+			break;
-+		case NL80211_CHAN_WIDTH_10:
-+			divisor = 2;
-+			break;
-+		default:
-+			divisor = 1;
-+			break;
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	return divisor;
-+}
-+
-+static inline int
-+ieee80211_hw_get_divisor(struct ieee80211_hw *hw)
-+{
-+	switch (hw->conf.chandef.width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		return 4;
-+	case NL80211_CHAN_WIDTH_10:
-+		return 2;
-+	default:
-+		return 1;
-+	}
-+}
-+
- enum sdata_queue_type {
- 	IEEE80211_SDATA_QUEUE_TYPE_FRAME	= 0,
- 	IEEE80211_SDATA_QUEUE_AGG_START		= 1,
-@@ -1448,7 +1487,8 @@ extern void *mac80211_wiphy_privid; /* for wiphy privid */
- u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
- 			enum nl80211_iftype type);
- int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
--			     int rate, int erp, int short_preamble);
-+			     int rate, int erp, int short_preamble,
-+			     int divisor);
- void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int keyidx,
- 				     struct ieee80211_hdr *hdr, const u8 *tsc,
- 				     gfp_t gfp);
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index ac7ef54..3fe134a 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -382,14 +382,17 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- static void
- calc_rate_durations(enum ieee80211_band band,
- 		    struct minstrel_rate *d,
--		    struct ieee80211_rate *rate)
-+		    struct ieee80211_rate *rate,
-+		    struct minstrel_priv *mp)
- {
- 	int erp = !!(rate->flags & IEEE80211_RATE_ERP_G);
- 
- 	d->perfect_tx_time = ieee80211_frame_duration(band, 1200,
--			rate->bitrate, erp, 1);
-+			rate->bitrate, erp, 1,
-+			ieee80211_hw_get_divisor(mp->hw));
- 	d->ack_time = ieee80211_frame_duration(band, 10,
--			rate->bitrate, erp, 1);
-+			rate->bitrate, erp, 1,
-+			ieee80211_hw_get_divisor(mp->hw));
- }
- 
- static void
-@@ -430,7 +433,8 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 	ctl_rate = &sband->bitrates[mi->lowest_rix];
- 	mi->sp_ack_dur = ieee80211_frame_duration(sband->band, 10,
- 				ctl_rate->bitrate,
--				!!(ctl_rate->flags & IEEE80211_RATE_ERP_G), 1);
-+				!!(ctl_rate->flags & IEEE80211_RATE_ERP_G), 1,
-+				ieee80211_hw_get_divisor(mp->hw));
- 
- 	memset(mi->max_tp_rate, 0, sizeof(mi->max_tp_rate));
- 	mi->max_prob_rate = 0;
-@@ -448,7 +452,7 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 
- 		mr->rix = i;
- 		mr->bitrate = sband->bitrates[i].bitrate / 5;
--		calc_rate_durations(sband->band, mr, &sband->bitrates[i]);
-+		calc_rate_durations(sband->band, mr, &sband->bitrates[i], mp);
- 
- 		/* calculate maximum number of retransmissions before
- 		 * fallback (based on maximum segment size) */
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 5b2d301..f05eeff 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -844,7 +844,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
- 	u16 sta_cap = sta->ht_cap.cap;
- 	int n_supported = 0;
--	int ack_dur;
-+	int ack_dur, divisor;
- 	int stbc;
- 	int i;
- 
-@@ -861,8 +861,10 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	mi->sta = sta;
- 	mi->stats_update = jiffies;
- 
--	ack_dur = ieee80211_frame_duration(sband->band, 10, 60, 1, 1);
--	mi->overhead = ieee80211_frame_duration(sband->band, 0, 60, 1, 1) + ack_dur;
-+	divisor = ieee80211_hw_get_divisor(mp->hw);
-+	ack_dur = ieee80211_frame_duration(sband->band, 10, 60, 1, 1, divisor);
-+	mi->overhead = ieee80211_frame_duration(sband->band, 0, 60, 1, 1,
-+						divisor) + ack_dur;
- 	mi->overhead_rtscts = mi->overhead + 2 * ack_dur;
- 
- 	mi->avg_ampdu_len = MINSTREL_FRAC(1, 1);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 9972e07..e1f18a8 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -40,7 +40,7 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 				 struct sk_buff *skb, int group_addr,
- 				 int next_frag_len)
- {
--	int rate, mrate, erp, dur, i;
-+	int rate, mrate, erp, dur, i, divisor;
- 	struct ieee80211_rate *txrate;
- 	struct ieee80211_local *local = tx->local;
- 	struct ieee80211_supported_band *sband;
-@@ -153,6 +153,8 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 		rate = mrate;
- 	}
- 
-+	divisor = ieee80211_vif_get_divisor(&tx->sdata->vif);
-+
- 	/* Don't calculate ACKs for QoS Frames with NoAck Policy set */
- 	if (ieee80211_is_data_qos(hdr->frame_control) &&
- 	    *(ieee80211_get_qos_ctl(hdr)) & IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
-@@ -162,7 +164,8 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 		 * (10 bytes + 4-byte FCS = 112 bits) plus SIFS; rounded up
- 		 * to closest integer */
- 		dur = ieee80211_frame_duration(sband->band, 10, rate, erp,
--				tx->sdata->vif.bss_conf.use_short_preamble);
-+				tx->sdata->vif.bss_conf.use_short_preamble,
-+				divisor);
- 
- 	if (next_frag_len) {
- 		/* Frame is fragmented: duration increases with time needed to
-@@ -171,7 +174,8 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 		/* next fragment */
- 		dur += ieee80211_frame_duration(sband->band, next_frag_len,
- 				txrate->bitrate, erp,
--				tx->sdata->vif.bss_conf.use_short_preamble);
-+				tx->sdata->vif.bss_conf.use_short_preamble,
-+				divisor);
- 	}
- 
- 	return cpu_to_le16(dur);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3f87fa4..5496764 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -107,7 +107,8 @@ void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx)
- }
- 
- int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
--			     int rate, int erp, int short_preamble)
-+			     int rate, int erp, int short_preamble,
-+			     int divisor)
- {
- 	int dur;
- 
-@@ -118,6 +119,9 @@ int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
- 	 *
- 	 * rate is in 100 kbps, so divident is multiplied by 10 in the
- 	 * DIV_ROUND_UP() operations.
-+	 *
-+	 * divisor may be 4 for 5 MHz channels or 2 for 1 MHz channels, and
-+	 * is assumed to be 1 otherwise.
- 	 */
- 
- 	if (band == IEEE80211_BAND_5GHZ || erp) {
-@@ -130,15 +134,21 @@ int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
- 		 * TXTIME = T_PREAMBLE + T_SIGNAL + T_SYM x N_SYM + Signal Ext
- 		 *
- 		 * T_SYM = 4 usec
--		 * 802.11a - 17.5.2: aSIFSTime = 16 usec
-+		 * 802.11a - 18.5.2: aSIFSTime = 16 usec
- 		 * 802.11g - 19.8.4: aSIFSTime = 10 usec +
- 		 *	signal ext = 6 usec
- 		 */
- 		dur = 16; /* SIFS + signal ext */
--		dur += 16; /* 17.3.2.3: T_PREAMBLE = 16 usec */
--		dur += 4; /* 17.3.2.3: T_SIGNAL = 4 usec */
-+		dur += 16; /* IEEE 802.11-2012 18.3.2.4: T_PREAMBLE = 16 usec */
-+		dur += 4; /* IEEE 802.11-2012 18.3.2.4: T_SIGNAL = 4 usec */
- 		dur += 4 * DIV_ROUND_UP((16 + 8 * (len + 4) + 6) * 10,
- 					4 * rate); /* T_SYM x N_SYM */
-+
-+		/* IEEE 802.11-2012 18.3.2.4: all values above are:
-+		 *  * times 4 for 5 MHz
-+		 *  * times 2 for 10 MHz
-+		 */
-+		dur *= divisor;
- 	} else {
- 		/*
- 		 * 802.11b or 802.11g with 802.11b compatibility:
-@@ -168,7 +178,7 @@ __le16 ieee80211_generic_frame_duration(struct ieee80211_hw *hw,
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	u16 dur;
--	int erp;
-+	int erp, divisor = 1;
- 	bool short_preamble = false;
- 
- 	erp = 0;
-@@ -177,10 +187,11 @@ __le16 ieee80211_generic_frame_duration(struct ieee80211_hw *hw,
- 		short_preamble = sdata->vif.bss_conf.use_short_preamble;
- 		if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
- 			erp = rate->flags & IEEE80211_RATE_ERP_G;
-+		divisor = ieee80211_vif_get_divisor(vif);
- 	}
- 
- 	dur = ieee80211_frame_duration(band, frame_len, rate->bitrate, erp,
--				       short_preamble);
-+				       short_preamble, divisor);
- 
- 	return cpu_to_le16(dur);
- }
-@@ -194,7 +205,7 @@ __le16 ieee80211_rts_duration(struct ieee80211_hw *hw,
- 	struct ieee80211_rate *rate;
- 	struct ieee80211_sub_if_data *sdata;
- 	bool short_preamble;
--	int erp;
-+	int erp, divisor = 1;
- 	u16 dur;
- 	struct ieee80211_supported_band *sband;
- 
-@@ -210,17 +221,18 @@ __le16 ieee80211_rts_duration(struct ieee80211_hw *hw,
- 		short_preamble = sdata->vif.bss_conf.use_short_preamble;
- 		if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
- 			erp = rate->flags & IEEE80211_RATE_ERP_G;
-+		divisor = ieee80211_vif_get_divisor(vif);
- 	}
- 
- 	/* CTS duration */
- 	dur = ieee80211_frame_duration(sband->band, 10, rate->bitrate,
--				       erp, short_preamble);
-+				       erp, short_preamble, divisor);
- 	/* Data frame duration */
- 	dur += ieee80211_frame_duration(sband->band, frame_len, rate->bitrate,
--					erp, short_preamble);
-+					erp, short_preamble, divisor);
- 	/* ACK duration */
- 	dur += ieee80211_frame_duration(sband->band, 10, rate->bitrate,
--					erp, short_preamble);
-+					erp, short_preamble, divisor);
- 
- 	return cpu_to_le16(dur);
- }
-@@ -235,7 +247,7 @@ __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
- 	struct ieee80211_rate *rate;
- 	struct ieee80211_sub_if_data *sdata;
- 	bool short_preamble;
--	int erp;
-+	int erp, divisor = 1;
- 	u16 dur;
- 	struct ieee80211_supported_band *sband;
- 
-@@ -250,15 +262,16 @@ __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
- 		short_preamble = sdata->vif.bss_conf.use_short_preamble;
- 		if (sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
- 			erp = rate->flags & IEEE80211_RATE_ERP_G;
-+		divisor = ieee80211_vif_get_divisor(vif);
- 	}
- 
- 	/* Data frame duration */
- 	dur = ieee80211_frame_duration(sband->band, frame_len, rate->bitrate,
--				       erp, short_preamble);
-+				       erp, short_preamble, divisor);
- 	if (!(frame_txctl->flags & IEEE80211_TX_CTL_NO_ACK)) {
- 		/* ACK duration */
- 		dur += ieee80211_frame_duration(sband->band, 10, rate->bitrate,
--						erp, short_preamble);
-+						erp, short_preamble, divisor);
- 	}
- 
- 	return cpu_to_le16(dur);
--- 
-1.7.10.4
+Larry
+
 
