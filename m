@@ -1,158 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1470 "EHLO mms3.broadcom.com"
+Received: from terminus.zytor.com ([198.137.202.10]:34308 "EHLO mail.zytor.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759365Ab3E2QjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 12:39:24 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for 3.10 14/16] brcmfmac: Signalling header push and
- pull on logic places.
-Date: Wed, 29 May 2013 18:39:04 +0200
-Message-ID: <1369845546-31950-15-git-send-email-arend@broadcom.com> (sfid-20130529_183949_229352_4717A327)
-In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
-References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+	id S1750881Ab3EHCc4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 May 2013 22:32:56 -0400
+Message-ID: <5189B939.4010905@zytor.com> (sfid-20130508_043318_463305_2A12DD5B)
+Date: Tue, 07 May 2013 19:32:25 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Dan Williams <dcbw@redhat.com>,
+	"'George0505'" <george0505@realtek.com>,
+	Joon Ro <joonhyoung.ro@gmail.com>,
+	Greg KH <gregkh@linux-foundation.org>
+Subject: Re: Linux driver for Realtek RTL8723AU devices with USB ID 0bda:1724
+ such as found in Lenovo IdeaPad Yoga 13
+References: <5159B52D.3050601@lwfinger.net>
+In-Reply-To: <5159B52D.3050601@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On 04/01/2013 09:26 AM, Larry Finger wrote:
+> 
+> My plan is to evolve this driver into a form that is suitable for
+> inclusion in the staging tree of the kernel; however, that will take
+> some effort and time, which is why I am making the intermediate results
+> available now. As that work proceeds, the git version will evolve into
+> code that can be submitted to the kernel with only small changes.
+> 
+> Please be aware that I do not have any hardware that uses this driver,
+> thus I can only guarantee that the code compiles; however, Joon Ro has
+> tested the driver and he assures me that it works. Together we have been
+> eliminating spurious log entries.
+> 
+> The 8723a chip also includes Bluetooth hardware. I have not received any
+> indication that it is active in the RTL8723AU, but it certainly is in
+> the RTL8723AE, the PCIe version. In a separate activity, I am working
+> with Realtek to prepare a kernel driver for this portion of the device.
+> 
 
-Currently suppressed packets get enque-ed with header which
-then gets pulled before transmit. It is more logical and clean
-to pull the header on return and push it unconditionally on xmit.
+So I can verify that this driver works against 3.8.11 (not against
+current -linus because of a build failure), and yes, there is Bluetooth
+in this device.  In fact, it seems to work better than some in-tree
+drivers I have seen in the past.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   42 ++++++--------------
- 1 file changed, 13 insertions(+), 29 deletions(-)
+However, I'm confused as to the above and what it implies for the
+purpose of the staging tree.  Wasn't the whole point of the staging tree
+to have a working-but-ugly driver upstream and have the work to clean it
+up happen in the mainline tree instead of off somewhere.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index dd47796..8b2297a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1263,6 +1263,7 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
- 	struct brcmf_fws_mac_descriptor *entry = brcmf_skbcb(skb)->mac;
- 	u32 hslot;
- 	int ret;
-+	u8 ifidx;
- 
- 	hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
- 
-@@ -1279,9 +1280,12 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
- 
- 	entry->generation = genbit;
- 
--	ret = brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_SUPPRESSED, fifo, skb);
-+	ret = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
-+	if (ret == 0)
-+		ret = brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_SUPPRESSED, fifo,
-+				    skb);
- 	if (ret != 0) {
--		/* suppress q is full, drop this packet */
-+		/* suppress q is full or hdrpull failed, drop this packet */
- 		brcmf_fws_hanger_poppkt(&fws->hanger, hslot, &skb,
- 					true);
- 	} else {
-@@ -1585,18 +1589,10 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
- 	bool first_time;
- 	int hslot = BRCMF_FWS_HANGER_MAXITEMS;
- 	u8 free_ctr;
--	u8 ifidx;
- 	u8 flags;
- 
- 	first_time = skcb->state != BRCMF_FWS_SKBSTATE_SUPPRESSED;
- 
--	if (!first_time) {
--		rc = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, p);
--		if (rc) {
--			brcmf_err("hdrpull failed\n");
--			return rc;
--		}
--	}
- 	brcmf_skb_if_flags_set_field(p, TRANSMIT, 1);
- 	brcmf_skb_htod_tag_set_field(p, FIFO, fifo);
- 	brcmf_skb_htod_tag_set_field(p, GENERATION, entry->generation);
-@@ -1619,15 +1615,14 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
- 		brcmf_skb_htod_tag_set_field(p, HSLOT, hslot);
- 		brcmf_skb_htod_tag_set_field(p, FREERUN, free_ctr);
- 		entry->transit_count++;
--	}
--
--	brcmf_fws_hdrpush(fws, p);
--	if (first_time) {
- 		rc = brcmf_fws_hanger_pushpkt(&fws->hanger, p, hslot);
- 		if (rc)
- 			brcmf_err("hanger push failed: rc=%d\n", rc);
- 	}
- 
-+	if (rc == 0)
-+		brcmf_fws_hdrpush(fws, p);
-+
- 	return rc;
- }
- 
-@@ -1648,7 +1643,6 @@ brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
- 	struct sk_buff *pktout;
- 	int rc = 0;
- 	int hslot;
--	u8 ifidx;
- 
- 	state = brcmf_skbcb(skb)->state;
- 	entry = brcmf_skbcb(skb)->mac;
-@@ -1665,17 +1659,6 @@ brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
- 		} else {
- 			hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
- 
--			/* remove header first */
--			rc = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
--			if (rc) {
--				brcmf_err("header removal failed\n");
--				/* free the hanger slot */
--				brcmf_fws_hanger_poppkt(&fws->hanger, hslot,
--							&pktout, true);
--				rc = -EINVAL;
--				goto fail;
--			}
--
- 			/* delay-q packets are going to delay-q */
- 			pktout = brcmu_pktq_penq_head(&entry->psq,
- 						      2 * fifo, skb);
-@@ -1696,8 +1679,6 @@ brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
- 		rc = -ENOENT;
- 	}
- 
--
--fail:
- 	if (rc) {
- 		brcmf_fws_bustxfail(fws, skb);
- 		fws->stats.rollback_failed++;
-@@ -1767,6 +1748,7 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
- 	struct brcmf_fws_mac_descriptor *entry;
- 	struct brcmf_bus *bus = fws->drvr->bus_if;
- 	int rc;
-+	u8 ifidx;
- 
- 	entry = skcb->mac;
- 	if (IS_ERR(entry))
-@@ -1781,8 +1763,10 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
- 	brcmf_dbg(DATA, "%s flags %X htod %X\n", entry->name, skcb->if_flags,
- 		  skcb->htod);
- 	rc = brcmf_bus_txdata(bus, skb);
--	if (rc < 0)
-+	if (rc < 0) {
-+		brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
- 		goto rollback;
-+	}
- 
- 	entry->seq[fifo]++;
- 	fws->stats.pkt2bus++;
--- 
-1.7.10.4
-
+	-hpa
 
