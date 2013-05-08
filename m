@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40857 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755400Ab3EXVTf (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41062 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752578Ab3EHPPt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 17:19:35 -0400
-Message-ID: <1369430370.13623.9.camel@johannes> (sfid-20130524_231940_096158_4F506520)
-Subject: Re: [PATCH] mac80211: Move mesh estab_plinks outside mesh_stats
- debug group
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org, javier@cozybit.com
-Date: Fri, 24 May 2013 23:19:30 +0200
-In-Reply-To: <1368490084-10711-1-git-send-email-ashok@cozybit.com> (sfid-20130514_020816_418057_C105AD4F)
-References: <1368490084-10711-1-git-send-email-ashok@cozybit.com>
-	 (sfid-20130514_020816_418057_C105AD4F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 8 May 2013 11:15:49 -0400
+Message-ID: <518A6C21.5070408@candelatech.com> (sfid-20130508_171552_375075_70DA3BB7)
+Date: Wed, 08 May 2013 08:15:45 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Fun with QoS in AP mode.
+References: <5189DB72.3020809@candelatech.com> <20873.56643.216380.594657@gargle.gargle.HOWL>
+In-Reply-To: <20873.56643.216380.594657@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-05-13 at 17:08 -0700, Ashok Nagarajan wrote:
-> As estab_plinks is not a statistics member, don't show its debug information
-> along with other mesh stat members
+On 05/07/2013 10:06 PM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> We were doing some testing with ToS/QoS in some VOIP streams today.
+>>
+>> The mappings on the station machine work fine, but on the AP, the packets
+>> always go to the BE queue.  Both systems are 3.9.0+ ath9k, recent hostapd,
+>> supplicant, etc.
+>
+> Is the AP running ath9k ?
 
-Applied.
+Yes, both AP and Station machine are ath9k, 3.9.0+, etc....
 
-johannes
+Basically identicaly hardware and software loads..just one is acting as AP
+and one as station(s) in this scenario.
+
+Ben
+
+>
+> Sujith
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
