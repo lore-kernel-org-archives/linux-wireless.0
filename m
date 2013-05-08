@@ -1,78 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f66.google.com ([209.85.160.66]:48298 "EHLO
-	mail-pb0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756862Ab3EWMVW convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45440 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754227Ab3EHQSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 08:21:22 -0400
-Received: by mail-pb0-f66.google.com with SMTP id md12so1180523pbc.9
-        for <linux-wireless@vger.kernel.org>; Thu, 23 May 2013 05:21:22 -0700 (PDT)
-Message-ID: <519E09BE.6060802@pdm.ac.in> (sfid-20130523_142126_182888_7B632D51)
-Date: Thu, 23 May 2013 17:51:18 +0530
-From: Mohit <mt1037ag11@pdm.ac.in>
+	Wed, 8 May 2013 12:18:37 -0400
+Message-ID: <518A7AD4.2060100@candelatech.com> (sfid-20130508_181841_094773_91714F6C)
+Date: Wed, 08 May 2013 09:18:28 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Ralink RT3290 proprietary drivers causing kernel panic
-References: <519D0D44.1040901@pdm.ac.in> <14ECE0C4-AE53-4CC5-B6B6-42930C2C26FB@gmail.com>
-In-Reply-To: <14ECE0C4-AE53-4CC5-B6B6-42930C2C26FB@gmail.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting
+ station.
+References: <5182C38B.7060107@candelatech.com>  (sfid-20130502_215043_578677_76592D19) <1367526288.11375.2.camel@jlt4.sipsolutions.net> <5182D078.4020605@candelatech.com>
+In-Reply-To: <5182D078.4020605@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 23 May 2013 01:25 AM, Gertjan van Wingerde wrote:
-> Hi Mohit,
->
-> Sent from my iPad
->
-> On 22 mei 2013, at 20:24, Mohit <mt1037ag11@pdm.ac.in> wrote:
->
->> Hello,
+On 05/02/2013 01:45 PM, Ben Greear wrote:
+> On 05/02/2013 01:24 PM, Johannes Berg wrote:
+>> On Thu, 2013-05-02 at 12:50 -0700, Ben Greear wrote:
+>>> Kernel is hacked 3.9.0+
 >>
->>           I am on openSUSE 12.3 with kernel 3.7.10-1.4-desktop, i wanted to try out the proprietary drivers for Ralink RT3290 so i downloaded the drivers from http://www.mediatek.com/_en/07_downloads/01_windows.php?sn=501 and compiled the drivers as mentioned on my thread here : https://forums.opensuse.org/english/get-technical-help-here/wireless/486975-rt3290-wireless-proprietary-drivers-not-working.html#post2557514. Everything compiled fine, openSUSE was able to scan and connect to access points after installation, but when i access the internet a kernel panic occurs after ~5sec (time varies based on the data usage). So i humbly request you to please provide the solution for the same, you can reach me through email or reply to my thread (probably faster as i don't check my email everyday).
+>> Clearly :)
 >>
-> You'll have to contact Mediatek about the drivers that you downloaded from their web site.
-> None of us on this mailing list have created this driver, nor are we supporting it.
+>>> I've been seeing this problem for a while (and posted about it previously).  The problem
+>>> is that a station appears to associate fine, but never actually 'connects'.  This problem
+>>> is not easy to reproduce...
+>>
+>> It would be useful to know what you added ... the message you point to
+>> (invalid wds/flush whatever) doesn't exist upstream.
 >
-> Note that the standard kernel does contain support for the RT3290 chipset in its rt2x00 driver since kernel version 3.6 or 3.7, so you might give that a try.
+> Gobs of stuff, as usual.  Thought I had that WDS thing pushed upstream,
+> but I guess not.
+
+Ok, I reproduced this with yet more debugging printouts in the kernel.
+
+The symptom is this:
+
+The sme_state is SME_CONNECTED, so it bails out below before sending the
+'connected' message to user-space.
+
+void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+                                const u8 *req_ie, size_t req_ie_len,
+                                const u8 *resp_ie, size_t resp_ie_len,
+                                u16 status, bool wextev,
+                                struct cfg80211_bss *bss)
+{
+         struct wireless_dev *wdev = dev->ieee80211_ptr;
+         const u8 *country_ie;
+#ifdef CONFIG_CFG80211_WEXT
+         union iwreq_data wrqu;
+#endif
+
+         ASSERT_WDEV_LOCK(wdev);
+
+         printk("connect_result: %s: type: %i  sme_state: %i\n",
+                dev->name, (int)(wdev->iftype), (int)(wdev->sme_state));
+
+         if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
+                     wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
+                 return;
+
+         if (wdev->sme_state != CFG80211_SME_CONNECTING)
+                 return;
+
 >
-> ---
-> Gertjan
-The drivers work in kernel 3.2 but stop working from either kernel ver. 
-3.3, 3.4 or 3.5.
+> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.9.dev.y/.git;a=summary
+>
+> That message comes from:
+>
+>      /*
+>       * Remove all stations associated with this interface.
+>       *
+>       * This must be done before calling ops->remove_interface()
+>       * because otherwise we can later invoke ops->sta_notify()
+>       * whenever the STAs are removed, and that invalidates driver
+>       * assumptions about always getting a vif pointer that is valid
+>       * (because if we remove a STA after ops->remove_interface()
+>       * the driver will have removed the vif info already!)
+>       *
+>       * This is relevant only in WDS mode, in all other modes we've
+>       * already removed all stations when disconnecting or similar,
+>       * so warn otherwise.
+>       *
+>       * We call sta_info_flush_cleanup() later, to combine RCU waits.
+>       */
+>      flushed = sta_info_flush_defer(sdata);
+>      if ((sdata->vif.type != NL80211_IFTYPE_WDS && flushed > 0) ||
+>          (sdata->vif.type == NL80211_IFTYPE_WDS && flushed != 1)) {
+>          sdata_info(sdata,
+>                 "Invalid WDS/flush state, type: %i  WDS: %i  flushed: %i\n",
+>                 sdata->vif.type, NL80211_IFTYPE_WDS, flushed);
+>          WARN_ON_ONCE(1);
+>      }
+>
+> I notice __cfg80211_connect_result checks the wdev state, so I added some
+> printouts there to see if it is bailing due to some funny state, but will
+> probably be a while before I reproduce it again and know for sure.
+>
+> Thanks,
+> Ben
+>
+>
+>>
+>> johannes
+>>
+>
+>
 
-The drivers included in the kernel work, but they are a buggy, have low 
-range, connection drops etc.
-I switched from Linux mint 13 kernel 3.2, installed the proprietary 
-driver and it is way better than rt2800pci drivers interms of signal 
-strength, latency, speed etc. I think the proprietary drivers use 
-rt2860pci driver instead of a dedicated rt3290sta driver.
-
-Can the drivers included in the kernel be tweaked to match the 
-proprietary driver?
-
-Can the future kernels support the drivers?
 
 -- 
-
-
-
-
-
-
-
-
-
---
-******************************************************************************************************************************************************************
-"This e-Mail may contain proprietary and confidential information and is 
-sent for the intended  recipient(s) only. If, by an addressing or 
-transmission error, this mail has been misdirected to you, you are 
-requested to delete this mail immediately.You are also hereby notified that 
-any use, any form of reproduction, dissemination, copying, disclosure, 
-modification, distribution and/or publication of this e-mail 
-message,contents or its attachment(s) other than by its intended 
-recipient(s) is strictly prohibited.Any opinions expressed in this email 
-are those of the individual and not necessarily of the organization.Before 
-opening attachment(s), please scan for viruses."
-**********************************************************************************************************************************************************************
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
