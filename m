@@ -1,88 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18107 "EHLO mx1.redhat.com"
+Received: from terminus.zytor.com ([198.137.202.10]:42089 "EHLO mail.zytor.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755697Ab3EQLl2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 07:41:28 -0400
-Date: Fri, 17 May 2013 13:43:04 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3.10] mac80211: fix direct probe auth
-Message-ID: <20130517114303.GB1641@redhat.com> (sfid-20130517_134147_282067_74742627)
+	id S1756129Ab3EHQ31 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 May 2013 12:29:27 -0400
+Message-ID: <518A7D56.3050502@zytor.com> (sfid-20130508_182948_090905_EC4C4219)
+Date: Wed, 08 May 2013 09:29:10 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Dan Williams <dcbw@redhat.com>,
+	"'George0505'" <george0505@realtek.com>,
+	Joon Ro <joonhyoung.ro@gmail.com>,
+	Greg KH <gregkh@linux-foundation.org>
+Subject: Re: Linux driver for Realtek RTL8723AU devices with USB ID 0bda:1724
+ such as found in Lenovo IdeaPad Yoga 13
+References: <5159B52D.3050601@lwfinger.net> <5189B939.4010905@zytor.com> <518A7814.1070604@lwfinger.net>
+In-Reply-To: <518A7814.1070604@lwfinger.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We send direct probe to broadcast address, as some APs do not respond to
-unicast PROBE frames when unassociated. Broadcast frames are not acked,
-so we can not use that for trigger MLME state machine, but we need to
-use old timeout mechanism.
+On 05/08/2013 09:06 AM, Larry Finger wrote:
+> On 05/07/2013 09:32 PM, H. Peter Anvin wrote:
+>>
+>> So I can verify that this driver works against 3.8.11 (not against
+>> current -linus because of a build failure), and yes, there is Bluetooth
+>> in this device.  In fact, it seems to work better than some in-tree
+>> drivers I have seen in the past.
+>>
+>> However, I'm confused as to the above and what it implies for the
+>> purpose of the staging tree.  Wasn't the whole point of the staging tree
+>> to have a working-but-ugly driver upstream and have the work to clean it
+>> up happen in the mainline tree instead of off somewhere.
+>
+> Yes, but even staging has some standards. For example, they frown on
+> inclusion of firmware in a massive data block in a file in the driver -
+> it should be in a separate file the /lib/firmware/ tree. In addition,
+> the mainline drivers/net/wireless/ tree is only available to devices
+> that use mac80211 for the software-based MAC layer. That conversion is a
+> serious effort that may never be done, thus the 8723au driver may never
+> leave staging.
+>
+> What are the details of the build failure on the mainline tree? It
+> builds fine here. One possibility is that your source tree has a
+> leftover copy of include/linux/version.h that contains a stale coded
+> value of the kernel version. I just pushed a Makefile fix that causes
+> the compiler to look in the new location for version.h first. If that
+> doesn't work, please post the error.
+>
 
-This fixes authentication timed out like below:
+Unlikely, since the kernel source tree is clean.
 
-[ 1024.671974] wlan6: authenticate with 54:e6:fc:98:63:fe
-[ 1024.694125] wlan6: direct probe to 54:e6:fc:98:63:fe (try 1/3)
-[ 1024.695450] wlan6: direct probe to 54:e6:fc:98:63:fe (try 2/3)
-[ 1024.700586] wlan6: send auth to 54:e6:fc:98:63:fe (try 3/3)
-[ 1024.701441] wlan6: authentication with 54:e6:fc:98:63:fe timed out
+The error is on os_dep/os_intfs.c:
 
-With fix, we have:
-
-[ 4524.198978] wlan6: authenticate with 54:e6:fc:98:63:fe
-[ 4524.220692] wlan6: direct probe to 54:e6:fc:98:63:fe (try 1/3)
-[ 4524.421784] wlan6: send auth to 54:e6:fc:98:63:fe (try 2/3)
-[ 4524.423272] wlan6: authenticated
-[ 4524.423811] wlan6: associate with 54:e6:fc:98:63:fe (try 1/3)
-[ 4524.427492] wlan6: RX AssocResp from 54:e6:fc:98:63:fe (capab=0x431 status=0 aid=1)
-
-Cc: stable@vger.kernel.org # 3.9
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/mlme.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 346ad4c..0a60f40 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3182,10 +3182,6 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
- 	if (WARN_ON_ONCE(!auth_data))
- 		return -EINVAL;
- 
--	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
--		tx_flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
--			   IEEE80211_TX_INTFL_MLME_CONN_TX;
--
- 	auth_data->tries++;
- 
- 	if (auth_data->tries > IEEE80211_AUTH_MAX_TRIES) {
-@@ -3219,6 +3215,10 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
- 			auth_data->expected_transaction = trans;
- 		}
- 
-+		if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
-+			tx_flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
-+				   IEEE80211_TX_INTFL_MLME_CONN_TX;
-+
- 		ieee80211_send_auth(sdata, trans, auth_data->algorithm, status,
- 				    auth_data->data, auth_data->data_len,
- 				    auth_data->bss->bssid,
-@@ -3242,12 +3242,12 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
- 		 * will not answer to direct packet in unassociated state.
- 		 */
- 		ieee80211_send_probe_req(sdata, NULL, ssidie + 2, ssidie[1],
--					 NULL, 0, (u32) -1, true, tx_flags,
-+					 NULL, 0, (u32) -1, true, 0,
- 					 auth_data->bss->channel, false);
- 		rcu_read_unlock();
- 	}
- 
--	if (!(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
-+	if (tx_flags == 0) {
- 		auth_data->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
- 		ifmgd->auth_data->timeout_started = true;
- 		run_again(ifmgd, auth_data->timeout);
--- 
-1.7.4.4
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c: In function 
+‘rtw_proc_init_one’:
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:315:3: error: implicit 
+declaration of function ‘create_proc_entry’ 
+[-Werror=implicit-function-declaration]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:315:11: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:322:3: error: implicit 
+declaration of function ‘create_proc_read_entry’ 
+[-Werror=implicit-function-declaration]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:322:9: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:333:21: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:364:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:370:7: error: dereferencing 
+pointer to incomplete type
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:372:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:378:7: error: dereferencing 
+pointer to incomplete type
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:381:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:389:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:397:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:405:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:412:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:419:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:426:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:433:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:440:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:447:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:454:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:461:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:468:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:475:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:482:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:489:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:496:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:505:9: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:512:9: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:522:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:539:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:545:7: error: dereferencing 
+pointer to incomplete type
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:547:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:553:7: error: dereferencing 
+pointer to incomplete type
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:555:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:561:7: error: dereferencing 
+pointer to incomplete type
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:563:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:569:7: error: dereferencing 
+pointer to incomplete type
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:572:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:576:8: warning: assignment 
+makes pointer from integer without a cast [enabled by default]
+/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:582:7: error: dereferencing 
+pointer to incomplete type
 
