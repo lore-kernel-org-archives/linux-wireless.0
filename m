@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1639 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752596Ab3EKHf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 May 2013 03:35:26 -0400
-Message-ID: <518DF4B1.3020706@broadcom.com> (sfid-20130511_093543_404629_38A61C4C)
-Date: Sat, 11 May 2013 09:35:13 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "JoSH Lehan" <krellan@gmail.com>
-cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: Using compat-drivers conflicts with kernel mac80211 and
- cfg80211
-References: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com>
-In-Reply-To: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:57229 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254Ab3EHIgH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 May 2013 04:36:07 -0400
+Message-ID: <1368002161.8279.14.camel@jlt4.sipsolutions.net> (sfid-20130508_103612_210241_E3587283)
+Subject: Re: [PATCH] mac80211: refine ieee80211_rx() context requirement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wei.Yang@windriver.com
+Cc: linux-wireless@vger.kernel.org, wei.wyang@windriver.com
+Date: Wed, 08 May 2013 10:36:01 +0200
+In-Reply-To: <1368001892-18068-1-git-send-email-Wei.Yang@windriver.com>
+References: <1368001892-18068-1-git-send-email-Wei.Yang@windriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2013 02:52 AM, JoSH Lehan wrote:
-> It seems I can choose to use the mac80211/cfg80211 that came with the
-> kernel,*or*, the mac80211/cfg80211 that come with compat-drivers.  Is
-> this correct?  I'll have to maintain these two mac80211/cfg80211
-> drivers in separate directories, since they have the same name, and it
-> will complicate my detection/loading script, but if there's no other
-> way, then this is what needs to be done.
+On Wed, 2013-05-08 at 16:31 +0800, Wei.Yang@windriver.com wrote:
+> From: Wei Yang <Wei.Yang@windriver.com>
+> 
+> In case of RT kernel, the return value of softirq_count() always
+> equal to 0, we need to use in_serving_softirq to decide whether
+> the current context is in softirq context.
 
-Luis may correct me, but I think you are correct. compat-drivers 
-provides a compat.ko which is the glue between new drivers and your 
-kernel. With the new drivers you get new features provided you have new 
-mac80211/cfg80211 as well. Hence the glue is between wireless modules 
-(including mac80211/cfg80211) and rest of your kernel. On a non-embedded 
-system the compat-driver modules are installed in a separate folder 
-/lib/modules/<your_kernel_version/updates. depmod is run during the 
-install in which this folder takes precedence.
+> -	WARN_ON_ONCE(softirq_count() == 0);
+> +	WARN_ON_ONCE(!in_serving_softirq());
 
-Not sure what your use-case is. You have a system in which different 
-wireless devices may be plugged in or ...?
+As I understand the code, I don't believe this change to be correct. The
+function can happily run with softirqs disabled (e.g.
+local_bh_disable()), for example by being called via ieee80211_rx_ni().
+As I understand in_serving_softirq(), it checks that it's actually
+inside handling a softirq, no?
 
-> Could it be because I cross-compile compat-drivers?  Looking at the
-> installation scripts, it's clearly intended to be ran by the end user
-> to replace the drivers in their distribution with updated drivers, and
-> it could be that I missed something when tweaking it to cross-compile
-> the drivers and not install them locally.
-
-Probably not, provided you build it for your kernel version.
-
-> Has anybody else tried to use compat-drivers to build for an embedded
-> system?  If so, what's the recommended solution?  How to solve the
-> mac80211/cfg80211 problem, where the kernel-compiled mac80211/cfg80211
-> modules conflict with their equivalent compat-drivers modules?
-
-Depends what you call an embedded system. We used it to run our driver 
-on Android. Just cross-compiling it and install it on the system is what 
-we did. Recently, there have been a number of people walking that path 
-and contacting us. It may be an idea to have a compat-drivers feature to 
-generate Android tarballs as it is always running a few kernel versions 
-behind mainline.
-
-Regards,
-Arend
+johannes
 
