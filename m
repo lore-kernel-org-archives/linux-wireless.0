@@ -1,107 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41406 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752022Ab3EDLQf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 May 2013 07:16:35 -0400
-Message-ID: <5184EE0B.1030605@openwrt.org> (sfid-20130504_131638_597194_554815B7)
-Date: Sat, 04 May 2013 13:16:27 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from s72.web-hosting.com ([198.187.29.21]:33187 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719Ab3EHFIf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 May 2013 01:08:35 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: Oleksij Rempel <linux@rempel-privat.de>
-CC: Adrian Chadd <adrian@freebsd.org>, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH 1/2] ath9k_htc: add STBC TX support
-References: <1367482308-9882-1-git-send-email-linux@rempel-privat.de> <1367482308-9882-2-git-send-email-linux@rempel-privat.de> <CAJ-Vmo=rZrHmXD0Os-Mb40jSEywbO-7GHSqL=7iMbkzAfS=+UQ@mail.gmail.com> <5182A341.8050704@rempel-privat.de> <5182A9DC.6030203@openwrt.org> <CAJ-Vmo=XYK=Jkc40U_vJO03n+tiA_LDpw8e1QKYRX6-+E9o4fA@mail.gmail.com> <5184AFC2.8060101@rempel-privat.de> <5184DCCF.9010009@openwrt.org> <5184EC19.9060206@rempel-privat.de>
-In-Reply-To: <5184EC19.9060206@rempel-privat.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20873.56643.216380.594657@gargle.gargle.HOWL> (sfid-20130508_070849_636552_0003DE7E)
+Date: Wed, 8 May 2013 10:36:11 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Fun with QoS in AP mode.
+In-Reply-To: <5189DB72.3020809@candelatech.com>
+References: <5189DB72.3020809@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-05-04 1:08 PM, Oleksij Rempel wrote:
-> Am 04.05.2013 12:02, schrieb Felix Fietkau:
->> On 2013-05-04 8:50 AM, Oleksij Rempel wrote:
->>> Am 02.05.2013 22:15, schrieb Adrian Chadd:
->>>> Well, let's dig into the firmware a bit more and tidy up how STBC is handled.
->>>
->>> Does it mean, i should change this patch and provide a patch for
->>> firmware too?
->>> I still do not think, changing peer caps i a good idea in any case.
->>> I mena this part of patch:
->>> +               if (sta->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC)
->>> +                       caps |= WLAN_RC_TX_STBC_FLAG;
->>>
->>>
->>> Behaviour with this patch will be fallowing:
->>> - peer provide caps, even if it is RX-STBC12
->>> - we pass this information to firmware and ratecontroller of FW, do
->>> right decision based on hardware it has.
->>>
->>> You suggestion, if i understand it correctly, is to filter caps:
->>> - if peer provide more than we can, we should tell firmware the value
->>> what we can. So, if peer say it can RX-STBC12, we should tell firmware
->>> that peer is RX-STBC1.
->>> In my opinion, this kind of filter is a source for hidden errors.
->> I think the discussion regarding RX-STBC12 vs RX-STBC1 is purely
->> hypothetical. The hardware that this firmware was designed for only
->> supports sending STBC for MCS0-7. This will not change.
->>
->> Also, there's no reason to tell the firmware about both rx and tx STBC
->> capabilities, the only thing it needs to know is what tells the rate
->> control part to enable/disable STBC.
+Ben Greear wrote:
+> We were doing some testing with ToS/QoS in some VOIP streams today.
 > 
-> As you can see, in version 2 of this path there was no more discussion 
-> about it. I just did it.
-> 
->> In addition to that, using the WLAN_RC_* flags is wrong, you need to use
->> the ATH_RC_* flags, as this is what ath_rate_newassoc_11n checks for in
->> the firmware.
-> 
-> Renamed.
-> 
->> The only STBC related flag that actually gets used (when
->> passed from the driver) is ATH_RC_RX_STBC_FLAG.
-> 
-> Well, may be it is not used at the end. But it is present on some places 
-> in the firmware.
-> For example here:
-> void
-> rcSibUpdate_11n(struct ath_softc_tgt *sc, struct ath_node_target *pSib,
->                  A_UINT32 capflag, A_BOOL keepState, struct 
-> ieee80211_rate  *pRateSet)
-> {
->          rcSibUpdate_ht(sc,
->                         pSib,
->                         ((capflag & ATH_RC_DS_FLAG)   ? WLAN_RC_DS_FLAG 
->   : 0) |
->                         ((capflag & ATH_RC_HT40_SGI_FLAG)  ? 
-> WLAN_RC_HT40_SGI_FLAG : 0) |
->                         ((capflag & ATH_RC_HT_FLAG)   ? WLAN_RC_HT_FLAG 
->   : 0) |
->                         ((capflag & ATH_RC_CW40_FLAG) ? WLAN_RC_40_FLAG 
->   : 0) |
->                         ((capflag & ATH_RC_TX_STBC_FLAG)   ? 
-> WLAN_RC_STBC_FLAG  : 0),
->                         keepState,
->                         pRateSet);
-> 
-> 
-> 
-> So, should i remove ATH_RC_TX_STBC_FLAG from my patch?
-I extensively reviewed this part, and it's really crazy. Here's what
-happens:
+> The mappings on the station machine work fine, but on the AP, the packets
+> always go to the BE queue.  Both systems are 3.9.0+ ath9k, recent hostapd,
+> supplicant, etc.
 
-ath_rate_newassoc_11n takes ATH_RC_* flags, converts them to WLAN_RC_*.
-rcSibUpdate_11n interprets the WLAN_RC_* flags as ATH_RC_* and converts
-them to WLAN_RC_* again. For most flags this is pretty much a no-op
-because the definitions are identical.
-For STBC the result 'accidentally' still contains WLAN_RC_STBC_FLAG, but
-only because ath_rate_newassoc_11n converts ATH_RC_RX_STBC_FLAG to
-WLAN_RC_STBC_FLAG and WLAN_RC_STBC_FLAG overlaps with ATH_RC_TX_STBC_FLAG.
-In the end it doesn't matter anymore, because nothing in the code takes
-the STBC info from the capflags.
+Is the AP running ath9k ?
 
-STBC is used if ATH_NODE_ATHEROS(an)->stbc is non-zero, and this gets
-set by ath_rate_newassoc_11n before all of those incredibly moronic
-conversions happen.
-
-- Felix
+Sujith
