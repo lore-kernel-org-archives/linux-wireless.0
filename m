@@ -1,56 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3318 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762307Ab3ECOVS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 10:21:18 -0400
-Message-ID: <5183C7D3.80405@broadcom.com> (sfid-20130503_162121_822190_4F188B6B)
-Date: Fri, 3 May 2013 16:21:07 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:48405 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757775Ab3EHSMS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 May 2013 14:12:18 -0400
+Message-ID: <518A957F.1040502@lwfinger.net> (sfid-20130508_201256_790213_2325226F)
+Date: Wed, 08 May 2013 13:12:15 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: m.fitzjohn@samsung.com, linux-wireless@vger.kernel.org
-Subject: Re: Does mac80211 support use of WIPHY_FLAG_SUPPORTS_FW_ROAM?
-References: <006d01ce47fc$76a61690$63f243b0$%fitzjohn@samsung.com> (
- sfid-20130503_144817_713432_206EE938)
- <1367585797.13104.23.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1367585797.13104.23.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: Greg KH <gregkh@linux-foundation.org>
+CC: "H. Peter Anvin" <hpa@zytor.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Dan Williams <dcbw@redhat.com>,
+	'George0505' <george0505@realtek.com>,
+	Joon Ro <joonhyoung.ro@gmail.com>
+Subject: Re: Linux driver for Realtek RTL8723AU devices with USB ID 0bda:1724
+ such as found in Lenovo IdeaPad Yoga 13
+References: <5159B52D.3050601@lwfinger.net> <5189B939.4010905@zytor.com> <518A7814.1070604@lwfinger.net> <20130508162350.GC28080@kroah.com>
+In-Reply-To: <20130508162350.GC28080@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2013 02:56 PM, Johannes Berg wrote:
-> Hi,
->
-> The short answer to your question is: no.
->
->> I know that we need to set the WIPHY_FLAG_SUPPORTS_FW_ROAMING but I'm not
->> sure if anything else needs to be signalled (called) in to mac80211?
+On 05/08/2013 11:23 AM, Greg KH wrote:
+> On Wed, May 08, 2013 at 11:06:44AM -0500, Larry Finger wrote:
+>> On 05/07/2013 09:32 PM, H. Peter Anvin wrote:
+>>>
+>>> So I can verify that this driver works against 3.8.11 (not against
+>>> current -linus because of a build failure), and yes, there is Bluetooth
+>>> in this device.  In fact, it seems to work better than some in-tree
+>>> drivers I have seen in the past.
+>>>
+>>> However, I'm confused as to the above and what it implies for the
+>>> purpose of the staging tree.  Wasn't the whole point of the staging tree
+>>> to have a working-but-ugly driver upstream and have the work to clean it
+>>> up happen in the mainline tree instead of off somewhere.
 >>
->> I've seen calls to cfg80211_roamed_bss which gets the roamed indication out
->> to the user space but do we need to use this as well?
->>
->> Can anyone explain?
+>> Yes, but even staging has some standards.
 >
-> The longer answer is that mac80211 doesn't use the connect API, it
-> implements the MLME itself. Roaming in firmware isn't just that, it's
-> much much more complex. Think of the AP station entry getting updated
-> (mac80211 would have to do this!), the new QoS/WMM parameters,
-> BSSID, ...
+> I have standards?  That's a first :)
 >
-> If you have roaming in your firmware, then you must have the MLME in the
-> firmware as well. Then, why are you using mac80211? Clearly not for the
-> MLME, but then what for instead? Maybe what you really want instead is
-> to do some (really really big!) refactoring on the datapath?
+>> For example, they frown on inclusion of firmware in a massive data
+>> block in a file in the driver - it should be in a separate file the
+>> /lib/firmware/ tree.
+>
+> Sure, that would be "nice", but it's not something that I should reject
+> a driver for, have I done that?
 
-More general, a while ago we have been looking at mac80211 offloads to 
-see whether the brcmfmac driver could be (effectively) converted to a 
-mac80211 driver. The only possible conclusion was that a device with 
-MLME in firmware should have a cfg80211 based driver, but maybe some 
-daredevil would feel challenged to implement MLME firmware-offloading in 
-mac80211, but that is probably a 'really really big' task :-)
+No. You merely "recommended" that it be the #1 item in the TODO list, which 
+forced me to fix it fairly quickly for r8712u.
 
-Regards,
-Arend
+>
+>> In addition, the mainline drivers/net/wireless/ tree is only available
+>> to devices that use mac80211 for the software-based MAC layer. That
+>> conversion is a serious effort that may never be done, thus the
+>> 8723au driver may never leave staging.
+>
+> That's a bigger deal, but note, some drivers have done it, it is not
+> impossible.
+
+Most of them were in the kernel before mac80211, and have been given a pass as 
+part of a "grandfather" clause.
+
+Unfortunately, I forgot the main reason for development in an off-line repo. I 
+do not have one of these devices, and I have drawn the line at purchasing a 
+$1000 Lenovo tablet just to get one. Making "small" untested changes in the 
+off-line repo for the users to verify is a lot simpler than working through 
+staging, no matter how accommodating you are. :)
+
+If someone wants to donate a device, that would speed up the process.
+
+Larry
 
