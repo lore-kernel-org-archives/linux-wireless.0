@@ -1,59 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54437 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932821Ab3EGNzR (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:48777 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842Ab3EIFjj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 09:55:17 -0400
-Message-ID: <1367934904.8328.32.camel@jlt4.sipsolutions.net> (sfid-20130507_155533_874944_759AA609)
-Subject: Re: Standardisation - adding 2 bit STBC and Ness to MCS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: radiotap@NetBSD.org, simon@superduper.net,
-	Adrian Chadd <adrian@freebsd.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 07 May 2013 15:55:04 +0200
-In-Reply-To: <1367934867.8328.31.camel@jlt4.sipsolutions.net>
-References: <518127ED.9060900@rempel-privat.de>
-	 (sfid-20130501_163425_421280_1DE3F635) <1367527479.11375.19.camel@jlt4.sipsolutions.net>
-	 <5188AFFE.6070804@rempel-privat.de>
-	 (sfid-20130507_094050_709302_8E653F0F) <1367934867.8328.31.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 9 May 2013 01:39:39 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20875.13834.615920.337442@gargle.gargle.HOWL> (sfid-20130509_073953_625459_295D9AF4)
+Date: Thu, 9 May 2013 11:07:14 +0530
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k:  Disable spectral scan code to fix crash on rmmod.
+In-Reply-To: <1368050908-7554-1-git-send-email-greearb@candelatech.com>
+References: <1368050908-7554-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-05-07 at 15:54 +0200, Johannes Berg wrote:
-> On Tue, 2013-05-07 at 09:40 +0200, Oleksij Rempel wrote:
-> > Am 02.05.2013 22:44, schrieb Johannes Berg:
-> > > On Wed, 2013-05-01 at 16:34 +0200, Oleksij Rempel wrote:
-> > >
-> > >>> With this I believe we have everything needed to start the 3 week
-> > >>> comment period.
-> > >
-> > > Yeah, I guess there was plenty of time. I would have preferred a
-> > > separate thread, but I guess there's little enough traffic on this list
-> > > so it doesn't really matter.
-> > >
-> > >> There is a bit more then 3 week now. I would like to have this approved :)
-> > >> Are there any thing needed to finish this?
-> > >
-> > > http://www.radiotap.org/Standardisation
-> > >
-> > > johannes
-> > >
-> > 
-> > ping.
-> > 
-> > Johannes, are you the one who says last word on standardisation for 
-> > radiotap?
+greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> No? I thought the link made that pretty clear.
+> With CONFIG_ATH9K_DEBUGFS enabled, and slub memory poisoning
+> enabled, I see this crash on rmmod of ath9k.  I'm not sure how
+> to fix this properly, but in the meantime, this patch to disable
+> the spectral scan code works around the problem for me.
 > 
-> But since nobody poked holes in this and it's been a long time, I think
-> you should probably just post "this has been adopted now" ...
+> With memory poisoning and the verify_mem_not_deleted code
+> below added, the crash looks as follows...  The dentry
+> is not *always* freed at this point, probably because rcu
+> callbacks haven't completed.  You still get a crash soon
+> after, however.
 
-Or actually, go to step 5, preferably reposting it as a separate thread.
+The relay file should probably be closed before calling ieee80211_unregister_hw().
+The ath9k debugfs directory is created inside the phy#/ directory and that would
+get cleaned up when the wiphy is unregistered.
 
-johannes
+Does this help ?
 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 4101c4a..cecbe1f 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1684,6 +1684,14 @@ void ath9k_get_et_stats(struct ieee80211_hw *hw,
+ 	WARN_ON(i != ATH9K_SSTATS_LEN);
+ }
+ 
++void ath9k_deinit_debug(struct ath_softc *sc)
++{
++	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
++		relay_close(sc->rfs_chan_spec_scan);
++		sc->rfs_chan_spec_scan = NULL;
++	}
++}
++
+ int ath9k_init_debug(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 62da19c..223418d 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -297,6 +297,7 @@ struct ath9k_debug {
+ };
+ 
+ int ath9k_init_debug(struct ath_hw *ah);
++void ath9k_deinit_debug(struct ath_softc *sc);
+ 
+ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status);
+ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+@@ -332,6 +333,10 @@ static inline int ath9k_init_debug(struct ath_hw *ah)
+ 	return 0;
+ }
+ 
++static inline void ath9k_deinit_debug(struct ath_softc *sc)
++{
++}
++
+ static inline void ath_debug_stat_interrupt(struct ath_softc *sc,
+ 					    enum ath9k_int status)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index c7b888f..c0aa4ff 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -903,7 +903,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 	if (!ath_is_world_regd(reg)) {
+ 		error = regulatory_hint(hw->wiphy, reg->alpha2);
+ 		if (error)
+-			goto unregister;
++			goto debug_cleanup;
+ 	}
+ 
+ 	ath_init_leds(sc);
+@@ -911,6 +911,8 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 
+ 	return 0;
+ 
++debug_cleanup:
++	ath9k_deinit_debug(sc);
+ unregister:
+ 	ieee80211_unregister_hw(hw);
+ rx_cleanup:
+@@ -939,11 +941,6 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+ 		sc->dfs_detector->exit(sc->dfs_detector);
+ 
+ 	ath9k_eeprom_release(sc);
+-
+-	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
+-		relay_close(sc->rfs_chan_spec_scan);
+-		sc->rfs_chan_spec_scan = NULL;
+-	}
+ }
+ 
+ void ath9k_deinit_device(struct ath_softc *sc)
+@@ -957,6 +954,7 @@ void ath9k_deinit_device(struct ath_softc *sc)
+ 
+ 	ath9k_ps_restore(sc);
+ 
++	ath9k_deinit_debug(sc);
+ 	ieee80211_unregister_hw(hw);
+ 	ath_rx_cleanup(sc);
+ 	ath9k_deinit_softc(sc);
