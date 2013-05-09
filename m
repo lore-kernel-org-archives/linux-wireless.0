@@ -1,84 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46262 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757822Ab3EBMaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 08:30:10 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 01/14] rt2x00: rt2x00queue: add priv_size field to struct data_queue
-Date: Thu,  2 May 2013 14:30:16 +0200
-Message-Id: <1367497829-7672-2-git-send-email-juhosg@openwrt.org> (sfid-20130502_143041_501944_AFB8D709)
-In-Reply-To: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
-References: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:37620 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab3EISuw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 May 2013 14:50:52 -0400
+Message-ID: <518BF007.9010501@candelatech.com> (sfid-20130509_205056_228104_48096274)
+Date: Thu, 09 May 2013 11:50:47 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+CC: Sujith Manoharan <sujith@msujith.org>,
+	Cyril Segretain <cyrilseg@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Fun with QoS in AP mode.
+References: <5189DB72.3020809@candelatech.com> <20873.56643.216380.594657@gargle.gargle.HOWL> <518A6C21.5070408@candelatech.com> <20875.12412.946993.203664@gargle.gargle.HOWL> <518BB62D.9060108@candelatech.com> <CAJu560hVBcdJ67uNprj0TOY6rWNd-iT8f7QNaE64=ENz91yj6w@mail.gmail.com> <518BCE45.1060704@candelatech.com> <20875.53161.157603.680374@gargle.gargle.HOWL> <518BD13D.1030504@candelatech.com> <CABPxzY+t1bZRtYf26-3yjVqv15m2FjB0eZ29ixniqbVPZ2NoNA@mail.gmail.com>
+In-Reply-To: <CABPxzY+t1bZRtYf26-3yjVqv15m2FjB0eZ29ixniqbVPZ2NoNA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new field into struct data_queue and store
-the size of the per-queue_entry private data in
-that. Additionally, use the new field in the
-rt2x00queue_alloc_entries function to compute
-the size of the queue entries for a given queue.
+On 05/09/2013 10:00 AM, Krishna Chaitanya wrote:
+> On Thu, May 9, 2013 at 10:09 PM, Ben Greear <greearb@candelatech.com> wrote:
+>>
+>> On 05/09/2013 09:32 AM, Sujith Manoharan wrote:
+>>>
+>>> Ben Greear wrote:
+>>>>
+>>>> I suspect we need to set up rules with 'tc' and maybe iptables.
+>>>>
+>>>> I'm not having any luck finding any examples out on the web, but
+>>>> surely the info is somewhere w/out having to fully understand 'tc'.
+>>>
+>>>
+>>> DSCP can be used...
+>>>
+>>> Something like "iptables -t mangle -A OUTPUT -p tcp --dport 5005 -j DSCP --set-dscp-class "CS6""
+>>> (Change the class for other priorities).
+>>
+>>
+>> In my case, I'd like to match on the ToS set in the IP headers.
+>>
+>> Basically, just map ToS 192 to VO, for instance.
+>
+> Talking about rules, Are you able to see the ToS marked in the IP header in
+> the sniffer and not in the 802.11 header? Then we can concentrate on
+> marking the packet (or) mapping in the driver?
+>
 
-This does not change the current behaviour but
-makes it possible to move the initialization of
-the queue_data fields into the rt2x00queue_init
-routine.
+Ahh, in my case, I introduced the bug in my code trying to fix a kernel
+splat when using pktgen to drive packets against wifi interfaces.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    5 +++--
- drivers/net/wireless/rt2x00/rt2x00queue.h |    2 ++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+When I remove that, then the AP uses queues as expected.  I'm going to
+have to make the pktgen hack a bit better it seems.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 2c12311..15714a2 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -1175,11 +1175,12 @@ static int rt2x00queue_alloc_entries(struct data_queue *queue,
- 	queue->data_size = qdesc->data_size;
- 	queue->desc_size = qdesc->desc_size;
- 	queue->winfo_size = qdesc->winfo_size;
-+	queue->priv_size = qdesc->priv_size;
- 
- 	/*
- 	 * Allocate all queue entries.
- 	 */
--	entry_size = sizeof(*entries) + qdesc->priv_size;
-+	entry_size = sizeof(*entries) + queue->priv_size;
- 	entries = kcalloc(queue->limit, entry_size, GFP_KERNEL);
- 	if (!entries)
- 		return -ENOMEM;
-@@ -1195,7 +1196,7 @@ static int rt2x00queue_alloc_entries(struct data_queue *queue,
- 		entries[i].entry_idx = i;
- 		entries[i].priv_data =
- 		    QUEUE_ENTRY_PRIV_OFFSET(entries, i, queue->limit,
--					    sizeof(*entries), qdesc->priv_size);
-+					    sizeof(*entries), queue->priv_size);
- 	}
- 
- #undef QUEUE_ENTRY_PRIV_OFFSET
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 4a7b34e..2cf4903 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -453,6 +453,7 @@ enum data_queue_flags {
-  * @cw_max: The cw max value for outgoing frames (field ignored in RX queue).
-  * @data_size: Maximum data size for the frames in this queue.
-  * @desc_size: Hardware descriptor size for the data in this queue.
-+ * @priv_size: Size of per-queue_entry private data.
-  * @usb_endpoint: Device endpoint used for communication (USB only)
-  * @usb_maxpacket: Max packet size for given endpoint (USB only)
-  */
-@@ -481,6 +482,7 @@ struct data_queue {
- 	unsigned short data_size;
- 	unsigned char  desc_size;
- 	unsigned char  winfo_size;
-+	unsigned short priv_size;
- 
- 	unsigned short usb_endpoint;
- 	unsigned short usb_maxpacket;
+With this in mind, other folks that want QoS working on their APs
+probably just needs to somehow mangle the ToS on their packets
+to get it automatically working.  Hopefully no 'tc' or similar commands
+would be needed.
+
+Thanks,
+Ben
+
+
 -- 
-1.7.10
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
