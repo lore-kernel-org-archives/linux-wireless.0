@@ -1,62 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:38505 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751935Ab3EITYx (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56174 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988Ab3EIE0z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 May 2013 15:24:53 -0400
-Received: by mail-ee0-f48.google.com with SMTP id c4so1331684eek.21
-        for <linux-wireless@vger.kernel.org>; Thu, 09 May 2013 12:24:52 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: add more core IDs
-Date: Thu,  9 May 2013 21:24:24 +0200
-Message-Id: <1368127464-11448-1-git-send-email-zajec5@gmail.com> (sfid-20130509_212523_030863_B8195615)
+	Thu, 9 May 2013 00:26:55 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20875.9473.525821.266607@gargle.gargle.HOWL> (sfid-20130509_062658_883639_DEA0F9DD)
+Date: Thu, 9 May 2013 09:54:33 +0530
+To: Wally <wally.yeh@a-trust.com.tw>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: atheros AR5B22, using ath9k, can't switch between inscure and
+ WEP/WPA
+In-Reply-To: <1368015905.17674.11.camel@bigdick-desktop>
+References: <1368015905.17674.11.camel@bigdick-desktop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PCIe and ARM CR4 cores were found on 14e4:43b1 AKA BCM4352.
+Wally wrote:
+>     Recently I got a atheros mini-PCIE wifi module AR5B22, so I download
+> the latest version of compat-driver(compat-drivers-2013-03-28.tar.gz),
+> and build it for armel on my arm board, it works great but with one
+> little problem:
+> 
+> If I connect to an inscure AP then change to a WEP/WPA AP, I can't
+> connect the inscure one again, I have to run "modprobe -r ath9k;
+> modprobe ath9k" to connect the inscure AP.
+> 
+>     I think this may be a bug in the ath9k driver, I also search this
+> bug on web but without an answer, so I send this letter for help.
 
-Reported-by: Gabriel Thörnblad <gabriel@thornblad.com>
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/scan.c       |    2 ++
- include/linux/bcma/bcma.h |    5 ++++-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+What commands do you use to connect to the APs ? Also, can you post the
+kernel log / wpa_supplicant log when the issue happens ?
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index bca9c80..8bffa5c 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -84,6 +84,8 @@ static const struct bcma_device_id_name bcma_bcm_device_names[] = {
- 	{ BCMA_CORE_I2S, "I2S" },
- 	{ BCMA_CORE_SDR_DDR1_MEM_CTL, "SDR/DDR1 Memory Controller" },
- 	{ BCMA_CORE_SHIM, "SHIM" },
-+	{ BCMA_CORE_PCIE2, "PCIe Gen2" },
-+	{ BCMA_CORE_ARM_CR4, "ARM CR4" },
- 	{ BCMA_CORE_DEFAULT, "Default" },
- };
- 
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index f14a98a..2e34db8 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -134,7 +134,10 @@ struct bcma_host_ops {
- #define BCMA_CORE_I2S			0x834
- #define BCMA_CORE_SDR_DDR1_MEM_CTL	0x835	/* SDR/DDR1 memory controller core */
- #define BCMA_CORE_SHIM			0x837	/* SHIM component in ubus/6362 */
--#define BCMA_CORE_ARM_CR4		0x83e
-+#define BCMA_CORE_PHY_AC		0x83B
-+#define BCMA_CORE_PCIE2			0x83C	/* PCI Express Gen2 */
-+#define BCMA_CORE_USB30_DEV		0x83D
-+#define BCMA_CORE_ARM_CR4		0x83E
- #define BCMA_CORE_DEFAULT		0xFFF
- 
- #define BCMA_MAX_NR_CORES		16
--- 
-1.7.10.4
-
+Sujith
