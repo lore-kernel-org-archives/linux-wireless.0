@@ -1,178 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55949 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933640Ab3E1JAE (ORCPT
+Received: from juliette.telenet-ops.be ([195.130.137.74]:47789 "EHLO
+	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753865Ab3EIVFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 05:00:04 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] mac80211: work around broken APs not including HT info
-Date: Tue, 28 May 2013 10:59:54 +0200
-Message-Id: <1369731594-16303-2-git-send-email-johannes@sipsolutions.net> (sfid-20130528_110012_309683_6131E905)
-In-Reply-To: <1369731594-16303-1-git-send-email-johannes@sipsolutions.net>
-References: <1369731594-16303-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 9 May 2013 17:05:09 -0400
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: linux-kernel@vger.kernel.org
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 05/12] net/wireless: ATH9K should depend on HAS_DMA
+Date: Thu,  9 May 2013 23:04:47 +0200
+Message-Id: <1368133494-22198-5-git-send-email-geert@linux-m68k.org> (sfid-20130509_230840_352175_B8C8AC9B)
+In-Reply-To: <1368133494-22198-1-git-send-email-geert@linux-m68k.org>
+References: <1368133494-22198-1-git-send-email-geert@linux-m68k.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+If NO_DMA=y:
 
-There are some APs, notably 2G/3G/4G Wifi routers, specifically
-the "Onda PN51T", "Vodafone PocketWiFi 2" and a similar T-Mobile
-branded device [1] that erroneously don't include all the needed
-information in (re)association response frames. Work around this
-by assuming the information is the same as it was in the beacon
-or probe response and using the data from there instead.
+drivers/built-in.o: In function `ath9k_beacon_generate':
+drivers/net/wireless/ath/ath9k/beacon.c:146: undefined reference to `dma_unmap_single'
+drivers/net/wireless/ath/ath9k/beacon.c:174: undefined reference to `dma_map_single'
+drivers/net/wireless/ath/ath9k/beacon.c:176: undefined reference to `dma_mapping_error'
+drivers/built-in.o: In function `ath9k_beacon_remove_slot':
+drivers/net/wireless/ath/ath9k/beacon.c:252: undefined reference to `dma_unmap_single'
+drivers/built-in.o: In function `ath_descdma_setup':
+drivers/net/wireless/ath/ath9k/init.c:382: undefined reference to `dmam_alloc_coherent'
+drivers/built-in.o: In function `ath_edma_get_buffers':
+drivers/net/wireless/ath/ath9k/recv.c:616: undefined reference to `dma_sync_single_for_cpu'
+drivers/built-in.o: In function `ath_get_next_rx_buf':
+drivers/net/wireless/ath/ath9k/recv.c:740: undefined reference to `dma_sync_single_for_cpu'
+drivers/built-in.o: In function `ath_rx_edma_cleanup':
+drivers/net/wireless/ath/ath9k/recv.c:176: undefined reference to `dma_unmap_single'
+drivers/built-in.o: In function `ath_rx_cleanup':
+drivers/net/wireless/ath/ath9k/recv.c:340: undefined reference to `dma_unmap_single'
+drivers/built-in.o: In function `ath_rx_edma_buf_link':
+drivers/net/wireless/ath/ath9k/recv.c:122: undefined reference to `dma_sync_single_for_cpu'
+drivers/built-in.o: In function `ath_rx_tasklet':
+drivers/net/wireless/ath/ath9k/recv.c:1275: undefined reference to `dma_map_single'
+drivers/net/wireless/ath/ath9k/recv.c:1277: undefined reference to `dma_mapping_error'
+drivers/net/wireless/ath/ath9k/recv.c:1283: undefined reference to `dma_unmap_single'
+drivers/built-in.o: In function `ath_rx_edma_init':
+drivers/net/wireless/ath/ath9k/recv.c:226: undefined reference to `dma_map_single'
+drivers/net/wireless/ath/ath9k/recv.c:229: undefined reference to `dma_mapping_error'
+drivers/built-in.o: In function `ath_rx_init':
+drivers/net/wireless/ath/ath9k/recv.c:303: undefined reference to `dma_map_single'
+drivers/net/wireless/ath/ath9k/recv.c:306: undefined reference to `dma_mapping_error'
+drivers/built-in.o: In function `ath_tx_complete_buf':
+drivers/net/wireless/ath/ath9k/xmit.c:2088: undefined reference to `dma_unmap_single'
+drivers/built-in.o: In function `ath_txstatus_setup':
+drivers/net/wireless/ath/ath9k/xmit.c:2344: undefined reference to `dmam_alloc_coherent'
+drivers/built-in.o: In function `ath_tx_set_retry':
+drivers/net/wireless/ath/ath9k/xmit.c:307: undefined reference to `dma_sync_single_for_cpu'
+drivers/built-in.o: In function `ath_tx_setup_buffer':
+drivers/net/wireless/ath/ath9k/xmit.c:1887: undefined reference to `dma_map_single'
+drivers/net/wireless/ath/ath9k/xmit.c:1889: undefined reference to `dma_mapping_error'
 
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=58881.
-
-[1] https://bbs.archlinux.org/viewtopic.php?pid=1277305
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
 ---
- net/mac80211/mlme.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 80 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f44f4ca..8571294 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2486,8 +2486,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	u16 capab_info, aid;
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
-+	const struct cfg80211_bss_ies *bss_ies = NULL;
-+	struct ieee80211_mgd_assoc_data *assoc_data = ifmgd->assoc_data;
- 	u32 changed = 0;
- 	int err;
-+	bool ret;
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 17507dc..f3dc124 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -17,7 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
  
- 	/* AssocResp and ReassocResp have identical structure */
- 
-@@ -2519,21 +2522,86 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	ifmgd->aid = aid;
- 
- 	/*
-+	 * Some APs are erroneously not including some information in their
-+	 * (re)association response frames. Try to recover by using the data
-+	 * from the beacon or probe response. This seems to afflict mobile
-+	 * 2G/3G/4G wifi routers, reported models include the "Onda PN51T",
-+	 * "Vodafone PocketWiFi 2" and a similar T-Mobile branded device.
-+	 */
-+	if ((assoc_data->wmm && !elems.wmm_param) ||
-+	    (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT) &&
-+	     (!elems.ht_cap_elem || !elems.ht_operation)) ||
-+	    (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT) &&
-+	     (!elems.vht_cap_elem || !elems.vht_operation))) {
-+		const struct cfg80211_bss_ies *ies;
-+		struct ieee802_11_elems bss_elems;
-+
-+		rcu_read_lock();
-+		ies = rcu_dereference(cbss->ies);
-+		if (ies)
-+			bss_ies = kmemdup(ies, sizeof(*ies) + ies->len,
-+					  GFP_ATOMIC);
-+		rcu_read_unlock();
-+		if (!bss_ies)
-+			return false;
-+
-+		ieee802_11_parse_elems(bss_ies->data, bss_ies->len,
-+				       false, &bss_elems);
-+		if (assoc_data->wmm &&
-+		    !elems.wmm_param && bss_elems.wmm_param) {
-+			elems.wmm_param = bss_elems.wmm_param;
-+			sdata_info(sdata,
-+				   "AP bug: WMM param missing from AssocResp\n");
-+		}
-+
-+		/*
-+		 * Also check if we requested HT/VHT, otherwise the AP doesn't
-+		 * have to include the IEs in the (re)association response.
-+		 */
-+		if (!elems.ht_cap_elem && bss_elems.ht_cap_elem &&
-+		    !(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
-+			elems.ht_cap_elem = bss_elems.ht_cap_elem;
-+			sdata_info(sdata,
-+				   "AP bug: HT capability missing from AssocResp\n");
-+		}
-+		if (!elems.ht_operation && bss_elems.ht_operation &&
-+		    !(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
-+			elems.ht_operation = bss_elems.ht_operation;
-+			sdata_info(sdata,
-+				   "AP bug: HT operation missing from AssocResp\n");
-+		}
-+		if (!elems.vht_cap_elem && bss_elems.vht_cap_elem &&
-+		    !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT)) {
-+			elems.vht_cap_elem = bss_elems.vht_cap_elem;
-+			sdata_info(sdata,
-+				   "AP bug: VHT capa missing from AssocResp\n");
-+		}
-+		if (!elems.vht_operation && bss_elems.vht_operation &&
-+		    !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT)) {
-+			elems.vht_operation = bss_elems.vht_operation;
-+			sdata_info(sdata,
-+				   "AP bug: VHT operation missing from AssocResp\n");
-+		}
-+	}
-+
-+	/*
- 	 * We previously checked these in the beacon/probe response, so
- 	 * they should be present here. This is just a safety net.
- 	 */
- 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT) &&
- 	    (!elems.wmm_param || !elems.ht_cap_elem || !elems.ht_operation)) {
- 		sdata_info(sdata,
--			   "HT AP is missing WMM params or HT capability/operation in AssocResp\n");
--		return false;
-+			   "HT AP is missing WMM params or HT capability/operation\n");
-+		ret = false;
-+		goto out;
- 	}
- 
- 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT) &&
- 	    (!elems.vht_cap_elem || !elems.vht_operation)) {
- 		sdata_info(sdata,
--			   "VHT AP is missing VHT capability/operation in AssocResp\n");
--		return false;
-+			   "VHT AP is missing VHT capability/operation\n");
-+		ret = false;
-+		goto out;
- 	}
- 
- 	mutex_lock(&sdata->local->sta_mtx);
-@@ -2544,7 +2612,8 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	sta = sta_info_get(sdata, cbss->bssid);
- 	if (WARN_ON(!sta)) {
- 		mutex_unlock(&sdata->local->sta_mtx);
--		return false;
-+		ret = false;
-+		goto out;
- 	}
- 
- 	sband = local->hw.wiphy->bands[ieee80211_get_sdata_band(sdata)];
-@@ -2597,7 +2666,8 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 			   sta->sta.addr);
- 		WARN_ON(__sta_info_destroy(sta));
- 		mutex_unlock(&sdata->local->sta_mtx);
--		return false;
-+		ret = false;
-+		goto out;
- 	}
- 
- 	mutex_unlock(&sdata->local->sta_mtx);
-@@ -2637,7 +2707,10 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_sta_rx_notify(sdata, (struct ieee80211_hdr *)mgmt);
- 	ieee80211_sta_reset_beacon_monitor(sdata);
- 
--	return true;
-+	ret = true;
-+ out:
-+	kfree(bss_ies);
-+	return ret;
- }
- 
- static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ config ATH9K
+ 	tristate "Atheros 802.11n wireless cards support"
+-	depends on MAC80211
++	depends on MAC80211 && HAS_DMA
+ 	select ATH9K_HW
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
 -- 
-1.8.0
+1.7.0.4
 
