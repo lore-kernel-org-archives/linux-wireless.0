@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40975 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753156Ab3EXWBX (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40554 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925Ab3EISUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 18:01:23 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Ug038-00023v-B4
-	for linux-wireless@vger.kernel.org; Sat, 25 May 2013 00:01:22 +0200
-Message-ID: <1369432881.13623.13.camel@johannes> (sfid-20130525_000125_742375_FA3B81C3)
-Subject: Re: [PATCH 0/9] cfg80211 spring cleaning
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 9 May 2013 14:20:25 -0400
+Date: Thu, 9 May 2013 20:20:18 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 To: linux-wireless@vger.kernel.org
-Date: Sat, 25 May 2013 00:01:21 +0200
-In-Reply-To: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net> (sfid-20130516_230344_782376_FD5FAA84)
-References: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130516_230344_782376_FD5FAA84)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH 0/8] Add support for 5 and 10 MHz channels
+Message-ID: <20130509182018.GB22871@pandem0nium> (sfid-20130509_202028_413740_8ECBDA3D)
+References: <1368123036-22721-1-git-send-email-a>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="5/uDoXvLw7AC5HRs"
+In-Reply-To: <1368123036-22721-1-git-send-email-a>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-16 at 23:03 +0200, Johannes Berg wrote:
-> Motivated by the bugs Ben Greear keeps reporting, I decided to do
-> some locking and general cleanup in cfg80211.
-> 
-> This is the first series. I'm working on more changes to actually
-> separate the SME and MLME code much better to avoid such strange
-> issues as we had before with their state (sme_state and current_bss)
-> getting confused, but that'll take a bit longer.
 
-Applied.
+--5/uDoXvLw7AC5HRs
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 
-johannes
+On Thu, May 09, 2013 at 08:10:28PM +0200, a@pandem0nium wrote:
+> [...]
 
+I wonder if I'll ever learn to use send git send-email properly ... please
+consider this as sent "From: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>"
+and sorry for the confusion.
+
+Thanks!
+	Simon
+
+--5/uDoXvLw7AC5HRs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlGL6OIACgkQrzg/fFk7axZ+cQCg5rkRta3FtjSfDcsnp0Z0ubAl
+F/MAoIInt78UnfX9uLLyprDkbmoYNFP9
+=3MTm
+-----END PGP SIGNATURE-----
+
+--5/uDoXvLw7AC5HRs--
