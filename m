@@ -1,93 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:41247 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750964Ab3E2VTV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 17:19:21 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "Mark A. Greer" <mgreer@animalcreek.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 29 May 2013 14:18:45 -0700
-Subject: RE: [PATCH] mwifiex: debugfs: Fix out of bounds array access
-Message-ID: <477F20668A386D41ADCC57781B1F70430E805C56F7@SC-VEXCH1.marvell.com> (sfid-20130529_231926_717589_6F82BCA2)
-References: <1369855534-20897-1-git-send-email-mgreer@animalcreek.com>
-In-Reply-To: <1369855534-20897-1-git-send-email-mgreer@animalcreek.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mout.gmx.net ([212.227.15.15]:61521 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752300Ab3EIJ4F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 May 2013 05:56:05 -0400
+Received: from mailout-de.gmx.net ([10.1.76.28]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0Lsdt9-1UP9HW0QhN-012LM0 for
+ <linux-wireless@vger.kernel.org>; Thu, 09 May 2013 11:56:03 +0200
+Message-ID: <518B72AE.4010402@rempel-privat.de> (sfid-20130509_115609_988734_84F167B4)
+Date: Thu, 09 May 2013 11:55:58 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
+To: radiotap@NetBSD.org, simon@superduper.net,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Standardisation - adding 2 bit STBC and Ness to MCS (repost 3)
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mark,
+Hallo all,
 
-Thanks for the patch.
+this is probably third repost of this standardisation request.
 
-> From: "Mark A. Greer" <mgreer@animalcreek.com>
-> 
-> When reading the contents of '/sys/kernel/debug/mwifiex/p2p0/info',
-> the following panic occurs:
-> 
-> $ cat /sys/kernel/debug/mwifiex/p2p0/info
-> Unable to handle kernel paging request at virtual address 74706164
-> pgd = de530000
-> [74706164] *pgd=00000000
-> Internal error: Oops: 5 [#1] SMP ARM
-> Modules linked in: phy_twl4030_usb omap2430 musb_hdrc mwifiex_sdio mwifiex
-> CPU: 0 PID: 1635 Comm: cat Not tainted 3.10.0-rc1-00010-g1268390 #1
-> task: de16b6c0 ti: de048000 task.ti: de048000
-> PC is at strnlen+0xc/0x4c
-> LR is at string+0x3c/0xf8
-> pc : [<c02c123c>]    lr : [<c02c2d1c>]    psr: a0000013
-> sp : de049e10  ip : c06efba0  fp : de6d2092
-> r10: bf01a260  r9 : ffffffff  r8 : 74706164
-> r7 : 0000ffff  r6 : ffffffff  r5 : de6d209c  r4 : 00000000
-> r3 : ff0a0004  r2 : 74706164  r1 : ffffffff  r0 : 74706164
-> Flags: NzCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
-> Control: 10c5387d  Table: 9e530019  DAC: 00000015
-> Process cat (pid: 1635, stack limit = 0xde048240)
-> Stack: (0xde049e10 to 0xde04a000)
-> 9e00:                                     de6d2092 00000002 bf01a25e de6d209c
-> 9e20: de049e80 c02c438c 0000000a ff0a0004 ffffffff 00000000 00000000 de049e48
-> 9e40: 00000000 2192df6d ff0a0004 ffffffff 00000000 de6d2092 de049ef8 bef3cc00
-> 9e60: de6b0000 dc358000 de6d2000 00000000 00000003 c02c45a4 bf01790c bf01a254
-> 9e80: 74706164 bf018698 00000000 de59c3c0 de048000 de049f80 00001000 bef3cc00
-> 9ea0: 00000008 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> 9ec0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> 9ee0: 00000000 00000000 00000000 00000001 00000000 00000000 6669776d 20786569
-> 9f00: 20302e31 2e343128 392e3636 3231702e 00202933 00000000 00000003 c0294898
-> 9f20: 00000000 00000000 00000000 00000000 de59c3c0 c0107c04 de554000 de59c3c0
-> 9f40: 00001000 bef3cc00 de049f80 bef3cc00 de049f80 00000000 00000003 c0108a00
-> 9f60: de048000 de59c3c0 00000000 00000000 de59c3c0 00001000 bef3cc00 c0108b60
-> 9f80: 00000000 00000000 00001000 bef3cc00 00000003 00000003 c0014128 de048000
-> 9fa0: 00000000 c0013f80 00001000 bef3cc00 00000003 bef3cc00 00001000 00000000
-> 9fc0: 00001000 bef3cc00 00000003 00000003 00000001 00000001 00000001 00000003
-> 9fe0: 00000000 bef3cbdc 00011984 b6f1127c 60000010 00000003 18dbdd2c 7f7bfffd
-> [<c02c123c>] (strnlen+0xc/0x4c) from [<c02c2d1c>] (string+0x3c/0xf8)
-> [<c02c2d1c>] (string+0x3c/0xf8) from [<c02c438c>] (vsnprintf+0x1e8/0x3e8)
-> [<c02c438c>] (vsnprintf+0x1e8/0x3e8) from [<c02c45a4>] (sprintf+0x18/0x24)
-> [<c02c45a4>] (sprintf+0x18/0x24) from [<bf01790c>] (mwifiex_info_read+0xfc/0x3e8 [mwifiex])
-> [<bf01790c>] (mwifiex_info_read+0xfc/0x3e8 [mwifiex]) from [<c0108a00>] (vfs_read+0xb0/0x144)
-> [<c0108a00>] (vfs_read+0xb0/0x144) from [<c0108b60>] (SyS_read+0x44/0x70)
-> [<c0108b60>] (SyS_read+0x44/0x70) from [<c0013f80>] (ret_fast_syscall+0x0/0x30)
-> Code: e12fff1e e3510000 e1a02000 0a00000d (e5d03000)
-> ---[ end trace ca98273dc605a04f ]---
-> 
-> The panic is caused by the mwifiex_info_read() routine assuming that
-> there can only be four modes (0-3) which is an invalid assumption.
-> For example, when testing P2P, the mode is '8' (P2P_CLIENT) so the
-> code accesses data beyond the bounds of the bss_modes[] array which
-> causes the panic.  Fix this by updating bss_modes[] to support the
-> current list of modes and adding a check to prevent the out-of-bounds
-> access from occuring in the future when more modes are added.
-> 
-> Signed-off-by: Mark A. Greer <mgreer@animalcreek.com>
+History:
+- 11 May 2012. initial request made by Simon Barber.
+http://www.radiotap.org/suggested-fields/MCS%20extension%20for%20STBC%20and%20Ness
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+- 1 Okt 2012, Wireshark support this fields. Patches provided by 
+Wojciech Dubowik.
+https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=6720
 
+- 1 Nov 2012. patches for intel adapters, ieee80211 and wireshark was 
+uploaded by Simon.
+http://www.radiotap.org/suggested-fields/MCS%20extension%20for%20STBC%20and%20Ness?action=AttachFile
 
-Hi John,
+- 17 Nov 2012. Simon posted new thread as suggested Johannes Berg.
 
-This patch is for 3.10.
+- 1 May 2013. I restarted this discussion.
 
-Thanks,
-Bing
+link to initial discussion:
+http://comments.gmane.org/gmane.network.wireless.radiotap/302
+
+As you can see it is already long standing issue...
+
+Now to proposal mad by Simon. Please add comments like: agreed or not 
+agreed and why.
+
+======================== Proposal ===========================
+
+This proposal is to extend the current MCS radiotap header to carry STBC 
+and Ness information. This information is carried in the 802.11 HT-SIG 
+field that carries all the other fields currently in this radiotap MCS 
+header. Both STBC and Ness fields are needed alongside the others to 
+calculate the length (duration in time) of a frame. This proposal adds 3 
+bits to the known field and the flags field. See below for proposed text.
+
+= MCS =
+
+  Bit Number:: 19
+  Structure:: u8 known, u8 flags, u8 mcs
+  Required Alignment:: 1
+
+The `mcs` field indicates the MCS rate index as in 
+[[http://en.wikipedia.org/wiki/IEEE_802.11n-2009#Data_rates|IEEE_802.11n-2009]]
+
+The `known` field indicates which information is known:
+||'''flag'''||'''definition'''||
+|| `0x01` || bandwidth ||
+|| `0x02` || MCS index known (in `mcs` part of the field) ||
+|| `0x04` || guard interval ||
+|| `0x08` || HT format ||
+|| `0x10` || FEC type ||
+|| `0x20` || STBC known ||
+|| `0x40` || Ness known (Number of extension spatial streams) ||
+|| `0x80` || Ness data - bit 1 (MSB) of Number of extension spatial 
+streams ||
+
+The `flags` field is any combination of the following:
+|| '''flag''' || '''definition''' ||
+|| `0x03` || bandwidth - 0: 20, 1: 40, 2: 20L, 3: 20U ||
+|| `0x04` || guard interval - 0: long GI, 1: short GI ||
+|| `0x08` || HT format - 0: mixed, 1: greenfield ||
+|| `0x10` || FEC type - 0: BCC, 1: LDPC ||
+|| `0x60` || Number of STBC streams ||
+|| `0x80` || Ness - bit 0 (LSB) of Number of extension spatial streams |
+
+-- 
+Regards,
+Oleksij
