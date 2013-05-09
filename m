@@ -1,68 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:55538 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757522Ab3EBNGY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 09:06:24 -0400
-Date: Thu, 2 May 2013 15:06:03 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Thommy Jakobsson <thommyj@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
-Message-ID: <20130502150603.2ac36385@milhouse> (sfid-20130502_150628_346569_AE82D01F)
-In-Reply-To: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
-References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ugTe_DC_=MVtQbrJDDzt82a"; protocol="application/pgp-signature"
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:33712 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750815Ab3EIF5s convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 May 2013 01:57:48 -0400
+Received: by mail-wi0-f182.google.com with SMTP id m6so2687691wiv.3
+        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2013 22:57:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1368062883.17674.24.camel@bigdick-desktop>
+References: <1368015905.17674.11.camel@bigdick-desktop>
+	<CAJ-Vmonq1YN2NoWFMXtqVYr16eTD=mZ0n74CCEhMHK=05M1xyQ@mail.gmail.com>
+	<1368062883.17674.24.camel@bigdick-desktop>
+Date: Wed, 8 May 2013 22:57:46 -0700
+Message-ID: <CAJ-Vmom2UZOtzMphRYJtH0NyLiQYy5PqibvZ0orAWhxTEud8bA@mail.gmail.com> (sfid-20130509_075752_601528_F829ED1C)
+Subject: Re: atheros AR5B22, using ath9k, can't switch between inscure and WEP/WPA
+From: Adrian Chadd <adrian@freebsd.org>
+To: Wally <wally.yeh@a-trust.com.tw>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=Big5
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/ugTe_DC_=MVtQbrJDDzt82a
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Ah, right. An AR9462.
 
-On Tue, 23 Apr 2013 21:45:11 +0200 (CEST)
-Thommy Jakobsson <thommyj@gmail.com> wrote:
+Odd. It should be fine. I wonder if the same behaviour exists for
+other NICs in that general family (AR9380, AR9485.)
 
-> From: Thommy Jakobsson <thommyj@gmail.com>
->=20
-> Add handling of rx descriptor underflow. This fixes a fault that could
-> happen on slow machines, where data is received faster than the CPU can
-> handle. In such a case the device will use up all rx descriptors and
-> refuse to send any more data before confirming that it is ok. This
-> patch enables necessary interrupt to discover such a situation and will
-> handle them by dropping everything in the ring buffer.
->=20
-> Reviewed-by: Michael Buesch <m@bues.ch>
-> Signed-off-by: Thommy Jakobsson <thommyj@gmail.com>
-> Cc: stable <stable@vger.kernel.org>
+Some code has shown up recently in the reference driver that does
+funny things with the keycache as a work-around for some bug. I don't
+know what the bug is yet though.
+I'll go check it out and get back to the list.
 
-Anybody interested in porting this to b43legacy (and testing)?
 
---=20
-Michael
 
---Sig_/ugTe_DC_=MVtQbrJDDzt82a
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Adrian
 
-iQIcBAEBAgAGBQJRgmS7AAoJEPUyvh2QjYsOjAsQAM31RzyinNXTvF1+IibmbXqk
-cYXpApNwrtbN5i1azFVmpPxnwkdYjQGi4l8bDBwLvQ9LA/Frt7DfF0egi5vMRhbq
-21Q0Wmx2Pu+yvfLC2pqs2SG4qG8OqSTY2sW7/B3dKbSlhmJi9BNFI0esNgN7OcCe
-BcvV7kA1uKwi7EFoyVYDMPKYdDnx9x5z0tz0gfBgM1noPauw/q08GPfd5XaynNFf
-QEiNqsZ41+PIHjEB39/veDLTla+UJ4G1Y5eFDTG1YdiUxgS3Zvkfnb63TCV0HbMc
-fbJa8LBs2cW81RiDUngKal0RO0sl141knJ0Q8bDqnCI7B0SMDi1qO/HhHwu+Vt2d
-/KtMhMBJTURqebXxcLCzk+NrqwPWAg+5VODiZjD3cFc2YZxj+9Kht+OjuiY0h/3B
-7XOSays7sly9ab+tIYgGmlr4w354yxQkiPBkTAug5TpoVL79pwUqYH6J+NY2/38F
-+pYPfBhGJwJmqw/o9EzfDMBXofTnxRoWbCvdD2GSBTV5JANtlgbqvHTGanm4g8RZ
-PBl2n4ORs2KH4j9cg7xYuf9XC82IZKbE68ePGlY1UeWFtUP19TjGbAij6fSTIxDv
-eJfNSLqoRn1y6QZASrOtnw5hR/qXrUHG3x8LsefcVkSOGtFjC3AQp5XL5uxd5hU+
-LZ7tHKCLvESHuM98gFsI
-=Is1A
------END PGP SIGNATURE-----
 
---Sig_/ugTe_DC_=MVtQbrJDDzt82a--
+On 8 May 2013 18:28, Wally <wally.yeh@a-trust.com.tw> wrote:
+> Hi, Adrian:
+>     Here is it's wiki:http://wikidevi.com/wiki/Atheros_AR5B22
+>
+>     As I modprobe ath9k. dmesg give these messages:
+> ----------------------------------------------------------------------
+> [49603.281250] compat-drivers backport release:
+> compat-drivers-2013-03-28
+> [49603.281250] Backport based on linux-next.git next-20130328
+> [49603.281250] compat.git: linux-next.git
+> [49603.367187] cfg80211: Calling CRDA to update world regulatory domain
+> [49603.609375] ath: EEPROM regdomain: 0x60
+> [49603.609375] ath: EEPROM indicates we should expect a direct regpair
+> map
+> [49603.609375] ath: Country alpha2 being used: 00
+> [49603.609375] ath: Regpair used: 0x60
+> [49603.609375] ieee80211 phy0: Selected rate control algorithm
+> 'ath9k_rate_control'
+> [49603.609375] Registered led device: ath9k-phy0
+> [49603.609375] ieee80211 phy0: Atheros AR9462 Rev:2 mem=0xe1300000,
+> irq=48
+> -----------------------------------------------------------------------
+>     so it seems ath9k probe this chip as Atheros AR9462. do you have
+> some idea?
+>
+> Wally
+>
+>
+>
+> 於 三，2013-05-08 於 15:46 -0700，Adrian Chadd 提到：
+>> .. AR5B22? Which chip does that probe as?
+>>
+>>
+>>
+>> Adrian
+>>
+>>
+>> On 8 May 2013 05:25, Wally <wally.yeh@a-trust.com.tw> wrote:
+>> > Hi, guys:
+>> >     Recently I got a atheros mini-PCIE wifi module AR5B22, so I download
+>> > the latest version of compat-driver(compat-drivers-2013-03-28.tar.gz),
+>> > and build it for armel on my arm board, it works great but with one
+>> > little problem:
+>> >
+>> > If I connect to an inscure AP then change to a WEP/WPA AP, I can't
+>> > connect the inscure one again, I have to run "modprobe -r ath9k;
+>> > modprobe ath9k" to connect the inscure AP.
+>> >
+>> >     I think this may be a bug in the ath9k driver, I also search this
+>> > bug on web but without an answer, so I send this letter for help.
+>> >
+>> >     Any advice would be grateful, thanks.
+>> >
+>> > Wally
+>> >
+>> >
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
