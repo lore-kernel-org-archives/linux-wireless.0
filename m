@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:56764 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751603Ab3EERYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 May 2013 13:24:40 -0400
-Date: Sun, 5 May 2013 19:24:05 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Thommy Jakobsson <thommyj@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	piotras@gmail.com, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
-Message-ID: <20130505192405.0cf4350e@milhouse> (sfid-20130505_192456_679340_589A7590)
-In-Reply-To: <CACna6ry+F45PhCXahPpJtzu-w+vLE29ksHo9njXfTcfY3Av6LA@mail.gmail.com>
-References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
-	<CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com>
-	<CACna6rwk0akD0x+sWTmjDDoaQqF0Y=NQ58rzqgZH92GCug6CeQ@mail.gmail.com>
-	<CACna6ry+F45PhCXahPpJtzu-w+vLE29ksHo9njXfTcfY3Av6LA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/z+FnjG_jiAmDwTf_jSOc2zY"; protocol="application/pgp-signature"
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40025 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752735Ab3EISKt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 May 2013 14:10:49 -0400
+From: a@pandem0nium
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 7/8] ath9k: announce that ath9k supports 5/10 MHz
+Date: Thu,  9 May 2013 20:10:35 +0200
+Message-Id: <1368123036-22721-8-git-send-email-a> (sfid-20130509_201107_640063_EE5B8247)
+In-Reply-To: <1368123036-22721-1-git-send-email-a>
+References: <1368123036-22721-1-git-send-email-a>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/z+FnjG_jiAmDwTf_jSOc2zY
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 
-On Sun, 5 May 2013 18:31:20 +0200
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-> Still worth considering is my previous e-mail. Why writing (for
-> example) 1 to RXSTOPINDEX doesn't stop firmware from using slot 1?
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 0959729..30c3ddf 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -794,6 +794,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+ 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
++	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
+ 
+ #ifdef CONFIG_PM_SLEEP
+ 
+-- 
+1.7.10.4
 
-What makes you think this register does not work?
-
-Do you write a 1 to the register, or do you mean "the offset that
-corresponds to slot 1"?
-
-> Can it be because it's "too late"? For example:
-> 1) Firmware writes to slot 0, changes "curr descr" to 1
-> 2) Firmware grabs slot 1
-> 3) Firmware generates IRQ
-> 4) Driver reads slot 0
-> 5) Driver writes RX stop index 1
-
-The stop index is the index that the firmware does _not_ write to.
-If you set it _after_ it already wrote, you clearly are too late (for
-this ring wrapping).
-
---=20
-Michael
-
---Sig_/z+FnjG_jiAmDwTf_jSOc2zY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRhpW1AAoJEPUyvh2QjYsOGf8P/0cE41OwSYfC2NHuSx3zXiYL
-sJZHWKDEj7Swj7ivS4eTkONtb+1oWRp0wJQckN1wjbymrgZJjrO1Xgz4O/4mMkjP
-aF1rHkRua3DEPbbsS5dlZHMZmXzIB63zSnLq1eYBCPHS5RyUfaGvC7mV1OVpECzA
-R+O83a4wkTvqOTROgRlqQiWiCMImDNi8L1cExwiFD7YZrF6oAUT4Fy/z/KqBLZ6X
-Ru8LCFZuUIAzzUZ7oP69DPsZK5HFR2Pwk316YniLxhrqJI4ZAnJiv9WBmB8fp2CX
-DCWXuVcBR+FCuQ84T1ihew5A9gAYD7U5rhGsCdqeciN1AVNQ9SNwRWGzdkiFMOOY
-4lwuI+84WmcSHc5Q6Rg+3itLkpMNu6tg2KTUBaviNvW7I1cNv9wJDrMPyx8KedtQ
-3BqfrX4AqvZwk3elAVKs1mk5cLOP11HPCe7c6MVmeJ/yeuBSYRdjCEAXSqf+EIgc
-vHgM1BydLv6vIp0F8DTHX7tvBuLvOmxci0VQELEf6N+4bGMLrPlJsonjaR6iH53o
-w9AFoQ/gIA/n1jTn7AMlOiHKG/gSSUkH1aE/UxYNBwNfT3PjgZYuDGhv2ufDSPJv
-E+wkX+np0xzbwKyKoLH89qVk6Ktx4upm/I0uwD+jJdI5WEeDou7RhTUA2/Jj0ZLj
-vmgFGcRWWVEPvbbtlHq9
-=4Txh
------END PGP SIGNATURE-----
-
---Sig_/z+FnjG_jiAmDwTf_jSOc2zY--
