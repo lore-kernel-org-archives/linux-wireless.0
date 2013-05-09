@@ -1,115 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:50040 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752231Ab3EPLB7 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:52500 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642Ab3EIFPz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 07:01:59 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 07/18] mac80211: add radiotap flag and handling for 5/10 MHz
-Date: Thu, 16 May 2013 13:00:34 +0200
-Message-Id: <1368702045-27598-8-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130214_283643_491CC7CF)
-In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Thu, 9 May 2013 01:15:55 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20875.12412.946993.203664@gargle.gargle.HOWL> (sfid-20130509_071558_999166_EB389FB6)
+Date: Thu, 9 May 2013 10:43:32 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Fun with QoS in AP mode.
+In-Reply-To: <518A6C21.5070408@candelatech.com>
+References: <5189DB72.3020809@candelatech.com>
+	<20873.56643.216380.594657@gargle.gargle.HOWL>
+	<518A6C21.5070408@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireshark already defines radiotap channel flags for 5 and 10 MHz, so
-just use them in Linux radiotap too. Furthermore, add rx status flags to
-allow drivers to report when they received data on 5 or 10 MHz channels.
+Ben Greear wrote:
+> Yes, both AP and Station machine are ath9k, 3.9.0+, etc....
+> 
+> Basically identicaly hardware and software loads..just one is acting as AP
+> and one as station(s) in this scenario.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- include/net/ieee80211_radiotap.h |    4 ++++
- include/net/mac80211.h           |    4 ++++
- net/mac80211/rx.c                |   21 ++++++++++++---------
- 3 files changed, 20 insertions(+), 9 deletions(-)
+Works okay here.
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index c399963..8b991ff 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -230,6 +230,10 @@ enum ieee80211_radiotap_type {
- #define	IEEE80211_CHAN_PASSIVE	0x0200	/* Only passive scan allowed */
- #define	IEEE80211_CHAN_DYN	0x0400	/* Dynamic CCK-OFDM channel */
- #define	IEEE80211_CHAN_GFSK	0x0800	/* GFSK channel (FHSS PHY) */
-+#define	IEEE80211_CHAN_GSM	0x1000	/* GSM (900 MHz) */
-+#define	IEEE80211_CHAN_STURBO	0x2000	/* Static Turbo */
-+#define	IEEE80211_CHAN_HALF	0x4000	/* Half channel (10 MHz wide) */
-+#define	IEEE80211_CHAN_QUARTER	0x8000	/* Quarter channel (5 MHz wide) */
- 
- /* For IEEE80211_RADIOTAP_FLAGS */
- #define	IEEE80211_RADIOTAP_F_CFP	0x01	/* sent/received
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0ce4290..4dae129 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -805,6 +805,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  *	on this subframe
-  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
-  *	is stored in the @ampdu_delimiter_crc field)
-+ * @RX_FLAG_10MHZ: 10 MHz (half channel) was used
-+ * @RX_FLAG_5MHZ: 5 MHz (quarter channel) was used
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -832,6 +834,8 @@ enum mac80211_rx_flags {
- 	RX_FLAG_80MHZ			= BIT(23),
- 	RX_FLAG_80P80MHZ		= BIT(24),
- 	RX_FLAG_160MHZ			= BIT(25),
-+	RX_FLAG_10MHZ			= BIT(26),
-+	RX_FLAG_5MHZ			= BIT(27),
- };
- 
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 4d8f817..d64f284 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -146,6 +146,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	struct ieee80211_radiotap_header *rthdr;
- 	unsigned char *pos;
- 	u16 rx_flags = 0;
-+	u16 channel_flags = 0;
- 	int mpdulen;
- 
- 	mpdulen = skb->len;
-@@ -220,20 +221,22 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	/* IEEE80211_RADIOTAP_CHANNEL */
- 	put_unaligned_le16(status->freq, pos);
- 	pos += 2;
-+	if (status->flag & RX_FLAG_10MHZ)
-+		channel_flags |= IEEE80211_CHAN_HALF;
-+	else if (status->flag & RX_FLAG_5MHZ)
-+		channel_flags |= IEEE80211_CHAN_QUARTER;
-+
- 	if (status->band == IEEE80211_BAND_5GHZ)
--		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ;
- 	else if (status->flag & (RX_FLAG_HT | RX_FLAG_VHT))
--		put_unaligned_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
- 	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
--		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
- 	else if (rate)
--		put_unaligned_le16(IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
- 	else
--		put_unaligned_le16(IEEE80211_CHAN_2GHZ, pos);
-+		channel_flags |= IEEE80211_CHAN_2GHZ;
-+	put_unaligned_le16(channel_flags, pos);
- 	pos += 2;
- 
- 	/* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
--- 
-1.7.10.4
+STA1 <-> AP <-> STA2 (ath9k stations, ath9k AP running OpenWrt trunk).
 
+Voice traffic from STA1 to STA2 and in the other direction are marked
+as VO in the AP.
+
+root@OpenWrt:/# cat /sys/kernel/debug/ieee80211/phy1/ath9k/xmit 
+                            BE         BK        VI        VO
+
+MPDUs Queued:              411          0         0   1780727
+MPDUs Completed:           411          0         0   1780659
+MPDUs XRetried:              0          0         0         2
+Aggregates:             111093          0         0         0
+AMPDUs Queued HW:        21843          0         0         0
+AMPDUs Queued SW:      2297530          0         0         0
+AMPDUs Completed:      2319373          0         0         0
+AMPDUs Retried:          28995          0         0         0
+AMPDUs XRetried:             0          0         0         0
+TXERR Filtered:              0          0         0       217
+FIFO Underrun:               0          0         0         0
+TXOP Exceeded:               0          0         0         0
+TXTIMER Expiry:              0          0         0         0
+DESC CFG Error:              0          0         0         0
+DATA Underrun:               0          0         0         0
+DELIM Underrun:              0          0         0         0
+TX-Pkts-All:           2319784          0         0   1780661
+TX-Bytes-All:        455830482          0         02734843421
+HW-put-tx-buf:          153471          0         0    263350
+HW-tx-start:                 0          0         0         0
+HW-tx-proc-desc:        153681          0         0   1780661
+TX-Failed:                   0          0         0         0
+
+Sujith
