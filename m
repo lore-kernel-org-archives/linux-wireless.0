@@ -1,102 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:58200 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800Ab3EaCLU (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46963 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752447Ab3EIRkO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 22:11:20 -0400
-Received: by mail-pb0-f47.google.com with SMTP id rr4so1386471pbb.34
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:11:20 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 22/40] crda: rename crda_verify_db_signature() to reglib_verify_db_signature()
-Date: Thu, 30 May 2013 19:09:11 -0700
-Message-Id: <1369966169-23640-23-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042937_655460_82F81BEF)
-In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 9 May 2013 13:40:14 -0400
+Message-ID: <518BDF70.3040407@candelatech.com> (sfid-20130509_194018_726804_82BD924B)
+Date: Thu, 09 May 2013 10:40:00 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k:  Disable spectral scan code to fix crash on rmmod.
+References: <1368050908-7554-1-git-send-email-greearb@candelatech.com> <20875.13834.615920.337442@gargle.gargle.HOWL>
+In-Reply-To: <20875.13834.615920.337442@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 05/08/2013 10:37 PM, Sujith Manoharan wrote:
+> greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> With CONFIG_ATH9K_DEBUGFS enabled, and slub memory poisoning
+>> enabled, I see this crash on rmmod of ath9k.  I'm not sure how
+>> to fix this properly, but in the meantime, this patch to disable
+>> the spectral scan code works around the problem for me.
+>>
+>> With memory poisoning and the verify_mem_not_deleted code
+>> below added, the crash looks as follows...  The dentry
+>> is not *always* freed at this point, probably because rcu
+>> callbacks haven't completed.  You still get a crash soon
+>> after, however.
+>
+> The relay file should probably be closed before calling ieee80211_unregister_hw().
+> The ath9k debugfs directory is created inside the phy#/ directory and that would
+> get cleaned up when the wiphy is unregistered.
+>
+> Does this help ?
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- reglib.c |   12 ++++++------
- reglib.h |    2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+This fixes the problem for me, and certainly is less of a hack than
+what I posted.
 
-diff --git a/reglib.c b/reglib.c
-index a957f0e..316e201 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -50,7 +50,7 @@ void *reglib_get_file_ptr(uint8_t *db, int dblen, int structlen, uint32_t ptr)
- }
- 
- /*
-- * crda_verify_db_signature():
-+ * reglib_verify_db_signature():
-  *
-  * Checks the validity of the signature found on the regulatory
-  * database against the array 'keys'. Returns 1 if there exists
-@@ -59,7 +59,7 @@ void *reglib_get_file_ptr(uint8_t *db, int dblen, int structlen, uint32_t ptr)
-  */
- 
- #ifdef USE_OPENSSL
--int crda_verify_db_signature(uint8_t *db, int dblen, int siglen)
-+int reglib_verify_db_signature(uint8_t *db, int dblen, int siglen)
- {
- 	RSA *rsa;
- 	uint8_t hash[SHA_DIGEST_LENGTH];
-@@ -118,7 +118,7 @@ out:
- #endif /* USE_OPENSSL */
- 
- #ifdef USE_GCRYPT
--int crda_verify_db_signature(uint8_t *db, int dblen, int siglen)
-+int reglib_verify_db_signature(uint8_t *db, int dblen, int siglen)
- {
- 	gcry_mpi_t mpi_e, mpi_n;
- 	gcry_sexp_t rsa, signature, data;
-@@ -180,7 +180,7 @@ out:
- #endif /* USE_GCRYPT */
- 
- #if !defined(USE_OPENSSL) && !defined(USE_GCRYPT)
--int crda_verify_db_signature(uint8_t *db, int dblen, int siglen)
-+int reglib_verify_db_signature(uint8_t *db, int dblen, int siglen)
- {
- 	return 1;
- }
-@@ -295,7 +295,7 @@ reglib_get_rd_idx(unsigned int idx, const char *file)
- 		goto out;
- 
- 	/* verify signature */
--	if (!crda_verify_db_signature(db, dblen, siglen))
-+	if (!reglib_verify_db_signature(db, dblen, siglen))
- 		goto out;
- 
- 	num_countries = ntohl(header->reg_country_num);
-@@ -366,7 +366,7 @@ reglib_get_rd_alpha2(const char *alpha2, const char *file)
- 		goto out;
- 
- 	/* verify signature */
--	if (!crda_verify_db_signature(db, dblen, siglen))
-+	if (!reglib_verify_db_signature(db, dblen, siglen))
- 		goto out;
- 
- 	num_countries = ntohl(header->reg_country_num);
-diff --git a/reglib.h b/reglib.h
-index 3510889..2f49a32 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -71,7 +71,7 @@ static inline uint32_t min(uint32_t a, uint32_t b)
- }
- 
- void *reglib_get_file_ptr(uint8_t *db, int dblen, int structlen, uint32_t ptr);
--int crda_verify_db_signature(uint8_t *db, int dblen, int siglen);
-+int reglib_verify_db_signature(uint8_t *db, int dblen, int siglen);
- 
- const struct ieee80211_regdomain *
- reglib_get_rd_idx(unsigned int idx, const char *file);
+I did several module unloads with memory poisoning enabled, system
+remains stable.
+
+Tested-by: Ben Greear <greearb@candelatech.com>
+
+Thanks,
+Ben
+
 -- 
-1.7.10.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
