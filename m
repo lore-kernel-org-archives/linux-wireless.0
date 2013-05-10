@@ -1,29 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59206 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033Ab3EPVDm (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:36638 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752608Ab3EJNKy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 17:03:42 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Ud5Kv-0005HK-5u
-	for linux-wireless@vger.kernel.org; Thu, 16 May 2013 23:03:41 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/9] cfg80211 spring cleaning
-Date: Thu, 16 May 2013 23:03:29 +0200
-Message-Id: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net> (sfid-20130516_230344_782376_FD5FAA84)
+	Fri, 10 May 2013 09:10:54 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Fix crash on module unload
+Date: Fri, 10 May 2013 18:38:24 +0530
+Message-Id: <1368191304-684-1-git-send-email-sujith@msujith.org> (sfid-20130510_151104_915107_BD595100)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Motivated by the bugs Ben Greear keeps reporting, I decided to do
-some locking and general cleanup in cfg80211.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This is the first series. I'm working on more changes to actually
-separate the SME and MLME code much better to avoid such strange
-issues as we had before with their state (sme_state and current_bss)
-getting confused, but that'll take a bit longer.
+Make sure that any open relayfs files are closed before
+unregistering with mac80211, otherwise this crash is seen:
 
-johannes
+[ 1331.097846] BUG: unable to handle kernel paging request at 6b6b6b8b
+[ 1331.098170] IP: [<c063d0d6>] debugfs_remove+0x26/0x80
+[ 1331.098170] *pdpt = 000000002f9aa001 *pde = 0000000000000000
+[ 1331.098170] Oops: 0000 [#1] PREEMPT SMP
+[ 1331.098170] Modules linked in: iptable_raw xt_CT nf_conntrack_ipv4 nf_defrag]
+[ 1331.098170] Pid: 4794, comm: rmmod Tainted: G        WC   3.9.1+ #5 To Be Fi.
+[ 1331.098170] EIP: 0060:[<c063d0d6>] EFLAGS: 00010202 CPU: 0
+[ 1331.098170] EIP is at debugfs_remove+0x26/0x80
+[ 1331.098170] EAX: f2f3acd0 EBX: f2f3acd0 ECX: 00000006 EDX: f8622348
+[ 1331.098170] ESI: 6b6b6b6b EDI: 00000001 EBP: ee251e14 ESP: ee251e0c
+[ 1331.098170]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+[ 1331.098170] CR0: 8005003b CR2: 6b6b6b8b CR3: 2e7b7000 CR4: 000007e0
+[ 1331.098170] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+[ 1331.098170] DR6: ffff0ff0 DR7: 00000400
+[ 1331.098170] Process rmmod (pid: 4794, ti=ee250000 task=efaa2560 task.ti=ee25)
+[ 1331.098170] Stack:
+[ 1331.098170]  f241e170 0000000a ee251e1c f861394d ee251e28 c04e3088 f241e170 4
+[ 1331.098170]  c04e30fe f45482b0 ee251e54 c04e3187 f25e86b0 ee251e54 f8618748 0
+[ 1331.098170]  0000000a 00000001 ee251e68 f860065b f2509e20 f25085a0 f5b6e8a4 8
+[ 1331.098170] Call Trace:
+[ 1331.098170]  [<f861394d>] remove_buf_file_handler+0xd/0x20 [ath9k]
+[ 1331.098170]  [<c04e3088>] relay_remove_buf+0x18/0x30
+[ 1331.098170]  [<c04e30fe>] relay_close_buf+0x2e/0x40
+[ 1331.098170]  [<c04e3187>] relay_close+0x77/0xf0
+[ 1331.098170]  [<f8618748>] ? dpd_exit+0x38/0x40 [ath9k]
+[ 1331.098170]  [<f860065b>] ath9k_deinit_softc+0x8b/0xa0 [ath9k]
+[ 1331.098170]  [<f86006b8>] ath9k_deinit_device+0x48/0x60 [ath9k]
+[ 1331.098170]  [<f86107f1>] ath_pci_remove+0x31/0x50 [ath9k]
+[ 1331.098170]  [<c06dbff8>] pci_device_remove+0x38/0xc0
+[ 1331.098170]  [<c079daa4>] __device_release_driver+0x64/0xc0
+[ 1331.098170]  [<c079db97>] driver_detach+0x97/0xa0
+[ 1331.098170]  [<c079cacc>] bus_remove_driver+0x6c/0xe0
+[ 1331.098170]  [<c079c197>] ? bus_put+0x17/0x20
+[ 1331.098170]  [<c079cae3>] ? bus_remove_driver+0x83/0xe0
+[ 1331.098170]  [<c079e709>] driver_unregister+0x49/0x80
+[ 1331.098170]  [<c06dc138>] pci_unregister_driver+0x18/0x80
+[ 1331.098170]  [<f8610602>] ath_pci_exit+0x12/0x20 [ath9k]
+[ 1331.098170]  [<f8619ce0>] ath9k_exit+0x17/0x337 [ath9k]
+[ 1331.098170]  [<c09e537d>] ? mutex_unlock+0xd/0x10
+[ 1331.098170]  [<c04bd36c>] sys_delete_module+0x17c/0x250
+[ 1331.098170]  [<c0540dc4>] ? do_munmap+0x244/0x2d0
+[ 1331.098170]  [<c0540e96>] ? vm_munmap+0x46/0x60
+[ 1331.098170]  [<c09e8dc4>] ? restore_all+0xf/0xf
+[ 1331.098170]  [<c09ebf50>] ? __do_page_fault+0x4c0/0x4c0
+[ 1331.098170]  [<c04b18e4>] ? trace_hardirqs_on_caller+0xf4/0x180
+[ 1331.098170]  [<c09ef28d>] sysenter_do_call+0x12/0x38
+[ 1331.098170] Code: 90 8d 74 26 00 55 89 e5 83 ec 08 89 1c 24 89 74 24 04 3e 82
+[ 1331.098170] EIP: [<c063d0d6>] debugfs_remove+0x26/0x80 SS:ESP 0068:ee251e0c
+[ 1331.098170] CR2: 000000006b6b6b8b
+[ 1331.727971] ---[ end trace b5bb9f2066cef7f9 ]---
+
+Acked-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Tested-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |  8 ++++++++
+ drivers/net/wireless/ath/ath9k/debug.h |  5 +++++
+ drivers/net/wireless/ath/ath9k/init.c  | 10 ++++------
+ 3 files changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 4101c4a..cecbe1f 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1684,6 +1684,14 @@ void ath9k_get_et_stats(struct ieee80211_hw *hw,
+ 	WARN_ON(i != ATH9K_SSTATS_LEN);
+ }
+ 
++void ath9k_deinit_debug(struct ath_softc *sc)
++{
++	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
++		relay_close(sc->rfs_chan_spec_scan);
++		sc->rfs_chan_spec_scan = NULL;
++	}
++}
++
+ int ath9k_init_debug(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 62da19c..223418d 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -297,6 +297,7 @@ struct ath9k_debug {
+ };
+ 
+ int ath9k_init_debug(struct ath_hw *ah);
++void ath9k_deinit_debug(struct ath_softc *sc);
+ 
+ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status);
+ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+@@ -332,6 +333,10 @@ static inline int ath9k_init_debug(struct ath_hw *ah)
+ 	return 0;
+ }
+ 
++static inline void ath9k_deinit_debug(struct ath_softc *sc)
++{
++}
++
+ static inline void ath_debug_stat_interrupt(struct ath_softc *sc,
+ 					    enum ath9k_int status)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index c7b888f..c0aa4ff 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -903,7 +903,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 	if (!ath_is_world_regd(reg)) {
+ 		error = regulatory_hint(hw->wiphy, reg->alpha2);
+ 		if (error)
+-			goto unregister;
++			goto debug_cleanup;
+ 	}
+ 
+ 	ath_init_leds(sc);
+@@ -911,6 +911,8 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 
+ 	return 0;
+ 
++debug_cleanup:
++	ath9k_deinit_debug(sc);
+ unregister:
+ 	ieee80211_unregister_hw(hw);
+ rx_cleanup:
+@@ -939,11 +941,6 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+ 		sc->dfs_detector->exit(sc->dfs_detector);
+ 
+ 	ath9k_eeprom_release(sc);
+-
+-	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
+-		relay_close(sc->rfs_chan_spec_scan);
+-		sc->rfs_chan_spec_scan = NULL;
+-	}
+ }
+ 
+ void ath9k_deinit_device(struct ath_softc *sc)
+@@ -957,6 +954,7 @@ void ath9k_deinit_device(struct ath_softc *sc)
+ 
+ 	ath9k_ps_restore(sc);
+ 
++	ath9k_deinit_debug(sc);
+ 	ieee80211_unregister_hw(hw);
+ 	ath_rx_cleanup(sc);
+ 	ath9k_deinit_softc(sc);
+-- 
+1.8.2.2
 
