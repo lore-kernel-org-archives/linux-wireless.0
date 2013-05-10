@@ -1,121 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:57939 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759466Ab3EOOwj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:35676 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561Ab3EJH0Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:52:39 -0400
-Subject: [PATCH 08/29] ath10k: add debug.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Wed, 15 May 2013 17:43:48 +0300
-Message-ID: <20130515144348.4492.87572.stgit@localhost6.localdomain6> (sfid-20130515_165337_035885_5584B428)
-In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 10 May 2013 03:26:25 -0400
+Message-ID: <1368170776.8390.4.camel@jlt4.sipsolutions.net> (sfid-20130510_092628_886361_389FADDA)
+Subject: Re: [PATCH 0/8] Add support for 5 and 10 MHz channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: a@pandem0nium.sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 10 May 2013 09:26:16 +0200
+In-Reply-To: <1368123036-22721-1-git-send-email-a>
+References: <1368123036-22721-1-git-send-email-a>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debug.h |   89 +++++++++++++++++++++++++++++++
- 1 file changed, 89 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/debug.h
+On Thu, 2013-05-09 at 20:10 +0200, a@pandem0nium wrote:
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-new file mode 100644
-index 0000000..e7fb640
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -0,0 +1,89 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _DEBUG_H_
-+#define _DEBUG_H_
-+
-+#include <linux/types.h>
-+#include "trace.h"
-+
-+enum ath10k_debug_mask {
-+	ATH10K_DBG_PCI		= 0x00000001,
-+	ATH10K_DBG_WMI		= 0x00000002,
-+	ATH10K_DBG_HTC		= 0x00000004,
-+	ATH10K_DBG_HTT		= 0x00000008,
-+	ATH10K_DBG_MAC		= 0x00000010,
-+	ATH10K_DBG_CORE		= 0x00000020,
-+	ATH10K_DBG_PCI_DUMP	= 0x00000040,
-+	ATH10K_DBG_HTT_DUMP	= 0x00000080,
-+	ATH10K_DBG_BEACON	= 0x00000100,
-+	ATH10K_DBG_ANY		= 0xffffffff,
-+};
-+
-+extern unsigned int ath10k_debug_mask;
-+
-+extern __printf(1, 2) int ath10k_info(const char *fmt, ...);
-+extern __printf(1, 2) int ath10k_err(const char *fmt, ...);
-+extern __printf(1, 2) int ath10k_warn(const char *fmt, ...);
-+
-+#ifdef CONFIG_ATH10K_DEBUGFS
-+int ath10k_debug_create(struct ath10k *ar);
-+void ath10k_debug_read_service_map(struct ath10k *ar,
-+				   void *service_map,
-+				   size_t map_size);
-+void ath10k_debug_read_target_stats(struct ath10k *ar,
-+				    struct wmi_stats_event *ev);
-+
-+#else
-+static inline int ath10k_debug_create(struct ath10k *ar)
-+{
-+	return 0;
-+}
-+
-+static inline void ath10k_debug_read_service_map(struct ath10k *ar,
-+						 void *service_map,
-+						 size_t map_size)
-+{
-+}
-+
-+static inline void ath10k_debug_read_target_stats(struct ath10k *ar,
-+						  struct wmi_stats_event *ev)
-+{
-+}
-+#endif /* CONFIG_ATH10K_DEBUGFS */
-+
-+#ifdef CONFIG_ATH10K_DEBUG
-+extern __printf(2, 3) void ath10k_dbg(enum ath10k_debug_mask mask,
-+				      const char *fmt, ...);
-+void ath10k_dbg_dump(enum ath10k_debug_mask mask,
-+		     const char *msg, const char *prefix,
-+		     const void *buf, size_t len);
-+#else /* CONFIG_ATH10K_DEBUG */
-+
-+static inline int ath10k_dbg(enum ath10k_debug_mask dbg_mask,
-+			     const char *fmt, ...)
-+{
-+	return 0;
-+}
-+
-+static inline void ath10k_dbg_dump(enum ath10k_debug_mask mask,
-+				   const char *msg, const char *prefix,
-+				   const void *buf, size_t len)
-+{
-+}
-+#endif /* CONFIG_ATH10K_DEBUG */
-+#endif /* _DEBUG_H_ */
+> Comments:
+>  * Is there any special requirement for handling beacons? For example,
+>    rates are halfed or quartered, but some rates could not be represented
+>    in the rate IEs. For example, 2.25 mbit/s can not be represented as
+>    multiple of 500 kbps.
+>  * therefore, all rates are handled like the corresponding 20 MHz
+> rates
+>    internally, which makes a lot of things easier (no changes required
+>    for rc-algos, beacon creation, etc...). We might consider adjusting
+> the
+>    output of rates for nl80211 or radiotap, though.
+
+This seems completely wrong, since Clause 18 says:
+
+        The OFDM system also provides a “half-clocked” operation using
+        10 MHz channel spacings with data communications capabilities of
+        3, 4.5, 6, 9, 12, 18, 24, and 27 Mb/s. The support of
+        transmitting and receiving at data rates of 3, 6, and 12 Mb/s is
+        mandatory when using 10 MHz channel spacing. The half-clocked
+        operation doubles symbol times and clear channel assessment
+        (CCA) times when using 10 MHz channel spacing. The regulatory
+        requirements and information regarding use of this OFDM PHY are
+        in Annex D and Annex E.
+
+IOW, it treats the rates as actually the rate they should be. Besides,
+what's so hard about rounding up? (8.4.2.4)
+
+        and bits 6 to 0 are set to the data rate, if necessary rounded
+        up to the next 500kb/s, in units of 500 kb/s.
+
+
+I also think you really need to handle this. If you just want a hack for
+5/10 MHz, you can put it into drivers' debugfs, if not, then it should
+be done properly :-)
+
+johannes
 
