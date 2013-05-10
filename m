@@ -1,158 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:39180 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759Ab3EGXgB (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59786 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753657Ab3EJVeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 19:36:01 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] ath9k: Fix TID locking
-Date: Wed,  8 May 2013 05:03:33 +0530
-Message-Id: <1367969613-1867-4-git-send-email-sujith@msujith.org> (sfid-20130508_013607_632326_153467D6)
-In-Reply-To: <1367969613-1867-1-git-send-email-sujith@msujith.org>
-References: <1367969613-1867-1-git-send-email-sujith@msujith.org>
+	Fri, 10 May 2013 17:34:05 -0400
+Message-ID: <518D67C6.9090406@candelatech.com> (sfid-20130510_233410_445963_61617772)
+Date: Fri, 10 May 2013 14:33:58 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting
+ station.
+References: <5182C38B.7060107@candelatech.com>    (sfid-20130502_215043_578677_76592D19) <1367526288.11375.2.camel@jlt4.sipsolutions.net>   <5182D078.4020605@candelatech.com> <518A7AD4.2060100@candelatech.com>  <1368035937.8279.25.camel@jlt4.sipsolutions.net>  <518A9618.1020107@candelatech.com> <518D64E6.8000102@candelatech.com> <1368221128.8390.47.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1368221128.8390.47.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 05/10/2013 02:25 PM, Johannes Berg wrote:
+> On Fri, 2013-05-10 at 14:21 -0700, Ben Greear wrote:
+>
+>> void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
+>> 			struct net_device *dev)
+>> {
+>> 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+>> 	struct cfg80211_deauth_request req;
+>> 	u8 bssid[ETH_ALEN];
+>>
+>> 	ASSERT_WDEV_LOCK(wdev);
+>>
+>> 	printk("mlme_down: %s: type: %i  sme_state: %i current-bss: %p\n",
+>>                  dev->name, (int)(wdev->iftype), (int)(wdev->sme_state),
+>> 	       wdev->current_bss);
+>>
+>> I see this printout for the stuck station (this is dmesg | grep sta74,
+>> so it skips errors about other interfaces that are also hung).
+>>
+>> I am guessing we should never be calling mlme_down with state
+>> of CFG80211_SME_CONNECTED when bss is NULL?
+>
+> We should _never_ be in a state where current_bss is NULL but the state
+> is != IDLE. The question I can't seem to find an answer for is how we
+> got into that state, that we're in the state in down() is really less
+> interesting.
+>
+> Since you seem to be able to reproduce this, maybe it'd help to mark all
+> state transitions and current_bss assignments, and then backtrack them
+> after the fact.
 
-The TID state is accessed from various contexts without any
-protection. Use the TX queue lock associated with the AC
-to make sure that the TID data is locked properly.
+I'll work on instrumenting all of those assignments.  I plan to use
+a helper macro to assign them and print out call sites..
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c   | 12 ++++++++----
- drivers/net/wireless/ath/ath9k/xmit.c | 37 ++++++++++++++++++++---------------
- 2 files changed, 29 insertions(+), 20 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index aa4d368..aa1b63f 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1221,15 +1221,19 @@ static bool ath_tx_aggr_check(struct ath_softc *sc, struct ieee80211_sta *sta,
- 			      u8 tidno)
- {
- 	struct ath_node *an = (struct ath_node *)sta->drv_priv;
--	struct ath_atx_tid *txtid;
-+	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tidno);
-+	struct ath_txq *txq = txtid->ac->txq;
- 
- 	if (!sta->ht_cap.ht_supported)
- 		return false;
- 
--	txtid = ATH_AN_2_TID(an, tidno);
-+	ath_txq_lock(sc, txq);
-+	if (!(txtid->state & (AGGR_ADDBA_COMPLETE | AGGR_ADDBA_PROGRESS))) {
-+		ath_txq_unlock(sc, txq);
-+		return true;
-+	}
-+	ath_txq_unlock(sc, txq);
- 
--	if (!(txtid->state & (AGGR_ADDBA_COMPLETE | AGGR_ADDBA_PROGRESS)))
--			return true;
- 	return false;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index eab0fcb..655057d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -131,16 +131,13 @@ static void ath_tx_resume_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
- 
- 	WARN_ON(!tid->paused);
- 
--	ath_txq_lock(sc, txq);
- 	tid->paused = false;
- 
- 	if (skb_queue_empty(&tid->buf_q))
--		goto unlock;
-+		return;
- 
- 	ath_tx_queue_tid(txq, tid);
- 	ath_txq_schedule(sc, txq);
--unlock:
--	ath_txq_unlock_complete(sc, txq);
- }
- 
- static struct ath_frame_info *get_frame_info(struct sk_buff *skb)
-@@ -1224,15 +1221,17 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 		      u16 tid, u16 *ssn)
- {
--	struct ath_atx_tid *txtid;
--	struct ath_node *an;
-+	struct ath_node *an = (struct ath_node *)sta->drv_priv;
-+	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tid);
-+	struct ath_txq *txq = txtid->ac->txq;
- 	u8 density;
- 
--	an = (struct ath_node *)sta->drv_priv;
--	txtid = ATH_AN_2_TID(an, tid);
-+	ath_txq_lock(sc, txq);
- 
--	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE))
-+	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE)) {
-+		ath_txq_unlock(sc, txq);
- 		return -EAGAIN;
-+	}
- 
- 	/* update ampdu factor/density, they may have changed. This may happen
- 	 * in HT IBSS when a beacon with HT-info is received after the station
-@@ -1253,6 +1252,8 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	memset(txtid->tx_buf, 0, sizeof(txtid->tx_buf));
- 	txtid->baw_head = txtid->baw_tail = 0;
- 
-+	ath_txq_unlock(sc, txq);
-+
- 	return 0;
- }
- 
-@@ -1262,15 +1263,19 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
- 	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tid);
- 	struct ath_txq *txq = txtid->ac->txq;
- 
--	if (txtid->state & AGGR_CLEANUP)
-+	ath_txq_lock(sc, txq);
-+
-+	if (txtid->state & AGGR_CLEANUP) {
-+		ath_txq_unlock(sc, txq);
- 		return;
-+	}
- 
- 	if (!(txtid->state & AGGR_ADDBA_COMPLETE)) {
- 		txtid->state &= ~AGGR_ADDBA_PROGRESS;
-+		ath_txq_unlock(sc, txq);
- 		return;
- 	}
- 
--	ath_txq_lock(sc, txq);
- 	txtid->paused = true;
- 
- 	/*
-@@ -1351,16 +1356,16 @@ void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
- 
- void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
- {
--	struct ath_atx_tid *txtid;
--	struct ath_node *an;
--
--	an = (struct ath_node *)sta->drv_priv;
-+	struct ath_node *an = (struct ath_node *)sta->drv_priv;
-+	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tid);
-+	struct ath_txq *txq = txtid->ac->txq;
- 
--	txtid = ATH_AN_2_TID(an, tid);
-+	ath_txq_lock(sc, txq);
- 	txtid->baw_size = IEEE80211_MIN_AMPDU_BUF << sta->ht_cap.ampdu_factor;
- 	txtid->state |= AGGR_ADDBA_COMPLETE;
- 	txtid->state &= ~AGGR_ADDBA_PROGRESS;
- 	ath_tx_resume_tid(sc, txtid);
-+	ath_txq_unlock_complete(sc, txq);
- }
- 
- /********************/
+
 -- 
-1.8.2.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
