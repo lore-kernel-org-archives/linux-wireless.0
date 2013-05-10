@@ -1,35 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:48858 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755932Ab3EGP4i (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51301 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934Ab3EJVVy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 11:56:38 -0400
-Received: by mail-ie0-f176.google.com with SMTP id at1so1216935iec.7
-        for <linux-wireless@vger.kernel.org>; Tue, 07 May 2013 08:56:38 -0700 (PDT)
-Date: Tue, 7 May 2013 11:55:22 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Subject: Re: [RFC 01/12] mac80211: track and share mesh BSSes among
- interfaces
-Message-ID: <20130507155522.GF1438@localhost> (sfid-20130507_175642_152446_5F03DBC7)
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
- <1367548442-8229-2-git-send-email-thomas@cozybit.com>
- <1367933862.8328.18.camel@jlt4.sipsolutions.net>
- <20130507140835.GD1438@localhost>
- <1367936535.8328.56.camel@jlt4.sipsolutions.net>
+	Fri, 10 May 2013 17:21:54 -0400
+Message-ID: <518D64E6.8000102@candelatech.com> (sfid-20130510_232157_394787_39DA03B8)
+Date: Fri, 10 May 2013 14:21:42 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1367936535.8328.56.camel@jlt4.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting
+ station.
+References: <5182C38B.7060107@candelatech.com>   (sfid-20130502_215043_578677_76592D19) <1367526288.11375.2.camel@jlt4.sipsolutions.net>  <5182D078.4020605@candelatech.com> <518A7AD4.2060100@candelatech.com> <1368035937.8279.25.camel@jlt4.sipsolutions.net> <518A9618.1020107@candelatech.com>
+In-Reply-To: <518A9618.1020107@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 07, 2013 at 04:22:15PM +0200, Johannes Berg wrote:
-> But why even add it to the global list if you only need it locally?
+On 05/08/2013 11:14 AM, Ben Greear wrote:
+> On 05/08/2013 10:58 AM, Johannes Berg wrote:
+>> On Wed, 2013-05-08 at 09:18 -0700, Ben Greear wrote:
+>>
+>>> Ok, I reproduced this with yet more debugging printouts in the kernel.
+>>>
+>>> The symptom is this:
+>>>
+>>> The sme_state is SME_CONNECTED, so it bails out below before sending the
+>>> 'connected' message to user-space.
+>>
+>> Is your system being really really really slow and/or are threads
+>> getting pre-empted a lot? This maybe seem like a bit of a stretch, but
+>> it seems possible that this happens:
+>>
+>> ieee80211_sta_rx_queued_mgmt() is running, possibly on one CPU, and is
+>> somewhere between printing "associated" and calling
+>> cfg80211_send_rx_assoc() (or in the call already, before taking the lock
+>> though.)
+>>
+>> Then your interface is set down at the same time, possibly on a
+>> different CPU. Here's where the scenario gets stretched, clearly your
+>> interface is getting set down over a minute later, I don't see how you
+>> could have stalled the other thread for that long.
+>>
+>> But if you did, then that thread is still processing things while the
+>> interface is going down, cfg80211 didn't know anything about the
+>> association having completed so it won't have disconnected, etc.
+>>
+>> So far, I haven't found any other scenario, nor a solution.
+>
+> It is not that slow or overloaded (at least most of the time,
+> and in particular, I only had 20 virtual stations up on this system
+> not doing much traffic...it easily handles 100's of stations).
+>
+> And, once it gets in this state..it stays there (overnight,
+> with my app resetting the port (via 'ip link set down' and
+> poking at wpa_supplicant) every minute or so in this case.
+>
+> I was wondering..in the cfg80211_mlme_down method (or perhaps
+> some place similar), should we force sme state to IDLE
+> with a big WARN_ON_ONCE or similar.
+>
+> That way, if it does get stuck somehow, we can recover by
+> downing the interface and bringing it back up?
+>
 
-Gotcha - agreed, makes sense to not do so and drop the can_share bit.
+Here's some more debug info..hit it again today:
+
+I added this debug code (on top of all my other patches and 3.9.1+).
+
+void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
+			struct net_device *dev)
+{
+	struct wireless_dev *wdev = dev->ieee80211_ptr;
+	struct cfg80211_deauth_request req;
+	u8 bssid[ETH_ALEN];
+
+	ASSERT_WDEV_LOCK(wdev);
+
+	printk("mlme_down: %s: type: %i  sme_state: %i current-bss: %p\n",
+                dev->name, (int)(wdev->iftype), (int)(wdev->sme_state),
+	       wdev->current_bss);
+
+I see this printout for the stuck station (this is dmesg | grep sta74,
+so it skips errors about other interfaces that are also hung).
+
+I am guessing we should never be calling mlme_down with state
+of CFG80211_SME_CONNECTED when bss is NULL?
+
+I'm hoping I can get by with some sort of work-around patch
+for the 3.9 kernel instead of trying to patch in your big
+locking changes....
+
+
+sta74: authenticate with 00:de:ad:1d:ea:00
+sta74: send auth to 00:de:ad:1d:ea:00 (try 1/3)
+sta74: authenticated
+sta74: associate with 00:de:ad:1d:ea:00 (try 1/3)
+sta74: RX AssocResp from 00:de:ad:1d:ea:00 (capab=0x1 status=0 aid=67)
+IPv6: ADDRCONF(NETDEV_CHANGE): sta74: link becomes ready
+sta74: associated
+connect_result: sta74: type: 2  sme_state: 2
+__cfg80211_disconnect: sta74: type: 2  sme_state: 2  conn-state: -1
+mlme_down: sta74: type: 2  sme_state: 2 current-bss:           (null)
+mlme_down: sta74: type: 2  sme_state: 2 current-bss:           (null)
+sta74: Invalid WDS/flush state, type: 2  WDS: 5  flushed: 1
+IPv6: ADDRCONF(NETDEV_UP): sta74: link is not ready
+__cfg80211_disconnect: sta74: type: 2  sme_state: 2  conn-state: -1
+mlme_down: sta74: type: 2  sme_state: 2 current-bss:           (null)
+mlme_down: sta74: type: 2  sme_state: 2 current-bss:           (null)
+IPv6: ADDRCONF(NETDEV_UP): sta74: link is not ready
+sta74: authenticate with 00:de:ad:1d:ea:00
+sta74: send auth to 00:de:ad:1d:ea:00 (try 1/3)
+sta74: authenticated
+sta74: associate with 00:de:ad:1d:ea:00 (try 1/3)
+sta74: RX AssocResp from 00:de:ad:1d:ea:00 (capab=0x1 status=0 aid=67)
+sta74: associated
+connect_result: sta74: type: 2  sme_state: 2
+IPv6: ADDRCONF(NETDEV_CHANGE): sta74: link becomes ready
+
+
+> For what it's worth, I don't recall ever seeing this problem
+> in 5.7, but it's way to rare to be able to bisect...
+>
+> Thanks,
+> Ben
+>
+>>
+>> johannes
+>>
+>
+>
+
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
