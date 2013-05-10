@@ -1,31 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33373 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758997Ab3EOP4m (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:35977 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576Ab3EJJeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 11:56:42 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20883.44965.174742.469466@gargle.gargle.HOWL> (sfid-20130515_175646_164027_D5765D74)
-Date: Wed, 15 May 2013 21:24:13 +0530
-To: Joe Perches <joe@perches.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <ath10k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH 00/29] ath10k: mac80211 driver for Qualcomm Atheros
- qca988x devices
-In-Reply-To: <1368633142.2194.6.camel@joe-AO722>
-References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-	<1368633142.2194.6.camel@joe-AO722>
+	Fri, 10 May 2013 05:34:14 -0400
+Message-ID: <1368178449.8390.10.camel@jlt4.sipsolutions.net> (sfid-20130510_113417_146793_9F883227)
+Subject: Re: [PATCH 0/8] Add support for 5 and 10 MHz channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 10 May 2013 11:34:09 +0200
+In-Reply-To: <20130510093241.GA28714@pandem0nium>
+References: <1368170776.8390.4.camel@jlt4.sipsolutions.net>
+	 <CAJ-Vmo=RCVOD1ffraTexETgqYP6LbLAa_g0d2DVd8yTO99Q1AQ@mail.gmail.com>
+	 <20130510093241.GA28714@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches wrote:
-> Perhaps it would be reasonable to create and use standardized
-> logging ath_<level> functions for all the device ath<x>k_<level>s.
+On Fri, 2013-05-10 at 11:32 +0200, Simon Wunderlich wrote:
 
-Indeed.
+> Yes interoperability would be nice of course - I'll re-work the patchset
+> to use the according half and quarter rates. Meanwhile, what do you guys think
+> about enabling HT too?
 
-You already did that in "ath: Add and use ath_printk and ath_<level>" :)
+I'd like to stick to the standard first. Enabling HT is nice for us, but
+I'd like to see it done in a way that doesn't clash with a possible
+future amendment doing it officially.
 
-Sujith
+johannes
+
