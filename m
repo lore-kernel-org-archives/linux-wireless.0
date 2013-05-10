@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40709 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869Ab3EXUcg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 16:32:36 -0400
-Message-ID: <1369427550.13623.3.camel@johannes> (sfid-20130524_223240_064816_4B8A57C3)
-Subject: Re: [RFC 06/12] mac80211: notify bridge when leaving mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	open80211s <devel@lists.open80211s.org>
-Date: Fri, 24 May 2013 22:32:30 +0200
-In-Reply-To: <CAG6hwVPah-8FjH=ntFPzxMzXi5ePcmG-UEhdsvEgHkJVE9khYQ@mail.gmail.com> (sfid-20130522_030953_079668_4D426723)
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
-	 <1367548442-8229-7-git-send-email-thomas@cozybit.com>
-	 <1367934155.8328.21.camel@jlt4.sipsolutions.net>
-	 <CAG6hwVPah-8FjH=ntFPzxMzXi5ePcmG-UEhdsvEgHkJVE9khYQ@mail.gmail.com>
-	 (sfid-20130522_030953_079668_4D426723)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from comal.ext.ti.com ([198.47.26.152]:57881 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751409Ab3EJHs3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 May 2013 03:48:29 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, <tony@atomide.com>
+Subject: [PATCH] wl12xx: increase minimum singlerole firmware version required
+Date: Fri, 10 May 2013 10:47:04 +0300
+Message-ID: <1368172024-14746-1-git-send-email-coelho@ti.com> (sfid-20130510_094843_490981_8E577DA4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-05-21 at 18:09 -0700, Thomas Pedersen wrote:
-> Hey, Sorry for the late response.
+The minimum firmware version required for singlerole after recent
+driver changes is 6/7.3.10.0.133.
 
-Me too :)
+Reported-by: Tony Lindgren <tony@atomide.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wl12xx/wl12xx.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> >>       netif_carrier_off(sdata->dev);
-> >> +     if (sdata->dev->priv_flags & IFF_BRIDGE_PORT)
-> >> +             /* stop bridge transmissions */
-> >> +             call_netdevice_notifiers(NETDEV_CHANGE, sdata->dev);
-> >
-> > Err, this seems like a really bad hack? I don't really think drivers
-> > should call that?
-> 
-> Why not? We're just notifying the bridge interface that this port has
-> gone down, to avoid dereferencing a null pointer (on bridge flood
-> traffic) after the mesh_bss has been removed.
-> 
-> Is cfg80211_leave_mesh() an acceptable location for this fix?
-
-I'm not really convinced it's an acceptable fix in itself? Why should we
-ever have to call netdev notifiers, that seems odd to me. Also why would
-that prevent a crash? Wouldn't we just drop packets for the mesh if we
-aren't joined in a mesh any more? Or something like that? Accessing the
-priv flags and then calling the netdev notifiers seems really strange to
-me. If this was necessary, then wouldn't netif_carrier_off() do it
-internally?
-
-johannes
+diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+index 139da4d..9e5484a 100644
+--- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+@@ -36,7 +36,7 @@
+ #define WL127X_IFTYPE_SR_VER	3
+ #define WL127X_MAJOR_SR_VER	10
+ #define WL127X_SUBTYPE_SR_VER	WLCORE_FW_VER_IGNORE
+-#define WL127X_MINOR_SR_VER	115
++#define WL127X_MINOR_SR_VER	133
+ /* minimum multi-role FW version for wl127x */
+ #define WL127X_IFTYPE_MR_VER	5
+ #define WL127X_MAJOR_MR_VER	7
+@@ -49,7 +49,7 @@
+ #define WL128X_IFTYPE_SR_VER	3
+ #define WL128X_MAJOR_SR_VER	10
+ #define WL128X_SUBTYPE_SR_VER	WLCORE_FW_VER_IGNORE
+-#define WL128X_MINOR_SR_VER	115
++#define WL128X_MINOR_SR_VER	133
+ /* minimum multi-role FW version for wl128x */
+ #define WL128X_IFTYPE_MR_VER	5
+ #define WL128X_MAJOR_MR_VER	7
+-- 
+1.7.10.4
 
