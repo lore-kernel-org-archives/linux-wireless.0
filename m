@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59230 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033Ab3EPVG6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 17:06:58 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, bzhao@marvell.com,
-	wireless-regdb@lists.infradead.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] regulatory: enable channels 52-64 and 100-144 for world roaming
-Date: Thu, 16 May 2013 23:06:52 +0200
-Message-Id: <1368738412-7740-1-git-send-email-johannes@sipsolutions.net> (sfid-20130516_230701_952159_6F4C91F7)
+Received: from arroyo.ext.ti.com ([192.94.94.40]:52154 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751708Ab3EJHeW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 May 2013 03:34:22 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, <levipearson@gmail.com>, <hashcode0f@gmail.com>
+Subject: [PATCH] wl12xx: fix minimum required firmware version for wl127x multirole
+Date: Fri, 10 May 2013 10:32:57 +0300
+Message-ID: <1368171177-13682-1-git-send-email-coelho@ti.com> (sfid-20130510_093426_151722_D4998316)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+There was a typo in commit 8675f9 (wlcore/wl12xx/wl18xx: verify
+multi-role and single-role fw versions), which was causing the
+multirole firmware for wl127x (WiLink6) to be rejected.  The actual
+minimum version needed for wl127x multirole is 6.5.7.0.42.
 
-If allowed in a country, these channels typically require DFS
-so mark them as such. Channel 144 is a bit special, it's coming
-into use now to allow more VHT 80 channels, but world roaming
-with passive scanning is acceptable anyway. It seems fairly
-unlikely that it'll be used as the control channel for a VHT
-AP, but it needs to be present to allow a full VHT connection
-to an AP that uses it as one of the secondary channels.
-
-Also enable VHT 160 on these channels, and also for channels
-36-48 to be able to use VHT 160 there.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: Levi Pearson <levipearson@gmail.com>
+Reported-by: Michael Scott <hashcode0f@gmail.com>
+Cc: stable@kernel.org # 3.9+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- net/wireless/reg.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ti/wl12xx/wl12xx.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index cc35fba..e713051 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -184,11 +184,21 @@ static const struct ieee80211_regdomain world_regdom = {
- 			NL80211_RRF_NO_IBSS |
- 			NL80211_RRF_NO_OFDM),
- 		/* IEEE 802.11a, channel 36..48 */
--		REG_RULE(5180-10, 5240+10, 80, 6, 20,
-+		REG_RULE(5180-10, 5240+10, 160, 6, 20,
-                         NL80211_RRF_PASSIVE_SCAN |
-                         NL80211_RRF_NO_IBSS),
+diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+index 222d035..139da4d 100644
+--- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+@@ -41,7 +41,7 @@
+ #define WL127X_IFTYPE_MR_VER	5
+ #define WL127X_MAJOR_MR_VER	7
+ #define WL127X_SUBTYPE_MR_VER	WLCORE_FW_VER_IGNORE
+-#define WL127X_MINOR_MR_VER	115
++#define WL127X_MINOR_MR_VER	42
  
--		/* NB: 5260 MHz - 5700 MHz requires DFS */
-+		/* IEEE 802.11a, channel 52..64 - DFS required */
-+		REG_RULE(5260-10, 5320+10, 160, 6, 20,
-+			NL80211_RRF_PASSIVE_SCAN |
-+			NL80211_RRF_NO_IBSS |
-+			NL80211_RRF_DFS),
-+
-+		/* IEEE 802.11a, channel 100..144 - DFS required */
-+		REG_RULE(5500-10, 5720+10, 160, 6, 20,
-+			NL80211_RRF_PASSIVE_SCAN |
-+			NL80211_RRF_NO_IBSS |
-+			NL80211_RRF_DFS),
- 
- 		/* IEEE 802.11a, channel 149..165 */
- 		REG_RULE(5745-10, 5825+10, 80, 6, 20,
+ /* FW chip version for wl128x */
+ #define WL128X_CHIP_VER		7
 -- 
-1.8.0
+1.7.10.4
 
