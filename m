@@ -1,126 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:41718 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756214Ab3EJQu7 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36362 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387Ab3EJMIQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 12:50:59 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130509115630.GC5111@gamma.logic.tuwien.ac.at>
-References: <20130509115630.GC5111@gamma.logic.tuwien.ac.at>
-Date: Fri, 10 May 2013 12:50:58 -0400
-Message-ID: <CAGnc4p-LRMSQ-3svzXJ-5ZoX8UzjV0Z-GtgJBLitffqexte9sA@mail.gmail.com> (sfid-20130510_185121_249235_B0EB6CDF)
-Subject: Re: RTL driver for RTL8191SEvB and/or wpa-supplicant really broken at times
-From: Matt Causey <matt.causey@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	hostap@lists.shmoo.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 10 May 2013 08:08:16 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: greearb@candelatech.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 1/4] cfg80211: move cfg80211_get_dev_from_ifindex under wext
+Date: Fri, 10 May 2013 14:08:06 +0200
+Message-Id: <1368187689-29706-2-git-send-email-johannes@sipsolutions.net> (sfid-20130510_140826_312853_2AF9F511)
+In-Reply-To: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
+References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry - reply got bounced because I accidentially replied with HTML
-mode enabled.  Re-sending.
+From: Johannes Berg <johannes.berg@intel.com>
 
+The function is only used and needed by the wext code
+for scanning, so move it there.
 
-On Thu, May 9, 2013 at 7:56 AM, Norbert Preining <preining@logic.at> wrote:
->
-> Dear all,
->
-> here is a short status report on my experiences with:
->         kernel 3.9.0
->         wpa_supplicant 1.0
->         hardware RTL191SEvB
->         Debian/sid
->
-> Short summary: broken to the degree that internet connection is impossible
->
-> Sorry for the long mail, I tried to reduce to the essentials only.
->
-> Contents:
-> =========
-> 0) hardware and software description
-> 1) during connection permanent break off
-> 2) connection seems established according to kernel and NM, but nothing
-> works
-> 3) if connection is working, ping times are crazy and connection breaks
-> down suddenly
-> 4) conclusion
->
->
-> 0) hardware and software description
-> ====================================
-> Hardware:
-> Lenovo Thinkpad Edge
-> WLAN:
-> 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8191SEvB
-> Wireless LAN Controller (rev 10)
->         Subsystem: Realtek Semiconductor Co., Ltd. Device e020
->         Flags: bus master, fast devsel, latency 0, IRQ 17
->         I/O ports at 2000 [size=256]
->         Memory at f0500000 (32-bit, non-prefetchable) [size=16K]
->         Capabilities: [40] Power Management version 3
->         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
->         Capabilities: [70] Express Legacy Endpoint, MSI 00
->         Capabilities: [100] Advanced Error Reporting
->         Capabilities: [140] Virtual Channel
->         Capabilities: [160] Device Serial Number 88-55-22-fe-ff-4c-e0-00
->         Kernel driver in use: rtl8192se
->
-> Debian unstable up to date
-> kernel 3.9.0
-> # wpa_supplicant -v
-> wpa_supplicant v1.0
-> Copyright (c) 2003-2012, Jouni Malinen <j@w1.fi> and contributors
->
-> Debian version: 1.0-3+b2
->
-> Please note: during all the following experiments at times
-> two other computers (iPhone, WinXP) very connected without
-> any problems (of course on different IPs).
->
->
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c | 21 ---------------------
+ net/wireless/core.h |  4 ----
+ net/wireless/scan.c | 21 +++++++++++++++++++++
+ 3 files changed, 21 insertions(+), 25 deletions(-)
 
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 68f0c96..4e0b52f 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -90,27 +90,6 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx)
+ 	return &rdev->wiphy;
+ }
+ 
+-struct cfg80211_registered_device *
+-cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
+-{
+-	struct cfg80211_registered_device *rdev = ERR_PTR(-ENODEV);
+-	struct net_device *dev;
+-
+-	mutex_lock(&cfg80211_mutex);
+-	dev = dev_get_by_index(net, ifindex);
+-	if (!dev)
+-		goto out;
+-	if (dev->ieee80211_ptr) {
+-		rdev = wiphy_to_dev(dev->ieee80211_ptr->wiphy);
+-		mutex_lock(&rdev->mtx);
+-	} else
+-		rdev = ERR_PTR(-ENODEV);
+-	dev_put(dev);
+- out:
+-	mutex_unlock(&cfg80211_mutex);
+-	return rdev;
+-}
+-
+ /* requires cfg80211_mutex to be held */
+ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
+ 			char *newname)
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index fd35dae..95b2907 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -164,10 +164,6 @@ int get_wiphy_idx(struct wiphy *wiphy);
+ /* requires cfg80211_rdev_mutex to be held! */
+ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx);
+ 
+-/* identical to cfg80211_get_dev_from_info but only operate on ifindex */
+-extern struct cfg80211_registered_device *
+-cfg80211_get_dev_from_ifindex(struct net *net, int ifindex);
+-
+ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+ 			  struct net *net);
+ 
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index fd99ea4..2ce44a7 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1040,6 +1040,27 @@ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
+ EXPORT_SYMBOL(cfg80211_unlink_bss);
+ 
+ #ifdef CONFIG_CFG80211_WEXT
++static struct cfg80211_registered_device *
++cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
++{
++	struct cfg80211_registered_device *rdev = ERR_PTR(-ENODEV);
++	struct net_device *dev;
++
++	mutex_lock(&cfg80211_mutex);
++	dev = dev_get_by_index(net, ifindex);
++	if (!dev)
++		goto out;
++	if (dev->ieee80211_ptr) {
++		rdev = wiphy_to_dev(dev->ieee80211_ptr->wiphy);
++		mutex_lock(&rdev->mtx);
++	} else
++		rdev = ERR_PTR(-ENODEV);
++	dev_put(dev);
++ out:
++	mutex_unlock(&cfg80211_mutex);
++	return rdev;
++}
++
+ int cfg80211_wext_siwscan(struct net_device *dev,
+ 			  struct iw_request_info *info,
+ 			  union iwreq_data *wrqu, char *extra)
+-- 
+1.8.0
 
-So this section seems to indicate that the access point is ignoring
-your probe requests:
-
-
-> ad 1) during connection permanent break off
-> ============================================
->
-> typical dmesg output:
-> many times:
-> May  8 20:54:59 tofuschnitzel NetworkManager[4878]: <info> (wlan0):
-> supplicant interface state: disconnected -> scanning
-> May  8 20:54:59 tofuschnitzel wpa_supplicant[5513]: wlan0: SME: Trying to
-> authenticate with 00:3a:9d:b4:54:5a (SSID='norbujp' fr
-> eq=2447 MHz)
-> kernel: [19070.021021] wlan0: authenticate with 00:3a:9d:b4:54:5a
-> NetworkManager[4878]: <info> (wlan0): supplicant interface state: scanning
-> -> authenticating
-> kernel: [19070.040313] wlan0: send auth to 00:3a:9d:b4:54:5a (try 1/3)
-> kernel: [19070.144143] wlan0: send auth to 00:3a:9d:b4:54:5a (try 2/3)
-> kernel: [19070.248113] wlan0: send auth to 00:3a:9d:b4:54:5a (try 3/3)
-> wpa_supplicant[5513]: wlan0: Trying to associate with 00:3a:9d:b4:54:5a
-> (SSID='norbujp' freq=2447 MHz)
-> kernel: [19070.286906] wlan0: authenticated
-> kernel: [19070.288224] wlan0: associate with 00:3a:9d:b4:54:5a (try 1/3)
-> NetworkManager[4878]: <info> (wlan0): supplicant interface state:
-> authenticating -> associating
-> kernel: [19070.392185] wlan0: associate with 00:3a:9d:b4:54:5a (try 2/3)
-> kernel: [19070.496204] wlan0: associate with 00:3a:9d:b4:54:5a (try 3/3)
-> kernel: [19070.600253] wlan0: association with 00:3a:9d:b4:54:5a timed out
-> NetworkManager[4878]: <info> (wlan0): supplicant interface state:
-> associating -> disconnected
-
-If that is happening for your client somehow, wpa_supplicant won't
-work well.  :-)
-
-I understand that you have other clients on the same WLAN, but what is
-your wireless infrastructure?  The MAC OID of your BSSID comes back as
-"NecAcces" - but I'm not familiar with that vendor.  Also, do you have
-a WLAN packet capture (from another host nearby on the same channel)?
-That would be helpful as well.
-
---
-Matt
