@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:39450 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754670Ab3EVUWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 May 2013 16:22:16 -0400
-Date: Wed, 22 May 2013 22:22:10 +0200
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: Mohit <mt1037ag11@pdm.ac.in>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Ralink RT3290 proprietary drivers causing kernel panic
-Message-ID: <20130522222210.4e005cec@north> (sfid-20130522_222219_171769_4775E58B)
-In-Reply-To: <519D0D44.1040901@pdm.ac.in>
-References: <519D0D44.1040901@pdm.ac.in>
+Received: from s3.sipsolutions.net ([144.76.43.152]:36443 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751583Ab3EJM1D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 May 2013 08:27:03 -0400
+Message-ID: <1368188814.8390.15.camel@jlt4.sipsolutions.net> (sfid-20130510_142711_226952_55581FF3)
+Subject: Re: [RFC 4/4] cfg80211/mac80211: use cfg80211 wdev mutex in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com
+Date: Fri, 10 May 2013 14:26:54 +0200
+In-Reply-To: <518CE683.2040402@broadcom.com>
+References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
+	 <1368187689-29706-5-git-send-email-johannes@sipsolutions.net>
+	 <518CE683.2040402@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 22 May 2013 23:54:04 +0530, Mohit wrote:
-> Hello,
+On Fri, 2013-05-10 at 14:22 +0200, Arend van Spriel wrote:
+> On 05/10/2013 02:08 PM, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > Using separate locks in cfg80211 and mac80211 has always
+> > caused issues, for example having to unlock in places in
+> > mac80211 to call cfg80211, which even needed a framework
+> > to make cfg80211 calls after some functions returned etc.
+> >
+> > Additionally, I suspect some issues people have reported
+> > with the cfg80211 state getting confused could be due to
+> > such issues, when cfg80211 is asking mac80211 to change
+> > state but mac80211 is in the process of telling cfg80211
+> > that the state changed (in another way.)
 > 
->            I am on openSUSE 12.3 with kernel 3.7.10-1.4-desktop, i 
-> wanted to try out the proprietary drivers for Ralink RT3290 so i 
-> downloaded the drivers from 
-> http://www.mediatek.com/_en/07_downloads/01_windows.php?sn=501 and 
-> compiled the drivers as mentioned on my thread here : 
-> https://forums.opensuse.org/english/get-technical-help-here/wireless/486975-rt3290-wireless-proprietary-drivers-not-working.html#post2557514. 
-> Everything compiled fine, openSUSE was able to scan and connect to 
-> access points after installation, but when i access the internet a 
-> kernel panic occurs after ~5sec (time varies based on the data usage). 
-> So i humbly request you to please provide the solution for the same, you 
-> can reach me through email or reply to my thread (probably faster as i 
-> don't check my email everyday).
+> I guess this change affects fullmac drivers like brcmfmac, right?
 
-I think vendor drivers crash on 64bit kernel because they
-have faulty skb offsets handling. It's usually enough to fix
-GCC warnings to make them work.
+I don't think so.
 
-Having said that - I agree with Gertjan, you should really try
-rt2800 from your kernel (or preferably from compat-wireless)
-and if that doesn't work ask the vendor for help.
+johannes
 
-  -- Kuba
