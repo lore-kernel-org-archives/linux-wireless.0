@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56588 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758921Ab3E1Mih (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:44026 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754459Ab3EJQoj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 08:38:37 -0400
-Message-ID: <1369744712.8548.3.camel@jlt4.sipsolutions.net> (sfid-20130528_143845_432336_5C083C37)
-Subject: Re: [PATCH v2 1/3] cfg80211: support an active monitor interface
- flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 28 May 2013 14:38:32 +0200
-In-Reply-To: <51A4A044.3030109@openwrt.org>
-References: <1369738914-34367-1-git-send-email-nbd@openwrt.org>
-	 <1369741810.8548.1.camel@jlt4.sipsolutions.net>
-	 <51A4A044.3030109@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
+	Fri, 10 May 2013 12:44:39 -0400
+Date: Fri, 10 May 2013 09:44:38 -0700 (PDT)
+Message-Id: <20130510.094438.1051841645429682811.davem@davemloft.net> (sfid-20130510_184457_316713_1AB3E3D9)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-05-10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130510152202.GD2103@tuxdriver.com>
+References: <20130510152202.GD2103@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-05-28 at 14:17 +0200, Felix Fietkau wrote:
-> On 2013-05-28 1:50 PM, Johannes Berg wrote:
-> > On Tue, 2013-05-28 at 13:01 +0200, Felix Fietkau wrote:
-> >> An active monitor interface is one that is used for communication (via
-> >> injection). It is expected to ACK incoming unicast packets. This is
-> >> useful for running various 802.11 testing utilities that associate to an
-> >> AP via injection and manage the state in user space.
-> > 
-> > Applied 1 and 2.
-> > 
-> > Allowing MAC address duplication seems a bit strange, but I guess it
-> > simplifies things for users?
-> It is allowed only for non-active monitor interfaces, which previously
-> did not use ieee80211_verify_mac and ignores the configured MAC address
-> anyway.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 10 May 2013 11:22:02 -0400
 
-Oh, that makes sense, I misread the code then.
+> Here is a batch of fixes intended for the 3.10 stream.
+ ...
+> Please let me know if there are problems!
+ ...
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
 
-johannes
-
+Pulled, thanks John!
