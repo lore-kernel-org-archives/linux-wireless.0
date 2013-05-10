@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:57793 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:36769 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753726Ab3E1TcY (ORCPT
+	with ESMTP id S1756008Ab3EJO1N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 15:32:24 -0400
-Message-ID: <1369769542.8548.13.camel@jlt4.sipsolutions.net> (sfid-20130528_213239_908591_06D2A7A9)
-Subject: Re: [v3.10-rc2] iwlwifi regression
+	Fri, 10 May 2013 10:27:13 -0400
+Message-ID: <1368196028.8390.18.camel@jlt4.sipsolutions.net> (sfid-20130510_162721_054162_B62A4BEF)
+Subject: Re: [RFC 0/4] cfg80211/mac80211: simplify locking
 From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?J=F6rg?= Otte <jrg.otte@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Tue, 28 May 2013 21:32:22 +0200
-In-Reply-To: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com> (sfid-20130525_111005_833824_A78E43A2)
-References: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com>
-	 (sfid-20130525_111005_833824_A78E43A2)
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 10 May 2013 16:27:08 +0200
+In-Reply-To: <518D0390.90006@candelatech.com>
+References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
+	 <518D0390.90006@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-05-25 at 11:09 +0200, Jörg Otte wrote:
-> If iwlwifi/iwldvm are built into the kernel (no loadable modules)
-> following error is written to console and syslog since v3.10-rc:
+On Fri, 2013-05-10 at 07:26 -0700, Ben Greear wrote:
+> On 05/10/2013 05:08 AM, Johannes Berg wrote:
+> > I got a little fed up with all the locking, and decided to simplify.
+> >
+> > This should still work, but I've only done some very simple tests.
+> > I'm hoping it'll fix some of the weird corner cases that Ben and
+> > others have found, which may be due to different locks in different
+> > cases and things racing against each other ... I'm not convinced it
+> > really will though, but hey, who knows :)
 > 
-> iwlwifi 0000:08:00.0: failed to load module iwldvm (error -38), is
-> dynamic loading enabled?
+> I'm stacked high with tasks at the moment, but will try to
+> run this through some testing soon.
+> 
+> These are in your tree?
 
-So you just see the message, the driver actually works? I guess that
-makes some sense ... I'll just #ifdef the message.
+In the wip branch, for now.
 
 johannes
 
