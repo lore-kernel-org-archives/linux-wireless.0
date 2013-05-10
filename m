@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41575 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3720 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756862Ab3EWMTb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 08:19:31 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Jake Edge <jake@lwn.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx rejection
-Date: Thu, 23 May 2013 14:20:56 +0200
-Message-Id: <1369311660-15378-1-git-send-email-sgruszka@redhat.com> (sfid-20130523_141934_783298_AE7244FB)
+	id S1752149Ab3EJMWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 May 2013 08:22:46 -0400
+Message-ID: <518CE683.2040402@broadcom.com> (sfid-20130510_142249_383263_5C34BF35)
+Date: Fri, 10 May 2013 14:22:27 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	"Johannes Berg" <johannes.berg@intel.com>
+Subject: Re: [RFC 4/4] cfg80211/mac80211: use cfg80211 wdev mutex in
+ mac80211
+References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
+ <1368187689-29706-5-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1368187689-29706-5-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jake, please test this set and check if it not cause association
-problems you reported earlier this month.
+On 05/10/2013 02:08 PM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Using separate locks in cfg80211 and mac80211 has always
+> caused issues, for example having to unlock in places in
+> mac80211 to call cfg80211, which even needed a framework
+> to make cfg80211 calls after some functions returned etc.
+>
+> Additionally, I suspect some issues people have reported
+> with the cfg80211 state getting confused could be due to
+> such issues, when cfg80211 is asking mac80211 to change
+> state but mac80211 is in the process of telling cfg80211
+> that the state changed (in another way.)
 
-Please apply it together with this mac80211 patch:
-http://marc.info/?l=linux-wireless&m=136879090123023&w=2 
-which I already posted and is queued to upstream. Not having
-it may cause troubles and influence negatively this set test.
+I guess this change affects fullmac drivers like brcmfmac, right?
 
-Johannes, is need to check beacon bssid or even if rx frame
-is a beacon to unblock queues? I think if we receive any frame
-(not necessary beacon or our bssid beacon) on passive channel,
-that mean we can use that channel. But that depend how firmware
-is implemented, if firmware require our bssid beacon to unblock
-channel, driver of course need that too.
-
-Stanislaw Gruszka (4):
-  iwlegacy: small refactoring of il_{stop,wake}_queue
-  iwlegacy: add il_{stop,wake}_queues_by_reason functions
-  iwlegacy: workaround for firmware frame tx rejection
-  Revert "iwl4965: workaround connection regression on passive channel"
-
- drivers/net/wireless/iwlegacy/4965-mac.c | 22 ++++++++++++++++-
- drivers/net/wireless/iwlegacy/common.c   | 10 ++++++++
- drivers/net/wireless/iwlegacy/common.h   | 41 ++++++++++++++++++++++++++++----
- 3 files changed, 68 insertions(+), 5 deletions(-)
-
--- 
-1.7.11.7
+Gr. AvS
 
