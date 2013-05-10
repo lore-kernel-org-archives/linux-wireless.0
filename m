@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60228 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249Ab3EIQfH (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37876 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753858Ab3EJVZd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 May 2013 12:35:07 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20875.53161.157603.680374@gargle.gargle.HOWL> (sfid-20130509_183512_151343_7ABBC33F)
-Date: Thu, 9 May 2013 22:02:41 +0530
+	Fri, 10 May 2013 17:25:33 -0400
+Message-ID: <1368221128.8390.47.camel@jlt4.sipsolutions.net> (sfid-20130510_232536_076472_227AC420)
+Subject: Re: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting
+ station.
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Ben Greear <greearb@candelatech.com>
-Cc: Cyril Segretain <cyrilseg@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Fun with QoS in AP mode.
-In-Reply-To: <518BCE45.1060704@candelatech.com>
-References: <5189DB72.3020809@candelatech.com>
-	<20873.56643.216380.594657@gargle.gargle.HOWL>
-	<518A6C21.5070408@candelatech.com>
-	<20875.12412.946993.203664@gargle.gargle.HOWL>
-	<518BB62D.9060108@candelatech.com>
-	<CAJu560hVBcdJ67uNprj0TOY6rWNd-iT8f7QNaE64=ENz91yj6w@mail.gmail.com>
-	<518BCE45.1060704@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 10 May 2013 23:25:28 +0200
+In-Reply-To: <518D64E6.8000102@candelatech.com>
+References: <5182C38B.7060107@candelatech.com>
+	   (sfid-20130502_215043_578677_76592D19) <1367526288.11375.2.camel@jlt4.sipsolutions.net>
+	  <5182D078.4020605@candelatech.com> <518A7AD4.2060100@candelatech.com>
+	 <1368035937.8279.25.camel@jlt4.sipsolutions.net>
+	 <518A9618.1020107@candelatech.com> <518D64E6.8000102@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> I suspect we need to set up rules with 'tc' and maybe iptables.
+On Fri, 2013-05-10 at 14:21 -0700, Ben Greear wrote:
+
+> void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
+> 			struct net_device *dev)
+> {
+> 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> 	struct cfg80211_deauth_request req;
+> 	u8 bssid[ETH_ALEN];
 > 
-> I'm not having any luck finding any examples out on the web, but
-> surely the info is somewhere w/out having to fully understand 'tc'.
+> 	ASSERT_WDEV_LOCK(wdev);
+> 
+> 	printk("mlme_down: %s: type: %i  sme_state: %i current-bss: %p\n",
+>                 dev->name, (int)(wdev->iftype), (int)(wdev->sme_state),
+> 	       wdev->current_bss);
+> 
+> I see this printout for the stuck station (this is dmesg | grep sta74,
+> so it skips errors about other interfaces that are also hung).
+> 
+> I am guessing we should never be calling mlme_down with state
+> of CFG80211_SME_CONNECTED when bss is NULL?
 
-DSCP can be used...
+We should _never_ be in a state where current_bss is NULL but the state
+is != IDLE. The question I can't seem to find an answer for is how we
+got into that state, that we're in the state in down() is really less
+interesting.
 
-Something like "iptables -t mangle -A OUTPUT -p tcp --dport 5005 -j DSCP --set-dscp-class "CS6""
-(Change the class for other priorities).
+Since you seem to be able to reproduce this, maybe it'd help to mark all
+state transitions and current_bss assignments, and then backtrack them
+after the fact.
 
-Sujith
+johannes
+
