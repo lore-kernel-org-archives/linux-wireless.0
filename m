@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59610 "EHLO
-	sipsolutions.net" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751696Ab3EVSXm (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36635 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752301Ab3EJNoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 May 2013 14:23:42 -0400
-Message-ID: <1369246994.8207.24.camel@jlt4.sipsolutions.net> (sfid-20130522_202345_485357_CECF35C5)
-Subject: Re: [PATCH 2/2] cfg80211/nl80211: Add coalesce support
+	Fri, 10 May 2013 09:44:04 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Wed, 22 May 2013 20:23:14 +0200
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430E801DC176@SC-VEXCH1.marvell.com>
-References: <1369099918-4921-1-git-send-email-bzhao@marvell.com>
-	 <1369099918-4921-2-git-send-email-bzhao@marvell.com>
-	 <20130521232303.GX6529@pogo>
-	 <477F20668A386D41ADCC57781B1F70430E0ADCE97D@SC-VEXCH1.marvell.com>
-	 <1369210344.8207.0.camel@jlt4.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F70430E801DC176@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: greearb@candelatech.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 2/4] cfg80211: use atomic_t for wiphy counter
+Date: Fri, 10 May 2013 15:43:54 +0200
+Message-Id: <1368193436-26618-2-git-send-email-johannes@sipsolutions.net> (sfid-20130510_154412_691707_8CEDABD5)
+In-Reply-To: <1368193436-26618-1-git-send-email-johannes@sipsolutions.net>
+References: <1368193436-26618-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > Before you make any changes (I didn't get around to commenting on your
-> > patches yesterday), I think you have to be more careful with the renames
-> > to not break the API. Please provide defines or so to not break
-> > compilation in the rename.
-> 
-> "[PATCH 1/2] cfg80211/nl80211: rename packet pattern related
-> structures and enums" should have taken care of the renames. Please
-> let me know if I missed anything here.
+There's no need to lock, we can just use an atomic_t.
 
-It did in the kernel, I was referring to the changes in nl80211.h, as
-far as I can tell those break existing userspace tools. You should be
-able to compile tools like iw and wpa_supplicant with the new nl80211.h
-without changing anything in them.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-johannes
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 4e0b52f..875d79a 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -289,7 +289,7 @@ static void cfg80211_event_work(struct work_struct *work)
+ 
+ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ {
+-	static int wiphy_counter;
++	static atomic_t wiphy_counter = ATOMIC_INIT(0);
+ 
+ 	struct cfg80211_registered_device *rdev;
+ 	int alloc_size;
+@@ -311,20 +311,15 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ 
+ 	rdev->ops = ops;
+ 
+-	mutex_lock(&cfg80211_mutex);
+-
+-	rdev->wiphy_idx = wiphy_counter++;
++	rdev->wiphy_idx = atomic_inc_return(&wiphy_counter);
+ 
+ 	if (unlikely(rdev->wiphy_idx < 0)) {
+-		wiphy_counter--;
+-		mutex_unlock(&cfg80211_mutex);
+ 		/* ugh, wrapped! */
++		atomic_dec(&wiphy_counter);
+ 		kfree(rdev);
+ 		return NULL;
+ 	}
+ 
+-	mutex_unlock(&cfg80211_mutex);
+-
+ 	/* give it a proper name */
+ 	dev_set_name(&rdev->wiphy.dev, PHY_NAME "%d", rdev->wiphy_idx);
+ 
+-- 
+1.8.0
 
