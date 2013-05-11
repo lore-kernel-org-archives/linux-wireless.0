@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44466 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759045Ab3E2SpI (ORCPT
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:54733 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751425Ab3EKXV0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 14:45:08 -0400
-Date: Wed, 29 May 2013 14:44:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH for 3.10 00/16] brcmfmac: firmware-signalling fixes
-Message-ID: <20130529184426.GC8770@tuxdriver.com> (sfid-20130529_204515_891697_36568D36)
-References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+	Sat, 11 May 2013 19:21:26 -0400
+Received: by mail-pd0-f173.google.com with SMTP id v10so3559150pde.18
+        for <linux-wireless@vger.kernel.org>; Sat, 11 May 2013 16:21:25 -0700 (PDT)
+Message-ID: <518ED273.6020700@gmail.com> (sfid-20130512_012142_208509_F55BBCD3)
+Date: Sat, 11 May 2013 16:21:23 -0700
+From: JoSH Lehan <krellan@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: Using compat-drivers conflicts with kernel mac80211 and cfg80211
+References: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com> <518DF4B1.3020706@broadcom.com> <518ECC39.9090401@gmail.com> <518ECFDA.20208@lwfinger.net>
+In-Reply-To: <518ECFDA.20208@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 29, 2013 at 06:38:50PM +0200, Arend van Spriel wrote:
-> This is a somewhat large series and reading the message of the announcement
-> of v3.10-rc3 I think it is good to give our story up front. Firmware-signalling
-> is a new feature merged in for 3.10, which was a major overhaul of the transmit
-> path in brcmfmac. During and after the merge window we still have some blanks
-> in our test coverage and further testing revealed issues with P2P, TDLS, and
-> power-saving clients in AP mode. These issues have been fixed in this series.
-> 
-> As said this series is intended for 3.10 and applies to the master branch of
-> the wireless repository.
-> 
-> Arend van Spriel (6):
->   brcmfmac: allow firmware-signal tlv to be longer than specified
->   brcmfmac: remove fifo bitfield from brcmf_skbuff_cb::if_flags
->   brcmfmac: rework credit pickup to assure consistent handling
->   brcmfmac: explicitly indicate sk_buff is sent upon request credit
->   brcmfmac: reducing debug logging in firmware-signalling code
->   brcmfmac: Sent TIM information in case of data available.
-> 
-> Hante Meuleman (10):
->   brcmfmac: Take bus flowcontrol at credit mgmt into account.
->   brcmfmac: On bus flow control use fw signalling or netif.
->   brcmfmac: For FW signalling it is necessary to track gen bit.
->   brcmfmac: Correct creditmap when credit borrowing is active.
->   brcmfmac: Find correct MAC descriptor in case of TDLS.
->   brcmfmac: fix invalid ifp lookup in firmware-signalling
->   brcmfmac: Accept only first creditmap event.
->   brcmfmac: Signalling header push and pull on logic places.
->   brcmfmac: Fix endless loop when brcmf_fws_commit_skb fails.
->   brcmfmac: Simplify counting transit count.
-> 
->  drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +
->  .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   21 +-
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
->  drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |  639 ++++++++++----------
->  drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h |    1 +
->  drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    8 +
->  6 files changed, 340 insertions(+), 333 deletions(-)
+On 05/11/2013 04:10 PM, Larry Finger wrote:
+> Neither driver r8712u, which has been in the kernel since 2.6.37, nor
+> the equivalent vendor driver depends on anything from mac80211 or
+> cfg80211. If it did, the kernel version would be in the
+> drivers/net/wireless tree rather than in staging. I suspect the same is
+> true for other wireless drivers from staging, which includes vt6656.
 
-Grr...I'll merge it, and pass your plea on to Dave.  But, there can't
-be any more batches like this for 3.10...
+Interesting.  I'll have to investigate more.  I'm using kernel 2.6.32
+for this system, so can't use the r8712u driver from the later kernel.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+When I ran the vendor rtl8712 driver, it worked well enough with the
+modules from the kernel, however, when I added compat-drivers to the
+build (which replaced the mac80211/cfg80211 modules that were already
+there), it crashed with an oops.  More investigation is needed to know
+why this happens, but it must have something to do with compat-drivers,
+because that is the only difference.  I removed compat-drivers from the
+build, and it went back to being fully working.  Something must be
+interacting in a bad way.
+
+Josh Lehan
