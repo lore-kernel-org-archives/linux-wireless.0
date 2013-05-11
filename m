@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:41013 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757098Ab3EAUld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 May 2013 16:41:33 -0400
-Message-ID: <51817E10.2000906@openwrt.org> (sfid-20130501_224137_162592_AB0CBD77)
-Date: Wed, 01 May 2013 22:41:52 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from mail-db8lp0185.outbound.messaging.microsoft.com ([213.199.154.185]:28726
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753879Ab3EKUWU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 May 2013 16:22:20 -0400
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Mike Miller <mike.miller@hp.com>,
+	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
+	Guo-Fu Tseng <cooldavid@cooldavid.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	"nic_swsd@realtek.com" <nic_swsd@realtek.com>,
+	"aacraid@adaptec.com" <aacraid@adaptec.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: is L1 really disabled in iwlwifi
+Date: Sat, 11 May 2013 20:22:11 +0000
+Message-ID: <1368303730.2425.47.camel@x230> (sfid-20130511_222240_228391_E98DD77F)
+References: <CANUX_P2Hy02SnyYS24dyUGLv3wB3L5xkXt8Y1s+8_RG9d5ReAw@mail.gmail.com>
+	 <CAErSpo6OCyTy19u6Xaf=xr0TSDriwCD3n-oMc7eJyLzuJ9d60g@mail.gmail.com>
+	 <20130510225257.GA10847@google.com> <1725435.3DlCxYF2FV@vostro.rjw.lan>
+In-Reply-To: <1725435.3DlCxYF2FV@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH 0/7] rt2x00: avoid a few superfluous pointer dereferences
-References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org> <CAL1gcdNQc1-vrxv5LGp3rtcLDPhNRqnCqedYRZdt+V4PSc71rg@mail.gmail.com>
-In-Reply-To: <CAL1gcdNQc1-vrxv5LGp3rtcLDPhNRqnCqedYRZdt+V4PSc71rg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gertjan,
+T24gU2F0LCAyMDEzLTA1LTExIGF0IDIyOjI2ICswMjAwLCBSYWZhZWwgSi4gV3lzb2NraSB3cm90
+ZToNCj4gT24gRnJpZGF5LCBNYXkgMTAsIDIwMTMgMDQ6NTI6NTcgUE0gQmpvcm4gSGVsZ2FhcyB3
+cm90ZToNCj4gPiBJIHByb3Bvc2UgdGhlIGZvbGxvd2luZyBwYXRjaC4gIEFueSBjb21tZW50cz8N
+Cj4gDQo+IEluIG15IG9waW5pb24gdGhpcyBpcyBkYW5nZXJvdXMsIGJlY2F1c2UgaXQgb3BlbnMg
+dXMgdG8gYnVncyB0aGF0IHJpZ2h0IG5vdw0KPiBhcmUgcHJldmVudGVkIGZyb20gaGFwcGVuaW5n
+IGR1ZSB0byB0aGUgd2F5IHRoZSBjb2RlIHdvcmtzLg0KDQpSaWdodCwgSSdtIGFsc28gbm90IGVu
+dGlyZWx5IGNvbWZvcnRhYmxlIHdpdGggdGhpcy4gVGhlIGN1cnJlbnQNCmJlaGF2aW91ciBtYXkg
+YmUgY29uZnVzaW5nLCBidXQgd2UgY291bGQgcmVkdWNlIHRoYXQgYnkgcmVuYW1pbmcgdGhlDQpm
+dW5jdGlvbnMuIEknbSBzdGlsbCBub3QgY2xlYXIgb24gd2hldGhlciBhbnlvbmUncyBhY3R1YWxs
+eSBzZWVpbmcNCnByb2JsZW1zIGNhdXNlZCBieSB0aGUgZXhpc3RpbmcgYmVoYXZpb3VyLg0KDQot
+LSANCk1hdHRoZXcgR2FycmV0dCB8IG1qZzU5QHNyY2YudWNhbS5vcmcNCg==
 
-> On Wed, May 1, 2013 at 5:17 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
->> Gabor Juhos (7):
->>   rt2x00: rt2x00dev: use rt2x00dev->tx->limit
->>   rt2x00: rt61pci: use rt2x00dev->tx->limit
->>   rt2x00: rt2800pci: use rt2x00dev->tx->limit
->>   rt2x00: rt2800usb: use rt2x00dev->rx->limit
->>   rt2x00: rt2800lib: use rt2x00dev->bcn->winfo_size
->>   rt2x00: rt2x00dev: defer operational mode detection
->>   rt2x00: rt2x00dev: use rt2x00dev->bcn->limit
->>
->>  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
->>  drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
->>  drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
->>  drivers/net/wireless/rt2x00/rt2x00dev.c |   36 +++++++++++++++----------------
->>  drivers/net/wireless/rt2x00/rt61pci.c   |    2 +-
->>  5 files changed, 22 insertions(+), 22 deletions(-)
->>
-> 
-> Thanks for these. Although they are micro optimizations, I guess it is 
-> cleaner to use the actual queue data rather than the queue description data.
-
-To be honest, I made these patches in preparation of queue descriptor data
-removal. However these changes are not strictly related to that, so I posted the
-patches as a separate series.
-
-> I've acked all patches, 
-
-Thanks!
-
-> but I'm afraid they may have come just too late to be included in
-> the 3.10 timeframe, but I leave it up to John to decide.
-
-No problem, the patches can wait for 3.11.
-
--Gabor
