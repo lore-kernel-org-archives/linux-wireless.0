@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:58178 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752810Ab3E2QMB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 12:12:01 -0400
-Received: by mail-bk0-f46.google.com with SMTP id my13so5015040bkb.5
-        for <linux-wireless@vger.kernel.org>; Wed, 29 May 2013 09:12:00 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:1639 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752596Ab3EKHf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 May 2013 03:35:26 -0400
+Message-ID: <518DF4B1.3020706@broadcom.com> (sfid-20130511_093543_404629_38A61C4C)
+Date: Sat, 11 May 2013 09:35:13 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAG6hwVPvRQw64A=-+J0J8ioru8-fze3NuEEA1z2+c_skk5tAdA@mail.gmail.com>
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
- <1367548442-8229-7-git-send-email-thomas@cozybit.com> <1367934155.8328.21.camel@jlt4.sipsolutions.net>
- <CAG6hwVPah-8FjH=ntFPzxMzXi5ePcmG-UEhdsvEgHkJVE9khYQ@mail.gmail.com>
- <1369427550.13623.3.camel@johannes> <CAG6hwVPvRQw64A=-+J0J8ioru8-fze3NuEEA1z2+c_skk5tAdA@mail.gmail.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 29 May 2013 09:11:39 -0700
-Message-ID: <CAG6hwVNNBOJDUCNzmocfN+SsySp4+U8Q3aAET=_7NRj8X6nGsw@mail.gmail.com> (sfid-20130529_181206_774436_F14197CB)
-Subject: Re: [RFC 06/12] mac80211: notify bridge when leaving mesh
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	open80211s <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "JoSH Lehan" <krellan@gmail.com>
+cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: Using compat-drivers conflicts with kernel mac80211 and
+ cfg80211
+References: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com>
+In-Reply-To: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 28, 2013 at 10:01 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
-> On Fri, May 24, 2013 at 1:32 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Tue, 2013-05-21 at 18:09 -0700, Thomas Pedersen wrote:
->>> Hey, Sorry for the late response.
->>
->> Me too :)
->>
->>> >>       netif_carrier_off(sdata->dev);
->>> >> +     if (sdata->dev->priv_flags & IFF_BRIDGE_PORT)
->>> >> +             /* stop bridge transmissions */
->>> >> +             call_netdevice_notifiers(NETDEV_CHANGE, sdata->dev);
->>> >
->>> > Err, this seems like a really bad hack? I don't really think drivers
->>> > should call that?
->>>
->>> Why not? We're just notifying the bridge interface that this port has
->>> gone down, to avoid dereferencing a null pointer (on bridge flood
->>> traffic) after the mesh_bss has been removed.
->>>
->>> Is cfg80211_leave_mesh() an acceptable location for this fix?
->>
->> I'm not really convinced it's an acceptable fix in itself? Why should we
->> ever have to call netdev notifiers, that seems odd to me. Also why would
->> that prevent a crash? Wouldn't we just drop packets for the mesh if we
->> aren't joined in a mesh any more? Or something like that  Accessing the
->> priv flags and then calling the netdev notifiers seems really strange to
->> me. If this was necessary, then wouldn't netif_carrier_off() do it
->> internally?
->
-> OK I'll take a look at this and figure out a cleaner solution then. Thanks.
+On 05/11/2013 02:52 AM, JoSH Lehan wrote:
+> It seems I can choose to use the mac80211/cfg80211 that came with the
+> kernel,*or*, the mac80211/cfg80211 that come with compat-drivers.  Is
+> this correct?  I'll have to maintain these two mac80211/cfg80211
+> drivers in separate directories, since they have the same name, and it
+> will complicate my detection/loading script, but if there's no other
+> way, then this is what needs to be done.
 
-After reverting this patch I can no longer trigger the crash it was
-supposed to fix. Either something changed in the rebase, or it was
-never needed. Will drop from the resubmission for now.
+Luis may correct me, but I think you are correct. compat-drivers 
+provides a compat.ko which is the glue between new drivers and your 
+kernel. With the new drivers you get new features provided you have new 
+mac80211/cfg80211 as well. Hence the glue is between wireless modules 
+(including mac80211/cfg80211) and rest of your kernel. On a non-embedded 
+system the compat-driver modules are installed in a separate folder 
+/lib/modules/<your_kernel_version/updates. depmod is run during the 
+install in which this folder takes precedence.
 
-Thanks,
---
-Thomas
+Not sure what your use-case is. You have a system in which different 
+wireless devices may be plugged in or ...?
+
+> Could it be because I cross-compile compat-drivers?  Looking at the
+> installation scripts, it's clearly intended to be ran by the end user
+> to replace the drivers in their distribution with updated drivers, and
+> it could be that I missed something when tweaking it to cross-compile
+> the drivers and not install them locally.
+
+Probably not, provided you build it for your kernel version.
+
+> Has anybody else tried to use compat-drivers to build for an embedded
+> system?  If so, what's the recommended solution?  How to solve the
+> mac80211/cfg80211 problem, where the kernel-compiled mac80211/cfg80211
+> modules conflict with their equivalent compat-drivers modules?
+
+Depends what you call an embedded system. We used it to run our driver 
+on Android. Just cross-compiling it and install it on the system is what 
+we did. Recently, there have been a number of people walking that path 
+and contacting us. It may be an idea to have a compat-drivers feature to 
+generate Android tarballs as it is always running a few kernel versions 
+behind mainline.
+
+Regards,
+Arend
+
