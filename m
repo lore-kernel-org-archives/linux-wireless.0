@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44927 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754054Ab3EaSvw (ORCPT
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:43630 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965Ab3EKXKV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 May 2013 14:51:52 -0400
-Message-ID: <51A8F141.5050804@candelatech.com> (sfid-20130531_205156_577264_2AB9AD65)
-Date: Fri, 31 May 2013 11:51:45 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 11 May 2013 19:10:21 -0400
+Received: by mail-oa0-f43.google.com with SMTP id o6so6256965oag.2
+        for <linux-wireless@vger.kernel.org>; Sat, 11 May 2013 16:10:20 -0700 (PDT)
+Message-ID: <518ECFDA.20208@lwfinger.net> (sfid-20130512_011025_448717_518C2F0F)
+Date: Sat, 11 May 2013 18:10:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: Another try at getting pktgen to work with wifi.
-References: <51A79E4A.7000609@candelatech.com>   <51A7B049.9090201@openwrt.org> <51A7BA63.4080403@candelatech.com>   <51A857BF.7070008@openwrt.org> <51A8DC1C.1040908@candelatech.com>   (sfid-20130531_192143_291284_FB196B0A) <1370021846.14117.13.camel@jlt4.sipsolutions.net>  <51A8E53E.8030101@candelatech.com> <1370025698.14117.15.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1370025698.14117.15.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: JoSH Lehan <krellan@gmail.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: Using compat-drivers conflicts with kernel mac80211 and cfg80211
+References: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com> <518DF4B1.3020706@broadcom.com> <518ECC39.9090401@gmail.com>
+In-Reply-To: <518ECC39.9090401@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/31/2013 11:41 AM, Johannes Berg wrote:
-> On Fri, 2013-05-31 at 11:00 -0700, Ben Greear wrote:
+On 05/11/2013 05:54 PM, JoSH Lehan wrote:
+> Yes.  It's an embedded system, however, it has an exposed USB port and
+> the user is free (within reason) to plug in a USB device.  I'm trying to
+> add support for as many USB wireless adapters that I can find.  For some
+> adapters (such as vt6656 and rtl8712), I use the vendor's tarball (which
+> compiles directly against the kernel).  So, this is why I need to mix
+> and match drivers compiled against the kernel's mac80211/cfg80211 with
+> drivers compiled against the mac80211/cfg80211 from compat.
 >
->> I think it might be more that the wifi stacks have some specific
->> assumptions about how skb->priority maps to queues and QoS.  If
->> they get out of sync, then the TID mappings and so forth get
->> confused.
->
-> What I'm saying though is that I don't see where skb->priority is even
-> _used_ in the wifi stack. I can see it getting set, but not used.
 
-ieee80211_downgrade_queue
-wme_downgrade_ac // sort of
-ieee80211_select_queue_80211 // sort of...seems twiddling skb->priority is more of a by-product here.
+Neither driver r8712u, which has been in the kernel since 2.6.37, nor the 
+equivalent vendor driver depends on anything from mac80211 or cfg80211. If it 
+did, the kernel version would be in the drivers/net/wireless tree rather than in 
+staging. I suspect the same is true for other wireless drivers from staging, 
+which includes vt6656.
 
-cfg80211_classify8021d
-
->>> Actually that makes it seem like something else should be doing packet
->>> classification, not mac80211 in select_queue()?
->>>
->>> Where is skb->priority actually really used in mac80211? I don't see
->>> much?
->>
->> There's a bit more in net/wireless/util.c, at least (cfg80211_classify8021d, for instance).
->
-> But that's pretty much all assignments.
-
-cfg80211_classify8021d uses it to determine the queue in if skb->priority is
-set to a special range (hard coded un-documented hack from hell, it appears).
-
-I didn't go looking to find out where those magic values might be set.
+Larry
 
 
->> The mac80211/wme.c uses it.  Some of this is called from the drivers
->> (line 1916 or so of ath9k/xmit.c).
->
-> What's called there? I don't see any reason for that to use
-> skb->priority?
-
-Ok, I was confused about that..but that *is* the code that pukes if you
-have have mis-matched queues like you get with pktgen in upstream kernels...
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
