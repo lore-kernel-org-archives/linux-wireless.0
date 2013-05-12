@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out21.han.skanova.net ([195.67.226.208]:50317 "EHLO
-	smtp-out21.han.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934474Ab3E1PHw (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:63879 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752216Ab3ELJfn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 11:07:52 -0400
-Message-ID: <51A4C6D6.1020002@emagii.com> (sfid-20130528_170755_778759_E13B0285)
-Date: Tue, 28 May 2013 17:01:42 +0200
-From: Ulf Samuelsson <ntp@emagii.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: ath6kl-devel@qualcomm.com
-Subject: ath6kl_sdio blocked by RFKILL
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 12 May 2013 05:35:43 -0400
+Received: by mail-we0-f182.google.com with SMTP id t60so5313714wes.41
+        for <linux-wireless@vger.kernel.org>; Sun, 12 May 2013 02:35:42 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/4] wlcore: cancel channel switch work on interface removal
+Date: Sun, 12 May 2013 12:35:29 +0300
+Message-Id: <1368351331-6914-2-git-send-email-eliad@wizery.com> (sfid-20130512_113549_508309_D54BE8EA)
+In-Reply-To: <1368351331-6914-1-git-send-email-eliad@wizery.com>
+References: <1368351331-6914-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Have built the ath6kl_sdio driver for an Cortex-A5 chip using the 
-linux-3.6.9 kernel
-File system built using Yocto  and Busybox RF-Kill.
+From: Arik Nemtsov <arik@wizery.com>
 
-Kernel Config contains:
+Otherwise, if the work is pending, we might get
+a bad dereference after the interface is removed.
 
-CONFIG_RFKILL=m
-CONFIG_RFKILL_LEDS=y
-CONFIG_RFKILL_INPUT=y
-# CONFIG_RFKILL_GPIO is not set
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-When I do
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index c384bad..ecbbd38 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2589,6 +2589,7 @@ unlock:
+ 	cancel_work_sync(&wlvif->rx_streaming_enable_work);
+ 	cancel_work_sync(&wlvif->rx_streaming_disable_work);
+ 	cancel_delayed_work_sync(&wlvif->connection_loss_work);
++	cancel_delayed_work_sync(&wlvif->channel_switch_work);
+ 
+ 	mutex_lock(&wl->mutex);
+ }
+-- 
+1.8.1.2
 
-# ifconfig wlan0 up.
-
-I get the error message:
-
-ifconfig: SIOCSIFFLAGS: Operation not possible due to RF-kill
-
-If I run "rfkill list" I get
-
-1: phy1: wlan
-         Soft blocked: yes
-         Hard blocked: no
-
-
-If I try to unblock using "rfkill unblock all" or "wifi" or "wlan", the 
-soft block remains.
-
-Any clues?
-
-Looking through the Busybox rfkill code, this seems to generate an event.
-What is supposed to react to this?
-Could there be a rule, which is missing?
-
-BR
-Ulf Samuelsson
