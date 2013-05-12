@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out07.sjc.mx.trendmicro.com ([216.99.131.23]:64563 "EHLO
-	out07.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756487Ab3ETXkL (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:63275 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752432Ab3ELAqC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 May 2013 19:40:11 -0400
-Received: from relay04.sjc.mx.trendmicro.com (unknown [10.30.239.129])
-	by out07.sjc.mx.trendmicro.com (Postfix) with ESMTP id 41897952474
-	for <linux-wireless@vger.kernel.org>; Mon, 20 May 2013 23:40:10 +0000 (UTC)
-Received: from thinktube.com (unknown [111.68.225.247])
-	by relay04.sjc.mx.trendmicro.com (Postfix) with ESMTP id C7A0C980441
-	for <linux-wireless@vger.kernel.org>; Mon, 20 May 2013 23:40:09 +0000 (UTC)
-Message-ID: <519AB452.2010903@thinktube.com> (sfid-20130521_014015_073056_71681EFB)
-Date: Tue, 21 May 2013 00:40:02 +0100
-From: Bruno Randolf <br1@thinktube.com>
+	Sat, 11 May 2013 20:46:02 -0400
+Received: by mail-wg0-f52.google.com with SMTP id k13so5301047wgh.7
+        for <linux-wireless@vger.kernel.org>; Sat, 11 May 2013 17:46:01 -0700 (PDT)
 MIME-Version: 1.0
-To: Alessandro Lannocca <alessandro.lannocca@gmail.com>
-CC: linux-wireless@vger.kernel.org, helmut.schaa@googlemail.com,
-	IvDoorn@gmail.com, gwingerde@gmail.com
-Subject: Re: rt3070-based usb device won't accept mac address changes
-References: <CAMfPB_xTUy72YokSoYJezOX_gb54CJEd7V6+4pAfOHnAzUMJcQ@mail.gmail.com> <5197AF6B.5040800@thinktube.com> <CAMfPB_yVuSD765CAycUtdWBTvEEam=MpdCGKpWDJAvFiEjvLrw@mail.gmail.com>
-In-Reply-To: <CAMfPB_yVuSD765CAycUtdWBTvEEam=MpdCGKpWDJAvFiEjvLrw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <518ECC39.9090401@gmail.com>
+References: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com>
+	<518DF4B1.3020706@broadcom.com>
+	<518ECC39.9090401@gmail.com>
+Date: Sat, 11 May 2013 17:46:01 -0700
+Message-ID: <CAJ-VmonOuhBgXa3-LkspaCgAAh8Y9Jxejn-McVourzgE-ajHTw@mail.gmail.com> (sfid-20130512_024607_710819_2972F16C)
+Subject: Re: Using compat-drivers conflicts with kernel mac80211 and cfg80211
+From: Adrian Chadd <adrian@freebsd.org>
+To: JoSH Lehan <krellan@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/2013 10:07 PM, Alessandro Lannocca wrote:
-> After digging a bit into linux-stable.git I found the culprit: this
-> regression comes from commit #
-> 6c50f9459e62eb133563fd23606f68bfc9d120e8 (rt2x00: Use addr_mask to
-> disallow invalid MAC addresses in mutli-bssid mode) ; reverting it
-> fixes the problem, tested by me in compat-drivers-2013-03-28-5-u .
->
->
-> I can't tell if reverting that commit adds any trouble as I'm not a
-> developer; however I'm sure you guys will know how to handle the
-> situation.
+Hi,
 
-Basically the driver got more picky and only allows the last 3 bit of 
-the MAC address changed. I just found out that if you generate your new 
-MAC accordingly it works!
+On 11 May 2013 15:54, JoSH Lehan <krellan@gmail.com> wrote:
 
-I wonder wether this is addr_mask is necessary for all RT chipsets, 
-since mine (RT5372) happily accepted different MAC addresses before, 
-also in multi-AP configurations...
+> Thanks!  So, I'll need to maintain two sets of mac80211/cfg80211
+> modules: one for drivers that were compiled along with the kernel, and
+> another for drivers that were compiled as part of the compat-drivers
+> package.
 
-bruno
+No, you or the vendor should forward port it to linux-next, then you
+can just pick up the whole driver/framework set from compat-wireless.
+
+
+
+Adrian
