@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:36947 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754484Ab3EVKhN (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:65356 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754645Ab3ELLoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 May 2013 06:37:13 -0400
+	Sun, 12 May 2013 07:44:05 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 0/7] wil6210 patches
+Date: Sun, 12 May 2013 14:43:31 +0300
+Message-ID: <1368359018-20870-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130512_134409_938373_5AE7F533)
 MIME-Version: 1.0
-In-Reply-To: <519C9187.6040301@gmail.com>
-References: <519B8021.6030002@gmail.com>
-	<CANUX_P1sMR6ugSt1Q=hA4dLXQ=mo+dqbAoMi4dn46jYhZZzL7A@mail.gmail.com>
-	<519C9187.6040301@gmail.com>
-Date: Wed, 22 May 2013 13:37:11 +0300
-Message-ID: <CANUX_P3A=EeuLhjDAbdsgrPVF0RVpjsg+ctbkvG+b5CTvhc99Q@mail.gmail.com> (sfid-20130522_123736_170225_544FCA60)
-Subject: Re: [v3.9.x stable regression, bisected] iwlwifi/iwldvm has a 30s
- delay in EAP authentication
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: kkhere.geo+suse@gmail.com
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>, gregkh@kroah.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->> Thanks for the bisection. Can you please try the patch in
->> https://bugzilla.kernel.org/show_bug.cgi?id=58341 and report?
->> Thanks
->>
->
-> I can confirm that the patch in this bugzilla entry does indeed get
-> rid of the delay in EAP authentication.
->
+Next bunch of patches.
 
-Thanks for the testing - patch on the way to upstream / stable
+This time it is all about data path, save for trace support.
+
+Vladimir Kondratiev (7):
+  wil6210: 'length' in Tx/Rx descriptors is little endian
+  wil6210: Sanity check for reported DMA length
+  wil6210: debug dump packet content right after DMA
+  wil6210: trace support
+  wil6210: use NAPI
+  wil6210: fix remaining use of non-cached copy of tx/rx descriptors
+  wil6210: do not stop Tx queue on packet drop
+
+ drivers/net/wireless/ath/wil6210/Kconfig     |  12 ++
+ drivers/net/wireless/ath/wil6210/Makefile    |  21 ++-
+ drivers/net/wireless/ath/wil6210/debug.c     |  70 ++++++++
+ drivers/net/wireless/ath/wil6210/debugfs.c   |   8 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c |  29 ++--
+ drivers/net/wireless/ath/wil6210/main.c      |   6 +
+ drivers/net/wireless/ath/wil6210/netdev.c    |  54 ++++++
+ drivers/net/wireless/ath/wil6210/trace.c     |  20 +++
+ drivers/net/wireless/ath/wil6210/trace.h     | 235 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.c      | 175 ++++++++++++--------
+ drivers/net/wireless/ath/wil6210/txrx.h      |  32 +++-
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  26 ++-
+ drivers/net/wireless/ath/wil6210/wmi.c       |   8 +-
+ 13 files changed, 589 insertions(+), 107 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/debug.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/trace.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/trace.h
+
+-- 
+1.8.1.2
+
