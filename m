@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:32802 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759742Ab3EWW02 (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:37637 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753566Ab3ELJfq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 18:26:28 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Thu, 23 May 2013 15:23:23 -0700
-Subject: RE: [PATCH v2 1/2] iw: use updated structures and enums for packet
- pattern
-Message-ID: <477F20668A386D41ADCC57781B1F70430E801DC656@SC-VEXCH1.marvell.com> (sfid-20130524_002631_565636_5774E8A8)
-References: <1369344941-11217-1-git-send-email-bzhao@marvell.com>
- <1369345157.12002.87.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1369345157.12002.87.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Sun, 12 May 2013 05:35:46 -0400
+Received: by mail-wg0-f44.google.com with SMTP id z12so5394911wgg.35
+        for <linux-wireless@vger.kernel.org>; Sun, 12 May 2013 02:35:45 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/4] wlcore: fix occasional AP TX stop after recovery
+Date: Sun, 12 May 2013 12:35:31 +0300
+Message-Id: <1368351331-6914-4-git-send-email-eliad@wizery.com> (sfid-20130512_113552_468139_8719560C)
+In-Reply-To: <1368351331-6914-1-git-send-email-eliad@wizery.com>
+References: <1368351331-6914-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gT24gVGh1LCAyMDEzLTA1LTIzIGF0IDE0OjM1IC0wNzAwLCBCaW5n
-IFpoYW8gd3JvdGU6DQo+ID4gRnJvbTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxs
-LmNvbT4NCj4gPg0KPiA+IFRoZXkgYXJlIHJlbmFtZWQgc28gdGhhdCB0aGV5IGNhbiBiZSB1c2Vk
-IGZvciBuZXcgZmVhdHVyZS4NCj4gDQo+IFRoaXMgaXNuJ3QgcmVhbGx5IG5lY2Vzc2FyeSwgcmln
-aHQ/IEkgbWVhbiwgaXQgc2hvdWxkIGNvbXBpbGUgdy9vIHRoaXMNCj4gZXZlbiBhZnRlciB0aGUg
-a2VybmVsIHBhdGNoZXMsIGJ1dCB0aGlzIGlzIGp1c3QgZm9yIG1ha2luZyBpdCBsb29rDQo+IG5p
-Y2VyPw0KDQpZZXMsIGl0IGNvbXBpbGVzIHcvbyB0aGlzIHBhdGNoLiBJdCBkb2VzIG1ha2UgaXQg
-bG9vayBuaWNlciwgSSB0aGluay4NCkhvd2V2ZXIsIHRoZSBjb21taXQgbWVzc2FnZSBzaG91bGQg
-YmUgc29tZXRoaW5nIGxpa2U6DQoNCiJUaGV5IGFyZSByZW5hbWVkIHRvIG1hdGNoIG5ldyBubDgw
-MjExLmggYW5kIG1ha2UgdGhlIGNvZGUgbG9vayBuaWNlci4iDQoNClBsZWFzZSBsZXQgbWUga25v
-dyBpZiB5b3Ugd2FudCBtZSB0byByZXNlbmQgMS8yIHdpdGggcmV2aXNlZCBjb21taXQgbG9nLg0K
-T3RoZXJ3aXNlLCBwbGVhc2Ugc2ltcGx5IGRyb3AgMS8yIGFuZCBhcHBseSAyLzIgYWxvbmUuDQoN
-ClRoYW5rcywNCkJpbmcNCg0K
+From: Victor Goldenshtein <victorg@ti.com>
+
+The fw_status wasn't zeroed during allocation, resulting
+in uninitialized var usage, and finally causing AP
+traffic stop after recovery.
+
+The wrong value in fw_status_2->counters.tx_lnk_free_pkts
+led to a bad lnk->allocated_pkts calculation in
+wlcore_fw_status(), causing wl18xx_lnk_low_prio() to return
+FALSE (lnk->allocated_pkts > thold).
+This eventually blocked the link in wlcore_tx_work_locked(),
+as wl1271_skb_dequeue() continuously returned NULL.
+
+Fix it by zeroing wl->fw_status_1/2 during allocation.
+
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index ecbbd38..2537391 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -970,7 +970,7 @@ static int wlcore_fw_wakeup(struct wl1271 *wl)
+ 
+ static int wl1271_setup(struct wl1271 *wl)
+ {
+-	wl->fw_status_1 = kmalloc(WLCORE_FW_STATUS_1_LEN(wl->num_rx_desc) +
++	wl->fw_status_1 = kzalloc(WLCORE_FW_STATUS_1_LEN(wl->num_rx_desc) +
+ 				  sizeof(*wl->fw_status_2) +
+ 				  wl->fw_status_priv_len, GFP_KERNEL);
+ 	if (!wl->fw_status_1)
+@@ -980,7 +980,7 @@ static int wl1271_setup(struct wl1271 *wl)
+ 				(((u8 *) wl->fw_status_1) +
+ 				WLCORE_FW_STATUS_1_LEN(wl->num_rx_desc));
+ 
+-	wl->tx_res_if = kmalloc(sizeof(*wl->tx_res_if), GFP_KERNEL);
++	wl->tx_res_if = kzalloc(sizeof(*wl->tx_res_if), GFP_KERNEL);
+ 	if (!wl->tx_res_if) {
+ 		kfree(wl->fw_status_1);
+ 		return -ENOMEM;
+-- 
+1.8.1.2
+
