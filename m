@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40264 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759273Ab3EOOTf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:19:35 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2 15/18] ath9k: announce that ath9k supports 5/10 MHz
-Date: Wed, 15 May 2013 16:19:06 +0200
-Message-Id: <1368627549-22518-16-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_161950_994882_7B05E109)
-In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:4858 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753248Ab3ELKeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 May 2013 06:34:25 -0400
+Message-ID: <518F701B.2080900@broadcom.com> (sfid-20130512_123431_472460_4ADC8521)
+Date: Sun, 12 May 2013 12:34:03 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "JoSH Lehan" <krellan@gmail.com>
+cc: "Adrian Chadd" <adrian@freebsd.org>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: Using compat-drivers conflicts with kernel mac80211 and
+ cfg80211
+References: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com>
+ <518DF4B1.3020706@broadcom.com> <518ECC39.9090401@gmail.com>
+ <CAJ-VmonOuhBgXa3-LkspaCgAAh8Y9Jxejn-McVourzgE-ajHTw@mail.gmail.com>
+In-Reply-To: <CAJ-VmonOuhBgXa3-LkspaCgAAh8Y9Jxejn-McVourzgE-ajHTw@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/init.c |    1 +
- 1 file changed, 1 insertion(+)
+On 05/12/2013 02:46 AM, Adrian Chadd wrote:
+> Hi,
+>
+> On 11 May 2013 15:54, JoSH Lehan <krellan@gmail.com> wrote:
+>
+>> Thanks!  So, I'll need to maintain two sets of mac80211/cfg80211
+>> modules: one for drivers that were compiled along with the kernel, and
+>> another for drivers that were compiled as part of the compat-drivers
+>> package.
+>
+> No, you or the vendor should forward port it to linux-next, then you
+> can just pick up the whole driver/framework set from compat-wireless.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 919d4c2..7eeb015 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -828,6 +828,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-+	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
- 
- #ifdef CONFIG_PM_SLEEP
- 
--- 
-1.7.10.4
+That is indeed the approach. So integrate your vendor provided driver 
+into your local linux-next tree and create you own compat-drivers 
+package using that tree (see [1]). You have to tinker the framework to 
+include that driver.
+
+Regards,
+Arend
+
+[1] 
+https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers/hacking
+
 
