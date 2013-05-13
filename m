@@ -1,93 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:42792 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759470Ab3EOOwk (ORCPT
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:36067 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276Ab3EMCo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:52:40 -0400
-Subject: [PATCH 18/29] ath10k: add mac.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Wed, 15 May 2013 17:45:19 +0300
-Message-ID: <20130515144519.4492.50012.stgit@localhost6.localdomain6> (sfid-20130515_165313_147567_89D77340)
-In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 12 May 2013 22:44:29 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH V3.10] rtlwifi: rtl8188ee: Fix warning when building on big-endian systems
+Date: Sun, 12 May 2013 21:43:46 -0500
+Message-Id: <1368413026-17106-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130513_044432_897432_49CE4B79)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.h |   61 +++++++++++++++++++++++++++++++++
- 1 file changed, 61 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/mac.h
+In http://lkml.indiana.edu/hypermail/linux/kernel/1305.1/index.html,
+Geert Uytterhoeven reports a new warning when building 3.10-rc1 in
+this driver. This is caused by using a "#if" test to see if __LITTLE_ENDIAN
+is set, which fails for all big-endian systems. Change to "ifdef".
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
-new file mode 100644
-index 0000000..27fc92e
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/mac.h
-@@ -0,0 +1,61 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _MAC_H_
-+#define _MAC_H_
-+
-+#include <net/mac80211.h>
-+#include "core.h"
-+
-+struct ath10k_generic_iter {
-+	struct ath10k *ar;
-+	int ret;
-+};
-+
-+struct ath10k *ath10k_mac_create(void);
-+void ath10k_mac_destroy(struct ath10k *ar);
-+int ath10k_mac_register(struct ath10k *ar);
-+void ath10k_mac_unregister(struct ath10k *ar);
-+struct ath10k_vif *ath10k_get_arvif(struct ath10k *ar, u32 vdev_id);
-+void ath10k_reset_scan(unsigned long ptr);
-+void ath10k_offchan_tx_purge(struct ath10k *ar);
-+void ath10k_offchan_tx_work(struct work_struct *work);
-+
-+static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
-+{
-+	return (struct ath10k_vif *)vif->drv_priv;
-+}
-+
-+static inline void ath10k_tx_h_seq_no(struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_vif *vif = info->control.vif;
-+	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+
-+	if (info->flags  & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-+		if (arvif->tx_seq_no == 0)
-+			arvif->tx_seq_no = 0x1000;
-+
-+		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-+			arvif->tx_seq_no += 0x10;
-+		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+		hdr->seq_ctrl |= cpu_to_le16(arvif->tx_seq_no);
-+	}
-+}
-+
-+#endif /* _MAC_H_ */
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+John,
+
+As noted above, please add to 3.10.
+
+Larry
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.h b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.h
+index d3a02e7..21ca33a 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.h
+@@ -550,7 +550,7 @@ do {								\
+ 	 rxmcs == DESC92C_RATE11M)
+ 
+ struct phy_rx_agc_info_t {
+-	#if __LITTLE_ENDIAN
++	#ifdef __LITTLE_ENDIAN
+ 		u8	gain:7, trsw:1;
+ 	#else
+ 		u8	trsw:1, gain:7;
+@@ -574,7 +574,7 @@ struct phy_status_rpt {
+ 	u8	stream_target_csi[2];
+ 	u8	sig_evm;
+ 	u8	rsvd_3;
+-#if __LITTLE_ENDIAN
++#ifdef __LITTLE_ENDIAN
+ 	u8	antsel_rx_keep_2:1;	/*ex_intf_flg:1;*/
+ 	u8	sgi_en:1;
+ 	u8	rxsc:2;
+-- 
+1.8.1.4
 
