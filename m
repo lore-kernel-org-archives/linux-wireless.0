@@ -1,180 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59102 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758206Ab3E1LCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 07:02:04 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2 2/3] mac80211: support active monitor interfaces
-Date: Tue, 28 May 2013 13:01:53 +0200
-Message-Id: <1369738914-34367-2-git-send-email-nbd@openwrt.org> (sfid-20130528_130208_828810_DCDB48E7)
-In-Reply-To: <1369738914-34367-1-git-send-email-nbd@openwrt.org>
-References: <1369738914-34367-1-git-send-email-nbd@openwrt.org>
+Received: from mail-la0-f45.google.com ([209.85.215.45]:63764 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751856Ab3EMRn2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 May 2013 13:43:28 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAJ-Vmo=HOFqu8vB1=pvz79YwE8qAMDc4ZJACJHaSuxn4S92sFg@mail.gmail.com>
+References: <1320756113.14409.385.camel@x61.thuisdomein> <20111108141647.GA3390@hash.lan>
+ <1342124352.22584.21.camel@x61.thuisdomein> <20120712203837.GA3045@localhost>
+ <4FFFBDD8.6020305@neratec.com> <20120713124134.GA5567@localhost>
+ <1362999998.3137.60.camel@x61.thuisdomein> <1368457391.1350.67.camel@x61.thuisdomein>
+ <CAJ-VmokciVPxzJ0LptdQyL9koa8Bw7ecJdentPH5q9+MQ4=GpA@mail.gmail.com>
+ <5191173D.3070709@gmail.com> <CAJ-Vmo=HOFqu8vB1=pvz79YwE8qAMDc4ZJACJHaSuxn4S92sFg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 13 May 2013 10:43:06 -0700
+Message-ID: <CAB=NE6UR+3uadczBt+2n4g8j2e_A6OBJ-+ZJiO4y2g4Z0cFywg@mail.gmail.com> (sfid-20130513_194348_629533_E73C3928)
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Remove AHB bus support.
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Jonathan Bither <jonbither@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support them only if the driver advertises support for them via
-IEEE80211_HW_SUPPORTS_ACTIVE_MONITOR. Unlike normal monitor interfaces,
-they are added to the driver, along with their MAC address.
+On Mon, May 13, 2013 at 10:09 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 13 May 2013 09:39, Jonathan Bither <jonbither@gmail.com> wrote:
+>
+>>> ... is anyone using this on openwrt?
+>>>
+>> I am.
+>> I am also reworking AR2131X drivers and will submit a patch to linux-mips
+>> shortly.
+>
+> Sweet. Someone say NACK then? :)
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/cfg.c        | 11 +++++++----
- net/mac80211/driver-ops.h |  3 ++-
- net/mac80211/iface.c      | 29 +++++++++++++++++++++++------
- net/mac80211/util.c       |  6 ++++++
- 4 files changed, 38 insertions(+), 11 deletions(-)
+NACK, looking forward to the linux-mips patches, in the future however
+we want to avoid these type of placeholder patches.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1a89c80..7f73859 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -73,16 +73,19 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 		struct ieee80211_local *local = sdata->local;
- 
- 		if (ieee80211_sdata_running(sdata)) {
-+			u32 mask = MONITOR_FLAG_COOK_FRAMES |
-+				   MONITOR_FLAG_ACTIVE;
-+
- 			/*
--			 * Prohibit MONITOR_FLAG_COOK_FRAMES to be
--			 * changed while the interface is up.
-+			 * Prohibit MONITOR_FLAG_COOK_FRAMES and
-+			 * MONITOR_FLAG_ACTIVE to be changed while the
-+			 * interface is up.
- 			 * Else we would need to add a lot of cruft
- 			 * to update everything:
- 			 *	cooked_mntrs, monitor and all fif_* counters
- 			 *	reconfigure hardware
- 			 */
--			if ((*flags & MONITOR_FLAG_COOK_FRAMES) !=
--			    (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES))
-+			if ((*flags & mask) != (sdata->u.mntr_flags & mask))
- 				return -EBUSY;
- 
- 			ieee80211_adjust_monitor_flags(sdata, -1);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 169664c..b931c96 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -146,7 +146,8 @@ static inline int drv_add_interface(struct ieee80211_local *local,
- 
- 	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
- 		    (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
--		     !(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF))))
-+		     !(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF) &&
-+		     !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))))
- 		return -EINVAL;
- 
- 	trace_drv_add_interface(local, sdata);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 60f1ce5..47e03e5 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -159,7 +159,8 @@ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
- 	return 0;
- }
- 
--static int ieee80211_verify_mac(struct ieee80211_local *local, u8 *addr)
-+static int ieee80211_verify_mac(struct ieee80211_local *local, u8 *addr,
-+				bool check_dup)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	u64 new, mask, tmp;
-@@ -179,10 +180,13 @@ static int ieee80211_verify_mac(struct ieee80211_local *local, u8 *addr)
- 		((u64)m[2] << 3*8) | ((u64)m[3] << 2*8) |
- 		((u64)m[4] << 1*8) | ((u64)m[5] << 0*8);
- 
-+	if (!check_dup)
-+		return ret;
- 
- 	mutex_lock(&local->iflist_mtx);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
-+		if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
-+		    !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
- 			continue;
- 
- 		m = sdata->vif.addr;
-@@ -204,12 +208,17 @@ static int ieee80211_change_mac(struct net_device *dev, void *addr)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct sockaddr *sa = addr;
-+	bool check_dup = true;
- 	int ret;
- 
- 	if (ieee80211_sdata_running(sdata))
- 		return -EBUSY;
- 
--	ret = ieee80211_verify_mac(sdata->local, sa->sa_data);
-+	if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
-+	    !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+		check_dup = false;
-+
-+	ret = ieee80211_verify_mac(sdata->local, sa->sa_data, check_dup);
- 	if (ret)
- 		return ret;
- 
-@@ -538,7 +547,11 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 			break;
- 		}
- 
--		if (local->monitors == 0 && local->open_count == 0) {
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
-+			res = drv_add_interface(local, sdata);
-+			if (res)
-+				goto err_stop;
-+		} else if (local->monitors == 0 && local->open_count == 0) {
- 			res = ieee80211_add_virtual_monitor(local);
- 			if (res)
- 				goto err_stop;
-@@ -912,7 +925,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		mutex_lock(&local->mtx);
- 		ieee80211_recalc_idle(local);
- 		mutex_unlock(&local->mtx);
--		break;
-+
-+		if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+			break;
-+
-+		/* fall through */
- 	default:
- 		if (going_down)
- 			drv_remove_interface(local, sdata);
-@@ -1061,7 +1078,7 @@ static const struct net_device_ops ieee80211_monitorif_ops = {
- 	.ndo_start_xmit		= ieee80211_monitor_start_xmit,
- 	.ndo_set_rx_mode	= ieee80211_set_multicast_list,
- 	.ndo_change_mtu 	= ieee80211_change_mtu,
--	.ndo_set_mac_address 	= eth_mac_addr,
-+	.ndo_set_mac_address 	= ieee80211_change_mac,
- 	.ndo_select_queue	= ieee80211_monitor_select_queue,
- };
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 27e0715..7cbe0db 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -560,6 +560,9 @@ void ieee80211_iterate_active_interfaces(
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_MONITOR:
-+			if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+				continue;
-+			break;
- 		case NL80211_IFTYPE_AP_VLAN:
- 			continue;
- 		default:
-@@ -598,6 +601,9 @@ void ieee80211_iterate_active_interfaces_atomic(
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_MONITOR:
-+			if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+				continue;
-+			break;
- 		case NL80211_IFTYPE_AP_VLAN:
- 			continue;
- 		default:
--- 
-1.8.0.2
-
+  Luis
