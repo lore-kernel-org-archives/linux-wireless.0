@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:43305 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752612Ab3EUPIE convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:57998 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006Ab3EMRN1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 May 2013 11:08:04 -0400
-Received: by mail-ea0-f176.google.com with SMTP id k11so486193eaj.35
-        for <linux-wireless@vger.kernel.org>; Tue, 21 May 2013 08:08:02 -0700 (PDT)
-From: "Alessandro Lannocca" <alessandro.lannocca@gmail.com>
-To: "'Helmut Schaa'" <helmut.schaa@googlemail.com>
-Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>
-References: <CAMfPB_xTUy72YokSoYJezOX_gb54CJEd7V6+4pAfOHnAzUMJcQ@mail.gmail.com> <CAGXE3d8u4ORgmOAdKFbgYSA3qTQxfhKiT6feDMMwn_-ue0ehow@mail.gmail.com>
-In-Reply-To: <CAGXE3d8u4ORgmOAdKFbgYSA3qTQxfhKiT6feDMMwn_-ue0ehow@mail.gmail.com>
-Subject: R: rt3070-based usb device won't accept mac address changes
-Date: Tue, 21 May 2013 17:07:57 +0200
-Message-ID: <000c01ce5634$fb6b3b80$f241b280$@gmail.com> (sfid-20130521_170808_917095_1CC77660)
+	Mon, 13 May 2013 13:13:27 -0400
+Received: by mail-wi0-f177.google.com with SMTP id hr14so3208386wib.4
+        for <linux-wireless@vger.kernel.org>; Mon, 13 May 2013 10:13:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+In-Reply-To: <1368438160.8300.11.camel@jlt4.sipsolutions.net>
+References: <1368233453-10581-1-git-send-email-ashok@cozybit.com>
+ <1368233453-10581-2-git-send-email-ashok@cozybit.com> <1368438160.8300.11.camel@jlt4.sipsolutions.net>
+From: Ashok Nagarajan <ashok@cozybit.com>
+Date: Mon, 13 May 2013 10:13:05 -0700
+Message-ID: <CACcxo+odk2L-pymHqof+geeEmKcC4xikebra9jcNZoHOF0by4A@mail.gmail.com> (sfid-20130513_191329_829802_31E8D935)
+Subject: Re: [PATCH 2/3] cfg80211: Allow ieee80211g mandatory rate sets in
+ 2.4GHz band
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, I have an ath9k-driven integrated card active at the same time (wlan0);
-but only one wlan interface (wlan1) active on the rt2800usb phy, running in
-managed mode.
-
-Thank you for your time.
-
------Messaggio originale-----
-Da: Helmut Schaa [mailto:helmut.schaa@googlemail.com] 
-Inviato: martedì 21 maggio 2013 10.16
-A: Alessandro Lannocca
-Cc: linux-wireless
-Oggetto: Re: rt3070-based usb device won't accept mac address changes
-
-On Sat, May 18, 2013 at 5:10 PM, Alessandro Lannocca
-<alessandro.lannocca@gmail.com> wrote:
-> Hi, after switching to kernel 3.8.8 (ubuntu quantal to raring), I'm 
-> unable to change my alfa AWUS036NH mac address; a simple:
+On Mon, May 13, 2013 at 2:42 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2013-05-10 at 17:50 -0700, Ashok Nagarajan wrote:
+>> This patch assumes 11g support
+>> implies a 11g operation and returns the appropriate mandatory rates.
 >
-> ifconfig <device> down
-> ifconfig <device> hw ether <random hw>
->
-> results in:
->
-> SIOCSIFHWADDR: Invalid argument
+> Which is a problem, because it means that by default we'll create IBSS
+> networks that are not compatible with 11b devices.
 
-Do you have multiple wifi interfaces or just that single one?
-Helmut
+Okay make sense. I would drop just this patch and send rest.
 
+Thanks,
+Ashok
+>
+> johannes
+>
+
+
+
+--
+Ashok Raj Nagarajan,
+cozybit Inc.
+http://www.cozybit.com
