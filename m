@@ -1,83 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:59522 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751669Ab3EaCKZ (ORCPT
+Received: from cpe-075-189-159-031.nc.res.rr.com ([75.189.159.31]:44243 "EHLO
+	jgpicker.rdu.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754418Ab3EMQoT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 22:10:25 -0400
-Received: by mail-pb0-f50.google.com with SMTP id wy17so1384818pbc.9
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:10:24 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 09/40] crda: do not double count on reglib_for_each_country()
-Date: Thu, 30 May 2013 19:08:58 -0700
-Message-Id: <1369966169-23640-10-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_041027_902681_EE7DAA0A)
-In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 13 May 2013 12:44:19 -0400
+From: John Greene <jogreene@redhat.com>
+To: rhkernel-list@redhat.com
+Cc: John Greene <jogreene@redhat.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, Tim Gardner <tim.gardner@canonical.com>
+Subject: [RHEL 6.5 PATCH 170/176] brcmsmac: avoid 512 byte stack variable
+Date: Mon, 13 May 2013 11:47:12 -0400
+Message-Id: <1368460038-21195-171-git-send-email-jogreene@redhat.com> (sfid-20130513_184432_766981_914984C3)
+In-Reply-To: <1368460038-21195-1-git-send-email-jogreene@redhat.com>
+References: <1368460038-21195-1-git-send-email-jogreene@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Bugzilla: 757944
+Brew: <https://brewweb.devel.redhat.com/taskinfo?taskID=5738553>
+Upstream Status: 0d61c9177cb9bf48dcec9c3d9205a309085d4318
+Tested: By me. Acceptable. See BZ for details
 
-Commit ebcbfcf4 introduced reglib_for_each_country() used
-by regdbump and later intersect. This helper however only
-increased the index count after we requestd getting a new
-regulatory domain, this is incorrect and causes us to iterate
-over the same element twice in the beginning. This means
-intersection and regdb printing was going over the first
-element twice. This has been present since v1.1.
+Dynamically allocate the probe response template which
+avoids potential stack corruption. Observed with smatch:
 
-This also requires an adjustment on intersect due to the
-way things were being handled before.
+drivers/net/wireless/brcm80211/brcmsmac/main.c:7412 brcms_c_bss_update_probe_resp()
+ warn: 'prb_resp' puts 512 bytes on stack
 
-mcgrof@frijol ~/devel/crda (git::master)$ git describe --contains ebcbfcf4
-v1.1.3~9
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list@broadcom.com
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- intersect.c |   10 +++-------
- reglib.h    |    3 +--
- 2 files changed, 4 insertions(+), 9 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/main.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/intersect.c b/intersect.c
-index 5cb7d7c..dea9145 100644
---- a/intersect.c
-+++ b/intersect.c
-@@ -79,16 +79,12 @@ int main(int argc, char **argv)
- 		return -EINVAL;
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index c72fbab..8ec610e 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -7398,9 +7398,13 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
+ 			      struct brcms_bss_cfg *cfg,
+ 			      bool suspend)
+ {
+-	u16 prb_resp[BCN_TMPL_LEN / 2];
++	u16 *prb_resp;
+ 	int len = BCN_TMPL_LEN;
  
--	if (idx == 1) {
--		world = (struct ieee80211_regdomain *) rd;
--		rd = NULL;
--	}
--
--
- 	if (intersected > 1)
- 		printf("%d regulatory domains intersected\n", intersected);
--	else
-+	else {
-+		world = prev_world;
- 		printf("Only one intersection completed\n");
-+	}
++	prb_resp = kmalloc(BCN_TMPL_LEN, GFP_ATOMIC);
++	if (!prb_resp)
++		return;
++
+ 	/*
+ 	 * write the probe response to hardware, or save in
+ 	 * the config structure
+@@ -7434,6 +7438,8 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
  
- 	/* Tada! */
- 	printf("== World regulatory domain: ==\n");
-diff --git a/reglib.h b/reglib.h
-index b52d717..8bd9e03 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -79,8 +79,7 @@ reglib_get_rd_idx(unsigned int idx, const char *file);
- #define reglib_for_each_country(__rd, __idx, __file)			\
- 	for (__rd = reglib_get_rd_idx(__idx, __file);		\
- 	     __rd != NULL;						\
--	     __rd = reglib_get_rd_idx(__idx, __file),		\
--	     __idx++)
-+	     __rd = reglib_get_rd_idx(++__idx, __file))		\
+ 	if (suspend)
+ 		brcms_c_enable_mac(wlc);
++
++	kfree(prb_resp);
+ }
  
- const struct ieee80211_regdomain *
- reglib_get_rd_alpha2(const char *alpha2, const char *file);
+ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
 -- 
-1.7.10.4
+1.7.11.7
 
