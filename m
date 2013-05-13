@@ -1,86 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:41989 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754461Ab3EOLQY (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:62483 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751846Ab3EMRJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 07:16:24 -0400
+	Mon, 13 May 2013 13:09:27 -0400
 MIME-Version: 1.0
-In-Reply-To: <51935A67.6000804@solcon.nl>
-References: <51935A67.6000804@solcon.nl>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 15 May 2013 21:16:02 +1000
-Message-ID: <CAGRGNgUAkUB_FimqmUg4hyNpkVYKW-1vs2J=Tsr2juiineusrw@mail.gmail.com> (sfid-20130515_131659_721026_0B5FC9E1)
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add new USB ID
-To: Albert Pool <albertpool@solcon.nl>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	chaoming_li@realsil.com.cn,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <5191173D.3070709@gmail.com>
+References: <1320756113.14409.385.camel@x61.thuisdomein>
+	<20111108141647.GA3390@hash.lan>
+	<1342124352.22584.21.camel@x61.thuisdomein>
+	<20120712203837.GA3045@localhost>
+	<4FFFBDD8.6020305@neratec.com>
+	<20120713124134.GA5567@localhost>
+	<1362999998.3137.60.camel@x61.thuisdomein>
+	<1368457391.1350.67.camel@x61.thuisdomein>
+	<CAJ-VmokciVPxzJ0LptdQyL9koa8Bw7ecJdentPH5q9+MQ4=GpA@mail.gmail.com>
+	<5191173D.3070709@gmail.com>
+Date: Mon, 13 May 2013 10:09:25 -0700
+Message-ID: <CAJ-Vmo=HOFqu8vB1=pvz79YwE8qAMDc4ZJACJHaSuxn4S92sFg@mail.gmail.com> (sfid-20130513_191001_744449_2A338F1F)
+Subject: Re: [PATCH] ath5k: Remove AHB bus support.
+From: Adrian Chadd <adrian@freebsd.org>
+To: Jonathan Bither <jonbither@gmail.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>,
+	nbd@openwrt.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Albert,
+On 13 May 2013 09:39, Jonathan Bither <jonbither@gmail.com> wrote:
 
-Your patch appears to have been mangled, please check your email
-client's settings, or send using git-send-email
+>> ... is anyone using this on openwrt?
+>>
+> I am.
+> I am also reworking AR2131X drivers and will submit a patch to linux-mips
+> shortly.
 
-There's instructions for most email clients in the Documentation
-directory of the kernel source tree.
-
-On Wed, May 15, 2013 at 7:50 PM, Albert Pool <albertpool@solcon.nl> wrote:
-> This adds the USB ID of the On Networks N300MA, clone of Netgear WNA3100M.
->
-> Signed-off-by: Albert Pool <albertpool@solcon.nl>
->
-> Reported-by: Ana Rey <Anazul77@hotmail.com>
->
-> ---
->
->  drivers/net/wireless/rtlwifi/rtl8192cu/sw.c |    1 +
->
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->
-> index 23d640a..0b593de 100644
->
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->
-> @@ -349,6 +349,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
->
->      {RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
->
->      {RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
->
->      {RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, /*Netgear-Sercomm*/
->
-> +    {RTL_USB_DEVICE(0x0846, 0xf001, rtl92cu_hal_cfg)}, /*Netgear-On
-> Networks*/
->
->      {RTL_USB_DEVICE(0x0b05, 0x17ab, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
->
->      {RTL_USB_DEVICE(0x0bda, 0x8186, rtl92cu_hal_cfg)}, /*Realtek 92CE-VAU*/
->
->      {RTL_USB_DEVICE(0x0df6, 0x0061, rtl92cu_hal_cfg)}, /*Sitecom-Edimax*/
->
-> --
->
-> 1.7.9.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sweet. Someone say NACK then? :)
 
 
 
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Adrian
