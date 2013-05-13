@@ -1,680 +1,481 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:60993 "EHLO
-	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759184Ab3EWVg5 (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:40975 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992Ab3EMPLY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 17:36:57 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 2/2] cfg80211/nl80211: Add packet coalesce support
-Date: Thu, 23 May 2013 14:35:08 -0700
-Message-ID: <1369344908-11184-2-git-send-email-bzhao@marvell.com> (sfid-20130523_233700_121726_569B03D4)
-In-Reply-To: <1369344908-11184-1-git-send-email-bzhao@marvell.com>
-References: <1369344908-11184-1-git-send-email-bzhao@marvell.com>
+	Mon, 13 May 2013 11:11:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1368457391.1350.67.camel@x61.thuisdomein>
+References: <1320756113.14409.385.camel@x61.thuisdomein>
+	<20111108141647.GA3390@hash.lan>
+	<1342124352.22584.21.camel@x61.thuisdomein>
+	<20120712203837.GA3045@localhost>
+	<4FFFBDD8.6020305@neratec.com>
+	<20120713124134.GA5567@localhost>
+	<1362999998.3137.60.camel@x61.thuisdomein>
+	<1368457391.1350.67.camel@x61.thuisdomein>
+Date: Mon, 13 May 2013 08:11:22 -0700
+Message-ID: <CAJ-VmokciVPxzJ0LptdQyL9koa8Bw7ecJdentPH5q9+MQ4=GpA@mail.gmail.com> (sfid-20130513_171147_823680_13B778E6)
+Subject: Re: [PATCH] ath5k: Remove AHB bus support.
+From: Adrian Chadd <adrian@freebsd.org>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>,
+	nbd@openwrt.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+... is anyone using this on openwrt?
 
-In most cases, host that receives IPv4 and IPv6 multicast/broadcast
-packets does not do anything with these packets. Therefore the
-reception of these unwanted packets causes unnecessary processing
-and power consumption.
 
-Packet coalesce feature helps to reduce number of received
-interrupts to host by buffering these packets in firmware/hardware
-for some predefined time. Received interrupt will be generated when
-one of the following events occur.
-a) Expiration of hardware timer whose expiration time is set to
-maximum coalescing delay of matching coalesce rule.
-b) Coalescing buffer in hardware reaches it's limit.
-c) Packet doesn't match any of the configured coalesce rules.
 
-This patch adds set/get configuration support for packet coalesce.
-User needs to configure following parameters for creating a coalesce
-rule.
-a) Maximum coalescing delay
-b) List of packet patterns which needs to be matched
-c) Condition for coalescence. pattern 'match' or 'no match'
-Multiple such rules can be created.
 
-This feature needs to be advertised during driver initialization.
-Drivers are supposed to do required firmware/hardware settings based
-on user configuration.
+Adrian
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-v2: add documentation in nl80211.h and elabiration of "coalesce"
-    in commit log (Luis R. Rodriguez)
-
- include/net/cfg80211.h       |  51 +++++++++
- include/uapi/linux/nl80211.h |  82 ++++++++++++-
- net/wireless/core.c          |   2 +
- net/wireless/core.h          |  22 ++++
- net/wireless/nl80211.c       | 265 +++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 419 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 4585b63..dcbf125 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1739,6 +1739,35 @@ struct cfg80211_wowlan {
- };
- 
- /**
-+ * struct cfg80211_coalesce_rules - Coalesce rule parameters
-+ *
-+ * This structure defines coalesce rule for the device.
-+ * @delay: maximum coalescing delay in msecs.
-+ * @condition: condition for packet coalescence.
-+ *	i.e. pattern 'match' or 'no match'
-+ * @patterns: array of packet patterns
-+ * @n_patterns: number of patterns
-+ */
-+struct cfg80211_coalesce_rules {
-+	int delay;
-+	u8 condition;
-+	struct cfg80211_pkt_pattern *patterns;
-+	int n_patterns;
-+};
-+
-+/**
-+ * struct cfg80211_coalesce - Packet coalescing settings
-+ *
-+ * This structure defines coalescing settings.
-+ * @rules: array of coalesce rules
-+ * @n_rules: number of rules
-+ */
-+struct cfg80211_coalesce {
-+	struct cfg80211_coalesce_rules **rules;
-+	int n_rules;
-+};
-+
-+/**
-  * struct cfg80211_wowlan_wakeup - wakeup report
-  * @disconnect: woke up by getting disconnected
-  * @magic_pkt: woke up by receiving magic packet
-@@ -2024,6 +2053,7 @@ struct cfg80211_update_ft_ies_params {
-  *	driver can take the most appropriate actions.
-  * @crit_proto_stop: Indicates critical protocol no longer needs increased link
-  *	reliability. This operation can not fail.
-+ * @set_coalesce: Set coalesce parameters.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -2259,6 +2289,8 @@ struct cfg80211_ops {
- 				    u16 duration);
- 	void	(*crit_proto_stop)(struct wiphy *wiphy,
- 				   struct wireless_dev *wdev);
-+	int	(*set_coalesce)(struct wiphy *wiphy,
-+				struct cfg80211_coalesce_rules *rule);
- };
- 
- /*
-@@ -2483,6 +2515,23 @@ struct wiphy_wowlan_support {
- };
- 
- /**
-+ * struct wiphy_coalesce_support - coalesce support data
-+ * @n_rules: maximum number of coalesce rules
-+ * @n_patterns: number of supported patterns
-+ *	(see nl80211.h for the pattern definition)
-+ * @pattern_max_len: maximum length of each pattern
-+ * @pattern_min_len: minimum length of each pattern
-+ * @max_pkt_offset: maximum Rx packet offset
-+ */
-+struct wiphy_coalesce_support {
-+	int n_rules;
-+	int n_patterns;
-+	int pattern_max_len;
-+	int pattern_min_len;
-+	int max_pkt_offset;
-+};
-+
-+/**
-  * struct wiphy - wireless hardware description
-  * @reg_notifier: the driver's regulatory notification callback,
-  *	note that if your driver uses wiphy_apply_custom_regulatory()
-@@ -2589,6 +2638,7 @@ struct wiphy_wowlan_support {
-  *	802.11-2012 8.4.2.29 for the defined fields.
-  * @extended_capabilities_mask: mask of the valid values
-  * @extended_capabilities_len: length of the extended capabilities
-+ * @wiphy_coalesce_support coalesce: coalesce support information
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -2697,6 +2747,7 @@ struct wiphy {
- 	const struct iw_handler_def *wext;
- #endif
- 
-+	struct wiphy_coalesce_support coalesce;
- 	char priv[0] __aligned(NETDEV_ALIGN);
- };
- 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 1fa2bf4..34401a1 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -126,6 +126,31 @@
-  */
- 
- /**
-+ * DOC: packet coalesce support
-+ *
-+ * In most cases, host that receives IPv4 and IPv6 multicast/broadcast
-+ * packets does not do anything with these packets. Therefore the
-+ * reception of these unwanted packets causes unnecessary processing
-+ * and power consumption.
-+ *
-+ * Packet coalesce feature helps to reduce number of received interrupts
-+ * to host by buffering these packets in firmware/hardware for some
-+ * predefined time. Received interrupt will be generated when one of the
-+ * following events occur.
-+ * a) Expiration of hardware timer whose expiration time is set to maximum
-+ * coalescing delay of matching coalesce rule.
-+ * b) Coalescing buffer in hardware reaches it's limit.
-+ * c) Packet doesn't match any of the configured coalesce rules.
-+ *
-+ * User needs to configure following parameters for creating a coalesce
-+ * rule.
-+ * a) Maximum coalescing delay
-+ * b) List of packet patterns which needs to be matched
-+ * c) Condition for coalescence. pattern 'match' or 'no match'
-+ * Multiple such rules can be created.
-+ */
-+
-+/**
-  * enum nl80211_commands - supported nl80211 commands
-  *
-  * @NL80211_CMD_UNSPEC: unspecified command to catch errors
-@@ -648,6 +673,10 @@
-  * @NL80211_CMD_CRIT_PROTOCOL_STOP: Indicates the connection reliability can
-  *	return back to normal.
-  *
-+ * @NL80211_CMD_GET_COALESCE: Get currently supported coalesce rules.
-+ *
-+ * @NL80211_CMD_SET_COALESCE: Add new coalesce rule.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -810,6 +839,9 @@ enum nl80211_commands {
- 	NL80211_CMD_CRIT_PROTOCOL_START,
- 	NL80211_CMD_CRIT_PROTOCOL_STOP,
- 
-+	NL80211_CMD_GET_COALESCE,
-+	NL80211_CMD_SET_COALESCE,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1431,6 +1463,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_MAX_CRIT_PROT_DURATION: duration in milliseconds in which
-  *      the connection should have increased reliability (u16).
-  *
-+ * @NL80211_ATTR_COALESCE_RULE: Coalesce rule information.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1729,6 +1763,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_CRIT_PROT_ID,
- 	NL80211_ATTR_MAX_CRIT_PROT_DURATION,
- 
-+	NL80211_ATTR_COALESCE_RULE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3027,7 +3063,6 @@ enum nl80211_cqm_rssi_threshold_event {
- 	NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
- };
- 
--
- /**
-  * enum nl80211_tx_power_setting - TX power adjustment
-  * @NL80211_TX_POWER_AUTOMATIC: automatically determine transmit power
-@@ -3079,8 +3114,10 @@ enum nl80211_packet_pattern_attr {
-  * @max_pkt_offset: maximum Rx packet offset
-  *
-  * This struct is carried in %NL80211_WOWLAN_TRIG_PKT_PATTERN when
-- * that is part of %NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED in the
-- * capability information given by the kernel to userspace.
-+ * that is part of %NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED or in
-+ * %NL80211_ATTR_COALESCE_RULE_PKT_PATTERN when that is part of
-+ * %NL80211_ATTR_COALESCE_RULE in the capability information given
-+ * by the kernel to userspace.
-  */
- struct nl80211_pattern_support {
- 	__u32 max_patterns;
-@@ -3299,6 +3336,41 @@ enum nl80211_wowlan_tcp_attrs {
- };
- 
- /**
-+ * struct nl80211_coalesce_rule_support - coalesce rule support information
-+ * @max_rules: maximum number of rules supported
-+ * @pat: packet pattern support information
-+ *
-+ * This struct is carried in %NL80211_ATTR_COALESCE_RULE in the
-+ * capability information given by the kernel to userspace.
-+ */
-+struct nl80211_coalesce_rule_support {
-+	__u32 max_rules;
-+	struct nl80211_pattern_support pat;
-+} __attribute__((packed));
-+
-+/**
-+ * enum nl80211_attr_coalesce_rule - coalesce rule attribute
-+ * @__NL80211_COALESCE_RULE_INVALID: invalid number for nested attribute
-+ * @NL80211_ATTR_COALESCE_RULE_DELAY: delay in msecs used for packet coalescing
-+ * @NL80211_ATTR_COALESCE_RULE_CONDITION: condition for packet coalescence.
-+ *	i.e. pattern 'match' or 'no match'
-+ * @NL80211_ATTR_COALESCE_RULE_PKT_PATTERN: packet offset, pattern is matched
-+ *	after these fixed number of bytes of received packet
-+ * @NUM_NL80211_ATTR_COALESCE_RULE: number of attributes
-+ * @NL80211_ATTR_COALESCE_RULE_MAX: max attribute number
-+ */
-+enum nl80211_attr_coalesce_rule {
-+	__NL80211_COALESCE_RULE_INVALID,
-+	NL80211_ATTR_COALESCE_RULE_DELAY,
-+	NL80211_ATTR_COALESCE_RULE_CONDITION,
-+	NL80211_ATTR_COALESCE_RULE_PKT_PATTERN,
-+
-+	/* keep last */
-+	NUM_NL80211_ATTR_COALESCE_RULE,
-+	NL80211_ATTR_COALESCE_RULE_MAX = NUM_NL80211_ATTR_COALESCE_RULE - 1
-+};
-+
-+/**
-  * enum nl80211_iface_limit_attrs - limit attributes
-  * @NL80211_IFACE_LIMIT_UNSPEC: (reserved)
-  * @NL80211_IFACE_LIMIT_MAX: maximum number of interfaces that
-@@ -3578,6 +3650,9 @@ enum nl80211_ap_sme_features {
-  *	Peering Management entity which may be implemented by registering for
-  *	beacons or NL80211_CMD_NEW_PEER_CANDIDATE events. The mesh beacon is
-  *	still generated by the driver.
-+ * @NL80211_FEATURE_PACKET_COALESCE: This driver support packet coalescing
-+ *	feature. Packets are buffered in firmware based on configured rules
-+ *	to reduce unwanted packet or interrupt to host.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -3597,6 +3672,7 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
- 	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 15,
- 	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
-+	NL80211_FEATURE_PACKET_COALESCE			= 1 << 17,
- };
- 
- /**
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 68f0c96..72a41da 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -737,6 +737,8 @@ void wiphy_unregister(struct wiphy *wiphy)
- 	if (rdev->wowlan && rdev->ops->set_wakeup)
- 		rdev_set_wakeup(rdev, false);
- 	cfg80211_rdev_free_wowlan(rdev);
-+
-+	cfg80211_rdev_free_coalesce(rdev);
- }
- EXPORT_SYMBOL(wiphy_unregister);
- 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index fd35dae..a0feff6 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -91,6 +91,8 @@ struct cfg80211_registered_device {
- 	/* netlink port which started critical protocol (0 means not started) */
- 	u32 crit_proto_nlportid;
- 
-+	struct cfg80211_coalesce *coalesce;
-+
- 	/* must be last because of the way we do wiphy_priv(),
- 	 * and it should at least be aligned to NETDEV_ALIGN */
- 	struct wiphy wiphy __aligned(NETDEV_ALIGN);
-@@ -119,6 +121,26 @@ cfg80211_rdev_free_wowlan(struct cfg80211_registered_device *rdev)
- 	kfree(rdev->wowlan);
- }
- 
-+static inline void
-+cfg80211_rdev_free_coalesce(struct cfg80211_registered_device *rdev)
-+{
-+	int i, j;
-+	struct cfg80211_coalesce_rules *rule;
-+
-+	if (!rdev->coalesce)
-+		return;
-+
-+	for (i = 0; i < rdev->coalesce->n_rules; i++) {
-+		rule = rdev->coalesce->rules[i];
-+		for (j = 0; j < rule->n_patterns; j++)
-+			kfree(rule->patterns[j].mask);
-+		kfree(rule->patterns);
-+		kfree(rule);
-+	}
-+	kfree(rdev->coalesce->rules);
-+	kfree(rdev->coalesce);
-+}
-+
- extern struct workqueue_struct *cfg80211_wq;
- extern struct mutex cfg80211_mutex;
- extern struct list_head cfg80211_rdev_list;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5f640de..8cfca0c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -432,6 +432,14 @@ nl80211_wowlan_tcp_policy[NUM_NL80211_WOWLAN_TCP] = {
- 	[NL80211_WOWLAN_TCP_WAKE_MASK] = { .len = 1 },
- };
- 
-+/* policy for coalesce rule attributes */
-+static const struct nla_policy
-+nl80211_coalesce_policy[NUM_NL80211_ATTR_COALESCE_RULE] = {
-+	[NL80211_ATTR_COALESCE_RULE_DELAY] = { .type = NLA_U32 },
-+	[NL80211_ATTR_COALESCE_RULE_CONDITION] = { .type = NLA_U8 },
-+	[NL80211_ATTR_COALESCE_RULE_PKT_PATTERN] = { .type = NLA_NESTED },
-+};
-+
- /* policy for GTK rekey offload attributes */
- static const struct nla_policy
- nl80211_rekey_policy[NUM_NL80211_REKEY_DATA] = {
-@@ -1035,6 +1043,27 @@ static int nl80211_send_wowlan(struct sk_buff *msg,
- }
- #endif
- 
-+static int nl80211_send_coalesce(struct sk_buff *msg,
-+				 struct cfg80211_registered_device *dev,
-+				 bool large)
-+{
-+	struct nl80211_coalesce_rule_support rule;
-+
-+	if (!dev->wiphy.coalesce.n_patterns || !dev->wiphy.coalesce.n_rules)
-+		return 0;
-+
-+	rule.max_rules = dev->wiphy.coalesce.n_rules;
-+	rule.pat.max_patterns = dev->wiphy.coalesce.n_patterns;
-+	rule.pat.min_pattern_len = dev->wiphy.coalesce.pattern_min_len;
-+	rule.pat.max_pattern_len = dev->wiphy.coalesce.pattern_max_len;
-+	rule.pat.max_pkt_offset = dev->wiphy.coalesce.max_pkt_offset;
-+
-+	if (nla_put(msg, NL80211_ATTR_COALESCE_RULE, sizeof(rule), &rule))
-+		return -ENOBUFS;
-+
-+	return 0;
-+}
-+
- static int nl80211_send_band_rateinfo(struct sk_buff *msg,
- 				      struct ieee80211_supported_band *sband)
- {
-@@ -1546,6 +1575,12 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
- 			    dev->wiphy.vht_capa_mod_mask))
- 			goto nla_put_failure;
- 
-+		(*split_start)++;
-+		break;
-+	case 10:
-+		if (nl80211_send_coalesce(msg, dev, split))
-+			goto nla_put_failure;
-+
- 		/* done */
- 		*split_start = 0;
- 		break;
-@@ -8007,6 +8042,221 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- }
- #endif
- 
-+static int nl80211_send_coalesce_rules(struct sk_buff *msg,
-+				       struct cfg80211_registered_device *rdev)
-+{
-+	struct nlattr *nl_pats, *nl_pat, *nl_rule, *nl_rules;
-+	int i, j, pat_len;
-+	struct cfg80211_coalesce_rules *rule;
-+
-+	if (!rdev->coalesce->n_rules)
-+		return 0;
-+
-+	nl_rules = nla_nest_start(msg, NL80211_ATTR_COALESCE_RULE);
-+	if (!nl_rules)
-+		return -ENOBUFS;
-+
-+	for (i = 0; i < rdev->coalesce->n_rules; i++) {
-+		nl_rule = nla_nest_start(msg, i + 1);
-+		if (!nl_rule)
-+			return -ENOBUFS;
-+
-+		rule = rdev->coalesce->rules[i];
-+		if (nla_put_u32(msg, NL80211_ATTR_COALESCE_RULE_DELAY,
-+				rule->delay))
-+			return -ENOBUFS;
-+
-+		if (nla_put_u8(msg, NL80211_ATTR_COALESCE_RULE_CONDITION,
-+			       rule->condition))
-+			return -ENOBUFS;
-+
-+		nl_pats = nla_nest_start(msg,
-+				NL80211_ATTR_COALESCE_RULE_PKT_PATTERN);
-+		if (!nl_pats)
-+			return -ENOBUFS;
-+
-+		for (j = 0; j < rule->n_patterns; j++) {
-+			nl_pat = nla_nest_start(msg, j + 1);
-+			if (!nl_pat)
-+				return -ENOBUFS;
-+			pat_len = rule->patterns[j].pattern_len;
-+			if (nla_put(msg, NL80211_PKTPAT_MASK,
-+				    DIV_ROUND_UP(pat_len, 8),
-+				    rule->patterns[j].mask) ||
-+			    nla_put(msg, NL80211_PKTPAT_PATTERN, pat_len,
-+				    rule->patterns[j].pattern) ||
-+			    nla_put_u32(msg, NL80211_PKTPAT_OFFSET,
-+					rule->patterns[j].pkt_offset))
-+				return -ENOBUFS;
-+			nla_nest_end(msg, nl_pat);
-+		}
-+		nla_nest_end(msg, nl_pats);
-+		nla_nest_end(msg, nl_rule);
-+	}
-+	nla_nest_end(msg, nl_rules);
-+
-+	return 0;
-+}
-+
-+static int nl80211_get_coalesce(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	if (!rdev->wiphy.coalesce.n_patterns || !rdev->wiphy.coalesce.n_rules)
-+		return -EOPNOTSUPP;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	hdr = nl80211hdr_put(msg, info->snd_portid, info->snd_seq, 0,
-+			     NL80211_CMD_GET_COALESCE);
-+	if (!hdr)
-+		goto nla_put_failure;
-+
-+	if (rdev->coalesce && nl80211_send_coalesce_rules(msg, rdev))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+	return genlmsg_reply(msg, info);
-+
-+nla_put_failure:
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
-+static int nl80211_set_coalesce(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct nlattr *tb[NUM_NL80211_ATTR_COALESCE_RULE];
-+	struct wiphy_coalesce_support *coalesce = &rdev->wiphy.coalesce;
-+	struct cfg80211_coalesce_rules new_rule = {};
-+	struct cfg80211_coalesce_rules *nrule;
-+	int err, i;
-+
-+	if (!(rdev->wiphy.features & NL80211_FEATURE_PACKET_COALESCE))
-+		return -EOPNOTSUPP;
-+	if (!rdev->ops->set_coalesce)
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_COALESCE_RULE]) {
-+		cfg80211_rdev_free_coalesce(rdev);
-+		rdev->coalesce = NULL;
-+		rdev->ops->set_coalesce(&rdev->wiphy, NULL);
-+		return 0;
-+	}
-+
-+	if (!rdev->coalesce) {
-+		rdev->coalesce = kzalloc(sizeof(*rdev->coalesce), GFP_KERNEL);
-+		rdev->coalesce->rules = kcalloc(coalesce->n_rules,
-+						sizeof(void *), GFP_KERNEL);
-+	}
-+
-+	if (rdev->coalesce->n_rules >= coalesce->n_rules)
-+		return -EOPNOTSUPP;
-+
-+	err = nla_parse(tb, NL80211_ATTR_COALESCE_RULE_MAX,
-+			nla_data(info->attrs[NL80211_ATTR_COALESCE_RULE]),
-+			nla_len(info->attrs[NL80211_ATTR_COALESCE_RULE]),
-+			nl80211_coalesce_policy);
-+	if (err)
-+		return err;
-+
-+	new_rule.delay = nla_get_u32(tb[NL80211_ATTR_COALESCE_RULE_DELAY]);
-+	new_rule.condition =
-+		nla_get_u8(tb[NL80211_ATTR_COALESCE_RULE_CONDITION]);
-+
-+	if (tb[NL80211_ATTR_COALESCE_RULE_PKT_PATTERN]) {
-+		struct nlattr *pat;
-+		int n_patterns = 0;
-+		int rem, pat_len, mask_len, pkt_offset;
-+		struct nlattr *pat_tb[NUM_NL80211_PKTPAT];
-+
-+		nla_for_each_nested(pat,
-+				    tb[NL80211_ATTR_COALESCE_RULE_PKT_PATTERN],
-+				    rem)
-+			n_patterns++;
-+		if (n_patterns > coalesce->n_patterns)
-+			return -EINVAL;
-+
-+		new_rule.patterns = kcalloc(n_patterns,
-+						sizeof(new_rule.patterns[0]),
-+						GFP_KERNEL);
-+		if (!new_rule.patterns)
-+			return -ENOMEM;
-+
-+		new_rule.n_patterns = n_patterns;
-+		i = 0;
-+
-+		nla_for_each_nested(pat,
-+				    tb[NL80211_ATTR_COALESCE_RULE_PKT_PATTERN],
-+				    rem) {
-+			nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
-+				  nla_len(pat), NULL);
-+			err = -EINVAL;
-+			if (!pat_tb[NL80211_PKTPAT_MASK] ||
-+			    !pat_tb[NL80211_PKTPAT_PATTERN])
-+				goto error;
-+			pat_len = nla_len(pat_tb[NL80211_PKTPAT_PATTERN]);
-+			mask_len = DIV_ROUND_UP(pat_len, 8);
-+			if (nla_len(pat_tb[NL80211_PKTPAT_MASK]) !=
-+			    mask_len)
-+				goto error;
-+			if (pat_len > coalesce->pattern_max_len ||
-+			    pat_len < coalesce->pattern_min_len)
-+				goto error;
-+
-+			if (!pat_tb[NL80211_PKTPAT_OFFSET])
-+				pkt_offset = 0;
-+			else
-+				pkt_offset = nla_get_u32(
-+					pat_tb[NL80211_PKTPAT_OFFSET]);
-+			if (pkt_offset > coalesce->max_pkt_offset)
-+				goto error;
-+			new_rule.patterns[i].pkt_offset = pkt_offset;
-+
-+			new_rule.patterns[i].mask =
-+				kmalloc(mask_len + pat_len, GFP_KERNEL);
-+			if (!new_rule.patterns[i].mask) {
-+				err = -ENOMEM;
-+				goto error;
-+			}
-+			new_rule.patterns[i].pattern =
-+				new_rule.patterns[i].mask + mask_len;
-+			memcpy(new_rule.patterns[i].mask,
-+			       nla_data(pat_tb[NL80211_PKTPAT_MASK]),
-+			       mask_len);
-+			new_rule.patterns[i].pattern_len = pat_len;
-+			memcpy(new_rule.patterns[i].pattern,
-+			       nla_data(pat_tb[NL80211_PKTPAT_PATTERN]),
-+			       pat_len);
-+			i++;
-+		}
-+	}
-+
-+	nrule = kmemdup(&new_rule, sizeof(new_rule), GFP_KERNEL);
-+	if (!nrule) {
-+		err = -ENOMEM;
-+		goto error;
-+	}
-+
-+	err = rdev->ops->set_coalesce(&rdev->wiphy, nrule);
-+	if (err)
-+		goto error;
-+
-+	rdev->coalesce->rules[rdev->coalesce->n_rules++] = nrule;
-+
-+	return 0;
-+
-+error:
-+	for (i = 0; i < new_rule.n_patterns; i++)
-+		kfree(new_rule.patterns[i].mask);
-+	kfree(new_rule.patterns);
-+	return err;
-+}
-+
- static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -9026,6 +9276,21 @@ static struct genl_ops nl80211_ops[] = {
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
-+		.cmd = NL80211_CMD_GET_COALESCE,
-+		.doit = nl80211_get_coalesce,
-+		.policy = nl80211_policy,
-+		.internal_flags = NL80211_FLAG_NEED_WIPHY |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
-+		.cmd = NL80211_CMD_SET_COALESCE,
-+		.doit = nl80211_set_coalesce,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_WIPHY |
-+				  NL80211_FLAG_NEED_RTNL,
- 	}
- };
- 
--- 
-1.8.0
-
+On 13 May 2013 08:03, Paul Bolle <pebolle@tiscali.nl> wrote:
+> AHB bus support was added in v2.6.38, through commit a0b907ee2a ("ath5k:
+> Add AHB bus support."). That code can only be build if the Kconfig
+> symbol ATHEROS_AR231X is set. But that symbol has never been added to
+> the tree. So AHB bus support has always been dead code.
+>
+> Let's remove all code that depends on ATHEROS_AR231X. If that symbol
+> ever gets added to the tree the AHB bus support can be re-added too.
+>
+> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> ---
+> 0) Compile tested (I do not think I have hardware that use the ath5k
+> driver).
+>
+> 1) I mentioned the missing ATHEROS_AR231X symbol three times before (in
+> August 2011, in July 2012 and in March 2103). Nobody stepped forward to
+> tell me they were actually working on adding that symbol somehow. So
+> let's see how people react when I submit a patch to remove the (dead)
+> AHB bus support.
+>
+>  drivers/net/wireless/ath/ath5k/Kconfig  |  14 +-
+>  drivers/net/wireless/ath/ath5k/Makefile |   1 -
+>  drivers/net/wireless/ath/ath5k/ahb.c    | 239 --------------------------------
+>  drivers/net/wireless/ath/ath5k/ath5k.h  |  28 ----
+>  drivers/net/wireless/ath/ath5k/base.c   |  14 --
+>  drivers/net/wireless/ath/ath5k/led.c    |   6 -
+>  6 files changed, 3 insertions(+), 299 deletions(-)
+>  delete mode 100644 drivers/net/wireless/ath/ath5k/ahb.c
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
+> index c9f81a3..93caf8e68 100644
+> --- a/drivers/net/wireless/ath/ath5k/Kconfig
+> +++ b/drivers/net/wireless/ath/ath5k/Kconfig
+> @@ -1,13 +1,12 @@
+>  config ATH5K
+>         tristate "Atheros 5xxx wireless cards support"
+> -       depends on (PCI || ATHEROS_AR231X) && MAC80211
+> +       depends on PCI && MAC80211
+>         select ATH_COMMON
+>         select MAC80211_LEDS
+>         select LEDS_CLASS
+>         select NEW_LEDS
+>         select AVERAGE
+> -       select ATH5K_AHB if (ATHEROS_AR231X && !PCI)
+> -       select ATH5K_PCI if (!ATHEROS_AR231X && PCI)
+> +       select ATH5K_PCI
+>         ---help---
+>           This module adds support for wireless adapters based on
+>           Atheros 5xxx chipset.
+> @@ -52,16 +51,9 @@ config ATH5K_TRACER
+>
+>           If unsure, say N.
+>
+> -config ATH5K_AHB
+> -       bool "Atheros 5xxx AHB bus support"
+> -       depends on (ATHEROS_AR231X && !PCI)
+> -       ---help---
+> -         This adds support for WiSoC type chipsets of the 5xxx Atheros
+> -         family.
+> -
+>  config ATH5K_PCI
+>         bool "Atheros 5xxx PCI bus support"
+> -       depends on (!ATHEROS_AR231X && PCI)
+> +       depends on PCI
+>         ---help---
+>           This adds support for PCI type chipsets of the 5xxx Atheros
+>           family.
+> diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
+> index 1b3a34f..51e2d86 100644
+> --- a/drivers/net/wireless/ath/ath5k/Makefile
+> +++ b/drivers/net/wireless/ath/ath5k/Makefile
+> @@ -17,6 +17,5 @@ ath5k-y                               += ani.o
+>  ath5k-y                                += sysfs.o
+>  ath5k-y                                += mac80211-ops.o
+>  ath5k-$(CONFIG_ATH5K_DEBUG)    += debug.o
+> -ath5k-$(CONFIG_ATH5K_AHB)      += ahb.o
+>  ath5k-$(CONFIG_ATH5K_PCI)      += pci.o
+>  obj-$(CONFIG_ATH5K)            += ath5k.o
+> diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+> deleted file mode 100644
+> index 8e8bcc7a..0000000
+> --- a/drivers/net/wireless/ath/ath5k/ahb.c
+> +++ /dev/null
+> @@ -1,239 +0,0 @@
+> -/*
+> - * Copyright (c) 2008-2009 Atheros Communications Inc.
+> - * Copyright (c) 2009 Gabor Juhos <juhosg@openwrt.org>
+> - * Copyright (c) 2009 Imre Kaloz <kaloz@openwrt.org>
+> - *
+> - * Permission to use, copy, modify, and/or distribute this software for any
+> - * purpose with or without fee is hereby granted, provided that the above
+> - * copyright notice and this permission notice appear in all copies.
+> - *
+> - * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> - * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> - * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> - * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> - * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> - * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> - * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> - */
+> -
+> -#include <linux/nl80211.h>
+> -#include <linux/platform_device.h>
+> -#include <linux/etherdevice.h>
+> -#include <linux/export.h>
+> -#include <ar231x_platform.h>
+> -#include "ath5k.h"
+> -#include "debug.h"
+> -#include "base.h"
+> -#include "reg.h"
+> -
+> -/* return bus cachesize in 4B word units */
+> -static void ath5k_ahb_read_cachesize(struct ath_common *common, int *csz)
+> -{
+> -       *csz = L1_CACHE_BYTES >> 2;
+> -}
+> -
+> -static bool
+> -ath5k_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
+> -{
+> -       struct ath5k_hw *ah = common->priv;
+> -       struct platform_device *pdev = to_platform_device(ah->dev);
+> -       struct ar231x_board_config *bcfg = pdev->dev.platform_data;
+> -       u16 *eeprom, *eeprom_end;
+> -
+> -
+> -
+> -       bcfg = pdev->dev.platform_data;
+> -       eeprom = (u16 *) bcfg->radio;
+> -       eeprom_end = ((void *) bcfg->config) + BOARD_CONFIG_BUFSZ;
+> -
+> -       eeprom += off;
+> -       if (eeprom > eeprom_end)
+> -               return false;
+> -
+> -       *data = *eeprom;
+> -       return true;
+> -}
+> -
+> -int ath5k_hw_read_srev(struct ath5k_hw *ah)
+> -{
+> -       struct platform_device *pdev = to_platform_device(ah->dev);
+> -       struct ar231x_board_config *bcfg = pdev->dev.platform_data;
+> -       ah->ah_mac_srev = bcfg->devid;
+> -       return 0;
+> -}
+> -
+> -static int ath5k_ahb_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac)
+> -{
+> -       struct platform_device *pdev = to_platform_device(ah->dev);
+> -       struct ar231x_board_config *bcfg = pdev->dev.platform_data;
+> -       u8 *cfg_mac;
+> -
+> -       if (to_platform_device(ah->dev)->id == 0)
+> -               cfg_mac = bcfg->config->wlan0_mac;
+> -       else
+> -               cfg_mac = bcfg->config->wlan1_mac;
+> -
+> -       memcpy(mac, cfg_mac, ETH_ALEN);
+> -       return 0;
+> -}
+> -
+> -static const struct ath_bus_ops ath_ahb_bus_ops = {
+> -       .ath_bus_type = ATH_AHB,
+> -       .read_cachesize = ath5k_ahb_read_cachesize,
+> -       .eeprom_read = ath5k_ahb_eeprom_read,
+> -       .eeprom_read_mac = ath5k_ahb_eeprom_read_mac,
+> -};
+> -
+> -/*Initialization*/
+> -static int ath_ahb_probe(struct platform_device *pdev)
+> -{
+> -       struct ar231x_board_config *bcfg = pdev->dev.platform_data;
+> -       struct ath5k_hw *ah;
+> -       struct ieee80211_hw *hw;
+> -       struct resource *res;
+> -       void __iomem *mem;
+> -       int irq;
+> -       int ret = 0;
+> -       u32 reg;
+> -
+> -       if (!pdev->dev.platform_data) {
+> -               dev_err(&pdev->dev, "no platform data specified\n");
+> -               ret = -EINVAL;
+> -               goto err_out;
+> -       }
+> -
+> -       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> -       if (res == NULL) {
+> -               dev_err(&pdev->dev, "no memory resource found\n");
+> -               ret = -ENXIO;
+> -               goto err_out;
+> -       }
+> -
+> -       mem = ioremap_nocache(res->start, resource_size(res));
+> -       if (mem == NULL) {
+> -               dev_err(&pdev->dev, "ioremap failed\n");
+> -               ret = -ENOMEM;
+> -               goto err_out;
+> -       }
+> -
+> -       res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+> -       if (res == NULL) {
+> -               dev_err(&pdev->dev, "no IRQ resource found\n");
+> -               ret = -ENXIO;
+> -               goto err_iounmap;
+> -       }
+> -
+> -       irq = res->start;
+> -
+> -       hw = ieee80211_alloc_hw(sizeof(struct ath5k_hw), &ath5k_hw_ops);
+> -       if (hw == NULL) {
+> -               dev_err(&pdev->dev, "no memory for ieee80211_hw\n");
+> -               ret = -ENOMEM;
+> -               goto err_iounmap;
+> -       }
+> -
+> -       ah = hw->priv;
+> -       ah->hw = hw;
+> -       ah->dev = &pdev->dev;
+> -       ah->iobase = mem;
+> -       ah->irq = irq;
+> -       ah->devid = bcfg->devid;
+> -
+> -       if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
+> -               /* Enable WMAC AHB arbitration */
+> -               reg = ioread32((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
+> -               reg |= AR5K_AR2315_AHB_ARB_CTL_WLAN;
+> -               iowrite32(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
+> -
+> -               /* Enable global WMAC swapping */
+> -               reg = ioread32((void __iomem *) AR5K_AR2315_BYTESWAP);
+> -               reg |= AR5K_AR2315_BYTESWAP_WMAC;
+> -               iowrite32(reg, (void __iomem *) AR5K_AR2315_BYTESWAP);
+> -       } else {
+> -               /* Enable WMAC DMA access (assuming 5312 or 231x*/
+> -               /* TODO: check other platforms */
+> -               reg = ioread32((void __iomem *) AR5K_AR5312_ENABLE);
+> -               if (to_platform_device(ah->dev)->id == 0)
+> -                       reg |= AR5K_AR5312_ENABLE_WLAN0;
+> -               else
+> -                       reg |= AR5K_AR5312_ENABLE_WLAN1;
+> -               iowrite32(reg, (void __iomem *) AR5K_AR5312_ENABLE);
+> -
+> -               /*
+> -                * On a dual-band AR5312, the multiband radio is only
+> -                * used as pass-through. Disable 2 GHz support in the
+> -                * driver for it
+> -                */
+> -               if (to_platform_device(ah->dev)->id == 0 &&
+> -                   (bcfg->config->flags & (BD_WLAN0 | BD_WLAN1)) ==
+> -                    (BD_WLAN1 | BD_WLAN0))
+> -                       ah->ah_capabilities.cap_needs_2GHz_ovr = true;
+> -               else
+> -                       ah->ah_capabilities.cap_needs_2GHz_ovr = false;
+> -       }
+> -
+> -       ret = ath5k_init_ah(ah, &ath_ahb_bus_ops);
+> -       if (ret != 0) {
+> -               dev_err(&pdev->dev, "failed to attach device, err=%d\n", ret);
+> -               ret = -ENODEV;
+> -               goto err_free_hw;
+> -       }
+> -
+> -       platform_set_drvdata(pdev, hw);
+> -
+> -       return 0;
+> -
+> - err_free_hw:
+> -       ieee80211_free_hw(hw);
+> -       platform_set_drvdata(pdev, NULL);
+> - err_iounmap:
+> -        iounmap(mem);
+> - err_out:
+> -       return ret;
+> -}
+> -
+> -static int ath_ahb_remove(struct platform_device *pdev)
+> -{
+> -       struct ar231x_board_config *bcfg = pdev->dev.platform_data;
+> -       struct ieee80211_hw *hw = platform_get_drvdata(pdev);
+> -       struct ath5k_hw *ah;
+> -       u32 reg;
+> -
+> -       if (!hw)
+> -               return 0;
+> -
+> -       ah = hw->priv;
+> -
+> -       if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
+> -               /* Disable WMAC AHB arbitration */
+> -               reg = ioread32((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
+> -               reg &= ~AR5K_AR2315_AHB_ARB_CTL_WLAN;
+> -               iowrite32(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
+> -       } else {
+> -               /*Stop DMA access */
+> -               reg = ioread32((void __iomem *) AR5K_AR5312_ENABLE);
+> -               if (to_platform_device(ah->dev)->id == 0)
+> -                       reg &= ~AR5K_AR5312_ENABLE_WLAN0;
+> -               else
+> -                       reg &= ~AR5K_AR5312_ENABLE_WLAN1;
+> -               iowrite32(reg, (void __iomem *) AR5K_AR5312_ENABLE);
+> -       }
+> -
+> -       ath5k_deinit_ah(ah);
+> -       iounmap(ah->iobase);
+> -       platform_set_drvdata(pdev, NULL);
+> -       ieee80211_free_hw(hw);
+> -
+> -       return 0;
+> -}
+> -
+> -static struct platform_driver ath_ahb_driver = {
+> -       .probe      = ath_ahb_probe,
+> -       .remove     = ath_ahb_remove,
+> -       .driver         = {
+> -               .name   = "ar231x-wmac",
+> -               .owner  = THIS_MODULE,
+> -       },
+> -};
+> -
+> -module_platform_driver(ath_ahb_driver);
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index 2d691b8..deaedb8 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -1645,32 +1645,6 @@ static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
+>         return &(ath5k_hw_common(ah)->regulatory);
+>  }
+>
+> -#ifdef CONFIG_ATHEROS_AR231X
+> -#define AR5K_AR2315_PCI_BASE   ((void __iomem *)0xb0100000)
+> -
+> -static inline void __iomem *ath5k_ahb_reg(struct ath5k_hw *ah, u16 reg)
+> -{
+> -       /* On AR2315 and AR2317 the PCI clock domain registers
+> -        * are outside of the WMAC register space */
+> -       if (unlikely((reg >= 0x4000) && (reg < 0x5000) &&
+> -           (ah->ah_mac_srev >= AR5K_SREV_AR2315_R6)))
+> -               return AR5K_AR2315_PCI_BASE + reg;
+> -
+> -       return ah->iobase + reg;
+> -}
+> -
+> -static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
+> -{
+> -       return ioread32(ath5k_ahb_reg(ah, reg));
+> -}
+> -
+> -static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
+> -{
+> -       iowrite32(val, ath5k_ahb_reg(ah, reg));
+> -}
+> -
+> -#else
+> -
+>  static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
+>  {
+>         return ioread32(ah->iobase + reg);
+> @@ -1681,8 +1655,6 @@ static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
+>         iowrite32(val, ah->iobase + reg);
+>  }
+>
+> -#endif
+> -
+>  static inline enum ath_bus_type ath5k_get_bus_type(struct ath5k_hw *ah)
+>  {
+>         return ath5k_hw_common(ah)->bus_ops->ath_bus_type;
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 9b20d9e..654cc3d 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -97,15 +97,6 @@ static int ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
+>
+>  /* Known SREVs */
+>  static const struct ath5k_srev_name srev_names[] = {
+> -#ifdef CONFIG_ATHEROS_AR231X
+> -       { "5312",       AR5K_VERSION_MAC,       AR5K_SREV_AR5312_R2 },
+> -       { "5312",       AR5K_VERSION_MAC,       AR5K_SREV_AR5312_R7 },
+> -       { "2313",       AR5K_VERSION_MAC,       AR5K_SREV_AR2313_R8 },
+> -       { "2315",       AR5K_VERSION_MAC,       AR5K_SREV_AR2315_R6 },
+> -       { "2315",       AR5K_VERSION_MAC,       AR5K_SREV_AR2315_R7 },
+> -       { "2317",       AR5K_VERSION_MAC,       AR5K_SREV_AR2317_R1 },
+> -       { "2317",       AR5K_VERSION_MAC,       AR5K_SREV_AR2317_R2 },
+> -#else
+>         { "5210",       AR5K_VERSION_MAC,       AR5K_SREV_AR5210 },
+>         { "5311",       AR5K_VERSION_MAC,       AR5K_SREV_AR5311 },
+>         { "5311A",      AR5K_VERSION_MAC,       AR5K_SREV_AR5311A },
+> @@ -124,7 +115,6 @@ static const struct ath5k_srev_name srev_names[] = {
+>         { "5418",       AR5K_VERSION_MAC,       AR5K_SREV_AR5418 },
+>         { "2425",       AR5K_VERSION_MAC,       AR5K_SREV_AR2425 },
+>         { "2417",       AR5K_VERSION_MAC,       AR5K_SREV_AR2417 },
+> -#endif
+>         { "xxxxx",      AR5K_VERSION_MAC,       AR5K_SREV_UNKNOWN },
+>         { "5110",       AR5K_VERSION_RAD,       AR5K_SREV_RAD_5110 },
+>         { "5111",       AR5K_VERSION_RAD,       AR5K_SREV_RAD_5111 },
+> @@ -140,10 +130,6 @@ static const struct ath5k_srev_name srev_names[] = {
+>         { "5413",       AR5K_VERSION_RAD,       AR5K_SREV_RAD_5413 },
+>         { "5424",       AR5K_VERSION_RAD,       AR5K_SREV_RAD_5424 },
+>         { "5133",       AR5K_VERSION_RAD,       AR5K_SREV_RAD_5133 },
+> -#ifdef CONFIG_ATHEROS_AR231X
+> -       { "2316",       AR5K_VERSION_RAD,       AR5K_SREV_RAD_2316 },
+> -       { "2317",       AR5K_VERSION_RAD,       AR5K_SREV_RAD_2317 },
+> -#endif
+>         { "xxxxx",      AR5K_VERSION_RAD,       AR5K_SREV_UNKNOWN },
+>  };
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
+> index f77ef36..dbf2483 100644
+> --- a/drivers/net/wireless/ath/ath5k/led.c
+> +++ b/drivers/net/wireless/ath/ath5k/led.c
+> @@ -162,20 +162,14 @@ int ath5k_init_leds(struct ath5k_hw *ah)
+>  {
+>         int ret = 0;
+>         struct ieee80211_hw *hw = ah->hw;
+> -#ifndef CONFIG_ATHEROS_AR231X
+>         struct pci_dev *pdev = ah->pdev;
+> -#endif
+>         char name[ATH5K_LED_MAX_NAME_LEN + 1];
+>         const struct pci_device_id *match;
+>
+>         if (!ah->pdev)
+>                 return 0;
+>
+> -#ifdef CONFIG_ATHEROS_AR231X
+> -       match = NULL;
+> -#else
+>         match = pci_match_id(&ath5k_led_devices[0], pdev);
+> -#endif
+>         if (match) {
+>                 __set_bit(ATH_STAT_LEDSOFT, ah->status);
+>                 ah->led_pin = ATH_PIN(match->driver_data);
+> --
+> 1.7.11.7
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
