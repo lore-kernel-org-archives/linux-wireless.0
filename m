@@ -1,70 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f173.google.com ([209.85.210.173]:36580 "EHLO
-	mail-ia0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756649Ab3EAUFh (ORCPT
+Received: from cpe-075-189-159-031.nc.res.rr.com ([75.189.159.31]:44243 "EHLO
+	jgpicker.rdu.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754429Ab3EMQoU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 May 2013 16:05:37 -0400
-Received: by mail-ia0-f173.google.com with SMTP id 21so1674558iay.4
-        for <linux-wireless@vger.kernel.org>; Wed, 01 May 2013 13:05:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1367421455-18463-2-git-send-email-juhosg@openwrt.org>
-References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
-	<1367421455-18463-2-git-send-email-juhosg@openwrt.org>
-Date: Wed, 1 May 2013 22:05:35 +0200
-Message-ID: <CAL1gcdPfKRu9tgs5Fcf_OSQw4vabkS6e4wpSphgYCih2tYbZXA@mail.gmail.com> (sfid-20130501_220540_963368_4C12B4C5)
-Subject: Re: [PATCH 1/7] rt2x00: rt2x00dev: use rt2x00dev->tx->limit
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 13 May 2013 12:44:20 -0400
+From: John Greene <jogreene@redhat.com>
+To: rhkernel-list@redhat.com
+Cc: John Greene <jogreene@redhat.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, Tim Gardner <tim.gardner@canonical.com>
+Subject: [RHEL 6.5 PATCH 169/176] brcmsmac: fix u16 overflow warning
+Date: Mon, 13 May 2013 11:47:11 -0400
+Message-Id: <1368460038-21195-170-git-send-email-jogreene@redhat.com> (sfid-20130513_184428_562244_757AD4BF)
+In-Reply-To: <1368460038-21195-1-git-send-email-jogreene@redhat.com>
+References: <1368460038-21195-1-git-send-email-jogreene@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 1, 2013 at 5:17 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
-> The TX data queue is initialized already when
-> the rt2x00lib_probe_hw() function is called.
->
-> Fetch the number of the queue entries from that
-> instead of using the entry_num field of the data
-> queue descriptor.
->
-> The two values are the same, and the use of the
-> rt2x00dev->tx->limit value allows us to get rid
-> of a superfluous pointer dereference.
->
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Bugzilla: 757944
+Brew: <https://brewweb.devel.redhat.com/taskinfo?taskID=5738553>
+Upstream Status: 708eb54f20334470ad92042547db0fef0cd60462
+Tested: By me. Acceptable. See BZ for details
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+DOT11_MIN_BEACON_PERIOD and DOT11_MAX_BEACON_PERIOD are
+superfluous. The only invalid beacon period is 0. Comparing
+a 16 bit quantity to 0xffff also causes a compile warning:
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 90dc143..b287467 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -1077,7 +1077,7 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
->                  */
->                 int kfifo_size =
->                         roundup_pow_of_two(rt2x00dev->ops->tx_queues *
-> -                                          rt2x00dev->ops->tx->entry_num *
-> +                                          rt2x00dev->tx->limit *
->                                            sizeof(u32));
->
->                 status = kfifo_alloc(&rt2x00dev->txstatus_fifo, kfifo_size,
-> --
-> 1.7.10
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+drivers/net/wireless/brcm80211/brcmsmac/main.c:5560 brcms_c_set_beacon_period()
+ warn: impossible condition '(period > 65535) => (0-65535 > 65535)'
 
+Observed from smatch analysis.
 
-
---
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list@broadcom.com
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
-Gertjan
+ drivers/net/wireless/brcm80211/brcmsmac/main.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 5c50b79..c72fbab 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -101,8 +101,6 @@
+ #define DOT11_RTS_LEN			16
+ #define DOT11_CTS_LEN			10
+ #define DOT11_BA_BITMAP_LEN		128
+-#define DOT11_MIN_BEACON_PERIOD		1
+-#define DOT11_MAX_BEACON_PERIOD		0xFFFF
+ #define DOT11_MAXNUMFRAGS		16
+ #define DOT11_MAX_FRAG_LEN		2346
+ 
+@@ -5548,8 +5546,7 @@ int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs)
+ 
+ int brcms_c_set_beacon_period(struct brcms_c_info *wlc, u16 period)
+ {
+-	if (period < DOT11_MIN_BEACON_PERIOD ||
+-	    period > DOT11_MAX_BEACON_PERIOD)
++	if (period == 0)
+ 		return -EINVAL;
+ 
+ 	wlc->default_bss->beacon_period = period;
+-- 
+1.7.11.7
+
