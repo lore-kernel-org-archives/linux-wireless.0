@@ -1,130 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:52228 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832Ab3ESHjO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 May 2013 03:39:14 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0MCvtd-1Und6x37XX-009fhB for
- <linux-wireless@vger.kernel.org>; Sun, 19 May 2013 09:39:12 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 1/3] mac80211: add STBC flag for radiotap
-Date: Sun, 19 May 2013 09:38:54 +0200
-Message-Id: <1368949136-6079-2-git-send-email-linux@rempel-privat.de> (sfid-20130519_093926_441072_B1D2886A)
-In-Reply-To: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
-References: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:55137 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755359Ab3EMUII (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 May 2013 16:08:08 -0400
+Received: by mail-ee0-f47.google.com with SMTP id t10so1227406eei.20
+        for <linux-wireless@vger.kernel.org>; Mon, 13 May 2013 13:08:07 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] bcma: support SPROM rev 10
+Date: Mon, 13 May 2013 22:07:53 +0200
+Message-Id: <1368475673-27587-3-git-send-email-zajec5@gmail.com> (sfid-20130513_220814_372208_CFC10535)
+In-Reply-To: <1368475673-27587-1-git-send-email-zajec5@gmail.com>
+References: <1368475673-27587-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- include/net/ieee80211_radiotap.h | 7 +++++++
- include/net/mac80211.h           | 4 ++++
- net/mac80211/main.c              | 3 ++-
- net/mac80211/rx.c                | 4 ++++
- net/mac80211/status.c            | 3 ++-
- 5 files changed, 19 insertions(+), 2 deletions(-)
+This is pretty much the same as rev 9, there are just 2 extra fields we
+know about, but are not used/stored yet anyway.
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index c399963..c6d07cb 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -269,6 +269,7 @@ enum ieee80211_radiotap_type {
- #define IEEE80211_RADIOTAP_MCS_HAVE_GI		0x04
- #define IEEE80211_RADIOTAP_MCS_HAVE_FMT		0x08
- #define IEEE80211_RADIOTAP_MCS_HAVE_FEC		0x10
-+#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	0x20
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/sprom.c         |   16 +++++++++-------
+ include/linux/ssb/ssb_regs.h |    1 +
+ 2 files changed, 10 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index c96f71c..de15b4f 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -154,7 +154,8 @@ static int bcma_sprom_check_crc(const u16 *sprom, size_t words)
+ 	return 0;
+ }
  
- #define IEEE80211_RADIOTAP_MCS_BW_MASK		0x03
- #define		IEEE80211_RADIOTAP_MCS_BW_20	0
-@@ -278,6 +279,12 @@ enum ieee80211_radiotap_type {
- #define IEEE80211_RADIOTAP_MCS_SGI		0x04
- #define IEEE80211_RADIOTAP_MCS_FMT_GF		0x08
- #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
-+#define IEEE80211_RADIOTAP_MCS_STBC_MASK	0x60
-+#define		IEEE80211_RADIOTAP_MCS_STBC_1	1
-+#define		IEEE80211_RADIOTAP_MCS_STBC_2	2
-+#define		IEEE80211_RADIOTAP_MCS_STBC_3	3
-+
-+#define IEEE80211_RADIOTAP_MCS_STBC_SHIFT	5
+-static int bcma_sprom_valid(const u16 *sprom, size_t words)
++static int bcma_sprom_valid(struct bcma_bus *bus, const u16 *sprom,
++			    size_t words)
+ {
+ 	u16 revision;
+ 	int err;
+@@ -164,11 +165,14 @@ static int bcma_sprom_valid(const u16 *sprom, size_t words)
+ 		return err;
  
- /* For IEEE80211_RADIOTAP_AMPDU_STATUS */
- #define IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN		0x0001
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 885898a..16705a9 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -805,6 +805,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  *	on this subframe
-  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
-  *	is stored in the @ampdu_delimiter_crc field)
-+ * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -832,8 +833,11 @@ enum mac80211_rx_flags {
- 	RX_FLAG_80MHZ			= BIT(23),
- 	RX_FLAG_80P80MHZ		= BIT(24),
- 	RX_FLAG_160MHZ			= BIT(25),
-+	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
- };
- 
-+#define RX_FLAG_STBC_SHIFT		26
-+
- /**
-  * struct ieee80211_rx_status - receive status
-  *
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 8a7bfc4..44191a3 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -589,7 +589,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
- 	local->hw.radiotap_mcs_details = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
- 					 IEEE80211_RADIOTAP_MCS_HAVE_GI |
--					 IEEE80211_RADIOTAP_MCS_HAVE_BW;
-+					 IEEE80211_RADIOTAP_MCS_HAVE_BW |
-+					 IEEE80211_RADIOTAP_MCS_HAVE_STBC;
- 	local->hw.radiotap_vht_details = IEEE80211_RADIOTAP_VHT_KNOWN_GI |
- 					 IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
- 	local->hw.uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8e29526..22bb2af 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -258,6 +258,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	pos += 2;
- 
- 	if (status->flag & RX_FLAG_HT) {
-+		unsigned int stbc = status->flag & RX_FLAG_STBC_MASK;
- 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
- 		*pos++ = local->hw.radiotap_mcs_details;
- 		*pos = 0;
-@@ -267,6 +268,9 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
- 		if (status->flag & RX_FLAG_HT_GF)
- 			*pos |= IEEE80211_RADIOTAP_MCS_FMT_GF;
-+		if (stbc)
-+			*pos |= (stbc >> RX_FLAG_STBC_SHIFT)
-+					<< IEEE80211_RADIOTAP_MCS_STBC_SHIFT;
- 		pos++;
- 		*pos++ = status->rate_idx;
+ 	revision = sprom[words - 1] & SSB_SPROM_REVISION_REV;
+-	if (revision != 8 && revision != 9) {
++	if (revision != 8 && revision != 9 && revision != 10) {
+ 		pr_err("Unsupported SPROM revision: %d\n", revision);
+ 		return -ENOENT;
  	}
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 4343920..41143f8 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -312,7 +312,8 @@ static void ieee80211_add_tx_radiotap_header(struct ieee80211_supported_band
- 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
- 		pos[0] = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
- 			 IEEE80211_RADIOTAP_MCS_HAVE_GI |
--			 IEEE80211_RADIOTAP_MCS_HAVE_BW;
-+			 IEEE80211_RADIOTAP_MCS_HAVE_BW |
-+			 IEEE80211_RADIOTAP_MCS_HAVE_STBC;
- 		if (info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
- 			pos[1] |= IEEE80211_RADIOTAP_MCS_SGI;
- 		if (info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+ 
++	bus->sprom.revision = revision;
++	bcma_debug(bus, "Found SPROM revision %d\n", revision);
++
+ 	return 0;
+ }
+ 
+@@ -208,9 +212,6 @@ static void bcma_sprom_extract_r8(struct bcma_bus *bus, const u16 *sprom)
+ 	BUILD_BUG_ON(ARRAY_SIZE(pwr_info_offset) !=
+ 			ARRAY_SIZE(bus->sprom.core_pwr_info));
+ 
+-	bus->sprom.revision = sprom[SSB_SPROMSIZE_WORDS_R4 - 1] &
+-		SSB_SPROM_REVISION_REV;
+-
+ 	for (i = 0; i < 3; i++) {
+ 		v = sprom[SPOFF(SSB_SPROM8_IL0MAC) + i];
+ 		*(((__be16 *)bus->sprom.il0mac) + i) = cpu_to_be16(v);
+@@ -549,7 +550,8 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ {
+ 	u16 offset = BCMA_CC_SPROM;
+ 	u16 *sprom;
+-	size_t sprom_sizes[] = { SSB_SPROMSIZE_WORDS_R4, };
++	size_t sprom_sizes[] = { SSB_SPROMSIZE_WORDS_R4,
++				 SSB_SPROMSIZE_WORDS_R10, };
+ 	int i, err = 0;
+ 
+ 	if (!bus->drv_cc.core)
+@@ -592,7 +594,7 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ 			return -ENOMEM;
+ 
+ 		bcma_sprom_read(bus, offset, sprom, words);
+-		err = bcma_sprom_valid(sprom, words);
++		err = bcma_sprom_valid(bus, sprom, words);
+ 		if (!err)
+ 			break;
+ 
+diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
+index 3a72569..f9f931c 100644
+--- a/include/linux/ssb/ssb_regs.h
++++ b/include/linux/ssb/ssb_regs.h
+@@ -172,6 +172,7 @@
+ #define SSB_SPROMSIZE_WORDS_R4		220
+ #define SSB_SPROMSIZE_BYTES_R123	(SSB_SPROMSIZE_WORDS_R123 * sizeof(u16))
+ #define SSB_SPROMSIZE_BYTES_R4		(SSB_SPROMSIZE_WORDS_R4 * sizeof(u16))
++#define SSB_SPROMSIZE_WORDS_R10		230
+ #define SSB_SPROM_BASE1			0x1000
+ #define SSB_SPROM_BASE31		0x0800
+ #define SSB_SPROM_REVISION		0x007E
 -- 
-1.8.1.2
+1.7.10.4
 
