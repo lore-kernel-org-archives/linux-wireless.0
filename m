@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49791 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330Ab3EPLCB (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:46571 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3EMJBY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 07:02:01 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Mon, 13 May 2013 05:01:24 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 15/18] ath9k: announce that ath9k supports 5/10 MHz
-Date: Thu, 16 May 2013 13:00:42 +0200
-Message-Id: <1368702045-27598-16-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130226_115567_04F2F345)
-In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH] nl80211: Add wdev identifier to some nl80211 notifications
+Date: Mon, 13 May 2013 11:01:18 +0200
+Message-Id: <1368435678-11855-1-git-send-email-johannes@sipsolutions.net> (sfid-20130513_110133_981272_2BD645A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/init.c |    1 +
- 1 file changed, 1 insertion(+)
+From: Ilan Peer <ilan.peer@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e4fb5e2..392ea80 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -803,6 +803,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-+	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
- 
- #ifdef CONFIG_PM_SLEEP
- 
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9cdcd9e..0dcc4e5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10008,6 +10008,7 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+ 	    (netdev && nla_put_u32(msg, NL80211_ATTR_IFINDEX,
+ 					netdev->ifindex)) ||
++	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)) ||
+ 	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, freq) ||
+ 	    (sig_dbm &&
+ 	     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm)) ||
+@@ -10048,6 +10049,7 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+ 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+ 	    (netdev && nla_put_u32(msg, NL80211_ATTR_IFINDEX,
+ 				   netdev->ifindex)) ||
++	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)) ||
+ 	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
+ 	    nla_put_u64(msg, NL80211_ATTR_COOKIE, cookie) ||
+ 	    (ack && nla_put_flag(msg, NL80211_ATTR_ACK)))
 -- 
-1.7.10.4
+1.8.0
 
