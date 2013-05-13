@@ -1,36 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ultra-3eti.com ([173.13.207.162]:49776 "EHLO
-	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762653Ab3ECOHR convert rfc822-to-8bit (ORCPT
+Received: from cpe-075-189-159-031.nc.res.rr.com ([75.189.159.31]:44243 "EHLO
+	jgpicker.rdu.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754395Ab3EMQoS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 10:07:17 -0400
-From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-To: "devel@lists.open80211s.org" <devel@lists.open80211s.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wirelss <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC 00/12] MBSS sharing across multiple interfaces
-Date: Fri, 3 May 2013 14:07:14 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C5C142@RockMX01.rock.corp> (sfid-20130503_160721_859138_5DE8B33B)
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
- <BD54DDEB2546894FAB0731EA7B0EDF8D07C5C070@RockMX01.rock.corp>
- <CAEFj987wqVTmN1eCCfqm2M16p5j8JtOn5AcKE0fETmsn+FyENg@mail.gmail.com>
-In-Reply-To: <CAEFj987wqVTmN1eCCfqm2M16p5j8JtOn5AcKE0fETmsn+FyENg@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
+	Mon, 13 May 2013 12:44:18 -0400
+From: John Greene <jogreene@redhat.com>
+To: rhkernel-list@redhat.com
+Cc: John Greene <jogreene@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Yuanhan Liu <yuanhan.liu@linux.intel.com>,
+	Fengguang Wu <fengguang.wu@intel.com>
+Subject: [RHEL 6.5 PATCH 087/176] bcma: suspend/resume callbacks should be conditionally compiled on CONFIG_PM_SLEEP
+Date: Mon, 13 May 2013 11:45:49 -0400
+Message-Id: <1368460038-21195-88-git-send-email-jogreene@redhat.com> (sfid-20130513_184421_956755_CBCA996E)
+In-Reply-To: <1368460038-21195-1-git-send-email-jogreene@redhat.com>
+References: <1368460038-21195-1-git-send-email-jogreene@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Question 2
+Bugzilla: 757944
+Brew: <https://brewweb.devel.redhat.com/taskinfo?taskID=5738553>
+Upstream Status: ccd609538e99d3465a8d498f3655098f44cd253b
+Tested: By me. Acceptable. See BZ for details
 
-In MPP where there are multiple mesh interfaces, AP interface and/or Ethernet interface, how does this "MBSS sharing" work?
-† † † † a. add both mesh interface in 802.1d bridge, or
-† † † † b. add either interface in bridge, or
-† † † † c. sharing can't be used
+This will fix warnings like following when CONFIG_PM_SLEEP is not set:
 
-> As far as I know, sharing can't be used for mesh interfaces with AP or Ethernet interfaces. Perhaps, Thomas and Bob can comment further.
+        warning: 'xxx_suspend' defined but not used [-Wunused-function]
+        warning: 'xxx_resume' defined but not used [-Wunused-function]
 
-I am not talking about sharing with AP or Ethernet interface.
-I am saying, how to bridge with AP or Ethernet?
-        a. add both mesh interface in 802.1d bridge, or
-        b. add either mesh interface in bridge, or
-        c. if sharing is enabled, interface can't added to bridge.
+Because
+	SET_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn)
+
+Only references the callbacks on CONFIG_PM_SLEEP (instead of CONFIG_PM).
+
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: "Rafa≈Ç Mi≈Çecki" <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/bcma/host_pci.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index b6b4b5e..98fdc3e 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -238,7 +238,7 @@ static void __devexit bcma_host_pci_remove(struct pci_dev *dev)
+ 	pci_set_drvdata(dev, NULL);
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int bcma_host_pci_suspend(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+@@ -261,11 +261,11 @@ static SIMPLE_DEV_PM_OPS(bcma_pm_ops, bcma_host_pci_suspend,
+ 			 bcma_host_pci_resume);
+ #define BCMA_PM_OPS	(&bcma_pm_ops)
+ 
+-#else /* CONFIG_PM */
++#else /* CONFIG_PM_SLEEP */
+ 
+ #define BCMA_PM_OPS     NULL
+ 
+-#endif /* CONFIG_PM */
++#endif /* CONFIG_PM_SLEEP */
+ 
+ static DEFINE_PCI_DEVICE_TABLE(bcma_pci_bridge_tbl) = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x0576) },
+-- 
+1.7.11.7
+
