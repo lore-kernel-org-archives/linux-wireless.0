@@ -1,84 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1463 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759340Ab3E2QjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 12:39:24 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for 3.10 09/16] brcmfmac: Correct creditmap when credit
- borrowing is active.
-Date: Wed, 29 May 2013 18:38:59 +0200
-Message-ID: <1369845546-31950-10-git-send-email-arend@broadcom.com> (sfid-20130529_183943_782488_E1B092A0)
-In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
-References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+Received: from mail-we0-f177.google.com ([74.125.82.177]:63205 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831Ab3EMRUu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 May 2013 13:20:50 -0400
+Received: by mail-we0-f177.google.com with SMTP id q58so6548466wes.22
+        for <linux-wireless@vger.kernel.org>; Mon, 13 May 2013 10:20:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1368465499.8300.33.camel@jlt4.sipsolutions.net>
+References: <1368233453-10581-1-git-send-email-ashok@cozybit.com>
+ <1368233453-10581-2-git-send-email-ashok@cozybit.com> <1368438160.8300.11.camel@jlt4.sipsolutions.net>
+ <CACcxo+odk2L-pymHqof+geeEmKcC4xikebra9jcNZoHOF0by4A@mail.gmail.com> <1368465499.8300.33.camel@jlt4.sipsolutions.net>
+From: Ashok Nagarajan <ashok@cozybit.com>
+Date: Mon, 13 May 2013 10:20:27 -0700
+Message-ID: <CACcxo+qxpDvgGKZX2=2U349h+F8L7vb+qo5WzNCz-bfCjfsq1g@mail.gmail.com> (sfid-20130513_192053_789071_10169673)
+Subject: Re: [PATCH 2/3] cfg80211: Allow ieee80211g mandatory rate sets in
+ 2.4GHz band
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Mon, May 13, 2013 at 10:18 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2013-05-13 at 10:13 -0700, Ashok Nagarajan wrote:
+>> On Mon, May 13, 2013 at 2:42 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Fri, 2013-05-10 at 17:50 -0700, Ashok Nagarajan wrote:
+>> >> This patch assumes 11g support
+>> >> implies a 11g operation and returns the appropriate mandatory rates.
+>> >
+>> > Which is a problem, because it means that by default we'll create IBSS
+>> > networks that are not compatible with 11b devices.
+>>
+>> Okay make sense. I would drop just this patch and send rest.
+>
+> If you just want the others as is I can do that, no need to resend. Let
+> me know.
+>
+Yes, the rest would be as it is now. That would work.
 
-When credit borrowing is active the BE credits have been depleted,
-however the worker should still be scheduled. In case of credit
-borrowing correct credit map to make sure worker remains active.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index cd8b5f5..d07c2a7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1020,6 +1020,8 @@ static void brcmf_fws_return_credits(struct brcmf_fws_info *fws,
- 	if (!credits)
- 		return;
- 
-+	fws->fifo_credit_map |= 1 << fifo;
-+
- 	if ((fifo == BRCMF_FWS_FIFO_AC_BE) &&
- 	    (fws->credits_borrowed[0])) {
- 		for (lender_ac = BRCMF_FWS_FIFO_AC_VO; lender_ac >= 0;
-@@ -1041,7 +1043,6 @@ static void brcmf_fws_return_credits(struct brcmf_fws_info *fws,
- 		}
- 	}
- 
--	fws->fifo_credit_map |= 1 << fifo;
- 	fws->fifo_credit[fifo] += credits;
- }
- 
-@@ -1675,8 +1676,10 @@ static int brcmf_fws_borrow_credit(struct brcmf_fws_info *fws)
- {
- 	int lender_ac;
- 
--	if (time_after(fws->borrow_defer_timestamp, jiffies))
-+	if (time_after(fws->borrow_defer_timestamp, jiffies)) {
-+		fws->fifo_credit_map &= ~(1 << BRCMF_FWS_FIFO_AC_BE);
- 		return -ENAVAIL;
-+	}
- 
- 	for (lender_ac = 0; lender_ac <= BRCMF_FWS_FIFO_AC_VO; lender_ac++) {
- 		if (fws->fifo_credit[lender_ac]) {
-@@ -1684,10 +1687,12 @@ static int brcmf_fws_borrow_credit(struct brcmf_fws_info *fws)
- 			fws->fifo_credit[lender_ac]--;
- 			if (fws->fifo_credit[lender_ac] == 0)
- 				fws->fifo_credit_map &= ~(1 << lender_ac);
-+			fws->fifo_credit_map |= (1 << BRCMF_FWS_FIFO_AC_BE);
- 			brcmf_dbg(DATA, "borrow credit from: %d\n", lender_ac);
- 			return 0;
- 		}
- 	}
-+	fws->fifo_credit_map &= ~(1 << BRCMF_FWS_FIFO_AC_BE);
- 	return -ENAVAIL;
- }
- 
--- 
-1.7.10.4
+Thanks,
+Ashok
+> johannes
+>
 
 
+
+--
+Ashok Raj Nagarajan,
+cozybit Inc.
+http://www.cozybit.com
