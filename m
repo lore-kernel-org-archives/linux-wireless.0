@@ -1,49 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f49.google.com ([209.85.128.49]:61641 "EHLO
-	mail-qe0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752939Ab3EFKqN (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:35639 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755222Ab3ENBRq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 06:46:13 -0400
-Received: by mail-qe0-f49.google.com with SMTP id 7so1932020qeb.8
-        for <linux-wireless@vger.kernel.org>; Mon, 06 May 2013 03:46:12 -0700 (PDT)
+	Mon, 13 May 2013 21:17:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
+	Tim Shepard <shep@laptop.org>,
+	Jason Abele <jabele@chromium.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 00/17] mwifiex updates for 3.11
+Date: Mon, 13 May 2013 18:14:44 -0700
+Message-ID: <1368494101-23651-1-git-send-email-bzhao@marvell.com> (sfid-20130514_031749_060141_69A5FA47)
 MIME-Version: 1.0
-In-Reply-To: <5186D7AD.1070702@lwfinger.net>
-References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
- <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
- <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
- <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
- <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
- <517199D4.9070702@broadcom.com> <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
- <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com>
- <517A427E.3010809@broadcom.com> <CACaajQsf8cgG9DQ-QuWY5EqeUNq4RgX9CMgQ8bZi7s8UJzCE_g@mail.gmail.com>
- <CACaajQuk359fYap=547qQ0r128bdCuzFCzR=iXgHNaaR_eTtow@mail.gmail.com> <5186D7AD.1070702@lwfinger.net>
-From: Vasiliy Tolstov <v.tolstov@selfip.ru>
-Date: Mon, 6 May 2013 14:45:57 +0400
-Message-ID: <CACaajQuSU4H0rdn9j7dFYB+Yh2WLsejocDfE+PX1eFQOUqWcgw@mail.gmail.com> (sfid-20130506_124617_214668_0B2E336D)
-Subject: Re: very bad work of wl (bcm 43228)
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/5/6 Larry Finger <Larry.Finger@lwfinger.net>:
-> You are using a closed-source driver. None of us know what is in the code,
-> thus there is very little help we can give you other than to give general
-> suggestions. If you were using b43 or brcmsmac, the situation would be
-> different.
+This series adds support for new chipset SD8897, calibration data
+downloading, del_station handler, as well as some random cleanups
+and updates.
 
 
-Yes, but on last message i get response from broadcom and expect to
-see his answers.
-May be broadcom has own mailing list for bad things in their drivers?
+Amitkumar Karwar (12):
+  mwifiex: rename mwifiex_free_adapter() routine in init.c
+  mwifiex: scan delay timer cleanup in unload path
+  mwifiex: remove global user_scan_cfg variable
+  mwifiex: add calibration data download feature
+  mwifiex: use u32 variables for SDIO read/write port bitmap
+  mwifiex: store SDIO chip specific information in separate structure
+  mwifiex: replace unnecessary u32 variables with u8 in sdio.c
+  mwifiex: code rearrangement in mwifiex_get_rd_port()
+  mwifiex: do port calculations separately
+  mwifiex: define a macro for MPA base address
+  mwifiex: remove unnecessary macros in sdio.h
+  mwifiex: code rearrangement in multiport aggregation path
 
+Avinash Patil (3):
+  mwifiex: avoid deleting all stations during mwifiex_del_sta_entry()
+  mwifiex: add del_station handler
+  mwifiex: replace spin_lock_irqsave with spin_lock and fix warn_on
 
---
-Vasiliy Tolstov,
-e-mail: v.tolstov@selfip.ru
-jabber: vase@selfip.ru
+Bing Zhao (1):
+  mwifiex: abort remaining scan commands when association started
+
+Yogesh Ashok Powar (1):
+  mwifiex: add support for Marvell SD8897 chipset
+
+ drivers/net/wireless/mwifiex/Kconfig       |   4 +-
+ drivers/net/wireless/mwifiex/cfg80211.c    |  77 ++++-
+ drivers/net/wireless/mwifiex/cmdevt.c      |   1 +
+ drivers/net/wireless/mwifiex/fw.h          |  17 ++
+ drivers/net/wireless/mwifiex/init.c        |  53 ++--
+ drivers/net/wireless/mwifiex/main.c        |  14 +
+ drivers/net/wireless/mwifiex/main.h        |   5 +-
+ drivers/net/wireless/mwifiex/scan.c        |  23 +-
+ drivers/net/wireless/mwifiex/sdio.c        | 462 ++++++++++++++++++++---------
+ drivers/net/wireless/mwifiex/sdio.h        | 340 ++++++++++++++-------
+ drivers/net/wireless/mwifiex/sta_cmd.c     |  62 ++++
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |  17 ++
+ drivers/net/wireless/mwifiex/uap_cmd.c     |  21 ++
+ drivers/net/wireless/mwifiex/uap_event.c   |  25 +-
+ 14 files changed, 807 insertions(+), 314 deletions(-)
+
+-- 
+1.8.2.3
+
