@@ -1,84 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:55046 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762292Ab3ECCga (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752559Ab3ENHlZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 22:36:30 -0400
-Received: by mail-pa0-f43.google.com with SMTP id hz10so676241pad.2
-        for <linux-wireless@vger.kernel.org>; Thu, 02 May 2013 19:36:30 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>, me@bobcopeland.com,
-	open80211s <devel@lists.open80211s.org>
-Subject: [RFC 09/12] mac80211: add shared-mbss transmit path
-Date: Thu,  2 May 2013 19:33:59 -0700
-Message-Id: <1367548442-8229-10-git-send-email-thomas@cozybit.com> (sfid-20130503_043633_295611_68429A4A)
-In-Reply-To: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
+	Tue, 14 May 2013 03:41:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.10] mac80211: report deauth to cfg80211 for local state change
+Date: Tue, 14 May 2013 09:41:20 +0200
+Message-Id: <1368517280-5714-1-git-send-email-johannes@sipsolutions.net> (sfid-20130514_094130_233944_A6973CB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Transmit locally-originated group data frames on every interface
-so that members of the mesh on every channel will see the frame.
+Even if the frame isn't transmitted to the AP, we need to
+report it to cfg80211 so the state there can be updated
+correctly.
 
-For individually-addressed frames, when we resolve the next
-hop, the outgoing interface might be different than the
-originator if the best path is on a different channel.
-Requeue such frames on the correct interface's pending queue.
-
-Signed-off-by: Bob Copeland <bob@cozybit.com>
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh_hwmp.c |   12 +++++++++++-
- net/mac80211/tx.c        |    3 +++
- 2 files changed, 14 insertions(+), 1 deletion(-)
+ net/mac80211/mlme.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index d8eaccc..6ba483e 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -1115,6 +1115,7 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
- 			 struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_sub_if_data *dest_sdata;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct mesh_local_bss *mbss = mbss(sdata);
- 	struct mesh_path *mpath;
-@@ -1128,8 +1129,17 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d87d3f1..a46e490 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4370,7 +4370,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 	bool tx = !req->local_state_change;
+-	bool sent_frame = false;
++	bool report_frame = false;
  
- 	rcu_read_lock();
- 	err = mesh_nexthop_lookup(mbss, skb);
--	if (!err)
-+	if (!err) {
-+		dest_sdata = vif_to_sdata(info->control.vif);
-+		/* requeue if mesh path uses a different interface */
-+		if (dest_sdata != sdata) {
-+			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-+			ieee80211_set_qos_hdr(dest_sdata, skb);
-+			ieee80211_add_pending_skb(dest_sdata->local, skb);
-+			err = -EAGAIN;
-+		}
- 		goto endlookup;
-+	}
+ 	mutex_lock(&ifmgd->mtx);
  
- 	/* no nexthop found, start resolving */
- 	mpath = mesh_path_lookup(mbss, target_addr);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c132c76..4b28680 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1452,6 +1452,9 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
- 		} else {
- 			ieee80211_mps_set_frame_flags(sdata, NULL, hdr);
- 		}
-+		if (is_multicast_ether_addr(hdr->addr1) &&
-+		    ieee80211_is_data(hdr->frame_control))
-+			mesh_bss_forward_tx(sdata, skb);
+@@ -4387,7 +4387,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_destroy_auth_data(sdata, false);
+ 		mutex_unlock(&ifmgd->mtx);
+ 
+-		sent_frame = tx;
++		report_frame = true;
+ 		goto out;
  	}
  
- 	ieee80211_set_qos_hdr(sdata, skb);
+@@ -4395,12 +4395,12 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
+ 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 				       req->reason_code, tx, frame_buf);
+-		sent_frame = tx;
++		report_frame = true;
+ 	}
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+  out:
+-	if (sent_frame)
++	if (report_frame)
+ 		__cfg80211_send_deauth(sdata->dev, frame_buf,
+ 				       IEEE80211_DEAUTH_FRAME_LEN);
+ 
 -- 
-1.7.10.4
+1.8.0
 
