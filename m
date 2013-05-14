@@ -1,98 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:47493 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754692Ab3EQJVj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 05:21:39 -0400
-Received: by mail-pd0-f174.google.com with SMTP id u10so3142459pdi.5
-        for <linux-wireless@vger.kernel.org>; Fri, 17 May 2013 02:21:39 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:4518 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751567Ab3ENSwv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 May 2013 14:52:51 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH] brcmfmac: announce P2P_DEVICE support in wiphy
+ structure
+Date: Tue, 14 May 2013 20:52:36 +0200
+Message-ID: <1368557556-2957-1-git-send-email-arend@broadcom.com> (sfid-20130514_205257_319276_2986A14C)
 MIME-Version: 1.0
-In-Reply-To: <5195F5BB.6030306@uni-dortmund.de>
-References: <CAFTPBc+jVwNnAirFCR9ZvHKCjy_AO1ce=ZpnLs3tPZUNGe75aQ@mail.gmail.com>
-	<5195F5BB.6030306@uni-dortmund.de>
-Date: Fri, 17 May 2013 11:21:39 +0200
-Message-ID: <CAFTPBcLZXs9oYJEs36T5wwJMQUPTr+7wnG8UZkMzo4tMyJFwnQ@mail.gmail.com> (sfid-20130517_112144_258631_EFA1F00C)
-Subject: Re: AR9227: Can't set master mode
-From: Felix Blanke <felixblanke@gmail.com>
-To: Thomas Klute <thomas2.klute@uni-dortmund.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I knew about hostapd, but I wanted to test the master mode first. You
-can still find a lot of tutorials that uses this command to set it to
-master mode :( So those are all outdated?
+P2P_DEVICE support was removed from brcmfmac for v3.9 kernel with
+the commit below:
 
-I'll try messing around with hostapd. Thanks for your reply!
+commit 1527c343c12f3a2aae532aa881d12c6fbf8749f4
+Author: Arend van Spriel <arend@broadcom.com>
+Date:   Thu Apr 4 12:10:11 2013 +0200
 
-On Fri, May 17, 2013 at 11:17 AM, Thomas Klute
-<thomas2.klute@uni-dortmund.de> wrote:
-> Am 17.05.2013 10:54, schrieb Felix Blanke:
->> Hi,
->>
->> first: Please CC me as I'm not subscribed to the list.
->>
->> I have the following wireless card: 04:02.0 Network controller:
->> Atheros Communications Inc. AR9227 Wireless Network Adapter (rev 01)
->>
->> I can't set it to master mode, but this card should support it:
->>
->> server ~ # iwconfig wlp4s2
->> wlp4s2    IEEE 802.11bgn  ESSID:off/any
->>           Mode:Managed  Access Point: Not-Associated   Tx-Power=19 dBm
->>           Retry  long limit:7   RTS thr:off   Fragment thr:off
->>           Encryption key:off
->>           Power Management:off
->>
->> server ~ # iwconfig wlp4s2 mode Master
->> Error for wireless request "Set Mode" (8B06) :
->>     SET failed on device wlp4s2 ; Invalid argument.
->
-> You cannot set any card to master mode this way, you have to use hostapd
-> to set up the access point interface. The documentation at
-> http://wireless.kernel.org/en/users/Documentation/hostapd should help. :-)
->
-> I'd also recommend using iw instead of iwconfig, see
-> http://wireless.kernel.org/en/users/Documentation/iw
->
->> My kernel config should be correct:
->>
->> server linux # cat .config | grep ATH9K
->> CONFIG_ATH9K_HW=y
->> CONFIG_ATH9K_COMMON=y
->> # CONFIG_ATH9K_BTCOEX_SUPPORT is not set
->> CONFIG_ATH9K=y
->> CONFIG_ATH9K_PCI=y
->> # CONFIG_ATH9K_AHB is not set
->> # CONFIG_ATH9K_DEBUGFS is not set
->> CONFIG_ATH9K_RATE_CONTROL=y
->> # CONFIG_ATH9K_HTC is not set
->>
->> server linux # cat .config | grep MAC80211
->> CONFIG_MAC80211=y
->> CONFIG_MAC80211_HAS_RC=y
->> CONFIG_MAC80211_RC_MINSTREL=y
->> CONFIG_MAC80211_RC_MINSTREL_HT=y
->> CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
->> CONFIG_MAC80211_RC_DEFAULT="minstrel_ht"
->> # CONFIG_MAC80211_MESH is not set
->> CONFIG_MAC80211_LEDS=y
->> # CONFIG_MAC80211_DEBUGFS is not set
->> # CONFIG_MAC80211_MESSAGE_TRACING is not set
->> # CONFIG_MAC80211_DEBUG_MENU is not set
->> # CONFIG_MAC80211_HWSIM is not set
->>
->>
->> I can scan for wireless networks and probably also connect to them
->> (never tested because this is not an use case for me).
->>
->> Any ideas? Thanks in advance!
->>
->> Kind regards,
->> Felix
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+    brcmfmac: remove advertising P2P device support
+
+However, it got merged into wireless-next. But for 3.10 brcmfmac does
+support P2P device. Putting it back with this commit.
+
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Hi John,
+
+Got started with 3.10-rc1 and found this 3.9 patch got merged.
+
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 6d758f2..761f501 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4140,6 +4140,10 @@ static const struct ieee80211_iface_limit brcmf_iface_limits[] = {
+ 		.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 			 BIT(NL80211_IFTYPE_P2P_GO)
+ 	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_DEVICE)
++	}
+ };
+ static const struct ieee80211_iface_combination brcmf_iface_combos[] = {
+ 	{
+@@ -4197,7 +4201,8 @@ static struct wiphy *brcmf_setup_wiphy(struct device *phydev)
+ 				 BIT(NL80211_IFTYPE_ADHOC) |
+ 				 BIT(NL80211_IFTYPE_AP) |
+ 				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
+-				 BIT(NL80211_IFTYPE_P2P_GO);
++				 BIT(NL80211_IFTYPE_P2P_GO) |
++				 BIT(NL80211_IFTYPE_P2P_DEVICE);
+ 	wiphy->iface_combinations = brcmf_iface_combos;
+ 	wiphy->n_iface_combinations = ARRAY_SIZE(brcmf_iface_combos);
+ 	wiphy->bands[IEEE80211_BAND_2GHZ] = &__wl_band_2ghz;
+-- 
+1.7.10.4
+
+
