@@ -1,51 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52945 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964858Ab3E1RpJ (ORCPT
+Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:41435 "EHLO
+	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754656Ab3ENBPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 13:45:09 -0400
-Date: Tue, 28 May 2013 13:39:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2013-05-27
-Message-ID: <20130528173909.GF2084@tuxdriver.com> (sfid-20130528_194514_974895_76A5D4C5)
-References: <1369646928.8229.24.camel@jlt4.sipsolutions.net>
+	Mon, 13 May 2013 21:15:12 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
+	Tim Shepard <shep@laptop.org>,
+	Jason Abele <jabele@chromium.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 02/17] mwifiex: scan delay timer cleanup in unload path
+Date: Mon, 13 May 2013 18:14:46 -0700
+Message-ID: <1368494101-23651-3-git-send-email-bzhao@marvell.com> (sfid-20130514_031518_342356_1CDB670A)
+In-Reply-To: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
+References: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369646928.8229.24.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 27, 2013 at 11:28:48AM +0200, Johannes Berg wrote:
-> Hi John,
-> 
-> Another pull request for 3.10 with a number of fixes.
-> 
-> This time I have a fix from Stanislaw for a stupid mistake I made in the
-> auth/assoc timeout changes, a fix from Felix for 64-bit traffic counters
-> and one from Helmut for address mask handling in mac80211. I also have a
-> few fixes myself for four different crashes reported by a few people.
-> 
-> Please let me know if there are any issues.
-> 
-> johannes
-> 
-> 
-> The following changes since commit e248ad30204eff6559b4d2d94d49d9d46c08185a:
-> 
->   cfg80211: fix sending WoWLAN TCP wakeup settings (2013-05-16 22:38:09 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to ac20976dcaeea3e77e40e9aac8f3799d2a22ea2b:
-> 
->   mac80211: Allow single vif mac address change with addr_mask (2013-05-27 11:26:48 +0200)
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Pulling now...
+Return from scan delay timer routine if surprise_removed flag
+is true. Also, cancel the timer in unload path.
 
+This fixes a crash when scan delay timer accesses structures
+that have been freed already.
+
+Tested with "iwlist mlan0 scan & sleep 1; rmmod mwifiex_sdio"
+
+Reported-by: Daniel Drake <dsd@laptop.org>
+Tested-by: Daniel Drake <dsd@laptop.org>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 58e151e..71bbf12 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -59,6 +59,9 @@ static void scan_delay_timer_fn(unsigned long data)
+ 	struct cmd_ctrl_node *cmd_node, *tmp_node;
+ 	unsigned long flags;
+ 
++	if (adapter->surprise_removed)
++		return;
++
+ 	if (adapter->scan_delay_cnt == MWIFIEX_MAX_SCAN_DELAY_CNT) {
+ 		/*
+ 		 * Abort scan operation by cancelling all pending scan
+@@ -458,11 +461,18 @@ static void mwifiex_free_lock_list(struct mwifiex_adapter *adapter)
+ static void
+ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ {
++	int i;
++
+ 	if (!adapter) {
+ 		pr_err("%s: adapter is NULL\n", __func__);
+ 		return;
+ 	}
+ 
++	for (i = 0; i < adapter->priv_num; i++) {
++		if (adapter->priv[i])
++			del_timer_sync(&adapter->priv[i]->scan_delay_timer);
++	}
++
+ 	mwifiex_cancel_all_pending_cmd(adapter);
+ 
+ 	/* Free lock variables */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.2.3
+
