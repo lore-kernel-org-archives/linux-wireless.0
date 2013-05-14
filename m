@@ -1,46 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54521 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752934Ab3EGOWU (ORCPT
+Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:35436 "EHLO
+	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752067Ab3ENBP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 10:22:20 -0400
-Message-ID: <1367936535.8328.56.camel@jlt4.sipsolutions.net> (sfid-20130507_162237_432101_9FD0CB89)
-Subject: Re: [RFC 01/12] mac80211: track and share mesh BSSes among
- interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Date: Tue, 07 May 2013 16:22:15 +0200
-In-Reply-To: <20130507140835.GD1438@localhost> (sfid-20130507_160953_266299_87301F8E)
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
-	 <1367548442-8229-2-git-send-email-thomas@cozybit.com>
-	 <1367933862.8328.18.camel@jlt4.sipsolutions.net>
-	 <20130507140835.GD1438@localhost> (sfid-20130507_160953_266299_87301F8E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 13 May 2013 21:15:26 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
+	Tim Shepard <shep@laptop.org>,
+	Jason Abele <jabele@chromium.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 07/17] mwifiex: replace spin_lock_irqsave with spin_lock and fix warn_on
+Date: Mon, 13 May 2013 18:14:51 -0700
+Message-ID: <1368494101-23651-8-git-send-email-bzhao@marvell.com> (sfid-20130514_031528_951535_ACCCAF7C)
+In-Reply-To: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
+References: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-05-07 at 10:08 -0400, Bob Copeland wrote:
-> On Tue, May 07, 2013 at 03:37:42PM +0200, Johannes Berg wrote:
-> > Ok this is big ... Let me tackle it patch by patch I guess :-)
-> > 
-> > > +struct mesh_local_bss {
-> > 
-> > > +	bool can_share;
-> > 
-> > Does that even make sense? I mean, wouldn't you simply not link/create
-> > such an entry if the given vif can't share?
-> 
-> We could do that, but as written mpath table now wants an mbss pointer
-> in either case.  Seemed more straight-forward to just always require
-> it even though the structures are kind of pointless for unshared vifs.
+From: Avinash Patil <patila@marvell.com>
 
-But why even add it to the global list if you only need it locally?
+We see this WARN_ON during PCIe unload:
+WARNING: at kernel/smp.c:382 smp_call_function_many+0x66/0x1e1()
 
-Anyway I guess it doesn't matter, just seemed a bit odd.
+This happens because we are doing PCI iounmap operations while
+holding spinlock via spin_lock_irqsave(). Holding spinlock this
+way causes disabling IRQs and hence PCI iounmap shows warning on
+irqs_disabled() check.
 
-johannes
+Use non-irq variant of spin_lock i.e. spin_lock() instead.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 1343725f..c7f11c0 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -687,7 +687,6 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 	int ret = -EINPROGRESS;
+ 	struct mwifiex_private *priv;
+ 	s32 i;
+-	unsigned long flags;
+ 	struct sk_buff *skb;
+ 
+ 	/* mwifiex already shutdown */
+@@ -722,7 +721,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 		}
+ 	}
+ 
+-	spin_lock_irqsave(&adapter->mwifiex_lock, flags);
++	spin_lock(&adapter->mwifiex_lock);
+ 
+ 	if (adapter->if_ops.data_complete) {
+ 		while ((skb = skb_dequeue(&adapter->usb_rx_data_q))) {
+@@ -738,7 +737,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 
+ 	mwifiex_adapter_cleanup(adapter);
+ 
+-	spin_unlock_irqrestore(&adapter->mwifiex_lock, flags);
++	spin_unlock(&adapter->mwifiex_lock);
+ 
+ 	/* Notify completion */
+ 	ret = mwifiex_shutdown_fw_complete(adapter);
+-- 
+1.8.2.3
 
