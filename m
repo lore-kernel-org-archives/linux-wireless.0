@@ -1,67 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40908 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754581Ab3EONOA (ORCPT
+Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:54050 "EHLO
+	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752067Ab3ENBPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 09:14:00 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id AB89A8EE0DD
-	for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 06:13:59 -0700 (PDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-	by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id JWfPj5VLZae6 for <linux-wireless@vger.kernel.org>;
-	Wed, 15 May 2013 06:13:59 -0700 (PDT)
-Received: from [10.10.178.236] (unknown [159.125.79.200])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 44D9A8EE0A9
-	for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 06:13:59 -0700 (PDT)
-Message-ID: <1368623636.19370.26.camel@dabdike> (sfid-20130515_151407_577721_27B1A107)
-Subject: warning in mac80211 from iwlwifi queuing work during suspend
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 15 May 2013 09:13:56 -0400
-Content-Type: text/plain; charset="ISO-8859-15"
-Mime-Version: 1.0
+	Mon, 13 May 2013 21:15:39 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
+	Tim Shepard <shep@laptop.org>,
+	Jason Abele <jabele@chromium.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 11/17] mwifiex: replace unnecessary u32 variables with u8 in sdio.c
+Date: Mon, 13 May 2013 18:14:55 -0700
+Message-ID: <1368494101-23651-12-git-send-email-bzhao@marvell.com> (sfid-20130514_031542_432634_6E5CE625)
+In-Reply-To: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
+References: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I got this message on resume
+From: Amitkumar Karwar <akarwar@marvell.com>
 
+Some u32 variables in sdio.c are used to store/pass u8 values.
+Replace them with u8 variables.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-[24856.578799] ------------[ cut here ]------------
-[24856.578849] WARNING: at /home/abuild/rpmbuild/BUILD/kernel-desktop-3.9.1/linux-3.9/net/mac80211/util.c:599 ieee80211_can_queue_work.isra.7+0x2d/0x40 [mac80211]()
-[24856.578851] Hardware name: 4286CTO
-[24856.578852] queueing ieee80211 work while going to suspend
-[24856.578917] Modules linked in: cpufreq_stats fuse tun af_packet rfcomm bnep sha256_generic cbc dm_crypt dm_mod mperf coretemp crc32_pclmul crc32c_intel ghash_clmulni_intel cryptd arc4 iwldvm mac80211 snd_hda_codec_hdmi snd_hda_codec_conexant iTCO_wdt iTCO_vendor_support kvm_intel kvm microcode snd_hda_intel snd_hda_codec joydev snd_hwdep pcspkr snd_pcm_oss i2c_i801 snd_pcm uvcvideo btusb sg thinkpad_acpi videobuf2_core videodev videobuf2_vmalloc bluetooth snd_seq videobuf2_memops lpc_ich mfd_core iwlwifi sdhci_pci sdhci snd_seq_device mmc_core cfg80211 e1000e rfkill snd_mixer_oss snd_timer ptp snd_page_alloc pps_core mei wmi snd battery tpm_tis tpm tpm_bios ac soundcore edd autofs4 i915 drm_kms_helper drm i2c_algo_bit video button scsi_dh_hp_sw scsi_dh_alua scsi_dh_emc scsi_dh_rdac scsi_dh fan processor thermal thermal_sys
-[24856.578921] Pid: 0, comm: swapper/0 Not tainted 3.9.1-7.gb6484b6-desktop #1
-[24856.578921] Call Trace:
-[24856.578933]  [<ffffffff81004728>] dump_trace+0x88/0x300
-[24856.578938]  [<ffffffff815cafba>] dump_stack+0x69/0x6f
-[24856.578945]  [<ffffffff810461c9>] warn_slowpath_common+0x79/0xc0
-[24856.578948]  [<ffffffff810462c5>] warn_slowpath_fmt+0x45/0x50
-[24856.578960]  [<ffffffffa06053dd>] ieee80211_can_queue_work.isra.7+0x2d/0x40 [mac80211]
-[24856.579004]  [<ffffffffa0605487>] ieee80211_queue_work+0x27/0x60 [mac80211]
-[24856.579029]  [<ffffffff8105615c>] call_timer_fn+0x2c/0x170
-[24856.579033]  [<ffffffff810564c5>] run_timer_softirq+0x225/0x2d0
-[24856.579037]  [<ffffffff8104e60e>] __do_softirq+0xde/0x280
-[24856.579040]  [<ffffffff8104e905>] irq_exit+0x95/0xa0
-[24856.579043]  [<ffffffff810264e8>] smp_apic_timer_interrupt+0x68/0xa0
-[24856.579047]  [<ffffffff815df9dd>] apic_timer_interrupt+0x6d/0x80
-[24856.579051] ---[ end trace 53ff81b324167a8a ]---
-----
+ drivers/net/wireless/mwifiex/sdio.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-Kernel is 
-
-Linux version 3.9.1-7.gb6484b6-desktop (geeko@buildhost) (gcc version 4.7.2 20130108 [gcc-4_7-branch revision 195012] (SUSE Linux) ) #1 SMP PREEMPT Wed May 8 15:02:04 UTC 2013 (b6484b6)
-
-and the wireless stack is 
-
-jejb@dabdike> lsmod|grep iwl
-iwldvm                253990  0 
-mac80211              678341  1 iwldvm
-iwlwifi               118000  1 iwldvm
-cfg80211              579562  3 iwldvm,mac80211,iwlwifi
-
-
-James
-
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 022e9fd..e4357a6 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -294,13 +294,13 @@ static struct sdio_driver mwifiex_sdio = {
+  * This function writes data into SDIO card register.
+  */
+ static int
+-mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u32 data)
++mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u8 data)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	int ret = -1;
+ 
+ 	sdio_claim_host(card->func);
+-	sdio_writeb(card->func, (u8) data, reg, &ret);
++	sdio_writeb(card->func, data, reg, &ret);
+ 	sdio_release_host(card->func);
+ 
+ 	return ret;
+@@ -310,7 +310,7 @@ mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u32 data)
+  * This function reads data from SDIO card register.
+  */
+ static int
+-mwifiex_read_reg(struct mwifiex_adapter *adapter, u32 reg, u32 *data)
++mwifiex_read_reg(struct mwifiex_adapter *adapter, u32 reg, u8 *data)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	int ret = -1;
+@@ -421,7 +421,7 @@ static int mwifiex_pm_wakeup_card_complete(struct mwifiex_adapter *adapter)
+  */
+ static int mwifiex_init_sdio_ioport(struct mwifiex_adapter *adapter)
+ {
+-	u32 reg;
++	u8 reg;
+ 	struct sdio_mmc_card *card = adapter->card;
+ 
+ 	adapter->ioport = 0;
+@@ -580,7 +580,7 @@ mwifiex_sdio_poll_card_status(struct mwifiex_adapter *adapter, u8 bits)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	u32 tries;
+-	u32 cs;
++	u8 cs;
+ 
+ 	for (tries = 0; tries < MAX_POLL_TRIES; tries++) {
+ 		if (mwifiex_read_reg(adapter, card->reg->poll_reg, &cs))
+@@ -604,7 +604,7 @@ mwifiex_sdio_read_fw_status(struct mwifiex_adapter *adapter, u16 *dat)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	const struct mwifiex_sdio_card_reg *reg = card->reg;
+-	u32 fws0, fws1;
++	u8 fws0, fws1;
+ 
+ 	if (mwifiex_read_reg(adapter, reg->status_reg_0, &fws0))
+ 		return -1;
+@@ -625,14 +625,14 @@ mwifiex_sdio_read_fw_status(struct mwifiex_adapter *adapter, u16 *dat)
+  */
+ static int mwifiex_sdio_disable_host_int(struct mwifiex_adapter *adapter)
+ {
+-	u32 host_int_mask;
++	u8 host_int_mask, host_int_disable = HOST_INT_DISABLE;
+ 
+ 	/* Read back the host_int_mask register */
+ 	if (mwifiex_read_reg(adapter, HOST_INT_MASK_REG, &host_int_mask))
+ 		return -1;
+ 
+ 	/* Update with the mask and write back to the register */
+-	host_int_mask &= ~HOST_INT_DISABLE;
++	host_int_mask &= ~host_int_disable;
+ 
+ 	if (mwifiex_write_reg(adapter, HOST_INT_MASK_REG, host_int_mask)) {
+ 		dev_err(adapter->dev, "disable host interrupt failed\n");
+@@ -712,7 +712,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 	u8 *firmware = fw->fw_buf;
+ 	u32 firmware_len = fw->fw_len;
+ 	u32 offset = 0;
+-	u32 base0, base1;
++	u8 base0, base1;
+ 	u8 *fwbuf;
+ 	u16 len = 0;
+ 	u32 txlen, tx_blocks = 0, tries;
+@@ -854,7 +854,7 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
+ 	int ret = 0;
+ 	u16 firmware_stat;
+ 	u32 tries;
+-	u32 winner_status;
++	u8 winner_status;
+ 
+ 	/* Wait for firmware initialization event */
+ 	for (tries = 0; tries < poll_num; tries++) {
+@@ -889,7 +889,7 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
+ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+-	u32 sdio_ireg;
++	u8 sdio_ireg;
+ 	unsigned long flags;
+ 
+ 	if (mwifiex_read_data_sync(adapter, card->mp_regs,
+@@ -1284,7 +1284,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 
+ 			if (mwifiex_sdio_card_to_host_mp_aggr(adapter, skb,
+ 							      port)) {
+-				u32 cr = 0;
++				u8 cr = 0;
+ 
+ 				dev_err(adapter->dev, "card_to_host_mpa failed:"
+ 					" int status=%#x\n", sdio_ireg);
+@@ -1644,7 +1644,7 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	const struct mwifiex_sdio_card_reg *reg = card->reg;
+ 	int ret;
+-	u32 sdio_ireg;
++	u8 sdio_ireg;
+ 
+ 	/*
+ 	 * Read the HOST_INT_STATUS_REG for ACK the first interrupt got
+-- 
+1.8.2.3
 
