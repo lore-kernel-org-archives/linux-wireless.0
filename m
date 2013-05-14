@@ -1,858 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www62.your-server.de ([213.133.104.62]:54964 "EHLO
-	www62.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751667Ab3EAMor (ORCPT
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:41399 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755548Ab3ENBQB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 May 2013 08:44:47 -0400
-Received: from [78.46.5.203] (helo=sslproxy01.your-server.de)
-	by www62.your-server.de with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.74)
-	(envelope-from <borkmann@iogearbox.net>)
-	id 1UXW2g-0005tP-JF
-	for linux-wireless@vger.kernel.org; Wed, 01 May 2013 14:21:50 +0200
-Received: from [212.23.233.194] (helo=[192.168.1.101])
-	by sslproxy01.your-server.de with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.72)
-	(envelope-from <borkmann@iogearbox.net>)
-	id 1UXW2c-0003LP-J5
-	for linux-wireless@vger.kernel.org; Wed, 01 May 2013 14:21:47 +0200
-Message-ID: <518108D7.9050206@iogearbox.net> (sfid-20130501_144452_393965_8ADAA371)
-Date: Wed, 01 May 2013 14:21:43 +0200
-From: Daniel Borkmann <borkmann@iogearbox.net>
+	Mon, 13 May 2013 21:16:01 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
+	Tim Shepard <shep@laptop.org>,
+	Jason Abele <jabele@chromium.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 16/17] mwifiex: code rearrangement in multiport aggregation path
+Date: Mon, 13 May 2013 18:15:00 -0700
+Message-ID: <1368494101-23651-17-git-send-email-bzhao@marvell.com> (sfid-20130514_031607_293676_EE720A0B)
+In-Reply-To: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
+References: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: net-next, wireless compile warnings
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When compiling the latest net-next tree with W=1, I get these warnings
-related to wireless. Not sure how much of them are actually serious:
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_local_sdata_addr_evt’:
-net/mac80211/./trace.h:72:775: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:72:964: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_local_u32_evt’:
-net/mac80211/./trace.h:95:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_local_sdata_evt’:
-net/mac80211/./trace.h:115:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:115:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_return_u64’:
-net/mac80211/./trace.h:170:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_change_interface’:
-net/mac80211/./trace.h:239:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:239:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:239:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_config’:
-net/mac80211/./trace.h:273:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:273:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:273:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:273:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:273:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:273:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_bss_info_changed’:
-net/mac80211/./trace.h:315:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:315:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:315:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:315:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:315:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:315:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:315:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:315:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:315:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_configure_filter’:
-net/mac80211/./trace.h:453:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:453:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:453:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_set_key’:
-net/mac80211/./trace.h:505:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:505:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:505:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_update_tkip_key’:
-net/mac80211/./trace.h:539:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:539:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:539:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_get_stats’:
-net/mac80211/./trace.h:601:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:601:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:601:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:601:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_get_tkip_seq’:
-net/mac80211/./trace.h:632:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_sta_notify’:
-net/mac80211/./trace.h:688:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:688:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:688:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_sta_state’:
-net/mac80211/./trace.h:716:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:716:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:716:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:716:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_sta_rc_update’:
-net/mac80211/./trace.h:748:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:748:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:748:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_sta_add’:
-net/mac80211/./trace.h:776:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:776:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_sta_remove’:
-net/mac80211/./trace.h:801:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:801:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_conf_tx’:
-net/mac80211/./trace.h:826:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:826:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_set_tsf’:
-net/mac80211/./trace.h:867:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:867:966: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:867:777: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_ampdu_action’:
-net/mac80211/./trace.h:903:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:903:2047: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:903:2236: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_flush’:
-net/mac80211/./trace.h:961:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_channel_switch’:
-net/mac80211/./trace.h:985:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:985:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:985:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:985:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:985:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_set_antenna’:
-net/mac80211/./trace.h:1013:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1013:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_get_antenna’:
-net/mac80211/./trace.h:1038:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1038:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_remain_on_channel’:
-net/mac80211/./trace.h:1063:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1063:968: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:1063:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1063:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_set_ringparam’:
-net/mac80211/./trace.h:1100:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1100:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_get_ringparam’:
-net/mac80211/./trace.h:1123:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1123:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1123:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1123:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_set_bitrate_mask’:
-net/mac80211/./trace.h:1162:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1162:968: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:1162:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1162:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_set_rekey_data’:
-net/mac80211/./trace.h:1189:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1189:968: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_rssi_callback’:
-net/mac80211/./trace.h:1217:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1217:968: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:1217:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_local_chanctx’:
-net/mac80211/./trace.h:1330:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1330:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1330:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1330:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_change_chanctx’:
-net/mac80211/./trace.h:1364:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1364:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1364:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1364:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1364:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_local_sdata_chanctx’:
-net/mac80211/./trace.h:1389:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1389:968: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:1389:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1389:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1389:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1389:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_start_ap’:
-net/mac80211/./trace.h:1428:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1428:968: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_api_start_tx_ba_cb’:
-net/mac80211/./trace.h:1503:195: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1503:384: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_api_stop_tx_ba_cb’:
-net/mac80211/./trace.h:1547:195: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1547:384: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_api_beacon_loss’:
-net/mac80211/./trace.h:1575:195: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1575:384: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_api_connection_loss’:
-net/mac80211/./trace.h:1594:195: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1594:384: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_api_cqm_rssi_notify’:
-net/mac80211/./trace.h:1613:195: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1613:384: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/./trace.h:1613:195: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_api_chswitch_done’:
-net/mac80211/./trace.h:1716:195: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1716:384: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_api_gtk_rekey_notify’:
-net/mac80211/./trace.h:1747:195: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1747:384: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_api_enable_rssi_reports’:
-net/mac80211/./trace.h:1768:195: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1768:384: warning: ordered comparison of pointer with null pointer [-Wextra]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_wake_queue’:
-net/mac80211/./trace.h:1819:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_stop_queue’:
-net/mac80211/./trace.h:1843:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/mac80211/trace.h:1953,
-                  from net/mac80211/trace.c:10:
-net/mac80211/./trace.h: In function ‘ftrace_define_fields_drv_set_default_unicast_key’:
-net/mac80211/./trace.h:1867:779: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/mac80211/./trace.h:1867:968: warning: ordered comparison of pointer with null pointer [-Wextra]
-net/mac80211/mlme.c: In function ‘ieee80211_sta_process_chanswitch’:
-net/mac80211/mlme.c:1023:24: warning: variable ‘bss’ set but not used [-Wunused-but-set-variable]
-[...]
-net/wireless/reg.c: In function ‘restore_alpha2’:
-net/wireless/reg.c:1813:3: warning: suggest braces around empty body in an ‘else’ statement [-Wempty-body]
-[...]
-net/wireless/nl80211.c: In function ‘nl80211_parse_mesh_config’:
-net/wireless/nl80211.c:4682:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4685:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4688:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4690:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4693:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4700:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4700:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4706:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4713:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4717:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4721:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4726:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4729:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4732:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4736:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4742:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4749:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4752:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4762:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c:4762:2: warning: comparison is always false due to limited range of data type [-Wtype-limits]
-net/wireless/nl80211.c: In function ‘nl80211_trigger_scan’:
-net/wireless/nl80211.c:5207:4: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/nl80211.c: In function ‘nl80211_set_tx_bitrate_mask’:
-net/wireless/nl80211.c:7055:3: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-[...]
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_add_virtual_intf’:
-net/wireless/./trace.h:314:987: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_wiphy_wdev_evt’:
-net/wireless/./trace.h:331:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_change_virtual_intf’:
-net/wireless/./trace.h:355:1510: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_start_ap’:
-net/wireless/./trace.h:455:1510: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:455:1510: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:455:1510: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:455:1510: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:455:1510: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:455:3498: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:455:3498: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:455:4109: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_station_add_change’:
-net/wireless/./trace.h:596:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:596:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:596:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_return_int_station_info’:
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:712:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_return_int_mpath_info’:
-net/wireless/./trace.h:792:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:792:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:792:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:792:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:792:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:792:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_return_int_mesh_config’:
-net/wireless/./trace.h:830:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:830:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:830:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:830:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_update_mesh_config’:
-net/wireless/./trace.h:847:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:847:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:847:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:847:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:847:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_join_mesh’:
-net/wireless/./trace.h:867:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:867:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:867:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:867:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_set_txq_params’:
-net/wireless/./trace.h:916:1496: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_libertas_set_mesh_channel’:
-net/wireless/./trace.h:943:1510: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_set_monitor_channel’:
-net/wireless/./trace.h:961:765: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:961:765: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:961:765: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:961:765: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:961:765: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_auth’:
-net/wireless/./trace.h:977:2089: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_assoc’:
-net/wireless/./trace.h:1001:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_mgmt_tx_cancel_wait’:
-net/wireless/./trace.h:1080:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1080:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_connect’:
-net/wireless/./trace.h:1119:2673: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1119:2673: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1119:2673: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_set_cqm_rssi_config’:
-net/wireless/./trace.h:1152:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_set_cqm_txe_config’:
-net/wireless/./trace.h:1175:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1175:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1175:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_set_wiphy_params’:
-net/wireless/./trace.h:1237:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_set_tx_power’:
-net/wireless/./trace.h:1257:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1257:953: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_mgmt_frame_register’:
-net/wireless/./trace.h:1338:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_return_int_tx_rx’:
-net/wireless/./trace.h:1359:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1359:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_return_void_tx_rx’:
-net/wireless/./trace.h:1378:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1378:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1378:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1378:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_tx_rx_evt’:
-net/wireless/./trace.h:1401:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1401:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_return_int_survey_info’:
-net/wireless/./trace.h:1492:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1492:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1492:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1492:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1492:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1492:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1492:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_tdls_oper’:
-net/wireless/./trace.h:1529:2087: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_remain_on_channel’:
-net/wireless/./trace.h:1597:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1597:933: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1597:933: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_return_int_cookie’:
-net/wireless/./trace.h:1618:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_cancel_remain_on_channel’:
-net/wireless/./trace.h:1635:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1635:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_mgmt_tx’:
-net/wireless/./trace.h:1652:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1652:933: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1652:933: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_get_et_strings’:
-net/wireless/./trace.h:1718:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_return_chandef’:
-net/wireless/./trace.h:1740:936: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1740:936: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1740:936: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1740:936: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1740:936: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_set_mac_acl’:
-net/wireless/./trace.h:1771:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_crit_proto_start’:
-net/wireless/./trace.h:1809:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_rdev_crit_proto_stop’:
-net/wireless/./trace.h:1829:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_send_rx_assoc’:
-net/wireless/./trace.h:1897:1490: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_michael_mic_failure’:
-net/wireless/./trace.h:1959:1503: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_ready_on_channel’:
-net/wireless/./trace.h:1982:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1982:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1982:527: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:1982:527: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_ready_on_channel_expired’:
-net/wireless/./trace.h:2004:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2004:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2004:527: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_new_sta’:
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2022:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_rx_mgmt’:
-net/wireless/./trace.h:2045:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_mgmt_tx_status’:
-net/wireless/./trace.h:2062:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2062:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_cqm_rssi_notify’:
-net/wireless/./trace.h:2079:984: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_reg_can_beacon’:
-net/wireless/./trace.h:2095:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2095:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2095:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2095:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2095:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_chandef_dfs_required’:
-net/wireless/./trace.h:2110:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2110:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2110:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2110:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2110:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_ch_switch_notify’:
-net/wireless/./trace.h:2125:930: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2125:930: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2125:930: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2125:930: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2125:930: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_radar_event’:
-net/wireless/./trace.h:2141:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2141:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2141:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2141:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2141:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_cac_event’:
-net/wireless/./trace.h:2156:937: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_probe_status’:
-net/wireless/./trace.h:2200:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_cqm_pktloss_notify’:
-net/wireless/./trace.h:2221:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_tdls_oper_request’:
-net/wireless/./trace.h:2282:2087: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_scan_done’:
-net/wireless/./trace.h:2305:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2305:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2305:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_get_bss’:
-net/wireless/./trace.h:2345:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_inform_bss_frame’:
-net/wireless/./trace.h:2372:767: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_bss_evt’:
-net/wireless/./trace.h:2394:743: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_return_uint’:
-net/wireless/./trace.h:2413:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_return_u32’:
-net/wireless/./trace.h:2425:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-In file included from include/trace/ftrace.h:356:0,
-                  from include/trace/define_trace.h:86,
-                  from net/wireless/trace.h:2504,
-                  from net/wireless/trace.c:5:
-net/wireless/./trace.h: In function ‘ftrace_define_fields_cfg80211_report_wowlan_wakeup’:
-net/wireless/./trace.h:2437:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
-net/wireless/./trace.h:2437:2: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
+There are some macros defined for multiport aggregation
+calculations. As we may need to add some more code to
+accomodate new chipsets, we will change them to inline
+functions. Also, use dynamic allocation for Rx buffer array.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c | 17 +++++---
+ drivers/net/wireless/mwifiex/sdio.h | 83 +++++++++++++++++++++++--------------
+ 2 files changed, 64 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 3e132b6..d97361f 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1084,10 +1084,10 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 	if (f_aggr_cur) {
+ 		dev_dbg(adapter->dev, "info: current packet aggregation\n");
+ 		/* Curr pkt can be aggregated */
+-		MP_RX_AGGR_SETUP(card, skb, port);
++		mp_rx_aggr_setup(card, skb, port);
+ 
+ 		if (MP_RX_AGGR_PKT_LIMIT_REACHED(card) ||
+-		    MP_RX_AGGR_PORT_LIMIT_REACHED(card)) {
++		    mp_rx_aggr_port_limit_reached(card)) {
+ 			dev_dbg(adapter->dev, "info: %s: aggregated packet "
+ 				"limit reached\n", __func__);
+ 			/* No more pkts allowed in Aggr buf, rx it */
+@@ -1357,7 +1357,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 			__func__);
+ 
+ 		if (MP_TX_AGGR_IN_PROGRESS(card)) {
+-			if (!MP_TX_AGGR_PORT_LIMIT_REACHED(card) &&
++			if (!mp_tx_aggr_port_limit_reached(card) &&
+ 			    MP_TX_AGGR_BUF_HAS_ROOM(card, pkt_len)) {
+ 				f_precopy_cur_buf = 1;
+ 
+@@ -1370,7 +1370,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 				/* No room in Aggr buf, send it */
+ 				f_send_aggr_buf = 1;
+ 
+-				if (MP_TX_AGGR_PORT_LIMIT_REACHED(card) ||
++				if (mp_tx_aggr_port_limit_reached(card) ||
+ 				    !(card->mp_wr_bitmap &
+ 				      (1 << card->curr_wr_port)))
+ 					f_send_cur_buf = 1;
+@@ -1409,7 +1409,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 		MP_TX_AGGR_BUF_PUT(card, payload, pkt_len, port);
+ 
+ 		if (MP_TX_AGGR_PKT_LIMIT_REACHED(card) ||
+-		    MP_TX_AGGR_PORT_LIMIT_REACHED(card))
++		    mp_tx_aggr_port_limit_reached(card))
+ 			/* No more pkts allowed in Aggr buf, send it */
+ 			f_send_aggr_buf = 1;
+ 	}
+@@ -1686,6 +1686,11 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 	if (!card->mp_regs)
+ 		return -ENOMEM;
+ 
++	/* Allocate skb pointer buffers */
++	card->mpa_rx.skb_arr = kzalloc((sizeof(void *)) *
++				       card->mp_agg_pkt_limit, GFP_KERNEL);
++	card->mpa_rx.len_arr = kzalloc(sizeof(*card->mpa_rx.len_arr) *
++				       card->mp_agg_pkt_limit, GFP_KERNEL);
+ 	ret = mwifiex_alloc_sdio_mpa_buffers(adapter,
+ 					     SDIO_MP_TX_AGGR_DEF_BUF_SIZE,
+ 					     SDIO_MP_RX_AGGR_DEF_BUF_SIZE);
+@@ -1722,6 +1727,8 @@ static void mwifiex_cleanup_sdio(struct mwifiex_adapter *adapter)
+ 	struct sdio_mmc_card *card = adapter->card;
+ 
+ 	kfree(card->mp_regs);
++	kfree(card->mpa_rx.skb_arr);
++	kfree(card->mpa_rx.len_arr);
+ 	kfree(card->mpa_tx.buf);
+ 	kfree(card->mpa_rx.buf);
+ }
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 339608b..597db37 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -46,8 +46,6 @@
+ #define CTRL_PORT			0
+ #define CTRL_PORT_MASK			0x0001
+ 
+-#define SDIO_MP_AGGR_DEF_PKT_LIMIT		8
+-
+ #define SDIO_MP_TX_AGGR_DEF_BUF_SIZE        (8192)	/* 8K */
+ 
+ /* Multi port RX aggregation buffer size */
+@@ -126,12 +124,6 @@
+ #define MP_TX_AGGR_PKT_LIMIT_REACHED(a)					\
+ 			(a->mpa_tx.pkt_cnt == a->mpa_tx.pkt_aggr_limit)
+ 
+-/* SDIO Tx aggregation port limit ? */
+-#define MP_TX_AGGR_PORT_LIMIT_REACHED(a) ((a->curr_wr_port <		\
+-			a->mpa_tx.start_port) && (((a->max_ports -\
+-			a->mpa_tx.start_port) + a->curr_wr_port) >=	\
+-				a->mp_agg_pkt_limit))
+-
+ /* Reset SDIO Tx aggregation buffer parameters */
+ #define MP_TX_AGGR_BUF_RESET(a) do {					\
+ 	a->mpa_tx.pkt_cnt = 0;						\
+@@ -144,12 +136,6 @@
+ #define MP_RX_AGGR_PKT_LIMIT_REACHED(a)					\
+ 			(a->mpa_rx.pkt_cnt == a->mpa_rx.pkt_aggr_limit)
+ 
+-/* SDIO Tx aggregation port limit ? */
+-#define MP_RX_AGGR_PORT_LIMIT_REACHED(a) ((a->curr_rd_port <		\
+-			a->mpa_rx.start_port) && (((a->max_ports -\
+-			a->mpa_rx.start_port) + a->curr_rd_port) >=	\
+-			a->mp_agg_pkt_limit))
+-
+ /* SDIO Rx aggregation in progress ? */
+ #define MP_RX_AGGR_IN_PROGRESS(a) (a->mpa_rx.pkt_cnt > 0)
+ 
+@@ -157,20 +143,6 @@
+ #define MP_RX_AGGR_BUF_HAS_ROOM(a, rx_len)				\
+ 			((a->mpa_rx.buf_len+rx_len) <= a->mpa_rx.buf_size)
+ 
+-/* Prepare to copy current packet from card to SDIO Rx aggregation buffer */
+-#define MP_RX_AGGR_SETUP(a, skb, port) do {				\
+-	a->mpa_rx.buf_len += skb->len;					\
+-	if (!a->mpa_rx.pkt_cnt)						\
+-		a->mpa_rx.start_port = port;				\
+-	if (a->mpa_rx.start_port <= port)				\
+-		a->mpa_rx.ports |= (1<<(a->mpa_rx.pkt_cnt));		\
+-	else								\
+-		a->mpa_rx.ports |= (1<<(a->mpa_rx.pkt_cnt+1));		\
+-	a->mpa_rx.skb_arr[a->mpa_rx.pkt_cnt] = skb;			\
+-	a->mpa_rx.len_arr[a->mpa_rx.pkt_cnt] = skb->len;		\
+-	a->mpa_rx.pkt_cnt++;						\
+-} while (0)
+-
+ /* Reset SDIO Rx aggregation buffer parameters */
+ #define MP_RX_AGGR_BUF_RESET(a) do {					\
+ 	a->mpa_rx.pkt_cnt = 0;						\
+@@ -179,7 +151,6 @@
+ 	a->mpa_rx.start_port = 0;					\
+ } while (0)
+ 
+-
+ /* data structure for SDIO MPA TX */
+ struct mwifiex_sdio_mpa_tx {
+ 	/* multiport tx aggregation buffer pointer */
+@@ -200,8 +171,8 @@ struct mwifiex_sdio_mpa_rx {
+ 	u32 ports;
+ 	u16 start_port;
+ 
+-	struct sk_buff *skb_arr[SDIO_MP_AGGR_DEF_PKT_LIMIT];
+-	u32 len_arr[SDIO_MP_AGGR_DEF_PKT_LIMIT];
++	struct sk_buff **skb_arr;
++	u32 *len_arr;
+ 
+ 	u8 enabled;
+ 	u32 buf_size;
+@@ -325,4 +296,54 @@ static inline int mwifiex_sdio_event_complete(struct mwifiex_adapter *adapter,
+ 	return 0;
+ }
+ 
++static inline bool
++mp_rx_aggr_port_limit_reached(struct sdio_mmc_card *card)
++{
++	u8 tmp;
++
++	if (card->curr_rd_port < card->mpa_rx.start_port) {
++		tmp = card->mp_agg_pkt_limit;
++
++		if (((card->max_ports - card->mpa_rx.start_port) +
++		    card->curr_rd_port) >= tmp)
++			return true;
++	}
++
++	return false;
++}
++
++static inline bool
++mp_tx_aggr_port_limit_reached(struct sdio_mmc_card *card)
++{
++	u16 tmp;
++
++	if (card->curr_wr_port < card->mpa_tx.start_port) {
++		tmp = card->mp_agg_pkt_limit;
++
++		if (((card->max_ports - card->mpa_tx.start_port) +
++		    card->curr_wr_port) >= tmp)
++			return true;
++	}
++
++	return false;
++}
++
++/* Prepare to copy current packet from card to SDIO Rx aggregation buffer */
++static inline void mp_rx_aggr_setup(struct sdio_mmc_card *card,
++				    struct sk_buff *skb, u8 port)
++{
++	card->mpa_rx.buf_len += skb->len;
++
++	if (!card->mpa_rx.pkt_cnt)
++		card->mpa_rx.start_port = port;
++
++	if (card->mpa_rx.start_port <= port)
++		card->mpa_rx.ports |= 1 << (card->mpa_rx.pkt_cnt);
++	else
++		card->mpa_rx.ports |= 1 << (card->mpa_rx.pkt_cnt + 1);
++
++	card->mpa_rx.skb_arr[card->mpa_rx.pkt_cnt] = skb;
++	card->mpa_rx.len_arr[card->mpa_rx.pkt_cnt] = skb->len;
++	card->mpa_rx.pkt_cnt++;
++}
+ #endif /* _MWIFIEX_SDIO_H */
+-- 
+1.8.2.3
+
