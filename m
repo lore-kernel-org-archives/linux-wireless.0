@@ -1,75 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:59166 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756827Ab3ECCgS (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:51193 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756433Ab3ENJ1l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 22:36:18 -0400
-Received: by mail-pa0-f48.google.com with SMTP id kp6so673614pab.35
-        for <linux-wireless@vger.kernel.org>; Thu, 02 May 2013 19:36:17 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
+	Tue, 14 May 2013 05:27:41 -0400
+Date: Tue, 14 May 2013 11:27:34 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>, me@bobcopeland.com,
-	open80211s <devel@lists.open80211s.org>,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [RFC 04/12] mac80211: assign outgoing interface with nexthop
-Date: Thu,  2 May 2013 19:33:54 -0700
-Message-Id: <1367548442-8229-5-git-send-email-thomas@cozybit.com> (sfid-20130503_043621_456737_4C5EA666)
-In-Reply-To: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [RFC 0/4] add master channel switch announcement support
+Message-ID: <20130514092734.GA16426@pandem0nium> (sfid-20130514_112746_399775_7A710602)
+References: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1368439778.8300.20.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+HP7ph2BbKc20aGI"
+In-Reply-To: <1368439778.8300.20.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When updated mpath routing info is found, the new route
-may be on a different interface (in the case of MBSS
-sharing).
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |   13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+--+HP7ph2BbKc20aGI
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 993a270..7df8f27 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -195,27 +195,34 @@ static u32 mesh_table_hash(struct mesh_local_bss *mbss, const u8 *addr,
- 
- /**
-  *
-- * mesh_path_assign_nexthop - update mesh path next hop
-+ * mesh_path_assign_nexthop - update mesh path info
-  *
-  * @mpath: mesh path to update
-  * @sta: next hop to assign
-  *
-+ * Updates queued frames and outgoing interface.
-+ *
-  * Locking: mpath->state_lock must be held when calling this function
-  */
- void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta)
- {
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
- 	struct ieee80211_hdr *hdr;
- 	unsigned long flags;
- 
- 	rcu_assign_pointer(mpath->next_hop, sta);
-+	mpath->sdata = sdata;
- 
- 	spin_lock_irqsave(&mpath->frame_queue.lock, flags);
- 	skb_queue_walk(&mpath->frame_queue, skb) {
-+		info = IEEE80211_SKB_CB(skb);
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
--		memcpy(hdr->addr2, mpath->sdata->vif.addr, ETH_ALEN);
--		ieee80211_mps_set_frame_flags(sta->sdata, sta, hdr);
-+		memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
-+		info->control.vif = &sdata->vif;
-+		ieee80211_mps_set_frame_flags(sdata, sta, hdr);
- 	}
- 
- 	spin_unlock_irqrestore(&mpath->frame_queue.lock, flags);
--- 
-1.7.10.4
+Hello Johannes,
 
+thanks for your review!
+
+On Mon, May 13, 2013 at 12:09:38PM +0200, Johannes Berg wrote:
+> On Mon, 2013-05-06 at 21:13 +0200, Simon Wunderlich wrote:
+> > This is an early RFC of a possible channel switch announcement infrastr=
+ucture.
+> > It adds CSA/ECSA handling support for AP. This is required for DFS oper=
+ation
+> > (e.g. Wi-Fi Alliance requires this for 802.11h certification). This wil=
+l also
+> > be required for IBSS-DFS later.
+> >=20
+> > I'd like to discuss if this design approach is going in the right direc=
+tion.
+> > What is currently working:
+> >=20
+> >  * channels are announced by adding IEs (CSA and Extended CSA) in beaco=
+ns
+> >  * after some (configurable) time, the channel is switched
+> >  * with the channel switch, CSA/ECSA IEs are removed and channel inform=
+ation
+> >    is updated.
+> >  * Userspace calls a new command NL80211_CMD_CHANNEL_SWITCH along with =
+channel info
+> >    (freq + width), whether traffic should be blocked and timing informa=
+tion
+> >  * it currently works for me [TM] on my ath9k based machine
+>=20
+> I don't really like your approach of building all the IEs in the kernel.
+> There are some things, like the country-after-switch in the CSA wrapper
+> (introduced in 11ac), that would be really awkward this way.
+
+Hmm ... OK. I have not checked 802.11ac yet (actually I don't have access t=
+o the
+drafts anyway). So what we have to expect is changing the country after the=
+ switch,
+or also other new things?
+
+> >  * We already have NL80211_CMD_CH_SWITCH_NOTIFY which is only used for =
+notification.
+> >    Maybe we can rename that and re-use it instead of adding a new comma=
+nd
+> >    NL80211_CMD_CHANNEL_SWITCH?
+>=20
+> Sure, I don't really care though.
+>=20
+OK, will try to merge that then. Seems cleaner than having multiple channel=
+ switch
+commands in the API.
+
+> >  * could other drivers (next to ath9k) work with this API?
+>=20
+> Probably not easily. Any TI folks reading this?
+
+I was thinking about adding another callback function or option for that fo=
+r drivers
+who do the channel switch internally. Then we would only need mac80211 to a=
+dapt.
+
+Would that help, or what would be problematic?
+>=20
+>=20
+> Anyway I think it'd be better to try to provide
+>  (a) the "during-switch IEs", maybe with an offset to the counter so
+> mac80211,
+>      driver or the device itself can count down
+>  (b) the "after-switch beacon" IEs (and maybe probe response for
+o> offload)
+
+Yeah, that would be an alternative. I've been inspired by IEEE 802.11-2012/=
+6.3.17
+(MLME-CHANNELSWITCH) originally. :)
+I think your suggestion is good for AP where we control the beacon. For IBS=
+S it
+would be a little different: when a channel switch is triggered, userspace =
+does
+not know the beacon (and will not set it). Therefore, we could only accept =
+the
+change IEs and skip the "after-switch-beacon" IEs (these would be re-genera=
+ted
+internally) in IBSS mode. I guess it would be similar for mesh.
+
+What do you think?
+
+Cheers,
+	Simon
+
+--+HP7ph2BbKc20aGI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlGSA4YACgkQrzg/fFk7axbAkQCgu8lzU3na/1+shidXosrpMx4D
+37IAn24g99YbH9cK8DxhnqZ72wKV/Zax
+=S6KM
+-----END PGP SIGNATURE-----
+
+--+HP7ph2BbKc20aGI--
