@@ -1,53 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:44352 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834Ab3EHFfU (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:44843 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755967Ab3ENGk6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 01:35:20 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Tue, 14 May 2013 02:40:58 -0400
+Received: by mail-la0-f41.google.com with SMTP id lx15so156893lab.0
+        for <linux-wireless@vger.kernel.org>; Mon, 13 May 2013 23:40:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20873.58246.410990.985421@gargle.gargle.HOWL> (sfid-20130508_073524_411875_9A99FE28)
-Date: Wed, 8 May 2013 11:02:54 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
- and Rx-STBC packets
-In-Reply-To: <517D3B50.6070806@openwrt.org>
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de>
-	<517D1B45.9020302@openwrt.org>
-	<517D3840.2060000@candelatech.com>
-	<517D3B50.6070806@openwrt.org>
+In-Reply-To: <034c01ce506a$50d75d90$f28618b0$@necst.nec.co.jp>
+References: <034c01ce506a$50d75d90$f28618b0$@necst.nec.co.jp>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 13 May 2013 23:40:36 -0700
+Message-ID: <CAB=NE6Wu8C2P52D_13-rnOXw3SW2dW71PLmz3HBSKYhbyy7Z+Q@mail.gmail.com> (sfid-20130514_084103_349741_7571A6D3)
+Subject: Re: switch user id in crda
+To: Tetsuo Tatsugami <tatsugami-txa@necst.nec.co.jp>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> The problem I have with the current stats is they're just an arbitrary
-> collection of random stuff that is probably useless for 99% of all
-> users. In many cases the way the stats are collected also makes the data
-> completely meaningless (e.g. because the source/destination address is
-> not taken into account).
-> 
-> Why care about the number of packets on the air that were sent with a
-> specific rate flag? Why care about the number of beacons on the air
-> (with no filter on a set of APs or anything)? Or what about the number
-> of fragments received? To me it just looks like an incoherent set of
-> useless facts.
+On Mon, May 13, 2013 at 11:14 PM, Tetsuo Tatsugami
+<tatsugami-txa@necst.nec.co.jp> wrote:
+> Dear mcgrof,
+>
+> My name is Tetsuo Tatsugami.
+> I work for NEC CASIO Mobile communications, Ltd.
+> We are using Qualcomm APQ 8064 chipset in our device.
+>
+> We requested the modification of crda to Qualcomm support team,
+> and they said that I could send the patches to you.
+> Because the crda is open source code.
+>
+>
+> Our modification for crda:
+> The crda is executed by root user to use netlink socket.
+> It's better to minimize the capabilities for security reason.
+> The crda can work if it has CAP_NET_ADMIN capabilities.
+>
+> I attached the patch in this mail.
+> It worked well in our device.
 
-Yes, having per-station statistics would be useful, mainly for RX and TX. Right
-now, all the counters are global and there is no way to find out how a
-particular station is performing, especially in AP mode. Since mac80211 gives us
-proper debugfs hooks for station addition/deletion, relevant stuff can be moved
-there.
+Tetsuo, thanks so much for the patch but unfortunately in order to
+facilitate patch review we need developers to engage with the
+community through our standard practice of submitting patches inline
+in ASCII text, not as attachments. Its also encouraged if you have
+multiple patches that you enumerate them and also provide a good
+commit log message. As for CRDA we also use the DCO so be sure to read
+the DCO and then if you agree be sure to add the Signed-off-by tag to
+each patch.
 
-The 'recv' file used to be just for HW errors (DESC, CRC etc.), now it has various
-counters that should probably be node-specific.
+This git guide is specific to 802.11 Linux wireless kernel development
+but it contains sufficient examples of how to configure git, ssmtp,
+etc to help you get patches out to me and the community that enables
+community review:
 
-The 'xmit' file can be trimmed and information can be maintained per-station.
-This will be really useful in AP mode - especially for diagnosing aggregation, QoS, PS etc.
+http://wireless.kernel.org/en/developers/Documentation/git-guide
 
-Other than these two files, the rest are simple.
+Please let me know if you have any questions. I cannot stress the
+importance of a good commit log message. If in doubt just check git
+log on the project for other holder commit log messages for examples.
 
-Sujith
+Can you resend with git format-patch ?
+
+  Luis
