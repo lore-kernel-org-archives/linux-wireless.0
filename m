@@ -1,98 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59195 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252Ab3EPU7e (ORCPT
+Received: from mailrelay02.solcon.nl ([212.45.32.108]:58402 "EHLO
+	mailrelay02.solcon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752704Ab3EOKPl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 16:59:34 -0400
-Message-ID: <1368737965.8253.9.camel@jlt4.sipsolutions.net> (sfid-20130516_225938_574124_575DD7D8)
-Subject: pull-request: iwlwifi-fixes 2013-05-16
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 16 May 2013 22:59:25 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-Sf4E5y/rVJPbhFZuNlUs"
-Mime-Version: 1.0
+	Wed, 15 May 2013 06:15:41 -0400
+Message-ID: <51935A67.6000804@solcon.nl> (sfid-20130515_121620_518293_4D68900E)
+Date: Wed, 15 May 2013 11:50:31 +0200
+From: Albert Pool <albertpool@solcon.nl>
+MIME-Version: 1.0
+To: larry.finger@lwfinger.net, chaoming_li@realsil.com.cn
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192cu: Add new USB ID
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This adds the USB ID of the On Networks N300MA, clone of Netgear WNA3100M.
 
---=-Sf4E5y/rVJPbhFZuNlUs
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Albert Pool <albertpool@solcon.nl>
 
-John,
+Reported-by: Ana Rey <Anazul77@hotmail.com>
 
-And another one for iwlwifi, much fewer commits though.
+---
 
-I have fixes for a firmware crash during resume, multicast RX,
-aggregation and a workaround for a firmware scanning bug.
+  drivers/net/wireless/rtlwifi/rtl8192cu/sw.c |    1 +
 
-Please pull. Thanks,
-johannes
+  1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
 
+index 23d640a..0b593de 100644
 
-The following changes since commit 61f1598278876527314f5fc1d00cf0a4d525c1f7=
-:
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
 
-  Merge branch 'wireless' (2013-05-10 09:44:05 -0700)
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
 
-are available in the git repository at:
+@@ -349,6 +349,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
 
+      {RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
-or-john
+      {RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
 
-for you to fetch changes up to e3d4bc8cc0230e8dc8033484666f03f87392a8c4:
+      {RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, /*Netgear-Sercomm*/
 
-  iwlwifi: mvm: fix aggregation drain flow (2013-05-16 22:39:07 +0200)
++    {RTL_USB_DEVICE(0x0846, 0xf001, rtl92cu_hal_cfg)}, /*Netgear-On Networks*/
 
-----------------------------------------------------------------
-Alexander Bondar (1):
-      iwlwifi: mvm: Prevent setting assoc flag in MAC_CONTEXT_CMD
+      {RTL_USB_DEVICE(0x0b05, 0x17ab, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
 
-Emmanuel Grumbach (2):
-      iwlwifi: mvm: tell firmware to let multicast frames in
-      iwlwifi: mvm: fix aggregation drain flow
+      {RTL_USB_DEVICE(0x0bda, 0x8186, rtl92cu_hal_cfg)}, /*Realtek 92CE-VAU*/
 
-Ilan Peer (1):
-      iwlwifi: mvm: Always use SCAN_TYPE_FORCED
+      {RTL_USB_DEVICE(0x0df6, 0x0061, rtl92cu_hal_cfg)}, /*Sitecom-Edimax*/
 
- drivers/net/wireless/iwlwifi/mvm/fw-api.h   | 27 ++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 12 +++++---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 17 +++++++++-
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  1 +
- drivers/net/wireless/iwlwifi/mvm/ops.c      |  1 +
- drivers/net/wireless/iwlwifi/mvm/scan.c     |  6 ++++
- drivers/net/wireless/iwlwifi/mvm/sta.c      | 13 ++++++--
- drivers/net/wireless/iwlwifi/mvm/sta.h      |  2 --
- drivers/net/wireless/iwlwifi/mvm/tx.c       | 48 +++++++++++++++++++++----=
-----
- 9 files changed, 105 insertions(+), 22 deletions(-)
+-- 
 
-
---=-Sf4E5y/rVJPbhFZuNlUs
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRlUitAAoJEDBSmw7B7bqrvC4P+gN6uWtEAugycgINvjF3Hdif
-YCW4TlK2mtrpTedxH5gNc+69AyZG0o6f+tjFo9ZvnhmyxmBhBZIeYpmsnu+lxx8d
-vu5pSAiCUttzE2Fbh3hzogbidsv1UK62/+NlMDMXJe2J1ZWj4e5Nf2fSFkWReNB0
-crEgISi71vhEZ6wY9aHAdq5kuV9rlO5Up44rB1NVTTnrDR3Gfs7h3BPBP5DpCV4K
-crhgt6nfFTNE1TZCyqVxuinNTzEsZ3to+Qf6AULgTMUxtlWGyQ0KHSsquvZ6jxD9
-fbLpt3GpQ5DUfgm9jU69ZznqqtlnbpMASBtJekT77BLO6Nb9HVb7yAp3FNbtqTOi
-//FlkZ+sDlOnPiDOpg51+vNcVJVwBAh0Y23A1uUvN8tQH0u0vYqrRRofpiAnjanT
-LU6bMkVxHk99ZgxkRA7fNhCmfRIO1t8OVl2vAFpcftOFZjFZDPKfyMsmj28a597h
-JnRVIEgcYmSAMha7Sf76qrRqNi16HeVFQ5jsK7Lg/jaMqIZf5CK77pxMbvX+10Vh
-8s1cqb+hChn3pqXW6ZdPAwtlu8+M309hC2cBcMJ2qb92lPviwwri5eFJ0MMtLdSq
-+ZX7A2fJzF3zmH1st6oJwNEnInGiAUxxcwCMsEUsnhQ0jl75/2Cpx3xwdzcgQR+N
-LoXCAZG8EMqhFwZJ66Eu
-=DzMN
------END PGP SIGNATURE-----
-
---=-Sf4E5y/rVJPbhFZuNlUs--
+1.7.9.5
 
