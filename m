@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:41102 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686Ab3EISKs (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:36155 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759274Ab3EOOTg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 May 2013 14:10:48 -0400
-From: a@pandem0nium
+	Wed, 15 May 2013 10:19:36 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes@sipsolutions.net>,
 	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
 	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 5/8] nl80211: allow 5 and 10 MHz channels for IBSS
-Date: Thu,  9 May 2013 20:10:33 +0200
-Message-Id: <1368123036-22721-6-git-send-email-a> (sfid-20130509_201058_232206_3A48E537)
-In-Reply-To: <1368123036-22721-1-git-send-email-a>
-References: <1368123036-22721-1-git-send-email-a>
+Subject: [PATCHv2 11/18] ath9k: always use SIFS times from OFDM for 5/10 MHz
+Date: Wed, 15 May 2013 16:19:02 +0200
+Message-Id: <1368627549-22518-12-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_161954_123221_D16984E9)
+In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-
-Whether the wiphy supports it or not is already checked, so what is left
-is to enable these channel types.
+5/10 MHz channels should always use SIFS times as defined in IEEE
+802.11-2012 18.4.4 (OFDM PHY characteristics). This makes it compatible
+to ath5k, which does the same.
 
 Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- net/wireless/nl80211.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath9k/hw.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f67d825..fbbb639 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6335,6 +6335,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 7f25da8..89ee731 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1071,7 +1071,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+ 		    tx_lat += 11;
  
- 	switch (ibss.chandef.width) {
-+	case NL80211_CHAN_WIDTH_5:
-+	case NL80211_CHAN_WIDTH_10:
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 		break;
- 	case NL80211_CHAN_WIDTH_20:
+-		sifstime *= 2;
++		sifstime = 32;
+ 		ack_offset = 16;
+ 		slottime = 13;
+ 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
+@@ -1081,7 +1081,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+ 		    tx_lat += 22;
+ 
+-		sifstime *= 4;
++		sifstime = 64;
+ 		ack_offset = 32;
+ 		slottime = 21;
+ 	} else {
+@@ -1118,7 +1118,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		ctstimeout += 48 - sifstime - ah->slottime;
+ 	}
+ 
+-
+ 	ath9k_hw_set_sifs_time(ah, sifstime);
+ 	ath9k_hw_setslottime(ah, slottime);
+ 	ath9k_hw_set_ack_timeout(ah, acktimeout);
 -- 
 1.7.10.4
 
