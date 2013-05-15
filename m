@@ -1,382 +1,387 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:50959 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752032Ab3EaCKD (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:42776 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759468Ab3EOOwk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 22:10:03 -0400
-Received: by mail-pd0-f171.google.com with SMTP id z11so1386196pdj.30
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:10:03 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 06/40] crda: move regdom_intersect() to reglib
-Date: Thu, 30 May 2013 19:08:55 -0700
-Message-Id: <1369966169-23640-7-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_041006_681800_531C9DC6)
-In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 15 May 2013 10:52:40 -0400
+Subject: [PATCH 20/29] ath10k: add pci.h
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k-devel@qca.qualcomm.com
+Date: Wed, 15 May 2013 17:45:37 +0300
+Message-ID: <20130515144537.4492.18344.stgit@localhost6.localdomain6> (sfid-20130515_165319_470656_770932E6)
+In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
+References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-
-This will be used later by other code so just share it.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- intersect.c |  157 ----------------------------------------------------------
- reglib.c    |  159 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- reglib.h    |    3 ++
- 3 files changed, 162 insertions(+), 157 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.h |  355 +++++++++++++++++++++++++++++++++
+ 1 file changed, 355 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath10k/pci.h
 
-diff --git a/intersect.c b/intersect.c
-index 7352e73..1c00a67 100644
---- a/intersect.c
-+++ b/intersect.c
-@@ -9,163 +9,6 @@
- /* Intersects regulatory domains, this will skip any regulatory marked with
-  * an alpha2 of '00', which is used to indicate a regulatory domain */
- 
--/* Sanity check on a regulatory rule */
--static int is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
--{
--	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
--	uint32_t freq_diff;
--
--	if (freq_range->start_freq_khz == 0 || freq_range->end_freq_khz == 0)
--		return 0;
--
--	if (freq_range->start_freq_khz > freq_range->end_freq_khz)
--		return 0;
--
--	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
--
--	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
--	    freq_range->max_bandwidth_khz > freq_diff)
--		return 0;
--
--	return 1;
--}
--
--/* Helper for regdom_intersect(), this does the real
-- * mathematical intersection fun */
--static int reg_rules_intersect(const struct ieee80211_reg_rule *rule1,
--			       const struct ieee80211_reg_rule *rule2,
--			       struct ieee80211_reg_rule *intersected_rule)
--{
--	const struct ieee80211_freq_range *freq_range1, *freq_range2;
--	struct ieee80211_freq_range *freq_range;
--	const struct ieee80211_power_rule *power_rule1, *power_rule2;
--	struct ieee80211_power_rule *power_rule;
--	uint32_t freq_diff;
--
--	freq_range1 = &rule1->freq_range;
--	freq_range2 = &rule2->freq_range;
--	freq_range = &intersected_rule->freq_range;
--
--	power_rule1 = &rule1->power_rule;
--	power_rule2 = &rule2->power_rule;
--	power_rule = &intersected_rule->power_rule;
--
--	freq_range->start_freq_khz = max(freq_range1->start_freq_khz,
--					 freq_range2->start_freq_khz);
--	freq_range->end_freq_khz = min(freq_range1->end_freq_khz,
--				       freq_range2->end_freq_khz);
--	freq_range->max_bandwidth_khz = min(freq_range1->max_bandwidth_khz,
--					    freq_range2->max_bandwidth_khz);
--
--	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
--	if (freq_range->max_bandwidth_khz > freq_diff)
--		freq_range->max_bandwidth_khz = freq_diff;
--
--	power_rule->max_eirp = min(power_rule1->max_eirp,
--		power_rule2->max_eirp);
--	power_rule->max_antenna_gain = min(power_rule1->max_antenna_gain,
--		power_rule2->max_antenna_gain);
--
--	intersected_rule->flags = rule1->flags | rule2->flags;
--
--	if (!is_valid_reg_rule(intersected_rule))
--		return -EINVAL;
--
--	return 0;
--}
--
--/**
-- * regdom_intersect - do the intersection between two regulatory domains
-- * @rd1: first regulatory domain
-- * @rd2: second regulatory domain
-- *
-- * Use this function to get the intersection between two regulatory domains.
-- * Once completed we will mark the alpha2 for the rd as intersected, "98",
-- * as no one single alpha2 can represent this regulatory domain.
-- *
-- * Returns a pointer to the regulatory domain structure which will hold the
-- * resulting intersection of rules between rd1 and rd2. We will
-- * malloc() this structure for you.
-- */
--static struct ieee80211_regdomain *
--regdom_intersect(const struct ieee80211_regdomain *rd1,
--		 const struct ieee80211_regdomain *rd2)
--{
--	int r, size_of_regd;
--	unsigned int x, y;
--	unsigned int num_rules = 0, rule_idx = 0;
--	const struct ieee80211_reg_rule *rule1, *rule2;
--	struct ieee80211_reg_rule *intersected_rule;
--	struct ieee80211_regdomain *rd;
--	/* This is just a dummy holder to help us count */
--	struct ieee80211_reg_rule irule;
--
--	/* Uses the stack temporarily for counter arithmetic */
--	intersected_rule = &irule;
--
--	memset(intersected_rule, 0, sizeof(struct ieee80211_reg_rule));
--
--	if (!rd1 || !rd2)
--		return NULL;
--
--	/* First we get a count of the rules we'll need, then we actually
--	 * build them. This is to so we can malloc() and free() a
--	 * regdomain once. The reason we use reg_rules_intersect() here
--	 * is it will return -EINVAL if the rule computed makes no sense.
--	 * All rules that do check out OK are valid. */
--
--	for (x = 0; x < rd1->n_reg_rules; x++) {
--		rule1 = &rd1->reg_rules[x];
--		for (y = 0; y < rd2->n_reg_rules; y++) {
--			rule2 = &rd2->reg_rules[y];
--			if (!reg_rules_intersect(rule1, rule2,
--					intersected_rule))
--				num_rules++;
--			memset(intersected_rule, 0,
--					sizeof(struct ieee80211_reg_rule));
--		}
--	}
--
--	if (!num_rules)
--		return NULL;
--
--	size_of_regd = sizeof(struct ieee80211_regdomain) +
--		((num_rules + 1) * sizeof(struct ieee80211_reg_rule));
--
--	rd = malloc(size_of_regd);
--	if (!rd)
--		return NULL;
--
--	memset(rd, 0, size_of_regd);
--
--	for (x = 0; x < rd1->n_reg_rules; x++) {
--		rule1 = &rd1->reg_rules[x];
--		for (y = 0; y < rd2->n_reg_rules; y++) {
--			rule2 = &rd2->reg_rules[y];
--			/* This time around instead of using the stack lets
--			 * write to the target rule directly saving ourselves
--			 * a memcpy() */
--			intersected_rule = &rd->reg_rules[rule_idx];
--			r = reg_rules_intersect(rule1, rule2,
--				intersected_rule);
--			if (r)
--				continue;
--			rule_idx++;
--		}
--	}
--
--	if (rule_idx != num_rules) {
--		free(rd);
--		return NULL;
--	}
--
--	rd->n_reg_rules = num_rules;
--	rd->alpha2[0] = '9';
--	rd->alpha2[1] = '9';
--
--	return rd;
--}
--
- int main(int argc, char **argv)
- {
- 	int r = 0;
-diff --git a/reglib.c b/reglib.c
-index 0b1599b..867e8cf 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -359,3 +359,162 @@ out:
- 	close(fd);
- 	return rd;
- }
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+new file mode 100644
+index 0000000..d2a055a
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -0,0 +1,355 @@
++/*
++ * Copyright (c) 2005-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+/* Sanity check on a regulatory rule */
-+static int is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
-+{
-+	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
-+	uint32_t freq_diff;
++#ifndef _PCI_H_
++#define _PCI_H_
 +
-+	if (freq_range->start_freq_khz == 0 || freq_range->end_freq_khz == 0)
-+		return 0;
++#include <linux/interrupt.h>
 +
-+	if (freq_range->start_freq_khz > freq_range->end_freq_khz)
-+		return 0;
++#include "hw.h"
++#include "ce.h"
 +
-+	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
-+
-+	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
-+	    freq_range->max_bandwidth_khz > freq_diff)
-+		return 0;
-+
-+	return 1;
-+}
++/* FW dump area */
++#define REG_DUMP_COUNT_QCA988X 60
 +
 +/*
-+ * Helper for regdom_intersect(), this does the real
-+ * mathematical intersection fun
++ * maximum number of bytes that can be handled atomically by DiagRead/DiagWrite
 + */
-+static int reg_rules_intersect(const struct ieee80211_reg_rule *rule1,
-+			       const struct ieee80211_reg_rule *rule2,
-+			       struct ieee80211_reg_rule *intersected_rule)
++#define DIAG_TRANSFER_LIMIT 2048
++
++/*
++ * maximum number of bytes that can be
++ * handled atomically by DiagRead/DiagWrite
++ */
++#define DIAG_TRANSFER_LIMIT 2048
++
++struct bmi_xfer {
++	struct completion done;
++	bool wait_for_resp;
++	u32 resp_len;
++};
++
++struct ath10k_pci_compl {
++	struct list_head list;
++	int send_or_recv;
++	struct ce_state *ce_state;
++	struct hif_ce_pipe_info *pipe_info;
++	void *transfer_context;
++	unsigned int nbytes;
++	unsigned int transfer_id;
++	unsigned int flags;
++};
++
++/* compl_state.send_or_recv */
++#define HIF_CE_COMPLETE_FREE 0
++#define HIF_CE_COMPLETE_SEND 1
++#define HIF_CE_COMPLETE_RECV 2
++
++/*
++ * PCI-specific Target state
++ *
++ * NOTE: Structure is shared between Host software and Target firmware!
++ *
++ * Much of this may be of interest to the Host so
++ * HOST_INTEREST->hi_interconnect_state points here
++ * (and all members are 32-bit quantities in order to
++ * facilitate Host access). In particular, Host software is
++ * required to initialize pipe_cfg_addr and svc_to_pipe_map.
++ */
++struct pcie_state {
++	/* Pipe configuration Target address */
++	/* NB: ce_pipe_config[CE_COUNT] */
++	u32 pipe_cfg_addr;
++
++	/* Service to pipe map Target address */
++	/* NB: service_to_pipe[PIPE_TO_CE_MAP_CN] */
++	u32 svc_to_pipe_map;
++
++	/* number of MSI interrupts requested */
++	u32 msi_requested;
++
++	/* number of MSI interrupts granted */
++	u32 msi_granted;
++
++	/* Message Signalled Interrupt address */
++	u32 msi_addr;
++
++	/* Base data */
++	u32 msi_data;
++
++	/*
++	 * Data for firmware interrupt;
++	 * MSI data for other interrupts are
++	 * in various SoC registers
++	 */
++	u32 msi_fw_intr_data;
++
++	/* PCIE_PWR_METHOD_* */
++	u32 power_mgmt_method;
++
++	/* PCIE_CONFIG_FLAG_* */
++	u32 config_flags;
++};
++
++/* PCIE_CONFIG_FLAG definitions */
++#define PCIE_CONFIG_FLAG_ENABLE_L1  0x0000001
++
++/* Host software's Copy Engine configuration. */
++#define CE_ATTR_FLAGS 0
++
++/*
++ * Configuration information for a Copy Engine pipe.
++ * Passed from Host to Target during startup (one per CE).
++ *
++ * NOTE: Structure is shared between Host software and Target firmware!
++ */
++struct ce_pipe_config {
++	u32 pipenum;
++	u32 pipedir;
++	u32 nentries;
++	u32 nbytes_max;
++	u32 flags;
++	u32 reserved;
++};
++
++/*
++ * Directions for interconnect pipe configuration.
++ * These definitions may be used during configuration and are shared
++ * between Host and Target.
++ *
++ * Pipe Directions are relative to the Host, so PIPEDIR_IN means
++ * "coming IN over air through Target to Host" as with a WiFi Rx operation.
++ * Conversely, PIPEDIR_OUT means "going OUT from Host through Target over air"
++ * as with a WiFi Tx operation. This is somewhat awkward for the "middle-man"
++ * Target since things that are "PIPEDIR_OUT" are coming IN to the Target
++ * over the interconnect.
++ */
++#define PIPEDIR_NONE    0
++#define PIPEDIR_IN      1  /* Target-->Host, WiFi Rx direction */
++#define PIPEDIR_OUT     2  /* Host->Target, WiFi Tx direction */
++#define PIPEDIR_INOUT   3  /* bidirectional */
++
++/* Establish a mapping between a service/direction and a pipe. */
++struct service_to_pipe {
++	u32 service_id;
++	u32 pipedir;
++	u32 pipenum;
++};
++
++enum ath10k_pci_features {
++	ATH10K_PCI_FEATURE_MSI_X		= 0,
++	ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND	= 1,
++
++	/* keep last */
++	ATH10K_PCI_FEATURE_COUNT
++};
++
++/* Per-pipe state. */
++struct hif_ce_pipe_info {
++	/* Handle of underlying Copy Engine */
++	struct ce_state *ce_hdl;
++
++	/* Our pipe number; facilitiates use of pipe_info ptrs. */
++	u8 pipe_num;
++
++	/* Convenience back pointer to hif_ce_state. */
++	struct ath10k *hif_ce_state;
++
++	size_t buf_sz;
++
++	/* protects compl_free and num_send_allowed */
++	spinlock_t pipe_lock;
++
++	/* List of free CE completion slots */
++	struct list_head compl_free;
++
++	/* Limit the number of outstanding send requests. */
++	int num_sends_allowed;
++
++	struct ath10k_pci *ar_pci;
++	struct tasklet_struct intr;
++};
++
++struct ath10k_pci {
++	struct pci_dev *pdev;
++	struct device *dev;
++	struct ath10k *ar;
++	void __iomem *mem;
++	int cacheline_sz;
++
++	DECLARE_BITMAP(features, ATH10K_PCI_FEATURE_COUNT);
++
++	/*
++	 * Number of MSI interrupts granted, 0 --> using legacy PCI line
++	 * interrupts.
++	 */
++	int num_msi_intrs;
++
++	struct tasklet_struct intr_tq;
++	struct tasklet_struct msi_fw_err;
++
++	/* Number of Copy Engines supported */
++	unsigned int ce_count;
++
++	int started;
++
++	atomic_t keep_awake_count;
++	bool verified_awake;
++
++	/* List of CE completions to be processed */
++	struct list_head compl_process;
++
++	/* protects compl_processing and compl_process */
++	spinlock_t compl_lock;
++
++	bool compl_processing;
++
++	struct hif_ce_pipe_info pipe_info[CE_COUNT_MAX];
++
++	struct ath10k_hif_cb msg_callbacks_current;
++
++	/* Target address used to signal a pending firmware event */
++	u32 fw_indicator_address;
++
++	/* Copy Engine used for Diagnostic Accesses */
++	struct ce_state *ce_diag;
++
++	/* FIXME: document what this really protects */
++	spinlock_t ce_lock;
++
++	/* Map CE id to ce_state */
++	struct ce_state *ce_id_to_state[CE_COUNT_MAX];
++
++	/* makes sure that dummy reads are atomic */
++	spinlock_t hw_v1_workaround_lock;
++};
++
++static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
 +{
-+	const struct ieee80211_freq_range *freq_range1, *freq_range2;
-+	struct ieee80211_freq_range *freq_range;
-+	const struct ieee80211_power_rule *power_rule1, *power_rule2;
-+	struct ieee80211_power_rule *power_rule;
-+	uint32_t freq_diff;
-+
-+	freq_range1 = &rule1->freq_range;
-+	freq_range2 = &rule2->freq_range;
-+	freq_range = &intersected_rule->freq_range;
-+
-+	power_rule1 = &rule1->power_rule;
-+	power_rule2 = &rule2->power_rule;
-+	power_rule = &intersected_rule->power_rule;
-+
-+	freq_range->start_freq_khz = max(freq_range1->start_freq_khz,
-+					 freq_range2->start_freq_khz);
-+	freq_range->end_freq_khz = min(freq_range1->end_freq_khz,
-+				       freq_range2->end_freq_khz);
-+	freq_range->max_bandwidth_khz = min(freq_range1->max_bandwidth_khz,
-+					    freq_range2->max_bandwidth_khz);
-+
-+	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
-+	if (freq_range->max_bandwidth_khz > freq_diff)
-+		freq_range->max_bandwidth_khz = freq_diff;
-+
-+	power_rule->max_eirp = min(power_rule1->max_eirp,
-+		power_rule2->max_eirp);
-+	power_rule->max_antenna_gain = min(power_rule1->max_antenna_gain,
-+		power_rule2->max_antenna_gain);
-+
-+	intersected_rule->flags = rule1->flags | rule2->flags;
-+
-+	if (!is_valid_reg_rule(intersected_rule))
-+		return -EINVAL;
-+
-+	return 0;
++	return ar->hif.priv;
 +}
 +
-+/**
-+ * regdom_intersect - do the intersection between two regulatory domains
-+ * @rd1: first regulatory domain
-+ * @rd2: second regulatory domain
-+ *
-+ * Use this function to get the intersection between two regulatory domains.
-+ * Once completed we will mark the alpha2 for the rd as intersected, "98",
-+ * as no one single alpha2 can represent this regulatory domain.
-+ *
-+ * Returns a pointer to the regulatory domain structure which will hold the
-+ * resulting intersection of rules between rd1 and rd2. We will
-+ * malloc() this structure for you.
-+ */
-+struct ieee80211_regdomain *
-+regdom_intersect(const struct ieee80211_regdomain *rd1,
-+		 const struct ieee80211_regdomain *rd2)
++static inline u32 ath10k_pci_reg_read32(void __iomem *mem, u32 addr)
 +{
-+	int r, size_of_regd;
-+	unsigned int x, y;
-+	unsigned int num_rules = 0, rule_idx = 0;
-+	const struct ieee80211_reg_rule *rule1, *rule2;
-+	struct ieee80211_reg_rule *intersected_rule;
-+	struct ieee80211_regdomain *rd;
-+	/* This is just a dummy holder to help us count */
-+	struct ieee80211_reg_rule irule;
-+
-+	/* Uses the stack temporarily for counter arithmetic */
-+	intersected_rule = &irule;
-+
-+	memset(intersected_rule, 0, sizeof(struct ieee80211_reg_rule));
-+
-+	if (!rd1 || !rd2)
-+		return NULL;
-+
-+	/* First we get a count of the rules we'll need, then we actually
-+	 * build them. This is to so we can malloc() and free() a
-+	 * regdomain once. The reason we use reg_rules_intersect() here
-+	 * is it will return -EINVAL if the rule computed makes no sense.
-+	 * All rules that do check out OK are valid. */
-+
-+	for (x = 0; x < rd1->n_reg_rules; x++) {
-+		rule1 = &rd1->reg_rules[x];
-+		for (y = 0; y < rd2->n_reg_rules; y++) {
-+			rule2 = &rd2->reg_rules[y];
-+			if (!reg_rules_intersect(rule1, rule2,
-+					intersected_rule))
-+				num_rules++;
-+			memset(intersected_rule, 0,
-+					sizeof(struct ieee80211_reg_rule));
-+		}
-+	}
-+
-+	if (!num_rules)
-+		return NULL;
-+
-+	size_of_regd = sizeof(struct ieee80211_regdomain) +
-+		((num_rules + 1) * sizeof(struct ieee80211_reg_rule));
-+
-+	rd = malloc(size_of_regd);
-+	if (!rd)
-+		return NULL;
-+
-+	memset(rd, 0, size_of_regd);
-+
-+	for (x = 0; x < rd1->n_reg_rules; x++) {
-+		rule1 = &rd1->reg_rules[x];
-+		for (y = 0; y < rd2->n_reg_rules; y++) {
-+			rule2 = &rd2->reg_rules[y];
-+			/* This time around instead of using the stack lets
-+			 * write to the target rule directly saving ourselves
-+			 * a memcpy() */
-+			intersected_rule = &rd->reg_rules[rule_idx];
-+			r = reg_rules_intersect(rule1, rule2,
-+				intersected_rule);
-+			if (r)
-+				continue;
-+			rule_idx++;
-+		}
-+	}
-+
-+	if (rule_idx != num_rules) {
-+		free(rd);
-+		return NULL;
-+	}
-+
-+	rd->n_reg_rules = num_rules;
-+	rd->alpha2[0] = '9';
-+	rd->alpha2[1] = '9';
-+
-+	return rd;
++	return ioread32(mem + PCIE_LOCAL_BASE_ADDRESS + addr);
 +}
-diff --git a/reglib.h b/reglib.h
-index e5da38b..b52d717 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -87,5 +87,8 @@ reglib_get_rd_alpha2(const char *alpha2, const char *file);
- 
- /* reg helpers */
- void print_regdom(const struct ieee80211_regdomain *rd);
-+struct ieee80211_regdomain *
-+regdom_intersect(const struct ieee80211_regdomain *rd1,
-+		 const struct ieee80211_regdomain *rd2);
- 
- #endif
--- 
-1.7.10.4
++
++static inline void ath10k_pci_reg_write32(void __iomem *mem, u32 addr, u32 val)
++{
++	iowrite32(val, mem + PCIE_LOCAL_BASE_ADDRESS + addr);
++}
++
++#define ATH_PCI_RESET_WAIT_MAX 10 /* ms */
++#define PCIE_WAKE_TIMEOUT 5000	/* 5ms */
++
++#define BAR_NUM 0
++
++#define CDC_WAR_MAGIC_STR   0xceef0000
++#define CDC_WAR_DATA_CE     4
++
++/*
++ * TODO: Should be a function call specific to each Target-type.
++ * This convoluted macro converts from Target CPU Virtual Address Space to CE
++ * Address Space. As part of this process, we conservatively fetch the current
++ * PCIE_BAR. MOST of the time, this should match the upper bits of PCI space
++ * for this device; but that's not guaranteed.
++ */
++#define TARG_CPU_SPACE_TO_CE_SPACE(ar, pci_addr, addr)			\
++	(((ioread32((pci_addr)+(SOC_CORE_BASE_ADDRESS|			\
++	  CORE_CTRL_ADDRESS)) & 0x7ff) << 21) |				\
++	 0x100000 | ((addr) & 0xfffff))
++
++/* Wait up to this many Ms for a Diagnostic Access CE operation to complete */
++#define DIAG_ACCESS_CE_TIMEOUT_MS 10
++
++/*
++ * This API allows the Host to access Target registers directly
++ * and relatively efficiently over PCIe.
++ * This allows the Host to avoid extra overhead associated with
++ * sending a message to firmware and waiting for a response message
++ * from firmware, as is done on other interconnects.
++ *
++ * Yet there is some complexity with direct accesses because the
++ * Target's power state is not known a priori. The Host must issue
++ * special PCIe reads/writes in order to explicitly wake the Target
++ * and to verify that it is awake and will remain awake.
++ *
++ * Usage:
++ *
++ *   Use ath10k_pci_read32 and ath10k_pci_write32 to access Target space.
++ *   These calls must be bracketed by ath10k_pci_wake and
++ *   ath10k_pci_sleep.  A single BEGIN/END pair is adequate for
++ *   multiple READ/WRITE operations.
++ *
++ *   Use ath10k_pci_wake to put the Target in a state in
++ *   which it is legal for the Host to directly access it. This
++ *   may involve waking the Target from a low power state, which
++ *   may take up to 2Ms!
++ *
++ *   Use ath10k_pci_sleep to tell the Target that as far as
++ *   this code path is concerned, it no longer needs to remain
++ *   directly accessible.  BEGIN/END is under a reference counter;
++ *   multiple code paths may issue BEGIN/END on a single targid.
++ */
++static inline void ath10k_pci_write32(struct ath10k *ar, u32 offset,
++				      u32 value)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	void __iomem *addr = ar_pci->mem;
++
++	if (test_bit(ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND, ar_pci->features)) {
++		unsigned long irq_flags;
++
++		spin_lock_irqsave(&ar_pci->hw_v1_workaround_lock, irq_flags);
++
++		ioread32(addr+offset+4); /* 3rd read prior to write */
++		ioread32(addr+offset+4); /* 2nd read prior to write */
++		ioread32(addr+offset+4); /* 1st read prior to write */
++		iowrite32(value, addr+offset);
++
++		spin_unlock_irqrestore(&ar_pci->hw_v1_workaround_lock,
++				       irq_flags);
++	} else {
++		iowrite32(value, addr+offset);
++	}
++}
++
++static inline u32 ath10k_pci_read32(struct ath10k *ar, u32 offset)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
++	return ioread32(ar_pci->mem + offset);
++}
++
++extern unsigned int ath10k_target_ps;
++
++void ath10k_do_pci_wake(struct ath10k *ar);
++void ath10k_do_pci_sleep(struct ath10k *ar);
++
++static inline void ath10k_pci_wake(struct ath10k *ar)
++{
++	if (ath10k_target_ps)
++		ath10k_do_pci_wake(ar);
++}
++
++static inline void ath10k_pci_sleep(struct ath10k *ar)
++{
++	if (ath10k_target_ps)
++		ath10k_do_pci_sleep(ar);
++}
++
++#endif /* _PCI_H_ */
 
