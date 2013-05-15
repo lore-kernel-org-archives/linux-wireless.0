@@ -1,56 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:61409 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753269Ab3EHIrx (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40236 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759180Ab3EOOTe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 04:47:53 -0400
-Message-ID: <518A112F.3070903@windriver.com> (sfid-20130508_104758_591796_45C6F48D)
-Date: Wed, 8 May 2013 16:47:43 +0800
-From: wyang1 <Wei.Yang@windriver.com>
-Reply-To: <Wei.Yang@windriver.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <wei.wyang@windriver.com>
-Subject: Re: [PATCH] mac80211: refine ieee80211_rx() context requirement
-References: <1368001892-18068-1-git-send-email-Wei.Yang@windriver.com>  <1368002161.8279.14.camel@jlt4.sipsolutions.net>  (sfid-20130508_103612_210241_E3587283) <1368002236.8279.15.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1368002236.8279.15.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Wed, 15 May 2013 10:19:34 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2 07/18] mac80211: add radiotap flag and handling for 5/10 MHz
+Date: Wed, 15 May 2013 16:18:58 +0200
+Message-Id: <1368627549-22518-8-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_162936_847414_228F57F0)
+In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/2013 04:37 PM, Johannes Berg wrote:
-> On Wed, 2013-05-08 at 10:36 +0200, Johannes Berg wrote:
->> On Wed, 2013-05-08 at 16:31 +0800, Wei.Yang@windriver.com wrote:
->>> From: Wei Yang <Wei.Yang@windriver.com>
->>>
->>> In case of RT kernel, the return value of softirq_count() always
->>> equal to 0, we need to use in_serving_softirq to decide whether
->>> the current context is in softirq context.
->>> -	WARN_ON_ONCE(softirq_count() == 0);
->>> +	WARN_ON_ONCE(!in_serving_softirq());
->> As I understand the code, I don't believe this change to be correct. The
->> function can happily run with softirqs disabled (e.g.
->> local_bh_disable()), for example by being called via ieee80211_rx_ni().
->> As I understand in_serving_softirq(), it checks that it's actually
->> inside handling a softirq, no?
-> Arguably, it should be
-> 	WARN_ON_ONCE(!in_softirq());
->
-> but that's equivalent:
+Wireshark already defines radiotap channel flags for 5 and 10 MHz, so
+just use them in Linux radiotap too. Furthermore, add rx status flags to
+allow drivers to report when they received data on 5 or 10 MHz channels.
 
-Yeah, but the softirq is threaded in rt kernel, the softirq_count always 
-return 0. The warning should always happen with rt kernel.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ include/net/ieee80211_radiotap.h |    4 ++++
+ include/net/mac80211.h           |    4 ++++
+ net/mac80211/rx.c                |   21 ++++++++++++---------
+ 3 files changed, 20 insertions(+), 9 deletions(-)
 
-Wei
->
-> include/linux/hardirq.h
->
->   * in_softirq - Are we currently processing softirq or have bh disabled?
->
->   #define in_softirq()           (softirq_count())
->
-> johannes
->
->
->
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index c399963..8b991ff 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -230,6 +230,10 @@ enum ieee80211_radiotap_type {
+ #define	IEEE80211_CHAN_PASSIVE	0x0200	/* Only passive scan allowed */
+ #define	IEEE80211_CHAN_DYN	0x0400	/* Dynamic CCK-OFDM channel */
+ #define	IEEE80211_CHAN_GFSK	0x0800	/* GFSK channel (FHSS PHY) */
++#define	IEEE80211_CHAN_GSM	0x1000	/* GSM (900 MHz) */
++#define	IEEE80211_CHAN_STURBO	0x2000	/* Static Turbo */
++#define	IEEE80211_CHAN_HALF	0x4000	/* Half channel (10 MHz wide) */
++#define	IEEE80211_CHAN_QUARTER	0x8000	/* Quarter channel (5 MHz wide) */
+ 
+ /* For IEEE80211_RADIOTAP_FLAGS */
+ #define	IEEE80211_RADIOTAP_F_CFP	0x01	/* sent/received
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3e52e22..bae3138 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -805,6 +805,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	on this subframe
+  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+  *	is stored in the @ampdu_delimiter_crc field)
++ * @RX_FLAG_10MHZ: 10 MHz (half channel) was used
++ * @RX_FLAG_5MHZ: 5 MHz (quarter channel) was used
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -832,6 +834,8 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_80MHZ			= BIT(23),
+ 	RX_FLAG_80P80MHZ		= BIT(24),
+ 	RX_FLAG_160MHZ			= BIT(25),
++	RX_FLAG_10MHZ			= BIT(26),
++	RX_FLAG_5MHZ			= BIT(27),
+ };
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b0834a9..8ab86cf 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -146,6 +146,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	struct ieee80211_radiotap_header *rthdr;
+ 	unsigned char *pos;
+ 	u16 rx_flags = 0;
++	u16 channel_flags = 0;
+ 	int mpdulen;
+ 
+ 	mpdulen = skb->len;
+@@ -215,20 +216,22 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	/* IEEE80211_RADIOTAP_CHANNEL */
+ 	put_unaligned_le16(status->freq, pos);
+ 	pos += 2;
++	if (status->flag & RX_FLAG_10MHZ)
++		channel_flags |= IEEE80211_CHAN_HALF;
++	else if (status->flag & RX_FLAG_5MHZ)
++		channel_flags |= IEEE80211_CHAN_QUARTER;
++
+ 	if (status->band == IEEE80211_BAND_5GHZ)
+-		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ;
+ 	else if (status->flag & (RX_FLAG_HT | RX_FLAG_VHT))
+-		put_unaligned_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
+ 	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
+-		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
+ 	else if (rate)
+-		put_unaligned_le16(IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
+ 	else
+-		put_unaligned_le16(IEEE80211_CHAN_2GHZ, pos);
++		channel_flags |= IEEE80211_CHAN_2GHZ;
++	put_unaligned_le16(channel_flags, pos);
+ 	pos += 2;
+ 
+ 	/* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
+-- 
+1.7.10.4
 
