@@ -1,106 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46365 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933886Ab3E1Mw1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 08:52:27 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	Gabor Juhos <juhosg@openwrt.org>, stable@vger.kernel.org,
-	#@arrakis.dune.hu, 3.6+@arrakis.dune.hu
-Subject: [PATCH for 3.10] ath9k: use correct OTP register offsets for AR9550
-Date: Tue, 28 May 2013 14:52:19 +0200
-Message-Id: <1369745539-2224-1-git-send-email-juhosg@openwrt.org> (sfid-20130528_145230_955960_F12A7CE8)
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:36179 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759089Ab3EOOTh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 May 2013 10:19:37 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2 18/18] ath5k: enable support for 5 MHz and 10 MHz channels
+Date: Wed, 15 May 2013 16:19:09 +0200
+Message-Id: <1368627549-22518-19-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_162936_702497_32762AF3)
+In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Accessing the OTP memory on AR9950 causes a data bus
-like this:
-
-  Data bus error, epc == 801f7774, ra == 801f7774
-  Oops[#1]:
-  CPU: 0 PID: 1 Comm: swapper Not tainted 3.10.0-rc3 #592
-  task: 87c28000 ti: 87c22000 task.ti: 87c22000
-  $ 0   : 00000000 00000061 deadc0de 00000000
-  $ 4   : b8115f18 00015f18 00000007 00000004
-  $ 8   : 00000001 7c7c3c7c 7c7c7c7c 7c7c7c7c
-  $12   : 7c7c3c7c 80320a68 00000000 7c7c7c3c
-  $16   : 87cd8010 00015f18 00000007 00000000
-  $20   : 00000064 00000004 87c23c7c 8035210c
-  $24   : 00000000 801f3674
-  $28   : 87c22000 87c23b48 00000001 801f7774
-  Hi    : 00000000
-  Lo    : 00000064
-  epc   : 801f7774 ath9k_hw_wait+0x58/0xb0
-      Not tainted
-  ra    : 801f7774 ath9k_hw_wait+0x58/0xb0
-  Status: 1000cc03 KERNEL EXL IE
-  Cause : 4080801c
-  PrId  : 00019750 (MIPS 74Kc)
-  Modules linked in:
-  Process swapper (pid: 1, threadinfo=87c22000, task=87c28000, ts=00000000)
-  Stack : 0000000f 00000061 00002710 8006240c 00000001 87cd8010 87c23bb0 87cd8010
-          00000000 00000004 00000003 80210c7c 000000b3 67fa8000 0000032a 000006fe
-          000003e8 00000002 00000028 87c23bf0 000003ff 80210d24 803e5630 80210e28
-          00000000 00000007 87cd8010 00007044 00000004 00000061 000003ff 000001ff
-          87c26000 87cd8010 00000220 87cd8bb8 80210000 8020fcf4 87c22000 87c23c08
-          ...
-  Call Trace:
-  [<801f7774>] ath9k_hw_wait+0x58/0xb0
-  [<80210c7c>] ar9300_otp_read_word+0x80/0xd4
-  [<80210d24>] ar9300_read_otp+0x54/0xb0
-  [<8020fcf4>] ar9300_check_eeprom_header+0x1c/0x40
-  [<80210fe4>] ath9k_hw_ar9300_fill_eeprom+0x118/0x39c
-  [<80206650>] ath9k_hw_eeprom_init+0x74/0xb4
-  [<801f96d0>] ath9k_hw_init+0x7ec/0x96c
-  [<801e65ec>] ath9k_init_device+0x340/0x758
-  [<801f35d0>] ath_ahb_probe+0x21c/0x2c0
-  [<801c041c>] driver_probe_device+0xc0/0x1e4
-  [<801c05ac>] __driver_attach+0x6c/0xa4
-  [<801bea08>] bus_for_each_dev+0x64/0xa8
-  [<801bfa40>] bus_add_driver+0xcc/0x24c
-  [<801c0954>] driver_register+0xbc/0x17c
-  [<803f8fc0>] ath9k_init+0x5c/0x88
-  [<800608fc>] do_one_initcall+0xec/0x1a0
-  [<803e6a68>] kernel_init_freeable+0x13c/0x200
-  [<80309cdc>] kernel_init+0x1c/0xe4
-  [<80062450>] ret_from_kernel_thread+0x10/0x18
-
-On the AR9550, the OTP registers are located at
-the same address as on the AR9340. Use the correct
-values to avoid the error.
-
-Cc: stable@vger.kernel.org  # 3.6+
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h        |    1 +
+ drivers/net/wireless/ath/ath5k/base.c         |   25 ++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath5k/base.h         |    2 +-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
+ 4 files changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 54ba42f..874f657 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -68,13 +68,16 @@
- #define AR9300_BASE_ADDR 0x3ff
- #define AR9300_BASE_ADDR_512 0x1ff
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 1dee0c4..b43ef34 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -29,6 +29,7 @@
+ #include <linux/average.h>
+ #include <linux/leds.h>
+ #include <net/mac80211.h>
++#include <net/cfg80211.h>
  
--#define AR9300_OTP_BASE			(AR_SREV_9340(ah) ? 0x30000 : 0x14000)
--#define AR9300_OTP_STATUS		(AR_SREV_9340(ah) ? 0x30018 : 0x15f18)
-+#define AR9300_OTP_BASE \
-+		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x30000 : 0x14000)
-+#define AR9300_OTP_STATUS \
-+		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x30018 : 0x15f18)
- #define AR9300_OTP_STATUS_TYPE		0x7
- #define AR9300_OTP_STATUS_VALID		0x4
- #define AR9300_OTP_STATUS_ACCESS_BUSY	0x2
- #define AR9300_OTP_STATUS_SM_BUSY	0x1
--#define AR9300_OTP_READ_DATA		(AR_SREV_9340(ah) ? 0x3001c : 0x15f1c)
-+#define AR9300_OTP_READ_DATA \
-+		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x3001c : 0x15f1c)
+ /* RX/TX descriptor hw structs
+  * TODO: Driver part should only see sw structs */
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 2a2ec99..9490589 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -56,6 +56,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/nl80211.h>
  
- enum targetPowerHTRates {
- 	HT_TARGET_RATE_0_8_16,
++#include <net/cfg80211.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+ #include <asm/unaligned.h>
+@@ -501,11 +502,27 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+  * Called with ah->lock.
+  */
+ int
+-ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
++ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef)
+ {
+ 	ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
+ 		  "channel set, resetting (%u -> %u MHz)\n",
+-		  ah->curchan->center_freq, chan->center_freq);
++		  ah->curchan->center_freq, chandef->chan->center_freq);
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_20:
++	case NL80211_CHAN_WIDTH_20_NOHT:
++		ah->ah_bwmode = AR5K_BWMODE_DEFAULT;
++		break;
++	case NL80211_CHAN_WIDTH_5:
++		ah->ah_bwmode = AR5K_BWMODE_5MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_10:
++		ah->ah_bwmode = AR5K_BWMODE_10MHZ;
++		break;
++	default:
++		WARN_ON(1);
++		return -EINVAL;
++	}
+ 
+ 	/*
+ 	 * To switch channels clear any pending DMA operations;
+@@ -513,7 +530,7 @@ ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
+ 	 * hardware at the new frequency, and then re-enable
+ 	 * the relevant bits of the h/w.
+ 	 */
+-	return ath5k_reset(ah, chan, true);
++	return ath5k_reset(ah, chandef->chan, true);
+ }
+ 
+ void ath5k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+@@ -2537,6 +2554,8 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
+ 	/* SW support for IBSS_RSN is provided by mac80211 */
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 
++	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
++
+ 	/* both antennas can be configured as RX or TX */
+ 	hw->wiphy->available_antennas_tx = 0x3;
+ 	hw->wiphy->available_antennas_rx = 0x3;
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 6c94c7f..130075b 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -99,7 +99,7 @@ void ath5k_set_beacon_filter(struct ieee80211_hw *hw, bool enable);
+ 
+ void ath5k_update_bssid_mask_and_opmode(struct ath5k_hw *ah,
+ 					struct ieee80211_vif *vif);
+-int ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan);
++int ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef);
+ void ath5k_txbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
+ void ath5k_rxbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
+ void ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index 06f86f4..2129330 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -202,7 +202,7 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_lock(&ah->lock);
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+-		ret = ath5k_chan_set(ah, conf->chandef.chan);
++		ret = ath5k_chan_set(ah, &conf->chandef);
+ 		if (ret < 0)
+ 			goto unlock;
+ 	}
 -- 
-1.7.10
+1.7.10.4
 
