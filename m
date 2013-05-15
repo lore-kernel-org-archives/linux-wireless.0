@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49509 "EHLO
+Received: from mail.candelatech.com ([208.74.158.172]:53661 "EHLO
 	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756103Ab3EJO0a (ORCPT
+	with ESMTP id S1751572Ab3EOWx0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 10:26:30 -0400
-Message-ID: <518D0390.90006@candelatech.com> (sfid-20130510_162636_555254_123697C2)
-Date: Fri, 10 May 2013 07:26:24 -0700
+	Wed, 15 May 2013 18:53:26 -0400
+Message-ID: <519411E4.6060505@candelatech.com> (sfid-20130516_005330_319941_BD5284E7)
+Date: Wed, 15 May 2013 15:53:24 -0700
 From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
+To: Cyril Seg <cyrilseg@gmail.com>
 CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 0/4] cfg80211/mac80211: simplify locking
-References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
+Subject: Re: STA doesn't support ACM for QoS
+References: <loom.20130516T003547-82@post.gmane.org>
+In-Reply-To: <loom.20130516T003547-82@post.gmane.org>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/10/2013 05:08 AM, Johannes Berg wrote:
-> I got a little fed up with all the locking, and decided to simplify.
+On 05/15/2013 03:42 PM, Cyril Seg wrote:
+> Hello ,
 >
-> This should still work, but I've only done some very simple tests.
-> I'm hoping it'll fix some of the weird corner cases that Ben and
-> others have found, which may be due to different locks in different
-> cases and things racing against each other ... I'm not convinced it
-> really will though, but hey, who knows :)
+> In my testbed, there is an AP that works with ath9k_htc and hostapd and there
+> also are 2 STAs that work with ath9k_htc.
+> Video flows aren't in the good priority, they are in Best_Effort.
+> But if I enable the ACM parameter for VIDEO and BEST EFFORT, video flows are
+> now in BACKGROUND priority.
+> STAs doesn't support the admission control ...
+>
+> Does someone have a solution ?
+>
+> I work with Kali Linux, kernel 3.7
 
-I'm stacked high with tasks at the moment, but will try to
-run this through some testing soon.
-
-These are in your tree?
+See what ToS bits are in your video frames.   Some definitions
+of ToS had low values for video (32), but wifi requires different
+settings (something like 128).
 
 Thanks,
 Ben
 
+
 >
-> johannes
+> Thanks,
+>
+> Cyril Segretain
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
 
