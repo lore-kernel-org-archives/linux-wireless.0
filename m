@@ -1,116 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:64595 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751757Ab3EPRrD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 13:47:03 -0400
-Received: from mailout-de.gmx.net ([10.1.76.24]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0MWvJi-1Uy1b70qRQ-00W0vD for
- <linux-wireless@vger.kernel.org>; Thu, 16 May 2013 19:47:01 +0200
-Message-ID: <51951B90.70909@rempel-privat.de> (sfid-20130516_194722_230421_85A1A5EF)
-Date: Thu, 16 May 2013 19:46:56 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Ignacy Gawedzki <i@lri.fr>, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
-References: <20130515134258.GA9033@zenon.in.qult.net> <5194DEB3.2060407@rempel-privat.de> <20130516172030.GD21850@zenon.in.qult.net>
-In-Reply-To: <20130516172030.GD21850@zenon.in.qult.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40206 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759029Ab3EOOTd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 May 2013 10:19:33 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2 03/18] mac80211: fix various components for the new 5 and 10 MHz widths
+Date: Wed, 15 May 2013 16:18:54 +0200
+Message-Id: <1368627549-22518-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_161938_203076_677D485B)
+In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 16.05.2013 19:20, schrieb Ignacy Gawedzki:
-> On Thu, May 16, 2013 at 03:27:15PM +0200, thus spake Oleksij Rempel:
->> Am 15.05.2013 15:42, schrieb Ignacy Gawedzki:
->>> Hi everyone,
->>>
->>> This is an old issue, about which it seems the first posts date back to 2009.
->>> With the latest possible version of the firmware for AR9271 and the latest
->>> possible wireless drivers, the issue is still there.  Whether this is still
->>> the exact same problem every time remains to be checked, but it is annoying
->>> enough to deserve some consideration.
->>>
->>> The problem is that the driver can't talk to the device if the following
->>> conditions are met:
->>>
->>>   - The system cold boots with the USB dongle inserted or the USB dongle is
->>>     inserted on a running system.
->>>
->>>   - The interface is *not* brought up.
->>>
->>>   - The system (warm) reboots.
->>>
->>> Then the driver complains about the target being unresponsive after uploading
->>> the firmware.  Apparently the only way to make it work again is to unplug and
->>> then plug the USB dongle back, physically.  It seems that if the USB port is
->>> not powered down during reboot (which happens with at least two different
->>> setups that I've tested it with), the device is left in a broken state.
->>>
->>> I would gladly help in tracing down this bug if only I knew where to start.
->>>
->>> Thanks for any suggestion.
->>
->> Hi Ignacy,
->>
->> i can't reproduce this issue on my system. I tested it with 4
->> different ath9_htc adapter. Without luck.
->
-> Without luck, but it seems you're the lucky one anyway. =)
->
->>                                            Please provide as match
->> information as possible:
->> - Usb host controller
->
-> Tested both on Raspberry Pi and on Dell XPS 13.  The latter uses Intel EHCI,
-> 8086:1c2d and Fresco Logic 1b73:1009, I don't know which one is used exactly.
->
->> - Adapter manufacture and version, or even better add it to the
->> wiki, and upload some images:
->> http://wikidevi.com/wiki/Main_Page
->
-> TP-Link TL-WN722NC, exactly as the one on the wiki.
+This is a collection of minor fixes:
+ * don't allow HT IEs in IBSS for 5/10 MHz
+ * don't allow HT IEs in Mesh for 5/10 MHz
+ * consider 5 and 10 MHz channels when downgrading
+ * don't try HT rates for 5 and 10 MHz channels when selecting rates
 
-That is interesting. I have got today TL-WN722N, but i still can't 
-reproduce this issue.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/mac80211/ibss.c       |    2 ++
+ net/mac80211/mesh.c       |    4 +++-
+ net/mac80211/mesh_plink.c |    8 +++++++-
+ net/mac80211/mlme.c       |   12 ++++++++++++
+ net/mac80211/rate.c       |    8 +++++++-
+ 5 files changed, 31 insertions(+), 3 deletions(-)
 
->> - your kernel version
->
-> Tested with 3.5.0 on XPS and 3.6.11, 3.8.12 and 3.9.2 on RPi (using a
-> customized buildroot, but I can provide the .config if needed).
->
->> I assume it is not firmware. May be there are some issue with boot
->> loader on adapter. Are you sure that UART pins are not soldered?
->
-> I opened the dongle, managed to solder the metal shield off and the pins
-> weren't used (all four 48-51, among others).
->
->> Current ath9k_htc do not have mechanism to reset an adapter. I will
->> start to work on it after some other issues are done.
->
-> Is it physically possible?
-
-may be.
-
->> PS: please find some way to enable uart, at least TX pin.
->
-> I tried to solder the TX pin, but it's really too tiny.  I don't have an iron
-> so small as to be able to do it, sorry.  I would really love to have an UART
-> connection, but that's just beyond my abilities.  BTW, it would really be
-> great to have a way to send debug message up the USB link, just as with
-> carl9170.
-
-That make no sense. Debug message i need, are from boot loader. There is 
-no way, that boot loader can send messages over usb. Or if firmwre will 
-crash, it wont send any thing too.
-
-So what do we have:
-- TL-WN722N is working. Or your model is different, or it is broken one.
-- Did you checked the cable?
-- usb host controller?
-- other options?
-
-
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 170f9a7..4e1fb81 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -176,6 +176,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* add HT capability and information IEs */
+ 	if (chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
++	    chandef.width != NL80211_CHAN_WIDTH_5 &&
++	    chandef.width != NL80211_CHAN_WIDTH_10 &&
+ 	    sband->ht_cap.ht_supported) {
+ 		pos = ieee80211_ie_build_ht_cap(pos, &sband->ht_cap,
+ 						sband->ht_cap.cap);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 6952760..5227b73 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -417,7 +417,9 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sband = local->hw.wiphy->bands[band];
+ 	if (!sband->ht_cap.ht_supported ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT)
++	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
++	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
++	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
+ 		return 0;
+ 
+ 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 09bebed..02c05fa 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -154,8 +154,14 @@ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
+ 	u16 ht_opmode;
+ 	bool non_ht_sta = false, ht20_sta = false;
+ 
+-	if (sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT)
++	switch (sdata->vif.bss_conf.chandef.width) {
++	case NL80211_CHAN_WIDTH_20_NOHT:
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
+ 		return 0;
++	default:
++		break;
++	}
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 29620bf..0eaee23 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -224,6 +224,12 @@ static u32 chandef_downgrade(struct cfg80211_chan_def *c)
+ 		c->width = NL80211_CHAN_WIDTH_20_NOHT;
+ 		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
+ 		break;
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
++		WARN_ON_ONCE(1);
++		/* keep c->width */
++		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
++		break;
+ 	}
+ 
+ 	WARN_ON_ONCE(!cfg80211_chandef_valid(c));
+@@ -3809,6 +3815,12 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 	 */
+ 	ret = ieee80211_vif_use_channel(sdata, &chandef,
+ 					IEEE80211_CHANCTX_SHARED);
++
++	/* don't downgrade for 5 and 10 MHz channels, though. */
++	if (chandef.width == NL80211_CHAN_WIDTH_5 ||
++	    chandef.width == NL80211_CHAN_WIDTH_10)
++		return ret;
++
+ 	while (ret && chandef.width != NL80211_CHAN_WIDTH_20_NOHT) {
+ 		ifmgd->flags |= chandef_downgrade(&chandef);
+ 		ret = ieee80211_vif_use_channel(sdata, &chandef,
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 0d51877..1ca7ded 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -397,8 +397,14 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
+ 			return;
+ 
+ 		/* if HT BSS, and we handle a data frame, also try HT rates */
+-		if (chan_width == NL80211_CHAN_WIDTH_20_NOHT)
++		switch (chan_width) {
++		case NL80211_CHAN_WIDTH_20_NOHT:
++		case NL80211_CHAN_WIDTH_5:
++		case NL80211_CHAN_WIDTH_10:
+ 			return;
++		default:
++			break;
++		}
+ 
+ 		alt_rate.idx = 0;
+ 		/* keep protection flags */
 -- 
-Regards,
-Oleksij
+1.7.10.4
+
