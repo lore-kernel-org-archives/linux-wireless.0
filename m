@@ -1,133 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:51193 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756433Ab3ENJ1l (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:48638 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759454Ab3EOOwh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 May 2013 05:27:41 -0400
-Date: Tue, 14 May 2013 11:27:34 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [RFC 0/4] add master channel switch announcement support
-Message-ID: <20130514092734.GA16426@pandem0nium> (sfid-20130514_112746_399775_7A710602)
-References: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1368439778.8300.20.camel@jlt4.sipsolutions.net>
+	Wed, 15 May 2013 10:52:37 -0400
+Subject: [PATCH 12/29] ath10k: add htt.c
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k-devel@qca.qualcomm.com
+Date: Wed, 15 May 2013 17:44:23 +0300
+Message-ID: <20130515144423.4492.61589.stgit@localhost6.localdomain6> (sfid-20130515_165256_828821_818920EF)
+In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
+References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+HP7ph2BbKc20aGI"
-In-Reply-To: <1368439778.8300.20.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.c |  165 +++++++++++++++++++++++++++++++++
+ 1 file changed, 165 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath10k/htt.c
 
---+HP7ph2BbKc20aGI
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+new file mode 100644
+index 0000000..4131cc6
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -0,0 +1,165 @@
++/*
++ * Copyright (c) 2005-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/slab.h>
++
++#include "htt.h"
++#include "core.h"
++#include "debug.h"
++
++static void ath10k_htt_stop_queue(struct ath10k *ar)
++{
++	ieee80211_stop_queues(ar->hw);
++}
++
++static void ath10k_htt_wake_queue(struct ath10k *ar)
++{
++	ieee80211_wake_queues(ar->hw);
++}
++
++static int ath10k_htt_htc_attach(struct ath10k_htt *htt)
++{
++	struct ath10k_htc_svc_conn_req conn_req;
++	struct ath10k_htc_svc_conn_resp conn_resp;
++	int status;
++
++	memset(&conn_req, 0, sizeof(conn_req));
++	memset(&conn_resp, 0, sizeof(conn_resp));
++
++	conn_req.ep_ops.ep_tx_complete = ath10k_htt_htc_tx_complete;
++	conn_req.ep_ops.ep_rx_complete = ath10k_htt_t2h_msg_handler;
++	conn_req.ep_ops.stop_queue = ath10k_htt_stop_queue;
++	conn_req.ep_ops.wake_queue = ath10k_htt_wake_queue;
++
++	/*
++	 * Specify how deep to let a queue get before ath10k_htc_send will
++	 * call the ep_send_full function due to excessive send queue depth.
++	 */
++	conn_req.max_send_queue_depth = HTT_MAX_SEND_QUEUE_DEPTH;
++
++	/* connect to control service */
++	conn_req.service_id = ATH10K_HTC_SVC_ID_HTT_DATA_MSG;
++
++	status = ath10k_htc_connect_service(htt->ar->htc, &conn_req,
++					    &conn_resp);
++
++	if (status)
++		return status;
++
++	htt->eid = conn_resp.eid;
++
++	return 0;
++}
++
++struct ath10k_htt *ath10k_htt_attach(struct ath10k *ar)
++{
++	struct ath10k_htt *htt;
++
++	htt = kzalloc(sizeof(*htt), GFP_KERNEL);
++	if (!htt)
++		return NULL;
++
++	htt->ar = ar;
++	htt->max_throughput_mbps = 800;
++
++	/*
++	 * Connect to HTC service.
++	 * This has to be done before calling ath10k_htt_rx_attach,
++	 * since ath10k_htt_rx_attach involves sending a rx ring configure
++	 * message to the target.
++	 */
++	if (ath10k_htt_htc_attach(htt))
++		goto err_htc_attach;
++
++	ath10k_htt_tx_attach(htt);
++
++	if (ath10k_htt_rx_attach(htt))
++		goto err_rx_attach;
++
++	/*
++	 * Prefetch enough data to satisfy target
++	 * classification engine.
++	 * This is for LL chips. HL chips will probably
++	 * transfer all frame in the tx fragment.
++	 */
++	htt->prefetch_len =
++		36 + /* 802.11 + qos + ht */
++		4 + /* 802.1q */
++		8 + /* llc snap */
++		2; /* ip4 dscp or ip6 priority */
++
++	return htt;
++
++err_rx_attach:
++	ath10k_htt_tx_detach(htt);
++err_htc_attach:
++	kfree(htt);
++	return NULL;
++}
++
++#define HTT_TARGET_VERSION_TIMEOUT_HZ (3*HZ)
++
++static int ath10k_htt_verify_version(struct ath10k_htt *htt)
++{
++	ath10k_dbg(ATH10K_DBG_HTT,
++		   "htt target version %d.%d; host version %d.%d\n",
++		    htt->target_version_major,
++		    htt->target_version_minor,
++		    HTT_CURRENT_VERSION_MAJOR,
++		    HTT_CURRENT_VERSION_MINOR);
++
++	if (htt->target_version_major != HTT_CURRENT_VERSION_MAJOR) {
++		ath10k_err("htt major versions are incompatible!\n");
++		return -ENOTSUPP;
++	}
++
++	if (htt->target_version_minor != HTT_CURRENT_VERSION_MINOR)
++		ath10k_warn("htt minor version differ but still compatible\n");
++
++	return 0;
++}
++
++int ath10k_htt_attach_target(struct ath10k_htt *htt)
++{
++	int status;
++
++	init_completion(&htt->target_version_received);
++
++	status = ath10k_htt_h2t_ver_req_msg(htt);
++	if (status)
++		return status;
++
++	status = wait_for_completion_timeout(&htt->target_version_received,
++						HTT_TARGET_VERSION_TIMEOUT_HZ);
++	if (status <= 0) {
++		ath10k_warn("htt version request timed out\n");
++		return -ETIMEDOUT;
++	}
++
++	status = ath10k_htt_verify_version(htt);
++	if (status)
++		return status;
++
++	return ath10k_htt_send_rx_ring_cfg_ll(htt);
++}
++
++void ath10k_htt_detach(struct ath10k_htt *htt)
++{
++	ath10k_htt_rx_detach(htt);
++	ath10k_htt_tx_detach(htt);
++	kfree(htt);
++}
 
-Hello Johannes,
-
-thanks for your review!
-
-On Mon, May 13, 2013 at 12:09:38PM +0200, Johannes Berg wrote:
-> On Mon, 2013-05-06 at 21:13 +0200, Simon Wunderlich wrote:
-> > This is an early RFC of a possible channel switch announcement infrastr=
-ucture.
-> > It adds CSA/ECSA handling support for AP. This is required for DFS oper=
-ation
-> > (e.g. Wi-Fi Alliance requires this for 802.11h certification). This wil=
-l also
-> > be required for IBSS-DFS later.
-> >=20
-> > I'd like to discuss if this design approach is going in the right direc=
-tion.
-> > What is currently working:
-> >=20
-> >  * channels are announced by adding IEs (CSA and Extended CSA) in beaco=
-ns
-> >  * after some (configurable) time, the channel is switched
-> >  * with the channel switch, CSA/ECSA IEs are removed and channel inform=
-ation
-> >    is updated.
-> >  * Userspace calls a new command NL80211_CMD_CHANNEL_SWITCH along with =
-channel info
-> >    (freq + width), whether traffic should be blocked and timing informa=
-tion
-> >  * it currently works for me [TM] on my ath9k based machine
->=20
-> I don't really like your approach of building all the IEs in the kernel.
-> There are some things, like the country-after-switch in the CSA wrapper
-> (introduced in 11ac), that would be really awkward this way.
-
-Hmm ... OK. I have not checked 802.11ac yet (actually I don't have access t=
-o the
-drafts anyway). So what we have to expect is changing the country after the=
- switch,
-or also other new things?
-
-> >  * We already have NL80211_CMD_CH_SWITCH_NOTIFY which is only used for =
-notification.
-> >    Maybe we can rename that and re-use it instead of adding a new comma=
-nd
-> >    NL80211_CMD_CHANNEL_SWITCH?
->=20
-> Sure, I don't really care though.
->=20
-OK, will try to merge that then. Seems cleaner than having multiple channel=
- switch
-commands in the API.
-
-> >  * could other drivers (next to ath9k) work with this API?
->=20
-> Probably not easily. Any TI folks reading this?
-
-I was thinking about adding another callback function or option for that fo=
-r drivers
-who do the channel switch internally. Then we would only need mac80211 to a=
-dapt.
-
-Would that help, or what would be problematic?
->=20
->=20
-> Anyway I think it'd be better to try to provide
->  (a) the "during-switch IEs", maybe with an offset to the counter so
-> mac80211,
->      driver or the device itself can count down
->  (b) the "after-switch beacon" IEs (and maybe probe response for
-o> offload)
-
-Yeah, that would be an alternative. I've been inspired by IEEE 802.11-2012/=
-6.3.17
-(MLME-CHANNELSWITCH) originally. :)
-I think your suggestion is good for AP where we control the beacon. For IBS=
-S it
-would be a little different: when a channel switch is triggered, userspace =
-does
-not know the beacon (and will not set it). Therefore, we could only accept =
-the
-change IEs and skip the "after-switch-beacon" IEs (these would be re-genera=
-ted
-internally) in IBSS mode. I guess it would be similar for mesh.
-
-What do you think?
-
-Cheers,
-	Simon
-
---+HP7ph2BbKc20aGI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlGSA4YACgkQrzg/fFk7axbAkQCgu8lzU3na/1+shidXosrpMx4D
-37IAn24g99YbH9cK8DxhnqZ72wKV/Zax
-=S6KM
------END PGP SIGNATURE-----
-
---+HP7ph2BbKc20aGI--
