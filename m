@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:35889 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752678Ab3EGUPk (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:52269 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758844Ab3EOQWv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 16:15:40 -0400
-Received: by mail-qc0-f180.google.com with SMTP id a10so546095qcx.39
-        for <linux-wireless@vger.kernel.org>; Tue, 07 May 2013 13:15:38 -0700 (PDT)
+	Wed, 15 May 2013 12:22:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Joe Perches <joe@perches.com>, <linux-wireless@vger.kernel.org>,
+	<ath10k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH 00/29] ath10k: mac80211 driver for Qualcomm Atheros qca988x devices
+References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
+	<1368633142.2194.6.camel@joe-AO722>
+	<20883.44965.174742.469466@gargle.gargle.HOWL>
+	<87wqr0ns47.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 15 May 2013 19:22:41 +0300
+In-Reply-To: <87wqr0ns47.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Wed, 15 May 2013 19:08:08 +0300")
+Message-ID: <87li7gnrfy.fsf@kamboji.qca.qualcomm.com> (sfid-20130515_182255_426917_E2859850)
 MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430DD2C9FC92@SC-VEXCH1.marvell.com>
-References: <CAMLZHHSVd6GpmqTQyJmbsheH1utZh8mNW8d4zLtjwoONaGwbNA@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E0579DB@SC-VEXCH1.marvell.com>
-	<CAMLZHHQ=BNuD0UmcV8pv=6phW=W-C5C7Af6n8tLWTrzyuzPQow@mail.gmail.com>
-	<CAMLZHHQXY3OuWKr_K1B9-NmZFwCcQFPNTBoOkpvT9kxWJ=ixqQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E14FF4C@SC-VEXCH1.marvell.com>
-	<CAMLZHHSHG2ySmW0ac6+M-7fOgNFrqXBf7=SXFFkWDrhwGwYKXQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E150221@SC-VEXCH1.marvell.com>
-	<CAMLZHHThUxB_Vj4eOjq+61osUQ3CQ5UGgvrgZXE33oDD1N=YtA@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E150A22@SC-VEXCH1.marvell.com>
-	<CAMLZHHTNPBh3LDD0F2+zqSvUPmT6bhA8HLZvc1dTJmHGR8eVJg@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E232E33@SC-VEXCH1.marvell.com>
-	<CAMLZHHS7DOfRfpd-W2hVeJSvxVHNjm7SrxGXH=qLqaFt2sB+BA@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430DD2C9FC92@SC-VEXCH1.marvell.com>
-Date: Tue, 7 May 2013 14:15:38 -0600
-Message-ID: <CAMLZHHQdBuy=7bBsifA4i5ZKQcjnEhKZqVumRE=qu+Jkn3dZug@mail.gmail.com> (sfid-20130507_221544_868433_0C5A5D79)
-Subject: Re: Memory leak in mwifiex_cfg80211_scan
-From: Daniel Drake <dsd@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 6, 2013 at 12:42 PM, Bing Zhao <bzhao@marvell.com> wrote:
-> There are two different static mwifiex_free_adapter() functions which cause confusion.
-> The 1/2 patch renames the one in init.c to mwifiex_adapter_cleanup().
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Thanks, that was confusing indeed.
-With these patches I can't trigger any further crashes.
+> Sujith Manoharan <sujith@msujith.org> writes:
+>
+>> Joe Perches wrote:
+>>> Perhaps it would be reasonable to create and use standardized
+>>> logging ath_<level> functions for all the device ath<x>k_<level>s.
+>>
+>> Indeed.
+>>
+>> You already did that in "ath: Add and use ath_printk and ath_<level>" :)
+>
+> IIRC Sujith actually suggested this to me already earlier, but I didn't
+> buy the idea even then. ath9k and ath10k are very different, so we
+> cannot share all the debug levels. I just feel that it restricts and
+> confuses the driver debugging too much, and all just to save something
+> like 100 lines of code. I'm having hard time to see why bother.
 
-I think you should use del_timer_sync() though, for the SMP case where
-the timer may be running on a different processor.
+I also noticed that ath.h doesn't support tracing. I would hate to lose
+that.
 
-Daniel
+-- 
+Kalle Valo
