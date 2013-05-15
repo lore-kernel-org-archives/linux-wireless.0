@@ -1,158 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:40617 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761752Ab3EFXta (ORCPT
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:46528 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757201Ab3EOQRl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 19:49:30 -0400
-Received: by mail-pb0-f41.google.com with SMTP id mc17so2266148pbc.28
-        for <linux-wireless@vger.kernel.org>; Mon, 06 May 2013 16:49:29 -0700 (PDT)
-From: Colleen Twitty <colleen@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: open80211s <devel@lists.open80211s.org>,
-	linux-wirelss <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/2] cfg80211: Userspace may inform kernel of mesh auth method.
-Date: Mon,  6 May 2013 16:49:23 -0700
-Message-Id: <1367884164-15953-1-git-send-email-colleen@cozybit.com> (sfid-20130507_014941_459596_6487DCC0)
+	Wed, 15 May 2013 12:17:41 -0400
+Received: by mail-ie0-f171.google.com with SMTP id e11so4118114iej.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 09:17:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87a9nwpaaf.fsf@kamboji.qca.qualcomm.com>
+References: <20130515134258.GA9033@zenon.in.qult.net>
+	<87a9nwpaaf.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 15 May 2013 18:11:49 +0200
+Message-ID: <CAFSJ42bDB+c0=eRmBYZBaQnZ4-h2Jm_MWZbfSEhUELb9y0Qv_Q@mail.gmail.com> (sfid-20130515_181744_761618_1C706F19)
+Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Ignacy Gawedzki <i@lri.fr>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Authentication takes place in userspace, but the beacon is
-generated in the kernel.  Allow userspace to inform the
-kernel of the authentication method so the appropriate
-mesh config IE can be set prior to beacon generation when
-joining the MBSS.
+there is a function in driver "ath9k_htc_reset"
+http://lxr.free-electrons.com/source/drivers/net/wireless/ath/ath9k/htc_drv_main.c#L189
+but not sure that is what you are looking for.
 
-Signed-off-by: Colleen Twitty <colleen@cozybit.com>
----
-    Check userspace is handling MPM instead of checking if setup is secure and
-    authenticated.  (Johannes)
-	
- include/linux/ieee80211.h    |   20 ++++++++++++++++++++
- include/net/cfg80211.h       |    2 ++
- include/uapi/linux/nl80211.h |    4 ++++
- net/wireless/mesh.c          |    1 +
- net/wireless/nl80211.c       |   16 ++++++++++++++++
- 5 files changed, 43 insertions(+)
+2013/5/15 Kalle Valo <kvalo@qca.qualcomm.com>:
+> Ignacy Gawedzki <i@lri.fr> writes:
+>
+>> Hi everyone,
+>>
+>> This is an old issue, about which it seems the first posts date back to 2009.
+>> With the latest possible version of the firmware for AR9271 and the latest
+>> possible wireless drivers, the issue is still there.  Whether this is still
+>> the exact same problem every time remains to be checked, but it is annoying
+>> enough to deserve some consideration.
+>>
+>> The problem is that the driver can't talk to the device if the following
+>> conditions are met:
+>>
+>>  - The system cold boots with the USB dongle inserted or the USB dongle is
+>>    inserted on a running system.
+>>
+>>  - The interface is *not* brought up.
+>>
+>>  - The system (warm) reboots.
+>>
+>> Then the driver complains about the target being unresponsive after uploading
+>> the firmware.  Apparently the only way to make it work again is to unplug and
+>> then plug the USB dongle back, physically.  It seems that if the USB port is
+>> not powered down during reboot (which happens with at least two different
+>> setups that I've tested it with), the device is left in a broken state.
+>>
+>> I would gladly help in tracing down this bug if only I knew where to start.
+>
+> With ath6kl a cold reset helped in a similar situation. Try to find if
+> ath9k_htc has a cold/warm reset and see if that helps.
+>
+> --
+> Kalle Valo
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 06b0ed0..e3b9509 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1899,6 +1899,26 @@ enum {
- };
- 
- /**
-+ * enum mesh_config_auth_proto - mesh authentication protocol identifier
-+ *
-+ * Ref IEEE 802.11-2012 8.4.2.100.6 Authentication Protocol Identifier
-+ *
-+ * This field indicates the type of authentication protocol used to secure the
-+ * MBSS.
-+ *
-+ * @IEEE80211_AUTH_PROTO_NONE: the default mesh authentication protocol,
-+ *	no authentication is required to establish peering within the MBSS
-+ * @IEEE80211_AUTH_PROTO_SAE: SAE authentication
-+ * @IEEE80211_AUTH_PROTO_8021X : IEEE 802.1X authentication
-+ *
-+ */
-+enum mesh_config_auth_proto {
-+	IEEE80211_AUTH_PROTO_NONE =		0x0,
-+	IEEE80211_AUTH_PROTO_SAE =		0x1,
-+	IEEE80211_AUTH_PROTO_8021X =		0x2,
-+};
-+
-+/**
-  * enum ieee80211_root_mode_identifier - root mesh STA mode identifier
-  *
-  * These attribute are used by dot11MeshHWMPRootMode to set root mesh STA mode
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 26e9113..072e424 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1161,6 +1161,7 @@ struct mesh_config {
-  * @sync_method: which synchronization method to use
-  * @path_sel_proto: which path selection protocol to use
-  * @path_metric: which metric to use
-+ * @auth_id: which authentication method this mesh is using
-  * @ie: vendor information elements (optional)
-  * @ie_len: length of vendor information elements
-  * @is_authenticated: this mesh requires authentication
-@@ -1179,6 +1180,7 @@ struct mesh_setup {
- 	u8 sync_method;
- 	u8 path_sel_proto;
- 	u8 path_metric;
-+	enum mesh_config_auth_proto auth_id;
- 	const u8 *ie;
- 	u8 ie_len;
- 	bool is_authenticated;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index b484307..408bb56 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2645,6 +2645,9 @@ enum nl80211_meshconf_params {
-  * @NL80211_MESH_SETUP_USERSPACE_MPM: Enable this option if userspace will
-  *	implement an MPM which handles peer allocation and state.
-  *
-+ * @NL80211_MESH_SETUP_AUTH_PROTOCOL: Inform the kernel of the authentication
-+ *	method.
-+ *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  *
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-@@ -2658,6 +2661,7 @@ enum nl80211_mesh_setup_params {
- 	NL80211_MESH_SETUP_USERSPACE_AMPE,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_SYNC,
- 	NL80211_MESH_SETUP_USERSPACE_MPM,
-+	NL80211_MESH_SETUP_AUTH_PROTOCOL,
- 
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 0bb93f3..53bfe0e 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -82,6 +82,7 @@ const struct mesh_setup default_mesh_setup = {
- 	.sync_method = IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET,
- 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
- 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
-+	.auth_id = IEEE80211_AUTH_PROTO_NONE,
- 	.ie = NULL,
- 	.ie_len = 0,
- 	.is_secure = false,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9cdcd9e..5795617 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4672,6 +4672,7 @@ static const struct nla_policy
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_USERSPACE_AUTH] = { .type = NLA_FLAG },
-+	[NL80211_MESH_SETUP_AUTH_PROTOCOL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_USERSPACE_MPM] = { .type = NLA_FLAG },
- 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 				    .len = IEEE80211_MAX_DATA_LEN },
-@@ -4857,6 +4858,21 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 	if (setup->is_secure)
- 		setup->user_mpm = true;
- 
-+	if (tb[NL80211_MESH_SETUP_AUTH_PROTOCOL]) {
-+		if (!setup->user_mpm)
-+			return -EINVAL;
-+		switch (nla_get_u8(tb[NL80211_MESH_SETUP_AUTH_PROTOCOL])) {
-+		case NL80211_AUTHTYPE_SAE:
-+			setup->auth_id = IEEE80211_AUTH_PROTO_SAE;
-+			break;
-+		case NL80211_AUTHTYPE_OPEN_SYSTEM:
-+			setup->auth_id = IEEE80211_AUTH_PROTO_NONE;
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+	}
-+
- 	return 0;
- }
- 
+
+
 -- 
-1.7.9.5
-
+Best regards,
+Eugene
