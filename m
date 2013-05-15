@@ -1,604 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rrcs-24-73-230-86.se.biz.rr.com ([24.73.230.86]:39139 "EHLO
-	stuffed.shaftnet.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752718Ab3EYAFK (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:34353 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932431Ab3EOU7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 20:05:10 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 05/14] cw1200: v7: Firmware loading
-Date: Fri, 24 May 2013 20:04:42 -0400
-Message-Id: <1369440291-8961-6-git-send-email-pizza@shaftnet.org> (sfid-20130525_020517_905684_73471E38)
-In-Reply-To: <1369440291-8961-1-git-send-email-pizza@shaftnet.org>
-References: <1369440291-8961-1-git-send-email-pizza@shaftnet.org>
+	Wed, 15 May 2013 16:59:41 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hn14so3458858wib.0
+        for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 13:59:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Date: Wed, 15 May 2013 13:59:39 -0700
+Message-ID: <CAJ-VmonrfSx6KLjNdPwtV_8q=Jmjz9KRSYmoLSXt7yocU=y35A@mail.gmail.com> (sfid-20130515_225946_372408_7D9A4E07)
+Subject: Re: [PATCHv2 00/18] Add support for 5 and 10 MHz channels
+From: Adrian Chadd <adrian@freebsd.org>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/cw1200/fwio.c | 525 +++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/fwio.h |  39 +++
- 2 files changed, 564 insertions(+)
- create mode 100644 drivers/net/wireless/cw1200/fwio.c
- create mode 100644 drivers/net/wireless/cw1200/fwio.h
+Have you tried interoperating with FreeBSD?
 
-diff --git a/drivers/net/wireless/cw1200/fwio.c b/drivers/net/wireless/cw1200/fwio.c
-new file mode 100644
-index 0000000..ad01cd2
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/fwio.c
-@@ -0,0 +1,525 @@
-+/*
-+ * Firmware I/O code for mac80211 ST-Ericsson CW1200 drivers
-+ *
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>
-+ *
-+ * Based on:
-+ * ST-Ericsson UMAC CW1200 driver which is
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Ajitpal Singh <ajitpal.singh@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/vmalloc.h>
-+#include <linux/sched.h>
-+#include <linux/firmware.h>
-+
-+#include "cw1200.h"
-+#include "fwio.h"
-+#include "hwio.h"
-+#include "sbus.h"
-+#include "bh.h"
-+
-+static int cw1200_get_hw_type(u32 config_reg_val, int *major_revision)
-+{
-+	int hw_type = -1;
-+	u32 silicon_type = (config_reg_val >> 24) & 0x7;
-+	u32 silicon_vers = (config_reg_val >> 31) & 0x1;
-+
-+	switch (silicon_type) {
-+	case 0x00:
-+		*major_revision = 1;
-+		hw_type = HIF_9000_SILICON_VERSATILE;
-+		break;
-+	case 0x01:
-+	case 0x02: /* CW1x00 */
-+	case 0x04: /* CW1x60 */
-+		*major_revision = silicon_type;
-+		if (silicon_vers)
-+			hw_type = HIF_8601_VERSATILE;
-+		else
-+			hw_type = HIF_8601_SILICON;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return hw_type;
-+}
-+
-+static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
-+{
-+	int ret, block, num_blocks;
-+	unsigned i;
-+	u32 val32;
-+	u32 put = 0, get = 0;
-+	u8 *buf = NULL;
-+	const char *fw_path;
-+	const struct firmware *firmware = NULL;
-+
-+	/* Macroses are local. */
-+#define APB_WRITE(reg, val) \
-+	do { \
-+		ret = cw1200_apb_write_32(priv, CW1200_APB(reg), (val)); \
-+		if (ret < 0) \
-+			goto error; \
-+	} while (0)
-+#define APB_READ(reg, val) \
-+	do { \
-+		ret = cw1200_apb_read_32(priv, CW1200_APB(reg), &(val)); \
-+		if (ret < 0) \
-+			goto error; \
-+	} while (0)
-+#define REG_WRITE(reg, val) \
-+	do { \
-+		ret = cw1200_reg_write_32(priv, (reg), (val)); \
-+		if (ret < 0) \
-+			goto error; \
-+	} while (0)
-+#define REG_READ(reg, val) \
-+	do { \
-+		ret = cw1200_reg_read_32(priv, (reg), &(val)); \
-+		if (ret < 0) \
-+			goto error; \
-+	} while (0)
-+
-+	switch (priv->hw_revision) {
-+	case CW1200_HW_REV_CUT10:
-+		fw_path = FIRMWARE_CUT10;
-+		if (!priv->sdd_path)
-+			priv->sdd_path = SDD_FILE_10;
-+		break;
-+	case CW1200_HW_REV_CUT11:
-+		fw_path = FIRMWARE_CUT11;
-+		if (!priv->sdd_path)
-+			priv->sdd_path = SDD_FILE_11;
-+		break;
-+	case CW1200_HW_REV_CUT20:
-+		fw_path = FIRMWARE_CUT20;
-+		if (!priv->sdd_path)
-+			priv->sdd_path = SDD_FILE_20;
-+		break;
-+	case CW1200_HW_REV_CUT22:
-+		fw_path = FIRMWARE_CUT22;
-+		if (!priv->sdd_path)
-+			priv->sdd_path = SDD_FILE_22;
-+		break;
-+	case CW1X60_HW_REV:
-+		fw_path = FIRMWARE_CW1X60;
-+		if (!priv->sdd_path)
-+			priv->sdd_path = SDD_FILE_CW1X60;
-+		break;
-+	default:
-+		pr_err("Invalid silicon revision %d.\n", priv->hw_revision);
-+		return -EINVAL;
-+	}
-+
-+	/* Initialize common registers */
-+	APB_WRITE(DOWNLOAD_IMAGE_SIZE_REG, DOWNLOAD_ARE_YOU_HERE);
-+	APB_WRITE(DOWNLOAD_PUT_REG, 0);
-+	APB_WRITE(DOWNLOAD_GET_REG, 0);
-+	APB_WRITE(DOWNLOAD_STATUS_REG, DOWNLOAD_PENDING);
-+	APB_WRITE(DOWNLOAD_FLAGS_REG, 0);
-+
-+	/* Write the NOP Instruction */
-+	REG_WRITE(ST90TDS_SRAM_BASE_ADDR_REG_ID, 0xFFF20000);
-+	REG_WRITE(ST90TDS_AHB_DPORT_REG_ID, 0xEAFFFFFE);
-+
-+	/* Release CPU from RESET */
-+	REG_READ(ST90TDS_CONFIG_REG_ID, val32);
-+	val32 &= ~ST90TDS_CONFIG_CPU_RESET_BIT;
-+	REG_WRITE(ST90TDS_CONFIG_REG_ID, val32);
-+
-+	/* Enable Clock */
-+	val32 &= ~ST90TDS_CONFIG_CPU_CLK_DIS_BIT;
-+	REG_WRITE(ST90TDS_CONFIG_REG_ID, val32);
-+
-+#ifdef CONFIG_CW1200_ETF
-+	if (etf_mode)
-+		fw_path = etf_firmware;
-+#endif
-+
-+	/* Load a firmware file */
-+	ret = request_firmware(&firmware, fw_path, priv->pdev);
-+	if (ret) {
-+		pr_err("Can't load firmware file %s.\n", fw_path);
-+		goto error;
-+	}
-+
-+	buf = kmalloc(DOWNLOAD_BLOCK_SIZE, GFP_KERNEL | GFP_DMA);
-+	if (!buf) {
-+		pr_err("Can't allocate firmware load buffer.\n");
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	/* Check if the bootloader is ready */
-+	for (i = 0; i < 100; i += 1 + i / 2) {
-+		APB_READ(DOWNLOAD_IMAGE_SIZE_REG, val32);
-+		if (val32 == DOWNLOAD_I_AM_HERE)
-+			break;
-+		mdelay(i);
-+	} /* End of for loop */
-+
-+	if (val32 != DOWNLOAD_I_AM_HERE) {
-+		pr_err("Bootloader is not ready.\n");
-+		ret = -ETIMEDOUT;
-+		goto error;
-+	}
-+
-+	/* Calculcate number of download blocks */
-+	num_blocks = (firmware->size - 1) / DOWNLOAD_BLOCK_SIZE + 1;
-+
-+	/* Updating the length in Download Ctrl Area */
-+	val32 = firmware->size; /* Explicit cast from size_t to u32 */
-+	APB_WRITE(DOWNLOAD_IMAGE_SIZE_REG, val32);
-+
-+	/* Firmware downloading loop */
-+	for (block = 0; block < num_blocks; block++) {
-+		size_t tx_size;
-+		size_t block_size;
-+
-+		/* check the download status */
-+		APB_READ(DOWNLOAD_STATUS_REG, val32);
-+		if (val32 != DOWNLOAD_PENDING) {
-+			pr_err("Bootloader reported error %d.\n", val32);
-+			ret = -EIO;
-+			goto error;
-+		}
-+
-+		/* loop until put - get <= 24K */
-+		for (i = 0; i < 100; i++) {
-+			APB_READ(DOWNLOAD_GET_REG, get);
-+			if ((put - get) <=
-+			    (DOWNLOAD_FIFO_SIZE - DOWNLOAD_BLOCK_SIZE))
-+				break;
-+			mdelay(i);
-+		}
-+
-+		if ((put - get) > (DOWNLOAD_FIFO_SIZE - DOWNLOAD_BLOCK_SIZE)) {
-+			pr_err("Timeout waiting for FIFO.\n");
-+			ret = -ETIMEDOUT;
-+			goto error;
-+		}
-+
-+		/* calculate the block size */
-+		tx_size = block_size = min((size_t)(firmware->size - put),
-+			(size_t)DOWNLOAD_BLOCK_SIZE);
-+
-+		memcpy(buf, &firmware->data[put], block_size);
-+		if (block_size < DOWNLOAD_BLOCK_SIZE) {
-+			memset(&buf[block_size], 0,
-+			       DOWNLOAD_BLOCK_SIZE - block_size);
-+			tx_size = DOWNLOAD_BLOCK_SIZE;
-+		}
-+
-+		/* send the block to sram */
-+		ret = cw1200_apb_write(priv,
-+			CW1200_APB(DOWNLOAD_FIFO_OFFSET +
-+				   (put & (DOWNLOAD_FIFO_SIZE - 1))),
-+			buf, tx_size);
-+		if (ret < 0) {
-+			pr_err("Can't write firmware block @ %d!\n",
-+			       put & (DOWNLOAD_FIFO_SIZE - 1));
-+			goto error;
-+		}
-+
-+		/* update the put register */
-+		put += block_size;
-+		APB_WRITE(DOWNLOAD_PUT_REG, put);
-+	} /* End of firmware download loop */
-+
-+	/* Wait for the download completion */
-+	for (i = 0; i < 300; i += 1 + i / 2) {
-+		APB_READ(DOWNLOAD_STATUS_REG, val32);
-+		if (val32 != DOWNLOAD_PENDING)
-+			break;
-+		mdelay(i);
-+	}
-+	if (val32 != DOWNLOAD_SUCCESS) {
-+		pr_err("Wait for download completion failed: 0x%.8X\n", val32);
-+		ret = -ETIMEDOUT;
-+		goto error;
-+	} else {
-+		pr_info("Firmware download completed.\n");
-+		ret = 0;
-+	}
-+
-+error:
-+	kfree(buf);
-+	if (firmware)
-+		release_firmware(firmware);
-+	return ret;
-+
-+#undef APB_WRITE
-+#undef APB_READ
-+#undef REG_WRITE
-+#undef REG_READ
-+}
-+
-+
-+static int config_reg_read(struct cw1200_common *priv, u32 *val)
-+{
-+	switch (priv->hw_type) {
-+	case HIF_9000_SILICON_VERSATILE: {
-+		u16 val16;
-+		int ret = cw1200_reg_read_16(priv,
-+					     ST90TDS_CONFIG_REG_ID,
-+					     &val16);
-+		if (ret < 0)
-+			return ret;
-+		*val = val16;
-+		return 0;
-+	}
-+	case HIF_8601_VERSATILE:
-+	case HIF_8601_SILICON:
-+	default:
-+		cw1200_reg_read_32(priv, ST90TDS_CONFIG_REG_ID, val);
-+		break;
-+	}
-+	return 0;
-+}
-+
-+static int config_reg_write(struct cw1200_common *priv, u32 val)
-+{
-+	switch (priv->hw_type) {
-+	case HIF_9000_SILICON_VERSATILE:
-+		return cw1200_reg_write_16(priv,
-+					   ST90TDS_CONFIG_REG_ID,
-+					   (u16)val);
-+	case HIF_8601_VERSATILE:
-+	case HIF_8601_SILICON:
-+	default:
-+		return cw1200_reg_write_32(priv, ST90TDS_CONFIG_REG_ID, val);
-+		break;
-+	}
-+	return 0;
-+}
-+
-+int cw1200_load_firmware(struct cw1200_common *priv)
-+{
-+	int ret;
-+	int i;
-+	u32 val32;
-+	u16 val16;
-+	int major_revision = -1;
-+
-+	/* Read CONFIG Register */
-+	ret = cw1200_reg_read_32(priv, ST90TDS_CONFIG_REG_ID, &val32);
-+	if (ret < 0) {
-+		pr_err("Can't read config register.\n");
-+		goto out;
-+	}
-+
-+	if (val32 == 0 || val32 == 0xffffffff) {
-+		pr_err("Bad config register value (0x%08x)\n", val32);
-+		ret = -EIO;
-+		goto out;
-+	}
-+
-+	priv->hw_type = cw1200_get_hw_type(val32, &major_revision);
-+	if (priv->hw_type < 0) {
-+		pr_err("Can't deduce hardware type.\n");
-+		ret = -ENOTSUPP;
-+		goto out;
-+	}
-+
-+	/* Set DPLL Reg value, and read back to confirm writes work */
-+	ret = cw1200_reg_write_32(priv, ST90TDS_TSET_GEN_R_W_REG_ID,
-+				  cw1200_dpll_from_clk(priv->hw_refclk));
-+	if (ret < 0) {
-+		pr_err("Can't write DPLL register.\n");
-+		goto out;
-+	}
-+
-+	msleep(20);
-+
-+	ret = cw1200_reg_read_32(priv,
-+		ST90TDS_TSET_GEN_R_W_REG_ID, &val32);
-+	if (ret < 0) {
-+		pr_err("Can't read DPLL register.\n");
-+		goto out;
-+	}
-+
-+	if (val32 != cw1200_dpll_from_clk(priv->hw_refclk)) {
-+		pr_err("Unable to initialise DPLL register. Wrote 0x%.8X, Read 0x%.8X.\n",
-+		       cw1200_dpll_from_clk(priv->hw_refclk), val32);
-+		ret = -EIO;
-+		goto out;
-+	}
-+
-+	/* Set wakeup bit in device */
-+	ret = cw1200_reg_read_16(priv, ST90TDS_CONTROL_REG_ID, &val16);
-+	if (ret < 0) {
-+		pr_err("set_wakeup: can't read control register.\n");
-+		goto out;
-+	}
-+
-+	ret = cw1200_reg_write_16(priv, ST90TDS_CONTROL_REG_ID,
-+		val16 | ST90TDS_CONT_WUP_BIT);
-+	if (ret < 0) {
-+		pr_err("set_wakeup: can't write control register.\n");
-+		goto out;
-+	}
-+
-+	/* Wait for wakeup */
-+	for (i = 0; i < 300; i += (1 + i / 2)) {
-+		ret = cw1200_reg_read_16(priv,
-+			ST90TDS_CONTROL_REG_ID, &val16);
-+		if (ret < 0) {
-+			pr_err("wait_for_wakeup: can't read control register.\n");
-+			goto out;
-+		}
-+
-+		if (val16 & ST90TDS_CONT_RDY_BIT)
-+			break;
-+
-+		msleep(i);
-+	}
-+
-+	if ((val16 & ST90TDS_CONT_RDY_BIT) == 0) {
-+		pr_err("wait_for_wakeup: device is not responding.\n");
-+		ret = -ETIMEDOUT;
-+		goto out;
-+	}
-+
-+	switch (major_revision) {
-+	case 1:
-+		/* CW1200 Hardware detection logic : Check for CUT1.1 */
-+		ret = cw1200_ahb_read_32(priv, CW1200_CUT_ID_ADDR, &val32);
-+		if (ret) {
-+			pr_err("HW detection: can't read CUT ID.\n");
-+			goto out;
-+		}
-+
-+		switch (val32) {
-+		case CW1200_CUT_11_ID_STR:
-+			pr_info("CW1x00 Cut 1.1 silicon detected.\n");
-+			priv->hw_revision = CW1200_HW_REV_CUT11;
-+			break;
-+		default:
-+			pr_info("CW1x00 Cut 1.0 silicon detected.\n");
-+			priv->hw_revision = CW1200_HW_REV_CUT10;
-+			break;
-+		}
-+
-+		/* According to ST-E, CUT<2.0 has busted BA TID0-3.
-+		   Just disable it entirely...
-+		*/
-+		priv->ba_rx_tid_mask = 0;
-+		priv->ba_tx_tid_mask = 0;
-+		break;
-+	case 2: {
-+		u32 ar1, ar2, ar3;
-+		ret = cw1200_ahb_read_32(priv, CW1200_CUT2_ID_ADDR, &ar1);
-+		if (ret) {
-+			pr_err("(1) HW detection: can't read CUT ID\n");
-+			goto out;
-+		}
-+		ret = cw1200_ahb_read_32(priv, CW1200_CUT2_ID_ADDR + 4, &ar2);
-+		if (ret) {
-+			pr_err("(2) HW detection: can't read CUT ID.\n");
-+			goto out;
-+		}
-+
-+		ret = cw1200_ahb_read_32(priv, CW1200_CUT2_ID_ADDR + 8, &ar3);
-+		if (ret) {
-+			pr_err("(3) HW detection: can't read CUT ID.\n");
-+			goto out;
-+		}
-+
-+		if (ar1 == CW1200_CUT_22_ID_STR1 &&
-+		    ar2 == CW1200_CUT_22_ID_STR2 &&
-+		    ar3 == CW1200_CUT_22_ID_STR3) {
-+			pr_info("CW1x00 Cut 2.2 silicon detected.\n");
-+			priv->hw_revision = CW1200_HW_REV_CUT22;
-+		} else {
-+			pr_info("CW1x00 Cut 2.0 silicon detected.\n");
-+			priv->hw_revision = CW1200_HW_REV_CUT20;
-+		}
-+		break;
-+	}
-+	case 4:
-+		pr_info("CW1x60 silicon detected.\n");
-+		priv->hw_revision = CW1X60_HW_REV;
-+		break;
-+	default:
-+		pr_err("Unsupported silicon major revision %d.\n",
-+		       major_revision);
-+		ret = -ENOTSUPP;
-+		goto out;
-+	}
-+
-+	/* Checking for access mode */
-+	ret = config_reg_read(priv, &val32);
-+	if (ret < 0) {
-+		pr_err("Can't read config register.\n");
-+		goto out;
-+	}
-+
-+	if (!(val32 & ST90TDS_CONFIG_ACCESS_MODE_BIT)) {
-+		pr_err("Device is already in QUEUE mode!\n");
-+			ret = -EINVAL;
-+			goto out;
-+	}
-+
-+	switch (priv->hw_type)  {
-+	case HIF_8601_SILICON:
-+		if (priv->hw_revision == CW1X60_HW_REV) {
-+			pr_err("Can't handle CW1160/1260 firmware load yet.\n");
-+			ret = -ENOTSUPP;
-+			goto out;
-+		}
-+		ret = cw1200_load_firmware_cw1200(priv);
-+		break;
-+	default:
-+		pr_err("Can't perform firmware load for hw type %d.\n",
-+		       priv->hw_type);
-+		ret = -ENOTSUPP;
-+		goto out;
-+	}
-+	if (ret < 0) {
-+		pr_err("Firmware load error.\n");
-+		goto out;
-+	}
-+
-+	/* Enable interrupt signalling */
-+	priv->sbus_ops->lock(priv->sbus_priv);
-+	ret = __cw1200_irq_enable(priv, 1);
-+	priv->sbus_ops->unlock(priv->sbus_priv);
-+	if (ret < 0)
-+		goto unsubscribe;
-+
-+	/* Configure device for MESSSAGE MODE */
-+	ret = config_reg_read(priv, &val32);
-+	if (ret < 0) {
-+		pr_err("Can't read config register.\n");
-+		goto unsubscribe;
-+	}
-+	ret = config_reg_write(priv, val32 & ~ST90TDS_CONFIG_ACCESS_MODE_BIT);
-+	if (ret < 0) {
-+		pr_err("Can't write config register.\n");
-+		goto unsubscribe;
-+	}
-+
-+	/* Unless we read the CONFIG Register we are
-+	 * not able to get an interrupt
-+	 */
-+	mdelay(10);
-+	config_reg_read(priv, &val32);
-+
-+out:
-+	return ret;
-+
-+unsubscribe:
-+	/* Disable interrupt signalling */
-+	priv->sbus_ops->lock(priv->sbus_priv);
-+	ret = __cw1200_irq_enable(priv, 0);
-+	priv->sbus_ops->unlock(priv->sbus_priv);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/cw1200/fwio.h b/drivers/net/wireless/cw1200/fwio.h
-new file mode 100644
-index 0000000..ea30993
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/fwio.h
-@@ -0,0 +1,39 @@
-+/*
-+ * Firmware API for mac80211 ST-Ericsson CW1200 drivers
-+ *
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>
-+ *
-+ * Based on:
-+ * ST-Ericsson UMAC CW1200 driver which is
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Ajitpal Singh <ajitpal.singh@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef FWIO_H_INCLUDED
-+#define FWIO_H_INCLUDED
-+
-+#define BOOTLOADER_CW1X60       "boot_cw1x60.bin"
-+#define FIRMWARE_CW1X60		"wsm_cw1x60.bin"
-+#define FIRMWARE_CUT22		"wsm_22.bin"
-+#define FIRMWARE_CUT20		"wsm_20.bin"
-+#define FIRMWARE_CUT11		"wsm_11.bin"
-+#define FIRMWARE_CUT10		"wsm_10.bin"
-+#define SDD_FILE_CW1X60		"sdd_cw1x60.bin"
-+#define SDD_FILE_22		"sdd_22.bin"
-+#define SDD_FILE_20		"sdd_20.bin"
-+#define SDD_FILE_11		"sdd_11.bin"
-+#define SDD_FILE_10		"sdd_10.bin"
-+
-+int cw1200_load_firmware(struct cw1200_common *priv);
-+
-+/* SDD definitions */
-+#define SDD_PTA_CFG_ELT_ID 0xEB
-+#define SDD_REFERENCE_FREQUENCY_ELT_ID 0xc5
-+u32 cw1200_dpll_from_clk(u16 clk);
-+
-+#endif
--- 
-1.8.1.4
+Have you tried interoperating with some of the atheros AP builds that
+are out there?
 
+I'd like to do some interoperability tests with this at some point
+soon just to ensure things aren't too crazy.
+
+thanks,
+
+
+
+Adrian
+
+
+On 15 May 2013 07:18, Simon Wunderlich
+<simon.wunderlich@s2003.tu-chemnitz.de> wrote:
+> This patchset adds support for 5 and 10 MHz in nl80211/cfg80211/mac80211
+> and enables support in ath5k and ath9k, which already support this feature
+> on the driver side. 5 and 10 MHz wide channels might be useful for:
+>
+>  * long shot links, as the transmissions are more robust
+>  * future support for 802.11y which allows some 5 and 10 MHz channels in
+>    3.6 GHz range
+>  * future support for 802.11p which uses 10 MHz in 5.9 GHz range
+>  * ... and more "special" applications.
+>
+> This patchset enables 5 and 10 MHz channels only for OFDM, and without
+> HT/MIMO/aggregation (for now). Support may be added later.
+>
+> Changes to PATCHv1:
+>  * the actual datarates are handled, not the corresponding 20MHz rates
+>    as before. This should make it compatible to freebsd, although I was
+>    informed that some other implementors might still use the corresponding
+>    20MHz rates. Anyway, from looking at the standard using the actual rates
+>    should be the right thing to do.
+>  * txpower is decremented according to channel bandwidth (the regulation I
+>    checked all define limits in dBm/MHz)
+>  * radiotap support for 5/10 MHz channel flag was added
+>  * some fixes for ath5k/ath9k were included to make them interoperable
+>    (having the same SIFS improved performance quite well,
+>     300kbps -> 6600 kbps for 5 MHz channels :) )
+>
+> As always, any comments are appreciated!
+> Cheers,
+>         Simon
+>
+> Simon Wunderlich (18):
+>   nl80211/cfg80211: add 5 and 10 MHz defines and wiphy flag
+>   nl80211: add half/quarter channel bitrate tables to supported band
+>     struct
+>   mac80211: fix various components for the new 5 and 10 MHz widths
+>   mac80211: fix timing for 5 MHz and 10 MHz channels
+>   mac80211: round rates to the next multiple of 500kbps
+>   mac80211: choose bitrate table according to bandwidth
+>   mac80211: add radiotap flag and handling for 5/10 MHz
+>   cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
+>   mac80211: change IBSS channel state to chandef
+>   nl80211: allow 5 and 10 MHz channels for IBSS
+>   ath9k: always use SIFS times from OFDM for 5/10 MHz
+>   ath9k: use chandef instead of channel_type
+>   ath9k: add and use 5/10 MHz bitrate tables
+>   ath9k: report 5/10 MHz channels
+>   ath9k: announce that ath9k supports 5/10 MHz
+>   ath5k: add and use 5/10 MHz bitrate tables
+>   ath5k: report 5/10 MHz channels
+>   ath5k: enable support for 5 MHz and 10 MHz channels
+>
+>  drivers/net/wireless/ath/ath5k/ath5k.h        |   11 +-
+>  drivers/net/wireless/ath/ath5k/base.c         |  133 +++++++++++++++++++++---
+>  drivers/net/wireless/ath/ath5k/base.h         |    2 +-
+>  drivers/net/wireless/ath/ath5k/debug.c        |   23 ++++-
+>  drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
+>  drivers/net/wireless/ath/ath5k/pcu.c          |   30 +++++-
+>  drivers/net/wireless/ath/ath5k/qcu.c          |   23 ++++-
+>  drivers/net/wireless/ath/ath9k/beacon.c       |   13 ++-
+>  drivers/net/wireless/ath/ath9k/common.c       |   67 +++++++-----
+>  drivers/net/wireless/ath/ath9k/common.h       |    3 +-
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c |    5 +-
+>  drivers/net/wireless/ath/ath9k/hw.c           |    5 +-
+>  drivers/net/wireless/ath/ath9k/init.c         |   68 +++++++++---
+>  drivers/net/wireless/ath/ath9k/main.c         |    8 +-
+>  drivers/net/wireless/ath/ath9k/rc.c           |   13 ++-
+>  drivers/net/wireless/ath/ath9k/recv.c         |   24 ++++-
+>  drivers/net/wireless/ath/ath9k/xmit.c         |   14 ++-
+>  include/net/cfg80211.h                        |   66 ++++++++++++
+>  include/net/ieee80211_radiotap.h              |    4 +
+>  include/net/mac80211.h                        |   40 ++++++-
+>  include/uapi/linux/nl80211.h                  |    4 +
+>  net/mac80211/cfg.c                            |   50 +++++++--
+>  net/mac80211/ibss.c                           |   58 +++++++----
+>  net/mac80211/ieee80211_i.h                    |   47 ++++++++-
+>  net/mac80211/iface.c                          |    7 +-
+>  net/mac80211/main.c                           |    7 +-
+>  net/mac80211/mesh.c                           |    4 +-
+>  net/mac80211/mesh_plink.c                     |   18 +++-
+>  net/mac80211/mlme.c                           |   84 ++++++++++-----
+>  net/mac80211/rate.c                           |  102 ++++++++++++------
+>  net/mac80211/rc80211_minstrel.c               |   59 +++++++----
+>  net/mac80211/rc80211_minstrel_ht.c            |   26 +++--
+>  net/mac80211/rc80211_pid.h                    |    2 +
+>  net/mac80211/rc80211_pid_algo.c               |   68 +++++++++---
+>  net/mac80211/rx.c                             |   52 +++++++---
+>  net/mac80211/status.c                         |   18 +++-
+>  net/mac80211/tx.c                             |   43 ++++++--
+>  net/mac80211/util.c                           |  138 +++++++++++++++++++------
+>  net/wireless/chan.c                           |   57 ++++++++--
+>  net/wireless/nl80211.c                        |   23 ++++-
+>  net/wireless/util.c                           |   58 +++++++++++
+>  41 files changed, 1179 insertions(+), 300 deletions(-)
+>
+> --
+> 1.7.10.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
