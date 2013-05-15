@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17914 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753107Ab3EYIvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 May 2013 04:51:12 -0400
-Date: Sat, 25 May 2013 10:53:00 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jake Edge <jake@lwn.net>
-Subject: Re: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx
- rejection
-Message-ID: <20130525085259.GB1599@redhat.com> (sfid-20130525_105119_291835_2C9B0F3C)
-References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
- <1369427208.8290.35.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369427208.8290.35.camel@jlt4.sipsolutions.net>
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:36137 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932596Ab3EOOTf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 May 2013 10:19:35 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2 10/18] nl80211: allow 5 and 10 MHz channels for IBSS
+Date: Wed, 15 May 2013 16:19:01 +0200
+Message-Id: <1368627549-22518-11-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_162936_139311_38FAB3FF)
+In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 24, 2013 at 10:26:48PM +0200, Johannes Berg wrote:
-> On Thu, 2013-05-23 at 14:20 +0200, Stanislaw Gruszka wrote:
-> > Jake, please test this set and check if it not cause association
-> > problems you reported earlier this month.
-> > 
-> > Please apply it together with this mac80211 patch:
-> > http://marc.info/?l=linux-wireless&m=136879090123023&w=2 
-> > which I already posted and is queued to upstream. Not having
-> > it may cause troubles and influence negatively this set test.
-> > 
-> > Johannes, is need to check beacon bssid or even if rx frame
-> > is a beacon to unblock queues? I think if we receive any frame
-> > (not necessary beacon or our bssid beacon) on passive channel,
-> > that mean we can use that channel. But that depend how firmware
-> > is implemented, if firmware require our bssid beacon to unblock
-> > channel, driver of course need that too.
-> 
-> I _think_ any frame with good CRC will do, but I'm not entirely sure for
-> 3945/4965.
+Whether the wiphy supports it or not is already checked, so what is left
+is to enable these channel types.
 
-I prefer to unblock queues on any frame, as this allow to start
-operating quickly.  Let's see if this will also work on Jake environment,
-I'll add patch 5/4 which implement that.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/wireless/nl80211.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Stanislaw
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 75070da..a5f281a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6297,6 +6297,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	switch (ibss.chandef.width) {
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 		break;
+ 	case NL80211_CHAN_WIDTH_20:
+-- 
+1.7.10.4
+
