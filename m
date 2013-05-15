@@ -1,65 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59214 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753376Ab3EPVDp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41445 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108Ab3EOEwc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 17:03:45 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/9] cfg80211: simplify and correct P2P-Device scan check
-Date: Thu, 16 May 2013 23:03:34 +0200
-Message-Id: <1368738218-7597-6-git-send-email-johannes@sipsolutions.net> (sfid-20130516_230354_155064_4FD4390E)
-In-Reply-To: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net>
-References: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 15 May 2013 00:52:32 -0400
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Sivanesan Rajapupathi <c_srajap@qti.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ath6kl: Fix a suspend/resume crash in AR6004 USB
+Date: Wed, 15 May 2013 10:22:24 +0530
+Message-ID: <1368593544-3612-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130515_065235_098924_77529BF8)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-If the driver for some reason successfully finishes
-scanning while in p2p_stop_device(), cfg80211 will
-still set it to aborted. Simplify this code using the
-new 'notified' value and only mark it aborted in case
-the driver didn't notify cfg80211 at all (in which
-case we also leak the request to not crash, this is
-a driver bug.)
+cfg80211 suspend/resume callbacks are not yet implemented
+for AR6004 USB. Introduce dummy handlers for these to avoid
+NULL pointer dereference.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Sivanesan Rajapupathi <c_srajap@qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- net/wireless/core.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath6kl/usb.c |   18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 5fc642d..afcb9ec 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -204,18 +204,15 @@ void cfg80211_stop_p2p_device(struct cfg80211_registered_device *rdev,
- 	rdev->opencount--;
- 
- 	if (rdev->scan_req && rdev->scan_req->wdev == wdev) {
--		bool busy = work_busy(&rdev->scan_done_wk);
--
- 		/*
--		 * If the work isn't pending or running (in which case it would
--		 * be waiting for the lock we hold) the driver didn't properly
--		 * cancel the scan when the interface was removed. In this case
--		 * warn and leak the scan request object to not crash later.
-+		 * If the scan request wasn't notified as done, set it
-+		 * to aborted and leak it after a warning. The driver
-+		 * should have notified us that it ended at the latest
-+		 * during rdev_stop_p2p_device().
- 		 */
--		WARN_ON(!busy);
--
--		rdev->scan_req->aborted = true;
--		___cfg80211_scan_done(rdev, !busy);
-+		if (WARN_ON(!rdev->scan_req->notified))
-+			rdev->scan_req->aborted = true;
-+		___cfg80211_scan_done(rdev, !rdev->scan_req->notified);
- 	}
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index f3a7a27..6eea296 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -1053,6 +1053,22 @@ static void ath6kl_usb_cleanup_scatter(struct ath6kl *ar)
+ 	return;
  }
  
++static int ath6kl_usb_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
++{
++	/*
++	 * cfg80211 suspend/WOW currently not supported for USB.
++	 */
++	return 0;
++}
++
++static int ath6kl_usb_resume(struct ath6kl *ar)
++{
++	/*
++	 * cfg80211 resume currently not supported for USB.
++	 */
++	return 0;
++}
++
+ static const struct ath6kl_hif_ops ath6kl_usb_ops = {
+ 	.diag_read32 = ath6kl_usb_diag_read32,
+ 	.diag_write32 = ath6kl_usb_diag_write32,
+@@ -1066,6 +1082,8 @@ static const struct ath6kl_hif_ops ath6kl_usb_ops = {
+ 	.pipe_map_service = ath6kl_usb_map_service_pipe,
+ 	.pipe_get_free_queue_number = ath6kl_usb_get_free_queue_number,
+ 	.cleanup_scatter = ath6kl_usb_cleanup_scatter,
++	.suspend = ath6kl_usb_suspend,
++	.resume = ath6kl_usb_resume,
+ };
+ 
+ /* ath6kl usb driver registered functions */
 -- 
-1.8.0
+1.7.9.5
 
