@@ -1,126 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:58019 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755387Ab3ERMCv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 May 2013 08:02:51 -0400
-Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:49 +0200
-From: stf_xl@wp.pl
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 15/32] rt2800: initialize BBP_R84 on all subroutines (except 5592)
-Date: Sat, 18 May 2013 14:03:38 +0200
-Message-Id: <1368878635-4455-16-git-send-email-stf_xl@wp.pl> (sfid-20130518_142938_741096_633C6549)
-In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
-References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47319 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108Ab3EOEwS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 May 2013 00:52:18 -0400
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Sivanesan Rajapupathi <c_srajap@qti.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath6kl: Rename USB driver's suspend/resume/reset_resume
+Date: Wed, 15 May 2013 10:22:10 +0530
+Message-ID: <1368593530-3568-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130515_065227_536050_FC0137CB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Rename USB driver's suspend/resume/reset_resume callbacks
+with 'pm' prefix. This is necessary to differentiate it from
+cfg80211/hif suspend/resume/reset_resume callbacks.
+
+Cc: Sivanesan Rajapupathi <c_srajap@qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   28 +++++++++++++++++++---------
- 1 files changed, 19 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath6kl/usb.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 5e3dfd4..bb0d941 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3971,6 +3971,8 @@ static void rt2800_init_bbp_305x_soc(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 5fcd342..f3a7a27 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -1144,7 +1144,7 @@ static void ath6kl_usb_remove(struct usb_interface *interface)
  
- 	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
-+
-+	rt2800_bbp_write(rt2x00dev, 84, 0x99);
+ #ifdef CONFIG_PM
+ 
+-static int ath6kl_usb_suspend(struct usb_interface *interface,
++static int ath6kl_usb_pm_suspend(struct usb_interface *interface,
+ 			      pm_message_t message)
+ {
+ 	struct ath6kl_usb *device;
+@@ -1154,7 +1154,7 @@ static int ath6kl_usb_suspend(struct usb_interface *interface,
+ 	return 0;
  }
  
- static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
-@@ -3993,6 +3995,11 @@ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
- 
- 	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
-+
-+	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860D))
-+		rt2800_bbp_write(rt2x00dev, 84, 0x19);
-+	else
-+		rt2800_bbp_write(rt2x00dev, 84, 0x99);
+-static int ath6kl_usb_resume(struct usb_interface *interface)
++static int ath6kl_usb_pm_resume(struct usb_interface *interface)
+ {
+ 	struct ath6kl_usb *device;
+ 	device = usb_get_intfdata(interface);
+@@ -1167,7 +1167,7 @@ static int ath6kl_usb_resume(struct usb_interface *interface)
+ 	return 0;
  }
  
- static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
-@@ -4012,6 +4019,8 @@ static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
+-static int ath6kl_usb_reset_resume(struct usb_interface *intf)
++static int ath6kl_usb_pm_reset_resume(struct usb_interface *intf)
+ {
+ 	if (usb_get_intfdata(intf))
+ 		ath6kl_usb_remove(intf);
+@@ -1176,9 +1176,9 @@ static int ath6kl_usb_reset_resume(struct usb_interface *intf)
  
- 	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
-+
-+	rt2800_bbp_write(rt2x00dev, 84, 0x99);
- }
+ #else
  
- static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
-@@ -4042,6 +4051,8 @@ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
+-#define ath6kl_usb_suspend NULL
+-#define ath6kl_usb_resume NULL
+-#define ath6kl_usb_reset_resume NULL
++#define ath6kl_usb_pm_suspend NULL
++#define ath6kl_usb_pm_resume NULL
++#define ath6kl_usb_pm_reset_resume NULL
  
- 	rt2800_bbp_write(rt2x00dev, 83, 0x7a);
-+
-+	rt2800_bbp_write(rt2x00dev, 84, 0x9a);
- }
+ #endif
  
- static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
-@@ -4074,6 +4085,8 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
- 
- 	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
-+
-+	rt2800_bbp_write(rt2x00dev, 84, 0x99);
- }
- 
- static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
-@@ -4093,6 +4106,8 @@ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
- 
- 	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
-+
-+	rt2800_bbp_write(rt2x00dev, 84, 0x99);
- }
- 
- static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
-@@ -4114,6 +4129,8 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
- 
- 	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
-+
-+	rt2800_bbp_write(rt2x00dev, 84, 0x99);
- }
- 
- static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
-@@ -4143,6 +4160,8 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
- 
- 	rt2800_bbp_write(rt2x00dev, 83, 0x7a);
-+
-+	rt2800_bbp_write(rt2x00dev, 84, 0x9a);
- }
- 
- static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
-@@ -4261,15 +4280,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		return;
- 	}
- 
--	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860D))
--		rt2800_bbp_write(rt2x00dev, 84, 0x19);
--	else if (rt2x00_rt(rt2x00dev, RT3290) ||
--		 rt2x00_rt(rt2x00dev, RT5390) ||
--		 rt2x00_rt(rt2x00dev, RT5392))
--		rt2800_bbp_write(rt2x00dev, 84, 0x9a);
--	else
--		rt2800_bbp_write(rt2x00dev, 84, 0x99);
--
- 	if (rt2x00_rt(rt2x00dev, RT3290) ||
- 	    rt2x00_rt(rt2x00dev, RT3352) ||
- 	    rt2x00_rt(rt2x00dev, RT5390) ||
+@@ -1193,9 +1193,9 @@ MODULE_DEVICE_TABLE(usb, ath6kl_usb_ids);
+ static struct usb_driver ath6kl_usb_driver = {
+ 	.name = "ath6kl_usb",
+ 	.probe = ath6kl_usb_probe,
+-	.suspend = ath6kl_usb_suspend,
+-	.resume = ath6kl_usb_resume,
+-	.reset_resume = ath6kl_usb_reset_resume,
++	.suspend = ath6kl_usb_pm_suspend,
++	.resume = ath6kl_usb_pm_resume,
++	.reset_resume = ath6kl_usb_pm_reset_resume,
+ 	.disconnect = ath6kl_usb_remove,
+ 	.id_table = ath6kl_usb_ids,
+ 	.supports_autosuspend = true,
 -- 
-1.7.4.4
+1.7.9.5
 
