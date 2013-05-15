@@ -1,27 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59890 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933784Ab3E2HLT (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:34391 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753985Ab3EOUXG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 03:11:19 -0400
-Message-ID: <1369811476.8414.2.camel@jlt4.sipsolutions.net> (sfid-20130529_091122_025542_269888A8)
-Subject: Re: [PATCH] cfg80211: fix a crash in the active monitor check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 29 May 2013 09:11:16 +0200
-In-Reply-To: <1369776014-10148-1-git-send-email-nbd@openwrt.org>
-References: <1369776014-10148-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 15 May 2013 16:23:06 -0400
+Received: by mail-lb0-f182.google.com with SMTP id r11so2355971lbv.13
+        for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 13:23:04 -0700 (PDT)
+Message-ID: <5193EEA8.8030900@cogentembedded.com> (sfid-20130515_222316_623323_EF8F08EE)
+Date: Thu, 16 May 2013 00:23:04 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Albert Pool <albertpool@solcon.nl>, netdev@vger.kernel.org
+Subject: Re: [PATCH V3] rtlwifi: rtl8192cu: Add new USB ID
+References: <1368630196-14704-1-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1368630196-14704-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-05-28 at 23:20 +0200, Felix Fietkau wrote:
-> flags can be NULL
+Hello.
 
-I merged this into the original patch and also fixed the kernel-doc for
-you while at it.
+On 05/15/2013 07:03 PM, Larry Finger wrote:
 
-johannes
+> From: Albert Pool <albertpool@solcon.nl>
+>
+> This adds the USB ID of the On Networks N300MA, clone of Netgear WNA3100M.
+>
+> Signed-off-by: Albert Pool <albertpool@solcon.nl>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Reported-by: Ana Rey <Anazul77@hotmail.com>
+> ---
+>
+> John,
+>
+> Please use this version. V2 still had some whitespace errors that I fixed.
+>
+> Albert,
+>
+> Please use scripts/checkpatch.pl to check the patch before you send it.
+>
+> Thanks,
+>
+> Larry
+> ---
+>
+>   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
+>   1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> index 23d640a..18da6de 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> @@ -349,6 +349,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+>   	{RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
+>   	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
+>   	{RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, /*Netgear-Sercomm*/
+> +	{RTL_USB_DEVICE(0x0846, 0xf001, rtl92cu_hal_cfg)}, /*On Netwrks N300MA*/
+
+    "Networks", perhaps? Or does it hit 80 columns limit this way?
+
+WBR, Sergei
 
