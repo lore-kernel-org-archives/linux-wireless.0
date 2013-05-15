@@ -1,129 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:36179 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759089Ab3EOOTh (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:55318 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932897Ab3EOSMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:19:37 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Wed, 15 May 2013 14:12:49 -0400
+Message-ID: <1368641562.20897.11.camel@jlt4.sipsolutions.net> (sfid-20130515_201252_204088_F1EC64BC)
+Subject: Re: [PATCHv2 03/18] mac80211: fix various components for the new 5
+ and 10 MHz widths
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sam Leffler <sleffler@google.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
 	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
 	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2 18/18] ath5k: enable support for 5 MHz and 10 MHz channels
-Date: Wed, 15 May 2013 16:19:09 +0200
-Message-Id: <1368627549-22518-19-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_162936_702497_32762AF3)
-In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Date: Wed, 15 May 2013 20:12:42 +0200
+In-Reply-To: <CA+yqC4a6W6i9TUoEc1Boxe6a5eun_TSjLB0F+w3F2L_Hn+v_gA@mail.gmail.com> (sfid-20130515_191656_282119_D9E15517)
 References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1368627549-22518-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <CA+yqC4a6W6i9TUoEc1Boxe6a5eun_TSjLB0F+w3F2L_Hn+v_gA@mail.gmail.com>
+	 (sfid-20130515_191656_282119_D9E15517)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath5k/ath5k.h        |    1 +
- drivers/net/wireless/ath/ath5k/base.c         |   25 ++++++++++++++++++++++---
- drivers/net/wireless/ath/ath5k/base.h         |    2 +-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
- 4 files changed, 25 insertions(+), 5 deletions(-)
+On Wed, 2013-05-15 at 10:16 -0700, Sam Leffler wrote:
+> On Wed, May 15, 2013 at 7:18 AM, Simon Wunderlich
+> <simon.wunderlich@s2003.tu-chemnitz.de> wrote:
+>         This is a collection of minor fixes:
+>          * don't allow HT IEs in IBSS for 5/10 MHz
+>          * don't allow HT IEs in Mesh for 5/10 MHz
+>          * consider 5 and 10 MHz channels when downgrading
+>          * don't try HT rates for 5 and 10 MHz channels when selecting
+>         rates
+> 
+> 
+> Perhaps I missed a standards discussion but unilaterally disallowing
+> HT rates on 5/10 channels breaks existing functionality (e.g. I use
+> them on openwrt).  NOHT should be a regulatory constraint just like it
+> is for 20 channels.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 1dee0c4..b43ef34 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -29,6 +29,7 @@
- #include <linux/average.h>
- #include <linux/leds.h>
- #include <net/mac80211.h>
-+#include <net/cfg80211.h>
- 
- /* RX/TX descriptor hw structs
-  * TODO: Driver part should only see sw structs */
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 2a2ec99..9490589 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -56,6 +56,7 @@
- #include <linux/etherdevice.h>
- #include <linux/nl80211.h>
- 
-+#include <net/cfg80211.h>
- #include <net/ieee80211_radiotap.h>
- 
- #include <asm/unaligned.h>
-@@ -501,11 +502,27 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
-  * Called with ah->lock.
-  */
- int
--ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
-+ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef)
- {
- 	ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
- 		  "channel set, resetting (%u -> %u MHz)\n",
--		  ah->curchan->center_freq, chan->center_freq);
-+		  ah->curchan->center_freq, chandef->chan->center_freq);
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		ah->ah_bwmode = AR5K_BWMODE_DEFAULT;
-+		break;
-+	case NL80211_CHAN_WIDTH_5:
-+		ah->ah_bwmode = AR5K_BWMODE_5MHZ;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		ah->ah_bwmode = AR5K_BWMODE_10MHZ;
-+		break;
-+	default:
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
- 
- 	/*
- 	 * To switch channels clear any pending DMA operations;
-@@ -513,7 +530,7 @@ ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
- 	 * hardware at the new frequency, and then re-enable
- 	 * the relevant bits of the h/w.
- 	 */
--	return ath5k_reset(ah, chan, true);
-+	return ath5k_reset(ah, chandef->chan, true);
- }
- 
- void ath5k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-@@ -2537,6 +2554,8 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
- 	/* SW support for IBSS_RSN is provided by mac80211 */
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
-+	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
-+
- 	/* both antennas can be configured as RX or TX */
- 	hw->wiphy->available_antennas_tx = 0x3;
- 	hw->wiphy->available_antennas_rx = 0x3;
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 6c94c7f..130075b 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -99,7 +99,7 @@ void ath5k_set_beacon_filter(struct ieee80211_hw *hw, bool enable);
- 
- void ath5k_update_bssid_mask_and_opmode(struct ath5k_hw *ah,
- 					struct ieee80211_vif *vif);
--int ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan);
-+int ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef);
- void ath5k_txbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
- void ath5k_rxbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
- void ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
-diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-index 06f86f4..2129330 100644
---- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-+++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-@@ -202,7 +202,7 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
- 	mutex_lock(&ah->lock);
- 
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
--		ret = ath5k_chan_set(ah, conf->chandef.chan);
-+		ret = ath5k_chan_set(ah, &conf->chandef);
- 		if (ret < 0)
- 			goto unlock;
- 	}
--- 
-1.7.10.4
+I don't see how this would break anything, since we wouldn't advertise
+HT capabilities (for now). My point was that that the standard doesn't
+(currently) define this, so I think it should be a separate second step
+for 5/10 MHz channels to see how to do it in a way that wouldn't break
+when/if the standard is changed to allow it, etc.
+
+johannes
+
 
