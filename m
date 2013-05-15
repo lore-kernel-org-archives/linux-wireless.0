@@ -1,44 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:48801 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784Ab3EaF3z (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:50187 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759182Ab3EOOwf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 May 2013 01:29:55 -0400
-Received: by mail-ie0-f176.google.com with SMTP id at20so2587708iec.7
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 22:29:54 -0700 (PDT)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: johannes.berg@intel.com, wey-yi.w.guy@intel.com
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	Nikolay Martynov <mar.kolya@gmail.com>
-Subject: [PATCH] iwlwifi: fix chain noise calibration
-Date: Fri, 31 May 2013 01:29:12 -0400
-Message-Id: <1369978152-506-1-git-send-email-mar.kolya@gmail.com> (sfid-20130531_073011_850072_0FBA6033)
+	Wed, 15 May 2013 10:52:35 -0400
+Subject: [PATCH 09/29] ath10k: add hif.h
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k-devel@qca.qualcomm.com
+Date: Wed, 15 May 2013 17:43:57 +0300
+Message-ID: <20130515144357.4492.22276.stgit@localhost6.localdomain6> (sfid-20130515_165253_650001_3A7F9801)
+In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
+References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First step of chain noise calibration process had disable flag check inverted.
-Chain noise calibration never started because of this.
-
-Tested on intel 5300 with two antennas attached. Driver correctly disabled one chain.
-
-Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/rxon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/hif.h |  137 +++++++++++++++++++++++++++++++++
+ 1 file changed, 137 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath10k/hif.h
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rxon.c b/drivers/net/wireless/iwlwifi/dvm/rxon.c
-index 707446f..cd1ad001 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rxon.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rxon.c
-@@ -1378,7 +1378,7 @@ static void iwlagn_chain_noise_reset(struct iwl_priv *priv)
- 	struct iwl_chain_noise_data *data = &priv->chain_noise_data;
- 	int ret;
- 
--	if (!(priv->calib_disabled & IWL_CHAIN_NOISE_CALIB_DISABLED))
-+	if (priv->calib_disabled & IWL_CHAIN_NOISE_CALIB_DISABLED)
- 		return;
- 
- 	if ((data->state == IWL_CHAIN_NOISE_ALIVE) &&
--- 
-1.8.1.2
+diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
+new file mode 100644
+index 0000000..73a24d4
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/hif.h
+@@ -0,0 +1,137 @@
++/*
++ * Copyright (c) 2005-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _HIF_H_
++#define _HIF_H_
++
++#include <linux/kernel.h>
++#include "core.h"
++
++struct ath10k_hif_cb {
++	int (*tx_completion)(struct ath10k *ar,
++			     struct sk_buff *wbuf,
++			     unsigned transfer_id);
++	int (*rx_completion)(struct ath10k *ar,
++			     struct sk_buff *wbuf,
++			     u8 pipe_id);
++};
++
++struct ath10k_hif_ops {
++	/* Send the head of a buffer to HIF for transmission to the target. */
++	int (*send_head)(struct ath10k *ar, u8 pipe_id,
++			 unsigned int transfer_id,
++			 unsigned int nbytes,
++			 struct sk_buff *buf);
++
++	/*
++	 * API to handle HIF-specific BMI message exchanges, this API is
++	 * synchronous and only allowed to be called from a context that
++	 * can block (sleep)
++	 */
++	int (*exchange_bmi_msg)(struct ath10k *ar,
++				void *request, u32 request_len,
++				void *response, u32 *response_len);
++
++	int (*start)(struct ath10k *ar);
++
++	void (*stop)(struct ath10k *ar);
++
++	int (*map_service_to_pipe)(struct ath10k *ar, u16 service_id,
++				   u8 *ul_pipe, u8 *dl_pipe,
++				   int *ul_is_polled, int *dl_is_polled);
++
++	void (*get_default_pipe)(struct ath10k *ar, u8 *ul_pipe, u8 *dl_pipe);
++
++	/*
++	 * Check if prior sends have completed.
++	 *
++	 * Check whether the pipe in question has any completed
++	 * sends that have not yet been processed.
++	 * This function is only relevant for HIF pipes that are configured
++	 * to be polled rather than interrupt-driven.
++	 */
++	void (*send_complete_check)(struct ath10k *ar, u8 pipe_id, int force);
++
++	void (*init)(struct ath10k *ar,
++		     struct ath10k_hif_cb *callbacks);
++
++	u16 (*get_free_queue_number)(struct ath10k *ar, u8 pipe_id);
++};
++
++
++static inline int ath10k_hif_send_head(struct ath10k *ar, u8 pipe_id,
++				       unsigned int transfer_id,
++				       unsigned int nbytes,
++				       struct sk_buff *buf)
++{
++	return ar->hif.ops->send_head(ar, pipe_id, transfer_id, nbytes, buf);
++}
++
++static inline int ath10k_hif_exchange_bmi_msg(struct ath10k *ar,
++					      void *request, u32 request_len,
++					      void *response, u32 *response_len)
++{
++	return ar->hif.ops->exchange_bmi_msg(ar, request, request_len,
++					     response, response_len);
++}
++
++static inline int ath10k_hif_start(struct ath10k *ar)
++{
++	return ar->hif.ops->start(ar);
++}
++
++static inline void ath10k_hif_stop(struct ath10k *ar)
++{
++	return ar->hif.ops->stop(ar);
++}
++
++static inline int ath10k_hif_map_service_to_pipe(struct ath10k *ar,
++						 u16 service_id,
++						 u8 *ul_pipe, u8 *dl_pipe,
++						 int *ul_is_polled,
++						 int *dl_is_polled)
++{
++	return ar->hif.ops->map_service_to_pipe(ar, service_id,
++						ul_pipe, dl_pipe,
++						ul_is_polled, dl_is_polled);
++}
++
++static inline void ath10k_hif_get_default_pipe(struct ath10k *ar,
++					       u8 *ul_pipe, u8 *dl_pipe)
++{
++	ar->hif.ops->get_default_pipe(ar, ul_pipe, dl_pipe);
++}
++
++static inline void ath10k_hif_send_complete_check(struct ath10k *ar,
++						  u8 pipe_id, int force)
++{
++	ar->hif.ops->send_complete_check(ar, pipe_id, force);
++}
++
++static inline void ath10k_hif_init(struct ath10k *ar,
++				   struct ath10k_hif_cb *callbacks)
++{
++	ar->hif.ops->init(ar, callbacks);
++}
++
++static inline u16 ath10k_hif_get_free_queue_number(struct ath10k *ar,
++						   u8 pipe_id)
++{
++	return ar->hif.ops->get_free_queue_number(ar, pipe_id);
++}
++
++#endif /* _HIF_H_ */
 
