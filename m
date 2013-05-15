@@ -1,74 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f173.google.com ([209.85.210.173]:52902 "EHLO
-	mail-ia0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758991Ab3EOOnB (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:41989 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754461Ab3EOLQY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:43:01 -0400
-Received: by mail-ia0-f173.google.com with SMTP id k20so2210017iak.4
-        for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 07:43:00 -0700 (PDT)
+	Wed, 15 May 2013 07:16:24 -0400
 MIME-Version: 1.0
-In-Reply-To: <20130515134258.GA9033@zenon.in.qult.net>
-References: <20130515134258.GA9033@zenon.in.qult.net>
-Date: Wed, 15 May 2013 16:43:00 +0200
-Message-ID: <CAFSJ42Zraj0xZ-YJ_LednHvjOa1uXt2-BWvSiYdhE=ttQXup8w@mail.gmail.com> (sfid-20130515_164306_071846_D6E18FF9)
-Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Ignacy Gawedzki <i@lri.fr>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <51935A67.6000804@solcon.nl>
+References: <51935A67.6000804@solcon.nl>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 15 May 2013 21:16:02 +1000
+Message-ID: <CAGRGNgUAkUB_FimqmUg4hyNpkVYKW-1vs2J=Tsr2juiineusrw@mail.gmail.com> (sfid-20130515_131659_721026_0B5FC9E1)
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add new USB ID
+To: Albert Pool <albertpool@solcon.nl>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	chaoming_li@realsil.com.cn,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware is open nowadays for AR9271
-https://github.com/qca/open-ath9k-htc-firmware/
-But this is an interesting issue. I am currently working on one
-problem that target becomes unresponsive(as described here
-https://github.com/qca/open-ath9k-htc-firmware/issues/25) but i doubt
-it's the same issue as yours. Let me see if i can reproduce your
-problem. Will come back to you shortly.
+Hi Albert,
 
-2013/5/15 Ignacy Gawedzki <i@lri.fr>:
-> Hi everyone,
+Your patch appears to have been mangled, please check your email
+client's settings, or send using git-send-email
+
+There's instructions for most email clients in the Documentation
+directory of the kernel source tree.
+
+On Wed, May 15, 2013 at 7:50 PM, Albert Pool <albertpool@solcon.nl> wrote:
+> This adds the USB ID of the On Networks N300MA, clone of Netgear WNA3100M.
 >
-> This is an old issue, about which it seems the first posts date back to 2009.
-> With the latest possible version of the firmware for AR9271 and the latest
-> possible wireless drivers, the issue is still there.  Whether this is still
-> the exact same problem every time remains to be checked, but it is annoying
-> enough to deserve some consideration.
+> Signed-off-by: Albert Pool <albertpool@solcon.nl>
 >
-> The problem is that the driver can't talk to the device if the following
-> conditions are met:
+> Reported-by: Ana Rey <Anazul77@hotmail.com>
 >
->  - The system cold boots with the USB dongle inserted or the USB dongle is
->    inserted on a running system.
+> ---
 >
->  - The interface is *not* brought up.
+>  drivers/net/wireless/rtlwifi/rtl8192cu/sw.c |    1 +
 >
->  - The system (warm) reboots.
+>  1 file changed, 1 insertion(+)
 >
-> Then the driver complains about the target being unresponsive after uploading
-> the firmware.  Apparently the only way to make it work again is to unplug and
-> then plug the USB dongle back, physically.  It seems that if the USB port is
-> not powered down during reboot (which happens with at least two different
-> setups that I've tested it with), the device is left in a broken state.
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
 >
-> I would gladly help in tracing down this bug if only I knew where to start.
+> index 23d640a..0b593de 100644
 >
-> Thanks for any suggestion.
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
 >
-> Ignacy
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+>
+> @@ -349,6 +349,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+>
+>      {RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
+>
+>      {RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
+>
+>      {RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, /*Netgear-Sercomm*/
+>
+> +    {RTL_USB_DEVICE(0x0846, 0xf001, rtl92cu_hal_cfg)}, /*Netgear-On
+> Networks*/
+>
+>      {RTL_USB_DEVICE(0x0b05, 0x17ab, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
+>
+>      {RTL_USB_DEVICE(0x0bda, 0x8186, rtl92cu_hal_cfg)}, /*Realtek 92CE-VAU*/
+>
+>      {RTL_USB_DEVICE(0x0df6, 0x0061, rtl92cu_hal_cfg)}, /*Sitecom-Edimax*/
 >
 > --
-> A person is shit's way of making more shit.
->                 -- S. Barnett, anthropologist.
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>
+> 1.7.9.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 
--- 
-Best regards,
-Eugene
+--
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
