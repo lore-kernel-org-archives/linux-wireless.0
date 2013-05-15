@@ -1,59 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60206 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965039Ab3E2JFM (ORCPT
+Received: from mail-qc0-f180.google.com ([209.85.216.180]:46691 "EHLO
+	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759807Ab3EORbD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 05:05:12 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: always send multicast on CAB queue
-Date: Wed, 29 May 2013 11:05:02 +0200
-Message-Id: <1369818302-15580-1-git-send-email-johannes@sipsolutions.net> (sfid-20130529_110516_171071_5C88C853)
+	Wed, 15 May 2013 13:31:03 -0400
+Received: by mail-qc0-f180.google.com with SMTP id a10so543719qcx.39
+        for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 10:31:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5189E31F.2090200@rempel-privat.de>
+References: <CA++BO6SfpV_7pimE=-TUcbXRX9Xgd8v69B5AQzPQ2g1b82e0FA@mail.gmail.com>
+	<5189E31F.2090200@rempel-privat.de>
+Date: Wed, 15 May 2013 13:31:01 -0400
+Message-ID: <CA++BO6TBrzJtD2cnNmUu4j6G2c5tSq228318avuGVF4r1NeW-A@mail.gmail.com> (sfid-20130515_193109_580033_55F86F88)
+Subject: Re: [ath9k-devel] ath9k_htc works poorly in 3.9
+From: Corey Richardson <corey@octayn.net>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, May 8, 2013 at 1:31 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> If it is an regression, can you please do "git bisect". If you can locate
+> the patch which introduced this regression, it will be great.
+>
 
-If the driver advertised support for a CAB queue, then we
-should put all multicast frames there, otherwise sending
-them can be racy with clients going to sleep while we TX
-a frame. To avoid this, always TX multicast frames on the
-multicast queue.
+It seems to have been an intermittent problem with my WAP as well; the
+PoE wasn't consistent so it kept dropping out, also taking down the
+adapter with it. It does seem to be a regression, but it's so hard to
+reproduce that I don't think it's worth pursuing.
 
-It seems like even drivers not using the queue framework
-might want to do this which would mean also moving the
-IEEE80211_TX_CTL_SEND_AFTER_DTIM flag assignment, but it
-also seems that drivers behave differently here so that
-just moving it wouldn't be a good idea. It'd be better to
-modify those drivers to use the queue framework.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 9972e07..34be933 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -398,13 +398,14 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
- 	if (ieee80211_has_order(hdr->frame_control))
- 		return TX_CONTINUE;
- 
-+	if (tx->local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
-+		info->hw_queue = tx->sdata->vif.cab_queue;
-+
- 	/* no stations in PS mode */
- 	if (!atomic_read(&ps->num_sta_ps))
- 		return TX_CONTINUE;
- 
- 	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
--	if (tx->local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
--		info->hw_queue = tx->sdata->vif.cab_queue;
- 
- 	/* device releases frame after DTIM beacon */
- 	if (!(tx->local->hw.flags & IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING))
--- 
-1.8.0
-
+Thanks!
