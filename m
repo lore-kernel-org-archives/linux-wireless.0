@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:59821 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932795Ab3EOPDc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 11:03:32 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Albert Pool <albertpool@solcon.nl>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH V3] rtlwifi: rtl8192cu: Add new USB ID
-Date: Wed, 15 May 2013 10:03:16 -0500
-Message-Id: <1368630196-14704-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130515_170349_422612_C5591CA1)
+Received: from purkki.adurom.net ([80.68.90.206]:51079 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754581Ab3EONTd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 May 2013 09:19:33 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: nick@nhthomas.freeserve.co.uk, linux-wireless@vger.kernel.org
+Subject: Re: Wifi signal level differences
+References: <7566504.38231368021104217.JavaMail.www@wwinf3714>
+	<1368023384.1664.10.camel@dcbw.foobar.com>
+Date: Wed, 15 May 2013 16:19:31 +0300
+In-Reply-To: <1368023384.1664.10.camel@dcbw.foobar.com> (Dan Williams's
+	message of "Wed, 08 May 2013 09:29:44 -0500")
+Message-ID: <871u985qjg.fsf@purkki.adurom.net> (sfid-20130515_151937_355428_532FE3E5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Albert Pool <albertpool@solcon.nl>
+Dan Williams <dcbw@redhat.com> writes:
 
-This adds the USB ID of the On Networks N300MA, clone of Netgear WNA3100M.
+> On Wed, 2013-05-08 at 15:51 +0200, nick@nhthomas.freeserve.co.uk wrote:
+>> Hi,
+>> 
+>> I have an Atheros ath6kl_usb based wifi dongle.
+>> I am using it with an embedded project.
 
-Signed-off-by: Albert Pool <albertpool@solcon.nl>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-by: Ana Rey <Anazul77@hotmail.com>
----
+[...]
 
-John,
+> What kernel versions is each system running?  The kernel's mac80211
+> stack is what calculates the actual dBm/RSSI value based on information
+> given from the dongle firmware.  And the calculations may change in
+> different kernel versions.
 
-Please use this version. V2 still had some whitespace errors that I fixed.
+ath6kl is a fullmac device and doesn't use mac80211.
 
-Albert,
-
-Please use scripts/checkpatch.pl to check the patch before you send it.
-
-Thanks,
-
-Larry
----
-
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index 23d640a..18da6de 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -349,6 +349,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
- 	{RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
- 	{RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, /*Netgear-Sercomm*/
-+	{RTL_USB_DEVICE(0x0846, 0xf001, rtl92cu_hal_cfg)}, /*On Netwrks N300MA*/
- 	{RTL_USB_DEVICE(0x0b05, 0x17ab, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
- 	{RTL_USB_DEVICE(0x0bda, 0x8186, rtl92cu_hal_cfg)}, /*Realtek 92CE-VAU*/
- 	{RTL_USB_DEVICE(0x0df6, 0x0061, rtl92cu_hal_cfg)}, /*Sitecom-Edimax*/
 -- 
-1.8.1.4
-
+Kalle Valo
