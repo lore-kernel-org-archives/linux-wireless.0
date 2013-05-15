@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:37759 "EHLO
-	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755424Ab3ENBP3 (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:59821 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932795Ab3EOPDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 21:15:29 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
-	Tim Shepard <shep@laptop.org>,
-	Jason Abele <jabele@chromium.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 04/17] mwifiex: abort remaining scan commands when association started
-Date: Mon, 13 May 2013 18:14:48 -0700
-Message-ID: <1368494101-23651-5-git-send-email-bzhao@marvell.com> (sfid-20130514_031531_684123_C8AB5F28)
-In-Reply-To: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
-References: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 15 May 2013 11:03:32 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Albert Pool <albertpool@solcon.nl>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH V3] rtlwifi: rtl8192cu: Add new USB ID
+Date: Wed, 15 May 2013 10:03:16 -0500
+Message-Id: <1368630196-14704-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130515_170349_422612_C5591CA1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A full-channel scan is split to multiple scan commands in driver
-before they are sent to firmware. When each scan result is back
-the SSID entries are parsed and informed to cfg80211 directly.
+From: Albert Pool <albertpool@solcon.nl>
 
-It's observed that sometimes userspace may initiate association
-as soon as the target AP is found. During the 4-way handshake
-firmware may go off-channel to scan the remaining channels.
-This causes the 4-way handshake to fail.
+This adds the USB ID of the On Networks N300MA, clone of Netgear WNA3100M.
 
-Fix it by checking 'scan_block' flag and aborting the remaining
-scan in this case. 'scan_block' flag is set after association
-and before 4-way handshake. It gets cleared after 4-way handshake
-is completed.
-
-Tested-by: Jason Abele <jabele@chromium.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Albert Pool <albertpool@solcon.nl>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-by: Ana Rey <Anazul77@hotmail.com>
 ---
- drivers/net/wireless/mwifiex/scan.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 7b2566b..801b6b7 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1793,7 +1793,8 @@ check_next_scan:
- 			dev_dbg(adapter->dev, "info: scan already aborted\n");
- 		}
- 	} else {
--		if (priv->scan_aborting && !priv->scan_request) {
-+		if ((priv->scan_aborting && !priv->scan_request) ||
-+		    priv->scan_block) {
- 			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
- 					       flags);
- 			adapter->scan_delay_cnt = MWIFIEX_MAX_SCAN_DELAY_CNT;
+John,
+
+Please use this version. V2 still had some whitespace errors that I fixed.
+
+Albert,
+
+Please use scripts/checkpatch.pl to check the patch before you send it.
+
+Thanks,
+
+Larry
+---
+
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+index 23d640a..18da6de 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+@@ -349,6 +349,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+ 	{RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
+ 	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
+ 	{RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, /*Netgear-Sercomm*/
++	{RTL_USB_DEVICE(0x0846, 0xf001, rtl92cu_hal_cfg)}, /*On Netwrks N300MA*/
+ 	{RTL_USB_DEVICE(0x0b05, 0x17ab, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
+ 	{RTL_USB_DEVICE(0x0bda, 0x8186, rtl92cu_hal_cfg)}, /*Realtek 92CE-VAU*/
+ 	{RTL_USB_DEVICE(0x0df6, 0x0061, rtl92cu_hal_cfg)}, /*Sitecom-Edimax*/
 -- 
-1.8.2.3
+1.8.1.4
 
