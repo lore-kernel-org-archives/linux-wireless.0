@@ -1,117 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:48397 "EHLO
-	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751130Ab3E3Xgb (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40908 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754581Ab3EONOA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 19:36:31 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v3 1/2] iw: use updated structures and enums for packet pattern
-Date: Thu, 30 May 2013 16:36:25 -0700
-Message-ID: <1369956986-23071-1-git-send-email-bzhao@marvell.com> (sfid-20130531_013634_374124_5A77D4A9)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 15 May 2013 09:14:00 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id AB89A8EE0DD
+	for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 06:13:59 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+	by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id JWfPj5VLZae6 for <linux-wireless@vger.kernel.org>;
+	Wed, 15 May 2013 06:13:59 -0700 (PDT)
+Received: from [10.10.178.236] (unknown [159.125.79.200])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 44D9A8EE0A9
+	for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 06:13:59 -0700 (PDT)
+Message-ID: <1368623636.19370.26.camel@dabdike> (sfid-20130515_151407_577721_27B1A107)
+Subject: warning in mac80211 from iwlwifi queuing work during suspend
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 15 May 2013 09:13:56 -0400
+Content-Type: text/plain; charset="ISO-8859-15"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+I got this message on resume
 
-They are renamed in new nl80211.h so that they can be used for
-new feature. This patch uses those updated structures and enums
-to make the code look nicer.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-v3: use new structure/enum names to make the code look nicer
+[24856.578799] ------------[ cut here ]------------
+[24856.578849] WARNING: at /home/abuild/rpmbuild/BUILD/kernel-desktop-3.9.1/linux-3.9/net/mac80211/util.c:599 ieee80211_can_queue_work.isra.7+0x2d/0x40 [mac80211]()
+[24856.578851] Hardware name: 4286CTO
+[24856.578852] queueing ieee80211 work while going to suspend
+[24856.578917] Modules linked in: cpufreq_stats fuse tun af_packet rfcomm bnep sha256_generic cbc dm_crypt dm_mod mperf coretemp crc32_pclmul crc32c_intel ghash_clmulni_intel cryptd arc4 iwldvm mac80211 snd_hda_codec_hdmi snd_hda_codec_conexant iTCO_wdt iTCO_vendor_support kvm_intel kvm microcode snd_hda_intel snd_hda_codec joydev snd_hwdep pcspkr snd_pcm_oss i2c_i801 snd_pcm uvcvideo btusb sg thinkpad_acpi videobuf2_core videodev videobuf2_vmalloc bluetooth snd_seq videobuf2_memops lpc_ich mfd_core iwlwifi sdhci_pci sdhci snd_seq_device mmc_core cfg80211 e1000e rfkill snd_mixer_oss snd_timer ptp snd_page_alloc pps_core mei wmi snd battery tpm_tis tpm tpm_bios ac soundcore edd autofs4 i915 drm_kms_helper drm i2c_algo_bit video button scsi_dh_hp_sw scsi_dh_alua scsi_dh_emc scsi_dh_rdac scsi_dh fan processor thermal thermal_sys
+[24856.578921] Pid: 0, comm: swapper/0 Not tainted 3.9.1-7.gb6484b6-desktop #1
+[24856.578921] Call Trace:
+[24856.578933]  [<ffffffff81004728>] dump_trace+0x88/0x300
+[24856.578938]  [<ffffffff815cafba>] dump_stack+0x69/0x6f
+[24856.578945]  [<ffffffff810461c9>] warn_slowpath_common+0x79/0xc0
+[24856.578948]  [<ffffffff810462c5>] warn_slowpath_fmt+0x45/0x50
+[24856.578960]  [<ffffffffa06053dd>] ieee80211_can_queue_work.isra.7+0x2d/0x40 [mac80211]
+[24856.579004]  [<ffffffffa0605487>] ieee80211_queue_work+0x27/0x60 [mac80211]
+[24856.579029]  [<ffffffff8105615c>] call_timer_fn+0x2c/0x170
+[24856.579033]  [<ffffffff810564c5>] run_timer_softirq+0x225/0x2d0
+[24856.579037]  [<ffffffff8104e60e>] __do_softirq+0xde/0x280
+[24856.579040]  [<ffffffff8104e905>] irq_exit+0x95/0xa0
+[24856.579043]  [<ffffffff810264e8>] smp_apic_timer_interrupt+0x68/0xa0
+[24856.579047]  [<ffffffff815df9dd>] apic_timer_interrupt+0x6d/0x80
+[24856.579051] ---[ end trace 53ff81b324167a8a ]---
+----
 
- info.c   |  2 +-
- wowlan.c | 32 ++++++++++++++++----------------
- 2 files changed, 17 insertions(+), 17 deletions(-)
+Kernel is 
 
-diff --git a/info.c b/info.c
-index 54d9a8d..d893ffc 100644
---- a/info.c
-+++ b/info.c
-@@ -432,7 +432,7 @@ broken_combination:
- 			[NL80211_WOWLAN_TRIG_RFKILL_RELEASE] = { .type = NLA_FLAG },
- 			[NL80211_WOWLAN_TRIG_TCP_CONNECTION] = { .type = NLA_NESTED },
- 		};
--		struct nl80211_wowlan_pattern_support *pat;
-+		struct nl80211_pattern_support *pat;
- 		int err;
- 
- 		err = nla_parse_nested(tb_wowlan, MAX_NL80211_WOWLAN_TRIG,
-diff --git a/wowlan.c b/wowlan.c
-index b4a2715..d323ca7 100644
---- a/wowlan.c
-+++ b/wowlan.c
-@@ -261,11 +261,11 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
- 			}
- 
- 			pattern = nla_nest_start(patterns, ++patnum);
--			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_MASK,
-+			NLA_PUT(patterns, NL80211_PKTPAT_MASK,
- 				DIV_ROUND_UP(patlen, 8), mask);
--			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_PATTERN,
--				patlen, pat);
--			NLA_PUT_U32(patterns, NL80211_WOWLAN_PKTPAT_OFFSET, pkt_offset);
-+			NLA_PUT(patterns, NL80211_PKTPAT_PATTERN, patlen, pat);
-+			NLA_PUT_U32(patterns, NL80211_PKTPAT_OFFSET,
-+				    pkt_offset);
- 			nla_nest_end(patterns, pattern);
- 			free(mask);
- 			free(pat);
-@@ -356,29 +356,29 @@ static int print_wowlan_handler(struct nl_msg *msg, void *arg)
- 		nla_for_each_nested(pattern,
- 				    trig[NL80211_WOWLAN_TRIG_PKT_PATTERN],
- 				    rem_pattern) {
--			struct nlattr *patattr[NUM_NL80211_WOWLAN_PKTPAT];
-+			struct nlattr *patattr[NUM_NL80211_PKTPAT];
- 			int i, patlen, masklen, pkt_offset;
- 			uint8_t *mask, *pat;
--			nla_parse(patattr, MAX_NL80211_WOWLAN_PKTPAT,
--				  nla_data(pattern), nla_len(pattern),
--				  NULL);
--			if (!patattr[NL80211_WOWLAN_PKTPAT_MASK] ||
--			    !patattr[NL80211_WOWLAN_PKTPAT_PATTERN] ||
--			    !patattr[NL80211_WOWLAN_PKTPAT_OFFSET]) {
-+			nla_parse(patattr, MAX_NL80211_PKTPAT,
-+				  nla_data(pattern), nla_len(pattern), NULL);
-+			if (!patattr[NL80211_PKTPAT_MASK] ||
-+			    !patattr[NL80211_PKTPAT_PATTERN] ||
-+			    !patattr[NL80211_PKTPAT_OFFSET]) {
- 				printf(" * (invalid pattern specification)\n");
- 				continue;
- 			}
--			masklen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
--			patlen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
--			pkt_offset = nla_get_u32(patattr[NL80211_WOWLAN_PKTPAT_OFFSET]);
-+			masklen = nla_len(patattr[NL80211_PKTPAT_MASK]);
-+			patlen = nla_len(patattr[NL80211_PKTPAT_PATTERN]);
-+			pkt_offset =
-+				nla_get_u32(patattr[NL80211_PKTPAT_OFFSET]);
- 			if (DIV_ROUND_UP(patlen, 8) != masklen) {
- 				printf(" * (invalid pattern specification)\n");
- 				continue;
- 			}
- 			printf(" * wake up on packet offset: %d", pkt_offset);
- 			printf(" pattern: ");
--			pat = nla_data(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
--			mask = nla_data(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
-+			pat = nla_data(patattr[NL80211_PKTPAT_PATTERN]);
-+			mask = nla_data(patattr[NL80211_PKTPAT_MASK]);
- 			for (i = 0; i < patlen; i++) {
- 				if (mask[i / 8] & (1 << (i % 8)))
- 					printf("%.2x", pat[i]);
--- 
-1.8.0
+Linux version 3.9.1-7.gb6484b6-desktop (geeko@buildhost) (gcc version 4.7.2 20130108 [gcc-4_7-branch revision 195012] (SUSE Linux) ) #1 SMP PREEMPT Wed May 8 15:02:04 UTC 2013 (b6484b6)
+
+and the wireless stack is 
+
+jejb@dabdike> lsmod|grep iwl
+iwldvm                253990  0 
+mac80211              678341  1 iwldvm
+iwlwifi               118000  1 iwldvm
+cfg80211              579562  3 iwldvm,mac80211,iwlwifi
+
+
+James
+
 
