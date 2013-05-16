@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:21910 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842Ab3E0POl (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49773 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265Ab3EPLCA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 11:14:41 -0400
-Date: Mon, 27 May 2013 18:14:36 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: Allow TDLS peer AID to be configured for VHT
-Message-ID: <20130527151436.GB12369@jouni.qca.qualcomm.com> (sfid-20130527_171447_166080_743251CE)
-References: <20130516171108.GA27497@jouni.qca.qualcomm.com>
- <1369427943.13623.8.camel@johannes>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1369427943.13623.8.camel@johannes>
+	Thu, 16 May 2013 07:02:00 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv3 10/18] nl80211: allow 5 and 10 MHz channels for IBSS
+Date: Thu, 16 May 2013 13:00:37 +0200
+Message-Id: <1368702045-27598-11-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130233_844267_29521860)
+In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 24, 2013 at 10:39:03PM +0200, Johannes Berg wrote:
-> On Thu, 2013-05-16 at 20:11 +0300, Jouni Malinen wrote:
-> 
-> > -	if (!info->attrs[NL80211_ATTR_STA_AID])
-> > +	if (!info->attrs[NL80211_ATTR_STA_AID] &&
-> > +	    !info->attrs[NL80211_ATTR_PEER_AID])
-> >  		return -EINVAL;
-> 
-> Technically here I think you could check that this attribute isn't used
-> with non-TDLS stations, since in new_station you know what it's going to
-> be, right?
+Whether the wiphy supports it or not is already checked, so what is left
+is to enable these channel types.
 
-Well, in this function yes, but not this early.. I'll add validation for
-this within the iftype switch.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/wireless/nl80211.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> > @@ -3985,7 +3989,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
-> > -	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
-> > +	if (info->attrs[NL80211_ATTR_STA_AID])
-> > +		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
-> > +	else
-> > +		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
-> 
-> This is a bit strange? Wouldn't you want to prefer the new attribute, so
-> you can put some possibly invalid value into the old attribute for old
-> kernels? Otherwise what's the reason for even reading the new attribute
-> in this code at all, if new userspace code must set the old attribute
-> for old kernels anyway?
-
-This was something to allow the new attribute to be taken into use if we
-ever get rid of the extra dummy STA for TDLS. I'd assume this ends up
-having to get a new capability flag, so wpa_supplicant could figure out
-which attribute to use. Anyway, I agree it makes more sense to reverse
-the order here to prefer _PEER_AID.
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 75070da..a5f281a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6297,6 +6297,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	switch (ibss.chandef.width) {
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 		break;
+ 	case NL80211_CHAN_WIDTH_20:
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.10.4
+
