@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:39252 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934660Ab3E1QWD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 12:22:03 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: 'Johannes Berg' <johannes@sipsolutions.net>,
-	Bing Zhao <bzhao@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>
-Date: Tue, 28 May 2013 09:21:44 -0700
-Subject: RE: [PATCH v2 1/2] cfg80211/nl80211: rename packet pattern related
- structures and enums
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5950F313C2CA4@SC-VEXCH1.marvell.com> (sfid-20130528_182211_768636_658F460B)
-In-Reply-To: <1369426217.8290.22.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49791 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330Ab3EPLCB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 May 2013 07:02:01 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv3 15/18] ath9k: announce that ath9k supports 5/10 MHz
+Date: Thu, 16 May 2013 13:00:42 +0200
+Message-Id: <1368702045-27598-16-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130226_115567_04F2F345)
+In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks for your comments.
-
-> 
-> > -enum nl80211_wowlan_packet_pattern_attr {
-> 
-> I think you missed a #define for this?
-
-It's not used anywhere in iw or kernel code.
-
-> 
-> > +/* only for backward compatibility */
-> > +#define __NL80211_WOWLAN_PKTPAT_INVALID __NL80211_INVALID,
-> 
-> that , at the end looks like a copy/paste error, but in fact shouldn't
-> it be "__NL80211_PKTPAT_INVALID" anyway?
-
-Thanks for pointing this out. We will correct it in updated version.
-
-> 
-> 
-> >   * that is part of %NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED in the
-> >   * capability information given by the kernel to userspace.
-> 
-> Should this be updated?
-
-It has been updated after adding coalesce support in 2/2 patch.
-
-Thanks,
-Amitkumar Karwar
-
-> 
-> johannes
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index e4fb5e2..392ea80 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -803,6 +803,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+ 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
++	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
+ 
+ #ifdef CONFIG_PM_SLEEP
+ 
+-- 
+1.7.10.4
 
