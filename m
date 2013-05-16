@@ -1,107 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49743 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752158Ab3EPLB6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 07:01:58 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 00/18] Add support for 5 and 10 MHz channels
-Date: Thu, 16 May 2013 13:00:27 +0200
-Message-Id: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130209_435918_33B4F0FE)
+Received: from [78.193.33.39] ([78.193.33.39]:50962 "EHLO qult.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752969Ab3EPRUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 May 2013 13:20:35 -0400
+Date: Thu, 16 May 2013 19:20:30 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
+Message-ID: <20130516172030.GD21850@zenon.in.qult.net> (sfid-20130516_192037_802567_93CAE604)
+References: <20130515134258.GA9033@zenon.in.qult.net>
+ <5194DEB3.2060407@rempel-privat.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5194DEB3.2060407@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds support for 5 and 10 MHz in nl80211/cfg80211/mac80211
-and enables support in ath5k and ath9k, which already support this feature
-on the driver side. 5 and 10 MHz wide channels might be useful for:
+On Thu, May 16, 2013 at 03:27:15PM +0200, thus spake Oleksij Rempel:
+> Am 15.05.2013 15:42, schrieb Ignacy Gawedzki:
+> >Hi everyone,
+> >
+> >This is an old issue, about which it seems the first posts date back to 2009.
+> >With the latest possible version of the firmware for AR9271 and the latest
+> >possible wireless drivers, the issue is still there.  Whether this is still
+> >the exact same problem every time remains to be checked, but it is annoying
+> >enough to deserve some consideration.
+> >
+> >The problem is that the driver can't talk to the device if the following
+> >conditions are met:
+> >
+> >  - The system cold boots with the USB dongle inserted or the USB dongle is
+> >    inserted on a running system.
+> >
+> >  - The interface is *not* brought up.
+> >
+> >  - The system (warm) reboots.
+> >
+> >Then the driver complains about the target being unresponsive after uploading
+> >the firmware.  Apparently the only way to make it work again is to unplug and
+> >then plug the USB dongle back, physically.  It seems that if the USB port is
+> >not powered down during reboot (which happens with at least two different
+> >setups that I've tested it with), the device is left in a broken state.
+> >
+> >I would gladly help in tracing down this bug if only I knew where to start.
+> >
+> >Thanks for any suggestion.
+> 
+> Hi Ignacy,
+> 
+> i can't reproduce this issue on my system. I tested it with 4
+> different ath9_htc adapter. Without luck.
 
- * long shot links, as the transmissions are more robust
- * future support for 802.11y which allows some 5 and 10 MHz channels in
-   3.6 GHz range
- * future support for 802.11p which uses 10 MHz in 5.9 GHz range
- * ... and more "special" applications.
+Without luck, but it seems you're the lucky one anyway. =)
 
-This patchset enables 5 and 10 MHz channels only for OFDM, and without
-HT/MIMO/aggregation (for now). Support may be added later.
+>                                           Please provide as match
+> information as possible:
+> - Usb host controller
 
-Changes to PATCHv2:
- * instead of introducing new bitrate tables, use bitrate flags which mark
-   the bitrate with support for 5/10 MHz. All bitrates have then to be
-   calculated manually.
---> this saves a few changes where we only operate on indexes anyway,
-    but requires some more checking at other parts where it is required
-    to see if the rate is supported in 5/10 MHz. At least it is not
-    that ugly and bloaty, and also saves a lot of code in drivers.
-* various DIV_ROUND_UP()s have been used instead of manual conversions
---> this was squashed with the "big" bitrate adjustment patch (-1 patch)
-* found a bug in the rate mask matching code, which is fixed (+1 patch)
-* fixed a few bugs I introuced myself. :)
+Tested both on Raspberry Pi and on Dell XPS 13.  The latter uses Intel EHCI,
+8086:1c2d and Fresco Logic 1b73:1009, I don't know which one is used exactly.
 
-As always, any comments are appreciated!
-Cheers,
-        Simon
+> - Adapter manufacture and version, or even better add it to the
+> wiki, and upload some images:
+> http://wikidevi.com/wiki/Main_Page
 
-Simon Wunderlich (18):
-  nl80211/cfg80211: add 5 and 10 MHz defines and wiphy flag
-  nl80211: add rate flags for 5/10 Mhz channels
-  mac80211: Fix rate control mask matching call
-  mac80211: fix various components for the new 5 and 10 MHz widths
-  mac80211: fix timing for 5 MHz and 10 MHz channels
-  mac80211: select and adjust bitrates according for channel mode
-  mac80211: add radiotap flag and handling for 5/10 MHz
-  cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
-  mac80211: change IBSS channel state to chandef
-  nl80211: allow 5 and 10 MHz channels for IBSS
-  ath9k: always use SIFS times from OFDM for 5/10 MHz
-  ath9k: use chandef instead of channel_type
-  ath9k: report 5/10 MHz channels
-  ath9k: set 5/10 MHz supported channels and fix bitrate
-  ath9k: announce that ath9k supports 5/10 MHz
-  ath5k: report 5/10 MHz channels
-  ath5k: set 5/10 MHz supported channels and fix duration
-  ath5k: enable support for 5 MHz and 10 MHz channels
+TP-Link TL-WN722NC, exactly as the one on the wiki.
 
- drivers/net/wireless/ath/ath5k/ath5k.h        |    1 +
- drivers/net/wireless/ath/ath5k/base.c         |   59 ++++++++--
- drivers/net/wireless/ath/ath5k/base.h         |    2 +-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
- drivers/net/wireless/ath/ath5k/pcu.c          |    2 +
- drivers/net/wireless/ath/ath5k/qcu.c          |   25 +++-
- drivers/net/wireless/ath/ath9k/common.c       |   67 +++++++----
- drivers/net/wireless/ath/ath9k/common.h       |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    5 +-
- drivers/net/wireless/ath/ath9k/hw.c           |    5 +-
- drivers/net/wireless/ath/ath9k/init.c         |   29 +++--
- drivers/net/wireless/ath/ath9k/main.c         |    8 +-
- drivers/net/wireless/ath/ath9k/rc.c           |   10 +-
- drivers/net/wireless/ath/ath9k/recv.c         |   11 ++
- include/net/cfg80211.h                        |   55 +++++++++
- include/net/ieee80211_radiotap.h              |    4 +
- include/net/mac80211.h                        |    5 +-
- include/uapi/linux/nl80211.h                  |    4 +
- net/mac80211/cfg.c                            |   36 +++++-
- net/mac80211/ibss.c                           |  101 +++++++++++-----
- net/mac80211/ieee80211_i.h                    |   45 ++++++-
- net/mac80211/iface.c                          |    2 +-
- net/mac80211/main.c                           |    2 +-
- net/mac80211/mesh.c                           |    4 +-
- net/mac80211/mesh_plink.c                     |    8 +-
- net/mac80211/mlme.c                           |   99 ++++++++++++----
- net/mac80211/rate.c                           |   60 +++++-----
- net/mac80211/rc80211_minstrel.c               |   29 ++++-
- net/mac80211/rc80211_minstrel_ht.c            |   11 +-
- net/mac80211/rx.c                             |   28 +++--
- net/mac80211/status.c                         |   17 ++-
- net/mac80211/tx.c                             |   16 ++-
- net/mac80211/util.c                           |  157 +++++++++++++++++++------
- net/wireless/chan.c                           |   57 +++++++--
- net/wireless/nl80211.c                        |   23 +++-
- 35 files changed, 761 insertions(+), 231 deletions(-)
+> - your kernel version
+
+Tested with 3.5.0 on XPS and 3.6.11, 3.8.12 and 3.9.2 on RPi (using a
+customized buildroot, but I can provide the .config if needed).
+
+> I assume it is not firmware. May be there are some issue with boot
+> loader on adapter. Are you sure that UART pins are not soldered?
+
+I opened the dongle, managed to solder the metal shield off and the pins
+weren't used (all four 48-51, among others).
+
+> Current ath9k_htc do not have mechanism to reset an adapter. I will
+> start to work on it after some other issues are done.
+
+Is it physically possible?
+
+> PS: please find some way to enable uart, at least TX pin.
+
+I tried to solder the TX pin, but it's really too tiny.  I don't have an iron
+so small as to be able to do it, sorry.  I would really love to have an UART
+connection, but that's just beyond my abilities.  BTW, it would really be
+great to have a way to send debug message up the USB link, just as with
+carl9170.
+
+Thanks for your help anyway, I hope we'll find a way to make that work.
 
 -- 
-1.7.10.4
-
+Sex on TV doesn't hurt....unless you fall off.
