@@ -1,81 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:33693 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750950Ab3EXJbP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 05:31:15 -0400
-Date: Fri, 24 May 2013 14:42:25 +0530
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>
-Subject: [PATCH] mwl8k: Fix the firmware hang issue for 8764
-Message-ID: <20130524091224.GA2583@markyou.marvell.com> (sfid-20130524_113118_944496_555E90E9)
+Received: from nbd.name ([46.4.11.11]:42305 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751705Ab3EPLth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 May 2013 07:49:37 -0400
+Message-ID: <5194C7CC.1090109@openwrt.org> (sfid-20130516_134942_451088_E08CA437)
+Date: Thu, 16 May 2013 13:49:32 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv3 08/18] cfg80211/mac80211: use reduced txpower for 5
+ and 10 MHz
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de> <1368702045-27598-9-git-send-email-siwu@hrz.tu-chemnitz.de>
+In-Reply-To: <1368702045-27598-9-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware hang issue is not seen very often,
-though it is still seen sometimes (once in 12
-hours in local tests). The changes in the driver
-,to interrupt the firmware, are needed when we
-detect that firmware is stuck and when the host
-queues are full and we begin to drop packets.
-This is to ensure that the firmware does not
-miss any PPA_RDY interrupts to cause the firmware
-restart dont miss PPA_READY interrupt for SC2
+On 2013-05-16 1:00 PM, Simon Wunderlich wrote:
+> Some regulations (like germany, but also FCC) express their transmission
+> power limit in dBm/MHz or mW/MHz. To cope with that and be on the safe
+> side, reduce the maximum power to half (10 MHz) or quarter (5 MHz)
+> when operating on these reduced bandwidth channels.
+As far as I know, chan->max_power can in some cases contain the hardware
+limit instead of the regulatory limit. It's safer to check
+chan->max_reg_power to see if a reduction is necessary.
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
- drivers/net/wireless/mwl8k.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 6820fce..a3707fd 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1548,7 +1548,7 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
- 	if (!priv->pending_tx_pkts)
- 		return 0;
- 
--	retry = 0;
-+	retry = 1;
- 	rc = 0;
- 
- 	spin_lock_bh(&priv->tx_lock);
-@@ -1572,13 +1572,19 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
- 
- 		spin_lock_bh(&priv->tx_lock);
- 
--		if (timeout) {
-+		if (timeout || !priv->pending_tx_pkts) {
- 			WARN_ON(priv->pending_tx_pkts);
- 			if (retry)
- 				wiphy_notice(hw->wiphy, "tx rings drained\n");
- 			break;
- 		}
- 
-+		if (retry) {
-+			mwl8k_tx_start(priv);
-+			retry = 0;
-+			continue;
-+		}
-+
- 		if (priv->pending_tx_pkts < oldcount) {
- 			wiphy_notice(hw->wiphy,
- 				     "waiting for tx rings to drain (%d -> %d pkts)\n",
-@@ -2055,6 +2061,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
- 				mwl8k_remove_stream(hw, stream);
- 				spin_unlock(&priv->stream_lock);
- 			}
-+			mwl8k_tx_start(priv);
- 			spin_unlock_bh(&priv->tx_lock);
- 			pci_unmap_single(priv->pdev, dma, skb->len,
- 					 PCI_DMA_TODEVICE);
--- 
-1.8.0.3
+- Felix
 
