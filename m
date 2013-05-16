@@ -1,139 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51301 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753934Ab3EJVVy (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11708 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752215Ab3EPRMh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 17:21:54 -0400
-Message-ID: <518D64E6.8000102@candelatech.com> (sfid-20130510_232157_394787_39DA03B8)
-Date: Fri, 10 May 2013 14:21:42 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
+	Thu, 16 May 2013 13:12:37 -0400
+Date: Thu, 16 May 2013 20:11:08 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting
- station.
-References: <5182C38B.7060107@candelatech.com>   (sfid-20130502_215043_578677_76592D19) <1367526288.11375.2.camel@jlt4.sipsolutions.net>  <5182D078.4020605@candelatech.com> <518A7AD4.2060100@candelatech.com> <1368035937.8279.25.camel@jlt4.sipsolutions.net> <518A9618.1020107@candelatech.com>
-In-Reply-To: <518A9618.1020107@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: Allow TDLS peer AID to be configured for VHT
+Message-ID: <20130516171108.GA27497@jouni.qca.qualcomm.com> (sfid-20130516_191240_413646_192CAF9C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/2013 11:14 AM, Ben Greear wrote:
-> On 05/08/2013 10:58 AM, Johannes Berg wrote:
->> On Wed, 2013-05-08 at 09:18 -0700, Ben Greear wrote:
->>
->>> Ok, I reproduced this with yet more debugging printouts in the kernel.
->>>
->>> The symptom is this:
->>>
->>> The sme_state is SME_CONNECTED, so it bails out below before sending the
->>> 'connected' message to user-space.
->>
->> Is your system being really really really slow and/or are threads
->> getting pre-empted a lot? This maybe seem like a bit of a stretch, but
->> it seems possible that this happens:
->>
->> ieee80211_sta_rx_queued_mgmt() is running, possibly on one CPU, and is
->> somewhere between printing "associated" and calling
->> cfg80211_send_rx_assoc() (or in the call already, before taking the lock
->> though.)
->>
->> Then your interface is set down at the same time, possibly on a
->> different CPU. Here's where the scenario gets stretched, clearly your
->> interface is getting set down over a minute later, I don't see how you
->> could have stalled the other thread for that long.
->>
->> But if you did, then that thread is still processing things while the
->> interface is going down, cfg80211 didn't know anything about the
->> association having completed so it won't have disconnected, etc.
->>
->> So far, I haven't found any other scenario, nor a solution.
->
-> It is not that slow or overloaded (at least most of the time,
-> and in particular, I only had 20 virtual stations up on this system
-> not doing much traffic...it easily handles 100's of stations).
->
-> And, once it gets in this state..it stays there (overnight,
-> with my app resetting the port (via 'ip link set down' and
-> poking at wpa_supplicant) every minute or so in this case.
->
-> I was wondering..in the cfg80211_mlme_down method (or perhaps
-> some place similar), should we force sme state to IDLE
-> with a big WARN_ON_ONCE or similar.
->
-> That way, if it does get stuck somehow, we can recover by
-> downing the interface and bringing it back up?
->
+VHT uses peer AID in the PARTIAL_AID field in TDLS frames. The current
+design for TDLS is to first add a dummy STA entry before completing TDLS
+Setup and then update information on this STA entry based on what was
+received from the peer during the setup exchange.
 
-Here's some more debug info..hit it again today:
+In theory, this could use NL80211_ATTR_STA_AID to set the peer AID just
+like this is used in AP mode to set the AID of an association station.
+However, existing cfg80211 validation rules prevent this attribute from
+being used with set_station operation. To avoid interoperability issues
+between different kernel and user space version combinations, introduce
+a new nl80211 attribute for the purpose of setting TDLS peer AID. This
+attribute can be used in both the new_station and set_station
+operations. It is not supposed to be allowed to change the AID value
+during the lifetime of the STA entry, but that validation is left for
+drivers to do in the change_station callback.
 
-I added this debug code (on top of all my other patches and 3.9.1+).
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/uapi/linux/nl80211.h |    7 +++++++
+ net/wireless/nl80211.c       |   11 +++++++++--
+ 2 files changed, 16 insertions(+), 2 deletions(-)
 
-void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
-			struct net_device *dev)
-{
-	struct wireless_dev *wdev = dev->ieee80211_ptr;
-	struct cfg80211_deauth_request req;
-	u8 bssid[ETH_ALEN];
-
-	ASSERT_WDEV_LOCK(wdev);
-
-	printk("mlme_down: %s: type: %i  sme_state: %i current-bss: %p\n",
-                dev->name, (int)(wdev->iftype), (int)(wdev->sme_state),
-	       wdev->current_bss);
-
-I see this printout for the stuck station (this is dmesg | grep sta74,
-so it skips errors about other interfaces that are also hung).
-
-I am guessing we should never be calling mlme_down with state
-of CFG80211_SME_CONNECTED when bss is NULL?
-
-I'm hoping I can get by with some sort of work-around patch
-for the 3.9 kernel instead of trying to patch in your big
-locking changes....
-
-
-sta74: authenticate with 00:de:ad:1d:ea:00
-sta74: send auth to 00:de:ad:1d:ea:00 (try 1/3)
-sta74: authenticated
-sta74: associate with 00:de:ad:1d:ea:00 (try 1/3)
-sta74: RX AssocResp from 00:de:ad:1d:ea:00 (capab=0x1 status=0 aid=67)
-IPv6: ADDRCONF(NETDEV_CHANGE): sta74: link becomes ready
-sta74: associated
-connect_result: sta74: type: 2  sme_state: 2
-__cfg80211_disconnect: sta74: type: 2  sme_state: 2  conn-state: -1
-mlme_down: sta74: type: 2  sme_state: 2 current-bss:           (null)
-mlme_down: sta74: type: 2  sme_state: 2 current-bss:           (null)
-sta74: Invalid WDS/flush state, type: 2  WDS: 5  flushed: 1
-IPv6: ADDRCONF(NETDEV_UP): sta74: link is not ready
-__cfg80211_disconnect: sta74: type: 2  sme_state: 2  conn-state: -1
-mlme_down: sta74: type: 2  sme_state: 2 current-bss:           (null)
-mlme_down: sta74: type: 2  sme_state: 2 current-bss:           (null)
-IPv6: ADDRCONF(NETDEV_UP): sta74: link is not ready
-sta74: authenticate with 00:de:ad:1d:ea:00
-sta74: send auth to 00:de:ad:1d:ea:00 (try 1/3)
-sta74: authenticated
-sta74: associate with 00:de:ad:1d:ea:00 (try 1/3)
-sta74: RX AssocResp from 00:de:ad:1d:ea:00 (capab=0x1 status=0 aid=67)
-sta74: associated
-connect_result: sta74: type: 2  sme_state: 2
-IPv6: ADDRCONF(NETDEV_CHANGE): sta74: link becomes ready
-
-
-> For what it's worth, I don't recall ever seeing this problem
-> in 5.7, but it's way to rare to be able to bisect...
->
-> Thanks,
-> Ben
->
->>
->> johannes
->>
->
->
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index d1e48b5..a061437 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1429,6 +1429,11 @@ enum nl80211_commands {
+  * @NL80211_ATTR_MAX_CRIT_PROT_DURATION: duration in milliseconds in which
+  *      the connection should have increased reliability (u16).
+  *
++ * @NL80211_ATTR_PEER_AID: Association ID for the peer TDLS station (u16).
++ *	This is similar to @NL80211_ATTR_STA_AID but with a difference of being
++ *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
++ *	update a TDLS peer STA entry.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1727,6 +1732,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_CRIT_PROT_ID,
+ 	NL80211_ATTR_MAX_CRIT_PROT_DURATION,
+ 
++	NL80211_ATTR_PEER_AID,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index afa2838..1525040 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -378,6 +378,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_MDID] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_IE_RIC] = { .type = NLA_BINARY,
+ 				  .len = IEEE80211_MAX_DATA_LEN },
++	[NL80211_ATTR_PEER_AID] = { .type = NLA_U16 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3834,6 +3835,8 @@ static int nl80211_set_station_tdls(struct genl_info *info,
+ 				    struct station_parameters *params)
+ {
+ 	/* Dummy STA entry gets updated once the peer capabilities are known */
++	if (info->attrs[NL80211_ATTR_PEER_AID])
++		params->aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
+ 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
+ 		params->ht_capa =
+ 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
+@@ -3974,7 +3977,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (!info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES])
+ 		return -EINVAL;
+ 
+-	if (!info->attrs[NL80211_ATTR_STA_AID])
++	if (!info->attrs[NL80211_ATTR_STA_AID] &&
++	    !info->attrs[NL80211_ATTR_PEER_AID])
+ 		return -EINVAL;
+ 
+ 	mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+@@ -3985,7 +3989,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	params.listen_interval =
+ 		nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
+ 
+-	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
++	if (info->attrs[NL80211_ATTR_STA_AID])
++		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
++	else
++		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
+ 	if (!params.aid || params.aid > IEEE80211_MAX_AID)
+ 		return -EINVAL;
+ 
+-- 
+1.7.9.5
 
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Jouni Malinen                                            PGP id EFC895FA
