@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:57484 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751017Ab3E0SWD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59214 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376Ab3EPVDp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 14:22:03 -0400
-Date: Mon, 27 May 2013 21:11:12 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jithu Jance <jithu@broadcom.com>
-Subject: Re: P2P Device support: how to deal with p2p_no_group_iface option
-Message-ID: <20130527181112.GA20210@w1.fi> (sfid-20130527_202207_207756_930923F0)
-References: <51A09F43.5030004@broadcom.com>
- <1369645418.8229.17.camel@jlt4.sipsolutions.net>
- <51A36603.7020403@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51A36603.7020403@broadcom.com>
+	Thu, 16 May 2013 17:03:45 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 5/9] cfg80211: simplify and correct P2P-Device scan check
+Date: Thu, 16 May 2013 23:03:34 +0200
+Message-Id: <1368738218-7597-6-git-send-email-johannes@sipsolutions.net> (sfid-20130516_230354_155064_4FD4390E)
+In-Reply-To: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net>
+References: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 27, 2013 at 03:56:19PM +0200, Arend van Spriel wrote:
-> In this mac80211_hwsim is a special case. We could make P2P_DEVICE
-> support in mac80211_hwsim optional using module parameter to allow
-> testing both cases.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes, that would be helpful. I don't understand why my test setup moves
-to using P2P Device by default when mac80211_hwsim is perfectly capable
-of operating without that.. I have been thinking of applying the
-wpa_supplicant changes in a way that would make them disabled by default
-and use a runtime configuration parameter (e.g., driver_param to
-driver_nl80211.c) to enable this functionality for now. This would allow
-the patches to go in now and make it somewhat easier to test them.
-Anyway, if mac80211_hwsim changes its default behavior, this would be of
-lesser needed (well, once a new kernel release or compat-drivers gets
-released).
+If the driver for some reason successfully finishes
+scanning while in p2p_stop_device(), cfg80211 will
+still set it to aborted. Simplify this code using the
+new 'notified' value and only mark it aborted in case
+the driver didn't notify cfg80211 at all (in which
+case we also leak the request to not crash, this is
+a driver bug.)
 
-In general, I don't think it is a good idea to change existing behavior
-with a kernel or wpa_supplicant upgrade. It is obviously fine if this is
-needed for the functionality to work in the first place, but that is not
-the case with mac80211_hwsim.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 5fc642d..afcb9ec 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -204,18 +204,15 @@ void cfg80211_stop_p2p_device(struct cfg80211_registered_device *rdev,
+ 	rdev->opencount--;
+ 
+ 	if (rdev->scan_req && rdev->scan_req->wdev == wdev) {
+-		bool busy = work_busy(&rdev->scan_done_wk);
+-
+ 		/*
+-		 * If the work isn't pending or running (in which case it would
+-		 * be waiting for the lock we hold) the driver didn't properly
+-		 * cancel the scan when the interface was removed. In this case
+-		 * warn and leak the scan request object to not crash later.
++		 * If the scan request wasn't notified as done, set it
++		 * to aborted and leak it after a warning. The driver
++		 * should have notified us that it ended at the latest
++		 * during rdev_stop_p2p_device().
+ 		 */
+-		WARN_ON(!busy);
+-
+-		rdev->scan_req->aborted = true;
+-		___cfg80211_scan_done(rdev, !busy);
++		if (WARN_ON(!rdev->scan_req->notified))
++			rdev->scan_req->aborted = true;
++		___cfg80211_scan_done(rdev, !rdev->scan_req->notified);
+ 	}
+ }
+ 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.8.0
+
