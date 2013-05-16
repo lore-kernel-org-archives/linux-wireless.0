@@ -1,29 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40959 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:59209 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755400Ab3EXV4s (ORCPT
+	with ESMTP id S1753215Ab3EPVDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 17:56:48 -0400
-Message-ID: <1369432601.13623.10.camel@johannes> (sfid-20130524_235651_412926_5771C528)
-Subject: Re: [PATCH 1/3] {cfg,mac}80211: move mandatory rates calculation to
- cfg80211
+	Thu, 16 May 2013 17:03:44 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Date: Fri, 24 May 2013 23:56:41 +0200
-In-Reply-To: <1368233453-10581-1-git-send-email-ashok@cozybit.com> (sfid-20130511_025106_872325_31B5141E)
-References: <1368233453-10581-1-git-send-email-ashok@cozybit.com>
-	 (sfid-20130511_025106_872325_31B5141E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/9] cfg80211: use atomic_t for wiphy counter
+Date: Thu, 16 May 2013 23:03:31 +0200
+Message-Id: <1368738218-7597-3-git-send-email-johannes@sipsolutions.net> (sfid-20130516_230349_092079_F769C6BC)
+In-Reply-To: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net>
+References: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-05-10 at 17:50 -0700, Ashok Nagarajan wrote:
-> Move mandatory rates calculation to cfg80211, shared with non mac80211 drivers.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied.
+There's no need to lock, we can just use an atomic_t.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index cc49cf1..9416b8f 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -289,7 +289,7 @@ static void cfg80211_event_work(struct work_struct *work)
+ 
+ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ {
+-	static int wiphy_counter;
++	static atomic_t wiphy_counter = ATOMIC_INIT(0);
+ 
+ 	struct cfg80211_registered_device *rdev;
+ 	int alloc_size;
+@@ -311,20 +311,15 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ 
+ 	rdev->ops = ops;
+ 
+-	mutex_lock(&cfg80211_mutex);
+-
+-	rdev->wiphy_idx = wiphy_counter++;
++	rdev->wiphy_idx = atomic_inc_return(&wiphy_counter);
+ 
+ 	if (unlikely(rdev->wiphy_idx < 0)) {
+-		wiphy_counter--;
+-		mutex_unlock(&cfg80211_mutex);
+ 		/* ugh, wrapped! */
++		atomic_dec(&wiphy_counter);
+ 		kfree(rdev);
+ 		return NULL;
+ 	}
+ 
+-	mutex_unlock(&cfg80211_mutex);
+-
+ 	/* give it a proper name */
+ 	dev_set_name(&rdev->wiphy.dev, PHY_NAME "%d", rdev->wiphy_idx);
+ 
+-- 
+1.8.0
 
