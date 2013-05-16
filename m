@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20124 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753756Ab3EGPd6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 11:33:58 -0400
-Date: Tue, 7 May 2013 17:35:25 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jake Edge <jake@lwn.net>, linux-wireless@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>
-Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to
- 1672c0e3
-Message-ID: <20130507153525.GB1576@redhat.com> (sfid-20130507_173419_750052_F297744B)
-References: <20130505143803.7e46e4c6@chukar.edge2.net>
- <20130506123805.GA1602@redhat.com>
- <20130506083759.556dac76@chukar.edge2.net>
- <20130506153044.GB1602@redhat.com>
- <1367854279.8434.13.camel@jlt4.sipsolutions.net>
- <1367855046.8434.16.camel@jlt4.sipsolutions.net>
- <20130507084241.GA1581@redhat.com>
- <1367934810.8328.30.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1367934810.8328.30.camel@jlt4.sipsolutions.net>
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49786 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752328Ab3EPLCB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 May 2013 07:02:01 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv3 16/18] ath5k: report 5/10 MHz channels
+Date: Thu, 16 May 2013 13:00:43 +0200
+Message-Id: <1368702045-27598-17-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130226_839686_2E783BDC)
+In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 07, 2013 at 03:53:30PM +0200, Johannes Berg wrote:
-> > > I think the best way to solve this would be to do such a thing in
-> > > iwlegacy as well, but until then and for stable maybe we should
-> > > introduce another HW flag to restore the previous mac80211 behaviour?
-> > 
-> > I'm not sure if I like to add passive_no_rx to iwlegacy. Stopping queues
-> > and waiting for beacon looks sticky, what happen if beacon will not be
-> > received?
-> 
-> Good question, do we get stuck? I was assuming we'd time out, but maybe
-> that's not the case?
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-AFICT, we wake queues only if beacon arrives or mac80211 call drv_config
-with BSS_CHANGED_IDLE. I'm not sure if the latter prevent stuck. 
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 7f702fe..13b0d37 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1355,6 +1355,16 @@ ath5k_receive_frame(struct ath5k_hw *ah, struct sk_buff *skb,
+ 
+ 	rxs->rate_idx = ath5k_hw_to_driver_rix(ah, rs->rs_rate);
+ 	rxs->flag |= ath5k_rx_decrypted(ah, skb, rs);
++	switch (ah->ah_bwmode) {
++	case AR5K_BWMODE_5MHZ:
++		rxs->flag |= RX_FLAG_5MHZ;
++		break;
++	case AR5K_BWMODE_10MHZ:
++		rxs->flag |= RX_FLAG_10MHZ;
++		break;
++	default:
++		break;
++	}
+ 
+ 	if (rxs->rate_idx >= 0 && rs->rs_rate ==
+ 	    ah->sbands[ah->curchan->band].bitrates[rxs->rate_idx].hw_value_short)
+-- 
+1.7.10.4
 
-> > Perhaps I will just remove IEEE80211_HW_REPORTS_TX_ACK_STATUS from 4965,
-> > it's simpler workaround ?
-> 
-> Sure, but maybe that loses other semantics that you want?
-> 
-> And anyway it's not complete. If you have a very long beacon interval
-> (say 1 second) then this could still lead to all probe/auth retries
-> going out inbetween two beacons since the timeout is just 3*100ms.
-
-Let's make that change as temporary regression workaround, I'll add
-passive_no_rx workaround latter. I'll also think if it can stuck or
-not.
-
-Stanislaw
