@@ -1,75 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:43312 "EHLO comal.ext.ti.com"
+Received: from mout.gmx.net ([212.227.17.21]:64595 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750772Ab3EHIqB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 04:46:01 -0400
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id r488k0l1015582
-	for <linux-wireless@vger.kernel.org>; Wed, 8 May 2013 03:46:00 -0500
-Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
-	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id r488k0nl002151
-	for <linux-wireless@vger.kernel.org>; Wed, 8 May 2013 03:46:00 -0500
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>
-Subject: [PATCH] wl18xx: use locally administered MAC address if not available from fuse
-Date: Wed, 8 May 2013 11:44:37 +0300
-Message-ID: <1368002677-16772-1-git-send-email-coelho@ti.com> (sfid-20130508_104610_134725_81F885B6)
+	id S1751757Ab3EPRrD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 May 2013 13:47:03 -0400
+Received: from mailout-de.gmx.net ([10.1.76.24]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0MWvJi-1Uy1b70qRQ-00W0vD for
+ <linux-wireless@vger.kernel.org>; Thu, 16 May 2013 19:47:01 +0200
+Message-ID: <51951B90.70909@rempel-privat.de> (sfid-20130516_194722_230421_85A1A5EF)
+Date: Thu, 16 May 2013 19:46:56 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ignacy Gawedzki <i@lri.fr>, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
+References: <20130515134258.GA9033@zenon.in.qult.net> <5194DEB3.2060407@rempel-privat.de> <20130516172030.GD21850@zenon.in.qult.net>
+In-Reply-To: <20130516172030.GD21850@zenon.in.qult.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some R&D chips, the device may be left untrimmed and with the MAC
-address missing from fuse ROM.  In order to support those devices,
-apply a locally administered MAC address instead and generate print
-out a message to warn the user.
+Am 16.05.2013 19:20, schrieb Ignacy Gawedzki:
+> On Thu, May 16, 2013 at 03:27:15PM +0200, thus spake Oleksij Rempel:
+>> Am 15.05.2013 15:42, schrieb Ignacy Gawedzki:
+>>> Hi everyone,
+>>>
+>>> This is an old issue, about which it seems the first posts date back to 2009.
+>>> With the latest possible version of the firmware for AR9271 and the latest
+>>> possible wireless drivers, the issue is still there.  Whether this is still
+>>> the exact same problem every time remains to be checked, but it is annoying
+>>> enough to deserve some consideration.
+>>>
+>>> The problem is that the driver can't talk to the device if the following
+>>> conditions are met:
+>>>
+>>>   - The system cold boots with the USB dongle inserted or the USB dongle is
+>>>     inserted on a running system.
+>>>
+>>>   - The interface is *not* brought up.
+>>>
+>>>   - The system (warm) reboots.
+>>>
+>>> Then the driver complains about the target being unresponsive after uploading
+>>> the firmware.  Apparently the only way to make it work again is to unplug and
+>>> then plug the USB dongle back, physically.  It seems that if the USB port is
+>>> not powered down during reboot (which happens with at least two different
+>>> setups that I've tested it with), the device is left in a broken state.
+>>>
+>>> I would gladly help in tracing down this bug if only I knew where to start.
+>>>
+>>> Thanks for any suggestion.
+>>
+>> Hi Ignacy,
+>>
+>> i can't reproduce this issue on my system. I tested it with 4
+>> different ath9_htc adapter. Without luck.
+>
+> Without luck, but it seems you're the lucky one anyway. =)
+>
+>>                                            Please provide as match
+>> information as possible:
+>> - Usb host controller
+>
+> Tested both on Raspberry Pi and on Dell XPS 13.  The latter uses Intel EHCI,
+> 8086:1c2d and Fresco Logic 1b73:1009, I don't know which one is used exactly.
+>
+>> - Adapter manufacture and version, or even better add it to the
+>> wiki, and upload some images:
+>> http://wikidevi.com/wiki/Main_Page
+>
+> TP-Link TL-WN722NC, exactly as the one on the wiki.
 
-Based on the original patch by Victor Goldenshtein.
+That is interesting. I have got today TL-WN722N, but i still can't 
+reproduce this issue.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl18xx/main.c   |    6 ++++++
- drivers/net/wireless/ti/wl18xx/wl18xx.h |    9 +++++++++
- 2 files changed, 15 insertions(+)
+>> - your kernel version
+>
+> Tested with 3.5.0 on XPS and 3.6.11, 3.8.12 and 3.9.2 on RPi (using a
+> customized buildroot, but I can provide the .config if needed).
+>
+>> I assume it is not firmware. May be there are some issue with boot
+>> loader on adapter. Are you sure that UART pins are not soldered?
+>
+> I opened the dongle, managed to solder the metal shield off and the pins
+> weren't used (all four 48-51, among others).
+>
+>> Current ath9k_htc do not have mechanism to reset an adapter. I will
+>> start to work on it after some other issues are done.
+>
+> Is it physically possible?
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index ae85ae4..e296f34 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1318,6 +1318,12 @@ static int wl18xx_get_mac(struct wl1271 *wl)
- 		((mac1 & 0xff000000) >> 24);
- 	wl->fuse_nic_addr = (mac1 & 0xffffff);
- 
-+	if (!wl->fuse_oui_addr && !wl->fuse_nic_addr) {
-+		wl->fuse_oui_addr = WL18XX_DEFAULT_LOCAL_OUI;
-+		wl->fuse_nic_addr = WL18XX_DEFAULT_LOCAL_NIC;
-+		wl1271_warning("MAC address from fuse ROM not available, using locally administered addresses.");
-+	}
-+
- 	ret = wlcore_set_partition(wl, &wl->ptable[PART_DOWN]);
- 
- out:
-diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-index 9204e07..e76bfc7 100644
---- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
-+++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-@@ -42,6 +42,15 @@
- 
- #define WL18XX_RX_BA_MAX_SESSIONS 5
- 
-+/*
-+ * Locally administered MAC address to be used when unavailable in
-+ * fuse ROM.  This is TI's 08:00:28 OUI with the locally administered
-+ * bit set.  Note that this is actually the assigned BDADDR, the WLAN
-+ * MAC addresses are generated incrementally from this one.
-+ */
-+#define WL18XX_DEFAULT_LOCAL_OUI	(0x0a0028)
-+#define WL18XX_DEFAULT_LOCAL_NIC	(0x000000)
-+
- struct wl18xx_priv {
- 	/* buffer for sending commands to FW */
- 	u8 cmd_buf[WL18XX_CMD_MAX_SIZE];
+may be.
+
+>> PS: please find some way to enable uart, at least TX pin.
+>
+> I tried to solder the TX pin, but it's really too tiny.  I don't have an iron
+> so small as to be able to do it, sorry.  I would really love to have an UART
+> connection, but that's just beyond my abilities.  BTW, it would really be
+> great to have a way to send debug message up the USB link, just as with
+> carl9170.
+
+That make no sense. Debug message i need, are from boot loader. There is 
+no way, that boot loader can send messages over usb. Or if firmwre will 
+crash, it wont send any thing too.
+
+So what do we have:
+- TL-WN722N is working. Or your model is different, or it is broken one.
+- Did you checked the cable?
+- usb host controller?
+- other options?
+
+
+
 -- 
-1.7.10.4
-
+Regards,
+Oleksij
