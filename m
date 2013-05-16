@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:57730 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750800Ab3ESHjK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 May 2013 03:39:10 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0MKwSE-1UdyCz0BzE-0006F9 for
- <linux-wireless@vger.kernel.org>; Sun, 19 May 2013 09:39:09 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 0/3] Work on STBC Rx monitoring
-Date: Sun, 19 May 2013 09:38:53 +0200
-Message-Id: <1368949136-6079-1-git-send-email-linux@rempel-privat.de> (sfid-20130519_093924_522580_99533937)
+Received: from s72.web-hosting.com ([198.187.29.21]:54850 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752754Ab3EPRUE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 May 2013 13:20:04 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, <stable@vger.kernel.org>
+Subject: [PATCH] ath9k_hw: Enable manual peak calibration for AR9485
+Date: Thu, 16 May 2013 22:47:34 +0530
+Message-Id: <1368724654-23241-1-git-send-email-sujith@msujith.org> (sfid-20130516_192009_358066_6B49687E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set will pass RxSTBC flags from ath9k to ieee80211
-and to radiotap.
-This field is now a part of radiotap specification:
-http://www.radiotap.org/defined-fields/MCS
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Oleksij Rempel (3):
-  mac80211: add STBC flag for radiotap
-  ath9k: remove useless flag conversation.
-  ath9k: check for Rx-STBC flag and pass it to ieee80211
+Manual peak calibration is currently enabled only for
+AR9462 and AR9565. This is also required for AR9485.
+The initvals are also modified to disable HW peak calibration.
 
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |  5 +++--
- drivers/net/wireless/ath/ath9k/mac.c        | 16 ++++++++++++----
- drivers/net/wireless/ath/ath9k/mac.h        |  4 +++-
- drivers/net/wireless/ath/ath9k/recv.c       |  5 +----
- include/net/ieee80211_radiotap.h            |  7 +++++++
- include/net/mac80211.h                      |  4 ++++
- net/mac80211/main.c                         |  3 ++-
- net/mac80211/rx.c                           |  4 ++++
- net/mac80211/status.c                       |  3 ++-
- 9 files changed, 38 insertions(+), 13 deletions(-)
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c    | 2 +-
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 639ba7d..6988e1d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -965,7 +965,7 @@ static void ar9003_hw_do_manual_peak_cal(struct ath_hw *ah,
+ {
+ 	int i;
+ 
+-	if (!AR_SREV_9462(ah) && !AR_SREV_9565(ah))
++	if (!AR_SREV_9462(ah) && !AR_SREV_9565(ah) && !AR_SREV_9485(ah))
+ 		return;
+ 
+ 	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+index 712f415..88ff1d7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+@@ -1020,7 +1020,7 @@ static const u32 ar9485_1_1_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x000002a0, 0x000002a0},
+ 	{0x0000a288, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a28c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2d0, 0x00071981, 0x00071981, 0x00071982, 0x00071982},
+ 	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0xf999a83a, 0xf999a83a},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
 -- 
-1.8.1.2
+1.8.2.3
 
