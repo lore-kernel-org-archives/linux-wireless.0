@@ -1,71 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4840 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965341Ab3E2TXS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 15:23:18 -0400
-Message-ID: <51A65599.5040000@broadcom.com> (sfid-20130529_212322_076217_CE8033F0)
-Date: Wed, 29 May 2013 21:23:05 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH for 3.10 00/16] brcmfmac: firmware-signalling fixes
-References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
- <20130529184426.GC8770@tuxdriver.com>
-In-Reply-To: <20130529184426.GC8770@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from s72.web-hosting.com ([198.187.29.21]:45224 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752870Ab3EPRUP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 May 2013 13:20:15 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] initvals: Update AR9485 initvals
+Date: Thu, 16 May 2013 22:47:46 +0530
+Message-Id: <1368724666-23299-1-git-send-email-sujith@msujith.org> (sfid-20130516_192018_544691_EB99AF63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/29/2013 08:44 PM, John W. Linville wrote:
-> On Wed, May 29, 2013 at 06:38:50PM +0200, Arend van Spriel wrote:
->> This is a somewhat large series and reading the message of the announcement
->> of v3.10-rc3 I think it is good to give our story up front. Firmware-signalling
->> is a new feature merged in for 3.10, which was a major overhaul of the transmit
->> path in brcmfmac. During and after the merge window we still have some blanks
->> in our test coverage and further testing revealed issues with P2P, TDLS, and
->> power-saving clients in AP mode. These issues have been fixed in this series.
->>
->> As said this series is intended for 3.10 and applies to the master branch of
->> the wireless repository.
->>
->> Arend van Spriel (6):
->>    brcmfmac: allow firmware-signal tlv to be longer than specified
->>    brcmfmac: remove fifo bitfield from brcmf_skbuff_cb::if_flags
->>    brcmfmac: rework credit pickup to assure consistent handling
->>    brcmfmac: explicitly indicate sk_buff is sent upon request credit
->>    brcmfmac: reducing debug logging in firmware-signalling code
->>    brcmfmac: Sent TIM information in case of data available.
->>
->> Hante Meuleman (10):
->>    brcmfmac: Take bus flowcontrol at credit mgmt into account.
->>    brcmfmac: On bus flow control use fw signalling or netif.
->>    brcmfmac: For FW signalling it is necessary to track gen bit.
->>    brcmfmac: Correct creditmap when credit borrowing is active.
->>    brcmfmac: Find correct MAC descriptor in case of TDLS.
->>    brcmfmac: fix invalid ifp lookup in firmware-signalling
->>    brcmfmac: Accept only first creditmap event.
->>    brcmfmac: Signalling header push and pull on logic places.
->>    brcmfmac: Fix endless loop when brcmf_fws_commit_skb fails.
->>    brcmfmac: Simplify counting transit count.
->>
->>   drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +
->>   .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   21 +-
->>   drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
->>   drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |  639 ++++++++++----------
->>   drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h |    1 +
->>   drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    8 +
->>   6 files changed, 340 insertions(+), 333 deletions(-)
->
-> Grr...I'll merge it, and pass your plea on to Dave.  But, there can't
-> be any more batches like this for 3.10...
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Sorry to make you growl. If there are regressions being reported I 
-expect that this was it for 3.10 (from us).
+Disable HW peak detector calibration.
 
-Gr. AvS
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ tools/initvals/ar9485_initvals.h | 2 +-
+ tools/initvals/checksums.txt     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-(not Growling, but Greeting)
+diff --git a/tools/initvals/ar9485_initvals.h b/tools/initvals/ar9485_initvals.h
+index a3710f3..0ec1ca7 100644
+--- a/tools/initvals/ar9485_initvals.h
++++ b/tools/initvals/ar9485_initvals.h
+@@ -874,7 +874,7 @@ static const u32 ar9485_1_1_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x000002a0, 0x000002a0},
+ 	{0x0000a288, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a28c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2d0, 0x00071981, 0x00071981, 0x00071982, 0x00071982},
+ 	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0xf999a83a, 0xf999a83a},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+diff --git a/tools/initvals/checksums.txt b/tools/initvals/checksums.txt
+index 551c3ba..49158f3 100644
+--- a/tools/initvals/checksums.txt
++++ b/tools/initvals/checksums.txt
+@@ -171,7 +171,7 @@ d9a90632a00a7b417154173b947dfffdeab23e51        ar9485Common_wo_xlna_rx_gain_1_1
+ b8bc19098aa0ac38cf74ca4747e28ce6bad14fa1        ar9485_1_1_pcie_phy_clkreq_enable_L1
+ 7e1adfdb0f6a6dbbbe901d8eb019a425edfa58a6        ar9485_1_1_soc_preamble
+ f247bc63c9a632092b94d1af1526650753b77a60        ar9485_fast_clock_1_1_baseband_postamble
+-f1b452dfb558a755d9004241c29b43abd3332359        ar9485_1_1_baseband_postamble
++2c8e4cc712b0dc78bdeee997023356cb41a0b9b2        ar9485_1_1_baseband_postamble
+ c8016c349304ed85842783f04f01f40a0cf4468f        ar9485_1_1_pcie_phy_clkreq_disable_L1
+ f5bb0f6a25e512b85039e8c49ebc6555ff27ac4d        ar9485_1_1_radio_postamble
+ be2a6982ce450a3e03b1593199395599778297b0        ar9485_1_1_mac_core
+-- 
+1.8.2.3
 
