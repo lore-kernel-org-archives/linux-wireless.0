@@ -1,404 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:57924 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759464Ab3EOOwj (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:50078 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752343Ab3EPLCC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:52:39 -0400
-Subject: [PATCH 11/29] ath10k: add htc.h
+	Thu, 16 May 2013 07:02:02 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Wed, 15 May 2013 17:44:15 +0300
-Message-ID: <20130515144415.4492.21738.stgit@localhost6.localdomain6> (sfid-20130515_165339_335661_9DEBB982)
-In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv3 14/18] ath9k: set 5/10 MHz supported channels and fix bitrate
+Date: Thu, 16 May 2013 13:00:41 +0200
+Message-Id: <1368702045-27598-15-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130224_369629_8C1F30CC)
+In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/ath/ath10k/htc.h |  372 +++++++++++++++++++++++++++++++++
- 1 file changed, 372 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/htc.h
+ drivers/net/wireless/ath/ath9k/init.c |   24 ++++++++++++++++--------
+ drivers/net/wireless/ath/ath9k/rc.c   |    6 ++++++
+ 2 files changed, 22 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-new file mode 100644
-index 0000000..6b4f75e
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -0,0 +1,372 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 5921194..e4fb5e2 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -145,14 +145,22 @@ static struct ieee80211_rate ath9k_legacy_rates[] = {
+ 	RATE(20, 0x1a, IEEE80211_RATE_SHORT_PREAMBLE),
+ 	RATE(55, 0x19, IEEE80211_RATE_SHORT_PREAMBLE),
+ 	RATE(110, 0x18, IEEE80211_RATE_SHORT_PREAMBLE),
+-	RATE(60, 0x0b, 0),
+-	RATE(90, 0x0f, 0),
+-	RATE(120, 0x0a, 0),
+-	RATE(180, 0x0e, 0),
+-	RATE(240, 0x09, 0),
+-	RATE(360, 0x0d, 0),
+-	RATE(480, 0x08, 0),
+-	RATE(540, 0x0c, 0),
++	RATE(60, 0x0b, (IEEE80211_RATE_SUPPORTS_5MHZ |
++			IEEE80211_RATE_SUPPORTS_10MHZ)),
++	RATE(90, 0x0f, (IEEE80211_RATE_SUPPORTS_5MHZ |
++			IEEE80211_RATE_SUPPORTS_10MHZ)),
++	RATE(120, 0x0a, (IEEE80211_RATE_SUPPORTS_5MHZ |
++			 IEEE80211_RATE_SUPPORTS_10MHZ)),
++	RATE(180, 0x0e, (IEEE80211_RATE_SUPPORTS_5MHZ |
++			 IEEE80211_RATE_SUPPORTS_10MHZ)),
++	RATE(240, 0x09, (IEEE80211_RATE_SUPPORTS_5MHZ |
++			 IEEE80211_RATE_SUPPORTS_10MHZ)),
++	RATE(360, 0x0d, (IEEE80211_RATE_SUPPORTS_5MHZ |
++			 IEEE80211_RATE_SUPPORTS_10MHZ)),
++	RATE(480, 0x08, (IEEE80211_RATE_SUPPORTS_5MHZ |
++			 IEEE80211_RATE_SUPPORTS_10MHZ)),
++	RATE(540, 0x0c, (IEEE80211_RATE_SUPPORTS_5MHZ |
++			 IEEE80211_RATE_SUPPORTS_10MHZ)),
+ };
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index ed57d57..ff7a9e4 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1284,9 +1284,15 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_rate_priv *ath_rc_priv = priv_sta;
+ 	int i, j = 0;
++	int divisor = ieee80211_hw_get_divisor(sc->hw->conf.hw);
++	u32 rate_flags = ieee80211_chandef_rate_flags(&sc->hw->conf.chandef);
+ 
+ 	for (i = 0; i < sband->n_bitrates; i++) {
+ 		if (sta->supp_rates[sband->band] & BIT(i)) {
++			if ((rate_flags & sband->bitrates[i].flags)
++			    != rate_flags)
++				continue;
 +
-+#ifndef _HTC_H_
-+#define _HTC_H_
-+
-+#include <linux/kernel.h>
-+#include <linux/list.h>
-+#include <linux/bug.h>
-+#include <linux/skbuff.h>
-+#include <linux/semaphore.h>
-+#include <linux/timer.h>
-+
-+struct ath10k;
-+
-+/****************/
-+/* HTC protocol */
-+/****************/
-+
-+/*
-+ * HTC - host-target control protocol
-+ *
-+ * tx packets are generally <htc_hdr><payload>
-+ * rx packets are more complex: <htc_hdr><payload><trailer>
-+ *
-+ * The payload + trailer length is stored in len.
-+ * To get payload-only length one needs to payload - trailer_len.
-+ *
-+ * Trailer contains (possibly) multiple <htc_record>.
-+ * Each record is a id-len-value.
-+ *
-+ * HTC header flags, control_byte0, control_byte1
-+ * have different meaning depending whether its tx
-+ * or rx.
-+ *
-+ * Alignment: htc_hdr, payload and trailer are
-+ * 4-byte aligned.
-+ */
-+
-+enum ath10k_htc_tx_flags {
-+	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
-+	ATH10K_HTC_FLAG_SEND_BUNDLE        = 0x02
-+};
-+
-+enum ath10k_htc_rx_flags {
-+	ATH10K_HTC_FLAG_TRAILER_PRESENT = 0x02,
-+	ATH10K_HTC_FLAG_BUNDLE_MASK     = 0xF0
-+};
-+
-+struct ath10k_htc_hdr {
-+	u8 eid; /* @enum ath10k_htc_ep_id */
-+	u8 flags; /* @enum ath10k_htc_tx_flags, ath10k_htc_rx_flags */
-+	__le16 len;
-+	union {
-+		u8 trailer_len; /* for rx */
-+		u8 control_byte0;
-+	} __packed;
-+	union {
-+		u8 seq_no; /* for tx */
-+		u8 control_byte1;
-+	} __packed;
-+	u8 pad0;
-+	u8 pad1;
-+} __packed __aligned(4);
-+
-+enum ath10k_ath10k_htc_msg_id {
-+	ATH10K_HTC_MSG_READY_ID                = 1,
-+	ATH10K_HTC_MSG_CONNECT_SERVICE_ID      = 2,
-+	ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID = 3,
-+	ATH10K_HTC_MSG_SETUP_COMPLETE_ID       = 4,
-+	ATH10K_HTC_MSG_SETUP_COMPLETE_EX_ID    = 5,
-+	ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE   = 6
-+};
-+
-+enum ath10k_htc_version {
-+	ATH10K_HTC_VERSION_2P0 = 0x00, /* 2.0 */
-+	ATH10K_HTC_VERSION_2P1 = 0x01, /* 2.1 */
-+};
-+
-+enum ath10k_htc_conn_flags {
-+	ATH10K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_ONE_FOURTH    = 0x0,
-+	ATH10K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_ONE_HALF      = 0x1,
-+	ATH10K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_THREE_FOURTHS = 0x2,
-+	ATH10K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_UNITY         = 0x3,
-+#define ATH10K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_MASK 0x3
-+	ATH10K_HTC_CONN_FLAGS_REDUCE_CREDIT_DRIBBLE    = 1 << 2,
-+	ATH10K_HTC_CONN_FLAGS_DISABLE_CREDIT_FLOW_CTRL = 1 << 3
-+#define ATH10K_HTC_CONN_FLAGS_RECV_ALLOC_MASK 0xFF00
-+#define ATH10K_HTC_CONN_FLAGS_RECV_ALLOC_LSB  8
-+};
-+
-+enum ath10k_htc_conn_svc_status {
-+	ATH10K_HTC_CONN_SVC_STATUS_SUCCESS      = 0,
-+	ATH10K_HTC_CONN_SVC_STATUS_NOT_FOUND    = 1,
-+	ATH10K_HTC_CONN_SVC_STATUS_FAILED       = 2,
-+	ATH10K_HTC_CONN_SVC_STATUS_NO_RESOURCES = 3,
-+	ATH10K_HTC_CONN_SVC_STATUS_NO_MORE_EP   = 4
-+};
-+
-+struct ath10k_ath10k_htc_msg_hdr {
-+	__le16 message_id; /* @enum htc_message_id */
-+} __packed;
-+
-+struct ath10k_htc_unknown {
-+	u8 pad0;
-+	u8 pad1;
-+} __packed;
-+
-+struct ath10k_htc_ready {
-+	__le16 credit_count;
-+	__le16 credit_size;
-+	u8 max_endpoints;
-+	u8 pad0;
-+} __packed;
-+
-+struct ath10k_htc_ready_extended {
-+	struct ath10k_htc_ready base;
-+	u8 htc_version; /* @enum ath10k_htc_version */
-+	u8 max_msgs_per_htc_bundle;
-+	u8 pad0;
-+	u8 pad1;
-+} __packed;
-+
-+struct ath10k_htc_conn_svc {
-+	__le16 service_id;
-+	__le16 flags; /* @enum ath10k_htc_conn_flags */
-+	u8 pad0;
-+	u8 pad1;
-+} __packed;
-+
-+struct ath10k_htc_conn_svc_response {
-+	__le16 service_id;
-+	u8 status; /* @enum ath10k_htc_conn_svc_status */
-+	u8 eid;
-+	__le16 max_msg_size;
-+} __packed;
-+
-+struct ath10k_htc_setup_complete_extended {
-+	u8 pad0;
-+	u8 pad1;
-+	__le32 flags; /* @enum htc_setup_complete_flags */
-+	u8 max_msgs_per_bundled_recv;
-+	u8 pad2;
-+	u8 pad3;
-+	u8 pad4;
-+} __packed;
-+
-+struct ath10k_htc_msg {
-+	struct ath10k_ath10k_htc_msg_hdr hdr;
-+	union {
-+		/* host-to-target */
-+		struct ath10k_htc_conn_svc connect_service;
-+		struct ath10k_htc_ready ready;
-+		struct ath10k_htc_ready_extended ready_ext;
-+		struct ath10k_htc_unknown unknown;
-+		struct ath10k_htc_setup_complete_extended setup_complete_ext;
-+
-+		/* target-to-host */
-+		struct ath10k_htc_conn_svc_response connect_service_response;
-+	};
-+} __packed __aligned(4);
-+
-+enum ath10k_ath10k_htc_record_id {
-+	ATH10K_HTC_RECORD_NULL    = 0,
-+	ATH10K_HTC_RECORD_CREDITS = 1
-+};
-+
-+struct ath10k_ath10k_htc_record_hdr {
-+	u8 id; /* @enum ath10k_ath10k_htc_record_id */
-+	u8 len;
-+	u8 pad0;
-+	u8 pad1;
-+} __packed;
-+
-+struct ath10k_htc_credit_report {
-+	u8 eid; /* @enum ath10k_htc_ep_id */
-+	u8 credits;
-+	u8 pad0;
-+	u8 pad1;
-+} __packed;
-+
-+struct ath10k_htc_record {
-+	struct ath10k_ath10k_htc_record_hdr hdr;
-+	union {
-+		struct ath10k_htc_credit_report credit_report[0];
-+		u8 pauload[0];
-+	};
-+} __packed __aligned(4);
-+
-+/*
-+ * note: the trailer offset is dynamic depending
-+ * on payload length. this is only a struct layout draft
-+ */
-+struct ath10k_htc_frame {
-+	struct ath10k_htc_hdr hdr;
-+	union {
-+		struct ath10k_htc_msg msg;
-+		u8 payload[0];
-+	};
-+	struct ath10k_htc_record trailer[0];
-+} __packed __aligned(4);
-+
-+
-+/*******************/
-+/* Host-side stuff */
-+/*******************/
-+
-+enum ath10k_htc_svc_gid {
-+	ATH10K_HTC_SVC_GRP_RSVD = 0,
-+	ATH10K_HTC_SVC_GRP_WMI = 1,
-+	ATH10K_HTC_SVC_GRP_NMI = 2,
-+	ATH10K_HTC_SVC_GRP_HTT = 3,
-+
-+	ATH10K_HTC_SVC_GRP_TEST = 254,
-+	ATH10K_HTC_SVC_GRP_LAST = 255,
-+};
-+
-+#define SVC(group, idx) \
-+	(int)(((int)(group) << 8) | (int)(idx))
-+
-+enum ath10k_htc_svc_id {
-+	/* NOTE: service ID of 0x0000 is reserved and should never be used */
-+	ATH10K_HTC_SVC_ID_RESERVED	= 0x0000,
-+	ATH10K_HTC_SVC_ID_UNUSED	= ATH10K_HTC_SVC_ID_RESERVED,
-+
-+	ATH10K_HTC_SVC_ID_RSVD_CTRL	= SVC(ATH10K_HTC_SVC_GRP_RSVD, 1),
-+	ATH10K_HTC_SVC_ID_WMI_CONTROL	= SVC(ATH10K_HTC_SVC_GRP_WMI, 0),
-+	ATH10K_HTC_SVC_ID_WMI_DATA_BE	= SVC(ATH10K_HTC_SVC_GRP_WMI, 1),
-+	ATH10K_HTC_SVC_ID_WMI_DATA_BK	= SVC(ATH10K_HTC_SVC_GRP_WMI, 2),
-+	ATH10K_HTC_SVC_ID_WMI_DATA_VI	= SVC(ATH10K_HTC_SVC_GRP_WMI, 3),
-+	ATH10K_HTC_SVC_ID_WMI_DATA_VO	= SVC(ATH10K_HTC_SVC_GRP_WMI, 4),
-+
-+	ATH10K_HTC_SVC_ID_NMI_CONTROL	= SVC(ATH10K_HTC_SVC_GRP_NMI, 0),
-+	ATH10K_HTC_SVC_ID_NMI_DATA	= SVC(ATH10K_HTC_SVC_GRP_NMI, 1),
-+
-+	ATH10K_HTC_SVC_ID_HTT_DATA_MSG	= SVC(ATH10K_HTC_SVC_GRP_HTT, 0),
-+
-+	/* raw stream service (i.e. flash, tcmd, calibration apps) */
-+	ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS = SVC(ATH10K_HTC_SVC_GRP_TEST, 0),
-+};
-+
-+#undef SVC
-+
-+enum ath10k_htc_ep_id {
-+	ATH10K_HTC_EP_UNUSED = -1,
-+	ATH10K_HTC_EP_0 = 0,
-+	ATH10K_HTC_EP_1 = 1,
-+	ATH10K_HTC_EP_2,
-+	ATH10K_HTC_EP_3,
-+	ATH10K_HTC_EP_4,
-+	ATH10K_HTC_EP_5,
-+	ATH10K_HTC_EP_6,
-+	ATH10K_HTC_EP_7,
-+	ATH10K_HTC_EP_8,
-+	ATH10K_HTC_EP_COUNT,
-+};
-+
-+struct ath10k_htc_ops {
-+	void (*target_send_suspend_complete)(struct ath10k *ar);
-+};
-+
-+struct ath10k_htc_ep_ops {
-+	void (*ep_tx_complete)(struct ath10k *, struct sk_buff *);
-+	void (*ep_rx_complete)(struct ath10k *, struct sk_buff *);
-+	void (*stop_queue)(struct ath10k *);
-+	void (*wake_queue)(struct ath10k *);
-+};
-+
-+/* service connection information */
-+struct ath10k_htc_svc_conn_req {
-+	u16 service_id;
-+	struct ath10k_htc_ep_ops ep_ops;
-+	int max_send_queue_depth;
-+};
-+
-+/* service connection response information */
-+struct ath10k_htc_svc_conn_resp {
-+	u8 buffer_len;
-+	u8 actual_len;
-+	enum ath10k_htc_ep_id eid;
-+	unsigned int max_msg_len;
-+	u8 connect_resp_code;
-+};
-+
-+#define ATH10K_NUM_CONTROL_TX_BUFFERS 2
-+#define ATH10K_HTC_MAX_LEN 4096
-+#define ATH10K_HTC_MAX_CTRL_MSG_LEN 256
-+#define ATH10K_HTC_WAIT_TIMEOUT_HZ (1*HZ)
-+#define ATH10K_HTC_CONTROL_BUFFER_SIZE (ATH10K_HTC_MAX_CTRL_MSG_LEN + \
-+					sizeof(struct ath10k_htc_hdr))
-+#define ATH10K_HTC_CONN_SVC_TIMEOUT_HZ (1*HZ)
-+
-+struct ath10k_htc_ep {
-+	struct ath10k_htc *htc;
-+	enum ath10k_htc_ep_id eid;
-+	enum ath10k_htc_svc_id service_id;
-+	struct ath10k_htc_ep_ops ep_ops;
-+
-+	int max_tx_queue_depth;
-+	int max_ep_message_len;
-+	u8 ul_pipe_id;
-+	u8 dl_pipe_id;
-+	int ul_is_polled; /* call HIF to get tx completions */
-+	int dl_is_polled; /* call HIF to fetch rx (not implemented) */
-+
-+	struct sk_buff_head tx_queue;
-+	int tx_queue_len;
-+	bool tx_queue_stopped;
-+
-+	u8 seq_no; /* for debugging */
-+	int tx_credits;
-+	int tx_credit_size;
-+	int tx_credits_per_max_message;
-+	bool tx_credit_flow_enabled;
-+
-+	struct work_struct send_work;
-+};
-+
-+struct ath10k_htc_svc_tx_credits {
-+	u16 service_id;
-+	u8  credit_allocation;
-+};
-+
-+struct ath10k_htc {
-+	struct ath10k *ar;
-+	struct ath10k_htc_ep endpoint[ATH10K_HTC_EP_COUNT];
-+
-+	/* protects endpoint and stopping fields */
-+	spinlock_t tx_lock;
-+
-+	struct ath10k_htc_ops htc_ops;
-+
-+	u8 control_resp_buffer[ATH10K_HTC_MAX_CTRL_MSG_LEN];
-+	int control_resp_len;
-+
-+	struct completion ctl_resp;
-+
-+	int total_transmit_credits;
-+	struct ath10k_htc_svc_tx_credits service_tx_alloc[ATH10K_HTC_EP_COUNT];
-+	int target_credit_size;
-+
-+	bool stopping;
-+};
-+
-+struct ath10k_htc *ath10k_htc_create(struct ath10k *ar,
-+				     struct ath10k_htc_ops *htc_ops);
-+int ath10k_htc_wait_target(struct ath10k_htc *htc);
-+int ath10k_htc_start(struct ath10k_htc *htc);
-+int ath10k_htc_connect_service(struct ath10k_htc *htc,
-+			       struct ath10k_htc_svc_conn_req  *conn_req,
-+			       struct ath10k_htc_svc_conn_resp *conn_resp);
-+int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
-+		    struct sk_buff *packet);
-+void ath10k_htc_stop(struct ath10k_htc *htc);
-+void ath10k_htc_destroy(struct ath10k_htc *htc);
-+struct sk_buff *ath10k_htc_alloc_skb(int size);
-+
-+#endif
+ 			ath_rc_priv->neg_rates.rs_rates[j]
+ 				= (sband->bitrates[i].bitrate * 2) / 10;
+ 			j++;
+-- 
+1.7.10.4
 
