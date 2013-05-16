@@ -1,82 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48907 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933033Ab3EBUpt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 16:45:49 -0400
-Message-ID: <5182D078.4020605@candelatech.com> (sfid-20130502_224556_512232_51196E1D)
-Date: Thu, 02 May 2013 13:45:44 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from [78.193.33.39] ([78.193.33.39]:51243 "EHLO qult.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751080Ab3EPSue (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 May 2013 14:50:34 -0400
+Date: Thu, 16 May 2013 20:50:30 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
+Message-ID: <20130516185030.GB16833@zenon.in.qult.net> (sfid-20130516_205043_917742_0C5AF1D8)
+References: <20130515134258.GA9033@zenon.in.qult.net>
+ <5194DEB3.2060407@rempel-privat.de>
+ <20130516172030.GD21850@zenon.in.qult.net>
+ <51951B90.70909@rempel-privat.de>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting
- station.
-References: <5182C38B.7060107@candelatech.com>  (sfid-20130502_215043_578677_76592D19) <1367526288.11375.2.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1367526288.11375.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51951B90.70909@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2013 01:24 PM, Johannes Berg wrote:
-> On Thu, 2013-05-02 at 12:50 -0700, Ben Greear wrote:
->> Kernel is hacked 3.9.0+
->
-> Clearly :)
->
->> I've been seeing this problem for a while (and posted about it previously).  The problem
->> is that a station appears to associate fine, but never actually 'connects'.  This problem
->> is not easy to reproduce...
->
-> It would be useful to know what you added ... the message you point to
-> (invalid wds/flush whatever) doesn't exist upstream.
+On Thu, May 16, 2013 at 07:46:56PM +0200, thus spake Oleksij Rempel:
+> Am 16.05.2013 19:20, schrieb Ignacy Gawedzki:
+> >TP-Link TL-WN722NC, exactly as the one on the wiki.
+> 
+> That is interesting. I have got today TL-WN722N, but i still can't
+> reproduce this issue.
 
-Gobs of stuff, as usual.  Thought I had that WDS thing pushed upstream,
-but I guess not.
+Are you sure that not any subsystem ups the interface before you have any
+chance to warm reboot?  Or that you don't have a hub that cuts power to
+devices on warm reboot?
 
-http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.9.dev.y/.git;a=summary
+> >I tried to solder the TX pin, but it's really too tiny.  I don't have an iron
+> >so small as to be able to do it, sorry.  I would really love to have an UART
+> >connection, but that's just beyond my abilities.  BTW, it would really be
+> >great to have a way to send debug message up the USB link, just as with
+> >carl9170.
+> 
+> That make no sense. Debug message i need, are from boot loader.
+> There is no way, that boot loader can send messages over usb. Or if
+> firmwre will crash, it wont send any thing too.
 
-That message comes from:
+I understand.
 
-	/*
-	 * Remove all stations associated with this interface.
-	 *
-	 * This must be done before calling ops->remove_interface()
-	 * because otherwise we can later invoke ops->sta_notify()
-	 * whenever the STAs are removed, and that invalidates driver
-	 * assumptions about always getting a vif pointer that is valid
-	 * (because if we remove a STA after ops->remove_interface()
-	 * the driver will have removed the vif info already!)
-	 *
-	 * This is relevant only in WDS mode, in all other modes we've
-	 * already removed all stations when disconnecting or similar,
-	 * so warn otherwise.
-	 *
-	 * We call sta_info_flush_cleanup() later, to combine RCU waits.
-	 */
-	flushed = sta_info_flush_defer(sdata);
-	if ((sdata->vif.type != NL80211_IFTYPE_WDS && flushed > 0) ||
-	    (sdata->vif.type == NL80211_IFTYPE_WDS && flushed != 1)) {
-		sdata_info(sdata,
-			   "Invalid WDS/flush state, type: %i  WDS: %i  flushed: %i\n",
-			   sdata->vif.type, NL80211_IFTYPE_WDS, flushed);
-		WARN_ON_ONCE(1);
-	}
+> So what do we have:
+> - TL-WN722N is working. Or your model is different, or it is broken one.
 
-I notice __cfg80211_connect_result checks the wdev state, so I added some
-printouts there to see if it is bailing due to some funny state, but will
-probably be a while before I reproduce it again and know for sure.
+I happen to have 8 of them, bought at different times and all exhibit the
+problem.
 
-Thanks,
-Ben
+> - Did you checked the cable?
 
+I usually plug the device directly to the USB port, but I also happen to use
+the cradle (supplied with the WN722NC version) that has a cable, when I need
+two wireless interfaces on the RPi (both of them don't fit at once directly on
+the ports).
 
->
-> johannes
->
+> - usb host controller?
 
+I'll try on yet another one and will tell you the results.
+
+> - other options?
+
+Hmmm... :/
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+-= Best Viewed Using [INLINE] =-
