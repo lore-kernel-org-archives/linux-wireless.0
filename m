@@ -1,130 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:58923 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758336Ab3EGNgO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 09:36:14 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, <arik@wizery.com>, <eliad@wizery.com>
-Subject: [PATCH 1/2] wlcore: some non-functional clean-ups in main.c
-Date: Tue, 7 May 2013 16:34:49 +0300
-Message-ID: <1367933690-6169-1-git-send-email-coelho@ti.com> (sfid-20130507_153617_983864_9C1AC86E)
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:59961 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755464Ab3EQIyu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 May 2013 04:54:50 -0400
+Received: by mail-pd0-f176.google.com with SMTP id x10so3127598pdj.21
+        for <linux-wireless@vger.kernel.org>; Fri, 17 May 2013 01:54:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Fri, 17 May 2013 10:54:50 +0200
+Message-ID: <CAFTPBc+jVwNnAirFCR9ZvHKCjy_AO1ce=ZpnLs3tPZUNGe75aQ@mail.gmail.com> (sfid-20130517_105455_951326_EE330D40)
+Subject: AR9227: Can't set master mode
+From: Felix Blanke <felixblanke@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary includes; remove duplicate and useless defines; fix
-copyright notice and remove some unnecessary line breaks.
+Hi,
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c |   30 ++++++------------------------
- 1 file changed, 6 insertions(+), 24 deletions(-)
+first: Please CC me as I'm not subscribed to the list.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 953111a..04074f7 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1,10 +1,9 @@
- 
- /*
-- * This file is part of wl1271
-+ * This file is part of wlcore
-  *
-  * Copyright (C) 2008-2010 Nokia Corporation
-- *
-- * Contact: Luciano Coelho <luciano.coelho@nokia.com>
-+ * Copyright (C) 2011-2013 Texas Instruments Inc.
-  *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License
-@@ -24,37 +23,25 @@
- 
- #include <linux/module.h>
- #include <linux/firmware.h>
--#include <linux/delay.h>
--#include <linux/spi/spi.h>
--#include <linux/crc32.h>
- #include <linux/etherdevice.h>
- #include <linux/vmalloc.h>
--#include <linux/platform_device.h>
--#include <linux/slab.h>
- #include <linux/wl12xx.h>
--#include <linux/sched.h>
- #include <linux/interrupt.h>
- 
- #include "wlcore.h"
- #include "debug.h"
- #include "wl12xx_80211.h"
- #include "io.h"
--#include "event.h"
- #include "tx.h"
--#include "rx.h"
- #include "ps.h"
- #include "init.h"
- #include "debugfs.h"
--#include "cmd.h"
--#include "boot.h"
- #include "testmode.h"
- #include "scan.h"
- #include "hw_ops.h"
- 
- #define WL1271_BOOT_RETRIES 3
- 
--#define WL1271_BOOT_RETRIES 3
--
- static char *fwlog_param;
- static int bug_on_recovery = -1;
- static int no_recovery     = -1;
-@@ -65,8 +52,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
- static void wlcore_op_stop_locked(struct wl1271 *wl);
- static void wl1271_free_ap_keys(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- 
--static int wl12xx_set_authorized(struct wl1271 *wl,
--				 struct wl12xx_vif *wlvif)
-+static int wl12xx_set_authorized(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
- 	int ret;
- 
-@@ -1668,8 +1654,7 @@ static int wl1271_configure_suspend(struct wl1271 *wl,
- 	return 0;
- }
- 
--static void wl1271_configure_resume(struct wl1271 *wl,
--				    struct wl12xx_vif *wlvif)
-+static void wl1271_configure_resume(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
- 	int ret = 0;
- 	bool is_ap = wlvif->bss_type == BSS_TYPE_AP_BSS;
-@@ -3782,8 +3767,7 @@ static int wlcore_set_beacon_template(struct wl1271 *wl,
- 	struct ieee80211_hdr *hdr;
- 	u32 min_rate;
- 	int ret;
--	int ieoffset = offsetof(struct ieee80211_mgmt,
--				u.beacon.variable);
-+	int ieoffset = offsetof(struct ieee80211_mgmt, u.beacon.variable);
- 	struct sk_buff *beacon = ieee80211_beacon_get(wl->hw, vif);
- 	u16 tmpl_id;
- 
-@@ -5827,8 +5811,6 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 	return 0;
- }
- 
--#define WL1271_DEFAULT_CHANNEL 0
--
- struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
- 				     u32 mbox_size)
- {
-@@ -5881,7 +5863,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
- 		goto err_hw;
- 	}
- 
--	wl->channel = WL1271_DEFAULT_CHANNEL;
-+	wl->channel = 0;
- 	wl->rx_counter = 0;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
- 	wl->band = IEEE80211_BAND_2GHZ;
--- 
-1.7.10.4
+I have the following wireless card: 04:02.0 Network controller:
+Atheros Communications Inc. AR9227 Wireless Network Adapter (rev 01)
 
+I can't set it to master mode, but this card should support it:
+
+server ~ # iwconfig wlp4s2
+wlp4s2    IEEE 802.11bgn  ESSID:off/any
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=19 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+
+server ~ # iwconfig wlp4s2 mode Master
+Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlp4s2 ; Invalid argument.
+
+
+My kernel config should be correct:
+
+server linux # cat .config | grep ATH9K
+CONFIG_ATH9K_HW=y
+CONFIG_ATH9K_COMMON=y
+# CONFIG_ATH9K_BTCOEX_SUPPORT is not set
+CONFIG_ATH9K=y
+CONFIG_ATH9K_PCI=y
+# CONFIG_ATH9K_AHB is not set
+# CONFIG_ATH9K_DEBUGFS is not set
+CONFIG_ATH9K_RATE_CONTROL=y
+# CONFIG_ATH9K_HTC is not set
+
+server linux # cat .config | grep MAC80211
+CONFIG_MAC80211=y
+CONFIG_MAC80211_HAS_RC=y
+CONFIG_MAC80211_RC_MINSTREL=y
+CONFIG_MAC80211_RC_MINSTREL_HT=y
+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+CONFIG_MAC80211_RC_DEFAULT="minstrel_ht"
+# CONFIG_MAC80211_MESH is not set
+CONFIG_MAC80211_LEDS=y
+# CONFIG_MAC80211_DEBUGFS is not set
+# CONFIG_MAC80211_MESSAGE_TRACING is not set
+# CONFIG_MAC80211_DEBUG_MENU is not set
+# CONFIG_MAC80211_HWSIM is not set
+
+
+I can scan for wireless networks and probably also connect to them
+(never tested because this is not an use case for me).
+
+Any ideas? Thanks in advance!
+
+Kind regards,
+Felix
