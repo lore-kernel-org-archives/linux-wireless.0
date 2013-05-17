@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:27893 "EHLO mx4.wp.pl"
+Received: from mms1.broadcom.com ([216.31.210.17]:3083 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754075Ab3ERMDE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 May 2013 08:03:04 -0400
-Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:03:02 +0200
-From: stf_xl@wp.pl
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 22/32] rt2800: initialize BBP_R104 on proper subroutines
-Date: Sat, 18 May 2013 14:03:45 +0200
-Message-Id: <1368878635-4455-23-git-send-email-stf_xl@wp.pl> (sfid-20130518_142939_329225_01E8835B)
-In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
-References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+	id S1753339Ab3EQOSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 May 2013 10:18:31 -0400
+Message-ID: <51963C29.7090909@broadcom.com> (sfid-20130517_161843_046903_070CCC11)
+Date: Fri, 17 May 2013 16:18:17 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Vasiliy Tolstov" <v.tolstov@selfip.ru>
+cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Julian Calaby" <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: very bad work of wl (bcm 43228)
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+ <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+ <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
+ <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
+ <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
+ <517199D4.9070702@broadcom.com>
+ <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
+ <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com>
+ <517A427E.3010809@broadcom.com>
+ <CACaajQsf8cgG9DQ-QuWY5EqeUNq4RgX9CMgQ8bZi7s8UJzCE_g@mail.gmail.com>
+ <CACaajQuk359fYap=547qQ0r128bdCuzFCzR=iXgHNaaR_eTtow@mail.gmail.com>
+ <5186D7AD.1070702@lwfinger.net>
+ <CACaajQuSU4H0rdn9j7dFYB+Yh2WLsejocDfE+PX1eFQOUqWcgw@mail.gmail.com>
+ <5187CCCB.1080500@lwfinger.net> <5188B732.3010403@broadcom.com>
+ <CACaajQtc7svPFAosDMYzW0gS8g_CPsRb9JwC1D9VUxhCFdfSSQ@mail.gmail.com>
+In-Reply-To: <CACaajQtc7svPFAosDMYzW0gS8g_CPsRb9JwC1D9VUxhCFdfSSQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+On 05/17/2013 03:30 PM, Vasiliy Tolstov wrote:
+> 2013/5/7 Arend van Spriel <arend@broadcom.com>:
+>> Actually, there is: linux-wlan-client-support-list@broadcom.com
+>>
+>> It can be found on the web page [1].
+>>
+>> Regards,
+>> Arend
+>>
+>> [1] http://www.broadcom.com/support/802.11/linux_sta.php
+>
+>
+> This email is dead. Nobody respond to me. May be exists another email list?
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+There should be someone on the receiving end. I did an internal query 
+with the info you provided so far.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 594b1e3..0b3c705 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4090,6 +4090,8 @@ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 92, 0x02);
- 
- 	rt2800_bbp_write(rt2x00dev, 103, 0xc0);
-+
-+	rt2800_bbp_write(rt2x00dev, 104, 0x92);
- }
- 
- static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
-@@ -4134,6 +4136,8 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 92, 0x02);
- 
- 	rt2800_bbp_write(rt2x00dev, 103, 0xc0);
-+
-+	rt2800_bbp_write(rt2x00dev, 104, 0x92);
- }
- 
- static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
-@@ -4244,6 +4248,8 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	rt2800_bbp_write(rt2x00dev, 103, 0xc0);
-+
-+	rt2800_bbp_write(rt2x00dev, 104, 0x92);
- }
- 
- static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
-@@ -4362,12 +4368,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		return;
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT3290) ||
--	    rt2x00_rt(rt2x00dev, RT3352) ||
--	    rt2x00_rt(rt2x00dev, RT5390) ||
--	    rt2x00_rt(rt2x00dev, RT5392))
--		rt2800_bbp_write(rt2x00dev, 104, 0x92);
--
- 	if (rt2800_is_305x_soc(rt2x00dev))
- 		rt2800_bbp_write(rt2x00dev, 105, 0x01);
- 	else if (rt2x00_rt(rt2x00dev, RT3290))
--- 
-1.7.4.4
+Regards,
+Arend
+
 
