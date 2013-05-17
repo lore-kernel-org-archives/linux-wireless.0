@@ -1,256 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44009 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759450Ab3EOOwg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:52:36 -0400
-Subject: [PATCH 02/29] ath10k: add bmi.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Wed, 15 May 2013 17:42:54 +0300
-Message-ID: <20130515144254.4492.14914.stgit@localhost6.localdomain6> (sfid-20130515_165258_187588_0CE3CF23)
-In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
+Received: from bar.sig21.net ([80.81.252.164]:42691 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754670Ab3EQGTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 May 2013 02:19:42 -0400
+Date: Fri, 17 May 2013 08:00:42 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: Ignacy Gawedzki <i@lri.fr>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
+Message-ID: <20130517060042.GA21663@sig21.net> (sfid-20130517_081953_783463_4D73AAB6)
+References: <20130515134258.GA9033@zenon.in.qult.net>
+ <5194DEB3.2060407@rempel-privat.de>
+ <20130516172030.GD21850@zenon.in.qult.net>
+ <51951B90.70909@rempel-privat.de>
+ <20130516185030.GB16833@zenon.in.qult.net>
+ <20130516234857.GA17867@zenon.in.qult.net>
+ <20130516234526.GH3795@alittletooquiet.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130516234526.GH3795@alittletooquiet.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/bmi.h |  224 +++++++++++++++++++++++++++++++++
- 1 file changed, 224 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/bmi.h
+On Thu, May 16, 2013 at 07:45:26PM -0400, Forest Bond wrote:
+> On Fri, May 17, 2013 at 01:48:57AM +0200, Ignacy Gawedzki wrote:
+> > On Thu, May 16, 2013 at 08:50:30PM +0200, thus spake Ignacy Gawedzki:
+> > > I'll try on yet another one and will tell you the results.
+> > 
+> > Just tried on ICH7, same thing.  The easiest way to reproduce the bug is to
+> > boot into single user mode ("recovery mode" on Ubuntu), in order to prevent
+> > any NetworkManager or udev from interfering.  Then, without any attempt to up
+> > the interface, reboot the system by typing "reboot" in a root shell.
+> 
+> FWIW, this has also been a problem for me on Ubuntu 12.04.  I can reproduce it
+> the same way.
 
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
-new file mode 100644
-index 0000000..32c56aa
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/bmi.h
-@@ -0,0 +1,224 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _BMI_H_
-+#define _BMI_H_
-+
-+#include "core.h"
-+
-+/*
-+ * Bootloader Messaging Interface (BMI)
-+ *
-+ * BMI is a very simple messaging interface used during initialization
-+ * to read memory, write memory, execute code, and to define an
-+ * application entry PC.
-+ *
-+ * It is used to download an application to QCA988x, to provide
-+ * patches to code that is already resident on QCA988x, and generally
-+ * to examine and modify state.  The Host has an opportunity to use
-+ * BMI only once during bootup.  Once the Host issues a BMI_DONE
-+ * command, this opportunity ends.
-+ *
-+ * The Host writes BMI requests to mailbox0, and reads BMI responses
-+ * from mailbox0.   BMI requests all begin with a command
-+ * (see below for specific commands), and are followed by
-+ * command-specific data.
-+ *
-+ * Flow control:
-+ * The Host can only issue a command once the Target gives it a
-+ * "BMI Command Credit", using AR8K Counter #4.  As soon as the
-+ * Target has completed a command, it issues another BMI Command
-+ * Credit (so the Host can issue the next command).
-+ *
-+ * BMI handles all required Target-side cache flushing.
-+ */
-+
-+/* Maximum data size used for BMI transfers */
-+#define BMI_MAX_DATA_SIZE	256
-+
-+/* len = cmd + addr + length */
-+#define BMI_MAX_CMDBUF_SIZE (BMI_MAX_DATA_SIZE + \
-+			sizeof(u32) + \
-+			sizeof(u32) + \
-+			sizeof(u32))
-+
-+/* BMI Commands */
-+
-+enum bmi_cmd_id {
-+	BMI_NO_COMMAND          = 0,
-+	BMI_DONE                = 1,
-+	BMI_READ_MEMORY         = 2,
-+	BMI_WRITE_MEMORY        = 3,
-+	BMI_EXECUTE             = 4,
-+	BMI_SET_APP_START       = 5,
-+	BMI_READ_SOC_REGISTER   = 6,
-+	BMI_READ_SOC_WORD       = 6,
-+	BMI_WRITE_SOC_REGISTER  = 7,
-+	BMI_WRITE_SOC_WORD      = 7,
-+	BMI_GET_TARGET_ID       = 8,
-+	BMI_GET_TARGET_INFO     = 8,
-+	BMI_ROMPATCH_INSTALL    = 9,
-+	BMI_ROMPATCH_UNINSTALL  = 10,
-+	BMI_ROMPATCH_ACTIVATE   = 11,
-+	BMI_ROMPATCH_DEACTIVATE = 12,
-+	BMI_LZ_STREAM_START     = 13, /* should be followed by LZ_DATA */
-+	BMI_LZ_DATA             = 14,
-+	BMI_NVRAM_PROCESS       = 15,
-+};
-+
-+#define BMI_NVRAM_SEG_NAME_SZ 16
-+
-+struct bmi_cmd {
-+	__le32 id; /* enum bmi_cmd_id */
-+	union {
-+		struct {
-+		} done;
-+		struct {
-+			__le32 addr;
-+			__le32 len;
-+		} read_mem;
-+		struct {
-+			__le32 addr;
-+			__le32 len;
-+			u8 payload[0];
-+		} write_mem;
-+		struct {
-+			__le32 addr;
-+			__le32 param;
-+		} execute;
-+		struct {
-+			__le32 addr;
-+		} set_app_start;
-+		struct {
-+			__le32 addr;
-+		} read_soc_reg;
-+		struct {
-+			__le32 addr;
-+			__le32 value;
-+		} write_soc_reg;
-+		struct {
-+		} get_target_info;
-+		struct {
-+			__le32 rom_addr;
-+			__le32 ram_addr; /* or value */
-+			__le32 size;
-+			__le32 activate; /* 0=install, but dont activate */
-+		} rompatch_install;
-+		struct {
-+			__le32 patch_id;
-+		} rompatch_uninstall;
-+		struct {
-+			__le32 count;
-+			__le32 patch_ids[0]; /* length of @count */
-+		} rompatch_activate;
-+		struct {
-+			__le32 count;
-+			__le32 patch_ids[0]; /* length of @count */
-+		} rompatch_deactivate;
-+		struct {
-+			__le32 addr;
-+		} lz_start;
-+		struct {
-+			__le32 len; /* max BMI_MAX_DATA_SIZE */
-+			u8 payload[0]; /* length of @len */
-+		} lz_data;
-+		struct {
-+			u8 name[BMI_NVRAM_SEG_NAME_SZ];
-+		} nvram_process;
-+		u8 payload[BMI_MAX_CMDBUF_SIZE];
-+	};
-+} __packed;
-+
-+union bmi_resp {
-+	struct {
-+		u8 payload[0];
-+	} read_mem;
-+	struct {
-+		__le32 result;
-+	} execute;
-+	struct {
-+		__le32 value;
-+	} read_soc_reg;
-+	struct {
-+		__le32 len;
-+		__le32 version;
-+		__le32 type;
-+	} get_target_info;
-+	struct {
-+		__le32 patch_id;
-+	} rompatch_install;
-+	struct {
-+		__le32 patch_id;
-+	} rompatch_uninstall;
-+	struct {
-+		/* 0 = nothing executed
-+		 * otherwise = NVRAM segment return value */
-+		__le32 result;
-+	} nvram_process;
-+	u8 payload[BMI_MAX_CMDBUF_SIZE];
-+} __packed;
-+
-+struct bmi_target_info {
-+	u32 version;
-+	u32 type;
-+};
-+
-+
-+/* in msec */
-+#define BMI_COMMUNICATION_TIMEOUT_HZ (1*HZ)
-+
-+#define BMI_CE_NUM_TO_TARG 0
-+#define BMI_CE_NUM_TO_HOST 1
-+
-+int ath10k_bmi_done(struct ath10k *ar);
-+int ath10k_bmi_get_target_info(struct ath10k *ar,
-+			       struct bmi_target_info *target_info);
-+int ath10k_bmi_read_memory(struct ath10k *ar, u32 address,
-+			   void *buffer, u32 length);
-+int ath10k_bmi_write_memory(struct ath10k *ar, u32 address,
-+			    const void *buffer, u32 length);
-+
-+#define ath10k_bmi_read32(ar, item, val)				\
-+	({								\
-+		int ret;						\
-+		u32 addr;						\
-+		__le32 tmp;						\
-+									\
-+		addr = host_interest_item_address(HI_ITEM(item));	\
-+		ret = ath10k_bmi_read_memory(ar, addr, (u8 *)&tmp, 4); \
-+		*val = __le32_to_cpu(tmp);				\
-+		ret;							\
-+	 })
-+
-+#define ath10k_bmi_write32(ar, item, val)				\
-+	({								\
-+		int ret;						\
-+		u32 address;						\
-+		__le32 v = __cpu_to_le32(val);				\
-+									\
-+		address = host_interest_item_address(HI_ITEM(item));	\
-+		ret = ath10k_bmi_write_memory(ar, address,		\
-+					      (u8 *)&v, sizeof(v));	\
-+		ret;							\
-+	})
-+
-+int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param);
-+int ath10k_bmi_lz_stream_start(struct ath10k *ar, u32 address);
-+int ath10k_bmi_lz_data(struct ath10k *ar, const void *buffer, u32 length);
-+int ath10k_bmi_fast_download(struct ath10k *ar, u32 address,
-+			     const void *buffer, u32 length);
-+#endif /* _BMI_H_ */
+FWIW, I also met this problem after I added ath9k_htc
+to my initrd (via /etc/initramfs-tools/modules).
+So I removed it and the issue went away.  I first
+noticed it after resume from suspend-to-disk, but
+later found it doesn't work after warm reboot, too.
+The mainboard has Intel H77 chipset, the TL-WN722N is
+plugged into USB2.0 port.
 
+
+Johannes
