@@ -1,86 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:49890 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755658Ab3EFTOJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 15:14:09 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Received: from mx3.wp.pl ([212.77.101.7]:52479 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755531Ab3ERMDL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:03:11 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:03:10 +0200
+From: stf_xl@wp.pl
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [RFC 0/4] add master channel switch announcement support
-Date: Mon,  6 May 2013 21:13:51 +0200
-Message-Id: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130506_211415_896123_FFF4F9E3)
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 26/32] rt2800: initialize BBP_R128 on proper subroutines
+Date: Sat, 18 May 2013 14:03:49 +0200
+Message-Id: <1368878635-4455-27-git-send-email-stf_xl@wp.pl> (sfid-20130518_142937_654917_A73416DD)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an early RFC of a possible channel switch announcement infrastructure.
-It adds CSA/ECSA handling support for AP. This is required for DFS operation
-(e.g. Wi-Fi Alliance requires this for 802.11h certification). This will also
-be required for IBSS-DFS later.
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-I'd like to discuss if this design approach is going in the right direction.
-What is currently working:
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
- * channels are announced by adding IEs (CSA and Extended CSA) in beacons
- * after some (configurable) time, the channel is switched
- * with the channel switch, CSA/ECSA IEs are removed and channel information
-   is updated.
- * Userspace calls a new command NL80211_CMD_CHANNEL_SWITCH along with channel info
-   (freq + width), whether traffic should be blocked and timing information
- * it currently works for me [TM] on my ath9k based machine
-
-Questions:
-
- * We already have NL80211_CMD_CH_SWITCH_NOTIFY which is only used for notification.
-   Maybe we can rename that and re-use it instead of adding a new command
-   NL80211_CMD_CHANNEL_SWITCH?
- * Changes from HT20/NOHT to HT20/NOHT are handled with normal Channel Switch
-   Announcements, everything else (for 40 MHz) is done with Extended Channel Switch
-   Announcements. As far as I read the spec, we can't  use the secondary channel
-   offset IE in beacons, but maybe I'm wrong here?
- * could other drivers (next to ath9k) work with this API?
-
-Limitations:
- * only works for single interfaces (no plan to change that, due to lack of good concept)
- * Only changes in the same band (e.g. 2GHz -> 2GHz or 5GHz -> 5 GHz) and same
-   operation mode (HT->HT or NOHT->NOHT) are supported. Especially the first
-   restriction would be troublesome when rewriting the beacon (not only channel
-   info has to be changed, but also basic rates, country information, etc ...).
-   => What do you think about this approach?
-   => (An alternative would be to require userspace to supply the next beacon too)
- * probe responses are not handled yet (have to look into it)
- * user notification is missing (we should send an event after this is finished)
- * locking and many corner cases are still broken (will fix that later)
-
-As always, any comments are appreciated.
-
-Cheers,
-	Simon 
-
-Simon Wunderlich (4):
-  cfg80211: add chandef to operating class conversion
-  nl80211/cfg80211: add channel switch command
-  mac80211: add channel switch command and beacon callbacks
-  ath9k: enable CSA functionality in ath9k
-
- drivers/net/wireless/ath/ath9k/main.c |    6 +
- include/linux/ieee80211.h             |    9 ++
- include/net/cfg80211.h                |   15 ++
- include/net/mac80211.h                |   21 +++
- include/uapi/linux/nl80211.h          |   20 +++
- net/mac80211/cfg.c                    |  262 +++++++++++++++++++++++++++++++++
- net/mac80211/driver-ops.h             |   11 ++
- net/mac80211/ieee80211_i.h            |    9 ++
- net/mac80211/iface.c                  |    2 +
- net/mac80211/trace.h                  |   20 +++
- net/mac80211/tx.c                     |   59 ++++++++
- net/mac80211/util.c                   |  210 ++++++++++++++++++++++++++
- net/wireless/nl80211.c                |   76 +++++++++-
- net/wireless/util.c                   |  193 ++++++++++++++++++++++++
- 14 files changed, 912 insertions(+), 1 deletion(-)
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index ba49902..49a4759 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4108,6 +4108,8 @@ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 105, 0x1c);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 106, 0x03);
++
++	rt2800_bbp_write(rt2x00dev, 128, 0x12);
+ }
+ 
+ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+@@ -4289,6 +4291,8 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 106, 0x12);
+ 	else
+ 		WARN_ON(1);
++
++	rt2800_bbp_write(rt2x00dev, 128, 0x12);
+ }
+ 
+ static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
+@@ -4407,11 +4411,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 	}
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3290) ||
+-	    rt2x00_rt(rt2x00dev, RT5390) ||
+-	    rt2x00_rt(rt2x00dev, RT5392))
+-		rt2800_bbp_write(rt2x00dev, 128, 0x12);
+-
+ 	if (rt2x00_rt(rt2x00dev, RT5392)) {
+ 		rt2800_bbp_write(rt2x00dev, 134, 0xd0);
+ 		rt2800_bbp_write(rt2x00dev, 135, 0xf6);
 -- 
-1.7.10.4
+1.7.4.4
 
