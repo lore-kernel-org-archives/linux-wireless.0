@@ -1,88 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay03.solcon.nl ([212.45.32.114]:37474 "EHLO
-	mailrelay03.solcon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820Ab3EPJFJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 05:05:09 -0400
-Message-ID: <5194A12C.6010807@solcon.nl> (sfid-20130516_110514_610400_0803E8D1)
-Date: Thu, 16 May 2013 11:04:44 +0200
-From: Albert Pool <albertpool@solcon.nl>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH V3] rtlwifi: rtl8192cu: Add new USB ID
-References: <1368630196-14704-1-git-send-email-Larry.Finger@lwfinger.net> <5193EEA8.8030900@cogentembedded.com> <5193F146.3030206@lwfinger.net>
-In-Reply-To: <5193F146.3030206@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx4.wp.pl ([212.77.101.8]:18322 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754533Ab3ERMCZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:02:25 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:23 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 01/32] rt2800: make rt2800_init_bbp return void
+Date: Sat, 18 May 2013 14:03:24 +0200
+Message-Id: <1368878635-4455-2-git-send-email-stf_xl@wp.pl> (sfid-20130518_140228_967116_90EB2608)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Op 15-05-13 22:34, Larry Finger schreef:
-> On 05/15/2013 03:23 PM, Sergei Shtylyov wrote:
->> Hello.
->>
->> On 05/15/2013 07:03 PM, Larry Finger wrote:
->>
->>> From: Albert Pool <albertpool@solcon.nl>
->>>
->>> This adds the USB ID of the On Networks N300MA, clone of Netgear 
->>> WNA3100M.
->>>
->>> Signed-off-by: Albert Pool <albertpool@solcon.nl>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> Reported-by: Ana Rey <Anazul77@hotmail.com>
->>> ---
->>>
->>> John,
->>>
->>> Please use this version. V2 still had some whitespace errors that I 
->>> fixed.
->>>
->>> Albert,
->>>
->>> Please use scripts/checkpatch.pl to check the patch before you send it.
->>>
->>> Thanks,
->>>
->>> Larry
->>> ---
->>>
->>>   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
->>>   1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->>> b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->>> index 23d640a..18da6de 100644
->>> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->>> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->>> @@ -349,6 +349,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
->>>       {RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, 
->>> /*ATKK-Gemtek*/
->>>       {RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai 
->>> -Abocom*/
->>>       {RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, 
->>> /*Netgear-Sercomm*/
->>> +    {RTL_USB_DEVICE(0x0846, 0xf001, rtl92cu_hal_cfg)}, /*On Netwrks 
->>> N300MA*/
->>
->>     "Networks", perhaps? Or does it hit 80 columns limit this way?
->
-> That is exactly the problem. I suppose I could allow one line to be 81 
-> characters in length, but that would diminish the effectiveness of my 
-> suggestion that checkpatch be used.
->
-> Thanks for noticing. At least someone is reading the patches.
->
-> Larry
->
->
-So my patch v2 could not be used because the line was longer than 80 
-chars? (It was 82, indeed)
+This function can not fail, we always return 0.
 
-Also the problems with bad signal were due to Ana Rey's AP. It's being 
-fixed or replaced today.
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   14 +++++---------
+ 1 files changed, 5 insertions(+), 9 deletions(-)
 
-Albert
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index b52d70c..f431dcb 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4027,20 +4027,16 @@ static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ }
+ 
+-static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
++static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ {
+ 	unsigned int i;
+ 	u16 eeprom;
+ 	u8 reg_id;
+ 	u8 value;
+ 
+-	if (unlikely(rt2800_wait_bbp_rf_ready(rt2x00dev) ||
+-		     rt2800_wait_bbp_ready(rt2x00dev)))
+-		return -EACCES;
+-
+ 	if (rt2x00_rt(rt2x00dev, RT5592)) {
+ 		rt2800_init_bbp_5592(rt2x00dev);
+-		return 0;
++		return;
+ 	}
+ 
+ 	if (rt2x00_rt(rt2x00dev, RT3352)) {
+@@ -4337,8 +4333,6 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 			rt2800_bbp_write(rt2x00dev, reg_id, value);
+ 		}
+ 	}
+-
+-	return 0;
+ }
+ 
+ static void rt2800_led_open_drain_enable(struct rt2x00_dev *rt2x00dev)
+@@ -5189,9 +5183,11 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 	msleep(1);
+ 
+-	if (unlikely(rt2800_init_bbp(rt2x00dev)))
++	if (unlikely(rt2800_wait_bbp_rf_ready(rt2x00dev) ||
++		     rt2800_wait_bbp_ready(rt2x00dev)))
+ 		return -EIO;
+ 
++	rt2800_init_bbp(rt2x00dev);
+ 	rt2800_init_rfcsr(rt2x00dev);
+ 
+ 	if (rt2x00_is_usb(rt2x00dev) &&
+-- 
+1.7.4.4
+
