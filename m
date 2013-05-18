@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:60550 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932269Ab3EGNCC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 09:02:02 -0400
-Message-ID: <1367931638.32148.87.camel@cumari.coelho.fi> (sfid-20130507_150226_926750_3D2FB5AE)
-Subject: Re: [PATCH 1/3] wlcore: allow TX BA on all TIDs
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 07 May 2013 16:00:38 +0300
-In-Reply-To: <CAB3XZEcyaXwy6w440AWo1JKMB-ZpPzhOc+cKnR=3fFqentdT+g@mail.gmail.com>
-References: <1367930469-29826-1-git-send-email-eliad@wizery.com>
-	 <1367930971.32148.85.camel@cumari.coelho.fi>
-	 <CAB3XZEcyaXwy6w440AWo1JKMB-ZpPzhOc+cKnR=3fFqentdT+g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx4.wp.pl ([212.77.101.8]:14722 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754075Ab3ERMDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:03:10 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:03:08 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 25/32] rt2800: initialize BBP_R120 on 3352 subroutine
+Date: Sat, 18 May 2013 14:03:48 +0200
+Message-Id: <1368878635-4455-26-git-send-email-stf_xl@wp.pl> (sfid-20130518_142938_465952_12745341)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-05-07 at 15:59 +0300, Eliad Peller wrote:
-> On Tue, May 7, 2013 at 3:49 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > Hi Eliad,
-> >
-> > On Tue, 2013-05-07 at 15:41 +0300, Eliad Peller wrote:
-> >> Previous fw limitation prevented us from from doing
-> >> TX BA on TIDs 6/7. However, this restriction no
-> >> longer exists, so enable TX BA on all TIDs.
-> >>
-> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> ---
-> >>  drivers/net/wireless/ti/wlcore/conf.h | 4 ++--
-> >>  1 file changed, 2 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
-> >> index 2b96ff8..80c1ac1 100644
-> >> --- a/drivers/net/wireless/ti/wlcore/conf.h
-> >> +++ b/drivers/net/wireless/ti/wlcore/conf.h
-> >> @@ -590,8 +590,8 @@ struct conf_tx_ac_category {
-> >>
-> >>  #define CONF_TX_MAX_TID_COUNT 8
-> >>
-> >> -/* Allow TX BA on all TIDs but 6,7. These are currently reserved in the FW */
-> >> -#define CONF_TX_BA_ENABLED_TID_BITMAP 0x3F
-> >> +/* Allow TX BA on all TIDs */
-> >> +#define CONF_TX_BA_ENABLED_TID_BITMAP 0xFF
-> >>
-> >>  enum {
-> >>       CONF_CHANNEL_TYPE_DCF = 0,   /* DC/LEGACY*/
-> >
-> > What happened with this?
-> >
-> > https://patchwork.kernel.org/patch/1802841/
-> >
-> hmm... you're right.
-> i forgot about it.
-> i'll delete it from my internal tree :)
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Okay, I'll remove from my rebased tree as well.
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
---
-Luca.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 70e2ff8..ba49902 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4158,6 +4158,8 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 105, 0x34);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 106, 0x05);
++
++	rt2800_bbp_write(rt2x00dev, 120, 0x50);
+ }
+ 
+ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+@@ -4405,9 +4407,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 	}
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3352))
+-		rt2800_bbp_write(rt2x00dev, 120, 0x50);
+-
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+-- 
+1.7.4.4
 
