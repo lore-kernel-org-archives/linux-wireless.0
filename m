@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:45408 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759559Ab3ECPmH (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:56100 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754075Ab3ERAur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 11:42:07 -0400
-Received: by mail-ie0-f169.google.com with SMTP id u16so625562iet.14
-        for <linux-wireless@vger.kernel.org>; Fri, 03 May 2013 08:42:07 -0700 (PDT)
-Date: Fri, 3 May 2013 11:41:02 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: devel@lists.open80211s.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wirelss <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 00/12] MBSS sharing across multiple interfaces
-Message-ID: <20130503154102.GB1438@localhost> (sfid-20130503_174212_650865_49478675)
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
- <BD54DDEB2546894FAB0731EA7B0EDF8D07C5C070@RockMX01.rock.corp>
- <20130503143509.GA1438@localhost>
- <CAEFj986Avr_C5Hm4uRs0oP2ZRa-jnn6eRCJH71jkehcCuQ7iGQ@mail.gmail.com>
+	Fri, 17 May 2013 20:50:47 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 07/17] mwifiex: replace spin_lock_irqsave with spin_lock and fix warn_on
+Date: Fri, 17 May 2013 17:50:24 -0700
+Message-ID: <1368838234-32585-8-git-send-email-bzhao@marvell.com> (sfid-20130518_025051_472050_08CDE56E)
+In-Reply-To: <1368838234-32585-1-git-send-email-bzhao@marvell.com>
+References: <1368838234-32585-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAEFj986Avr_C5Hm4uRs0oP2ZRa-jnn6eRCJH71jkehcCuQ7iGQ@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 03, 2013 at 11:01:48PM +0800, Yeoh Chun-Yeow wrote:
-> Hi, Bob
-> 
-> If we have two mesh interfaces which MBSS sharing is turned on and one
-> Ethernet interface in the same host, can we use the brctl to add the mesh
-> interfaces and Ethernet interface together, like the following?
-> 
-> brctl add br-lan mesh0
-> brctl add br-lan mesh1
-> brctl add br-lan eth0
+From: Avinash Patil <patila@marvell.com>
 
-So in the patch, the frames are already forwarded between the
-mesh interfaces, so we've at least tested the case like this:
+We see this WARN_ON during PCIe unload:
+WARNING: at kernel/smp.c:382 smp_call_function_many+0x66/0x1e1()
 
-mesh0/mesh1 shared
-brctl addif br-lan mesh1
-brctl addif br-lan eth0
+This happens because we are doing PCI iounmap operations while
+holding spinlock via spin_lock_irqsave(). Holding spinlock this
+way causes disabling IRQs and hence PCI iounmap shows warning on
+irqs_disabled() check.
 
-Then frames destined for mesh1/eth0 that arrive at mesh0 will be
-forwarded to the other devices and vice-versa.  I imagine some
-frame duplication would happen if both mesh devices were in the
-bridge, but I haven't tried.
+Use non-irq variant of spin_lock i.e. spin_lock() instead.
 
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 1343725f..c7f11c0 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -687,7 +687,6 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 	int ret = -EINPROGRESS;
+ 	struct mwifiex_private *priv;
+ 	s32 i;
+-	unsigned long flags;
+ 	struct sk_buff *skb;
+ 
+ 	/* mwifiex already shutdown */
+@@ -722,7 +721,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 		}
+ 	}
+ 
+-	spin_lock_irqsave(&adapter->mwifiex_lock, flags);
++	spin_lock(&adapter->mwifiex_lock);
+ 
+ 	if (adapter->if_ops.data_complete) {
+ 		while ((skb = skb_dequeue(&adapter->usb_rx_data_q))) {
+@@ -738,7 +737,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 
+ 	mwifiex_adapter_cleanup(adapter);
+ 
+-	spin_unlock_irqrestore(&adapter->mwifiex_lock, flags);
++	spin_unlock(&adapter->mwifiex_lock);
+ 
+ 	/* Notify completion */
+ 	ret = mwifiex_shutdown_fw_complete(adapter);
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.8.2.3
+
