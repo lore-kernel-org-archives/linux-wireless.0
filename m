@@ -1,70 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21973 "EHLO mx1.redhat.com"
+Received: from mx4.wp.pl ([212.77.101.8]:48473 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753413Ab3EGQFq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 12:05:46 -0400
-Date: Tue, 7 May 2013 18:07:06 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jake Edge <jake@lwn.net>, linux-wireless@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 3.10] iwl4965: workaround connection regression on passive
- channel
-Message-ID: <20130507160705.GC1576@redhat.com> (sfid-20130507_180604_916621_BC6BDC5E)
-References: <20130505143803.7e46e4c6@chukar.edge2.net>
- <20130506123805.GA1602@redhat.com>
- <20130506083759.556dac76@chukar.edge2.net>
- <20130506153044.GB1602@redhat.com>
- <1367854279.8434.13.camel@jlt4.sipsolutions.net>
- <1367855046.8434.16.camel@jlt4.sipsolutions.net>
- <20130507084241.GA1581@redhat.com>
- <1367934810.8328.30.camel@jlt4.sipsolutions.net>
- <20130507153525.GB1576@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130507153525.GB1576@redhat.com>
+	id S1755515Ab3ERMC6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:02:58 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:56 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 19/32] rt2800: initialize BBP_R92 on all subroutines (except 5592)
+Date: Sat, 18 May 2013 14:03:42 +0200
+Message-Id: <1368878635-4455-20-git-send-email-stf_xl@wp.pl> (sfid-20130518_142937_065490_526B3205)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jake reported that since commit 1672c0e31917f49d31d30d79067103432bc20cc7
-"mac80211: start auth/assoc timeout on frame status", he is unable to
-connect to his AP, which is configured to use passive channel.
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-After switch to passive channel 4965 firmware drops any TX packet until
-it receives beacon. Before commit 1672c0e3 we waited on channel and
-retransmit packet after 200ms, that makes we receive beacon on the
-meantime and association process succeed. New mac80211 behaviour cause
-that any ASSOC frame fail immediately on iwl4965 and we can not
-associate.
-
-This patch restore old mac80211 behaviour for iwl4965, by removing
-IEEE80211_HW_REPORTS_TX_ACK_STATUS feature. This feature will be
-added again to iwl4965 driver, when different, more complex
-workaround for this firmware issue, will be added to the driver.
-
-Cc: stable@vger.kernel.org # 3.9
-Bisected-by: Jake Edge <jake@lwn.net>
-Reported-and-tested-by: Jake Edge <jake@lwn.net>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/iwlegacy/4965-mac.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |   24 ++++++++++++++++--------
+ 1 files changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index b8f82e6..9a95045 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -5741,8 +5741,7 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
- 	hw->flags =
- 	    IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_AMPDU_AGGREGATION |
- 	    IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC | IEEE80211_HW_SPECTRUM_MGMT |
--	    IEEE80211_HW_REPORTS_TX_ACK_STATUS | IEEE80211_HW_SUPPORTS_PS |
--	    IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-+	    IEEE80211_HW_SUPPORTS_PS | IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
- 	if (il->cfg->sku & IL_SKU_N)
- 		hw->flags |=
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 03145f7..3b3f66b 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3977,6 +3977,8 @@ static void rt2800_init_bbp_305x_soc(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
++
++	rt2800_bbp_write(rt2x00dev, 92, 0x00);
+ }
+ 
+ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
+@@ -4008,6 +4010,8 @@ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
++
++	rt2800_bbp_write(rt2x00dev, 92, 0x00);
+ }
+ 
+ static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
+@@ -4033,6 +4037,8 @@ static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
++
++	rt2800_bbp_write(rt2x00dev, 92, 0x00);
+ }
+ 
+ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
+@@ -4069,6 +4075,8 @@ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 86, 0x38);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
++
++	rt2800_bbp_write(rt2x00dev, 92, 0x02);
+ }
+ 
+ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+@@ -4109,6 +4117,8 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 88, 0x90);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
++
++	rt2800_bbp_write(rt2x00dev, 92, 0x02);
+ }
+ 
+ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+@@ -4134,6 +4144,8 @@ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
++
++	rt2800_bbp_write(rt2x00dev, 92, 0x00);
+ }
+ 
+ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
+@@ -4161,6 +4173,8 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
++
++	rt2800_bbp_write(rt2x00dev, 92, 0x00);
+ }
+ 
+ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+@@ -4199,6 +4213,8 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 88, 0x90);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
++
++	rt2800_bbp_write(rt2x00dev, 92, 0x02);
+ }
+ 
+ static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
+@@ -4317,14 +4333,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 	}
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3290) ||
+-	    rt2x00_rt(rt2x00dev, RT3352) ||
+-	    rt2x00_rt(rt2x00dev, RT5390) ||
+-	    rt2x00_rt(rt2x00dev, RT5392))
+-		rt2800_bbp_write(rt2x00dev, 92, 0x02);
+-	else
+-		rt2800_bbp_write(rt2x00dev, 92, 0x00);
+-
+ 	if (rt2x00_rt(rt2x00dev, RT5392)) {
+ 		rt2800_bbp_write(rt2x00dev, 95, 0x9a);
+ 		rt2800_bbp_write(rt2x00dev, 98, 0x12);
 -- 
-1.7.11.7
+1.7.4.4
 
