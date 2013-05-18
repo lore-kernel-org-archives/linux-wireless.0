@@ -1,202 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:57974 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759393Ab3EOOwv (ORCPT
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:45806 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755876Ab3ERAzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:52:51 -0400
-Subject: [PATCH 24/29] ath10k: add trace.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Wed, 15 May 2013 17:46:13 +0300
-Message-ID: <20130515144613.4492.89111.stgit@localhost6.localdomain6> (sfid-20130515_165300_260835_06AC97A6)
-In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
+	Fri, 17 May 2013 20:55:05 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 14/17] mwifiex: define a macro for MPA base address
+Date: Fri, 17 May 2013 17:54:34 -0700
+Message-ID: <1368838474-307-1-git-send-email-bzhao@marvell.com> (sfid-20130518_025511_974565_D55AD729)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/trace.h |  170 +++++++++++++++++++++++++++++++
- 1 file changed, 170 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/trace.h
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-new file mode 100644
-index 0000000..85e806b
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -0,0 +1,170 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#if !defined(_TRACE_H_) || defined(TRACE_HEADER_MULTI_READ)
-+
-+#include <linux/tracepoint.h>
-+
-+#define _TRACE_H_
-+
-+/* create empty functions when tracing is disabled */
-+#if !defined(CONFIG_ATH10K_TRACING)
-+#undef TRACE_EVENT
-+#define TRACE_EVENT(name, proto, ...) \
-+static inline void trace_ ## name(proto) {}
-+#undef DECLARE_EVENT_CLASS
-+#define DECLARE_EVENT_CLASS(...)
-+#undef DEFINE_EVENT
-+#define DEFINE_EVENT(evt_class, name, proto, ...) \
-+static inline void trace_ ## name(proto) {}
-+#endif /* !CONFIG_ATH10K_TRACING || __CHECKER__ */
-+
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM ath10k
-+
-+#define ATH10K_MSG_MAX 200
-+
-+DECLARE_EVENT_CLASS(ath10k_log_event,
-+	TP_PROTO(struct va_format *vaf),
-+	TP_ARGS(vaf),
-+	TP_STRUCT__entry(
-+		__dynamic_array(char, msg, ATH10K_MSG_MAX)
-+	),
-+	TP_fast_assign(
-+		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-+				       ATH10K_MSG_MAX,
-+				       vaf->fmt,
-+				       *vaf->va) >= ATH10K_MSG_MAX);
-+	),
-+	TP_printk("%s", __get_str(msg))
-+);
-+
-+DEFINE_EVENT(ath10k_log_event, ath10k_log_err,
-+	     TP_PROTO(struct va_format *vaf),
-+	     TP_ARGS(vaf)
-+);
-+
-+DEFINE_EVENT(ath10k_log_event, ath10k_log_warn,
-+	     TP_PROTO(struct va_format *vaf),
-+	     TP_ARGS(vaf)
-+);
-+
-+DEFINE_EVENT(ath10k_log_event, ath10k_log_info,
-+	     TP_PROTO(struct va_format *vaf),
-+	     TP_ARGS(vaf)
-+);
-+
-+TRACE_EVENT(ath10k_log_dbg,
-+	TP_PROTO(unsigned int level, struct va_format *vaf),
-+	TP_ARGS(level, vaf),
-+	TP_STRUCT__entry(
-+		__field(unsigned int, level)
-+		__dynamic_array(char, msg, ATH10K_MSG_MAX)
-+	),
-+	TP_fast_assign(
-+		__entry->level = level;
-+		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-+				       ATH10K_MSG_MAX,
-+				       vaf->fmt,
-+				       *vaf->va) >= ATH10K_MSG_MAX);
-+	),
-+	TP_printk("%s", __get_str(msg))
-+);
-+
-+TRACE_EVENT(ath10k_log_dbg_dump,
-+	TP_PROTO(const char *msg, const char *prefix,
-+		 const void *buf, size_t buf_len),
-+
-+	TP_ARGS(msg, prefix, buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__string(msg, msg)
-+		__string(prefix, prefix)
-+		__field(size_t, buf_len)
-+		__dynamic_array(u8, buf, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(msg, msg);
-+		__assign_str(prefix, prefix);
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(buf), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"%s/%s\n", __get_str(prefix), __get_str(msg)
-+	)
-+);
-+
-+TRACE_EVENT(ath10k_wmi_cmd,
-+	TP_PROTO(int id, void *buf, size_t buf_len),
-+
-+	TP_ARGS(id, buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__field(unsigned int, id)
-+		__field(size_t, buf_len)
-+		__dynamic_array(u8, buf, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->id = id;
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(buf), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"id %d len %zu",
-+		__entry->id,
-+		__entry->buf_len
-+	)
-+);
-+
-+TRACE_EVENT(ath10k_wmi_event,
-+	TP_PROTO(int id, void *buf, size_t buf_len),
-+
-+	TP_ARGS(id, buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__field(unsigned int, id)
-+		__field(size_t, buf_len)
-+		__dynamic_array(u8, buf, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->id = id;
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(buf), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"id %d len %zu",
-+		__entry->id,
-+		__entry->buf_len
-+	)
-+);
-+
-+#endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
-+
-+/* we don't want to use include/trace/events */
-+#undef TRACE_INCLUDE_PATH
-+#define TRACE_INCLUDE_PATH .
-+#undef TRACE_INCLUDE_FILE
-+#define TRACE_INCLUDE_FILE trace
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
+As Multiple-Port Aggregation base address value is fixed, we can
+have a macro for it.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c | 4 ++--
+ drivers/net/wireless/mwifiex/sdio.h | 1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 99a508b..1892e88 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1100,7 +1100,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 		dev_dbg(adapter->dev, "info: do_rx_aggr: num of packets: %d\n",
+ 			card->mpa_rx.pkt_cnt);
+ 
+-		mport = (adapter->ioport | 0x1000 |
++		mport = (adapter->ioport | SDIO_MPA_ADDR_BASE |
+ 			 (card->mpa_rx.ports << 4)) + card->mpa_rx.start_port;
+ 
+ 		if (mwifiex_read_data_sync(adapter, card->mpa_rx.buf,
+@@ -1419,7 +1419,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 		dev_dbg(adapter->dev, "data: %s: send aggr buffer: %d %d\n",
+ 			__func__,
+ 				card->mpa_tx.start_port, card->mpa_tx.ports);
+-		mport = (adapter->ioport | 0x1000 |
++		mport = (adapter->ioport | SDIO_MPA_ADDR_BASE |
+ 			 (card->mpa_tx.ports << 4)) + card->mpa_tx.start_port;
+ 		ret = mwifiex_write_data_to_card(adapter, card->mpa_tx.buf,
+ 						 card->mpa_tx.buf_len, mport);
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 0d931f7..e4016d2 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -42,6 +42,7 @@
+ 
+ #define MWIFIEX_SDIO_BYTE_MODE_MASK	0x80000000
+ 
++#define SDIO_MPA_ADDR_BASE		0x1000
+ #define CTRL_PORT			0
+ #define CTRL_PORT_MASK			0x0001
+ 
+-- 
+1.8.2.3
 
