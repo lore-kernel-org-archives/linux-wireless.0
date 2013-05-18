@@ -1,66 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:57048 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269Ab3EPLkf (ORCPT
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:42877 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756507Ab3ERAyF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 07:40:35 -0400
-Date: Thu, 16 May 2013 13:40:28 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv2 00/18] Add support for 5 and 10 MHz channels
-Message-ID: <20130516114028.GA27887@pandem0nium> (sfid-20130516_134038_475899_28B50753)
-References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <CAJ-VmonrfSx6KLjNdPwtV_8q=Jmjz9KRSYmoLSXt7yocU=y35A@mail.gmail.com>
+	Fri, 17 May 2013 20:54:05 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 11/17] mwifiex: replace unnecessary u32 variables with u8 in sdio.c
+Date: Fri, 17 May 2013 17:53:42 -0700
+Message-ID: <1368838422-32670-1-git-send-email-bzhao@marvell.com> (sfid-20130518_025414_883161_E02535A9)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="nFreZHaLTZJo0R7j"
-In-Reply-To: <CAJ-VmonrfSx6KLjNdPwtV_8q=Jmjz9KRSYmoLSXt7yocU=y35A@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Amitkumar Karwar <akarwar@marvell.com>
 
---nFreZHaLTZJo0R7j
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Some u32 variables in sdio.c are used to store/pass u8 values.
+Replace them with u8 variables.
 
-Hello Adrian,
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-On Wed, May 15, 2013 at 01:59:39PM -0700, Adrian Chadd wrote:
-> Have you tried interoperating with FreeBSD?
->=20
-> Have you tried interoperating with some of the atheros AP builds that
-> are out there?
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 022e9fd..e4357a6 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -294,13 +294,13 @@ static struct sdio_driver mwifiex_sdio = {
+  * This function writes data into SDIO card register.
+  */
+ static int
+-mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u32 data)
++mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u8 data)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	int ret = -1;
+ 
+ 	sdio_claim_host(card->func);
+-	sdio_writeb(card->func, (u8) data, reg, &ret);
++	sdio_writeb(card->func, data, reg, &ret);
+ 	sdio_release_host(card->func);
+ 
+ 	return ret;
+@@ -310,7 +310,7 @@ mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u32 data)
+  * This function reads data from SDIO card register.
+  */
+ static int
+-mwifiex_read_reg(struct mwifiex_adapter *adapter, u32 reg, u32 *data)
++mwifiex_read_reg(struct mwifiex_adapter *adapter, u32 reg, u8 *data)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	int ret = -1;
+@@ -421,7 +421,7 @@ static int mwifiex_pm_wakeup_card_complete(struct mwifiex_adapter *adapter)
+  */
+ static int mwifiex_init_sdio_ioport(struct mwifiex_adapter *adapter)
+ {
+-	u32 reg;
++	u8 reg;
+ 	struct sdio_mmc_card *card = adapter->card;
+ 
+ 	adapter->ioport = 0;
+@@ -580,7 +580,7 @@ mwifiex_sdio_poll_card_status(struct mwifiex_adapter *adapter, u8 bits)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	u32 tries;
+-	u32 cs;
++	u8 cs;
+ 
+ 	for (tries = 0; tries < MAX_POLL_TRIES; tries++) {
+ 		if (mwifiex_read_reg(adapter, card->reg->poll_reg, &cs))
+@@ -604,7 +604,7 @@ mwifiex_sdio_read_fw_status(struct mwifiex_adapter *adapter, u16 *dat)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	const struct mwifiex_sdio_card_reg *reg = card->reg;
+-	u32 fws0, fws1;
++	u8 fws0, fws1;
+ 
+ 	if (mwifiex_read_reg(adapter, reg->status_reg_0, &fws0))
+ 		return -1;
+@@ -625,14 +625,14 @@ mwifiex_sdio_read_fw_status(struct mwifiex_adapter *adapter, u16 *dat)
+  */
+ static int mwifiex_sdio_disable_host_int(struct mwifiex_adapter *adapter)
+ {
+-	u32 host_int_mask;
++	u8 host_int_mask, host_int_disable = HOST_INT_DISABLE;
+ 
+ 	/* Read back the host_int_mask register */
+ 	if (mwifiex_read_reg(adapter, HOST_INT_MASK_REG, &host_int_mask))
+ 		return -1;
+ 
+ 	/* Update with the mask and write back to the register */
+-	host_int_mask &= ~HOST_INT_DISABLE;
++	host_int_mask &= ~host_int_disable;
+ 
+ 	if (mwifiex_write_reg(adapter, HOST_INT_MASK_REG, host_int_mask)) {
+ 		dev_err(adapter->dev, "disable host interrupt failed\n");
+@@ -712,7 +712,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 	u8 *firmware = fw->fw_buf;
+ 	u32 firmware_len = fw->fw_len;
+ 	u32 offset = 0;
+-	u32 base0, base1;
++	u8 base0, base1;
+ 	u8 *fwbuf;
+ 	u16 len = 0;
+ 	u32 txlen, tx_blocks = 0, tries;
+@@ -854,7 +854,7 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
+ 	int ret = 0;
+ 	u16 firmware_stat;
+ 	u32 tries;
+-	u32 winner_status;
++	u8 winner_status;
+ 
+ 	/* Wait for firmware initialization event */
+ 	for (tries = 0; tries < poll_num; tries++) {
+@@ -889,7 +889,7 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
+ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+-	u32 sdio_ireg;
++	u8 sdio_ireg;
+ 	unsigned long flags;
+ 
+ 	if (mwifiex_read_data_sync(adapter, card->mp_regs,
+@@ -1284,7 +1284,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 
+ 			if (mwifiex_sdio_card_to_host_mp_aggr(adapter, skb,
+ 							      port)) {
+-				u32 cr = 0;
++				u8 cr = 0;
+ 
+ 				dev_err(adapter->dev, "card_to_host_mpa failed:"
+ 					" int status=%#x\n", sdio_ireg);
+@@ -1644,7 +1644,7 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	const struct mwifiex_sdio_card_reg *reg = card->reg;
+ 	int ret;
+-	u32 sdio_ireg;
++	u8 sdio_ireg;
+ 
+ 	/*
+ 	 * Read the HOST_INT_STATUS_REG for ACK the first interrupt got
+-- 
+1.8.2.3
 
-Both no - the only interoperability I tested was ath5k and ath9k (and there
-was some stuff to be fixed too).
-
->=20
-> I'd like to do some interoperability tests with this at some point
-> soon just to ensure things aren't too crazy.
-
-I don't have any Atheros AP builds here, and don't plan to test. If you
-have access to them or would like test FreeBSD, that would be good. :)
-
-Thanks,
-	Simon
-
---nFreZHaLTZJo0R7j
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlGUxawACgkQrzg/fFk7axbrCwCdEzka9itrO7/u+HRLxlLifFaE
-KkwAn3W7z30PP8YTxlN+yRGY+L+0IVgd
-=MHmW
------END PGP SIGNATURE-----
-
---nFreZHaLTZJo0R7j--
