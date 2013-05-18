@@ -1,39 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:33874 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759631Ab3E2TxF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 15:53:05 -0400
-Message-ID: <1369857181.12820.6.camel@jlt4.sipsolutions.net> (sfid-20130529_215310_350608_8D1DB974)
-Subject: Re: [PATCH] mac80211: mesh formation info properly set
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jacob Minshall <jacob@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Wed, 29 May 2013 21:53:01 +0200
-In-Reply-To: <1369857129.12820.5.camel@jlt4.sipsolutions.net> (sfid-20130529_215221_985597_4EBA8B9A)
-References: <1369855313-25871-1-git-send-email-jacob@cozybit.com>
-	 (sfid-20130529_212202_758720_0E1A739C) <1369857129.12820.5.camel@jlt4.sipsolutions.net>
-	 (sfid-20130529_215221_985597_4EBA8B9A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx3.wp.pl ([212.77.101.7]:58111 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755139Ab3ERMCi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:02:38 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:36 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 08/32] rt2800: initialize BBP_R65 & BBP_R66 on all subroutines (except 5592)
+Date: Sat, 18 May 2013 14:03:31 +0200
+Message-Id: <1368878635-4455-9-git-send-email-stf_xl@wp.pl> (sfid-20130518_140241_752184_96AE6F5E)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-05-29 at 21:52 +0200, Johannes Berg wrote:
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-> >  	atomic_inc(&sdata->u.mesh.estab_plinks);
-> > -	return mesh_accept_plinks_update(sdata);
-> > +	mesh_accept_plinks_update(sdata);
-> > +	return BSS_CHANGED_BEACON;
-> 
-> These changes seem odd to me, why doesn't mesh_accept_plinks_update()
-> just return the change value then?
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   24 +++++++++++++++++++++---
+ 1 files changed, 21 insertions(+), 3 deletions(-)
 
-Oh wait, n/m, but shouldn't you have something like
-
-	return mesh_accept_...(...) | BSS_CHANGED_BEACON;
-
-?
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index d7e6dba..0265cf7 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3956,14 +3956,21 @@ static void rt2800_init_bbp_early(struct rt2x00_dev *rt2x00dev)
+ static void rt2800_init_bbp_305x_soc(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2800_bbp_write(rt2x00dev, 31, 0x08);
++
++	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
++	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ }
+ 
+ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
+ {
++	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
++	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ }
+ 
+ static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
+ {
++	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
++	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ }
+ 
+ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
+@@ -3971,6 +3978,9 @@ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 31, 0x08);
++
++	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
++	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ }
+ 
+ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+@@ -3981,15 +3991,23 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 31, 0x08);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 47, 0x48);
++
++	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
++	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ }
+ 
+ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+ {
++	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
++	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ }
+ 
+ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2800_bbp_write(rt2x00dev, 31, 0x08);
++
++	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
++	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ }
+ 
+ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+@@ -3997,6 +4015,9 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 31, 0x08);
++
++	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
++	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ }
+ 
+ static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
+@@ -4115,9 +4136,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 	}
+ 
+-	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
+-	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+-
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+ 	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+-- 
+1.7.4.4
 
