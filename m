@@ -1,39 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:49548 "EHLO mout.gmx.net"
+Received: from mx4.wp.pl ([212.77.101.8]:41293 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760009Ab3EXKLH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 06:11:07 -0400
-Received: from mailout-de.gmx.net ([10.1.76.12]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0LrY9r-1UTbeu0Mpx-013MXD for
- <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 12:11:05 +0200
-Message-ID: <519F3CB7.6010006@rempel-privat.de> (sfid-20130524_121111_045910_52AB72BB)
-Date: Fri, 24 May 2013 12:11:03 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] mac80211: add STBC flag for radiotap
-References: <1369250674.8207.26.camel@jlt4.sipsolutions.net>  <1369389945-805-1-git-send-email-linux@rempel-privat.de>  (sfid-20130524_120552_318974_4993675A) <1369390088.8290.5.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1369390088.8290.5.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1754776Ab3ERMC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:02:27 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:24 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 02/32] rt2800: prepare for rt2800_init_bbp spit
+Date: Sat, 18 May 2013 14:03:25 +0200
+Message-Id: <1368878635-4455-3-git-send-email-stf_xl@wp.pl> (sfid-20130518_140231_384841_56AF8454)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 24.05.2013 12:08, schrieb Johannes Berg:
-> On Fri, 2013-05-24 at 12:05 +0200, Oleksij Rempel wrote:
->> Some chips can tell us if received frame was
->> encoded with STBC or not. To make this information available
->> in user space we can use updated radiotap specification:
->> http://www.radiotap.org/defined-fields/MCS
->>
->> This patch will set number of STBC encoded spatial streams (Nss).
->> The HAVE_STBC flag should be provided by driver.
->
-> Applied, thanks.
->
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-thank you.
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   57 ++++++++++++++++++++++++++++++-
+ 1 files changed, 56 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index f431dcb..e04b1fa 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3953,6 +3953,34 @@ static void rt2800_init_bbp_early(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 106, 0x35);
+ }
+ 
++static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
++{
++}
++
++static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
++{
++}
++
++static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
++{
++}
++
++static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
++{
++}
++
++static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
++{
++}
++
++static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
++{
++}
++
++static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
++{
++}
++
+ static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int ant, div_mode;
+@@ -4034,7 +4062,34 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	u8 reg_id;
+ 	u8 value;
+ 
+-	if (rt2x00_rt(rt2x00dev, RT5592)) {
++	switch (rt2x00dev->chip.rt) {
++	case RT2860:
++	case RT2872:
++	case RT2883:
++		rt2800_init_bbp_28xx(rt2x00dev);
++		break;
++	case RT3070:
++	case RT3071:
++	case RT3090:
++		rt2800_init_bbp_30xx(rt2x00dev);
++		break;
++	case RT3290:
++		rt2800_init_bbp_3290(rt2x00dev);
++		break;
++	case RT3352:
++		rt2800_init_bbp_3352(rt2x00dev);
++		break;
++	case RT3390:
++		rt2800_init_bbp_3390(rt2x00dev);
++		break;
++	case RT3572:
++		rt2800_init_bbp_3572(rt2x00dev);
++		break;
++	case RT5390:
++	case RT5392:
++		rt2800_init_bbp_53xx(rt2x00dev);
++		break;
++	case RT5592:
+ 		rt2800_init_bbp_5592(rt2x00dev);
+ 		return;
+ 	}
 -- 
-Regards,
-Oleksij
+1.7.4.4
+
