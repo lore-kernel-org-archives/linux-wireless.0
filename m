@@ -1,43 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34045 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756244Ab3EVRaI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 May 2013 13:30:08 -0400
-Date: Wed, 22 May 2013 13:18:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from mx3.wp.pl ([212.77.101.7]:55308 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755531Ab3ERMDC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:03:02 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:03:00 +0200
+From: stf_xl@wp.pl
 To: linux-wireless@vger.kernel.org
-Cc: linux-bluetooth@vger.kernel.org, linux-nfc@vger.kernel.org
-Subject: Linux wireless summit, 19-20 September 2013 in New Orleans!
-Message-ID: <20130522171841.GE2113@tuxdriver.com> (sfid-20130522_193012_486555_C82EF154)
-References: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 21/32] rt2800: initialize BBP_R103 on all subroutines (except 5592)
+Date: Sat, 18 May 2013 14:03:44 +0200
+Message-Id: <1368878635-4455-22-git-send-email-stf_xl@wp.pl> (sfid-20130518_142939_179213_358D5BA5)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Announcement...there will be a Linux wireless networking mini-summit
-event coming soon.  It will be on 19-20 September in New Orleans,
-just after LinuxCon North America and concurrent with the Linux
-Plumbers Conference.
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Attendees of the wireless mini-summit must also register for
-either LinuxCon North America or for Linux Plumbers Conference.
-More information is available here:
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   38 +++++++++++++++++++-----------
+ 1 files changed, 24 insertions(+), 14 deletions(-)
 
-        http://wireless.kernel.org/en/developers/Summits/New-Orleans-2013
-
-Please notice that the above is a wiki -- please add your name to
-the bottom of the page if you intend to participate in the wireless
-summit event.  As the event draws nearer, we will hash-out the
-discussion topics and the agenda for the event on that wiki.  If you
-have suggestions or want other changes, please make them and/or let
-us know here.
-
-I hope to see you in New Orleans!
-
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index e08a2d2..594b1e3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3979,6 +3979,8 @@ static void rt2800_init_bbp_305x_soc(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
++
++	rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ }
+ 
+ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
+@@ -4012,6 +4014,8 @@ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
++
++	rt2800_bbp_write(rt2x00dev, 103, 0x00);
+ }
+ 
+ static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
+@@ -4039,6 +4043,13 @@ static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
++
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F) ||
++	    rt2x00_rt_rev_gte(rt2x00dev, RT3071, REV_RT3071E) ||
++	    rt2x00_rt_rev_gte(rt2x00dev, RT3090, REV_RT3090E))
++		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
++	else
++		rt2800_bbp_write(rt2x00dev, 103, 0x00);
+ }
+ 
+ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
+@@ -4077,6 +4088,8 @@ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x02);
++
++	rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ }
+ 
+ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+@@ -4119,6 +4132,8 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x02);
++
++	rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ }
+ 
+ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+@@ -4146,6 +4161,11 @@ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
++
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E))
++		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
++	else
++		rt2800_bbp_write(rt2x00dev, 103, 0x00);
+ }
+ 
+ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
+@@ -4175,6 +4195,8 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
++
++	rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ }
+ 
+ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+@@ -4220,6 +4242,8 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 95, 0x9a);
+ 		rt2800_bbp_write(rt2x00dev, 98, 0x12);
+ 	}
++
++	rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ }
+ 
+ static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
+@@ -4338,20 +4362,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 	}
+ 
+-	if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F) ||
+-	    rt2x00_rt_rev_gte(rt2x00dev, RT3071, REV_RT3071E) ||
+-	    rt2x00_rt_rev_gte(rt2x00dev, RT3090, REV_RT3090E) ||
+-	    rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E) ||
+-	    rt2x00_rt(rt2x00dev, RT3290) ||
+-	    rt2x00_rt(rt2x00dev, RT3352) ||
+-	    rt2x00_rt(rt2x00dev, RT3572) ||
+-	    rt2x00_rt(rt2x00dev, RT5390) ||
+-	    rt2x00_rt(rt2x00dev, RT5392) ||
+-	    rt2800_is_305x_soc(rt2x00dev))
+-		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+-	else
+-		rt2800_bbp_write(rt2x00dev, 103, 0x00);
+-
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+ 	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.4
+
