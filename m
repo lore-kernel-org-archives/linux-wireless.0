@@ -1,201 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:49891 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754882Ab3EFTOK (ORCPT
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:48722 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751244Ab3ERAzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 15:14:10 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [RFC 2/4] nl80211/cfg80211: add channel switch command
-Date: Mon,  6 May 2013 21:13:53 +0200
-Message-Id: <1367867635-3459-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130506_211416_612967_EC387FFA)
-In-Reply-To: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Fri, 17 May 2013 20:55:10 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 16/17] mwifiex: code rearrangement in multiport aggregation path
+Date: Fri, 17 May 2013 17:54:51 -0700
+Message-ID: <1368838491-376-1-git-send-email-bzhao@marvell.com> (sfid-20130518_025516_638688_AA5228F4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To allow channel switch announcements within beacons, add
-the channel switch command to nl80211/cfg80211. This is
-implementation is intended for AP and (later) IBSS mode.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+There are some macros defined for multiport aggregation
+calculations. As we may need to add some more code to
+accomodate new chipsets, we will change them to inline
+functions. Also, use dynamic allocation for Rx buffer array.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- include/net/cfg80211.h       |    4 +++
- include/uapi/linux/nl80211.h |   20 +++++++++++
- net/wireless/nl80211.c       |   76 +++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 99 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/sdio.c | 17 +++++---
+ drivers/net/wireless/mwifiex/sdio.h | 83 +++++++++++++++++++++++--------------
+ 2 files changed, 64 insertions(+), 36 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f46ac71..d7afb1f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2257,6 +2257,10 @@ struct cfg80211_ops {
- 				    u16 duration);
- 	void	(*crit_proto_stop)(struct wiphy *wiphy,
- 				   struct wireless_dev *wdev);
-+	int	(*channel_switch)(struct wiphy *wiphy,
-+				  struct net_device *dev,
-+				  struct cfg80211_chan_def *chandef,
-+				  bool block_tx, u32 count);
- };
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 1892e88..4b196dc 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1084,10 +1084,10 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 	if (f_aggr_cur) {
+ 		dev_dbg(adapter->dev, "info: current packet aggregation\n");
+ 		/* Curr pkt can be aggregated */
+-		MP_RX_AGGR_SETUP(card, skb, port);
++		mp_rx_aggr_setup(card, skb, port);
  
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index b484307..f9b168b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -648,6 +648,16 @@
-  * @NL80211_CMD_CRIT_PROTOCOL_STOP: Indicates the connection reliability can
-  *	return back to normal.
-  *
-+ * @NL80211_CMD_CHANNEL_SWITCH: Perform a channel switch by announcing the
-+ *	the new channel information (Channel Switch Announcement - CSA)
-+ *	in the beacon for some time (as defined in the
-+ *	%NL80211_ATTR_CH_SWITCH_COUNT parameter) and then change to the
-+ *	new channel. Userspace provides the new channel information (using
-+ *	%NL80211_ATTR_WIPHY_FREQ and the attributes determining channel
-+ *	width). %NL80211_ATTR_CH_SWITCH_BLOCK_TX may be supplied to inform
-+ *	other station that transmission must be blocked until the channel
-+ *	switch is complete.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -810,6 +820,7 @@ enum nl80211_commands {
- 	NL80211_CMD_CRIT_PROTOCOL_START,
- 	NL80211_CMD_CRIT_PROTOCOL_STOP,
+ 		if (MP_RX_AGGR_PKT_LIMIT_REACHED(card) ||
+-		    MP_RX_AGGR_PORT_LIMIT_REACHED(card)) {
++		    mp_rx_aggr_port_limit_reached(card)) {
+ 			dev_dbg(adapter->dev, "info: %s: aggregated packet "
+ 				"limit reached\n", __func__);
+ 			/* No more pkts allowed in Aggr buf, rx it */
+@@ -1358,7 +1358,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 			__func__);
  
-+	NL80211_CMD_CHANNEL_SWITCH,
- 	/* add new commands above here */
+ 		if (MP_TX_AGGR_IN_PROGRESS(card)) {
+-			if (!MP_TX_AGGR_PORT_LIMIT_REACHED(card) &&
++			if (!mp_tx_aggr_port_limit_reached(card) &&
+ 			    MP_TX_AGGR_BUF_HAS_ROOM(card, pkt_len)) {
+ 				f_precopy_cur_buf = 1;
  
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1431,6 +1442,12 @@ enum nl80211_commands {
-  * @NL80211_ATTR_MAX_CRIT_PROT_DURATION: duration in milliseconds in which
-  *      the connection should have increased reliability (u16).
-  *
-+ * @NL80211_ATTR_CH_SWITCH_COUNT: u32 attribute specifying the number of TBTT's
-+ *	until the channel switch event.
-+ * @NL80211_ATTR_CH_SWITCH_BLOCK_TX: flag attribute specifying that transmission
-+ *	must be blocked on the current channel (before the channel switch
-+ *	operation).
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1729,6 +1746,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_CRIT_PROT_ID,
- 	NL80211_ATTR_MAX_CRIT_PROT_DURATION,
+@@ -1371,7 +1371,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 				/* No room in Aggr buf, send it */
+ 				f_send_aggr_buf = 1;
  
-+	NL80211_ATTR_CH_SWITCH_COUNT,
-+	NL80211_ATTR_CH_SWITCH_BLOCK_TX,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+-				if (MP_TX_AGGR_PORT_LIMIT_REACHED(card) ||
++				if (mp_tx_aggr_port_limit_reached(card) ||
+ 				    !(card->mp_wr_bitmap &
+ 				      (1 << card->curr_wr_port)))
+ 					f_send_cur_buf = 1;
+@@ -1410,7 +1410,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 		MP_TX_AGGR_BUF_PUT(card, payload, pkt_len, port);
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9cdcd9e..63920db 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -378,6 +378,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_MDID] = { .type = NLA_U16 },
- 	[NL80211_ATTR_IE_RIC] = { .type = NLA_BINARY,
- 				  .len = IEEE80211_MAX_DATA_LEN },
-+	[NL80211_ATTR_CH_SWITCH_COUNT] = { .type = NLA_U32 },
-+	[NL80211_ATTR_CH_SWITCH_BLOCK_TX] = { .type = NLA_FLAG },
- };
+ 		if (MP_TX_AGGR_PKT_LIMIT_REACHED(card) ||
+-		    MP_TX_AGGR_PORT_LIMIT_REACHED(card))
++		    mp_tx_aggr_port_limit_reached(card))
+ 			/* No more pkts allowed in Aggr buf, send it */
+ 			f_send_aggr_buf = 1;
+ 	}
+@@ -1687,6 +1687,11 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 	if (!card->mp_regs)
+ 		return -ENOMEM;
  
- /* policy for the key attributes */
-@@ -5598,6 +5600,70 @@ err_locked:
- 	return err;
++	/* Allocate skb pointer buffers */
++	card->mpa_rx.skb_arr = kzalloc((sizeof(void *)) *
++				       card->mp_agg_pkt_limit, GFP_KERNEL);
++	card->mpa_rx.len_arr = kzalloc(sizeof(*card->mpa_rx.len_arr) *
++				       card->mp_agg_pkt_limit, GFP_KERNEL);
+ 	ret = mwifiex_alloc_sdio_mpa_buffers(adapter,
+ 					     SDIO_MP_TX_AGGR_DEF_BUF_SIZE,
+ 					     SDIO_MP_RX_AGGR_DEF_BUF_SIZE);
+@@ -1723,6 +1728,8 @@ static void mwifiex_cleanup_sdio(struct mwifiex_adapter *adapter)
+ 	struct sdio_mmc_card *card = adapter->card;
+ 
+ 	kfree(card->mp_regs);
++	kfree(card->mpa_rx.skb_arr);
++	kfree(card->mpa_rx.len_arr);
+ 	kfree(card->mpa_tx.buf);
+ 	kfree(card->mpa_rx.buf);
+ }
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 339608b..597db37 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -46,8 +46,6 @@
+ #define CTRL_PORT			0
+ #define CTRL_PORT_MASK			0x0001
+ 
+-#define SDIO_MP_AGGR_DEF_PKT_LIMIT		8
+-
+ #define SDIO_MP_TX_AGGR_DEF_BUF_SIZE        (8192)	/* 8K */
+ 
+ /* Multi port RX aggregation buffer size */
+@@ -126,12 +124,6 @@
+ #define MP_TX_AGGR_PKT_LIMIT_REACHED(a)					\
+ 			(a->mpa_tx.pkt_cnt == a->mpa_tx.pkt_aggr_limit)
+ 
+-/* SDIO Tx aggregation port limit ? */
+-#define MP_TX_AGGR_PORT_LIMIT_REACHED(a) ((a->curr_wr_port <		\
+-			a->mpa_tx.start_port) && (((a->max_ports -\
+-			a->mpa_tx.start_port) + a->curr_wr_port) >=	\
+-				a->mp_agg_pkt_limit))
+-
+ /* Reset SDIO Tx aggregation buffer parameters */
+ #define MP_TX_AGGR_BUF_RESET(a) do {					\
+ 	a->mpa_tx.pkt_cnt = 0;						\
+@@ -144,12 +136,6 @@
+ #define MP_RX_AGGR_PKT_LIMIT_REACHED(a)					\
+ 			(a->mpa_rx.pkt_cnt == a->mpa_rx.pkt_aggr_limit)
+ 
+-/* SDIO Tx aggregation port limit ? */
+-#define MP_RX_AGGR_PORT_LIMIT_REACHED(a) ((a->curr_rd_port <		\
+-			a->mpa_rx.start_port) && (((a->max_ports -\
+-			a->mpa_rx.start_port) + a->curr_rd_port) >=	\
+-			a->mp_agg_pkt_limit))
+-
+ /* SDIO Rx aggregation in progress ? */
+ #define MP_RX_AGGR_IN_PROGRESS(a) (a->mpa_rx.pkt_cnt > 0)
+ 
+@@ -157,20 +143,6 @@
+ #define MP_RX_AGGR_BUF_HAS_ROOM(a, rx_len)				\
+ 			((a->mpa_rx.buf_len+rx_len) <= a->mpa_rx.buf_size)
+ 
+-/* Prepare to copy current packet from card to SDIO Rx aggregation buffer */
+-#define MP_RX_AGGR_SETUP(a, skb, port) do {				\
+-	a->mpa_rx.buf_len += skb->len;					\
+-	if (!a->mpa_rx.pkt_cnt)						\
+-		a->mpa_rx.start_port = port;				\
+-	if (a->mpa_rx.start_port <= port)				\
+-		a->mpa_rx.ports |= (1<<(a->mpa_rx.pkt_cnt));		\
+-	else								\
+-		a->mpa_rx.ports |= (1<<(a->mpa_rx.pkt_cnt+1));		\
+-	a->mpa_rx.skb_arr[a->mpa_rx.pkt_cnt] = skb;			\
+-	a->mpa_rx.len_arr[a->mpa_rx.pkt_cnt] = skb->len;		\
+-	a->mpa_rx.pkt_cnt++;						\
+-} while (0)
+-
+ /* Reset SDIO Rx aggregation buffer parameters */
+ #define MP_RX_AGGR_BUF_RESET(a) do {					\
+ 	a->mpa_rx.pkt_cnt = 0;						\
+@@ -179,7 +151,6 @@
+ 	a->mpa_rx.start_port = 0;					\
+ } while (0)
+ 
+-
+ /* data structure for SDIO MPA TX */
+ struct mwifiex_sdio_mpa_tx {
+ 	/* multiport tx aggregation buffer pointer */
+@@ -200,8 +171,8 @@ struct mwifiex_sdio_mpa_rx {
+ 	u32 ports;
+ 	u16 start_port;
+ 
+-	struct sk_buff *skb_arr[SDIO_MP_AGGR_DEF_PKT_LIMIT];
+-	u32 len_arr[SDIO_MP_AGGR_DEF_PKT_LIMIT];
++	struct sk_buff **skb_arr;
++	u32 *len_arr;
+ 
+ 	u8 enabled;
+ 	u32 buf_size;
+@@ -325,4 +296,54 @@ static inline int mwifiex_sdio_event_complete(struct mwifiex_adapter *adapter,
+ 	return 0;
  }
  
-+static int nl80211_channel_switch(struct sk_buff *skb,
-+				  struct genl_info *info)
++static inline bool
++mp_rx_aggr_port_limit_reached(struct sdio_mmc_card *card)
 +{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_chan_def chandef;
-+	bool block_tx = false;
-+	u8 radar_detect_width = 0;
-+	u32 count;
-+	int err;
++	u8 tmp;
 +
-+	if (!rdev->ops->channel_switch)
-+		return -EOPNOTSUPP;
++	if (card->curr_rd_port < card->mpa_rx.start_port) {
++		tmp = card->mp_agg_pkt_limit;
 +
-+	/* may add IBSS support later */
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
-+	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-+		return -EOPNOTSUPP;
++		if (((card->max_ports - card->mpa_rx.start_port) +
++		    card->curr_rd_port) >= tmp)
++			return true;
++	}
 +
-+	if (!info->attrs[NL80211_ATTR_WIPHY_FREQ] ||
-+	    !info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE] ||
-+	    !info->attrs[NL80211_ATTR_CH_SWITCH_COUNT])
-+		return -EINVAL;
-+
-+	/* useless if AP is not running */
-+	if (!wdev->beacon_interval)
-+		return -EINVAL;
-+
-+	err = nl80211_parse_chandef(rdev, info, &chandef);
-+	if (err)
-+		return err;
-+
-+	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &chandef))
-+		return -EINVAL;
-+
-+	err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef);
-+	if (err < 0)
-+		return err;
-+
-+	if (err)
-+		radar_detect_width = BIT(chandef.width);
-+	else
-+		radar_detect_width = 0;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
-+					   chandef.chan,
-+					   CHAN_MODE_SHARED,
-+					   radar_detect_width);
-+	mutex_unlock(&rdev->devlist_mtx);
-+	if (err)
-+		return err;
-+
-+	count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
-+	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
-+		block_tx = true;
-+
-+	err = rdev->ops->channel_switch(&rdev->wiphy, dev, &chandef,
-+					block_tx, count);
-+
-+	return err;
++	return false;
 +}
 +
- static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 			    u32 seq, int flags,
- 			    struct cfg80211_registered_device *rdev,
-@@ -9020,7 +9086,15 @@ static struct genl_ops nl80211_ops[] = {
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
--	}
-+	},
-+	{
-+		.cmd = NL80211_CMD_CHANNEL_SWITCH,
-+		.doit = nl80211_channel_switch,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+		NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
++static inline bool
++mp_tx_aggr_port_limit_reached(struct sdio_mmc_card *card)
++{
++	u16 tmp;
++
++	if (card->curr_wr_port < card->mpa_tx.start_port) {
++		tmp = card->mp_agg_pkt_limit;
++
++		if (((card->max_ports - card->mpa_tx.start_port) +
++		    card->curr_wr_port) >= tmp)
++			return true;
++	}
++
++	return false;
++}
++
++/* Prepare to copy current packet from card to SDIO Rx aggregation buffer */
++static inline void mp_rx_aggr_setup(struct sdio_mmc_card *card,
++				    struct sk_buff *skb, u8 port)
++{
++	card->mpa_rx.buf_len += skb->len;
++
++	if (!card->mpa_rx.pkt_cnt)
++		card->mpa_rx.start_port = port;
++
++	if (card->mpa_rx.start_port <= port)
++		card->mpa_rx.ports |= 1 << (card->mpa_rx.pkt_cnt);
++	else
++		card->mpa_rx.ports |= 1 << (card->mpa_rx.pkt_cnt + 1);
++
++	card->mpa_rx.skb_arr[card->mpa_rx.pkt_cnt] = skb;
++	card->mpa_rx.len_arr[card->mpa_rx.pkt_cnt] = skb->len;
++	card->mpa_rx.pkt_cnt++;
++}
+ #endif /* _MWIFIEX_SDIO_H */
 -- 
-1.7.10.4
+1.8.2.3
 
