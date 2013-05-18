@@ -1,53 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:21608 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759261Ab3EOOu1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:50:27 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ignacy Gawedzki <i@lri.fr>
-CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
-References: <20130515134258.GA9033@zenon.in.qult.net>
-Date: Wed, 15 May 2013 17:50:16 +0300
-In-Reply-To: <20130515134258.GA9033@zenon.in.qult.net> (Ignacy Gawedzki's
-	message of "Wed, 15 May 2013 15:42:58 +0200")
-Message-ID: <87a9nwpaaf.fsf@kamboji.qca.qualcomm.com> (sfid-20130515_165031_410568_A7476D14)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx4.wp.pl ([212.77.101.8]:29210 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755139Ab3ERMCe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:02:34 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:32 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 06/32] rt2800: initialize BBP_R31 on proper subroutines
+Date: Sat, 18 May 2013 14:03:29 +0200
+Message-Id: <1368878635-4455-7-git-send-email-stf_xl@wp.pl> (sfid-20130518_140238_384653_30827B90)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ignacy Gawedzki <i@lri.fr> writes:
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-> Hi everyone,
->
-> This is an old issue, about which it seems the first posts date back to 2009.
-> With the latest possible version of the firmware for AR9271 and the latest
-> possible wireless drivers, the issue is still there.  Whether this is still
-> the exact same problem every time remains to be checked, but it is annoying
-> enough to deserve some consideration.
->
-> The problem is that the driver can't talk to the device if the following
-> conditions are met:
->
->  - The system cold boots with the USB dongle inserted or the USB dongle is
->    inserted on a running system.
->
->  - The interface is *not* brought up.
->
->  - The system (warm) reboots.
->
-> Then the driver complains about the target being unresponsive after uploading
-> the firmware.  Apparently the only way to make it work again is to unplug and
-> then plug the USB dongle back, physically.  It seems that if the USB port is
-> not powered down during reboot (which happens with at least two different
-> setups that I've tested it with), the device is left in a broken state.
->
-> I would gladly help in tracing down this bug if only I knew where to start.
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-With ath6kl a cold reset helped in a similar situation. Try to find if
-ath9k_htc has a cold/warm reset and see if that helps.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 7c5b25d..84c7d4e 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3955,6 +3955,7 @@ static void rt2800_init_bbp_early(struct rt2x00_dev *rt2x00dev)
+ 
+ static void rt2800_init_bbp_305x_soc(struct rt2x00_dev *rt2x00dev)
+ {
++	rt2800_bbp_write(rt2x00dev, 31, 0x08);
+ }
+ 
+ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
+@@ -3968,12 +3969,16 @@ static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
+ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
++
++	rt2800_bbp_write(rt2x00dev, 31, 0x08);
+ }
+ 
+ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2800_bbp_write(rt2x00dev, 3, 0x00);
+ 	rt2800_bbp_write(rt2x00dev, 4, 0x50);
++
++	rt2800_bbp_write(rt2x00dev, 31, 0x08);
+ }
+ 
+ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+@@ -3982,11 +3987,14 @@ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+ 
+ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
+ {
++	rt2800_bbp_write(rt2x00dev, 31, 0x08);
+ }
+ 
+ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
++
++	rt2800_bbp_write(rt2x00dev, 31, 0x08);
+ }
+ 
+ static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
+@@ -4105,14 +4113,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 	}
+ 
+-	if (rt2800_is_305x_soc(rt2x00dev) ||
+-	    rt2x00_rt(rt2x00dev, RT3290) ||
+-	    rt2x00_rt(rt2x00dev, RT3352) ||
+-	    rt2x00_rt(rt2x00dev, RT3572) ||
+-	    rt2x00_rt(rt2x00dev, RT5390) ||
+-	    rt2x00_rt(rt2x00dev, RT5392))
+-		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+-
+ 	if (rt2x00_rt(rt2x00dev, RT3352))
+ 		rt2800_bbp_write(rt2x00dev, 47, 0x48);
+ 
 -- 
-Kalle Valo
+1.7.4.4
+
