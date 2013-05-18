@@ -1,35 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:35699 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752343Ab3EUIQI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 May 2013 04:16:08 -0400
-Received: by mail-ie0-f173.google.com with SMTP id k5so698060iea.18
-        for <linux-wireless@vger.kernel.org>; Tue, 21 May 2013 01:16:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMfPB_xTUy72YokSoYJezOX_gb54CJEd7V6+4pAfOHnAzUMJcQ@mail.gmail.com>
-References: <CAMfPB_xTUy72YokSoYJezOX_gb54CJEd7V6+4pAfOHnAzUMJcQ@mail.gmail.com>
-Date: Tue, 21 May 2013 10:16:07 +0200
-Message-ID: <CAGXE3d8u4ORgmOAdKFbgYSA3qTQxfhKiT6feDMMwn_-ue0ehow@mail.gmail.com> (sfid-20130521_101613_726843_E6455434)
-Subject: Re: rt3070-based usb device won't accept mac address changes
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Alessandro Lannocca <alessandro.lannocca@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx4.wp.pl ([212.77.101.8]:51093 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754075Ab3ERMDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:03:13 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:03:11 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 27/32] rt2800: initialize BBP_R134 & BBP_R135 on 53xx subroutine
+Date: Sat, 18 May 2013 14:03:50 +0200
+Message-Id: <1368878635-4455-28-git-send-email-stf_xl@wp.pl> (sfid-20130518_142936_641898_F832F42B)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 18, 2013 at 5:10 PM, Alessandro Lannocca
-<alessandro.lannocca@gmail.com> wrote:
-> Hi, after switching to kernel 3.8.8 (ubuntu quantal to raring), I'm
-> unable to change my alfa AWUS036NH mac address; a simple:
->
-> ifconfig <device> down
-> ifconfig <device> hw ether <random hw>
->
-> results in:
->
-> SIOCSIFHWADDR: Invalid argument
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Do you have multiple wifi interfaces or just that single one?
-Helmut
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 49a4759..96c1aea 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4293,6 +4293,11 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ 		WARN_ON(1);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 128, 0x12);
++
++	if (rt2x00_rt(rt2x00dev, RT5392)) {
++		rt2800_bbp_write(rt2x00dev, 134, 0xd0);
++		rt2800_bbp_write(rt2x00dev, 135, 0xf6);
++	}
+ }
+ 
+ static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
+@@ -4411,11 +4416,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 	}
+ 
+-	if (rt2x00_rt(rt2x00dev, RT5392)) {
+-		rt2800_bbp_write(rt2x00dev, 134, 0xd0);
+-		rt2800_bbp_write(rt2x00dev, 135, 0xf6);
+-	}
+-
+ 	if (rt2x00_rt(rt2x00dev, RT3352))
+ 		rt2800_bbp_write(rt2x00dev, 137, 0x0f);
+ 
+-- 
+1.7.4.4
+
