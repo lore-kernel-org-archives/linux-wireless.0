@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50314 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752559Ab3ENHlZ (ORCPT
+Received: from out21.sjc.mx.trendmicro.com ([216.99.131.78]:49167 "EHLO
+	out21.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752207Ab3ERRBQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 May 2013 03:41:25 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.10] mac80211: report deauth to cfg80211 for local state change
-Date: Tue, 14 May 2013 09:41:20 +0200
-Message-Id: <1368517280-5714-1-git-send-email-johannes@sipsolutions.net> (sfid-20130514_094130_233944_A6973CB8)
+	Sat, 18 May 2013 13:01:16 -0400
+Received: from out14.sjc.mx.trendmicro.com (unknown [216.99.131.51])
+	by out21.sjc.mx.trendmicro.com (Postfix) with ESMTP id 1D2489CBBBE
+	for <linux-wireless@vger.kernel.org>; Sat, 18 May 2013 16:43:31 +0000 (UTC)
+Received: from relay07.sjc.mx.trendmicro.com (unknown [10.30.239.5])
+	by out14.sjc.mx.trendmicro.com (Postfix) with ESMTP id A0E5E98042E
+	for <linux-wireless@vger.kernel.org>; Sat, 18 May 2013 16:42:25 +0000 (UTC)
+Received: from thinktube.com (unknown [111.68.225.247])
+	by relay07.sjc.mx.trendmicro.com (Postfix) with ESMTP id 1A45B980415
+	for <linux-wireless@vger.kernel.org>; Sat, 18 May 2013 16:42:24 +0000 (UTC)
+Message-ID: <5197AF6B.5040800@thinktube.com> (sfid-20130518_190122_241212_A12163C5)
+Date: Sat, 18 May 2013 17:42:19 +0100
+From: Bruno Randolf <br1@thinktube.com>
+MIME-Version: 1.0
+To: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rt3070-based usb device won't accept mac address changes
+References: <CAMfPB_xTUy72YokSoYJezOX_gb54CJEd7V6+4pAfOHnAzUMJcQ@mail.gmail.com>
+In-Reply-To: <CAMfPB_xTUy72YokSoYJezOX_gb54CJEd7V6+4pAfOHnAzUMJcQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 05/18/2013 04:10 PM, Alessandro Lannocca wrote:
+> Hi, after switching to kernel 3.8.8 (ubuntu quantal to raring), I'm
+> unable to change my alfa AWUS036NH mac address; a simple:
+>
+> ifconfig <device> down
+> ifconfig <device> hw ether <random hw>
+>
+> results in:
+>
+> SIOCSIFHWADDR: Invalid argument
+>
+> I tried the drivers shipped with the distribution,
+> compat-drivers-3.9-rc4-2-su and compat-drivers-2013-03-28-4-u aswell;
+> all to no avail.
 
-Even if the frame isn't transmitted to the AP, we need to
-report it to cfg80211 so the state there can be updated
-correctly.
+Hi!
 
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+I have the same problem with RT5370 (rt2800usb driver).
+compat-drivers-v3.7.9-1 still works, so this must be a regression in 
+kernels after 3.8...
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d87d3f1..a46e490 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4370,7 +4370,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
- 	bool tx = !req->local_state_change;
--	bool sent_frame = false;
-+	bool report_frame = false;
- 
- 	mutex_lock(&ifmgd->mtx);
- 
-@@ -4387,7 +4387,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_destroy_auth_data(sdata, false);
- 		mutex_unlock(&ifmgd->mtx);
- 
--		sent_frame = tx;
-+		report_frame = true;
- 		goto out;
- 	}
- 
-@@ -4395,12 +4395,12 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       req->reason_code, tx, frame_buf);
--		sent_frame = tx;
-+		report_frame = true;
- 	}
- 	mutex_unlock(&ifmgd->mtx);
- 
-  out:
--	if (sent_frame)
-+	if (report_frame)
- 		__cfg80211_send_deauth(sdata->dev, frame_buf,
- 				       IEEE80211_DEAUTH_FRAME_LEN);
- 
--- 
-1.8.0
-
+bruno
