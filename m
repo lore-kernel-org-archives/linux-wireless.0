@@ -1,103 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:51183 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755498Ab3E0NF7 (ORCPT
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:59524 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755963Ab3ERAy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 09:05:59 -0400
-Received: by mail-bk0-f53.google.com with SMTP id mx1so3693960bkb.12
-        for <linux-wireless@vger.kernel.org>; Mon, 27 May 2013 06:05:57 -0700 (PDT)
-Message-ID: <1369659951.8283.22.camel@canaries64> (sfid-20130527_150601_981576_0B88019B)
-Subject: [PATCH 3/5] staging: vt6656: rf.c: RFvRSSITodBm Remove camel case
- and clean up.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 27 May 2013 14:05:51 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 17 May 2013 20:54:57 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 02/17] mwifiex: scan delay timer cleanup in unload path
+Date: Fri, 17 May 2013 17:50:19 -0700
+Message-ID: <1368838234-32585-3-git-send-email-bzhao@marvell.com> (sfid-20130518_025500_379109_919FFA6D)
+In-Reply-To: <1368838234-32585-1-git-send-email-bzhao@marvell.com>
+References: <1368838234-32585-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-White space clean up.
+Return from scan delay timer routine if surprise_removed flag
+is true. Also, cancel the timer in unload path.
 
-Camel case changes;
-pDevice -> priv
-byCurrRSSI -> rssi
-pldBm -> dbm
-byIdx -> idx
-abyAIROHARF -> airoharf
+This fixes a crash when scan delay timer accesses structures
+that have been freed already.
 
-No functional changes.
+Tested with "iwlist mlan0 scan & sleep 1; rmmod mwifiex_sdio"
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reported-by: Daniel Drake <dsd@laptop.org>
+Tested-by: Daniel Drake <dsd@laptop.org>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/staging/vt6656/rf.c | 37 +++++++++++++++++++------------------
- 1 file changed, 19 insertions(+), 18 deletions(-)
+ drivers/net/wireless/mwifiex/init.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
-index b7aad36..2f3963e 100644
---- a/drivers/staging/vt6656/rf.c
-+++ b/drivers/staging/vt6656/rf.c
-@@ -31,6 +31,7 @@
-  * Revision History:
-  *	RF_VT3226: RobertYu:20051111, VT3226C0 and before
-  *	RF_VT3226D0: RobertYu:20051228
-+ *	RF_VT3342A0: RobertYu:20060609
-  *
-  */
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 58e151e..71bbf12 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -59,6 +59,9 @@ static void scan_delay_timer_fn(unsigned long data)
+ 	struct cmd_ctrl_node *cmd_node, *tmp_node;
+ 	unsigned long flags;
  
-@@ -942,27 +943,27 @@ int RFbRawSetPower(struct vnt_private *priv, u8 power, u32 rate)
-  * Return Value: none
-  *
- -*/
--void RFvRSSITodBm(struct vnt_private *pDevice, u8 byCurrRSSI, long *pldBm)
-+void RFvRSSITodBm(struct vnt_private *priv, u8 rssi, long *dbm)
++	if (adapter->surprise_removed)
++		return;
++
+ 	if (adapter->scan_delay_cnt == MWIFIEX_MAX_SCAN_DELAY_CNT) {
+ 		/*
+ 		 * Abort scan operation by cancelling all pending scan
+@@ -458,11 +461,18 @@ static void mwifiex_free_lock_list(struct mwifiex_adapter *adapter)
+ static void
+ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
  {
--	u8 byIdx = (((byCurrRSSI & 0xC0) >> 6) & 0x03);
--	signed long b = (byCurrRSSI & 0x3F);
--	signed long a = 0;
--	u8 abyAIROHARF[4] = {0, 18, 0, 40};
-+	u8 idx = (((rssi & 0xc0) >> 6) & 0x03);
-+	long b = (rssi & 0x3f);
-+	long a = 0;
-+	u8 airoharf[4] = {0, 18, 0, 40};
++	int i;
++
+ 	if (!adapter) {
+ 		pr_err("%s: adapter is NULL\n", __func__);
+ 		return;
+ 	}
  
--    switch (pDevice->byRFType) {
--        case RF_AL2230:
--        case RF_AL2230S:
--        case RF_AIROHA7230:
--        case RF_VT3226: //RobertYu:20051111
--        case RF_VT3226D0:
--        case RF_VT3342A0:   //RobertYu:20060609
--            a = abyAIROHARF[byIdx];
--            break;
--        default:
--            break;
--    }
-+	switch (priv->byRFType) {
-+	case RF_AL2230:
-+	case RF_AL2230S:
-+	case RF_AIROHA7230:
-+	case RF_VT3226:
-+	case RF_VT3226D0:
-+	case RF_VT3342A0:
-+		a = airoharf[idx];
-+		break;
-+	default:
-+		break;
++	for (i = 0; i < adapter->priv_num; i++) {
++		if (adapter->priv[i])
++			del_timer_sync(&adapter->priv[i]->scan_delay_timer);
 +	}
++
+ 	mwifiex_cancel_all_pending_cmd(adapter);
  
--    *pldBm = -1 * (a + b * 2);
-+	*dbm = -1 * (a + b * 2);
- }
- 
- void RFbRFTableDownload(struct vnt_private *pDevice)
+ 	/* Free lock variables */
 -- 
-1.8.1.2
-
-
-
-
-
+1.8.2.3
 
