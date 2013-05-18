@@ -1,70 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:61517 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755989Ab3EAUGH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 May 2013 16:06:07 -0400
-Received: by mail-ie0-f171.google.com with SMTP id e11so2356681iej.2
-        for <linux-wireless@vger.kernel.org>; Wed, 01 May 2013 13:06:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1367421455-18463-3-git-send-email-juhosg@openwrt.org>
-References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
-	<1367421455-18463-3-git-send-email-juhosg@openwrt.org>
-Date: Wed, 1 May 2013 22:06:06 +0200
-Message-ID: <CAL1gcdM64iP5sQmrjxy1-pstPK1R4i0K-hy7XituqjU_3MbUmw@mail.gmail.com> (sfid-20130501_220610_578054_B4DD65F5)
-Subject: Re: [PATCH 2/7] rt2x00: rt61pci: use rt2x00dev->tx->limit
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx3.wp.pl ([212.77.101.7]:19644 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755231Ab3ERMDS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:03:18 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:03:16 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 30/32] rt2800: move 3352 specific bbp initialization
+Date: Sat, 18 May 2013 14:03:53 +0200
+Message-Id: <1368878635-4455-31-git-send-email-stf_xl@wp.pl> (sfid-20130518_142938_185300_034C278C)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 1, 2013 at 5:17 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
-> The TX data queue is initialized already when
-> the rt61pci_txdone() function is called.
->
-> Fetch the number of the queue entries from that
-> instead of using the entry_num field of the data
-> queue descriptor.
->
-> The two values are the same, and the use of the
-> rt2x00dev->tx->limit value allows us to get rid
-> of a superfluous pointer dereference.
->
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt61pci.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-> index 0dc8180..7e1759b 100644
-> --- a/drivers/net/wireless/rt2x00/rt61pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
-> @@ -2175,7 +2175,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
->          * that the TX_STA_FIFO stack has a size of 16. We stick to our
->          * tx ring size for now.
->          */
-> -       for (i = 0; i < rt2x00dev->ops->tx->entry_num; i++) {
-> +       for (i = 0; i < rt2x00dev->tx->limit; i++) {
->                 rt2x00mmio_register_read(rt2x00dev, STA_CSR4, &reg);
->                 if (!rt2x00_get_field32(reg, STA_CSR4_VALID))
->                         break;
-> --
-> 1.7.10
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
---
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
-Gertjan
+ drivers/net/wireless/rt2x00/rt2800lib.c |   42 ++++++++++++++----------------
+ 1 files changed, 20 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index bb0ed3d..ad191d5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4182,6 +4182,26 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 120, 0x50);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 137, 0x0f);
++
++	rt2800_bbp_write(rt2x00dev, 163, 0xbd);
++	/* Set ITxBF timeout to 0x9c40=1000msec */
++	rt2800_bbp_write(rt2x00dev, 179, 0x02);
++	rt2800_bbp_write(rt2x00dev, 180, 0x00);
++	rt2800_bbp_write(rt2x00dev, 182, 0x40);
++	rt2800_bbp_write(rt2x00dev, 180, 0x01);
++	rt2800_bbp_write(rt2x00dev, 182, 0x9c);
++	rt2800_bbp_write(rt2x00dev, 179, 0x00);
++	/* Reprogram the inband interface to put right values in RXWI */
++	rt2800_bbp_write(rt2x00dev, 142, 0x04);
++	rt2800_bbp_write(rt2x00dev, 143, 0x3b);
++	rt2800_bbp_write(rt2x00dev, 142, 0x06);
++	rt2800_bbp_write(rt2x00dev, 143, 0xa0);
++	rt2800_bbp_write(rt2x00dev, 142, 0x07);
++	rt2800_bbp_write(rt2x00dev, 143, 0xa1);
++	rt2800_bbp_write(rt2x00dev, 142, 0x08);
++	rt2800_bbp_write(rt2x00dev, 143, 0xa2);
++
++	rt2800_bbp_write(rt2x00dev, 148, 0xc8);
+ }
+ 
+ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+@@ -4465,28 +4485,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 3, value);
+ 	}
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3352)) {
+-		rt2800_bbp_write(rt2x00dev, 163, 0xbd);
+-		/* Set ITxBF timeout to 0x9c40=1000msec */
+-		rt2800_bbp_write(rt2x00dev, 179, 0x02);
+-		rt2800_bbp_write(rt2x00dev, 180, 0x00);
+-		rt2800_bbp_write(rt2x00dev, 182, 0x40);
+-		rt2800_bbp_write(rt2x00dev, 180, 0x01);
+-		rt2800_bbp_write(rt2x00dev, 182, 0x9c);
+-		rt2800_bbp_write(rt2x00dev, 179, 0x00);
+-		/* Reprogram the inband interface to put right values in RXWI */
+-		rt2800_bbp_write(rt2x00dev, 142, 0x04);
+-		rt2800_bbp_write(rt2x00dev, 143, 0x3b);
+-		rt2800_bbp_write(rt2x00dev, 142, 0x06);
+-		rt2800_bbp_write(rt2x00dev, 143, 0xa0);
+-		rt2800_bbp_write(rt2x00dev, 142, 0x07);
+-		rt2800_bbp_write(rt2x00dev, 143, 0xa1);
+-		rt2800_bbp_write(rt2x00dev, 142, 0x08);
+-		rt2800_bbp_write(rt2x00dev, 143, 0xa2);
+-
+-		rt2800_bbp_write(rt2x00dev, 148, 0xc8);
+-	}
+-
+ 	if (rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392)) {
+ 		int ant, div_mode;
+-- 
+1.7.4.4
+
