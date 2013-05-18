@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:65347 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758670Ab3EGMlX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 08:41:23 -0400
-Received: by mail-wg0-f45.google.com with SMTP id l18so563572wgh.12
-        for <linux-wireless@vger.kernel.org>; Tue, 07 May 2013 05:41:22 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] wl12xx/wl18xx: scan all 5ghz channels
-Date: Tue,  7 May 2013 15:41:09 +0300
-Message-Id: <1367930469-29826-3-git-send-email-eliad@wizery.com> (sfid-20130507_144126_898149_987D3867)
-In-Reply-To: <1367930469-29826-1-git-send-email-eliad@wizery.com>
-References: <1367930469-29826-1-git-send-email-eliad@wizery.com>
+Received: from mx3.wp.pl ([212.77.101.7]:58197 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754776Ab3ERMC3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 May 2013 08:02:29 -0400
+Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:26 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 03/32] rt2800: add rt2800_init_bbp_305x_soc subroutine
+Date: Sat, 18 May 2013 14:03:26 +0200
+Message-Id: <1368878635-4455-4-git-send-email-stf_xl@wp.pl> (sfid-20130518_140232_805328_2283E90A)
+In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Due to a typo, the current code copies only sizeof(cmd->channels_2)
-bytes, which is smaller than the correct sizeof(cmd->channels_5)
-size, resulting in a partial scan (some channels are skipped).
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+New routine for SOC specific BBP initialization, empty for now.
+
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/ti/wl12xx/scan.c | 2 +-
- drivers/net/wireless/ti/wl18xx/scan.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl12xx/scan.c b/drivers/net/wireless/ti/wl12xx/scan.c
-index affdb3e..4a0bbb1 100644
---- a/drivers/net/wireless/ti/wl12xx/scan.c
-+++ b/drivers/net/wireless/ti/wl12xx/scan.c
-@@ -310,7 +310,7 @@ static void wl12xx_adjust_channels(struct wl1271_cmd_sched_scan_config *cmd,
- 	memcpy(cmd->channels_2, cmd_channels->channels_2,
- 	       sizeof(cmd->channels_2));
- 	memcpy(cmd->channels_5, cmd_channels->channels_5,
--	       sizeof(cmd->channels_2));
-+	       sizeof(cmd->channels_5));
- 	/* channels_4 are not supported, so no need to copy them */
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index e04b1fa..697e38b 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3953,6 +3953,10 @@ static void rt2800_init_bbp_early(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 106, 0x35);
  }
  
-diff --git a/drivers/net/wireless/ti/wl18xx/scan.c b/drivers/net/wireless/ti/wl18xx/scan.c
-index 09d9445..2b642f8 100644
---- a/drivers/net/wireless/ti/wl18xx/scan.c
-+++ b/drivers/net/wireless/ti/wl18xx/scan.c
-@@ -34,7 +34,7 @@ static void wl18xx_adjust_channels(struct wl18xx_cmd_scan_params *cmd,
- 	memcpy(cmd->channels_2, cmd_channels->channels_2,
- 	       sizeof(cmd->channels_2));
- 	memcpy(cmd->channels_5, cmd_channels->channels_5,
--	       sizeof(cmd->channels_2));
-+	       sizeof(cmd->channels_5));
- 	/* channels_4 are not supported, so no need to copy them */
++static void rt2800_init_bbp_305x_soc(struct rt2x00_dev *rt2x00dev)
++{
++}
++
+ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
+ {
  }
+@@ -4062,6 +4066,9 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	u8 reg_id;
+ 	u8 value;
  
++	if (rt2800_is_305x_soc(rt2x00dev))
++		rt2800_init_bbp_305x_soc(rt2x00dev);
++
+ 	switch (rt2x00dev->chip.rt) {
+ 	case RT2860:
+ 	case RT2872:
 -- 
-1.8.1.2
+1.7.4.4
 
