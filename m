@@ -1,105 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f50.google.com ([209.85.210.50]:57027 "EHLO
-	mail-da0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756515Ab3EHRS5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 13:18:57 -0400
-Received: by mail-da0-f50.google.com with SMTP id i23so1100845dad.37
-        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2013 10:18:57 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: ath9k <ath9k-devel@lists.ath9k.org>,
-	linux-wirelss <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 3/3] ath9k: use ap style beaconing for mesh
-Date: Wed,  8 May 2013 10:16:48 -0700
-Message-Id: <1368033408-3994-3-git-send-email-thomas@cozybit.com> (sfid-20130508_191900_017824_8E317C96)
-In-Reply-To: <1368033408-3994-1-git-send-email-thomas@cozybit.com>
-References: <1368033408-3994-1-git-send-email-thomas@cozybit.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58301 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752217Ab3ESKZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 May 2013 06:25:09 -0400
+Message-ID: <5198A879.6000406@hauke-m.de> (sfid-20130519_122513_903775_E5E6BC46)
+Date: Sun, 19 May 2013 12:24:57 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: REGRESSION: v3.10-rc1: [PATCH 04/15] brcmsmac: remove brcms_bss_cfg->associated
+References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de> <1364085963-25940-5-git-send-email-hauke@hauke-m.de> <5197DC4F.7030503@broadcom.com> <51988B8F.7010205@broadcom.com>
+In-Reply-To: <51988B8F.7010205@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chun-Yeow and Javier Lopez contributed these changes to
-make mesh mode use the more similar AP beaconing mode and
-queue parameters. Should improve PS performance, interface
-concurrency (AP modes can coexist), and beacon interval
-stability.
+On 05/19/2013 10:21 AM, Arend van Spriel wrote:
+> On 05/18/2013 09:53 PM, Arend van Spriel wrote:
+>> On 03/24/2013 01:45 AM, Hauke Mehrtens wrote:
+>>> Replaced the usage with pub->associated.
+>>>
+>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>> ---
+>>>   drivers/net/wireless/brcm80211/brcmsmac/main.c |   12 +++---------
+>>>   drivers/net/wireless/brcm80211/brcmsmac/main.h |    2 --
+>>>   2 files changed, 3 insertions(+), 11 deletions(-)
+>>
+>> Hi Hauke,
+>>
+>> I had a problem with bcm43224 in STA mode and bisecting it shows this
+>> change as culprit. On laptop I installed kernel with brcmsmac compiled
+>> as module. It comes up and associates during boot, but after logging in
+>> there is no connectivity. Triggering reassoc gives connectivity for some
+>> time, but after a while (1-2 min) it stops.
+>>
+>> I am looking into it. Given the function name below (brcms_c_ps_allowed)
+>> it may be power-save related. I will keep you informed.
+>>
+>> Gr. AvS
+>>
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+>>> b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+>>> index 90e6c0d..810b7e2 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+>>> @@ -3049,8 +3049,6 @@ static void brcms_b_antsel_set(struct
+>>> brcms_hardware *wlc_hw, u32 antsel_avail)
+>>>    */
+>>>   static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+>>>   {
+>>> -    struct brcms_bss_cfg *cfg = wlc->bsscfg;
+>>> -
+>>>       /* disallow PS when one of the following global conditions
+>>> meets */
+>>>       if (!wlc->pub->associated)
+>>>           return false;
+>>> @@ -3059,9 +3057,6 @@ static bool brcms_c_ps_allowed(struct
+>>> brcms_c_info *wlc)
+>>>       if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
+>>>           return false;
+>>>
+>>> -    if (cfg->associated)
+>>> -        return false;
+>>> -
+> 
+> wlc->pub->associated and wlc->bsscfg->associated have the same value,
+> which I guess was your motivation to remove it from struct
+> brcms_bss_cfg. So before this patch the function brcms_c_ps_allowed()
+> always returned false. As power-save is a unsupported feature for
+> brcmsmac that was fine, but the removal below changed that behaviour.
 
-AR9271 (ath9k_htc) mesh interfaces also need to be in AP
-operating mode.
+The change in the behavior was not intended. I removed
+wlc->bsscfg->associated because it always had the same value as
+wlc->pub->associated. I must have missed that one the if conditions was
+negated. When multi bssid support will be added to brcmsmac this
+complete handling has to be reworked.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    8 +++++---
- drivers/net/wireless/ath/ath9k/hw.c     |    4 ++--
- 2 files changed, 7 insertions(+), 5 deletions(-)
+> As power-save is not supported this function can be changed to simply
+> return false for now. I will send out a patch for that.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 2ff570f..fd1eeba 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -39,7 +39,8 @@ static void ath9k_beaconq_config(struct ath_softc *sc)
- 
- 	ath9k_hw_get_txq_props(ah, sc->beacon.beaconq, &qi);
- 
--	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP) {
-+	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP ||
-+	    sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT) {
- 		/* Always burst out beacon and CAB traffic. */
- 		qi.tqi_aifs = 1;
- 		qi.tqi_cwmin = 0;
-@@ -273,7 +274,8 @@ static int ath9k_beacon_choose_slot(struct ath_softc *sc)
- 	u64 tsf;
- 	int slot;
- 
--	if (sc->sc_ah->opmode != NL80211_IFTYPE_AP) {
-+	if (sc->sc_ah->opmode != NL80211_IFTYPE_AP &&
-+	    sc->sc_ah->opmode != NL80211_IFTYPE_MESH_POINT) {
- 		ath_dbg(common, BEACON, "slot 0, tsf: %llu\n",
- 			ath9k_hw_gettsf64(sc->sc_ah));
- 		return 0;
-@@ -765,10 +767,10 @@ void ath9k_set_beacon(struct ath_softc *sc)
- 
- 	switch (sc->sc_ah->opmode) {
- 	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		ath9k_beacon_config_ap(sc, cur_conf);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_MESH_POINT:
- 		ath9k_beacon_config_adhoc(sc, cur_conf);
- 		break;
- 	case NL80211_IFTYPE_STATION:
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 7f25da8..a263ccc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1245,10 +1245,10 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
- 
- 	switch (opmode) {
- 	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_MESH_POINT:
- 		set |= AR_STA_ID1_ADHOC;
- 		REG_SET_BIT(ah, AR_CFG, AR_CFG_AP_ADHOC_INDICATION);
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_AP:
- 		set |= AR_STA_ID1_STA_AP;
- 		/* fall through */
-@@ -2246,12 +2246,12 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
- 
- 	switch (ah->opmode) {
- 	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_MESH_POINT:
- 		REG_SET_BIT(ah, AR_TXCFG,
- 			    AR_TXCFG_ADHOC_BEACON_ATIM_TX_POLICY);
- 		REG_WRITE(ah, AR_NEXT_NDP_TIMER, next_beacon +
- 			  TU_TO_USEC(ah->atim_window ? ah->atim_window : 1));
- 		flags |= AR_NDP_TIMER_EN;
-+	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_AP:
- 		REG_WRITE(ah, AR_NEXT_TBTT_TIMER, next_beacon);
- 		REG_WRITE(ah, AR_NEXT_DMA_BEACON_ALERT, next_beacon -
--- 
-1.7.10.4
+Thanks for making such a patch.
+
+> Regards,
+> Arend
+> 
+>>>       return true;
+>>>   }
+>>>
+>>> @@ -3819,7 +3814,7 @@ static void brcms_c_set_home_chanspec(struct
+>>> brcms_c_info *wlc, u16 chanspec)
+>>>       if (wlc->home_chanspec != chanspec) {
+>>>           wlc->home_chanspec = chanspec;
+>>>
+>>> -        if (wlc->bsscfg->associated)
+>>> +        if (wlc->pub->associated)
+>>>               wlc->bsscfg->current_bss->chanspec = chanspec;
+>>>       }
+>>>   }
+>>> @@ -5433,7 +5428,7 @@ static void brcms_c_ofdm_rateset_war(struct
+>>> brcms_c_info *wlc)
+>>>       u8 r;
+>>>       bool war = false;
+>>>
+>>> -    if (wlc->bsscfg->associated)
+>>> +    if (wlc->pub->associated)
+>>>           r = wlc->bsscfg->current_bss->rateset.rates[0];
+>>>       else
+>>>           r = wlc->default_bss->rateset.rates[0];
+>>> @@ -5527,7 +5522,7 @@ int brcms_c_set_rateset(struct brcms_c_info
+>>> *wlc, struct brcm_rateset *rs)
+>>>       /* merge rateset coming in with the current mcsset */
+>>>       if (wlc->pub->_n_enab & SUPPORT_11N) {
+>>>           struct brcms_bss_info *mcsset_bss;
+>>> -        if (wlc->bsscfg->associated)
+>>> +        if (wlc->pub->associated)
+>>>               mcsset_bss = wlc->bsscfg->current_bss;
+>>>           else
+>>>               mcsset_bss = wlc->default_bss;
+>>> @@ -7496,7 +7491,6 @@ void brcms_c_scan_stop(struct brcms_c_info *wlc)
+>>>   void brcms_c_associate_upd(struct brcms_c_info *wlc, bool state)
+>>>   {
+>>>       wlc->pub->associated = state;
+>>> -    wlc->bsscfg->associated = state;
+>>>   }
+>>>
+>>>   /*
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h
+>>> b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+>>> index 0cfe782..96dc2f4 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
+>>> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+>>> @@ -589,7 +589,6 @@ enum brcms_bss_type {
+>>>    * type: interface type
+>>>    * up: is this configuration up operational
+>>>    * enable: is this configuration enabled
+>>> - * associated: is BSS in ASSOCIATED state
+>>>    * SSID_len: the length of SSID
+>>>    * SSID: SSID string
+>>>    *
+>>> @@ -608,7 +607,6 @@ struct brcms_bss_cfg {
+>>>       enum brcms_bss_type type;
+>>>       bool up;
+>>>       bool enable;
+>>> -    bool associated;
+>>>       u8 SSID_len;
+>>>       u8 SSID[IEEE80211_MAX_SSID_LEN];
+>>>       u8 BSSID[ETH_ALEN];
+>>>
+>>
+> 
+> 
 
