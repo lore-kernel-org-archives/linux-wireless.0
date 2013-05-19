@@ -1,38 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:49195 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760000Ab3EXKSj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 06:18:39 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0M94oF-1Ul08O1iIf-00CRPi for
- <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 12:18:37 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 0/2] ath9k: STBC Rx monitoring
-Date: Fri, 24 May 2013 12:18:29 +0200
-Message-Id: <1369390711-992-1-git-send-email-linux@rempel-privat.de> (sfid-20130524_121842_137911_9B67EBC3)
-In-Reply-To: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
-References: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:35975 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751347Ab3ESVWW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 May 2013 17:22:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <1368981836-6247-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1368981836-6247-1-git-send-email-Larry.Finger@lwfinger.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Sun, 19 May 2013 14:22:00 -0700
+Message-ID: <CAB=NE6VxqKBeQReqaNS4CJKt5qk65d5UBPaha_kODSF=W0Qcvw@mail.gmail.com> (sfid-20130519_232225_763782_98D1D86A)
+Subject: Re: [PATCH 1/2 V2] backports: Fix menuconfig build
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"backports@vger.kernel.org" <backports@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this are two remaining patches to allow STBC Rx monitoring
-on ath9k devices.
-This patches depend on currently applied:
-[PATCH v4 1/3] mac80211: add STBC flag for radiotap
+On Sun, May 19, 2013 at 9:43 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Oleksij Rempel (2):
-  ath9k: remove useless flag conversation.
-  ath9k: check for Rx-STBC flag and pass it to ieee80211
+Thanks Larry, applied and pushed! Also kicked out a new release with these:
 
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |  5 +++--
- drivers/net/wireless/ath/ath9k/init.c       |  9 +++++++--
- drivers/net/wireless/ath/ath9k/mac.c        | 16 ++++++++++++----
- drivers/net/wireless/ath/ath9k/mac.h        |  4 +++-
- drivers/net/wireless/ath/ath9k/recv.c       |  5 +----
- 5 files changed, 26 insertions(+), 13 deletions(-)
+https://www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.10-rc1/backports-3.10-rc1-2.tar.bz2
 
--- 
-1.8.1.2
-
+  Luis
