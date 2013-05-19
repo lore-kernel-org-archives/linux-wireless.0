@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:57881 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751409Ab3EJHs3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 03:48:29 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, <tony@atomide.com>
-Subject: [PATCH] wl12xx: increase minimum singlerole firmware version required
-Date: Fri, 10 May 2013 10:47:04 +0300
-Message-ID: <1368172024-14746-1-git-send-email-coelho@ti.com> (sfid-20130510_094843_490981_8E577DA4)
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:21161 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344Ab3ESQ2F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 May 2013 12:28:05 -0400
+Date: Sun, 19 May 2013 11:27:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: mcgrof@kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] backports: Fix menuconfig build
+Message-ID: <5198fd8e.jScXWCVTcp8xL6Fp%Larry.Finger@lwfinger.net> (sfid-20130519_182823_302731_2998B6FC)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The minimum firmware version required for singlerole after recent
-driver changes is 6/7.3.10.0.133.
+Using openSUSE 12.3 with x86_64 architecture, the 'make menuconfig'
+command results in the following:
 
-Reported-by: Tony Lindgren <tony@atomide.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl12xx/wl12xx.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+finger@larrylap:~/backports-3.10-rc1-1> make menuconfig
+cc -Wl,--no-as-needed -lncurses  mconf.o zconf.tab.o lxdialog/checklist.o lxdialog/inputbox.o lxdialog/menubox.o lxdialog/textbox.o lxdialog/util.o lxdialog/yesno.o   -o mconf
+/usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../x86_64-suse-linux/bin/ld: /lib64/libncurses.so.5: undefined reference to symbol 'acs_map'
+/usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../x86_64-suse-linux/bin/ld: note: 'acs_map' is defined in DSO /usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../lib64/libtinfo.so so try adding it to the linker command line
+/usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../lib64/libtinfo.so: could not read symbols: Invalid operation
+collect2: error: ld returned 1 exit status
+make[2]: *** [mconf] Error 1
+make[1]: *** [menuconfig] Error 2
+make: *** [menuconfig] Error 2
+finger@larrylap:~/backports-3.10-rc1-1>
 
-diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
-index 139da4d..9e5484a 100644
---- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
-@@ -36,7 +36,7 @@
- #define WL127X_IFTYPE_SR_VER	3
- #define WL127X_MAJOR_SR_VER	10
- #define WL127X_SUBTYPE_SR_VER	WLCORE_FW_VER_IGNORE
--#define WL127X_MINOR_SR_VER	115
-+#define WL127X_MINOR_SR_VER	133
- /* minimum multi-role FW version for wl127x */
- #define WL127X_IFTYPE_MR_VER	5
- #define WL127X_MAJOR_MR_VER	7
-@@ -49,7 +49,7 @@
- #define WL128X_IFTYPE_SR_VER	3
- #define WL128X_MAJOR_SR_VER	10
- #define WL128X_SUBTYPE_SR_VER	WLCORE_FW_VER_IGNORE
--#define WL128X_MINOR_SR_VER	115
-+#define WL128X_MINOR_SR_VER	133
- /* minimum multi-role FW version for wl128x */
- #define WL128X_IFTYPE_MR_VER	5
- #define WL128X_MAJOR_MR_VER	7
--- 
-1.7.10.4
+When "-ltinfo" is added to the LDFLAGS symbol as suggested by the linker,
+it builds and runs correctly.
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Index: backports-3.10-rc1-1/kconfig/Makefile
+===================================================================
+--- backports-3.10-rc1-1.orig/kconfig/Makefile
++++ backports-3.10-rc1-1/kconfig/Makefile
+@@ -3,7 +3,7 @@ CFLAGS=-Wall -Wmissing-prototypes -Wstri
+ LXDIALOG := lxdialog/checklist.o lxdialog/inputbox.o lxdialog/menubox.o lxdialog/textbox.o lxdialog/util.o lxdialog/yesno.o
+ 
+ conf: conf.o zconf.tab.o
+-mconf: LDFLAGS = -Wl,--no-as-needed -lncurses
++mconf: LDFLAGS = -Wl,--no-as-needed -lncurses -ltinfo
+ mconf: CFLAGS += -DCURSES_LOC="<ncurses.h>" -DLOCALE
+ mconf: mconf.o zconf.tab.o $(LXDIALOG)
+ 
