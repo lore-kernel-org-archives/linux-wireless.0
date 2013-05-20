@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51007 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753652Ab3EFPYY (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:51168 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754941Ab3ETBDZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 11:24:24 -0400
-Message-ID: <1367853859.8434.11.camel@jlt4.sipsolutions.net> (sfid-20130506_172441_613436_9897E5AF)
-Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to
- 1672c0e3
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jake Edge <jake@lwn.net>
-Cc: linux-wireless@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
-Date: Mon, 06 May 2013 17:24:19 +0200
-In-Reply-To: <20130506092143.58a7713f@chukar.edge2.net>
-References: <20130505143803.7e46e4c6@chukar.edge2.net>
-	 <1367853112.8434.6.camel@jlt4.sipsolutions.net>
-	 <20130506092143.58a7713f@chukar.edge2.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 19 May 2013 21:03:25 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20889.30147.707771.32138@gargle.gargle.HOWL> (sfid-20130520_030328_912185_3357D7C2)
+Date: Mon, 20 May 2013 06:30:51 +0530
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3.10] ath9k: prevent aggregation session deadlocks
+In-Reply-To: <1368905295-51440-1-git-send-email-nbd@openwrt.org>
+References: <1368905295-51440-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-05-06 at 09:21 -0600, Jake Edge wrote:
-
-> > Thanks for the report. Is the AP on a passive channel by any chance (5
-> > GHz, or channels 12/13)?
+Felix Fietkau wrote:
+> Waiting for all subframes of an existing aggregation session to drain
+> before allowing mac80211 to start a new one is fragile and deadlocks
+> caused by this behavior have been observed.
 > 
-> No, from what I can see on my router, it is using channel 36 (5.180
-> GHz) for the SSID in question
+> Since mac80211 has proper synchronization for aggregation session
+> start/stop handling, a better approach to session handling is to simply
+> allow mac80211 to start a new session at any time. This requires
+> changing the code to discard any packets outside of the BlockAck window
+> in the A-MPDU software retry code.
+> 
+> This patch implements the above and also simplifies the code.
 
-So yes, that is a passive channel for the 4965 device :-)
+John,
 
-> but Stanislaw seems to have pinpointed the issue.
+Can you please drop my patch, "ath9k: Fix TID locking" since it is not necessary
+after this one ?
 
-Yeah that was a workaround, but I'm not sure we'd really want to do
-that. I'd rather see what really caused this issue. I have a feeling
-it's the passive-no-RX workaround, or lack thereof maybe? I need to look
-a bit closer.
+The rest of the pending patches have been rebased and are here:
+http://msujith.org/patches/wl/May-20-2013/
 
-johannes
+Yell at me if you want them to be resent.
 
+Sujith
