@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46003 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757816Ab3EYThn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 May 2013 15:37:43 -0400
-Message-ID: <51A112FC.8060100@hauke-m.de> (sfid-20130525_213746_030640_1E949430)
-Date: Sat, 25 May 2013 21:37:32 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from out07.sjc.mx.trendmicro.com ([216.99.131.23]:64563 "EHLO
+	out07.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756487Ab3ETXkL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 May 2013 19:40:11 -0400
+Received: from relay04.sjc.mx.trendmicro.com (unknown [10.30.239.129])
+	by out07.sjc.mx.trendmicro.com (Postfix) with ESMTP id 41897952474
+	for <linux-wireless@vger.kernel.org>; Mon, 20 May 2013 23:40:10 +0000 (UTC)
+Received: from thinktube.com (unknown [111.68.225.247])
+	by relay04.sjc.mx.trendmicro.com (Postfix) with ESMTP id C7A0C980441
+	for <linux-wireless@vger.kernel.org>; Mon, 20 May 2013 23:40:09 +0000 (UTC)
+Message-ID: <519AB452.2010903@thinktube.com> (sfid-20130521_014015_073056_71681EFB)
+Date: Tue, 21 May 2013 00:40:02 +0100
+From: Bruno Randolf <br1@thinktube.com>
 MIME-Version: 1.0
-To: Thommy Jakobsson <thommyj@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYI=?= =?UTF-8?B?ZWNraQ==?=
-	<zajec5@gmail.com>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, m@bues.ch, piotras@gmail.com,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
-References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net> <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com> <alpine.DEB.2.02.1305132025560.1278@kelly.ryd.net> <20130524164922.GA2175@tuxdriver.com> <alpine.DEB.2.02.1305252058060.1282@kelly.ryd.net>
-In-Reply-To: <alpine.DEB.2.02.1305252058060.1282@kelly.ryd.net>
-Content-Type: text/plain; charset=UTF-8
+To: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+CC: linux-wireless@vger.kernel.org, helmut.schaa@googlemail.com,
+	IvDoorn@gmail.com, gwingerde@gmail.com
+Subject: Re: rt3070-based usb device won't accept mac address changes
+References: <CAMfPB_xTUy72YokSoYJezOX_gb54CJEd7V6+4pAfOHnAzUMJcQ@mail.gmail.com> <5197AF6B.5040800@thinktube.com> <CAMfPB_yVuSD765CAycUtdWBTvEEam=MpdCGKpWDJAvFiEjvLrw@mail.gmail.com>
+In-Reply-To: <CAMfPB_yVuSD765CAycUtdWBTvEEam=MpdCGKpWDJAvFiEjvLrw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/25/2013 09:02 PM, Thommy Jakobsson wrote:
-> 
-> 
-> On Fri, 24 May 2013, John W. Linville wrote:
-> 
->> Ping?  Should I drop this one?
->>
-> Still working great on my device, so from that I think we should go for 
-> it. But it would be great if Rafal (or someone) tested it on some other 
-> hardware as well. 
-> 
-> //Thommy
+On 05/18/2013 10:07 PM, Alessandro Lannocca wrote:
+> After digging a bit into linux-stable.git I found the culprit: this
+> regression comes from commit #
+> 6c50f9459e62eb133563fd23606f68bfc9d120e8 (rt2x00: Use addr_mask to
+> disallow invalid MAC addresses in mutli-bssid mode) ; reverting it
+> fixes the problem, tested by me in compat-drivers-2013-03-28-5-u .
+>
+>
+> I can't tell if reverting that commit adds any trouble as I'm not a
+> developer; however I'm sure you guys will know how to handle the
+> situation.
 
-This is included in OpenWrt for ~4 weeks now and I haven't read of
-anybody complaining about any new problems introduced by this patch or
-something which looks like the DMA under run.
-I am also for adding this to the kernel.
+Basically the driver got more picky and only allows the last 3 bit of 
+the MAC address changed. I just found out that if you generate your new 
+MAC accordingly it works!
 
-Hauke
+I wonder wether this is addr_mask is necessary for all RT chipsets, 
+since mine (RT5372) happily accepted different MAC addresses before, 
+also in multi-AP configurations...
 
+bruno
