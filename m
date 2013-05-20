@@ -1,168 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:44193 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752574Ab3EJNNf (ORCPT
+Received: from mail-ia0-f176.google.com ([209.85.210.176]:64533 "EHLO
+	mail-ia0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756561Ab3ETV0u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 09:13:35 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, <stable@vger.kernel.org>
-Subject: [PATCH v2] ath9k: Fix crash on module unload
-Date: Fri, 10 May 2013 18:41:06 +0530
-Message-Id: <1368191466-907-1-git-send-email-sujith@msujith.org> (sfid-20130510_151339_173808_9015E99C)
+	Mon, 20 May 2013 17:26:50 -0400
+Received: by mail-ia0-f176.google.com with SMTP id j3so5590696iae.7
+        for <linux-wireless@vger.kernel.org>; Mon, 20 May 2013 14:26:50 -0700 (PDT)
+MIME-Version: 1.0
+From: Flavio <fbcyborg@gmail.com>
+Date: Mon, 20 May 2013 23:26:30 +0200
+Message-ID: <CAP8Jb=oTE_tL+57_wtMo_QTNG01_oP2jgjicrDneFwTuOocs8g@mail.gmail.com> (sfid-20130520_232654_460705_D72ADFDC)
+Subject: Problem with iwlwifi kernel 3.9.0 and 3.9.2
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hello,
 
-Make sure that any open relayfs files are closed before
-unregistering with mac80211, otherwise this crash is seen:
+I've recently changed my wifi router and I'm experiencing something
+really strange with my wifi connection.
+If I try to connect to my access point using windows, I don't have any
+problem, but if I try with Linux (Gentoo Linux
+x86_64) I cannot connect to my Access Point unless I do the following steps:
 
-[ 1331.097846] BUG: unable to handle kernel paging request at 6b6b6b8b
-[ 1331.098170] IP: [<c063d0d6>] debugfs_remove+0x26/0x80
-[ 1331.098170] *pdpt = 000000002f9aa001 *pde = 0000000000000000
-[ 1331.098170] Oops: 0000 [#1] PREEMPT SMP
-[ 1331.098170] Modules linked in: iptable_raw xt_CT nf_conntrack_ipv4 nf_defrag]
-[ 1331.098170] Pid: 4794, comm: rmmod Tainted: G        WC   3.9.1+ #5 To Be Fi.
-[ 1331.098170] EIP: 0060:[<c063d0d6>] EFLAGS: 00010202 CPU: 0
-[ 1331.098170] EIP is at debugfs_remove+0x26/0x80
-[ 1331.098170] EAX: f2f3acd0 EBX: f2f3acd0 ECX: 00000006 EDX: f8622348
-[ 1331.098170] ESI: 6b6b6b6b EDI: 00000001 EBP: ee251e14 ESP: ee251e0c
-[ 1331.098170]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-[ 1331.098170] CR0: 8005003b CR2: 6b6b6b8b CR3: 2e7b7000 CR4: 000007e0
-[ 1331.098170] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-[ 1331.098170] DR6: ffff0ff0 DR7: 00000400
-[ 1331.098170] Process rmmod (pid: 4794, ti=ee250000 task=efaa2560 task.ti=ee25)
-[ 1331.098170] Stack:
-[ 1331.098170]  f241e170 0000000a ee251e1c f861394d ee251e28 c04e3088 f241e170 4
-[ 1331.098170]  c04e30fe f45482b0 ee251e54 c04e3187 f25e86b0 ee251e54 f8618748 0
-[ 1331.098170]  0000000a 00000001 ee251e68 f860065b f2509e20 f25085a0 f5b6e8a4 8
-[ 1331.098170] Call Trace:
-[ 1331.098170]  [<f861394d>] remove_buf_file_handler+0xd/0x20 [ath9k]
-[ 1331.098170]  [<c04e3088>] relay_remove_buf+0x18/0x30
-[ 1331.098170]  [<c04e30fe>] relay_close_buf+0x2e/0x40
-[ 1331.098170]  [<c04e3187>] relay_close+0x77/0xf0
-[ 1331.098170]  [<f8618748>] ? dpd_exit+0x38/0x40 [ath9k]
-[ 1331.098170]  [<f860065b>] ath9k_deinit_softc+0x8b/0xa0 [ath9k]
-[ 1331.098170]  [<f86006b8>] ath9k_deinit_device+0x48/0x60 [ath9k]
-[ 1331.098170]  [<f86107f1>] ath_pci_remove+0x31/0x50 [ath9k]
-[ 1331.098170]  [<c06dbff8>] pci_device_remove+0x38/0xc0
-[ 1331.098170]  [<c079daa4>] __device_release_driver+0x64/0xc0
-[ 1331.098170]  [<c079db97>] driver_detach+0x97/0xa0
-[ 1331.098170]  [<c079cacc>] bus_remove_driver+0x6c/0xe0
-[ 1331.098170]  [<c079c197>] ? bus_put+0x17/0x20
-[ 1331.098170]  [<c079cae3>] ? bus_remove_driver+0x83/0xe0
-[ 1331.098170]  [<c079e709>] driver_unregister+0x49/0x80
-[ 1331.098170]  [<c06dc138>] pci_unregister_driver+0x18/0x80
-[ 1331.098170]  [<f8610602>] ath_pci_exit+0x12/0x20 [ath9k]
-[ 1331.098170]  [<f8619ce0>] ath9k_exit+0x17/0x337 [ath9k]
-[ 1331.098170]  [<c09e537d>] ? mutex_unlock+0xd/0x10
-[ 1331.098170]  [<c04bd36c>] sys_delete_module+0x17c/0x250
-[ 1331.098170]  [<c0540dc4>] ? do_munmap+0x244/0x2d0
-[ 1331.098170]  [<c0540e96>] ? vm_munmap+0x46/0x60
-[ 1331.098170]  [<c09e8dc4>] ? restore_all+0xf/0xf
-[ 1331.098170]  [<c09ebf50>] ? __do_page_fault+0x4c0/0x4c0
-[ 1331.098170]  [<c04b18e4>] ? trace_hardirqs_on_caller+0xf4/0x180
-[ 1331.098170]  [<c09ef28d>] sysenter_do_call+0x12/0x38
-[ 1331.098170] Code: 90 8d 74 26 00 55 89 e5 83 ec 08 89 1c 24 89 74 24 04 3e 82
-[ 1331.098170] EIP: [<c063d0d6>] debugfs_remove+0x26/0x80 SS:ESP 0068:ee251e0c
-[ 1331.098170] CR2: 000000006b6b6b8b
-[ 1331.727971] ---[ end trace b5bb9f2066cef7f9 ]---
+ifconfig wlan0 down
+rmmod iwldvm
+rmmod iwlwifi
+modprobe iwlwifi
+ifconfig wlan0 up
 
-Cc: <stable@vger.kernel.org>
-Acked-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Tested-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |  8 ++++++++
- drivers/net/wireless/ath/ath9k/debug.h |  5 +++++
- drivers/net/wireless/ath/ath9k/init.c  | 10 ++++------
- 3 files changed, 17 insertions(+), 6 deletions(-)
+otherwise if I try to connect to my access point / wifi router, Wicd
+tells me that I inserted a wrong password.
+I've even tried with another live linux distribution, and I don't have
+this issue.
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 4101c4a..cecbe1f 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1684,6 +1684,14 @@ void ath9k_get_et_stats(struct ieee80211_hw *hw,
- 	WARN_ON(i != ATH9K_SSTATS_LEN);
- }
- 
-+void ath9k_deinit_debug(struct ath_softc *sc)
-+{
-+	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
-+		relay_close(sc->rfs_chan_spec_scan);
-+		sc->rfs_chan_spec_scan = NULL;
-+	}
-+}
-+
- int ath9k_init_debug(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index 62da19c..223418d 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -297,6 +297,7 @@ struct ath9k_debug {
- };
- 
- int ath9k_init_debug(struct ath_hw *ah);
-+void ath9k_deinit_debug(struct ath_softc *sc);
- 
- void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status);
- void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
-@@ -332,6 +333,10 @@ static inline int ath9k_init_debug(struct ath_hw *ah)
- 	return 0;
- }
- 
-+static inline void ath9k_deinit_debug(struct ath_softc *sc)
-+{
-+}
-+
- static inline void ath_debug_stat_interrupt(struct ath_softc *sc,
- 					    enum ath9k_int status)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c7b888f..c0aa4ff 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -903,7 +903,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 	if (!ath_is_world_regd(reg)) {
- 		error = regulatory_hint(hw->wiphy, reg->alpha2);
- 		if (error)
--			goto unregister;
-+			goto debug_cleanup;
- 	}
- 
- 	ath_init_leds(sc);
-@@ -911,6 +911,8 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 
- 	return 0;
- 
-+debug_cleanup:
-+	ath9k_deinit_debug(sc);
- unregister:
- 	ieee80211_unregister_hw(hw);
- rx_cleanup:
-@@ -939,11 +941,6 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
- 		sc->dfs_detector->exit(sc->dfs_detector);
- 
- 	ath9k_eeprom_release(sc);
--
--	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
--		relay_close(sc->rfs_chan_spec_scan);
--		sc->rfs_chan_spec_scan = NULL;
--	}
- }
- 
- void ath9k_deinit_device(struct ath_softc *sc)
-@@ -957,6 +954,7 @@ void ath9k_deinit_device(struct ath_softc *sc)
- 
- 	ath9k_ps_restore(sc);
- 
-+	ath9k_deinit_debug(sc);
- 	ieee80211_unregister_hw(hw);
- 	ath_rx_cleanup(sc);
- 	ath9k_deinit_softc(sc);
+I use gentoo-sources-3.9.2 kernel.
+
+Anway, I see a lot of these lines into the ringbuffer:
+[   10.597894] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   10.604842] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   10.974579] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   10.981532] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   11.170175] udevd (1281) used greatest stack depth: 3904 bytes left
+[   11.177626] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   12.943205] ehci-pci 0000:00:1d.0: reused qh ffff88025442db80 schedule
+[   12.943220] usb 2-1.2.4: link qh8-0601/ffff88025442db80 start 3 [1/2 us]
+[   14.966790] ehci-pci 0000:00:1a.0: reused qh ffff880256313780 schedule
+[   14.966809] usb 1-1.2: link qh1-0601/ffff880256313780 start 0 [1/2 us]
+[   16.040474] r8169 0000:05:00.0 eth0: unable to load firmware patch
+rtl_nic/rtl8168e-3.fw (-2)
+[   16.053919] r8169 0000:05:00.0 eth0: link down
+[   16.053984] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   16.290113] EXT4-fs (sdb2): re-mounted. Opts: discard,data=ordered,commit=600
+[   16.361332] EXT4-fs (sdb3): re-mounted. Opts: discard,user_xattr,commit=600
+[   21.357366] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   21.364249] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   21.575272] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   21.657055] r8169 0000:05:00.0 eth0: link down
+[   21.657128] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   21.700948] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   21.707855] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   21.917497] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   31.326409] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   31.333315] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   31.549301] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   31.632951] r8169 0000:05:00.0 eth0: link down
+[   31.633017] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   31.674518] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   31.681424] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   31.901246] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   32.708189] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   32.715113] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   32.930218] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   33.019577] r8169 0000:05:00.0 eth0: link down
+[   33.019645] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   41.426395] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   41.433323] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   41.648486] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   41.732823] r8169 0000:05:00.0 eth0: link down
+[   41.732902] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   41.782637] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   41.789542] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   42.003966] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   42.801094] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   42.808009] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   43.022852] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   43.109315] r8169 0000:05:00.0 eth0: link down
+[   43.109382] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   50.550516] ata1.00: configured for UDMA/133
+[   50.550520] ata1: EH complete
+[   50.556920] ata2.00: configured for UDMA/133
+[   50.556924] ata2: EH complete
+[   50.640043] EXT4-fs (sdb2): re-mounted. Opts: discard,commit=600
+[   50.679807] EXT4-fs (sdb3): re-mounted. Opts: discard,user_xattr,commit=600
+[   51.314954] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   51.321836] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   51.517346] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   51.584493] r8169 0000:05:00.0 eth0: link down
+[   51.584529] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   51.622496] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   51.629524] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   51.825554] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   52.651756] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   52.658680] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   52.874838] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   52.964131] r8169 0000:05:00.0 eth0: link down
+[   52.964196] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   55.297179] cc1 (3560) used greatest stack depth: 3560 bytes left
+[   57.035425] ehci-pci 0000:00:1a.0: reused qh ffff880255754a80 schedule
+[   57.035431] usb 1-1.3: link qh16-0001/ffff880255754a80 start 3 [1/0 us]
+[   57.035539] usb 1-1.3: unlink qh16-0001/ffff880255754a80 start 3 [1/0 us]
+[   58.078190] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   58.085086] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   58.278011] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   58.341392] r8169 0000:05:00.0 eth0: link down
+[   58.341432] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   75.980776] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   75.987691] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   76.198996] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   76.282766] r8169 0000:05:00.0 eth0: link down
+[   76.282848] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   76.336181] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   76.343115] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   76.552906] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   78.929615] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[   78.936515] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[   79.147113] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   79.231901] r8169 0000:05:00.0 eth0: link down
+[   79.231989] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[  125.566966] Intel(R) Wireless WiFi driver for Linux, in-tree:
+[  125.566975] Copyright(c) 2003-2013 Intel Corporation
+[  125.567862] iwlwifi 0000:02:00.0: irq 50 for MSI/MSI-X
+[  125.569289] iwlwifi 0000:02:00.0: loaded firmware version 18.168.6.1
+[  125.573184] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEBUG disabled
+[  125.573198] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
+[  125.573206] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
+[  125.573214] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
+[  125.573222] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_P2P disabled
+[  125.573232] iwlwifi 0000:02:00.0: Detected Intel(R) Centrino(R)
+Advanced-N 6230 AGN, REV=0xB0
+[  125.573311] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[  125.589763] ieee80211 phy1: Selected rate control algorithm 'iwl-agn-rs'
+[  131.463071] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[  131.469967] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[  131.849054] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[  131.855971] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[  132.059034] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  155.659291] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[  155.666217] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[  155.878162] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  155.960425] r8169 0000:05:00.0 eth0: link down
+[  155.960500] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[  156.013922] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[  156.020848] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[  156.232123] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  158.686204] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[  158.693095] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[  158.909408] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  158.996422] r8169 0000:05:00.0 eth0: link down
+[  158.996489] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[  165.945974] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[  165.952897] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[  166.165433] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  166.241019] r8169 0000:05:00.0 eth0: link down
+[  166.241097] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[  166.298743] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[  166.305659] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
+[  166.520184] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  168.607165] wlan0: authenticate with 9c:d3:6d:f7:95:02
+[  168.612821] wlan0: send auth to 9c:d3:6d:f7:95:02 (try 1/3)
+[  168.615680] wlan0: authenticated
+[  168.615720] wlan0: waiting for beacon from 9c:d3:6d:f7:95:02
+[  168.711236] wlan0: associate with 9c:d3:6d:f7:95:02 (try 1/3)
+[  168.714864] wlan0: RX AssocResp from 9c:d3:6d:f7:95:02 (capab=0x411
+status=0 aid=2)
+[  168.718389] wlan0: associated
+[  168.718442] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+
+I don't know if this is normal or not, but since when I changed the
+wifi router I'm experiencing the problem described above.
+Could you help me to debug the problem?
+I don't understand if this has something to do with my configuration
+or if there's a bug somewhere.
+the /etc/modprobe.d/iwlwifi.conf file is empty.
+
+Feel free to ask for further information you would need.
+
+Thanks a lot,
+
 -- 
-1.8.2.2
-
+Flavio
