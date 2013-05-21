@@ -1,70 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35741 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751746Ab3EaRVh (ORCPT
+Received: from mx1.sisa.samsung.com ([63.166.156.249]:47317 "EHLO
+	mx1.sisa.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754105Ab3EUCwI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 May 2013 13:21:37 -0400
-Message-ID: <51A8DC1C.1040908@candelatech.com> (sfid-20130531_192143_291284_FB196B0A)
-Date: Fri, 31 May 2013 10:21:32 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
+	Mon, 20 May 2013 22:52:08 -0400
+From: Shuah Khan <shuah.kh@samsung.com>
+To: "bzhao@marvell.com" <bzhao@marvell.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: Another try at getting pktgen to work with wifi.
-References: <51A79E4A.7000609@candelatech.com> <51A7B049.9090201@openwrt.org> <51A7BA63.4080403@candelatech.com> <51A857BF.7070008@openwrt.org>
-In-Reply-To: <51A857BF.7070008@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"shuahkhan@gmail.com" <shuahkhan@gmail.com>,
+	Shuah Khan <shuah.kh@samsung.com>
+Subject: [RFC PATCH] net/wireless/mwifiex/pcie: Convert to dev_pm_ops from
+ legacy pm ops
+Date: Tue, 21 May 2013 02:33:09 +0000
+Message-ID: <1369103589.12093.4.camel@lorien> (sfid-20130521_045215_902873_EBC698F6)
+Reply-To: Shuah Khan <shuah.kh@samsung.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/31/2013 12:56 AM, Felix Fietkau wrote:
-> On 2013-05-30 10:45 PM, Ben Greear wrote:
->> On 05/30/2013 01:02 PM, Felix Fietkau wrote:
->>> On 2013-05-30 8:45 PM, Ben Greear wrote:
->>>> I'm trying to come up with a more acceptable patch to the problem discussed a few years
->>>> ago:
->>>>
->>>> http://thread.gmane.org/gmane.linux.kernel.wireless.general/64582/focus=64626
->>>>
->>>> The patch below appears to work as expected.  In pktgen, you just have to set
->>>> the QoS to whatever value matches the queue you need.
->>>>
->>>> This seem reasonable?
->>> Why do you adjust the queue mapping instead of the skb priority? In that
->>> other thread you mentioned that pktgen should be able to control the
->>> queue, yet here you're taking queue control away from it for tx on mac80211.
->>
->> I was having trouble getting it to work, but I was trying it at
->> a different place in the code when I was hacking on it...
->>
->> Do you think I'd just need to adjust skb->priority in the
->> same spot in the code, or is there more to it?
-> I think that could work.
-
-[added netdev to CC list]
-
-Before I go work on this, does anyone have any preference over
-whether pktgen packets should obey the QoS or the xmit-queue?
-
-Currently, the kernel is effectively broken, and has been for years,
-so probably no one has ever used pktgen with wifi devices.
-
-As it turns out, mapping QoS appears to work best for my own needs,
-but I can also try using the skb->priority as Felix suggests.
-
-If no one cares, then I'd prefer to stick with the QoS method I posted
-recently, and ignore the xmit-queue that pktgen might select.
-
-Thanks,
-Ben
-
->
-> - Felix
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Q29udmVydCB0aGUgZHJpdmVyIHRvIHVzZSBkZXZfcG1fb3BzIGZvciBwb3dlciBtYW5hZ2VtZW50
+IGFuZCByZW1vdmUgTGVnYWN5IFBNDQpoYW5kbGluZy4gVGhpcyBjaGFuZ2UgcmUtdXNlcyBleGlz
+dGluZyBzdXNwZW5kIGFuZCByZXN1bWUgaW50ZXJmYWNlcyBmb3IgDQpkZXZfcG1fb3BzLg0KDQpT
+aWduZWQtb2ZmLWJ5OiBTaHVhaCBLaGFuIDxzaHVhaC5raEBzYW1zdW5nLmNvbT4NCkNjOiBTaHVh
+aCBLaGFuIDxzaHVhaGtoYW5AZ21haWwuY29tPg0KU3VnZ2VzdGVkLWJ5OiByYWZhZWwuai53eXNv
+Y2tpQGludGVsLmNvbQ0KLS0tDQoNClJhZmFlbCwNCg0KVGhpcyBpcyB0aGUgZmlyc3QgZHJpdmVy
+IHBhdGNoIHRvIGNvbnZlcnQgZHJpdmVycyB0byB1c2UgZGV2X3BtX29wcyBmb3INCnBvd2VyIG1h
+bmFnZW1lbnQuIFBsZWFzZSByZXZpZXcgZm9yIHRoZSBhcHByb2FjaCBhbmQgbWFrZSBzdWdnZXN0
+aW9ucyBmb3INCmltcHJvdmVtZW50Lg0KDQp0aGFua3MsDQotLSBTaHVhaA0KDQogZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvbXdpZmlleC9wY2llLmMgfCAgIDMzICsrKysrKysrKysrKysrKysrKysrKysr
+KysrKy0tLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCAyNyBpbnNlcnRpb25zKCspLCA2IGRlbGV0aW9u
+cygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9wY2llLmMg
+Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3BjaWUuYw0KaW5kZXggMjBjOWM0Yy4uYTI3
+MWM2NCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvcGNpZS5jDQor
+KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3BjaWUuYw0KQEAgLTg1LDcgKzg1LDcg
+QEAgc3RhdGljIGJvb2wgbXdpZmlleF9wY2llX29rX3RvX2FjY2Vzc19odyhzdHJ1Y3QgbXdpZmll
+eF9hZGFwdGVyICphZGFwdGVyKQ0KICAqIElmIGFscmVhZHkgbm90IHN1c3BlbmRlZCwgdGhpcyBm
+dW5jdGlvbiBhbGxvY2F0ZXMgYW5kIHNlbmRzIGEgaG9zdA0KICAqIHNsZWVwIGFjdGl2YXRlIHJl
+cXVlc3QgdG8gdGhlIGZpcm13YXJlIGFuZCB0dXJucyBvZmYgdGhlIHRyYWZmaWMuDQogICovDQot
+c3RhdGljIGludCBtd2lmaWV4X3BjaWVfc3VzcGVuZChzdHJ1Y3QgcGNpX2RldiAqcGRldiwgcG1f
+bWVzc2FnZV90IHN0YXRlKQ0KK3N0YXRpYyBpbnQgX19td2lmaWV4X3BjaWVfc3VzcGVuZChzdHJ1
+Y3QgcGNpX2RldiAqcGRldikNCiB7DQogCXN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXI7
+DQogCXN0cnVjdCBwY2llX3NlcnZpY2VfY2FyZCAqY2FyZDsNCkBAIC0xMTIsNiArMTEyLDEzIEBA
+IHN0YXRpYyBpbnQgbXdpZmlleF9wY2llX3N1c3BlbmQoc3RydWN0IHBjaV9kZXYgKnBkZXYsIHBt
+X21lc3NhZ2VfdCBzdGF0ZSkNCiAJcmV0dXJuIDA7DQogfQ0KIA0KK3N0YXRpYyBpbnQgbXdpZmll
+eF9wY2llX3N1c3BlbmQoc3RydWN0IGRldmljZSAqZGV2KQ0KK3sNCisJc3RydWN0IHBjaV9kZXYg
+KnBkZXYgPSB0b19wY2lfZGV2KGRldik7DQorDQorCXJldHVybiBfX213aWZpZXhfcGNpZV9zdXNw
+ZW5kKHBkZXYpOw0KK30NCisNCiAvKg0KICAqIEtlcm5lbCBuZWVkcyB0byBzdXNwZW5kIGFsbCBm
+dW5jdGlvbnMgc2VwYXJhdGVseS4gVGhlcmVmb3JlIGFsbA0KICAqIHJlZ2lzdGVyZWQgZnVuY3Rp
+b25zIG11c3QgaGF2ZSBkcml2ZXJzIHdpdGggc3VzcGVuZCBhbmQgcmVzdW1lDQpAQCAtMTIwLDcg
+KzEyNyw3IEBAIHN0YXRpYyBpbnQgbXdpZmlleF9wY2llX3N1c3BlbmQoc3RydWN0IHBjaV9kZXYg
+KnBkZXYsIHBtX21lc3NhZ2VfdCBzdGF0ZSkNCiAgKiBJZiBhbHJlYWR5IG5vdCByZXN1bWVkLCB0
+aGlzIGZ1bmN0aW9uIHR1cm5zIG9uIHRoZSB0cmFmZmljIGFuZA0KICAqIHNlbmRzIGEgaG9zdCBz
+bGVlcCBjYW5jZWwgcmVxdWVzdCB0byB0aGUgZmlybXdhcmUuDQogICovDQotc3RhdGljIGludCBt
+d2lmaWV4X3BjaWVfcmVzdW1lKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQ0KK3N0YXRpYyBpbnQgX19t
+d2lmaWV4X3BjaWVfcmVzdW1lKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQ0KIHsNCiAJc3RydWN0IG13
+aWZpZXhfYWRhcHRlciAqYWRhcHRlcjsNCiAJc3RydWN0IHBjaWVfc2VydmljZV9jYXJkICpjYXJk
+Ow0KQEAgLTE1MCw2ICsxNTcsMTMgQEAgc3RhdGljIGludCBtd2lmaWV4X3BjaWVfcmVzdW1lKHN0
+cnVjdCBwY2lfZGV2ICpwZGV2KQ0KIA0KIAlyZXR1cm4gMDsNCiB9DQorDQorc3RhdGljIGludCBt
+d2lmaWV4X3BjaWVfcmVzdW1lKHN0cnVjdCBkZXZpY2UgKmRldikNCit7DQorCXN0cnVjdCBwY2lf
+ZGV2ICpwZGV2ID0gdG9fcGNpX2RldihkZXYpOw0KKw0KKwlyZXR1cm4gX19td2lmaWV4X3BjaWVf
+cmVzdW1lKHBkZXYpOw0KK30NCiAjZW5kaWYNCiANCiAvKg0KQEAgLTIxMyw3ICsyMjcsNyBAQCBz
+dGF0aWMgdm9pZCBtd2lmaWV4X3BjaWVfcmVtb3ZlKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQ0KIAlp
+ZiAodXNlcl9ybW1vZCkgew0KICNpZmRlZiBDT05GSUdfUE0NCiAJCWlmIChhZGFwdGVyLT5pc19z
+dXNwZW5kZWQpDQotCQkJbXdpZmlleF9wY2llX3Jlc3VtZShwZGV2KTsNCisJCQlfX213aWZpZXhf
+cGNpZV9yZXN1bWUocGRldik7DQogI2VuZGlmDQogDQogCQlmb3IgKGkgPSAwOyBpIDwgYWRhcHRl
+ci0+cHJpdl9udW07IGkrKykNCkBAIC0yNDksNiArMjYzLDEzIEBAIHN0YXRpYyBERUZJTkVfUENJ
+X0RFVklDRV9UQUJMRShtd2lmaWV4X2lkcykgPSB7DQogDQogTU9EVUxFX0RFVklDRV9UQUJMRShw
+Y2ksIG13aWZpZXhfaWRzKTsNCiANCisjaWZkZWYgQ09ORklHX1BNDQorLyogUG93ZXIgTWFuYWdl
+bWVudCBIb29rcyAqLw0KK3N0YXRpYyBjb25zdCBzdHJ1Y3QgZGV2X3BtX29wcyBtd2lmaWV4X3Bj
+aWVfcG1fb3BzID0gew0KKwlTRVRfU1lTVEVNX1NMRUVQX1BNX09QUyhtd2lmaWV4X3BjaWVfc3Vz
+cGVuZCwgbXdpZmlleF9wY2llX3Jlc3VtZSkNCit9Ow0KKyNlbmRpZg0KKw0KIC8qIFBDSSBEZXZp
+Y2UgRHJpdmVyICovDQogc3RhdGljIHN0cnVjdCBwY2lfZHJpdmVyIF9fcmVmZGF0YSBtd2lmaWV4
+X3BjaWUgPSB7DQogCS5uYW1lICAgICA9ICJtd2lmaWV4X3BjaWUiLA0KQEAgLTI1Niw5ICsyNzcs
+OSBAQCBzdGF0aWMgc3RydWN0IHBjaV9kcml2ZXIgX19yZWZkYXRhIG13aWZpZXhfcGNpZSA9IHsN
+CiAJLnByb2JlICAgID0gbXdpZmlleF9wY2llX3Byb2JlLA0KIAkucmVtb3ZlICAgPSBtd2lmaWV4
+X3BjaWVfcmVtb3ZlLA0KICNpZmRlZiBDT05GSUdfUE0NCi0JLyogUG93ZXIgTWFuYWdlbWVudCBI
+b29rcyAqLw0KLQkuc3VzcGVuZCAgPSBtd2lmaWV4X3BjaWVfc3VzcGVuZCwNCi0JLnJlc3VtZSAg
+ID0gbXdpZmlleF9wY2llX3Jlc3VtZSwNCisJLmRyaXZlciAgID0gew0KKwkJLnBtID0gJm13aWZp
+ZXhfcGNpZV9wbV9vcHMsDQorCX0sDQogI2VuZGlmDQogfTsNCiANCi0tIA0KMS43LjEwLjQNCg0K
+DQo=
