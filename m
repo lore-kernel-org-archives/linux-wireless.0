@@ -1,75 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:48405 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757775Ab3EHSMS (ORCPT
+Received: from mx4.wp.pl ([212.77.101.8]:50947 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753289Ab3EUPKW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 14:12:18 -0400
-Message-ID: <518A957F.1040502@lwfinger.net> (sfid-20130508_201256_790213_2325226F)
-Date: Wed, 08 May 2013 13:12:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Greg KH <gregkh@linux-foundation.org>
-CC: "H. Peter Anvin" <hpa@zytor.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, Dan Williams <dcbw@redhat.com>,
-	'George0505' <george0505@realtek.com>,
-	Joon Ro <joonhyoung.ro@gmail.com>
-Subject: Re: Linux driver for Realtek RTL8723AU devices with USB ID 0bda:1724
- such as found in Lenovo IdeaPad Yoga 13
-References: <5159B52D.3050601@lwfinger.net> <5189B939.4010905@zytor.com> <518A7814.1070604@lwfinger.net> <20130508162350.GC28080@kroah.com>
-In-Reply-To: <20130508162350.GC28080@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 21 May 2013 11:10:22 -0400
+Date: Tue, 21 May 2013 17:10:18 +0200
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	IvDoorn@gmail.com, gwingerde@gmail.com, stf_xl@wp.pl,
+	Alessandro Lannocca <alessandro.lannocca@gmail.com>,
+	Bruno Randolf <br1@thinktube.com>
+Subject: Re: [PATCH] mac80211: Allow single vif mac address change with
+ addr_mask
+Message-ID: <20130521171018.238056b2@north> (sfid-20130521_171026_273390_478D8325)
+In-Reply-To: <1369140893-22622-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1369140893-22622-1-git-send-email-helmut.schaa@googlemail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/2013 11:23 AM, Greg KH wrote:
-> On Wed, May 08, 2013 at 11:06:44AM -0500, Larry Finger wrote:
->> On 05/07/2013 09:32 PM, H. Peter Anvin wrote:
->>>
->>> So I can verify that this driver works against 3.8.11 (not against
->>> current -linus because of a build failure), and yes, there is Bluetooth
->>> in this device.  In fact, it seems to work better than some in-tree
->>> drivers I have seen in the past.
->>>
->>> However, I'm confused as to the above and what it implies for the
->>> purpose of the staging tree.  Wasn't the whole point of the staging tree
->>> to have a working-but-ugly driver upstream and have the work to clean it
->>> up happen in the mainline tree instead of off somewhere.
->>
->> Yes, but even staging has some standards.
->
-> I have standards?  That's a first :)
->
->> For example, they frown on inclusion of firmware in a massive data
->> block in a file in the driver - it should be in a separate file the
->> /lib/firmware/ tree.
->
-> Sure, that would be "nice", but it's not something that I should reject
-> a driver for, have I done that?
+On Tue, 21 May 2013 14:54:53 +0200, Helmut Schaa wrote:
+> When changing the MAC address of a single vif mac80211 will check if the new
+> address fits into the address mask specified by the driver. This only needs
+> to be done when using multiple BSSIDs. Hence, check the new address only
+> against all other vifs.
 
-No. You merely "recommended" that it be the #1 item in the TODO list, which 
-forced me to fix it fairly quickly for r8712u.
+Oh, I see that you already posted this patch for review! 
 
->
->> In addition, the mainline drivers/net/wireless/ tree is only available
->> to devices that use mac80211 for the software-based MAC layer. That
->> conversion is a serious effort that may never be done, thus the
->> 8723au driver may never leave staging.
->
-> That's a bigger deal, but note, some drivers have done it, it is not
-> impossible.
+I think we should also take care of the way addresses for new
+interfaces are chosen otherwise they'll just pick up
+perm_addr and we will end up with incompatible MACs.
 
-Most of them were in the kernel before mac80211, and have been given a pass as 
-part of a "grandfather" clause.
+I created a patch for a user who reported this problem to
+rt2x00 ML independently from Helmut.
 
-Unfortunately, I forgot the main reason for development in an off-line repo. I 
-do not have one of these devices, and I have drawn the line at purchasing a 
-$1000 Lenovo tablet just to get one. Making "small" untested changes in the 
-off-line repo for the users to verify is a lot simpler than working through 
-staging, no matter how accommodating you are. :)
+--->8------------------
 
-If someone wants to donate a device, that would speed up the process.
+>From 63b32f4509d2c2bcf0ad791faa624b56a1947748 Mon Sep 17 00:00:00 2001
+From: Jakub Kicinski <kubakici@wp.pl>
+Date: Tue, 21 May 2013 13:05:43 +0200
+Subject: [PATCH] mac80211: allow changing mac address on mac-masking devices
 
-Larry
+Some devices support multiple MAC addresses by
+masking last few bits of the address.  Address
+compatibility has to be checked only when there
+is more than one interface - otherwise we can
+just overwrite current address.
+
+While at it fix inverted flow at the end of
+ieee80211_change_mac.
+
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+---
+ net/mac80211/iface.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 60f1ce5..367aa3b 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -159,8 +159,9 @@ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
+ 	return 0;
+ }
+ 
+-static int ieee80211_verify_mac(struct ieee80211_local *local, u8 *addr)
++static int ieee80211_verify_mac(struct ieee80211_sub_if_data *target, u8 *addr)
+ {
++	struct ieee80211_local *local = target->local;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	u64 new, mask, tmp;
+ 	u8 *m;
+@@ -184,6 +185,8 @@ static int ieee80211_verify_mac(struct ieee80211_local *local, u8 *addr)
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
+ 			continue;
++		if (sdata == target)
++			continue;
+ 
+ 		m = sdata->vif.addr;
+ 		tmp =	((u64)m[0] << 5*8) | ((u64)m[1] << 4*8) |
+@@ -209,14 +212,15 @@ static int ieee80211_change_mac(struct net_device *dev, void *addr)
+ 	if (ieee80211_sdata_running(sdata))
+ 		return -EBUSY;
+ 
+-	ret = ieee80211_verify_mac(sdata->local, sa->sa_data);
++	ret = ieee80211_verify_mac(sdata, sa->sa_data);
+ 	if (ret)
+ 		return ret;
+ 
+ 	ret = eth_mac_addr(dev, sa);
++	if (ret)
++		return ret;
+ 
+-	if (ret == 0)
+-		memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
++	memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
+ 
+ 	return ret;
+ }
+@@ -1479,7 +1483,17 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 			break;
+ 		}
+ 
++		/*
++		 * Pick address of existing interface in case user changed
++		 * MAC address manually, default to perm_addr.
++		 */
+ 		m = local->hw.wiphy->perm_addr;
++		list_for_each_entry(sdata, &local->interfaces, list) {
++			if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
++				continue;
++			m = sdata->vif.addr;
++			break;
++		}
+ 		start = ((u64)m[0] << 5*8) | ((u64)m[1] << 4*8) |
+ 			((u64)m[2] << 3*8) | ((u64)m[3] << 2*8) |
+ 			((u64)m[4] << 1*8) | ((u64)m[5] << 0*8);
+-- 
+1.8.1.4
 
