@@ -1,52 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35016 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752319Ab3EVSaK (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:41134 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757235Ab3EUBdW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 May 2013 14:30:10 -0400
-Date: Wed, 22 May 2013 14:27:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@ml01.01.org>
-Subject: Re: [GIT] [3.10] NFC fixes
-Message-ID: <20130522182747.GG2113@tuxdriver.com> (sfid-20130522_203014_376150_EB2BD31B)
-References: <20130521230711.GD4566@zurbaran>
+	Mon, 20 May 2013 21:33:22 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Luciano Coelho <coelho@ti.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] iw: use updated structures and enums for packet pattern
+Date: Mon, 20 May 2013 18:32:15 -0700
+Message-ID: <1369099936-4954-1-git-send-email-bzhao@marvell.com> (sfid-20130521_033325_191915_4660F667)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130521230711.GD4566@zurbaran>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 22, 2013 at 01:07:11AM +0200, Samuel Ortiz wrote:
-> Hi John,
-> 
-> This is the first batch of NFC fixes for 3.10, and it contains:
-> 
-> - 3 fixes for the NFC MEI support:
->         * We now depend on the correct Kconfig symbol.
->         * We register an MEI event callback whenever we enable an NFC device,
->           otherwise we fail to read anything after an enable/disable cycle.
->         * We only disable an MEI device from its disable mey_phy_ops,
->           preventing useless consecutive disable calls.
-> 
-> - An NFC Makefile cleanup, as I forgot to remove a commented out line when
->   moving the LLCP code to the NFC top level directory.
-> 
-> The following changes since commit 6bb4880d9ef30375da4507aeabd6dc261a2c6c2b:
-> 
->   ath9k: fix draining aggregation tid buffers (2013-05-17 14:31:09 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.10-1
-> 
-> for you to fetch changes up to e3a6b14ceda0207c3405c6266e5177a85c0db044:
-> 
->   NFC: mei: Do not disable MEI devices from their remove routine (2013-05-21 10:48:41 +0200)
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Pulling now...
+They are renamed so that they can be used for new feature.
 
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ info.c   |  2 +-
+ wowlan.c | 32 ++++++++++++++++----------------
+ 2 files changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/info.c b/info.c
+index 54d9a8d..d893ffc 100644
+--- a/info.c
++++ b/info.c
+@@ -432,7 +432,7 @@ broken_combination:
+ 			[NL80211_WOWLAN_TRIG_RFKILL_RELEASE] = { .type = NLA_FLAG },
+ 			[NL80211_WOWLAN_TRIG_TCP_CONNECTION] = { .type = NLA_NESTED },
+ 		};
+-		struct nl80211_wowlan_pattern_support *pat;
++		struct nl80211_pattern_support *pat;
+ 		int err;
+ 
+ 		err = nla_parse_nested(tb_wowlan, MAX_NL80211_WOWLAN_TRIG,
+diff --git a/wowlan.c b/wowlan.c
+index b4a2715..d323ca7 100644
+--- a/wowlan.c
++++ b/wowlan.c
+@@ -261,11 +261,11 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
+ 			}
+ 
+ 			pattern = nla_nest_start(patterns, ++patnum);
+-			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_MASK,
++			NLA_PUT(patterns, NL80211_PKTPAT_MASK,
+ 				DIV_ROUND_UP(patlen, 8), mask);
+-			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_PATTERN,
+-				patlen, pat);
+-			NLA_PUT_U32(patterns, NL80211_WOWLAN_PKTPAT_OFFSET, pkt_offset);
++			NLA_PUT(patterns, NL80211_PKTPAT_PATTERN, patlen, pat);
++			NLA_PUT_U32(patterns, NL80211_PKTPAT_OFFSET,
++				    pkt_offset);
+ 			nla_nest_end(patterns, pattern);
+ 			free(mask);
+ 			free(pat);
+@@ -356,29 +356,29 @@ static int print_wowlan_handler(struct nl_msg *msg, void *arg)
+ 		nla_for_each_nested(pattern,
+ 				    trig[NL80211_WOWLAN_TRIG_PKT_PATTERN],
+ 				    rem_pattern) {
+-			struct nlattr *patattr[NUM_NL80211_WOWLAN_PKTPAT];
++			struct nlattr *patattr[NUM_NL80211_PKTPAT];
+ 			int i, patlen, masklen, pkt_offset;
+ 			uint8_t *mask, *pat;
+-			nla_parse(patattr, MAX_NL80211_WOWLAN_PKTPAT,
+-				  nla_data(pattern), nla_len(pattern),
+-				  NULL);
+-			if (!patattr[NL80211_WOWLAN_PKTPAT_MASK] ||
+-			    !patattr[NL80211_WOWLAN_PKTPAT_PATTERN] ||
+-			    !patattr[NL80211_WOWLAN_PKTPAT_OFFSET]) {
++			nla_parse(patattr, MAX_NL80211_PKTPAT,
++				  nla_data(pattern), nla_len(pattern), NULL);
++			if (!patattr[NL80211_PKTPAT_MASK] ||
++			    !patattr[NL80211_PKTPAT_PATTERN] ||
++			    !patattr[NL80211_PKTPAT_OFFSET]) {
+ 				printf(" * (invalid pattern specification)\n");
+ 				continue;
+ 			}
+-			masklen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
+-			patlen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
+-			pkt_offset = nla_get_u32(patattr[NL80211_WOWLAN_PKTPAT_OFFSET]);
++			masklen = nla_len(patattr[NL80211_PKTPAT_MASK]);
++			patlen = nla_len(patattr[NL80211_PKTPAT_PATTERN]);
++			pkt_offset =
++				nla_get_u32(patattr[NL80211_PKTPAT_OFFSET]);
+ 			if (DIV_ROUND_UP(patlen, 8) != masklen) {
+ 				printf(" * (invalid pattern specification)\n");
+ 				continue;
+ 			}
+ 			printf(" * wake up on packet offset: %d", pkt_offset);
+ 			printf(" pattern: ");
+-			pat = nla_data(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
+-			mask = nla_data(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
++			pat = nla_data(patattr[NL80211_PKTPAT_PATTERN]);
++			mask = nla_data(patattr[NL80211_PKTPAT_MASK]);
+ 			for (i = 0; i < patlen; i++) {
+ 				if (mask[i / 8] & (1 << (i % 8)))
+ 					printf("%.2x", pat[i]);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0
+
