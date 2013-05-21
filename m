@@ -1,256 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60251 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973Ab3EFElz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 00:41:55 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Update initvals for AR9565
-Date: Mon,  6 May 2013 10:09:33 +0530
-Message-Id: <1367815173-8008-1-git-send-email-sujith@msujith.org> (sfid-20130506_064157_706535_F0EB3148)
+Received: from mga14.intel.com ([143.182.124.37]:33498 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752623Ab3EUXHc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 May 2013 19:07:32 -0400
+Date: Wed, 22 May 2013 01:07:11 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux NFC <linux-nfc@lists.01.org>
+Subject: [GIT] [3.10] NFC fixes
+Message-ID: <20130521230711.GD4566@zurbaran> (sfid-20130522_010735_163201_09C6AEF8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi John,
 
-* Register Modification for xLNA board.
-* TX gain table modification for zero calibration.
-* AUX chain (LNA2) sensitivity enhancement
-* Modify diversity bias default setting in INI.
+This is the first batch of NFC fixes for 3.10, and it contains:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   | 138 +++++++++++----------
- 1 file changed, 70 insertions(+), 68 deletions(-)
+- 3 fixes for the NFC MEI support:
+        * We now depend on the correct Kconfig symbol.
+        * We register an MEI event callback whenever we enable an NFC device,
+          otherwise we fail to read anything after an enable/disable cycle.
+        * We only disable an MEI device from its disable mey_phy_ops,
+          preventing useless consecutive disable calls.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-index 0c2ac0c..e85a8b0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-@@ -233,9 +233,9 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
- 	{0x00009d10, 0x01834061},
- 	{0x00009d14, 0x00c00400},
- 	{0x00009d18, 0x00000000},
--	{0x00009e08, 0x0078230c},
--	{0x00009e24, 0x990bb515},
--	{0x00009e28, 0x126f0000},
-+	{0x00009e08, 0x0038230c},
-+	{0x00009e24, 0x9907b515},
-+	{0x00009e28, 0x126f0600},
- 	{0x00009e30, 0x06336f77},
- 	{0x00009e34, 0x6af6532f},
- 	{0x00009e38, 0x0cc80c00},
-@@ -337,7 +337,7 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
- 
- static const u32 ar9565_1p0_baseband_postamble[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
--	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8005, 0xd00a800d},
-+	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8005, 0xd00a8009},
- 	{0x00009820, 0x206a022e, 0x206a022e, 0x206a012e, 0x206a01ae},
- 	{0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x63c640da},
- 	{0x00009828, 0x06903081, 0x06903081, 0x06903881, 0x09143c81},
-@@ -345,9 +345,9 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
- 	{0x00009830, 0x0000059c, 0x0000059c, 0x0000059c, 0x0000059c},
- 	{0x00009c00, 0x000000c4, 0x000000c4, 0x000000c4, 0x000000c4},
- 	{0x00009e00, 0x0372111a, 0x0372111a, 0x037216a0, 0x037216a0},
--	{0x00009e04, 0x00802020, 0x00802020, 0x00802020, 0x00802020},
--	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000d8},
--	{0x00009e10, 0x7ec88d2e, 0x7ec88d2e, 0x7ec84d2e, 0x7ec86d2e},
-+	{0x00009e04, 0x00802020, 0x00802020, 0x00142020, 0x00142020},
-+	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000e2},
-+	{0x00009e10, 0x7ec88d2e, 0x7ec88d2e, 0x7ec84d2e, 0x7ec84d2e},
- 	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3379605e, 0x33795d5e},
- 	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
-@@ -450,6 +450,8 @@ static const u32 ar9565_1p0_soc_postamble[][5] = {
- 
- static const u32 ar9565_1p0_Common_rx_gain_table[][2] = {
- 	/* Addr      allmodes  */
-+	{0x00004050, 0x00300300},
-+	{0x0000406c, 0x00100000},
- 	{0x0000a000, 0x00010000},
- 	{0x0000a004, 0x00030002},
- 	{0x0000a008, 0x00050004},
-@@ -498,27 +500,27 @@ static const u32 ar9565_1p0_Common_rx_gain_table[][2] = {
- 	{0x0000a0b4, 0x00000000},
- 	{0x0000a0b8, 0x00000000},
- 	{0x0000a0bc, 0x00000000},
--	{0x0000a0c0, 0x001f0000},
--	{0x0000a0c4, 0x01000101},
--	{0x0000a0c8, 0x011e011f},
--	{0x0000a0cc, 0x011c011d},
--	{0x0000a0d0, 0x02030204},
--	{0x0000a0d4, 0x02010202},
--	{0x0000a0d8, 0x021f0200},
--	{0x0000a0dc, 0x0302021e},
--	{0x0000a0e0, 0x03000301},
--	{0x0000a0e4, 0x031e031f},
--	{0x0000a0e8, 0x0402031d},
--	{0x0000a0ec, 0x04000401},
--	{0x0000a0f0, 0x041e041f},
--	{0x0000a0f4, 0x0502041d},
--	{0x0000a0f8, 0x05000501},
--	{0x0000a0fc, 0x051e051f},
--	{0x0000a100, 0x06010602},
--	{0x0000a104, 0x061f0600},
--	{0x0000a108, 0x061d061e},
--	{0x0000a10c, 0x07020703},
--	{0x0000a110, 0x07000701},
-+	{0x0000a0c0, 0x00bf00a0},
-+	{0x0000a0c4, 0x11a011a1},
-+	{0x0000a0c8, 0x11be11bf},
-+	{0x0000a0cc, 0x11bc11bd},
-+	{0x0000a0d0, 0x22632264},
-+	{0x0000a0d4, 0x22612262},
-+	{0x0000a0d8, 0x227f2260},
-+	{0x0000a0dc, 0x4322227e},
-+	{0x0000a0e0, 0x43204321},
-+	{0x0000a0e4, 0x433e433f},
-+	{0x0000a0e8, 0x4462433d},
-+	{0x0000a0ec, 0x44604461},
-+	{0x0000a0f0, 0x447e447f},
-+	{0x0000a0f4, 0x5582447d},
-+	{0x0000a0f8, 0x55805581},
-+	{0x0000a0fc, 0x559e559f},
-+	{0x0000a100, 0x66816682},
-+	{0x0000a104, 0x669f6680},
-+	{0x0000a108, 0x669d669e},
-+	{0x0000a10c, 0x77627763},
-+	{0x0000a110, 0x77607761},
- 	{0x0000a114, 0x00000000},
- 	{0x0000a118, 0x00000000},
- 	{0x0000a11c, 0x00000000},
-@@ -530,27 +532,27 @@ static const u32 ar9565_1p0_Common_rx_gain_table[][2] = {
- 	{0x0000a134, 0x00000000},
- 	{0x0000a138, 0x00000000},
- 	{0x0000a13c, 0x00000000},
--	{0x0000a140, 0x001f0000},
--	{0x0000a144, 0x01000101},
--	{0x0000a148, 0x011e011f},
--	{0x0000a14c, 0x011c011d},
--	{0x0000a150, 0x02030204},
--	{0x0000a154, 0x02010202},
--	{0x0000a158, 0x021f0200},
--	{0x0000a15c, 0x0302021e},
--	{0x0000a160, 0x03000301},
--	{0x0000a164, 0x031e031f},
--	{0x0000a168, 0x0402031d},
--	{0x0000a16c, 0x04000401},
--	{0x0000a170, 0x041e041f},
--	{0x0000a174, 0x0502041d},
--	{0x0000a178, 0x05000501},
--	{0x0000a17c, 0x051e051f},
--	{0x0000a180, 0x06010602},
--	{0x0000a184, 0x061f0600},
--	{0x0000a188, 0x061d061e},
--	{0x0000a18c, 0x07020703},
--	{0x0000a190, 0x07000701},
-+	{0x0000a140, 0x00bf00a0},
-+	{0x0000a144, 0x11a011a1},
-+	{0x0000a148, 0x11be11bf},
-+	{0x0000a14c, 0x11bc11bd},
-+	{0x0000a150, 0x22632264},
-+	{0x0000a154, 0x22612262},
-+	{0x0000a158, 0x227f2260},
-+	{0x0000a15c, 0x4322227e},
-+	{0x0000a160, 0x43204321},
-+	{0x0000a164, 0x433e433f},
-+	{0x0000a168, 0x4462433d},
-+	{0x0000a16c, 0x44604461},
-+	{0x0000a170, 0x447e447f},
-+	{0x0000a174, 0x5582447d},
-+	{0x0000a178, 0x55805581},
-+	{0x0000a17c, 0x559e559f},
-+	{0x0000a180, 0x66816682},
-+	{0x0000a184, 0x669f6680},
-+	{0x0000a188, 0x669d669e},
-+	{0x0000a18c, 0x77e677e7},
-+	{0x0000a190, 0x77e477e5},
- 	{0x0000a194, 0x00000000},
- 	{0x0000a198, 0x00000000},
- 	{0x0000a19c, 0x00000000},
-@@ -770,7 +772,7 @@ static const u32 ar9565_1p0_Modes_lowest_ob_db_tx_gain_table[][5] = {
- 
- static const u32 ar9565_1p0_pciephy_clkreq_disable_L1[][2] = {
- 	/* Addr      allmodes  */
--	{0x00018c00, 0x18213ede},
-+	{0x00018c00, 0x18212ede},
- 	{0x00018c04, 0x000801d8},
- 	{0x00018c08, 0x0003780c},
- };
-@@ -889,8 +891,8 @@ static const u32 ar9565_1p0_common_wo_xlna_rx_gain_table[][2] = {
- 	{0x0000a180, 0x66816682},
- 	{0x0000a184, 0x669f6680},
- 	{0x0000a188, 0x669d669e},
--	{0x0000a18c, 0x77627763},
--	{0x0000a190, 0x77607761},
-+	{0x0000a18c, 0x77e677e7},
-+	{0x0000a190, 0x77e477e5},
- 	{0x0000a194, 0x00000000},
- 	{0x0000a198, 0x00000000},
- 	{0x0000a19c, 0x00000000},
-@@ -1114,7 +1116,7 @@ static const u32 ar9565_1p0_modes_high_ob_db_tx_gain_table[][5] = {
- 	{0x0000a2e0, 0xffecec00, 0xffecec00, 0xfd339c84, 0xfd339c84},
- 	{0x0000a2e4, 0xfc0f0000, 0xfc0f0000, 0xfec3e000, 0xfec3e000},
- 	{0x0000a2e8, 0xfc100000, 0xfc100000, 0xfffc0000, 0xfffc0000},
--	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
-+	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050df, 0x000050df},
- 	{0x0000a500, 0x00002220, 0x00002220, 0x00000000, 0x00000000},
- 	{0x0000a504, 0x06002223, 0x06002223, 0x04000002, 0x04000002},
- 	{0x0000a508, 0x0b022220, 0x0b022220, 0x08000004, 0x08000004},
-@@ -1140,13 +1142,13 @@ static const u32 ar9565_1p0_modes_high_ob_db_tx_gain_table[][5] = {
- 	{0x0000a558, 0x69027f56, 0x69027f56, 0x53001ce5, 0x53001ce5},
- 	{0x0000a55c, 0x6d029f56, 0x6d029f56, 0x57001ce9, 0x57001ce9},
- 	{0x0000a560, 0x73049f56, 0x73049f56, 0x5b001ceb, 0x5b001ceb},
--	{0x0000a564, 0x7804ff56, 0x7804ff56, 0x5d001eec, 0x5d001eec},
--	{0x0000a568, 0x7804ff56, 0x7804ff56, 0x5d001eec, 0x5d001eec},
--	{0x0000a56c, 0x7804ff56, 0x7804ff56, 0x5d001eec, 0x5d001eec},
--	{0x0000a570, 0x7804ff56, 0x7804ff56, 0x5d001eec, 0x5d001eec},
--	{0x0000a574, 0x7804ff56, 0x7804ff56, 0x5d001eec, 0x5d001eec},
--	{0x0000a578, 0x7804ff56, 0x7804ff56, 0x5d001eec, 0x5d001eec},
--	{0x0000a57c, 0x7804ff56, 0x7804ff56, 0x5d001eec, 0x5d001eec},
-+	{0x0000a564, 0x7804ff56, 0x7804ff56, 0x60001cf0, 0x60001cf0},
-+	{0x0000a568, 0x7804ff56, 0x7804ff56, 0x61001cf1, 0x61001cf1},
-+	{0x0000a56c, 0x7804ff56, 0x7804ff56, 0x62001cf2, 0x62001cf2},
-+	{0x0000a570, 0x7804ff56, 0x7804ff56, 0x63001cf3, 0x63001cf3},
-+	{0x0000a574, 0x7804ff56, 0x7804ff56, 0x64001cf4, 0x64001cf4},
-+	{0x0000a578, 0x7804ff56, 0x7804ff56, 0x66001ff6, 0x66001ff6},
-+	{0x0000a57c, 0x7804ff56, 0x7804ff56, 0x66001ff6, 0x66001ff6},
- 	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-@@ -1174,7 +1176,7 @@ static const u32 ar9565_1p0_modes_high_power_tx_gain_table[][5] = {
- 	{0x0000a2e0, 0xffecec00, 0xffecec00, 0xfd339c84, 0xfd339c84},
- 	{0x0000a2e4, 0xfc0f0000, 0xfc0f0000, 0xfec3e000, 0xfec3e000},
- 	{0x0000a2e8, 0xfc100000, 0xfc100000, 0xfffc0000, 0xfffc0000},
--	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
-+	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050df, 0x000050df},
- 	{0x0000a500, 0x00002220, 0x00002220, 0x00000000, 0x00000000},
- 	{0x0000a504, 0x06002223, 0x06002223, 0x04000002, 0x04000002},
- 	{0x0000a508, 0x0a022220, 0x0a022220, 0x08000004, 0x08000004},
-@@ -1200,13 +1202,13 @@ static const u32 ar9565_1p0_modes_high_power_tx_gain_table[][5] = {
- 	{0x0000a558, 0x66027f56, 0x66027f56, 0x4c001ce5, 0x4c001ce5},
- 	{0x0000a55c, 0x6a029f56, 0x6a029f56, 0x50001ce9, 0x50001ce9},
- 	{0x0000a560, 0x70049f56, 0x70049f56, 0x54001ceb, 0x54001ceb},
--	{0x0000a564, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a568, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a56c, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a570, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a574, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a578, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a57c, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
-+	{0x0000a564, 0x7504ff56, 0x7504ff56, 0x59001cf0, 0x59001cf0},
-+	{0x0000a568, 0x7504ff56, 0x7504ff56, 0x5a001cf1, 0x5a001cf1},
-+	{0x0000a56c, 0x7504ff56, 0x7504ff56, 0x5b001cf2, 0x5b001cf2},
-+	{0x0000a570, 0x7504ff56, 0x7504ff56, 0x5c001cf3, 0x5c001cf3},
-+	{0x0000a574, 0x7504ff56, 0x7504ff56, 0x5d001cf4, 0x5d001cf4},
-+	{0x0000a578, 0x7504ff56, 0x7504ff56, 0x5f001ff6, 0x5f001ff6},
-+	{0x0000a57c, 0x7504ff56, 0x7504ff56, 0x5f001ff6, 0x5f001ff6},
- 	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+- An NFC Makefile cleanup, as I forgot to remove a commented out line when
+  moving the LLCP code to the NFC top level directory.
+
+The following changes since commit 6bb4880d9ef30375da4507aeabd6dc261a2c6c2b:
+
+  ath9k: fix draining aggregation tid buffers (2013-05-17 14:31:09 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.10-1
+
+for you to fetch changes up to e3a6b14ceda0207c3405c6266e5177a85c0db044:
+
+  NFC: mei: Do not disable MEI devices from their remove routine (2013-05-21 10:48:41 +0200)
+
+----------------------------------------------------------------
+Paul Bolle (1):
+      NFC: Remove commented out LLCP related Makefile line
+
+Samuel Ortiz (3):
+      NFC: mei_phy depends on INTEL_MEI
+      NFC: mei_phy: Register event callback when enabling the device
+      NFC: mei: Do not disable MEI devices from their remove routine
+
+ drivers/nfc/Kconfig         |    2 +-
+ drivers/nfc/mei_phy.c       |    9 +++++++++
+ drivers/nfc/microread/mei.c |   20 +++++---------------
+ drivers/nfc/pn544/mei.c     |   20 +++++---------------
+ net/nfc/Makefile            |    1 -
+ 5 files changed, 20 insertions(+), 32 deletions(-)
+
 -- 
-1.8.2.2
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
