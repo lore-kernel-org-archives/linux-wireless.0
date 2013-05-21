@@ -1,88 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1486 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964784Ab3E1Rgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 13:36:51 -0400
-Message-ID: <1369762649.1568.11.camel@dcbw.foobar.com> (sfid-20130528_193654_470769_7F547E5C)
-Subject: Re: [PATCH] ath9k_hw: fix PA predistortion miscalibration
-From: Dan Williams <dcbw@redhat.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com, felixb@qca.qualcomm.com
-Date: Tue, 28 May 2013 12:37:29 -0500
-In-Reply-To: <1369757084-50141-1-git-send-email-nbd@openwrt.org>
-References: <1369757084-50141-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:36515 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754272Ab3EUPvo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 May 2013 11:51:44 -0400
+Received: by mail-ea0-f179.google.com with SMTP id z16so499603ead.24
+        for <linux-wireless@vger.kernel.org>; Tue, 21 May 2013 08:51:43 -0700 (PDT)
+From: "Alessandro Lannocca" <alessandro.lannocca@gmail.com>
+To: "'Helmut Schaa'" <helmut.schaa@googlemail.com>
+Cc: <linux-wireless@vger.kernel.org>
+References: <1369140893-22622-1-git-send-email-helmut.schaa@googlemail.com>
+In-Reply-To: <1369140893-22622-1-git-send-email-helmut.schaa@googlemail.com>
+Subject: R: [PATCH] mac80211: Allow single vif mac address change with addr_mask
+Date: Tue, 21 May 2013 17:51:38 +0200
+Message-ID: <000d01ce563b$15810800$40831800$@gmail.com> (sfid-20130521_175147_654833_9487B5CB)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-05-28 at 18:04 +0200, Felix Fietkau wrote:
-> If any bins from the training data are skipped (i != max_index), the
-> calculated compensation curve gets distorted, and the signal will be
-> wildly overamplified. This may be the cause of the reported hardware
-> damage that was caused by PA predistortion (because of which PAPRD was
-> disabled by default).
-> 
-> When calculating the x_est, Y, theta values, the use of max_index and i
-> was reversed. i points to the bin index whereas max_index refers to the
-> index of the calculated arrays.
+Tested right now against compat-drivers-2013-03-28-5-u and I can confirm it
+works.
 
-Maybe add a comment in the code about the meaning of max_index and i, if
-there isn't one already?
+Thank you for your effort!
 
-Dan
+Alessandro Lannocca
 
-> Note that PA predistortion is still disabled, it will be re-enabled
-> after it has been properly validated.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_paprd.c | 19 +++++++++++--------
->  1 file changed, 11 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-> index 09c1f9d..6343cc9 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-> @@ -454,6 +454,8 @@ static bool create_pa_curve(u32 *data_L, u32 *data_U, u32 *pa_table, u16 *gain)
->  		if (accum_cnt <= thresh_accum_cnt)
->  			continue;
->  
-> +		max_index++;
-> +
->  		/* sum(tx amplitude) */
->  		accum_tx = ((data_L[i] >> 16) & 0xffff) |
->  		    ((data_U[i] & 0x7ff) << 16);
-> @@ -468,20 +470,21 @@ static bool create_pa_curve(u32 *data_L, u32 *data_U, u32 *pa_table, u16 *gain)
->  
->  		accum_tx <<= scale_factor;
->  		accum_rx <<= scale_factor;
-> -		x_est[i + 1] = (((accum_tx + accum_cnt) / accum_cnt) + 32) >>
-> -		    scale_factor;
-> +		x_est[max_index] =
-> +			(((accum_tx + accum_cnt) / accum_cnt) + 32) >>
-> +			scale_factor;
->  
-> -		Y[i + 1] = ((((accum_rx + accum_cnt) / accum_cnt) + 32) >>
-> +		Y[max_index] =
-> +			((((accum_rx + accum_cnt) / accum_cnt) + 32) >>
->  			    scale_factor) +
-> -			    (1 << scale_factor) * max_index + 16;
-> +			(1 << scale_factor) * i + 16;
->  
->  		if (accum_ang >= (1 << 26))
->  			accum_ang -= 1 << 27;
->  
-> -		theta[i + 1] = ((accum_ang * (1 << scale_factor)) + accum_cnt) /
-> -		    accum_cnt;
-> -
-> -		max_index++;
-> +		theta[max_index] =
-> +			((accum_ang * (1 << scale_factor)) + accum_cnt) /
-> +			accum_cnt;
->  	}
->  
->  	/*
+-----Messaggio originale-----
+Da: Helmut Schaa [mailto:helmut.schaa@googlemail.com] 
+Inviato: martedì 21 maggio 2013 14.55
+A: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net; IvDoorn@gmail.com; gwingerde@gmail.com;
+stf_xl@wp.pl; Helmut Schaa; Alessandro Lannocca; Bruno Randolf
+Oggetto: [PATCH] mac80211: Allow single vif mac address change with
+addr_mask
+
+When changing the MAC address of a single vif mac80211 will check if the new
+address fits into the address mask specified by the driver. This only needs
+to be done when using multiple BSSIDs. Hence, check the new address only
+against all other vifs.
+
+Resolves:
+https://bugzilla.kernel.org/show_bug.cgi?id=57371
+
+Reported-by: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+Cc: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+Cc: Bruno Randolf <br1@thinktube.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/iface.c |   16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c index
+60f1ce5..c1a8c79 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -159,9 +159,10 @@ static int ieee80211_change_mtu(struct net_device *dev,
+int new_mtu)
+ 	return 0;
+ }
+ 
+-static int ieee80211_verify_mac(struct ieee80211_local *local, u8 *addr)
++static int ieee80211_verify_mac(struct ieee80211_sub_if_data *sdata, u8 
++*addr)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_sub_if_data *iter;
+ 	u64 new, mask, tmp;
+ 	u8 *m;
+ 	int ret = 0;
+@@ -181,11 +182,14 @@ static int ieee80211_verify_mac(struct ieee80211_local
+*local, u8 *addr)
+ 
+ 
+ 	mutex_lock(&local->iflist_mtx);
+-	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
++	list_for_each_entry(iter, &local->interfaces, list) {
++		if (iter == sdata)
++			continue;
++
++		if (iter->vif.type == NL80211_IFTYPE_MONITOR)
+ 			continue;
+ 
+-		m = sdata->vif.addr;
++		m = iter->vif.addr;
+ 		tmp =	((u64)m[0] << 5*8) | ((u64)m[1] << 4*8) |
+ 			((u64)m[2] << 3*8) | ((u64)m[3] << 2*8) |
+ 			((u64)m[4] << 1*8) | ((u64)m[5] << 0*8); @@ -209,7
++213,7 @@ static int ieee80211_change_mac(struct net_device *dev, void
+*addr)
+ 	if (ieee80211_sdata_running(sdata))
+ 		return -EBUSY;
+ 
+-	ret = ieee80211_verify_mac(sdata->local, sa->sa_data);
++	ret = ieee80211_verify_mac(sdata, sa->sa_data);
+ 	if (ret)
+ 		return ret;
+ 
+--
+1.7.10.4
 
 
