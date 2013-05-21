@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:36155 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759274Ab3EOOTg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:19:36 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2 11/18] ath9k: always use SIFS times from OFDM for 5/10 MHz
-Date: Wed, 15 May 2013 16:19:02 +0200
-Message-Id: <1368627549-22518-12-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_161954_123221_D16984E9)
-In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:39243 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752809Ab3EVACq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 May 2013 20:02:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Luciano Coelho <coelho@ti.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 21 May 2013 16:59:44 -0700
+Subject: RE: [PATCH 2/2] cfg80211/nl80211: Add coalesce support
+Message-ID: <477F20668A386D41ADCC57781B1F70430E0ADCE97D@SC-VEXCH1.marvell.com> (sfid-20130522_020249_651254_3CA9DED0)
+References: <1369099918-4921-1-git-send-email-bzhao@marvell.com>
+ <1369099918-4921-2-git-send-email-bzhao@marvell.com>
+ <20130521232303.GX6529@pogo>
+In-Reply-To: <20130521232303.GX6529@pogo>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-5/10 MHz channels should always use SIFS times as defined in IEEE
-802.11-2012 18.4.4 (OFDM PHY characteristics). This makes it compatible
-to ath5k, which does the same.
+Hi Luis,
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/hw.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Thanks for your comments.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 7f25da8..89ee731 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1071,7 +1071,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 11;
- 
--		sifstime *= 2;
-+		sifstime = 32;
- 		ack_offset = 16;
- 		slottime = 13;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
-@@ -1081,7 +1081,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 22;
- 
--		sifstime *= 4;
-+		sifstime = 64;
- 		ack_offset = 32;
- 		slottime = 21;
- 	} else {
-@@ -1118,7 +1118,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		ctstimeout += 48 - sifstime - ah->slottime;
- 	}
- 
--
- 	ath9k_hw_set_sifs_time(ah, sifstime);
- 	ath9k_hw_setslottime(ah, slottime);
- 	ath9k_hw_set_ack_timeout(ah, acktimeout);
--- 
-1.7.10.4
+> > From: Amitkumar Karwar <akarwar@marvell.com>
+> >
+> > Add set/get configuration support for packet coalesce.
+> >
+> > This feature needs to be advertised during driver initialization.
+> > Drivers can do required hardware settings based on user configuration.
+> >
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> 
+> I see nothing documenting clearly what this "coalesce" does.
+> Can you elaborate quite a bit both on the commit log and also
+> the documentation on nl80211.h what this is exactly?
 
+will add the documentations in v2.
+
+> It would also be good for you to express on your previous patch why
+> you want the rename.
+
+"packet coalesce" will reuse the pattern structure (and its enum definitions) defined for
+WoWLAN. It's renamed so that both WoWLAN and Coalesce can make use of it.
+
+More elaborations will be added in v2 series.
+
+> 
+> If you add this also can you please be sure to update the wiki
+> for iw to document support for this?
+
+Sure. It will be done as soon as the iw patches are merged.
+
+Thanks,
+Bing
+
+> 
+>   Luis
