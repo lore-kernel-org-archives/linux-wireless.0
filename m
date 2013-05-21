@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:56179 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755733Ab3ETTrd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 May 2013 15:47:33 -0400
-Received: from mailout-de.gmx.net ([10.1.76.1]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0LdKAB-1UEUi24Bu5-00iXBn for
- <linux-wireless@vger.kernel.org>; Mon, 20 May 2013 21:47:32 +0200
-From: Peter Huewe <peterhuewe@gmx.de>
-To: Luciano Coelho <coelho@ti.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Felipe Balbi <balbi@ti.com>, Ido Yariv <ido@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Peter Huewe <peterhuewe@gmx.de>
-Subject: [PATCH] net/wireless/ti/wlcore/spi: Use module_spi_driver to register driver
-Date: Mon, 20 May 2013 21:52:40 +0200
-Message-Id: <1369079560-6101-1-git-send-email-peterhuewe@gmx.de> (sfid-20130520_214752_366112_3B56ADF1)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:32748 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758602Ab3EUCnb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 May 2013 22:43:31 -0400
+From: Libo Chen <libo.chen@huawei.com>
+To: <brudley@broadcom.com>, <arend@broadcom.com>,
+	<frankyl@broadcom.com>, <meuleman@broadcom.com>,
+	<linville@tuxdriver.com>
+CC: <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <lizefan@huawei.com>,
+	<libo.chen@huawei.com>
+Subject: [PATCH 14/19] drivers/net/wireless/brcm80211/brcmfmac: add missing platform_driver owner
+Date: Tue, 21 May 2013 10:42:40 +0800
+Message-ID: <1369104160-5624-1-git-send-email-libo.chen@huawei.com> (sfid-20130521_044613_321604_7AC310FE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing some boilerplate by using module_spi_driver instead of calling
-register and unregister in the otherwise empty init/exit functions
+set the owner of platform_driver, to ensure that the
+caller of driver holds a module refernece
 
-Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+Signed-off-by: Libo Chen <libo.chen@huawei.com>
 ---
- drivers/net/wireless/ti/wlcore/spi.c | 14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index e264478..1b0cd98 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -434,19 +434,7 @@ static struct spi_driver wl1271_spi_driver = {
- 	.remove		= wl1271_remove,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 44fa0cd..11400b3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -606,7 +606,8 @@ static int brcmf_sdio_pd_remove(struct platform_device *pdev)
+ static struct platform_driver brcmf_sdio_pd = {
+ 	.remove		= brcmf_sdio_pd_remove,
+ 	.driver		= {
+-		.name	= BRCMFMAC_SDIO_PDATA_NAME
++		.name	= BRCMFMAC_SDIO_PDATA_NAME,
++		.owner	= THIS_MODULE,
+ 	}
  };
  
--static int __init wl1271_init(void)
--{
--	return spi_register_driver(&wl1271_spi_driver);
--}
--
--static void __exit wl1271_exit(void)
--{
--	spi_unregister_driver(&wl1271_spi_driver);
--}
--
--module_init(wl1271_init);
--module_exit(wl1271_exit);
--
-+module_spi_driver(wl1271_spi_driver);
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
 -- 
-1.8.1.5
+1.7.1
+
 
