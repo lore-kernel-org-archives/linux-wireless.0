@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52943 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964784Ab3E1RpJ (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:43305 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752612Ab3EUPIE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 13:45:09 -0400
-Date: Tue, 28 May 2013 13:39:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-fixes 2013-05-27
-Message-ID: <20130528173951.GG2084@tuxdriver.com> (sfid-20130528_194513_239348_B8CAA84C)
-References: <1369647404.8229.26.camel@jlt4.sipsolutions.net>
+	Tue, 21 May 2013 11:08:04 -0400
+Received: by mail-ea0-f176.google.com with SMTP id k11so486193eaj.35
+        for <linux-wireless@vger.kernel.org>; Tue, 21 May 2013 08:08:02 -0700 (PDT)
+From: "Alessandro Lannocca" <alessandro.lannocca@gmail.com>
+To: "'Helmut Schaa'" <helmut.schaa@googlemail.com>
+Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>
+References: <CAMfPB_xTUy72YokSoYJezOX_gb54CJEd7V6+4pAfOHnAzUMJcQ@mail.gmail.com> <CAGXE3d8u4ORgmOAdKFbgYSA3qTQxfhKiT6feDMMwn_-ue0ehow@mail.gmail.com>
+In-Reply-To: <CAGXE3d8u4ORgmOAdKFbgYSA3qTQxfhKiT6feDMMwn_-ue0ehow@mail.gmail.com>
+Subject: R: rt3070-based usb device won't accept mac address changes
+Date: Tue, 21 May 2013 17:07:57 +0200
+Message-ID: <000c01ce5634$fb6b3b80$f241b280$@gmail.com> (sfid-20130521_170808_917095_1CC77660)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369647404.8229.26.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 27, 2013 at 11:36:44AM +0200, Johannes Berg wrote:
-> John,
-> 
-> And here's a pull request for iwlwifi-fixes ...
-> 
-> This fixes a brown paper-bag bug that we really should've caught in
-> review. More details in the changelog for the fix.
-> 
-> johannes
-> 
-> 
-> The following changes since commit e3d4bc8cc0230e8dc8033484666f03f87392a8c4:
-> 
->   iwlwifi: mvm: fix aggregation drain flow (2013-05-16 22:39:07 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
-> 
-> for you to fetch changes up to a87783699b23395c46bbeeb5d28f6db24897bf26:
-> 
->   iwlwifi: dvm: fix zero LQ CMD sending avoidance (2013-05-27 11:33:57 +0200)
+Hi, I have an ath9k-driven integrated card active at the same time (wlan0);
+but only one wlan interface (wlan1) active on the rt2800usb phy, running in
+managed mode.
 
-Pulling now...
+Thank you for your time.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+-----Messaggio originale-----
+Da: Helmut Schaa [mailto:helmut.schaa@googlemail.com] 
+Inviato: martedì 21 maggio 2013 10.16
+A: Alessandro Lannocca
+Cc: linux-wireless
+Oggetto: Re: rt3070-based usb device won't accept mac address changes
+
+On Sat, May 18, 2013 at 5:10 PM, Alessandro Lannocca
+<alessandro.lannocca@gmail.com> wrote:
+> Hi, after switching to kernel 3.8.8 (ubuntu quantal to raring), I'm 
+> unable to change my alfa AWUS036NH mac address; a simple:
+>
+> ifconfig <device> down
+> ifconfig <device> hw ether <random hw>
+>
+> results in:
+>
+> SIOCSIFHWADDR: Invalid argument
+
+Do you have multiple wifi interfaces or just that single one?
+Helmut
+
