@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42225 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754725Ab3EaSlp (ORCPT
+Received: from mailout4.w1.samsung.com ([210.118.77.14]:42997 "EHLO
+	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755465Ab3EVGYl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 May 2013 14:41:45 -0400
-Message-ID: <1370025698.14117.15.camel@jlt4.sipsolutions.net> (sfid-20130531_204153_665019_C0E78175)
-Subject: Re: Another try at getting pktgen to work with wifi.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Fri, 31 May 2013 20:41:38 +0200
-In-Reply-To: <51A8E53E.8030101@candelatech.com>
-References: <51A79E4A.7000609@candelatech.com>
-	  <51A7B049.9090201@openwrt.org> <51A7BA63.4080403@candelatech.com>
-	  <51A857BF.7070008@openwrt.org> <51A8DC1C.1040908@candelatech.com>
-	  (sfid-20130531_192143_291284_FB196B0A) <1370021846.14117.13.camel@jlt4.sipsolutions.net>
-	 <51A8E53E.8030101@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 22 May 2013 02:24:41 -0400
+Received: from eucpsbgm1.samsung.com (unknown [203.254.199.244])
+ by mailout4.w1.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0MN600EFISG0S570@mailout4.w1.samsung.com> for
+ linux-wireless@vger.kernel.org; Wed, 22 May 2013 07:24:33 +0100 (BST)
+Received: from CAMNPWMFITZJOH ([106.1.222.14])
+ by eusync4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTPA id <0MN600292SGU4860@eusync4.samsung.com> for
+ linux-wireless@vger.kernel.org; Wed, 22 May 2013 07:24:33 +0100 (BST)
+Reply-to: m.fitzjohn@samsung.com
+From: Mark Fitzjohn <m.fitzjohn@samsung.com>
+To: linux-wireless@vger.kernel.org
+Subject: Is anyone working on voice enterprise?
+Date: Wed, 22 May 2013 07:24:29 +0100
+Message-id: <001601ce56b5$047c7e20$0d757a60$%fitzjohn@samsung.com> (sfid-20130522_082452_262880_908AD805)
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-05-31 at 11:00 -0700, Ben Greear wrote:
+Hi
 
-> I think it might be more that the wifi stacks have some specific
-> assumptions about how skb->priority maps to queues and QoS.  If
-> they get out of sync, then the TID mappings and so forth get
-> confused.
+I couldn't see much in terms of t-spec handling in the code that we're
+working with:
 
-What I'm saying though is that I don't see where skb->priority is even
-_used_ in the wifi stack. I can see it getting set, but not used.
+compat-wireless 3.6.2.1
+wpa_supplicant_8
 
-> I actually don't know exactly why pktgen shows this problem,
-> but it must be because it does direct calls to the hard_start_xmit
-> method of the netdev when (most?) other paths do dev_queue_xmit
-> or similar.
+Other than on the AP side and then with a few TODOs.
 
-Other paths go through select_queue(), obviously.
+So is anyone already looking at this?
 
-> > Actually that makes it seem like something else should be doing packet
-> > classification, not mac80211 in select_queue()?
-> >
-> > Where is skb->priority actually really used in mac80211? I don't see
-> > much?
-> 
-> There's a bit more in net/wireless/util.c, at least (cfg80211_classify8021d, for instance).
+Thanks
+Mark
 
-But that's pretty much all assignments.
-
-> The mac80211/wme.c uses it.  Some of this is called from the drivers
-> (line 1916 or so of ath9k/xmit.c).
-
-What's called there? I don't see any reason for that to use
-skb->priority?
-
-> It's all a bit convoluted in my opinion, but there may well
-> be good reasons for it.
-
-More likely legacy.
-
-johannes
 
