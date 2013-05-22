@@ -1,93 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:56286 "EHLO mout.gmx.net"
+Received: from mx1.redhat.com ([209.132.183.28]:27344 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757298Ab3EXSbP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 14:31:15 -0400
-Received: from mailout-de.gmx.net ([10.1.76.17]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0M1kqC-1ULXVQ0AAs-00tmex for
- <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 20:31:14 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v4 2/2] ath9k: check for Rx-STBC flag and pass it to ieee80211
-Date: Fri, 24 May 2013 20:30:59 +0200
-Message-Id: <1369420259-10513-1-git-send-email-linux@rempel-privat.de> (sfid-20130524_203118_546088_A81B7749)
-In-Reply-To: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
-References: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
+	id S1754799Ab3EVL53 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 May 2013 07:57:29 -0400
+Date: Wed, 22 May 2013 13:59:08 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jake Edge <jake@lwn.net>, linux-wireless@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to
+ 1672c0e3
+Message-ID: <20130522115908.GA22547@redhat.com> (sfid-20130522_135746_681476_3DA2AE12)
+References: <20130505143803.7e46e4c6@chukar.edge2.net>
+ <20130506123805.GA1602@redhat.com>
+ <20130506083759.556dac76@chukar.edge2.net>
+ <20130506153044.GB1602@redhat.com>
+ <1367854279.8434.13.camel@jlt4.sipsolutions.net>
+ <1367855046.8434.16.camel@jlt4.sipsolutions.net>
+ <20130507084241.GA1581@redhat.com>
+ <1367934810.8328.30.camel@jlt4.sipsolutions.net>
+ <20130507153525.GB1576@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130507153525.GB1576@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch make use of STBC flag in DMA RX descriptor.
-Only devices after ar9280 can provide this information.
+On Tue, May 07, 2013 at 05:35:25PM +0200, Stanislaw Gruszka wrote:
+> On Tue, May 07, 2013 at 03:53:30PM +0200, Johannes Berg wrote:
+> > > I'm not sure if I like to add passive_no_rx to iwlegacy. Stopping queues
+> > > and waiting for beacon looks sticky, what happen if beacon will not be
+> > > received?
+> > 
+> > Good question, do we get stuck? I was assuming we'd time out, but maybe
+> > that's not the case?
+> 
+> AFICT, we wake queues only if beacon arrives or mac80211 call drv_config
+> with BSS_CHANGED_IDLE. I'm not sure if the latter prevent stuck. 
 
-If card support it we will set HAVE_STBC flag, to show
-clint programm thet STBC is supported but not received.
+It should prevent stuck. When we fail to auth, drv_config() with BSS_CHANGED_IDLE
+is called via:
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/init.c | 10 ++++++++--
- drivers/net/wireless/ath/ath9k/mac.c  |  5 +++++
- drivers/net/wireless/ath/ath9k/mac.h  |  3 ++-
- 3 files changed, 15 insertions(+), 3 deletions(-)
+ieee80211_destroy_auth_data ->
+ieee80211_vif_release_channel ->
+__ieee80211_vif_release_channel ->
+ieee80211_unassign_vif_chanctx ->
+ieee80211_bss_info_change_notify
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index aba4151..b9c97d4 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -21,6 +21,7 @@
- #include <linux/ath9k_platform.h>
- #include <linux/module.h>
- #include <linux/relay.h>
-+#include <net/ieee80211_radiotap.h>
- 
- #include "ath9k.h"
- 
-@@ -769,8 +770,13 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 		IEEE80211_HW_SUPPORTS_RC_TABLE;
- 
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
--		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
-+		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
-+
-+		if (AR_SREV_9280_20_OR_LATER(ah))
-+			hw->radiotap_mcs_details |=
-+				IEEE80211_RADIOTAP_MCS_HAVE_STBC;
-+	}
- 
- 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index a52081d..d055e38 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -593,6 +593,11 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 		(ads.ds_rxstatus3 & AR_GI) ? RX_FLAG_SHORT_GI : 0;
- 	rs->flag |=
- 		(ads.ds_rxstatus3 & AR_2040) ? RX_FLAG_40MHZ : 0;
-+	if (AR_SREV_9280_20_OR_LATER(ah))
-+		rs->flag |=
-+			(ads.ds_rxstatus3 & AR_STBC) ?
-+				/* we can only Nss=1 STBC */
-+				(1 << RX_FLAG_STBC_SHIFT) : 0;
- 
- 	if (ads.ds_rxstatus8 & AR_PreDelimCRCErr)
- 		rs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 3f1e775..b02dfce 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -534,7 +534,8 @@ struct ar5416_desc {
- #define AR_2040             0x00000002
- #define AR_Parallel40       0x00000004
- #define AR_Parallel40_S     2
--#define AR_RxStatusRsvd30   0x000000f8
-+#define AR_STBC             0x00000008 /* on ar9280 and later */
-+#define AR_RxStatusRsvd30   0x000000f0
- #define AR_RxAntenna	    0xffffff00
- #define AR_RxAntenna_S	    8
- 
--- 
-1.8.1.2
+But there is need to have ->vif.chanctx_conf valid in 
+__ieee80211_vif_release_channel(), where is below condition:
+
+        conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+                                         lockdep_is_held(&local->chanctx_mtx));
+        if (!conf)
+                return;
+
+I'm not sure if that always happen. Perhaps would be better to change
+BSS_CHANGED_IDLE to BSS_CHANGED_BSSID, which is called directly from
+ieee80211_destroy_auth_data() ?
+
+Stanislaw
 
