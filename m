@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:39665 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848Ab3EIRAv (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:36073 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756859Ab3EVSqz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 May 2013 13:00:51 -0400
-Received: by mail-wg0-f48.google.com with SMTP id f11so3194517wgh.15
-        for <linux-wireless@vger.kernel.org>; Thu, 09 May 2013 10:00:50 -0700 (PDT)
+	Wed, 22 May 2013 14:46:55 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Luciano Coelho <coelho@ti.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Wed, 22 May 2013 11:46:49 -0700
+Subject: RE: [PATCH 2/2] cfg80211/nl80211: Add coalesce support
+Message-ID: <477F20668A386D41ADCC57781B1F70430E801DC19F@SC-VEXCH1.marvell.com> (sfid-20130522_204705_617933_073F21E6)
+References: <1369099918-4921-1-git-send-email-bzhao@marvell.com>
+	 <1369099918-4921-2-git-send-email-bzhao@marvell.com>
+	 <20130521232303.GX6529@pogo>
+	 <477F20668A386D41ADCC57781B1F70430E0ADCE97D@SC-VEXCH1.marvell.com>
+	 <1369210344.8207.0.camel@jlt4.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F70430E801DC176@SC-VEXCH1.marvell.com>
+ <1369246994.8207.24.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1369246994.8207.24.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <518BD13D.1030504@candelatech.com>
-References: <5189DB72.3020809@candelatech.com> <20873.56643.216380.594657@gargle.gargle.HOWL>
- <518A6C21.5070408@candelatech.com> <20875.12412.946993.203664@gargle.gargle.HOWL>
- <518BB62D.9060108@candelatech.com> <CAJu560hVBcdJ67uNprj0TOY6rWNd-iT8f7QNaE64=ENz91yj6w@mail.gmail.com>
- <518BCE45.1060704@candelatech.com> <20875.53161.157603.680374@gargle.gargle.HOWL>
- <518BD13D.1030504@candelatech.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 9 May 2013 22:30:30 +0530
-Message-ID: <CABPxzY+t1bZRtYf26-3yjVqv15m2FjB0eZ29ixniqbVPZ2NoNA@mail.gmail.com> (sfid-20130509_190056_176811_DAAB9B96)
-Subject: Re: Fun with QoS in AP mode.
-To: Ben Greear <greearb@candelatech.com>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	Cyril Segretain <cyrilseg@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 9, 2013 at 10:09 PM, Ben Greear <greearb@candelatech.com> wrote:
->
-> On 05/09/2013 09:32 AM, Sujith Manoharan wrote:
->>
->> Ben Greear wrote:
->>>
->>> I suspect we need to set up rules with 'tc' and maybe iptables.
->>>
->>> I'm not having any luck finding any examples out on the web, but
->>> surely the info is somewhere w/out having to fully understand 'tc'.
->>
->>
->> DSCP can be used...
->>
->> Something like "iptables -t mangle -A OUTPUT -p tcp --dport 5005 -j DSCP --set-dscp-class "CS6""
->> (Change the class for other priorities).
->
->
-> In my case, I'd like to match on the ToS set in the IP headers.
->
-> Basically, just map ToS 192 to VO, for instance.
-
-Talking about rules, Are you able to see the ToS marked in the IP header in
-the sniffer and not in the 802.11 header? Then we can concentrate on
-marking the packet (or) mapping in the driver?
+SGkgSm9oYW5uZXMsDQoNCj4gPiA+IEJlZm9yZSB5b3UgbWFrZSBhbnkgY2hhbmdlcyAoSSBkaWRu
+J3QgZ2V0IGFyb3VuZCB0byBjb21tZW50aW5nIG9uIHlvdXINCj4gPiA+IHBhdGNoZXMgeWVzdGVy
+ZGF5KSwgSSB0aGluayB5b3UgaGF2ZSB0byBiZSBtb3JlIGNhcmVmdWwgd2l0aCB0aGUgcmVuYW1l
+cw0KPiA+ID4gdG8gbm90IGJyZWFrIHRoZSBBUEkuIFBsZWFzZSBwcm92aWRlIGRlZmluZXMgb3Ig
+c28gdG8gbm90IGJyZWFrDQo+ID4gPiBjb21waWxhdGlvbiBpbiB0aGUgcmVuYW1lLg0KPiA+DQo+
+ID4gIltQQVRDSCAxLzJdIGNmZzgwMjExL25sODAyMTE6IHJlbmFtZSBwYWNrZXQgcGF0dGVybiBy
+ZWxhdGVkDQo+ID4gc3RydWN0dXJlcyBhbmQgZW51bXMiIHNob3VsZCBoYXZlIHRha2VuIGNhcmUg
+b2YgdGhlIHJlbmFtZXMuIFBsZWFzZQ0KPiA+IGxldCBtZSBrbm93IGlmIEkgbWlzc2VkIGFueXRo
+aW5nIGhlcmUuDQo+IA0KPiBJdCBkaWQgaW4gdGhlIGtlcm5lbCwgSSB3YXMgcmVmZXJyaW5nIHRv
+IHRoZSBjaGFuZ2VzIGluIG5sODAyMTEuaCwgYXMNCj4gZmFyIGFzIEkgY2FuIHRlbGwgdGhvc2Ug
+YnJlYWsgZXhpc3RpbmcgdXNlcnNwYWNlIHRvb2xzLiBZb3Ugc2hvdWxkIGJlDQo+IGFibGUgdG8g
+Y29tcGlsZSB0b29scyBsaWtlIGl3IGFuZCB3cGFfc3VwcGxpY2FudCB3aXRoIHRoZSBuZXcgbmw4
+MDIxMS5oDQo+IHdpdGhvdXQgY2hhbmdpbmcgYW55dGhpbmcgaW4gdGhlbS4NCg0KSSBzZWUuIFRo
+YW5rcyBmb3IgeW91ciBoZWxwLg0KDQpSZWdhcmRzLA0KQmluZw0KDQo=
