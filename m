@@ -1,113 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:41134 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757235Ab3EUBdW (ORCPT
+Received: from mail-pb0-f65.google.com ([209.85.160.65]:46642 "EHLO
+	mail-pb0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696Ab3EVSY1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 May 2013 21:33:22 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] iw: use updated structures and enums for packet pattern
-Date: Mon, 20 May 2013 18:32:15 -0700
-Message-ID: <1369099936-4954-1-git-send-email-bzhao@marvell.com> (sfid-20130521_033325_191915_4660F667)
+	Wed, 22 May 2013 14:24:27 -0400
+Received: by mail-pb0-f65.google.com with SMTP id xb12so852008pbc.8
+        for <linux-wireless@vger.kernel.org>; Wed, 22 May 2013 11:24:26 -0700 (PDT)
+Received: from [192.168.1.2] ([59.177.207.232])
+        by mx.google.com with ESMTPSA id ya4sm8173887pbb.24.2013.05.22.11.24.19
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Wed, 22 May 2013 11:24:25 -0700 (PDT)
+Message-ID: <519D0D44.1040901@pdm.ac.in> (sfid-20130522_202430_562339_9D8EDA9B)
+Date: Wed, 22 May 2013 23:54:04 +0530
+From: Mohit <mt1037ag11@pdm.ac.in>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless@vger.kernel.org
+Subject: Ralink RT3290 proprietary drivers causing kernel panic
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Hello,
 
-They are renamed so that they can be used for new feature.
+           I am on openSUSE 12.3 with kernel 3.7.10-1.4-desktop, i 
+wanted to try out the proprietary drivers for Ralink RT3290 so i 
+downloaded the drivers from 
+http://www.mediatek.com/_en/07_downloads/01_windows.php?sn=501 and 
+compiled the drivers as mentioned on my thread here : 
+https://forums.opensuse.org/english/get-technical-help-here/wireless/486975-rt3290-wireless-proprietary-drivers-not-working.html#post2557514. 
+Everything compiled fine, openSUSE was able to scan and connect to 
+access points after installation, but when i access the internet a 
+kernel panic occurs after ~5sec (time varies based on the data usage). 
+So i humbly request you to please provide the solution for the same, you 
+can reach me through email or reply to my thread (probably faster as i 
+don't check my email everyday).
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- info.c   |  2 +-
- wowlan.c | 32 ++++++++++++++++----------------
- 2 files changed, 17 insertions(+), 17 deletions(-)
+Thank You!
 
-diff --git a/info.c b/info.c
-index 54d9a8d..d893ffc 100644
---- a/info.c
-+++ b/info.c
-@@ -432,7 +432,7 @@ broken_combination:
- 			[NL80211_WOWLAN_TRIG_RFKILL_RELEASE] = { .type = NLA_FLAG },
- 			[NL80211_WOWLAN_TRIG_TCP_CONNECTION] = { .type = NLA_NESTED },
- 		};
--		struct nl80211_wowlan_pattern_support *pat;
-+		struct nl80211_pattern_support *pat;
- 		int err;
- 
- 		err = nla_parse_nested(tb_wowlan, MAX_NL80211_WOWLAN_TRIG,
-diff --git a/wowlan.c b/wowlan.c
-index b4a2715..d323ca7 100644
---- a/wowlan.c
-+++ b/wowlan.c
-@@ -261,11 +261,11 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
- 			}
- 
- 			pattern = nla_nest_start(patterns, ++patnum);
--			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_MASK,
-+			NLA_PUT(patterns, NL80211_PKTPAT_MASK,
- 				DIV_ROUND_UP(patlen, 8), mask);
--			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_PATTERN,
--				patlen, pat);
--			NLA_PUT_U32(patterns, NL80211_WOWLAN_PKTPAT_OFFSET, pkt_offset);
-+			NLA_PUT(patterns, NL80211_PKTPAT_PATTERN, patlen, pat);
-+			NLA_PUT_U32(patterns, NL80211_PKTPAT_OFFSET,
-+				    pkt_offset);
- 			nla_nest_end(patterns, pattern);
- 			free(mask);
- 			free(pat);
-@@ -356,29 +356,29 @@ static int print_wowlan_handler(struct nl_msg *msg, void *arg)
- 		nla_for_each_nested(pattern,
- 				    trig[NL80211_WOWLAN_TRIG_PKT_PATTERN],
- 				    rem_pattern) {
--			struct nlattr *patattr[NUM_NL80211_WOWLAN_PKTPAT];
-+			struct nlattr *patattr[NUM_NL80211_PKTPAT];
- 			int i, patlen, masklen, pkt_offset;
- 			uint8_t *mask, *pat;
--			nla_parse(patattr, MAX_NL80211_WOWLAN_PKTPAT,
--				  nla_data(pattern), nla_len(pattern),
--				  NULL);
--			if (!patattr[NL80211_WOWLAN_PKTPAT_MASK] ||
--			    !patattr[NL80211_WOWLAN_PKTPAT_PATTERN] ||
--			    !patattr[NL80211_WOWLAN_PKTPAT_OFFSET]) {
-+			nla_parse(patattr, MAX_NL80211_PKTPAT,
-+				  nla_data(pattern), nla_len(pattern), NULL);
-+			if (!patattr[NL80211_PKTPAT_MASK] ||
-+			    !patattr[NL80211_PKTPAT_PATTERN] ||
-+			    !patattr[NL80211_PKTPAT_OFFSET]) {
- 				printf(" * (invalid pattern specification)\n");
- 				continue;
- 			}
--			masklen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
--			patlen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
--			pkt_offset = nla_get_u32(patattr[NL80211_WOWLAN_PKTPAT_OFFSET]);
-+			masklen = nla_len(patattr[NL80211_PKTPAT_MASK]);
-+			patlen = nla_len(patattr[NL80211_PKTPAT_PATTERN]);
-+			pkt_offset =
-+				nla_get_u32(patattr[NL80211_PKTPAT_OFFSET]);
- 			if (DIV_ROUND_UP(patlen, 8) != masklen) {
- 				printf(" * (invalid pattern specification)\n");
- 				continue;
- 			}
- 			printf(" * wake up on packet offset: %d", pkt_offset);
- 			printf(" pattern: ");
--			pat = nla_data(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
--			mask = nla_data(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
-+			pat = nla_data(patattr[NL80211_PKTPAT_PATTERN]);
-+			mask = nla_data(patattr[NL80211_PKTPAT_MASK]);
- 			for (i = 0; i < patlen; i++) {
- 				if (mask[i / 8] & (1 << (i % 8)))
- 					printf("%.2x", pat[i]);
 -- 
-1.8.0
+
+
+
+
+
+
+
+
+
+--
+******************************************************************************************************************************************************************
+"This e-Mail may contain proprietary and confidential information and is 
+sent for the intended  recipient(s) only. If, by an addressing or 
+transmission error, this mail has been misdirected to you, you are 
+requested to delete this mail immediately.You are also hereby notified that 
+any use, any form of reproduction, dissemination, copying, disclosure, 
+modification, distribution and/or publication of this e-mail 
+message,contents or its attachment(s) other than by its intended 
+recipient(s) is strictly prohibited.Any opinions expressed in this email 
+are those of the individual and not necessarily of the organization.Before 
+opening attachment(s), please scan for viruses."
+**********************************************************************************************************************************************************************
 
