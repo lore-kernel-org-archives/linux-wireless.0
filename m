@@ -1,142 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42089 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756129Ab3EHQ31 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 12:29:27 -0400
-Message-ID: <518A7D56.3050502@zytor.com> (sfid-20130508_182948_090905_EC4C4219)
-Date: Wed, 08 May 2013 09:29:10 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:62416 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753235Ab3EVIRE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 May 2013 04:17:04 -0400
+Received: by mail-lb0-f179.google.com with SMTP id r11so1759217lbv.38
+        for <linux-wireless@vger.kernel.org>; Wed, 22 May 2013 01:17:01 -0700 (PDT)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, Dan Williams <dcbw@redhat.com>,
-	"'George0505'" <george0505@realtek.com>,
-	Joon Ro <joonhyoung.ro@gmail.com>,
-	Greg KH <gregkh@linux-foundation.org>
-Subject: Re: Linux driver for Realtek RTL8723AU devices with USB ID 0bda:1724
- such as found in Lenovo IdeaPad Yoga 13
-References: <5159B52D.3050601@lwfinger.net> <5189B939.4010905@zytor.com> <518A7814.1070604@lwfinger.net>
-In-Reply-To: <518A7814.1070604@lwfinger.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <CAP8Jb=oTE_tL+57_wtMo_QTNG01_oP2jgjicrDneFwTuOocs8g@mail.gmail.com>
+References: <CAP8Jb=oTE_tL+57_wtMo_QTNG01_oP2jgjicrDneFwTuOocs8g@mail.gmail.com>
+Date: Wed, 22 May 2013 11:17:01 +0300
+Message-ID: <CANUX_P1zU-ntkdb33taPz=0qw2Xy-bp3jdA-C7eqXX-wbebMGA@mail.gmail.com> (sfid-20130522_101708_835095_3A371A65)
+Subject: Re: Problem with iwlwifi kernel 3.9.0 and 3.9.2
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Flavio <fbcyborg@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/2013 09:06 AM, Larry Finger wrote:
-> On 05/07/2013 09:32 PM, H. Peter Anvin wrote:
->>
->> So I can verify that this driver works against 3.8.11 (not against
->> current -linus because of a build failure), and yes, there is Bluetooth
->> in this device.  In fact, it seems to work better than some in-tree
->> drivers I have seen in the past.
->>
->> However, I'm confused as to the above and what it implies for the
->> purpose of the staging tree.  Wasn't the whole point of the staging tree
->> to have a working-but-ugly driver upstream and have the work to clean it
->> up happen in the mainline tree instead of off somewhere.
+On Tue, May 21, 2013 at 12:26 AM, Flavio <fbcyborg@gmail.com> wrote:
+> Hello,
 >
-> Yes, but even staging has some standards. For example, they frown on
-> inclusion of firmware in a massive data block in a file in the driver -
-> it should be in a separate file the /lib/firmware/ tree. In addition,
-> the mainline drivers/net/wireless/ tree is only available to devices
-> that use mac80211 for the software-based MAC layer. That conversion is a
-> serious effort that may never be done, thus the 8723au driver may never
-> leave staging.
+> I've recently changed my wifi router and I'm experiencing something
+> really strange with my wifi connection.
+> If I try to connect to my access point using windows, I don't have any
+> problem, but if I try with Linux (Gentoo Linux
+> x86_64) I cannot connect to my Access Point unless I do the following steps:
 >
-> What are the details of the build failure on the mainline tree? It
-> builds fine here. One possibility is that your source tree has a
-> leftover copy of include/linux/version.h that contains a stale coded
-> value of the kernel version. I just pushed a Makefile fix that causes
-> the compiler to look in the new location for version.h first. If that
-> doesn't work, please post the error.
+> ifconfig wlan0 down
+> rmmod iwldvm
+> rmmod iwlwifi
+> modprobe iwlwifi
+> ifconfig wlan0 up
+>
+> otherwise if I try to connect to my access point / wifi router, Wicd
+> tells me that I inserted a wrong password.
+> I've even tried with another live linux distribution, and I don't have
+> this issue.
 >
 
-Unlikely, since the kernel source tree is clean.
-
-The error is on os_dep/os_intfs.c:
-
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c: In function 
-‘rtw_proc_init_one’:
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:315:3: error: implicit 
-declaration of function ‘create_proc_entry’ 
-[-Werror=implicit-function-declaration]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:315:11: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:322:3: error: implicit 
-declaration of function ‘create_proc_read_entry’ 
-[-Werror=implicit-function-declaration]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:322:9: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:333:21: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:364:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:370:7: error: dereferencing 
-pointer to incomplete type
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:372:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:378:7: error: dereferencing 
-pointer to incomplete type
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:381:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:389:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:397:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:405:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:412:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:419:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:426:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:433:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:440:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:447:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:454:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:461:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:468:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:475:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:482:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:489:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:496:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:505:9: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:512:9: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:522:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:539:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:545:7: error: dereferencing 
-pointer to incomplete type
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:547:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:553:7: error: dereferencing 
-pointer to incomplete type
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:555:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:561:7: error: dereferencing 
-pointer to incomplete type
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:563:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:569:7: error: dereferencing 
-pointer to incomplete type
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:572:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:576:8: warning: assignment 
-makes pointer from integer without a cast [enabled by default]
-/home/hpa/kernel/rtl8723au/os_dep/os_intfs.c:582:7: error: dereferencing 
-pointer to incomplete type
-
+Please try the patch attached in
+https://bugzilla.kernel.org/show_bug.cgi?id=58341
