@@ -1,74 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:59961 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755464Ab3EQIyu (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:42296 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756654Ab3EVTzv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 04:54:50 -0400
-Received: by mail-pd0-f176.google.com with SMTP id x10so3127598pdj.21
-        for <linux-wireless@vger.kernel.org>; Fri, 17 May 2013 01:54:50 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 17 May 2013 10:54:50 +0200
-Message-ID: <CAFTPBc+jVwNnAirFCR9ZvHKCjy_AO1ce=ZpnLs3tPZUNGe75aQ@mail.gmail.com> (sfid-20130517_105455_951326_EE330D40)
-Subject: AR9227: Can't set master mode
-From: Felix Blanke <felixblanke@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 May 2013 15:55:51 -0400
+Received: by mail-wg0-f50.google.com with SMTP id k13so1642757wgh.5
+        for <linux-wireless@vger.kernel.org>; Wed, 22 May 2013 12:55:49 -0700 (PDT)
+References: <519D0D44.1040901@pdm.ac.in>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <519D0D44.1040901@pdm.ac.in>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <14ECE0C4-AE53-4CC5-B6B6-42930C2C26FB@gmail.com> (sfid-20130522_215554_034191_DC53AD7F)
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: Ralink RT3290 proprietary drivers causing kernel panic
+Date: Wed, 22 May 2013 21:55:46 +0200
+To: Mohit <mt1037ag11@pdm.ac.in>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Mohit,
 
-first: Please CC me as I'm not subscribed to the list.
+Sent from my iPad
 
-I have the following wireless card: 04:02.0 Network controller:
-Atheros Communications Inc. AR9227 Wireless Network Adapter (rev 01)
+On 22 mei 2013, at 20:24, Mohit <mt1037ag11@pdm.ac.in> wrote:
 
-I can't set it to master mode, but this card should support it:
+> Hello,
+> 
+>          I am on openSUSE 12.3 with kernel 3.7.10-1.4-desktop, i wanted to try out the proprietary drivers for Ralink RT3290 so i downloaded the drivers from http://www.mediatek.com/_en/07_downloads/01_windows.php?sn=501 and compiled the drivers as mentioned on my thread here : https://forums.opensuse.org/english/get-technical-help-here/wireless/486975-rt3290-wireless-proprietary-drivers-not-working.html#post2557514. Everything compiled fine, openSUSE was able to scan and connect to access points after installation, but when i access the internet a kernel panic occurs after ~5sec (time varies based on the data usage). So i humbly request you to please provide the solution for the same, you can reach me through email or reply to my thread (probably faster as i don't check my email everyday).
+> 
 
-server ~ # iwconfig wlp4s2
-wlp4s2    IEEE 802.11bgn  ESSID:off/any
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=19 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
+You'll have to contact Mediatek about the drivers that you downloaded from their web site.
+None of us on this mailing list have created this driver, nor are we supporting it.
 
-server ~ # iwconfig wlp4s2 mode Master
-Error for wireless request "Set Mode" (8B06) :
-    SET failed on device wlp4s2 ; Invalid argument.
+Note that the standard kernel does contain support for the RT3290 chipset in its rt2x00 driver since kernel version 3.6 or 3.7, so you might give that a try.
 
-
-My kernel config should be correct:
-
-server linux # cat .config | grep ATH9K
-CONFIG_ATH9K_HW=y
-CONFIG_ATH9K_COMMON=y
-# CONFIG_ATH9K_BTCOEX_SUPPORT is not set
-CONFIG_ATH9K=y
-CONFIG_ATH9K_PCI=y
-# CONFIG_ATH9K_AHB is not set
-# CONFIG_ATH9K_DEBUGFS is not set
-CONFIG_ATH9K_RATE_CONTROL=y
-# CONFIG_ATH9K_HTC is not set
-
-server linux # cat .config | grep MAC80211
-CONFIG_MAC80211=y
-CONFIG_MAC80211_HAS_RC=y
-CONFIG_MAC80211_RC_MINSTREL=y
-CONFIG_MAC80211_RC_MINSTREL_HT=y
-CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-CONFIG_MAC80211_RC_DEFAULT="minstrel_ht"
-# CONFIG_MAC80211_MESH is not set
-CONFIG_MAC80211_LEDS=y
-# CONFIG_MAC80211_DEBUGFS is not set
-# CONFIG_MAC80211_MESSAGE_TRACING is not set
-# CONFIG_MAC80211_DEBUG_MENU is not set
-# CONFIG_MAC80211_HWSIM is not set
-
-
-I can scan for wireless networks and probably also connect to them
-(never tested because this is not an use case for me).
-
-Any ideas? Thanks in advance!
-
-Kind regards,
-Felix
+---
+Gertjan
