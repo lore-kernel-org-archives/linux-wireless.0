@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay02.solcon.nl ([212.45.32.108]:58402 "EHLO
-	mailrelay02.solcon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752704Ab3EOKPl (ORCPT
+Received: from complete.lackof.org ([198.49.126.79]:59747 "EHLO
+	complete.lackof.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754670Ab3EVULE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 06:15:41 -0400
-Message-ID: <51935A67.6000804@solcon.nl> (sfid-20130515_121620_518293_4D68900E)
-Date: Wed, 15 May 2013 11:50:31 +0200
-From: Albert Pool <albertpool@solcon.nl>
-MIME-Version: 1.0
-To: larry.finger@lwfinger.net, chaoming_li@realsil.com.cn
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192cu: Add new USB ID
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 22 May 2013 16:11:04 -0400
+From: Matt Taggart <taggart@debian.org>
+To: linux-wireless@vger.kernel.org
+cc: 709364@bugs.debian.org
+Subject: iwlwifi: problems with Intel 6235
+Date: Wed, 22 May 2013 13:01:49 -0700
+Message-Id: <20130522200149.90BD2153@taggart.lackof.org> (sfid-20130522_221108_274333_45C9CBA4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the USB ID of the On Networks N300MA, clone of Netgear WNA3100M.
+I am seeing problems with the "Intel Corporation Centrino Advanced-N
+6235 [8086:088e]" card in my laptop.
 
-Signed-off-by: Albert Pool <albertpool@solcon.nl>
+When connected to a particular access point using 802.11n I get
+frequent disconnects, dropped packets, erratic latency, and slow
+data rates. Some access points don't have the problem.
 
-Reported-by: Ana Rey <Anazul77@hotmail.com>
+I have tested both the Debian wheezy (3.2.41 based) and sid (3.8.13
+based) kernels and both have the problems.
 
----
+I reported the problem and details to the Debian BTS here
 
-  drivers/net/wireless/rtlwifi/rtl8192cu/sw.c |    1 +
+  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=709364
 
-  1 file changed, 1 insertion(+)
+(cc'd) and I think it's the same problem as this ubuntu bug
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+  https://bugs.launchpad.net/ubuntu/+source/linux/+bug/836250
 
-index 23d640a..0b593de 100644
+Let me know if you want me to try anything or need me to send more
+info.
 
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-
-@@ -349,6 +349,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
-
-      {RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
-
-      {RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
-
-      {RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, /*Netgear-Sercomm*/
-
-+    {RTL_USB_DEVICE(0x0846, 0xf001, rtl92cu_hal_cfg)}, /*Netgear-On Networks*/
-
-      {RTL_USB_DEVICE(0x0b05, 0x17ab, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
-
-      {RTL_USB_DEVICE(0x0bda, 0x8186, rtl92cu_hal_cfg)}, /*Realtek 92CE-VAU*/
-
-      {RTL_USB_DEVICE(0x0df6, 0x0061, rtl92cu_hal_cfg)}, /*Sitecom-Edimax*/
+Thanks,
 
 -- 
-
-1.7.9.5
-
+Matt Taggart
+taggart@debian.org
