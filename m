@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47452 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811Ab3E3Up1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35016 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752319Ab3EVSaK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 16:45:27 -0400
-Message-ID: <51A7BA63.4080403@candelatech.com> (sfid-20130530_224532_188595_45D30BAE)
-Date: Thu, 30 May 2013 13:45:23 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 22 May 2013 14:30:10 -0400
+Date: Wed, 22 May 2013 14:27:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux NFC <linux-nfc@ml01.01.org>
+Subject: Re: [GIT] [3.10] NFC fixes
+Message-ID: <20130522182747.GG2113@tuxdriver.com> (sfid-20130522_203014_376150_EB2BD31B)
+References: <20130521230711.GD4566@zurbaran>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Another try at getting pktgen to work with wifi.
-References: <51A79E4A.7000609@candelatech.com> <51A7B049.9090201@openwrt.org>
-In-Reply-To: <51A7B049.9090201@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130521230711.GD4566@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/30/2013 01:02 PM, Felix Fietkau wrote:
-> On 2013-05-30 8:45 PM, Ben Greear wrote:
->> I'm trying to come up with a more acceptable patch to the problem discussed a few years
->> ago:
->>
->> http://thread.gmane.org/gmane.linux.kernel.wireless.general/64582/focus=64626
->>
->> The patch below appears to work as expected.  In pktgen, you just have to set
->> the QoS to whatever value matches the queue you need.
->>
->> This seem reasonable?
-> Why do you adjust the queue mapping instead of the skb priority? In that
-> other thread you mentioned that pktgen should be able to control the
-> queue, yet here you're taking queue control away from it for tx on mac80211.
+On Wed, May 22, 2013 at 01:07:11AM +0200, Samuel Ortiz wrote:
+> Hi John,
+> 
+> This is the first batch of NFC fixes for 3.10, and it contains:
+> 
+> - 3 fixes for the NFC MEI support:
+>         * We now depend on the correct Kconfig symbol.
+>         * We register an MEI event callback whenever we enable an NFC device,
+>           otherwise we fail to read anything after an enable/disable cycle.
+>         * We only disable an MEI device from its disable mey_phy_ops,
+>           preventing useless consecutive disable calls.
+> 
+> - An NFC Makefile cleanup, as I forgot to remove a commented out line when
+>   moving the LLCP code to the NFC top level directory.
+> 
+> The following changes since commit 6bb4880d9ef30375da4507aeabd6dc261a2c6c2b:
+> 
+>   ath9k: fix draining aggregation tid buffers (2013-05-17 14:31:09 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.10-1
+> 
+> for you to fetch changes up to e3a6b14ceda0207c3405c6266e5177a85c0db044:
+> 
+>   NFC: mei: Do not disable MEI devices from their remove routine (2013-05-21 10:48:41 +0200)
 
-I was having trouble getting it to work, but I was trying it at
-a different place in the code when I was hacking on it...
-
-Do you think I'd just need to adjust skb->priority in the
-same spot in the code, or is there more to it?
-
-Thanks,
-Ben
-
+Pulling now...
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
