@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53572 "EHLO
-	sipsolutions.net" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759277Ab3EGJQN (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:48657 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756985Ab3EVTm1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 05:16:13 -0400
-Message-ID: <1367918136.8328.1.camel@jlt4.sipsolutions.net> (sfid-20130507_111632_856371_FFA95DD8)
-Subject: Re: linux-next: Tree for May 6 (b43/bcma)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev@lists.infradead.org
-Date: Tue, 07 May 2013 11:15:36 +0200
-In-Reply-To: <51886FAF.1030801@lwfinger.net> (sfid-20130507_051212_785834_D4BC17E9)
-References: <20130506144207.c812a0227d7763d26e5fec80@canb.auug.org.au>
-	 <5187EB95.2060605@infradead.org> <51886FAF.1030801@lwfinger.net>
-	 (sfid-20130507_051212_785834_D4BC17E9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 22 May 2013 15:42:27 -0400
+Received: by mail-wi0-f173.google.com with SMTP id hi5so4068443wib.12
+        for <linux-wireless@vger.kernel.org>; Wed, 22 May 2013 12:42:26 -0700 (PDT)
+References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl> <20130522190145.GJ2113@tuxdriver.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <20130522190145.GJ2113@tuxdriver.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <54CB38BA-6701-4249-ADFA-761B3C95C084@gmail.com> (sfid-20130522_214234_626768_0FD6AC51)
+Cc: "stf_xl@wp.pl" <stf_xl@wp.pl>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"ivdoorn@gmail.com" <ivdoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 00/32] BBP initialization split
+Date: Wed, 22 May 2013 21:42:23 +0200
+To: "John W. Linville" <linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-05-06 at 22:06 -0500, Larry Finger wrote:
+John,
 
-> > Probably mostly due to B43=y and BCMA=m.
+Sent from my iPad
+
+On 22 mei 2013, at 21:01, "John W. Linville" <linville@tuxdriver.com> wrote:
+
+> On Sat, May 18, 2013 at 02:03:23PM +0200, stf_xl@wp.pl wrote:
+>> This series spits big and messy rt2800_init_bbp() procedure into small
+>> per chip (or few similar chips) subroutines.
 > 
-> Does any Kconfig wizard know the magic incantation to accomplish the following:
-> 
-> 1. Ensure that if SSB and BMCA are both selected, then both are either "m" or "y"
+> Lots of refactoring here -- I trust Stanislaw, but it might be nice
+> to see an ACK from Gertjan, Helmut, and/or Ivo?
 
-I think one of them being m and the other y should be OK? But do they
-have interdependencies?
+I believe Helmut already acked it, but I don't have issues with the patch set. So, you can add my
 
-> 2. Ensure that BRCMSMAC is not "y" if BMCA is "m".
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Isn't that a simple
-	depends on BCMA
-or maybe it can work w/o BCMA, then you'd have
-	depends on BCMA || !BCMA
+to the whole series.
 
-> 3. Ensure that B43 is not "y" if SSB and/or BCMA is "m".
-
-same.
-
-johannes
-
+---
+Gertjan
