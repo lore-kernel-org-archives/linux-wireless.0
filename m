@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54429 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933551Ab3EGNyi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 09:54:38 -0400
-Message-ID: <1367934867.8328.31.camel@jlt4.sipsolutions.net> (sfid-20130507_155454_593190_4EC1F6D2)
-Subject: Re: Standardisation - adding 2 bit STBC and Ness to MCS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: radiotap@NetBSD.org, simon@superduper.net,
-	Adrian Chadd <adrian@freebsd.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 07 May 2013 15:54:27 +0200
-In-Reply-To: <5188AFFE.6070804@rempel-privat.de> (sfid-20130507_094050_709302_8E653F0F)
-References: <518127ED.9060900@rempel-privat.de>
-	  (sfid-20130501_163425_421280_1DE3F635) <1367527479.11375.19.camel@jlt4.sipsolutions.net>
-	 <5188AFFE.6070804@rempel-privat.de> (sfid-20130507_094050_709302_8E653F0F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:41487 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758166Ab3EWKVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 May 2013 06:21:04 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.10 2/3] ath9k_hw: fix host interface reset on AR934x
+Date: Thu, 23 May 2013 12:20:55 +0200
+Message-Id: <1369304456-74526-2-git-send-email-nbd@openwrt.org> (sfid-20130523_122112_793209_C6A1C692)
+In-Reply-To: <1369304456-74526-1-git-send-email-nbd@openwrt.org>
+References: <1369304456-74526-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-05-07 at 09:40 +0200, Oleksij Rempel wrote:
-> Am 02.05.2013 22:44, schrieb Johannes Berg:
-> > On Wed, 2013-05-01 at 16:34 +0200, Oleksij Rempel wrote:
-> >
-> >>> With this I believe we have everything needed to start the 3 week
-> >>> comment period.
-> >
-> > Yeah, I guess there was plenty of time. I would have preferred a
-> > separate thread, but I guess there's little enough traffic on this list
-> > so it doesn't really matter.
-> >
-> >> There is a bit more then 3 week now. I would like to have this approved :)
-> >> Are there any thing needed to finish this?
-> >
-> > http://www.radiotap.org/Standardisation
-> >
-> > johannes
-> >
-> 
-> ping.
-> 
-> Johannes, are you the one who says last word on standardisation for 
-> radiotap?
+If a local bus timeout has been detected, the host interface needs to be
+reset to clear the errors. AR934x uses a different synchronous interrupt
+bit to indicate this, so the check needs to be fixed.
 
-No? I thought the link made that pretty clear.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  | 10 +++++++---
+ drivers/net/wireless/ath/ath9k/reg.h |  2 ++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-But since nobody poked holes in this and it's been a long time, I think
-you should probably just post "this has been adopted now" ...
-
-johannes
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a263ccc..40331f4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1306,9 +1306,13 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+ 			AR_RTC_RC_COLD_RESET | AR_RTC_RC_WARM_RESET;
+ 	} else {
+ 		tmpReg = REG_READ(ah, AR_INTR_SYNC_CAUSE);
+-		if (tmpReg &
+-		    (AR_INTR_SYNC_LOCAL_TIMEOUT |
+-		     AR_INTR_SYNC_RADM_CPL_TIMEOUT)) {
++		if (AR_SREV_9340(ah))
++			tmpReg &= AR9340_INTR_SYNC_LOCAL_TIMEOUT;
++		else
++			tmpReg &= AR_INTR_SYNC_LOCAL_TIMEOUT |
++				  AR_INTR_SYNC_RADM_CPL_TIMEOUT;
++
++		if (tmpReg) {
+ 			u32 val;
+ 			REG_WRITE(ah, AR_INTR_SYNC_ENABLE, 0);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 5c4ab50..9c056a8 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1007,6 +1007,8 @@ enum {
+ 				AR_INTR_SYNC_LOCAL_TIMEOUT |
+ 				AR_INTR_SYNC_MAC_SLEEP_ACCESS),
+ 
++	AR9340_INTR_SYNC_LOCAL_TIMEOUT = 0x00000010,
++
+ 	AR_INTR_SYNC_SPURIOUS = 0xFFFFFFFF,
+ 
+ };
+-- 
+1.8.0.2
 
