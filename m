@@ -1,115 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:40539 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751244Ab3ERAzN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 20:55:13 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 15/17] mwifiex: remove unnecessary macros in sdio.h
-Date: Fri, 17 May 2013 17:54:42 -0700
-Message-ID: <1368838482-342-1-git-send-email-bzhao@marvell.com> (sfid-20130518_025532_151765_746AE79C)
+Received: from mout2.freenet.de ([195.4.92.92]:44032 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752417Ab3EWQdx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 May 2013 12:33:53 -0400
+Received: from [195.4.92.140] (helo=mjail0.freenet.de)
+	by mout2.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.80.1 #3)
+	id 1UfYHC-0001Ha-Ht
+	for linux-wireless@vger.kernel.org; Thu, 23 May 2013 18:22:02 +0200
+Received: from localhost ([::1]:47790 helo=mjail0.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.80.1 #3)
+	id 1UfYHC-0007vd-AK
+	for linux-wireless@vger.kernel.org; Thu, 23 May 2013 18:22:02 +0200
+Received: from [195.4.92.16] (port=36526 helo=6.mx.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.80.1 #3)
+	id 1UfYEC-00007r-70
+	for linux-wireless@vger.kernel.org; Thu, 23 May 2013 18:18:56 +0200
+Received: from p4fde1c80.dip0.t-ipconnect.de ([79.222.28.128]:42629 helo=mail.maya.org)
+	by 6.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:DHE-RSA-AES256-SHA:256) (port 25) (Exim 4.80.1 #3)
+	id 1UfYEB-0008SN-RT
+	for linux-wireless@vger.kernel.org; Thu, 23 May 2013 18:18:56 +0200
+Message-ID: <519E4158.2060600@01019freenet.de> (sfid-20130523_183406_514947_9322C179)
+Date: Thu, 23 May 2013 18:18:32 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Mohit <mt1037ag11@pdm.ac.in>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Ralink RT3290 proprietary drivers causing kernel panic
+References: <519D0D44.1040901@pdm.ac.in> <14ECE0C4-AE53-4CC5-B6B6-42930C2C26FB@gmail.com> <519E09BE.6060802@pdm.ac.in>
+In-Reply-To: <519E09BE.6060802@pdm.ac.in>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Mohit wrote:
+[...]
+> The drivers work in kernel 3.2 but stop working from either kernel ver.
+> 3.3, 3.4 or 3.5.
 
-They are not used in the code.
+>From my experience, it seems more to be a compiler / binutils problem:
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.h | 51 -------------------------------------
- 1 file changed, 51 deletions(-)
+See
+http://news.gmane.org/find-root.php?group=gmane.linux.drivers.rt2x00.user&article=1765
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index e4016d2..339608b 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -66,14 +66,8 @@
- 
- /* Host Control Registers : Configuration */
- #define CONFIGURATION_REG		0x00
--/* Host Control Registers : Host without Command 53 finish host*/
--#define HOST_TO_CARD_EVENT       (0x1U << 3)
--/* Host Control Registers : Host without Command 53 finish host */
--#define HOST_WO_CMD53_FINISH_HOST	(0x1U << 2)
- /* Host Control Registers : Host power up */
- #define HOST_POWER_UP			(0x1U << 1)
--/* Host Control Registers : Host power down */
--#define HOST_POWER_DOWN			(0x1U << 0)
- 
- /* Host Control Registers : Host interrupt mask */
- #define HOST_INT_MASK_REG		0x02
-@@ -93,60 +87,15 @@
- 
- /* Host Control Registers : Host interrupt RSR */
- #define HOST_INT_RSR_REG		0x01
--/* Host Control Registers : Upload host interrupt RSR */
--#define UP_LD_HOST_INT_RSR		(0x1U)
- 
- /* Host Control Registers : Host interrupt status */
- #define HOST_INT_STATUS_REG		0x28
--/* Host Control Registers : Upload CRC error */
--#define UP_LD_CRC_ERR			(0x1U << 2)
--/* Host Control Registers : Upload restart */
--#define UP_LD_RESTART                   (0x1U << 1)
--/* Host Control Registers : Download restart */
--#define DN_LD_RESTART                   (0x1U << 0)
- 
- /* Card Control Registers : Card I/O ready */
- #define CARD_IO_READY                   (0x1U << 3)
--/* Card Control Registers : CIS card ready */
--#define CIS_CARD_RDY                    (0x1U << 2)
--/* Card Control Registers : Upload card ready */
--#define UP_LD_CARD_RDY                  (0x1U << 1)
- /* Card Control Registers : Download card ready */
- #define DN_LD_CARD_RDY                  (0x1U << 0)
- 
--/* Card Control Registers : Host interrupt mask register */
--#define HOST_INTERRUPT_MASK_REG         0x34
--/* Card Control Registers : Host power interrupt mask */
--#define HOST_POWER_INT_MASK             (0x1U << 3)
--/* Card Control Registers : Abort card interrupt mask */
--#define ABORT_CARD_INT_MASK             (0x1U << 2)
--/* Card Control Registers : Upload card interrupt mask */
--#define UP_LD_CARD_INT_MASK             (0x1U << 1)
--/* Card Control Registers : Download card interrupt mask */
--#define DN_LD_CARD_INT_MASK             (0x1U << 0)
--
--/* Card Control Registers : Card interrupt status register */
--#define CARD_INTERRUPT_STATUS_REG       0x38
--/* Card Control Registers : Power up interrupt */
--#define POWER_UP_INT                    (0x1U << 4)
--/* Card Control Registers : Power down interrupt */
--#define POWER_DOWN_INT                  (0x1U << 3)
--
--/* Card Control Registers : Card interrupt RSR register */
--#define CARD_INTERRUPT_RSR_REG          0x3c
--/* Card Control Registers : Power up RSR */
--#define POWER_UP_RSR                    (0x1U << 4)
--/* Card Control Registers : Power down RSR */
--#define POWER_DOWN_RSR                  (0x1U << 3)
--
--/* Host F1 card ready */
--#define HOST_F1_CARD_RDY		0x0020
--
--/* Rx length register */
--#define CARD_RX_LEN_REG			0x62
--/* Rx unit register */
--#define CARD_RX_UNIT_REG		0x63
--
- /* Max retry number of CMD53 write */
- #define MAX_WRITE_IOMEM_RETRY		2
- 
--- 
-1.8.2.3
+> The drivers included in the kernel work, but they are a buggy, have low
+> range, connection drops etc.
 
+Exactly my experience here, especially the USB ones (but seems to be
+heavily hardware dependent). And they produce enormous cpu load as soon
+as throughput rises.
+
+That's why I'm only using the vendor driver (for STA), too (besides the
+point that rt2800usb doesn't support a Linksys AE3000 at all e.g.
+(http://wikidevi.com/wiki/Linksys_AE3000), which is a really fine device!)
+
+> I switched from Linux mint 13 kernel 3.2, installed the proprietary
+> driver and it is way better than rt2800pci drivers interms of signal
+> strength, latency, speed etc. I think the proprietary drivers use
+> rt2860pci driver instead of a dedicated rt3290sta driver.
+> 
+> Can the drivers included in the kernel be tweaked to match the
+> proprietary driver?
+
+It would be cool on the one hand, if Mediatek would integrate their own
+drivers themselves to mac80211, but on the other hand, I fear, this is
+mostly impossible because mac80211 (which was heavily built for and from
+Atheros and Intel and therefore "optimized" for there own needs) doesn't
+match the requirements of the Ralink hardware.
+
+That's why I'm happy they don't integrate their drivers in the existing
+mac80211 because I fear a likewise bad quality.
+
+
+I think the maintainer of rt2800 do all they can given the opportunities
+they have so far. Unfortunately, they have very little opportunities
+from my point of view.
+
+
+
+Kind regards,
+Andreas
