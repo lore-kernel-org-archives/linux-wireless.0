@@ -1,149 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3549 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753441Ab3ESIVs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 May 2013 04:21:48 -0400
-Message-ID: <51988B8F.7010205@broadcom.com> (sfid-20130519_102207_361267_086FBBF0)
-Date: Sun, 19 May 2013 10:21:35 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: REGRESSION: v3.10-rc1: [PATCH 04/15] brcmsmac: remove
- brcms_bss_cfg->associated
-References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
- <1364085963-25940-5-git-send-email-hauke@hauke-m.de>
- <5197DC4F.7030503@broadcom.com>
-In-Reply-To: <5197DC4F.7030503@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:36412 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759760Ab3EWW2R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 May 2013 18:28:17 -0400
+Message-ID: <1369348092.17244.0.camel@jlt4.sipsolutions.net> (sfid-20130524_002819_909296_CB0A7921)
+Subject: Re: [PATCH v2 1/2] iw: use updated structures and enums for packet
+ pattern
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Luciano Coelho <coelho@ti.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Fri, 24 May 2013 00:28:12 +0200
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430E801DC656@SC-VEXCH1.marvell.com>
+References: <1369344941-11217-1-git-send-email-bzhao@marvell.com>
+	 <1369345157.12002.87.camel@jlt4.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F70430E801DC656@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/2013 09:53 PM, Arend van Spriel wrote:
-> On 03/24/2013 01:45 AM, Hauke Mehrtens wrote:
->> Replaced the usage with pub->associated.
->>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->>   drivers/net/wireless/brcm80211/brcmsmac/main.c |   12 +++---------
->>   drivers/net/wireless/brcm80211/brcmsmac/main.h |    2 --
->>   2 files changed, 3 insertions(+), 11 deletions(-)
->
-> Hi Hauke,
->
-> I had a problem with bcm43224 in STA mode and bisecting it shows this
-> change as culprit. On laptop I installed kernel with brcmsmac compiled
-> as module. It comes up and associates during boot, but after logging in
-> there is no connectivity. Triggering reassoc gives connectivity for some
-> time, but after a while (1-2 min) it stops.
->
-> I am looking into it. Given the function name below (brcms_c_ps_allowed)
-> it may be power-save related. I will keep you informed.
->
-> Gr. AvS
->
->> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c
->> b/drivers/net/wireless/brcm80211/brcmsmac/main.c
->> index 90e6c0d..810b7e2 100644
->> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
->> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
->> @@ -3049,8 +3049,6 @@ static void brcms_b_antsel_set(struct
->> brcms_hardware *wlc_hw, u32 antsel_avail)
->>    */
->>   static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
->>   {
->> -    struct brcms_bss_cfg *cfg = wlc->bsscfg;
->> -
->>       /* disallow PS when one of the following global conditions meets */
->>       if (!wlc->pub->associated)
->>           return false;
->> @@ -3059,9 +3057,6 @@ static bool brcms_c_ps_allowed(struct
->> brcms_c_info *wlc)
->>       if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
->>           return false;
->>
->> -    if (cfg->associated)
->> -        return false;
->> -
+On Thu, 2013-05-23 at 15:23 -0700, Bing Zhao wrote:
+> Hi Johannes,
+> 
+> > On Thu, 2013-05-23 at 14:35 -0700, Bing Zhao wrote:
+> > > From: Amitkumar Karwar <akarwar@marvell.com>
+> > >
+> > > They are renamed so that they can be used for new feature.
+> > 
+> > This isn't really necessary, right? I mean, it should compile w/o this
+> > even after the kernel patches, but this is just for making it look
+> > nicer?
+> 
+> Yes, it compiles w/o this patch. It does make it look nicer, I think.
+> However, the commit message should be something like:
+> 
+> "They are renamed to match new nl80211.h and make the code look nicer."
+> 
+> Please let me know if you want me to resend 1/2 with revised commit log.
+> Otherwise, please simply drop 1/2 and apply 2/2 alone.
 
-wlc->pub->associated and wlc->bsscfg->associated have the same value, 
-which I guess was your motivation to remove it from struct 
-brcms_bss_cfg. So before this patch the function brcms_c_ps_allowed() 
-always returned false. As power-save is a unsupported feature for 
-brcmsmac that was fine, but the removal below changed that behaviour.
+No, no need. Just wanted to double-check. I started going through the
+kernel side patches and had some comments, but I'm too tired to finish
+now.
 
-As power-save is not supported this function can be changed to simply 
-return false for now. I will send out a patch for that.
-
-Regards,
-Arend
-
->>       return true;
->>   }
->>
->> @@ -3819,7 +3814,7 @@ static void brcms_c_set_home_chanspec(struct
->> brcms_c_info *wlc, u16 chanspec)
->>       if (wlc->home_chanspec != chanspec) {
->>           wlc->home_chanspec = chanspec;
->>
->> -        if (wlc->bsscfg->associated)
->> +        if (wlc->pub->associated)
->>               wlc->bsscfg->current_bss->chanspec = chanspec;
->>       }
->>   }
->> @@ -5433,7 +5428,7 @@ static void brcms_c_ofdm_rateset_war(struct
->> brcms_c_info *wlc)
->>       u8 r;
->>       bool war = false;
->>
->> -    if (wlc->bsscfg->associated)
->> +    if (wlc->pub->associated)
->>           r = wlc->bsscfg->current_bss->rateset.rates[0];
->>       else
->>           r = wlc->default_bss->rateset.rates[0];
->> @@ -5527,7 +5522,7 @@ int brcms_c_set_rateset(struct brcms_c_info
->> *wlc, struct brcm_rateset *rs)
->>       /* merge rateset coming in with the current mcsset */
->>       if (wlc->pub->_n_enab & SUPPORT_11N) {
->>           struct brcms_bss_info *mcsset_bss;
->> -        if (wlc->bsscfg->associated)
->> +        if (wlc->pub->associated)
->>               mcsset_bss = wlc->bsscfg->current_bss;
->>           else
->>               mcsset_bss = wlc->default_bss;
->> @@ -7496,7 +7491,6 @@ void brcms_c_scan_stop(struct brcms_c_info *wlc)
->>   void brcms_c_associate_upd(struct brcms_c_info *wlc, bool state)
->>   {
->>       wlc->pub->associated = state;
->> -    wlc->bsscfg->associated = state;
->>   }
->>
->>   /*
->> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h
->> b/drivers/net/wireless/brcm80211/brcmsmac/main.h
->> index 0cfe782..96dc2f4 100644
->> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
->> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
->> @@ -589,7 +589,6 @@ enum brcms_bss_type {
->>    * type: interface type
->>    * up: is this configuration up operational
->>    * enable: is this configuration enabled
->> - * associated: is BSS in ASSOCIATED state
->>    * SSID_len: the length of SSID
->>    * SSID: SSID string
->>    *
->> @@ -608,7 +607,6 @@ struct brcms_bss_cfg {
->>       enum brcms_bss_type type;
->>       bool up;
->>       bool enable;
->> -    bool associated;
->>       u8 SSID_len;
->>       u8 SSID[IEEE80211_MAX_SSID_LEN];
->>       u8 BSSID[ETH_ALEN];
->>
->
-
+johannes
 
