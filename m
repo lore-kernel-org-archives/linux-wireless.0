@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:61092 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762292Ab3ECCg1 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:35774 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757946Ab3EWTQQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 22:36:27 -0400
-Received: by mail-pa0-f41.google.com with SMTP id rl6so682088pac.28
-        for <linux-wireless@vger.kernel.org>; Thu, 02 May 2013 19:36:27 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>, me@bobcopeland.com,
-	open80211s <devel@lists.open80211s.org>
-Subject: [RFC 08/12] mac80211: forward group frames on mbss-shared interfaces
-Date: Thu,  2 May 2013 19:33:58 -0700
-Message-Id: <1367548442-8229-9-git-send-email-thomas@cozybit.com> (sfid-20130503_043630_611503_ADD7361D)
-In-Reply-To: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
+	Thu, 23 May 2013 15:16:16 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.10] mac80211: fix queue handling crash
+Date: Thu, 23 May 2013 21:16:09 +0200
+Message-Id: <1369336569-13358-1-git-send-email-johannes@sipsolutions.net> (sfid-20130523_211619_431464_2B97C9D2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-When multiple local interfaces are in the same MBSS, we should
-forward group-directed data frames received on one interface
-for transmit on the other interfaces, so that the frames may be
-seen on other channels.
+The code I added in "mac80211: don't start new netdev queues
+if driver stopped" crashes for monitor and AP VLAN interfaces
+because while they have a netdev, they don't have queues set
+up by the driver.
 
-Signed-off-by: Bob Copeland <bob@cozybit.com>
+To fix the crash, exclude these from queue accounting here
+and just start their netdev queues unconditionally.
+
+For monitor, this is the best we can do, as we can redirect
+frames there to any other interface and don't know which one
+that will since it can be different for each frame.
+
+For AP VLAN interfaces, we can do better later and actually
+properly track the queue status. Not doing this is really a
+separate bug though.
+
+Reported-by: Ilan Peer <ilan.peer@intel.com>
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/rx.c |    2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/iface.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 0c5f870..850bfe3 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2142,6 +2142,8 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 60f1ce5..68f51c3 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -653,7 +653,11 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
  
- 	IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_frames);
- 	ieee80211_add_pending_skb(local, fwd_skb);
-+	if (is_multicast_ether_addr(fwd_hdr->addr1))
-+		mesh_bss_forward_tx(sdata, fwd_skb);
-  out:
- 	if (is_multicast_ether_addr(hdr->addr1) ||
- 	    sdata->dev->flags & IFF_PROMISC)
+ 	ieee80211_recalc_ps(local, -1);
+ 
+-	if (dev) {
++	if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		/* XXX: for AP_VLAN, actually track AP queues */
++		netif_tx_start_all_queues(dev);
++	} else if (dev) {
+ 		unsigned long flags;
+ 		int n_acs = IEEE80211_NUM_ACS;
+ 		int ac;
 -- 
-1.7.10.4
+1.8.0
 
