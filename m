@@ -1,72 +1,320 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp06.msg.oleane.net ([62.161.4.6]:59546 "EHLO
-	smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874Ab3EMMpi convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:48243 "EHLO
+	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759190Ab3EWVfr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 08:45:38 -0400
-From: "voncken" <cedric.voncken@acksys.fr>
+	Thu, 23 May 2013 17:35:47 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: <linux-wireless@vger.kernel.org>
-Cc: <johannes@sipsolutions.net>
-References: <1366363242-29481-1-git-send-email-cedric.voncken@acksys.fr>
-In-Reply-To: <1366363242-29481-1-git-send-email-cedric.voncken@acksys.fr>
-Subject: RE: [PATCH] mac80211: Fix driver crash when STA_NOTIFY_AWAKE occures
-Date: Mon, 13 May 2013 14:45:34 +0200
-Message-ID: <01a401ce4fd7$c2e9d3b0$48bd7b10$@acksys.fr> (sfid-20130513_144542_752441_E55BB4DC)
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Luciano Coelho <coelho@ti.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 2/2] iw: add coalesce support
+Date: Thu, 23 May 2013 14:35:41 -0700
+Message-ID: <1369344941-11217-2-git-send-email-bzhao@marvell.com> (sfid-20130523_233551_540629_5C611EBA)
+In-Reply-To: <1369344941-11217-1-git-send-email-bzhao@marvell.com>
+References: <1369344941-11217-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This default occurs when I set a mesh interface with HT mode and SAE user
-daemon from cozibit.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-I have put more information in thread "ath9k null pointer with mesh network"
-in the linux-wireless mailing list.
+User can add one coalesce rule at a time using 'iw coalesce add'
+command. The settings can be cleared using 'iw coalesce disable'
+command. 'iw coalesce show' displays current configuration.
 
-Cedric Voncken 
-
------Message d'origine-----
-De : linux-wireless-owner@vger.kernel.org
-[mailto:linux-wireless-owner@vger.kernel.org] De la part de cedric voncken
-Envoyé : vendredi 19 avril 2013 11:21
-À : linux-wireless@vger.kernel.org
-Cc : cedric voncken
-Objet : [PATCH] mac80211: Fix driver crash when STA_NOTIFY_AWAKE occures
-
-If the device uses the HT mode and receives a frame from a sta whith state <
-IEEE80211_STA_ASSOC then the null pointer exception crashes the Linnux
-kernel.
-
-In the case of ath9k, the function ath_tx_node_init is indirectly called by
-drv_sta_state (in net/mac80211/driver-ops.h) only when the sta_state goes to
-IEEE80211_STA_ASSOC from IEEE80211_STA_AUTH.
-
-Signed-off-by: cedric VONCKEN <cedric.voncken@acksys.fr>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/mac80211/sta_info.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ Makefile   |   2 +-
+ coalesce.c | 232 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ info.c     |  14 ++++
+ 3 files changed, 247 insertions(+), 1 deletion(-)
+ create mode 100644 coalesce.c
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c index
-11216bc..bcfd7b0 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1040,7 +1040,8 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info
-*sta)
- 	BUILD_BUG_ON(BITS_TO_LONGS(IEEE80211_NUM_TIDS) > 1);
- 	sta->driver_buffered_tids = 0;
+diff --git a/Makefile b/Makefile
+index c485b5e..f042e30 100644
+--- a/Makefile
++++ b/Makefile
+@@ -16,7 +16,7 @@ OBJS = iw.o genl.o event.o info.o phy.o \
+ 	interface.o ibss.o station.o survey.o util.o \
+ 	mesh.o mpath.o scan.o reg.o version.o \
+ 	reason.o status.o connect.o link.o offch.o ps.o cqm.o \
+-	bitrate.o wowlan.o roc.o p2p.o
++	bitrate.o wowlan.o coalesce.o roc.o p2p.o
+ OBJS += sections.o
  
--	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
-+	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS &&
-+			sta->sta_state >= IEEE80211_STA_ASSOC))
- 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
+ OBJS-$(HWSIM) += hwsim.o
+diff --git a/coalesce.c b/coalesce.c
+new file mode 100644
+index 0000000..73f5d77
+--- /dev/null
++++ b/coalesce.c
+@@ -0,0 +1,232 @@
++#include <net/if.h>
++#include <errno.h>
++#include <string.h>
++#include <stdio.h>
++
++#include <netlink/genl/genl.h>
++#include <netlink/genl/family.h>
++#include <netlink/genl/ctrl.h>
++#include <netlink/msg.h>
++#include <netlink/attr.h>
++
++#include <arpa/inet.h>
++
++#include "nl80211.h"
++#include "iw.h"
++
++SECTION(coalesce);
++
++static int handle_coalesce_add(struct nl80211_state *state, struct nl_cb *cb,
++			       struct nl_msg *msg, int argc, char **argv,
++			       enum id_input id)
++{
++	struct nlattr *coalesce, *pattern;
++	struct nl_msg *patterns = NULL;
++	enum {
++		PS_REG,
++		PS_PAT,
++	} parse_state = PS_REG;
++	int err = -ENOBUFS;
++	unsigned char *pat, *mask;
++	size_t patlen;
++	int patnum = 0, pkt_offset;
++	char *eptr, *value1, *value2, *sptr = NULL, *end;
++	unsigned int condition;
++
++	coalesce = nla_nest_start(msg, NL80211_ATTR_COALESCE_RULE);
++	if (!coalesce)
++		return -ENOBUFS;
++
++	NLA_PUT_U32(msg, NL80211_ATTR_COALESCE_RULE_DELAY,
++		    strtoul(argv[0], &end, 10));
++	if (*end != '\0')
++		return 1;
++
++	argv++;
++	argc--;
++
++	condition = strtoul(argv[0], &end, 10);
++
++	if (condition != 1 && condition != 0)
++		return 1;
++
++	if (*end)
++		return 1;
++
++	NLA_PUT_U8(msg, NL80211_ATTR_COALESCE_RULE_CONDITION, condition);
++
++	argv++;
++	argc--;
++
++	while (argc) {
++		switch (parse_state) {
++		case PS_REG:
++			if (strcmp(argv[0], "patterns") == 0) {
++				parse_state = PS_PAT;
++				patterns = nlmsg_alloc();
++				if (!patterns) {
++					err = -ENOMEM;
++					goto nla_put_failure;
++				}
++			} else {
++				err = 1;
++				goto nla_put_failure;
++			}
++			break;
++		case PS_PAT:
++			value1 = strtok_r(argv[0], "+", &sptr);
++			value2 = strtok_r(NULL, "+", &sptr);
++
++			if (!value2) {
++				pkt_offset = 0;
++				value2 = value1;
++			} else {
++				pkt_offset = strtoul(value1, &eptr, 10);
++				if (eptr != value1 + strlen(value1)) {
++					err = 1;
++					goto nla_put_failure;
++				}
++			}
++
++			if (parse_hex_mask(value2, &pat, &patlen, &mask)) {
++				err = 1;
++				goto nla_put_failure;
++			}
++
++			pattern = nla_nest_start(patterns, ++patnum);
++			NLA_PUT(patterns, NL80211_PKTPAT_MASK,
++				DIV_ROUND_UP(patlen, 8), mask);
++			NLA_PUT(patterns, NL80211_PKTPAT_PATTERN, patlen, pat);
++			NLA_PUT_U32(patterns, NL80211_PKTPAT_OFFSET,
++				    pkt_offset);
++			nla_nest_end(patterns, pattern);
++			free(mask);
++			free(pat);
++			break;
++		}
++		argv++;
++		argc--;
++	}
++
++	if (patterns)
++		nla_put_nested(msg, NL80211_ATTR_COALESCE_RULE_PKT_PATTERN,
++			       patterns);
++
++	nla_nest_end(msg, coalesce);
++	err = 0;
++ nla_put_failure:
++	nlmsg_free(patterns);
++	return err;
++}
++COMMAND(coalesce, add, "<delay> <0|1> patterns [offset1+]<pattern1> ...]",
++	NL80211_CMD_SET_COALESCE, 0, CIB_PHY, handle_coalesce_add,
++	"Add coalesce rule.\n"
++	"Maximum coalescing delay in msec.\n"
++	"Condition is 0/1 i.e. 'not match'/'match' the patterns\n"
++	"Each pattern is given as a bytestring with '-' in places where any byte\n"
++	"may be present, e.g. 00:11:22:-:44 will match 00:11:22:33:44 and\n"
++	"00:11:22:33:ff:44 etc.\n"
++	"Offset and pattern should be separated by '+', e.g. 18+43:34:00:12 will\n"
++	"match '43:34:00:12' after 18 bytes of offset in Rx packet.\n");
++
++static int
++handle_coalesce_disable(struct nl80211_state *state, struct nl_cb *cb,
++			struct nl_msg *msg, int argc, char **argv,
++			enum id_input id)
++{
++	/* just a set w/o coalesce attribute */
++	return 0;
++}
++COMMAND(coalesce, disable, "", NL80211_CMD_SET_COALESCE, 0, CIB_PHY,
++	handle_coalesce_disable, "Disable coalesce.");
++
++static int print_coalesce_handler(struct nl_msg *msg, void *arg)
++{
++	struct nlattr *attrs[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	struct nlattr *pattern, *rule;
++	int rem_pattern, rem_rule;
++	bool condition;
++	int delay;
++
++	nla_parse(attrs, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
++
++	if (!attrs[NL80211_ATTR_COALESCE_RULE]) {
++		printf("Coalesce is disabled.\n");
++		return NL_SKIP;
++	}
++
++	printf("Coalesce is enabled:\n");
++
++	nla_for_each_nested(rule, attrs[NL80211_ATTR_COALESCE_RULE], rem_rule) {
++		struct nlattr *ruleattr[NUM_NL80211_ATTR_COALESCE_RULE];
++
++		nla_parse(ruleattr, NL80211_ATTR_COALESCE_RULE_MAX,
++			  nla_data(rule), nla_len(rule), NULL);
++
++		delay = nla_get_u32(ruleattr[NL80211_ATTR_COALESCE_RULE_DELAY]);
++		condition =
++		     nla_get_u8(ruleattr[NL80211_ATTR_COALESCE_RULE_CONDITION]);
++
++		printf("Rule - max coalescing delay: %dmsec condition:", delay);
++		if (condition)
++			printf("match\n");
++		else
++			printf("not match\n");
++
++		if (ruleattr[NL80211_ATTR_COALESCE_RULE_PKT_PATTERN]) {
++			nla_for_each_nested(pattern,
++					ruleattr[NL80211_ATTR_COALESCE_RULE_PKT_PATTERN],
++					rem_pattern) {
++				struct nlattr *patattr[NUM_NL80211_PKTPAT];
++				int i, patlen, masklen, pkt_offset;
++				uint8_t *mask, *pat;
++
++				nla_parse(patattr, MAX_NL80211_PKTPAT,
++					  nla_data(pattern), nla_len(pattern),
++					  NULL);
++				if (!patattr[NL80211_PKTPAT_MASK] ||
++				    !patattr[NL80211_PKTPAT_PATTERN] ||
++				    !patattr[NL80211_PKTPAT_OFFSET]) {
++					printf(" * (invalid pattern specification)\n");
++					continue;
++				}
++				masklen = nla_len(patattr[NL80211_PKTPAT_MASK]);
++				patlen = nla_len(patattr[NL80211_PKTPAT_PATTERN]);
++				pkt_offset = nla_get_u32(patattr[NL80211_PKTPAT_OFFSET]);
++				if (DIV_ROUND_UP(patlen, 8) != masklen) {
++					printf(" * (invalid pattern specification)\n");
++					continue;
++				}
++				printf(" * packet offset: %d", pkt_offset);
++				printf(" pattern: ");
++				pat = nla_data(patattr[NL80211_PKTPAT_PATTERN]);
++				mask = nla_data(patattr[NL80211_PKTPAT_MASK]);
++				for (i = 0; i < patlen; i++) {
++					if (mask[i / 8] & (1 << (i % 8)))
++						printf("%.2x", pat[i]);
++					else
++						printf("--");
++					if (i != patlen - 1)
++						printf(":");
++				}
++				printf("\n");
++			}
++		}
++	}
++
++	return NL_SKIP;
++}
++
++static int handle_coalesce_show(struct nl80211_state *state, struct nl_cb *cb,
++			      struct nl_msg *msg, int argc, char **argv,
++			      enum id_input id)
++{
++	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM,
++		  print_coalesce_handler, NULL);
++
++	return 0;
++}
++COMMAND(coalesce, show, "", NL80211_CMD_GET_COALESCE, 0, CIB_PHY, handle_coalesce_show,
++	"Show coalesce status.");
+diff --git a/info.c b/info.c
+index d893ffc..849da67 100644
+--- a/info.c
++++ b/info.c
+@@ -528,6 +528,20 @@ broken_combination:
+ 			printf("\tDevice supports AP scan.\n");
+ 	}
  
- 	skb_queue_head_init(&pending);
---
-1.7.2.5
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
++	if (tb_msg[NL80211_ATTR_COALESCE_RULE]) {
++		struct nl80211_coalesce_rule_support *rule;
++		struct nl80211_pattern_support *pat;
++
++		printf("\tCoalesce support:\n");
++		rule = nla_data(tb_msg[NL80211_ATTR_COALESCE_RULE]);
++		pat = &rule->pat;
++		printf("\t\t * Maximum %u coalesce rules supported\n"
++		       "\t\t * Each rule contains upto %u patterns of %u-%u bytes,\n"
++		       "\t\t   maximum packet offset %u bytes\n",
++			rule->max_rules, pat->max_patterns, pat->min_pattern_len,
++			pat->max_pattern_len, pat->max_pkt_offset);
++	}
++
+ 	return NL_SKIP;
+ }
+ 
+-- 
+1.8.0
 
