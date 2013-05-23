@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:54311 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934209Ab3ECTyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 15:54:15 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0LiZta-1U0Okc2GtA-00ceWd for
- <linux-wireless@vger.kernel.org>; Fri, 03 May 2013 21:54:14 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	radiotap@NetBSD.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH] tcpdump: add STBC Rx support
-Date: Fri,  3 May 2013 21:53:56 +0200
-Message-Id: <1367610836-3303-5-git-send-email-linux@rempel-privat.de> (sfid-20130503_215419_326499_CC4CF831)
-In-Reply-To: <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
-References: <1367527479.11375.19.camel@jlt4.sipsolutions.net>
- <1367610836-3303-1-git-send-email-linux@rempel-privat.de>
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:41422 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752769Ab3EWSwL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 May 2013 14:52:11 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: <linux-wireless@vger.kernel.org>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: linux-firmware: pull-request Marvell mwifiex-firmware 2013-05-23
+Date: Thu, 23 May 2013 11:49:52 -0700
+Message-ID: <1369334992-10587-1-git-send-email-bzhao@marvell.com> (sfid-20130523_205215_011560_D449D529)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- ieee802_11_radio.h | 6 ++++++
- print-802_11.c     | 5 +++++
- 2 files changed, 11 insertions(+)
+The following changes since commit 07ea598af5b9dde3acdf279846b062fa1b2987b8:
 
-diff --git a/ieee802_11_radio.h b/ieee802_11_radio.h
-index 5aff137..65c25df 100644
---- a/ieee802_11_radio.h
-+++ b/ieee802_11_radio.h
-@@ -277,6 +277,7 @@ enum ieee80211_radiotap_type {
- #define IEEE80211_RADIOTAP_MCS_GUARD_INTERVAL_KNOWN	0x04
- #define IEEE80211_RADIOTAP_MCS_HT_FORMAT_KNOWN		0x08
- #define IEEE80211_RADIOTAP_MCS_FEC_TYPE_KNOWN		0x10
-+#define IEEE80211_RADIOTAP_MCS_STBC_KNOWN		0x20
- 
- /* For IEEE80211_RADIOTAP_MCS flags */
- #define IEEE80211_RADIOTAP_MCS_BANDWIDTH_MASK	0x03
-@@ -287,5 +288,10 @@ enum ieee80211_radiotap_type {
- #define IEEE80211_RADIOTAP_MCS_SHORT_GI		0x04 /* short guard interval */
- #define IEEE80211_RADIOTAP_MCS_HT_GREENFIELD	0x08
- #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
-+#define IEEE80211_RADIOTAP_MCS_STBC_MASK	0x60
-+#define		IEEE80211_RADIOTAP_MCS_STBC_1	1
-+#define		IEEE80211_RADIOTAP_MCS_STBC_2	2
-+#define		IEEE80211_RADIOTAP_MCS_STBC_3	3
-+#define IEEE80211_RADIOTAP_MCS_STBC_SHIFT	5
- 
- #endif /* _NET_IF_IEEE80211RADIOTAP_H_ */
-diff --git a/print-802_11.c b/print-802_11.c
-index 97badb9..5f65752 100644
---- a/print-802_11.c
-+++ b/print-802_11.c
-@@ -2184,6 +2184,11 @@ print_radiotap_field(struct cpack_state *s, u_int32_t bit, u_int8_t *flags,
- 				(u2.u8 & IEEE80211_RADIOTAP_MCS_FEC_LDPC) ?
- 				"LDPC" : "BCC");
- 		}
-+		if (u.u8 & IEEE80211_RADIOTAP_MCS_STBC_KNOWN) {
-+			printf("RX-STBC%u ",
-+				(u2.u8 & IEEE80211_RADIOTAP_MCS_STBC_MASK) >> IEEE80211_RADIOTAP_MCS_STBC_SHIFT);
-+		}
-+	
- 		break;
- 		}
- 	}
--- 
-1.8.1.2
+  Merge branch 'linux-firmware' of git://github.com/TI-OpenLink/firmwares (2013-05-06 14:21:49 +0100)
 
+are available in the git repository at:
+
+
+  git://git.marvell.com/mwifiex-firmware.git master
+
+for you to fetch changes up to 009719f9eca7a9d61b9c3cba5dbafbf937d93c80:
+
+  linux-firmware: add Marvell PCIe8897-B0 WLAN firmware image (2013-05-22 18:23:52 -0700)
+
+----------------------------------------------------------------
+Bing Zhao (1):
+      linux-firmware: add Marvell PCIe8897-B0 WLAN firmware image
+
+ WHENCE                   |   5 ++++-
+ mrvl/pcie8897_uapsta.bin | Bin 0 -> 350244 bytes
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+ create mode 100644 mrvl/pcie8897_uapsta.bin
+
+diff --git a/WHENCE b/WHENCE
+index c08336a..d1a2713 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -716,7 +716,7 @@ directly by Marvell.
+ 
+ --------------------------------------------------------------------------
+ 
+-Driver: mwifiex - Marvell Wi-Fi fullmac-type 802.11n card
++Driver: mwifiex - Marvell Wi-Fi fullmac-type 802.11n/ac cards
+ 
+ File: mrvl/sd8787_uapsta.bin
+ Version: 14.66.9.p96
+@@ -727,6 +727,9 @@ Version: 14.66.11.p151
+ File: mrvl/usb8797_uapsta.bin
+ Version: 14.69.11.p179
+ 
++File: mrvl/pcie8897_uapsta.bin
++Version: 15.69.201.p52
++
+ Licence: Redistributable. See LICENCE.Marvell for details.  Originates from
+ http://git.marvell.com/?p=mwifiex-firmware.git
+ 
+diff --git a/mrvl/pcie8897_uapsta.bin b/mrvl/pcie8897_uapsta.bin
+new file mode 100644
+index 0000000..b067689
+Binary files /dev/null and b/mrvl/pcie8897_uapsta.bin differ
