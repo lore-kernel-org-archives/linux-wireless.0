@@ -1,62 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:33498 "EHLO mga14.intel.com"
+Received: from mout.gmx.net ([212.227.17.22]:53609 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752623Ab3EUXHc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 May 2013 19:07:32 -0400
-Date: Wed, 22 May 2013 01:07:11 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@lists.01.org>
-Subject: [GIT] [3.10] NFC fixes
-Message-ID: <20130521230711.GD4566@zurbaran> (sfid-20130522_010735_163201_09C6AEF8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1758503Ab3EWOLf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 May 2013 10:11:35 -0400
+Received: from mailout-de.gmx.net ([10.1.76.34]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0MQKg6-1V2fIv3lNs-00TpM3 for
+ <linux-wireless@vger.kernel.org>; Thu, 23 May 2013 16:11:33 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v3 1/3] mac80211: add STBC flag for radiotap
+Date: Thu, 23 May 2013 16:11:19 +0200
+Message-Id: <1369318279-13768-1-git-send-email-linux@rempel-privat.de> (sfid-20130523_161148_776075_BEF6E877)
+In-Reply-To: <1369250674.8207.26.camel@jlt4.sipsolutions.net>
+References: <1369250674.8207.26.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Some chips can tell us if received frame was
+encoded with STBC or not. To make this information available
+in user space we can use updated radiotap specification:
+http://www.radiotap.org/defined-fields/MCS
 
-This is the first batch of NFC fixes for 3.10, and it contains:
+This patch add HAVE_STBC flag and provide number
+of STBC encoded spatial streams (Nss).
 
-- 3 fixes for the NFC MEI support:
-        * We now depend on the correct Kconfig symbol.
-        * We register an MEI event callback whenever we enable an NFC device,
-          otherwise we fail to read anything after an enable/disable cycle.
-        * We only disable an MEI device from its disable mey_phy_ops,
-          preventing useless consecutive disable calls.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ include/net/ieee80211_radiotap.h |  7 +++++++
+ include/net/mac80211.h           |  4 ++++
+ net/mac80211/rx.c                | 13 ++++++++++++-
+ 3 files changed, 23 insertions(+), 1 deletion(-)
 
-- An NFC Makefile cleanup, as I forgot to remove a commented out line when
-  moving the LLCP code to the NFC top level directory.
-
-The following changes since commit 6bb4880d9ef30375da4507aeabd6dc261a2c6c2b:
-
-  ath9k: fix draining aggregation tid buffers (2013-05-17 14:31:09 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.10-1
-
-for you to fetch changes up to e3a6b14ceda0207c3405c6266e5177a85c0db044:
-
-  NFC: mei: Do not disable MEI devices from their remove routine (2013-05-21 10:48:41 +0200)
-
-----------------------------------------------------------------
-Paul Bolle (1):
-      NFC: Remove commented out LLCP related Makefile line
-
-Samuel Ortiz (3):
-      NFC: mei_phy depends on INTEL_MEI
-      NFC: mei_phy: Register event callback when enabling the device
-      NFC: mei: Do not disable MEI devices from their remove routine
-
- drivers/nfc/Kconfig         |    2 +-
- drivers/nfc/mei_phy.c       |    9 +++++++++
- drivers/nfc/microread/mei.c |   20 +++++---------------
- drivers/nfc/pn544/mei.c     |   20 +++++---------------
- net/nfc/Makefile            |    1 -
- 5 files changed, 20 insertions(+), 32 deletions(-)
-
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index c399963..c6d07cb 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -269,6 +269,7 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_HAVE_GI		0x04
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FMT		0x08
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FEC		0x10
++#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	0x20
+ 
+ #define IEEE80211_RADIOTAP_MCS_BW_MASK		0x03
+ #define		IEEE80211_RADIOTAP_MCS_BW_20	0
+@@ -278,6 +279,12 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_SGI		0x04
+ #define IEEE80211_RADIOTAP_MCS_FMT_GF		0x08
+ #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
++#define IEEE80211_RADIOTAP_MCS_STBC_MASK	0x60
++#define		IEEE80211_RADIOTAP_MCS_STBC_1	1
++#define		IEEE80211_RADIOTAP_MCS_STBC_2	2
++#define		IEEE80211_RADIOTAP_MCS_STBC_3	3
++
++#define IEEE80211_RADIOTAP_MCS_STBC_SHIFT	5
+ 
+ /* For IEEE80211_RADIOTAP_AMPDU_STATUS */
+ #define IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN		0x0001
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 885898a..16705a9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -805,6 +805,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	on this subframe
+  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+  *	is stored in the @ampdu_delimiter_crc field)
++ * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -832,8 +833,11 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_80MHZ			= BIT(23),
+ 	RX_FLAG_80P80MHZ		= BIT(24),
+ 	RX_FLAG_160MHZ			= BIT(25),
++	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
+ };
+ 
++#define RX_FLAG_STBC_SHIFT		26
++
+ /**
+  * struct ieee80211_rx_status - receive status
+  *
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 8e29526..db7c68a 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -258,8 +258,16 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	pos += 2;
+ 
+ 	if (status->flag & RX_FLAG_HT) {
++		unsigned int stbc = status->flag & RX_FLAG_STBC_MASK;
+ 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
+-		*pos++ = local->hw.radiotap_mcs_details;
++
++		/* MCS known field */
++		*pos = local->hw.radiotap_mcs_details;
++		if (stbc)
++			*pos |= IEEE80211_RADIOTAP_MCS_HAVE_STBC;
++		*pos++;
++
++		/* MCS flags field */
+ 		*pos = 0;
+ 		if (status->flag & RX_FLAG_SHORT_GI)
+ 			*pos |= IEEE80211_RADIOTAP_MCS_SGI;
+@@ -267,6 +275,9 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
+ 		if (status->flag & RX_FLAG_HT_GF)
+ 			*pos |= IEEE80211_RADIOTAP_MCS_FMT_GF;
++		if (stbc)
++			*pos |= (stbc >> RX_FLAG_STBC_SHIFT)
++					<< IEEE80211_RADIOTAP_MCS_STBC_SHIFT;
+ 		pos++;
+ 		*pos++ = status->rate_idx;
+ 	}
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.8.1.2
+
