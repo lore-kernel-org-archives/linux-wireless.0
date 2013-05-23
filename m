@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36412 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759760Ab3EWW2R (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:36128 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752403Ab3EWQtj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 18:28:17 -0400
-Message-ID: <1369348092.17244.0.camel@jlt4.sipsolutions.net> (sfid-20130524_002819_909296_CB0A7921)
-Subject: Re: [PATCH v2 1/2] iw: use updated structures and enums for packet
- pattern
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Fri, 24 May 2013 00:28:12 +0200
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430E801DC656@SC-VEXCH1.marvell.com>
-References: <1369344941-11217-1-git-send-email-bzhao@marvell.com>
-	 <1369345157.12002.87.camel@jlt4.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F70430E801DC656@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 23 May 2013 12:49:39 -0400
+Received: by mail-wi0-f179.google.com with SMTP id hq7so2210011wib.12
+        for <linux-wireless@vger.kernel.org>; Thu, 23 May 2013 09:49:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <002301ce57cc$dcaeef40$960ccdc0$@acksys.fr>
+References: <002301ce57cc$dcaeef40$960ccdc0$@acksys.fr>
+From: Ashok Nagarajan <ashok@cozybit.com>
+Date: Thu, 23 May 2013 09:49:17 -0700
+Message-ID: <CACcxo+rJcr3sL_8NU8ygyzvx0eqN+5gKtz6kfcX=QH6pNphCMw@mail.gmail.com> (sfid-20130523_184954_400271_9E5AAB61)
+Subject: Re: How to set basic rates in mesh mode?
+To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-23 at 15:23 -0700, Bing Zhao wrote:
-> Hi Johannes,
-> 
-> > On Thu, 2013-05-23 at 14:35 -0700, Bing Zhao wrote:
-> > > From: Amitkumar Karwar <akarwar@marvell.com>
-> > >
-> > > They are renamed so that they can be used for new feature.
-> > 
-> > This isn't really necessary, right? I mean, it should compile w/o this
-> > even after the kernel patches, but this is just for making it look
-> > nicer?
-> 
-> Yes, it compiles w/o this patch. It does make it look nicer, I think.
-> However, the commit message should be something like:
-> 
-> "They are renamed to match new nl80211.h and make the code look nicer."
-> 
-> Please let me know if you want me to resend 1/2 with revised commit log.
-> Otherwise, please simply drop 1/2 and apply 2/2 alone.
+Hi Tosoni,
 
-No, no need. Just wanted to double-check. I started going through the
-kernel side patches and had some comments, but I'm too tired to finish
-now.
+On Thu, May 23, 2013 at 8:47 AM, Jean-Pierre Tosoni <jp.tosoni@acksys.fr> wrote:
+> Hi all,
+>
+> Is there a way to change the basic rates set in mesh mode ?
+> (so that broadcasts and ACKs could be sent faster)
+>
+Not with the current ToT. But patches to support this feature have
+been sent and is waiting to get merged.
 
-johannes
+If you would like to use the feature now, you could find these patches here.
 
+1. https://patchwork.kernel.org/patch/2552611/
+2. https://patchwork.kernel.org/patch/2552621/
+and 3. https://patchwork.kernel.org/patch/2552641/
+
+Thanks,
+Ashok
+> - iw does not do this, and cfg80211 rejects NL80211_CMD_SET_BSS for mesh
+> interfaces, I cannot figure out another way ?
+>
+> Regards
+> j.p. Tosoni
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+--
+Ashok Raj Nagarajan,
+cozybit Inc.
+http://www.cozybit.com
