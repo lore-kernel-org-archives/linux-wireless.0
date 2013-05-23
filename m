@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:62564 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965577Ab3E2Kc3 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:53408 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757780Ab3EWJKo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 06:32:29 -0400
-Received: by mail-pd0-f174.google.com with SMTP id 3so6955456pdj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 May 2013 03:32:28 -0700 (PDT)
-From: Sachin Kamat <sachin.kamat@linaro.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, davem@davemloft.net, coelho@ti.com,
-	linville@tuxdriver.com, sachin.kamat@linaro.org
-Subject: [PATCH 2/2] net: wireless: wl1251: Fix commenting style
-Date: Wed, 29 May 2013 15:48:23 +0530
-Message-Id: <1369822703-27769-2-git-send-email-sachin.kamat@linaro.org> (sfid-20130529_123238_009479_92249C90)
-In-Reply-To: <1369822703-27769-1-git-send-email-sachin.kamat@linaro.org>
-References: <1369822703-27769-1-git-send-email-sachin.kamat@linaro.org>
+	Thu, 23 May 2013 05:10:44 -0400
+Received: by mail-bk0-f46.google.com with SMTP id my13so1687841bkb.33
+        for <linux-wireless@vger.kernel.org>; Thu, 23 May 2013 02:10:43 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 23 May 2013 17:10:43 +0800
+Message-ID: <CAPgLHd9HBQWnjA-ViiK27Z2AjnuwHgjrUqFhSLxGCRZD1fGsSA@mail.gmail.com> (sfid-20130523_111102_454037_A5810DE9)
+Subject: [PATCH -next] wil6210: use kfree_skb() instead of kfree()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: qca_vkondrat@qca.qualcomm.com, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	wil6210@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the commenting style consistent with networking block comment
-style as suggested by checkpatch.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Use kfree_skb() instead of kfree() to free sk_buff.
+
+Introduced by commit e270045b569cc7030abd29857f3a4e7906524ec0
+(wil6210: Sanity check for reported DMA length)
+
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- drivers/net/wireless/ti/wl1251/spi.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/txrx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index dfd0877..c7dc6fe 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -93,8 +93,7 @@ static void wl1251_spi_wake(struct wl1251 *wl)
- 	memset(&t, 0, sizeof(t));
- 	spi_message_init(&m);
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 082f76b..00dffed 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -369,7 +369,7 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
  
--	/*
--	 * Set WSPI_INIT_COMMAND
-+	/* Set WSPI_INIT_COMMAND
- 	 * the data is being send from the MSB to LSB
- 	 */
- 	cmd[2] = 0xff;
-@@ -262,7 +261,8 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 	wl->if_ops = &wl1251_spi_ops;
- 
- 	/* This is the only SPI value that we need to set here, the rest
--	 * comes from the board-peripherals file */
-+	 * comes from the board-peripherals file
-+	 */
- 	spi->bits_per_word = 32;
- 
- 	ret = spi_setup(spi);
--- 
-1.7.9.5
+ 	if (dmalen > sz) {
+ 		wil_err(wil, "Rx size too large: %d bytes!\n", dmalen);
+-		kfree(skb);
++		kfree_skb(skb);
+ 		return NULL;
+ 	}
+ 	skb_trim(skb, dmalen);
 
