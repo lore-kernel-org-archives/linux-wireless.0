@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:56048 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751669Ab3EaCJm (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36522 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759757Ab3EWXKO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 22:09:42 -0400
-Received: by mail-pd0-f177.google.com with SMTP id u11so1368048pdi.22
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:09:41 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 01/40] crda: make reg_rules_intersect() style match Linux
-Date: Thu, 30 May 2013 19:08:50 -0700
-Message-Id: <1369966169-23640-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_040945_138126_27E02EEF)
-In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 23 May 2013 19:10:14 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.10] mac80211: close AP_VLAN interfaces before unregistering all
+Date: Fri, 24 May 2013 01:10:08 +0200
+Message-Id: <1369350608-26874-1-git-send-email-johannes@sipsolutions.net> (sfid-20130524_011018_018111_648D90EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This makes reg_rules_intersect() style match exactly
-as it is upstream as of next-20130522.
+Since Eric's commit efe117ab8 ("Speedup ieee80211_remove_interfaces")
+there's a bug in mac80211 when it unregisters with AP_VLAN interfaces
+up. If the AP_VLAN interface was registered after the AP it belongs
+to (which is the typical case) and then we get into this code path,
+unregister_netdevice_many() will crash because it isn't prepared to
+deal with interfaces being closed in the middle of it. Exactly this
+happens though, because we iterate the list, find the AP master this
+AP_VLAN belongs to and dev_close() the dependent VLANs. After this,
+unregister_netdevice_many() won't pick up the fact that the AP_VLAN
+is already down and will do it again, causing a crash.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Cc: stable@vger.kernel.org [2.6.33+]
+Cc: Eric Dumazet <eric.dumazet@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- intersect.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ net/mac80211/iface.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/intersect.c b/intersect.c
-index 012750d..aa67dbc 100644
---- a/intersect.c
-+++ b/intersect.c
-@@ -56,11 +56,11 @@ static int reg_rules_intersect(
- 	power_rule = &intersected_rule->power_rule;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 00e2238..ceef644 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1703,6 +1703,15 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
  
- 	freq_range->start_freq_khz = max(freq_range1->start_freq_khz,
--		freq_range2->start_freq_khz);
-+					 freq_range2->start_freq_khz);
- 	freq_range->end_freq_khz = min(freq_range1->end_freq_khz,
--		freq_range2->end_freq_khz);
-+				       freq_range2->end_freq_khz);
- 	freq_range->max_bandwidth_khz = min(freq_range1->max_bandwidth_khz,
--		freq_range2->max_bandwidth_khz);
-+					    freq_range2->max_bandwidth_khz);
+ 	ASSERT_RTNL();
  
- 	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
- 	if (freq_range->max_bandwidth_khz > freq_diff)
-@@ -71,7 +71,7 @@ static int reg_rules_intersect(
- 	power_rule->max_antenna_gain = min(power_rule1->max_antenna_gain,
- 		power_rule2->max_antenna_gain);
- 
--	intersected_rule->flags = (rule1->flags | rule2->flags);
-+	intersected_rule->flags = rule1->flags | rule2->flags;
- 
- 	if (!is_valid_reg_rule(intersected_rule))
- 		return -EINVAL;
++	/*
++	 * Close all AP_VLAN interfaces first, as otherwise they
++	 * might be closed while the AP interface they belong to
++	 * is closed, causing unregister_netdevice_many() to crash.
++	 */
++	list_for_each_entry(sdata, &local->interfaces, list)
++		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++			dev_close(sdata->dev);
++
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
+ 		list_del(&sdata->list);
 -- 
-1.7.10.4
+1.8.0
 
