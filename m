@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53932 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:45922 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753830Ab3EBAyD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 May 2013 20:54:03 -0400
-Message-ID: <5181B927.5010407@openwrt.org> (sfid-20130502_025409_473336_8653D954)
-Date: Thu, 02 May 2013 02:53:59 +0200
+	id S1758251Ab3EWNGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 May 2013 09:06:00 -0400
 From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Stephen Hemminger <stephen@networkplumber.org>
-CC: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: Regression in 3.9 caused by "bridge: respect RFC2863 operational
- state"
-References: <518166C5.4080904@openwrt.org> <CABPxzYLP53mnMXAicD33oX8TW77xnZziS=XBuVCy_u4H2oyLUw@mail.gmail.com> <CAOaVG179Rx_JfV99mbjWhwQTALb5gh+2_WVFWDSbngA0qkzoGw@mail.gmail.com> <518183C8.8050606@openwrt.org> <20130501154904.0ea31991@nehalam.linuxnetplumber.net>
-In-Reply-To: <20130501154904.0ea31991@nehalam.linuxnetplumber.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 3.10] cfg80211: fix reporting 64-bit station info tx bytes
+Date: Thu, 23 May 2013 15:05:59 +0200
+Message-Id: <1369314359-99291-1-git-send-email-nbd@openwrt.org> (sfid-20130523_150604_845058_208FB262)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-05-02 12:49 AM, Stephen Hemminger wrote:
-> On Wed, 01 May 2013 23:06:16 +0200
-> Felix Fietkau <nbd@openwrt.org> wrote:
-> 
->> On 2013-05-01 10:21 PM, Stephen Hemminger wrote:
->> > What about using AF_PACKET bound to underlying wireless device and the
->> > packet type. You can even use BPF to filter.
->> As far as I know, AF_PACKET only works when not binding it to the packet
->> type (otherwise it get stolen by the rx handler).
-> 
-> You can do AF_PACKET and it gets handle before rx_handler.
-If I don't bind it to a protocol, it ends up in ptype_all, if I do, it
-ends up in &ptype_base. ptype_all is processed before the rx_handler,
-ptype_base is processed after the rx handler.
-Hooking into ptype_all wastes tons of CPU cycles, hooking into
-ptype_base does not solve the problem.
+Copy & paste mistake - STATION_INFO_TX_BYTES64 is the name of the flag,
+not NL80211_STA_INFO_TX_BYTES64.
 
-- Felix
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/wireless/nl80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index dfdb5e6..d5aed3b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3411,7 +3411,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
+ 			(u32)sinfo->rx_bytes))
+ 		goto nla_put_failure;
+ 	if ((sinfo->filled & (STATION_INFO_TX_BYTES |
+-			      NL80211_STA_INFO_TX_BYTES64)) &&
++			      STATION_INFO_TX_BYTES64)) &&
+ 	    nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES,
+ 			(u32)sinfo->tx_bytes))
+ 		goto nla_put_failure;
+-- 
+1.8.0.2
+
