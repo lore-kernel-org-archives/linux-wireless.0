@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from complete.lackof.org ([198.49.126.79]:59747 "EHLO
-	complete.lackof.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754670Ab3EVULE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25641 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400Ab3EWF6E convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 May 2013 16:11:04 -0400
-From: Matt Taggart <taggart@debian.org>
-To: linux-wireless@vger.kernel.org
-cc: 709364@bugs.debian.org
-Subject: iwlwifi: problems with Intel 6235
-Date: Wed, 22 May 2013 13:01:49 -0700
-Message-Id: <20130522200149.90BD2153@taggart.lackof.org> (sfid-20130522_221108_274333_45C9CBA4)
+	Thu, 23 May 2013 01:58:04 -0400
+From: "Zhou, Robie" <rzhou@qca.qualcomm.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "Deng, Flavian" <flaviand@qti.qualcomm.com>
+Subject: ath9k_htc p2p finding issue
+Date: Thu, 23 May 2013 05:58:03 +0000
+Message-ID: <A75A50687AD91044B3B81AB78993F668447D2F7F@NASANEXD02E.na.qualcomm.com> (sfid-20130523_075811_143951_FD9DD8F4)
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am seeing problems with the "Intel Corporation Centrino Advanced-N
-6235 [8086:088e]" card in my laptop.
+Hi all,
 
-When connected to a particular access point using 802.11n I get
-frequent disconnects, dropped packets, erratic latency, and slow
-data rates. Some access points don't have the problem.
+We meet some problem when try P2P by using ath9k_htc compat-wireless-v3.6.8-1. 
 
-I have tested both the Debian wheezy (3.2.41 based) and sid (3.8.13
-based) kernels and both have the problems.
+When using the compat-wireless-v3.6.8-1, AR9271 could find other P2P devices, but other P2P devices couldn't find AR9271 (runs ath9k_htc) because driver couldn't report Probe Request to wpa_supplicant. 
 
-I reported the problem and details to the Debian BTS here
+And this issue could not be observed when using compat-wireless-v3.0.9-1, by compare with compat-wireless-v3.0.9-1, ATH9K RX filter is  set correctly after got "Report Probe Request" command from wpa_supplicant, but ATH9K driver couldn't get "Probe Request" frame(I add debug msg in ieee80211_rx_handlers() function).
 
-  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=709364
+<7>[  205.784118] [DF_DBG]    [ieee80211_mgmt_frame_register] : local->probe_req_reg = 1; 
+<7>[  205.830232] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
+<7>[  205.832858] [DF_DBG]    [ieee80211_configure_filter] : new_flags |= FIF_PROBE_REQ; 
+<7>[  205.833101] [DF_DBG]    [ath9k_htc_configure_filter]    rfilt = 0x287;   ->   ath9k_hw_setrxfilter
+<7>[  205.878230] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x287;   ->   ath9k_hw_setrxfilter
+<7>[  205.882556] [DF_DBG]    [ieee80211_configure_filter] : new_flags |= FIF_PROBE_REQ; 
+<7>[  205.883606] [DF_DBG]    [ath9k_htc_configure_filter]    rfilt = 0x287;   ->   ath9k_hw_setrxfilter
 
-(cc'd) and I think it's the same problem as this ubuntu bug
+<7>[  206.010886] [DF_DBG]    [ieee80211_mgmt_frame_register] : local->probe_req_reg = 0; 
+<7>[  206.036237] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x287;   ->   ath9k_hw_setrxfilter
+<7>[  206.043357] [DF_DBG]    [ath9k_htc_configure_filter]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
+<7>[  206.044107] [DF_DBG]    [ath9k_htc_configure_filter]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
+<7>[  206.090106] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
+<7>[  206.160734] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
+<7>[  206.230740] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
 
-  https://bugs.launchpad.net/ubuntu/+source/linux/+bug/836250
 
-Let me know if you want me to try anything or need me to send more
-info.
+Did anyone ever meet this issue? Any suggestion for further debugging this issue?
 
-Thanks,
 
--- 
-Matt Taggart
-taggart@debian.org
+Thanks
+Robie
+
+
+
