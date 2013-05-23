@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:54733 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425Ab3EKXV0 (ORCPT
+Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:54769 "EHLO
+	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759847Ab3EWWh4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 May 2013 19:21:26 -0400
-Received: by mail-pd0-f173.google.com with SMTP id v10so3559150pde.18
-        for <linux-wireless@vger.kernel.org>; Sat, 11 May 2013 16:21:25 -0700 (PDT)
-Message-ID: <518ED273.6020700@gmail.com> (sfid-20130512_012142_208509_F55BBCD3)
-Date: Sat, 11 May 2013 16:21:23 -0700
-From: JoSH Lehan <krellan@gmail.com>
+	Thu, 23 May 2013 18:37:56 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Luciano Coelho <coelho@ti.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Thu, 23 May 2013 15:36:24 -0700
+Subject: RE: [PATCH v2 1/2] iw: use updated structures and enums for packet
+ pattern
+Message-ID: <477F20668A386D41ADCC57781B1F70430E801DC66D@SC-VEXCH1.marvell.com> (sfid-20130524_003807_602049_7ED0A31A)
+References: <1369344941-11217-1-git-send-email-bzhao@marvell.com>
+	 <1369345157.12002.87.camel@jlt4.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F70430E801DC656@SC-VEXCH1.marvell.com>
+ <1369348092.17244.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1369348092.17244.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: Using compat-drivers conflicts with kernel mac80211 and cfg80211
-References: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com> <518DF4B1.3020706@broadcom.com> <518ECC39.9090401@gmail.com> <518ECFDA.20208@lwfinger.net>
-In-Reply-To: <518ECFDA.20208@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2013 04:10 PM, Larry Finger wrote:
-> Neither driver r8712u, which has been in the kernel since 2.6.37, nor
-> the equivalent vendor driver depends on anything from mac80211 or
-> cfg80211. If it did, the kernel version would be in the
-> drivers/net/wireless tree rather than in staging. I suspect the same is
-> true for other wireless drivers from staging, which includes vt6656.
-
-Interesting.  I'll have to investigate more.  I'm using kernel 2.6.32
-for this system, so can't use the r8712u driver from the later kernel.
-
-When I ran the vendor rtl8712 driver, it worked well enough with the
-modules from the kernel, however, when I added compat-drivers to the
-build (which replaced the mac80211/cfg80211 modules that were already
-there), it crashed with an oops.  More investigation is needed to know
-why this happens, but it must have something to do with compat-drivers,
-because that is the only difference.  I removed compat-drivers from the
-build, and it went back to being fully working.  Something must be
-interacting in a bad way.
-
-Josh Lehan
+SGkgSm9oYW5uZXMsDQoNCj4gPiBQbGVhc2UgbGV0IG1lIGtub3cgaWYgeW91IHdhbnQgbWUgdG8g
+cmVzZW5kIDEvMiB3aXRoIHJldmlzZWQgY29tbWl0IGxvZy4NCj4gPiBPdGhlcndpc2UsIHBsZWFz
+ZSBzaW1wbHkgZHJvcCAxLzIgYW5kIGFwcGx5IDIvMiBhbG9uZS4NCj4gDQo+IE5vLCBubyBuZWVk
+LiBKdXN0IHdhbnRlZCB0byBkb3VibGUtY2hlY2suIEkgc3RhcnRlZCBnb2luZyB0aHJvdWdoIHRo
+ZQ0KPiBrZXJuZWwgc2lkZSBwYXRjaGVzIGFuZCBoYWQgc29tZSBjb21tZW50cywgYnV0IEknbSB0
+b28gdGlyZWQgdG8gZmluaXNoDQo+IG5vdy4NCg0KT0ssIE5vIGh1cnJ5Lg0KDQpUaGFua3MsDQpC
+aW5nDQo=
