@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:36067 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276Ab3EMCo3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36154 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758830Ab3EWVMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 May 2013 22:44:29 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V3.10] rtlwifi: rtl8188ee: Fix warning when building on big-endian systems
-Date: Sun, 12 May 2013 21:43:46 -0500
-Message-Id: <1368413026-17106-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130513_044432_897432_49CE4B79)
+	Thu, 23 May 2013 17:12:23 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jouni Malinen <j@w1.fi>, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.10] mac80211: assign AP_VLAN hw queues correctly
+Date: Thu, 23 May 2013 23:12:09 +0200
+Message-Id: <1369343529-16103-1-git-send-email-johannes@sipsolutions.net> (sfid-20130523_231226_245145_D8209694)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In http://lkml.indiana.edu/hypermail/linux/kernel/1305.1/index.html,
-Geert Uytterhoeven reports a new warning when building 3.10-rc1 in
-this driver. This is caused by using a "#if" test to see if __LITTLE_ENDIAN
-is set, which fails for all big-endian systems. Change to "ifdef".
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+A lot of code in mac80211 assumes that the hw queues are
+set up correctly for all interfaces (except for monitor)
+but this isn't true for AP_VLAN interfaces. Fix this by
+copying the AP master configuration when an AP VLAN is
+brought up, after this the AP interface can't change its
+configuration any more and needs to be brought down to
+change it, which also forces AP_VLAN interfaces down, so
+just copying in open() is sufficient.
+
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
+ net/mac80211/iface.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-John,
-
-As noted above, please add to 3.10.
-
-Larry
----
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.h b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.h
-index d3a02e7..21ca33a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.h
-@@ -550,7 +550,7 @@ do {								\
- 	 rxmcs == DESC92C_RATE11M)
- 
- struct phy_rx_agc_info_t {
--	#if __LITTLE_ENDIAN
-+	#ifdef __LITTLE_ENDIAN
- 		u8	gain:7, trsw:1;
- 	#else
- 		u8	trsw:1, gain:7;
-@@ -574,7 +574,7 @@ struct phy_status_rpt {
- 	u8	stream_target_csi[2];
- 	u8	sig_evm;
- 	u8	rsvd_3;
--#if __LITTLE_ENDIAN
-+#ifdef __LITTLE_ENDIAN
- 	u8	antsel_rx_keep_2:1;	/*ex_intf_flg:1;*/
- 	u8	sgi_en:1;
- 	u8	rxsc:2;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 68f51c3..00e2238 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -474,6 +474,9 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			master->control_port_protocol;
+ 		sdata->control_port_no_encrypt =
+ 			master->control_port_no_encrypt;
++		sdata->vif.cab_queue = master->vif.cab_queue;
++		memcpy(sdata->vif.hw_queue, master->vif.hw_queue,
++		       sizeof(sdata->vif.hw_queue));
+ 		break;
+ 		}
+ 	case NL80211_IFTYPE_AP:
 -- 
-1.8.1.4
+1.8.0
 
