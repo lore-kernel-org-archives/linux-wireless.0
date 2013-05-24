@@ -1,69 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46268 "EHLO arrakis.dune.hu"
+Received: from mout.gmx.net ([212.227.15.18]:49548 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758176Ab3EBMaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 08:30:10 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 03/14] rt2x00: rt2x00queue: remove qdesc parameter of rt2x00queue_alloc_entries
-Date: Thu,  2 May 2013 14:30:18 +0200
-Message-Id: <1367497829-7672-4-git-send-email-juhosg@openwrt.org> (sfid-20130502_143018_908102_D772F657)
-In-Reply-To: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
-References: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
+	id S1760009Ab3EXKLH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 May 2013 06:11:07 -0400
+Received: from mailout-de.gmx.net ([10.1.76.12]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0LrY9r-1UTbeu0Mpx-013MXD for
+ <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 12:11:05 +0200
+Message-ID: <519F3CB7.6010006@rempel-privat.de> (sfid-20130524_121111_045910_52AB72BB)
+Date: Fri, 24 May 2013 12:11:03 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] mac80211: add STBC flag for radiotap
+References: <1369250674.8207.26.camel@jlt4.sipsolutions.net>  <1369389945-805-1-git-send-email-linux@rempel-privat.de>  (sfid-20130524_120552_318974_4993675A) <1369390088.8290.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1369390088.8290.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The qdesc parameter is not used anymore, so remove that.
+Am 24.05.2013 12:08, schrieb Johannes Berg:
+> On Fri, 2013-05-24 at 12:05 +0200, Oleksij Rempel wrote:
+>> Some chips can tell us if received frame was
+>> encoded with STBC or not. To make this information available
+>> in user space we can use updated radiotap specification:
+>> http://www.radiotap.org/defined-fields/MCS
+>>
+>> This patch will set number of STBC encoded spatial streams (Nss).
+>> The HAVE_STBC flag should be provided by driver.
+>
+> Applied, thanks.
+>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |   12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+thank you.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 7f938a5..c12d1c8 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -1161,8 +1161,7 @@ void rt2x00queue_init_queues(struct rt2x00_dev *rt2x00dev)
- 	}
- }
- 
--static int rt2x00queue_alloc_entries(struct data_queue *queue,
--				     const struct data_queue_desc *qdesc)
-+static int rt2x00queue_alloc_entries(struct data_queue *queue)
- {
- 	struct queue_entry *entries;
- 	unsigned int entry_size;
-@@ -1231,23 +1230,22 @@ int rt2x00queue_initialize(struct rt2x00_dev *rt2x00dev)
- 	struct data_queue *queue;
- 	int status;
- 
--	status = rt2x00queue_alloc_entries(rt2x00dev->rx, rt2x00dev->ops->rx);
-+	status = rt2x00queue_alloc_entries(rt2x00dev->rx);
- 	if (status)
- 		goto exit;
- 
- 	tx_queue_for_each(rt2x00dev, queue) {
--		status = rt2x00queue_alloc_entries(queue, rt2x00dev->ops->tx);
-+		status = rt2x00queue_alloc_entries(queue);
- 		if (status)
- 			goto exit;
- 	}
- 
--	status = rt2x00queue_alloc_entries(rt2x00dev->bcn, rt2x00dev->ops->bcn);
-+	status = rt2x00queue_alloc_entries(rt2x00dev->bcn);
- 	if (status)
- 		goto exit;
- 
- 	if (test_bit(REQUIRE_ATIM_QUEUE, &rt2x00dev->cap_flags)) {
--		status = rt2x00queue_alloc_entries(rt2x00dev->atim,
--						   rt2x00dev->ops->atim);
-+		status = rt2x00queue_alloc_entries(rt2x00dev->atim);
- 		if (status)
- 			goto exit;
- 	}
 -- 
-1.7.10
-
+Regards,
+Oleksij
