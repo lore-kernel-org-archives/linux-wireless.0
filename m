@@ -1,78 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:56142 "EHLO
-	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756507Ab3ERAyA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 20:54:00 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 12/17] mwifiex: code rearrangement in mwifiex_get_rd_port()
-Date: Fri, 17 May 2013 17:53:56 -0700
-Message-ID: <1368838436-32704-1-git-send-email-bzhao@marvell.com> (sfid-20130518_025414_164555_1BB8FBE7)
+Received: from mga09.intel.com ([134.134.136.24]:13785 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751633Ab3EXSKv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 May 2013 14:10:51 -0400
+Date: Fri, 24 May 2013 11:10:51 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, dcbw@redhat
+Cc: "Ismail, Rahman" <abdul.r.ismail@intel.com>,
+	"Wallick, Stephanie S" <stephanie.s.wallick@intel.com>
+Subject: Re: Mobile Broadband Interface Model (MBIM) support?
+Message-ID: <20130524181051.GB15788@xanatos> (sfid-20130524_201100_648767_E3BBCD66)
+References: <20130524170915.GA15788@xanatos>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130524170915.GA15788@xanatos>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Ccing Dan Williams, since Johannes Berg mentioned on IRC that Dan might
+know the status of MBIM support.
 
-Get rid of 'if else' usage by returning in 'if' block.
-This improves readability by removing indentations.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.c | 29 +++++++++++++++--------------
- 1 file changed, 15 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index e4357a6..a18a5b4 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -512,22 +512,23 @@ static int mwifiex_get_rd_port(struct mwifiex_adapter *adapter, u8 *port)
- 		*port = CTRL_PORT;
- 		dev_dbg(adapter->dev, "data: port=%d mp_rd_bitmap=0x%08x\n",
- 			*port, card->mp_rd_bitmap);
--	} else {
--		if (card->mp_rd_bitmap & (1 << card->curr_rd_port)) {
--			card->mp_rd_bitmap &= (u32)
--						(~(1 << card->curr_rd_port));
--			*port = card->curr_rd_port;
-+		return 0;
-+	}
- 
--			if (++card->curr_rd_port == card->max_ports)
--				card->curr_rd_port = reg->start_rd_port;
--		} else {
--			return -1;
--		}
-+	if (!(card->mp_rd_bitmap & (1 << card->curr_rd_port)))
-+		return -1;
-+
-+	/* We are now handling the SDIO data ports */
-+	card->mp_rd_bitmap &= (u32)(~(1 << card->curr_rd_port));
-+	*port = card->curr_rd_port;
-+
-+	if (++card->curr_rd_port == card->max_ports)
-+		card->curr_rd_port = reg->start_rd_port;
-+
-+	dev_dbg(adapter->dev,
-+		"data: port=%d mp_rd_bitmap=0x%08x -> 0x%08x\n",
-+		*port, rd_bitmap, card->mp_rd_bitmap);
- 
--		dev_dbg(adapter->dev,
--			"data: port=%d mp_rd_bitmap=0x%08x -> 0x%08x\n",
--			*port, rd_bitmap, card->mp_rd_bitmap);
--	}
- 	return 0;
- }
- 
--- 
-1.8.2.3
-
+On Fri, May 24, 2013 at 10:09:15AM -0700, Sarah Sharp wrote:
+> Do we have support for the new extensions for USB communication devices
+> that use the Mobile Broadband Interface Model (MBIM) spec?
+> 
+> http://www.usb.org/developers/devclass_docs/MBIM10Errata1.zip
+> 
+> The spec was released pretty recently, which is why I'm asking on the
+> mailing lists, rather than digging around the kernel tree for a driver.
+> 
+> Sarah Sharp
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
