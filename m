@@ -1,53 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:33335 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932568Ab3E3Lmz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 07:42:55 -0400
-Received: by mail-bk0-f43.google.com with SMTP id jm2so85153bkc.16
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 04:42:54 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 30 May 2013 19:42:54 +0800
-Message-ID: <CAPgLHd9e+T7UVET28Xe3RP05s2jVJdLx4TRtw3V635+HnKjnZA@mail.gmail.com> (sfid-20130530_134323_516370_5B1F96EA)
-Subject: [PATCH -next] cw1200: use module_spi_driver to simplify the code
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: pizza@shaftnet.org, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mout.gmx.net ([212.227.17.21]:64381 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760076Ab3EXKSj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 May 2013 06:18:39 -0400
+Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MEYeV-1UhgkG45Pt-00FnCW for
+ <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 12:18:38 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 1/2] ath9k: remove useless flag conversation.
+Date: Fri, 24 May 2013 12:18:30 +0200
+Message-Id: <1369390711-992-2-git-send-email-linux@rempel-privat.de> (sfid-20130524_121844_557704_4725B427)
+In-Reply-To: <1369390711-992-1-git-send-email-linux@rempel-privat.de>
+References: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
+ <1369390711-992-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+some flags used only outside of ath9k - In this case we can use
+"enum mac80211_rx_flags" and pass it upstream without extra
+conversation.
 
-module_spi_driver() makes the code simpler by eliminating
-boilerplate code.
-
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/cw1200/cw1200_spi.c | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |  5 +++--
+ drivers/net/wireless/ath/ath9k/mac.c        | 11 +++++++----
+ drivers/net/wireless/ath/ath9k/mac.h        |  1 +
+ drivers/net/wireless/ath/ath9k/recv.c       |  5 +----
+ 4 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
-index 04af685..1e6c58d 100644
---- a/drivers/net/wireless/cw1200/cw1200_spi.c
-+++ b/drivers/net/wireless/cw1200/cw1200_spi.c
-@@ -464,17 +464,4 @@ static struct spi_driver spi_driver = {
- 	},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 301bf72..5163abd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -469,6 +469,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 
+ 	rxs->rs_status = 0;
+ 	rxs->rs_flags =  0;
++	rxs->flag =  0;
+ 
+ 	rxs->rs_datalen = rxsp->status2 & AR_DataLen;
+ 	rxs->rs_tstamp =  rxsp->status3;
+@@ -493,8 +494,8 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 	rxs->rs_isaggr = (rxsp->status11 & AR_RxAggr) ? 1 : 0;
+ 	rxs->rs_moreaggr = (rxsp->status11 & AR_RxMoreAggr) ? 1 : 0;
+ 	rxs->rs_antenna = (MS(rxsp->status4, AR_RxAntenna) & 0x7);
+-	rxs->rs_flags  = (rxsp->status4 & AR_GI) ? ATH9K_RX_GI : 0;
+-	rxs->rs_flags  |= (rxsp->status4 & AR_2040) ? ATH9K_RX_2040 : 0;
++	rxs->flag  |= (rxsp->status4 & AR_GI) ? RX_FLAG_SHORT_GI : 0;
++	rxs->flag  |= (rxsp->status4 & AR_2040) ? RX_FLAG_40MHZ : 0;
+ 
+ 	rxs->evm0 = rxsp->status6;
+ 	rxs->evm1 = rxsp->status7;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 498fee0..a52081d 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -547,6 +547,7 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 
+ 	rs->rs_status = 0;
+ 	rs->rs_flags = 0;
++	rs->flag = 0;
+ 
+ 	rs->rs_datalen = ads.ds_rxstatus1 & AR_DataLen;
+ 	rs->rs_tstamp = ads.AR_RcvTimestamp;
+@@ -586,10 +587,12 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 	rs->rs_moreaggr =
+ 		(ads.ds_rxstatus8 & AR_RxMoreAggr) ? 1 : 0;
+ 	rs->rs_antenna = MS(ads.ds_rxstatus3, AR_RxAntenna);
+-	rs->rs_flags =
+-		(ads.ds_rxstatus3 & AR_GI) ? ATH9K_RX_GI : 0;
+-	rs->rs_flags |=
+-		(ads.ds_rxstatus3 & AR_2040) ? ATH9K_RX_2040 : 0;
++
++	/* directly mapped flags for ieee80211_rx_status */
++	rs->flag |=
++		(ads.ds_rxstatus3 & AR_GI) ? RX_FLAG_SHORT_GI : 0;
++	rs->flag |=
++		(ads.ds_rxstatus3 & AR_2040) ? RX_FLAG_40MHZ : 0;
+ 
+ 	if (ads.ds_rxstatus8 & AR_PreDelimCRCErr)
+ 		rs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 5865f92..3f1e775 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -149,6 +149,7 @@ struct ath_rx_status {
+ 	u32 evm2;
+ 	u32 evm3;
+ 	u32 evm4;
++	u32 flag; /* see enum mac80211_rx_flags */
  };
  
--/* Init Module function -> Called by insmod */
--static int __init cw1200_spi_init(void)
--{
--	return spi_register_driver(&spi_driver);
--}
--
--/* Called at Driver Unloading */
--static void __exit cw1200_spi_exit(void)
--{
--	spi_unregister_driver(&spi_driver);
--}
--
--module_init(cw1200_spi_init);
--module_exit(cw1200_spi_exit);
-+module_spi_driver(spi_driver);
+ struct ath_htc_rx_status {
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 8be2b5d..b4b758d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -868,10 +868,7 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	if (rx_stats->rs_rate & 0x80) {
+ 		/* HT rate */
+ 		rxs->flag |= RX_FLAG_HT;
+-		if (rx_stats->rs_flags & ATH9K_RX_2040)
+-			rxs->flag |= RX_FLAG_40MHZ;
+-		if (rx_stats->rs_flags & ATH9K_RX_GI)
+-			rxs->flag |= RX_FLAG_SHORT_GI;
++		rxs->flag |= rx_stats->flag;
+ 		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
+ 		return 0;
+ 	}
+-- 
+1.8.1.2
 
