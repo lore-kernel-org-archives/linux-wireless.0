@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f44.google.com ([209.85.210.44]:47567 "EHLO
-	mail-da0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873Ab3ECCgX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 22:36:23 -0400
-Received: by mail-da0-f44.google.com with SMTP id z8so587459daj.31
-        for <linux-wireless@vger.kernel.org>; Thu, 02 May 2013 19:36:22 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>, me@bobcopeland.com,
-	open80211s <devel@lists.open80211s.org>,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [RFC 06/12] mac80211: notify bridge when leaving mesh
-Date: Thu,  2 May 2013 19:33:56 -0700
-Message-Id: <1367548442-8229-7-git-send-email-thomas@cozybit.com> (sfid-20130503_043626_076542_16643620)
-In-Reply-To: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
+Received: from tex.lwn.net ([70.33.254.29]:42340 "EHLO vena.lwn.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751514Ab3EXXSx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 May 2013 19:18:53 -0400
+Date: Fri, 24 May 2013 17:18:46 -0600
+From: Jake Edge <jake@lwn.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx
+ rejection
+Message-ID: <20130524171846.54f3d0be@chukar.edge2.net> (sfid-20130525_011909_310230_C37698EB)
+In-Reply-To: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
+References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After turning carrier off, any parent bridge interface
-needs to be notified. Otherwise we would see a panic when
-attempting to transmit frames on a mesh interface which
-hadn't yet been put down.
+On Thu, 23 May 2013 14:20:56 +0200 Stanislaw Gruszka wrote:
+> Jake, please test this set and check if it not cause association
+> problems you reported earlier this month.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh.c |    3 +++
- 1 file changed, 3 insertions(+)
+I won't be able to get to this for 10 days or so ... I just got to
+Japan, so the AP in question is thousands of miles east :)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index eac9988..271ddc9 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -993,6 +993,9 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	struct beacon_data *bcn;
- 
- 	netif_carrier_off(sdata->dev);
-+	if (sdata->dev->priv_flags & IFF_BRIDGE_PORT)
-+		/* stop bridge transmissions */
-+		call_netdevice_notifiers(NETDEV_CHANGE, sdata->dev);
- 
- 	/* stop the beacon */
- 	ifmsh->mesh_id_len = 0;
+maybe they will use passive channel(s) at LinuxCon Japan on the
+wireless?  Not sure, but if I can figure that out, I'll try out the
+code ...
+
+jake
+
 -- 
-1.7.10.4
-
+Jake Edge - LWN - jake@lwn.net - http://lwn.net
