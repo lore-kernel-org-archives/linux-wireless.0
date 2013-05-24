@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40694 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869Ab3EXU06 (ORCPT
+Received: from canardo.mork.no ([148.122.252.1]:37027 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755650Ab3EXTIw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 16:26:58 -0400
-Message-ID: <1369427208.8290.35.camel@jlt4.sipsolutions.net> (sfid-20130524_222702_045026_3AB62EF6)
-Subject: Re: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx
- rejection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Jake Edge <jake@lwn.net>
-Date: Fri, 24 May 2013 22:26:48 +0200
-In-Reply-To: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
-References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 24 May 2013 15:08:52 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	"Ismail\, Rahman" <abdul.r.ismail@intel.com>,
+	"Wallick\, Stephanie S" <stephanie.s.wallick@intel.com>
+Subject: Re: Mobile Broadband Interface Model (MBIM) support?
+In-Reply-To: <20130524170915.GA15788@xanatos> (Sarah Sharp's message of "Fri,
+	24 May 2013 10:09:15 -0700")
+References: <20130524170915.GA15788@xanatos>
+Date: Fri, 24 May 2013 21:08:44 +0200
+Message-ID: <87zjvkdwlf.fsf@nemi.mork.no> (sfid-20130524_210857_040011_7AE56FFF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-23 at 14:20 +0200, Stanislaw Gruszka wrote:
-> Jake, please test this set and check if it not cause association
-> problems you reported earlier this month.
-> 
-> Please apply it together with this mac80211 patch:
-> http://marc.info/?l=linux-wireless&m=136879090123023&w=2 
-> which I already posted and is queued to upstream. Not having
-> it may cause troubles and influence negatively this set test.
-> 
-> Johannes, is need to check beacon bssid or even if rx frame
-> is a beacon to unblock queues? I think if we receive any frame
-> (not necessary beacon or our bssid beacon) on passive channel,
-> that mean we can use that channel. But that depend how firmware
-> is implemented, if firmware require our bssid beacon to unblock
-> channel, driver of course need that too.
+[resending due to an unreliable smtp smarthost - apologies if you
+ receive any duplicates]
 
-I _think_ any frame with good CRC will do, but I'm not entirely sure for
-3945/4965.
+Sarah Sharp <sarah.a.sharp@linux.intel.com> writes:
 
-johannes
+> Do we have support for the new extensions for USB communication devices
+> that use the Mobile Broadband Interface Model (MBIM) spec?
 
+We do. See drivers/net/usb/cdc_mbim.c. It's a usbnet minidriver based on
+reusing parts of cdc_ncm.  It should be fairly complete, but the IP
+session multiplexing and Device Service Streams features are not tested
+on actual devices.  I just haven't found any device with those features
+yet.  Any hints are appreciated...
+
+The management protocol implementation is completely delegated to
+userspace. The driver isn't involved at all. One implementation is
+libmbim, which just had its 1.0.0 release:
+http://www.freedesktop.org/software/libmbim/
+
+The next ModemManager release will support MBIM devices using this
+library.
+
+> http://www.usb.org/developers/devclass_docs/MBIM10Errata1.zip
+
+Thanks for that pointer.  I haven't seen the errata before. Will study
+it, but fortunately we are protected against anything involving
+management protocol updates.
+
+> The spec was released pretty recently, which is why I'm asking on the
+> mailing lists, rather than digging around the kernel tree for a driver.
+
+Well, a "git grep MBIM drivers/" would be enough.   But I'm happy to
+answer your questions :)
+
+
+Bjørn
