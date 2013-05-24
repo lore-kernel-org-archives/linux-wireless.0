@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58673 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755656Ab3EBAAd (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40700 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752310Ab3EXU2s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 May 2013 20:00:33 -0400
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r4200WLo024833
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 1 May 2013 17:00:33 -0700
-Message-ID: <5181ACA0.808@candelatech.com> (sfid-20130502_020047_306084_9B21A3B6)
-Date: Wed, 01 May 2013 17:00:32 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: iw: BUG:  Lists more than one phy in info request.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 24 May 2013 16:28:48 -0400
+Message-ID: <1369427323.8290.37.camel@jlt4.sipsolutions.net> (sfid-20130524_222904_312288_15E26AF0)
+Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to
+ 1672c0e3
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Jake Edge <jake@lwn.net>, linux-wireless@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>
+Date: Fri, 24 May 2013 22:28:43 +0200
+In-Reply-To: <20130522115908.GA22547@redhat.com>
+References: <20130505143803.7e46e4c6@chukar.edge2.net>
+	 <20130506123805.GA1602@redhat.com>
+	 <20130506083759.556dac76@chukar.edge2.net>
+	 <20130506153044.GB1602@redhat.com>
+	 <1367854279.8434.13.camel@jlt4.sipsolutions.net>
+	 <1367855046.8434.16.camel@jlt4.sipsolutions.net>
+	 <20130507084241.GA1581@redhat.com>
+	 <1367934810.8328.30.camel@jlt4.sipsolutions.net>
+	 <20130507153525.GB1576@redhat.com> <20130522115908.GA22547@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When running this command on a system with two wiphy devices
-(renamed from phy0, phy1), the command below dumps info for
-both wiphy0 and wiphy1
+On Wed, 2013-05-22 at 13:59 +0200, Stanislaw Gruszka wrote:
 
-iw phy wiphy1 info
+> > AFICT, we wake queues only if beacon arrives or mac80211 call drv_config
+> > with BSS_CHANGED_IDLE. I'm not sure if the latter prevent stuck. 
+> 
+> It should prevent stuck. When we fail to auth, drv_config() with BSS_CHANGED_IDLE
+> is called via:
+> 
+> ieee80211_destroy_auth_data ->
+> ieee80211_vif_release_channel ->
+> __ieee80211_vif_release_channel ->
+> ieee80211_unassign_vif_chanctx ->
+> ieee80211_bss_info_change_notify
+> 
+> But there is need to have ->vif.chanctx_conf valid in 
+> __ieee80211_vif_release_channel(), where is below condition:
+> 
+>         conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+>                                          lockdep_is_held(&local->chanctx_mtx));
+>         if (!conf)
+>                 return;
+> 
+> I'm not sure if that always happen. Perhaps would be better to change
+> BSS_CHANGED_IDLE to BSS_CHANGED_BSSID, which is called directly from
+> ieee80211_destroy_auth_data() ?
 
-iw version is latest from git.
+I don't think the "!conf" can hit in this case, since to even try to
+associate you have to have a channel context assigned.
 
-kernel is 3.9.0+
-
-Using the 'standard' iw on Fedora 14 (version 0.9.22)
-it behaves as I expected and only dumps info for wiphy1.
-
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
