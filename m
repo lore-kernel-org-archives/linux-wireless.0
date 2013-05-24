@@ -1,60 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32299 "EHLO mx1.redhat.com"
+Received: from mout.gmx.net ([212.227.17.21]:49195 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754977Ab3EFP3R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 11:29:17 -0400
-Date: Mon, 6 May 2013 17:30:45 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jake Edge <jake@lwn.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to
- 1672c0e3
-Message-ID: <20130506153044.GB1602@redhat.com> (sfid-20130506_172937_479092_20758F17)
-References: <20130505143803.7e46e4c6@chukar.edge2.net>
- <20130506123805.GA1602@redhat.com>
- <20130506083759.556dac76@chukar.edge2.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130506083759.556dac76@chukar.edge2.net>
+	id S1760000Ab3EXKSj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 May 2013 06:18:39 -0400
+Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0M94oF-1Ul08O1iIf-00CRPi for
+ <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 12:18:37 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 0/2] ath9k: STBC Rx monitoring
+Date: Fri, 24 May 2013 12:18:29 +0200
+Message-Id: <1369390711-992-1-git-send-email-linux@rempel-privat.de> (sfid-20130524_121842_137911_9B67EBC3)
+In-Reply-To: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
+References: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 06, 2013 at 08:37:59AM -0600, Jake Edge wrote:
-> On Mon, 6 May 2013 14:38:06 +0200 Stanislaw Gruszka wrote:
-> 
-> > > I bisected the problem to:
-> > > 
-> > > commit 1672c0e31917f49d31d30d79067103432bc20cc7
-> 
-> > > What more information is needed from me?  I may still mess around
-> > > with trying to revert that patch just to nail it down for sure, but
-> > > two separate bisection exercises ended up at the same place.
-> > 
-> > Below patch should restore old mac80211 behaviour, by stop
-> > telling mac that 4965 supports TX ACK status. Does it help?
-> 
-> Yup, that fixed the problem, thanks.  So did reverting Johannes's
-> commit above, fwiw, but just turning off that flag in 3.9 as your patch
-> does fixes it.
-> 
-> seems like that needs to head to Linus and the stable folks ...
+this are two remaining patches to allow STBC Rx monitoring
+on ath9k devices.
+This patches depend on currently applied:
+[PATCH v4 1/3] mac80211: add STBC flag for radiotap
 
-We can fix the problem that way, but I'm not sure if that is the best
-way. IEEE80211_HW_REPORTS_TX_ACK_STATUS is nice to have as long hardware
-really supports that feature.
+Oleksij Rempel (2):
+  ath9k: remove useless flag conversation.
+  ath9k: check for Rx-STBC flag and pass it to ieee80211
 
-I thought this happen because 4965 firmware does not mark tx status
-ack for PROBE_REQUEST frame, because it is not acked by standard 
-ACK frame, but by PROBE_RESPONSE frame. But if so, I would also see
-the breakage on my setup, but I don't - it works quite well here. So
-perhaps something different is broken on commit
-1672c0e31917f49d31d30d79067103432bc20cc7 , that make we can not
-associate with some APs.
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |  5 +++--
+ drivers/net/wireless/ath/ath9k/init.c       |  9 +++++++--
+ drivers/net/wireless/ath/ath9k/mac.c        | 16 ++++++++++++----
+ drivers/net/wireless/ath/ath9k/mac.h        |  4 +++-
+ drivers/net/wireless/ath/ath9k/recv.c       |  5 +----
+ 5 files changed, 26 insertions(+), 13 deletions(-)
 
-Let me think a bit longer about this issue. Also maybe Johannes will
-have some thoughts.
+-- 
+1.8.1.2
 
-Stanislaw 
