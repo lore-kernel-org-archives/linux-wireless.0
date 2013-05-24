@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:64355 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496Ab3EaCKu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 22:10:50 -0400
-Received: by mail-pd0-f177.google.com with SMTP id u11so1382354pdi.36
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:10:49 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 15/40] crda: use gcry_sexp_release() on crda_verify_db_signature()
-Date: Thu, 30 May 2013 19:09:04 -0700
-Message-Id: <1369966169-23640-16-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_041052_564372_AAAA624C)
-In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mout.gmx.net ([212.227.15.15]:49421 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754087Ab3EXLf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 May 2013 07:35:29 -0400
+Received: from mailout-de.gmx.net ([10.1.76.17]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MW5VH-1UzKBd1pqT-00XK3q for
+ <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 13:35:28 +0200
+Message-ID: <519F507C.6090000@rempel-privat.de> (sfid-20130524_133533_108658_89C09372)
+Date: Fri, 24 May 2013 13:35:24 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Oleksij Rempel <linux@rempel-privat.de>
+CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath9k: check for Rx-STBC flag and pass it to ieee80211
+References: <1368949136-6079-1-git-send-email-linux@rempel-privat.de> <1369390711-992-1-git-send-email-linux@rempel-privat.de> <1369390711-992-3-git-send-email-linux@rempel-privat.de>
+In-Reply-To: <1369390711-992-3-git-send-email-linux@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Am 24.05.2013 12:18, schrieb Oleksij Rempel:
+> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+> ---
+>   drivers/net/wireless/ath/ath9k/init.c | 9 +++++++--
+>   drivers/net/wireless/ath/ath9k/mac.c  | 5 +++++
+>   drivers/net/wireless/ath/ath9k/mac.h  | 3 ++-
+>   3 files changed, 14 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index aba4151..7739b05 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -769,8 +769,13 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+>   		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+>   		IEEE80211_HW_SUPPORTS_RC_TABLE;
+>
+> -	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+> -		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+> +	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+> +		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+> +
+> +		if (AR_SREV_9280_20_OR_LATER(ah))
+> +			hw->radiotap_mcs_details |=
+> +				IEEE80211_RADIOTAP_MCS_HAVE_STBC;
 
-This fixes 6 of 10 reported valgrind errors when
-crda_verify_db_signature() is used through regdbdump.
+comment for my self. i forgot to include <net/ieee80211_radiotap.h>
+for IEEE80211_RADIOTAP_MCS_HAVE_STBC. This patch is broken.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- reglib.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/reglib.c b/reglib.c
-index 17e3f31..634525b 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -135,13 +135,14 @@ int crda_verify_db_signature(uint8_t *db, int dblen, int siglen)
- 	if (gcry_sexp_build(&data, NULL, "(data (flags pkcs1) (hash sha1 %b))",
- 			    20, hash)) {
- 		fprintf(stderr, "Failed to build data S-expression.\n");
--		goto out;
-+		return ok;
- 	}
- 
- 	if (gcry_sexp_build(&signature, NULL, "(sig-val (rsa (s %b)))",
- 			    siglen, db + dblen)) {
- 		fprintf(stderr, "Failed to build signature S-expression.\n");
--		goto out;
-+		gcry_sexp_release(data);
-+		return ok;
- 	}
- 
- 	for (i = 0; (i < sizeof(keys)/sizeof(keys[0])) && (!ok); i++) {
-@@ -161,12 +162,15 @@ int crda_verify_db_signature(uint8_t *db, int dblen, int siglen)
- 		}
- 
- 		ok = gcry_pk_verify(signature, data, rsa) == 0;
-+		gcry_sexp_release(rsa);
- 	}
- 
- 	if (!ok)
- 		fprintf(stderr, "Database signature verification failed.\n");
- 
- out:
-+	gcry_sexp_release(data);
-+	gcry_sexp_release(signature);
- 	return ok;
- }
- #endif /* USE_GCRYPT */
 -- 
-1.7.10.4
-
+Regards,
+Oleksij
