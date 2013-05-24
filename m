@@ -1,111 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36362 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752387Ab3EJMIQ (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:48718 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751707Ab3EXXOF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 08:08:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: greearb@candelatech.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/4] cfg80211: move cfg80211_get_dev_from_ifindex under wext
-Date: Fri, 10 May 2013 14:08:06 +0200
-Message-Id: <1368187689-29706-2-git-send-email-johannes@sipsolutions.net> (sfid-20130510_140826_312853_2AF9F511)
-In-Reply-To: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
-References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 24 May 2013 19:14:05 -0400
+Received: by mail-wi0-f174.google.com with SMTP id c10so170884wiw.7
+        for <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 16:14:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1369432740.13623.12.camel@johannes>
+References: <1368233453-10581-1-git-send-email-ashok@cozybit.com>
+ <1368233453-10581-3-git-send-email-ashok@cozybit.com> <1369432740.13623.12.camel@johannes>
+From: Ashok Nagarajan <ashok@cozybit.com>
+Date: Fri, 24 May 2013 16:13:43 -0700
+Message-ID: <CACcxo+pWnCFW3wvdjhHZvhb065Trup1KL=8fj7bbBhC5m4evqQ@mail.gmail.com> (sfid-20130525_011417_350593_8B9A7EA2)
+Subject: Re: [PATCH 3/3] {nl,mac,cfg}80211: Allow user to configure basic
+ rates for mesh
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Johannes,
 
-The function is only used and needed by the wext code
-for scanning, so move it there.
+On Fri, May 24, 2013 at 2:59 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Sorry for leaving this open for so long. I think it didn't hurt since
+> the merge window was open anyway.
+>
+>> + * @basic_rates: per-band bitmap of basic rates to use when creating the mesh
+>
+> Does per-band really make sense? The mesh channel is also determined at
+> join time.
+>
+>>  static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+>>  {
+>>       struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>> @@ -7460,6 +7487,22 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+>>                           nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
+>>                       return -EINVAL;
+>>
+>> +     if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
+>
+> I think you should consider allowing this attribute only if the channel
+> is also specified (NL80211_ATTR_WIPHY_FREQ, parsed below), and not make
+> it nested with rates for both bands but just the selected band.
+>
+Yes, I think by this approach, we eliminate the need for the user to
+provide rates for both bands and also not require to have a per-band
+for basic_rates.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c | 21 ---------------------
- net/wireless/core.h |  4 ----
- net/wireless/scan.c | 21 +++++++++++++++++++++
- 3 files changed, 21 insertions(+), 25 deletions(-)
+Said that, I am wondering why give mcast_rate for both bands, but
+basic_rates only for one band?
+> johannes
+>
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 68f0c96..4e0b52f 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -90,27 +90,6 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx)
- 	return &rdev->wiphy;
- }
- 
--struct cfg80211_registered_device *
--cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
--{
--	struct cfg80211_registered_device *rdev = ERR_PTR(-ENODEV);
--	struct net_device *dev;
--
--	mutex_lock(&cfg80211_mutex);
--	dev = dev_get_by_index(net, ifindex);
--	if (!dev)
--		goto out;
--	if (dev->ieee80211_ptr) {
--		rdev = wiphy_to_dev(dev->ieee80211_ptr->wiphy);
--		mutex_lock(&rdev->mtx);
--	} else
--		rdev = ERR_PTR(-ENODEV);
--	dev_put(dev);
-- out:
--	mutex_unlock(&cfg80211_mutex);
--	return rdev;
--}
--
- /* requires cfg80211_mutex to be held */
- int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 			char *newname)
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index fd35dae..95b2907 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -164,10 +164,6 @@ int get_wiphy_idx(struct wiphy *wiphy);
- /* requires cfg80211_rdev_mutex to be held! */
- struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx);
- 
--/* identical to cfg80211_get_dev_from_info but only operate on ifindex */
--extern struct cfg80211_registered_device *
--cfg80211_get_dev_from_ifindex(struct net *net, int ifindex);
--
- int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
- 			  struct net *net);
- 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index fd99ea4..2ce44a7 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1040,6 +1040,27 @@ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
- EXPORT_SYMBOL(cfg80211_unlink_bss);
- 
- #ifdef CONFIG_CFG80211_WEXT
-+static struct cfg80211_registered_device *
-+cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
-+{
-+	struct cfg80211_registered_device *rdev = ERR_PTR(-ENODEV);
-+	struct net_device *dev;
-+
-+	mutex_lock(&cfg80211_mutex);
-+	dev = dev_get_by_index(net, ifindex);
-+	if (!dev)
-+		goto out;
-+	if (dev->ieee80211_ptr) {
-+		rdev = wiphy_to_dev(dev->ieee80211_ptr->wiphy);
-+		mutex_lock(&rdev->mtx);
-+	} else
-+		rdev = ERR_PTR(-ENODEV);
-+	dev_put(dev);
-+ out:
-+	mutex_unlock(&cfg80211_mutex);
-+	return rdev;
-+}
-+
- int cfg80211_wext_siwscan(struct net_device *dev,
- 			  struct iw_request_info *info,
- 			  union iwreq_data *wrqu, char *extra)
--- 
-1.8.0
 
+
+--
+Ashok Raj Nagarajan,
+cozybit Inc.
+http://www.cozybit.com
