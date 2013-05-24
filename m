@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1466 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759328Ab3E2QjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 12:39:24 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for 3.10 15/16] brcmfmac: Fix endless loop when
- brcmf_fws_commit_skb fails.
-Date: Wed, 29 May 2013 18:39:05 +0200
-Message-ID: <1369845546-31950-16-git-send-email-arend@broadcom.com> (sfid-20130529_183946_107360_2C364165)
-In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
-References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29860 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758000Ab3EXBqy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 May 2013 21:46:54 -0400
+From: "Deng, Flavian" <flaviand@qti.qualcomm.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	"Zhou, Robie" <rzhou@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: ath9k_htc p2p finding issue
+Date: Fri, 24 May 2013 01:46:52 +0000
+Message-ID: <9517E2FCC9F9DF4183C1EF703F5BC36D0E7E7E6D@NASANEXD02D.na.qualcomm.com> (sfid-20130524_034658_294779_DD735951)
+References: <A75A50687AD91044B3B81AB78993F668447D2F7F@NASANEXD02E.na.qualcomm.com>
+ <519DCF76.8050704@broadcom.com>
+In-Reply-To: <519DCF76.8050704@broadcom.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 8b2297a..5d66f3a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1914,7 +1914,8 @@ static void brcmf_fws_dequeue_worker(struct work_struct *worker)
- 					brcmf_fws_return_credits(fws, fifo, 1);
- 					break;
- 				}
--				brcmf_fws_commit_skb(fws, fifo, skb);
-+				if (brcmf_fws_commit_skb(fws, fifo, skb))
-+					break;
- 				if (fws->bus_flow_blocked)
- 					break;
- 			}
--- 
-1.7.10.4
-
-
+SGkgQXJlbmQsDQpUaGFua3MgZm9yIHlvdXIgc3VnZ2VzdGlvbiwgYnV0IGl0IGxvb2tzIHRoZSBh
+dGg5a19odGMgZGlkbid0IGdldCBwcm9iZSByZXF1ZXN0IGZyYW1lLiBJIGFkZGVkIGRlYnVnIG1l
+c3NhZ2UgaW4gImF0aDlrX3J4X3Rhc2tsZXQoKSIoaHRjX2Rydl90eHJ4LmMpLCBidXQgbm8gcHJv
+YmUgcmVxdWVzdCBmcmFtZSBhcnJpdmVkIHRoZXJlLg0KQWZ0ZXIgbW9yZSB0ZXN0LCBpdCBsb29r
+cyB0aGlzIGlzc3VlIG9jY3VycmVkIGFmdGVyICJjb21wYXQtd2lyZWxlc3MtMy42LjItMSIsIGFu
+ZCB0aGlzIGlzc3VlIGNvdWxkbid0IGJlIG9ic2VydmVkIGluICJjb21wYXQtd2lyZWxlc3MtMy41
+LjQtMSIuDQoNCkRvIHlvdSBoYXZlIG90aGVyIHN1Z2dlc3Rpb24gZm9yIHRoaXMgaXNzdWU/DQoN
+ClRoYW5rcw0KRmxhdmlhbiBEZW5nDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
+b206IEFyZW5kIHZhbiBTcHJpZWwgW21haWx0bzphcmVuZEBicm9hZGNvbS5jb21dIA0KU2VudDog
+MjAxM8TqNdTCMjPI1SAxNjoxMw0KVG86IFpob3UsIFJvYmllDQpDYzogbGludXgtd2lyZWxlc3NA
+dmdlci5rZXJuZWwub3JnOyBEZW5nLCBGbGF2aWFuDQpTdWJqZWN0OiBSZTogYXRoOWtfaHRjIHAy
+cCBmaW5kaW5nIGlzc3VlDQoNCk9uIDA1LzIzLzIwMTMgMDc6NTggQU0sIFpob3UsIFJvYmllIHdy
+b3RlOg0KPiBIaSBhbGwsDQo+DQo+IFdlIG1lZXQgc29tZSBwcm9ibGVtIHdoZW4gdHJ5IFAyUCBi
+eSB1c2luZyBhdGg5a19odGMgY29tcGF0LXdpcmVsZXNzLXYzLjYuOC0xLg0KPg0KPiBXaGVuIHVz
+aW5nIHRoZSBjb21wYXQtd2lyZWxlc3MtdjMuNi44LTEsIEFSOTI3MSBjb3VsZCBmaW5kIG90aGVy
+IFAyUCBkZXZpY2VzLCBidXQgb3RoZXIgUDJQIGRldmljZXMgY291bGRuJ3QgZmluZCBBUjkyNzEg
+KHJ1bnMgYXRoOWtfaHRjKSBiZWNhdXNlIGRyaXZlciBjb3VsZG4ndCByZXBvcnQgUHJvYmUgUmVx
+dWVzdCB0byB3cGFfc3VwcGxpY2FudC4NCj4NCj4gQW5kIHRoaXMgaXNzdWUgY291bGQgbm90IGJl
+IG9ic2VydmVkIHdoZW4gdXNpbmcgY29tcGF0LXdpcmVsZXNzLXYzLjAuOS0xLCBieSBjb21wYXJl
+IHdpdGggY29tcGF0LXdpcmVsZXNzLXYzLjAuOS0xLCBBVEg5SyBSWCBmaWx0ZXIgaXMgIHNldCBj
+b3JyZWN0bHkgYWZ0ZXIgZ290ICJSZXBvcnQgUHJvYmUgUmVxdWVzdCIgY29tbWFuZCBmcm9tIHdw
+YV9zdXBwbGljYW50LCBidXQgQVRIOUsgZHJpdmVyIGNvdWxkbid0IGdldCAiUHJvYmUgUmVxdWVz
+dCIgZnJhbWUoSSBhZGQgZGVidWcgbXNnIGluIGllZWU4MDIxMV9yeF9oYW5kbGVycygpIGZ1bmN0
+aW9uKS4NCj4NCj4gPDc+WyAgMjA1Ljc4NDExOF0gW0RGX0RCR10gICAgW2llZWU4MDIxMV9tZ210
+X2ZyYW1lX3JlZ2lzdGVyXSA6IGxvY2FsLT5wcm9iZV9yZXFfcmVnID0gMTsNCj4gPDc+WyAgMjA1
+LjgzMDIzMl0gW0RGX0RCR10gICAgW2F0aDlrX2h0Y19vcG1vZGVfaW5pdF0gICAgcmZpbHQgPSAw
+eDE3OyAgIC0+ICAgYXRoOWtfaHdfc2V0cnhmaWx0ZXINCj4gPDc+WyAgMjA1LjgzMjg1OF0gW0RG
+X0RCR10gICAgW2llZWU4MDIxMV9jb25maWd1cmVfZmlsdGVyXSA6IG5ld19mbGFncyB8PSBGSUZf
+UFJPQkVfUkVROw0KPiA8Nz5bICAyMDUuODMzMTAxXSBbREZfREJHXSAgICBbYXRoOWtfaHRjX2Nv
+bmZpZ3VyZV9maWx0ZXJdICAgIHJmaWx0ID0gMHgyODc7ICAgLT4gICBhdGg5a19od19zZXRyeGZp
+bHRlcg0KPiA8Nz5bICAyMDUuODc4MjMwXSBbREZfREJHXSAgICBbYXRoOWtfaHRjX29wbW9kZV9p
+bml0XSAgICByZmlsdCA9IDB4Mjg3OyAgIC0+ICAgYXRoOWtfaHdfc2V0cnhmaWx0ZXINCj4gPDc+
+WyAgMjA1Ljg4MjU1Nl0gW0RGX0RCR10gICAgW2llZWU4MDIxMV9jb25maWd1cmVfZmlsdGVyXSA6
+IG5ld19mbGFncyB8PSBGSUZfUFJPQkVfUkVROw0KPiA8Nz5bICAyMDUuODgzNjA2XSBbREZfREJH
+XSAgICBbYXRoOWtfaHRjX2NvbmZpZ3VyZV9maWx0ZXJdICAgIHJmaWx0ID0gMHgyODc7ICAgLT4g
+ICBhdGg5a19od19zZXRyeGZpbHRlcg0KPg0KPiA8Nz5bICAyMDYuMDEwODg2XSBbREZfREJHXSAg
+ICBbaWVlZTgwMjExX21nbXRfZnJhbWVfcmVnaXN0ZXJdIDogbG9jYWwtPnByb2JlX3JlcV9yZWcg
+PSAwOw0KPiA8Nz5bICAyMDYuMDM2MjM3XSBbREZfREJHXSAgICBbYXRoOWtfaHRjX29wbW9kZV9p
+bml0XSAgICByZmlsdCA9IDB4Mjg3OyAgIC0+ICAgYXRoOWtfaHdfc2V0cnhmaWx0ZXINCj4gPDc+
+WyAgMjA2LjA0MzM1N10gW0RGX0RCR10gICAgW2F0aDlrX2h0Y19jb25maWd1cmVfZmlsdGVyXSAg
+ICByZmlsdCA9IDB4MTc7ICAgLT4gICBhdGg5a19od19zZXRyeGZpbHRlcg0KPiA8Nz5bICAyMDYu
+MDQ0MTA3XSBbREZfREJHXSAgICBbYXRoOWtfaHRjX2NvbmZpZ3VyZV9maWx0ZXJdICAgIHJmaWx0
+ID0gMHgxNzsgICAtPiAgIGF0aDlrX2h3X3NldHJ4ZmlsdGVyDQo+IDw3PlsgIDIwNi4wOTAxMDZd
+IFtERl9EQkddICAgIFthdGg5a19odGNfb3Btb2RlX2luaXRdICAgIHJmaWx0ID0gMHgxNzsgICAt
+PiAgIGF0aDlrX2h3X3NldHJ4ZmlsdGVyDQo+IDw3PlsgIDIwNi4xNjA3MzRdIFtERl9EQkddICAg
+IFthdGg5a19odGNfb3Btb2RlX2luaXRdICAgIHJmaWx0ID0gMHgxNzsgICAtPiAgIGF0aDlrX2h3
+X3NldHJ4ZmlsdGVyDQo+IDw3PlsgIDIwNi4yMzA3NDBdIFtERl9EQkddICAgIFthdGg5a19odGNf
+b3Btb2RlX2luaXRdICAgIHJmaWx0ID0gMHgxNzsgICAtPiAgIGF0aDlrX2h3X3NldHJ4ZmlsdGVy
+DQo+DQo+DQo+IERpZCBhbnlvbmUgZXZlciBtZWV0IHRoaXMgaXNzdWU/IEFueSBzdWdnZXN0aW9u
+IGZvciBmdXJ0aGVyIGRlYnVnZ2luZyB0aGlzIGlzc3VlPw0KDQpEaWQgeW91IGNvbmZpcm0gYXRo
+OWtfaHRjIGlzIGhhbmRpbmcgb3ZlciBwcm9iZSByZXF1ZXN0cyB0byBtYWM4MDIxMT8gDQpNaWdo
+dCBiZSB1c2VmdWwgdG8gYWRkIGRlYnVnZ2luZyBpbiBwcmVwYXJlX2Zvcl9oYW5kbGVycygpIGlu
+c3RlYWQuDQoNClJlZ2FyZHMsDQpBcmVuZA0KDQoNCg==
