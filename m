@@ -1,87 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54466 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932907Ab3EGOKm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 10:10:42 -0400
-Message-ID: <1367935836.8328.45.camel@jlt4.sipsolutions.net> (sfid-20130507_161047_821416_4115BC00)
-Subject: Re: [PATCH v6] cfg80211: P2P find phase offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Date: Tue, 07 May 2013 16:10:36 +0200
-In-Reply-To: <1367235610-10375-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1367235610-10375-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1367235610-10375-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.17.21]:54011 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760011Ab3EXKFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 May 2013 06:05:54 -0400
+Received: from mailout-de.gmx.net ([10.1.76.35]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MBHw3-1UnDGE1mE9-00AIWt for
+ <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 12:05:51 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v4 1/3] mac80211: add STBC flag for radiotap
+Date: Fri, 24 May 2013 12:05:45 +0200
+Message-Id: <1369389945-805-1-git-send-email-linux@rempel-privat.de> (sfid-20130524_120557_123056_C3F690BC)
+In-Reply-To: <1369250674.8207.26.camel@jlt4.sipsolutions.net>
+References: <1369250674.8207.26.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Some chips can tell us if received frame was
+encoded with STBC or not. To make this information available
+in user space we can use updated radiotap specification:
+http://www.radiotap.org/defined-fields/MCS
 
-sorry for the delay. Looks good, a few comments below.
+This patch will set number of STBC encoded spatial streams (Nss).
+The HAVE_STBC flag should be provided by driver.
 
-> to perform p2p scan, wpa_supplicant:
-> - perform legacy scan, through driver's cfg80211_ops 'scan' method
-> - configure rx management filter to get probe-request and probe-response frames
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ include/net/ieee80211_radiotap.h | 7 +++++++
+ include/net/mac80211.h           | 4 ++++
+ net/mac80211/rx.c                | 4 ++++
+ 3 files changed, 15 insertions(+)
 
-Does that part make sense? Why should the supplicant be required to
-configure the filter, if the next thing is going to be
-
-> - start p2p find via driver's cfg80211_ops start_p2p_find method
-
-starting the p2p find? I mean, it seems that should implicitly enable
-the filter? Or is there a reason you think this command would be useful
-_without_ enabling the filter??
-
-> +/**
-> + * cfg80211_p2p_find_notify_end - report p2p find phase ended
-> + * @wdev: the wireless device reporting the event
-> + * @gfp: allocation flags
-> + *
-> + * p2p find phase may be ended either unsolicited or in response to
-> + * ops->p2p_stop_find
-> + *
-> + * In any case, if @start_p2p_find from driver's struct cfg80211_ops called,
-> + * @cfg80211_p2p_find_notify_end should be eventually called
-> + */
-> +void cfg80211_p2p_find_notify_end(struct wireless_dev *wdev, gfp_t gfp);
-
-Please clarify whether or not this should be called when a stop is
-explicitly requested by userspace. I don't think it's all that useful,
-and if required maybe cfg80211 should send the event itself instead of
-having the driver do it?
-
-> + * @NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL:
-> + * @NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL: min/max discoverable interval
-> + *	for the p2p find, multiple of 100 TUs, represented as u32
-> + *
-> + *
-
-One blank line is enough :-)
-
-> +	struct cfg80211_p2p_find_params params = {};
-
-> +	attr = info->attrs[NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL];
-> +	if (attr)
-> +		params.min_discoverable_interval = nla_get_u32(attr);
-> +
-> +	attr = info->attrs[NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL];
-> +	if (attr)
-> +		params.max_discoverable_interval = nla_get_u32(attr);
-
-Shouldn't those have better defaults than 0/0? Or should they just be
-required?
-
-> +	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", disc. int. [%d..%d]"
-> +		  ", n_channels %d",
-
-you shouldn't break strings across lines (and in fact checkpatch
-shouldn't warn about 80 cols there, but if it does ignore it)
-
-johannes
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index c399963..c6d07cb 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -269,6 +269,7 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_HAVE_GI		0x04
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FMT		0x08
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FEC		0x10
++#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	0x20
+ 
+ #define IEEE80211_RADIOTAP_MCS_BW_MASK		0x03
+ #define		IEEE80211_RADIOTAP_MCS_BW_20	0
+@@ -278,6 +279,12 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_SGI		0x04
+ #define IEEE80211_RADIOTAP_MCS_FMT_GF		0x08
+ #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
++#define IEEE80211_RADIOTAP_MCS_STBC_MASK	0x60
++#define		IEEE80211_RADIOTAP_MCS_STBC_1	1
++#define		IEEE80211_RADIOTAP_MCS_STBC_2	2
++#define		IEEE80211_RADIOTAP_MCS_STBC_3	3
++
++#define IEEE80211_RADIOTAP_MCS_STBC_SHIFT	5
+ 
+ /* For IEEE80211_RADIOTAP_AMPDU_STATUS */
+ #define IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN		0x0001
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 885898a..16705a9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -805,6 +805,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	on this subframe
+  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+  *	is stored in the @ampdu_delimiter_crc field)
++ * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -832,8 +833,11 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_80MHZ			= BIT(23),
+ 	RX_FLAG_80P80MHZ		= BIT(24),
+ 	RX_FLAG_160MHZ			= BIT(25),
++	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
+ };
+ 
++#define RX_FLAG_STBC_SHIFT		26
++
+ /**
+  * struct ieee80211_rx_status - receive status
+  *
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 8e29526..811dd64 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -258,6 +258,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	pos += 2;
+ 
+ 	if (status->flag & RX_FLAG_HT) {
++		unsigned int stbc;
+ 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
+ 		*pos++ = local->hw.radiotap_mcs_details;
+ 		*pos = 0;
+@@ -267,6 +268,9 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
+ 		if (status->flag & RX_FLAG_HT_GF)
+ 			*pos |= IEEE80211_RADIOTAP_MCS_FMT_GF;
++		stbc = status->flag & RX_FLAG_STBC_MASK;
++		*pos |= (stbc >> RX_FLAG_STBC_SHIFT)
++				<< IEEE80211_RADIOTAP_MCS_STBC_SHIFT;
+ 		pos++;
+ 		*pos++ = status->rate_idx;
+ 	}
+-- 
+1.8.1.2
 
