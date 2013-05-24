@@ -1,65 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:48718 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751707Ab3EXXOF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 19:14:05 -0400
-Received: by mail-wi0-f174.google.com with SMTP id c10so170884wiw.7
-        for <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 16:14:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1369432740.13623.12.camel@johannes>
-References: <1368233453-10581-1-git-send-email-ashok@cozybit.com>
- <1368233453-10581-3-git-send-email-ashok@cozybit.com> <1369432740.13623.12.camel@johannes>
-From: Ashok Nagarajan <ashok@cozybit.com>
-Date: Fri, 24 May 2013 16:13:43 -0700
-Message-ID: <CACcxo+pWnCFW3wvdjhHZvhb065Trup1KL=8fj7bbBhC5m4evqQ@mail.gmail.com> (sfid-20130525_011417_350593_8B9A7EA2)
-Subject: Re: [PATCH 3/3] {nl,mac,cfg}80211: Allow user to configure basic
- rates for mesh
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mout.gmx.net ([212.227.17.21]:55939 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760076Ab3EXKSm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 May 2013 06:18:42 -0400
+Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MKOUK-1UeAOE39nS-001kYo for
+ <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 12:18:40 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 2/2] ath9k: check for Rx-STBC flag and pass it to ieee80211
+Date: Fri, 24 May 2013 12:18:31 +0200
+Message-Id: <1369390711-992-3-git-send-email-linux@rempel-privat.de> (sfid-20130524_121845_309854_63769133)
+In-Reply-To: <1369390711-992-1-git-send-email-linux@rempel-privat.de>
+References: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
+ <1369390711-992-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 9 +++++++--
+ drivers/net/wireless/ath/ath9k/mac.c  | 5 +++++
+ drivers/net/wireless/ath/ath9k/mac.h  | 3 ++-
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
-On Fri, May 24, 2013 at 2:59 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Sorry for leaving this open for so long. I think it didn't hurt since
-> the merge window was open anyway.
->
->> + * @basic_rates: per-band bitmap of basic rates to use when creating the mesh
->
-> Does per-band really make sense? The mesh channel is also determined at
-> join time.
->
->>  static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
->>  {
->>       struct cfg80211_registered_device *rdev = info->user_ptr[0];
->> @@ -7460,6 +7487,22 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
->>                           nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
->>                       return -EINVAL;
->>
->> +     if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
->
-> I think you should consider allowing this attribute only if the channel
-> is also specified (NL80211_ATTR_WIPHY_FREQ, parsed below), and not make
-> it nested with rates for both bands but just the selected band.
->
-Yes, I think by this approach, we eliminate the need for the user to
-provide rates for both bands and also not require to have a per-band
-for basic_rates.
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index aba4151..7739b05 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -769,8 +769,13 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+ 		IEEE80211_HW_SUPPORTS_RC_TABLE;
+ 
+-	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+-		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
++		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
++
++		if (AR_SREV_9280_20_OR_LATER(ah))
++			hw->radiotap_mcs_details |=
++				IEEE80211_RADIOTAP_MCS_HAVE_STBC;
++	}
+ 
+ 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index a52081d..d055e38 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -593,6 +593,11 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 		(ads.ds_rxstatus3 & AR_GI) ? RX_FLAG_SHORT_GI : 0;
+ 	rs->flag |=
+ 		(ads.ds_rxstatus3 & AR_2040) ? RX_FLAG_40MHZ : 0;
++	if (AR_SREV_9280_20_OR_LATER(ah))
++		rs->flag |=
++			(ads.ds_rxstatus3 & AR_STBC) ?
++				/* we can only Nss=1 STBC */
++				(1 << RX_FLAG_STBC_SHIFT) : 0;
+ 
+ 	if (ads.ds_rxstatus8 & AR_PreDelimCRCErr)
+ 		rs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 3f1e775..b02dfce 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -534,7 +534,8 @@ struct ar5416_desc {
+ #define AR_2040             0x00000002
+ #define AR_Parallel40       0x00000004
+ #define AR_Parallel40_S     2
+-#define AR_RxStatusRsvd30   0x000000f8
++#define AR_STBC             0x00000008 /* on ar9280 and later */
++#define AR_RxStatusRsvd30   0x000000f0
+ #define AR_RxAntenna	    0xffffff00
+ #define AR_RxAntenna_S	    8
+ 
+-- 
+1.8.1.2
 
-Said that, I am wondering why give mcast_rate for both bands, but
-basic_rates only for one band?
-> johannes
->
-
-
-
---
-Ashok Raj Nagarajan,
-cozybit Inc.
-http://www.cozybit.com
