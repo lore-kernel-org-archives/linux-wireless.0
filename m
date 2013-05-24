@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:59893 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801Ab3EaCKm (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38514 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752201Ab3EXKaD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 22:10:42 -0400
-Received: by mail-pd0-f174.google.com with SMTP id 3so1376641pdj.33
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:10:41 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 13/40] crda: explicitly close file descriptor and munmap() on failures
-Date: Thu, 30 May 2013 19:09:02 -0700
-Message-Id: <1369966169-23640-14-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_041044_658822_948DAFF0)
-In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 24 May 2013 06:30:03 -0400
+Message-ID: <1369391399.8290.6.camel@jlt4.sipsolutions.net> (sfid-20130524_123008_090233_8978D260)
+Subject: Re: [PATCH 2/2] ath9k: check for Rx-STBC flag and pass it to
+ ieee80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Date: Fri, 24 May 2013 12:29:59 +0200
+In-Reply-To: <1369390711-992-3-git-send-email-linux@rempel-privat.de> (sfid-20130524_121845_309854_63769133)
+References: <1368949136-6079-1-git-send-email-linux@rempel-privat.de>
+	 <1369390711-992-1-git-send-email-linux@rempel-privat.de>
+	 <1369390711-992-3-git-send-email-linux@rempel-privat.de>
+	 (sfid-20130524_121845_309854_63769133)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Fri, 2013-05-24 at 12:18 +0200, Oleksij Rempel wrote:
+> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+> ---
+>  drivers/net/wireless/ath/ath9k/init.c | 9 +++++++--
+>  drivers/net/wireless/ath/ath9k/mac.c  | 5 +++++
+>  drivers/net/wireless/ath/ath9k/mac.h  | 3 ++-
+>  3 files changed, 14 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index aba4151..7739b05 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -769,8 +769,13 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+>  		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+>  		IEEE80211_HW_SUPPORTS_RC_TABLE;
+>  
+> -	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+> -		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+> +	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+> +		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+> +
+> +		if (AR_SREV_9280_20_OR_LATER(ah))
+> +			hw->radiotap_mcs_details |=
+> +				IEEE80211_RADIOTAP_MCS_HAVE_STBC;
+> +	}
 
-Just do this explicitly.
+Are you sure this is right? It seems that if other devices don't support
+STBC they can report all frames to be w/o STBC. Or do they support STBC
+but don't report it?
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- reglib.c |   16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
-
-diff --git a/reglib.c b/reglib.c
-index bb6f23f..cbe9676 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -307,33 +307,37 @@ reglib_get_rd_alpha2(const char *alpha2, const char *file)
- 	if (fd < 0)
- 		return NULL;
- 
--	if (fstat(fd, &stat))
-+	if (fstat(fd, &stat)) {
-+		close(fd);
- 		return NULL;
-+	}
- 
- 	dblen = stat.st_size;
- 
- 	db = mmap(NULL, dblen, PROT_READ, MAP_PRIVATE, fd, 0);
--	if (db == MAP_FAILED)
-+	if (db == MAP_FAILED) {
-+		close(fd);
- 		return NULL;
-+	}
- 
- 	header = crda_get_file_ptr(db, dblen, sizeof(*header), 0);
- 
- 	if (ntohl(header->magic) != REGDB_MAGIC)
--		return NULL;
-+		goto out;
- 
- 	if (ntohl(header->version) != REGDB_VERSION)
--		return NULL;
-+		goto out;
- 
- 	siglen = ntohl(header->signature_length);
- 	/* adjust dblen so later sanity checks don't run into the signature */
- 	dblen -= siglen;
- 
- 	if (dblen <= (int)sizeof(*header))
--		return NULL;
-+		goto out;
- 
- 	/* verify signature */
- 	if (!crda_verify_db_signature(db, dblen, siglen))
--		return NULL;
-+		goto out;
- 
- 	num_countries = ntohl(header->reg_country_num);
- 	countries = crda_get_file_ptr(db, dblen,
--- 
-1.7.10.4
+johannes
 
