@@ -1,24 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51669 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753017Ab3E0JLK (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:36196 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755217Ab3EYJJj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 05:11:10 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UgtSM-0001Oj-IL
-	for linux-wireless@vger.kernel.org; Mon, 27 May 2013 11:11:06 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
+	Sat, 25 May 2013 05:09:39 -0400
+MIME-Version: 1.0
+Date: Sat, 25 May 2013 11:09:38 +0200
+Message-ID: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com> (sfid-20130525_111005_833824_A78E43A2)
+Subject: [v3.10-rc2] iwlwifi regression
+From: =?UTF-8?Q?J=C3=B6rg_Otte?= <jrg.otte@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/2] cfg80211: SME cleanups
-Date: Mon, 27 May 2013 11:11:00 +0200
-Message-Id: <1369645862-29054-1-git-send-email-johannes@sipsolutions.net> (sfid-20130527_111114_970729_8BD02A04)
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The second patch will have to wait for a wil6210 driver update,
-but you can review it in the meantime :)
+If iwlwifi/iwldvm are built into the kernel (no loadable modules)
+following error is written to console and syslog since v3.10-rc:
 
-johannes
+iwlwifi 0000:08:00.0: failed to load module iwldvm (error -38), is
+dynamic loading enabled?
 
+reverting
+commit 1618b2b02a3a0ee7a6863fed4b0d22e697e7e97c
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Thu Apr 4 10:35:23 2013 +0200
+    iwlwifi: print warning on request_module failure
+
+fixes the problem for me.
+
+Jörg
+
+I'm not subscribed,please CC me in answeres
