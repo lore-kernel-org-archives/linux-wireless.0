@@ -1,110 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:35091 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753161Ab3EFN0h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 09:26:37 -0400
-Message-ID: <1367846711.32148.22.camel@cumari.coelho.fi> (sfid-20130506_152640_519262_86A50048)
-Subject: Re: linux-firmware: pull-request TI wireless firmwares 2012-04-29
-From: Luciano Coelho <coelho@ti.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 06 May 2013 16:25:11 +0300
-In-Reply-To: <1367846698.4131.65.camel@deadeye.wl.decadent.org.uk>
-References: <1367229856.30716.22.camel@cumari.coelho.fi>
-	 <1367811576.4131.39.camel@deadeye.wl.decadent.org.uk>
-	 <1367821181.23730.5.camel@cumari.coelho.fi>
-	 <1367846698.4131.65.camel@deadeye.wl.decadent.org.uk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:17914 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753107Ab3EYIvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 May 2013 04:51:12 -0400
+Date: Sat, 25 May 2013 10:53:00 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jake Edge <jake@lwn.net>
+Subject: Re: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx
+ rejection
+Message-ID: <20130525085259.GB1599@redhat.com> (sfid-20130525_105119_291835_2C9B0F3C)
+References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
+ <1369427208.8290.35.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1369427208.8290.35.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-05-06 at 14:24 +0100, Ben Hutchings wrote:
-> On Mon, 2013-05-06 at 09:19 +0300, Luciano Coelho wrote:
-> > On Mon, 2013-05-06 at 04:39 +0100, Ben Hutchings wrote:
-> > > On Mon, 2013-04-29 at 13:04 +0300, Luciano Coelho wrote:
-> > > > Hi Ben,
-> > > > 
-> > > > Here are some updates to our wireless firmwares.  Updated the firmwares
-> > > > for WiLink 6 and 7 and added a new version of the firmware for WiLink 8
-> > > > and a binary configuration file.  Also updated the WHENCE file
-> > > > accordingly.
-> > > > 
-> > > > Please let me know if there are any more problems.
-> > > [...]
-> > > > diff --git a/WHENCE b/WHENCE
-> > > > index 4726742..257f24e 100644
-> > > > --- a/WHENCE
-> > > > +++ b/WHENCE
-> > > > @@ -1681,11 +1681,11 @@ Version: 6.5.2.0.15 (Multi-role)
-> > > >  File: ti-connectivity/wl127x-fw-4-plt.bin
-> > > >  Version: 6.3.5.0.98 (PLT-only)
-> > > >  File: ti-connectivity/wl127x-fw-5-sr.bin
-> > > > -Version: 6.3.10.2.115 (Single-role)
-> > > > +Version: 6.3.10.0.133 (Single-role)
-> > > >  File: ti-connectivity/wl127x-fw-5-mr.bin
-> > > > -Version: 6.5.7.0.27 (Multi-role)
-> > > > +Version: 6.5.7.0.42 (Multi-role)
-> > > >  File: ti-connectivity/wl127x-fw-5-plt.bin
-> > > > -Version: 6.3.10.2.115 (PLT-only)
-> > > > +Version: 6.3.10.0.133 (PLT-only)
-> > > >  
-> > > >  File: ti-connectivity/wl128x-fw.bin
-> > > >  Version: 7.1.5.50.74 (STA-only)
-> > > > @@ -1702,11 +1702,11 @@ Version: 7.5.2.0.15 (Multi-role)
-> > > >  File: ti-connectivity/wl128x-fw-4-plt.bin
-> > > >  Version: 7.3.5.0.98 (PLT)
-> > > >  File: ti-connectivity/wl128x-fw-5-sr.bin
-> > > > -Version: 7.3.10.2.115 (Single-role)
-> > > > +Version: 7.3.10.0.133 (Single-role)
-> > > >  File: ti-connectivity/wl128x-fw-5-mr.bin
-> > > > -Version: 7.5.7.0.27 (Multi-role)
-> > > > +Version: 7.5.7.0.42 (Multi-role)
-> > > >  File: ti-connectivity/wl128x-fw-5-plt.bin
-> > > > -Version: 7.3.10.2.115 (PLT-only)
-> > > > +Version: 7.3.10.2.133 (PLT-only)
-> > > >  
-> > > >  File: ti-connectivity/wl127x-nvs.bin
-> > > >  File: ti-connectivity/wl128x-nvs.bin
-> > > [...]
-> > > 
-> > > The commit message for this bit says:
-> > > 
-> > >     Update the wl127x and wl128x firmwares to *.3.10.0.133 for single-role
-> > >     and *.5.7.0.42 for multi-role.
-> > > 
-> > > But for ti-connectivity/wl127x-fw-5-sr.bin,
-> > > ti-connectivity/wl127x-fw-5-plt.bin and
-> > > ti-connectivity/wl128x-fw-5-sr.bin this means the version is now *lower*
-> > > than before.  For ti-connectivity/wl128x-fw-5-plt.bin the version is
-> > > incremented to end in 2.133, but this is contrary to the commit message.
-> > > 
-> > > Are some of these firmware images being downgraded?  Should the version
-> > > numbers really end in 2.133 or 0.133?
+On Fri, May 24, 2013 at 10:26:48PM +0200, Johannes Berg wrote:
+> On Thu, 2013-05-23 at 14:20 +0200, Stanislaw Gruszka wrote:
+> > Jake, please test this set and check if it not cause association
+> > problems you reported earlier this month.
 > > 
-> > No, they are not being downgraded.  They are actually being upgraded.
-> > The firmware versioning is rather weird.  The second last value is not
-> > incremental, it specifies a project.  0 is the multichannel support
-> > project.
-> >
-> > The driver was changed a while back to take this version structure into
-> > consideration.  Take a look at this patch:
+> > Please apply it together with this mac80211 patch:
+> > http://marc.info/?l=linux-wireless&m=136879090123023&w=2 
+> > which I already posted and is queued to upstream. Not having
+> > it may cause troubles and influence negatively this set test.
 > > 
-> > af4e94c wlcore: change way of checking the firmware version
-> > 
-> > I hope this clarifies.
+> > Johannes, is need to check beacon bssid or even if rx frame
+> > is a beacon to unblock queues? I think if we receive any frame
+> > (not necessary beacon or our bssid beacon) on passive channel,
+> > that mean we can use that channel. But that depend how firmware
+> > is implemented, if firmware require our bssid beacon to unblock
+> > channel, driver of course need that too.
 > 
-> OK, I've pulled these changes.  But I think it would be helpful to
-> change that project code to be non-numeric, to avoid such confusion.
+> I _think_ any frame with good CRC will do, but I'm not entirely sure for
+> 3945/4965.
 
-Thanks, Ben!
+I prefer to unblock queues on any frame, as this allow to start
+operating quickly.  Let's see if this will also work on Jake environment,
+I'll add patch 5/4 which implement that.
 
-I'll talk with the firmware team to see if they can change the project
-code, as you suggested.
-
---
-Cheers,
-Luca.
-
+Stanislaw
