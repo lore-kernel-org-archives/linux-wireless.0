@@ -1,119 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46297 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758826Ab3EBMaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 08:30:12 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:61994 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757624Ab3EYTDF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 May 2013 15:03:05 -0400
+Received: by mail-lb0-f175.google.com with SMTP id v10so5583840lbd.6
+        for <linux-wireless@vger.kernel.org>; Sat, 25 May 2013 12:03:03 -0700 (PDT)
+Date: Sat, 25 May 2013 21:02:55 +0200 (CEST)
+From: Thommy Jakobsson <thommyj@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 10/14] rt2x00: rt2400pci: implement queue_init callback
-Date: Thu,  2 May 2013 14:30:25 +0200
-Message-Id: <1367497829-7672-11-git-send-email-juhosg@openwrt.org> (sfid-20130502_143057_525145_D8556466)
-In-Reply-To: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
-References: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
+cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	m@bues.ch, piotras@gmail.com, Larry.Finger@lwfinger.net,
+	Thommy Jakobsson <thommyj@gmail.com>
+Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
+In-Reply-To: <20130524164922.GA2175@tuxdriver.com>
+Message-ID: <alpine.DEB.2.02.1305252058060.1282@kelly.ryd.net> (sfid-20130525_210322_856079_6F33810A)
+References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net> <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com> <alpine.DEB.2.02.1305132025560.1278@kelly.ryd.net> <20130524164922.GA2175@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The generic rt2x00 code has been changed to allow the
-drivers toimplement dynamic data_queue initialization.
 
-Remove the static data queue descriptor structures
-and implement the queue_init callback instead.
 
-Compile tested only.
+On Fri, 24 May 2013, John W. Linville wrote:
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |   65 ++++++++++++++++++-------------
- 1 file changed, 37 insertions(+), 28 deletions(-)
+> Ping?  Should I drop this one?
+> 
+Still working great on my device, so from that I think we should go for 
+it. But it would be great if Rafal (or someone) tested it on some other 
+hardware as well. 
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index f714373..e1ec9a4 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1767,33 +1767,45 @@ static const struct rt2x00lib_ops rt2400pci_rt2x00_ops = {
- 	.config			= rt2400pci_config,
- };
- 
--static const struct data_queue_desc rt2400pci_queue_rx = {
--	.entry_num		= 24,
--	.data_size		= DATA_FRAME_SIZE,
--	.desc_size		= RXD_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_mmio),
--};
-+static void rt2400pci_queue_init(struct data_queue *queue)
-+{
-+	switch (queue->qid) {
-+	case QID_RX:
-+		queue->limit = 24;
-+		queue->data_size = DATA_FRAME_SIZE;
-+		queue->desc_size = RXD_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
-+		break;
- 
--static const struct data_queue_desc rt2400pci_queue_tx = {
--	.entry_num		= 24,
--	.data_size		= DATA_FRAME_SIZE,
--	.desc_size		= TXD_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_mmio),
--};
-+	case QID_AC_VO:
-+	case QID_AC_VI:
-+	case QID_AC_BE:
-+	case QID_AC_BK:
-+		queue->limit = 24;
-+		queue->data_size = DATA_FRAME_SIZE;
-+		queue->desc_size = TXD_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
-+		break;
- 
--static const struct data_queue_desc rt2400pci_queue_bcn = {
--	.entry_num		= 1,
--	.data_size		= MGMT_FRAME_SIZE,
--	.desc_size		= TXD_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_mmio),
--};
-+	case QID_BEACON:
-+		queue->limit = 1;
-+		queue->data_size = MGMT_FRAME_SIZE;
-+		queue->desc_size = TXD_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
-+		break;
- 
--static const struct data_queue_desc rt2400pci_queue_atim = {
--	.entry_num		= 8,
--	.data_size		= DATA_FRAME_SIZE,
--	.desc_size		= TXD_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_mmio),
--};
-+	case QID_ATIM:
-+		queue->limit = 8;
-+		queue->data_size = DATA_FRAME_SIZE;
-+		queue->desc_size = TXD_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
-+		break;
-+
-+	default:
-+		BUG();
-+		break;
-+	}
-+}
- 
- static const struct rt2x00_ops rt2400pci_ops = {
- 	.name			= KBUILD_MODNAME,
-@@ -1802,10 +1814,7 @@ static const struct rt2x00_ops rt2400pci_ops = {
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
- 	.extra_tx_headroom	= 0,
--	.rx			= &rt2400pci_queue_rx,
--	.tx			= &rt2400pci_queue_tx,
--	.bcn			= &rt2400pci_queue_bcn,
--	.atim			= &rt2400pci_queue_atim,
-+	.queue_init		= rt2400pci_queue_init,
- 	.lib			= &rt2400pci_rt2x00_ops,
- 	.hw			= &rt2400pci_mac80211_ops,
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
--- 
-1.7.10
-
+//Thommy
