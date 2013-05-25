@@ -1,84 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52350 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758048Ab3E0NLz (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:33778 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757947Ab3EYUhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 09:11:55 -0400
-Message-ID: <1369660310.14740.12.camel@jlt4.sipsolutions.net> (sfid-20130527_151158_294786_1950B718)
-Subject: Re: pull-request: mac80211-next 2013-05-27
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 27 May 2013 15:11:50 +0200
-In-Reply-To: <1369658569.14740.11.camel@jlt4.sipsolutions.net> (sfid-20130527_144301_831846_51777608)
-References: <1369658569.14740.11.camel@jlt4.sipsolutions.net>
-	 (sfid-20130527_144301_831846_51777608)
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-HM1+2KC9nE1o0+NrQMQW"
-Mime-Version: 1.0
+	Sat, 25 May 2013 16:37:05 -0400
+Received: by mail-ob0-f176.google.com with SMTP id wp18so6728313obc.35
+        for <linux-wireless@vger.kernel.org>; Sat, 25 May 2013 13:37:04 -0700 (PDT)
+Message-ID: <51A120EE.40008@lwfinger.net> (sfid-20130525_223710_085316_D7FCAF5B)
+Date: Sat, 25 May 2013 15:37:02 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	Thommy Jakobsson <thommyj@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlYw==?= =?UTF-8?B?a2k=?=
+	<zajec5@gmail.com>, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, piotras@gmail.com
+Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
+References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net> <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com> <alpine.DEB.2.02.1305132025560.1278@kelly.ryd.net> <20130524164922.GA2175@tuxdriver.com> <alpine.DEB.2.02.1305252058060.1282@kelly.ryd.net> <51A112FC.8060100@hauke-m.de> <20130525214223.4e69a772@milhouse>
+In-Reply-To: <20130525214223.4e69a772@milhouse>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 05/25/2013 02:42 PM, Michael Büsch wrote:
+> On Sat, 25 May 2013 21:37:32 +0200
+> Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+>> On 05/25/2013 09:02 PM, Thommy Jakobsson wrote:
+>>>
+>>>
+>>> On Fri, 24 May 2013, John W. Linville wrote:
+>>>
+>>>> Ping?  Should I drop this one?
+>>>>
+>>> Still working great on my device, so from that I think we should go for
+>>> it. But it would be great if Rafal (or someone) tested it on some other
+>>> hardware as well.
+>>>
+>>> //Thommy
+>>
+>> This is included in OpenWrt for ~4 weeks now and I haven't read of
+>> anybody complaining about any new problems introduced by this patch or
+>> something which looks like the DMA under run.
+>> I am also for adding this to the kernel.
+>
+> I'm probably missing something, but isn't this patch already in Linus' tree?
+> It's in stable review after all.
 
---=-HM1+2KC9nE1o0+NrQMQW
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+The patch is in wireless-testing with John's s-o-b, and in the mainline tree 
+with the same annotation.
 
-On Mon, 2013-05-27 at 14:42 +0200, Johannes Berg wrote:
-> John,
->=20
-> I also have a bunch of new things for cfg80211/mac80211. Just like with
-> iwlwifi, I had to merge my mac80211 tree, so this pulled in some more
-> changes that looks spurious. Again, a better looking shortlog all the
-> way at the end.
->=20
-> The biggest change this time is my cfg80211 locking and MLME/SME work,
-> cleaning up locking there by greatly reducing the number of different
-> useless locks. Other than that, some relatively minor things.
->=20
-> Please let me know of any problems.
->=20
-> johannes
->=20
->=20
-> The following changes since commit f722406faae2d073cc1d01063d1123c3542593=
-9e:
->=20
->   Linux 3.10-rc1 (2013-05-11 17:14:08 -0700)
->=20
-> are available in the git repository at:
->=20
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git f=
-or-john
->=20
-> for you to fetch changes up to 0dd83174762ff46356824217e69daf374f794ba4:
+It has been working OK here, but my devices did not show underrun.
 
-Oh, there was a build error here, I've corrected it and the new HEAD is
-now 6abb9cb99f33b20c2f32f18a3ae9cc7543e46edb.
+Larry
 
-johannes
-
---=-HM1+2KC9nE1o0+NrQMQW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRo1uWAAoJEDBSmw7B7bqr198P/0RhxlTCXb+NDxZtQBu0ZIsS
-q8d+5m2RS/rUvZ3fYYn2Ia4xWoexttDUpVgLqms2eN2+uIiTvnEV2e3KvwXXp+xs
-bKauYK6jVgsX34dCrOwET1E3/HYxifs6ueYYh4doma4HANBw0oJTnoL8iLyJ1KQe
-CLfZE4R8TNbnMPekcuAUAX+/3QZ/PoD6nSdcskCSWTO/9F0hskME2O24d7LVbWpA
-JunyZUQbpweNVPpwwaor2Lp+mc20t/oN2FHXJp1VcKVP7SwvRZ9IF/j5TOhZmnaP
-WGJQN5Elav+59uS8/IWBDIdFHZHFoqtiUi3YpEhLqcFFb++UQx4zmEaTYvkLazXY
-rIix3wWsrjp8UNXO33JWbECnQEYCWbL9qxBhqArU0EXRuFNvgKxDmqx7SlBoLt5B
-mTSqRsBWiznGLZZ2jO43PI0ZYO93b1A7XTJV8AsfpigRcm+RCcAvx6go8g3nKll3
-quKsYLOliqlgZyvv5vCM/lEk+tqjfmTOuZPGkcSppTkydS/iNQeIqviBcK5a0Uk7
-W4t7yeFgTkbJIg2iiCFzDoRXD9lrFbcL9hf1MfvEhft5BHEVQowwkOSHHZAdZizl
-UWgx5pgcJCGkHhGgSldQdTG0boFFnybIThVsDN5C/oJn0AXHKgVPWzjK1rS7f1TT
-aLfVNd0/TSX3eYM6SDBc
-=cM+g
------END PGP SIGNATURE-----
-
---=-HM1+2KC9nE1o0+NrQMQW--
 
