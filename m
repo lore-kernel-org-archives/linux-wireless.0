@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:58730 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759101Ab3EBXNW (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752123Ab3EYIU5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 19:13:22 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rq8so589499pbb.5
-        for <linux-wireless@vger.kernel.org>; Thu, 02 May 2013 16:13:22 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH] mac80211: clean up mesh RCU warning
-Date: Thu,  2 May 2013 16:11:19 -0700
-Message-Id: <1367536279-14241-1-git-send-email-thomas@cozybit.com> (sfid-20130503_011352_995070_23B3D8AE)
+	Sat, 25 May 2013 04:20:57 -0400
+Message-ID: <1369470049.9074.2.camel@jlt4.sipsolutions.net> (sfid-20130525_102122_853345_EC0D9DCF)
+Subject: Re: [PATCH 3/3] {nl,mac,cfg}80211: Allow user to configure basic
+ rates for mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org
+Date: Sat, 25 May 2013 10:20:49 +0200
+In-Reply-To: <CACcxo+pWnCFW3wvdjhHZvhb065Trup1KL=8fj7bbBhC5m4evqQ@mail.gmail.com> (sfid-20130525_011407_378756_F59410FC)
+References: <1368233453-10581-1-git-send-email-ashok@cozybit.com>
+	 <1368233453-10581-3-git-send-email-ashok@cozybit.com>
+	 <1369432740.13623.12.camel@johannes>
+	 <CACcxo+pWnCFW3wvdjhHZvhb065Trup1KL=8fj7bbBhC5m4evqQ@mail.gmail.com>
+	 (sfid-20130525_011407_378756_F59410FC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When running a kernel with CONFIG_PROVE_RCU, the minstrel
-rate update code would complain about being called without
-the RCU read lock held. This is because
-mesh_sta_info_init() may or may not have been called under
-RCU read lock. Perform some bureaucratic critical section
-toggling to always call mesh_sta_info_init() under RCU,
-and silence this warning.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_plink.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+> > I think you should consider allowing this attribute only if the channel
+> > is also specified (NL80211_ATTR_WIPHY_FREQ, parsed below), and not make
+> > it nested with rates for both bands but just the selected band.
+> >
+> Yes, I think by this approach, we eliminate the need for the user to
+> provide rates for both bands and also not require to have a per-band
+> for basic_rates.
+> 
+> Said that, I am wondering why give mcast_rate for both bands, but
+> basic_rates only for one band?
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 09bebed..4058bd7 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -473,13 +473,15 @@ mesh_sta_info_get(struct ieee80211_sub_if_data *sdata,
- 		rcu_read_unlock();
- 		/* can't run atomic */
- 		sta = mesh_sta_info_alloc(sdata, addr, elems);
--		if (!sta) {
--			rcu_read_lock();
-+
-+		rcu_read_lock();
-+		if (!sta)
- 			return NULL;
--		}
- 
- 		mesh_sta_info_init(sdata, sta, elems, true);
- 
-+		rcu_read_unlock();
-+		/* also might sleep */
- 		if (sta_info_insert_rcu(sta))
- 			return NULL;
- 	}
--- 
-1.7.10.4
+Heh, good question. I think it was probably copied from IBSS where you
+can pick another channel? Doesn't make all that much sense for mesh I
+guess, unless MBSS channel switch could cause us to use another channel?
+But then presumably you should follow the basic rates from the STA
+initiating the switch, or something, since mesh networks are only
+compatible with the same basic rates, right?
+
+johannes
 
