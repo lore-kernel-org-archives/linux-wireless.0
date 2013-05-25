@@ -1,113 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:50786 "EHLO
-	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759184Ab3EWVhC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 17:37:02 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 1/2] iw: use updated structures and enums for packet pattern
-Date: Thu, 23 May 2013 14:35:40 -0700
-Message-ID: <1369344941-11217-1-git-send-email-bzhao@marvell.com> (sfid-20130523_233706_313326_00BD9FBE)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46003 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757816Ab3EYThn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 May 2013 15:37:43 -0400
+Message-ID: <51A112FC.8060100@hauke-m.de> (sfid-20130525_213746_030640_1E949430)
+Date: Sat, 25 May 2013 21:37:32 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Thommy Jakobsson <thommyj@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYI=?= =?UTF-8?B?ZWNraQ==?=
+	<zajec5@gmail.com>, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, m@bues.ch, piotras@gmail.com,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
+References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net> <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com> <alpine.DEB.2.02.1305132025560.1278@kelly.ryd.net> <20130524164922.GA2175@tuxdriver.com> <alpine.DEB.2.02.1305252058060.1282@kelly.ryd.net>
+In-Reply-To: <alpine.DEB.2.02.1305252058060.1282@kelly.ryd.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On 05/25/2013 09:02 PM, Thommy Jakobsson wrote:
+> 
+> 
+> On Fri, 24 May 2013, John W. Linville wrote:
+> 
+>> Ping?  Should I drop this one?
+>>
+> Still working great on my device, so from that I think we should go for 
+> it. But it would be great if Rafal (or someone) tested it on some other 
+> hardware as well. 
+> 
+> //Thommy
 
-They are renamed so that they can be used for new feature.
+This is included in OpenWrt for ~4 weeks now and I haven't read of
+anybody complaining about any new problems introduced by this patch or
+something which looks like the DMA under run.
+I am also for adding this to the kernel.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- info.c   |  2 +-
- wowlan.c | 32 ++++++++++++++++----------------
- 2 files changed, 17 insertions(+), 17 deletions(-)
-
-diff --git a/info.c b/info.c
-index 54d9a8d..d893ffc 100644
---- a/info.c
-+++ b/info.c
-@@ -432,7 +432,7 @@ broken_combination:
- 			[NL80211_WOWLAN_TRIG_RFKILL_RELEASE] = { .type = NLA_FLAG },
- 			[NL80211_WOWLAN_TRIG_TCP_CONNECTION] = { .type = NLA_NESTED },
- 		};
--		struct nl80211_wowlan_pattern_support *pat;
-+		struct nl80211_pattern_support *pat;
- 		int err;
- 
- 		err = nla_parse_nested(tb_wowlan, MAX_NL80211_WOWLAN_TRIG,
-diff --git a/wowlan.c b/wowlan.c
-index b4a2715..d323ca7 100644
---- a/wowlan.c
-+++ b/wowlan.c
-@@ -261,11 +261,11 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
- 			}
- 
- 			pattern = nla_nest_start(patterns, ++patnum);
--			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_MASK,
-+			NLA_PUT(patterns, NL80211_PKTPAT_MASK,
- 				DIV_ROUND_UP(patlen, 8), mask);
--			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_PATTERN,
--				patlen, pat);
--			NLA_PUT_U32(patterns, NL80211_WOWLAN_PKTPAT_OFFSET, pkt_offset);
-+			NLA_PUT(patterns, NL80211_PKTPAT_PATTERN, patlen, pat);
-+			NLA_PUT_U32(patterns, NL80211_PKTPAT_OFFSET,
-+				    pkt_offset);
- 			nla_nest_end(patterns, pattern);
- 			free(mask);
- 			free(pat);
-@@ -356,29 +356,29 @@ static int print_wowlan_handler(struct nl_msg *msg, void *arg)
- 		nla_for_each_nested(pattern,
- 				    trig[NL80211_WOWLAN_TRIG_PKT_PATTERN],
- 				    rem_pattern) {
--			struct nlattr *patattr[NUM_NL80211_WOWLAN_PKTPAT];
-+			struct nlattr *patattr[NUM_NL80211_PKTPAT];
- 			int i, patlen, masklen, pkt_offset;
- 			uint8_t *mask, *pat;
--			nla_parse(patattr, MAX_NL80211_WOWLAN_PKTPAT,
--				  nla_data(pattern), nla_len(pattern),
--				  NULL);
--			if (!patattr[NL80211_WOWLAN_PKTPAT_MASK] ||
--			    !patattr[NL80211_WOWLAN_PKTPAT_PATTERN] ||
--			    !patattr[NL80211_WOWLAN_PKTPAT_OFFSET]) {
-+			nla_parse(patattr, MAX_NL80211_PKTPAT,
-+				  nla_data(pattern), nla_len(pattern), NULL);
-+			if (!patattr[NL80211_PKTPAT_MASK] ||
-+			    !patattr[NL80211_PKTPAT_PATTERN] ||
-+			    !patattr[NL80211_PKTPAT_OFFSET]) {
- 				printf(" * (invalid pattern specification)\n");
- 				continue;
- 			}
--			masklen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
--			patlen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
--			pkt_offset = nla_get_u32(patattr[NL80211_WOWLAN_PKTPAT_OFFSET]);
-+			masklen = nla_len(patattr[NL80211_PKTPAT_MASK]);
-+			patlen = nla_len(patattr[NL80211_PKTPAT_PATTERN]);
-+			pkt_offset =
-+				nla_get_u32(patattr[NL80211_PKTPAT_OFFSET]);
- 			if (DIV_ROUND_UP(patlen, 8) != masklen) {
- 				printf(" * (invalid pattern specification)\n");
- 				continue;
- 			}
- 			printf(" * wake up on packet offset: %d", pkt_offset);
- 			printf(" pattern: ");
--			pat = nla_data(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
--			mask = nla_data(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
-+			pat = nla_data(patattr[NL80211_PKTPAT_PATTERN]);
-+			mask = nla_data(patattr[NL80211_PKTPAT_MASK]);
- 			for (i = 0; i < patlen; i++) {
- 				if (mask[i / 8] & (1 << (i % 8)))
- 					printf("%.2x", pat[i]);
--- 
-1.8.0
+Hauke
 
