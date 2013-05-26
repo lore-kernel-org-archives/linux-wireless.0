@@ -1,263 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40256 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759029Ab3EOOTf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:19:35 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2 13/18] ath9k: add and use 5/10 MHz bitrate tables
-Date: Wed, 15 May 2013 16:19:04 +0200
-Message-Id: <1368627549-22518-14-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_161949_685840_8F5B0465)
-In-Reply-To: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mout.gmx.net ([212.227.17.22]:58707 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759141Ab3EZICs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 May 2013 04:02:48 -0400
+Received: from mailout-de.gmx.net ([10.1.76.2]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0LpiUy-1UDFdg2TDC-00fSzv for
+ <linux-wireless@vger.kernel.org>; Sun, 26 May 2013 10:02:46 +0200
+Message-ID: <51A1C19F.6050604@rempel-privat.de> (sfid-20130526_100304_640914_AFD1A678)
+Date: Sun, 26 May 2013 10:02:39 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Marc Kleine-Budde <mkl@blackshift.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Subject: [PATCH RFC] Re: skb_under_panic in ath9k
+References: <519D405B.2080806@blackshift.org> <519F291B.1060905@blackshift.org> <51A1A9C4.4000203@rempel-privat.de>
+In-Reply-To: <51A1A9C4.4000203@rempel-privat.de>
+Content-Type: multipart/mixed;
+ boundary="------------030308000508090302090509"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a reduced bandwidth mode is enabled, the according bitrate tables
-must be used instead of the standard tables. This patch adds these
-bitrate tables and selects the appropriate table.
+This is a multi-part message in MIME format.
+--------------030308000508090302090509
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/beacon.c |   13 ++++++-
- drivers/net/wireless/ath/ath9k/init.c   |   63 +++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/rc.c     |    9 +++++
- drivers/net/wireless/ath/ath9k/recv.c   |   13 +++++--
- drivers/net/wireless/ath/ath9k/xmit.c   |   14 ++++++-
- 5 files changed, 90 insertions(+), 22 deletions(-)
+Am 26.05.2013 08:20, schrieb Oleksij Rempel:
+> Am 24.05.2013 10:47, schrieb Marc Kleine-Budde:
+>> added ath9k-devel to Cc
+>>
+>> On 05/23/2013 12:02 AM, Marc Kleine-Budde wrote:
+>>> Hello,
+>>>
+>>> I'm on a kirkwood based armv5 system with an USB attached TP-Link
+>>> TL-WN821N - Atheros AR7010+AR9287, [1]. the wlan is running in AP mode
+>>> with hostapd-1.0. The kernel is v3.8.12 from debian (3.8-1-kirkwood #1
+>>> Debian 3.8.12-1).
+>>>
+>>> The system crashes repeatedly after about one week with the following
+>>> oops:
+>>>
+>>> [633625.401875] skbuff: skb_under_panic: text:bf501028 len:128 put:8
+>>> head:d2788800 data:d27887fe tail:0xd278887e end:0xd2788f40 dev:wlan1
+>>> [633625.414180] ------------[ cut here ]------------
+>>> [633625.418909] kernel BUG at
+>>> /build/buildd-linux_3.8.12-1-armel-7F6kBx/linux-3.8.12/net/core/skbuff.c:145!
+>>>
+>>> [633625.428430] Internal error: Oops - BUG: 0 [#1] ARM
+>>> [633625.433322] Modules linked in:
+>>> [...]
+>>> [633625.583170] CPU: 0    Not tainted  (3.8-1-kirkwood #1 Debian
+>>> 3.8.12-1)
+>>> [633625.589821] PC is at skb_push+0x6c/0x84
+>>> [633625.593763] LR is at skb_push+0x6c/0x84
+>>> [633625.597707] pc : [<c0282990>]    lr : [<c0282990>]    psr: 20000013
+>>> [633625.597707] sp : c04c1d50  ip : 000008f8  fp : df04ea54
+>>> [633625.609404] r10: 00000002  r9 : 00000008  r8 : df00dca8
+>>> [633625.614734] r7 : 00000006  r6 : c04410a0  r5 : d278887e  r4 :
+>>> d2788800
+>>> [633625.621378] r3 : c04d328c  r2 : 20000093  r1 : 00000001  r0 :
+>>> 00000079
+>>> [633625.628015] Flags: nzCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM
+>>> Segment kernel
+>>> [633625.635443] Control: 0005317f  Table: 1f224000  DAC: 00000017
+>>> [633625.641295] Process swapper (pid: 0, stack limit = 0xc04c01b8)
+>>> [633625.647241] Stack: (0xc04c1d50 to 0xc04c2000)
+>>> [633625.657414] 1d40:                                     00000008
+>>> d2788800 d27887fe d278887e
+>>> [633625.666101] 1d60: d2788f40 df04e000 df00dc00 df2e0c00 00000078
+>>> bf501028 df2e0c00 dfba3120
+>>> [633625.675025] 1d80: d278882a df04e9a0 00000000 bf504110 dfb3ce20
+>>> 00000201 00000000 00084502
+>>> [633625.683954] 1da0: 00000001 df2e0c00 dfba3120 00000008 00000002
+>>> c04c1df4 00000000 00000001
+>>> [633625.693553] 1dc0: 0000006a bf5058b0 00000000 c04c1df4 c04c1e30
+>>> dfba2300 c151ff18 df04e9a0
+>>> [633625.702041] 1de0: c04c1e30 bf37560c 0000000c 00004288 c04c1e2c
+>>> c151ff18 0000006a df2e0c00
+>>> [633625.710540] 1e00: dfba2300 00000000 0000006a df04e462 00000000
+>>> 00000001 60000013 bf375760
+>>> [633625.718904] 1e20: 00000001 c14c19a0 c14c0460 00000000 c04c1e30
+>>> c04c1e30 00000000 dfba2300
+>>> [633625.727374] 1e40: df04e460 c151fc00 de5af200 00000002 00000002
+>>> dfba2300 dfba2308 dfba28a8
+>>> [633625.787263] 1e60: c04c1e7c dfba28ac df2e0c00 bf376d58 c0508ae0
+>>> 00000000 0000012c 00000080
+>>> [633625.798914] 1e80: 03c66eab c0508ae8 c04d4c68 c04d3494 00000000
+>>> 00000000 00000006 00000100
+>>> [633625.810249] 1ea0: c052b3a0 00000009 c052b3c0 c0026e2c 00000001
+>>> 00000018 c04c0000 c0026644
+>>> [633625.818620] 1ec0: c04d8f74 c1484260 1144b25a c04d8f74 00000000
+>>> 00200000 c04c1f4c 00000013
+>>> [633625.831230] 1ee0: 00000000 fed20200 c04c1f4c 00000000 56251311
+>>> c04d0420 00000000 c0026a2c
+>>> [633625.842695] 1f00: 00002000 c000f28c c004e27c c0271318 20000013
+>>> c000df94 c04c1f60 60000013
+>>> [633625.853824] 1f20: 000e32dc 0002404f b5def004 0002404f c04d0698
+>>> 00000000 00000000 56251311
+>>> [633625.864745] 1f40: c04d0420 00000000 00000003 c04c1f60 c004e27c
+>>> c0271318 20000013 ffffffff
+>>> [633625.875714] 1f60: b5ed22e0 0002404f 0084d405 00000000 00000000
+>>> c04d0698 00000000 c04d0698
+>>> [633625.886646] 1f80: 00000000 c04d0420 004b8074 c0270e88 c04d0698
+>>> 00000000 c050918c c0271014
+>>> [633625.898317] 1fa0: c04c0000 c0509b28 c04cc1cc c096f0e0 00004000
+>>> c000f484 c04c8c20 00000000
+>>> [633625.909787] 1fc0: c04b9650 c0498764 ffffffff ffffffff c0498284
+>>> 00000000 00000000 c04b9650
+>>> [633625.918159] 1fe0: 00000000 00053175 c04c8048 c04b964c c04cc1c4
+>>> 00008040 00000000 00000000
+>>> [633625.926557] [<c0282990>] (skb_push+0x6c/0x84) from [<bf501028>]
+>>> (htc_issue_send.constprop.0+0x28/0x68 [ath9k_htc])
+>>> [633625.937158] [<bf501028>] (htc_issue_send.constprop.0+0x28/0x68
+>>> [ath9k_htc]) from [<bf504110>] (ath9k_htc_tx_start+0x290/0x2a4
+>>> [ath9k_htc])
+>>> [633625.949877] [<bf504110>] (ath9k_htc_tx_start+0x290/0x2a4
+>>> [ath9k_htc]) from [<bf5058b0>] (ath9k_htc_tx+0x98/0xcc [ath9k_htc])
+>>> [633625.961458] [<bf5058b0>] (ath9k_htc_tx+0x98/0xcc [ath9k_htc])
+>>> from [<bf37560c>] (__ieee80211_tx+0x210/0x2a8 [mac80211])
+>>> [633625.972695] [<bf37560c>] (__ieee80211_tx+0x210/0x2a8 [mac80211])
+>>> from [<bf375760>] (ieee80211_tx+0xbc/0xc4 [mac80211])
+>>> [633625.983816] [<bf375760>] (ieee80211_tx+0xbc/0xc4 [mac80211]) from
+>>> [<bf376d58>] (ieee80211_tx_pending+0xf0/0x194 [mac80211])
+>>> [633625.995326] [<bf376d58>] (ieee80211_tx_pending+0xf0/0x194
+>>> [mac80211]) from [<c0026e2c>] (tasklet_action+0x84/0xcc)
+>>> [633626.005905] [<c0026e2c>] (tasklet_action+0x84/0xcc) from
+>>> [<c0026644>] (__do_softirq+0xdc/0x204)
+>>> [633626.014750] [<c0026644>] (__do_softirq+0xdc/0x204) from
+>>> [<c0026a2c>] (irq_exit+0x40/0x8c)
+>>> [633626.023103] [<c0026a2c>] (irq_exit+0x40/0x8c) from [<c000f28c>]
+>>> (handle_IRQ+0x64/0x84)
+>>> [633626.031193] [<c000f28c>] (handle_IRQ+0x64/0x84) from [<c000df94>]
+>>> (__irq_svc+0x34/0x78)
+>>> [633626.039412] [<c000df94>] (__irq_svc+0x34/0x78) from [<c0271318>]
+>>> (cpuidle_wrap_enter+0x54/0x9c)
+>>> [633626.048331] [<c0271318>] (cpuidle_wrap_enter+0x54/0x9c) from
+>>> [<c0270e88>] (cpuidle_enter_state+0x14/0x68)
+>>> [633626.058162] [<c0270e88>] (cpuidle_enter_state+0x14/0x68) from
+>>> [<c0271014>] (cpuidle_idle_call+0x138/0x25c)
+>>> [633626.067998] [<c0271014>] (cpuidle_idle_call+0x138/0x25c) from
+>>> [<c000f484>] (cpu_idle+0x68/0xc8)
+>>> [633626.076852] [<c000f484>] (cpu_idle+0x68/0xc8) from [<c0498764>]
+>>> (start_kernel+0x2b4/0x30c)
+>>> [633626.146230] Code: e58dc014 e59f1014 e59f0014 eb0308b0 (e7f001f2)
+>>> [633626.152520] ---[ end trace ee5dbceea3381e46 ]---
+>>> [633626.157249] Kernel panic - not syncing: Fatal exception in interrupt
+>>>
+>>> Has the problem been fixed already? I can update the kernel to a recent
+>>> version if needed.
+>
+> this oops was generated by skb_push:
+> " skb_push() will decrement the 'skb->data' pointer by the specified
+> number of bytes. It will also increment 'skb->len' by that number of
+> bytes as well. The caller must make sure there is enough head room for
+> the push being performed. This condition is checked for by skb_push()
+> and an assertion failure will trigger if this rule is violated."
+>
+> hmm... theoretically driver should check the size of date before
+> skb_push, but i do not see that other driver do this check. Interesting
+> where this buffer was allocated.
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 2ff570f..56383e5 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -76,13 +76,22 @@ static void ath9k_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_tx_info info;
- 	struct ieee80211_supported_band *sband;
-+	struct ieee80211_rate *bitrates;
- 	u8 chainmask = ah->txchainmask;
- 	u8 rate = 0;
-+	int n_bitrates;
- 
- 	sband = &sc->sbands[common->hw->conf.chandef.chan->band];
--	rate = sband->bitrates[rateidx].hw_value;
-+	if (WARN_ON(ieee80211_get_bitrates(sband,
-+					   common->hw->conf.chandef.width,
-+					   &bitrates, &n_bitrates))) {
-+		bitrates = sband->bitrates;
-+		n_bitrates = sband->n_bitrates;
-+	}
-+
-+	rate = bitrates[rateidx].hw_value;
- 	if (vif->bss_conf.use_short_preamble)
--		rate |= sband->bitrates[rateidx].hw_value_short;
-+		rate |= bitrates[rateidx].hw_value_short;
- 
- 	memset(&info, 0, sizeof(info));
- 	info.pkt_len = skb->len + FCS_LEN;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 5921194..919d4c2 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -155,6 +155,30 @@ static struct ieee80211_rate ath9k_legacy_rates[] = {
- 	RATE(540, 0x0c, 0),
- };
- 
-+static struct ieee80211_rate ath9k_legacy_rates_half[] = {
-+	RATE(30, 0x0b, 0),
-+	RATE(45, 0x0f, 0),
-+	RATE(60, 0x0a, 0),
-+	RATE(90, 0x0e, 0),
-+	RATE(120, 0x09, 0),
-+	RATE(180, 0x0d, 0),
-+	RATE(240, 0x08, 0),
-+	RATE(270, 0x0c, 0),
-+};
-+
-+static struct ieee80211_rate ath9k_legacy_rates_quarter[] = {
-+	RATE(15, 0x0b, 0),
-+	RATE(22, 0x0f, 0), /* actually 22.5 */
-+	RATE(30, 0x0a, 0),
-+	RATE(45, 0x0e, 0),
-+	RATE(60, 0x09, 0),
-+	RATE(90, 0x0d, 0),
-+	RATE(120, 0x08, 0),
-+	RATE(135, 0x0c, 0),
-+};
-+
-+
-+
- #ifdef CONFIG_MAC80211_LEDS
- static const struct ieee80211_tpt_blink ath9k_tpt_blink[] = {
- 	{ .throughput = 0 * 1024, .blink_time = 334 },
-@@ -442,6 +466,7 @@ static int ath9k_init_queues(struct ath_softc *sc)
- static int ath9k_init_channels_rates(struct ath_softc *sc)
- {
- 	void *channels;
-+	struct ieee80211_supported_band *sband;
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(ath9k_2ghz_chantable) +
- 		     ARRAY_SIZE(ath9k_5ghz_chantable) !=
-@@ -455,13 +480,18 @@ static int ath9k_init_channels_rates(struct ath_softc *sc)
- 
- 		memcpy(channels, ath9k_2ghz_chantable,
- 		       sizeof(ath9k_2ghz_chantable));
--		sc->sbands[IEEE80211_BAND_2GHZ].channels = channels;
--		sc->sbands[IEEE80211_BAND_2GHZ].band = IEEE80211_BAND_2GHZ;
--		sc->sbands[IEEE80211_BAND_2GHZ].n_channels =
--			ARRAY_SIZE(ath9k_2ghz_chantable);
--		sc->sbands[IEEE80211_BAND_2GHZ].bitrates = ath9k_legacy_rates;
--		sc->sbands[IEEE80211_BAND_2GHZ].n_bitrates =
--			ARRAY_SIZE(ath9k_legacy_rates);
-+		sband = &sc->sbands[IEEE80211_BAND_2GHZ];
-+		sband->channels = channels;
-+		sband->band = IEEE80211_BAND_2GHZ;
-+		sband->n_channels = ARRAY_SIZE(ath9k_2ghz_chantable);
-+		sband->bitrates = ath9k_legacy_rates;
-+		sband->n_bitrates = ARRAY_SIZE(ath9k_legacy_rates);
-+		sband->bitrates_half = ath9k_legacy_rates_half;
-+		sband->n_bitrates_half = ARRAY_SIZE(ath9k_legacy_rates_half);
-+		sband->bitrates_quarter = ath9k_legacy_rates_quarter;
-+		sband->n_bitrates_quarter =
-+			ARRAY_SIZE(ath9k_legacy_rates_quarter);
-+
- 	}
- 
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ) {
-@@ -472,14 +502,17 @@ static int ath9k_init_channels_rates(struct ath_softc *sc)
- 
- 		memcpy(channels, ath9k_5ghz_chantable,
- 		       sizeof(ath9k_5ghz_chantable));
--		sc->sbands[IEEE80211_BAND_5GHZ].channels = channels;
--		sc->sbands[IEEE80211_BAND_5GHZ].band = IEEE80211_BAND_5GHZ;
--		sc->sbands[IEEE80211_BAND_5GHZ].n_channels =
--			ARRAY_SIZE(ath9k_5ghz_chantable);
--		sc->sbands[IEEE80211_BAND_5GHZ].bitrates =
--			ath9k_legacy_rates + 4;
--		sc->sbands[IEEE80211_BAND_5GHZ].n_bitrates =
--			ARRAY_SIZE(ath9k_legacy_rates) - 4;
-+		sband = &sc->sbands[IEEE80211_BAND_5GHZ];
-+		sband->channels = channels;
-+		sband->band = IEEE80211_BAND_5GHZ;
-+		sband->n_channels = ARRAY_SIZE(ath9k_5ghz_chantable);
-+		sband->bitrates = ath9k_legacy_rates + 4;
-+		sband->n_bitrates = ARRAY_SIZE(ath9k_legacy_rates) - 4;
-+		sband->bitrates_half = ath9k_legacy_rates_half;
-+		sband->n_bitrates_half = ARRAY_SIZE(ath9k_legacy_rates_half);
-+		sband->bitrates_quarter = ath9k_legacy_rates_quarter;
-+		sband->n_bitrates_quarter =
-+			ARRAY_SIZE(ath9k_legacy_rates_quarter);
- 	}
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index ed57d57..0559ac6 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1283,8 +1283,17 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 	struct ath_softc *sc = priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
-+	struct ieee80211_rate *bitrates;
-+	int n_bitrates;
- 	int i, j = 0;
- 
-+	if (WARN_ON(ieee80211_get_bitrates(sband,
-+					   sc->hw->conf.chandef.width,
-+					   &bitrates, &n_bitrates))) {
-+		bitrates = sband->bitrates;
-+		n_bitrates = sband->n_bitrates;
-+	}
-+
- 	for (i = 0; i < sband->n_bitrates; i++) {
- 		if (sta->supp_rates[sband->band] & BIT(i)) {
- 			ath_rc_priv->neg_rates.rs_rates[j]
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 8be2b5d..9e7c929 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -858,6 +858,8 @@ static int ath9k_process_rate(struct ath_common *common,
- 			      struct ieee80211_rx_status *rxs)
- {
- 	struct ieee80211_supported_band *sband;
-+	struct ieee80211_rate *bitrates;
-+	int n_bitrates;
- 	enum ieee80211_band band;
- 	unsigned int i = 0;
- 	struct ath_softc __maybe_unused *sc = common->priv;
-@@ -865,6 +867,11 @@ static int ath9k_process_rate(struct ath_common *common,
- 	band = hw->conf.chandef.chan->band;
- 	sband = hw->wiphy->bands[band];
- 
-+	if (WARN_ON(ieee80211_get_bitrates(sband,
-+					   hw->conf.chandef.width,
-+					   &bitrates, &n_bitrates)))
-+		return 0;
-+
- 	if (rx_stats->rs_rate & 0x80) {
- 		/* HT rate */
- 		rxs->flag |= RX_FLAG_HT;
-@@ -876,12 +883,12 @@ static int ath9k_process_rate(struct ath_common *common,
- 		return 0;
- 	}
- 
--	for (i = 0; i < sband->n_bitrates; i++) {
--		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
-+	for (i = 0; i < n_bitrates; i++) {
-+		if (bitrates[i].hw_value == rx_stats->rs_rate) {
- 			rxs->rate_idx = i;
- 			return 0;
- 		}
--		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
-+		if (bitrates[i].hw_value_short == rx_stats->rs_rate) {
- 			rxs->flag |= RX_FLAG_SHORTPRE;
- 			rxs->rate_idx = i;
- 			return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index eab0fcb..7062386 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -998,15 +998,25 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	struct ieee80211_tx_info *tx_info;
- 	struct ieee80211_tx_rate *rates;
- 	const struct ieee80211_rate *rate;
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_rate *bitrates;
- 	struct ieee80211_hdr *hdr;
- 	struct ath_frame_info *fi = get_frame_info(bf->bf_mpdu);
--	int i;
-+	int i, n_bitrates;
- 	u8 rix = 0;
- 
- 	skb = bf->bf_mpdu;
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	rates = bf->rates;
- 	hdr = (struct ieee80211_hdr *)skb->data;
-+	sband = &sc->sbands[tx_info->band];
-+
-+	if (WARN_ON(ieee80211_get_bitrates(sband,
-+					   sc->hw->conf.chandef.width,
-+					   &bitrates, &n_bitrates))) {
-+		bitrates = sband->bitrates;
-+		n_bitrates = sband->n_bitrates;
-+	}
- 
- 	/* set dur_update_en for l-sig computation except for PS-Poll frames */
- 	info->dur_update = !ieee80211_is_pspoll(hdr->frame_control);
-@@ -1052,7 +1062,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 		}
- 
- 		/* legacy rates */
--		rate = &sc->sbands[tx_info->band].bitrates[rates[i].idx];
-+		rate = &bitrates[rates[i].idx];
- 		if ((tx_info->band == IEEE80211_BAND_2GHZ) &&
- 		    !(rate->flags & IEEE80211_RATE_ERP_G))
- 			phy = WLAN_RC_PHY_CCK;
+In attachment is a patch. I hope it is proper fix. "Elders of the 
+Internet" your comments :)
+
 -- 
-1.7.10.4
+Regards,
+Oleksij
 
+--------------030308000508090302090509
+Content-Type: text/x-patch;
+ name="oops.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="oops.diff"
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index aac4a40..2901351 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -26,6 +26,12 @@ static int htc_issue_send(struct htc_target *target, struct sk_buff* skb,
+ 	struct htc_endpoint *endpoint = &target->endpoint[epid];
+ 	int status;
+ 
++	if (skb_headroom(skb) < len &&
++	    pskb_expand_head(skb, len, 0, GFP_ATOMIC)) {
++		dev_err(target->dev, "Unable to expand headrom to %d\n", len);
++		return -ENOMEM;
++	}
++
+ 	hdr = (struct htc_frame_hdr *)
+ 		skb_push(skb, sizeof(struct htc_frame_hdr));
+ 	hdr->endpoint_id = epid;
+
+--------------030308000508090302090509--
