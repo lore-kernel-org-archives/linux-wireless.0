@@ -1,56 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3514 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751386Ab3EWIMq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 04:12:46 -0400
-Message-ID: <519DCF76.8050704@broadcom.com> (sfid-20130523_101251_873023_920BB4AC)
-Date: Thu, 23 May 2013 10:12:38 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Zhou, Robie" <rzhou@qca.qualcomm.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Deng, Flavian" <flaviand@qti.qualcomm.com>
-Subject: Re: ath9k_htc p2p finding issue
-References: <A75A50687AD91044B3B81AB78993F668447D2F7F@NASANEXD02E.na.qualcomm.com>
-In-Reply-To: <A75A50687AD91044B3B81AB78993F668447D2F7F@NASANEXD02E.na.qualcomm.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:51752 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754729Ab3E0Jgs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 May 2013 05:36:48 -0400
+Message-ID: <1369647404.8229.26.camel@jlt4.sipsolutions.net> (sfid-20130527_113651_044051_B3247150)
+Subject: pull-request: iwlwifi-fixes 2013-05-27
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 27 May 2013 11:36:44 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-4+Azb90OibtUXneBO6pT"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2013 07:58 AM, Zhou, Robie wrote:
-> Hi all,
->
-> We meet some problem when try P2P by using ath9k_htc compat-wireless-v3.6.8-1.
->
-> When using the compat-wireless-v3.6.8-1, AR9271 could find other P2P devices, but other P2P devices couldn't find AR9271 (runs ath9k_htc) because driver couldn't report Probe Request to wpa_supplicant.
->
-> And this issue could not be observed when using compat-wireless-v3.0.9-1, by compare with compat-wireless-v3.0.9-1, ATH9K RX filter is  set correctly after got "Report Probe Request" command from wpa_supplicant, but ATH9K driver couldn't get "Probe Request" frame(I add debug msg in ieee80211_rx_handlers() function).
->
-> <7>[  205.784118] [DF_DBG]    [ieee80211_mgmt_frame_register] : local->probe_req_reg = 1;
-> <7>[  205.830232] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
-> <7>[  205.832858] [DF_DBG]    [ieee80211_configure_filter] : new_flags |= FIF_PROBE_REQ;
-> <7>[  205.833101] [DF_DBG]    [ath9k_htc_configure_filter]    rfilt = 0x287;   ->   ath9k_hw_setrxfilter
-> <7>[  205.878230] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x287;   ->   ath9k_hw_setrxfilter
-> <7>[  205.882556] [DF_DBG]    [ieee80211_configure_filter] : new_flags |= FIF_PROBE_REQ;
-> <7>[  205.883606] [DF_DBG]    [ath9k_htc_configure_filter]    rfilt = 0x287;   ->   ath9k_hw_setrxfilter
->
-> <7>[  206.010886] [DF_DBG]    [ieee80211_mgmt_frame_register] : local->probe_req_reg = 0;
-> <7>[  206.036237] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x287;   ->   ath9k_hw_setrxfilter
-> <7>[  206.043357] [DF_DBG]    [ath9k_htc_configure_filter]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
-> <7>[  206.044107] [DF_DBG]    [ath9k_htc_configure_filter]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
-> <7>[  206.090106] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
-> <7>[  206.160734] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
-> <7>[  206.230740] [DF_DBG]    [ath9k_htc_opmode_init]    rfilt = 0x17;   ->   ath9k_hw_setrxfilter
->
->
-> Did anyone ever meet this issue? Any suggestion for further debugging this issue?
 
-Did you confirm ath9k_htc is handing over probe requests to mac80211? 
-Might be useful to add debugging in prepare_for_handlers() instead.
+--=-4+Azb90OibtUXneBO6pT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-Arend
+John,
 
+And here's a pull request for iwlwifi-fixes ...
+
+This fixes a brown paper-bag bug that we really should've caught in
+review. More details in the changelog for the fix.
+
+johannes
+
+
+The following changes since commit e3d4bc8cc0230e8dc8033484666f03f87392a8c4=
+:
+
+  iwlwifi: mvm: fix aggregation drain flow (2013-05-16 22:39:07 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
+or-john
+
+for you to fetch changes up to a87783699b23395c46bbeeb5d28f6db24897bf26:
+
+  iwlwifi: dvm: fix zero LQ CMD sending avoidance (2013-05-27 11:33:57 +020=
+0)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: dvm: fix zero LQ CMD sending avoidance
+
+ drivers/net/wireless/iwlwifi/dvm/sta.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+--=-4+Azb90OibtUXneBO6pT
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRoyksAAoJEDBSmw7B7bqrp9YQAMu3PWCcxgk4tvlhkytLj1Ht
+aO7wfLQtV831BKX76gIiWRNmwdViF+eQSTA6CJn8WeZCbmeOSKUg1AULQGugLNvn
+TkI0v+bfehUw8cMgKhs0hX4laiLojVJfwycqShgZrAPBS8BtT55I6TRBn88Jbgk+
+Vya1R/DtTcMdvYaATALfdqYNrgGbt+/6gfhcvDHfHS8xNTQjre+riVowNDXLbBzr
+PFIaFbRbFgJo1eZf7yfkEZSOPryeNqancBOfsjTrSCpT9DYGo8VhlL0fLD0xTrbA
+GE+fedJMZbv8FFCWdX4+88LEqRTjSbXI7KYxIRCa43eQEYErKes4L/QrEKutfLqu
+dizsOfEXmpgEYflYBryqufBCKmiX5RnXJWvSgEaNtxsh9lYM4PUGYSDxGQIhGeYf
++QL2d4C/b1yPUCeB5Z8YUeRsOy9sWZD16Vu6IUx58kzdlzzDVIrkGhDB7jYCnLwI
+VPkA8zUcS+c0s76YRn7L6RB00k2OnCdKB1qPbWHtkYRk1+PkE8bStNyJxSLYKgSH
+Mbetvyp8VVSkA9HvKeNxZfB4sJ4t8Wd2vgTn7Rua5iMa4Fb1DqM9dGwUSlSWlUye
+jOSOYci+XaavCiAfiWkxrhxSv7VU+j8v5P14/uyxo3qstFZ0+jV3Y5MZW5YMSyMf
+CGYigp1Il7iVa1SWAD3u
+=l8uM
+-----END PGP SIGNATURE-----
+
+--=-4+Azb90OibtUXneBO6pT--
 
