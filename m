@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:64377 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752817Ab3EIBhu (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52497 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932531Ab3E0N72 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 21:37:50 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hm14so5672174wib.5
-        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2013 18:37:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1368001971-11551-1-git-send-email-wilocity.git@gmail.com>
-References: <1368001971-11551-1-git-send-email-wilocity.git@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 9 May 2013 11:37:29 +1000
-Message-ID: <CAGRGNgUStj6ZKPj1fKV6uwHJUD+LU655zrje-R8=Ow+cHUHb_w@mail.gmail.com> (sfid-20130509_033754_623931_B7DE7376)
-Subject: Re: [PATCH 1/3] wil6210: TCP/UDP checksum offloading support
-To: wilocity.git@gmail.com
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Mon, 27 May 2013 09:59:28 -0400
+Message-ID: <1369663161.14740.13.camel@jlt4.sipsolutions.net> (sfid-20130527_155930_938836_6099C316)
+Subject: Re: P2P Device support: how to deal with p2p_no_group_iface option
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	wil6210@qca.qualcomm.com, Erez Kirshenbaum <erezk@wilocity.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Jithu Jance <jithu@broadcom.com>
+Date: Mon, 27 May 2013 15:59:21 +0200
+In-Reply-To: <51A36603.7020403@broadcom.com>
+References: <51A09F43.5030004@broadcom.com>
+	 <1369645418.8229.17.camel@jlt4.sipsolutions.net>
+	 <51A36603.7020403@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Erez,
+On Mon, 2013-05-27 at 15:56 +0200, Arend van Spriel wrote:
 
-Just a couple of notes on patch authorship and email addresses.
+> > I don't think I'd do either of those. Not creating P2P_DEVICE will
+> > simply not work with drivers expecting it, and changing iftype to/from
+> > P2P-Device isn't supported since it would delete/create the netdev.
+> 
+> So should we check that in cfg80211 upon wiphy_register().
 
-On Wed, May 8, 2013 at 6:32 PM,  <wilocity.git@gmail.com> wrote:
-> From: Erez Kirshenbaum <erezk@wilocity.com>
+Check what?
 
-In the other two patches, your email address is "erezk@wilocitycom" -
-note the missing "."
+> > I don't really see much choice but reject (or ignore) this option for
+> > drivers using P2P_DEVICE. Why would anyone *really* want P2P operation
+> > on wlan0 when another interface can be used?
+> 
+> In this mac80211_hwsim is a special case. We could make P2P_DEVICE 
+> support in mac80211_hwsim optional using module parameter to allow 
+> testing both cases.
 
-> Add TCP/UDP checksum hardware offloading, configure hw and set the corresponding offloading bits in the
-> DMA descriptors.
->
-> Signed-off-by: Erez Kirshenbaum <erezk@wilocity.com>
-> Signed-off-by: Wilocity Git <wilocity.git@gmail.com>
+Yes, that we could do.
 
-I assume you've read Documentation/SubmittingPatches, particularly the
-section about signing your changes:
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches#n297
+johannes
 
-The names in Signed-off-bys are expected to be real people or
-permanent email addresses for teams. Given the name of the gmail
-account, this appears to be just a email address you're sending
-patches through. Is it monitored? Can you not send patches directly
-from your "real" account?
-
-Thanks,
-
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
