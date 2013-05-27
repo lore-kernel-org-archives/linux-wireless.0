@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51752 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:52350 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754729Ab3E0Jgs (ORCPT
+	with ESMTP id S1758048Ab3E0NLz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 05:36:48 -0400
-Message-ID: <1369647404.8229.26.camel@jlt4.sipsolutions.net> (sfid-20130527_113651_044051_B3247150)
-Subject: pull-request: iwlwifi-fixes 2013-05-27
+	Mon, 27 May 2013 09:11:55 -0400
+Message-ID: <1369660310.14740.12.camel@jlt4.sipsolutions.net> (sfid-20130527_151158_294786_1950B718)
+Subject: Re: pull-request: mac80211-next 2013-05-27
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Mon, 27 May 2013 11:36:44 +0200
+Date: Mon, 27 May 2013 15:11:50 +0200
+In-Reply-To: <1369658569.14740.11.camel@jlt4.sipsolutions.net> (sfid-20130527_144301_831846_51777608)
+References: <1369658569.14740.11.camel@jlt4.sipsolutions.net>
+	 (sfid-20130527_144301_831846_51777608)
 Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-4+Azb90OibtUXneBO6pT"
+	protocol="application/pgp-signature"; boundary="=-HM1+2KC9nE1o0+NrQMQW"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-4+Azb90OibtUXneBO6pT
+--=-HM1+2KC9nE1o0+NrQMQW
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-John,
+On Mon, 2013-05-27 at 14:42 +0200, Johannes Berg wrote:
+> John,
+>=20
+> I also have a bunch of new things for cfg80211/mac80211. Just like with
+> iwlwifi, I had to merge my mac80211 tree, so this pulled in some more
+> changes that looks spurious. Again, a better looking shortlog all the
+> way at the end.
+>=20
+> The biggest change this time is my cfg80211 locking and MLME/SME work,
+> cleaning up locking there by greatly reducing the number of different
+> useless locks. Other than that, some relatively minor things.
+>=20
+> Please let me know of any problems.
+>=20
+> johannes
+>=20
+>=20
+> The following changes since commit f722406faae2d073cc1d01063d1123c3542593=
+9e:
+>=20
+>   Linux 3.10-rc1 (2013-05-11 17:14:08 -0700)
+>=20
+> are available in the git repository at:
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git f=
+or-john
+>=20
+> for you to fetch changes up to 0dd83174762ff46356824217e69daf374f794ba4:
 
-And here's a pull request for iwlwifi-fixes ...
-
-This fixes a brown paper-bag bug that we really should've caught in
-review. More details in the changelog for the fix.
+Oh, there was a build error here, I've corrected it and the new HEAD is
+now 6abb9cb99f33b20c2f32f18a3ae9cc7543e46edb.
 
 johannes
 
-
-The following changes since commit e3d4bc8cc0230e8dc8033484666f03f87392a8c4=
-:
-
-  iwlwifi: mvm: fix aggregation drain flow (2013-05-16 22:39:07 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
-or-john
-
-for you to fetch changes up to a87783699b23395c46bbeeb5d28f6db24897bf26:
-
-  iwlwifi: dvm: fix zero LQ CMD sending avoidance (2013-05-27 11:33:57 +020=
-0)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: dvm: fix zero LQ CMD sending avoidance
-
- drivers/net/wireless/iwlwifi/dvm/sta.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
---=-4+Azb90OibtUXneBO6pT
+--=-HM1+2KC9nE1o0+NrQMQW
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABCAAGBQJRoyksAAoJEDBSmw7B7bqrp9YQAMu3PWCcxgk4tvlhkytLj1Ht
-aO7wfLQtV831BKX76gIiWRNmwdViF+eQSTA6CJn8WeZCbmeOSKUg1AULQGugLNvn
-TkI0v+bfehUw8cMgKhs0hX4laiLojVJfwycqShgZrAPBS8BtT55I6TRBn88Jbgk+
-Vya1R/DtTcMdvYaATALfdqYNrgGbt+/6gfhcvDHfHS8xNTQjre+riVowNDXLbBzr
-PFIaFbRbFgJo1eZf7yfkEZSOPryeNqancBOfsjTrSCpT9DYGo8VhlL0fLD0xTrbA
-GE+fedJMZbv8FFCWdX4+88LEqRTjSbXI7KYxIRCa43eQEYErKes4L/QrEKutfLqu
-dizsOfEXmpgEYflYBryqufBCKmiX5RnXJWvSgEaNtxsh9lYM4PUGYSDxGQIhGeYf
-+QL2d4C/b1yPUCeB5Z8YUeRsOy9sWZD16Vu6IUx58kzdlzzDVIrkGhDB7jYCnLwI
-VPkA8zUcS+c0s76YRn7L6RB00k2OnCdKB1qPbWHtkYRk1+PkE8bStNyJxSLYKgSH
-Mbetvyp8VVSkA9HvKeNxZfB4sJ4t8Wd2vgTn7Rua5iMa4Fb1DqM9dGwUSlSWlUye
-jOSOYci+XaavCiAfiWkxrhxSv7VU+j8v5P14/uyxo3qstFZ0+jV3Y5MZW5YMSyMf
-CGYigp1Il7iVa1SWAD3u
-=l8uM
+iQIcBAABCAAGBQJRo1uWAAoJEDBSmw7B7bqr198P/0RhxlTCXb+NDxZtQBu0ZIsS
+q8d+5m2RS/rUvZ3fYYn2Ia4xWoexttDUpVgLqms2eN2+uIiTvnEV2e3KvwXXp+xs
+bKauYK6jVgsX34dCrOwET1E3/HYxifs6ueYYh4doma4HANBw0oJTnoL8iLyJ1KQe
+CLfZE4R8TNbnMPekcuAUAX+/3QZ/PoD6nSdcskCSWTO/9F0hskME2O24d7LVbWpA
+JunyZUQbpweNVPpwwaor2Lp+mc20t/oN2FHXJp1VcKVP7SwvRZ9IF/j5TOhZmnaP
+WGJQN5Elav+59uS8/IWBDIdFHZHFoqtiUi3YpEhLqcFFb++UQx4zmEaTYvkLazXY
+rIix3wWsrjp8UNXO33JWbECnQEYCWbL9qxBhqArU0EXRuFNvgKxDmqx7SlBoLt5B
+mTSqRsBWiznGLZZ2jO43PI0ZYO93b1A7XTJV8AsfpigRcm+RCcAvx6go8g3nKll3
+quKsYLOliqlgZyvv5vCM/lEk+tqjfmTOuZPGkcSppTkydS/iNQeIqviBcK5a0Uk7
+W4t7yeFgTkbJIg2iiCFzDoRXD9lrFbcL9hf1MfvEhft5BHEVQowwkOSHHZAdZizl
+UWgx5pgcJCGkHhGgSldQdTG0boFFnybIThVsDN5C/oJn0AXHKgVPWzjK1rS7f1TT
+aLfVNd0/TSX3eYM6SDBc
+=cM+g
 -----END PGP SIGNATURE-----
 
---=-4+Azb90OibtUXneBO6pT--
+--=-HM1+2KC9nE1o0+NrQMQW--
 
