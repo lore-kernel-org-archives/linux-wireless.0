@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:36233 "EHLO arrakis.dune.hu"
+Received: from mms2.broadcom.com ([216.31.210.18]:4120 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761464Ab3EAPRe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 May 2013 11:17:34 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
+	id S1756579Ab3E0TKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 May 2013 15:10:16 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/7] rt2x00: rt61pci: use rt2x00dev->tx->limit
-Date: Wed,  1 May 2013 17:17:30 +0200
-Message-Id: <1367421455-18463-3-git-send-email-juhosg@openwrt.org> (sfid-20130501_171802_549632_EF8BFE2F)
-In-Reply-To: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
-References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.10 7/7] brcmfmac: Disable powersave mode for P2P
+ link.
+Date: Mon, 27 May 2013 21:09:59 +0200
+Message-ID: <1369681799-3163-8-git-send-email-arend@broadcom.com> (sfid-20130527_211025_420027_8CA7DA98)
+In-Reply-To: <1369681799-3163-1-git-send-email-arend@broadcom.com>
+References: <1369681799-3163-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TX data queue is initialized already when
-the rt61pci_txdone() function is called.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Fetch the number of the queue entries from that
-instead of using the entry_num field of the data
-queue descriptor.
+For p2p client mode powersave mode should be kept disabled. It is
+working but inefficient. In general p2p links do no benefit from this
+mode, because these links are setup temporarily to transfer data.
 
-The two values are the same, and the use of the
-rt2x00dev->tx->limit value allows us to get rid
-of a superfluous pointer dereference.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/rt2x00/rt61pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 0dc8180..7e1759b 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2175,7 +2175,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 	 * that the TX_STA_FIFO stack has a size of 16. We stick to our
- 	 * tx ring size for now.
- 	 */
--	for (i = 0; i < rt2x00dev->ops->tx->entry_num; i++) {
-+	for (i = 0; i < rt2x00dev->tx->limit; i++) {
- 		rt2x00mmio_register_read(rt2x00dev, STA_CSR4, &reg);
- 		if (!rt2x00_get_field32(reg, STA_CSR4_VALID))
- 			break;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 6a87178..301e572 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -2248,6 +2248,11 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *ndev,
+ 	}
+ 
+ 	pm = enabled ? PM_FAST : PM_OFF;
++	/* Do not enable the power save after assoc if it is a p2p interface */
++	if (ifp->vif->wdev.iftype == NL80211_IFTYPE_P2P_CLIENT) {
++		brcmf_dbg(INFO, "Do not enable power save for P2P clients\n");
++		pm = PM_OFF;
++	}
+ 	brcmf_dbg(INFO, "power save %s\n", (pm ? "enabled" : "disabled"));
+ 
+ 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, pm);
 -- 
-1.7.10
+1.7.10.4
+
 
