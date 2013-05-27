@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp27.msg.oleane.net ([62.161.4.27]:53186 "EHLO
-	smtp27.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757321Ab3EON6E (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:37331 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018Ab3E0Svp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 09:58:04 -0400
-Received: from RD9 ([195.6.104.67])
-	by smtp27.msg.oleane.net (MTA) with ESMTP id r4FDw0dh002242
-	for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 15:58:00 +0200
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
-Subject: [RFC] 802.11s needs to send about 900 frames to detect a lost peer on ath9k (AR9160 chip)
-Date: Wed, 15 May 2013 15:58:00 +0200
-Message-ID: <005601ce5174$3634a8c0$a29dfa40$@acksys.fr> (sfid-20130515_155809_046365_AB892EF6)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+	Mon, 27 May 2013 14:51:45 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
+Subject: Re: P2P Device support: how to deal with p2p_no_group_iface option
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <51A36603.7020403@broadcom.com>
+Date: Tue, 28 May 2013 03:51:37 +0900
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Jouni Malinen" <j@w1.fi>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Jithu Jance" <jithu@broadcom.com>
+Message-Id: <628A7F37-349C-458C-98CC-E70DEA7735A2@holtmann.org> (sfid-20130527_205154_332714_75007207)
+References: <51A09F43.5030004@broadcom.com> <1369645418.8229.17.camel@jlt4.sipsolutions.net> <51A36603.7020403@broadcom.com>
+To: Arend van Spriel <arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Hi Arend,
 
-I am testing what happens when a mesh peer suddenly disappears while I am
-sending data to it.
+>>> I looked into issues around hwsim p2p tests and got all but one p2p test
+>>> passing now (test_autogo_tdls). I had to remove the p2p_no_group_iface
+>>> option from the p2px.conf files, because otherwise it tries to change
+>>> the P2P management interface into a P2P group interface. When using
+>>> P2P_DEVICE and P2P management interface this is not allowed by
+>>> mac80211_hwsim. Also for brcmfmac the P2P_DEVICE interface is dedicated
+>>> and can only be added/deleted, but not changed. Not sure if that is true
+>>> for iwlmvm as well.
+>>> 
+>>> So I would like to discuss how to deal with the p2p_no_group_iface
+>>> option. As P2P_DEVICE is a new concept the name of the option may no
+>>> longer match what it intends. Is the option to force all P2P operations
+>>> to be done on a single interface, ie. wlan0 (or whatever is specified on
+>>> the command line) and no P2P_DEVICE is to be created. Or should it
+>>> change the interface from the command line as P2P group interface.
+>> 
+>> I don't think I'd do either of those. Not creating P2P_DEVICE will
+>> simply not work with drivers expecting it, and changing iftype to/from
+>> P2P-Device isn't supported since it would delete/create the netdev.
+> 
+> So should we check that in cfg80211 upon wiphy_register().
+> 
+>> I don't really see much choice but reject (or ignore) this option for
+>> drivers using P2P_DEVICE. Why would anyone *really* want P2P operation
+>> on wlan0 when another interface can be used?
+> 
+> In this mac80211_hwsim is a special case. We could make P2P_DEVICE support in mac80211_hwsim optional using module parameter to allow testing both cases.
 
-I am using compat-wireless 2013-04-16 plus openwrt patches, and I operate on
-a clean 5GHz channel at HT40.
-I am sending a low throughput UDP stream, then I suddenly poweroff the
-receiver MP.
-On Wireshark I can see that the sending MP continues sending approx. 900
-frames for about one second before giving up, which seems a very large
-number of frames (and a large detection delay).
+or instead of overloading it with pointless module parameters, we allow dynamic device creation via its already existing netlink interface. I do actually have patches for this. I just never cleaned them up enough to submit them upstream. There is a bunch of required refactoring that has to go in first before this would be possible, but it does work in my setup that I have running on my test machine.
 
-I investigated for the reason of so many frames, I found the following
-reasons, each of them bring questions.
+I would like to get to a state where mac80211_hwsim can be loaded all the time and starts out with radios=0. And you just add test radios one by one. Which then in fact can all have different features enabled or disabled. To that extend, the test cases for the regulatory subsystem could also be moved into userspace and do not need to be hardcoded in the kernel module anymore.
 
+Regards
 
-1) ath9k does not give up before ATH_MAX_SW_RETRIES(=30)  retries, some of
-them done by hardware and some by software in ath9k/xmit.c.
-Q: I saw that the number of retries is configurable in ath5k and nl80211
-(NL80211_ATTR_WIPHY_RETRY_LONG). Should we use this instead of the constant,
-or is this obsolete/unsupported/inappropriate/whatever?
-
-2) ath9k retries are computed from ts_longretry. But when the peer
-disappears, the last retries are subject to RTS, hence the retry count is in
-ts_shortretry instead.
-Q: shouldn't we add ts_shortretry and ts_longretry in
-ath9k/xmit.c/ath_tx_complete_aggr() and ath_tx_rc_status() ?
-
-3) In the rate control table, rates 1,2,3 are subject to RTS. When RTS fails
-the shortretry count seems to be always 10, whatever is the retry count set
-by the rate control. From Wireshark I see that indeed there are 10 RTS
-retries per rate control slot. (I googled for this one, the point is rised
-in madwifi-devel but not answered)
-Q: is this a "feature" of the AR9160 ? or in the standard ? or a hidden
-constant ?
-
-4) The mac80211 mesh_hwmp code computes an error rate with a decaying
-algorithm. Each time a TX frame fails it updates the error rate and gives up
-when the error is >95%. But when the ath9k driver retries 26x4 = 104 times,
-this accounts only for one failure.
-Q1: shouldn't we take into account the number of retries done by the
-underlying driver ?
-Q2: Isn't a 95% error rate damn high for a useable link ??? (just kidding -
-or not?)
-
->From (4), 17 frames are required for the mesh to detect failure. From (3) 26
-frames are sent by the hardware for each try. From (2) the ath9k resends 4
-times each failed frame. Total 17*4*26 = 1768 frames before detecting peer
-failure. The observed count is lesser because at some point the driver
-starts aggregating.
-
-I plan to work on these issues - Any advice about the best ways to improve
-this? 
-
-Cheers
+Marcel
 
