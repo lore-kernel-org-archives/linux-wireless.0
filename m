@@ -1,86 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:56620 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561Ab3EaCMd (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32500 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193Ab3E0PYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 22:12:33 -0400
-Received: by mail-pb0-f44.google.com with SMTP id wz12so1402268pbc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:12:33 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 39/40] crda: pass struct reglib_regdb_ctx to country2rd()
-Date: Thu, 30 May 2013 19:09:28 -0700
-Message-Id: <1369966169-23640-40-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042937_043133_55A5183A)
-In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 27 May 2013 11:24:07 -0400
+Date: Mon, 27 May 2013 18:24:02 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] cfg80211: Allow TDLS peer AID to be configured for VHT
+Message-ID: <20130527152402.GC12369@jouni.qca.qualcomm.com> (sfid-20130527_172411_839026_215404AF)
+References: <20130516171108.GA27497@jouni.qca.qualcomm.com>
+ <1369427943.13623.8.camel@johannes>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1369427943.13623.8.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+VHT uses peer AID in the PARTIAL_AID field in TDLS frames. The current
+design for TDLS is to first add a dummy STA entry before completing TDLS
+Setup and then update information on this STA entry based on what was
+received from the peer during the setup exchange.
 
-This consolidates the number of arguments.
+In theory, this could use NL80211_ATTR_STA_AID to set the peer AID just
+like this is used in AP mode to set the AID of an association station.
+However, existing cfg80211 validation rules prevent this attribute from
+being used with set_station operation. To avoid interoperability issues
+between different kernel and user space version combinations, introduce
+a new nl80211 attribute for the purpose of setting TDLS peer AID. This
+attribute can be used in both the new_station and set_station
+operations. It is not supposed to be allowed to change the AID value
+during the lifetime of the STA entry, but that validation is left for
+drivers to do in the change_station callback.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- reglib.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ include/uapi/linux/nl80211.h |    7 +++++++
+ net/wireless/nl80211.c       |   17 +++++++++++++----
+ 2 files changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/reglib.c b/reglib.c
-index 6f076ff..ff05aaa 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -298,18 +298,18 @@ static void reg_rule2rd(uint8_t *db, int dblen,
+v2:
+- reject NL80211_ATTR_PEER_AID if not TDLS STA in nl80211_new_station()
+- prefer NL80211_ATTR_PEER_AID in nl80211_new_station()
+
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index d1e48b5..a061437 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1429,6 +1429,11 @@ enum nl80211_commands {
+  * @NL80211_ATTR_MAX_CRIT_PROT_DURATION: duration in milliseconds in which
+  *      the connection should have increased reliability (u16).
+  *
++ * @NL80211_ATTR_PEER_AID: Association ID for the peer TDLS station (u16).
++ *	This is similar to @NL80211_ATTR_STA_AID but with a difference of being
++ *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
++ *	update a TDLS peer STA entry.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1727,6 +1732,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_CRIT_PROT_ID,
+ 	NL80211_ATTR_MAX_CRIT_PROT_DURATION,
  
- /* Converts a file regdomain to ieee80211_regdomain, easier to manage */
- const static struct ieee80211_regdomain *
--country2rd(uint8_t *db, int dblen,
-+country2rd(const struct reglib_regdb_ctx *ctx,
- 	   struct regdb_file_reg_country *country)
++	NL80211_ATTR_PEER_AID,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index dfdb5e6..2963b8d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -378,6 +378,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_MDID] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_IE_RIC] = { .type = NLA_BINARY,
+ 				  .len = IEEE80211_MAX_DATA_LEN },
++	[NL80211_ATTR_PEER_AID] = { .type = NLA_U16 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3834,6 +3835,8 @@ static int nl80211_set_station_tdls(struct genl_info *info,
+ 				    struct station_parameters *params)
  {
- 	struct regdb_file_reg_rules_collection *rcoll;
- 	struct ieee80211_regdomain *rd;
- 	int i, num_rules, size_of_rd;
+ 	/* Dummy STA entry gets updated once the peer capabilities are known */
++	if (info->attrs[NL80211_ATTR_PEER_AID])
++		params->aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
+ 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
+ 		params->ht_capa =
+ 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
+@@ -3974,7 +3977,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (!info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES])
+ 		return -EINVAL;
  
--	rcoll = reglib_get_file_ptr(db, dblen, sizeof(*rcoll),
--				country->reg_collection_ptr);
-+	rcoll = reglib_get_file_ptr(ctx->db, ctx->dblen, sizeof(*rcoll),
-+				    country->reg_collection_ptr);
- 	num_rules = ntohl(rcoll->reg_rule_num);
- 	/* re-get pointer with sanity checking for num_rules */
--	rcoll = reglib_get_file_ptr(db, dblen,
-+	rcoll = reglib_get_file_ptr(ctx->db, ctx->dblen,
- 			sizeof(*rcoll) + num_rules * sizeof(uint32_t),
- 			country->reg_collection_ptr);
+-	if (!info->attrs[NL80211_ATTR_STA_AID])
++	if (!info->attrs[NL80211_ATTR_STA_AID] &&
++	    !info->attrs[NL80211_ATTR_PEER_AID])
+ 		return -EINVAL;
  
-@@ -328,7 +328,7 @@ country2rd(uint8_t *db, int dblen,
- 	rd->n_reg_rules = num_rules;
+ 	mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+@@ -3985,7 +3989,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	params.listen_interval =
+ 		nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
  
- 	for (i = 0; i < num_rules; i++) {
--		reg_rule2rd(db, dblen, rcoll->reg_rule_ptrs[i],
-+		reg_rule2rd(ctx->db, ctx->dblen, rcoll->reg_rule_ptrs[i],
- 			&rd->reg_rules[i]);
- 	}
+-	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
++	if (info->attrs[NL80211_ATTR_PEER_AID])
++		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
++	else
++		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
+ 	if (!params.aid || params.aid > IEEE80211_MAX_AID)
+ 		return -EINVAL;
  
-@@ -351,7 +351,7 @@ reglib_get_rd_idx(unsigned int idx, const char *file)
+@@ -4037,7 +4044,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
  
- 	country = ctx->countries + idx;
- 
--	rd = country2rd(ctx->db, ctx->dblen, country);
-+	rd = country2rd(ctx, country);
- 	if (!rd)
- 		goto out;
- 
-@@ -384,7 +384,7 @@ reglib_get_rd_alpha2(const char *alpha2, const char *file)
- 	if (!found_country)
- 		goto out;
- 
--	rd = country2rd(ctx->db, ctx->dblen, country);
-+	rd = country2rd(ctx, country);
- 	if (!rd)
- 		goto out;
- 
+ 		/* TDLS peers cannot be added */
+-		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
++		if ((params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) ||
++		    info->attrs[NL80211_ATTR_PEER_AID])
+ 			return -EINVAL;
+ 		/* but don't bother the driver with it */
+ 		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
+@@ -4063,7 +4071,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
+ 			return -EINVAL;
+ 		/* TDLS peers cannot be added */
+-		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
++		if ((params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) ||
++		    info->attrs[NL80211_ATTR_PEER_AID])
+ 			return -EINVAL;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
 -- 
-1.7.10.4
+1.7.9.5
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
