@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49786 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752328Ab3EPLCB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 07:02:01 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Received: from plane.gmane.org ([80.91.229.3]:50812 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753355Ab3E0VaE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 May 2013 17:30:04 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Uh4zS-00084i-Q6
+	for linux-wireless@vger.kernel.org; Mon, 27 May 2013 23:30:03 +0200
+Received: from d108-172-141-189.bchsia.telus.net ([108.172.141.189])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 27 May 2013 23:30:02 +0200
+Received: from janzhang5 by d108-172-141-189.bchsia.telus.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 27 May 2013 23:30:02 +0200
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 16/18] ath5k: report 5/10 MHz channels
-Date: Thu, 16 May 2013 13:00:43 +0200
-Message-Id: <1368702045-27598-17-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130226_839686_2E783BDC)
-In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+From: Janice <janzhang5@gmail.com>
+Subject: Re: Realtek rtl8192se in AP mode?
+Date: Mon, 27 May 2013 05:00:39 +0000 (UTC)
+Message-ID: <loom.20130527T065555-81@post.gmane.org> (sfid-20130527_233009_356795_2380E0A3)
+References: <CAP6E9idrT=gu6cnKqMzVMVEXqRHdyuADgBNJTdCebt1Rf1dcfg@mail.gmail.com> <jfoo7s$4n9$1@dough.gmane.org> <4F207641.2090908@lwfinger.net> <jfr3s6$ff7$1@dough.gmane.org> <4F211384.5080105@gmail.com> <4F2172D4.9090208@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath5k/base.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+Larry Finger <Larry.Finger@...> writes:
+Hi Larry, I'm having trouble installing the file 
+"92ce_se_de_linux_mac80211_0005.1230.2011.tar.gz". 
+1) Extracted it in Ubuntu 12.04 (installed using Wubi to avoid partitioning) 
+using the command "tar -xzvf 
+92ce_se_de_linux_mac80211_0005.1230.2011.tar.gz"
+2) ls to search for dir name
+3) cd dir
+4) make
+5) gets 2 errors.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 7f702fe..13b0d37 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1355,6 +1355,16 @@ ath5k_receive_frame(struct ath5k_hw *ah, struct sk_buff *skb,
- 
- 	rxs->rate_idx = ath5k_hw_to_driver_rix(ah, rs->rs_rate);
- 	rxs->flag |= ath5k_rx_decrypted(ah, skb, rs);
-+	switch (ah->ah_bwmode) {
-+	case AR5K_BWMODE_5MHZ:
-+		rxs->flag |= RX_FLAG_5MHZ;
-+		break;
-+	case AR5K_BWMODE_10MHZ:
-+		rxs->flag |= RX_FLAG_10MHZ;
-+		break;
-+	default:
-+		break;
-+	}
- 
- 	if (rxs->rate_idx >= 0 && rs->rs_rate ==
- 	    ah->sbands[ah->curchan->band].bitrates[rxs->rate_idx].hw_value_short)
--- 
-1.7.10.4
+2 questions: 
+
+I) is the vendor source you mentioned 
+"92ce_se_de_linux_mac80211_0005.1230.2011.tar.gz" ?
+II) If not, would you please email the file you're talking about? 
+
+Thank you.
+
+
+
 
