@@ -1,73 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51614 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757268Ab3E0IuU (ORCPT
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:51183 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755498Ab3E0NF7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 04:50:20 -0400
-Message-ID: <1369644617.8229.9.camel@jlt4.sipsolutions.net> (sfid-20130527_105034_565223_1140479D)
-Subject: Re: [PATCH 2/3] mac80211: support active monitor interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
+	Mon, 27 May 2013 09:05:59 -0400
+Received: by mail-bk0-f53.google.com with SMTP id mx1so3693960bkb.12
+        for <linux-wireless@vger.kernel.org>; Mon, 27 May 2013 06:05:57 -0700 (PDT)
+Message-ID: <1369659951.8283.22.camel@canaries64> (sfid-20130527_150601_981576_0B88019B)
+Subject: [PATCH 3/5] staging: vt6656: rf.c: RFvRSSITodBm Remove camel case
+ and clean up.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Mon, 27 May 2013 10:50:17 +0200
-In-Reply-To: <1369577107-87931-2-git-send-email-nbd@openwrt.org>
-References: <1369577107-87931-1-git-send-email-nbd@openwrt.org>
-	 <1369577107-87931-2-git-send-email-nbd@openwrt.org>
+Date: Mon, 27 May 2013 14:05:51 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-05-26 at 16:05 +0200, Felix Fietkau wrote:
 
->  	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
->  		    (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
-> -		     !(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF))))
-> +		     !(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF) &&
-> +			 !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))))
->  		return -EINVAL;
+White space clean up.
 
-bad indentation
+Camel case changes;
+pDevice -> priv
+byCurrRSSI -> rssi
+pldBm -> dbm
+byIdx -> idx
+abyAIROHARF -> airoharf
 
-> +++ b/net/mac80211/iface.c
-> @@ -209,9 +209,11 @@ static int ieee80211_change_mac(struct net_device *dev, void *addr)
->  	if (ieee80211_sdata_running(sdata))
->  		return -EBUSY;
->  
-> -	ret = ieee80211_verify_mac(sdata->local, sa->sa_data);
-> -	if (ret)
-> -		return ret;
-> +	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-> +		ret = ieee80211_verify_mac(sdata->local, sa->sa_data);
-> +		if (ret)
-> +			return ret;
-> +	}
+No functional changes.
 
-I'm not convinced this makes sense, why would you want to have a monitor
-with an invalid address? I'd rather not allow that, having e.g. a
-multicast address that is ACK'ing frames would be very very strange.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rf.c | 37 +++++++++++++++++++------------------
+ 1 file changed, 19 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index b7aad36..2f3963e 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -31,6 +31,7 @@
+  * Revision History:
+  *	RF_VT3226: RobertYu:20051111, VT3226C0 and before
+  *	RF_VT3226D0: RobertYu:20051228
++ *	RF_VT3342A0: RobertYu:20060609
+  *
+  */
  
-> @@ -479,9 +481,13 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
->  	case NL80211_IFTYPE_AP:
->  		sdata->bss = &sdata->u.ap;
->  		break;
-> +	case NL80211_IFTYPE_MONITOR:
-> +		if ((sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) &&
-> +		    !(local->hw.flags & IEEE80211_HW_SUPPORTS_ACTIVE_MONITOR))
-> +			return -EOPNOTSUPP;
+@@ -942,27 +943,27 @@ int RFbRawSetPower(struct vnt_private *priv, u8 power, u32 rate)
+  * Return Value: none
+  *
+ -*/
+-void RFvRSSITodBm(struct vnt_private *pDevice, u8 byCurrRSSI, long *pldBm)
++void RFvRSSITodBm(struct vnt_private *priv, u8 rssi, long *dbm)
+ {
+-	u8 byIdx = (((byCurrRSSI & 0xC0) >> 6) & 0x03);
+-	signed long b = (byCurrRSSI & 0x3F);
+-	signed long a = 0;
+-	u8 abyAIROHARF[4] = {0, 18, 0, 40};
++	u8 idx = (((rssi & 0xc0) >> 6) & 0x03);
++	long b = (rssi & 0x3f);
++	long a = 0;
++	u8 airoharf[4] = {0, 18, 0, 40};
+ 
+-    switch (pDevice->byRFType) {
+-        case RF_AL2230:
+-        case RF_AL2230S:
+-        case RF_AIROHA7230:
+-        case RF_VT3226: //RobertYu:20051111
+-        case RF_VT3226D0:
+-        case RF_VT3342A0:   //RobertYu:20060609
+-            a = abyAIROHARF[byIdx];
+-            break;
+-        default:
+-            break;
+-    }
++	switch (priv->byRFType) {
++	case RF_AL2230:
++	case RF_AL2230S:
++	case RF_AIROHA7230:
++	case RF_VT3226:
++	case RF_VT3226D0:
++	case RF_VT3342A0:
++		a = airoharf[idx];
++		break;
++	default:
++		break;
++	}
+ 
+-    *pldBm = -1 * (a + b * 2);
++	*dbm = -1 * (a + b * 2);
+ }
+ 
+ void RFbRFTableDownload(struct vnt_private *pDevice)
+-- 
+1.8.1.2
 
-How can you even get here? Shouldn't you just disallow setting the flag
-unless it's supported?
 
-> -		if (local->monitors == 0 && local->open_count == 0) {
-> +		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
-> +			res = drv_add_interface(local, sdata);
-> +			if (res)
-> +				goto err_stop;
-> +
-> +			local->active_mntrs++;
 
-Did I miss something, or don't you use the counter?
 
-johannes
+
 
