@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:42691 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754670Ab3EQGTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 02:19:42 -0400
-Date: Fri, 17 May 2013 08:00:42 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Ignacy Gawedzki <i@lri.fr>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
-Message-ID: <20130517060042.GA21663@sig21.net> (sfid-20130517_081953_783463_4D73AAB6)
-References: <20130515134258.GA9033@zenon.in.qult.net>
- <5194DEB3.2060407@rempel-privat.de>
- <20130516172030.GD21850@zenon.in.qult.net>
- <51951B90.70909@rempel-privat.de>
- <20130516185030.GB16833@zenon.in.qult.net>
- <20130516234857.GA17867@zenon.in.qult.net>
- <20130516234526.GH3795@alittletooquiet.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130516234526.GH3795@alittletooquiet.net>
+Received: from s72.web-hosting.com ([198.187.29.21]:44955 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755025Ab3E0JbV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 May 2013 05:31:21 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] ath10k: Calculate correct peer PHY mode for VHT
+Date: Mon, 27 May 2013 14:58:40 +0530
+Message-Id: <1369646921-22278-2-git-send-email-sujith@msujith.org> (sfid-20130527_113124_847750_0E7FB014)
+In-Reply-To: <1369646921-22278-1-git-send-email-sujith@msujith.org>
+References: <20899.9846.857204.903600@gargle.gargle.HOWL>
+ <1369646921-22278-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 16, 2013 at 07:45:26PM -0400, Forest Bond wrote:
-> On Fri, May 17, 2013 at 01:48:57AM +0200, Ignacy Gawedzki wrote:
-> > On Thu, May 16, 2013 at 08:50:30PM +0200, thus spake Ignacy Gawedzki:
-> > > I'll try on yet another one and will tell you the results.
-> > 
-> > Just tried on ICH7, same thing.  The easiest way to reproduce the bug is to
-> > boot into single user mode ("recovery mode" on Ubuntu), in order to prevent
-> > any NetworkManager or udev from interfering.  Then, without any attempt to up
-> > the interface, reboot the system by typing "reboot" in a root shell.
-> 
-> FWIW, this has also been a problem for me on Ubuntu 12.04.  I can reproduce it
-> the same way.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-FWIW, I also met this problem after I added ath9k_htc
-to my initrd (via /etc/initramfs-tools/modules).
-So I removed it and the issue went away.  I first
-noticed it after resume from suspend-to-disk, but
-later found it doesn't work after warm reboot, too.
-The mainboard has Intel H77 chipset, the TL-WN722N is
-plugged into USB2.0 port.
+The peer PHY mode for 11ac operation needs to be determined
+properly based on the channel bandwidth being used. Fix
+this so that the proper mode is given to the firmware.
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
-Johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 74dc3f9..377e329 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1013,8 +1013,6 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+ {
+ 	enum wmi_phy_mode phymode = MODE_UNKNOWN;
+ 
+-	/* FIXME: add VHT */
+-
+ 	switch (ar->hw->conf.chandef.chan->band) {
+ 	case IEEE80211_BAND_2GHZ:
+ 		if (sta->ht_cap.ht_supported) {
+@@ -1028,7 +1026,17 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+ 
+ 		break;
+ 	case IEEE80211_BAND_5GHZ:
+-		if (sta->ht_cap.ht_supported) {
++		/*
++		 * Check VHT first.
++		 */
++		if (sta->vht_cap.vht_supported) {
++			if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
++				phymode = MODE_11AC_VHT80;
++			else if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
++				phymode = MODE_11AC_VHT40;
++			else if (sta->bandwidth == IEEE80211_STA_RX_BW_20)
++				phymode = MODE_11AC_VHT20;
++		} else if (sta->ht_cap.ht_supported) {
+ 			if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
+ 				phymode = MODE_11NA_HT40;
+ 			else
+@@ -1042,6 +1050,9 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+ 		break;
+ 	}
+ 
++	ath10k_dbg(ATH10K_DBG_MAC, "Peer %pM phymode: %d\n",
++		   sta->addr, phymode);
++
+ 	arg->peer_phymode = phymode;
+ 	WARN_ON(phymode == MODE_UNKNOWN);
+ }
+-- 
+1.8.3
+
