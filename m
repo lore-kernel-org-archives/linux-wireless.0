@@ -1,121 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:26791 "EHLO mx4.wp.pl"
+Received: from mms2.broadcom.com ([216.31.210.18]:4128 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755255Ab3ERMCt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 May 2013 08:02:49 -0400
-Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:48 +0200
-From: stf_xl@wp.pl
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 14/32] rt2800: initialize BBP_R83 on all subroutines (except 5592)
-Date: Sat, 18 May 2013 14:03:37 +0200
-Message-Id: <1368878635-4455-15-git-send-email-stf_xl@wp.pl> (sfid-20130518_142937_504276_FE4A48D7)
-In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
-References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+	id S1756630Ab3E0TKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 May 2013 15:10:16 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.10 5/7] brcmfmac: use struct
+ net_device::destructor to remove interfaces
+Date: Mon, 27 May 2013 21:09:57 +0200
+Message-ID: <1369681799-3163-6-git-send-email-arend@broadcom.com> (sfid-20130527_211029_721940_0CE3AF92)
+In-Reply-To: <1369681799-3163-1-git-send-email-arend@broadcom.com>
+References: <1369681799-3163-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+Upon deleting a P2P_CLIENT/GO interface the vif and consequently
+the wdev is freed before the net_device is actually being unregistered
+but cfg80211 still needs to access the wdev. Using destructor field
+to free the net_device and vif.
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   23 ++++++++++++++++-------
- 1 files changed, 16 insertions(+), 7 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    6 ++---
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |   23 +++++++++++++++++++-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    1 -
+ 3 files changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 54042e4..5e3dfd4 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3969,6 +3969,8 @@ static void rt2800_init_bbp_305x_soc(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 80, 0x08);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index f04e355..b98f223 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -653,6 +653,7 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
  
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+
-+	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
- }
+ 	brcmf_dbg(INFO, "%s: Broadcom Dongle Host Driver\n", ndev->name);
  
- static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
-@@ -3989,6 +3991,8 @@ static void rt2800_init_bbp_28xx(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 81, 0x37);
++	ndev->destructor = free_netdev;
+ 	return 0;
  
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+
-+	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
- }
+ fail:
+@@ -793,6 +794,7 @@ void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
+ 	struct brcmf_if *ifp;
  
- static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
-@@ -4006,6 +4010,8 @@ static void rt2800_init_bbp_30xx(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 81, 0x33);
- 
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+
-+	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
- }
- 
- static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
-@@ -4034,6 +4040,8 @@ static void rt2800_init_bbp_3290(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 81, 0x33);
- 
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+
-+	rt2800_bbp_write(rt2x00dev, 83, 0x7a);
- }
- 
- static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
-@@ -4064,6 +4072,8 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 81, 0x37);
- 
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+
-+	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
- }
- 
- static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
-@@ -4081,6 +4091,8 @@ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 81, 0x33);
- 
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+
-+	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
- }
- 
- static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
-@@ -4100,6 +4112,8 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 81, 0x33);
- 
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+
-+	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
- }
- 
- static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
-@@ -4127,6 +4141,8 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 81, 0x33);
- 
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+
-+	rt2800_bbp_write(rt2x00dev, 83, 0x7a);
- }
- 
- static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
-@@ -4245,13 +4261,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	ifp = drvr->iflist[bssidx];
++	drvr->iflist[bssidx] = NULL;
+ 	if (!ifp) {
+ 		brcmf_err("Null interface, idx=%d\n", bssidx);
  		return;
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT3290) ||
--	    rt2x00_rt(rt2x00dev, RT5390) ||
--	    rt2x00_rt(rt2x00dev, RT5392))
--		rt2800_bbp_write(rt2x00dev, 83, 0x7a);
--	else
--		rt2800_bbp_write(rt2x00dev, 83, 0x6a);
+@@ -813,15 +815,13 @@ void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
+ 			cancel_work_sync(&ifp->setmacaddr_work);
+ 			cancel_work_sync(&ifp->multicast_work);
+ 		}
 -
- 	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860D))
- 		rt2800_bbp_write(rt2x00dev, 84, 0x19);
- 	else if (rt2x00_rt(rt2x00dev, RT3290) ||
++		/* unregister will take care of freeing it */
+ 		unregister_netdev(ifp->ndev);
+ 		if (bssidx == 0)
+ 			brcmf_cfg80211_detach(drvr->config);
+-		free_netdev(ifp->ndev);
+ 	} else {
+ 		kfree(ifp);
+ 	}
+-	drvr->iflist[bssidx] = NULL;
+ }
+ 
+ int brcmf_attach(uint bus_hdrlen, struct device *dev)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index 167b7af..79555f0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -2240,6 +2240,25 @@ static void brcmf_p2p_delete_p2pdev(struct brcmf_cfg80211_info *cfg,
+ }
+ 
+ /**
++ * brcmf_p2p_free_p2p_if() - free up net device related data.
++ *
++ * @ndev: net device that needs to be freed.
++ */
++static void brcmf_p2p_free_p2p_if(struct net_device *ndev)
++{
++	struct brcmf_cfg80211_info *cfg;
++	struct brcmf_cfg80211_vif *vif;
++	struct brcmf_if *ifp;
++
++	ifp = netdev_priv(ndev);
++	cfg = ifp->drvr->config;
++	vif = ifp->vif;
++
++	brcmf_free_vif(cfg, vif);
++	free_netdev(ifp->ndev);
++}
++
++/**
+  * brcmf_p2p_add_vif() - create a new P2P virtual interface.
+  *
+  * @wiphy: wiphy device of new interface.
+@@ -2316,6 +2335,9 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ 		brcmf_err("Registering netdevice failed\n");
+ 		goto fail;
+ 	}
++	/* override destructor */
++	ifp->ndev->destructor = brcmf_p2p_free_p2p_if;
++
+ 	cfg->p2p.bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = vif;
+ 	/* Disable firmware roaming for P2P interface  */
+ 	brcmf_fil_iovar_int_set(ifp, "roam_off", 1);
+@@ -2391,7 +2413,6 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 			err = 0;
+ 	}
+ 	brcmf_cfg80211_arm_vif_event(cfg, NULL);
+-	brcmf_free_vif(cfg, vif);
+ 	p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
+ 
+ 	return err;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index f8c86b5..656ce87 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4678,7 +4678,6 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
+ 		return 0;
+ 
+ 	case BRCMF_E_IF_DEL:
+-		ifp->vif = NULL;
+ 		mutex_unlock(&event->vif_event_lock);
+ 		/* event may not be upon user request */
+ 		if (brcmf_cfg80211_vif_event_armed(cfg))
 -- 
-1.7.4.4
+1.7.10.4
+
 
