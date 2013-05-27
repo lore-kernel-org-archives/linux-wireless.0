@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:44021 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753846Ab3EGQmt (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:21910 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842Ab3E0POl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 12:42:49 -0400
-Date: Tue, 7 May 2013 11:42:36 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Matt Chen <machen@suse.com>, joeyli <jlee@suse.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Linux summit this year ?
-Message-ID: <20130507164236.GD32496@thinkpad-t410> (sfid-20130507_184252_735641_5394FBF1)
-References: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>
- <20130225143201.GA6455@tuxdriver.com>
- <1361809785.3902.19.camel@aeonflux>
- <512BAED0.2000507@lwfinger.net>
- <20130225211207.GE6455@tuxdriver.com>
- <1361892097.3902.34.camel@aeonflux>
- <1367522831.11375.1.camel@jlt4.sipsolutions.net>
- <20130502194308.GC2050@tuxdriver.com>
- <1367568670.9430.7.camel@jlt4.sipsolutions.net>
- <20130503144947.GF2069@tuxdriver.com>
+	Mon, 27 May 2013 11:14:41 -0400
+Date: Mon, 27 May 2013 18:14:36 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: Allow TDLS peer AID to be configured for VHT
+Message-ID: <20130527151436.GB12369@jouni.qca.qualcomm.com> (sfid-20130527_171447_166080_743251CE)
+References: <20130516171108.GA27497@jouni.qca.qualcomm.com>
+ <1369427943.13623.8.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130503144947.GF2069@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1369427943.13623.8.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 03, 2013 at 10:49:47AM -0400, John W. Linville wrote:
-> On Fri, May 03, 2013 at 10:11:10AM +0200, Johannes Berg wrote:
-> > On Thu, 2013-05-02 at 15:43 -0400, John W. Linville wrote:
-> > 
-> > > "I'm confirming that we got the space you needed for the Wireless Summit in
-> > > New Orleans.
-> > 
-> > > Does that sound alright to everyone?  
-> > 
-> > Sounds good to me. If it overlaps LPC, which one are people going to
-> > have to register for (if not going to both anyway)?
+On Fri, May 24, 2013 at 10:39:03PM +0200, Johannes Berg wrote:
+> On Thu, 2013-05-16 at 20:11 +0300, Jouni Malinen wrote:
 > 
-> I would presume that if you want to got to LPC sessions then you
-> would have to register for LPC.  Generally we have required Wireless
-> Summit attendees to register for LinuxCon, and I presume that would
-> be required this time (so both LinuxCon and LPC if you want the
-> LPC sessions).
+> > -	if (!info->attrs[NL80211_ATTR_STA_AID])
+> > +	if (!info->attrs[NL80211_ATTR_STA_AID] &&
+> > +	    !info->attrs[NL80211_ATTR_PEER_AID])
+> >  		return -EINVAL;
+> 
+> Technically here I think you could check that this attribute isn't used
+> with non-TDLS stations, since in new_station you know what it's going to
+> be, right?
 
-Why require LinuxCon registration rather than LPC? I'd assume most
-wireless summit attendees are more interested in plumbers than LinuxCon.
-Could the summit just require registration at one or the other?
+Well, in this function yes, but not this early.. I'll add validation for
+this within the iftype switch.
+
+> > @@ -3985,7 +3989,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+> > -	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
+> > +	if (info->attrs[NL80211_ATTR_STA_AID])
+> > +		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
+> > +	else
+> > +		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
+> 
+> This is a bit strange? Wouldn't you want to prefer the new attribute, so
+> you can put some possibly invalid value into the old attribute for old
+> kernels? Otherwise what's the reason for even reading the new attribute
+> in this code at all, if new userspace code must set the old attribute
+> for old kernels anyway?
+
+This was something to allow the new attribute to be taken into use if we
+ever get rid of the extra dummy STA for TDLS. I'd assume this ends up
+having to get a new capability flag, so wpa_supplicant could figure out
+which attribute to use. Anyway, I agree it makes more sense to reverse
+the order here to prefer _PEER_AID.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
