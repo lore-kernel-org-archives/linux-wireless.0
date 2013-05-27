@@ -1,37 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:55999 "EHLO mout.gmx.net"
+Received: from mms3.broadcom.com ([216.31.210.19]:3293 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762766Ab3ECUEk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 16:04:40 -0400
-Received: from mailout-de.gmx.net ([10.1.76.24]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0MF6gP-1UoaqK1s9z-00GGia for
- <linux-wireless@vger.kernel.org>; Fri, 03 May 2013 22:04:39 +0200
-Message-ID: <51841856.2090503@rempel-privat.de> (sfid-20130503_220444_599547_E5BAC123)
-Date: Fri, 03 May 2013 22:04:38 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+	id S1756579Ab3E0TKU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 May 2013 15:10:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.10 4/7] brcmfmac: free net device when
+ registration fails
+Date: Mon, 27 May 2013 21:09:56 +0200
+Message-ID: <1369681799-3163-5-git-send-email-arend@broadcom.com> (sfid-20130527_211034_327879_E049EE4E)
+In-Reply-To: <1369681799-3163-1-git-send-email-arend@broadcom.com>
+References: <1369681799-3163-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Guy Harris <guy@alum.mit.edu>
-CC: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	radiotap@NetBSD.org
-Subject: Re: [PATCH] tcpdump: add STBC Rx support
-References: <1367527479.11375.19.camel@jlt4.sipsolutions.net> <1367610836-3303-1-git-send-email-linux@rempel-privat.de> <1367610836-3303-5-git-send-email-linux@rempel-privat.de> <15EBD372-C4E3-4DA3-9ED9-47B238654587@alum.mit.edu>
-In-Reply-To: <15EBD372-C4E3-4DA3-9ED9-47B238654587@alum.mit.edu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 03.05.2013 21:58, schrieb Guy Harris:
-> You might want to fork the tcpdump Git repository on GitHub:
->
-> 	https://github.com/the-tcpdump-group/tcpdump
->
-> make your changes, and submit a pull request for the tcpdump repository; that's the preferred way to submit changes to tcpdump (and, *mutatis mutandis*, to libpcap).
->
+When registration fails the net device is no longer needed. Free
+the net device and remove reference to private data from the
+driver.
 
-Ok, i'll do that. I thought is should be posted first on radiotap list 
-as part of standardisation process. May be some constructive comments 
-and change will come ;)
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |   10 +++++++---
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c      |    3 ++-
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 59c2546..f04e355 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -656,7 +656,9 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
+ 	return 0;
+ 
+ fail:
++	drvr->iflist[ifp->bssidx] = NULL;
+ 	ndev->netdev_ops = NULL;
++	free_netdev(ndev);
+ 	return -EBADE;
+ }
+ 
+@@ -720,6 +722,9 @@ static int brcmf_net_p2p_attach(struct brcmf_if *ifp)
+ 	return 0;
+ 
+ fail:
++	ifp->drvr->iflist[ifp->bssidx] = NULL;
++	ndev->netdev_ops = NULL;
++	free_netdev(ndev);
+ 	return -EBADE;
+ }
+ 
+@@ -925,8 +930,6 @@ fail:
+ 			brcmf_fws_del_interface(ifp);
+ 			brcmf_fws_deinit(drvr);
+ 		}
+-		free_netdev(ifp->ndev);
+-		drvr->iflist[0] = NULL;
+ 		if (p2p_ifp) {
+ 			free_netdev(p2p_ifp->ndev);
+ 			drvr->iflist[1] = NULL;
+@@ -934,7 +937,8 @@ fail:
+ 		return ret;
+ 	}
+ 	if ((brcmf_p2p_enable) && (p2p_ifp))
+-		brcmf_net_p2p_attach(p2p_ifp);
++		if (brcmf_net_p2p_attach(p2p_ifp) < 0)
++			brcmf_p2p_enable = 0;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index 5a64280..83ee53a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -202,7 +202,8 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+ 			return;
+ 		brcmf_fws_add_interface(ifp);
+ 		if (!drvr->fweh.evt_handler[BRCMF_E_IF])
+-			err = brcmf_net_attach(ifp, false);
++			if (brcmf_net_attach(ifp, false) < 0)
++				return;
+ 	}
+ 
+ 	if (ifevent->action == BRCMF_E_IF_CHANGE)
 -- 
-Regards,
-Oleksij
+1.7.10.4
+
+
