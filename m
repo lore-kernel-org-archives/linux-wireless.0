@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41062 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578Ab3EHPPt (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:57793 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753726Ab3E1TcY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 11:15:49 -0400
-Message-ID: <518A6C21.5070408@candelatech.com> (sfid-20130508_171552_375075_70DA3BB7)
-Date: Wed, 08 May 2013 08:15:45 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Fun with QoS in AP mode.
-References: <5189DB72.3020809@candelatech.com> <20873.56643.216380.594657@gargle.gargle.HOWL>
-In-Reply-To: <20873.56643.216380.594657@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 28 May 2013 15:32:24 -0400
+Message-ID: <1369769542.8548.13.camel@jlt4.sipsolutions.net> (sfid-20130528_213239_908591_06D2A7A9)
+Subject: Re: [v3.10-rc2] iwlwifi regression
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?J=F6rg?= Otte <jrg.otte@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Tue, 28 May 2013 21:32:22 +0200
+In-Reply-To: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com> (sfid-20130525_111005_833824_A78E43A2)
+References: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com>
+	 (sfid-20130525_111005_833824_A78E43A2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/07/2013 10:06 PM, Sujith Manoharan wrote:
-> Ben Greear wrote:
->> We were doing some testing with ToS/QoS in some VOIP streams today.
->>
->> The mappings on the station machine work fine, but on the AP, the packets
->> always go to the BE queue.  Both systems are 3.9.0+ ath9k, recent hostapd,
->> supplicant, etc.
->
-> Is the AP running ath9k ?
+On Sat, 2013-05-25 at 11:09 +0200, Jörg Otte wrote:
+> If iwlwifi/iwldvm are built into the kernel (no loadable modules)
+> following error is written to console and syslog since v3.10-rc:
+> 
+> iwlwifi 0000:08:00.0: failed to load module iwldvm (error -38), is
+> dynamic loading enabled?
 
-Yes, both AP and Station machine are ath9k, 3.9.0+, etc....
+So you just see the message, the driver actually works? I guess that
+makes some sense ... I'll just #ifdef the message.
 
-Basically identicaly hardware and software loads..just one is acting as AP
-and one as station(s) in this scenario.
-
-Ben
-
->
-> Sujith
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
