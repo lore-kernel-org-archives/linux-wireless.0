@@ -1,134 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4128 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756630Ab3E0TKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 May 2013 15:10:16 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for 3.10 5/7] brcmfmac: use struct
- net_device::destructor to remove interfaces
-Date: Mon, 27 May 2013 21:09:57 +0200
-Message-ID: <1369681799-3163-6-git-send-email-arend@broadcom.com> (sfid-20130527_211029_721940_0CE3AF92)
-In-Reply-To: <1369681799-3163-1-git-send-email-arend@broadcom.com>
-References: <1369681799-3163-1-git-send-email-arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52947 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964858Ab3E1RpM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 May 2013 13:45:12 -0400
+Date: Tue, 28 May 2013 13:37:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Thommy Jakobsson <thommyj@gmail.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	piotras@gmail.com
+Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
+Message-ID: <20130528173736.GE2084@tuxdriver.com> (sfid-20130528_194521_012130_1E43577C)
+References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net>
+ <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com>
+ <alpine.DEB.2.02.1305132025560.1278@kelly.ryd.net>
+ <20130524164922.GA2175@tuxdriver.com>
+ <alpine.DEB.2.02.1305252058060.1282@kelly.ryd.net>
+ <51A112FC.8060100@hauke-m.de>
+ <20130525214223.4e69a772@milhouse>
+ <51A120EE.40008@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <51A120EE.40008@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upon deleting a P2P_CLIENT/GO interface the vif and consequently
-the wdev is freed before the net_device is actually being unregistered
-but cfg80211 still needs to access the wdev. Using destructor field
-to free the net_device and vif.
+On Sat, May 25, 2013 at 03:37:02PM -0500, Larry Finger wrote:
+> On 05/25/2013 02:42 PM, Michael Büsch wrote:
+> >On Sat, 25 May 2013 21:37:32 +0200
+> >Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> >
+> >>On 05/25/2013 09:02 PM, Thommy Jakobsson wrote:
+> >>>
+> >>>
+> >>>On Fri, 24 May 2013, John W. Linville wrote:
+> >>>
+> >>>>Ping?  Should I drop this one?
+> >>>>
+> >>>Still working great on my device, so from that I think we should go for
+> >>>it. But it would be great if Rafal (or someone) tested it on some other
+> >>>hardware as well.
+> >>>
+> >>>//Thommy
+> >>
+> >>This is included in OpenWrt for ~4 weeks now and I haven't read of
+> >>anybody complaining about any new problems introduced by this patch or
+> >>something which looks like the DMA under run.
+> >>I am also for adding this to the kernel.
+> >
+> >I'm probably missing something, but isn't this patch already in Linus' tree?
+> >It's in stable review after all.
+> 
+> The patch is in wireless-testing with John's s-o-b, and in the
+> mainline tree with the same annotation.
+> 
+> It has been working OK here, but my devices did not show underrun.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    6 ++---
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |   23 +++++++++++++++++++-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    1 -
- 3 files changed, 25 insertions(+), 5 deletions(-)
+OK, thanks -- sorry for the confusion!
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index f04e355..b98f223 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -653,6 +653,7 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
- 
- 	brcmf_dbg(INFO, "%s: Broadcom Dongle Host Driver\n", ndev->name);
- 
-+	ndev->destructor = free_netdev;
- 	return 0;
- 
- fail:
-@@ -793,6 +794,7 @@ void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
- 	struct brcmf_if *ifp;
- 
- 	ifp = drvr->iflist[bssidx];
-+	drvr->iflist[bssidx] = NULL;
- 	if (!ifp) {
- 		brcmf_err("Null interface, idx=%d\n", bssidx);
- 		return;
-@@ -813,15 +815,13 @@ void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
- 			cancel_work_sync(&ifp->setmacaddr_work);
- 			cancel_work_sync(&ifp->multicast_work);
- 		}
--
-+		/* unregister will take care of freeing it */
- 		unregister_netdev(ifp->ndev);
- 		if (bssidx == 0)
- 			brcmf_cfg80211_detach(drvr->config);
--		free_netdev(ifp->ndev);
- 	} else {
- 		kfree(ifp);
- 	}
--	drvr->iflist[bssidx] = NULL;
- }
- 
- int brcmf_attach(uint bus_hdrlen, struct device *dev)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 167b7af..79555f0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -2240,6 +2240,25 @@ static void brcmf_p2p_delete_p2pdev(struct brcmf_cfg80211_info *cfg,
- }
- 
- /**
-+ * brcmf_p2p_free_p2p_if() - free up net device related data.
-+ *
-+ * @ndev: net device that needs to be freed.
-+ */
-+static void brcmf_p2p_free_p2p_if(struct net_device *ndev)
-+{
-+	struct brcmf_cfg80211_info *cfg;
-+	struct brcmf_cfg80211_vif *vif;
-+	struct brcmf_if *ifp;
-+
-+	ifp = netdev_priv(ndev);
-+	cfg = ifp->drvr->config;
-+	vif = ifp->vif;
-+
-+	brcmf_free_vif(cfg, vif);
-+	free_netdev(ifp->ndev);
-+}
-+
-+/**
-  * brcmf_p2p_add_vif() - create a new P2P virtual interface.
-  *
-  * @wiphy: wiphy device of new interface.
-@@ -2316,6 +2335,9 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
- 		brcmf_err("Registering netdevice failed\n");
- 		goto fail;
- 	}
-+	/* override destructor */
-+	ifp->ndev->destructor = brcmf_p2p_free_p2p_if;
-+
- 	cfg->p2p.bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = vif;
- 	/* Disable firmware roaming for P2P interface  */
- 	brcmf_fil_iovar_int_set(ifp, "roam_off", 1);
-@@ -2391,7 +2413,6 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
- 			err = 0;
- 	}
- 	brcmf_cfg80211_arm_vif_event(cfg, NULL);
--	brcmf_free_vif(cfg, vif);
- 	p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
- 
- 	return err;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index f8c86b5..656ce87 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4678,7 +4678,6 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
- 		return 0;
- 
- 	case BRCMF_E_IF_DEL:
--		ifp->vif = NULL;
- 		mutex_unlock(&event->vif_event_lock);
- 		/* event may not be upon user request */
- 		if (brcmf_cfg80211_vif_event_armed(cfg))
 -- 
-1.7.10.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
