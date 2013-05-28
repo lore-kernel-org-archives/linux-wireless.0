@@ -1,59 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:33778 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757947Ab3EYUhF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 May 2013 16:37:05 -0400
-Received: by mail-ob0-f176.google.com with SMTP id wp18so6728313obc.35
-        for <linux-wireless@vger.kernel.org>; Sat, 25 May 2013 13:37:04 -0700 (PDT)
-Message-ID: <51A120EE.40008@lwfinger.net> (sfid-20130525_223710_085316_D7FCAF5B)
-Date: Sat, 25 May 2013 15:37:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	Thommy Jakobsson <thommyj@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlYw==?= =?UTF-8?B?a2k=?=
-	<zajec5@gmail.com>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, piotras@gmail.com
-Subject: Re: [PATCH] B43: Handle DMA RX descriptor underrun
-References: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net> <CACna6rxWPOqQPNUaASaj=v=O+Wjt0okjX4jNwE3tv-=etfATCg@mail.gmail.com> <alpine.DEB.2.02.1305132025560.1278@kelly.ryd.net> <20130524164922.GA2175@tuxdriver.com> <alpine.DEB.2.02.1305252058060.1282@kelly.ryd.net> <51A112FC.8060100@hauke-m.de> <20130525214223.4e69a772@milhouse>
-In-Reply-To: <20130525214223.4e69a772@milhouse>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from arrakis.dune.hu ([78.24.191.176]:46365 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933886Ab3E1Mw1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 May 2013 08:52:27 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	Gabor Juhos <juhosg@openwrt.org>, stable@vger.kernel.org,
+	#@arrakis.dune.hu, 3.6+@arrakis.dune.hu
+Subject: [PATCH for 3.10] ath9k: use correct OTP register offsets for AR9550
+Date: Tue, 28 May 2013 14:52:19 +0200
+Message-Id: <1369745539-2224-1-git-send-email-juhosg@openwrt.org> (sfid-20130528_145230_955960_F12A7CE8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/25/2013 02:42 PM, Michael Büsch wrote:
-> On Sat, 25 May 2013 21:37:32 +0200
-> Hauke Mehrtens <hauke@hauke-m.de> wrote:
->
->> On 05/25/2013 09:02 PM, Thommy Jakobsson wrote:
->>>
->>>
->>> On Fri, 24 May 2013, John W. Linville wrote:
->>>
->>>> Ping?  Should I drop this one?
->>>>
->>> Still working great on my device, so from that I think we should go for
->>> it. But it would be great if Rafal (or someone) tested it on some other
->>> hardware as well.
->>>
->>> //Thommy
->>
->> This is included in OpenWrt for ~4 weeks now and I haven't read of
->> anybody complaining about any new problems introduced by this patch or
->> something which looks like the DMA under run.
->> I am also for adding this to the kernel.
->
-> I'm probably missing something, but isn't this patch already in Linus' tree?
-> It's in stable review after all.
+Accessing the OTP memory on AR9950 causes a data bus
+like this:
 
-The patch is in wireless-testing with John's s-o-b, and in the mainline tree 
-with the same annotation.
+  Data bus error, epc == 801f7774, ra == 801f7774
+  Oops[#1]:
+  CPU: 0 PID: 1 Comm: swapper Not tainted 3.10.0-rc3 #592
+  task: 87c28000 ti: 87c22000 task.ti: 87c22000
+  $ 0   : 00000000 00000061 deadc0de 00000000
+  $ 4   : b8115f18 00015f18 00000007 00000004
+  $ 8   : 00000001 7c7c3c7c 7c7c7c7c 7c7c7c7c
+  $12   : 7c7c3c7c 80320a68 00000000 7c7c7c3c
+  $16   : 87cd8010 00015f18 00000007 00000000
+  $20   : 00000064 00000004 87c23c7c 8035210c
+  $24   : 00000000 801f3674
+  $28   : 87c22000 87c23b48 00000001 801f7774
+  Hi    : 00000000
+  Lo    : 00000064
+  epc   : 801f7774 ath9k_hw_wait+0x58/0xb0
+      Not tainted
+  ra    : 801f7774 ath9k_hw_wait+0x58/0xb0
+  Status: 1000cc03 KERNEL EXL IE
+  Cause : 4080801c
+  PrId  : 00019750 (MIPS 74Kc)
+  Modules linked in:
+  Process swapper (pid: 1, threadinfo=87c22000, task=87c28000, ts=00000000)
+  Stack : 0000000f 00000061 00002710 8006240c 00000001 87cd8010 87c23bb0 87cd8010
+          00000000 00000004 00000003 80210c7c 000000b3 67fa8000 0000032a 000006fe
+          000003e8 00000002 00000028 87c23bf0 000003ff 80210d24 803e5630 80210e28
+          00000000 00000007 87cd8010 00007044 00000004 00000061 000003ff 000001ff
+          87c26000 87cd8010 00000220 87cd8bb8 80210000 8020fcf4 87c22000 87c23c08
+          ...
+  Call Trace:
+  [<801f7774>] ath9k_hw_wait+0x58/0xb0
+  [<80210c7c>] ar9300_otp_read_word+0x80/0xd4
+  [<80210d24>] ar9300_read_otp+0x54/0xb0
+  [<8020fcf4>] ar9300_check_eeprom_header+0x1c/0x40
+  [<80210fe4>] ath9k_hw_ar9300_fill_eeprom+0x118/0x39c
+  [<80206650>] ath9k_hw_eeprom_init+0x74/0xb4
+  [<801f96d0>] ath9k_hw_init+0x7ec/0x96c
+  [<801e65ec>] ath9k_init_device+0x340/0x758
+  [<801f35d0>] ath_ahb_probe+0x21c/0x2c0
+  [<801c041c>] driver_probe_device+0xc0/0x1e4
+  [<801c05ac>] __driver_attach+0x6c/0xa4
+  [<801bea08>] bus_for_each_dev+0x64/0xa8
+  [<801bfa40>] bus_add_driver+0xcc/0x24c
+  [<801c0954>] driver_register+0xbc/0x17c
+  [<803f8fc0>] ath9k_init+0x5c/0x88
+  [<800608fc>] do_one_initcall+0xec/0x1a0
+  [<803e6a68>] kernel_init_freeable+0x13c/0x200
+  [<80309cdc>] kernel_init+0x1c/0xe4
+  [<80062450>] ret_from_kernel_thread+0x10/0x18
 
-It has been working OK here, but my devices did not show underrun.
+On the AR9550, the OTP registers are located at
+the same address as on the AR9340. Use the correct
+values to avoid the error.
 
-Larry
+Cc: stable@vger.kernel.org  # 3.6+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 54ba42f..874f657 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -68,13 +68,16 @@
+ #define AR9300_BASE_ADDR 0x3ff
+ #define AR9300_BASE_ADDR_512 0x1ff
+ 
+-#define AR9300_OTP_BASE			(AR_SREV_9340(ah) ? 0x30000 : 0x14000)
+-#define AR9300_OTP_STATUS		(AR_SREV_9340(ah) ? 0x30018 : 0x15f18)
++#define AR9300_OTP_BASE \
++		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x30000 : 0x14000)
++#define AR9300_OTP_STATUS \
++		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x30018 : 0x15f18)
+ #define AR9300_OTP_STATUS_TYPE		0x7
+ #define AR9300_OTP_STATUS_VALID		0x4
+ #define AR9300_OTP_STATUS_ACCESS_BUSY	0x2
+ #define AR9300_OTP_STATUS_SM_BUSY	0x1
+-#define AR9300_OTP_READ_DATA		(AR_SREV_9340(ah) ? 0x3001c : 0x15f1c)
++#define AR9300_OTP_READ_DATA \
++		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x3001c : 0x15f1c)
+ 
+ enum targetPowerHTRates {
+ 	HT_TARGET_RATE_0_8_16,
+-- 
+1.7.10
 
