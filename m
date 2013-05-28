@@ -1,111 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59207 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:56418 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752811Ab3EPVDn (ORCPT
+	with ESMTP id S932878Ab3E1LnV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 17:03:43 -0400
+	Tue, 28 May 2013 07:43:21 -0400
+Message-ID: <1369741393.8548.0.camel@jlt4.sipsolutions.net> (sfid-20130528_134324_610311_6ABDF7DF)
+Subject: Re: iwlwifi dmar errors in 3.9.2
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/9] cfg80211: move cfg80211_get_dev_from_ifindex under wext
-Date: Thu, 16 May 2013 23:03:30 +0200
-Message-Id: <1368738218-7597-2-git-send-email-johannes@sipsolutions.net> (sfid-20130516_230347_153638_C17F877F)
-In-Reply-To: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net>
-References: <1368738218-7597-1-git-send-email-johannes@sipsolutions.net>
+To: Ilia Mirkin <imirkin@alum.mit.edu>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 28 May 2013 13:43:13 +0200
+In-Reply-To: <CAKb7UvhBS6G=1Burf6MfekEnT5vhiy8BKijJ27Fpd=9yBDy9Ng@mail.gmail.com> (sfid-20130520_231244_289559_C8DD3342)
+References: <CAKb7UvhBS6G=1Burf6MfekEnT5vhiy8BKijJ27Fpd=9yBDy9Ng@mail.gmail.com>
+	 (sfid-20130520_231244_289559_C8DD3342)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2013-05-20 at 17:12 -0400, Ilia Mirkin wrote:
+> Hello,
+> 
+> I recently upgraded to 3.9.2 from 3.7.10, and have begun to see some
+> DMAR errors in my log. Here are a bunch of them:
+> http://pastebin.com/wgq0JW0S
 
-The function is only used and needed by the wext code
-for scanning, so move it there.
+Was there anything in the log _before_ this? Like the device already
+getting an error, or so?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c | 21 ---------------------
- net/wireless/core.h |  4 ----
- net/wireless/scan.c | 21 +++++++++++++++++++++
- 3 files changed, 21 insertions(+), 25 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 58e69d6..cc49cf1 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -90,27 +90,6 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx)
- 	return &rdev->wiphy;
- }
- 
--struct cfg80211_registered_device *
--cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
--{
--	struct cfg80211_registered_device *rdev = ERR_PTR(-ENODEV);
--	struct net_device *dev;
--
--	mutex_lock(&cfg80211_mutex);
--	dev = dev_get_by_index(net, ifindex);
--	if (!dev)
--		goto out;
--	if (dev->ieee80211_ptr) {
--		rdev = wiphy_to_dev(dev->ieee80211_ptr->wiphy);
--		mutex_lock(&rdev->mtx);
--	} else
--		rdev = ERR_PTR(-ENODEV);
--	dev_put(dev);
-- out:
--	mutex_unlock(&cfg80211_mutex);
--	return rdev;
--}
--
- /* requires cfg80211_mutex to be held */
- int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 			char *newname)
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index fd35dae..95b2907 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -164,10 +164,6 @@ int get_wiphy_idx(struct wiphy *wiphy);
- /* requires cfg80211_rdev_mutex to be held! */
- struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx);
- 
--/* identical to cfg80211_get_dev_from_info but only operate on ifindex */
--extern struct cfg80211_registered_device *
--cfg80211_get_dev_from_ifindex(struct net *net, int ifindex);
--
- int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
- 			  struct net *net);
- 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index fd99ea4..2ce44a7 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1040,6 +1040,27 @@ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
- EXPORT_SYMBOL(cfg80211_unlink_bss);
- 
- #ifdef CONFIG_CFG80211_WEXT
-+static struct cfg80211_registered_device *
-+cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
-+{
-+	struct cfg80211_registered_device *rdev = ERR_PTR(-ENODEV);
-+	struct net_device *dev;
-+
-+	mutex_lock(&cfg80211_mutex);
-+	dev = dev_get_by_index(net, ifindex);
-+	if (!dev)
-+		goto out;
-+	if (dev->ieee80211_ptr) {
-+		rdev = wiphy_to_dev(dev->ieee80211_ptr->wiphy);
-+		mutex_lock(&rdev->mtx);
-+	} else
-+		rdev = ERR_PTR(-ENODEV);
-+	dev_put(dev);
-+ out:
-+	mutex_unlock(&cfg80211_mutex);
-+	return rdev;
-+}
-+
- int cfg80211_wext_siwscan(struct net_device *dev,
- 			  struct iw_request_info *info,
- 			  union iwreq_data *wrqu, char *extra)
--- 
-1.8.0
+johannes
 
