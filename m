@@ -1,152 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rrcs-24-73-230-86.se.biz.rr.com ([24.73.230.86]:39197 "EHLO
-	stuffed.shaftnet.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881Ab3EYAFk (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:55949 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933640Ab3E1JAE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 20:05:40 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
+	Tue, 28 May 2013 05:00:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 14/14] cw1200: v7: Kbuild integration and maintainers entry
-Date: Fri, 24 May 2013 20:04:51 -0400
-Message-Id: <1369440291-8961-15-git-send-email-pizza@shaftnet.org> (sfid-20130525_022936_270049_94966EFD)
-In-Reply-To: <1369440291-8961-1-git-send-email-pizza@shaftnet.org>
-References: <1369440291-8961-1-git-send-email-pizza@shaftnet.org>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: work around broken APs not including HT info
+Date: Tue, 28 May 2013 10:59:54 +0200
+Message-Id: <1369731594-16303-2-git-send-email-johannes@sipsolutions.net> (sfid-20130528_110012_309683_6131E905)
+In-Reply-To: <1369731594-16303-1-git-send-email-johannes@sipsolutions.net>
+References: <1369731594-16303-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- MAINTAINERS                          |  5 ++++
- drivers/net/wireless/Kconfig         |  1 +
- drivers/net/wireless/Makefile        |  3 +++
- drivers/net/wireless/cw1200/Kconfig  | 46 ++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/Makefile | 25 ++++++++++++++++++++
- 5 files changed, 80 insertions(+)
- create mode 100644 drivers/net/wireless/cw1200/Kconfig
- create mode 100644 drivers/net/wireless/cw1200/Makefile
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b645a3d..0ba85a2 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2299,6 +2299,11 @@ M:	Jaya Kumar <jayakumar.alsa@gmail.com>
- S:	Maintained
- F:	sound/pci/cs5535audio/
+There are some APs, notably 2G/3G/4G Wifi routers, specifically
+the "Onda PN51T", "Vodafone PocketWiFi 2" and a similar T-Mobile
+branded device [1] that erroneously don't include all the needed
+information in (re)association response frames. Work around this
+by assuming the information is the same as it was in the beacon
+or probe response and using the data from there instead.
+
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=58881.
+
+[1] https://bbs.archlinux.org/viewtopic.php?pid=1277305
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 80 insertions(+), 7 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f44f4ca..8571294 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2486,8 +2486,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	u16 capab_info, aid;
+ 	struct ieee802_11_elems elems;
+ 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
++	const struct cfg80211_bss_ies *bss_ies = NULL;
++	struct ieee80211_mgd_assoc_data *assoc_data = ifmgd->assoc_data;
+ 	u32 changed = 0;
+ 	int err;
++	bool ret;
  
-+CW1200 WLAN driver
-+M:     Solomon Peachy <pizza@shaftnet.org>
-+S:     Maintained
-+F:     drivers/net/wireless/cw1200/
-+
- CX18 VIDEO4LINUX DRIVER
- M:	Andy Walls <awalls@md.metrocast.net>
- L:	ivtv-devel@ivtvdriver.org (moderated for non-subscribers)
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index f8f0156..200020e 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -280,5 +280,6 @@ source "drivers/net/wireless/rtlwifi/Kconfig"
- source "drivers/net/wireless/ti/Kconfig"
- source "drivers/net/wireless/zd1211rw/Kconfig"
- source "drivers/net/wireless/mwifiex/Kconfig"
-+source "drivers/net/wireless/cw1200/Kconfig"
+ 	/* AssocResp and ReassocResp have identical structure */
  
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 67156ef..56532fa 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -57,3 +57,6 @@ obj-$(CONFIG_MWIFIEX)	+= mwifiex/
+@@ -2519,21 +2522,86 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	ifmgd->aid = aid;
  
- obj-$(CONFIG_BRCMFMAC)	+= brcm80211/
- obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
+ 	/*
++	 * Some APs are erroneously not including some information in their
++	 * (re)association response frames. Try to recover by using the data
++	 * from the beacon or probe response. This seems to afflict mobile
++	 * 2G/3G/4G wifi routers, reported models include the "Onda PN51T",
++	 * "Vodafone PocketWiFi 2" and a similar T-Mobile branded device.
++	 */
++	if ((assoc_data->wmm && !elems.wmm_param) ||
++	    (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT) &&
++	     (!elems.ht_cap_elem || !elems.ht_operation)) ||
++	    (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT) &&
++	     (!elems.vht_cap_elem || !elems.vht_operation))) {
++		const struct cfg80211_bss_ies *ies;
++		struct ieee802_11_elems bss_elems;
 +
-+obj-$(CONFIG_CW1200)	+= cw1200/
++		rcu_read_lock();
++		ies = rcu_dereference(cbss->ies);
++		if (ies)
++			bss_ies = kmemdup(ies, sizeof(*ies) + ies->len,
++					  GFP_ATOMIC);
++		rcu_read_unlock();
++		if (!bss_ies)
++			return false;
 +
-diff --git a/drivers/net/wireless/cw1200/Kconfig b/drivers/net/wireless/cw1200/Kconfig
-new file mode 100644
-index 0000000..13e3611
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/Kconfig
-@@ -0,0 +1,46 @@
-+config CW1200
-+	tristate "CW1200 WLAN support"
-+	depends on MAC80211 && CFG80211
-+	help
-+	  This is a driver for the ST-E CW1100 & CW1200 WLAN chipsets.
-+	  This option just enables the driver core, see below for
-+	  specific bus support.
++		ieee802_11_parse_elems(bss_ies->data, bss_ies->len,
++				       false, &bss_elems);
++		if (assoc_data->wmm &&
++		    !elems.wmm_param && bss_elems.wmm_param) {
++			elems.wmm_param = bss_elems.wmm_param;
++			sdata_info(sdata,
++				   "AP bug: WMM param missing from AssocResp\n");
++		}
 +
-+if CW1200
++		/*
++		 * Also check if we requested HT/VHT, otherwise the AP doesn't
++		 * have to include the IEs in the (re)association response.
++		 */
++		if (!elems.ht_cap_elem && bss_elems.ht_cap_elem &&
++		    !(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
++			elems.ht_cap_elem = bss_elems.ht_cap_elem;
++			sdata_info(sdata,
++				   "AP bug: HT capability missing from AssocResp\n");
++		}
++		if (!elems.ht_operation && bss_elems.ht_operation &&
++		    !(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
++			elems.ht_operation = bss_elems.ht_operation;
++			sdata_info(sdata,
++				   "AP bug: HT operation missing from AssocResp\n");
++		}
++		if (!elems.vht_cap_elem && bss_elems.vht_cap_elem &&
++		    !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT)) {
++			elems.vht_cap_elem = bss_elems.vht_cap_elem;
++			sdata_info(sdata,
++				   "AP bug: VHT capa missing from AssocResp\n");
++		}
++		if (!elems.vht_operation && bss_elems.vht_operation &&
++		    !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT)) {
++			elems.vht_operation = bss_elems.vht_operation;
++			sdata_info(sdata,
++				   "AP bug: VHT operation missing from AssocResp\n");
++		}
++	}
 +
-+config CW1200_WLAN_SDIO
-+	tristate "Support SDIO platforms"
-+	depends on CW1200 && MMC
-+	help
-+	  Enable support for the CW1200 connected via an SDIO bus.
-+
-+config CW1200_WLAN_SPI
-+	tristate "Support SPI platforms"
-+	depends on CW1200 && SPI
-+	help
-+	  Enables support for the CW1200 connected via a SPI bus.
-+
-+config CW1200_WLAN_SAGRAD
-+	tristate "Support Sagrad SG901-1091/1098 modules"
-+	depends on CW1200_WLAN_SDIO
-+	help
-+	  This provides the platform data glue to support the
-+	  Sagrad SG901-1091/1098 modules in their standard SDIO EVK.
-+	  It also includes example SPI platform data.
-+
-+menu "Driver debug features"
-+	depends on CW1200 && DEBUG_FS
-+
-+config CW1200_ETF
-+	bool "Enable CW1200 Engineering Test Framework hooks"
-+	help
-+	  If you don't know what this is, just say N.
-+
-+config CW1200_ITP
-+	bool "Enable ITP access"
-+	help
-+	  If you don't know what this is, just say N.
-+
-+endmenu
-+
-+endif
-diff --git a/drivers/net/wireless/cw1200/Makefile b/drivers/net/wireless/cw1200/Makefile
-new file mode 100644
-index 0000000..a92a87d
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/Makefile
-@@ -0,0 +1,25 @@
-+cw1200_core-y := \
-+		fwio.o \
-+		txrx.o \
-+		main.o \
-+		queue.o \
-+		hwio.o \
-+		bh.o \
-+		wsm.o \
-+		sta.o \
-+		scan.o \
-+		pm.o \
-+		debug.o
-+cw1200_core-$(CONFIG_CW1200_ITP)	+= itp.o
-+
-+# CFLAGS_sta.o += -DDEBUG
-+
-+cw1200_wlan_sdio-y := cw1200_sdio.o
-+cw1200_wlan_spi-y := cw1200_spi.o
-+cw1200_wlan_sagrad-y := cw1200_sagrad.o
-+
-+obj-$(CONFIG_CW1200) += cw1200_core.o
-+obj-$(CONFIG_CW1200_WLAN_SDIO) += cw1200_wlan_sdio.o
-+obj-$(CONFIG_CW1200_WLAN_SPI) += cw1200_wlan_spi.o
-+obj-$(CONFIG_CW1200_WLAN_SAGRAD) += cw1200_wlan_sagrad.o
-+
++	/*
+ 	 * We previously checked these in the beacon/probe response, so
+ 	 * they should be present here. This is just a safety net.
+ 	 */
+ 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT) &&
+ 	    (!elems.wmm_param || !elems.ht_cap_elem || !elems.ht_operation)) {
+ 		sdata_info(sdata,
+-			   "HT AP is missing WMM params or HT capability/operation in AssocResp\n");
+-		return false;
++			   "HT AP is missing WMM params or HT capability/operation\n");
++		ret = false;
++		goto out;
+ 	}
+ 
+ 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT) &&
+ 	    (!elems.vht_cap_elem || !elems.vht_operation)) {
+ 		sdata_info(sdata,
+-			   "VHT AP is missing VHT capability/operation in AssocResp\n");
+-		return false;
++			   "VHT AP is missing VHT capability/operation\n");
++		ret = false;
++		goto out;
+ 	}
+ 
+ 	mutex_lock(&sdata->local->sta_mtx);
+@@ -2544,7 +2612,8 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	sta = sta_info_get(sdata, cbss->bssid);
+ 	if (WARN_ON(!sta)) {
+ 		mutex_unlock(&sdata->local->sta_mtx);
+-		return false;
++		ret = false;
++		goto out;
+ 	}
+ 
+ 	sband = local->hw.wiphy->bands[ieee80211_get_sdata_band(sdata)];
+@@ -2597,7 +2666,8 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 			   sta->sta.addr);
+ 		WARN_ON(__sta_info_destroy(sta));
+ 		mutex_unlock(&sdata->local->sta_mtx);
+-		return false;
++		ret = false;
++		goto out;
+ 	}
+ 
+ 	mutex_unlock(&sdata->local->sta_mtx);
+@@ -2637,7 +2707,10 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_sta_rx_notify(sdata, (struct ieee80211_hdr *)mgmt);
+ 	ieee80211_sta_reset_beacon_monitor(sdata);
+ 
+-	return true;
++	ret = true;
++ out:
++	kfree(bss_ies);
++	return ret;
+ }
+ 
+ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
 -- 
-1.8.1.4
+1.8.0
 
