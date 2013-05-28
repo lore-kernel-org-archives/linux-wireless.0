@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:64395 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754048Ab3EQFtE (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56908 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934123Ab3E1OZr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 01:49:04 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130516225535.GA27962@google.com>
-References: <CANUX_P2Hy02SnyYS24dyUGLv3wB3L5xkXt8Y1s+8_RG9d5ReAw@mail.gmail.com>
-	<CAErSpo6OCyTy19u6Xaf=xr0TSDriwCD3n-oMc7eJyLzuJ9d60g@mail.gmail.com>
-	<20130510225257.GA10847@google.com>
-	<1725435.3DlCxYF2FV@vostro.rjw.lan>
-	<1368303730.2425.47.camel@x230>
-	<20130516225535.GA27962@google.com>
-Date: Fri, 17 May 2013 08:49:01 +0300
-Message-ID: <CANUX_P2YJC+dULEpa0SJ8Ug+ROZ+RVGNg0FS5b_eYD260mAC=Q@mail.gmail.com> (sfid-20130517_074928_785008_9A3EC458)
-Subject: Re: is L1 really disabled in iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <matthew.garrett@nebula.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Mike Miller <mike.miller@hp.com>,
-	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
-	Guo-Fu Tseng <cooldavid@cooldavid.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"nic_swsd@realtek.com" <nic_swsd@realtek.com>,
-	"aacraid@adaptec.com" <aacraid@adaptec.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 28 May 2013 10:25:47 -0400
+Message-ID: <1369751143.8548.4.camel@jlt4.sipsolutions.net> (sfid-20130528_162550_610565_2D779ECD)
+Subject: Re: iwlwifi dmar errors in 3.9.2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ilia Mirkin <imirkin@alum.mit.edu>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 28 May 2013 16:25:43 +0200
+In-Reply-To: <CAKb7Uvj5rr1CBxpas3kVKk7zdKDFs7+iVRVT7Q+Ob_mue6-_pQ@mail.gmail.com> (sfid-20130528_155936_875283_78E14BA7)
+References: <CAKb7UvhBS6G=1Burf6MfekEnT5vhiy8BKijJ27Fpd=9yBDy9Ng@mail.gmail.com>
+	 <1369741393.8548.0.camel@jlt4.sipsolutions.net>
+	 <CAKb7Uvj5rr1CBxpas3kVKk7zdKDFs7+iVRVT7Q+Ob_mue6-_pQ@mail.gmail.com>
+	 (sfid-20130528_155936_875283_78E14BA7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> I couldn't imagine that silently ignoring the request to disable ASPM
-> would be the right thing, but I spent a long time experimenting with
-> Windows on qemu, and I think you're right.  Windows 7 also seems to
-> ignore the "PciASPMOptOut" directive when we don't have permission
-> to manage ASPM.  All the gory details are at
-> https://bugzilla.kernel.org/show_bug.cgi?id=57331
->
-> The current behavior is definitely confusing.  I hate to rename or change
-> pci_disable_link_state() because it's exported and we'd have to maintain
-> the old interface for a while anyway.  And I don't really want to return
-> failure to drivers, because I think that would encourage people to fiddle
-> with the Link Control register directly in the driver, which doesn't seem
-> like a good idea.
->
-> And you're also right that (as far as I know) there's not an actual
-> problem with the current behavior other than the confusion it causes.
->
-> So, how about something like the following patch, which just prints a
-> warning when we can't do what the driver requested?  I suppose this may
-> also be a nuisance, because users will be worried, but they can't actually
-> *do* anything about it.  Maybe it should be dev_info() instead.
->
+On Tue, 2013-05-28 at 09:59 -0400, Ilia Mirkin wrote:
+> On Tue, May 28, 2013 at 7:43 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Mon, 2013-05-20 at 17:12 -0400, Ilia Mirkin wrote:
+> >> Hello,
+> >>
+> >> I recently upgraded to 3.9.2 from 3.7.10, and have begun to see some
+> >> DMAR errors in my log. Here are a bunch of them:
+> >> http://pastebin.com/wgq0JW0S
+> >
+> > Was there anything in the log _before_ this? Like the device already
+> > getting an error, or so?
+> 
+> Nothing that I felt was relevant, but you be the judge:
+> http://pastebin.com/s3rV3UK9
 
-Good for me - now I would be notified that something wrong happened.
+Indeed, nothing that seems relevant, particularly no device error or so.
+That seems almost like this _causes_ the device error ... hmm. I feel
+this is going to be a tricky bug, probably should buy a laptop with
+DMAR ... :)
+
+johannes
+
