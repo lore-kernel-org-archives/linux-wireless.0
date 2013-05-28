@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:36255 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761484Ab3EAPRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 May 2013 11:17:36 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 5/7] rt2x00: rt2800lib: use rt2x00dev->bcn->winfo_size
-Date: Wed,  1 May 2013 17:17:33 +0200
-Message-Id: <1367421455-18463-6-git-send-email-juhosg@openwrt.org> (sfid-20130501_171757_802343_1F1E065B)
-In-Reply-To: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
-References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52504 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933730Ab3E1MSG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 May 2013 08:18:06 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 0/2] wil6210: fix for wdev->sme_state
+Date: Tue, 28 May 2013 15:17:51 +0300
+Message-ID: <1369743473-7243-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130528_141810_449300_CB490EF4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The beacon data queue is initialized already when
-the rt2800_clear_beacon_register() function is called.
+Here goes patch that Johannes asked for, where wil6210 stop using
+wdev->sme_state. Also, included is small patch fixing wrong channel
+when starting AP
 
-Fetch the size of the TXWI descriptor from that
-instead of using the winfo_size field of the data
-queue descriptor.
+Vladimir Kondratiev (2):
+  wil6210: channel off by 1
+  wil6210: Don't use wdev->sme_state
 
-The two values are the same, and the use of the
-rt2x00dev->bcn->winfo_size value allows us to
-get rid of a superfluous pointer dereference.
+ drivers/net/wireless/ath/wil6210/cfg80211.c |  4 ++++
+ drivers/net/wireless/ath/wil6210/main.c     | 17 ++++++-----------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
+ drivers/net/wireless/ath/wil6210/wmi.c      |  5 +++--
+ 4 files changed, 14 insertions(+), 13 deletions(-)
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index b52d70c..bddfd6d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -840,7 +840,7 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
- 						unsigned int beacon_base)
- {
- 	int i;
--	const int txwi_desc_size = rt2x00dev->ops->bcn->winfo_size;
-+	const int txwi_desc_size = rt2x00dev->bcn->winfo_size;
- 
- 	/*
- 	 * For the Beacon base registers we only need to clear
 -- 
-1.7.10
+1.8.1.2
 
