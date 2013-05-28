@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:57229 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254Ab3EHIgH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52943 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964784Ab3E1RpJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 04:36:07 -0400
-Message-ID: <1368002161.8279.14.camel@jlt4.sipsolutions.net> (sfid-20130508_103612_210241_E3587283)
-Subject: Re: [PATCH] mac80211: refine ieee80211_rx() context requirement
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wei.Yang@windriver.com
-Cc: linux-wireless@vger.kernel.org, wei.wyang@windriver.com
-Date: Wed, 08 May 2013 10:36:01 +0200
-In-Reply-To: <1368001892-18068-1-git-send-email-Wei.Yang@windriver.com>
-References: <1368001892-18068-1-git-send-email-Wei.Yang@windriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 28 May 2013 13:45:09 -0400
+Date: Tue, 28 May 2013 13:39:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-fixes 2013-05-27
+Message-ID: <20130528173951.GG2084@tuxdriver.com> (sfid-20130528_194513_239348_B8CAA84C)
+References: <1369647404.8229.26.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1369647404.8229.26.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-05-08 at 16:31 +0800, Wei.Yang@windriver.com wrote:
-> From: Wei Yang <Wei.Yang@windriver.com>
+On Mon, May 27, 2013 at 11:36:44AM +0200, Johannes Berg wrote:
+> John,
 > 
-> In case of RT kernel, the return value of softirq_count() always
-> equal to 0, we need to use in_serving_softirq to decide whether
-> the current context is in softirq context.
+> And here's a pull request for iwlwifi-fixes ...
+> 
+> This fixes a brown paper-bag bug that we really should've caught in
+> review. More details in the changelog for the fix.
+> 
+> johannes
+> 
+> 
+> The following changes since commit e3d4bc8cc0230e8dc8033484666f03f87392a8c4:
+> 
+>   iwlwifi: mvm: fix aggregation drain flow (2013-05-16 22:39:07 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to a87783699b23395c46bbeeb5d28f6db24897bf26:
+> 
+>   iwlwifi: dvm: fix zero LQ CMD sending avoidance (2013-05-27 11:33:57 +0200)
 
-> -	WARN_ON_ONCE(softirq_count() == 0);
-> +	WARN_ON_ONCE(!in_serving_softirq());
+Pulling now...
 
-As I understand the code, I don't believe this change to be correct. The
-function can happily run with softirqs disabled (e.g.
-local_bh_disable()), for example by being called via ieee80211_rx_ni().
-As I understand in_serving_softirq(), it checks that it's actually
-inside handling a softirq, no?
-
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
