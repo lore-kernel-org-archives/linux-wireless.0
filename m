@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54376 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933442Ab3EGNoE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 09:44:04 -0400
-Message-ID: <1367934240.8328.22.camel@jlt4.sipsolutions.net> (sfid-20130507_154411_203642_40B10317)
-Subject: Re: [RFC 00/12] MBSS sharing across multiple interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>, me@bobcopeland.com,
-	open80211s <devel@lists.open80211s.org>
-Date: Tue, 07 May 2013 15:44:00 +0200
-In-Reply-To: <1367548442-8229-1-git-send-email-thomas@cozybit.com> (sfid-20130503_043611_905025_22468B9A)
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20130503_043611_905025_22468B9A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:48018 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759396Ab3E2Szw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 14:55:52 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 29 May 2013 11:55:44 -0700
+Subject: RE: [PATCH] mwifiex: dump small buffers with help of %*ph
+Message-ID: <477F20668A386D41ADCC57781B1F70430E805C5682@SC-VEXCH1.marvell.com> (sfid-20130529_205555_039183_94933E89)
+References: <1369821860-3004-1-git-send-email-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <1369821860-3004-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-02 at 19:33 -0700, Thomas Pedersen wrote:
-> This patchset enables multiple interfaces on the same host to share mesh path
-> selection and frame forwarding duties. The peering state machine remains
-> per-interface.
+Hi Andy,
 
-Generally, this looks pretty good. The one thing I didn't see (maybe I
-missed it) is how you handle different headroom/tailroom/crypto
-requirements for different devices?
+Thanks for the patch.
 
-johannes
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
+
+> ---
+>  drivers/net/wireless/mwifiex/join.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+> index 6bcb66e..122175a 100644
+> --- a/drivers/net/wireless/mwifiex/join.c
+> +++ b/drivers/net/wireless/mwifiex/join.c
+> @@ -919,9 +919,8 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
+>  	memcpy(&priv->curr_bss_params.data_rates,
+>  	       &adhoc_start->data_rate, priv->curr_bss_params.num_of_rates);
+> 
+> -	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: rates=%02x %02x %02x %02x\n",
+> -		adhoc_start->data_rate[0], adhoc_start->data_rate[1],
+> -		adhoc_start->data_rate[2], adhoc_start->data_rate[3]);
+> +	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: rates=%4ph\n",
+> +		adhoc_start->data_rate);
+> 
+>  	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: AD-HOC Start command is ready\n");
+> 
+> --
+> 1.8.2.rc0.22.gb3600c3
 
