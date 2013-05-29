@@ -1,196 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40049 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686Ab3EISKu (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44702 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965989Ab3E2TAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 May 2013 14:10:50 -0400
-From: a@pandem0nium
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 1/8] nl80211/cfg80211: add 5 and 10 MHz defines and wiphy flag
-Date: Thu,  9 May 2013 20:10:29 +0200
-Message-Id: <1368123036-22721-2-git-send-email-a> (sfid-20130509_201058_962846_970EA45C)
-In-Reply-To: <1368123036-22721-1-git-send-email-a>
-References: <1368123036-22721-1-git-send-email-a>
+	Wed, 29 May 2013 15:00:08 -0400
+Date: Wed, 29 May 2013 14:52:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2013-05-27
+Message-ID: <20130529185229.GE8770@tuxdriver.com> (sfid-20130529_210028_221826_6A745850)
+References: <1369658569.14740.11.camel@jlt4.sipsolutions.net>
+ <1369660310.14740.12.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1369660310.14740.12.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+On Mon, May 27, 2013 at 03:11:50PM +0200, Johannes Berg wrote:
+> On Mon, 2013-05-27 at 14:42 +0200, Johannes Berg wrote:
+> > John,
+> > 
+> > I also have a bunch of new things for cfg80211/mac80211. Just like with
+> > iwlwifi, I had to merge my mac80211 tree, so this pulled in some more
+> > changes that looks spurious. Again, a better looking shortlog all the
+> > way at the end.
+> > 
+> > The biggest change this time is my cfg80211 locking and MLME/SME work,
+> > cleaning up locking there by greatly reducing the number of different
+> > useless locks. Other than that, some relatively minor things.
+> > 
+> > Please let me know of any problems.
+> > 
+> > johannes
+> > 
+> > 
+> > The following changes since commit f722406faae2d073cc1d01063d1123c35425939e:
+> > 
+> >   Linux 3.10-rc1 (2013-05-11 17:14:08 -0700)
+> > 
+> > are available in the git repository at:
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> > 
+> > for you to fetch changes up to 0dd83174762ff46356824217e69daf374f794ba4:
+> 
+> Oh, there was a build error here, I've corrected it and the new HEAD is
+> now 6abb9cb99f33b20c2f32f18a3ae9cc7543e46edb.
 
-Add defines for 5 and 10 MHz channel width and fix channel
-handling functions accordingly.
+Pulling now...
 
-Also check for and report the WIPHY_FLAG_SUPPORTS_5_10_MHZ
-capability.
-
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- include/net/cfg80211.h       |    2 ++
- include/uapi/linux/nl80211.h |    4 ++++
- net/wireless/chan.c          |   29 +++++++++++++++++++++++++++++
- net/wireless/nl80211.c       |   21 +++++++++++++++++----
- 4 files changed, 52 insertions(+), 4 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 26e9113..2aeecfa 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2321,6 +2321,7 @@ struct cfg80211_ops {
-  *	responds to probe-requests in hardware.
-  * @WIPHY_FLAG_OFFCHAN_TX: Device supports direct off-channel TX.
-  * @WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL: Device supports remain-on-channel call.
-+ * @WIPHY_FLAG_SUPPORTS_5_10_MHZ: Device supports 5 MHz and 10 MHz channels.
-  */
- enum wiphy_flags {
- 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
-@@ -2344,6 +2345,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD	= BIT(19),
- 	WIPHY_FLAG_OFFCHAN_TX			= BIT(20),
- 	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
-+	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index b484307..ed4f106 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2738,6 +2738,8 @@ enum nl80211_channel_type {
-  *	and %NL80211_ATTR_CENTER_FREQ2 attributes must be provided as well
-  * @NL80211_CHAN_WIDTH_160: 160 MHz channel, the %NL80211_ATTR_CENTER_FREQ1
-  *	attribute must be provided as well
-+ * @NL80211_CHAN_WIDTH_5: 5 MHz OFDM channel
-+ * @NL80211_CHAN_WIDTH_10: 10 MHz OFDM channel
-  */
- enum nl80211_chan_width {
- 	NL80211_CHAN_WIDTH_20_NOHT,
-@@ -2746,6 +2748,8 @@ enum nl80211_chan_width {
- 	NL80211_CHAN_WIDTH_80,
- 	NL80211_CHAN_WIDTH_80P80,
- 	NL80211_CHAN_WIDTH_160,
-+	NL80211_CHAN_WIDTH_5,
-+	NL80211_CHAN_WIDTH_10,
- };
- 
- /**
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index fd556ac..4052815 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -54,6 +54,8 @@ bool cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
- 	control_freq = chandef->chan->center_freq;
- 
- 	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+	case NL80211_CHAN_WIDTH_10:
- 	case NL80211_CHAN_WIDTH_20:
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 		if (chandef->center_freq1 != control_freq)
-@@ -152,6 +154,12 @@ static int cfg80211_chandef_get_width(const struct cfg80211_chan_def *c)
- 	int width;
- 
- 	switch (c->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		width = 5;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		width = 10;
-+		break;
- 	case NL80211_CHAN_WIDTH_20:
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 		width = 20;
-@@ -194,6 +202,16 @@ cfg80211_chandef_compatible(const struct cfg80211_chan_def *c1,
- 	if (c1->width == c2->width)
- 		return NULL;
- 
-+	/*
-+	 * can't be compatible if one of them are 5 or 10 MHz,
-+	 * but they have not the same width.
-+	 */
-+	if (c1->width == NL80211_CHAN_WIDTH_5 ||
-+	    c1->width == NL80211_CHAN_WIDTH_10 ||
-+	    c2->width == NL80211_CHAN_WIDTH_5 ||
-+	    c2->width == NL80211_CHAN_WIDTH_10)
-+		return NULL;
-+
- 	if (c1->width == NL80211_CHAN_WIDTH_20_NOHT ||
- 	    c1->width == NL80211_CHAN_WIDTH_20)
- 		return c2;
-@@ -349,6 +367,12 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 	control_freq = chandef->chan->center_freq;
- 
- 	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		width = 5;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		width = 10;
-+		break;
- 	case NL80211_CHAN_WIDTH_20:
- 		if (!ht_cap->ht_supported)
- 			return false;
-@@ -405,6 +429,11 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 	if (width > 20)
- 		prohibited_flags |= IEEE80211_CHAN_NO_OFDM;
- 
-+	/* 5 and 10 MHz are only defined for the OFDM PHY */
-+	if (width < 20)
-+		prohibited_flags |= IEEE80211_CHAN_NO_OFDM;
-+
-+
- 	if (!cfg80211_secondary_chans_ok(wiphy, chandef->center_freq1,
- 					 width, prohibited_flags))
- 		return false;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9cdcd9e..f67d825 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1228,6 +1228,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
- 		if ((dev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP) &&
- 		    nla_put_flag(msg, NL80211_ATTR_TDLS_EXTERNAL_SETUP))
- 			goto nla_put_failure;
-+		if ((dev->wiphy.flags & WIPHY_FLAG_SUPPORTS_5_10_MHZ) &&
-+		    nla_put_flag(msg, WIPHY_FLAG_SUPPORTS_5_10_MHZ))
-+			goto nla_put_failure;
- 
- 		(*split_start)++;
- 		if (split)
-@@ -1771,6 +1774,11 @@ static int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
- 				     IEEE80211_CHAN_DISABLED))
- 		return -EINVAL;
- 
-+	if ((chandef->width == NL80211_CHAN_WIDTH_5 ||
-+	     chandef->width == NL80211_CHAN_WIDTH_10) &&
-+	    !(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_5_10_MHZ))
-+		return -EINVAL;
-+
- 	return 0;
- }
- 
-@@ -6326,11 +6334,16 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &ibss.chandef))
- 		return -EINVAL;
- 
--	if (ibss.chandef.width > NL80211_CHAN_WIDTH_40)
--		return -EINVAL;
--	if (ibss.chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
--	    !(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
-+	switch (ibss.chandef.width) {
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		break;
-+	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_40:
-+		if (rdev->wiphy.features & NL80211_FEATURE_HT_IBSS)
-+			break;
-+	default:
- 		return -EINVAL;
-+	}
- 
- 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
- 	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
 -- 
-1.7.10.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
