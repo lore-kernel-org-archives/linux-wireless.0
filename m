@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:36128 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752403Ab3EWQtj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 12:49:39 -0400
-Received: by mail-wi0-f179.google.com with SMTP id hq7so2210011wib.12
-        for <linux-wireless@vger.kernel.org>; Thu, 23 May 2013 09:49:38 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:1478 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759384Ab3E2QjZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 12:39:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.10 13/16] brcmfmac: Accept only first creditmap
+ event.
+Date: Wed, 29 May 2013 18:39:03 +0200
+Message-ID: <1369845546-31950-14-git-send-email-arend@broadcom.com> (sfid-20130529_184006_796132_F7527C15)
+In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <002301ce57cc$dcaeef40$960ccdc0$@acksys.fr>
-References: <002301ce57cc$dcaeef40$960ccdc0$@acksys.fr>
-From: Ashok Nagarajan <ashok@cozybit.com>
-Date: Thu, 23 May 2013 09:49:17 -0700
-Message-ID: <CACcxo+rJcr3sL_8NU8ygyzvx0eqN+5gKtz6kfcX=QH6pNphCMw@mail.gmail.com> (sfid-20130523_184954_400271_9E5AAB61)
-Subject: Re: How to set basic rates in mesh mode?
-To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tosoni,
+From: Hante Meuleman <meuleman@broadcom.com>
 
-On Thu, May 23, 2013 at 8:47 AM, Jean-Pierre Tosoni <jp.tosoni@acksys.fr> wrote:
-> Hi all,
->
-> Is there a way to change the basic rates set in mesh mode ?
-> (so that broadcasts and ACKs could be sent faster)
->
-Not with the current ToT. But patches to support this feature have
-been sent and is waiting to get merged.
+During P2P testing it turned out that the firmware sents multiple
+multiple creditmap event messages. Only the first message from the
+firmware should be processed. Otherwise the firmware-signalled flow
+control can run haywire when it has packets outstanding in firmware.
 
-If you would like to use the feature now, you could find these patches here.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-1. https://patchwork.kernel.org/patch/2552611/
-2. https://patchwork.kernel.org/patch/2552621/
-and 3. https://patchwork.kernel.org/patch/2552641/
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index b11a51b..dd47796 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -438,6 +438,7 @@ struct brcmf_fws_info {
+ 	u32 fifo_delay_map;
+ 	unsigned long borrow_defer_timestamp;
+ 	bool bus_flow_blocked;
++	bool creditmap_received;
+ };
+ 
+ /*
+@@ -1432,6 +1433,10 @@ static int brcmf_fws_notify_credit_map(struct brcmf_if *ifp,
+ 		brcmf_err("event payload too small (%d)\n", e->datalen);
+ 		return -EINVAL;
+ 	}
++	if (fws->creditmap_received)
++		return 0;
++
++	fws->creditmap_received = true;
+ 
+ 	brcmf_dbg(TRACE, "enter: credits %pM\n", credits);
+ 	brcmf_fws_lock(ifp->drvr, flags);
+-- 
+1.7.10.4
 
-Thanks,
-Ashok
-> - iw does not do this, and cfg80211 rejects NL80211_CMD_SET_BSS for mesh
-> interfaces, I cannot figure out another way ?
->
-> Regards
-> j.p. Tosoni
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-
---
-Ashok Raj Nagarajan,
-cozybit Inc.
-http://www.cozybit.com
