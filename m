@@ -1,557 +1,248 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rrcs-24-73-230-86.se.biz.rr.com ([24.73.230.86]:39129 "EHLO
-	stuffed.shaftnet.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703Ab3EYAFG (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59880 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933784Ab3E2HGF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 20:05:06 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 03/14] cw1200: v7: Scanning implementation
-Date: Fri, 24 May 2013 20:04:40 -0400
-Message-Id: <1369440291-8961-4-git-send-email-pizza@shaftnet.org> (sfid-20130525_020513_896432_837B3E5F)
-In-Reply-To: <1369440291-8961-1-git-send-email-pizza@shaftnet.org>
-References: <1369440291-8961-1-git-send-email-pizza@shaftnet.org>
+	Wed, 29 May 2013 03:06:05 -0400
+Message-ID: <1369811155.8414.1.camel@jlt4.sipsolutions.net> (sfid-20130529_090609_605439_26842BBD)
+Subject: pull-request: iwlwifi-next 2013-05-29
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 29 May 2013 09:05:55 +0200
+In-Reply-To: <1369658029.14740.7.camel@jlt4.sipsolutions.net> (sfid-20130527_143407_283994_588E3186)
+References: <1369658029.14740.7.camel@jlt4.sipsolutions.net>
+	 (sfid-20130527_143407_283994_588E3186)
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-BkktiuWAHcQFXRaPKUA7"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/cw1200/scan.c | 461 +++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/scan.h |  56 +++++
- 2 files changed, 517 insertions(+)
- create mode 100644 drivers/net/wireless/cw1200/scan.c
- create mode 100644 drivers/net/wireless/cw1200/scan.h
 
-diff --git a/drivers/net/wireless/cw1200/scan.c b/drivers/net/wireless/cw1200/scan.c
-new file mode 100644
-index 0000000..ee3c190
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/scan.c
-@@ -0,0 +1,461 @@
-+/*
-+ * Scan implementation for ST-Ericsson CW1200 mac80211 drivers
-+ *
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/sched.h>
-+#include "cw1200.h"
-+#include "scan.h"
-+#include "sta.h"
-+#include "pm.h"
-+
-+static void cw1200_scan_restart_delayed(struct cw1200_common *priv);
-+
-+static int cw1200_scan_start(struct cw1200_common *priv, struct wsm_scan *scan)
-+{
-+	int ret, i;
-+	int tmo = 2000;
-+
-+	switch (priv->join_status) {
-+	case CW1200_JOIN_STATUS_PRE_STA:
-+	case CW1200_JOIN_STATUS_JOINING:
-+		return -EBUSY;
-+	default:
-+		break;
-+	}
-+
-+	wiphy_dbg(priv->hw->wiphy, "[SCAN] hw req, type %d, %d channels, flags: 0x%x.\n",
-+		  scan->type, scan->num_channels, scan->flags);
-+
-+	for (i = 0; i < scan->num_channels; ++i)
-+		tmo += scan->ch[i].max_chan_time + 10;
-+
-+	cancel_delayed_work_sync(&priv->clear_recent_scan_work);
-+	atomic_set(&priv->scan.in_progress, 1);
-+	atomic_set(&priv->recent_scan, 1);
-+	cw1200_pm_stay_awake(&priv->pm_state, tmo * HZ / 1000);
-+	queue_delayed_work(priv->workqueue, &priv->scan.timeout,
-+			   tmo * HZ / 1000);
-+	ret = wsm_scan(priv, scan);
-+	if (ret) {
-+		atomic_set(&priv->scan.in_progress, 0);
-+		cancel_delayed_work_sync(&priv->scan.timeout);
-+		cw1200_scan_restart_delayed(priv);
-+	}
-+	return ret;
-+}
-+
-+int cw1200_hw_scan(struct ieee80211_hw *hw,
-+		   struct ieee80211_vif *vif,
-+		   struct cfg80211_scan_request *req)
-+{
-+	struct cw1200_common *priv = hw->priv;
-+	struct wsm_template_frame frame = {
-+		.frame_type = WSM_FRAME_TYPE_PROBE_REQUEST,
-+	};
-+	int i, ret;
-+
-+	if (!priv->vif)
-+		return -EINVAL;
-+
-+	/* Scan when P2P_GO corrupt firmware MiniAP mode */
-+	if (priv->join_status == CW1200_JOIN_STATUS_AP)
-+		return -EOPNOTSUPP;
-+
-+	if (req->n_ssids == 1 && !req->ssids[0].ssid_len)
-+		req->n_ssids = 0;
-+
-+	wiphy_dbg(hw->wiphy, "[SCAN] Scan request for %d SSIDs.\n",
-+		  req->n_ssids);
-+
-+	if (req->n_ssids > WSM_SCAN_MAX_NUM_OF_SSIDS)
-+		return -EINVAL;
-+
-+	frame.skb = ieee80211_probereq_get(hw, priv->vif, NULL, 0,
-+		req->ie_len);
-+	if (!frame.skb)
-+		return -ENOMEM;
-+
-+	if (req->ie_len)
-+		memcpy(skb_put(frame.skb, req->ie_len), req->ie, req->ie_len);
-+
-+	/* will be unlocked in cw1200_scan_work() */
-+	down(&priv->scan.lock);
-+	mutex_lock(&priv->conf_mutex);
-+
-+	ret = wsm_set_template_frame(priv, &frame);
-+	if (!ret) {
-+		/* Host want to be the probe responder. */
-+		ret = wsm_set_probe_responder(priv, true);
-+	}
-+	if (ret) {
-+		mutex_unlock(&priv->conf_mutex);
-+		up(&priv->scan.lock);
-+		dev_kfree_skb(frame.skb);
-+		return ret;
-+	}
-+
-+	wsm_lock_tx(priv);
-+
-+	BUG_ON(priv->scan.req);
-+	priv->scan.req = req;
-+	priv->scan.n_ssids = 0;
-+	priv->scan.status = 0;
-+	priv->scan.begin = &req->channels[0];
-+	priv->scan.curr = priv->scan.begin;
-+	priv->scan.end = &req->channels[req->n_channels];
-+	priv->scan.output_power = priv->output_power;
-+
-+	for (i = 0; i < req->n_ssids; ++i) {
-+		struct wsm_ssid *dst = &priv->scan.ssids[priv->scan.n_ssids];
-+		memcpy(&dst->ssid[0], req->ssids[i].ssid, sizeof(dst->ssid));
-+		dst->length = req->ssids[i].ssid_len;
-+		++priv->scan.n_ssids;
-+	}
-+
-+	mutex_unlock(&priv->conf_mutex);
-+
-+	if (frame.skb)
-+		dev_kfree_skb(frame.skb);
-+	queue_work(priv->workqueue, &priv->scan.work);
-+	return 0;
-+}
-+
-+void cw1200_scan_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv = container_of(work, struct cw1200_common,
-+							scan.work);
-+	struct ieee80211_channel **it;
-+	struct wsm_scan scan = {
-+		.type = WSM_SCAN_TYPE_FOREGROUND,
-+		.flags = WSM_SCAN_FLAG_SPLIT_METHOD,
-+	};
-+	bool first_run = (priv->scan.begin == priv->scan.curr &&
-+			  priv->scan.begin != priv->scan.end);
-+	int i;
-+
-+	if (first_run) {
-+		/* Firmware gets crazy if scan request is sent
-+		 * when STA is joined but not yet associated.
-+		 * Force unjoin in this case.
-+		 */
-+		if (cancel_delayed_work_sync(&priv->join_timeout) > 0)
-+			cw1200_join_timeout(&priv->join_timeout.work);
-+	}
-+
-+	mutex_lock(&priv->conf_mutex);
-+
-+	if (first_run) {
-+		if (priv->join_status == CW1200_JOIN_STATUS_STA &&
-+		    !(priv->powersave_mode.mode & WSM_PSM_PS)) {
-+			struct wsm_set_pm pm = priv->powersave_mode;
-+			pm.mode = WSM_PSM_PS;
-+			cw1200_set_pm(priv, &pm);
-+		} else if (priv->join_status == CW1200_JOIN_STATUS_MONITOR) {
-+			/* FW bug: driver has to restart p2p-dev mode
-+			 * after scan
-+			 */
-+			cw1200_disable_listening(priv);
-+		}
-+	}
-+
-+	if (!priv->scan.req || (priv->scan.curr == priv->scan.end)) {
-+		if (priv->scan.output_power != priv->output_power)
-+			wsm_set_output_power(priv, priv->output_power * 10);
-+		if (priv->join_status == CW1200_JOIN_STATUS_STA &&
-+		    !(priv->powersave_mode.mode & WSM_PSM_PS))
-+			cw1200_set_pm(priv, &priv->powersave_mode);
-+
-+		if (priv->scan.status < 0)
-+			wiphy_dbg(priv->hw->wiphy, "[SCAN] Scan failed (%d).\n",
-+				  priv->scan.status);
-+		else if (priv->scan.req)
-+			wiphy_dbg(priv->hw->wiphy,
-+				  "[SCAN] Scan completed.\n");
-+		else
-+			wiphy_dbg(priv->hw->wiphy,
-+				  "[SCAN] Scan canceled.\n");
-+
-+		priv->scan.req = NULL;
-+		cw1200_scan_restart_delayed(priv);
-+		wsm_unlock_tx(priv);
-+		mutex_unlock(&priv->conf_mutex);
-+		ieee80211_scan_completed(priv->hw, priv->scan.status ? 1 : 0);
-+		up(&priv->scan.lock);
-+		return;
-+	} else {
-+		struct ieee80211_channel *first = *priv->scan.curr;
-+		for (it = priv->scan.curr + 1, i = 1;
-+		     it != priv->scan.end && i < WSM_SCAN_MAX_NUM_OF_CHANNELS;
-+		     ++it, ++i) {
-+			if ((*it)->band != first->band)
-+				break;
-+			if (((*it)->flags ^ first->flags) &
-+					IEEE80211_CHAN_PASSIVE_SCAN)
-+				break;
-+			if (!(first->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
-+			    (*it)->max_power != first->max_power)
-+				break;
-+		}
-+		scan.band = first->band;
-+
-+		if (priv->scan.req->no_cck)
-+			scan.max_tx_rate = WSM_TRANSMIT_RATE_6;
-+		else
-+			scan.max_tx_rate = WSM_TRANSMIT_RATE_1;
-+		scan.num_probes =
-+			(first->flags & IEEE80211_CHAN_PASSIVE_SCAN) ? 0 : 2;
-+		scan.num_ssids = priv->scan.n_ssids;
-+		scan.ssids = &priv->scan.ssids[0];
-+		scan.num_channels = it - priv->scan.curr;
-+		/* TODO: Is it optimal? */
-+		scan.probe_delay = 100;
-+		/* It is not stated in WSM specification, however
-+		 * FW team says that driver may not use FG scan
-+		 * when joined.
-+		 */
-+		if (priv->join_status == CW1200_JOIN_STATUS_STA) {
-+			scan.type = WSM_SCAN_TYPE_BACKGROUND;
-+			scan.flags = WSM_SCAN_FLAG_FORCE_BACKGROUND;
-+		}
-+		scan.ch = kzalloc(
-+			sizeof(struct wsm_scan_ch) * (it - priv->scan.curr),
-+			GFP_KERNEL);
-+		if (!scan.ch) {
-+			priv->scan.status = -ENOMEM;
-+			goto fail;
-+		}
-+		for (i = 0; i < scan.num_channels; ++i) {
-+			scan.ch[i].number = priv->scan.curr[i]->hw_value;
-+			if (priv->scan.curr[i]->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
-+				scan.ch[i].min_chan_time = 50;
-+				scan.ch[i].max_chan_time = 100;
-+			} else {
-+				scan.ch[i].min_chan_time = 10;
-+				scan.ch[i].max_chan_time = 25;
-+			}
-+		}
-+		if (!(first->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
-+		    priv->scan.output_power != first->max_power) {
-+			priv->scan.output_power = first->max_power;
-+			wsm_set_output_power(priv,
-+					     priv->scan.output_power * 10);
-+		}
-+		priv->scan.status = cw1200_scan_start(priv, &scan);
-+		kfree(scan.ch);
-+		if (priv->scan.status)
-+			goto fail;
-+		priv->scan.curr = it;
-+	}
-+	mutex_unlock(&priv->conf_mutex);
-+	return;
-+
-+fail:
-+	priv->scan.curr = priv->scan.end;
-+	mutex_unlock(&priv->conf_mutex);
-+	queue_work(priv->workqueue, &priv->scan.work);
-+	return;
-+}
-+
-+static void cw1200_scan_restart_delayed(struct cw1200_common *priv)
-+{
-+	/* FW bug: driver has to restart p2p-dev mode after scan. */
-+	if (priv->join_status == CW1200_JOIN_STATUS_MONITOR) {
-+		cw1200_enable_listening(priv);
-+		cw1200_update_filtering(priv);
-+	}
-+
-+	if (priv->delayed_unjoin) {
-+		priv->delayed_unjoin = false;
-+		if (queue_work(priv->workqueue, &priv->unjoin_work) <= 0)
-+			wsm_unlock_tx(priv);
-+	} else if (priv->delayed_link_loss) {
-+			wiphy_dbg(priv->hw->wiphy, "[CQM] Requeue BSS loss.\n");
-+			priv->delayed_link_loss = 0;
-+			cw1200_cqm_bssloss_sm(priv, 1, 0, 0);
-+	}
-+}
-+
-+static void cw1200_scan_complete(struct cw1200_common *priv)
-+{
-+	queue_delayed_work(priv->workqueue, &priv->clear_recent_scan_work, HZ);
-+	if (priv->scan.direct_probe) {
-+		wiphy_dbg(priv->hw->wiphy, "[SCAN] Direct probe complete.\n");
-+		cw1200_scan_restart_delayed(priv);
-+		priv->scan.direct_probe = 0;
-+		up(&priv->scan.lock);
-+		wsm_unlock_tx(priv);
-+	} else {
-+		cw1200_scan_work(&priv->scan.work);
-+	}
-+}
-+
-+void cw1200_scan_failed_cb(struct cw1200_common *priv)
-+{
-+	if (priv->mode == NL80211_IFTYPE_UNSPECIFIED)
-+		/* STA is stopped. */
-+		return;
-+
-+	if (cancel_delayed_work_sync(&priv->scan.timeout) > 0) {
-+		priv->scan.status = -EIO;
-+		queue_delayed_work(priv->workqueue, &priv->scan.timeout, 0);
-+	}
-+}
-+
-+
-+void cw1200_scan_complete_cb(struct cw1200_common *priv,
-+				struct wsm_scan_complete *arg)
-+{
-+	if (priv->mode == NL80211_IFTYPE_UNSPECIFIED)
-+		/* STA is stopped. */
-+		return;
-+
-+	if (cancel_delayed_work_sync(&priv->scan.timeout) > 0) {
-+		priv->scan.status = 1;
-+		queue_delayed_work(priv->workqueue, &priv->scan.timeout, 0);
-+	}
-+}
-+
-+void cw1200_clear_recent_scan_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common,
-+			     clear_recent_scan_work.work);
-+	atomic_xchg(&priv->recent_scan, 0);
-+}
-+
-+void cw1200_scan_timeout(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, scan.timeout.work);
-+	if (atomic_xchg(&priv->scan.in_progress, 0)) {
-+		if (priv->scan.status > 0) {
-+			priv->scan.status = 0;
-+		} else if (!priv->scan.status) {
-+			wiphy_warn(priv->hw->wiphy,
-+				   "Timeout waiting for scan complete notification.\n");
-+			priv->scan.status = -ETIMEDOUT;
-+			priv->scan.curr = priv->scan.end;
-+			wsm_stop_scan(priv);
-+		}
-+		cw1200_scan_complete(priv);
-+	}
-+}
-+
-+void cw1200_probe_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, scan.probe_work.work);
-+	u8 queue_id = cw1200_queue_get_queue_id(priv->pending_frame_id);
-+	struct cw1200_queue *queue = &priv->tx_queue[queue_id];
-+	const struct cw1200_txpriv *txpriv;
-+	struct wsm_tx *wsm;
-+	struct wsm_template_frame frame = {
-+		.frame_type = WSM_FRAME_TYPE_PROBE_REQUEST,
-+	};
-+	struct wsm_ssid ssids[1] = {{
-+		.length = 0,
-+	} };
-+	struct wsm_scan_ch ch[1] = {{
-+		.min_chan_time = 0,
-+		.max_chan_time = 10,
-+	} };
-+	struct wsm_scan scan = {
-+		.type = WSM_SCAN_TYPE_FOREGROUND,
-+		.num_probes = 1,
-+		.probe_delay = 0,
-+		.num_channels = 1,
-+		.ssids = ssids,
-+		.ch = ch,
-+	};
-+	u8 *ies;
-+	size_t ies_len;
-+	int ret;
-+
-+	wiphy_dbg(priv->hw->wiphy, "[SCAN] Direct probe work.\n");
-+
-+	mutex_lock(&priv->conf_mutex);
-+	if (down_trylock(&priv->scan.lock)) {
-+		/* Scan is already in progress. Requeue self. */
-+		schedule();
-+		queue_delayed_work(priv->workqueue,
-+				   &priv->scan.probe_work, HZ / 10);
-+		mutex_unlock(&priv->conf_mutex);
-+		return;
-+	}
-+
-+	/* Make sure we still have a pending probe req */
-+	if (cw1200_queue_get_skb(queue,	priv->pending_frame_id,
-+				 &frame.skb, &txpriv)) {
-+		up(&priv->scan.lock);
-+		mutex_unlock(&priv->conf_mutex);
-+		wsm_unlock_tx(priv);
-+		return;
-+	}
-+	wsm = (struct wsm_tx *)frame.skb->data;
-+	scan.max_tx_rate = wsm->max_tx_rate;
-+	scan.band = (priv->channel->band == IEEE80211_BAND_5GHZ) ?
-+		WSM_PHY_BAND_5G : WSM_PHY_BAND_2_4G;
-+	if (priv->join_status == CW1200_JOIN_STATUS_STA ||
-+	    priv->join_status == CW1200_JOIN_STATUS_IBSS) {
-+		scan.type = WSM_SCAN_TYPE_BACKGROUND;
-+		scan.flags = WSM_SCAN_FLAG_FORCE_BACKGROUND;
-+	}
-+	ch[0].number = priv->channel->hw_value;
-+
-+	skb_pull(frame.skb, txpriv->offset);
-+
-+	ies = &frame.skb->data[sizeof(struct ieee80211_hdr_3addr)];
-+	ies_len = frame.skb->len - sizeof(struct ieee80211_hdr_3addr);
-+
-+	if (ies_len) {
-+		u8 *ssidie =
-+			(u8 *)cfg80211_find_ie(WLAN_EID_SSID, ies, ies_len);
-+		if (ssidie && ssidie[1] && ssidie[1] <= sizeof(ssids[0].ssid)) {
-+			u8 *nextie = &ssidie[2 + ssidie[1]];
-+			/* Remove SSID from the IE list. It has to be provided
-+			 * as a separate argument in cw1200_scan_start call
-+			 */
-+
-+			/* Store SSID localy */
-+			ssids[0].length = ssidie[1];
-+			memcpy(ssids[0].ssid, &ssidie[2], ssids[0].length);
-+			scan.num_ssids = 1;
-+
-+			/* Remove SSID from IE list */
-+			ssidie[1] = 0;
-+			memmove(&ssidie[2], nextie, &ies[ies_len] - nextie);
-+			skb_trim(frame.skb, frame.skb->len - ssids[0].length);
-+		}
-+	}
-+
-+	/* FW bug: driver has to restart p2p-dev mode after scan */
-+	if (priv->join_status == CW1200_JOIN_STATUS_MONITOR)
-+		cw1200_disable_listening(priv);
-+	ret = wsm_set_template_frame(priv, &frame);
-+	priv->scan.direct_probe = 1;
-+	if (!ret) {
-+		wsm_flush_tx(priv);
-+		ret = cw1200_scan_start(priv, &scan);
-+	}
-+	mutex_unlock(&priv->conf_mutex);
-+
-+	skb_push(frame.skb, txpriv->offset);
-+	if (!ret)
-+		IEEE80211_SKB_CB(frame.skb)->flags |= IEEE80211_TX_STAT_ACK;
-+	BUG_ON(cw1200_queue_remove(queue, priv->pending_frame_id));
-+
-+	if (ret) {
-+		priv->scan.direct_probe = 0;
-+		up(&priv->scan.lock);
-+		wsm_unlock_tx(priv);
-+	}
-+
-+	return;
-+}
-diff --git a/drivers/net/wireless/cw1200/scan.h b/drivers/net/wireless/cw1200/scan.h
-new file mode 100644
-index 0000000..5a8296c
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/scan.h
-@@ -0,0 +1,56 @@
-+/*
-+ * Scan interface for ST-Ericsson CW1200 mac80211 drivers
-+ *
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef SCAN_H_INCLUDED
-+#define SCAN_H_INCLUDED
-+
-+#include <linux/semaphore.h>
-+#include "wsm.h"
-+
-+/* external */ struct sk_buff;
-+/* external */ struct cfg80211_scan_request;
-+/* external */ struct ieee80211_channel;
-+/* external */ struct ieee80211_hw;
-+/* external */ struct work_struct;
-+
-+struct cw1200_scan {
-+	struct semaphore lock;
-+	struct work_struct work;
-+	struct delayed_work timeout;
-+	struct cfg80211_scan_request *req;
-+	struct ieee80211_channel **begin;
-+	struct ieee80211_channel **curr;
-+	struct ieee80211_channel **end;
-+	struct wsm_ssid ssids[WSM_SCAN_MAX_NUM_OF_SSIDS];
-+	int output_power;
-+	int n_ssids;
-+	int status;
-+	atomic_t in_progress;
-+	/* Direct probe requests workaround */
-+	struct delayed_work probe_work;
-+	int direct_probe;
-+};
-+
-+int cw1200_hw_scan(struct ieee80211_hw *hw,
-+		   struct ieee80211_vif *vif,
-+		   struct cfg80211_scan_request *req);
-+void cw1200_scan_work(struct work_struct *work);
-+void cw1200_scan_timeout(struct work_struct *work);
-+void cw1200_clear_recent_scan_work(struct work_struct *work);
-+void cw1200_scan_complete_cb(struct cw1200_common *priv,
-+			     struct wsm_scan_complete *arg);
-+void cw1200_scan_failed_cb(struct cw1200_common *priv);
-+
-+/* ******************************************************************** */
-+/* Raw probe requests TX workaround					*/
-+void cw1200_probe_work(struct work_struct *work);
-+
-+#endif
--- 
-1.8.1.4
+--=-BkktiuWAHcQFXRaPKUA7
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+[resending, same text but new commit IDs]
+
+> John,
+>=20
+> I have accumulated a bunch of new things in iwlwifi-next. Unfortunately,
+> to resolve a (semantic) conflict, I had to merge iwlwifi, which pulled
+> in some ath9k/mwifiex changes we well since you didn't merge wireless
+> into wireless-next at any point. If you want to handle this differently
+> let me know. The shortlog below also looks inflated because of that,
+> I've also pasted the 'real' one below the pull request.
+>=20
+> The 'big features' I have are powersave related, including beacon
+> filtering and connection monitor (which I have been sitting on for a
+> while because it required a mac80211 patch) and thermal throttling/CT
+> kill. The rest is mostly cleanups and small(ish) improvements.
+>=20
+> Please pull.
+>=20
+> Thanks,
+> johannes
+
+The following changes since commit f722406faae2d073cc1d01063d1123c35425939e=
+:
+
+  Linux 3.10-rc1 (2013-05-11 17:14:08 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to b571a69745dc90aec3d0505a7ceac2702a93861b:
+
+  iwlwifi: mvm: add debugfs for powersave (2013-05-29 09:03:24 +0200)
+
+----------------------------------------------------------------
+Alexander Bondar (6):
+      iwlwifi: mvm: Prevent setting assoc flag in MAC_CONTEXT_CMD
+      iwlwifi: mvm: Add number of DTIMs to skip
+      iwlwifi: mvm: configure power management in D3
+      iwlwifi: mvm: Add beacon abort enablement
+      iwlwifi: mvm: Change number of DTIMs to skip semantics
+      iwlwifi: mvm: add debugfs for powersave
+
+Amitkumar Karwar (1):
+      mwifiex: fix memory leak issue when driver unload
+
+Bing Zhao (1):
+      mwifiex: clear is_suspended flag when interrupt is received early
+
+Daniel Drake (1):
+      mwifiex: fix setting of multicast filter
+
+David S. Miller (1):
+      Merge branch 'wireless'
+
+Emmanuel Grumbach (10):
+      iwlwifi: move BUILD_RAxTID to transport
+      iwlwifi: pcie: prefer to load the firmware in one shot
+      iwlwifi: enable shadow registers for 7000
+      iwlwifi: mvm: tell firmware to let multicast frames in
+      iwlwifi: mvm: fix aggregation drain flow
+      iwlwifi: mvm: add a missing define in firmware API
+      iwlwifi: constify the source buffer of iwl_trans_write_mem
+      iwlwifi: dvm: fix zero LQ CMD sending avoidance
+      iwlwifi: mvm: use proper scan type for P2P
+      iwlwifi: take valid ant for HT caps from TLV
+
+Eran Harary (2):
+      iwlwifi: support loading NVM data from file
+      iwlwifi: fix initialisation while RF-kill is asserted
+
+Eytan Lifshitz (1):
+      iwlwifi: mvm: add thermal throttling and CT kill
+
+Felix Fietkau (1):
+      ath9k: fix key allocation error handling for powersave keys
+
+Hila Gonen (2):
+      iwlwifi: mvm: Add beacon filtering support
+      iwlwifi: mvm: Add support for connection monitor offload
+
+Ilan Peer (4):
+      iwlwifi: mvm: Loosen the channel context/phy context coupling
+      iwlwifi: mvm: Change PHY context handling
+      iwlwifi: mvm: Allow P2P Device to use an existing PHY context
+      iwlwifi: mvm: Always use SCAN_TYPE_FORCED
+
+Johannes Berg (15):
+      iwlwifi: mvm: don't assume data section is at 0x800000
+      iwlwifi: pcie: dump stack on NIC error in sync commands
+      iwlwifi: nvm: honour VHT enable flag
+      iwlwifi: mvm: optionally store D3 SRAM after resume
+      iwlwifi: mvm: sanity check context in iwl_mvm_phy_ctxt_unref()
+      iwlwifi: mvm: fix NVM parsing error path
+      iwlwifi: reverse DATA/INST section order
+      iwlwifi: nvm: don't print NVM section reads by default
+      iwlwifi: mvm: don't store section offset/length in debugfs
+      iwlwifi: mvm: adjust firmware D3 configuration API
+      iwlwifi: move D3_CFG_COMPLETE handling into DVM
+      iwlwifi: dvm: rename iwl_lib_ops to iwl_dvm_cfg
+      iwlwifi: move some configuration parameters into DVM
+      iwlwifi: dvm: constify configuration structs
+      Merge remote-tracking branch 'iwlwifi-fixes/master' into HEAD
+
+John W. Linville (1):
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless i=
+nto for-davem
+
+Oren Givon (1):
+      iwlwifi: add new 7260 and 3160 series device IDs
+
+Stanislaw Gruszka (2):
+      ath5k: do not reschedule tx_complete_work on stop
+      iwl4965: workaround connection regression on passive channel
+
+Sujith Manoharan (2):
+      ath9k: Fix beacon reconfiguration
+      ath9k: Update initvals for AR9565
+
+Thommy Jakobsson (1):
+      B43: Handle DMA RX descriptor underrun
+
+ drivers/net/wireless/ath/ath5k/base.c              |   5 +
+ .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   | 138 +++---
+ drivers/net/wireless/ath/ath9k/main.c              |  10 +-
+ drivers/net/wireless/b43/dma.c                     |  19 +
+ drivers/net/wireless/b43/dma.h                     |   4 +-
+ drivers/net/wireless/b43/main.c                    |  43 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c           |   3 +-
+ drivers/net/wireless/iwlwifi/dvm/agn.h             |  21 +-
+ drivers/net/wireless/iwlwifi/dvm/calib.c           |   8 +-
+ drivers/net/wireless/iwlwifi/dvm/commands.h        |   4 -
+ drivers/net/wireless/iwlwifi/dvm/dev.h             |  57 ++-
+ drivers/net/wireless/iwlwifi/dvm/devices.c         | 107 ++++-
+ drivers/net/wireless/iwlwifi/dvm/lib.c             |  20 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c        |  14 +-
+ drivers/net/wireless/iwlwifi/dvm/main.c            |  45 +-
+ drivers/net/wireless/iwlwifi/dvm/power.c           |   6 +-
+ drivers/net/wireless/iwlwifi/dvm/rs.c              |   8 +-
+ drivers/net/wireless/iwlwifi/dvm/rx.c              |   2 +-
+ drivers/net/wireless/iwlwifi/dvm/scan.c            |  12 +-
+ drivers/net/wireless/iwlwifi/dvm/sta.c             |   2 +-
+ drivers/net/wireless/iwlwifi/dvm/tt.c              |   2 +-
+ drivers/net/wireless/iwlwifi/dvm/tx.c              |  12 +-
+ drivers/net/wireless/iwlwifi/dvm/ucode.c           |  10 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c            |   3 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c            |  39 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c            |   4 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c            |  32 +-
+ drivers/net/wireless/iwlwifi/iwl-7000.c            |  53 ++-
+ drivers/net/wireless/iwlwifi/iwl-config.h          |  49 +-
+ drivers/net/wireless/iwlwifi/iwl-csr.h             |  19 +
+ drivers/net/wireless/iwlwifi/iwl-drv.c             |   3 +
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c    |  15 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h    |   3 +-
+ drivers/net/wireless/iwlwifi/iwl-fw.h              |   7 +-
+ drivers/net/wireless/iwlwifi/iwl-modparams.h       |   1 +
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c       |  20 +-
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.h       |   2 +-
+ drivers/net/wireless/iwlwifi/iwl-prph.h            |  12 +
+ drivers/net/wireless/iwlwifi/iwl-trans.h           |   7 +-
+ drivers/net/wireless/iwlwifi/mvm/Makefile          |   2 +-
+ drivers/net/wireless/iwlwifi/mvm/bt-coex.c         |   6 +-
+ drivers/net/wireless/iwlwifi/mvm/d3.c              |  27 ++
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c         | 427 ++++++++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h       |   4 +-
+ drivers/net/wireless/iwlwifi/mvm/fw-api-power.h    |  93 +++-
+ drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h       |   1 +
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h          | 260 +++++++++++
+ drivers/net/wireless/iwlwifi/mvm/fw.c              |  37 +-
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c        |  42 +-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c        | 244 ++++++++--
+ drivers/net/wireless/iwlwifi/mvm/mvm.h             | 197 +++++++-
+ drivers/net/wireless/iwlwifi/mvm/nvm.c             | 212 ++++++++-
+ drivers/net/wireless/iwlwifi/mvm/ops.c             |  31 +-
+ drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c        |  75 +--
+ drivers/net/wireless/iwlwifi/mvm/power.c           | 183 +++++++-
+ drivers/net/wireless/iwlwifi/mvm/rs.c              |  26 ++
+ drivers/net/wireless/iwlwifi/mvm/rs.h              |   5 +
+ drivers/net/wireless/iwlwifi/mvm/rx.c              |  22 +
+ drivers/net/wireless/iwlwifi/mvm/sta.c             |  26 +-
+ drivers/net/wireless/iwlwifi/mvm/sta.h             |   8 +-
+ drivers/net/wireless/iwlwifi/mvm/tt.c              | 509 +++++++++++++++++=
+++++
+ drivers/net/wireless/iwlwifi/mvm/tx.c              |  48 +-
+ drivers/net/wireless/iwlwifi/mvm/utils.c           |  31 ++
+ drivers/net/wireless/iwlwifi/pcie/drv.c            |  50 +-
+ drivers/net/wireless/iwlwifi/pcie/trans.c          |  32 +-
+ drivers/net/wireless/iwlwifi/pcie/tx.c             |   8 +-
+ drivers/net/wireless/mwifiex/cfg80211.c            |   3 -
+ drivers/net/wireless/mwifiex/cmdevt.c              |   1 +
+ drivers/net/wireless/mwifiex/main.c                |   1 +
+ drivers/net/wireless/mwifiex/sta_ioctl.c           |  21 +-
+ 70 files changed, 2907 insertions(+), 546 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/tt.c
+
+
+--=-BkktiuWAHcQFXRaPKUA7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRpajTAAoJEDBSmw7B7bqruEUQAKiKBb4wX6NeF8sCFJqVo2N2
+ZGDS+OsModxtDgNq8G6eAuWFlsgyCI1dZugX9VfrpsHBlYxA9VGgwEODkfLFod65
+yJLLBxKLb42UL+0pKRJx4V0D0VyKqajnoLxCLCKQ9OQXV0Fmph55l6/RfsncKfXJ
+1pvvFKH9bOIR6DJq+U7WNaq8LTwkDVyez1zOrOfU5SHfEhVugauOUoIBWTJfpJ89
+wCKSCIxydCHyJ/c6Ax80x633PLb23I5TI38PyK+V9hJe5iseLKUFZOeC7ycViICp
+iHmMMGSreCSX8pfjSdTkEp3fVUwkTStDB0cH6MvlTc9AOMXHqpySaTWFuUEGDtco
+jg1y69AVyHGHHqP6L9aNSFdulNFyB6POEK8HTVtXsiMmgGvf/Hr0ggudOFl0G3pA
+E+89isf2c3zEUxWbh4T+HnDjBpi/l+b4oYsTOau+EetXwElFgkGdn6BRg2JlThPk
+87QfEEinYWCgZBxOMEUt2JjmwmbNzG6FFy0rsMLKcnXnJ6ngfxutksS9vAbkERFx
+lwvMaUWFAymo/Aaug2XnTCoCn3+IV1psjlgvmxIZLCkf0xInFsIALb1gFgqLTN4g
+pcMzveThKpVdQPP2l4tVzx5QFSyVS/Hiz9sBXCPI7Bh7mVc7KlsBnlGuXBP8EAg3
+FtAAud3Zi57H+VH7znIn
+=yF3M
+-----END PGP SIGNATURE-----
+
+--=-BkktiuWAHcQFXRaPKUA7--
 
