@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [78.193.33.39] ([78.193.33.39]:51243 "EHLO qult.net"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751080Ab3EPSue (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 14:50:34 -0400
-Date: Thu, 16 May 2013 20:50:30 +0200
-From: Ignacy Gawedzki <i@lri.fr>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
-Message-ID: <20130516185030.GB16833@zenon.in.qult.net> (sfid-20130516_205043_917742_0C5AF1D8)
-References: <20130515134258.GA9033@zenon.in.qult.net>
- <5194DEB3.2060407@rempel-privat.de>
- <20130516172030.GD21850@zenon.in.qult.net>
- <51951B90.70909@rempel-privat.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51951B90.70909@rempel-privat.de>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:62564 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965577Ab3E2Kc3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 06:32:29 -0400
+Received: by mail-pd0-f174.google.com with SMTP id 3so6955456pdj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 May 2013 03:32:28 -0700 (PDT)
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, davem@davemloft.net, coelho@ti.com,
+	linville@tuxdriver.com, sachin.kamat@linaro.org
+Subject: [PATCH 2/2] net: wireless: wl1251: Fix commenting style
+Date: Wed, 29 May 2013 15:48:23 +0530
+Message-Id: <1369822703-27769-2-git-send-email-sachin.kamat@linaro.org> (sfid-20130529_123238_009479_92249C90)
+In-Reply-To: <1369822703-27769-1-git-send-email-sachin.kamat@linaro.org>
+References: <1369822703-27769-1-git-send-email-sachin.kamat@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 16, 2013 at 07:46:56PM +0200, thus spake Oleksij Rempel:
-> Am 16.05.2013 19:20, schrieb Ignacy Gawedzki:
-> >TP-Link TL-WN722NC, exactly as the one on the wiki.
-> 
-> That is interesting. I have got today TL-WN722N, but i still can't
-> reproduce this issue.
+Make the commenting style consistent with networking block comment
+style as suggested by checkpatch.
 
-Are you sure that not any subsystem ups the interface before you have any
-chance to warm reboot?  Or that you don't have a hub that cuts power to
-devices on warm reboot?
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+---
+ drivers/net/wireless/ti/wl1251/spi.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> >I tried to solder the TX pin, but it's really too tiny.  I don't have an iron
-> >so small as to be able to do it, sorry.  I would really love to have an UART
-> >connection, but that's just beyond my abilities.  BTW, it would really be
-> >great to have a way to send debug message up the USB link, just as with
-> >carl9170.
-> 
-> That make no sense. Debug message i need, are from boot loader.
-> There is no way, that boot loader can send messages over usb. Or if
-> firmwre will crash, it wont send any thing too.
-
-I understand.
-
-> So what do we have:
-> - TL-WN722N is working. Or your model is different, or it is broken one.
-
-I happen to have 8 of them, bought at different times and all exhibit the
-problem.
-
-> - Did you checked the cable?
-
-I usually plug the device directly to the USB port, but I also happen to use
-the cradle (supplied with the WN722NC version) that has a cable, when I need
-two wireless interfaces on the RPi (both of them don't fit at once directly on
-the ports).
-
-> - usb host controller?
-
-I'll try on yet another one and will tell you the results.
-
-> - other options?
-
-Hmmm... :/
-
+diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
+index dfd0877..c7dc6fe 100644
+--- a/drivers/net/wireless/ti/wl1251/spi.c
++++ b/drivers/net/wireless/ti/wl1251/spi.c
+@@ -93,8 +93,7 @@ static void wl1251_spi_wake(struct wl1251 *wl)
+ 	memset(&t, 0, sizeof(t));
+ 	spi_message_init(&m);
+ 
+-	/*
+-	 * Set WSPI_INIT_COMMAND
++	/* Set WSPI_INIT_COMMAND
+ 	 * the data is being send from the MSB to LSB
+ 	 */
+ 	cmd[2] = 0xff;
+@@ -262,7 +261,8 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 	wl->if_ops = &wl1251_spi_ops;
+ 
+ 	/* This is the only SPI value that we need to set here, the rest
+-	 * comes from the board-peripherals file */
++	 * comes from the board-peripherals file
++	 */
+ 	spi->bits_per_word = 32;
+ 
+ 	ret = spi_setup(spi);
 -- 
--= Best Viewed Using [INLINE] =-
+1.7.9.5
+
