@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:32792 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932773Ab3EGOMa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 10:12:30 -0400
-Received: by mail-ie0-f172.google.com with SMTP id 16so1025136iea.31
-        for <linux-wireless@vger.kernel.org>; Tue, 07 May 2013 07:12:29 -0700 (PDT)
-Date: Tue, 7 May 2013 10:11:15 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Subject: Re: [RFC 03/12] mac80211: use all MBSS interfaces for path
- selection
-Message-ID: <20130507141115.GE1438@localhost> (sfid-20130507_161240_027510_98113C68)
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
- <1367548442-8229-4-git-send-email-thomas@cozybit.com>
- <1367934045.8328.20.camel@jlt4.sipsolutions.net>
+Received: from mms3.broadcom.com ([216.31.210.19]:1466 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759328Ab3E2QjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 12:39:24 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.10 15/16] brcmfmac: Fix endless loop when
+ brcmf_fws_commit_skb fails.
+Date: Wed, 29 May 2013 18:39:05 +0200
+Message-ID: <1369845546-31950-16-git-send-email-arend@broadcom.com> (sfid-20130529_183946_107360_2C364165)
+In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1367934045.8328.20.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 07, 2013 at 03:40:45PM +0200, Johannes Berg wrote:
-> >  /**
-> > + * mesh_nexthop_lookup - put the appropriate next hop on a mesh frame and
-> > + * insert the correct outgoing interface on the skb cb. Calling this function
-> > + * is considered "using" the associated mpath, so preempt a path refresh if
-> > + * this mpath expires soon.
-> 
-> This is of course completely bogus kernel-doc :)
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Ack, thanks.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 8b2297a..5d66f3a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1914,7 +1914,8 @@ static void brcmf_fws_dequeue_worker(struct work_struct *worker)
+ 					brcmf_fws_return_credits(fws, fifo, 1);
+ 					break;
+ 				}
+-				brcmf_fws_commit_skb(fws, fifo, skb);
++				if (brcmf_fws_commit_skb(fws, fifo, skb))
++					break;
+ 				if (fws->bus_flow_blocked)
+ 					break;
+ 			}
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.10.4
+
+
