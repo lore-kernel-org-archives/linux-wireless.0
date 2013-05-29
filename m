@@ -1,62 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59786 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753657Ab3EJVeF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 17:34:05 -0400
-Message-ID: <518D67C6.9090406@candelatech.com> (sfid-20130510_233410_445963_61617772)
-Date: Fri, 10 May 2013 14:33:58 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4980 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758978Ab3E2Qjf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 12:39:35 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.10 16/16] brcmfmac: Simplify counting transit
+ count.
+Date: Wed, 29 May 2013 18:39:06 +0200
+Message-ID: <1369845546-31950-17-git-send-email-arend@broadcom.com> (sfid-20130529_184007_473026_529B2A98)
+In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211:  3.9.0+:  Invalid WDS/flush state and non-connecting
- station.
-References: <5182C38B.7060107@candelatech.com>    (sfid-20130502_215043_578677_76592D19) <1367526288.11375.2.camel@jlt4.sipsolutions.net>   <5182D078.4020605@candelatech.com> <518A7AD4.2060100@candelatech.com>  <1368035937.8279.25.camel@jlt4.sipsolutions.net>  <518A9618.1020107@candelatech.com> <518D64E6.8000102@candelatech.com> <1368221128.8390.47.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1368221128.8390.47.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/10/2013 02:25 PM, Johannes Berg wrote:
-> On Fri, 2013-05-10 at 14:21 -0700, Ben Greear wrote:
->
->> void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
->> 			struct net_device *dev)
->> {
->> 	struct wireless_dev *wdev = dev->ieee80211_ptr;
->> 	struct cfg80211_deauth_request req;
->> 	u8 bssid[ETH_ALEN];
->>
->> 	ASSERT_WDEV_LOCK(wdev);
->>
->> 	printk("mlme_down: %s: type: %i  sme_state: %i current-bss: %p\n",
->>                  dev->name, (int)(wdev->iftype), (int)(wdev->sme_state),
->> 	       wdev->current_bss);
->>
->> I see this printout for the stuck station (this is dmesg | grep sta74,
->> so it skips errors about other interfaces that are also hung).
->>
->> I am guessing we should never be calling mlme_down with state
->> of CFG80211_SME_CONNECTED when bss is NULL?
->
-> We should _never_ be in a state where current_bss is NULL but the state
-> is != IDLE. The question I can't seem to find an answer for is how we
-> got into that state, that we're in the state in down() is really less
-> interesting.
->
-> Since you seem to be able to reproduce this, maybe it'd help to mark all
-> state transitions and current_bss assignments, and then backtrack them
-> after the fact.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-I'll work on instrumenting all of those assignments.  I plan to use
-a helper macro to assign them and print out call sites..
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   31 ++++++++------------
+ 1 file changed, 12 insertions(+), 19 deletions(-)
 
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 5d66f3a..6a9a25f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -361,7 +361,6 @@ struct brcmf_fws_mac_descriptor {
+ 	u8 seq[BRCMF_FWS_FIFO_COUNT];
+ 	struct pktq psq;
+ 	int transit_count;
+-	int suppress_count;
+ 	int suppr_transit_count;
+ 	bool send_tim_signal;
+ 	u8 traffic_pending_bmp;
+@@ -1176,8 +1175,6 @@ static int brcmf_fws_enq(struct brcmf_fws_info *fws,
+ 
+ 	/* update the sk_buff state */
+ 	brcmf_skbcb(p)->state = state;
+-	if (state == BRCMF_FWS_SKBSTATE_SUPPRESSED)
+-		entry->suppress_count++;
+ 
+ 	/*
+ 	 * A packet has been pushed so update traffic
+@@ -1217,9 +1214,8 @@ static struct sk_buff *brcmf_fws_deq(struct brcmf_fws_info *fws, int fifo)
+ 		p = brcmu_pktq_mdeq(&entry->psq, pmsk << (fifo * 2), &prec_out);
+ 		if (p == NULL) {
+ 			if (entry->suppressed) {
+-				if (entry->suppr_transit_count >
+-				    entry->suppress_count)
+-					return NULL;
++				if (entry->suppr_transit_count)
++					continue;
+ 				entry->suppressed = false;
+ 				p = brcmu_pktq_mdeq(&entry->psq,
+ 						    1 << (fifo * 2), &prec_out);
+@@ -1270,12 +1266,9 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 	/* this packet was suppressed */
+ 	if (!entry->suppressed) {
+ 		entry->suppressed = true;
+-		entry->suppress_count = brcmu_pktq_mlen(&entry->psq,
+-							1 << (fifo * 2 + 1));
+ 		entry->suppr_transit_count = entry->transit_count;
+-		brcmf_dbg(DATA, "suppress %s: supp_cnt %d transit %d\n",
+-			  entry->name, entry->suppress_count,
+-			  entry->transit_count);
++		brcmf_dbg(DATA, "suppress %s: transit %d\n",
++			  entry->name, entry->transit_count);
+ 	}
+ 
+ 	entry->generation = genbit;
+@@ -1294,7 +1287,6 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 		 * wlfc cleanup
+ 		 */
+ 		brcmf_fws_hanger_mark_suppressed(&fws->hanger, hslot);
+-		entry->suppress_count++;
+ 	}
+ 
+ 	return ret;
+@@ -1339,6 +1331,9 @@ brcmf_fws_txs_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		return -EINVAL;
+ 	}
++	entry->transit_count--;
++	if (entry->suppressed && entry->suppr_transit_count)
++		entry->suppr_transit_count--;
+ 
+ 	brcmf_dbg(DATA, "%s flags %X htod %X\n", entry->name, skcb->if_flags,
+ 		  skcb->htod);
+@@ -1352,13 +1347,9 @@ brcmf_fws_txs_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
+ 	if (!remove_from_hanger)
+ 		ret = brcmf_fws_txstatus_suppressed(fws, fifo, skb, genbit);
+ 
+-	if (remove_from_hanger || ret) {
+-		entry->transit_count--;
+-		if (entry->suppressed)
+-			entry->suppr_transit_count--;
+-
++	if (remove_from_hanger || ret)
+ 		brcmf_txfinalize(fws->drvr, skb, true);
+-	}
++
+ 	return 0;
+ }
+ 
+@@ -1614,7 +1605,6 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 		free_ctr = entry->seq[fifo];
+ 		brcmf_skb_htod_tag_set_field(p, HSLOT, hslot);
+ 		brcmf_skb_htod_tag_set_field(p, FREERUN, free_ctr);
+-		entry->transit_count++;
+ 		rc = brcmf_fws_hanger_pushpkt(&fws->hanger, p, hslot);
+ 		if (rc)
+ 			brcmf_err("hanger push failed: rc=%d\n", rc);
+@@ -1768,6 +1758,9 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
+ 		goto rollback;
+ 	}
+ 
++	entry->transit_count++;
++	if (entry->suppressed)
++		entry->suppr_transit_count++;
+ 	entry->seq[fifo]++;
+ 	fws->stats.pkt2bus++;
+ 	if (brcmf_skbcb(skb)->if_flags & BRCMF_SKB_IF_FLAGS_CREDITCHECK_MASK) {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
+
 
