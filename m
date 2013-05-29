@@ -1,114 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:51340 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755737Ab3E1KoF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 06:44:05 -0400
-Date: Tue, 28 May 2013 12:43:57 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [RFC 0/4] add master channel switch announcement support
-Message-ID: <20130528104357.GB13489@pandem0nium> (sfid-20130528_124409_507772_8195C4D0)
-References: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1368439778.8300.20.camel@jlt4.sipsolutions.net>
- <20130514092734.GA16426@pandem0nium>
+Received: from mms1.broadcom.com ([216.31.210.17]:1339 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757683Ab3E2Qro (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 12:47:44 -0400
+Message-ID: <51A63120.7020102@broadcom.com> (sfid-20130529_184748_292370_CC2F5759)
+Date: Wed, 29 May 2013 18:47:28 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rS8CxjVDS/+yyDmU"
-In-Reply-To: <20130514092734.GA16426@pandem0nium>
+To: "Arend van Spriel" <arend@broadcom.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH for 3.10 00/16] brcmfmac: firmware-signalling fixes
+References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 05/29/2013 06:38 PM, Arend van Spriel wrote:
+> This is a somewhat large series and reading the message of the announcement
+> of v3.10-rc3 I think it is good to give our story up front. Firmware-signalling
+> is a new feature merged in for 3.10, which was a major overhaul of the transmit
+> path in brcmfmac. During and after the merge window we still have some blanks
+> in our test coverage and further testing revealed issues with P2P, TDLS, and
+> power-saving clients in AP mode. These issues have been fixed in this series.
 
---rS8CxjVDS/+yyDmU
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+forgot: last but not least inconsistent firmware behaviour for different 
+devices.
 
-Hey,
+Regards,
+Arend
 
-On Tue, May 14, 2013 at 11:27:34AM +0200, Simon Wunderlich wrote:
-> > > [....]
-> >=20
-> > I don't really like your approach of building all the IEs in the kernel.
-> > There are some things, like the country-after-switch in the CSA wrapper
-> > (introduced in 11ac), that would be really awkward this way.
->=20
-> Hmm ... OK. I have not checked 802.11ac yet (actually I don't have access=
- to the
-> drafts anyway). So what we have to expect is changing the country after t=
-he switch,
-> or also other new things?
->=20
-> > >  * We already have NL80211_CMD_CH_SWITCH_NOTIFY which is only used fo=
-r notification.
-> > >    Maybe we can rename that and re-use it instead of adding a new com=
-mand
-> > >    NL80211_CMD_CHANNEL_SWITCH?
-> >=20
-> > Sure, I don't really care though.
-> >=20
-> OK, will try to merge that then. Seems cleaner than having multiple chann=
-el switch
-> commands in the API.
->=20
-> > >  * could other drivers (next to ath9k) work with this API?
-> >=20
-> > Probably not easily. Any TI folks reading this?
->=20
-> I was thinking about adding another callback function or option for that =
-for drivers
-> who do the channel switch internally. Then we would only need mac80211 to=
- adapt.
->=20
-> Would that help, or what would be problematic?
-> >=20
-> >=20
-> > Anyway I think it'd be better to try to provide
-> >  (a) the "during-switch IEs", maybe with an offset to the counter so
-> > mac80211,
-> >      driver or the device itself can count down
-> >  (b) the "after-switch beacon" IEs (and maybe probe response for
-> o> offload)
->=20
-> Yeah, that would be an alternative. I've been inspired by IEEE 802.11-201=
-2/6.3.17
-> (MLME-CHANNELSWITCH) originally. :)
-> I think your suggestion is good for AP where we control the beacon. For I=
-BSS it
-> would be a little different: when a channel switch is triggered, userspac=
-e does
-> not know the beacon (and will not set it). Therefore, we could only accep=
-t the
-> change IEs and skip the "after-switch-beacon" IEs (these would be re-gene=
-rated
-> internally) in IBSS mode. I guess it would be similar for mesh.
->=20
-> What do you think?
+> As said this series is intended for 3.10 and applies to the master branch of
+> the wireless repository.
+>
+> Arend van Spriel (6):
+>    brcmfmac: allow firmware-signal tlv to be longer than specified
+>    brcmfmac: remove fifo bitfield from brcmf_skbuff_cb::if_flags
+>    brcmfmac: rework credit pickup to assure consistent handling
+>    brcmfmac: explicitly indicate sk_buff is sent upon request credit
+>    brcmfmac: reducing debug logging in firmware-signalling code
+>    brcmfmac: Sent TIM information in case of data available.
+>
+> Hante Meuleman (10):
+>    brcmfmac: Take bus flowcontrol at credit mgmt into account.
+>    brcmfmac: On bus flow control use fw signalling or netif.
+>    brcmfmac: For FW signalling it is necessary to track gen bit.
+>    brcmfmac: Correct creditmap when credit borrowing is active.
+>    brcmfmac: Find correct MAC descriptor in case of TDLS.
+>    brcmfmac: fix invalid ifp lookup in firmware-signalling
+>    brcmfmac: Accept only first creditmap event.
+>    brcmfmac: Signalling header push and pull on logic places.
+>    brcmfmac: Fix endless loop when brcmf_fws_commit_skb fails.
+>    brcmfmac: Simplify counting transit count.
+>
+>   drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +
+>   .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   21 +-
+>   drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
+>   drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |  639 ++++++++++----------
+>   drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h |    1 +
+>   drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    8 +
+>   6 files changed, 340 insertions(+), 333 deletions(-)
+>
 
-I'd like to bump this issue again - if we agree on that this solution could=
- work
-for IBSS and possibly other modes I'd like to prepare the patchset implemen=
-ting that.
-This is required for IBSS-DFS later after all ...
 
-Thanks,
-	Simon
-
---rS8CxjVDS/+yyDmU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlGkim0ACgkQrzg/fFk7axbMHQCeOKJHK6PzrBZu8cFwkxqdmMqF
-ZHMAoJvwjm0v5lLNalXAgstCUGqO6q+g
-=6cf+
------END PGP SIGNATURE-----
-
---rS8CxjVDS/+yyDmU--
