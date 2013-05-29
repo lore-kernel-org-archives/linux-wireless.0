@@ -1,56 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:36998 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754237Ab3EGJm2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 05:42:28 -0400
+Received: from mms3.broadcom.com ([216.31.210.19]:1470 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759365Ab3E2QjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 12:39:24 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.10 14/16] brcmfmac: Signalling header push and
+ pull on logic places.
+Date: Wed, 29 May 2013 18:39:04 +0200
+Message-ID: <1369845546-31950-15-git-send-email-arend@broadcom.com> (sfid-20130529_183949_229352_4717A327)
+In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20130507084241.GA1581@redhat.com>
-References: <20130505143803.7e46e4c6@chukar.edge2.net>
-	<20130506123805.GA1602@redhat.com>
-	<20130506083759.556dac76@chukar.edge2.net>
-	<20130506153044.GB1602@redhat.com>
-	<1367854279.8434.13.camel@jlt4.sipsolutions.net>
-	<1367855046.8434.16.camel@jlt4.sipsolutions.net>
-	<20130507084241.GA1581@redhat.com>
-Date: Tue, 7 May 2013 11:46:07 +0300
-Message-ID: <CANUX_P1n=A1rxDYyuQH=azYiTtuz=q-mh3zZeu_30bRUHjVzSA@mail.gmail.com> (sfid-20130507_114247_702590_B1DD5A03)
-Subject: Re: Bisected 3.9 regression for iwl4965 connection problem to 1672c0e3
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jake Edge <jake@lwn.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> > > But if so, I would also see
->> > > the breakage on my setup, but I don't - it works quite well here.
->> >
->> > Are you testing on a passive channel? Try with a large beacon interval.
->>
->> I think most likely what happens is that it's on a passive channel, and
->> the firmware drops the TX packet with a bad status. Before the patch,
->> we'd just wait sitting on the channel for HZ/5 (200ms) before trying
->> again, with the patch we immediately retransmit the packet, which will
->> fail again and again until the firmware received a beacon.
->>
->> If you look at iwlwifi/dvm/, it has some passive_no_rx workaround for
->> this, which I don't see in iwlegacy.
->
-> Can you explain why it is named passive_no_rx instead passive_no_tx ?
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Well, it is basically - passive channel with no rx :-) This means we can't tx.
+Currently suppressed packets get enque-ed with header which
+then gets pulled before transmit. It is more logical and clean
+to pull the header on return and push it unconditionally on xmit.
 
->> I think the best way to solve this would be to do such a thing in
->> iwlegacy as well, but until then and for stable maybe we should
->> introduce another HW flag to restore the previous mac80211 behaviour?
->
-> I'm not sure if I like to add passive_no_rx to iwlegacy. Stopping queues
-> and waiting for beacon looks sticky, what happen if beacon will not be
-> received?
->
-> Perhaps I will just remove IEEE80211_HW_REPORTS_TX_ACK_STATUS from 4965,
-> it's simpler workaround ?
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   42 ++++++--------------
+ 1 file changed, 13 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index dd47796..8b2297a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1263,6 +1263,7 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 	struct brcmf_fws_mac_descriptor *entry = brcmf_skbcb(skb)->mac;
+ 	u32 hslot;
+ 	int ret;
++	u8 ifidx;
+ 
+ 	hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
+ 
+@@ -1279,9 +1280,12 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 
+ 	entry->generation = genbit;
+ 
+-	ret = brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_SUPPRESSED, fifo, skb);
++	ret = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
++	if (ret == 0)
++		ret = brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_SUPPRESSED, fifo,
++				    skb);
+ 	if (ret != 0) {
+-		/* suppress q is full, drop this packet */
++		/* suppress q is full or hdrpull failed, drop this packet */
+ 		brcmf_fws_hanger_poppkt(&fws->hanger, hslot, &skb,
+ 					true);
+ 	} else {
+@@ -1585,18 +1589,10 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 	bool first_time;
+ 	int hslot = BRCMF_FWS_HANGER_MAXITEMS;
+ 	u8 free_ctr;
+-	u8 ifidx;
+ 	u8 flags;
+ 
+ 	first_time = skcb->state != BRCMF_FWS_SKBSTATE_SUPPRESSED;
+ 
+-	if (!first_time) {
+-		rc = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, p);
+-		if (rc) {
+-			brcmf_err("hdrpull failed\n");
+-			return rc;
+-		}
+-	}
+ 	brcmf_skb_if_flags_set_field(p, TRANSMIT, 1);
+ 	brcmf_skb_htod_tag_set_field(p, FIFO, fifo);
+ 	brcmf_skb_htod_tag_set_field(p, GENERATION, entry->generation);
+@@ -1619,15 +1615,14 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 		brcmf_skb_htod_tag_set_field(p, HSLOT, hslot);
+ 		brcmf_skb_htod_tag_set_field(p, FREERUN, free_ctr);
+ 		entry->transit_count++;
+-	}
+-
+-	brcmf_fws_hdrpush(fws, p);
+-	if (first_time) {
+ 		rc = brcmf_fws_hanger_pushpkt(&fws->hanger, p, hslot);
+ 		if (rc)
+ 			brcmf_err("hanger push failed: rc=%d\n", rc);
+ 	}
+ 
++	if (rc == 0)
++		brcmf_fws_hdrpush(fws, p);
++
+ 	return rc;
+ }
+ 
+@@ -1648,7 +1643,6 @@ brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
+ 	struct sk_buff *pktout;
+ 	int rc = 0;
+ 	int hslot;
+-	u8 ifidx;
+ 
+ 	state = brcmf_skbcb(skb)->state;
+ 	entry = brcmf_skbcb(skb)->mac;
+@@ -1665,17 +1659,6 @@ brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
+ 		} else {
+ 			hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
+ 
+-			/* remove header first */
+-			rc = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
+-			if (rc) {
+-				brcmf_err("header removal failed\n");
+-				/* free the hanger slot */
+-				brcmf_fws_hanger_poppkt(&fws->hanger, hslot,
+-							&pktout, true);
+-				rc = -EINVAL;
+-				goto fail;
+-			}
+-
+ 			/* delay-q packets are going to delay-q */
+ 			pktout = brcmu_pktq_penq_head(&entry->psq,
+ 						      2 * fifo, skb);
+@@ -1696,8 +1679,6 @@ brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
+ 		rc = -ENOENT;
+ 	}
+ 
+-
+-fail:
+ 	if (rc) {
+ 		brcmf_fws_bustxfail(fws, skb);
+ 		fws->stats.rollback_failed++;
+@@ -1767,6 +1748,7 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
+ 	struct brcmf_fws_mac_descriptor *entry;
+ 	struct brcmf_bus *bus = fws->drvr->bus_if;
+ 	int rc;
++	u8 ifidx;
+ 
+ 	entry = skcb->mac;
+ 	if (IS_ERR(entry))
+@@ -1781,8 +1763,10 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
+ 	brcmf_dbg(DATA, "%s flags %X htod %X\n", entry->name, skcb->if_flags,
+ 		  skcb->htod);
+ 	rc = brcmf_bus_txdata(bus, skb);
+-	if (rc < 0)
++	if (rc < 0) {
++		brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
+ 		goto rollback;
++	}
+ 
+ 	entry->seq[fifo]++;
+ 	fws->stats.pkt2bus++;
+-- 
+1.7.10.4
+
+
