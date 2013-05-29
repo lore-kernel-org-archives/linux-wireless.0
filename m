@@ -1,112 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41486 "EHLO nbd.name"
+Received: from m1plsmtpa01-01.prod.mesa1.secureserver.net ([64.202.165.173]:57079
+	"EHLO m1plsmtpa01-01.prod.mesa1.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758161Ab3EWKVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 06:21:04 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.10 3/3] ath9k_hw: improve performance for AR934x v1.3+
-Date: Thu, 23 May 2013 12:20:56 +0200
-Message-Id: <1369304456-74526-3-git-send-email-nbd@openwrt.org> (sfid-20130523_122111_230244_325D11E5)
-In-Reply-To: <1369304456-74526-1-git-send-email-nbd@openwrt.org>
-References: <1369304456-74526-1-git-send-email-nbd@openwrt.org>
+	id S966032Ab3E2Tdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 15:33:33 -0400
+From: "Mark A. Greer" <mgreer@animalcreek.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
+	"Mark A. Greer" <mgreer@animalcreek.com>
+Subject: [PATCH] mwifiex: debugfs: Fix out of bounds array access
+Date: Wed, 29 May 2013 12:25:34 -0700
+Message-Id: <1369855534-20897-1-git-send-email-mgreer@animalcreek.com> (sfid-20130529_213400_601638_69176ABF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR934x v1.3 no longer needs the DCU backoff reduction workaround for
-preventing rx overruns, but in turn needs the number of usable Tx
-buffers to be reduced slightly.
+From: "Mark A. Greer" <mgreer@animalcreek.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+When reading the contents of '/sys/kernel/debug/mwifiex/p2p0/info',
+the following panic occurs:
+
+$ cat /sys/kernel/debug/mwifiex/p2p0/info
+Unable to handle kernel paging request at virtual address 74706164
+pgd = de530000
+[74706164] *pgd=00000000
+Internal error: Oops: 5 [#1] SMP ARM
+Modules linked in: phy_twl4030_usb omap2430 musb_hdrc mwifiex_sdio mwifiex
+CPU: 0 PID: 1635 Comm: cat Not tainted 3.10.0-rc1-00010-g1268390 #1
+task: de16b6c0 ti: de048000 task.ti: de048000
+PC is at strnlen+0xc/0x4c
+LR is at string+0x3c/0xf8
+pc : [<c02c123c>]    lr : [<c02c2d1c>]    psr: a0000013
+sp : de049e10  ip : c06efba0  fp : de6d2092
+r10: bf01a260  r9 : ffffffff  r8 : 74706164
+r7 : 0000ffff  r6 : ffffffff  r5 : de6d209c  r4 : 00000000
+r3 : ff0a0004  r2 : 74706164  r1 : ffffffff  r0 : 74706164
+Flags: NzCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
+Control: 10c5387d  Table: 9e530019  DAC: 00000015
+Process cat (pid: 1635, stack limit = 0xde048240)
+Stack: (0xde049e10 to 0xde04a000)
+9e00:                                     de6d2092 00000002 bf01a25e de6d209c
+9e20: de049e80 c02c438c 0000000a ff0a0004 ffffffff 00000000 00000000 de049e48
+9e40: 00000000 2192df6d ff0a0004 ffffffff 00000000 de6d2092 de049ef8 bef3cc00
+9e60: de6b0000 dc358000 de6d2000 00000000 00000003 c02c45a4 bf01790c bf01a254
+9e80: 74706164 bf018698 00000000 de59c3c0 de048000 de049f80 00001000 bef3cc00
+9ea0: 00000008 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+9ec0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+9ee0: 00000000 00000000 00000000 00000001 00000000 00000000 6669776d 20786569
+9f00: 20302e31 2e343128 392e3636 3231702e 00202933 00000000 00000003 c0294898
+9f20: 00000000 00000000 00000000 00000000 de59c3c0 c0107c04 de554000 de59c3c0
+9f40: 00001000 bef3cc00 de049f80 bef3cc00 de049f80 00000000 00000003 c0108a00
+9f60: de048000 de59c3c0 00000000 00000000 de59c3c0 00001000 bef3cc00 c0108b60
+9f80: 00000000 00000000 00001000 bef3cc00 00000003 00000003 c0014128 de048000
+9fa0: 00000000 c0013f80 00001000 bef3cc00 00000003 bef3cc00 00001000 00000000
+9fc0: 00001000 bef3cc00 00000003 00000003 00000001 00000001 00000001 00000003
+9fe0: 00000000 bef3cbdc 00011984 b6f1127c 60000010 00000003 18dbdd2c 7f7bfffd
+[<c02c123c>] (strnlen+0xc/0x4c) from [<c02c2d1c>] (string+0x3c/0xf8)
+[<c02c2d1c>] (string+0x3c/0xf8) from [<c02c438c>] (vsnprintf+0x1e8/0x3e8)
+[<c02c438c>] (vsnprintf+0x1e8/0x3e8) from [<c02c45a4>] (sprintf+0x18/0x24)
+[<c02c45a4>] (sprintf+0x18/0x24) from [<bf01790c>] (mwifiex_info_read+0xfc/0x3e8 [mwifiex])
+[<bf01790c>] (mwifiex_info_read+0xfc/0x3e8 [mwifiex]) from [<c0108a00>] (vfs_read+0xb0/0x144)
+[<c0108a00>] (vfs_read+0xb0/0x144) from [<c0108b60>] (SyS_read+0x44/0x70)
+[<c0108b60>] (SyS_read+0x44/0x70) from [<c0013f80>] (ret_fast_syscall+0x0/0x30)
+Code: e12fff1e e3510000 e1a02000 0a00000d (e5d03000)
+---[ end trace ca98273dc605a04f ]---
+
+The panic is caused by the mwifiex_info_read() routine assuming that
+there can only be four modes (0-3) which is an invalid assumption.
+For example, when testing P2P, the mode is '8' (P2P_CLIENT) so the
+code accesses data beyond the bounds of the bss_modes[] array which
+causes the panic.  Fix this by updating bss_modes[] to support the
+current list of modes and adding a check to prevent the out-of-bounds
+access from occuring in the future when more modes are added.
+
+Signed-off-by: Mark A. Greer <mgreer@animalcreek.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  | 15 ++++++++++-----
- drivers/net/wireless/ath/ath9k/mac.c |  2 +-
- drivers/net/wireless/ath/ath9k/reg.h |  9 +++++++++
- 3 files changed, 20 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mwifiex/debugfs.c | 22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 40331f4..2caf7de 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1172,6 +1172,7 @@ u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan)
- static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	int txbuf_size;
+diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
+index 753b568..a5f9875 100644
+--- a/drivers/net/wireless/mwifiex/debugfs.c
++++ b/drivers/net/wireless/mwifiex/debugfs.c
+@@ -26,10 +26,17 @@
+ static struct dentry *mwifiex_dfs_dir;
  
- 	ENABLE_REGWRITE_BUFFER(ah);
+ static char *bss_modes[] = {
+-	"Unknown",
+-	"Ad-hoc",
+-	"Managed",
+-	"Auto"
++	"UNSPECIFIED",
++	"ADHOC",
++	"STATION",
++	"AP",
++	"AP_VLAN",
++	"WDS",
++	"MONITOR",
++	"MESH_POINT",
++	"P2P_CLIENT",
++	"P2P_GO",
++	"P2P_DEVICE",
+ };
  
-@@ -1225,13 +1226,17 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- 		 * So set the usable tx buf size also to half to
- 		 * avoid data/delimiter underruns
- 		 */
--		REG_WRITE(ah, AR_PCU_TXBUF_CTRL,
--			  AR_9285_PCU_TXBUF_CTRL_USABLE_SIZE);
--	} else if (!AR_SREV_9271(ah)) {
--		REG_WRITE(ah, AR_PCU_TXBUF_CTRL,
--			  AR_PCU_TXBUF_CTRL_USABLE_SIZE);
-+		txbuf_size = AR_9285_PCU_TXBUF_CTRL_USABLE_SIZE;
-+	} else if (AR_SREV_9340_13_OR_LATER(ah)) {
-+		/* Uses fewer entries for AR934x v1.3+ to prevent rx overruns */
-+		txbuf_size = AR_9340_PCU_TXBUF_CTRL_USABLE_SIZE;
-+	} else {
-+		txbuf_size = AR_PCU_TXBUF_CTRL_USABLE_SIZE;
- 	}
- 
-+	if (!AR_SREV_9271(ah))
-+		REG_WRITE(ah, AR_PCU_TXBUF_CTRL, txbuf_size);
+ /* size/addr for mwifiex_debug_info */
+@@ -200,7 +207,12 @@ mwifiex_info_read(struct file *file, char __user *ubuf,
+ 	p += sprintf(p, "driver_version = %s", fmt);
+ 	p += sprintf(p, "\nverext = %s", priv->version_str);
+ 	p += sprintf(p, "\ninterface_name=\"%s\"\n", netdev->name);
+-	p += sprintf(p, "bss_mode=\"%s\"\n", bss_modes[info.bss_mode]);
 +
- 	REGWRITE_BUFFER_FLUSH(ah);
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah))
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 498fee0..566109a 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -410,7 +410,7 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 
- 	REG_WRITE(ah, AR_QMISC(q), AR_Q_MISC_DCU_EARLY_TERM_REQ);
- 
--	if (AR_SREV_9340(ah))
-+	if (AR_SREV_9340(ah) && !AR_SREV_9340_13_OR_LATER(ah))
- 		REG_WRITE(ah, AR_DMISC(q),
- 			  AR_D_MISC_CW_BKOFF_EN | AR_D_MISC_FRAG_WAIT_EN | 0x1);
- 	else
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 9c056a8..f7c90cc 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -798,6 +798,10 @@
- #define AR_SREV_REVISION_9485_10	0
- #define AR_SREV_REVISION_9485_11        1
- #define AR_SREV_VERSION_9340		0x300
-+#define AR_SREV_REVISION_9340_10	0
-+#define AR_SREV_REVISION_9340_11	1
-+#define AR_SREV_REVISION_9340_12	2
-+#define AR_SREV_REVISION_9340_13	3
- #define AR_SREV_VERSION_9580		0x1C0
- #define AR_SREV_REVISION_9580_10	4 /* AR9580 1.0 */
- #define AR_SREV_VERSION_9462		0x280
-@@ -897,6 +901,10 @@
- #define AR_SREV_9340(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9340))
- 
-+#define AR_SREV_9340_13_OR_LATER(_ah) \
-+	(AR_SREV_9340((_ah)) && \
-+	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9340_13))
++	if (info.bss_mode >= ARRAY_SIZE(bss_modes))
++		p += sprintf(p, "bss_mode=\"%d\"\n", info.bss_mode);
++	else
++		p += sprintf(p, "bss_mode=\"%s\"\n", bss_modes[info.bss_mode]);
 +
- #define AR_SREV_9285E_20(_ah) \
-     (AR_SREV_9285_12_OR_LATER(_ah) && \
-      ((REG_READ(_ah, AR_AN_SYNTH9) & 0x7) == 0x1))
-@@ -1883,6 +1891,7 @@ enum {
- #define AR_PCU_TXBUF_CTRL_SIZE_MASK     0x7FF
- #define AR_PCU_TXBUF_CTRL_USABLE_SIZE   0x700
- #define AR_9285_PCU_TXBUF_CTRL_USABLE_SIZE   0x380
-+#define AR_9340_PCU_TXBUF_CTRL_USABLE_SIZE   0x500
- 
- #define AR_PCU_MISC_MODE2               0x8344
- #define AR_PCU_MISC_MODE2_MGMT_CRYPTO_ENABLE           0x00000002
+ 	p += sprintf(p, "media_state=\"%s\"\n",
+ 		     (!priv->media_connected ? "Disconnected" : "Connected"));
+ 	p += sprintf(p, "mac_address=\"%pM\"\n", netdev->dev_addr);
 -- 
-1.8.0.2
+1.7.12
 
