@@ -1,154 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:42877 "EHLO
-	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756507Ab3ERAyF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 20:54:05 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 11/17] mwifiex: replace unnecessary u32 variables with u8 in sdio.c
-Date: Fri, 17 May 2013 17:53:42 -0700
-Message-ID: <1368838422-32670-1-git-send-email-bzhao@marvell.com> (sfid-20130518_025414_883161_E02535A9)
+Received: from mms1.broadcom.com ([216.31.210.17]:4980 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759315Ab3E2QjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 12:39:24 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.10 08/16] brcmfmac: For FW signalling it is
+ necessary to track gen bit.
+Date: Wed, 29 May 2013 18:38:58 +0200
+Message-ID: <1369845546-31950-9-git-send-email-arend@broadcom.com> (sfid-20130529_183941_488691_FE182BEB)
+In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Some u32 variables in sdio.c are used to store/pass u8 values.
-Replace them with u8 variables.
+Store gen bit on suppressed packet per entry and use latest
+stored version for each packet which gets transmitted to fw.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/mwifiex/sdio.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   92 ++++++--------------
+ 1 file changed, 29 insertions(+), 63 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 022e9fd..e4357a6 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -294,13 +294,13 @@ static struct sdio_driver mwifiex_sdio = {
-  * This function writes data into SDIO card register.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 56ef466..cd8b5f5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -246,7 +246,7 @@ struct brcmf_skbuff_cb {
+ #define BRCMF_SKB_HTOD_TAG_HSLOT_MASK			0x00ffff00
+ #define BRCMF_SKB_HTOD_TAG_HSLOT_SHIFT			8
+ #define BRCMF_SKB_HTOD_TAG_FREERUN_MASK			0x000000ff
+-#define BRCMF_SKB_HTOD_TAG_FREERUN_SHIFT			0
++#define BRCMF_SKB_HTOD_TAG_FREERUN_SHIFT		0
+ 
+ #define brcmf_skb_htod_tag_set_field(skb, field, value) \
+ 	brcmu_maskset32(&(brcmf_skbcb(skb)->htod), \
+@@ -384,12 +384,10 @@ enum brcmf_fws_hanger_item_state {
+  * struct brcmf_fws_hanger_item - single entry for tx pending packet.
+  *
+  * @state: entry is either free or occupied.
+- * @gen: generation.
+  * @pkt: packet itself.
   */
- static int
--mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u32 data)
-+mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u8 data)
+ struct brcmf_fws_hanger_item {
+ 	enum brcmf_fws_hanger_item_state state;
+-	u8 gen;
+ 	struct sk_buff *pkt;
+ };
+ 
+@@ -537,7 +535,7 @@ done:
+ }
+ 
+ static int brcmf_fws_hanger_pushpkt(struct brcmf_fws_hanger *h,
+-					   struct sk_buff *pkt, u32 slot_id)
++				    struct sk_buff *pkt, u32 slot_id)
  {
- 	struct sdio_mmc_card *card = adapter->card;
- 	int ret = -1;
+ 	if (slot_id >= BRCMF_FWS_HANGER_MAXITEMS)
+ 		return -ENOENT;
+@@ -571,20 +569,17 @@ static int brcmf_fws_hanger_poppkt(struct brcmf_fws_hanger *h,
+ 	if (remove_item) {
+ 		h->items[slot_id].state = BRCMF_FWS_HANGER_ITEM_STATE_FREE;
+ 		h->items[slot_id].pkt = NULL;
+-		h->items[slot_id].gen = 0xff;
+ 		h->popped++;
+ 	}
+ 	return 0;
+ }
  
- 	sdio_claim_host(card->func);
--	sdio_writeb(card->func, (u8) data, reg, &ret);
-+	sdio_writeb(card->func, data, reg, &ret);
- 	sdio_release_host(card->func);
- 
- 	return ret;
-@@ -310,7 +310,7 @@ mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u32 data)
-  * This function reads data from SDIO card register.
-  */
- static int
--mwifiex_read_reg(struct mwifiex_adapter *adapter, u32 reg, u32 *data)
-+mwifiex_read_reg(struct mwifiex_adapter *adapter, u32 reg, u8 *data)
+ static int brcmf_fws_hanger_mark_suppressed(struct brcmf_fws_hanger *h,
+-						   u32 slot_id, u8 gen)
++					    u32 slot_id)
  {
- 	struct sdio_mmc_card *card = adapter->card;
- 	int ret = -1;
-@@ -421,7 +421,7 @@ static int mwifiex_pm_wakeup_card_complete(struct mwifiex_adapter *adapter)
-  */
- static int mwifiex_init_sdio_ioport(struct mwifiex_adapter *adapter)
- {
--	u32 reg;
-+	u8 reg;
- 	struct sdio_mmc_card *card = adapter->card;
+ 	if (slot_id >= BRCMF_FWS_HANGER_MAXITEMS)
+ 		return -ENOENT;
  
- 	adapter->ioport = 0;
-@@ -580,7 +580,7 @@ mwifiex_sdio_poll_card_status(struct mwifiex_adapter *adapter, u8 bits)
- {
- 	struct sdio_mmc_card *card = adapter->card;
- 	u32 tries;
--	u32 cs;
-+	u8 cs;
+-	h->items[slot_id].gen = gen;
+-
+ 	if (h->items[slot_id].state != BRCMF_FWS_HANGER_ITEM_STATE_INUSE) {
+ 		brcmf_err("entry not in use\n");
+ 		return -EINVAL;
+@@ -594,24 +589,6 @@ static int brcmf_fws_hanger_mark_suppressed(struct brcmf_fws_hanger *h,
+ 	return 0;
+ }
  
- 	for (tries = 0; tries < MAX_POLL_TRIES; tries++) {
- 		if (mwifiex_read_reg(adapter, card->reg->poll_reg, &cs))
-@@ -604,7 +604,7 @@ mwifiex_sdio_read_fw_status(struct mwifiex_adapter *adapter, u16 *dat)
- {
- 	struct sdio_mmc_card *card = adapter->card;
- 	const struct mwifiex_sdio_card_reg *reg = card->reg;
--	u32 fws0, fws1;
-+	u8 fws0, fws1;
+-static int brcmf_fws_hanger_get_genbit(struct brcmf_fws_hanger *hanger,
+-					      struct sk_buff *pkt, u32 slot_id,
+-					      int *gen)
+-{
+-	*gen = 0xff;
+-
+-	if (slot_id >= BRCMF_FWS_HANGER_MAXITEMS)
+-		return -ENOENT;
+-
+-	if (hanger->items[slot_id].state == BRCMF_FWS_HANGER_ITEM_STATE_FREE) {
+-		brcmf_err("slot not in use\n");
+-		return -EINVAL;
+-	}
+-
+-	*gen = hanger->items[slot_id].gen;
+-	return 0;
+-}
+-
+ static void brcmf_fws_hanger_cleanup(struct brcmf_fws_info *fws,
+ 				     bool (*fn)(struct sk_buff *, void *),
+ 				     int ifidx)
+@@ -838,9 +815,6 @@ brcmf_fws_flow_control_check(struct brcmf_fws_info *fws, struct pktq *pq,
+ 	if (WARN_ON(!ifp))
+ 		return;
  
- 	if (mwifiex_read_reg(adapter, reg->status_reg_0, &fws0))
- 		return -1;
-@@ -625,14 +625,14 @@ mwifiex_sdio_read_fw_status(struct mwifiex_adapter *adapter, u16 *dat)
-  */
- static int mwifiex_sdio_disable_host_int(struct mwifiex_adapter *adapter)
- {
--	u32 host_int_mask;
-+	u8 host_int_mask, host_int_disable = HOST_INT_DISABLE;
+-	brcmf_dbg(TRACE,
+-		  "enter: bssidx=%d, ifidx=%d\n", ifp->bssidx, ifp->ifidx);
+-
+ 	if ((ifp->netif_stop & BRCMF_NETIF_STOP_REASON_FWS_FC) &&
+ 	    pq->len <= BRCMF_FWS_FLOWCONTROL_LOWATER)
+ 		brcmf_txflowblock_if(ifp,
+@@ -1220,7 +1194,7 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 	hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
  
- 	/* Read back the host_int_mask register */
- 	if (mwifiex_read_reg(adapter, HOST_INT_MASK_REG, &host_int_mask))
- 		return -1;
+ 	/* this packet was suppressed */
+-	if (!entry->suppressed || entry->generation != genbit) {
++	if (!entry->suppressed) {
+ 		entry->suppressed = true;
+ 		entry->suppress_count = brcmu_pktq_mlen(&entry->psq,
+ 							1 << (fifo * 2 + 1));
+@@ -1242,8 +1216,7 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 		 * Mark suppressed to avoid a double free during
+ 		 * wlfc cleanup
+ 		 */
+-		brcmf_fws_hanger_mark_suppressed(&fws->hanger, hslot,
+-						 genbit);
++		brcmf_fws_hanger_mark_suppressed(&fws->hanger, hslot);
+ 		entry->suppress_count++;
+ 	}
  
- 	/* Update with the mask and write back to the register */
--	host_int_mask &= ~HOST_INT_DISABLE;
-+	host_int_mask &= ~host_int_disable;
+@@ -1573,15 +1546,34 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 	struct brcmf_skbuff_cb *skcb = brcmf_skbcb(p);
+ 	struct brcmf_fws_mac_descriptor *entry = skcb->mac;
+ 	int rc = 0;
+-	bool header_needed;
++	bool first_time;
+ 	int hslot = BRCMF_FWS_HANGER_MAXITEMS;
+ 	u8 free_ctr;
+ 	u8 ifidx;
+ 	u8 flags;
  
- 	if (mwifiex_write_reg(adapter, HOST_INT_MASK_REG, host_int_mask)) {
- 		dev_err(adapter->dev, "disable host interrupt failed\n");
-@@ -712,7 +712,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 	u8 *firmware = fw->fw_buf;
- 	u32 firmware_len = fw->fw_len;
- 	u32 offset = 0;
--	u32 base0, base1;
-+	u8 base0, base1;
- 	u8 *fwbuf;
- 	u16 len = 0;
- 	u32 txlen, tx_blocks = 0, tries;
-@@ -854,7 +854,7 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
- 	int ret = 0;
- 	u16 firmware_stat;
- 	u32 tries;
--	u32 winner_status;
-+	u8 winner_status;
+-	header_needed = skcb->state != BRCMF_FWS_SKBSTATE_SUPPRESSED;
++	first_time = skcb->state != BRCMF_FWS_SKBSTATE_SUPPRESSED;
  
- 	/* Wait for firmware initialization event */
- 	for (tries = 0; tries < poll_num; tries++) {
-@@ -889,7 +889,7 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
- static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
- {
- 	struct sdio_mmc_card *card = adapter->card;
--	u32 sdio_ireg;
-+	u8 sdio_ireg;
- 	unsigned long flags;
+-	if (header_needed) {
++	if (!first_time) {
++		rc = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, p);
++		if (rc) {
++			brcmf_err("hdrpull failed\n");
++			return rc;
++		}
++	}
++	brcmf_skb_if_flags_set_field(p, TRANSMIT, 1);
++	brcmf_skb_htod_tag_set_field(p, FIFO, fifo);
++	brcmf_skb_htod_tag_set_field(p, GENERATION, entry->generation);
++	flags = BRCMF_FWS_HTOD_FLAG_PKTFROMHOST;
++	if (!(skcb->if_flags & BRCMF_SKB_IF_FLAGS_CREDITCHECK_MASK)) {
++		/*
++		 * Indicate that this packet is being sent in response to an
++		 * explicit request from the firmware side.
++		 */
++		flags |= BRCMF_FWS_HTOD_FLAG_PKT_REQUESTED;
++	}
++	brcmf_skb_htod_tag_set_field(p, FLAGS, flags);
++	if (first_time) {
+ 		/* obtaining free slot may fail, but that will be caught
+ 		 * by the hanger push. This assures the packet has a BDC
+ 		 * header upon return.
+@@ -1590,40 +1582,14 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 		free_ctr = entry->seq[fifo];
+ 		brcmf_skb_htod_tag_set_field(p, HSLOT, hslot);
+ 		brcmf_skb_htod_tag_set_field(p, FREERUN, free_ctr);
+-		brcmf_skb_htod_tag_set_field(p, GENERATION, 1);
+ 		entry->transit_count++;
+ 	}
+-	brcmf_skb_if_flags_set_field(p, TRANSMIT, 1);
+-	brcmf_skb_htod_tag_set_field(p, FIFO, fifo);
  
- 	if (mwifiex_read_data_sync(adapter, card->mp_regs,
-@@ -1284,7 +1284,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+-	flags = BRCMF_FWS_HTOD_FLAG_PKTFROMHOST;
+-	if (!(skcb->if_flags & BRCMF_SKB_IF_FLAGS_CREDITCHECK_MASK)) {
+-		/*
+-		Indicate that this packet is being sent in response to an
+-		explicit request from the firmware side.
+-		*/
+-		flags |= BRCMF_FWS_HTOD_FLAG_PKT_REQUESTED;
+-	}
+-	brcmf_skb_htod_tag_set_field(p, FLAGS, flags);
+-	if (header_needed) {
+-		brcmf_fws_hdrpush(fws, p);
++	brcmf_fws_hdrpush(fws, p);
++	if (first_time) {
+ 		rc = brcmf_fws_hanger_pushpkt(&fws->hanger, p, hslot);
+ 		if (rc)
+ 			brcmf_err("hanger push failed: rc=%d\n", rc);
+-	} else {
+-		int gen;
+-
+-		/* remove old header */
+-		rc = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, p);
+-		if (rc == 0) {
+-			hslot = brcmf_skb_htod_tag_get_field(p, HSLOT);
+-			brcmf_fws_hanger_get_genbit(&fws->hanger, p,
+-						    hslot, &gen);
+-			brcmf_skb_htod_tag_set_field(p, GENERATION, gen);
+-
+-			/* push new header */
+-			brcmf_fws_hdrpush(fws, p);
+-		}
+ 	}
  
- 			if (mwifiex_sdio_card_to_host_mp_aggr(adapter, skb,
- 							      port)) {
--				u32 cr = 0;
-+				u8 cr = 0;
- 
- 				dev_err(adapter->dev, "card_to_host_mpa failed:"
- 					" int status=%#x\n", sdio_ireg);
-@@ -1644,7 +1644,7 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
- 	struct sdio_mmc_card *card = adapter->card;
- 	const struct mwifiex_sdio_card_reg *reg = card->reg;
- 	int ret;
--	u32 sdio_ireg;
-+	u8 sdio_ireg;
- 
- 	/*
- 	 * Read the HOST_INT_STATUS_REG for ACK the first interrupt got
+ 	return rc;
 -- 
-1.8.2.3
+1.7.10.4
+
 
