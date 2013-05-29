@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:36942 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347Ab3ESQoO (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:46847 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965275Ab3E2KPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 May 2013 12:44:14 -0400
-Received: by mail-oa0-f49.google.com with SMTP id k14so6753985oag.22
-        for <linux-wireless@vger.kernel.org>; Sun, 19 May 2013 09:44:13 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: mcgrof@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/2 V2] backports: Fix menuconfig build
-Date: Sun, 19 May 2013 11:43:55 -0500
-Message-Id: <1368981836-6247-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130519_184417_922542_5854E1C8)
+	Wed, 29 May 2013 06:15:44 -0400
+Received: by mail-pa0-f50.google.com with SMTP id fb11so7749582pad.37
+        for <linux-wireless@vger.kernel.org>; Wed, 29 May 2013 03:15:44 -0700 (PDT)
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, chunkeey@googlemail.com,
+	linville@tuxdriver.com, davem@davemloft.net,
+	sachin.kamat@linaro.org
+Subject: [PATCH 2/2] net: wireless: p54spi: Fix commenting style
+Date: Wed, 29 May 2013 15:31:41 +0530
+Message-Id: <1369821701-4867-2-git-send-email-sachin.kamat@linaro.org> (sfid-20130529_121553_844685_68342F5F)
+In-Reply-To: <1369821701-4867-1-git-send-email-sachin.kamat@linaro.org>
+References: <1369821701-4867-1-git-send-email-sachin.kamat@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using openSUSE 12.3 with x86_64 architecture, the 'make menuconfig'
-command results in the following:
+Make the commenting style consistent with networking block comment
+style as suggested by checkpatch.
 
-finger@larrylap:~/backports-3.10-rc1-1> make menuconfig
-cc -Wl,--no-as-needed -lncurses  mconf.o zconf.tab.o lxdialog/checklist.o lxdialog/inputbox.o lxdialog/menubox.o lxdialog/textbox.o lxdialog/util.o lxdialog/yesno.o   -o mconf
-/usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../x86_64-suse-linux/bin/ld: /lib64/libncurses.so.5: undefined reference to symbol 'acs_map'
-/usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../x86_64-suse-linux/bin/ld: note: 'acs_map' is defined in DSO /usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../lib64/libtinfo.so so try adding it to the linker command line
-/usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../lib64/libtinfo.so: could not read symbols: Invalid operation
-collect2: error: ld returned 1 exit status
-make[2]: *** [mconf] Error 1
-make[1]: *** [menuconfig] Error 2
-make: *** [menuconfig] Error 2
-finger@larrylap:~/backports-3.10-rc1-1>
-
-When "-ltinfo" is added to the LDFLAGS symbol as suggested by the linker,
-it builds and runs correctly.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
 ---
+ drivers/net/wireless/p54/p54spi.c |   15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-V2 in the proper format for git repository
-
-Larry
----
-
- backport/kconfig/Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/backport/kconfig/Makefile b/backport/kconfig/Makefile
-index 5974e48..ff5c270 100644
---- a/backport/kconfig/Makefile
-+++ b/backport/kconfig/Makefile
-@@ -3,7 +3,7 @@ CFLAGS=-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
- LXDIALOG := lxdialog/checklist.o lxdialog/inputbox.o lxdialog/menubox.o lxdialog/textbox.o lxdialog/util.o lxdialog/yesno.o
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 146e653..7fc46f2 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -42,8 +42,7 @@
  
- conf: conf.o zconf.tab.o
--mconf: LDFLAGS = -Wl,--no-as-needed -lncurses
-+mconf: LDFLAGS = -Wl,--no-as-needed -lncurses -ltinfo
- mconf: CFLAGS += -DCURSES_LOC="<ncurses.h>" -DLOCALE
- mconf: mconf.o zconf.tab.o $(LXDIALOG)
+ MODULE_FIRMWARE("3826.arm");
  
+-/*
+- * gpios should be handled in board files and provided via platform data,
++/* gpios should be handled in board files and provided via platform data,
+  * but because it's currently impossible for p54spi to have a header file
+  * in include/linux, let's use module paramaters for now
+  */
+@@ -191,8 +190,7 @@ static int p54spi_request_eeprom(struct ieee80211_hw *dev)
+ 	const struct firmware *eeprom;
+ 	int ret;
+ 
+-	/*
+-	 * allow users to customize their eeprom.
++	/* allow users to customize their eeprom.
+ 	 */
+ 
+ 	ret = request_firmware(&eeprom, "3826.eeprom", &priv->spi->dev);
+@@ -285,8 +283,7 @@ static void p54spi_power_on(struct p54s_priv *priv)
+ 	gpio_set_value(p54spi_gpio_power, 1);
+ 	enable_irq(gpio_to_irq(p54spi_gpio_irq));
+ 
+-	/*
+-	 * need to wait a while before device can be accessed, the length
++	/* need to wait a while before device can be accessed, the length
+ 	 * is just a guess
+ 	 */
+ 	msleep(10);
+@@ -365,7 +362,8 @@ static int p54spi_rx(struct p54s_priv *priv)
+ 	/* Firmware may insert up to 4 padding bytes after the lmac header,
+ 	 * but it does not amend the size of SPI data transfer.
+ 	 * Such packets has correct data size in header, thus referencing
+-	 * past the end of allocated skb. Reserve extra 4 bytes for this case */
++	 * past the end of allocated skb. Reserve extra 4 bytes for this case
++	 */
+ 	skb = dev_alloc_skb(len + 4);
+ 	if (!skb) {
+ 		p54spi_sleep(priv);
+@@ -383,7 +381,8 @@ static int p54spi_rx(struct p54s_priv *priv)
+ 	}
+ 	p54spi_sleep(priv);
+ 	/* Put additional bytes to compensate for the possible
+-	 * alignment-caused truncation */
++	 * alignment-caused truncation
++	 */
+ 	skb_put(skb, 4);
+ 
+ 	if (p54_rx(priv->hw, skb) == 0)
 -- 
-1.8.1.4
+1.7.9.5
 
