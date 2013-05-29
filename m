@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:41422 "EHLO
-	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752769Ab3EWSwL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 14:52:11 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: <linux-wireless@vger.kernel.org>, Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: linux-firmware: pull-request Marvell mwifiex-firmware 2013-05-23
-Date: Thu, 23 May 2013 11:49:52 -0700
-Message-ID: <1369334992-10587-1-git-send-email-bzhao@marvell.com> (sfid-20130523_205215_011560_D449D529)
+Received: from mms1.broadcom.com ([216.31.210.17]:4980 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759119Ab3E2QjT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 12:39:19 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.10 07/16] brcmfmac: On bus flow control use fw
+ signalling or netif.
+Date: Wed, 29 May 2013 18:38:57 +0200
+Message-ID: <1369845546-31950-8-git-send-email-arend@broadcom.com> (sfid-20130529_183930_152452_A4FF30A0)
+In-Reply-To: <1369845546-31950-1-git-send-email-arend@broadcom.com>
+References: <1369845546-31950-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 07ea598af5b9dde3acdf279846b062fa1b2987b8:
+From: Hante Meuleman <meuleman@broadcom.com>
 
-  Merge branch 'linux-firmware' of git://github.com/TI-OpenLink/firmwares (2013-05-06 14:21:49 +0100)
+Currently on a bus flow control both fws is informed and netif queue
+gets closed. In case of fw signalling enabled, let the flow control
+be handled by fw signalling only.
 
-are available in the git repository at:
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-
-  git://git.marvell.com/mwifiex-firmware.git master
-
-for you to fetch changes up to 009719f9eca7a9d61b9c3cba5dbafbf937d93c80:
-
-  linux-firmware: add Marvell PCIe8897-B0 WLAN firmware image (2013-05-22 18:23:52 -0700)
-
-----------------------------------------------------------------
-Bing Zhao (1):
-      linux-firmware: add Marvell PCIe8897-B0 WLAN firmware image
-
- WHENCE                   |   5 ++++-
- mrvl/pcie8897_uapsta.bin | Bin 0 -> 350244 bytes
- 2 files changed, 4 insertions(+), 1 deletion(-)
- create mode 100644 mrvl/pcie8897_uapsta.bin
-
-diff --git a/WHENCE b/WHENCE
-index c08336a..d1a2713 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -716,7 +716,7 @@ directly by Marvell.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 9450d10..63cadf6 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -269,11 +269,14 @@ void brcmf_txflowblock(struct device *dev, bool state)
  
- --------------------------------------------------------------------------
+ 	brcmf_dbg(TRACE, "Enter\n");
  
--Driver: mwifiex - Marvell Wi-Fi fullmac-type 802.11n card
-+Driver: mwifiex - Marvell Wi-Fi fullmac-type 802.11n/ac cards
+-	brcmf_fws_bus_blocked(drvr, state);
+-
+-	for (i = 0; i < BRCMF_MAX_IFS; i++)
+-		brcmf_txflowblock_if(drvr->iflist[i],
+-				     BRCMF_NETIF_STOP_REASON_BLOCK_BUS, state);
++	if (brcmf_fws_fc_active(drvr->fws)) {
++		brcmf_fws_bus_blocked(drvr, state);
++	} else {
++		for (i = 0; i < BRCMF_MAX_IFS; i++)
++			brcmf_txflowblock_if(drvr->iflist[i],
++					     BRCMF_NETIF_STOP_REASON_BLOCK_BUS,
++					     state);
++	}
+ }
  
- File: mrvl/sd8787_uapsta.bin
- Version: 14.66.9.p96
-@@ -727,6 +727,9 @@ Version: 14.66.11.p151
- File: mrvl/usb8797_uapsta.bin
- Version: 14.69.11.p179
- 
-+File: mrvl/pcie8897_uapsta.bin
-+Version: 15.69.201.p52
-+
- Licence: Redistributable. See LICENCE.Marvell for details.  Originates from
- http://git.marvell.com/?p=mwifiex-firmware.git
- 
-diff --git a/mrvl/pcie8897_uapsta.bin b/mrvl/pcie8897_uapsta.bin
-new file mode 100644
-index 0000000..b067689
-Binary files /dev/null and b/mrvl/pcie8897_uapsta.bin differ
+ void brcmf_rx_frames(struct device *dev, struct sk_buff_head *skb_list)
+-- 
+1.7.10.4
+
+
