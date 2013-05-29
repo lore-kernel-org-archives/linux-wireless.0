@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:57998 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751006Ab3EMRN1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 13:13:27 -0400
-Received: by mail-wi0-f177.google.com with SMTP id hr14so3208386wib.4
-        for <linux-wireless@vger.kernel.org>; Mon, 13 May 2013 10:13:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1368438160.8300.11.camel@jlt4.sipsolutions.net>
-References: <1368233453-10581-1-git-send-email-ashok@cozybit.com>
- <1368233453-10581-2-git-send-email-ashok@cozybit.com> <1368438160.8300.11.camel@jlt4.sipsolutions.net>
-From: Ashok Nagarajan <ashok@cozybit.com>
-Date: Mon, 13 May 2013 10:13:05 -0700
-Message-ID: <CACcxo+odk2L-pymHqof+geeEmKcC4xikebra9jcNZoHOF0by4A@mail.gmail.com> (sfid-20130513_191329_829802_31E8D935)
-Subject: Re: [PATCH 2/3] cfg80211: Allow ieee80211g mandatory rate sets in
- 2.4GHz band
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:8064 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965230Ab3E2KEZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 May 2013 06:04:25 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH] mwifiex: dump small buffers with help of %*ph
+Date: Wed, 29 May 2013 13:04:20 +0300
+Message-Id: <1369821860-3004-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20130529_120428_649109_8199AFC1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 13, 2013 at 2:42 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2013-05-10 at 17:50 -0700, Ashok Nagarajan wrote:
->> This patch assumes 11g support
->> implies a 11g operation and returns the appropriate mandatory rates.
->
-> Which is a problem, because it means that by default we'll create IBSS
-> networks that are not compatible with 11b devices.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/net/wireless/mwifiex/join.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-Okay make sense. I would drop just this patch and send rest.
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 6bcb66e..122175a 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -919,9 +919,8 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
+ 	memcpy(&priv->curr_bss_params.data_rates,
+ 	       &adhoc_start->data_rate, priv->curr_bss_params.num_of_rates);
+ 
+-	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: rates=%02x %02x %02x %02x\n",
+-		adhoc_start->data_rate[0], adhoc_start->data_rate[1],
+-		adhoc_start->data_rate[2], adhoc_start->data_rate[3]);
++	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: rates=%4ph\n",
++		adhoc_start->data_rate);
+ 
+ 	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: AD-HOC Start command is ready\n");
+ 
+-- 
+1.8.2.rc0.22.gb3600c3
 
-Thanks,
-Ashok
->
-> johannes
->
-
-
-
---
-Ashok Raj Nagarajan,
-cozybit Inc.
-http://www.cozybit.com
