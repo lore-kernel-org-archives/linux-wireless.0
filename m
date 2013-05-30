@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:35639 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755222Ab3ENBRq (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:49308 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965072Ab3E3Qrb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 21:17:46 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
-	Tim Shepard <shep@laptop.org>,
-	Jason Abele <jabele@chromium.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 00/17] mwifiex updates for 3.11
-Date: Mon, 13 May 2013 18:14:44 -0700
-Message-ID: <1368494101-23651-1-git-send-email-bzhao@marvell.com> (sfid-20130514_031749_060141_69A5FA47)
+	Thu, 30 May 2013 12:47:31 -0400
+Received: by mail-wg0-f51.google.com with SMTP id b13so442650wgh.30
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 09:47:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1369470049.9074.2.camel@jlt4.sipsolutions.net>
+References: <1368233453-10581-1-git-send-email-ashok@cozybit.com>
+ <1368233453-10581-3-git-send-email-ashok@cozybit.com> <1369432740.13623.12.camel@johannes>
+ <CACcxo+pWnCFW3wvdjhHZvhb065Trup1KL=8fj7bbBhC5m4evqQ@mail.gmail.com> <1369470049.9074.2.camel@jlt4.sipsolutions.net>
+From: Ashok Nagarajan <ashok@cozybit.com>
+Date: Thu, 30 May 2013 09:47:10 -0700
+Message-ID: <CACcxo+qncV+jqi_yxeJTkkhEH4K01epDNy6ZvUxi-Uh-o549PA@mail.gmail.com> (sfid-20130530_184735_473011_D239E33C)
+Subject: Re: [PATCH 3/3] {nl,mac,cfg}80211: Allow user to configure basic
+ rates for mesh
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds support for new chipset SD8897, calibration data
-downloading, del_station handler, as well as some random cleanups
-and updates.
+On Sat, May 25, 2013 at 1:20 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> > I think you should consider allowing this attribute only if the channel
+>> > is also specified (NL80211_ATTR_WIPHY_FREQ, parsed below), and not make
+>> > it nested with rates for both bands but just the selected band.
+>> >
+>> Yes, I think by this approach, we eliminate the need for the user to
+>> provide rates for both bands and also not require to have a per-band
+>> for basic_rates.
+>>
+>> Said that, I am wondering why give mcast_rate for both bands, but
+>> basic_rates only for one band?
+>
+> Heh, good question. I think it was probably copied from IBSS where you
+> can pick another channel? Doesn't make all that much sense for mesh I
+> guess, unless MBSS channel switch could cause us to use another channel?
+> But then presumably you should follow the basic rates from the STA
+> initiating the switch, or something, since mesh networks are only
+> compatible with the same basic rates, right?
+>
+
+Yes, that is right. I will come up with a patch now for basic_rates
+configuration as per your suggestion.
+
+Thanks,
+Ashok
+> johannes
+>
 
 
-Amitkumar Karwar (12):
-  mwifiex: rename mwifiex_free_adapter() routine in init.c
-  mwifiex: scan delay timer cleanup in unload path
-  mwifiex: remove global user_scan_cfg variable
-  mwifiex: add calibration data download feature
-  mwifiex: use u32 variables for SDIO read/write port bitmap
-  mwifiex: store SDIO chip specific information in separate structure
-  mwifiex: replace unnecessary u32 variables with u8 in sdio.c
-  mwifiex: code rearrangement in mwifiex_get_rd_port()
-  mwifiex: do port calculations separately
-  mwifiex: define a macro for MPA base address
-  mwifiex: remove unnecessary macros in sdio.h
-  mwifiex: code rearrangement in multiport aggregation path
 
-Avinash Patil (3):
-  mwifiex: avoid deleting all stations during mwifiex_del_sta_entry()
-  mwifiex: add del_station handler
-  mwifiex: replace spin_lock_irqsave with spin_lock and fix warn_on
-
-Bing Zhao (1):
-  mwifiex: abort remaining scan commands when association started
-
-Yogesh Ashok Powar (1):
-  mwifiex: add support for Marvell SD8897 chipset
-
- drivers/net/wireless/mwifiex/Kconfig       |   4 +-
- drivers/net/wireless/mwifiex/cfg80211.c    |  77 ++++-
- drivers/net/wireless/mwifiex/cmdevt.c      |   1 +
- drivers/net/wireless/mwifiex/fw.h          |  17 ++
- drivers/net/wireless/mwifiex/init.c        |  53 ++--
- drivers/net/wireless/mwifiex/main.c        |  14 +
- drivers/net/wireless/mwifiex/main.h        |   5 +-
- drivers/net/wireless/mwifiex/scan.c        |  23 +-
- drivers/net/wireless/mwifiex/sdio.c        | 462 ++++++++++++++++++++---------
- drivers/net/wireless/mwifiex/sdio.h        | 340 ++++++++++++++-------
- drivers/net/wireless/mwifiex/sta_cmd.c     |  62 ++++
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  17 ++
- drivers/net/wireless/mwifiex/uap_cmd.c     |  21 ++
- drivers/net/wireless/mwifiex/uap_event.c   |  25 +-
- 14 files changed, 807 insertions(+), 314 deletions(-)
-
--- 
-1.8.2.3
-
+--
+Ashok Raj Nagarajan,
+cozybit Inc.
+http://www.cozybit.com
