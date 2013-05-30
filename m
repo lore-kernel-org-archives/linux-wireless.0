@@ -1,139 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:17787 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755759Ab3ERMDW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 May 2013 08:03:22 -0400
-Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:03:20 +0200
-From: stf_xl@wp.pl
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 32/32] rt2800: move 53xx specific bbp initialization
-Date: Sat, 18 May 2013 14:03:55 +0200
-Message-Id: <1368878635-4455-33-git-send-email-stf_xl@wp.pl> (sfid-20130518_142938_322402_6D424B0B)
-In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
-References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+Received: from mail.candelatech.com ([208.74.158.172]:47452 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750811Ab3E3Up1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 May 2013 16:45:27 -0400
+Message-ID: <51A7BA63.4080403@candelatech.com> (sfid-20130530_224532_188595_45D30BAE)
+Date: Thu, 30 May 2013 13:45:23 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Another try at getting pktgen to work with wifi.
+References: <51A79E4A.7000609@candelatech.com> <51A7B049.9090201@openwrt.org>
+In-Reply-To: <51A7B049.9090201@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+On 05/30/2013 01:02 PM, Felix Fietkau wrote:
+> On 2013-05-30 8:45 PM, Ben Greear wrote:
+>> I'm trying to come up with a more acceptable patch to the problem discussed a few years
+>> ago:
+>>
+>> http://thread.gmane.org/gmane.linux.kernel.wireless.general/64582/focus=64626
+>>
+>> The patch below appears to work as expected.  In pktgen, you just have to set
+>> the QoS to whatever value matches the queue you need.
+>>
+>> This seem reasonable?
+> Why do you adjust the queue mapping instead of the skb priority? In that
+> other thread you mentioned that pktgen should be able to control the
+> queue, yet here you're taking queue control away from it for tx on mac80211.
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   83 +++++++++++++++----------------
- 1 files changed, 41 insertions(+), 42 deletions(-)
+I was having trouble getting it to work, but I was trying it at
+a different place in the code when I was hacking on it...
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 1e58180..fc43c7d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4304,6 +4304,10 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
- 
- static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- {
-+	int ant, div_mode;
-+	u16 eeprom;
-+	u8 value;
-+
- 	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
- 
- 	rt2800_bbp_write(rt2x00dev, 31, 0x08);
-@@ -4367,6 +4371,43 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	rt2800_disable_unused_dac_adc(rt2x00dev);
-+
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
-+	div_mode = rt2x00_get_field16(eeprom,
-+				      EEPROM_NIC_CONF1_ANT_DIVERSITY);
-+	ant = (div_mode == 3) ? 1 : 0;
-+
-+	/* check if this is a Bluetooth combo card */
-+	if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags)) {
-+		u32 reg;
-+
-+		rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
-+		rt2x00_set_field32(&reg, GPIO_CTRL_DIR3, 0);
-+		rt2x00_set_field32(&reg, GPIO_CTRL_DIR6, 0);
-+		rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, 0);
-+		rt2x00_set_field32(&reg, GPIO_CTRL_VAL6, 0);
-+		if (ant == 0)
-+			rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, 1);
-+		else if (ant == 1)
-+			rt2x00_set_field32(&reg, GPIO_CTRL_VAL6, 1);
-+		rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
-+	}
-+
-+	/* This chip has hardware antenna diversity*/
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
-+		rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
-+		rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
-+		rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
-+	}
-+
-+	rt2800_bbp_read(rt2x00dev, 152, &value);
-+	if (ant == 0)
-+		rt2x00_set_field8(&value, BBP152_RX_DEFAULT_ANT, 1);
-+	else
-+		rt2x00_set_field8(&value, BBP152_RX_DEFAULT_ANT, 0);
-+	rt2800_bbp_write(rt2x00dev, 152, value);
-+
-+	rt2800_init_freq_calibration(rt2x00dev);
- }
- 
- static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
-@@ -4485,48 +4526,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		return;
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT5390) ||
--	    rt2x00_rt(rt2x00dev, RT5392)) {
--		int ant, div_mode;
--
--		rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
--		div_mode = rt2x00_get_field16(eeprom,
--					      EEPROM_NIC_CONF1_ANT_DIVERSITY);
--		ant = (div_mode == 3) ? 1 : 0;
--
--		/* check if this is a Bluetooth combo card */
--		if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags)) {
--			u32 reg;
--
--			rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
--			rt2x00_set_field32(&reg, GPIO_CTRL_DIR3, 0);
--			rt2x00_set_field32(&reg, GPIO_CTRL_DIR6, 0);
--			rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, 0);
--			rt2x00_set_field32(&reg, GPIO_CTRL_VAL6, 0);
--			if (ant == 0)
--				rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, 1);
--			else if (ant == 1)
--				rt2x00_set_field32(&reg, GPIO_CTRL_VAL6, 1);
--			rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
--		}
--
--		/* This chip has hardware antenna diversity*/
--		if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
--			rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
--			rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
--			rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
--		}
--
--		rt2800_bbp_read(rt2x00dev, 152, &value);
--		if (ant == 0)
--			rt2x00_set_field8(&value, BBP152_RX_DEFAULT_ANT, 1);
--		else
--			rt2x00_set_field8(&value, BBP152_RX_DEFAULT_ANT, 0);
--		rt2800_bbp_write(rt2x00dev, 152, value);
--
--		rt2800_init_freq_calibration(rt2x00dev);
--	}
--
- 	for (i = 0; i < EEPROM_BBP_SIZE; i++) {
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_BBP_START + i, &eeprom);
- 
+Do you think I'd just need to adjust skb->priority in the
+same spot in the code, or is there more to it?
+
+Thanks,
+Ben
+
+
 -- 
-1.7.4.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
