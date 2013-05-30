@@ -1,61 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:33091 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753328Ab3EVBJx (ORCPT
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:45042 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825Ab3E3Wwj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 May 2013 21:09:53 -0400
-Received: by mail-bk0-f53.google.com with SMTP id mx1so792965bkb.12
-        for <linux-wireless@vger.kernel.org>; Tue, 21 May 2013 18:09:52 -0700 (PDT)
+	Thu, 30 May 2013 18:52:39 -0400
+Date: Thu, 30 May 2013 19:52:32 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2013-05-30
+Message-ID: <20130530225232.GB14083@joana> (sfid-20130531_005300_871639_E6D9FF8C)
 MIME-Version: 1.0
-In-Reply-To: <1367934155.8328.21.camel@jlt4.sipsolutions.net>
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
- <1367548442-8229-7-git-send-email-thomas@cozybit.com> <1367934155.8328.21.camel@jlt4.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Tue, 21 May 2013 18:09:31 -0700
-Message-ID: <CAG6hwVPah-8FjH=ntFPzxMzXi5ePcmG-UEhdsvEgHkJVE9khYQ@mail.gmail.com> (sfid-20130522_030956_397571_44DB9539)
-Subject: Re: [RFC 06/12] mac80211: notify bridge when leaving mesh
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	open80211s <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ZPt4rx8FFjLCG7dd"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey, Sorry for the late response.
 
-On Tue, May 7, 2013 at 6:42 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2013-05-02 at 19:33 -0700, Thomas Pedersen wrote:
->> After turning carrier off, any parent bridge interface
->> needs to be notified. Otherwise we would see a panic when
->> attempting to transmit frames on a mesh interface which
->> hadn't yet been put down.
->>
->> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
->> ---
->>  net/mac80211/mesh.c |    3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
->> index eac9988..271ddc9 100644
->> --- a/net/mac80211/mesh.c
->> +++ b/net/mac80211/mesh.c
->> @@ -993,6 +993,9 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
->>       struct beacon_data *bcn;
->>
->>       netif_carrier_off(sdata->dev);
->> +     if (sdata->dev->priv_flags & IFF_BRIDGE_PORT)
->> +             /* stop bridge transmissions */
->> +             call_netdevice_notifiers(NETDEV_CHANGE, sdata->dev);
->
-> Err, this seems like a really bad hack? I don't really think drivers
-> should call that?
+--ZPt4rx8FFjLCG7dd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Why not? We're just notifying the bridge interface that this port has
-gone down, to avoid dereferencing a null pointer (on bridge flood
-traffic) after the mesh_bss has been removed.
+Hi John,
 
-Is cfg80211_leave_mesh() an acceptable location for this fix?
+The following patches are important bug fixes for 3.10, plus the support for a
+new device. We do have three fixes from Johan. The first one is a fix to avoid
+LE-only devices to rely on the (inexistent) extended features data. The second
+patch fixes length checks on incoming L2CAP signalling PDUs so we can discard
+PDU whose size doesn't match the one reported in the header.
+The last one fixes the handling of power on failures, we now report proper
+errors to mgmt when hci_dev_open().
 
---
-Thomas
+Please pull or let me know of any issues! Thanks.
+
+	Gustavo
+
+---
+
+The following changes since commit f942d116b80feb3ae618a0d8ce2df6e853526d3c:
+
+  brcmsmac: fix regression observed in 3.10-rc1 (2013-05-29 14:46:51 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+
+for you to fetch changes up to 0f9e216b0e12971af8a1d39c98c353c76533283b:
+
+  Bluetooth: Fix mgmt handling of power on failures (2013-05-30 18:36:08 -0300)
+
+----------------------------------------------------------------
+Bing Zhao (1):
+      Bluetooth: btmrvl: support Marvell Bluetooth device SD8897
+
+Johan Hedberg (3):
+      Bluetooth: Fix checks for LE support on LE-only controllers
+      Bluetooth: Fix missing length checks for L2CAP signalling PDUs
+      Bluetooth: Fix mgmt handling of power on failures
+
+ drivers/bluetooth/Kconfig        |  4 +--
+ drivers/bluetooth/btmrvl_sdio.c  | 28 ++++++++++++++++++
+ include/net/bluetooth/hci_core.h |  1 +
+ include/net/bluetooth/mgmt.h     |  1 +
+ net/bluetooth/hci_core.c         |  6 +++-
+ net/bluetooth/l2cap_core.c       | 70 ++++++++++++++++++++++++++++++++------------
+ net/bluetooth/mgmt.c             | 23 ++++++++++++++-
+ net/bluetooth/smp.c              |  4 +--
+ 8 files changed, 113 insertions(+), 24 deletions(-)
+
+
+--ZPt4rx8FFjLCG7dd
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRp9gwAAoJEPs3PUX4s20ozpEP/0rBewYThcZk/uSEA2lu1011
+eOaj7LXxiMKVKesNGrpbmDyPiVwy5MiQUthPt3DOGt9TSwHOO3zndlt9mCJtuqeg
+/yyhT2ApNyLN58sGfsg2mFYuq4TAlKjLOgjJxGdq0zLQo5Ip+T4dagFmdeYaMEgG
+agH+aIbmrBqU5/rz3YsTvDFbK4ww0roLuHtthVP7W4iFd5JwETSGn/u2xGbH3z7p
+X1p/3JvrGmen/fuTIhS1kfCeigKob9c/tXjTyjpS4pFzBZq4BIYxRYJmhnlri0Hv
++8JKvfDA6cxyZ7Hsnr9W/ZkKPQmQw5xmqL7b+Ui2jnxf0HKnDYxd6aY62r1kELFZ
+cJfO6VicQXNcUbwuCnR/28DRJ2giKa7pZOzY9dq2r1OH0DJYn65+b4XetUBAD1Kk
+8gUFxks5/rYKNRt2tTEa6ZPFzcm0JqMEoZTpI1d2UDRvMKQoQiuytfLqGSW+5mAB
+wAArBED1kv6qxkpXUq1KPeWbQ3r4TpUZk38NhDqAn00BOWb4FMvNRwcqoPoq/iVS
+n2+CZw7tDqi192nWCrqSELkLRkP+03eh07XMzahDThk7lr32KFkJlJlJO1YbLa7z
+Zf/72A4BfKfUV4hJT2nppD42Ju6WVSkRvnI7ygGafinUIEVS8X079VOeuDUrAQSY
+xsSGZBcu3YAkwt/PHMso
+=hu5I
+-----END PGP SIGNATURE-----
+
+--ZPt4rx8FFjLCG7dd--
