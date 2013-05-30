@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:38644 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759547Ab3EORnC (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:61644 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752498Ab3E3LlO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 13:43:02 -0400
-Message-ID: <5193C8FB.3070408@infradead.org> (sfid-20130515_194330_832413_FFCABB34)
-Date: Wed, 15 May 2013 10:42:19 -0700
-From: Randy Dunlap <rdunlap@infradead.org>
+	Thu, 30 May 2013 07:41:14 -0400
+Received: by mail-bk0-f46.google.com with SMTP id na10so82323bkb.33
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 04:41:12 -0700 (PDT)
 MIME-Version: 1.0
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-CC: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: Re: linux-next: Tree for May 15 (wireless/brcm)
-References: <20130515132627.817585a3d9fb3a3e502eb586@canb.auug.org.au>
-In-Reply-To: <20130515132627.817585a3d9fb3a3e502eb586@canb.auug.org.au>
+Date: Thu, 30 May 2013 19:41:11 +0800
+Message-ID: <CAPgLHd_=MWYEYniddEJNBJGDBJyoDC1S2HV+Pnn1GugwM+PQgg@mail.gmail.com> (sfid-20130530_134122_653068_83D2C0A3)
+Subject: [PATCH -next] cw1200: remove duplicated include from wsm.c
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: pizza@shaftnet.org, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/14/13 20:26, Stephen Rothwell wrote:
-> Hi all,
-> 
-> Changes since 20130514:
-> 
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-on x86_64:
+Remove duplicated include.
 
-drivers/built-in.o: In function `brcms_led_unregister':
-(.text+0x136f0e): undefined reference to `led_classdev_unregister'
-drivers/built-in.o: In function `brcms_led_register':
-(.text+0x1370b5): undefined reference to `led_classdev_register'
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/net/wireless/cw1200/wsm.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-when CONFIG_NEW_LEDS is not enabled.
+diff --git a/drivers/net/wireless/cw1200/wsm.c b/drivers/net/wireless/cw1200/wsm.c
+index 4db6cc1..f3fd9b2 100644
+--- a/drivers/net/wireless/cw1200/wsm.c
++++ b/drivers/net/wireless/cw1200/wsm.c
+@@ -12,7 +12,6 @@
+ 
+ #include <linux/skbuff.h>
+ #include <linux/wait.h>
+-#include <linux/skbuff.h>
+ #include <linux/delay.h>
+ #include <linux/sched.h>
+ #include <linux/random.h>
 
-
--- 
-~Randy
