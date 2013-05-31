@@ -1,133 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:49249 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775Ab3FWCYB (ORCPT
+Received: from mail-ve0-f174.google.com ([209.85.128.174]:34720 "EHLO
+	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017Ab3EaWIu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Jun 2013 22:24:01 -0400
-Date: Sun, 23 Jun 2013 03:23:56 +0100
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2013-06-23
-Message-ID: <20130623022356.GB2327@joana> (sfid-20130623_042447_963935_8074E4DC)
+	Fri, 31 May 2013 18:08:50 -0400
+Received: by mail-ve0-f174.google.com with SMTP id oz10so1542913veb.5
+        for <linux-wireless@vger.kernel.org>; Fri, 31 May 2013 15:08:49 -0700 (PDT)
+Message-ID: <51A91F6E.2060702@lwfinger.net> (sfid-20130601_000853_827363_363DEEBE)
+Date: Fri, 31 May 2013 17:08:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="V0207lvV8h4k8FAm"
+To: Yunlian Jiang <yunlian@google.com>
+CC: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	linville@tuxdriver.com, davem@davemloft.net
+Subject: Re: [PATCH] rtlwifi: initialize local array and set value.
+References: <1370036721-18164-1-git-send-email-yunlian@google.com>
+In-Reply-To: <1370036721-18164-1-git-send-email-yunlian@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 05/31/2013 04:45 PM, Yunlian Jiang wrote:
+> GCC 4.8 is spitting out uninitialized-variable warnings against
+> "drivers/net/wireless/rtlwifi/rtl8192de/dm.c".
+>
+> drivers/net/wireless/rtlwifi/rtl8192de/dm.c:941:31:
+> error: 'ofdm_index_old[1]' may be used uninitialized in this
+> function [-Werror=maybe-uninitialized]
+>       rtlpriv->dm.ofdm_index[i] = ofdm_index_old[i];
+>
+> This patch adds initialization to the variable and properly sets its value.
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192de/dm.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 
---V0207lvV8h4k8FAm
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I thought this had already been fixed, but apparently not.
 
-Hi John,
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Here goes a set of patches to 3.11. The biggest work here is from Andre Gue=
-des
-on the move of the Discovery to use the new request framework. Other than t=
-hat
-Johan provided a bunch of fixes to the L2CAP code. The rest are just small
-fixes and clean ups.=20
+Thanks,
 
-Please pull or let me know of any problem! Thanks.
+Larry
 
-	Gustavo
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> index 19a7655..47875ba 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> @@ -842,7 +842,7 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
+>   	long val_y, ele_c = 0;
+>   	u8 ofdm_index[2];
+>   	s8 cck_index = 0;
+> -	u8 ofdm_index_old[2];
+> +	u8 ofdm_index_old[2] = {0, 0};
+>   	s8 cck_index_old = 0;
+>   	u8 index;
+>   	int i;
+>
 
----
-The following changes since commit b887664d882ee4f6a67e0bf05e5f141d32fcc067:
-
-  mwifiex: channel switch handling for station (2013-06-19 15:28:43 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next fo=
-r-upstream
-
-for you to fetch changes up to b8f4e068004859eefac7b1ced59ddb67ca6d2d80:
-
-  Bluetooth: Improve comments on the HCI_Delete_Store_Link_Key issue (2013-=
-06-23 03:05:47 +0100)
-
-----------------------------------------------------------------
-Andre Guedes (14):
-      Bluetooth: Make inquiry_cache_flush non-static
-      Bluetooth: Update start_discovery to use HCI request
-      Bluetooth: Remove start discovery handling from hci_event.c
-      Bluetooth: Make mgmt_start_discovery_failed static
-      Bluetooth: Move discovery macros to hci_core.h
-      Bluetooth: Use HCI request in interleaved discovery
-      Bluetooth: Update stop_discovery to use HCI request
-      Bluetooth: Remove stop discovery handling from hci_event.c
-      Bluetooth: Make mgmt_stop_discovery_failed static
-      Bluetooth: Refactor hci_cc_le_set_scan_enable
-      Bluetooth: Remove LE scan helpers
-      Bluetooth: Remove inquiry helpers
-      Bluetooth: Remove empty event handler
-      Bluetooth: Mgmt Device Found Event
-
-Andrei Emeltchenko (2):
-      Bluetooth: Use HCI_MGMT instead of HCI_LINK_KEYS flag
-      Bluetooth: Remove unneeded flag
-
-Chen Gang (1):
-      Bluetooth: hidp: using strlcpy instead of strncpy, also beautify code.
-
-Gustavo Padovan (1):
-      Bluetooth: Improve comments on the HCI_Delete_Store_Link_Key issue
-
-Johan Hedberg (12):
-      Bluetooth: Handle LE L2CAP signalling in its own function
-      Bluetooth: Rename L2CAP_CID_LE_DATA to L2CAP_CID_ATT
-      Bluetooth: Fix LE vs BR/EDR selection when connecting
-      Bluetooth: Fix EBUSY condition test in l2cap_chan_connect
-      Bluetooth: Fix hardcoding ATT CID in __l2cap_chan_add()
-      Bluetooth: Add clarifying comment to l2cap_conn_ready()
-      Bluetooth: Fix duplicate call to l2cap_chan_ready()
-      Bluetooth: Remove useless sk variable in l2cap_le_conn_ready
-      Bluetooth: Remove unnecessary L2CAP channel state check
-      Bluetooth: Simplify hci_conn_hold/drop logic for L2CAP
-      Bluetooth: Remove useless hci_conn disc_timeout setting
-      Bluetooth: Fix multiple LE socket handling
-
-Shuah Khan (1):
-      Bluetooth: Add missing reset_resume dev_pm_ops
-
- drivers/bluetooth/btusb.c        |   1 +
- include/net/bluetooth/hci.h      |   1 -
- include/net/bluetooth/hci_core.h |  29 ++----
- include/net/bluetooth/l2cap.h    |   2 +-
- net/bluetooth/hci_core.c         | 192 +++++++++++-----------------------
- net/bluetooth/hci_event.c        |  71 ++-----------
- net/bluetooth/hidp/core.c        |  14 +--
- net/bluetooth/l2cap_core.c       | 121 +++++++++++++++-------
- net/bluetooth/l2cap_sock.c       |   4 +-
- net/bluetooth/mgmt.c             | 229 ++++++++++++++++++++++++++++-------=
-------
- 10 files changed, 321 insertions(+), 343 deletions(-)
-
-
---V0207lvV8h4k8FAm
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRxlw8AAoJEPs3PUX4s20o7MgP/AwyX702tzgUX7IH7cpKHFJB
-XXXbJSnvvJZC8h8ew+M2NRg7E93cJkRqdk4VFAj37jSaKpcaEHah7WXXtSzteucM
-hRJq0LdoeK17TMbQC7ucoveOxUaOW0pF05+xGe12YL2PeuwyC8Y5ym4bwt+FtGNC
-rksxj/q/1SerGO9B4IS4d19YfdzPj39fHy9DP0Nhu1figa0LsL+vENL/WcPVHiu4
-/AAEIBVDHPAQRt05Mj70/v8eJzro2Gdt2RH39hqLgstmphPnAH+psvUdU4MUr+wD
-ZaYmiOb9NFmJ0Nm46543fVF0QtQAi6GLDVo8vtSX68NGNF9Hg67CecdFEUTGa+qg
-GNTucxkH6Cyol2c4CYL+zs0UVaqDWvaNLDhmqBfBM4LF6nBgiSQeV3NXuWfstxpo
-fDM9rfnEXrRwc5RjN0aUBb3wK0qw4D4Lnjx8AeJU79keQIz6m9AjXS5ccZaOAnyX
-eNa/HlzkPd39dm8KyY/wpAvhbL9u/k92qWelyXUpZeeoAVL1b974hlTt+vHmf9Ld
-4XkXBKUKT3kTtIxnB0dsm0uf/W+r8f67KY050Nk9srRIviGY+wL1n03laUOUoFDX
-u9lnGtLu5vUD8JZEIzhNTWTQhvZHg0Z7/5alRiUYrD+4w1l5T2uqDHQCG3QVnM+w
-rEevGY+t1FoMxB7Q1p7B
-=uyFy
------END PGP SIGNATURE-----
-
---V0207lvV8h4k8FAm--
