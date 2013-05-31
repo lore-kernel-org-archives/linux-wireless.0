@@ -1,58 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:37027 "EHLO canardo.mork.no"
+Received: from mga02.intel.com ([134.134.136.20]:13388 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755650Ab3EXTIw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 15:08:52 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	"Ismail\, Rahman" <abdul.r.ismail@intel.com>,
-	"Wallick\, Stephanie S" <stephanie.s.wallick@intel.com>
-Subject: Re: Mobile Broadband Interface Model (MBIM) support?
-In-Reply-To: <20130524170915.GA15788@xanatos> (Sarah Sharp's message of "Fri,
-	24 May 2013 10:09:15 -0700")
-References: <20130524170915.GA15788@xanatos>
-Date: Fri, 24 May 2013 21:08:44 +0200
-Message-ID: <87zjvkdwlf.fsf@nemi.mork.no> (sfid-20130524_210857_040011_7AE56FFF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1754237Ab3EaJLd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 May 2013 05:11:33 -0400
+Message-ID: <1369991487.8501.0.camel@jlt4.sipsolutions.net> (sfid-20130531_111136_481289_F402E666)
+Subject: Re: [PATCH] iwlwifi: fix chain noise calibration
+From: Johannes Berg <johannes.berg@intel.com>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+Cc: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org
+Date: Fri, 31 May 2013 11:11:27 +0200
+In-Reply-To: <1369978152-506-1-git-send-email-mar.kolya@gmail.com> (sfid-20130531_073011_850072_0FBA6033)
+References: <1369978152-506-1-git-send-email-mar.kolya@gmail.com>
+	 (sfid-20130531_073011_850072_0FBA6033)
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[resending due to an unreliable smtp smarthost - apologies if you
- receive any duplicates]
+T24gRnJpLCAyMDEzLTA1LTMxIGF0IDAxOjI5IC0wNDAwLCBOaWtvbGF5IE1hcnR5bm92IHdyb3Rl
+Ogo+IEZpcnN0IHN0ZXAgb2YgY2hhaW4gbm9pc2UgY2FsaWJyYXRpb24gcHJvY2VzcyBoYWQgZGlz
+YWJsZSBmbGFnIGNoZWNrIGludmVydGVkLgo+IENoYWluIG5vaXNlIGNhbGlicmF0aW9uIG5ldmVy
+IHN0YXJ0ZWQgYmVjYXVzZSBvZiB0aGlzLgo+IAo+IFRlc3RlZCBvbiBpbnRlbCA1MzAwIHdpdGgg
+dHdvIGFudGVubmFzIGF0dGFjaGVkLiBEcml2ZXIgY29ycmVjdGx5IGRpc2FibGVkIG9uZSBjaGFp
+bi4KCkh1aCwgdGhpcyBidWcgbXVzdCBoYXZlIGJlZW4gdGhlcmUgZm9yIGEgbG9uZyB0aW1lIC4u
+IHRoYW5rcywgYXBwbGllZCEKCmpvaGFubmVzCgpJbnRlbCBHbWJICkRvcm5hY2hlciBTdHJhc3Nl
+IDEKODU2MjIgRmVsZGtpcmNoZW4vTXVlbmNoZW4sIERldXRzY2hsYW5kClNpdHogZGVyIEdlc2Vs
+bHNjaGFmdDogRmVsZGtpcmNoZW4gYmVpIE11ZW5jaGVuCkdlc2NoYWVmdHNmdWVocmVyOiBDaHJp
+c3RpYW4gTGFtcHJlY2h0ZXIsIEhhbm5lcyBTY2h3YWRlcmVyLCBEb3VnbGFzIEx1c2sKUmVnaXN0
+ZXJnZXJpY2h0OiBNdWVuY2hlbiBIUkIgNDc0NTYKVXN0Li1JZE5yLi9WQVQgUmVnaXN0cmF0aW9u
+IE5vLjogREUxMjkzODU4OTUKQ2l0aWJhbmsgRnJhbmtmdXJ0IGEuTS4gKEJMWiA1MDIgMTA5IDAw
+KSA2MDAxMTkwNTIK
 
-Sarah Sharp <sarah.a.sharp@linux.intel.com> writes:
-
-> Do we have support for the new extensions for USB communication devices
-> that use the Mobile Broadband Interface Model (MBIM) spec?
-
-We do. See drivers/net/usb/cdc_mbim.c. It's a usbnet minidriver based on
-reusing parts of cdc_ncm.  It should be fairly complete, but the IP
-session multiplexing and Device Service Streams features are not tested
-on actual devices.  I just haven't found any device with those features
-yet.  Any hints are appreciated...
-
-The management protocol implementation is completely delegated to
-userspace. The driver isn't involved at all. One implementation is
-libmbim, which just had its 1.0.0 release:
-http://www.freedesktop.org/software/libmbim/
-
-The next ModemManager release will support MBIM devices using this
-library.
-
-> http://www.usb.org/developers/devclass_docs/MBIM10Errata1.zip
-
-Thanks for that pointer.  I haven't seen the errata before. Will study
-it, but fortunately we are protected against anything involving
-management protocol updates.
-
-> The spec was released pretty recently, which is why I'm asking on the
-> mailing lists, rather than digging around the kernel tree for a driver.
-
-Well, a "git grep MBIM drivers/" would be enough.   But I'm happy to
-answer your questions :)
-
-
-Bjørn
