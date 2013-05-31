@@ -1,267 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:51161 "EHLO
-	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755449Ab3ENBPk (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:57603 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561Ab3EaCMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 21:15:40 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
-	Tim Shepard <shep@laptop.org>,
-	Jason Abele <jabele@chromium.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 08/17] mwifiex: add calibration data download feature
-Date: Mon, 13 May 2013 18:14:52 -0700
-Message-ID: <1368494101-23651-9-git-send-email-bzhao@marvell.com> (sfid-20130514_031543_892046_F23B58CE)
-In-Reply-To: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
-References: <1368494101-23651-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 30 May 2013 22:12:17 -0400
+Received: by mail-pb0-f49.google.com with SMTP id rp8so1390231pbb.36
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:12:16 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 35/40] crda: separate intersecting a full db into a helper
+Date: Thu, 30 May 2013 19:09:24 -0700
+Message-Id: <1369966169-23640-36-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042937_991719_89058503)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-User can provide a text file containing calibration data in hex
-format while loading mwifiex module. It will be downloaded to
-firmware.
-eg. insmod mwifiex.ko cal_data_cfg=cal_data.conf
+This should make it easier to review the code and allow
+us to stuff it next into reglib. This has no real functional
+changes except that of returning NULL in case of any failure
+while reading the regdb.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/mwifiex/fw.h          | 10 +++++
- drivers/net/wireless/mwifiex/main.c        | 13 +++++++
- drivers/net/wireless/mwifiex/main.h        |  1 +
- drivers/net/wireless/mwifiex/sta_cmd.c     | 62 ++++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 15 ++++++++
- 5 files changed, 101 insertions(+)
+ intersect.c |   58 +++++++++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 37 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index d3c1e01..d6ada73 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -271,6 +271,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_802_11_SUBSCRIBE_EVENT            0x0075
- #define HostCmd_CMD_802_11_TX_RATE_QUERY              0x007f
- #define HostCmd_CMD_802_11_IBSS_COALESCING_STATUS     0x0083
-+#define HostCmd_CMD_CFG_DATA                          0x008f
- #define HostCmd_CMD_VERSION_EXT                       0x0097
- #define HostCmd_CMD_MEF_CFG                           0x009a
- #define HostCmd_CMD_RSSI_INFO                         0x00a4
-@@ -465,6 +466,8 @@ enum P2P_MODES {
- #define MWIFIEX_CRITERIA_UNICAST	BIT(1)
- #define MWIFIEX_CRITERIA_MULTICAST	BIT(3)
+diff --git a/intersect.c b/intersect.c
+index baca5f1..b9e3429 100644
+--- a/intersect.c
++++ b/intersect.c
+@@ -6,24 +6,25 @@
  
-+#define CFG_DATA_TYPE_CAL		2
-+
- struct mwifiex_ie_types_header {
- 	__le16 type;
- 	__le16 len;
-@@ -1579,6 +1582,12 @@ struct mwifiex_ie_list {
- 	struct mwifiex_ie ie_list[MAX_MGMT_IE_INDEX];
- } __packed;
+ #include "reglib.h"
  
-+struct host_cmd_ds_802_11_cfg_data {
-+	__le16 action;
-+	__le16 type;
-+	__le16 data_len;
-+} __packed;
-+
- struct host_cmd_ds_command {
- 	__le16 command;
- 	__le16 size;
-@@ -1638,6 +1647,7 @@ struct host_cmd_ds_command {
- 		struct host_cmd_ds_sys_config uap_sys_config;
- 		struct host_cmd_ds_sta_deauth sta_deauth;
- 		struct host_cmd_11ac_vht_cfg vht_cfg;
-+		struct host_cmd_ds_802_11_cfg_data cfg_data;
- 	} params;
- } __packed;
- 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 4e7270c..5bc7ef8 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -25,6 +25,8 @@
- #define VERSION	"1.0"
- 
- const char driver_version[] = "mwifiex " VERSION " (%s) ";
-+static char *cal_data_cfg;
-+module_param(cal_data_cfg, charp, 0);
- 
- /*
-  * This function registers the device and performs all the necessary
-@@ -336,6 +338,13 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 
- 	dev_notice(adapter->dev, "WLAN FW is active\n");
- 
-+	if (cal_data_cfg) {
-+		if ((request_firmware(&adapter->cal_data, cal_data_cfg,
-+				      adapter->dev)) < 0)
-+			dev_err(adapter->dev,
-+				"Cal data request_firmware() failed\n");
-+	}
-+
- 	adapter->init_wait_q_woken = false;
- 	ret = mwifiex_init_fw(adapter);
- 	if (ret == -1) {
-@@ -390,6 +399,10 @@ err_init_fw:
- 	pr_debug("info: %s: unregister device\n", __func__);
- 	adapter->if_ops.unregister_dev(adapter);
- done:
-+	if (adapter->cal_data) {
-+		release_firmware(adapter->cal_data);
-+		adapter->cal_data = NULL;
-+	}
- 	release_firmware(adapter->firmware);
- 	complete(&adapter->fw_load);
- 	return;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 9cf6852..0832c24 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -730,6 +730,7 @@ struct mwifiex_adapter {
- 	u16 max_mgmt_ie_index;
- 	u8 scan_delay_cnt;
- 	u8 empty_tx_q_cnt;
-+	const struct firmware *cal_data;
- 
- 	/* 11AC */
- 	u32 is_hw_11ac_capable;
-diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-index b193e25..8ece485 100644
---- a/drivers/net/wireless/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-@@ -1134,6 +1134,55 @@ mwifiex_cmd_mef_cfg(struct mwifiex_private *priv,
- 	return 0;
- }
- 
-+/* This function parse cal data from ASCII to hex */
-+static u32 mwifiex_parse_cal_cfg(u8 *src, size_t len, u8 *dst)
-+{
-+	u8 *s = src, *d = dst;
-+
-+	while (s - src < len) {
-+		if (*s && (isspace(*s) || *s == '\t')) {
-+			s++;
-+			continue;
-+		}
-+		if (isxdigit(*s)) {
-+			*d++ = simple_strtol(s, NULL, 16);
-+			s += 2;
-+		} else {
-+			s++;
-+		}
-+	}
-+
-+	return d - dst;
-+}
-+
-+/* This function prepares command of set_cfg_data. */
-+static int mwifiex_cmd_cfg_data(struct mwifiex_private *priv,
-+				struct host_cmd_ds_command *cmd,
-+				u16 cmd_action)
-+{
-+	struct host_cmd_ds_802_11_cfg_data *cfg_data = &cmd->params.cfg_data;
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	u32 len, cal_data_offset;
-+	u8 *tmp_cmd = (u8 *)cmd;
-+
-+	cal_data_offset = S_DS_GEN + sizeof(*cfg_data);
-+	if ((adapter->cal_data->data) && (adapter->cal_data->size > 0))
-+		len = mwifiex_parse_cal_cfg((u8 *)adapter->cal_data->data,
-+					    adapter->cal_data->size,
-+					    (u8 *)(tmp_cmd + cal_data_offset));
-+	else
-+		return -1;
-+
-+	cfg_data->action = cpu_to_le16(cmd_action);
-+	cfg_data->type = cpu_to_le16(CFG_DATA_TYPE_CAL);
-+	cfg_data->data_len = cpu_to_le16(len);
-+
-+	cmd->command = cpu_to_le16(HostCmd_CMD_CFG_DATA);
-+	cmd->size = cpu_to_le16(S_DS_GEN + sizeof(*cfg_data) + len);
-+
-+	return 0;
-+}
-+
- /*
-  * This function prepares the commands before sending them to the firmware.
-  *
-@@ -1152,6 +1201,9 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 	case HostCmd_CMD_GET_HW_SPEC:
- 		ret = mwifiex_cmd_get_hw_spec(priv, cmd_ptr);
- 		break;
-+	case HostCmd_CMD_CFG_DATA:
-+		ret = mwifiex_cmd_cfg_data(priv, cmd_ptr, cmd_action);
-+		break;
- 	case HostCmd_CMD_MAC_CONTROL:
- 		ret = mwifiex_cmd_mac_control(priv, cmd_ptr, cmd_action,
- 					      data_buf);
-@@ -1384,6 +1436,7 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
-  */
- int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta)
+-/* Intersects regulatory domains, this will skip any regulatory marked with
+- * an alpha2 of '00', which is used to indicate a world regulatory domain */
+-
+-int main(int argc, char **argv)
++/**
++ * reglib_intersect_regdb - intersects a regulatory database
++ *
++ * @regdb_file: the regulatory database to intersect
++ *
++ * Goes through an entire regulatory database and intersects all regulatory
++ * domains. This will skip any regulatory marked with an alpha2 of '00', which
++ * is used to indicate a world regulatory domain. If intersection is able
++ * to find rules that fit all regulatory domains it return a regulatory
++ * domain with such rules otherwise it returns NULL.
++ */
++const struct ieee80211_regdomain *reglib_intersect_regdb(char *regdb_file)
  {
-+	struct mwifiex_adapter *adapter = priv->adapter;
- 	int ret;
- 	u16 enable = true;
- 	struct mwifiex_ds_11n_amsdu_aggr_ctrl amsdu_aggr_ctrl;
-@@ -1404,6 +1457,15 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta)
- 					    HostCmd_ACT_GEN_SET, 0, NULL);
- 		if (ret)
- 			return -1;
-+
-+		/* Download calibration data to firmware */
-+		if (adapter->cal_data) {
-+			ret = mwifiex_send_cmd_sync(priv, HostCmd_CMD_CFG_DATA,
-+						HostCmd_ACT_GEN_SET, 0, NULL);
-+			if (ret)
-+				return -1;
-+		}
-+
- 		/* Read MAC address from HW */
- 		ret = mwifiex_send_cmd_sync(priv, HostCmd_CMD_GET_HW_SPEC,
- 					    HostCmd_ACT_GEN_GET, 0, NULL);
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index c710a1b..d85df15 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -818,6 +818,18 @@ static int mwifiex_ret_subsc_evt(struct mwifiex_private *priv,
- 	return 0;
- }
+-	int r = 0;
+ 	const struct ieee80211_regdomain *rd;
+ 	struct ieee80211_regdomain *prev_rd_intsct = NULL, *rd_intsct = NULL;
+ 	int intersected = 0;
+ 	unsigned int idx = 0;
  
-+/* This function handles the command response of set_cfg_data */
-+static int mwifiex_ret_cfg_data(struct mwifiex_private *priv,
-+				struct host_cmd_ds_command *resp)
-+{
-+	if (resp->result != HostCmd_RESULT_OK) {
-+		dev_err(priv->adapter->dev, "Cal data cmd resp failed\n");
-+		return -1;
-+	}
-+
-+	return 0;
+-	if (argc != 2) {
+-		fprintf(stderr, "You must specify a file\n");
+-		return -EINVAL;
+-	}
+-
+-	/* We intersect only when we have to rd structures ready */
+-	reglib_for_each_country(rd, idx, argv[1]) {
++	reglib_for_each_country(rd, idx, regdb_file) {
+ 		if (reglib_is_world_regdom((const char *) rd->alpha2)) {
+ 			free((struct ieee80211_regdomain *) rd);
+ 			continue;
+@@ -43,7 +44,7 @@ int main(int argc, char **argv)
+ 		if (!rd_intsct) {
+ 			free(prev_rd_intsct);
+ 			free((struct ieee80211_regdomain *) rd);
+-			return -ENOENT;
++			return NULL;
+ 		}
+ 
+ 		intersected++;
+@@ -51,25 +52,40 @@ int main(int argc, char **argv)
+ 	}
+ 
+ 	if (!idx)
+-		return -EINVAL;
++		return NULL;
+ 
+ 	if (intersected <= 0) {
+ 		rd_intsct = prev_rd_intsct;
+ 		prev_rd_intsct = NULL;
+ 		if (idx > 1) {
+-			r = -ENOENT;
+ 			free(rd_intsct);
+-			return r;
++			return NULL;
+ 		}
+ 	}
+ 
+ 	if (prev_rd_intsct)
+ 		free(prev_rd_intsct);
+ 
+-	/* Tada! */
+-	printf("Intersected regulatory domain:\n");
+-	reglib_print_regdom(rd_intsct);
++	return rd_intsct;
 +}
 +
- /*
-  * This function handles the command responses.
-  *
-@@ -841,6 +853,9 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 	case HostCmd_CMD_GET_HW_SPEC:
- 		ret = mwifiex_ret_get_hw_spec(priv, resp);
- 		break;
-+	case HostCmd_CMD_CFG_DATA:
-+		ret = mwifiex_ret_cfg_data(priv, resp);
-+		break;
- 	case HostCmd_CMD_MAC_CONTROL:
- 		break;
- 	case HostCmd_CMD_802_11_MAC_ADDRESS:
++int main(int argc, char **argv)
++{
++	const struct ieee80211_regdomain *rd;
++
++	if (argc != 2) {
++		fprintf(stderr, "You must specify a file\n");
++		return -EINVAL;
++	}
++
++	rd = reglib_intersect_regdb(argv[1]);
++	if (!rd) {
++		fprintf(stderr, "Intersection not possible\n");
++		return -ENOENT;
++	}
++
++	reglib_print_regdom(rd);
++	free((struct ieee80211_regdomain *) rd);
+ 
+-	free(rd_intsct);
+-	return r;
++	return 0;
+ }
 -- 
-1.8.2.3
+1.7.10.4
 
