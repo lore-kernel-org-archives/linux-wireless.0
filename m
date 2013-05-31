@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:58467 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221Ab3EOV4B (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41393 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752614Ab3EaPNV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 17:56:01 -0400
-Message-ID: <5194046F.1030606@lwfinger.net> (sfid-20130515_235632_263705_E220B308)
-Date: Wed, 15 May 2013 16:55:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Norbert Preining <preining@logic.at>
-CC: Matt Causey <matt.causey@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	hostap@lists.shmoo.com
-Subject: Re: RTL driver for RTL8191SEvB and/or wpa-supplicant really broken
- at times
-References: <20130509115630.GC5111@gamma.logic.tuwien.ac.at> <CAGnc4p8w-Y8QHsEM_SbQLxFSfHC_X1ZCQpeKCXFJ8Qtk-cLHrA@mail.gmail.com> <20130509115630.GC5111@gamma.logic.tuwien.ac.at> <518BC290.2040306@lwfinger.net> <20130515120801.GA24670@gamma.logic.tuwien.ac.at>
-In-Reply-To: <20130515120801.GA24670@gamma.logic.tuwien.ac.at>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 31 May 2013 11:13:21 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: thomas@cozybit.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: advertise userspace MPM only if mesh is supported
+Date: Fri, 31 May 2013 17:13:11 +0200
+Message-Id: <1370013191-25900-1-git-send-email-johannes@sipsolutions.net> (sfid-20130531_171324_115740_2E2B04A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/15/2013 07:08 AM, Norbert Preining wrote:
-> Hi everyone,
->
-> sorry for the late reply, business trip to Tokyo.
+From: Johannes Berg <johannes.berg@intel.com>
 
-No problem.
+There's no danger in always advertising it, but it would
+look a bit inconsistent so don't do it unless supported.
 
-> On Do, 09 Mai 2013, Larry Finger wrote:
->> absolutely critical, namely the PCI ID. There are at least three
->
-> 10ec:8172
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/main.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-That card is the 1x2 variant.
-
-I tested my sample of that card using the wireless-testing git repo as merged 
-with mainline on May 13. I could connect with WEP, WPA, and WPA2 APs and the 
-connection was stable for at least 2 hours.
-
-Performance could be improved. For WEP and WPA, netperf shows about 10 Mbps for 
-RX and TX. For WPA2, it is not that good. I will compare these results with the 
-latest vendor driver, but it does not build on 3.10 and I do not have time to 
-sort that out now.
-
-Larry
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 1998f14..810e20c 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -556,8 +556,10 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	wiphy->features |= NL80211_FEATURE_SK_TX_STATUS |
+ 			   NL80211_FEATURE_SAE |
+ 			   NL80211_FEATURE_HT_IBSS |
+-			   NL80211_FEATURE_VIF_TXPOWER |
+-			   NL80211_FEATURE_USERSPACE_MPM;
++			   NL80211_FEATURE_VIF_TXPOWER;
++#ifdef CONFIG_MAC80211_MESH
++	wiphy->features |= NL80211_FEATURE_USERSPACE_MPM;
++#endif
+ 
+ 	if (!ops->hw_scan)
+ 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
+-- 
+1.8.0
 
