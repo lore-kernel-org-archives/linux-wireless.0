@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4707 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759146Ab3E2QyQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 12:54:16 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for 3.10] brcmsmac: fix regression observed in 3.10-rc1
-Date: Wed, 29 May 2013 18:54:05 +0200
-Message-ID: <1369846445-32216-1-git-send-email-arend@broadcom.com> (sfid-20130529_185421_652312_7B78F025)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:62910 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751698Ab3EaCKi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 May 2013 22:10:38 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rq2so1384357pbb.33
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:10:37 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 12/40] crda: explicitly munmap() on reglib_get_rd_alpha2()
+Date: Thu, 30 May 2013 19:09:01 -0700
+Message-Id: <1369966169-23640-13-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_041040_554772_F8CBA3BA)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a regression introduced by:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-  commit 6da3b6c48d79da96a36c2632053cf4f53bf48fb2
-  Author: Hauke Mehrtens <hauke@hauke-m.de>
-  Date:   Sun Mar 24 01:45:52 2013 +0100
+Although the region mapped by mmap() is also automatically
+unmapped when the process is terminated lets just munmap()
+it ourselves to be more tidy.
 
-      brcmsmac: remove brcms_bss_cfg->associated
-
-This commit changed the behaviour of the function
-brcms_c_ps_allowed().
-
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   17 ++---------------
- 1 file changed, 2 insertions(+), 15 deletions(-)
+ reglib.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 28e7aee..9fd6f2f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -3074,21 +3074,8 @@ static void brcms_b_antsel_set(struct brcms_hardware *wlc_hw, u32 antsel_avail)
-  */
- static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
- {
--	/* disallow PS when one of the following global conditions meets */
--	if (!wlc->pub->associated)
--		return false;
--
--	/* disallow PS when one of these meets when not scanning */
--	if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
--		return false;
--
--	if (wlc->bsscfg->type == BRCMS_TYPE_AP)
--		return false;
--
--	if (wlc->bsscfg->type == BRCMS_TYPE_ADHOC)
--		return false;
--
--	return true;
-+	/* not supporting PS so always return false for now */
-+	return false;
+diff --git a/reglib.c b/reglib.c
+index 867e8cf..bb6f23f 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -357,6 +357,7 @@ reglib_get_rd_alpha2(const char *alpha2, const char *file)
+ 
+ out:
+ 	close(fd);
++	munmap(db, dblen);
+ 	return rd;
  }
  
- static void brcms_c_statsupd(struct brcms_c_info *wlc)
 -- 
 1.7.10.4
-
 
