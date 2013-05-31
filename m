@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50996 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753856Ab3EFPTb (ORCPT
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:53453 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790Ab3EaCJ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 May 2013 11:19:31 -0400
-Message-ID: <1367853566.8434.8.camel@jlt4.sipsolutions.net> (sfid-20130506_171934_492678_F02CF5A3)
-Subject: Re: [PATCH 1/2] cfg80211: Userspace may inform kernel of mesh auth
- method.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Colleen Twitty <colleen@cozybit.com>
-Cc: open80211s <devel@lists.open80211s.org>,
-	linux-wirelss <linux-wireless@vger.kernel.org>
-Date: Mon, 06 May 2013 17:19:26 +0200
-In-Reply-To: <1367608308-588-1-git-send-email-colleen@cozybit.com> (sfid-20130503_211224_065979_10F4624E)
-References: <1367608308-588-1-git-send-email-colleen@cozybit.com>
-	 (sfid-20130503_211224_065979_10F4624E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 30 May 2013 22:09:59 -0400
+Received: by mail-pd0-f175.google.com with SMTP id 6so1376010pdd.6
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:09:58 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 05/40] crda: remove unused BUG_ON() from intersect.c
+Date: Thu, 30 May 2013 19:08:54 -0700
+Message-Id: <1369966169-23640-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_041001_719114_EE0050B8)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Colleen,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
->  	if (setup->is_secure)
->  		setup->user_mpm = true;
->  
-> +	if (tb[NL80211_MESH_SETUP_AUTH_PROTOCOL]) {
-> +		if (!setup->is_authenticated || !setup->is_secure)
-> +			return -EINVAL;
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ intersect.c |    7 -------
+ 1 file changed, 7 deletions(-)
 
-Is that really what you want? It seems strange to first check is secured
-or authenticated and then allow to set the auth protocol to none, but
-that may be fine since I don't really understand the mesh protocol very
-well.
-
-However if userspace is in control it can basically do whatever it
-likes, so shouldn't you just check "setup->user_mpm"? Or am I
-misunderstanding this, and the authentication isn't related to peering
-at all?
-
-johannes
+diff --git a/intersect.c b/intersect.c
+index 59fd007..7352e73 100644
+--- a/intersect.c
++++ b/intersect.c
+@@ -9,13 +9,6 @@
+ /* Intersects regulatory domains, this will skip any regulatory marked with
+  * an alpha2 of '00', which is used to indicate a regulatory domain */
+ 
+-#define BUG_ON(foo) do { \
+-	if (foo) { \
+-		printf("BUG\n"); \
+-		exit(-1); \
+-	} \
+-	} while (0)
+-
+ /* Sanity check on a regulatory rule */
+ static int is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
+ {
+-- 
+1.7.10.4
 
