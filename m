@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:21161 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344Ab3ESQ2F (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:43356 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801Ab3EaCMM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 May 2013 12:28:05 -0400
-Date: Sun, 19 May 2013 11:27:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: mcgrof@kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] backports: Fix menuconfig build
-Message-ID: <5198fd8e.jScXWCVTcp8xL6Fp%Larry.Finger@lwfinger.net> (sfid-20130519_182823_302731_2998B6FC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 30 May 2013 22:12:12 -0400
+Received: by mail-pb0-f53.google.com with SMTP id un4so1392938pbc.12
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:12:12 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 34/40] crda: clarify intersect.c only computes an intersection
+Date: Thu, 30 May 2013 19:09:23 -0700
+Message-Id: <1369966169-23640-35-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042938_328944_AD79783C)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using openSUSE 12.3 with x86_64 architecture, the 'make menuconfig'
-command results in the following:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-finger@larrylap:~/backports-3.10-rc1-1> make menuconfig
-cc -Wl,--no-as-needed -lncurses  mconf.o zconf.tab.o lxdialog/checklist.o lxdialog/inputbox.o lxdialog/menubox.o lxdialog/textbox.o lxdialog/util.o lxdialog/yesno.o   -o mconf
-/usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../x86_64-suse-linux/bin/ld: /lib64/libncurses.so.5: undefined reference to symbol 'acs_map'
-/usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../x86_64-suse-linux/bin/ld: note: 'acs_map' is defined in DSO /usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../lib64/libtinfo.so so try adding it to the linker command line
-/usr/lib64/gcc/x86_64-suse-linux/4.7/../../../../lib64/libtinfo.so: could not read symbols: Invalid operation
-collect2: error: ld returned 1 exit status
-make[2]: *** [mconf] Error 1
-make[1]: *** [menuconfig] Error 2
-make: *** [menuconfig] Error 2
-finger@larrylap:~/backports-3.10-rc1-1>
+World regulatory domains should deal with passive scan
+flags to account for gaps in the frequency spectrum that
+some countries do not rely on but some APs / Cell towers
+could be relied upon for determining location.
 
-When "-ltinfo" is added to the LDFLAGS symbol as suggested by the linker,
-it builds and runs correctly.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ intersect.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Index: backports-3.10-rc1-1/kconfig/Makefile
-===================================================================
---- backports-3.10-rc1-1.orig/kconfig/Makefile
-+++ backports-3.10-rc1-1/kconfig/Makefile
-@@ -3,7 +3,7 @@ CFLAGS=-Wall -Wmissing-prototypes -Wstri
- LXDIALOG := lxdialog/checklist.o lxdialog/inputbox.o lxdialog/menubox.o lxdialog/textbox.o lxdialog/util.o lxdialog/yesno.o
+diff --git a/intersect.c b/intersect.c
+index bc1e63e..baca5f1 100644
+--- a/intersect.c
++++ b/intersect.c
+@@ -7,7 +7,7 @@
+ #include "reglib.h"
  
- conf: conf.o zconf.tab.o
--mconf: LDFLAGS = -Wl,--no-as-needed -lncurses
-+mconf: LDFLAGS = -Wl,--no-as-needed -lncurses -ltinfo
- mconf: CFLAGS += -DCURSES_LOC="<ncurses.h>" -DLOCALE
- mconf: mconf.o zconf.tab.o $(LXDIALOG)
+ /* Intersects regulatory domains, this will skip any regulatory marked with
+- * an alpha2 of '00', which is used to indicate a regulatory domain */
++ * an alpha2 of '00', which is used to indicate a world regulatory domain */
  
+ int main(int argc, char **argv)
+ {
+@@ -67,7 +67,7 @@ int main(int argc, char **argv)
+ 		free(prev_rd_intsct);
+ 
+ 	/* Tada! */
+-	printf("== World regulatory domain: ==\n");
++	printf("Intersected regulatory domain:\n");
+ 	reglib_print_regdom(rd_intsct);
+ 
+ 	free(rd_intsct);
+-- 
+1.7.10.4
+
