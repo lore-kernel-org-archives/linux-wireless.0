@@ -1,111 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46288 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758766Ab3EBMaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 08:30:12 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 08/14] rt2x00: rt2800pci: implement queue_init callback
-Date: Thu,  2 May 2013 14:30:23 +0200
-Message-Id: <1367497829-7672-9-git-send-email-juhosg@openwrt.org> (sfid-20130502_143042_197177_0FAFD13B)
-In-Reply-To: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
-References: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:46515 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752520Ab3EaCLm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 May 2013 22:11:42 -0400
+Received: by mail-pb0-f51.google.com with SMTP id jt11so1378576pbb.24
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:11:41 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 27/40] crda: rename is_world_regdom() to reglib_is_world_regdom()
+Date: Thu, 30 May 2013 19:09:16 -0700
+Message-Id: <1369966169-23640-28-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042939_164859_2FF68AD3)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The generic rt2x00 code has been changed to allow the
-drivers toimplement dynamic data_queue initialization.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Remove the static data queue descriptor structures
-and implement the queue_init callback instead.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |   60 ++++++++++++++++++-------------
- 1 file changed, 36 insertions(+), 24 deletions(-)
+ intersect.c |    2 +-
+ reglib.h    |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 330f1d2..260c8b4 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1186,29 +1186,43 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
- 	.sta_remove		= rt2800_sta_remove,
+diff --git a/intersect.c b/intersect.c
+index 22b3225..bc1e63e 100644
+--- a/intersect.c
++++ b/intersect.c
+@@ -24,7 +24,7 @@ int main(int argc, char **argv)
+ 
+ 	/* We intersect only when we have to rd structures ready */
+ 	reglib_for_each_country(rd, idx, argv[1]) {
+-		if (is_world_regdom((const char *) rd->alpha2)) {
++		if (reglib_is_world_regdom((const char *) rd->alpha2)) {
+ 			free((struct ieee80211_regdomain *) rd);
+ 			continue;
+ 		}
+diff --git a/reglib.h b/reglib.h
+index 4c0ec6d..98aadcc 100644
+--- a/reglib.h
++++ b/reglib.h
+@@ -31,7 +31,7 @@ struct ieee80211_regdomain {
+ 	struct ieee80211_reg_rule reg_rules[];
  };
  
--static const struct data_queue_desc rt2800pci_queue_rx = {
--	.entry_num		= 128,
--	.data_size		= AGGREGATION_SIZE,
--	.desc_size		= RXD_DESC_SIZE,
--	.winfo_size		= RXWI_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_mmio),
--};
-+static void rt2800pci_queue_init(struct data_queue *queue)
-+{
-+	switch (queue->qid) {
-+	case QID_RX:
-+		queue->limit = 128;
-+		queue->data_size = AGGREGATION_SIZE;
-+		queue->desc_size = RXD_DESC_SIZE;
-+		queue->winfo_size = RXWI_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
-+		break;
+-static inline int is_world_regdom(const char *alpha2)
++static inline int reglib_is_world_regdom(const char *alpha2)
+ {
+ 	if (alpha2[0] == '0' && alpha2[1] == '0')
+ 		return 1;
+@@ -54,7 +54,7 @@ static inline int is_alpha2(const char *alpha2)
  
--static const struct data_queue_desc rt2800pci_queue_tx = {
--	.entry_num		= 64,
--	.data_size		= AGGREGATION_SIZE,
--	.desc_size		= TXD_DESC_SIZE,
--	.winfo_size		= TXWI_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_mmio),
--};
-+	case QID_AC_VO:
-+	case QID_AC_VI:
-+	case QID_AC_BE:
-+	case QID_AC_BK:
-+		queue->limit = 64;
-+		queue->data_size = AGGREGATION_SIZE;
-+		queue->desc_size = TXD_DESC_SIZE;
-+		queue->winfo_size = TXWI_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
-+		break;
+ static inline int is_valid_regdom(const char *alpha2)
+ {
+-	if (!is_alpha2(alpha2) && !is_world_regdom(alpha2))
++	if (!is_alpha2(alpha2) && !reglib_is_world_regdom(alpha2))
+ 		return 0;
  
--static const struct data_queue_desc rt2800pci_queue_bcn = {
--	.entry_num		= 8,
--	.data_size		= 0, /* No DMA required for beacons */
--	.desc_size		= TXD_DESC_SIZE,
--	.winfo_size		= TXWI_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_mmio),
--};
-+	case QID_BEACON:
-+		queue->limit = 8;
-+		queue->data_size = 0; /* No DMA required for beacons */
-+		queue->desc_size = TXD_DESC_SIZE;
-+		queue->winfo_size = TXWI_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
-+		break;
-+
-+	case QID_ATIM:
-+		/* fallthrough */
-+	default:
-+		BUG();
-+		break;
-+	}
-+}
- 
- static const struct rt2x00_ops rt2800pci_ops = {
- 	.name			= KBUILD_MODNAME,
-@@ -1218,9 +1232,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
- 	.extra_tx_headroom	= TXWI_DESC_SIZE,
--	.rx			= &rt2800pci_queue_rx,
--	.tx			= &rt2800pci_queue_tx,
--	.bcn			= &rt2800pci_queue_bcn,
-+	.queue_init		= rt2800pci_queue_init,
- 	.lib			= &rt2800pci_rt2x00_ops,
- 	.drv			= &rt2800pci_rt2800_ops,
- 	.hw			= &rt2800pci_mac80211_ops,
+ 	return 1;
 -- 
-1.7.10
+1.7.10.4
 
