@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:8064 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965230Ab3E2KEZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 May 2013 06:04:25 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH] mwifiex: dump small buffers with help of %*ph
-Date: Wed, 29 May 2013 13:04:20 +0300
-Message-Id: <1369821860-3004-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20130529_120428_649109_8199AFC1)
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:60444 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801Ab3EaCL7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 May 2013 22:11:59 -0400
+Received: by mail-pd0-f178.google.com with SMTP id w11so1382417pde.37
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:11:59 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 31/40] crda: rename max() to reglib_max()
+Date: Thu, 30 May 2013 19:09:20 -0700
+Message-Id: <1369966169-23640-32-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042939_396923_4E4E116F)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/net/wireless/mwifiex/join.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 6bcb66e..122175a 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -919,9 +919,8 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
- 	memcpy(&priv->curr_bss_params.data_rates,
- 	       &adhoc_start->data_rate, priv->curr_bss_params.num_of_rates);
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ reglib.c |    2 +-
+ reglib.h |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/reglib.c b/reglib.c
+index 0d258d8..57bb22b 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -438,7 +438,7 @@ static int reg_rules_intersect(const struct ieee80211_reg_rule *rule1,
+ 	power_rule2 = &rule2->power_rule;
+ 	power_rule = &intersected_rule->power_rule;
  
--	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: rates=%02x %02x %02x %02x\n",
--		adhoc_start->data_rate[0], adhoc_start->data_rate[1],
--		adhoc_start->data_rate[2], adhoc_start->data_rate[3]);
-+	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: rates=%4ph\n",
-+		adhoc_start->data_rate);
+-	freq_range->start_freq_khz = max(freq_range1->start_freq_khz,
++	freq_range->start_freq_khz = reglib_max(freq_range1->start_freq_khz,
+ 					 freq_range2->start_freq_khz);
+ 	freq_range->end_freq_khz = min(freq_range1->end_freq_khz,
+ 				       freq_range2->end_freq_khz);
+diff --git a/reglib.h b/reglib.h
+index 8ed94d9..21518d2 100644
+--- a/reglib.h
++++ b/reglib.h
+@@ -60,7 +60,7 @@ static inline int reglib_is_valid_regdom(const char *alpha2)
+ 	return 1;
+ }
  
- 	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: AD-HOC Start command is ready\n");
- 
+-static inline uint32_t max(uint32_t a, uint32_t b)
++static inline uint32_t reglib_max(uint32_t a, uint32_t b)
+ {
+ 	return (a > b) ? a : b;
+ }
 -- 
-1.8.2.rc0.22.gb3600c3
+1.7.10.4
 
