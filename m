@@ -1,85 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:42400 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761170Ab3EBSnX (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:64355 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752496Ab3EaCKu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 May 2013 14:43:23 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Thu, 2 May 2013 11:41:42 -0700
-Subject: RE: Memory leak in mwifiex_cfg80211_scan
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9E232E33@SC-VEXCH1.marvell.com> (sfid-20130502_204336_165374_6E01B745)
-References: <CAMLZHHSVd6GpmqTQyJmbsheH1utZh8mNW8d4zLtjwoONaGwbNA@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E0579DB@SC-VEXCH1.marvell.com>
-	<CAMLZHHQ=BNuD0UmcV8pv=6phW=W-C5C7Af6n8tLWTrzyuzPQow@mail.gmail.com>
-	<CAMLZHHQXY3OuWKr_K1B9-NmZFwCcQFPNTBoOkpvT9kxWJ=ixqQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E14FF4C@SC-VEXCH1.marvell.com>
-	<CAMLZHHSHG2ySmW0ac6+M-7fOgNFrqXBf7=SXFFkWDrhwGwYKXQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E150221@SC-VEXCH1.marvell.com>
-	<CAMLZHHThUxB_Vj4eOjq+61osUQ3CQ5UGgvrgZXE33oDD1N=YtA@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E150A22@SC-VEXCH1.marvell.com>
- <CAMLZHHTNPBh3LDD0F2+zqSvUPmT6bhA8HLZvc1dTJmHGR8eVJg@mail.gmail.com>
-In-Reply-To: <CAMLZHHTNPBh3LDD0F2+zqSvUPmT6bhA8HLZvc1dTJmHGR8eVJg@mail.gmail.com>
-Content-Type: multipart/mixed;
-	boundary="_002_477F20668A386D41ADCC57781B1F70430D9E232E33SCVEXCH1marve_"
-MIME-Version: 1.0
+	Thu, 30 May 2013 22:10:50 -0400
+Received: by mail-pd0-f177.google.com with SMTP id u11so1382354pdi.36
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:10:49 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 15/40] crda: use gcry_sexp_release() on crda_verify_db_signature()
+Date: Thu, 30 May 2013 19:09:04 -0700
+Message-Id: <1369966169-23640-16-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_041052_564372_AAAA624C)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_002_477F20668A386D41ADCC57781B1F70430D9E232E33SCVEXCH1marve_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Hi Daniel,
+This fixes 6 of 10 reported valgrind errors when
+crda_verify_db_signature() is used through regdbdump.
 
->  Kernel panic - not syncing: Fatal exception in interrupt
->=20
-> I suspect this crash also existed before your patch, just I was not
-> testing scan_delay_fn before. Maybe you prefer to deal with it as a
-> separate issue.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ reglib.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-You are right, this crash also existed before the patch in "deferred scan" =
-path.
-Please try attached patch address this issue.
+diff --git a/reglib.c b/reglib.c
+index 17e3f31..634525b 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -135,13 +135,14 @@ int crda_verify_db_signature(uint8_t *db, int dblen, int siglen)
+ 	if (gcry_sexp_build(&data, NULL, "(data (flags pkcs1) (hash sha1 %b))",
+ 			    20, hash)) {
+ 		fprintf(stderr, "Failed to build data S-expression.\n");
+-		goto out;
++		return ok;
+ 	}
+ 
+ 	if (gcry_sexp_build(&signature, NULL, "(sig-val (rsa (s %b)))",
+ 			    siglen, db + dblen)) {
+ 		fprintf(stderr, "Failed to build signature S-expression.\n");
+-		goto out;
++		gcry_sexp_release(data);
++		return ok;
+ 	}
+ 
+ 	for (i = 0; (i < sizeof(keys)/sizeof(keys[0])) && (!ok); i++) {
+@@ -161,12 +162,15 @@ int crda_verify_db_signature(uint8_t *db, int dblen, int siglen)
+ 		}
+ 
+ 		ok = gcry_pk_verify(signature, data, rsa) == 0;
++		gcry_sexp_release(rsa);
+ 	}
+ 
+ 	if (!ok)
+ 		fprintf(stderr, "Database signature verification failed.\n");
+ 
+ out:
++	gcry_sexp_release(data);
++	gcry_sexp_release(signature);
+ 	return ok;
+ }
+ #endif /* USE_GCRYPT */
+-- 
+1.7.10.4
 
-Thanks,
-Bing
-
->=20
-> Daniel
-
---_002_477F20668A386D41ADCC57781B1F70430D9E232E33SCVEXCH1marve_
-Content-Type: application/octet-stream;
-	name="0001-mwifiex-cancel-scan-delay-timer-when-driver-unload.patch"
-Content-Description: 0001-mwifiex-cancel-scan-delay-timer-when-driver-unload.patch
-Content-Disposition: attachment;
-	filename="0001-mwifiex-cancel-scan-delay-timer-when-driver-unload.patch";
-	size=1173; creation-date="Thu, 02 May 2013 18:38:01 GMT";
-	modification-date="Thu, 02 May 2013 18:38:01 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbSA1NTYxNDAwYWQ1Y2U4ODZlNjBiNzZhMzliNjlhOWQ2YTBlYzdlMmUxIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
-PgpEYXRlOiBGcmksIDMgTWF5IDIwMTMgMjE6MTg6NTggKzA1MzAKU3ViamVjdDogW1BBVENIXSBt
-d2lmaWV4OiBjYW5jZWwgc2NhbiBkZWxheSB0aW1lciB3aGVuIGRyaXZlciB1bmxvYWQKCkFsbCBw
-ZW5kaW5nIHNjYW4gY29tbWFuZHMgYXJlIGNsZWFyZWQgaW4gdW5sb2FkIHBhdGgsCmJ1dCBzY2Fu
-IGRlbGF5IHRpbWVyIGlzIG5vdCBjYW5jZWxsZWQuIFRoaXMgcGF0Y2ggZml4ZXMgdGhlCmlzc3Vl
-LgoKU2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4K
-LS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2luaXQuYyB8ICAgIDcgKysrKysrKwog
-MSBmaWxlcyBjaGFuZ2VkLCA3IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCgpkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9pbml0LmMgYi9kcml2ZXJzL25ldC93
-aXJlbGVzcy9td2lmaWV4L2luaXQuYwppbmRleCBkNzUwMjg2Li5mNmI0Yjk2IDEwMDY0NAotLS0g
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2luaXQuYworKysgYi9kcml2ZXJzL25ldC93
-aXJlbGVzcy9td2lmaWV4L2luaXQuYwpAQCAtNDUzLDExICs0NTMsMTggQEAgc3RhdGljIHZvaWQg
-bXdpZmlleF9mcmVlX2xvY2tfbGlzdChzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVyKQog
-c3RhdGljIHZvaWQKIG13aWZpZXhfZnJlZV9hZGFwdGVyKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIg
-KmFkYXB0ZXIpCiB7CisJaW50IGk7CisKIAlpZiAoIWFkYXB0ZXIpIHsKIAkJcHJfZXJyKCIlczog
-YWRhcHRlciBpcyBOVUxMXG4iLCBfX2Z1bmNfXyk7CiAJCXJldHVybjsKIAl9CiAKKwlmb3IgKGkg
-PSAwOyBpIDwgYWRhcHRlci0+cHJpdl9udW07IGkrKykgeworCQlpZiAoYWRhcHRlci0+cHJpdltp
-XSkKKwkJCWRlbF90aW1lcigmYWRhcHRlci0+cHJpdltpXS0+c2Nhbl9kZWxheV90aW1lcik7CisJ
-fQorCiAJbXdpZmlleF9jYW5jZWxfYWxsX3BlbmRpbmdfY21kKGFkYXB0ZXIpOwogCiAJLyogRnJl
-ZSBsb2NrIHZhcmlhYmxlcyAqLwotLSAKMS43LjMuNAoK
-
---_002_477F20668A386D41ADCC57781B1F70430D9E232E33SCVEXCH1marve_--
