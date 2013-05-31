@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:45138 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408Ab3EOX0k (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:35941
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753886Ab3EaMGE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 19:26:40 -0400
-Received: by mail-la0-f52.google.com with SMTP id fo13so2386710lab.11
-        for <linux-wireless@vger.kernel.org>; Wed, 15 May 2013 16:26:38 -0700 (PDT)
+	Fri, 31 May 2013 08:06:04 -0400
+Date: Fri, 31 May 2013 08:05:54 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: cw1200 "sbus" conflicts with SPARC "sbus"
+Message-ID: <20130531120553.GA31667@shaftnet.org> (sfid-20130531_140609_343566_CC2623E3)
+References: <alpine.DEB.2.00.1305311127200.4645@ayla.of.borg>
 MIME-Version: 1.0
-Date: Wed, 15 May 2013 17:26:38 -0600
-Message-ID: <CAJu560g_TvoG1PSTQ=Ns8buigMoaHzqbh=7W27qc0+LgJ23mGg@mail.gmail.com> (sfid-20130516_012644_176673_5F8F652D)
-Subject: Re: STA doesn't support ACM for QoS
-From: Cyril Segretain <cyrilseg@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="HcAYCG3uE/tztfnV"
+In-Reply-To: <alpine.DEB.2.00.1305311127200.4645@ayla.of.borg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/5/15 Ben Greear <greearb@candelatech.com>:
-> On 05/15/2013 03:42 PM, Cyril Seg wrote:
->>
->> Hello ,
->>
->> In my testbed, there is an AP that works with ath9k_htc and hostapd and
->> there
->> also are 2 STAs that work with ath9k_htc.
->> Video flows aren't in the good priority, they are in Best_Effort.
->> But if I enable the ACM parameter for VIDEO and BEST EFFORT, video flows
->> are
->> now in BACKGROUND priority.
->> STAs doesn't support the admission control ...
->>
->> Does someone have a solution ?
->>
->> I work with Kali Linux, kernel 3.7
->
->
-> See what ToS bits are in your video frames.   Some definitions
-> of ToS had low values for video (32), but wifi requires different
-> settings (something like 128).
->
 
-The ToS for Video Streaming should be at 160.
-But in my testbed all ToS bits are 0. I don't know why...
+--HcAYCG3uE/tztfnV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Thanks,
-> Ben
->
->
->
->>
->> Thanks,
->>
->> Cyril Segretain
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
+On Fri, May 31, 2013 at 11:31:05AM +0200, Geert Uytterhoeven wrote:
+>=20
+> sparc64/allmodconfig:
+>=20
+> drivers/net/wireless/cw1200/hwio.c:51:21: error: macro "sbus_memcpy_fromi=
+o" passed 4 arguments, but takes just 3
+> drivers/net/wireless/cw1200/hwio.c:66:19: error: macro "sbus_memcpy_toio"=
+ passed 4 arguments, but takes just 3
+>=20
+> http://kisskb.ellerman.id.au/kisskb/buildresult/8846508/
+>=20
+> At first I thought it was a bad/old implementation of a real SPARC sbus
+> driver.  but it seems the two sbusses are completely unrelated.
+
+Yikes.=20
+
+Would it be sufficient to just rename that pair of macros, or should I=20
+go and rename entire cw1200's "bus" subsystem?
+
+Either way, I'll add this to the to-do list for the weekend.
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Delray Beach, FL                          ^^ (mail/jabber) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--HcAYCG3uE/tztfnV
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iD8DBQFRqJIhPuLgii2759ARAqnIAKDuJmGl4GdnnN8FYROfmonYfRM2YACfU1oI
+2WFw0GyBMlsAqdXHjnUrw40=
+=SbeX
+-----END PGP SIGNATURE-----
+
+--HcAYCG3uE/tztfnV--
