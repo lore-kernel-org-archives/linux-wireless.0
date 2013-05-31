@@ -1,118 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f48.google.com ([209.85.210.48]:46907 "EHLO
-	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153Ab3EHSqH (ORCPT
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:45903 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750813Ab3EaFMm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 14:46:07 -0400
-Received: by mail-da0-f48.google.com with SMTP id h32so1130558dak.7
-        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2013 11:46:06 -0700 (PDT)
-From: Colleen Twitty <colleen@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: open80211s <devel@lists.open80211s.org>,
-	linux-wirelss <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 1/2] cfg80211: Userspace may inform kernel of mesh auth method.
-Date: Wed,  8 May 2013 11:45:59 -0700
-Message-Id: <1368038760-17752-1-git-send-email-colleen@cozybit.com> (sfid-20130508_204613_051522_EB773891)
+	Fri, 31 May 2013 01:12:42 -0400
+Received: by mail-pd0-f181.google.com with SMTP id bv13so1562852pdb.40
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 22:12:42 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 30 May 2013 22:12:41 -0700
+Message-ID: <CAFVsH1JXZ-UmUPPRZ17DC+Fu9qomSVLPZd6byedq1EzrySsT4g@mail.gmail.com> (sfid-20130531_071245_840771_17E681AC)
+Subject: incoming packets seemed to be delayed with rtl8723ae
+From: Chris David <chris@chrisdavid.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Authentication takes place in userspace, but the beacon is
-generated in the kernel.  Allow userspace to inform the
-kernel of the authentication method so the appropriate
-mesh config IE can be set prior to beacon generation when
-joining the MBSS.
+Hello,
 
-Signed-off-by: Colleen Twitty <colleen@cozybit.com>
----
-  If user_mpm is set, allow userspace to set authentication bit.  (Johannes)
+I have an rtl8723ae card.  I'm noticing a "minature" version of the
+bug reported with this subject line:
+rtl8723ae losing IP connectivity (3.8.2 + 3.9-rc2)
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/105646
 
- include/net/cfg80211.h       |    2 ++
- include/uapi/linux/nl80211.h |    5 +++++
- net/wireless/mesh.c          |    1 +
- net/wireless/nl80211.c       |    8 ++++++++
- 4 files changed, 16 insertions(+)
+My description would be:  When I ping the machine this card is
+installed in from another machine, some packets seemed to be delayed.
+Here is a sample ping output:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 26e9113..32a2f1b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1161,6 +1161,7 @@ struct mesh_config {
-  * @sync_method: which synchronization method to use
-  * @path_sel_proto: which path selection protocol to use
-  * @path_metric: which metric to use
-+ * @auth_id: which authentication method this mesh is using
-  * @ie: vendor information elements (optional)
-  * @ie_len: length of vendor information elements
-  * @is_authenticated: this mesh requires authentication
-@@ -1179,6 +1180,7 @@ struct mesh_setup {
- 	u8 sync_method;
- 	u8 path_sel_proto;
- 	u8 path_metric;
-+	u8 auth_id;
- 	const u8 *ie;
- 	u8 ie_len;
- 	bool is_authenticated;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index b484307..0632071 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2645,6 +2645,10 @@ enum nl80211_meshconf_params {
-  * @NL80211_MESH_SETUP_USERSPACE_MPM: Enable this option if userspace will
-  *	implement an MPM which handles peer allocation and state.
-  *
-+ * @NL80211_MESH_SETUP_AUTH_PROTOCOL: Inform the kernel of the authentication
-+ *	method (u8, as defined in IEEE 8.4.2.100.6, e.g. 0x1 for SAE).
-+ *	Default is no authentication method required.
-+ *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  *
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-@@ -2658,6 +2662,7 @@ enum nl80211_mesh_setup_params {
- 	NL80211_MESH_SETUP_USERSPACE_AMPE,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_SYNC,
- 	NL80211_MESH_SETUP_USERSPACE_MPM,
-+	NL80211_MESH_SETUP_AUTH_PROTOCOL,
- 
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 0bb93f3..9546ad2 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -82,6 +82,7 @@ const struct mesh_setup default_mesh_setup = {
- 	.sync_method = IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET,
- 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
- 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
-+	.auth_id = 0, /* open */
- 	.ie = NULL,
- 	.ie_len = 0,
- 	.is_secure = false,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9cdcd9e..5f10f7a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4672,6 +4672,7 @@ static const struct nla_policy
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_USERSPACE_AUTH] = { .type = NLA_FLAG },
-+	[NL80211_MESH_SETUP_AUTH_PROTOCOL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_USERSPACE_MPM] = { .type = NLA_FLAG },
- 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 				    .len = IEEE80211_MAX_DATA_LEN },
-@@ -4857,6 +4858,13 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 	if (setup->is_secure)
- 		setup->user_mpm = true;
- 
-+	if (tb[NL80211_MESH_SETUP_AUTH_PROTOCOL]) {
-+		if (!setup->user_mpm)
-+			return -EINVAL;
-+		setup->auth_id =
-+			nla_get_u8(tb[NL80211_MESH_SETUP_AUTH_PROTOCOL]);
-+	}
-+
- 	return 0;
- }
- 
--- 
-1.7.9.5
+64 bytes from 192.168.1.15: icmp_req=194 ttl=64 time=2002 ms
+64 bytes from 192.168.1.15: icmp_req=195 ttl=64 time=996 ms
+64 bytes from 192.168.1.15: icmp_req=196 ttl=64 time=1.15 ms
+64 bytes from 192.168.1.15: icmp_req=197 ttl=64 time=1.25 ms
+64 bytes from 192.168.1.15: icmp_req=198 ttl=64 time=2002 ms
+64 bytes from 192.168.1.15: icmp_req=199 ttl=64 time=1002 ms
+64 bytes from 192.168.1.15: icmp_req=200 ttl=64 time=3.66 ms
+64 bytes from 192.168.1.15: icmp_req=201 ttl=64 time=5.46 ms
+64 bytes from 192.168.1.15: icmp_req=202 ttl=64 time=2.21 ms
+64 bytes from 192.168.1.15: icmp_req=203 ttl=64 time=1005 ms
+64 bytes from 192.168.1.15: icmp_req=204 ttl=64 time=5.73 ms
+64 bytes from 192.168.1.15: icmp_req=205 ttl=64 time=1.25 ms
+64 bytes from 192.168.1.15: icmp_req=206 ttl=64 time=1.72 ms
+64 bytes from 192.168.1.15: icmp_req=207 ttl=64 time=1011 ms
 
+As you can see, sometimes there is a second or two delay, other times
+its very quick.  And the delayed packets seem to happen every second
+or two, very consistently.
+
+This happens to be on kernel 3.9.4, with the backports-3.10-rc1
+drivers installed.  But I've seen this behavior on a 3.8.13 kernel
+also with the same backports, and also on 3.10-rc3.  On 3.9.4 and
+3.8.13 without backports, I observe the same issue except its 50
+seconds, instead of 2.
+
+I've seen this behaviour with wpa_supplicant using both the wext
+driver on 3.8.18, and the nl80211 driver on 3.9.4.
+
+If the pings are sourced from the box with the 8723ae installed, I
+don't observe this behavior.  Its only when the pings come from some
+external box.  Also, when I ssh into the box with the 8723ae from an
+external machine, I notice the same sort of delays with the commands
+that I type.  (its making me a better typist!)
+
+It's "as-if" the buffer for incoming packets (at least TCP and UDP),
+likes to hang on to the data for roughly mod(gettime(), 2) amount of
+time.
+
+I'm definitely willing to try patches, and even might have the skill
+to fix it.  But if anybody has hints or advice, or perhaps a reference
+to the patch that reeled this bug in from 50 seconds to 2 seconds,
+that would be good information for me to know.  Also, I really don't
+know its a 8723ae problem.  But, I can say I don't observe this
+behavior on the wired ethernet ports on the same box.  So it seems at
+least wireless related.
+
+There's not much in dmesg that looks out of place.  And iw event -t
+doesn't print anything while this issue happens.
+[    4.724126] rtl8723ae: Using firmware rtlwifi/rtl8723fw_B.bin
+
+BTW, I'm subscribed to this email list.
+
+Thank you,
+
+-Chris
