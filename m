@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:27273 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755387Ab3ERMCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 May 2013 08:02:55 -0400
-Received: from ip-94-112-188-135.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.188.135])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 18 May 2013 14:02:53 +0200
-From: stf_xl@wp.pl
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 17/32] rt2800: initialize BBP_R88 on proper subroutines
-Date: Sat, 18 May 2013 14:03:40 +0200
-Message-Id: <1368878635-4455-18-git-send-email-stf_xl@wp.pl> (sfid-20130518_142936_352148_CCEDED7B)
-In-Reply-To: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
-References: <1368878635-4455-1-git-send-email-stf_xl@wp.pl>
+Received: from s3.sipsolutions.net ([144.76.43.152]:42225 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754725Ab3EaSlp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 May 2013 14:41:45 -0400
+Message-ID: <1370025698.14117.15.camel@jlt4.sipsolutions.net> (sfid-20130531_204153_665019_C0E78175)
+Subject: Re: Another try at getting pktgen to work with wifi.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Date: Fri, 31 May 2013 20:41:38 +0200
+In-Reply-To: <51A8E53E.8030101@candelatech.com>
+References: <51A79E4A.7000609@candelatech.com>
+	  <51A7B049.9090201@openwrt.org> <51A7BA63.4080403@candelatech.com>
+	  <51A857BF.7070008@openwrt.org> <51A8DC1C.1040908@candelatech.com>
+	  (sfid-20130531_192143_291284_FB196B0A) <1370021846.14117.13.camel@jlt4.sipsolutions.net>
+	 <51A8E53E.8030101@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+On Fri, 2013-05-31 at 11:00 -0700, Ben Greear wrote:
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+> I think it might be more that the wifi stacks have some specific
+> assumptions about how skb->priority maps to queues and QoS.  If
+> they get out of sync, then the TID mappings and so forth get
+> confused.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 428fc3f..6d0e810 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4097,6 +4097,8 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 84, 0x99);
- 
- 	rt2800_bbp_write(rt2x00dev, 86, 0x38);
-+
-+	rt2800_bbp_write(rt2x00dev, 88, 0x90);
- }
- 
- static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
-@@ -4178,6 +4180,9 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 84, 0x9a);
- 
- 	rt2800_bbp_write(rt2x00dev, 86, 0x38);
-+
-+	if (rt2x00_rt(rt2x00dev, RT5392))
-+		rt2800_bbp_write(rt2x00dev, 88, 0x90);
- }
- 
- static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
-@@ -4296,10 +4301,6 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		return;
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT3352) ||
--	    rt2x00_rt(rt2x00dev, RT5392))
--		rt2800_bbp_write(rt2x00dev, 88, 0x90);
--
- 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- 
- 	if (rt2x00_rt(rt2x00dev, RT3290) ||
--- 
-1.7.4.4
+What I'm saying though is that I don't see where skb->priority is even
+_used_ in the wifi stack. I can see it getting set, but not used.
+
+> I actually don't know exactly why pktgen shows this problem,
+> but it must be because it does direct calls to the hard_start_xmit
+> method of the netdev when (most?) other paths do dev_queue_xmit
+> or similar.
+
+Other paths go through select_queue(), obviously.
+
+> > Actually that makes it seem like something else should be doing packet
+> > classification, not mac80211 in select_queue()?
+> >
+> > Where is skb->priority actually really used in mac80211? I don't see
+> > much?
+> 
+> There's a bit more in net/wireless/util.c, at least (cfg80211_classify8021d, for instance).
+
+But that's pretty much all assignments.
+
+> The mac80211/wme.c uses it.  Some of this is called from the drivers
+> (line 1916 or so of ath9k/xmit.c).
+
+What's called there? I don't see any reason for that to use
+skb->priority?
+
+> It's all a bit convoluted in my opinion, but there may well
+> be good reasons for it.
+
+More likely legacy.
+
+johannes
 
