@@ -1,112 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49771 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233Ab3EPLCA (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:59893 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801Ab3EaCKm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 07:02:00 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 08/18] cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
-Date: Thu, 16 May 2013 13:00:35 +0200
-Message-Id: <1368702045-27598-9-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130214_952023_9C9D9C93)
-In-Reply-To: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Thu, 30 May 2013 22:10:42 -0400
+Received: by mail-pd0-f174.google.com with SMTP id 3so1376641pdj.33
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:10:41 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 13/40] crda: explicitly close file descriptor and munmap() on failures
+Date: Thu, 30 May 2013 19:09:02 -0700
+Message-Id: <1369966169-23640-14-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_041044_658822_948DAFF0)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some regulations (like germany, but also FCC) express their transmission
-power limit in dBm/MHz or mW/MHz. To cope with that and be on the safe
-side, reduce the maximum power to half (10 MHz) or quarter (5 MHz)
-when operating on these reduced bandwidth channels.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Just do this explicitly.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- include/net/cfg80211.h |   25 +++++++++++++++++++++++++
- net/mac80211/iface.c   |    2 +-
- net/mac80211/main.c    |    2 +-
- net/mac80211/mlme.c    |    3 ++-
- 4 files changed, 29 insertions(+), 3 deletions(-)
+ reglib.c |   16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c9f5194..45f9b19 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -461,6 +461,31 @@ ieee80211_chandef_rate_flags(struct cfg80211_chan_def *chandef)
- }
+diff --git a/reglib.c b/reglib.c
+index bb6f23f..cbe9676 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -307,33 +307,37 @@ reglib_get_rd_alpha2(const char *alpha2, const char *file)
+ 	if (fd < 0)
+ 		return NULL;
  
- /**
-+ * ieee80211_chandef_max_power - maximum transmission power for the chandef
-+ *
-+ * In some regulations, the transmit power may depend on the configured channel
-+ * bandwidth which may be defined as dBm/MHz. This function returns the actual
-+ * max_power for non-standard (20 MHz) channels.
-+ *
-+ * @chandef: channel definition for the channel
-+ *
-+ * Returns: maximum allowed transmission power in dBm for the chandef
-+ */
-+static inline int
-+ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
-+{
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		return chandef->chan->max_power - 6;
-+	case NL80211_CHAN_WIDTH_10:
-+		return chandef->chan->max_power - 3;
-+	default:
-+		break;
+-	if (fstat(fd, &stat))
++	if (fstat(fd, &stat)) {
++		close(fd);
+ 		return NULL;
 +	}
-+	return chandef->chan->max_power;
-+}
-+
-+/**
-  * enum survey_info_flags - survey information flags
-  *
-  * @SURVEY_INFO_NOISE_DBM: noise (in dBm) was filled in
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 60f1ce5..06f1861 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -54,7 +54,7 @@ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
- 		return false;
- 	}
  
--	power = chanctx_conf->def.chan->max_power;
-+	power = ieee80211_chandef_max_power(&chanctx_conf->def);
- 	rcu_read_unlock();
+ 	dblen = stat.st_size;
  
- 	if (sdata->user_power_level != IEEE80211_UNSET_POWER_LEVEL)
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 8a7bfc4..cb347d4 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -151,7 +151,7 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
- 		changed |= IEEE80211_CONF_CHANGE_SMPS;
- 	}
+ 	db = mmap(NULL, dblen, PROT_READ, MAP_PRIVATE, fd, 0);
+-	if (db == MAP_FAILED)
++	if (db == MAP_FAILED) {
++		close(fd);
+ 		return NULL;
++	}
  
--	power = chandef.chan->max_power;
-+	power = ieee80211_chandef_max_power(&chandef);
+ 	header = crda_get_file_ptr(db, dblen, sizeof(*header), 0);
  
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f36b909..b10bba3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -809,7 +809,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		*pos++ = WLAN_EID_PWR_CAPABILITY;
- 		*pos++ = 2;
- 		*pos++ = 0; /* min tx power */
--		*pos++ = chan->max_power; /* max tx power */
-+		 /* max tx power */
-+		*pos++ = ieee80211_chandef_max_power(&chanctx_conf->def);
+ 	if (ntohl(header->magic) != REGDB_MAGIC)
+-		return NULL;
++		goto out;
  
- 		/* 2. supported channels */
- 		/* TODO: get this in reg domain format */
+ 	if (ntohl(header->version) != REGDB_VERSION)
+-		return NULL;
++		goto out;
+ 
+ 	siglen = ntohl(header->signature_length);
+ 	/* adjust dblen so later sanity checks don't run into the signature */
+ 	dblen -= siglen;
+ 
+ 	if (dblen <= (int)sizeof(*header))
+-		return NULL;
++		goto out;
+ 
+ 	/* verify signature */
+ 	if (!crda_verify_db_signature(db, dblen, siglen))
+-		return NULL;
++		goto out;
+ 
+ 	num_countries = ntohl(header->reg_country_num);
+ 	countries = crda_get_file_ptr(db, dblen,
 -- 
 1.7.10.4
 
