@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:65356 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754655Ab3ELLoI (ORCPT
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:53941 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800Ab3EaCK7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 May 2013 07:44:08 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/7] wil6210: Sanity check for reported DMA length
-Date: Sun, 12 May 2013 14:43:33 +0300
-Message-ID: <1368359018-20870-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130512_134415_424988_C063703C)
-In-Reply-To: <1368359018-20870-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1368359018-20870-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 30 May 2013 22:10:59 -0400
+Received: by mail-pb0-f48.google.com with SMTP id md4so1378975pbc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:10:58 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 17/40] crda: use gcry_mpi_release() when using gcry_mpi_scan()
+Date: Thu, 30 May 2013 19:09:06 -0700
+Message-Id: <1369966169-23640-18-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042937_404907_2CD6DB18)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If Rx descriptor contains garbage, it is possible to access memory beyond
-allocated buffer.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Check this condition and drop Rx if reported length is
-unreasonable large
+Its not well documented you should do this but I found out
+through valgrind. This fixes the last 4 valgrind issues
+I was seeing with regdbdump.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ reglib.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index b9cac7d..6506b76 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -351,7 +351,13 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
+diff --git a/reglib.c b/reglib.c
+index 3d13782..72ea78f 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -158,10 +158,14 @@ int crda_verify_db_signature(uint8_t *db, int dblen, int siglen)
+ 				    "(public-key (rsa (n %m) (e %m)))",
+ 				    mpi_n, mpi_e)) {
+ 			fprintf(stderr, "Failed to build RSA S-expression.\n");
++			gcry_mpi_release(mpi_e);
++			gcry_mpi_release(mpi_n);
+ 			goto out;
+ 		}
  
- 	d1 = wil_skb_rxdesc(skb);
- 	*d1 = *d;
-+	wil_vring_advance_head(vring, 1);
- 	dmalen = le16_to_cpu(d1->dma.length);
-+	if (dmalen > sz) {
-+		wil_err(wil, "Rx size too large: %d bytes!\n", dmalen);
-+		kfree(skb);
-+		return NULL;
-+	}
- 	skb_trim(skb, dmalen);
+ 		ok = gcry_pk_verify(signature, data, rsa) == 0;
++		gcry_mpi_release(mpi_e);
++		gcry_mpi_release(mpi_n);
+ 		gcry_sexp_release(rsa);
+ 	}
  
- 	wil->stats.last_mcs_rx = wil_rxdesc_mcs(d1);
-@@ -364,8 +370,6 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
- 	wil_hex_dump_txrx("Rx ", DUMP_PREFIX_NONE, 32, 4,
- 			  (const void *)d, sizeof(*d), false);
- 
--	wil_vring_advance_head(vring, 1);
--
- 	/* no extra checks if in sniffer mode */
- 	if (ndev->type != ARPHRD_ETHER)
- 		return skb;
 -- 
-1.8.1.2
+1.7.10.4
 
