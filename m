@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:37397 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755382Ab3EQPj1 (ORCPT
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:41021 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801Ab3EaCMI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 11:39:27 -0400
-Received: by mail-wi0-f174.google.com with SMTP id c10so553349wiw.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 May 2013 08:39:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130517095825.GA1555@pandem0nium>
-References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	<CAJ-VmonrfSx6KLjNdPwtV_8q=Jmjz9KRSYmoLSXt7yocU=y35A@mail.gmail.com>
-	<20130516114028.GA27887@pandem0nium>
-	<CAJ-Vmo=39cS38UCDeQrdJ7x-t=cyr8cnsf3G2opxyeY3KzWLUg@mail.gmail.com>
-	<20130517095825.GA1555@pandem0nium>
-Date: Fri, 17 May 2013 08:39:19 -0700
-Message-ID: <CAJ-Vmomy+Dy878GcZYtqaFYOnaRaB=zYUXGdbKi44_-KPU-RKw@mail.gmail.com> (sfid-20130517_173933_347200_C073AF83)
-Subject: Re: [PATCHv2 00/18] Add support for 5 and 10 MHz channels
-From: Adrian Chadd <adrian@freebsd.org>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Thu, 30 May 2013 22:12:08 -0400
+Received: by mail-pd0-f181.google.com with SMTP id bv13so1374329pdb.26
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:12:07 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 33/40] crda: fix spacing on reglib_for_each_country()
+Date: Thu, 30 May 2013 19:09:22 -0700
+Message-Id: <1369966169-23640-34-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042938_659678_04CA415C)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 May 2013 02:58, Simon Wunderlich
-<simon.wunderlich@s2003.tu-chemnitz.de> wrote:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-> Maybe I can do the same for the Linux IEs too, just for reference.
-> We basically enable it only if 802.11a or g is supported (802.11b is not
-> supported), and announce OFDM only rates. The rates are divided by two or
-> four (for 10 and 5 MHz), and rounded up. That's pretty much the only
-> thing which is changed to 20 MHz.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ reglib.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Cool. I'll do it over the weekend. I'm currently at BSDCan 2013 fixing
-and talking about wifi stuff. :-)
+diff --git a/reglib.h b/reglib.h
+index 8a31e0d..d89fcd5 100644
+--- a/reglib.h
++++ b/reglib.h
+@@ -76,9 +76,9 @@ int reglib_verify_db_signature(uint8_t *db, int dblen, int siglen);
+ const struct ieee80211_regdomain *
+ reglib_get_rd_idx(unsigned int idx, const char *file);
+ 
+-#define reglib_for_each_country(__rd, __idx, __file)			\
++#define reglib_for_each_country(__rd, __idx, __file)		\
+ 	for (__rd = reglib_get_rd_idx(__idx, __file);		\
+-	     __rd != NULL;						\
++	     __rd != NULL;					\
+ 	     __rd = reglib_get_rd_idx(++__idx, __file))		\
+ 
+ const struct ieee80211_regdomain *
+-- 
+1.7.10.4
 
-> BTW, how is HT handled for narrow channels in FreeBSD? Do you just send
-> HT IEs as they are in 20 MHz? Also, do you disable secondary channels?
-> (I would probably do that, using two adjacent 5 MHz channels should be
-> replaceable by one 10 MHz channel ...)
-
-I haven't enabled 11n half/quarter rate channels yet. Yeah, I intend
-to leave the MCS IE's alone, as the MCS rates are a bitmap. I won't
-disable HT40 but it wouldn't make sense to configure it.
-
-(But who knows, people do odd crap.)
-
-
-
-Adrian
