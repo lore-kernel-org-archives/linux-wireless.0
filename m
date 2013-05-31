@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f53.google.com ([209.85.128.53]:37627 "EHLO
-	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753506Ab3EGGQV (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:35741 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751746Ab3EaRVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 02:16:21 -0400
-Received: by mail-qe0-f53.google.com with SMTP id cz11so107187qeb.26
-        for <linux-wireless@vger.kernel.org>; Mon, 06 May 2013 23:16:20 -0700 (PDT)
+	Fri, 31 May 2013 13:21:37 -0400
+Message-ID: <51A8DC1C.1040908@candelatech.com> (sfid-20130531_192143_291284_FB196B0A)
+Date: Fri, 31 May 2013 10:21:32 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <5187C502.10407@gmail.com>
-References: <5187C502.10407@gmail.com>
-Date: Tue, 7 May 2013 09:16:20 +0300
-Message-ID: <CAApCBGwp8NDsAYDzFc8_Pgx09anYoW894cygqNF55vV_-6dq6Q@mail.gmail.com> (sfid-20130507_081626_584504_C1332FB1)
-Subject: Re: RT5390 rev 0503 problems
-From: wireless newbie <wnewbie72@gmail.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: Another try at getting pktgen to work with wifi.
+References: <51A79E4A.7000609@candelatech.com> <51A7B049.9090201@openwrt.org> <51A7BA63.4080403@candelatech.com> <51A857BF.7070008@openwrt.org>
+In-Reply-To: <51A857BF.7070008@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, that is exactly the same patch that I used. It does it's job
-fixing my signal levels with one antenna. I was just wondering if
-there could be something
-else that is different with this revision, because the performance
-seems to be worse than with rt3070 on same environment.
-
-2013/5/6 Xose Vazquez Perez <xose.vazquez@gmail.com>:
-> wireless newbie wrote:
->
->> Has anyone experience with Ralink RT5390 chip with revision 0503? I
->> have that chip on my wireless usb module (WPER-172gn). I'm able to use
->> only one antenna with it but it has very poor rx signal level that
->> way. Adding second antenna for testing purposes clearly improves rx
->> level but that is no option for me.
+On 05/31/2013 12:56 AM, Felix Fietkau wrote:
+> On 2013-05-30 10:45 PM, Ben Greear wrote:
+>> On 05/30/2013 01:02 PM, Felix Fietkau wrote:
+>>> On 2013-05-30 8:45 PM, Ben Greear wrote:
+>>>> I'm trying to come up with a more acceptable patch to the problem discussed a few years
+>>>> ago:
+>>>>
+>>>> http://thread.gmane.org/gmane.linux.kernel.wireless.general/64582/focus=64626
+>>>>
+>>>> The patch below appears to work as expected.  In pktgen, you just have to set
+>>>> the QoS to whatever value matches the queue you need.
+>>>>
+>>>> This seem reasonable?
+>>> Why do you adjust the queue mapping instead of the skb priority? In that
+>>> other thread you mentioned that pktgen should be able to control the
+>>> queue, yet here you're taking queue control away from it for tx on mac80211.
 >>
->> I noticed in the list that someone had same sort of problem with
->> rt5390 rev 1502. Problem was hardware antenna diversity that wasn't
->> handled properly on the driver. Driver patch was provided to fix that.
->> I applied those same changes for rev 0503 and that solved my rx level
->> problem too.
+>> I was having trouble getting it to work, but I was trying it at
+>> a different place in the code when I was hacking on it...
+>>
+>> Do you think I'd just need to adjust skb->priority in the
+>> same spot in the code, or is there more to it?
+> I think that could work.
+
+[added netdev to CC list]
+
+Before I go work on this, does anyone have any preference over
+whether pktgen packets should obey the QoS or the xmit-queue?
+
+Currently, the kernel is effectively broken, and has been for years,
+so probably no one has ever used pktgen with wifi devices.
+
+As it turns out, mapping QoS appears to work best for my own needs,
+but I can also try using the skb->priority as Felix suggests.
+
+If no one cares, then I'd prefer to stick with the QoS method I posted
+recently, and ignore the xmit-queue that pktgen might select.
+
+Thanks,
+Ben
+
 >
-> is it like this ?
-> http://marc.info/?l=linux-wireless&m=134136097328697
+> - Felix
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
