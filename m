@@ -1,114 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:36116 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759139Ab3EOOTd (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:54097 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561Ab3EaCLd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:19:33 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2 00/18] Add support for 5 and 10 MHz channels
-Date: Wed, 15 May 2013 16:18:51 +0200
-Message-Id: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130515_162018_958002_718BF24D)
+	Thu, 30 May 2013 22:11:33 -0400
+Received: by mail-pd0-f177.google.com with SMTP id u11so1368675pdi.8
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:11:33 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 25/40] crda: make print-regdom use internal flags
+Date: Thu, 30 May 2013 19:09:14 -0700
+Message-Id: <1369966169-23640-26-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042937_176005_555CB89B)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds support for 5 and 10 MHz in nl80211/cfg80211/mac80211
-and enables support in ath5k and ath9k, which already support this feature
-on the driver side. 5 and 10 MHz wide channels might be useful for:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
- * long shot links, as the transmissions are more robust
- * future support for 802.11y which allows some 5 and 10 MHz channels in
-   3.6 GHz range
- * future support for 802.11p which uses 10 MHz in 5.9 GHz range
- * ... and more "special" applications.
+Do not rely on nl80211.h for general regulatory db parsing.
+Its best to use our own OS agnostic definitions.
 
-This patchset enables 5 and 10 MHz channels only for OFDM, and without
-HT/MIMO/aggregation (for now). Support may be added later.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ print-regdom.c |   31 +++++++++++++++----------------
+ 1 file changed, 15 insertions(+), 16 deletions(-)
 
-Changes to PATCHv1:
- * the actual datarates are handled, not the corresponding 20MHz rates
-   as before. This should make it compatible to freebsd, although I was
-   informed that some other implementors might still use the corresponding
-   20MHz rates. Anyway, from looking at the standard using the actual rates
-   should be the right thing to do.
- * txpower is decremented according to channel bandwidth (the regulation I
-   checked all define limits in dBm/MHz)
- * radiotap support for 5/10 MHz channel flag was added
- * some fixes for ath5k/ath9k were included to make them interoperable
-   (having the same SIFS improved performance quite well, 
-    300kbps -> 6600 kbps for 5 MHz channels :) )
-
-As always, any comments are appreciated!
-Cheers,
-        Simon
-
-Simon Wunderlich (18):
-  nl80211/cfg80211: add 5 and 10 MHz defines and wiphy flag
-  nl80211: add half/quarter channel bitrate tables to supported band
-    struct
-  mac80211: fix various components for the new 5 and 10 MHz widths
-  mac80211: fix timing for 5 MHz and 10 MHz channels
-  mac80211: round rates to the next multiple of 500kbps
-  mac80211: choose bitrate table according to bandwidth
-  mac80211: add radiotap flag and handling for 5/10 MHz
-  cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
-  mac80211: change IBSS channel state to chandef
-  nl80211: allow 5 and 10 MHz channels for IBSS
-  ath9k: always use SIFS times from OFDM for 5/10 MHz
-  ath9k: use chandef instead of channel_type
-  ath9k: add and use 5/10 MHz bitrate tables
-  ath9k: report 5/10 MHz channels
-  ath9k: announce that ath9k supports 5/10 MHz
-  ath5k: add and use 5/10 MHz bitrate tables
-  ath5k: report 5/10 MHz channels
-  ath5k: enable support for 5 MHz and 10 MHz channels
-
- drivers/net/wireless/ath/ath5k/ath5k.h        |   11 +-
- drivers/net/wireless/ath/ath5k/base.c         |  133 +++++++++++++++++++++---
- drivers/net/wireless/ath/ath5k/base.h         |    2 +-
- drivers/net/wireless/ath/ath5k/debug.c        |   23 ++++-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
- drivers/net/wireless/ath/ath5k/pcu.c          |   30 +++++-
- drivers/net/wireless/ath/ath5k/qcu.c          |   23 ++++-
- drivers/net/wireless/ath/ath9k/beacon.c       |   13 ++-
- drivers/net/wireless/ath/ath9k/common.c       |   67 +++++++-----
- drivers/net/wireless/ath/ath9k/common.h       |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    5 +-
- drivers/net/wireless/ath/ath9k/hw.c           |    5 +-
- drivers/net/wireless/ath/ath9k/init.c         |   68 +++++++++---
- drivers/net/wireless/ath/ath9k/main.c         |    8 +-
- drivers/net/wireless/ath/ath9k/rc.c           |   13 ++-
- drivers/net/wireless/ath/ath9k/recv.c         |   24 ++++-
- drivers/net/wireless/ath/ath9k/xmit.c         |   14 ++-
- include/net/cfg80211.h                        |   66 ++++++++++++
- include/net/ieee80211_radiotap.h              |    4 +
- include/net/mac80211.h                        |   40 ++++++-
- include/uapi/linux/nl80211.h                  |    4 +
- net/mac80211/cfg.c                            |   50 +++++++--
- net/mac80211/ibss.c                           |   58 +++++++----
- net/mac80211/ieee80211_i.h                    |   47 ++++++++-
- net/mac80211/iface.c                          |    7 +-
- net/mac80211/main.c                           |    7 +-
- net/mac80211/mesh.c                           |    4 +-
- net/mac80211/mesh_plink.c                     |   18 +++-
- net/mac80211/mlme.c                           |   84 ++++++++++-----
- net/mac80211/rate.c                           |  102 ++++++++++++------
- net/mac80211/rc80211_minstrel.c               |   59 +++++++----
- net/mac80211/rc80211_minstrel_ht.c            |   26 +++--
- net/mac80211/rc80211_pid.h                    |    2 +
- net/mac80211/rc80211_pid_algo.c               |   68 +++++++++---
- net/mac80211/rx.c                             |   52 +++++++---
- net/mac80211/status.c                         |   18 +++-
- net/mac80211/tx.c                             |   43 ++++++--
- net/mac80211/util.c                           |  138 +++++++++++++++++++------
- net/wireless/chan.c                           |   57 ++++++++--
- net/wireless/nl80211.c                        |   23 ++++-
- net/wireless/util.c                           |   58 +++++++++++
- 41 files changed, 1179 insertions(+), 300 deletions(-)
-
+diff --git a/print-regdom.c b/print-regdom.c
+index ab122db..68c7b4e 100644
+--- a/print-regdom.c
++++ b/print-regdom.c
+@@ -3,20 +3,19 @@
+ #include <string.h>
+ #include <arpa/inet.h>
+ 
+-#include "nl80211.h"
+-
+ #include "reglib.h"
++#include "regdb.h"
+ 
+-static const char *dfs_domain_name(enum nl80211_dfs_regions region)
++static const char *dfs_domain_name(enum regdb_dfs_regions region)
+ {
+ 	switch (region) {
+-	case NL80211_DFS_UNSET:
++	case REGDB_DFS_UNSET:
+ 		return "DFS-UNSET";
+-	case NL80211_DFS_FCC:
++	case REGDB_DFS_FCC:
+ 		return "DFS-FCC";
+-	case NL80211_DFS_ETSI:
++	case REGDB_DFS_ETSI:
+ 		return "DFS-ETSI";
+-	case NL80211_DFS_JP:
++	case REGDB_DFS_JP:
+ 		return "DFS-JP";
+ 	default:
+ 		return "DFS-invalid";
+@@ -48,23 +47,23 @@ static void print_reg_rule(const struct ieee80211_reg_rule *rule)
+ 	else
+ 		printf("N/A)");
+ 
+-	if (rule->flags & NL80211_RRF_NO_OFDM)
++	if (rule->flags & RRF_NO_OFDM)
+ 		printf(", NO-OFDM");
+-	if (rule->flags & NL80211_RRF_NO_CCK)
++	if (rule->flags & RRF_NO_CCK)
+ 		printf(", NO-CCK");
+-	if (rule->flags & NL80211_RRF_NO_INDOOR)
++	if (rule->flags & RRF_NO_INDOOR)
+ 		printf(", NO-INDOOR");
+-	if (rule->flags & NL80211_RRF_NO_OUTDOOR)
++	if (rule->flags & RRF_NO_OUTDOOR)
+ 		printf(", NO-OUTDOOR");
+-	if (rule->flags & NL80211_RRF_DFS)
++	if (rule->flags & RRF_DFS)
+ 		printf(", DFS");
+-	if (rule->flags & NL80211_RRF_PTP_ONLY)
++	if (rule->flags & RRF_PTP_ONLY)
+ 		printf(", PTP-ONLY");
+-	if (rule->flags & NL80211_RRF_PTMP_ONLY)
++	if (rule->flags & RRF_PTMP_ONLY)
+ 		printf(", PTMP-ONLY");
+-	if (rule->flags & NL80211_RRF_PASSIVE_SCAN)
++	if (rule->flags & RRF_PASSIVE_SCAN)
+ 		printf(", PASSIVE-SCAN");
+-	if (rule->flags & NL80211_RRF_NO_IBSS)
++	if (rule->flags & RRF_NO_IBSS)
+ 		printf(", NO-IBSS");
+ 
+ 	printf("\n");
 -- 
 1.7.10.4
 
