@@ -1,85 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:46821 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757973Ab3ECJ5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 May 2013 05:57:53 -0400
-Date: Fri, 3 May 2013 11:57:50 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [rfkill] Add NFC support
-Message-ID: <20130503095750.GN4563@zurbaran> (sfid-20130503_115757_742221_6076606B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:42701 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561Ab3EaCMY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 May 2013 22:12:24 -0400
+Received: by mail-pb0-f47.google.com with SMTP id rr4so1387742pbb.34
+        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:12:24 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 37/40] crda: move regdbprint to its own helper
+Date: Thu, 30 May 2013 19:09:26 -0700
+Message-Id: <1369966169-23640-38-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_042938_960079_D509E1D9)
+In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill.h is synced with the kernel header, man page is updated and
-RFKILL_TYPE_NFC is mapped to "nfc".
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
+We'll later move this to reglib but first we have
+to clean up the print utility to make it more general.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- rfkill.8 |    2 +-
- rfkill.c |    3 +++
- rfkill.h |    2 ++
- 3 files changed, 6 insertions(+), 1 deletion(-)
+ regdbdump.c |   25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/rfkill.8 b/rfkill.8
-index aa11fde..24baccc 100644
---- a/rfkill.8
-+++ b/rfkill.8
-@@ -24,7 +24,7 @@ or just all of the given type.
- .BI block " index|type"
- Disable the device corresponding to the given index.
- \fItype\fR is one of "all", "wifi", "wlan", "bluetooth", "uwb",
--"ultrawideband", "wimax", "wwan", "gps" or "fm".
-+"ultrawideband", "wimax", "wwan", "gps", "fm" or "nfc".
- .TP
- .BI unblock " index|type"
- Enable the device corresponding to the given index. If the device is
-diff --git a/rfkill.c b/rfkill.c
-index bda649a..b2672ee 100644
---- a/rfkill.c
-+++ b/rfkill.c
-@@ -111,6 +111,8 @@ static const char *type2string(enum rfkill_type type)
- 		return "GPS";
- 	case RFKILL_TYPE_FM:
- 		return "FM";
-+	case RFKILL_TYPE_NFC:
-+		return "NFC";
- 	case NUM_RFKILL_TYPES:
- 		return NULL;
+diff --git a/regdbdump.c b/regdbdump.c
+index ea14730..edf3e7c 100644
+--- a/regdbdump.c
++++ b/regdbdump.c
+@@ -2,26 +2,35 @@
+ #include <errno.h>
+ #include "reglib.h"
+ 
+-int main(int argc, char **argv)
++static int reglib_regdbdump(char *regdb_file)
+ {
+ 	const struct ieee80211_regdomain *rd = NULL;
+ 	unsigned int idx = 0;
+ 
+-	if (argc != 2) {
+-		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+-		return 2;
+-	}
+-
+-	reglib_for_each_country(rd, idx, argv[1]) {
++	reglib_for_each_country(rd, idx, regdb_file) {
+ 		reglib_print_regdom(rd);
+ 		free((struct ieee80211_regdomain *) rd);
  	}
-@@ -133,6 +135,7 @@ static const struct rfkill_type_str rfkill_type_strings[] = {
- 	{	.type = RFKILL_TYPE_WWAN,		.name = "wwan"	},
- 	{	.type = RFKILL_TYPE_GPS,		.name = "gps"	},
- 	{	.type = RFKILL_TYPE_FM,			.name = "fm"	},
-+	{	.type = RFKILL_TYPE_NFC,		.name = "nfc"	},
- 	{	.name = NULL }
- };
  
-diff --git a/rfkill.h b/rfkill.h
-index 97059d0..d253b4e 100644
---- a/rfkill.h
-+++ b/rfkill.h
-@@ -37,6 +37,7 @@
-  * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
-  * @RFKILL_TYPE_GPS: switch is on a GPS device.
-  * @RFKILL_TYPE_FM: switch is on a FM radio device.
-+ * @RFKILL_TYPE_NFC: switch is on an NFC device.
-  * @NUM_RFKILL_TYPES: number of defined rfkill types
-  */
- enum rfkill_type {
-@@ -48,6 +49,7 @@ enum rfkill_type {
- 	RFKILL_TYPE_WWAN,
- 	RFKILL_TYPE_GPS,
- 	RFKILL_TYPE_FM,
-+	RFKILL_TYPE_NFC,
- 	NUM_RFKILL_TYPES,
- };
+ 	if (!idx) {
+-		printf("Invalid or empty regulatory file, note: "
++		fprintf(stderr, "Invalid or empty regulatory file, note: "
+ 		       "a binary regulatory file should be used.\n");
+ 		return -EINVAL;
+ 	}
  
+ 	return 0;
+ }
++
++int main(int argc, char **argv)
++{
++	int r;
++
++	if (argc != 2) {
++		fprintf(stderr, "Usage: %s <regulatory-binary-file>\n", argv[0]);
++		return 2;
++	}
++
++	r = reglib_regdbdump(argv[1]);
++
++	return r;
++}
 -- 
 1.7.10.4
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
