@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:63704 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752812Ab3FDJzk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 05:55:40 -0400
-Received: by mail-qa0-f41.google.com with SMTP id bn16so2415668qab.7
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2013 02:55:39 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33564 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751326Ab3FASGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jun 2013 14:06:51 -0400
+Message-ID: <51AA3832.2070605@hauke-m.de> (sfid-20130601_200657_584923_E6208459)
+Date: Sat, 01 Jun 2013 20:06:42 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <CADaB71PpUQar24AN4PtpVwACFVq-=VsbOsqUahPW=eh4wdpjLA@mail.gmail.com>
-References: <CADaB71PpUQar24AN4PtpVwACFVq-=VsbOsqUahPW=eh4wdpjLA@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 4 Jun 2013 19:55:19 +1000
-Message-ID: <CAGRGNgXj8jCgDgvewgm1=QPsUwAKcgWYT-jne0tpnhH_M1GO_w@mail.gmail.com> (sfid-20130604_115543_806843_F60D7ABA)
-Subject: Re: I can't download "Intel(R) PRO/Wireless 2200BG Driver for Linux"
-To: Hyun-Su Lim <hyunsu.lim2@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+To: =?ISO-8859-1?Q?Marc_Mar=ED?= <5.markmb.5@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Intel Centrino Advanced N 6200 and Debian 7
+References: <CA+nFU8T5Ja9jg_E7=Y4TbsT+OxJfNy=x18CMm3VUA9BcKb1+WA@mail.gmail.com>
+In-Reply-To: <CA+nFU8T5Ja9jg_E7=Y4TbsT+OxJfNy=x18CMm3VUA9BcKb1+WA@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hyunsu,
+On 06/01/2013 07:57 PM, Marc Marí wrote:
+> Hello everyone
+> 
+> I recently changed my wireless card from a Broadcom (very bad
+> supported) to a Intel Centrino Advanced N 6200. In Fedora, it works
+> well, but I prefer Debian, and I'll change again, but in a Debian 7
+> live CD (I need my laptop, so I can't stay several days with a half
+> installation) the wifi doesn't work (kernel 3.2.0-4). This is the
+> error
+> 
+> Jun  1 17:36:54 localhost kernel: [ 1355.505261] iwlwifi 0000:03:00.0:
+> Unsupported (too old) EEPROM VER=0x416 < 0x423 CALIB=0x5 < 0x4
 
-On Tue, Jun 4, 2013 at 4:56 PM, Hyun-Su Lim <hyunsu.lim2@gmail.com> wrote:
-> Dear..
->
-> I'm trying to find a driver of Intel(R) PRO/Wireless 2915ABG Network
-> Connection to use wireless network in my old laptop with Fedora18.
-> Very pleased to find Intel® PRO/Wireless 2200BG Driver for Linux and
-> followed your webpage but failed to get download files.
-> Because the download page didn't open at
-> http://ipw2200.sourceforge.net/firmware.php?i_agree_to_the_license=yes&f=ipw2200-fw-3.1.tgz.
-> I hope you can receive this e-mail and hope to get the driver which
-> can only solve this network connection problem.
+This looks like you bought an engineering sample and not a device that
+should be sold to end users. This device is not supported and you
+probably have to buy a different one.
 
-I believe that Fedora provides a package with this firmware in it, you
-should install that.
+> Jun  1 17:36:54 localhost kernel: [ 1355.505393] iwlwifi: probe of
+> 0000:03:00.0 failed with error -22
+> 
+> Searching the web, it seems that the error is not very common, but is
+> a weird thing, so I am asking for any support in this.
+> 
+> Thank you in advance
+> Marc
 
-Thanks,
-
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
