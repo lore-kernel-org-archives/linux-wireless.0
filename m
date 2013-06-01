@@ -1,652 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:49918 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752402Ab3F1TNR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:13:17 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 04/19] rt2x00: rt2800lib: add TX power configuration for RT3593
-Date: Fri, 28 Jun 2013 21:12:18 +0200
-Message-Id: <1372446753-11408-5-git-send-email-juhosg@openwrt.org> (sfid-20130628_211345_578525_0ACCEFBE)
-In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
-References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:36558 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756482Ab3FANUN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jun 2013 09:20:13 -0400
+Received: by mail-ie0-f172.google.com with SMTP id 17so6665489iea.3
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Jun 2013 06:20:12 -0700 (PDT)
+Date: Sat, 1 Jun 2013 09:19:16 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: johannes@sipsolutions.net, thomas@cozybit.com
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Subject: [PATCH] cfg80211: fix deadlock in cfg80211_leave_mesh()
+Message-ID: <20130601131916.GA2484@localhost> (sfid-20130601_152017_371934_0CE2FD30)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
+As of "cfg80211/mac80211: use cfg80211 wdev mutex in mac80211",
+mac80211 expects to be able to take the wdev mutex around sdata
+accesses.  This causes a recursive deadlock since
+__cfg80211_leave_mesh() already holds the wdev mutex.  Removing
+the sdata_lock() calls in ieee80211_stop_mesh() alone won't fix
+this, as the cancel_work_sync() in mesh runs the iface work,
+and various work items also want to take the wdev lock (not
+just in mesh, see e.g.  ieee80211_sta_rx_queued_mgmt().)
 
-References:
-  RTMPReadTxPwrPerRateExt in chips/rt3593.c
-  RT3593_AsicGetTxPowerOffset in chips/rt3593.c
+We don't seem to need the wdev lock held over rdev_leave_mesh()
+anyway, so drop it before calling.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Fixes:
+[   75.571222] =============================================
+[   75.571222] [ INFO: possible recursive locking detected ]
+[   75.571222] 3.10.0-rc1-a8cd57b+ #113 Not tainted
+[   75.571222] ---------------------------------------------
+[   75.571222] iw/2597 is trying to acquire lock:
+[   75.571222]  (&wdev->mtx){+.+.+.}, at: [<ffffffffa0115180>] ieee80211_stop_mesh+0x60/0x160 [mac80211]
+[   75.571222]
+[   75.571222] but task is already holding lock:
+[   75.571222]  (&wdev->mtx){+.+.+.}, at: [<ffffffffa0035fa5>] cfg80211_leave_mesh+0x35/0x370 [cfg80211]
+[   75.571222]
+[   75.571222] other info that might help us debug this:
+[   75.571222]  Possible unsafe locking scenario:
+[   75.571222]
+[   75.571222]        CPU0
+[   75.571222]        ----
+[   75.571222]   lock(&wdev->mtx);
+[   75.571222]   lock(&wdev->mtx);
+[   75.571222]
+[   75.571222]  *** DEADLOCK ***
+[   75.571222]
+[   75.571222]  May be due to missing lock nesting notation
+[   75.571222]
+[   75.571222] 4 locks held by iw/2597:
+[   75.571222]  #0:  (cb_lock){++++++}, at: [<ffffffff8165a4cd>] genl_rcv+0x1d/0x40
+[   75.571222]  #1:  (genl_mutex){+.+.+.}, at: [<ffffffff8165a997>] genl_lock+0x17/0x20
+[   75.571222]  #2:  (rtnl_mutex){+.+.+.}, at: [<ffffffff81638e47>] rtnl_lock+0x17/0x20
+[   75.571222]  #3:  (&wdev->mtx){+.+.+.}, at: [<ffffffffa0035fa5>] cfg80211_leave_mesh+0x35/0x370 [cfg80211]
+[   75.571222]
+[   75.571222] stack backtrace:
+[   75.571222] CPU: 1 PID: 2597 Comm: iw Not tainted 3.10.0-rc1-a8cd57b+ #113
+[   75.571222] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2007
+[   75.571222]  ffffffff82155790 ffff8800035c5768 ffffffff817b8335 ffff8800035c5868
+[   75.571222]  ffffffff810a3da2 0000000000000000 0000000000000000 0000000000000002
+[   75.571222]  0000000000000046 00000000035c5818 ffffffff82155790 ffff8800057e2360
+[   75.571222] Call Trace:
+[   75.571222]  [<ffffffff817b8335>] dump_stack+0x19/0x1b
+[   75.571222]  [<ffffffff810a3da2>] __lock_acquire+0xba2/0x1d30
+[   75.571222]  [<ffffffff817c0bed>] ? _raw_spin_unlock_irqrestore+0x4d/0x70
+[   75.571222]  [<ffffffff810a615d>] ? trace_hardirqs_on_caller+0x16d/0x200
+[   75.571222]  [<ffffffff810a568a>] lock_acquire+0x17a/0x200
+[   75.571222]  [<ffffffffa0115180>] ? ieee80211_stop_mesh+0x60/0x160 [mac80211]
+[   75.571222]  [<ffffffff817bd4fe>] mutex_lock_nested+0x6e/0x380
+[   75.571222]  [<ffffffffa0115180>] ? ieee80211_stop_mesh+0x60/0x160 [mac80211]
+[   75.571222]  [<ffffffffa00b26b2>] ? ieee80211_bss_info_change_notify+0x202/0x3d0 [mac80211]
+[   75.571222]  [<ffffffffa0115180>] ieee80211_stop_mesh+0x60/0x160 [mac80211]
+[   75.571222]  [<ffffffffa00d195d>] ieee80211_leave_mesh+0x1d/0x30 [mac80211]
+[   75.571222]  [<ffffffffa00360f8>] cfg80211_leave_mesh+0x188/0x370 [cfg80211]
+[   75.571222]  [<ffffffffa000dfb9>] nl80211_leave_mesh+0x19/0x20 [cfg80211]
+[   75.571222]  [<ffffffff8165a756>] genl_family_rcv_msg+0x266/0x2e0
+[   75.571222]  [<ffffffff8165a9a0>] ? genl_lock+0x20/0x20
+[   75.571222]  [<ffffffff8165aa2e>] genl_rcv_msg+0x8e/0xc0
+[   75.571222]  [<ffffffff8165a1ce>] netlink_rcv_skb+0x6e/0xd0
+[   75.571222]  [<ffffffff8165a4cd>] ? genl_rcv+0x1d/0x40
+[   75.571222]  [<ffffffff8165a4dc>] genl_rcv+0x2c/0x40
+[   75.571222]  [<ffffffff81659b6a>] netlink_unicast+0x11a/0x1f0
+[   75.571222]  [<ffffffff812a11b5>] ? sock_has_perm+0x5/0x1f0
+[   75.571222]  [<ffffffff81659f4d>] netlink_sendmsg+0x30d/0x360
+[   75.571222]  [<ffffffff8160f196>] sock_sendmsg+0xa6/0xd0
+[   75.571222]  [<ffffffff810a4fde>] ? lock_release_non_nested+0xae/0x2e0
+[   75.571222]  [<ffffffff8160f529>] __sys_sendmsg+0x369/0x390
+[   75.571222]  [<ffffffff81071723>] ? up_read+0x23/0x40
+[   75.571222]  [<ffffffff817c4e64>] ? __do_page_fault+0x4b4/0x570
+[   75.571222]  [<ffffffff8117d27d>] ? dput+0x13d/0x1d0
+[   75.571222]  [<ffffffff81184c6c>] ? fget_light+0x12c/0x430
+[   75.571222]  [<ffffffff8161084d>] SyS_sendmsg+0x4d/0x80
+[   75.571222]  [<ffffffff817c9e02>] system_call_fastpath+0x16/0x1b
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+
 ---
- drivers/net/wireless/rt2x00/rt2800.h    |  116 +++++++++
- drivers/net/wireless/rt2x00/rt2800lib.c |  425 ++++++++++++++++++++++++++++++-
- 2 files changed, 538 insertions(+), 3 deletions(-)
+I don't like dropping locks, but I can't see any races added by
+this -- join/leave are already serialized by rtnl and I didn't see
+leave_mesh using the wdev fields in a way that would matter -- but
+let me know if I missed something.  We could also split out the
+cancel_work_sync into a separate (unlocked) op but this approach
+seems simpler.  Thoughts?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 47aceae..7b7caeb 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1083,6 +1083,15 @@
- #define TX_PWR_CFG_0_9MBS		FIELD32(0x00f00000)
- #define TX_PWR_CFG_0_12MBS		FIELD32(0x0f000000)
- #define TX_PWR_CFG_0_18MBS		FIELD32(0xf0000000)
-+/* bits for 3T devices */
-+#define TX_PWR_CFG_0_CCK1_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_0_CCK1_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_0_CCK5_CH0		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_0_CCK5_CH1		FIELD32(0x0000f000)
-+#define TX_PWR_CFG_0_OFDM6_CH0		FIELD32(0x000f0000)
-+#define TX_PWR_CFG_0_OFDM6_CH1		FIELD32(0x00f00000)
-+#define TX_PWR_CFG_0_OFDM12_CH0		FIELD32(0x0f000000)
-+#define TX_PWR_CFG_0_OFDM12_CH1		FIELD32(0xf0000000)
+ net/wireless/mesh.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 5dfb289..6344a81 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -250,7 +250,9 @@ static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
+ 	if (!wdev->mesh_id_len)
+ 		return -ENOTCONN;
  
- /*
-  * TX_PWR_CFG_1:
-@@ -1096,6 +1105,15 @@
- #define TX_PWR_CFG_1_MCS1		FIELD32(0x00f00000)
- #define TX_PWR_CFG_1_MCS2		FIELD32(0x0f000000)
- #define TX_PWR_CFG_1_MCS3		FIELD32(0xf0000000)
-+/* bits for 3T devices */
-+#define TX_PWR_CFG_1_OFDM24_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_1_OFDM24_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_1_OFDM48_CH0		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_1_OFDM48_CH1		FIELD32(0x0000f000)
-+#define TX_PWR_CFG_1_MCS0_CH0		FIELD32(0x000f0000)
-+#define TX_PWR_CFG_1_MCS0_CH1		FIELD32(0x00f00000)
-+#define TX_PWR_CFG_1_MCS2_CH0		FIELD32(0x0f000000)
-+#define TX_PWR_CFG_1_MCS2_CH1		FIELD32(0xf0000000)
- 
- /*
-  * TX_PWR_CFG_2:
-@@ -1109,6 +1127,15 @@
- #define TX_PWR_CFG_2_MCS9		FIELD32(0x00f00000)
- #define TX_PWR_CFG_2_MCS10		FIELD32(0x0f000000)
- #define TX_PWR_CFG_2_MCS11		FIELD32(0xf0000000)
-+/* bits for 3T devices */
-+#define TX_PWR_CFG_2_MCS4_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_2_MCS4_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_2_MCS6_CH0		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_2_MCS6_CH1		FIELD32(0x0000f000)
-+#define TX_PWR_CFG_2_MCS8_CH0		FIELD32(0x000f0000)
-+#define TX_PWR_CFG_2_MCS8_CH1		FIELD32(0x00f00000)
-+#define TX_PWR_CFG_2_MCS10_CH0		FIELD32(0x0f000000)
-+#define TX_PWR_CFG_2_MCS10_CH1		FIELD32(0xf0000000)
- 
- /*
-  * TX_PWR_CFG_3:
-@@ -1122,6 +1149,15 @@
- #define TX_PWR_CFG_3_UKNOWN2		FIELD32(0x00f00000)
- #define TX_PWR_CFG_3_UKNOWN3		FIELD32(0x0f000000)
- #define TX_PWR_CFG_3_UKNOWN4		FIELD32(0xf0000000)
-+/* bits for 3T devices */
-+#define TX_PWR_CFG_3_MCS12_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_3_MCS12_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_3_MCS14_CH0		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_3_MCS14_CH1		FIELD32(0x0000f000)
-+#define TX_PWR_CFG_3_STBC0_CH0		FIELD32(0x000f0000)
-+#define TX_PWR_CFG_3_STBC0_CH1		FIELD32(0x00f00000)
-+#define TX_PWR_CFG_3_STBC2_CH0		FIELD32(0x0f000000)
-+#define TX_PWR_CFG_3_STBC2_CH1		FIELD32(0xf0000000)
- 
- /*
-  * TX_PWR_CFG_4:
-@@ -1131,6 +1167,11 @@
- #define TX_PWR_CFG_4_UKNOWN6		FIELD32(0x000000f0)
- #define TX_PWR_CFG_4_UKNOWN7		FIELD32(0x00000f00)
- #define TX_PWR_CFG_4_UKNOWN8		FIELD32(0x0000f000)
-+/* bits for 3T devices */
-+#define TX_PWR_CFG_3_STBC4_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_3_STBC4_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_3_STBC6_CH0		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_3_STBC6_CH1		FIELD32(0x0000f000)
- 
- /*
-  * TX_PIN_CFG:
-@@ -1452,6 +1493,81 @@
-  */
- #define EXP_ACK_TIME			0x1380
- 
-+/* TX_PWR_CFG_5 */
-+#define TX_PWR_CFG_5			0x1384
-+#define TX_PWR_CFG_5_MCS16_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_5_MCS16_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_5_MCS16_CH2		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_5_MCS18_CH0		FIELD32(0x000f0000)
-+#define TX_PWR_CFG_5_MCS18_CH1		FIELD32(0x00f00000)
-+#define TX_PWR_CFG_5_MCS18_CH2		FIELD32(0x0f000000)
-+
-+/* TX_PWR_CFG_6 */
-+#define TX_PWR_CFG_6			0x1388
-+#define TX_PWR_CFG_6_MCS20_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_6_MCS20_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_6_MCS20_CH2		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_6_MCS22_CH0		FIELD32(0x000f0000)
-+#define TX_PWR_CFG_6_MCS22_CH1		FIELD32(0x00f00000)
-+#define TX_PWR_CFG_6_MCS22_CH2		FIELD32(0x0f000000)
-+
-+/* TX_PWR_CFG_0_EXT */
-+#define TX_PWR_CFG_0_EXT		0x1390
-+#define TX_PWR_CFG_0_EXT_CCK1_CH2	FIELD32(0x0000000f)
-+#define TX_PWR_CFG_0_EXT_CCK5_CH2	FIELD32(0x00000f00)
-+#define TX_PWR_CFG_0_EXT_OFDM6_CH2	FIELD32(0x000f0000)
-+#define TX_PWR_CFG_0_EXT_OFDM12_CH2	FIELD32(0x0f000000)
-+
-+/* TX_PWR_CFG_1_EXT */
-+#define TX_PWR_CFG_1_EXT		0x1394
-+#define TX_PWR_CFG_1_EXT_OFDM24_CH2	FIELD32(0x0000000f)
-+#define TX_PWR_CFG_1_EXT_OFDM48_CH2	FIELD32(0x00000f00)
-+#define TX_PWR_CFG_1_EXT_MCS0_CH2	FIELD32(0x000f0000)
-+#define TX_PWR_CFG_1_EXT_MCS2_CH2	FIELD32(0x0f000000)
-+
-+/* TX_PWR_CFG_2_EXT */
-+#define TX_PWR_CFG_2_EXT		0x1398
-+#define TX_PWR_CFG_2_EXT_MCS4_CH2	FIELD32(0x0000000f)
-+#define TX_PWR_CFG_2_EXT_MCS6_CH2	FIELD32(0x00000f00)
-+#define TX_PWR_CFG_2_EXT_MCS8_CH2	FIELD32(0x000f0000)
-+#define TX_PWR_CFG_2_EXT_MCS10_CH2	FIELD32(0x0f000000)
-+
-+/* TX_PWR_CFG_3_EXT */
-+#define TX_PWR_CFG_3_EXT		0x139c
-+#define TX_PWR_CFG_3_EXT_MCS12_CH2	FIELD32(0x0000000f)
-+#define TX_PWR_CFG_3_EXT_MCS14_CH2	FIELD32(0x00000f00)
-+#define TX_PWR_CFG_3_EXT_STBC0_CH2	FIELD32(0x000f0000)
-+#define TX_PWR_CFG_3_EXT_STBC2_CH2	FIELD32(0x0f000000)
-+
-+/* TX_PWR_CFG_4_EXT */
-+#define TX_PWR_CFG_4_EXT		0x13a0
-+#define TX_PWR_CFG_4_EXT_STBC4_CH2	FIELD32(0x0000000f)
-+#define TX_PWR_CFG_4_EXT_STBC6_CH2	FIELD32(0x00000f00)
-+
-+/* TX_PWR_CFG_7 */
-+#define TX_PWR_CFG_7			0x13d4
-+#define TX_PWR_CFG_7_OFDM54_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_7_OFDM54_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_7_OFDM54_CH2		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_7_MCS7_CH0		FIELD32(0x000f0000)
-+#define TX_PWR_CFG_7_MCS7_CH1		FIELD32(0x00f00000)
-+#define TX_PWR_CFG_7_MCS7_CH2		FIELD32(0x0f000000)
-+
-+/* TX_PWR_CFG_8 */
-+#define TX_PWR_CFG_8			0x13d8
-+#define TX_PWR_CFG_8_MCS15_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_8_MCS15_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_8_MCS15_CH2		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_8_MCS23_CH0		FIELD32(0x000f0000)
-+#define TX_PWR_CFG_8_MCS23_CH1		FIELD32(0x00f00000)
-+#define TX_PWR_CFG_8_MCS23_CH2		FIELD32(0x0f000000)
-+
-+/* TX_PWR_CFG_9 */
-+#define TX_PWR_CFG_9			0x13dc
-+#define TX_PWR_CFG_9_STBC7_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_9_STBC7_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_9_STBC7_CH2		FIELD32(0x00000f00)
-+
- /*
-  * RX_FILTER_CFG: RX configuration register.
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 87b7f94..b6f456c 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3121,6 +3121,9 @@ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
- 	u8 eirp_txpower_criterion;
- 	u8 reg_limit;
- 
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		return min_t(u8, txpower, 0xc);
-+
- 	if (test_bit(CAPABILITY_POWER_LIMIT, &rt2x00dev->cap_flags)) {
- 		/*
- 		 * Check if eirp txpower exceed txpower_limit.
-@@ -3156,6 +3159,412 @@ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
- 	return min_t(u8, txpower, 0xc);
- }
- 
-+
-+enum {
-+	TX_PWR_CFG_0_IDX,
-+	TX_PWR_CFG_1_IDX,
-+	TX_PWR_CFG_2_IDX,
-+	TX_PWR_CFG_3_IDX,
-+	TX_PWR_CFG_4_IDX,
-+	TX_PWR_CFG_5_IDX,
-+	TX_PWR_CFG_6_IDX,
-+	TX_PWR_CFG_7_IDX,
-+	TX_PWR_CFG_8_IDX,
-+	TX_PWR_CFG_9_IDX,
-+	TX_PWR_CFG_0_EXT_IDX,
-+	TX_PWR_CFG_1_EXT_IDX,
-+	TX_PWR_CFG_2_EXT_IDX,
-+	TX_PWR_CFG_3_EXT_IDX,
-+	TX_PWR_CFG_4_EXT_IDX,
-+	TX_PWR_CFG_IDX_COUNT,
-+};
-+
-+static void rt2800_config_txpower_rt3593(struct rt2x00_dev *rt2x00dev,
-+					 struct ieee80211_channel *chan,
-+					 int power_level)
-+{
-+	u8 txpower;
-+	u16 eeprom;
-+	u32 regs[TX_PWR_CFG_IDX_COUNT];
-+	unsigned int offset;
-+	enum ieee80211_band band = chan->band;
-+	int delta;
-+	int i;
-+
-+	memset(regs, '\0', sizeof(regs));
-+
-+	/* TODO: adapt TX power reduction from the rt28xx code */
-+
-+	/* calculate temperature compensation delta */
-+	delta = rt2800_get_gain_calibration_delta(rt2x00dev);
-+
-+	if (band == IEEE80211_BAND_5GHZ)
-+		offset = 16;
-+	else
-+		offset = 0;
-+
-+	if (test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags))
-+		offset += 8;
-+
-+	/* read the next four txpower values */
-+	rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
-+				      offset, &eeprom);
-+
-+	/* CCK 1MBS,2MBS */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE0);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 1, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_IDX],
-+			   TX_PWR_CFG_0_CCK1_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_IDX],
-+			   TX_PWR_CFG_0_CCK1_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_EXT_IDX],
-+			   TX_PWR_CFG_0_EXT_CCK1_CH2, txpower);
-+
-+	/* CCK 5.5MBS,11MBS */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE1);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 1, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_IDX],
-+			   TX_PWR_CFG_0_CCK5_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_IDX],
-+			   TX_PWR_CFG_0_CCK5_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_EXT_IDX],
-+			   TX_PWR_CFG_0_EXT_CCK5_CH2, txpower);
-+
-+	/* OFDM 6MBS,9MBS */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE2);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_IDX],
-+			   TX_PWR_CFG_0_OFDM6_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_IDX],
-+			   TX_PWR_CFG_0_OFDM6_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_EXT_IDX],
-+			   TX_PWR_CFG_0_EXT_OFDM6_CH2, txpower);
-+
-+	/* OFDM 12MBS,18MBS */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE3);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_IDX],
-+			   TX_PWR_CFG_0_OFDM12_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_IDX],
-+			   TX_PWR_CFG_0_OFDM12_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_0_EXT_IDX],
-+			   TX_PWR_CFG_0_EXT_OFDM12_CH2, txpower);
-+
-+	/* read the next four txpower values */
-+	rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
-+				      offset + 1, &eeprom);
-+
-+	/* OFDM 24MBS,36MBS */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE0);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_IDX],
-+			   TX_PWR_CFG_1_OFDM24_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_IDX],
-+			   TX_PWR_CFG_1_OFDM24_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_EXT_IDX],
-+			   TX_PWR_CFG_1_EXT_OFDM24_CH2, txpower);
-+
-+	/* OFDM 48MBS */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE1);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_IDX],
-+			   TX_PWR_CFG_1_OFDM48_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_IDX],
-+			   TX_PWR_CFG_1_OFDM48_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_EXT_IDX],
-+			   TX_PWR_CFG_1_EXT_OFDM48_CH2, txpower);
-+
-+	/* OFDM 54MBS */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE2);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_7_IDX],
-+			   TX_PWR_CFG_7_OFDM54_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_7_IDX],
-+			   TX_PWR_CFG_7_OFDM54_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_7_IDX],
-+			   TX_PWR_CFG_7_OFDM54_CH2, txpower);
-+
-+	/* read the next four txpower values */
-+	rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
-+				      offset + 2, &eeprom);
-+
-+	/* MCS 0,1 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE0);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_IDX],
-+			   TX_PWR_CFG_1_MCS0_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_IDX],
-+			   TX_PWR_CFG_1_MCS0_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_EXT_IDX],
-+			   TX_PWR_CFG_1_EXT_MCS0_CH2, txpower);
-+
-+	/* MCS 2,3 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE1);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_IDX],
-+			   TX_PWR_CFG_1_MCS2_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_IDX],
-+			   TX_PWR_CFG_1_MCS2_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_1_EXT_IDX],
-+			   TX_PWR_CFG_1_EXT_MCS2_CH2, txpower);
-+
-+	/* MCS 4,5 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE2);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_IDX],
-+			   TX_PWR_CFG_2_MCS4_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_IDX],
-+			   TX_PWR_CFG_2_MCS4_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_EXT_IDX],
-+			   TX_PWR_CFG_2_EXT_MCS4_CH2, txpower);
-+
-+	/* MCS 6 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE3);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_IDX],
-+			   TX_PWR_CFG_2_MCS6_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_IDX],
-+			   TX_PWR_CFG_2_MCS6_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_EXT_IDX],
-+			   TX_PWR_CFG_2_EXT_MCS6_CH2, txpower);
-+
-+	/* read the next four txpower values */
-+	rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
-+				      offset + 3, &eeprom);
-+
-+	/* MCS 7 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE0);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_7_IDX],
-+			   TX_PWR_CFG_7_MCS7_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_7_IDX],
-+			   TX_PWR_CFG_7_MCS7_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_7_IDX],
-+			   TX_PWR_CFG_7_MCS7_CH2, txpower);
-+
-+	/* MCS 8,9 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE1);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_IDX],
-+			   TX_PWR_CFG_2_MCS8_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_IDX],
-+			   TX_PWR_CFG_2_MCS8_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_EXT_IDX],
-+			   TX_PWR_CFG_2_EXT_MCS8_CH2, txpower);
-+
-+	/* MCS 10,11 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE2);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_IDX],
-+			   TX_PWR_CFG_2_MCS10_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_IDX],
-+			   TX_PWR_CFG_2_MCS10_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_2_EXT_IDX],
-+			   TX_PWR_CFG_2_EXT_MCS10_CH2, txpower);
-+
-+	/* MCS 12,13 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE3);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_IDX],
-+			   TX_PWR_CFG_3_MCS12_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_IDX],
-+			   TX_PWR_CFG_3_MCS12_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_EXT_IDX],
-+			   TX_PWR_CFG_3_EXT_MCS12_CH2, txpower);
-+
-+	/* read the next four txpower values */
-+	rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
-+				      offset + 4, &eeprom);
-+
-+	/* MCS 14 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE0);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_IDX],
-+			   TX_PWR_CFG_3_MCS14_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_IDX],
-+			   TX_PWR_CFG_3_MCS14_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_EXT_IDX],
-+			   TX_PWR_CFG_3_EXT_MCS14_CH2, txpower);
-+
-+	/* MCS 15 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE1);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_8_IDX],
-+			   TX_PWR_CFG_8_MCS15_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_8_IDX],
-+			   TX_PWR_CFG_8_MCS15_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_8_IDX],
-+			   TX_PWR_CFG_8_MCS15_CH2, txpower);
-+
-+	/* MCS 16,17 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE2);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_5_IDX],
-+			   TX_PWR_CFG_5_MCS16_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_5_IDX],
-+			   TX_PWR_CFG_5_MCS16_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_5_IDX],
-+			   TX_PWR_CFG_5_MCS16_CH2, txpower);
-+
-+	/* MCS 18,19 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE3);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_5_IDX],
-+			   TX_PWR_CFG_5_MCS18_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_5_IDX],
-+			   TX_PWR_CFG_5_MCS18_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_5_IDX],
-+			   TX_PWR_CFG_5_MCS18_CH2, txpower);
-+
-+	/* read the next four txpower values */
-+	rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
-+				      offset + 5, &eeprom);
-+
-+	/* MCS 20,21 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE0);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_6_IDX],
-+			   TX_PWR_CFG_6_MCS20_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_6_IDX],
-+			   TX_PWR_CFG_6_MCS20_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_6_IDX],
-+			   TX_PWR_CFG_6_MCS20_CH2, txpower);
-+
-+	/* MCS 22 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE1);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_6_IDX],
-+			   TX_PWR_CFG_6_MCS22_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_6_IDX],
-+			   TX_PWR_CFG_6_MCS22_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_6_IDX],
-+			   TX_PWR_CFG_6_MCS22_CH2, txpower);
-+
-+	/* MCS 23 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE2);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_8_IDX],
-+			   TX_PWR_CFG_8_MCS23_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_8_IDX],
-+			   TX_PWR_CFG_8_MCS23_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_8_IDX],
-+			   TX_PWR_CFG_8_MCS23_CH2, txpower);
-+
-+	/* read the next four txpower values */
-+	rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
-+				      offset + 6, &eeprom);
-+
-+	/* STBC, MCS 0,1 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE0);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_IDX],
-+			   TX_PWR_CFG_3_STBC0_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_IDX],
-+			   TX_PWR_CFG_3_STBC0_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_EXT_IDX],
-+			   TX_PWR_CFG_3_EXT_STBC0_CH2, txpower);
-+
-+	/* STBC, MCS 2,3 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE1);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_IDX],
-+			   TX_PWR_CFG_3_STBC2_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_IDX],
-+			   TX_PWR_CFG_3_STBC2_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_3_EXT_IDX],
-+			   TX_PWR_CFG_3_EXT_STBC2_CH2, txpower);
-+
-+	/* STBC, MCS 4,5 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE2);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_4_IDX], TX_PWR_CFG_RATE0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_4_IDX], TX_PWR_CFG_RATE1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_4_EXT_IDX], TX_PWR_CFG_RATE0,
-+			   txpower);
-+
-+	/* STBC, MCS 6 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE3);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_4_IDX], TX_PWR_CFG_RATE2, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_4_IDX], TX_PWR_CFG_RATE3, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_4_EXT_IDX], TX_PWR_CFG_RATE2,
-+			   txpower);
-+
-+	/* read the next four txpower values */
-+	rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
-+				      offset + 7, &eeprom);
-+
-+	/* STBC, MCS 7 */
-+	txpower = rt2x00_get_field16(eeprom, EEPROM_TXPOWER_BYRATE_RATE0);
-+	txpower = rt2800_compensate_txpower(rt2x00dev, 0, band, power_level,
-+					    txpower, delta);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_9_IDX],
-+			   TX_PWR_CFG_9_STBC7_CH0, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_9_IDX],
-+			   TX_PWR_CFG_9_STBC7_CH1, txpower);
-+	rt2x00_set_field32(&regs[TX_PWR_CFG_9_IDX],
-+			   TX_PWR_CFG_9_STBC7_CH2, txpower);
-+
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_0, regs[TX_PWR_CFG_0_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_1, regs[TX_PWR_CFG_1_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_2, regs[TX_PWR_CFG_2_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_3, regs[TX_PWR_CFG_3_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_4, regs[TX_PWR_CFG_4_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_5, regs[TX_PWR_CFG_5_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_6, regs[TX_PWR_CFG_6_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_7, regs[TX_PWR_CFG_7_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_8, regs[TX_PWR_CFG_8_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_9, regs[TX_PWR_CFG_9_IDX]);
-+
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_0_EXT,
-+			      regs[TX_PWR_CFG_0_EXT_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_1_EXT,
-+			      regs[TX_PWR_CFG_1_EXT_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_2_EXT,
-+			      regs[TX_PWR_CFG_2_EXT_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_3_EXT,
-+			      regs[TX_PWR_CFG_3_EXT_IDX]);
-+	rt2800_register_write(rt2x00dev, TX_PWR_CFG_4_EXT,
-+			      regs[TX_PWR_CFG_4_EXT_IDX]);
-+
-+	for (i = 0; i < TX_PWR_CFG_IDX_COUNT; i++)
-+		rt2x00_dbg(rt2x00dev,
-+			   "band:%cGHz, BW:%c0MHz, TX_PWR_CFG_%d%s = %08lx\n",
-+			   (band == IEEE80211_BAND_5GHZ) ? '5' : '2',
-+			   (test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags)) ?
-+								'4' : '2',
-+			   (i > TX_PWR_CFG_9_IDX) ?
-+					(i - TX_PWR_CFG_9_IDX - 1) : i,
-+			   (i > TX_PWR_CFG_9_IDX) ? "_EXT" : "",
-+			   (unsigned long) regs[i]);
-+}
-+
- /*
-  * We configure transmit power using MAC TX_PWR_CFG_{0,...,N} registers and
-  * BBP R1 register. TX_PWR_CFG_X allow to configure per rate TX power values,
-@@ -3165,9 +3574,9 @@ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
-  * EEPROM_TXPOWER_BYRATE offset. We adjust them and BBP R1 settings according to
-  * current conditions (i.e. band, bandwidth, temperature, user settings).
-  */
--static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
--				  struct ieee80211_channel *chan,
--				  int power_level)
-+static void rt2800_config_txpower_rt28xx(struct rt2x00_dev *rt2x00dev,
-+					 struct ieee80211_channel *chan,
-+					 int power_level)
- {
- 	u8 txpower, r1;
- 	u16 eeprom;
-@@ -3339,6 +3748,16 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 	}
- }
- 
-+static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
-+				  struct ieee80211_channel *chan,
-+				  int power_level)
-+{
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		rt2800_config_txpower_rt3593(rt2x00dev, chan, power_level);
-+	else
-+		rt2800_config_txpower_rt28xx(rt2x00dev, chan, power_level);
-+}
-+
- void rt2800_gain_calibration(struct rt2x00_dev *rt2x00dev)
- {
- 	rt2800_config_txpower(rt2x00dev, rt2x00dev->hw->conf.chandef.chan,
++	wdev_unlock(wdev);
+ 	err = rdev_leave_mesh(rdev, dev);
++	wdev_lock(wdev);
+ 	if (!err) {
+ 		wdev->mesh_id_len = 0;
+ 		wdev->channel = NULL;
 -- 
-1.7.10
+1.7.10.4
 
+-- 
+Bob Copeland %% www.bobcopeland.com
