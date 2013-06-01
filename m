@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38363 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934714Ab3FSTaM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33483 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848Ab3FAMe1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 15:30:12 -0400
-Date: Wed, 19 Jun 2013 15:27:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [PATCH mac80211-next] brcm80211: fix null pointer access
-Message-ID: <20130619192714.GF12079@tuxdriver.com> (sfid-20130619_213016_984074_3B8D462C)
-References: <1371641731-1297-1-git-send-email-ordex@autistici.org>
+	Sat, 1 Jun 2013 08:34:27 -0400
+Cc: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ulf Samuelsson <ntp@emagii.com>
+Subject: Re: ath6kl_sdio blocked by RFKILL
+References: <51A4C6D6.1020002@emagii.com>
+Date: Sat, 1 Jun 2013 15:34:21 +0300
+In-Reply-To: <51A4C6D6.1020002@emagii.com> (Ulf Samuelsson's message of "Tue,
+	28 May 2013 17:01:42 +0200")
+Message-ID: <8738t2nh6a.fsf@kamboji.qca.qualcomm.com> (sfid-20130601_143429_560292_F7A9BA52)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1371641731-1297-1-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FWIW, driver fixes like this come to me rather than Johannes...
+Ulf Samuelsson <ntp@emagii.com> writes:
 
-On Wed, Jun 19, 2013 at 01:35:31PM +0200, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
-> 
-> Do not unconditionally access the chan variable in
-> brcmf_cfg80211_mgmt_tx() as it may be NULL.
-> Use freq instead.
-> 
-> Introduced by c2ff8cad64233b539c71a27e2a6e324001143ef0
-> ("brcm80211: make mgmt_tx in brcmfmac accept a NULL channel")
-> 
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> index 8bd256b..d316d62 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> @@ -3985,8 +3985,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
->  		       le16_to_cpu(action_frame->len));
->  
->  		brcmf_dbg(TRACE, "Action frame, cookie=%lld, len=%d, freq=%d\n",
-> -			  *cookie, le16_to_cpu(action_frame->len),
-> -			  chan->center_freq);
-> +			  *cookie, le16_to_cpu(action_frame->len), freq);
->  
->  		ack = brcmf_p2p_send_action_frame(cfg, cfg_to_ndev(cfg),
->  						  af_params);
-> -- 
-> 1.8.1.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Have built the ath6kl_sdio driver for an Cortex-A5 chip using the
+> linux-3.6.9 kernel
+> File system built using Yocto  and Busybox RF-Kill.
+>
+> Kernel Config contains:
+>
+> CONFIG_RFKILL=m
+> CONFIG_RFKILL_LEDS=y
+> CONFIG_RFKILL_INPUT=y
+> # CONFIG_RFKILL_GPIO is not set
+>
+> When I do
+>
+> # ifconfig wlan0 up.
+>
+> I get the error message:
+>
+> ifconfig: SIOCSIFFLAGS: Operation not possible due to RF-kill
+>
+> If I run "rfkill list" I get
+>
+> 1: phy1: wlan
+>         Soft blocked: yes
+>         Hard blocked: no
+>
+>
+> If I try to unblock using "rfkill unblock all" or "wifi" or "wlan",
+> the soft block remains.
+
+Have you tried "rfkill unblock 1"?
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
