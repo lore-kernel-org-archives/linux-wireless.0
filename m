@@ -1,40 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58173 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753109Ab3FDPEL (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:60751 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839Ab3FAHYJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 11:04:11 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v9] P2P find phase offload
-Date: Tue, 4 Jun 2013 18:03:10 +0300
-Message-ID: <1370358191-7103-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130604_170414_083585_5F1CC95D)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 1 Jun 2013 03:24:09 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: "'David S. Miller'" <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	'Jouni Malinen' <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	'Larry Finger' <Larry.Finger@lwfinger.net>,
+	'Chaoming Li' <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] net: wireless: replace strict_strtoul() with kstrtoul()
+Date: Sat, 01 Jun 2013 16:24:06 +0900
+Message-id: <000f01ce5e99$00617fc0$01247f40$@samsung.com> (sfid-20130601_092415_266027_C503405F)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- add listen_channel
-- comment on channel set assumption (either missing or non-empty set)
-- document expected behavior for p2p_find conflict with scan/ROC
-- document probe/probe-resp reporting assumption
-- remove check for genlmsg_end return value
+The usage of strict_strtoul() is not preferred, because
+strict_strtoul() is obsolete. Thus, kstrtoul() should be
+used.
 
-Vladimir Kondratiev (1):
-  cfg80211: P2P find phase offload
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c         |   14 +++++++-------
+ drivers/net/wireless/ath/ath9k/dfs_debug.c     |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |    2 +-
+ drivers/net/wireless/iwlegacy/3945-mac.c       |    2 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c       |    4 ++--
+ drivers/net/wireless/libertas/mesh.c           |    2 +-
+ drivers/net/wireless/rtlwifi/base.c            |    2 +-
+ 7 files changed, 14 insertions(+), 14 deletions(-)
 
- include/net/cfg80211.h       |  72 +++++++++++++++++
- include/uapi/linux/nl80211.h |  15 ++++
- net/wireless/nl80211.c       | 181 +++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      |  19 +++++
- net/wireless/trace.h         |  42 ++++++++++
- 5 files changed, 329 insertions(+)
-
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 53c0658..0399c897 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -69,7 +69,7 @@ static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
+ 		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+-	if (strict_strtoul(buf, 0, &mask))
++	if (kstrtoul(buf, 0, &mask))
+ 		return -EINVAL;
+ 
+ 	common->debug_mask = mask;
+@@ -114,7 +114,7 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
+ 		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+-	if (strict_strtoul(buf, 0, &mask))
++	if (kstrtoul(buf, 0, &mask))
+ 		return -EINVAL;
+ 
+ 	ah->txchainmask = mask;
+@@ -157,7 +157,7 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
+ 		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+-	if (strict_strtoul(buf, 0, &mask))
++	if (kstrtoul(buf, 0, &mask))
+ 		return -EINVAL;
+ 
+ 	ah->rxchainmask = mask;
+@@ -200,7 +200,7 @@ static ssize_t write_file_disable_ani(struct file *file,
+ 		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+-	if (strict_strtoul(buf, 0, &disable_ani))
++	if (kstrtoul(buf, 0, &disable_ani))
+ 		return -EINVAL;
+ 
+ 	common->disable_ani = !!disable_ani;
+@@ -253,7 +253,7 @@ static ssize_t write_file_ant_diversity(struct file *file,
+ 		goto exit;
+ 
+ 	buf[len] = '\0';
+-	if (strict_strtoul(buf, 0, &antenna_diversity))
++	if (kstrtoul(buf, 0, &antenna_diversity))
+ 		return -EINVAL;
+ 
+ 	common->antenna_diversity = !!antenna_diversity;
+@@ -1223,7 +1223,7 @@ static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
+ 		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+-	if (strict_strtoul(buf, 0, &regidx))
++	if (kstrtoul(buf, 0, &regidx))
+ 		return -EINVAL;
+ 
+ 	sc->debug.regidx = regidx;
+@@ -1268,7 +1268,7 @@ static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
+ 		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+-	if (strict_strtoul(buf, 0, &regval))
++	if (kstrtoul(buf, 0, &regval))
+ 		return -EINVAL;
+ 
+ 	ath9k_ps_wakeup(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/dfs_debug.c b/drivers/net/wireless/ath/ath9k/dfs_debug.c
+index b7611b7..3c6e413 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs_debug.c
++++ b/drivers/net/wireless/ath/ath9k/dfs_debug.c
+@@ -96,7 +96,7 @@ static ssize_t write_file_dfs(struct file *file, const char __user *user_buf,
+ 		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+-	if (strict_strtoul(buf, 0, &val))
++	if (kstrtoul(buf, 0, &val))
+ 		return -EINVAL;
+ 
+ 	if (val == DFS_STATS_RESET_MAGIC)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 87110de5..d08ef24 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -471,7 +471,7 @@ static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
+ 		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+-	if (strict_strtoul(buf, 0, &mask))
++	if (kstrtoul(buf, 0, &mask))
+ 		return -EINVAL;
+ 
+ 	common->debug_mask = mask;
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index b37a582..dce5e8f 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3119,7 +3119,7 @@ il3945_store_debug_level(struct device *d, struct device_attribute *attr,
+ 	unsigned long val;
+ 	int ret;
+ 
+-	ret = strict_strtoul(buf, 0, &val);
++	ret = kstrtoul(buf, 0, &val);
+ 	if (ret)
+ 		IL_INFO("%s is not in hex or decimal form.\n", buf);
+ 	else
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 9a95045..3c4899b 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -4567,7 +4567,7 @@ il4965_store_debug_level(struct device *d, struct device_attribute *attr,
+ 	unsigned long val;
+ 	int ret;
+ 
+-	ret = strict_strtoul(buf, 0, &val);
++	ret = kstrtoul(buf, 0, &val);
+ 	if (ret)
+ 		IL_ERR("%s is not in hex or decimal form.\n", buf);
+ 	else
+@@ -4614,7 +4614,7 @@ il4965_store_tx_power(struct device *d, struct device_attribute *attr,
+ 	unsigned long val;
+ 	int ret;
+ 
+-	ret = strict_strtoul(buf, 10, &val);
++	ret = kstrtoul(buf, 10, &val);
+ 	if (ret)
+ 		IL_INFO("%s is not in decimal form.\n", buf);
+ 	else {
+diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
+index 3e81264..efae07e 100644
+--- a/drivers/net/wireless/libertas/mesh.c
++++ b/drivers/net/wireless/libertas/mesh.c
+@@ -240,7 +240,7 @@ static ssize_t lbs_prb_rsp_limit_set(struct device *dev,
+ 	memset(&mesh_access, 0, sizeof(mesh_access));
+ 	mesh_access.data[0] = cpu_to_le32(CMD_ACT_SET);
+ 
+-	if (!strict_strtoul(buf, 10, &retry_limit))
++	if (!kstrtoul(buf, 10, &retry_limit))
+ 		return -ENOTSUPP;
+ 	if (retry_limit > 15)
+ 		return -ENOTSUPP;
+diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+index af59dd5..8053f77 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -1817,7 +1817,7 @@ static ssize_t rtl_store_debug_level(struct device *d,
+ 	unsigned long val;
+ 	int ret;
+ 
+-	ret = strict_strtoul(buf, 0, &val);
++	ret = kstrtoul(buf, 0, &val);
+ 	if (ret) {
+ 		printk(KERN_DEBUG "%s is not in hex or decimal form.\n", buf);
+ 	} else {
 -- 
-1.8.1.2
+1.7.10.4
+
 
