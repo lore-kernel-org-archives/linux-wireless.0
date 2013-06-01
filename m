@@ -1,79 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:32900 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754841Ab3F1Jxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 05:53:49 -0400
-Message-ID: <1372413215.21065.41.camel@cumari.coelho.fi> (sfid-20130628_115404_530478_B970885A)
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-From: Luciano Coelho <coelho@ti.com>
-To: Mark Rutland <mark.rutland@arm.com>
-CC: "grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm@vger.kernel.org" <linux-arm@vger.kernel.org>
-Date: Fri, 28 Jun 2013 12:53:35 +0300
-In-Reply-To: <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-	 <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:46101 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754485Ab3FALZm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jun 2013 07:25:42 -0400
+Subject: [PATCH v2 12/29] ath10k: add htt.c
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k-devel@qca.qualcomm.com
+Date: Sat, 01 Jun 2013 14:25:39 +0300
+Message-ID: <20130601112538.32443.76475.stgit@localhost6.localdomain6> (sfid-20130601_132936_847230_6B8DACE5)
+In-Reply-To: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
+References: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
-> On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
-> > +Optional properties:
-> > +--------------------
-> > +
-> > +- refclock: the internal WLAN reference clock frequency (required for
-> > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-> > +  following:
-> > +	0 = 19.2 MHz
-> > +	1 = 26.0 MHz
-> > +	2 = 38.4 MHz
-> > +	3 = 52.0 MHz
-> > +	4 = 38.4 MHz, XTAL
-> > +	5 = 26.0 MHz, XTAL
-> > +
-> > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> > +  following:
-> > +	0 = 19.200 MHz
-> > +	1 = 26.000 MHz
-> > +	2 = 38.400 MHz
-> > +	3 = 52.000 MHz
-> > +	4 = 16.368 MHz
-> > +	5 = 32.736 MHz
-> > +	6 = 16.800 MHz
-> > +	7 = 33.600 MHz
-> 
-> This looks suspiciously like what we have the common clock bindings for:
-> 
-> refclk {
-> 	compatible = "fixed-clock";
-> 	#clock-cells = <0>;
-> 	clock-frequency = <19200000>;
-> }
-> 
-> wilink {
-> 	compatible = "ti,wilink7";
-> 	interrupt-parent = <&some_interrupt_controller>;
-> 	interrupts = <0 1 1>;
-> 	clocks = <&refclk>, <&refclk>;
-> 	clock-names = "refclk", "txoclk";
-> };
-> 
-> Could you not use them?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.c |  152 +++++++++++++++++++++++++++++++++
+ 1 file changed, 152 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath10k/htt.c
 
-Hmmm... this actually does look good.  But these are internal clocks in
-the modules, they cannot be accessed from outside.  Does it make sense
-to register them with the clock framework?
-
---
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+new file mode 100644
+index 0000000..185a546
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -0,0 +1,152 @@
++/*
++ * Copyright (c) 2005-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/slab.h>
++
++#include "htt.h"
++#include "core.h"
++#include "debug.h"
++
++static int ath10k_htt_htc_attach(struct ath10k_htt *htt)
++{
++	struct ath10k_htc_svc_conn_req conn_req;
++	struct ath10k_htc_svc_conn_resp conn_resp;
++	int status;
++
++	memset(&conn_req, 0, sizeof(conn_req));
++	memset(&conn_resp, 0, sizeof(conn_resp));
++
++	conn_req.ep_ops.ep_tx_complete = ath10k_htt_htc_tx_complete;
++	conn_req.ep_ops.ep_rx_complete = ath10k_htt_t2h_msg_handler;
++
++	/* connect to control service */
++	conn_req.service_id = ATH10K_HTC_SVC_ID_HTT_DATA_MSG;
++
++	status = ath10k_htc_connect_service(htt->ar->htc, &conn_req,
++					    &conn_resp);
++
++	if (status)
++		return status;
++
++	htt->eid = conn_resp.eid;
++
++	return 0;
++}
++
++struct ath10k_htt *ath10k_htt_attach(struct ath10k *ar)
++{
++	struct ath10k_htt *htt;
++	int ret;
++
++	htt = kzalloc(sizeof(*htt), GFP_KERNEL);
++	if (!htt)
++		return NULL;
++
++	htt->ar = ar;
++	htt->max_throughput_mbps = 800;
++
++	/*
++	 * Connect to HTC service.
++	 * This has to be done before calling ath10k_htt_rx_attach,
++	 * since ath10k_htt_rx_attach involves sending a rx ring configure
++	 * message to the target.
++	 */
++	if (ath10k_htt_htc_attach(htt))
++		goto err_htc_attach;
++
++	ret = ath10k_htt_tx_attach(htt);
++	if (ret) {
++		ath10k_err("could not attach htt tx (%d)\n", ret);
++		goto err_htc_attach;
++	}
++
++	if (ath10k_htt_rx_attach(htt))
++		goto err_rx_attach;
++
++	/*
++	 * Prefetch enough data to satisfy target
++	 * classification engine.
++	 * This is for LL chips. HL chips will probably
++	 * transfer all frame in the tx fragment.
++	 */
++	htt->prefetch_len =
++		36 + /* 802.11 + qos + ht */
++		4 + /* 802.1q */
++		8 + /* llc snap */
++		2; /* ip4 dscp or ip6 priority */
++
++	return htt;
++
++err_rx_attach:
++	ath10k_htt_tx_detach(htt);
++err_htc_attach:
++	kfree(htt);
++	return NULL;
++}
++
++#define HTT_TARGET_VERSION_TIMEOUT_HZ (3*HZ)
++
++static int ath10k_htt_verify_version(struct ath10k_htt *htt)
++{
++	ath10k_dbg(ATH10K_DBG_HTT,
++		   "htt target version %d.%d; host version %d.%d\n",
++		    htt->target_version_major,
++		    htt->target_version_minor,
++		    HTT_CURRENT_VERSION_MAJOR,
++		    HTT_CURRENT_VERSION_MINOR);
++
++	if (htt->target_version_major != HTT_CURRENT_VERSION_MAJOR) {
++		ath10k_err("htt major versions are incompatible!\n");
++		return -ENOTSUPP;
++	}
++
++	if (htt->target_version_minor != HTT_CURRENT_VERSION_MINOR)
++		ath10k_warn("htt minor version differ but still compatible\n");
++
++	return 0;
++}
++
++int ath10k_htt_attach_target(struct ath10k_htt *htt)
++{
++	int status;
++
++	init_completion(&htt->target_version_received);
++
++	status = ath10k_htt_h2t_ver_req_msg(htt);
++	if (status)
++		return status;
++
++	status = wait_for_completion_timeout(&htt->target_version_received,
++						HTT_TARGET_VERSION_TIMEOUT_HZ);
++	if (status <= 0) {
++		ath10k_warn("htt version request timed out\n");
++		return -ETIMEDOUT;
++	}
++
++	status = ath10k_htt_verify_version(htt);
++	if (status)
++		return status;
++
++	return ath10k_htt_send_rx_ring_cfg_ll(htt);
++}
++
++void ath10k_htt_detach(struct ath10k_htt *htt)
++{
++	ath10k_htt_rx_detach(htt);
++	ath10k_htt_tx_detach(htt);
++	kfree(htt);
++}
 
