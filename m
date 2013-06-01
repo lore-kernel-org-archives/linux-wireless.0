@@ -1,53 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53629 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935060Ab3FSVH0 (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:60777
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755467Ab3FAMCm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 17:07:26 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH-WN 2/3] wireless: Check for dangling wdev->current_bss pointer.
-Date: Wed, 19 Jun 2013 14:06:26 -0700
-Message-Id: <1371675987-28732-2-git-send-email-greearb@candelatech.com> (sfid-20130619_230733_100493_E0020B12)
-In-Reply-To: <1371675987-28732-1-git-send-email-greearb@candelatech.com>
-References: <1371675987-28732-1-git-send-email-greearb@candelatech.com>
+	Sat, 1 Jun 2013 08:02:42 -0400
+Date: Sat, 1 Jun 2013 08:02:35 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH -next] cw1200: use module_spi_driver to simplify the code
+Message-ID: <20130601120235.GD20362@shaftnet.org> (sfid-20130601_140244_490359_91D4C9F1)
+References: <CAPgLHd9e+T7UVET28Xe3RP05s2jVJdLx4TRtw3V635+HnKjnZA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4zI0WCX1RcnW9Hbu"
+In-Reply-To: <CAPgLHd9e+T7UVET28Xe3RP05s2jVJdLx4TRtw3V635+HnKjnZA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
 
-If it *is* still set when the netdev is being deleted,
-then we are about to leak a pointer.  Warn and clean up
-in that case.
+--4zI0WCX1RcnW9Hbu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+On Thu, May 30, 2013 at 07:42:54PM +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>=20
+> module_spi_driver() makes the code simpler by eliminating
+> boilerplate code.
+>=20
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-This is against wireless-next.  I've never seen this hit,
-though possibly it would catch some future bugs.  If you
-think it's not useful, I won't argue :)
+Acked-by: Solomon Peachy <pizza@shaftnet.org>
 
- net/wireless/core.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+> ---
+>  drivers/net/wireless/cw1200/cw1200_spi.c | 15 +--------------
+>  1 file changed, 1 insertion(+), 14 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wirel=
+ess/cw1200/cw1200_spi.c
+> index 04af685..1e6c58d 100644
+> --- a/drivers/net/wireless/cw1200/cw1200_spi.c
+> +++ b/drivers/net/wireless/cw1200/cw1200_spi.c
+> @@ -464,17 +464,4 @@ static struct spi_driver spi_driver =3D {
+>  	},
+>  };
+> =20
+> -/* Init Module function -> Called by insmod */
+> -static int __init cw1200_spi_init(void)
+> -{
+> -	return spi_register_driver(&spi_driver);
+> -}
+> -
+> -/* Called at Driver Unloading */
+> -static void __exit cw1200_spi_exit(void)
+> -{
+> -	spi_unregister_driver(&spi_driver);
+> -}
+> -
+> -module_init(cw1200_spi_init);
+> -module_exit(cw1200_spi_exit);
+> +module_spi_driver(spi_driver);
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 9143288..042d6a3 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -934,6 +934,12 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		 * freed.
- 		 */
- 		cfg80211_process_wdev_events(wdev);
-+
-+		if (WARN_ON(wdev->current_bss)) {
-+			cfg80211_unhold_bss(wdev->current_bss);
-+			cfg80211_put_bss(wdev->wiphy, &wdev->current_bss->pub);
-+			wdev->current_bss = NULL;
-+		}
- 		break;
- 	case NETDEV_PRE_UP:
- 		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)))
--- 
-1.7.3.4
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Delray Beach, FL                          ^^ (mail/jabber) ^^
+Quidquid latine dictum sit, altum viditur.
 
+--4zI0WCX1RcnW9Hbu
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iD8DBQFRqeLbPuLgii2759ARAjFPAJ9m8TzXivskJ4EAhfNRMoY1OZ4A6QCg2H0H
+Wq1rMGy6QHUaRt2TQMex9vI=
+=yWEn
+-----END PGP SIGNATURE-----
+
+--4zI0WCX1RcnW9Hbu--
