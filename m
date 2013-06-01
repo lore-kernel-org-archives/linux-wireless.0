@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:49196 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330Ab3FKFl3 (ORCPT
+Received: from mail-qa0-f47.google.com ([209.85.216.47]:46088 "EHLO
+	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3FASKJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 01:41:29 -0400
-Received: by mail-la0-f44.google.com with SMTP id er20so6485467lab.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jun 2013 22:41:28 -0700 (PDT)
+	Sat, 1 Jun 2013 14:10:09 -0400
+Received: by mail-qa0-f47.google.com with SMTP id n20so1100178qaj.20
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Jun 2013 11:10:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130611042801.GA217@FermiDesk>
-References: <20130611042801.GA217@FermiDesk>
-Date: Tue, 11 Jun 2013 08:41:28 +0300
-Message-ID: <CANUX_P0ddkfEY+hxir8=PGH1ocS5FQRFwvrm2otj3eTUkwJ+Gw@mail.gmail.com> (sfid-20130611_074133_003190_DA7F71C6)
-Subject: Re: Intel Centrino Wireless-N 2200 Tech Support
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Edward Seyler <epseyler@gmail.com>
+In-Reply-To: <51AA3832.2070605@hauke-m.de>
+References: <CA+nFU8T5Ja9jg_E7=Y4TbsT+OxJfNy=x18CMm3VUA9BcKb1+WA@mail.gmail.com>
+ <51AA3832.2070605@hauke-m.de>
+From: =?ISO-8859-1?Q?Marc_Mar=ED?= <5.markmb.5@gmail.com>
+Date: Sat, 1 Jun 2013 20:09:48 +0200
+Message-ID: <CA+nFU8TSDVRzHh0GBve8nfXEhqL=k9GvPaJ9LAGqU8gziEqywQ@mail.gmail.com> (sfid-20130601_201012_701364_5B970066)
+Subject: Re: Intel Centrino Advanced N 6200 and Debian 7
+To: Hauke Mehrtens <hauke@hauke-m.de>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> # dmesg | grep iwl
->
-> [    9.868028] iwlwifi 0000:03:00.0: irq 44 for MSI/MSI-X
-> [    9.942668] iwlwifi 0000:03:00.0: loaded firmware version 18.168.6.1
-> [   10.015848] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG disabled
-> [   10.015861] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
-> [   10.015866] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING enabled
-> [   10.015872] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
-> [   10.015877] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P enabled
-> [   10.015884] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R) Wireless-N 2200 BGN, REV=0x104
-> [   10.015912] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-> [   10.056013] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-> [  280.878663] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-> [  280.886234] iwlwifi 0000:03:00.0: Radio type=0x2-0x0-0x0
-> [  285.886692] iwlwifi 0000:03:00.0: Failed to load firmware chunk!
-> [  285.886888] iwlwifi 0000:03:00.0: Could not load the [0] uCode section
-> [  285.887299] iwlwifi 0000:03:00.0: Failed to run INIT ucode: -110
-> [  285.887516] iwlwifi 0000:03:00.0: Unable to initialize device.
->
+It is strange, because I bought it on Amazon time ago, and it has been
+working on Fedora since then... Well, I sent an email to Intel,
+because they offer linux support through email.
 
-This is really weird...
-Can you compile with CONFIG_IWLWIFI_DEBUG?
-I will then need a few debug prints.
-I recently changed this flow to speed up the fw loading process on
-platform that can afford a bit amount of DMA, but I just tested it
-(again) and it works even if there is not big DMA chunk available.
+Thank you for your answer
+
+2013/6/1 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 06/01/2013 07:57 PM, Marc Marí wrote:
+>> Hello everyone
+>>
+>> I recently changed my wireless card from a Broadcom (very bad
+>> supported) to a Intel Centrino Advanced N 6200. In Fedora, it works
+>> well, but I prefer Debian, and I'll change again, but in a Debian 7
+>> live CD (I need my laptop, so I can't stay several days with a half
+>> installation) the wifi doesn't work (kernel 3.2.0-4). This is the
+>> error
+>>
+>> Jun  1 17:36:54 localhost kernel: [ 1355.505261] iwlwifi 0000:03:00.0:
+>> Unsupported (too old) EEPROM VER=0x416 < 0x423 CALIB=0x5 < 0x4
+>
+> This looks like you bought an engineering sample and not a device that
+> should be sold to end users. This device is not supported and you
+> probably have to buy a different one.
+>
+>> Jun  1 17:36:54 localhost kernel: [ 1355.505393] iwlwifi: probe of
+>> 0000:03:00.0 failed with error -22
+>>
+>> Searching the web, it seems that the error is not very common, but is
+>> a weird thing, so I am asking for any support in this.
+>>
+>> Thank you in advance
+>> Marc
+>
