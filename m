@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60337 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756248Ab3FMJCr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 05:02:47 -0400
-Date: Thu, 13 Jun 2013 11:02:09 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@ml01.01.org>
-Subject: Re: [GIT] [3.10] NFC fixes
-Message-ID: <20130613090209.GA7998@zurbaran> (sfid-20130613_110250_747815_816E03AB)
-References: <20130606152019.GT4793@zurbaran>
- <20130612182238.GG11589@tuxdriver.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10608 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751971Ab3FAMPT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jun 2013 08:15:19 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Sivanesan Rajapupathi <c_srajap@qti.qualcomm.com>,
+	<ath6kl-devel@qca.qualcomm.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] ath6kl: Rename USB driver's suspend/resume/reset_resume
+References: <1368593530-3568-1-git-send-email-mohammed@qca.qualcomm.com>
+Date: Sat, 1 Jun 2013 15:15:14 +0300
+In-Reply-To: <1368593530-3568-1-git-send-email-mohammed@qca.qualcomm.com>
+	(Mohammed Shafi Shajakhan's message of "Wed, 15 May 2013 10:22:10
+	+0530")
+Message-ID: <87k3meni25.fsf@kamboji.qca.qualcomm.com> (sfid-20130601_141522_484083_93FBF4B9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130612182238.GG11589@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com> writes:
 
-On Wed, Jun 12, 2013 at 02:22:38PM -0400, John W. Linville wrote:
-> Given recent events, I'm not sure that this is really acceptable as
-> a fix request.  The service bit and endianness in particular don't
-> sound like they are addressing big problems, and the other two don't
-> sound like they are really fixing any regressions either.
-> 
-> Can these wait for 3.11?
-I guess so, although they really are fixes.
-I'll queue them in nfc-next and will send you a pull request.
-Btw, are you going to merge wireless into wireless-next soon ?
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>
+> Rename USB driver's suspend/resume/reset_resume callbacks
+> with 'pm' prefix. This is necessary to differentiate it from
+> cfg80211/hif suspend/resume/reset_resume callbacks.
+>
+> Cc: Sivanesan Rajapupathi <c_srajap@qualcomm.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Cheers,
-Samuel.
+Thanks, both applied.
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Kalle Valo
