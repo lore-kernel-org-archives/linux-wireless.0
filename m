@@ -1,58 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47783 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843Ab3F0APJ (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:62170 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753465Ab3FAVbe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 20:15:09 -0400
-Date: Wed, 26 Jun 2013 20:05:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-next 2013-06-25
-Message-ID: <20130627000558.GB2139@tuxdriver.com> (sfid-20130627_021514_012700_B7702232)
-References: <1372160186.8372.13.camel@jlt4.sipsolutions.net>
+	Sat, 1 Jun 2013 17:31:34 -0400
+Received: by mail-ie0-f182.google.com with SMTP id 9so1691153iec.41
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Jun 2013 14:31:34 -0700 (PDT)
+Date: Sat, 1 Jun 2013 17:30:37 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	open11s <devel@lists.open80211s.org>
+Subject: Re: [PATCH] cfg80211: fix deadlock in cfg80211_leave_mesh()
+Message-ID: <20130601213037.GE1030@localhost> (sfid-20130601_233137_857581_74EB2DCE)
+References: <20130601131916.GA2484@localhost>
+ <CAG6hwVNZ4oDGsZTLO0gqQ2eWV-C7rxQZ2F=PiR9-URc44FxgKw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372160186.8372.13.camel@jlt4.sipsolutions.net>
+In-Reply-To: <CAG6hwVNZ4oDGsZTLO0gqQ2eWV-C7rxQZ2F=PiR9-URc44FxgKw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 01:36:26PM +0200, Johannes Berg wrote:
-> Hi John,
-> 
-> This is hopefully going to be the last big pull request for
-> iwlwifi-next, luckily it actually mostly removes code ;-)
-> 
-> Emmanuel removed some unneeded/unsupported module parameters and adds a
-> Bluetooth 1x1 lookup-table for some upcoming products. From Alex I have
-> an older patch to add low-power receive support, this depended on a
-> mac80211 commit that only just came in with the merge from wireless-next
-> I did. Ilan made beacon timings better, and Eytan added some debug
-> statements for thermal throttling. I have a few cleanups, a fix for a
-> long-standing but rare warning, and, arguably the most important patch
-> here, the firmware API version bump for the 7260/3160 devices.
-> 
-> Let me know if there are any issues.
-> 
-> johannes
-> 
-> 
-> 
-> The following changes since commit 9fbdc75116f7a2b183464d42f3abccb616584105:
-> 
->   Merge branch 'for-upstream' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next (2013-06-24 14:45:50 -0400)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> 
-> for you to fetch changes up to bd4ace2a36e7c87bb5f3eceb54d3b304d395dcf0:
-> 
->   iwlwifi: mvm: Add support for Low Power RX (2013-06-25 12:21:19 +0200)
+On Sat, Jun 01, 2013 at 01:53:35PM -0700, Thomas Pedersen wrote:
+> wdev->mtx is already held). But it does look weird for cfg80211 to
+> drop a lock on behalf of the driver.
 
-Pulling now...
+This did cross my mind, but I thought maybe it made sense to do
+it there to make it easier to reason about the code -- if dropped
+in mac80211, someone reading the code would have no idea.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Bob Copeland %% www.bobcopeland.com
