@@ -1,45 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:50005 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752849Ab3F1TNa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:13:30 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 19/19] rt2x00: rt2800usb: add USB device ID for Linksys AE3000
-Date: Fri, 28 Jun 2013 21:12:33 +0200
-Message-Id: <1372446753-11408-20-git-send-email-juhosg@openwrt.org> (sfid-20130628_211342_416033_F887C814)
-In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
-References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:41993 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754013Ab3FALB5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jun 2013 07:01:57 -0400
+Received: by mail-pd0-f182.google.com with SMTP id g10so3479073pdj.27
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Jun 2013 04:01:56 -0700 (PDT)
+Received: from gmail.com ([203.86.46.201])
+        by mx.google.com with ESMTPSA id rn7sm50873292pbc.12.2013.06.01.04.01.54
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Sat, 01 Jun 2013 04:01:56 -0700 (PDT)
+Date: Sat, 1 Jun 2013 19:01:50 +0800
+From: Huawei Yang <harvey.huawei.yang@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: BK, VI, VO tx queue stopped unexpectedly
+Message-ID: <20130601110149.GA6504@gmail.com> (sfid-20130601_130217_716513_33BCA89A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Linksys AE3000 device is based on the RT3573
-chipset. The support for this chipset is available
-already, and the AE3000 device works with the driver.
+Hi guys
 
-Only managed mode works correctly at the moment,
-for AP mode additional changes are needed in the
-driver.
+I am writing a nl80211/cfg80211 driver for my wifi chip. I am testing my chip under the AP mode with hostapd. I use the kernel 3.0. I start the AP and check that all four tx queues are start, then I start a udp stream of BE from Ap to the station. After that I find other three tx queues stopped. I am sure that my driver dose not stop them. Is this a kernel machinesm ? 
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index c24c1fd..6136871 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1183,6 +1183,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x04bb, 0x0944) },
- 	/* Linksys */
- 	{ USB_DEVICE(0x13b1, 0x002f) },
-+	{ USB_DEVICE(0x13b1, 0x003b) },
- 	{ USB_DEVICE(0x1737, 0x0079) },
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x3572) },
--- 
-1.7.10
-
+Thanks  
