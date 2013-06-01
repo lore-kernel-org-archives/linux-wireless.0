@@ -1,52 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:64318 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161Ab3FJOyK convert rfc822-to-8bit (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:46079 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753633Ab3FALZT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jun 2013 10:54:10 -0400
-Received: by mail-ob0-f180.google.com with SMTP id eh20so9909221obb.25
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jun 2013 07:54:09 -0700 (PDT)
+	Sat, 1 Jun 2013 07:25:19 -0400
+Subject: [PATCH v2 09/29] ath10k: add hif.h
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k-devel@qca.qualcomm.com
+Date: Sat, 01 Jun 2013 14:25:13 +0300
+Message-ID: <20130601112513.32443.99853.stgit@localhost6.localdomain6> (sfid-20130601_132522_542072_454135FB)
+In-Reply-To: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
+References: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <20130610182317.3beb2841@lenovo-laptop>
-References: <20130610182317.3beb2841@lenovo-laptop>
-Date: Mon, 10 Jun 2013 16:54:09 +0200
-Message-ID: <CACna6rwOHS26o3gPMy5nKag8Dm0pYaEOi6B+kuxtoLfVrRZOrA@mail.gmail.com> (sfid-20130610_165413_805177_5B151BC7)
-Subject: Re: [DEFECT] iw: No output if passive scanning is requested
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Fran=C3=A7ois_Ravaillac?= <neutrino.nuovo@yahoo.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/6/10 François Ravaillac <neutrino.nuovo@yahoo.com>:
-> Using b43 driver with newer kernels (namely, 3.8-1-686-pae from Debian
-> and 3.10.0-rc4 from git) it isn't possible to perform passive scanning
-> (in 2.4GHz band) using 'iw' tool. The command 'iw dev wlan0 scan
-> passive' doesn't print any output. At the same time, a usual scan with
-> sending probe requests ('iw wlan0 scan' or 'iwlist wlan0 scan') does
-> work as expected.
->
-> The radio module I'm using is
-> 05:00.0 Network controller [0280]: Broadcom Corporation BCM4312
-> 802.11b/g LP-PHY [14e4:4315] (rev 01)
->
-> Copy of dmesg, lspci, lsmod, 'iw phy0 info' outputs and kernel config file
-> is attached.
->
->
-> P.S. I'm not a developer nor programmer, but I'm ready to help to make
-> linux better :)
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/hif.h |  137 +++++++++++++++++++++++++++++++++
+ 1 file changed, 137 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath10k/hif.h
 
-Hm, this is very interesting. Recently I've discovered problem with
-finding AP working on channel 13. It turned out to be a regression
-caused by
-> Scanning regression since "cfg80211: use DS or HT operation IEs to determine BSS channel"
-http://lists.infradead.org/pipermail/b43-dev/2013-March/003003.html
+diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
+new file mode 100644
+index 0000000..73a24d4
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/hif.h
+@@ -0,0 +1,137 @@
++/*
++ * Copyright (c) 2005-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _HIF_H_
++#define _HIF_H_
++
++#include <linux/kernel.h>
++#include "core.h"
++
++struct ath10k_hif_cb {
++	int (*tx_completion)(struct ath10k *ar,
++			     struct sk_buff *wbuf,
++			     unsigned transfer_id);
++	int (*rx_completion)(struct ath10k *ar,
++			     struct sk_buff *wbuf,
++			     u8 pipe_id);
++};
++
++struct ath10k_hif_ops {
++	/* Send the head of a buffer to HIF for transmission to the target. */
++	int (*send_head)(struct ath10k *ar, u8 pipe_id,
++			 unsigned int transfer_id,
++			 unsigned int nbytes,
++			 struct sk_buff *buf);
++
++	/*
++	 * API to handle HIF-specific BMI message exchanges, this API is
++	 * synchronous and only allowed to be called from a context that
++	 * can block (sleep)
++	 */
++	int (*exchange_bmi_msg)(struct ath10k *ar,
++				void *request, u32 request_len,
++				void *response, u32 *response_len);
++
++	int (*start)(struct ath10k *ar);
++
++	void (*stop)(struct ath10k *ar);
++
++	int (*map_service_to_pipe)(struct ath10k *ar, u16 service_id,
++				   u8 *ul_pipe, u8 *dl_pipe,
++				   int *ul_is_polled, int *dl_is_polled);
++
++	void (*get_default_pipe)(struct ath10k *ar, u8 *ul_pipe, u8 *dl_pipe);
++
++	/*
++	 * Check if prior sends have completed.
++	 *
++	 * Check whether the pipe in question has any completed
++	 * sends that have not yet been processed.
++	 * This function is only relevant for HIF pipes that are configured
++	 * to be polled rather than interrupt-driven.
++	 */
++	void (*send_complete_check)(struct ath10k *ar, u8 pipe_id, int force);
++
++	void (*init)(struct ath10k *ar,
++		     struct ath10k_hif_cb *callbacks);
++
++	u16 (*get_free_queue_number)(struct ath10k *ar, u8 pipe_id);
++};
++
++
++static inline int ath10k_hif_send_head(struct ath10k *ar, u8 pipe_id,
++				       unsigned int transfer_id,
++				       unsigned int nbytes,
++				       struct sk_buff *buf)
++{
++	return ar->hif.ops->send_head(ar, pipe_id, transfer_id, nbytes, buf);
++}
++
++static inline int ath10k_hif_exchange_bmi_msg(struct ath10k *ar,
++					      void *request, u32 request_len,
++					      void *response, u32 *response_len)
++{
++	return ar->hif.ops->exchange_bmi_msg(ar, request, request_len,
++					     response, response_len);
++}
++
++static inline int ath10k_hif_start(struct ath10k *ar)
++{
++	return ar->hif.ops->start(ar);
++}
++
++static inline void ath10k_hif_stop(struct ath10k *ar)
++{
++	return ar->hif.ops->stop(ar);
++}
++
++static inline int ath10k_hif_map_service_to_pipe(struct ath10k *ar,
++						 u16 service_id,
++						 u8 *ul_pipe, u8 *dl_pipe,
++						 int *ul_is_polled,
++						 int *dl_is_polled)
++{
++	return ar->hif.ops->map_service_to_pipe(ar, service_id,
++						ul_pipe, dl_pipe,
++						ul_is_polled, dl_is_polled);
++}
++
++static inline void ath10k_hif_get_default_pipe(struct ath10k *ar,
++					       u8 *ul_pipe, u8 *dl_pipe)
++{
++	ar->hif.ops->get_default_pipe(ar, ul_pipe, dl_pipe);
++}
++
++static inline void ath10k_hif_send_complete_check(struct ath10k *ar,
++						  u8 pipe_id, int force)
++{
++	ar->hif.ops->send_complete_check(ar, pipe_id, force);
++}
++
++static inline void ath10k_hif_init(struct ath10k *ar,
++				   struct ath10k_hif_cb *callbacks)
++{
++	ar->hif.ops->init(ar, callbacks);
++}
++
++static inline u16 ath10k_hif_get_free_queue_number(struct ath10k *ar,
++						   u8 pipe_id)
++{
++	return ar->hif.ops->get_free_queue_number(ar, pipe_id);
++}
++
++#endif /* _HIF_H_ */
 
-I think it can be related. I'll try to take a look at this in free
-time, but don't promise anything soon. Thanks for your report anyway.
-
--- 
-Rafał
