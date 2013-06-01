@@ -1,34 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:36098 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751992Ab3FDL7i (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:51738 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755517Ab3FAL1E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 07:59:38 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Sat, 1 Jun 2013 07:27:04 -0400
+Subject: [PATCH v2 23/29] ath10k: add trace.c
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k-devel@qca.qualcomm.com
+Date: Sat, 01 Jun 2013 14:27:00 +0300
+Message-ID: <20130601112700.32443.38564.stgit@localhost6.localdomain6> (sfid-20130601_132707_746871_22F66641)
+In-Reply-To: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
+References: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20909.54790.725704.860717@gargle.gargle.HOWL> (sfid-20130604_135941_703802_20CAC4A5)
-Date: Tue, 4 Jun 2013 17:26:54 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: Re: [PATCH 2/6] ath9k: Fix ANI monitoring
-In-Reply-To: <20909.54201.497575.556986@gargle.gargle.HOWL>
-References: <1370340695-29003-1-git-send-email-sujith@msujith.org>
-	<1370340695-29003-2-git-send-email-sujith@msujith.org>
-	<51ADD058.5000003@openwrt.org>
-	<20909.54201.497575.556986@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan wrote:
-> > With this patch, the raise-limit is always 3500, you should change it to
-> > 1000 when removing the above-/below-INI distinction.
-> 
-> Thanks, I'll fix this and send a v2.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/trace.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath10k/trace.c
 
-Actually, the changes appear to have been merged internally, for QCA988x.
-So, I am not sure if we can keep the ANI tweaks.
+diff --git a/drivers/net/wireless/ath/ath10k/trace.c b/drivers/net/wireless/ath/ath10k/trace.c
+new file mode 100644
+index 0000000..4a31e2c
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/trace.c
+@@ -0,0 +1,20 @@
++/*
++ * Copyright (c) 2012 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/module.h>
++
++#define CREATE_TRACE_POINTS
++#include "trace.h"
 
-Sujith
