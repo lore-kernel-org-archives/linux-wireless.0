@@ -1,50 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46224 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754586Ab3FVKjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Jun 2013 06:39:31 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 3.10] ath9k: fix an RCU issue in calling ieee80211_get_tx_rates
-Date: Sat, 22 Jun 2013 12:39:26 +0200
-Message-Id: <1371897566-47892-1-git-send-email-nbd@openwrt.org> (sfid-20130622_123944_463809_318A4F13)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:36322 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751971Ab3FAMNH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jun 2013 08:13:07 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	<ath6kl-devel@qca.qualcomm.com>
+Subject: Re: [PATCH v2] wireless: ath6kl: re-use native helper to parse MAC
+References: <1366896682-2023-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Date: Sat, 1 Jun 2013 15:13:01 +0300
+In-Reply-To: <1366896682-2023-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	(Andy Shevchenko's message of "Thu, 25 Apr 2013 16:31:22 +0300")
+Message-ID: <87obbqni5u.fsf@kamboji.qca.qualcomm.com> (sfid-20130601_141311_431528_15176781)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_txq_schedule is called outside of the drv_tx call, so it needs RCU
-protection.
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+> There is native mac_pton() function which helps to parse MAC.
+>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index bfb58a5..c59ae43 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1673,6 +1673,8 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
- 		return;
- 
-+	rcu_read_lock();
-+
- 	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
- 	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
- 
-@@ -1711,8 +1713,10 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 
- 		if (ac == last_ac ||
- 		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
--			return;
-+			break;
- 	}
-+
-+	rcu_read_unlock();
- }
- 
- /***********/
+Thanks, applied.
+
 -- 
-1.8.0.2
-
+Kalle Valo
