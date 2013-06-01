@@ -1,89 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40726 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750966Ab3FLGnC (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:46523 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753633Ab3FALZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 02:43:02 -0400
-Message-ID: <1371019363.8601.6.camel@jlt4.sipsolutions.net> (sfid-20130612_084307_095664_EEF5FB16)
-Subject: pull-request: mac80211 2013-06-12
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 12 Jun 2013 08:42:43 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-r7TYLuV3+2fXxx3AgfFP"
-Mime-Version: 1.0
+	Sat, 1 Jun 2013 07:25:10 -0400
+Subject: [PATCH v2 08/29] ath10k: add debug.h
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k-devel@qca.qualcomm.com
+Date: Sat, 01 Jun 2013 14:25:06 +0300
+Message-ID: <20130601112506.32443.68113.stgit@localhost6.localdomain6> (sfid-20130601_132512_410683_0C5E3F38)
+In-Reply-To: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
+References: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.h |   90 +++++++++++++++++++++++++++++++
+ 1 file changed, 90 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath10k/debug.h
 
---=-r7TYLuV3+2fXxx3AgfFP
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-John,
-
-Following davem's complaint about my patch, here's a new pull request
-w/o the patch he was complaining about, but instead with an ugly void*
-cast to suppress the compiler warning.
-
-I have a fix for radar detection, one for rate control and a workaround
-for broken HT APs which is a regression fix because we didn't rely on
-them to be correct before.
-
-johannes
-
-
-The following changes since commit ac20976dcaeea3e77e40e9aac8f3799d2a22ea2b=
-:
-
-  mac80211: Allow single vif mac address change with addr_mask (2013-05-27 =
-11:26:48 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to be0d678f67ce75ad7099d067e0de6c72f61db27f:
-
-  mac80211: Fix rate control mask matching call (2013-06-12 08:37:36 +0200)
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      mac80211: work around broken APs not including HT info
-
-Simon Wunderlich (2):
-      mac80211: abort CAC in stop_ap()
-      mac80211: Fix rate control mask matching call
-
- net/mac80211/cfg.c  |  6 ++++
- net/mac80211/mlme.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++++-=
-----
- net/mac80211/rate.c |  2 +-
- 3 files changed, 87 insertions(+), 8 deletions(-)
-
-
---=-r7TYLuV3+2fXxx3AgfFP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRuBhjAAoJEDBSmw7B7bqr/3AP/AhPOPrSkcjBGQmLdsiF879D
-TFFp05DnT1sLWBW+7U6TSmNACgDeyp1/AFEAJGc0YenEM4dSer+oplLcnz6xHM46
-GE0TV0KHyXp93RLWCk0Diq+UDyWuo0IEMKBb9wAuTmMsQ6qEue0zCwvChR4JucvT
-i8mRahYUpinckiDDX8NzjK/oGsJntgeCGopBrph2JwCUly5UttrmV1m6ATETibOi
-pRQE16qLIl6GUBjA9+OZcZJ9/pVUTAnu7EwdgF7xpGf3N9Xql7xD0fvwLI0cVnCW
-h0ShhMWWLbrtW0EJGJkOmkeScw0YwCLOKogcaEnKalti3spzQur5WFdwUs7yd3sd
-RuIIes5ha06uHnAKH+B9Bvhet+kU6C/wEVlK3U3Arj0+3X2SiuezYcgQQRlarSRs
-t8ig8eYfGUAJIA/HArnKYjPcg5zI/N9h8ciKxb4daoZb0RtzfBZspfMrM7FR+4Dw
-aafHy3nyHvIceQcSmVYTbl5g4/WlcGUd/BeCFtdqqWA3zdRg9gKuHMqPArWYfIml
-SWvn2fv7vk8iIfViB1jBrJ5SGcQGl5rKANDNONf97SrHRODA/PgAWDv+cbH+EvC4
-Jdhh5O8FwiMdr7l1vgWzdTG21ahDjDrhYzT5kKxTjkzFdNDctPyEyiTLyMVgUSFt
-aXrOtJzTw6riDq96O7j9
-=E+LA
------END PGP SIGNATURE-----
-
---=-r7TYLuV3+2fXxx3AgfFP--
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+new file mode 100644
+index 0000000..168140c
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -0,0 +1,90 @@
++/*
++ * Copyright (c) 2005-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _DEBUG_H_
++#define _DEBUG_H_
++
++#include <linux/types.h>
++#include "trace.h"
++
++enum ath10k_debug_mask {
++	ATH10K_DBG_PCI		= 0x00000001,
++	ATH10K_DBG_WMI		= 0x00000002,
++	ATH10K_DBG_HTC		= 0x00000004,
++	ATH10K_DBG_HTT		= 0x00000008,
++	ATH10K_DBG_MAC		= 0x00000010,
++	ATH10K_DBG_CORE		= 0x00000020,
++	ATH10K_DBG_PCI_DUMP	= 0x00000040,
++	ATH10K_DBG_HTT_DUMP	= 0x00000080,
++	ATH10K_DBG_MGMT		= 0x00000100,
++	ATH10K_DBG_DATA		= 0x00000200,
++	ATH10K_DBG_ANY		= 0xffffffff,
++};
++
++extern unsigned int ath10k_debug_mask;
++
++extern __printf(1, 2) int ath10k_info(const char *fmt, ...);
++extern __printf(1, 2) int ath10k_err(const char *fmt, ...);
++extern __printf(1, 2) int ath10k_warn(const char *fmt, ...);
++
++#ifdef CONFIG_ATH10K_DEBUGFS
++int ath10k_debug_create(struct ath10k *ar);
++void ath10k_debug_read_service_map(struct ath10k *ar,
++				   void *service_map,
++				   size_t map_size);
++void ath10k_debug_read_target_stats(struct ath10k *ar,
++				    struct wmi_stats_event *ev);
++
++#else
++static inline int ath10k_debug_create(struct ath10k *ar)
++{
++	return 0;
++}
++
++static inline void ath10k_debug_read_service_map(struct ath10k *ar,
++						 void *service_map,
++						 size_t map_size)
++{
++}
++
++static inline void ath10k_debug_read_target_stats(struct ath10k *ar,
++						  struct wmi_stats_event *ev)
++{
++}
++#endif /* CONFIG_ATH10K_DEBUGFS */
++
++#ifdef CONFIG_ATH10K_DEBUG
++extern __printf(2, 3) void ath10k_dbg(enum ath10k_debug_mask mask,
++				      const char *fmt, ...);
++void ath10k_dbg_dump(enum ath10k_debug_mask mask,
++		     const char *msg, const char *prefix,
++		     const void *buf, size_t len);
++#else /* CONFIG_ATH10K_DEBUG */
++
++static inline int ath10k_dbg(enum ath10k_debug_mask dbg_mask,
++			     const char *fmt, ...)
++{
++	return 0;
++}
++
++static inline void ath10k_dbg_dump(enum ath10k_debug_mask mask,
++				   const char *msg, const char *prefix,
++				   const void *buf, size_t len)
++{
++}
++#endif /* CONFIG_ATH10K_DEBUG */
++#endif /* _DEBUG_H_ */
 
