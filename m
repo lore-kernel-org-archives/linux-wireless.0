@@ -1,77 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:52310
-	"EHLO snark.thyrsus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750719Ab3FRFVW (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:44226
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751722Ab3FBNxJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 01:21:22 -0400
-Received: from [127.0.1.1] (localhost [127.0.0.1])
-	by snark.thyrsus.com (Postfix) with ESMTP id 3A21941765
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Jun 2013 01:13:52 -0400 (EDT)
-Content-Type: multipart/mixed; boundary="===============5853243746613757781=="
-MIME-Version: 1.0
+	Sun, 2 Jun 2013 09:53:09 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
 To: linux-wireless@vger.kernel.org
-Subject: Problems in regulatory.bin.5
-Message-Id: <20130618051352.3A21941765@snark.thyrsus.com> (sfid-20130618_072127_381560_532AC1E4)
-Date: Tue, 18 Jun 2013 01:13:52 -0400 (EDT)
-From: esr@thyrsus.com
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH -next 2/3] cw1200:  Reference correct 'powerup' GPIO signal.
+Date: Sun,  2 Jun 2013 09:53:02 -0400
+Message-Id: <1370181183-11424-2-git-send-email-pizza@shaftnet.org> (sfid-20130602_155328_272187_F23D6BFE)
+In-Reply-To: <1370181183-11424-1-git-send-email-pizza@shaftnet.org>
+References: <1370181183-11424-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---===============5853243746613757781==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+---
+ drivers/net/wireless/cw1200/cw1200_sdio.c | 2 +-
+ drivers/net/wireless/cw1200/cw1200_spi.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-This is automatically generated email about markup problems in a man
-page for which you appear to be responsible.  If you are not the right
-person or list, please tell me so I can correct my database.
-
-See http://catb.org/~esr/doclifter/bugs.html for details on how and
-why these patches were generated.  Feel free to email me with any
-questions.  Note: These patches do not change the modification date of
-any manual page.  You may wish to do that by hand.
-
-I apologize if this message seems spammy or impersonal. The volume of
-markup bugs I am tracking is over five hundred - there is no real
-alternative to generating bugmail from a database and template.
-
---
-                             Eric S. Raymond
-
---===============5853243746613757781==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-
-Problems with regulatory.bin.5:
-
-.SS markup in name section seriously confuses parsing, and sections
-don't follow standard naming conventions.
-
---- regulatory.bin.5-unpatched	2012-07-02 01:57:14.437776710 -0400
-+++ regulatory.bin.5	2012-07-02 01:59:11.117774528 -0400
-@@ -2,12 +2,7 @@
- .SH NAME
- regulatory.bin \- The Linux wireless regulatory database
+diff --git a/drivers/net/wireless/cw1200/cw1200_sdio.c b/drivers/net/wireless/cw1200/cw1200_sdio.c
+index d5bdbeb..a725693 100644
+--- a/drivers/net/wireless/cw1200/cw1200_sdio.c
++++ b/drivers/net/wireless/cw1200/cw1200_sdio.c
+@@ -194,7 +194,7 @@ static int cw1200_sdio_off(const struct cw1200_platform_data_sdio *pdata)
+ static int cw1200_sdio_on(const struct cw1200_platform_data_sdio *pdata)
+ {
+ 	const struct resource *reset = pdata->reset;
+-	const struct resource *powerup = pdata->reset;
++	const struct resource *powerup = pdata->powerup;
  
--.ad l
--.in +8
--.ti -8
--
--.SS
--.SH Description
-+.SH DESCRIPTION
- .B regulatory.bin
- is the file used by the Linux wireless subsystem to keep its regulatory
- database information. It is read by
-@@ -22,7 +17,7 @@
- .B regulatory.bin
- file should be updated upon regulatory changes or corrections.
+ 	/* Ensure I/Os are pulled low */
+ 	if (reset) {
+diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
+index d77848a..c4ddee8 100644
+--- a/drivers/net/wireless/cw1200/cw1200_spi.c
++++ b/drivers/net/wireless/cw1200/cw1200_spi.c
+@@ -286,7 +286,7 @@ static int cw1200_spi_off(const struct cw1200_platform_data_spi *pdata)
+ static int cw1200_spi_on(const struct cw1200_platform_data_spi *pdata)
+ {
+ 	const struct resource *reset = pdata->reset;
+-	const struct resource *powerup = pdata->reset;
++	const struct resource *powerup = pdata->powerup;
  
--.SH Upkeeping
-+.SH UPKEEP
- The regulatory database is maintained by the community as such
- you are encouraged to send any corrections or updates to the
- linux-wireless mailing list:
+ 	/* Ensure I/Os are pulled low */
+ 	if (reset) {
+-- 
+1.8.2.1
 
---===============5853243746613757781==--
