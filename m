@@ -1,166 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38649 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996Ab3FKSjy (ORCPT
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:55231 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755181Ab3FBXhJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 14:39:54 -0400
-Message-ID: <1370975989.8356.66.camel@jlt4.sipsolutions.net> (sfid-20130611_203958_084428_3863B2A6)
-Subject: pull-request: mac80211-next 2013-06-11
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 11 Jun 2013 20:39:49 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-OQrXshYBQejTcRubE7Qp"
-Mime-Version: 1.0
+	Sun, 2 Jun 2013 19:37:09 -0400
+Received: by mail-qa0-f45.google.com with SMTP id o13so1492089qaj.4
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Jun 2013 16:37:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1370181183-11424-3-git-send-email-pizza@shaftnet.org>
+References: <1370181183-11424-1-git-send-email-pizza@shaftnet.org> <1370181183-11424-3-git-send-email-pizza@shaftnet.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 3 Jun 2013 09:36:48 +1000
+Message-ID: <CAGRGNgWrOj2QMzvvdVvVL16Cs64La_a5jx8Zpvp_9VH5u_Y8=w@mail.gmail.com> (sfid-20130603_013712_516788_9BBAC14B)
+Subject: Re: [PATCH -next 3/3] cw1200: Replace use of 'struct resource' with
+ 'int' for GPIO fields.
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Solomon,
 
---=-OQrXshYBQejTcRubE7Qp
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+One very minor nit.
 
-Hi,
+On Sun, Jun 2, 2013 at 11:53 PM, Solomon Peachy <pizza@shaftnet.org> wrote:
+> The only advantage of 'struct resource' is that it lets us assign names
+> as part of the platform data.  Unfortunately since we are using platform
+> data, we are already limited to a single instance of each driver,
+> rendering this moot.
+>
+> So, replace the struct resources with ints, resulting in cleaner code.
+>
+> This was based on a suggestion from Arnd Bergmann.
+>
+> Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+> ---
+>  drivers/net/wireless/cw1200/cw1200_sagrad.c   | 49 +++-----------------------
+>  drivers/net/wireless/cw1200/cw1200_sdio.c     | 50 ++++++++++++---------------
+>  drivers/net/wireless/cw1200/cw1200_spi.c      | 33 ++++++++----------
+>  include/linux/platform_data/cw1200_platform.h | 12 +++----
+>  4 files changed, 47 insertions(+), 97 deletions(-)
+>
+> diff --git a/drivers/net/wireless/cw1200/cw1200_sagrad.c b/drivers/net/wireless/cw1200/cw1200_sagrad.c
+> index 14c2a18..3f884ac 100644
+> --- a/drivers/net/wireless/cw1200/cw1200_sagrad.c
+> +++ b/drivers/net/wireless/cw1200/cw1200_sagrad.c
+> @@ -68,9 +45,9 @@ static struct cw1200_platform_data_sdio cw1200_platform_data = {
+>         .ref_clk = 38400,
+>         .have_5ghz = false,
+>  #if 0
+> -       .reset = &cw1200_href_resources[0],
+> -       .powerup = &cw1200_href_resources[1],
+> -       .irq = &cw1200_href_resources[2],
+> +       .reset = GPIO_RF_RESET, /* Replace as appropriate */
+> +       .powerup = GPIO_RF_POWERUP, /* Replace as appropriate */
+> +       .irq = GPIO_TO_IRQ(GPIO_RF_IRQ), /* Replace as appropriate */
 
-And another one (last one for now!) for mac80211-next. This one's a
-little bigger.
+You might want to mark these "Replace as appropriate" bits with a
+comment at the start indicating that these need to be set for the
+platform data or modified as appropriate. I haven't looked at the rest
+of the driver, so you've probably documented this already, but it
+can't hurt to say that twice.
 
-I have a number of mesh fixes and improvements from Colleen, Jacob,
-Ashok and Thomas, powersave fixes in mac80211 from Alex, improved
-management-TX from Antonio, and a few various things, including locking
-fixes, from others and myself. Overall though, nothing really stands
-out.
+Maybe:
+
+/* If your device doesn't support Device Tree, you'll need to enable
+ * this and set the GPIO pins as appropriate.
+ */
+
+Also, at least in Vim, if "XXX", "FIXME" or "TODO" appear in comments,
+they get highlighted, so it might be worth adding one of those,
+(probably "TODO") to the comments so that this is a touch easier to
+find.
 
 Thanks,
-johannes
 
+--
+Julian Calaby
 
-The following changes since commit 99e94940697adec4f84758adb2db71f4a82c7ba5=
-:
-
-  brcmsmac: Reduce log spam in heavy tx, make err print in debug (2013-06-0=
-3 15:55:48 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
--john
-
-for you to fetch changes up to 940d0ac9dbe3fb9d4806e96f006286c2e476deed:
-
-  cfg80211: fix rtnl leak in wiphy dump error cases (2013-06-11 16:52:39 +0=
-200)
-
-----------------------------------------------------------------
-Alexander Bondar (2):
-      mac80211: fix powersave bug and clean up ieee80211_rx_bss_info
-      mac80211: Use suitable semantics for beacon availability indication
-
-Antonio Quartulli (4):
-      mac80211: make mgmt_tx accept a NULL channel
-      brcm80211: make mgmt_tx in brcmfmac accept a NULL channel
-      ath6kl: make mgmt_tx accept a NULL channel
-      nl80211: allow sending CMD_FRAME without specifying any frequency
-
-Ashok Nagarajan (1):
-      {nl,mac,cfg}80211: Allow user to configure basic rates for mesh
-
-Colleen Twitty (2):
-      {nl,cfg}80211: make peer link expiration time configurable
-      mac80211: expire mesh peers based on mesh configuration
-
-Felix Fietkau (2):
-      mac80211: add a tx control flag to indicate PS-Poll/uAPSD response
-      nl80211: add kernel-doc for NL80211_FEATURE_ACTIVE_MONITOR
-
-Jacob Minshall (1):
-      mac80211: set mesh formation field properly
-
-Johannes Berg (10):
-      cfg80211: take WoWLAN support information out of wiphy struct
-      nl80211: remove bogus genlmsg_end() error checking
-      Merge remote-tracking branch 'wireless-next/master' into HEAD
-      cfg80211/mac80211: clean up cfg80211 SME APIs
-      cfg80211: separate internal SME implementation
-      regulatory: use proper enum return value
-      cfg80211: fix potential deadlock regression
-      cfg80211: make wiphy index start at 0 again
-      wireless: fix kernel-doc
-      cfg80211: fix rtnl leak in wiphy dump error cases
-
-Jouni Malinen (1):
-      cfg80211: fix VHT TDLS peer AID verification
-
-Pontus Fuchs (1):
-      mac80211: set IEEE80211_TX_CTL_REQ_TX_STATUS on nullframes
-
-Thomas Pedersen (2):
-      mac80211: don't check local mesh TTL on TX
-      mac80211: fix mesh deadlock
-
- Documentation/DocBook/80211.tmpl                   |  11 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |  51 +-
- drivers/net/wireless/ath/ath9k/init.c              |  18 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  15 +-
- drivers/net/wireless/cw1200/main.c                 |  13 +-
- drivers/net/wireless/iwlwifi/dvm/dev.h             |   3 +
- drivers/net/wireless/iwlwifi/dvm/mac80211.c        |  17 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c        |  28 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h             |   1 +
- drivers/net/wireless/mwifiex/cfg80211.c            |  16 +-
- drivers/net/wireless/ti/wlcore/main.c              |  19 +-
- include/linux/ieee80211.h                          |   1 +
- include/net/cfg80211.h                             | 115 ++---
- include/net/mac80211.h                             |  11 +-
- include/uapi/linux/nl80211.h                       |   9 +
- net/mac80211/cfg.c                                 |  20 +-
- net/mac80211/ieee80211_i.h                         |   3 +-
- net/mac80211/main.c                                |   3 +-
- net/mac80211/mesh.c                                |  38 +-
- net/mac80211/mesh.h                                |   5 +-
- net/mac80211/mesh_plink.c                          |   7 +-
- net/mac80211/mlme.c                                |  98 ++--
- net/mac80211/rx.c                                  |  26 +-
- net/mac80211/sta_info.c                            |   4 +-
- net/mac80211/sta_info.h                            |   3 +
- net/mac80211/tx.c                                  |   6 -
- net/mac80211/util.c                                |   5 +-
- net/wireless/core.c                                |  47 +-
- net/wireless/core.h                                |  30 +-
- net/wireless/ibss.c                                |   6 -
- net/wireless/mesh.c                                |  12 +
- net/wireless/mlme.c                                | 241 ++++-----
- net/wireless/nl80211.c                             | 192 ++++----
- net/wireless/reg.c                                 |   2 +-
- net/wireless/sme.c                                 | 542 ++++++++++-------=
-----
- net/wireless/trace.h                               |  46 +-
- net/wireless/wext-sme.c                            |   8 +-
- 37 files changed, 834 insertions(+), 838 deletions(-)
-
-
---=-OQrXshYBQejTcRubE7Qp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRt271AAoJEDBSmw7B7bqrrCAP/Rc0A9eiYNT4ZhdomUKa2m9S
-HbGuPEK/q/XVJrgSD4VXEYHG7GMbcGwSv+8bP/q+OmgldtQoqEGiMl6yJj+MQPMb
-nzN24J/7TCHGwGpqIS+zKvPjDVwhAlB2SSPVPvzqdIjYJmE5GZSdpbIXi+PtRhX7
-enU0uzDYYlyyU2cWDGW5KtBmPBwfr190MB2FGn+zbWOww6R9DYXocpufU/z3JYwh
-GPydpLuPNsbcF/ol9m0ulGEJUDSyW18DDcj0HSW3tiOjpcFreaKCKjREZcP930cs
-yTmelig2g4VRyCCoXCuCh/HT5bRWYP4MVspjYAqcRETzVdJU/JZ/qvU1ZXabxFji
-jW8aQYlfUvHFrtAvu+E8UDzAtNa8JBZDOOOEbLsShkG3VyW4j51gQnUR7EVAbBmL
-3c4iPDNKfYVhC5au7CJMxa0LCBvADkNQg/UV9qW9ia+Pmvnn/otygVlNPdQ5CYg/
-vhizo/j5iedyyr+JDM7CPOTHcfxn/HLoC7w8CJ/Ye/s5XRE5jkiyQ2lvHDXWmlNC
-0VywLtjZFAzZtXmAxeo/J4SDFwSuxiNCFt3Zdf5kHvktyIkWnHBTXSM930Ze1dUN
-5OIZFX0fxjySDvboPmAi7zFe0blLaE7jCUwUnu+0e0VB5NMadHUsMqNzbpBTJMOR
-NR0DRzkudOlc+sDJ+Sge
-=RSns
------END PGP SIGNATURE-----
-
---=-OQrXshYBQejTcRubE7Qp--
-
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
