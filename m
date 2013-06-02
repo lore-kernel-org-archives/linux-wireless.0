@@ -1,147 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:44985 "EHLO bear.ext.ti.com"
+Received: from mx3.wp.pl ([212.77.101.7]:57565 "EHLO mx3.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751236Ab3F1MOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 08:14:25 -0400
-Message-ID: <1372421632.21065.60.camel@cumari.coelho.fi> (sfid-20130628_141500_798791_322423CC)
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-From: Luciano Coelho <coelho@ti.com>
-To: <balbi@ti.com>, <mturquette@linaro.org>
-CC: Mark Rutland <mark.rutland@arm.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm@vger.kernel.org" <linux-arm-kernel@lists.infradead.org>
-Date: Fri, 28 Jun 2013 15:13:52 +0300
-In-Reply-To: <20130628114129.GO11297@arwen.pp.htv.fi>
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-	 <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
-	 <1372413215.21065.41.camel@cumari.coelho.fi>
-	 <20130628102145.GB2139@e106331-lin.cambridge.arm.com>
-	 <1372415514.21065.50.camel@cumari.coelho.fi>
-	 <1372418531.21065.53.camel@cumari.coelho.fi>
-	 <20130628114129.GO11297@arwen.pp.htv.fi>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	id S1755117Ab3FBXcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Jun 2013 19:32:50 -0400
+Date: Mon, 3 Jun 2013 01:32:47 +0200
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: wireless-testing: lockdep warning in __ieee80211_request_smps
+Message-ID: <20130603013247.33849c6c@north> (sfid-20130603_013254_066582_3E81ADE4)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-06-28 at 14:41 +0300, Felipe Balbi wrote:
-> On Fri, Jun 28, 2013 at 02:22:11PM +0300, Luciano Coelho wrote:
-> > On Fri, 2013-06-28 at 13:31 +0300, Luciano Coelho wrote:
-> > > (fixed Mike's address)
-> > > 
-> > > On Fri, 2013-06-28 at 11:21 +0100, Mark Rutland wrote:
-> > > > On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
-> > > > > On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
-> > > > > > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
-> > > > > > > +Optional properties:
-> > > > > > > +--------------------
-> > > > > > > +
-> > > > > > > +- refclock: the internal WLAN reference clock frequency (required for
-> > > > > > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-> > > > > > > +  following:
-> > > > > > > +	0 = 19.2 MHz
-> > > > > > > +	1 = 26.0 MHz
-> > > > > > > +	2 = 38.4 MHz
-> > > > > > > +	3 = 52.0 MHz
-> > > > > > > +	4 = 38.4 MHz, XTAL
-> > > > > > > +	5 = 26.0 MHz, XTAL
-> > > > > > > +
-> > > > > > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> > > > > > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> > > > > > > +  following:
-> > > > > > > +	0 = 19.200 MHz
-> > > > > > > +	1 = 26.000 MHz
-> > > > > > > +	2 = 38.400 MHz
-> > > > > > > +	3 = 52.000 MHz
-> > > > > > > +	4 = 16.368 MHz
-> > > > > > > +	5 = 32.736 MHz
-> > > > > > > +	6 = 16.800 MHz
-> > > > > > > +	7 = 33.600 MHz
-> > > > > > 
-> > > > > > This looks suspiciously like what we have the common clock bindings for:
-> > > > > > 
-> > > > > > refclk {
-> > > > > > 	compatible = "fixed-clock";
-> > > > > > 	#clock-cells = <0>;
-> > > > > > 	clock-frequency = <19200000>;
-> > > > > > }
-> > > > > > 
-> > > > > > wilink {
-> > > > > > 	compatible = "ti,wilink7";
-> > > > > > 	interrupt-parent = <&some_interrupt_controller>;
-> > > > > > 	interrupts = <0 1 1>;
-> > > > > > 	clocks = <&refclk>, <&refclk>;
-> > > > > > 	clock-names = "refclk", "txoclk";
-> > > > > > };
-> > > > > > 
-> > > > > > Could you not use them?
-> > > > > 
-> > > > > Hmmm... this actually does look good.  But these are internal clocks in
-> > > > > the modules, they cannot be accessed from outside.  Does it make sense
-> > > > > to register them with the clock framework?
-> > > > 
-> > > > Given we already have a common way of describing clocks, I think it
-> > > > makes sense to use it -- people already understand the common bindings,
-> > > > and it's less code to add add to the kernel. I don't think the fact
-> > > > these clocks are internal should prevent us from describing them as we
-> > > > would an external clock.
-> > > 
-> > > Yes, I agree with you.  Thanks for the suggestion! I think it will look
-> > > much better.  And now that I dug a bit more into the code, I can see
-> > > that there are only structs being populated, so there shouldn't be any
-> > > other side-effects.
-> > 
-> > Hmmm, one thing that escaped me.  Besides the frequency, I also need a
-> > boolean that tells if the clock is XTAL or not.  I can't figure out how
-> > to pass this if I use the generic clock framework.  Any suggestions?
-> 
-> Could you use clock-output-names for that ?
-> 
-> XTAL clock:
-> 
-> refclk {
-> 	compatible = "fixed-clock";
-> 	#clock cells = <0>;
-> 	clock-frequency = <19200000>;
-> 	clock-output-names = "xtal";
-> };
-> 
-> non-XTAL clock:
-> 
-> refclk {
-> 	compatible = "fixed-clock";
-> 	#clock cells = <0>;
-> 	clock-frequency = <19200000>;
-> 	clock-output-names = "osc"; /* any better name ? */
-> };
+Hi,
 
-This starts looking a bit hacky.  Using the output name as a flag is not
-very pretty.
+bringing interface up for the first time (or changing PS
+settings) cause following warning in current wireless-testing:
 
-I think it would be better to have a separate flag for it in the wlan
-node.  Like an optional "refclock-xtal" boolean or something.  The
-downside of this is that we would be adding information about the clock
-details in the wilink node. :(
+WARNING: at /home/kuba/wireless-testing/net/mac80211/cfg.c:2321 __ieee80211_request_smps+0xc5/0xf0 [mac80211]()
+Modules linked in: rt2800usb rt2x00usb ...
+CPU: 1 PID: 1945 Comm: ifconfig Not tainted 3.10.0-rc3-wl+ #1
+Hardware name: Gigabyte Technology Co., Ltd. GA-MA790XT-UD4P/GA-MA790XT-UD4P, BIOS F9b 08/17/2012
+ 0000000000000009 ffff88021872bb48 ffffffff815d82ad ffff88021872bb88
+ ffffffff8103db10 ffff88021872bb78 ffff88021f8eaac0 0000000000000001
+ ffff8802188d09e0 ffff88021f8eab58 0000000000000001 ffff88021872bb98
+Call Trace:
+ [<ffffffff815d82ad>] dump_stack+0x19/0x1b
+ [<ffffffff8103db10>] warn_slowpath_common+0x70/0xa0
+ [<ffffffff8103db5a>] warn_slowpath_null+0x1a/0x20
+ [<ffffffffa07345f5>] __ieee80211_request_smps+0xc5/0xf0 [mac80211]
+ [<ffffffffa07346a1>] ieee80211_set_power_mgmt+0x81/0x100 [mac80211]
+ [<ffffffffa03abf95>] cfg80211_netdev_notifier_call+0x3e5/0x620 [cfg80211]
+ [<ffffffff815c0358>] ? dp_device_event+0x48/0x110
+ [<ffffffff815e26bd>] notifier_call_chain+0x4d/0x70
+ [<ffffffff8106b80e>] __raw_notifier_call_chain+0xe/0x10
+ [<ffffffff8106b826>] raw_notifier_call_chain+0x16/0x20
+ [<ffffffff814d2396>] call_netdevice_notifiers+0x36/0x60
+ [<ffffffff814d9658>] __dev_notify_flags+0x38/0x90
+ [<ffffffff814d96f5>] dev_change_flags+0x45/0x70
+ [<ffffffff81552e79>] devinet_ioctl+0x639/0x720
+ [<ffffffff814ebc20>] ? dev_ioctl+0x260/0x750
+ [<ffffffff815536b5>] inet_ioctl+0x75/0x90
+ [<ffffffff814bc950>] sock_do_ioctl+0x30/0x70
+ [<ffffffff81289c08>] ? avc_has_perm_flags+0x28/0x1e0
+ [<ffffffff814be714>] sock_ioctl+0x84/0x2b0
+ [<ffffffff81175537>] do_vfs_ioctl+0x97/0x640
+ [<ffffffff8128ab0a>] ? inode_has_perm.isra.24.constprop.66+0x2a/0x30
+ [<ffffffff8128b807>] ? file_has_perm+0x97/0xb0
+ [<ffffffff81175b71>] SyS_ioctl+0x91/0xb0
+ [<ffffffff812f1629>] ? lockdep_sys_exit_thunk+0x35/0x67
+ [<ffffffff815e6f42>] system_call_fastpath+0x16/0x1b
 
-OTOH, we could add a flag to the generic clock binding? A new optional
-boolean that tells whether the clock is XTAL or not:
+It seems that wdev.mtx lock is neither held in
+nl80211_set_power_save nor in cfg80211_netdev_notifier_call.
 
-refclk {
-	compatible = "fixed-clock";
-	#clock cells = <0>;
-	clock-frequency = <19200000>;
-	clock-xtal;
-};
+I couldn't find any patch addressing this, is it a known
+issue?
 
-Do you think that would make sense?
-
---
-Luca.
-
+  -- kuba
