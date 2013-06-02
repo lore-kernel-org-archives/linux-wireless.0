@@ -1,199 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:60751 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750839Ab3FAHYJ (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:46658
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752632Ab3FBPfj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jun 2013 03:24:09 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'David S. Miller'" <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	'Jouni Malinen' <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	'Larry Finger' <Larry.Finger@lwfinger.net>,
-	'Chaoming Li' <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] net: wireless: replace strict_strtoul() with kstrtoul()
-Date: Sat, 01 Jun 2013 16:24:06 +0900
-Message-id: <000f01ce5e99$00617fc0$01247f40$@samsung.com> (sfid-20130601_092415_266027_C503405F)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Sun, 2 Jun 2013 11:35:39 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH -next 2/2] cw1200:  rename the cw1200 platform definition header
+Date: Sun,  2 Jun 2013 11:35:32 -0400
+Message-Id: <1370187332-18813-2-git-send-email-pizza@shaftnet.org> (sfid-20130602_173542_420355_44077295)
+In-Reply-To: <1370187332-18813-1-git-send-email-pizza@shaftnet.org>
+References: <1370187332-18813-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The usage of strict_strtoul() is not preferred, because
-strict_strtoul() is obsolete. Thus, kstrtoul() should be
-used.
+My previous patch just moved the file, but it also needed to be renamed
+to conform to proper conventions.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 ---
- drivers/net/wireless/ath/ath9k/debug.c         |   14 +++++++-------
- drivers/net/wireless/ath/ath9k/dfs_debug.c     |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c |    2 +-
- drivers/net/wireless/iwlegacy/3945-mac.c       |    2 +-
- drivers/net/wireless/iwlegacy/4965-mac.c       |    4 ++--
- drivers/net/wireless/libertas/mesh.c           |    2 +-
- drivers/net/wireless/rtlwifi/base.c            |    2 +-
- 7 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/net/wireless/cw1200/cw1200_sdio.c     |  2 +-
+ drivers/net/wireless/cw1200/cw1200_spi.c      |  2 +-
+ include/linux/platform_data/cw1200_platform.h | 81 ---------------------------
+ include/linux/platform_data/net-cw1200.h      | 81 +++++++++++++++++++++++++++
+ 4 files changed, 83 insertions(+), 83 deletions(-)
+ delete mode 100644 include/linux/platform_data/cw1200_platform.h
+ create mode 100644 include/linux/platform_data/net-cw1200.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 53c0658..0399c897 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -69,7 +69,7 @@ static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
- 		return -EFAULT;
+diff --git a/drivers/net/wireless/cw1200/cw1200_sdio.c b/drivers/net/wireless/cw1200/cw1200_sdio.c
+index 913a3eb..808257e 100644
+--- a/drivers/net/wireless/cw1200/cw1200_sdio.c
++++ b/drivers/net/wireless/cw1200/cw1200_sdio.c
+@@ -21,7 +21,7 @@
  
- 	buf[len] = '\0';
--	if (strict_strtoul(buf, 0, &mask))
-+	if (kstrtoul(buf, 0, &mask))
- 		return -EINVAL;
+ #include "cw1200.h"
+ #include "hwbus.h"
+-#include <linux/platform_data/cw1200_platform.h>
++#include <linux/platform_data/net-cw1200.h>
+ #include "hwio.h"
  
- 	common->debug_mask = mask;
-@@ -114,7 +114,7 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
- 		return -EFAULT;
+ MODULE_AUTHOR("Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>");
+diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
+index 5eacf9e..61406e7 100644
+--- a/drivers/net/wireless/cw1200/cw1200_spi.c
++++ b/drivers/net/wireless/cw1200/cw1200_spi.c
+@@ -26,7 +26,7 @@
  
- 	buf[len] = '\0';
--	if (strict_strtoul(buf, 0, &mask))
-+	if (kstrtoul(buf, 0, &mask))
- 		return -EINVAL;
+ #include "cw1200.h"
+ #include "hwbus.h"
+-#include <linux/platform_data/cw1200_platform.h>
++#include <linux/platform_data/net-cw1200.h>
+ #include "hwio.h"
  
- 	ah->txchainmask = mask;
-@@ -157,7 +157,7 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
- 		return -EFAULT;
- 
- 	buf[len] = '\0';
--	if (strict_strtoul(buf, 0, &mask))
-+	if (kstrtoul(buf, 0, &mask))
- 		return -EINVAL;
- 
- 	ah->rxchainmask = mask;
-@@ -200,7 +200,7 @@ static ssize_t write_file_disable_ani(struct file *file,
- 		return -EFAULT;
- 
- 	buf[len] = '\0';
--	if (strict_strtoul(buf, 0, &disable_ani))
-+	if (kstrtoul(buf, 0, &disable_ani))
- 		return -EINVAL;
- 
- 	common->disable_ani = !!disable_ani;
-@@ -253,7 +253,7 @@ static ssize_t write_file_ant_diversity(struct file *file,
- 		goto exit;
- 
- 	buf[len] = '\0';
--	if (strict_strtoul(buf, 0, &antenna_diversity))
-+	if (kstrtoul(buf, 0, &antenna_diversity))
- 		return -EINVAL;
- 
- 	common->antenna_diversity = !!antenna_diversity;
-@@ -1223,7 +1223,7 @@ static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
- 		return -EFAULT;
- 
- 	buf[len] = '\0';
--	if (strict_strtoul(buf, 0, &regidx))
-+	if (kstrtoul(buf, 0, &regidx))
- 		return -EINVAL;
- 
- 	sc->debug.regidx = regidx;
-@@ -1268,7 +1268,7 @@ static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
- 		return -EFAULT;
- 
- 	buf[len] = '\0';
--	if (strict_strtoul(buf, 0, &regval))
-+	if (kstrtoul(buf, 0, &regval))
- 		return -EINVAL;
- 
- 	ath9k_ps_wakeup(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/dfs_debug.c b/drivers/net/wireless/ath/ath9k/dfs_debug.c
-index b7611b7..3c6e413 100644
---- a/drivers/net/wireless/ath/ath9k/dfs_debug.c
-+++ b/drivers/net/wireless/ath/ath9k/dfs_debug.c
-@@ -96,7 +96,7 @@ static ssize_t write_file_dfs(struct file *file, const char __user *user_buf,
- 		return -EFAULT;
- 
- 	buf[len] = '\0';
--	if (strict_strtoul(buf, 0, &val))
-+	if (kstrtoul(buf, 0, &val))
- 		return -EINVAL;
- 
- 	if (val == DFS_STATS_RESET_MAGIC)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-index 87110de5..d08ef24 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-@@ -471,7 +471,7 @@ static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
- 		return -EFAULT;
- 
- 	buf[len] = '\0';
--	if (strict_strtoul(buf, 0, &mask))
-+	if (kstrtoul(buf, 0, &mask))
- 		return -EINVAL;
- 
- 	common->debug_mask = mask;
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index b37a582..dce5e8f 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3119,7 +3119,7 @@ il3945_store_debug_level(struct device *d, struct device_attribute *attr,
- 	unsigned long val;
- 	int ret;
- 
--	ret = strict_strtoul(buf, 0, &val);
-+	ret = kstrtoul(buf, 0, &val);
- 	if (ret)
- 		IL_INFO("%s is not in hex or decimal form.\n", buf);
- 	else
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 9a95045..3c4899b 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -4567,7 +4567,7 @@ il4965_store_debug_level(struct device *d, struct device_attribute *attr,
- 	unsigned long val;
- 	int ret;
- 
--	ret = strict_strtoul(buf, 0, &val);
-+	ret = kstrtoul(buf, 0, &val);
- 	if (ret)
- 		IL_ERR("%s is not in hex or decimal form.\n", buf);
- 	else
-@@ -4614,7 +4614,7 @@ il4965_store_tx_power(struct device *d, struct device_attribute *attr,
- 	unsigned long val;
- 	int ret;
- 
--	ret = strict_strtoul(buf, 10, &val);
-+	ret = kstrtoul(buf, 10, &val);
- 	if (ret)
- 		IL_INFO("%s is not in decimal form.\n", buf);
- 	else {
-diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
-index 3e81264..efae07e 100644
---- a/drivers/net/wireless/libertas/mesh.c
-+++ b/drivers/net/wireless/libertas/mesh.c
-@@ -240,7 +240,7 @@ static ssize_t lbs_prb_rsp_limit_set(struct device *dev,
- 	memset(&mesh_access, 0, sizeof(mesh_access));
- 	mesh_access.data[0] = cpu_to_le32(CMD_ACT_SET);
- 
--	if (!strict_strtoul(buf, 10, &retry_limit))
-+	if (!kstrtoul(buf, 10, &retry_limit))
- 		return -ENOTSUPP;
- 	if (retry_limit > 15)
- 		return -ENOTSUPP;
-diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-index af59dd5..8053f77 100644
---- a/drivers/net/wireless/rtlwifi/base.c
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -1817,7 +1817,7 @@ static ssize_t rtl_store_debug_level(struct device *d,
- 	unsigned long val;
- 	int ret;
- 
--	ret = strict_strtoul(buf, 0, &val);
-+	ret = kstrtoul(buf, 0, &val);
- 	if (ret) {
- 		printk(KERN_DEBUG "%s is not in hex or decimal form.\n", buf);
- 	} else {
+ MODULE_AUTHOR("Solomon Peachy <speachy@sagrad.com>");
+diff --git a/include/linux/platform_data/cw1200_platform.h b/include/linux/platform_data/cw1200_platform.h
+deleted file mode 100644
+index c6fbc3c..0000000
+--- a/include/linux/platform_data/cw1200_platform.h
++++ /dev/null
+@@ -1,81 +0,0 @@
+-/*
+- * Copyright (C) ST-Ericsson SA 2011
+- *
+- * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+- * License terms: GNU General Public License (GPL) version 2
+- */
+-
+-#ifndef CW1200_PLAT_H_INCLUDED
+-#define CW1200_PLAT_H_INCLUDED
+-
+-struct cw1200_platform_data_spi {
+-	u8 spi_bits_per_word;           /* REQUIRED */
+-	u16 ref_clk;                    /* REQUIRED (in KHz) */
+-
+-	/* All others are optional */
+-	bool have_5ghz;
+-	int reset;                     /* GPIO to RSTn signal (0 disables) */
+-	int powerup;                   /* GPIO to POWERUP signal (0 disables) */
+-	int (*power_ctrl)(const struct cw1200_platform_data_spi *pdata,
+-			  bool enable); /* Control 3v3 / 1v8 supply */
+-	int (*clk_ctrl)(const struct cw1200_platform_data_spi *pdata,
+-			bool enable); /* Control CLK32K */
+-	const u8 *macaddr;  /* if NULL, use cw1200_mac_template module parameter */
+-	const char *sdd_file;  /* if NULL, will use default for detected hw type */
+-};
+-
+-struct cw1200_platform_data_sdio {
+-	u16 ref_clk;                    /* REQUIRED (in KHz) */
+-
+-	/* All others are optional */
+-	bool have_5ghz;
+-	bool no_nptb;       /* SDIO hardware does not support non-power-of-2-blocksizes */
+-	int reset;          /* GPIO to RSTn signal (0 disables) */
+-	int powerup;        /* GPIO to POWERUP signal (0 disables) */
+-	int irq;            /* IRQ line or 0 to use SDIO IRQ */
+-	int (*power_ctrl)(const struct cw1200_platform_data_sdio *pdata,
+-			  bool enable); /* Control 3v3 / 1v8 supply */
+-	int (*clk_ctrl)(const struct cw1200_platform_data_sdio *pdata,
+-			bool enable); /* Control CLK32K */
+-	const u8 *macaddr;  /* if NULL, use cw1200_mac_template module parameter */
+-	const char *sdd_file;  /* if NULL, will use default for detected hw type */
+-};
+-
+-
+-/* An example of SPI support in your board setup file:
+-
+-   static struct cw1200_platform_data_spi cw1200_platform_data = {
+-       .ref_clk = 38400,
+-       .spi_bits_per_word = 16,
+-       .reset = GPIO_RF_RESET,
+-       .powerup = GPIO_RF_POWERUP,
+-       .macaddr = wifi_mac_addr,
+-       .sdd_file = "sdd_sagrad_1091_1098.bin",
+-  };
+-  static struct spi_board_info myboard_spi_devices[] __initdata = {
+-       {
+-               .modalias = "cw1200_wlan_spi",
+-               .max_speed_hz = 52000000,
+-               .bus_num = 0,
+-               .irq = WIFI_IRQ,
+-               .platform_data = &cw1200_platform_data,
+-               .chip_select = 0,
+-       },
+-  };
+-
+- */
+-
+-/* An example of SDIO support in your board setup file:
+-
+-  static struct cw1200_platform_data_sdio my_cw1200_platform_data = {
+-	.ref_clk = 38400,
+-	.have_5ghz = false,
+-	.sdd_file = "sdd_myplatform.bin",
+-  };
+-  cw1200_sdio_set_platform_data(&my_cw1200_platform_data);
+-
+- */
+-
+-void __init cw1200_sdio_set_platform_data(struct cw1200_platform_data_sdio *pdata);
+-
+-#endif /* CW1200_PLAT_H_INCLUDED */
+diff --git a/include/linux/platform_data/net-cw1200.h b/include/linux/platform_data/net-cw1200.h
+new file mode 100644
+index 0000000..c6fbc3c
+--- /dev/null
++++ b/include/linux/platform_data/net-cw1200.h
+@@ -0,0 +1,81 @@
++/*
++ * Copyright (C) ST-Ericsson SA 2011
++ *
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ * License terms: GNU General Public License (GPL) version 2
++ */
++
++#ifndef CW1200_PLAT_H_INCLUDED
++#define CW1200_PLAT_H_INCLUDED
++
++struct cw1200_platform_data_spi {
++	u8 spi_bits_per_word;           /* REQUIRED */
++	u16 ref_clk;                    /* REQUIRED (in KHz) */
++
++	/* All others are optional */
++	bool have_5ghz;
++	int reset;                     /* GPIO to RSTn signal (0 disables) */
++	int powerup;                   /* GPIO to POWERUP signal (0 disables) */
++	int (*power_ctrl)(const struct cw1200_platform_data_spi *pdata,
++			  bool enable); /* Control 3v3 / 1v8 supply */
++	int (*clk_ctrl)(const struct cw1200_platform_data_spi *pdata,
++			bool enable); /* Control CLK32K */
++	const u8 *macaddr;  /* if NULL, use cw1200_mac_template module parameter */
++	const char *sdd_file;  /* if NULL, will use default for detected hw type */
++};
++
++struct cw1200_platform_data_sdio {
++	u16 ref_clk;                    /* REQUIRED (in KHz) */
++
++	/* All others are optional */
++	bool have_5ghz;
++	bool no_nptb;       /* SDIO hardware does not support non-power-of-2-blocksizes */
++	int reset;          /* GPIO to RSTn signal (0 disables) */
++	int powerup;        /* GPIO to POWERUP signal (0 disables) */
++	int irq;            /* IRQ line or 0 to use SDIO IRQ */
++	int (*power_ctrl)(const struct cw1200_platform_data_sdio *pdata,
++			  bool enable); /* Control 3v3 / 1v8 supply */
++	int (*clk_ctrl)(const struct cw1200_platform_data_sdio *pdata,
++			bool enable); /* Control CLK32K */
++	const u8 *macaddr;  /* if NULL, use cw1200_mac_template module parameter */
++	const char *sdd_file;  /* if NULL, will use default for detected hw type */
++};
++
++
++/* An example of SPI support in your board setup file:
++
++   static struct cw1200_platform_data_spi cw1200_platform_data = {
++       .ref_clk = 38400,
++       .spi_bits_per_word = 16,
++       .reset = GPIO_RF_RESET,
++       .powerup = GPIO_RF_POWERUP,
++       .macaddr = wifi_mac_addr,
++       .sdd_file = "sdd_sagrad_1091_1098.bin",
++  };
++  static struct spi_board_info myboard_spi_devices[] __initdata = {
++       {
++               .modalias = "cw1200_wlan_spi",
++               .max_speed_hz = 52000000,
++               .bus_num = 0,
++               .irq = WIFI_IRQ,
++               .platform_data = &cw1200_platform_data,
++               .chip_select = 0,
++       },
++  };
++
++ */
++
++/* An example of SDIO support in your board setup file:
++
++  static struct cw1200_platform_data_sdio my_cw1200_platform_data = {
++	.ref_clk = 38400,
++	.have_5ghz = false,
++	.sdd_file = "sdd_myplatform.bin",
++  };
++  cw1200_sdio_set_platform_data(&my_cw1200_platform_data);
++
++ */
++
++void __init cw1200_sdio_set_platform_data(struct cw1200_platform_data_sdio *pdata);
++
++#endif /* CW1200_PLAT_H_INCLUDED */
 -- 
-1.7.10.4
-
+1.8.2.1
 
