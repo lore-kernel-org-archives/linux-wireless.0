@@ -1,200 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:47234 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754606Ab3FMRXi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 13:23:38 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Add custom parameters for CUS198
-Date: Thu, 13 Jun 2013 22:50:39 +0530
-Message-Id: <1371144039-10042-1-git-send-email-sujith@msujith.org> (sfid-20130613_192342_337079_BDB334AF)
+Received: from mx3.wp.pl ([212.77.101.7]:37768 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752781Ab3FBPiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Jun 2013 11:38:15 -0400
+Date: Sun, 2 Jun 2013 17:38:10 +0200
+From: Jakub Kicinski <moorray@wp.pl>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [rt2x00-users] [PATCH 3.10-rc] wireless: rt2x00: rt2800: fix
+ hardware antenna diversity for RT5370G
+Message-ID: <20130602173810.1d058f12@north> (sfid-20130602_173818_534756_29FD2816)
+In-Reply-To: <86F5D1A2-7E2C-4EE5-9D29-C66306833C35@gmail.com>
+References: <1367957010-9496-1-git-send-email-xose.vazquez@gmail.com>
+	<86F5D1A2-7E2C-4EE5-9D29-C66306833C35@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi!
 
-CUS198 is a card based on AR9485. There are differences
-between the base reference design HB125 and CUS198.
-Identify such cards based on the PCI subsystem IDs and
-set HW parameters appropriately.
+Any progress on this patch?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 18 +++++++++++++---
- drivers/net/wireless/ath/ath9k/ath9k.h         |  3 +++
- drivers/net/wireless/ath/ath9k/hw.h            |  4 ++++
- drivers/net/wireless/ath/ath9k/init.c          | 21 +++++++++++++++++++
- drivers/net/wireless/ath/ath9k/pci.c           | 29 ++++++++++++++++++++++++++
- 5 files changed, 72 insertions(+), 3 deletions(-)
+  -- Kuba
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 25b8bbb..9a00bc0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3563,16 +3563,22 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- {
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	int chain;
--	u32 regval, value;
-+	u32 regval, value, gpio;
- 	static const u32 switch_chain_reg[AR9300_MAX_CHAINS] = {
- 			AR_PHY_SWITCH_CHAIN_0,
- 			AR_PHY_SWITCH_CHAIN_1,
- 			AR_PHY_SWITCH_CHAIN_2,
- 	};
- 
--	if (AR_SREV_9485(ah) && (ar9003_hw_get_rx_gain_idx(ah) == 0))
-+	if (AR_SREV_9485(ah) && (ar9003_hw_get_rx_gain_idx(ah) == 0)) {
-+		if (ah->config.xlna_gpio)
-+			gpio = ah->config.xlna_gpio;
-+		else
-+			gpio = AR9300_EXT_LNA_CTL_GPIO_AR9485;
-+
- 		ath9k_hw_cfg_output(ah, AR9300_EXT_LNA_CTL_GPIO_AR9485,
- 				    AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED);
-+	}
- 
- 	value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
- 
-@@ -3800,7 +3806,13 @@ static void ar9003_hw_atten_apply(struct ath_hw *ah, struct ath9k_channel *chan)
- 			REG_RMW_FIELD(ah, ext_atten_reg[i],
- 				      AR_PHY_EXT_ATTEN_CTL_XATTEN1_DB, value);
- 
--			value = ar9003_hw_atten_chain_get_margin(ah, i, chan);
-+			if (AR_SREV_9485(ah) &&
-+			    (ar9003_hw_get_rx_gain_idx(ah) == 0) &&
-+			    ah->config.xatten_margin_cfg)
-+				value = 5;
-+			else
-+				value = ar9003_hw_atten_chain_get_margin(ah, i, chan);
-+
- 			REG_RMW_FIELD(ah, ext_atten_reg[i],
- 				      AR_PHY_EXT_ATTEN_CTL_XATTEN1_MARGIN,
- 				      value);
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a6e666b..74965ee 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -631,6 +631,8 @@ void ath_ant_comb_update(struct ath_softc *sc);
- /* Main driver core */
- /********************/
- 
-+#define ATH9K_PCI_CUS198 0x0001
-+
- /*
-  * Default cache line size, in bytes.
-  * Used when PCI device not fully initialized by bootrom/BIOS
-@@ -715,6 +717,7 @@ struct ath_softc {
- 
- 	unsigned int hw_busy_count;
- 	unsigned long sc_flags;
-+	unsigned long driver_data;
- 
- 	u32 intrstatus;
- 	u16 ps_flags; /* PS_* */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 7d259b7..ed7d4fc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -307,6 +307,10 @@ struct ath9k_ops_config {
- 	u16 spurchans[AR_EEPROM_MODAL_SPURS][2];
- 	u8 max_txtrig_level;
- 	u16 ani_poll_interval; /* ANI poll interval in ms */
-+
-+	/* Platform specific config */
-+	u32 xlna_gpio;
-+	bool xatten_margin_cfg;
- };
- 
- enum ath9k_int {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 818f22d..7c2ed1c 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -513,6 +513,22 @@ static void ath9k_init_misc(struct ath_softc *sc)
- 	sc->spec_config.fft_period = 0xF;
- }
- 
-+static void ath9k_init_platform(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if (common->bus_ops->ath_bus_type != ATH_PCI)
-+		return;
-+
-+	if (sc->driver_data & ATH9K_PCI_CUS198) {
-+		ah->config.xlna_gpio = 9;
-+		ah->config.xatten_margin_cfg = true;
-+
-+		ath_info(common, "Set parameters for CUS198\n");
-+	}
-+}
-+
- static void ath9k_eeprom_request_cb(const struct firmware *eeprom_blob,
- 				    void *ctx)
- {
-@@ -605,6 +621,11 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	common->disable_ani = false;
- 
- 	/*
-+	 * Platform quirks.
-+	 */
-+	ath9k_init_platform(sc);
-+
-+	/*
- 	 * Enable Antenna diversity only when BTCOEX is disabled
- 	 * and the user manually requests the feature.
- 	 */
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 0e0d395..4ac00b4 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -34,6 +34,34 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
-+
-+	/* PCI-E CUS198 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x2086),
-+	  .driver_data = ATH9K_PCI_CUS198 },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x1237),
-+	  .driver_data = ATH9K_PCI_CUS198 },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x2126),
-+	  .driver_data = ATH9K_PCI_CUS198 },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x2152),
-+	  .driver_data = ATH9K_PCI_CUS198 },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_FOXCONN,
-+			 0xE075),
-+	  .driver_data = ATH9K_PCI_CUS198 },
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
-@@ -221,6 +249,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->hw = hw;
- 	sc->dev = &pdev->dev;
- 	sc->mem = pcim_iomap_table(pdev)[0];
-+	sc->driver_data = id->driver_data;
- 
- 	/* Will be cleared in ath9k_start() */
- 	set_bit(SC_OP_INVALID, &sc->sc_flags);
--- 
-1.8.3.1
+On Wed, 8 May 2013 00:30:22 +0200, Gertjan van Wingerde wrote:
+> Hi Xose,
+> 
+> Sent from my iPad
+> 
+> On 7 mei 2013, at 22:03, Xose Vazquez Perez <xose.vazquez@gmail.com> wrote:
+> 
+> > RT5370G has hardware RX antenna diversity like RT5390R.
+> > 
+> > based on 2012_03_22_RT5572_Linux_STA_v2.6.0.0_DPO
+> 
+> I'll check this patch tomorrow, when I get back home.
+> 
+> In the meantime some style related comments below.
+> 
+> > 
+> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> > Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+> > Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+> > Cc: John W. Linville <linville@tuxdriver.com>
+> > Cc: users@rt2x00.serialmonkey.com
+> > Cc: linux-wireless@vger.kernel.org
+> > Tested-by: wnewbie72@gmail.com
+> > Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> > ---
+> > drivers/net/wireless/rt2x00/rt2800.h    | 3 ++-
+> > drivers/net/wireless/rt2x00/rt2800lib.c | 8 +++++---
+> > 2 files changed, 7 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> > index a7630d5..6e84eee 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2800.h
+> > +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> > @@ -89,7 +89,8 @@
+> > #define REV_RT3090E            0x0211
+> > #define REV_RT3390E            0x0211
+> > #define REV_RT5390F            0x0502
+> > -#define REV_RT5390R            0x1502
+> > +#define REV_RT5370G            0x0503 /* hardware RX antenna diversity */
+> > +#define REV_RT5390R            0x1502 /* hardware RX antenna diversity */
+> > #define REV_RT5592C            0x0221
+> 
+> Please don't the comments to the chipset revision definitions. These macros are usually used all over the place; there is no need to specify this here.
+> 
+> > 
+> > #define DEFAULT_RSSI_OFFSET        120
+> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > index b52d70c..e202ec7 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > @@ -4311,8 +4311,9 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+> >            rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
+> >        }
+> > 
+> > -        /* This chip has hardware antenna diversity*/
+> > -        if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
+> > +        /* These chips have hardware RX antenna diversity */
+> > +        if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R) ||
+> > +            rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5370G)) {
+> >            rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
+> >            rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
+> >            rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
+> 
+> With respect to the comment change: are you sure this is only about RX antenna diversity?
+> 
+> Also, I'm wondering if the change to the if condition brings us everything that is wanted. Checking the same chipset for different minimal revisions doesn't make a whole lot of sense to me.
+> Sure, you are fixing later RT5370 revisions here, but may be botching up early RT5390 revisions here at the same time
+> 
+> > @@ -5554,7 +5555,8 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+> >        rt2x00dev->default_ant.rx = ANTENNA_A;
+> >    }
+> > 
+> > -    if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
+> > +    if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R) ||
+> > +        rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5370G)) {
+> >        rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY; /* Unused */
+> >        rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY; /* Unused */
+> >      }
+> 
+> The same comment on the if conditions apply here.
+> 
+> ---
+> Gertjan
+> _______________________________________________
+> users mailing list
+> users@rt2x00.serialmonkey.com
+> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
+> 
 
