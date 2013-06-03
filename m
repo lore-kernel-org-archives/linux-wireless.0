@@ -1,89 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53269 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423539Ab3FUU76 (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:38380 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752448Ab3FCLjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jun 2013 16:59:58 -0400
-Message-ID: <1371848393.8936.13.camel@jlt4.sipsolutions.net> (sfid-20130621_230008_104557_9F0ACB08)
-Subject: Re: [PATCH] nl80211/drivers: change bss channel to chandef
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 21 Jun 2013 22:59:53 +0200
-In-Reply-To: <1371737435-5694-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1371737435-5694-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 3 Jun 2013 07:39:07 -0400
+Message-ID: <1370259433.31905.7.camel@cumari.coelho.fi> (sfid-20130603_133911_036214_8C471040)
+Subject: pull request: TI wireless drivers fixes 2013-06-03 (for 3.10)
+From: Luciano Coelho <coelho@ti.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Mon, 3 Jun 2013 14:37:13 +0300
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="=-fTclRqC3vXS2ti6NganY"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-06-20 at 16:10 +0200, Simon Wunderlich wrote:
+--=-fTclRqC3vXS2ti6NganY
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -1402,7 +1402,7 @@ struct cfg80211_bss_ies {
->   * This structure describes a BSS (which may also be a mesh network)
->   * for use in scan results and similar.
->   *
-> - * @channel: channel this BSS is on
-> + * @chandef: chandef of the channel this BSS is on
+Hi John,
 
-I don't think this makes a lot of sense. The chandefs were defined to be
-able to capture things like 80+80 MHz, and there's no way that will be
-used here. I think it would make more sense to define a separate "scan
-width" or so that can only represent the values 5/10/20.
+Here are three patches that I'd like to get into 3.10.  Two of them, by
+me, are related to the firmware version checks in our driver.  Without
+them, the firmwares fail to load.  The other one, by Eliad, fixes a typo
+bug in our 5GHz scanning code.
 
-> +++ b/net/mac80211/ibss.c
-> @@ -246,7 +246,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
->  	mod_timer(&ifibss->timer,
->  		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
->  
-> -	bss = cfg80211_inform_bss_frame(local->hw.wiphy, chan,
-> +	bss = cfg80211_inform_bss_frame(local->hw.wiphy, &chandef,
+Please let me know if you have any problems with it!
 
-In fact I think this might even create a 40 MHz BSS which would be
-strange.
+The following changes since commit 4ab21db2202895e2c9d3520fed8e7fb061b29605=
+:
 
-> +++ b/net/wireless/nl80211.c
-> @@ -5608,7 +5608,8 @@ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
->  	    nla_put_u16(msg, NL80211_BSS_BEACON_INTERVAL, res->beacon_interval))
->  		goto nla_put_failure;
->  	if (nla_put_u16(msg, NL80211_BSS_CAPABILITY, res->capability) ||
-> -	    nla_put_u32(msg, NL80211_BSS_FREQUENCY, res->channel->center_freq) ||
-> +	    nla_put_u32(msg, NL80211_BSS_FREQUENCY,
-> +			res->chandef.chan->center_freq) ||
->  	    nla_put_u32(msg, NL80211_BSS_SEEN_MS_AGO,
->  			jiffies_to_msecs(jiffies - intbss->ts)))
->  		goto nla_put_failure;
+  rtlwifi: rtl8192cu: Fix problem in connecting to WEP or WPA(1) networks (=
+2013-05-31 13:00:33 -0400)
 
-You should also advertise the width to userspace.
+are available in the git repository at:
 
-> @@ -5887,10 +5888,9 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
->  		return -EOPNOTSUPP;
->  
->  	bssid = nla_data(info->attrs[NL80211_ATTR_MAC]);
-> -	chan = ieee80211_get_channel(&rdev->wiphy,
-> -		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
-> -	if (!chan || (chan->flags & IEEE80211_CHAN_DISABLED))
-> -		return -EINVAL;
-> +	err = nl80211_parse_chandef(rdev, info, &chandef);
-> +	if (!err)
-> +		return err;
+  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git wl12xx-fixe=
+s
 
-This also doesn't make sense, you'd allow asking for a 40 MHz channel.
-That doesn't mean anything though.
+for you to fetch changes up to 1b5346776c6688006380c2bb491ebf28bc3f3a19:
 
-Anyway, this is a bit pointless since __cfg80211_mlme_auth() will look
-up the BSS entry for the given parameters and pass _it_, so unless you
-need to support two APs using the same BSSID on the same channel but
-with different channel widths (which seems really unlikely) then nothing
-is needed here.
+  wl12xx/wl18xx: scan all 5ghz channels (2013-06-03 11:43:41 +0300)
 
-It might also be worthwhile to rename the inform_bss() functions and
-provide static inline wrappers for the current behaviour, since the 5/10
-MHz support is really something of a special case and not all drivers
-really need that.
+----------------------------------------------------------------
+Eliad Peller (1):
+      wl12xx/wl18xx: scan all 5ghz channels
 
-johannes
+Luciano Coelho (2):
+      wl12xx: fix minimum required firmware version for wl127x multirole
+      wl12xx: increase minimum singlerole firmware version required
 
+ drivers/net/wireless/ti/wl12xx/scan.c   |    2 +-
+ drivers/net/wireless/ti/wl12xx/wl12xx.h |    6 +++---
+ drivers/net/wireless/ti/wl18xx/scan.c   |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+
+--=20
+Cheers,
+Luca.
+
+
+--=-fTclRqC3vXS2ti6NganY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABAgAGBQJRrH/pAAoJEKFHnKIaPMX6ajkQAKNdft49HqDw7gWsC0xfVC+G
+MCXlnpj2IQ9hLrd7gOa6jmCp8nTzozDVFWXSt90HwlcAVYU8VPwrqUvra4dNmfXr
+dN5qg4IEYX0Q8H4Ahf08jJhCc0EY7dY2CQ7Jxv+ifI3z2PVcRMRXnJcvcGQ63GT0
+Aqtcr7Kq6Oe5ipOXKeAvp2yeTKeqcTqbyEwclXzI/b8gwm63mdLD4wWgIglUQ6Et
+Tfiqg+j0YDnSvaLVbAOA36TgUvXcEhFhGWii7rE2n19X+i+Ixi+OYDgSqn2EK+um
+CAH38H+f40l1KeIQK7eiZIAuDqpWnCYeiEiM+LV8gkQB4zgv81Nhg+rwBQT94PYB
+o8nnQAfeHJ7fGUrMBwMmJQT23bUdJdwDflhhhO9DZUw1k2bTZeXxPa9+cxGxzFCO
+99siAD3ct8e6WTovBMtZf6/bca9EQMcCFpDjNr/Z4UOGcyb1G0RMVcjh5QS51tIy
+Ut0dZ+bMz1QruKUo4Y02u00TRtk8qp2/o2szllq9CddvtMkYEXy/xGLeNpNUzPpR
+Jn6M3udKltjl/HjsR6f9Lq7WdX0cKkkimkFKtKpJBwFJ+YWonE2pL8wb9XgMw4W7
+vhDLFVUbQsw8O2K9B6gMQn9aLRMfNHsmZoS5XxdVh50xJit1qc1g8/Wl14oLS6AL
+j5xzl4ilwvhZ2yHmr8Ef
+=S7Mv
+-----END PGP SIGNATURE-----
+
+--=-fTclRqC3vXS2ti6NganY--
