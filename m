@@ -1,131 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:55490 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791Ab3FXVTn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 17:19:43 -0400
-Received: by mail-ee0-f54.google.com with SMTP id t10so6321550eei.41
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2013 14:19:41 -0700 (PDT)
-References: <1372107804-19679-1-git-send-email-juhosg@openwrt.org> <1372107804-19679-4-git-send-email-juhosg@openwrt.org>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1372107804-19679-4-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <27D52B4B-B53E-45D8-A326-813F3B2C7F5F@gmail.com> (sfid-20130624_231946_110315_30570B04)
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v3 3/3] rt2x00: rt2800lib: turn on tertiary PAs/LNAs for 3T/3R devices
-Date: Mon, 24 Jun 2013 23:19:37 +0200
+Received: from mx3.wp.pl ([212.77.101.7]:47406 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758953Ab3FCRKC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 13:10:02 -0400
+Date: Mon, 3 Jun 2013 19:09:59 +0200
+From: Jakub Kicinski <moorray@wp.pl>
 To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 1/7] rt2x00: rt2x00dev: use
+ rt2x00dev->tx->limit
+Message-ID: <20130603190959.70b1f4d2@north> (sfid-20130603_191010_698464_1D00E985)
+In-Reply-To: <1367421455-18463-2-git-send-email-juhosg@openwrt.org>
+References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
+	<1367421455-18463-2-git-send-email-juhosg@openwrt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Gabor!
 
-
-Sent from my iPad
-
-On 24 jun. 2013, at 23:03, Gabor Juhos <juhosg@openwrt.org> wrote:
-
-> The 3T/3R devices are using the tertiary PAs/LNAs
-> however those are never turned on. Fix the code to
-> turn on those on for such devices.
-> 
-> Also modify the code to use switch statements to
-> improve readability.
-> 
+On Wed,  1 May 2013 17:17:29 +0200, Gabor Juhos wrote:
+> The TX data queue is initialized already when
+> the rt2x00lib_probe_hw() function is called.
+>
+> Fetch the number of the queue entries from that
+> instead of using the entry_num field of the data
+> queue descriptor.
+>
+> The two values are the same, and the use of the
+> rt2x00dev->tx->limit value allows us to get rid
+> of a superfluous pointer dereference.
+>
 > Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
 > ---
-> Changes in v3:
-> - also move setting of the primary PA of the 5GHz band into the first
->   switch statement
-> Changes in v2:
-> - use a switch statement to improve readability as suggested
->   by Gertjan
-> - add detailed commit description
-> ---
-> drivers/net/wireless/rt2x00/rt2800lib.c |   47 +++++++++++++++++++++++--------
-> 1 file changed, 35 insertions(+), 12 deletions(-)
+>  drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index b7119e3..25f7dbe 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2678,30 +2678,53 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
-> 
->    tx_pin = 0;
-> 
-> -    if (rt2x00dev->default_ant.tx_chain_num > 1) {
-> -        /* Turn on secondary PAs for 2T and for 3T devices*/
-> +    switch (rt2x00dev->default_ant.tx_chain_num) {
-> +    case 3:
-> +        /* Turn on tertiary PAs */
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A2_EN,
-> +                   rf->channel > 14);
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G2_EN,
-> +                   rf->channel <= 14);
-> +        /* fall-through */
-> +    case 2:
-> +        /* Turn on secondary PAs */
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
->                   rf->channel > 14);
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
->                   rf->channel <= 14);
-> +        /* fall-through */
-> +    case 1:
-> +        /* Turn on primary PAs */
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN,
-> +                   rf->channel > 14);
-> +        if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags))
-> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
-> +        else
-> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN,
-> +                       rf->channel <= 14);
-> +        break;
->    }
-> 
-> -    if (rt2x00dev->default_ant.rx_chain_num > 1) {
-> -        /* Turn on secondary LNAs for 2R and for 3R devices */
-> +    switch (rt2x00dev->default_ant.rx_chain_num) {
-> +    case 3:
-> +        /* Turn on tertiary LNAs */
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A2_EN, 1);
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G2_EN, 1);
-> +        /* fall-through */
-> +    case 2:
-> +        /* Turn on secondary LNAs */
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A1_EN, 1);
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G1_EN, 1);
-> +        /* fall-through */
-> +    case 1:
-> +        /* Turn on primary LNAs */
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A0_EN, 1);
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G0_EN, 1);
-> +        break;
->    }
-> 
-> -    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A0_EN, 1);
-> -    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G0_EN, 1);
->    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_RFTR_EN, 1);
->    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_TRSW_EN, 1);
-> -    if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags))
-> -        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
-> -    else
-> -        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN,
-> -                   rf->channel <= 14);
-> -    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN, rf->channel > 14);
-> 
->    rt2800_register_write(rt2x00dev, TX_PIN_CFG, tx_pin);
-> 
-> -- 
-> 1.7.10
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index 90dc143..b287467 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -1077,7 +1077,7 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
+>   		 */
+>  		int kfifo_size =
+>  			roundup_pow_of_two(rt2x00dev->ops->tx_queues *
+> -					   rt2x00dev->ops->tx->entry_num *
+> +					   rt2x00dev->tx->limit *
+>  					   sizeof(u32));
+>  
+>  		status = kfifo_alloc(&rt2x00dev->txstatus_fifo, kfifo_size,
+
+Unfortunately this does not work without your "get rid of
+static data queue descriptors" series as well.
+
+queue->limit is set when rt2x00lib_start is called, not on
+probe. kfifo_alloc will fail with EINVAL here. As a result
+support for all rt2x00 devices is broken on wireless-testing.
+
+Maybe you can just post the mentioned series for inclusion?
+I have been running with it since you posted it as RFC and
+I did not notice any problems so far...
+
+ -- kuba
