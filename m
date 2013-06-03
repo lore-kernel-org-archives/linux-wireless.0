@@ -1,51 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44510 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934764Ab3FSUgr (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:49070 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243Ab3FCDwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 16:36:47 -0400
-Message-ID: <1371674192.8349.28.camel@jlt4.sipsolutions.net> (sfid-20130619_223650_431239_E1025EE5)
-Subject: Re: [PATCH 2/2] cfg80211: hold BSS over association process
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
+	Sun, 2 Jun 2013 23:52:18 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Jun 2013 22:36:32 +0200
-In-Reply-To: <51C21476.2070401@candelatech.com>
-References: <1371650017-14293-1-git-send-email-johannes@sipsolutions.net>
-	 <1371650017-14293-2-git-send-email-johannes@sipsolutions.net>
-	 <51C21476.2070401@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: [PATCH 3/7] ath9k: Remove unused structure ath_dbg_bb_mac_samp
+Date: Mon,  3 Jun 2013 09:19:25 +0530
+Message-Id: <1370231369-16241-3-git-send-email-sujith@msujith.org> (sfid-20130603_055223_859155_2D15E920)
+In-Reply-To: <1370231369-16241-1-git-send-email-sujith@msujith.org>
+References: <1370231369-16241-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-06-19 at 13:28 -0700, Ben Greear wrote:
-> On 06/19/2013 06:53 AM, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > This fixes the potential issue that the BSS struct that we use
-> > and later assign to wdev->current_bss is removed from the scan
-> > list while associating.
-> >
-> > Also warn when we don't have a BSS struct in connect_result
-> > unless it's from a driver that only has the connect() API.
-> 
-> I ran these two patches, plus my memory debugging patch
-> on top of wireless-testing (in relatively light testing).
-> 
-> It appears to fix the leaks I was seeing.
-> 
-> Just to make sure I am not missing something:
-> 
-> mac80211 should never take an additional reference
-> on the bss related to auth_data now?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-On *auth_data* it takes and (unconditionally) puts one. On *assoc_data*
-the reference is only temporarily owned by mac80211 until given back to
-cfg80211, and unless mac80211 wanted to have a separate one afterwards
-it doesn't need one (it would probably make sense to take one for
-"ifmgd->associated" though, but currently it relies on that being the
-same as "wdev->current_bss")
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.h | 39 ----------------------------------
+ 1 file changed, 39 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 223418d..fc67919 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -251,45 +251,6 @@ struct ath_stats {
+ 	u32 reset[__RESET_TYPE_MAX];
+ };
+ 
+-#define ATH_DBG_MAX_SAMPLES	10
+-struct ath_dbg_bb_mac_samp {
+-	u32 dma_dbg_reg_vals[ATH9K_NUM_DMA_DEBUG_REGS];
+-	u32 pcu_obs, pcu_cr, noise;
+-	struct {
+-		u64 jiffies;
+-		int8_t rssi_ctl0;
+-		int8_t rssi_ctl1;
+-		int8_t rssi_ctl2;
+-		int8_t rssi_ext0;
+-		int8_t rssi_ext1;
+-		int8_t rssi_ext2;
+-		int8_t rssi;
+-		bool isok;
+-		u8 rts_fail_cnt;
+-		u8 data_fail_cnt;
+-		u8 rateindex;
+-		u8 qid;
+-		u8 tid;
+-		u32 ba_low;
+-		u32 ba_high;
+-	} ts[ATH_DBG_MAX_SAMPLES];
+-	struct {
+-		u64 jiffies;
+-		int8_t rssi_ctl0;
+-		int8_t rssi_ctl1;
+-		int8_t rssi_ctl2;
+-		int8_t rssi_ext0;
+-		int8_t rssi_ext1;
+-		int8_t rssi_ext2;
+-		int8_t rssi;
+-		bool is_mybeacon;
+-		u8 antenna;
+-		u8 rate;
+-	} rs[ATH_DBG_MAX_SAMPLES];
+-	struct ath_cycle_counters cc;
+-	struct ath9k_nfcal_hist nfCalHist[NUM_NF_READINGS];
+-};
+-
+ struct ath9k_debug {
+ 	struct dentry *debugfs_phy;
+ 	u32 regidx;
+-- 
+1.8.3
 
