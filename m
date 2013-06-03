@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:43985 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753969Ab3FFG3u (ORCPT
+Received: from diserzione.investici.org ([82.221.99.153]:37497 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861Ab3FCHEc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 02:29:50 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH] ath9k: Fix OFDM weak signal detection for AP mode
-Date: Thu,  6 Jun 2013 11:57:00 +0530
-Message-Id: <1370500021-18722-1-git-send-email-sujith@msujith.org> (sfid-20130606_082954_082760_EA455D71)
+	Mon, 3 Jun 2013 03:04:32 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCH 2/2] mac80211: in mgmt_tx use the current channel if none has been specified
+Date: Mon,  3 Jun 2013 08:39:47 +0200
+Message-Id: <1370241587-2609-2-git-send-email-ordex@autistici.org> (sfid-20130603_090435_727410_099A6CFA)
+In-Reply-To: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-The commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
-changed the OFDM weak signal detection logic to disable it
-for AP mode, which is not allowed. Fix this and enable it always
-for AP mode.
+In mgmt_tx, if no channel has been specified via cfg80211,
+use the current one.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+If the interface requires offchan (because disconnected or
+for other reasons) then fail.
+
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ net/mac80211/cfg.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index e91725b..3ec4c53 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -177,10 +177,15 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
- 	    BEACON_RSSI(ah) <= ATH9K_ANI_RSSI_THR_HIGH)
- 		weak_sig = true;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9034da1..e6e41c7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2836,6 +2836,13 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		return -EOPNOTSUPP;
+ 	}
  
--	if (aniState->ofdmWeakSigDetect != weak_sig)
--			ath9k_hw_ani_control(ah,
--				ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
--				entry_ofdm->ofdm_weak_signal_on);
 +	/*
-+	 * OFDM Weak signal detection is always enabled for AP mode.
++	 * configurations requiring offchan cannot work if no channel has been
++	 * specified
 +	 */
-+	if (ah->opmode != NL80211_IFTYPE_AP &&
-+	    aniState->ofdmWeakSigDetect != weak_sig) {
-+		ath9k_hw_ani_control(ah,
-+				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
-+				     entry_ofdm->ofdm_weak_signal_on);
-+	}
++	if (need_offchan && !chan)
++		return -EINVAL;
++
+ 	mutex_lock(&local->mtx);
  
- 	if (aniState->ofdmNoiseImmunityLevel >= ATH9K_ANI_OFDM_DEF_LEVEL) {
- 		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
+ 	/* Check if the operating channel is the requested channel */
+@@ -2845,6 +2852,10 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		rcu_read_lock();
+ 		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 
++		/* if no channel was specified, use the current one */
++		if (chanctx_conf && !chan)
++			chan = chanctx_conf->def.chan;
++
+ 		if (chanctx_conf)
+ 			need_offchan = chan != chanctx_conf->def.chan;
+ 		else
+@@ -2852,6 +2863,12 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		rcu_read_unlock();
+ 	}
+ 
++	/* at this point a channel should have been chosen */
++	if (!chan) {
++		ret = -EINVAL;
++		goto out_unlock;
++	}
++
+ 	if (need_offchan && !offchan) {
+ 		ret = -EBUSY;
+ 		goto out_unlock;
 -- 
-1.8.3
+1.8.1.5
 
