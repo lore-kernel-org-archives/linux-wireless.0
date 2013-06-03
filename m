@@ -1,26 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:37758 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752816Ab3FXHcA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54267 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758041Ab3FCSQI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 03:32:00 -0400
-Date: Mon, 24 Jun 2013 00:31:59 -0700 (PDT)
-Message-Id: <20130624.003159.328922185075554033.davem@davemloft.net> (sfid-20130624_093213_981779_7E569D8A)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2013-06-21
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130621200957.GA2831@tuxdriver.com>
-References: <20130621200957.GA2831@tuxdriver.com>
+	Mon, 3 Jun 2013 14:16:08 -0400
+Message-ID: <1370283363.8227.27.camel@jlt4.sipsolutions.net> (sfid-20130603_201611_634982_A8794125)
+Subject: Re: [PATCH 2/2] mac80211: in mgmt_tx use the current channel if
+ none has been specified
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Date: Mon, 03 Jun 2013 20:16:03 +0200
+In-Reply-To: <20130603180320.GF1226@ritirata.org>
+References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+	 <1370241587-2609-2-git-send-email-ordex@autistici.org>
+	 <1370271690.8227.18.camel@jlt4.sipsolutions.net>
+	 <20130603180320.GF1226@ritirata.org>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 21 Jun 2013 16:09:58 -0400
+On Mon, 2013-06-03 at 20:03 +0200, Antonio Quartulli wrote:
+> On Mon, Jun 03, 2013 at 05:01:30PM +0200, Johannes Berg wrote:
+> > On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
+> > 
+> > > @@ -2845,6 +2852,10 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+> > >  		rcu_read_lock();
+> > >  		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> > >  
+> > > +		/* if no channel was specified, use the current one */
+> > > +		if (chanctx_conf && !chan)
+> > > +			chan = chanctx_conf->def.chan;
+> > > +
+> > >  		if (chanctx_conf)
+> > >  			need_offchan = chan != chanctx_conf->def.chan;
+> > >  		else
+> > > @@ -2852,6 +2863,12 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+> > >  		rcu_read_unlock();
+> > >  	}
+> > >  
+> > > +	/* at this point a channel should have been chosen */
+> > > +	if (!chan) {
+> > > +		ret = -EINVAL;
+> > > +		goto out_unlock;
+> > > +	}
+> > > +
+> > 
+> > These two changes make no sense at all. If you look at the function
+> > you'll see that "chan" isn't used at all after the check, 
+> 
+> uhm? it is passed to ieee80211_start_roc_work() right after (this part has not
+> been changed).
 
-> I would guess that this is the last big wireless pull request before
-> the 3.11 merge window...
+> 2904         ret = ieee80211_start_roc_work(local, sdata, chan,
 
-Pulled, thanks John.
+No, you can't get there without need_offchan.
+
+johannes
+
