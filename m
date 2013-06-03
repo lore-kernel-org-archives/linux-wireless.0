@@ -1,57 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49779 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751379Ab3FLJsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 05:48:09 -0400
-Message-ID: <51B843C9.9090500@openwrt.org> (sfid-20130612_114829_715942_7A14C831)
-Date: Wed, 12 Jun 2013 11:47:53 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Calvin Owens <jcalvinowens@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Use RCU protection in ieee80211_get_tx_rates()
-References: <20130609225120.GA2789@gmail.com> <20130610042959.GA1902@gmail.com> <1370950926.8356.14.camel@jlt4.sipsolutions.net> <20130611171304.GA2189@gmail.com> <1370980523.8356.70.camel@jlt4.sipsolutions.net> <20130612075634.GA1649@gmail.com> <20130612080042.GA1695@gmail.com>
-In-Reply-To: <20130612080042.GA1695@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:61567 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753676Ab3FCVty (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 17:49:54 -0400
+Received: by mail-wg0-f52.google.com with SMTP id z11so3721508wgg.7
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 14:49:53 -0700 (PDT)
+Message-ID: <1370296188.9091.31.camel@canaries64> (sfid-20130603_234957_697022_2736DF14)
+Subject: [PATCH 5/8] staging: vt6656: rf.c/h rename RFvRSSITodBm
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 03 Jun 2013 22:49:48 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-06-12 10:00 AM, Calvin Owens wrote:
-> Copying the rate table should be done in an RCU read-side critical
-> section.
-I think this approach is wrong. The sta entry is also under RCU
-protection (no locking for read access in that part of the code.
-In a normal driver tx path, no extra rcu_read_lock/rcu_read_unlock is
-needed. Only if the driver does some scheduling outside of the tx
-function (which ath9k does), this RCU warning appears.
+Remove camel case rename RFvRSSITodBm to vnt_rf_rssi_to_dbm
 
-How about this change instead:
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1570,6 +1570,8 @@ void ath_txq_schedule(struct ath_softc *
- 	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
- 		return;
+ drivers/staging/vt6656/bssdb.c | 6 +++---
+ drivers/staging/vt6656/iwctl.c | 6 +++---
+ drivers/staging/vt6656/rf.c    | 2 +-
+ drivers/staging/vt6656/rf.h    | 2 +-
+ 4 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
+index ee79bbd..078d751 100644
+--- a/drivers/staging/vt6656/bssdb.c
++++ b/drivers/staging/vt6656/bssdb.c
+@@ -451,7 +451,7 @@ int BSSbInsertToBSSList(struct vnt_private *pDevice,
+     if (pDevice->bUpdateBBVGA) {
+         // Monitor if RSSI is too strong.
+         pBSSList->byRSSIStatCnt = 0;
+-        RFvRSSITodBm(pDevice, (u8)(pRxPacket->uRSSI), &pBSSList->ldBmMAX);
++	vnt_rf_rssi_to_dbm(pDevice, (u8)(pRxPacket->uRSSI), &pBSSList->ldBmMAX);
+         pBSSList->ldBmAverage[0] = pBSSList->ldBmMAX;
+         pBSSList->ldBmAverRange = pBSSList->ldBmMAX;
+         for (ii = 1; ii < RSSI_STAT_COUNT; ii++)
+@@ -578,7 +578,7 @@ int BSSbUpdateToBSSList(struct vnt_private *pDevice,
+     }
  
-+	rcu_read_lock();
-+
- 	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
- 	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
- 
-@@ -1608,8 +1610,10 @@ void ath_txq_schedule(struct ath_softc *
- 
- 		if (ac == last_ac ||
- 		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
--			return;
-+			break;
- 	}
-+
-+	rcu_read_unlock();
+     if (pRxPacket->uRSSI != 0) {
+-        RFvRSSITodBm(pDevice, (u8)(pRxPacket->uRSSI), &ldBm);
++	vnt_rf_rssi_to_dbm(pDevice, (u8)(pRxPacket->uRSSI), &ldBm);
+         // Monitor if RSSI is too strong.
+         pBSSList->byRSSIStatCnt++;
+         pBSSList->byRSSIStatCnt %= RSSI_STAT_COUNT;
+@@ -1387,7 +1387,7 @@ if(pDevice->bLinkPass !=true)
  }
+ else
+ {
+-   RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
++	vnt_rf_rssi_to_dbm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
+    if(-ldBm < 50)  {
+    	RssiRatio = 4000;
+      }
+diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
+index d0cf7d8..af355d2 100644
+--- a/drivers/staging/vt6656/iwctl.c
++++ b/drivers/staging/vt6656/iwctl.c
+@@ -61,7 +61,7 @@ struct iw_statistics *iwctl_get_wireless_stats(struct net_device *dev)
+ 	if (pDevice->scStatistic.LinkQuality > 100)
+ 		pDevice->scStatistic.LinkQuality = 100;
+ 	pDevice->wstats.qual.qual =(u8)pDevice->scStatistic.LinkQuality;
+-	RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
++	vnt_rf_rssi_to_dbm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
+ 	pDevice->wstats.qual.level = ldBm;
+ 	pDevice->wstats.qual.noise = 0;
+ 	pDevice->wstats.qual.updated = 1;
+@@ -237,7 +237,7 @@ int iwctl_giwscan(struct net_device *dev, struct iw_request_info *info,
+ 			// ADD quality
+ 			memset(&iwe, 0, sizeof(iwe));
+ 			iwe.cmd = IWEVQUAL;
+-			RFvRSSITodBm(pDevice, (u8)(pBSS->uRSSI), &ldBm);
++			vnt_rf_rssi_to_dbm(pDevice, (u8)(pBSS->uRSSI), &ldBm);
+ 			iwe.u.qual.level = ldBm;
+ 			iwe.u.qual.noise = 0;
  
- /***********/
+@@ -1427,7 +1427,7 @@ int iwctl_giwsens(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " SIOCGIWSENS\n");
+ 	if (pDevice->bLinkPass == true) {
+-		RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
++		vnt_rf_rssi_to_dbm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
+ 		wrq->value = ldBm;
+ 	} else {
+ 		wrq->value = 0;
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index 1706d8d..bcc9632 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -943,7 +943,7 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+  * Return Value: none
+  *
+ -*/
+-void RFvRSSITodBm(struct vnt_private *priv, u8 rssi, long *dbm)
++void vnt_rf_rssi_to_dbm(struct vnt_private *priv, u8 rssi, long *dbm)
+ {
+ 	u8 idx = (((rssi & 0xc0) >> 6) & 0x03);
+ 	long b = (rssi & 0x3f);
+diff --git a/drivers/staging/vt6656/rf.h b/drivers/staging/vt6656/rf.h
+index 1c0dd25..73abc5a 100644
+--- a/drivers/staging/vt6656/rf.h
++++ b/drivers/staging/vt6656/rf.h
+@@ -58,7 +58,7 @@ extern const u8 RFaby11aChannelIndex[200];
+ int vnt_rf_write_embedded(struct vnt_private *, u32);
+ int vnt_rf_setpower(struct vnt_private *, u32, u32);
+ int vnt_rf_set_txpower(struct vnt_private *, u8, u32);
+-void RFvRSSITodBm(struct vnt_private *, u8 byCurrRSSI, long *pldBm);
++void vnt_rf_rssi_to_dbm(struct vnt_private *, u8, long *);
+ void RFbRFTableDownload(struct vnt_private *pDevice);
+ 
+ #endif /* __RF_H__ */
+-- 
+1.8.1.2
 
