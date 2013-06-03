@@ -1,65 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7472 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752699Ab3FEKF0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 06:05:26 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Antonio Quartulli <antonio@open-mesh.com>
-CC: Antonio Quartulli <ordex@autistici.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] nl80211: allow sending CMD_FRAME without specifying any frequency
-References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
-	<877gi8khyi.fsf@kamboji.qca.qualcomm.com>
-	<20130605095311.GA2349@open-mesh.com>
-Date: Wed, 5 Jun 2013 13:05:21 +0300
-In-Reply-To: <20130605095311.GA2349@open-mesh.com> (Antonio Quartulli's
-	message of "Wed, 5 Jun 2013 11:53:11 +0200")
-Message-ID: <87y5aoj2ji.fsf@kamboji.qca.qualcomm.com> (sfid-20130605_120529_686478_D12F9CE0)
+Received: from mms1.broadcom.com ([216.31.210.17]:4922 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759352Ab3FCRI3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 13:08:29 -0400
+Message-ID: <51ACCD36.3050504@broadcom.com> (sfid-20130603_190832_097423_E7B55457)
+Date: Mon, 3 Jun 2013 19:07:02 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "John Greene" <jogreene@redhat.com>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] brcmsmac: Reduce log spam in heavy tx, make err
+ print in debug
+References: <1370267259-19712-1-git-send-email-jogreene@redhat.com>
+In-Reply-To: <1370267259-19712-1-git-send-email-jogreene@redhat.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Antonio Quartulli <antonio@open-mesh.com> writes:
+On 06/03/2013 03:47 PM, John Greene wrote:
+> Move message to debug mode to reduce log spam under heavy tx (iperf) load.
+> This message prints in ht debug mode only:
+> brcms_c_ampdu_dotxstatus_complete: Pkt tx suppressed, illegal channel
+> possibly 153
 
-> On Wed, Jun 05, 2013 at 02:47:01AM -0700, Kalle Valo wrote:
->> Antonio Quartulli <ordex@autistici.org> writes:
->> 
->> > From: Antonio Quartulli <antonio@open-mesh.com>
->> >
->> > Users may want to send a frame on the current channel
->> > without specifying it.
->> >
->> > Make mgmt_tx pass a NULL channel to mac80211 if none has
->> > been specified by the user.
->> >
->> > Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
->> 
->> Why? And what users are we talking about here? It would be nice if the
->> commit log would give some context here for use who nothing about this
->> patch. "Users may want" is not very informative :)
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: John Greene <jogreene@redhat.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/ampdu.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> Hello Kalle,
-> thanks for your feedback.
->
-> Sure, I can change the commit log.
->
-> However, I already wrote a couple of (userspace) applications which wanted to
-> send a message on the current channel and the only way to do it was to first get
-> the current channel and then pass it when sending a CMD_FRAME via nl80211. Of
-> course this approach is just a bit racy :-)
->
-> Moreover, I'm currently working on improving IBSS/RSN support in wpa_supplicant
-> and sending frames on the current channel is needed.
->
-> Do you think it is worth mentioning userspace applications like wpa_s in the
-> kernel commit message?
 
-I don't know what others think, but to me it is. It makes it easier to
-understand why the change is made. And also do we really need the change
-or not.
-
--- 
-Kalle Valo
