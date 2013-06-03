@@ -1,128 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:51400 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784Ab3FXUlE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 16:41:04 -0400
-Received: by mail-wg0-f44.google.com with SMTP id m15so8655411wgh.23
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2013 13:41:02 -0700 (PDT)
-References: <1372105972-3022-1-git-send-email-juhosg@openwrt.org> <1372105972-3022-4-git-send-email-juhosg@openwrt.org>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1372105972-3022-4-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <EF51C8D4-466A-49C3-9D8B-05548F7EB806@gmail.com> (sfid-20130624_224109_357655_EB523503)
-Cc: John Linville <linville@tuxdriver.com>,
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:46312 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759541Ab3FCQxP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 12:53:15 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: 'Johannes Berg' <johannes@sipsolutions.net>
+CC: Bing Zhao <bzhao@marvell.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v2 3/3] rt2x00: rt2800lib: turn on tertiary PAs/LNAs for 3T/3R devices
-Date: Mon, 24 Jun 2013 22:40:59 +0200
-To: Gabor Juhos <juhosg@openwrt.org>
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Luciano Coelho <coelho@ti.com>
+Date: Mon, 3 Jun 2013 09:47:43 -0700
+Subject: RE: [PATCH v2 2/2] cfg80211/nl80211: Add packet coalesce support
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5950F313C2CB5@SC-VEXCH1.marvell.com> (sfid-20130603_185324_161464_C13FF38D)
+In-Reply-To: <1370273291.8227.24.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gabor,
+Hi Johannes,
 
-Sent from my iPad
+> Hi,
+> 
+> sorry for the late reply. I did see you sent another version, but wanted
+> to comment here anyway.
+> 
+> > > This is curious, you already discard those that you don't care about
+> by
+> > > way of multicast filtering, no? What's the added advantage here? Would
+> > > you coalesce interrupts for those packets that pass the filter(s)?
+> >
+> > Yes. we don't want to simply discard those packets, because few of
+> > them may be useful for the host.
+> > The advantage here is instead of getting random per packet receive
+> > interrupts, host receives multiple buffered packets with a single
+> > receive interrupt.
+> 
+> I guess that makes some sense.
+> 
+> > > Actually, you should probably make that a pointer, then it can be NULL
+> > > for drivers not supporting it, and static const for those that do.
+> Means
+> > > you should make it a const pointer, of course.
+> > >
+> > > Userspace can tell by checking if the support is advertised.
+> >
+> > We will use following condition to check if driver is not supporting
+> > the feature. (wowlan code does the same thing)
+> >
+> > "if (!dev->wiphy.coalesce.n_patterns || !dev->wiphy.coalesce.n_rules)"
+> 
+> Hmm. I think wowlan should probably be changed though, no need to make
+> the struct larger just for this, right? Not all drivers are going to
+> support it.
+> 
+> For WoWLAN I'm going to apply this:
+> http://p.sipsolutions.net/fa808e0722a7624a.txt
+> 
 
-On 24 jun. 2013, at 22:32, Gabor Juhos <juhosg@openwrt.org> wrote:
+This looks good. We don't need to unnecessarily allocate space in wiphy. We will make similar changes for coalesce.
 
-> The 3T/3R devices are using the tertiary PAs/LNAs
-> however those are never turned on. Fix the code to
-> turn on those on for such devices.
+> > > This is bad. You leave rdev->coalesce assigned, but it's completely
+> > > invalid data. IMHO you should use a temporary variable and only assign
+> > > it when it's fully parsed, freeing it if not. That way, you also don't
+> > > kill old values when new invalid values are parsed.
+> >
+> > "iw coalesce add" command adds one coalesce rule at a time. "iw
+> > coalesce disable" command removes all configured rules.
 > 
-> Also modify the code to use switch statements to
-> improve readability.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> Can you please change this to "iw coalesce set" and make it set all the
+> rules in one?
 
-Just one more thing. See below.
+"iw coalesce add" was used, because command for adding multiple rules at the same time will be a bit lengthy(user will need to enter multiple lists of packet patterns) and syntax check in iw will also need some efforts. 
 
-> ---
-> Changes in v2:
-> - use a switch statement to improve readability as suggested
->   by Gertjan
-> - add detailed commit description
-> ---
-> drivers/net/wireless/rt2x00/rt2800lib.c |   44 +++++++++++++++++++++++--------
-> 1 file changed, 33 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index b7119e3..25f4727 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2678,29 +2678,51 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
-> 
->    tx_pin = 0;
-> 
-> -    if (rt2x00dev->default_ant.tx_chain_num > 1) {
-> -        /* Turn on secondary PAs for 2T and for 3T devices*/
-> +    switch (rt2x00dev->default_ant.tx_chain_num) {
-> +    case 3:
-> +        /* Turn on tertiary PAs */
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A2_EN,
-> +                   rf->channel > 14);
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G2_EN,
-> +                   rf->channel <= 14);
-> +        /* fall-through */
-> +    case 2:
-> +        /* Turn on secondary PAs */
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
->                   rf->channel > 14);
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
->                   rf->channel <= 14);
-> +        /* fall-through */
-> +    case 1:
-> +        /* Turn on primary PAs */
-> +        if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags))
-> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
-> +        else
-> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN,
-> +                       rf->channel <= 14);
-> +        break;
->    }
-> 
-> -    if (rt2x00dev->default_ant.rx_chain_num > 1) {
-> -        /* Turn on secondary LNAs for 2R and for 3R devices */
-> +    switch (rt2x00dev->default_ant.rx_chain_num) {
-> +    case 3:
-> +        /* Turn on tertiary LNAs */
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A2_EN, 1);
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G2_EN, 1);
-> +        /* fall-through */
-> +    case 2:
-> +        /* Turn on secondary LNAs */
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A1_EN, 1);
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G1_EN, 1);
-> +        /* fall-through */
-> +    case 1:
-> +        /* Turn on primary LNAs */
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A0_EN, 1);
-> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G0_EN, 1);
-> +        break;
->    }
-> 
-> -    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A0_EN, 1);
-> -    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G0_EN, 1);
->    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_RFTR_EN, 1);
->    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_TRSW_EN, 1);
-> -    if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags))
-> -        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
-> -    else
-> -        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN,
-> -                   rf->channel <= 14);
->    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN, rf->channel > 14);
+> Otherwise you're going to have very awkward races and need
+> to always clear etc. The code would also be easier, though obviously
+> you'd need to be able to specify multiple rules at the same time.
 
-I guess you forgot to move this setting of the primary PA of the 5GHz band inside the switch?
+For "iw coalesce set" also user needs to always clear the settings using "iw coalesce disable". Also similar to "coalesce set", for "coalesce add" we clear the settings and free allocations while unloading the driver.
+
+Please let us know if you prefer "coalesce set" over "coalesce add".
+
+Thanks,
+Amit
 
 > 
->    rt2800_register_write(rt2x00dev, TX_PIN_CFG, tx_pin);
-> -- 
-> 1.7.10
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> johannes
+
