@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38360 "EHLO arrakis.dune.hu"
+Received: from mx1.redhat.com ([209.132.183.28]:1631 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752908Ab3FDLlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 07:41:07 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 04/13] rt2x00: rt2x00queue: setup queue->threshold from queue->limit
-Date: Tue,  4 Jun 2013 13:40:41 +0200
-Message-Id: <1370346050-7047-5-git-send-email-juhosg@openwrt.org> (sfid-20130604_135936_404743_44A86F84)
-In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
-References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+	id S1757296Ab3FCPGq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 11:06:46 -0400
+Date: Mon, 3 Jun 2013 17:08:47 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/7] ath9k: Enable WoW only for AR9462
+Message-ID: <20130603150846.GB2146@redhat.com> (sfid-20130603_170650_691253_31A380CA)
+References: <1370231369-16241-1-git-send-email-sujith@msujith.org>
+ <1370231369-16241-2-git-send-email-sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370231369-16241-2-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the queue->limit value instead of the
-qdesc->entry_num to compute the threshold.
-The two source values are the same and the
-data queue descriptor structure will be
-removed by a later patch.
+Hi
 
-Also separate the computation from the rest
-of the init code to make further changes
-easier.
+On Mon, Jun 03, 2013 at 09:19:24AM +0530, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> The only card with which WoW has been tested and verified is
+> AR9462. Do not enable it for all cards since WoW is really quirky
+> and needs to be tested properly with each chip.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Do this feature will be added back in the future? If so, when? Or there
+are some limitations regarding WoW support on older chips?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index c12d1c8..3ae2264 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -1323,11 +1323,12 @@ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
- 	BUG_ON(!qdesc);
- 
- 	queue->limit = qdesc->entry_num;
--	queue->threshold = DIV_ROUND_UP(qdesc->entry_num, 10);
- 	queue->data_size = qdesc->data_size;
- 	queue->desc_size = qdesc->desc_size;
- 	queue->winfo_size = qdesc->winfo_size;
- 	queue->priv_size = qdesc->priv_size;
-+
-+	queue->threshold = DIV_ROUND_UP(queue->limit, 10);
- }
- 
- int rt2x00queue_allocate(struct rt2x00_dev *rt2x00dev)
--- 
-1.7.10
+I'm asking because, we have RHEL customer that request WoWLAN support
+for AR9280. I thought this will be matter of backport ath9k driver
+from upstream to RHEL, since we have commits that add WoW for AR9002,
+including AR9280. But since you're now removing that feature I'm a bit
+worried. Will WoW be supported on AR9280, or we should rather ask
+customer to use different chip i.e. AR9462 ?
+
+Thanks
+Stanislaw
 
