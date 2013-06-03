@@ -1,104 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:50975 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750724Ab3FQI5b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 04:57:31 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2] ath9k: Fix ANI for AP mode
-Date: Mon, 17 Jun 2013 14:24:36 +0530
-Message-Id: <1371459276-4800-1-git-send-email-sujith@msujith.org> (sfid-20130617_105734_398323_22434D9D)
+Received: from mout.gmx.net ([212.227.17.21]:53862 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752555Ab3FCH6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 03:58:17 -0400
+Received: from mailout-de.gmx.net ([10.1.76.32]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0MH2cu-1UfcJ00zkQ-00DnqL for
+ <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 09:58:16 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 1/2] ath9k: remove useless flag conversation.
+Date: Mon,  3 Jun 2013 09:57:58 +0200
+Message-Id: <1370246279-6536-2-git-send-email-linux@rempel-privat.de> (sfid-20130603_095823_542604_7790B511)
+In-Reply-To: <1370246279-6536-1-git-send-email-linux@rempel-privat.de>
+References: <1370246279-6536-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+some flags used only outside of ath9k - In this case we can use
+"enum mac80211_rx_flags" and pass it upstream without extra
+conversation.
 
-The commit "ath9k: Fix ANI monitoring" reverted an earlier
-commit that adjusted ANI to improve performance. But, this causes
-adverse effects in AP mode (as reported by Felix based on an OpenWrt
-report). Use the older INI/period configuration for now until more
-testing is done.
-
-Cc: Felix Fietkau <nbd@openwrt.org>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
-v2 - Earlier patch added a macro twice.
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |  5 +++--
+ drivers/net/wireless/ath/ath9k/mac.c        | 11 +++++++----
+ drivers/net/wireless/ath/ath9k/mac.h        |  1 +
+ drivers/net/wireless/ath/ath9k/recv.c       |  5 +----
+ 4 files changed, 12 insertions(+), 10 deletions(-)
 
- drivers/net/wireless/ath/ath9k/ani.c | 29 ++++++++++++-----------------
- drivers/net/wireless/ath/ath9k/ani.h |  6 +++++-
- 2 files changed, 17 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index a68beb1..4994bea 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -186,6 +186,14 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
- 				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
- 				     entry_ofdm->ofdm_weak_signal_on);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 301bf72..5163abd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -469,6 +469,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 
+ 	rxs->rs_status = 0;
+ 	rxs->rs_flags =  0;
++	rxs->flag =  0;
+ 
+ 	rxs->rs_datalen = rxsp->status2 & AR_DataLen;
+ 	rxs->rs_tstamp =  rxsp->status3;
+@@ -493,8 +494,8 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 	rxs->rs_isaggr = (rxsp->status11 & AR_RxAggr) ? 1 : 0;
+ 	rxs->rs_moreaggr = (rxsp->status11 & AR_RxMoreAggr) ? 1 : 0;
+ 	rxs->rs_antenna = (MS(rxsp->status4, AR_RxAntenna) & 0x7);
+-	rxs->rs_flags  = (rxsp->status4 & AR_GI) ? ATH9K_RX_GI : 0;
+-	rxs->rs_flags  |= (rxsp->status4 & AR_2040) ? ATH9K_RX_2040 : 0;
++	rxs->flag  |= (rxsp->status4 & AR_GI) ? RX_FLAG_SHORT_GI : 0;
++	rxs->flag  |= (rxsp->status4 & AR_2040) ? RX_FLAG_40MHZ : 0;
+ 
+ 	rxs->evm0 = rxsp->status6;
+ 	rxs->evm1 = rxsp->status7;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 498fee0..a52081d 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -547,6 +547,7 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 
+ 	rs->rs_status = 0;
+ 	rs->rs_flags = 0;
++	rs->flag = 0;
+ 
+ 	rs->rs_datalen = ads.ds_rxstatus1 & AR_DataLen;
+ 	rs->rs_tstamp = ads.AR_RcvTimestamp;
+@@ -586,10 +587,12 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 	rs->rs_moreaggr =
+ 		(ads.ds_rxstatus8 & AR_RxMoreAggr) ? 1 : 0;
+ 	rs->rs_antenna = MS(ads.ds_rxstatus3, AR_RxAntenna);
+-	rs->rs_flags =
+-		(ads.ds_rxstatus3 & AR_GI) ? ATH9K_RX_GI : 0;
+-	rs->rs_flags |=
+-		(ads.ds_rxstatus3 & AR_2040) ? ATH9K_RX_2040 : 0;
++
++	/* directly mapped flags for ieee80211_rx_status */
++	rs->flag |=
++		(ads.ds_rxstatus3 & AR_GI) ? RX_FLAG_SHORT_GI : 0;
++	rs->flag |=
++		(ads.ds_rxstatus3 & AR_2040) ? RX_FLAG_40MHZ : 0;
+ 
+ 	if (ads.ds_rxstatus8 & AR_PreDelimCRCErr)
+ 		rs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 5865f92..3f1e775 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -149,6 +149,7 @@ struct ath_rx_status {
+ 	u32 evm2;
+ 	u32 evm3;
+ 	u32 evm4;
++	u32 flag; /* see enum mac80211_rx_flags */
+ };
+ 
+ struct ath_htc_rx_status {
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 8be2b5d..b4b758d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -868,10 +868,7 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	if (rx_stats->rs_rate & 0x80) {
+ 		/* HT rate */
+ 		rxs->flag |= RX_FLAG_HT;
+-		if (rx_stats->rs_flags & ATH9K_RX_2040)
+-			rxs->flag |= RX_FLAG_40MHZ;
+-		if (rx_stats->rs_flags & ATH9K_RX_GI)
+-			rxs->flag |= RX_FLAG_SHORT_GI;
++		rxs->flag |= rx_stats->flag;
+ 		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
+ 		return 0;
  	}
-+
-+	if (aniState->ofdmNoiseImmunityLevel >= ATH9K_ANI_OFDM_DEF_LEVEL) {
-+		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
-+		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI;
-+	} else {
-+		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI;
-+		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW;
-+	}
- }
- 
- static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
-@@ -420,25 +428,12 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- 		ofdmPhyErrRate, aniState->cckNoiseImmunityLevel,
- 		cckPhyErrRate, aniState->ofdmsTurn);
- 
--	if (aniState->listenTime > 5 * ah->aniperiod) {
--		/*
--		 * Check if we need to lower immunity if
--		 * 5 ani_periods have passed.
--		 */
--		if (ofdmPhyErrRate <= ah->config.ofdm_trig_low &&
--		    cckPhyErrRate <= ah->config.cck_trig_low) {
-+	if (aniState->listenTime > ah->aniperiod) {
-+		if (cckPhyErrRate < ah->config.cck_trig_low &&
-+		    ofdmPhyErrRate < ah->config.ofdm_trig_low) {
- 			ath9k_hw_ani_lower_immunity(ah);
- 			aniState->ofdmsTurn = !aniState->ofdmsTurn;
--		}
--		ath9k_ani_restart(ah);
--	} else if (aniState->listenTime > ah->aniperiod) {
--		/*
--		 * Check if immunity has to be raised,
--		 * (either OFDM or CCK).
--		 */
--		if (ofdmPhyErrRate > ah->config.ofdm_trig_high &&
--		    (cckPhyErrRate <= ah->config.cck_trig_high ||
--		     aniState->ofdmsTurn)) {
-+		} else if (ofdmPhyErrRate > ah->config.ofdm_trig_high) {
- 			ath9k_hw_ani_ofdm_err_trigger(ah);
- 			aniState->ofdmsTurn = false;
- 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 77a06fd..b54a3fb 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -20,8 +20,12 @@
- #define BEACON_RSSI(ahp) (ahp->stats.avgbrssi)
- 
- /* units are errors per second */
--#define ATH9K_ANI_OFDM_TRIG_HIGH          1000
-+#define ATH9K_ANI_OFDM_TRIG_HIGH           3500
-+#define ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI 1000
-+
- #define ATH9K_ANI_OFDM_TRIG_LOW           400
-+#define ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI 900
-+
- #define ATH9K_ANI_CCK_TRIG_HIGH           600
- #define ATH9K_ANI_CCK_TRIG_LOW            300
- 
 -- 
-1.8.3.1
+1.8.1.2
 
