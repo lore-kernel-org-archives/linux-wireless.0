@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48806 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751685Ab3F0NMl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 09:12:41 -0400
-Message-ID: <1372338757.8160.9.camel@jlt4.sipsolutions.net> (sfid-20130627_151244_435221_5359F1CA)
-Subject: Re: [PATCHv4 08/18] mac80211: allow scanning for 5/10 MHz channels
- in IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 27 Jun 2013 15:12:37 +0200
-In-Reply-To: <1372337064-19254-9-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1372337064-19254-9-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp2.u-psud.fr ([129.175.33.42]:64527 "EHLO smtp2.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757296Ab3FCPEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 11:04:12 -0400
+Message-ID: <51ACB068.8070006@lri.fr> (sfid-20130603_170414_595385_4FA3EC7A)
+Date: Mon, 03 Jun 2013 17:04:08 +0200
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Antonio Quartulli <ordex@autistici.org>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: Re: [PATCH 1/2] nl80211: allow sending CMD_FRAME without specifying
+ any frequency
+References: <1370241587-2609-1-git-send-email-ordex@autistici.org> <1370271547.8227.16.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1370271547.8227.16.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-06-27 at 14:44 +0200, Simon Wunderlich wrote:
+On 03/06/2013 16:59, Johannes Berg wrote:
+> On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
+>> From: Antonio Quartulli <antonio@open-mesh.com>
+>>
+>> Users may want to send a frame on the current channel
+>> without specifying it.
+>>
+>> Make mgmt_tx pass a NULL channel to mac80211 if none has
+>> been specified by the user.
+> 
+> cfg80211 isn't just a mac80211 frontend ... ;-)
+> 
+> Also, as Nicolas said, ath6kl_mgmt_tx() will crash after this patch if
+> it's called in AP mode w/o a channel, so you need to think about that.
 
-> +	case NL80211_BSS_CHAN_WIDTH_20:
-> +		/* If scanning on oper channel, use whatever channel-type
-> +		 * is currently in use.
-> +		*/
-
-That seems to be missing a space :)
-You also moved the code, but didn't delete the comment in its original
-place?
-
-johannes
-
+It will crash unconditionally. All ath6kl_mgmt_tx()'s code paths access
+chan->center_freq at some point.
