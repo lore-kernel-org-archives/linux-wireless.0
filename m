@@ -1,88 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:52878 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754658Ab3FKMWH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 08:22:07 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCHv5 4/4] nl80211: allow sending CMD_FRAME without specifying any frequency
-Date: Tue, 11 Jun 2013 14:20:03 +0200
-Message-Id: <1370953203-4086-4-git-send-email-ordex@autistici.org> (sfid-20130611_142216_200377_4D8B4EB6)
-In-Reply-To: <1370953203-4086-1-git-send-email-ordex@autistici.org>
-References: <1370953203-4086-1-git-send-email-ordex@autistici.org>
+Received: from arrakis.dune.hu ([78.24.191.176]:46580 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758133Ab3FCVkB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 17:40:01 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Jakub Kicinski <moorray@wp.pl>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH] rt2x00: rt2x00queue: initialize data_queue fields earlier
+Date: Mon,  3 Jun 2013 23:39:53 +0200
+Message-Id: <1370295593-18938-1-git-send-email-juhosg@openwrt.org> (sfid-20130603_234013_261037_92EF8513)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+Support for rt2800 device is broken since my
+'rt2x00: rt2x00dev: use rt2x00dev->tx->limit'
+patch. The changelog of that commit says that the
+TX data queue is initialized already when the
+rt2x00lib_probe_hw() function is called.
 
-Users may want to send a frame on the current channel
-without specifying it.
+However as Jakub noticed it, this statement is not
+correct. The queue->limit field is initialized in
+the rt2x00queue_alloc_entries routine and that is
+not yet called when rt2x00lib_probe_hw() runs.
+Because the value of tx->limit contains zero, the
+driver tries to allocate a kernel fifo with zero
+size and kfifo_alloc rejects that with -EINVAL.
 
-This is particularly useful for the correct implementation
-of the IBSS/RSN support in wpa_supplicant which requires to
-receive and send AUTH frames.
+  PCI: Enabling device 0000:01:00.0 (0000 -> 0002)
+  ieee80211 phy1: rt2x00_set_rt: Info - RT chipset 3071, rev 021c detected
+  ieee80211 phy1: rt2x00_set_rf: Info - RF chipset 0008 detected
+  ieee80211 phy1: rt2x00lib_probe_dev: Error - Failed to initialize hw
+  rt2800pci: probe of 0000:01:00.0 failed with error -22
 
-Make mgmt_tx pass a NULL channel to the driver if none has
-been specified by the user.
+Move the data_queue field initialization from
+the rt2x00queue_alloc_entries routine into the
+rt2x00queue_init function. The initialization
+code is not strictly related to the allocation,
+and the change ensures that the queue_data fields
+can be used in the probe routines.
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+The patch also introduces a helper function in
+order to be able to get the correct data_queue_desc
+structure for a given queue. This helper is only
+needed temporarily and it will be removed later.
+
+Reported-by: Jakub Kicinski <moorray@wp.pl>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   44 +++++++++++++++++++++++++----
+ 1 file changed, 38 insertions(+), 6 deletions(-)
 
-v5:
-- return -EINVAL if NL80211_ATTR_WIPHY_FREQ is set while
-  NL80211_ATTR_OFFCHANNEL_TX_OK is not
-
-
- net/wireless/nl80211.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 88e820b..d8f43df 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7139,6 +7139,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 2c12311..5efbbbd 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -1170,12 +1170,6 @@ static int rt2x00queue_alloc_entries(struct data_queue *queue,
  
- 	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+		if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
-+			return -EINVAL;
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_P2P_CLIENT:
-@@ -7146,7 +7149,6 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_P2P_GO:
--	case NL80211_IFTYPE_P2P_DEVICE:
- 		break;
- 	default:
- 		return -EOPNOTSUPP;
-@@ -7174,9 +7176,18 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	rt2x00queue_reset(queue);
  
- 	no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+-	queue->limit = qdesc->entry_num;
+-	queue->threshold = DIV_ROUND_UP(qdesc->entry_num, 10);
+-	queue->data_size = qdesc->data_size;
+-	queue->desc_size = qdesc->desc_size;
+-	queue->winfo_size = qdesc->winfo_size;
+-
+ 	/*
+ 	 * Allocate all queue entries.
+ 	 */
+@@ -1284,9 +1278,38 @@ void rt2x00queue_uninitialize(struct rt2x00_dev *rt2x00dev)
+ 	}
+ }
  
--	err = nl80211_parse_chandef(rdev, info, &chandef);
--	if (err)
--		return err;
-+	/* get the channel if any has been specified, otherwise pass NULL to
-+	 * the driver. The latter will use the current one
-+	 */
-+	chandef.chan = NULL;
-+	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
-+		err = nl80211_parse_chandef(rdev, info, &chandef);
-+		if (err)
-+			return err;
++static const struct data_queue_desc *
++rt2x00queue_get_qdesc_by_qid(struct rt2x00_dev *rt2x00dev,
++			     enum data_queue_qid qid)
++{
++	switch (qid) {
++	case QID_RX:
++		return rt2x00dev->ops->rx;
++
++	case QID_AC_BE:
++	case QID_AC_BK:
++	case QID_AC_VO:
++	case QID_AC_VI:
++		return rt2x00dev->ops->tx;
++
++	case QID_BEACON:
++		return rt2x00dev->ops->bcn;
++
++	case QID_ATIM:
++		return rt2x00dev->ops->atim;
++
++	default:
++		break;
 +	}
 +
-+	if (!chandef.chan && offchan)
-+		return -EINVAL;
++	return NULL;
++}
++
+ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
+ 			     struct data_queue *queue, enum data_queue_qid qid)
+ {
++	const struct data_queue_desc *qdesc;
++
+ 	mutex_init(&queue->status_lock);
+ 	spin_lock_init(&queue->tx_lock);
+ 	spin_lock_init(&queue->index_lock);
+@@ -1297,6 +1320,15 @@ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
+ 	queue->aifs = 2;
+ 	queue->cw_min = 5;
+ 	queue->cw_max = 10;
++
++	qdesc = rt2x00queue_get_qdesc_by_qid(rt2x00dev, qid);
++	BUG_ON(!qdesc);
++
++	queue->limit = qdesc->entry_num;
++	queue->threshold = DIV_ROUND_UP(qdesc->entry_num, 10);
++	queue->data_size = qdesc->data_size;
++	queue->desc_size = qdesc->desc_size;
++	queue->winfo_size = qdesc->winfo_size;
+ }
  
- 	if (!dont_wait_for_ack) {
- 		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ int rt2x00queue_allocate(struct rt2x00_dev *rt2x00dev)
 -- 
-1.8.1.5
+1.7.10
 
