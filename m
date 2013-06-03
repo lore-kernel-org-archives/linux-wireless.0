@@ -1,95 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:52846 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753496Ab3FKMWF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50752 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756049Ab3FCTPI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 08:22:05 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>,
-	Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Subject: [PATCHv5 3/4] ath6kl: make mgmt_tx accept a NULL channel
-Date: Tue, 11 Jun 2013 14:20:02 +0200
-Message-Id: <1370953203-4086-3-git-send-email-ordex@autistici.org> (sfid-20130611_142212_102631_4D790F0B)
-In-Reply-To: <1370953203-4086-1-git-send-email-ordex@autistici.org>
-References: <1370953203-4086-1-git-send-email-ordex@autistici.org>
+	Mon, 3 Jun 2013 15:15:08 -0400
+Date: Mon, 3 Jun 2013 15:04:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull request: TI wireless drivers fixes 2013-06-03 (for 3.10)
+Message-ID: <20130603190451.GF2727@tuxdriver.com> (sfid-20130603_211511_615962_6CB6FC54)
+References: <1370259433.31905.7.camel@cumari.coelho.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370259433.31905.7.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+On Mon, Jun 03, 2013 at 02:37:13PM +0300, Luciano Coelho wrote:
+> Hi John,
+> 
+> Here are three patches that I'd like to get into 3.10.  Two of them, by
+> me, are related to the firmware version checks in our driver.  Without
+> them, the firmwares fail to load.  The other one, by Eliad, fixes a typo
+> bug in our 5GHz scanning code.
+> 
+> Please let me know if you have any problems with it!
+> 
+> The following changes since commit 4ab21db2202895e2c9d3520fed8e7fb061b29605:
+> 
+>   rtlwifi: rtl8192cu: Fix problem in connecting to WEP or WPA(1) networks (2013-05-31 13:00:33 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git wl12xx-fixes
+> 
+> for you to fetch changes up to 1b5346776c6688006380c2bb491ebf28bc3f3a19:
+> 
+>   wl12xx/wl18xx: scan all 5ghz channels (2013-06-03 11:43:41 +0300)
 
-cfg80211 passes a NULL channel to mgmt_tx if the frame has
-to be sent on the one currently in use by the device.
-Make the implementation of mgmt_tx correctly handle this
-case
+Pulling now...
 
-Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 27 +++++++++++++++++----------
- 1 file changed, 17 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index f7995b2..2437ad2 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3175,10 +3175,21 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- {
- 	struct ath6kl_vif *vif = ath6kl_vif_from_wdev(wdev);
- 	struct ath6kl *ar = ath6kl_priv(vif->ndev);
--	u32 id;
-+	u32 id, freq;
- 	const struct ieee80211_mgmt *mgmt;
- 	bool more_data, queued;
- 
-+	/* default to the current channel, but use the one specified as argument
-+	 * if any
-+	 */
-+	freq = vif->ch_hint;
-+	if (chan)
-+		freq = chan->center_freq;
-+
-+	/* never send freq zero to the firmware */
-+	if (WARN_ON(freq == 0))
-+		return -EINVAL;
-+
- 	mgmt = (const struct ieee80211_mgmt *) buf;
- 	if (vif->nw_type == AP_NETWORK && test_bit(CONNECTED, &vif->flags) &&
- 	    ieee80211_is_probe_resp(mgmt->frame_control) &&
-@@ -3188,8 +3199,7 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		 * command to allow the target to fill in the generic IEs.
- 		 */
- 		*cookie = 0; /* TX status not supported */
--		return ath6kl_send_go_probe_resp(vif, buf, len,
--						 chan->center_freq);
-+		return ath6kl_send_go_probe_resp(vif, buf, len, freq);
- 	}
- 
- 	id = vif->send_action_id++;
-@@ -3205,17 +3215,14 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 
- 	/* AP mode Power saving processing */
- 	if (vif->nw_type == AP_NETWORK) {
--		queued = ath6kl_mgmt_powersave_ap(vif,
--					id, chan->center_freq,
--					wait, buf,
--					len, &more_data, no_cck);
-+		queued = ath6kl_mgmt_powersave_ap(vif, id, freq, wait, buf, len,
-+						  &more_data, no_cck);
- 		if (queued)
- 			return 0;
- 	}
- 
--	return ath6kl_wmi_send_mgmt_cmd(ar->wmi, vif->fw_vif_idx, id,
--					chan->center_freq, wait,
--					buf, len, no_cck);
-+	return ath6kl_wmi_send_mgmt_cmd(ar->wmi, vif->fw_vif_idx, id, freq,
-+					wait, buf, len, no_cck);
- }
- 
- static void ath6kl_mgmt_frame_register(struct wiphy *wiphy,
 -- 
-1.8.1.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
