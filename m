@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2300 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751949Ab3FEIqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 04:46:32 -0400
-Message-ID: <51AEFACD.7000902@broadcom.com> (sfid-20130605_104636_904551_C6297722)
-Date: Wed, 5 Jun 2013 10:46:05 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:51254 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759643Ab3FCS01 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 14:26:27 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Huawei Yang <harvey.huawei.yang@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Date: Mon, 3 Jun 2013 11:24:15 -0700
+Subject: RE: [RFC PATCH 1/1] mwifiex: Remove stop_net_dev_queue operation
+ when uap handling packets forwarding.
+Message-ID: <477F20668A386D41ADCC57781B1F70430E805C627A@SC-VEXCH1.marvell.com> (sfid-20130603_202650_947291_F47B44F9)
+References: <1370246060-9087-1-git-send-email-harvey.huawei.yang@gmail.com>
+In-Reply-To: <1370246060-9087-1-git-send-email-harvey.huawei.yang@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: "Kalle Valo" <kvalo@adurom.com>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"David Miller" <davem@davemloft.net>
-Subject: Re: [PATCH] brcmsmac: disable power-save related functions
-References: <1370419185-3977-1-git-send-email-arend@broadcom.com>
- <878v2p3qst.fsf@purkki.adurom.net> <874ndd3q20.fsf@purkki.adurom.net>
-In-Reply-To: <874ndd3q20.fsf@purkki.adurom.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2013 10:44 AM, Kalle Valo wrote:
-> Kalle Valo <kvalo@adurom.com> writes:
->
->> "Arend van Spriel" <arend@broadcom.com> writes:
->>
->>> This patch fixes a regression introduced by:
->>>
->>>    commit 6da3b6c48d79da96a36c2632053cf4f53bf48fb2
->>>    Author: Hauke Mehrtens <hauke@hauke-m.de>
->>>    Date:   Sun Mar 24 01:45:52 2013 +0100
->>>
->>>        brcmsmac: remove brcms_bss_cfg->associated
->>>
->>> The regression behaviour is described in:
->>>
->>> http://www.spinics.net/lists/linux-wireless/msg107474.html
->>
->> The link is not a very reliable reference, it can die anytime and
->> there's no way to know what message it refers to. Stating the message id
->> would better. And the best would be to copy the full text to the commit
->> log, it's only few lines anyway.
->
-> Johannes gave a handy tip. Gmane has a service which uses message ids:
->
-> http://mid.gmane.org/5197DC4F.7030503@broadcom.com
->
-> If the link or service dies, one can find the email with the message id
-> visible from the link.
->
+Hi Huawei,
 
-What if gmane dies ;-)
+Thanks for the patch.
 
-Gr. AvS
+> Under uap mode mwifiex may stop all net tx queues on forwarding packets. This may stop some tx queues
+> and they never have chance to be waked up... There is also no need to check tx_pending and stop
+> queues here. Because local host has such kind of check when transmitting packets and it's not proper
+> to have forwarding affect local transmitting.
+> 
+> Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
+
+Reviewed-by: Avinash Patil <patila@marvell.com>
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
+
+> ---
+>  drivers/net/wireless/mwifiex/uap_txrx.c |    4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+> index a018e42..11df2b2 100644
+> --- a/drivers/net/wireless/mwifiex/uap_txrx.c
+> +++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+> @@ -95,10 +95,6 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+>  	atomic_inc(&adapter->tx_pending);
+>  	atomic_inc(&adapter->pending_bridged_pkts);
+> 
+> -	if ((atomic_read(&adapter->tx_pending) >= MAX_TX_PENDING)) {
+> -		mwifiex_set_trans_start(priv->netdev);
+> -		mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
+> -	}
+>  	return;
+>  }
+> 
+> --
+> 1.7.10.4
 
