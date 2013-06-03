@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49271 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751367Ab3FYL4W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 07:56:22 -0400
-Message-ID: <1372161370.18889.13.camel@cumari.coelho.fi> (sfid-20130625_135626_982121_293A229E)
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-From: Luciano Coelho <coelho@ti.com>
-To: <balbi@ti.com>
-CC: <grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<tony@atomide.com>, <linux-omap@vger.kernel.org>,
-	<linux-arm@vger.kernel.org>
-Date: Tue, 25 Jun 2013 14:56:10 +0300
-In-Reply-To: <20130625111234.GJ15407@arwen.pp.htv.fi>
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-	 <20130625111234.GJ15407@arwen.pp.htv.fi>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from mxout2.netvision.net.il ([194.90.9.21]:51966 "EHLO
+	mxout2.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756532Ab3FCKeq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 06:34:46 -0400
+Received: from localhost.localdomain ([82.166.196.250])
+ by mxout2.netvision.net.il
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTPA id <0MNT00EMMBCPPDE0@mxout2.netvision.net.il> for
+ linux-wireless@vger.kernel.org; Mon, 03 Jun 2013 13:19:43 +0300 (IDT)
+From: Kirshenbaum Erez <erezk@wilocity.com>
+To: qca_vkondrat@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org,
+	Kirshenbaum Erez <erezk@wilocity.com>
+Subject: [PATCH] Fix channel index in WMI PCP start
+Date: Mon, 03 Jun 2013 12:19:13 +0300
+Message-id: <1370251153-13791-1-git-send-email-erezk@wilocity.com> (sfid-20130603_123449_276659_60A8547D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-25 at 14:12 +0300, Felipe Balbi wrote:
-> On Tue, Jun 25, 2013 at 11:35:30AM +0300, Luciano Coelho wrote:
-> > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> > +  following:
-> > +	0 = 19.200 MHz
-> > +	1 = 26.000 MHz
-> > +	2 = 38.400 MHz
-> > +	3 = 52.000 MHz
-> > +	4 = 16.368 MHz
-> > +	5 = 32.736 MHz
-> > +	6 = 16.800 MHz
-> > +	7 = 33.600 MHz
-> 
-> DTS files are pre-processed, so you could add defines in a header and
-> share the header between DTS and driver. Could help you having:
-> 
-> tcxoclock = WILINK_19_200MHz;
-> 
-> instead of
-> 
-> tcxoclock = 0;
+Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-I don't see any .dts file really doing this.  There are some imx*.dtsi
-files that include imx*.h files, but I don't see these headers being
-included in any source code file.
-
-In fact, we already have all these values defined in
-include/linux/wl12xx.h, so it could be nice to reuse.  But the
-cross-directory includes would look "funny".  And I think it's a bit
-overkill.
-
-These values are actually used by the firmware itself, not only the
-driver, so they are also platform independent and not related to the OS.
-
---
-Luca.
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 45b04e3..26f760a 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -724,7 +724,7 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype, u8 chan)
+ 		.bcon_interval = cpu_to_le16(bi),
+ 		.network_type = wmi_nettype,
+ 		.disable_sec_offload = 1,
+-		.channel = chan,
++		.channel = chan-1,
+ 	};
+ 	struct {
+ 		struct wil6210_mbox_hdr_wmi wmi;
+@@ -733,9 +733,9 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype, u8 chan)
+ 
+ 	if (!wil->secure_pcp)
+ 		cmd.disable_sec = 1;
+-
++	/* This may take some time (FW set/calibrate new freq) */
+ 	rc = wmi_call(wil, WMI_PCP_START_CMDID, &cmd, sizeof(cmd),
+-		      WMI_PCP_STARTED_EVENTID, &reply, sizeof(reply), 100);
++		      WMI_PCP_STARTED_EVENTID, &reply, sizeof(reply), 5000);
+ 	if (rc)
+ 		return rc;
+ 
+-- 
+1.7.11.7
 
