@@ -1,100 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:38949 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751222Ab3FQREM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 13:04:12 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Uocqd-0004ko-6r
-	for linux-wireless@vger.kernel.org; Mon, 17 Jun 2013 19:04:07 +0200
-Received: from ip-109-84-0-66.web.vodafone.de ([109.84.0.66])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 19:04:07 +0200
-Received: from zielscheibe by ip-109-84-0-66.web.vodafone.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 19:04:07 +0200
-To: linux-wireless@vger.kernel.org
-From: Tobias Kluge <zielscheibe@gmail.com>
-Subject: Re: rtl8192cu fail to connect with a AP
-Date: Mon, 17 Jun 2013 17:03:50 +0000 (UTC)
-Message-ID: <loom.20130617T185506-165@post.gmane.org> (sfid-20130617_190415_769870_0C88B53A)
-References: <loom.20130617T154136-827@post.gmane.org> <51BF2996.9060102@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from contumacia.investici.org ([178.255.144.35]:42274 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754821Ab3FCS2R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 14:28:17 -0400
+Date: Mon, 3 Jun 2013 20:26:24 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: Re: [PATCH 2/2] mac80211: in mgmt_tx use the current channel if none
+ has been specified
+Message-ID: <20130603182624.GG1226@ritirata.org> (sfid-20130603_202821_001370_37EDA5E0)
+References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+ <1370241587-2609-2-git-send-email-ordex@autistici.org>
+ <1370271690.8227.18.camel@jlt4.sipsolutions.net>
+ <20130603180320.GF1226@ritirata.org>
+ <1370283363.8227.27.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="Wtrm9ATX0sn6fFKv"
+In-Reply-To: <1370283363.8227.27.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@...> writes:
 
-> 
-> On 06/17/2013 09:06 AM, Tobias Kluge wrote:
-> > Hi,
-> >
-> > I've recently bought a TP-Link TL-WN8200ND USB WiFi dongle, it uses the
-> > Realtek 8192cu chipset.
-> > After several attempts with different kernels (starting with 3.2.6) and
-> > compat-wireless drivers, I'm still running into the same problem. The device
-> > can successful scan for networks in reach, but cannot connect to any of
-> > them, regardless the encryption (tried every mode, including no encryption
-> > at all).
-> >
-> > At the moment I'm using the kernel release 3.10.0-rc6 and the device is
-> > still not recognized by the "rtl8192cu" driver module without manually
-> > setting the device ID into the SySFS
-> >
-> > "echo "2357 0100" > /sys/bus/usb/drivers/rtl8192cu/new_id"
-> 
-> No one had reported that this device used rtl8192cu, thus it is not in the 
-> device tables, nor is it in the USB database as shown by the bare entry in
-your 
-> lsusb output. Attached is a patch that will add your device to the tables.
-That 
-> will be submitted to the maintainer relatively soon.
-> 
-> There were a number of changes to that driver that just appeared in 3.10-rc6. 
-> These fixed a number of bug reports on the Red Hat bugzilla as shown in the 
-> commit message for commit 5b8df24. I had built 3.10-rc6 from the mainline git 
-> tree; however, I had not booted it till now. With it, my Edimax EW-7811Un 
-> adapter with an RTL8188CUS chip could connect to WEP, WPA1 and WPA2 APs; 
-> however, when I dug out my Alfa AWUS036NHR with an RTL8188RU chip, it
-could not 
-> connect to any of my APs. I now need to check the results for the 
-> wireless-testing git tree, which I normally use, to see if there is a
-difference 
-> in the two trees.
-> 
-> Larry
-> 
-> 
-> 
-> Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> ===================================================================
-> --- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->  <at>  <at>  -359,6 +359,7  <at>  <at>  static struct usb_device_id
-rtl8192c_usb
->  	{RTL_USB_DEVICE(0x2001, 0x330a, rtl92cu_hal_cfg)}, /*D-Link-Alpha*/
->  	{RTL_USB_DEVICE(0x2019, 0xab2b, rtl92cu_hal_cfg)}, /*Planex -Abocom*/
->  	{RTL_USB_DEVICE(0x20f4, 0x624d, rtl92cu_hal_cfg)}, /*TRENDNet*/
-> +	{RTL_USB_DEVICE(0x2357, 0x0100, rtl92cu_hal_cfg)}, /*TP-Link WN8200ND*/
->  	{RTL_USB_DEVICE(0x7392, 0x7822, rtl92cu_hal_cfg)}, /*Edimax -Edimax*/
->  	{}
->  };
-> 
-> 
+--Wtrm9ATX0sn6fFKv
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your effort Larry,
+On Mon, Jun 03, 2013 at 08:16:03PM +0200, Johannes Berg wrote:
+> On Mon, 2013-06-03 at 20:03 +0200, Antonio Quartulli wrote:
+> > On Mon, Jun 03, 2013 at 05:01:30PM +0200, Johannes Berg wrote:
+> > > On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
+> > >=20
+> > > > @@ -2845,6 +2852,10 @@ static int ieee80211_mgmt_tx(struct wiphy *w=
+iphy, struct wireless_dev *wdev,
+> > > >  		rcu_read_lock();
+> > > >  		chanctx_conf =3D rcu_dereference(sdata->vif.chanctx_conf);
+> > > > =20
+> > > > +		/* if no channel was specified, use the current one */
+> > > > +		if (chanctx_conf && !chan)
+> > > > +			chan =3D chanctx_conf->def.chan;
+> > > > +
+> > > >  		if (chanctx_conf)
+> > > >  			need_offchan =3D chan !=3D chanctx_conf->def.chan;
+> > > >  		else
+> > > > @@ -2852,6 +2863,12 @@ static int ieee80211_mgmt_tx(struct wiphy *w=
+iphy, struct wireless_dev *wdev,
+> > > >  		rcu_read_unlock();
+> > > >  	}
+> > > > =20
+> > > > +	/* at this point a channel should have been chosen */
+> > > > +	if (!chan) {
+> > > > +		ret =3D -EINVAL;
+> > > > +		goto out_unlock;
+> > > > +	}
+> > > > +
+> > >=20
+> > > These two changes make no sense at all. If you look at the function
+> > > you'll see that "chan" isn't used at all after the check,=20
+> >=20
+> > uhm? it is passed to ieee80211_start_roc_work() right after (this part =
+has not
+> > been changed).
+>=20
+> > 2904         ret =3D ieee80211_start_roc_work(local, sdata, chan,
+>=20
+> No, you can't get there without need_offchan.
 
-compiled the latest stable kernel (3.9.6) with your fixed device table, the
-dongle is now recognized properly, when the module (rtl8192cu) is loaded.
-The connection issue to any AP still remains, with the same dmesg output. I
-don't believe that the changes you mentioned in 3.10.0-rc6 are the trouble
-makers with this device. I tried many different kernels before (3.26, 3.8.0
-binaries from the Ubuntu sources, 3.9.6, 3.10.0-rc6 build from scratch). I
-hope you can see some possibilities to fix this problem.
+ah, you are right. Now I see why these two changes do not make sense at all=
+ :-)
 
-Thank you in advance
-Tobias
+Thanks!
 
+--=20
+Antonio Quartulli
 
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--Wtrm9ATX0sn6fFKv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRrN/QAAoJEADl0hg6qKeOBzYQALoMfRuReePflIugthunlq7i
+6itzo5H0Sig0WImzAbdu3UNae6k6P7FB4BBUD1sefDyOYTAfQZbxk01d3kZOsJSS
+Pm9v+2NBn7yymiaRdy+EIshRHA/2D87sV8acLSjPGV1IHHAsPK1l/p5RGo3rCjFQ
+ecs8qmQtc78OsGKxjwXM+TQWa5F/cdN4M42o/ABvu/ww+SHXiKmNAqgi6fhWm13c
+gWPpvCW5aqU16cEOBGehlPh7HHmFwOE3rK6MZvCbVh6FoQlkzcCQMauETNsYKeeO
+J3qYEEqGesmQLDBC/F2h9RbiSNXan8p8BqqaPMDJB+ToX+ljbUBT36de3c7394qT
++ecsrmWlrpaBKUpVTu8WsKwCAMw5xh516aJHJoatDeTeuPCDO0ue5YBAeKHY0o6s
+DTkkMlMWzTidZqKsIwrsz7rWnSwUy8WGi2xQqWU4/FeJAfSfiCMd/3EHIDTfmCah
+W1weBeDR7Dr/+uMEy0omAk50chBjlbnBvWh7NfMIjcmfC1zvoPx7kIb/25wMCBcM
+hI7dThCdOikvkNt9SY/oa+l4CDlOc4KNmh9tOhTfe43/C3r+RBCOic4OQ/9QPYbC
+uEYlPJkeUdrFuYZn+wwK/50XZI9ROBrcrHuF2rV8lUeb3zprlgt4tJp8lwsJB7uD
+f3GPY+tIdHo2C1p4kgKm
+=vF2A
+-----END PGP SIGNATURE-----
+
+--Wtrm9ATX0sn6fFKv--
