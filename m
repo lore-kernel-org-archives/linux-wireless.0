@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:41056 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166Ab3FZMrk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 08:47:40 -0400
-Date: Wed, 26 Jun 2013 13:47:36 +0100
-From: Gustavo Padovan <gustavo@padovan.org>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: pull request: bluetooth 2013-06-23
-Message-ID: <20130626124736.GA3337@joana> (sfid-20130626_144807_752374_F269B158)
-References: <20130623021351.GA2327@joana>
- <20130625201217.GA13879@amd.pavel.ucw.cz>
- <E95EC814-F064-4AEB-AE13-79982D3BE5E8@holtmann.org>
- <20130625210039.GA28448@joana>
- <20130626115255.GA7940@amd.pavel.ucw.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130626115255.GA7940@amd.pavel.ucw.cz>
+Received: from nbd.name ([46.4.11.11]:34910 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751450Ab3FCJTH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 05:19:07 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, rmanohar@qca.qualcomm.com
+Subject: [PATCH 3.10] Revert "ath9k_hw: Update rx gain initval to improve rx sensitivity"
+Date: Mon,  3 Jun 2013 11:18:57 +0200
+Message-Id: <1370251137-3130-1-git-send-email-nbd@openwrt.org> (sfid-20130603_111911_409232_CB8A4F34)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Pavel Machek <pavel@ucw.cz> [2013-06-26 13:52:55 +0200]:
+This reverts commit 68d9e1fa24d9c7c2e527f49df8d18fb8cf0ec943
 
-> On Tue 2013-06-25 22:00:39, Gustavo Padovan wrote:
-> > Hi Marcel,
-> > 
-> > * Marcel Holtmann <marcel@holtmann.org> [2013-06-25 13:49:19 -0700]:
-> > 
-> > > Hi Pavel,
-> > > 
-> > > >> Jaganath Kanakkassery (1):
-> > > >>      Bluetooth: Fix invalid length check in l2cap_information_rsp()
-> > > > 
-> > > > Could we add the "3.10 vs. thinkpad x60" patch that fixes regression?
-> > > > It is from Johan Hedberg…
-> > > 
-> > > that one went into net-next tree. It is scheduled for 3.11 right now.
-> > > 
-> > > After 3.10 is out, maybe it can go into -stable, but otherwise I think it is bit late now. Unless someone wants to cherry-pick it.
-> > 
-> > That patch is actually in 3.10 already, it was included in the last pull
-> > request and John took it to wireless.git.
-> 
-> Is it? I tried pulling yesterday (some updates) and today (no
-> changes), am on:
+This change reduces rx sensitivity with no apparent extra benefit.
+It looks like it was meant for testing in a specific scenario,
+but it was never properly validated.
 
-Dave already pulled it so it should land in mainline anytime soon.
+Cc: rmanohar@qca.qualcomm.com
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-	Gustavo
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index db5ffad..7546b9a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -958,11 +958,11 @@ static const u32 ar9300Common_rx_gain_table_2p2[][2] = {
+ 	{0x0000a074, 0x00000000},
+ 	{0x0000a078, 0x00000000},
+ 	{0x0000a07c, 0x00000000},
+-	{0x0000a080, 0x1a1a1a1a},
+-	{0x0000a084, 0x1a1a1a1a},
+-	{0x0000a088, 0x1a1a1a1a},
+-	{0x0000a08c, 0x1a1a1a1a},
+-	{0x0000a090, 0x171a1a1a},
++	{0x0000a080, 0x22222229},
++	{0x0000a084, 0x1d1d1d1d},
++	{0x0000a088, 0x1d1d1d1d},
++	{0x0000a08c, 0x1d1d1d1d},
++	{0x0000a090, 0x171d1d1d},
+ 	{0x0000a094, 0x11111717},
+ 	{0x0000a098, 0x00030311},
+ 	{0x0000a09c, 0x00000000},
+-- 
+1.8.0.2
+
