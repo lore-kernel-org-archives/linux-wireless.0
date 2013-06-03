@@ -1,41 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:40119 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751100Ab3FCHyh (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:54136 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753Ab3FCDwW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 03:54:37 -0400
-From: Huawei Yang <harvey.huawei.yang@gmail.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Huawei Yang <harvey.huawei.yang@gmail.com>
-Subject: [RFC PATCH 1/1] mwifiex: Remove stop_net_dev_queue operation when uap handling packets forwarding.
-Date: Mon,  3 Jun 2013 15:54:20 +0800
-Message-Id: <1370246060-9087-1-git-send-email-harvey.huawei.yang@gmail.com> (sfid-20130603_095441_819665_2BBCAD3D)
+	Sun, 2 Jun 2013 23:52:22 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/7] ath9k: Set ofdmWeakSigDetect directly
+Date: Mon,  3 Jun 2013 09:19:27 +0530
+Message-Id: <1370231369-16241-5-git-send-email-sujith@msujith.org> (sfid-20130603_055227_237218_EF8ACD16)
+In-Reply-To: <1370231369-16241-1-git-send-email-sujith@msujith.org>
+References: <1370231369-16241-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Under uap mode mwifiex may stop all net tx queues on forwarding packets. This may stop some tx queues and they never have chance to be waked up... There is also no need to check tx_pending and stop queues here. Because local host has such kind of check when transmitting packets and it's not proper to have forwarding affect local transmitting.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
+The macros ATH9K_ANI_USE_OFDM_WEAK_SIG can be removed.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/uap_txrx.c |    4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c        | 6 +-----
+ drivers/net/wireless/ath/ath9k/ani.h        | 6 +-----
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c | 2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 2 +-
+ 4 files changed, 4 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
-index a018e42..11df2b2 100644
---- a/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -95,10 +95,6 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
- 	atomic_inc(&adapter->tx_pending);
- 	atomic_inc(&adapter->pending_bridged_pkts);
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 734e72d..ba0bad6 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -505,14 +505,10 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 		struct ar5416AniState *ani = &chan->ani;
  
--	if ((atomic_read(&adapter->tx_pending) >= MAX_TX_PENDING)) {
--		mwifiex_set_trans_start(priv->netdev);
--		mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
--	}
- 	return;
+ 		ani->spurImmunityLevel = ATH9K_ANI_SPUR_IMMUNE_LVL;
+-
+ 		ani->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
+-
+ 		ani->mrcCCK = AR_SREV_9300_20_OR_LATER(ah) ? true : false;
+-
+ 		ani->ofdmsTurn = true;
+-
+-		ani->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
++		ani->ofdmWeakSigDetect = true;
+ 		ani->cckNoiseImmunityLevel = ATH9K_ANI_CCK_DEF_LEVEL;
+ 		ani->ofdmNoiseImmunityLevel = ATH9K_ANI_OFDM_DEF_LEVEL;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 07079f2..c585e05 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -34,11 +34,7 @@
+ #define ATH9K_ANI_CCK_TRIG_LOW            300
+ 
+ #define ATH9K_ANI_NOISE_IMMUNE_LVL        4
+-#define ATH9K_ANI_USE_OFDM_WEAK_SIG       true
+-#define ATH9K_ANI_CCK_WEAK_SIG_THR        false
+-
+ #define ATH9K_ANI_SPUR_IMMUNE_LVL         3
+-
+ #define ATH9K_ANI_FIRSTEP_LVL             2
+ 
+ #define ATH9K_ANI_RSSI_THR_HIGH           40
+@@ -107,7 +103,7 @@ struct ar5416AniState {
+ 	u8 mrcCCK;
+ 	u8 spurImmunityLevel;
+ 	u8 firstepLevel;
+-	u8 ofdmWeakSigDetect;
++	bool ofdmWeakSigDetect;
+ 	u32 listenTime;
+ 	u32 ofdmPhyErrCount;
+ 	u32 cckPhyErrCount;
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 391da5a..92b79a2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1251,7 +1251,7 @@ static void ar5008_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ 	/* these levels just got reset to defaults by the INI */
+ 	aniState->spurImmunityLevel = ATH9K_ANI_SPUR_IMMUNE_LVL;
+ 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
+-	aniState->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
++	aniState->ofdmWeakSigDetect = true;
+ 	aniState->mrcCCK = false; /* not available on pre AR9003 */
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index e1714d7..53562a4 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1214,7 +1214,7 @@ static void ar9003_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ 	/* these levels just got reset to defaults by the INI */
+ 	aniState->spurImmunityLevel = ATH9K_ANI_SPUR_IMMUNE_LVL;
+ 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
+-	aniState->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
++	aniState->ofdmWeakSigDetect = true;
+ 	aniState->mrcCCK = true;
  }
  
 -- 
-1.7.10.4
+1.8.3
 
