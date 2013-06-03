@@ -1,238 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:50156 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754580Ab3FFHga (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 03:36:30 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 1/2] rt2x00: move extra_tx_headroom field from rt2x00_ops to rt2x00_dev
-Date: Thu,  6 Jun 2013 09:36:19 +0200
-Message-Id: <1370504180-10950-1-git-send-email-juhosg@openwrt.org> (sfid-20130606_093634_346731_D95724FF)
+Received: from contumacia.investici.org ([178.255.144.35]:56498 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759434Ab3FCRQY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 13:16:24 -0400
+Date: Mon, 3 Jun 2013 19:14:30 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: ath6kl_mgmt_tx with NULL chan (was Re: [PATCH 1/2] nl80211: allow
+ sending CMD_FRAME without specifying any frequency)
+Message-ID: <20130603171430.GE1226@ritirata.org> (sfid-20130603_191636_945457_F5ECC3BF)
+References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+ <1370271547.8227.16.camel@jlt4.sipsolutions.net>
+ <51ACB068.8070006@lri.fr>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="SNIs70sCzqvszXB4"
+In-Reply-To: <51ACB068.8070006@lri.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The extra_tx_headroom field of struct rt2x00_ops
-indicates the extra TX headroom size required for
-a given device. This data is redundant, the value
-can be computed from the desc_size and winfo_size
-fields of the TX queues.
 
-Move the extra_tx_headroom field to struct rt2x00_dev,
-compute its value in the probe routine and use the
-cached value in the rest of the code.
+--SNIs70sCzqvszXB4
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
-v2:
-  - remove the callbacks and compute the extra_tx_headroom
-    value from winfo_size and desc_size instead
-  - change subject
+On Mon, Jun 03, 2013 at 05:04:08PM +0200, Nicolas Cavallari wrote:
+> On 03/06/2013 16:59, Johannes Berg wrote:
+> > On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
+> >> From: Antonio Quartulli <antonio@open-mesh.com>
+> >>
+> >> Users may want to send a frame on the current channel
+> >> without specifying it.
+> >>
+> >> Make mgmt_tx pass a NULL channel to mac80211 if none has
+> >> been specified by the user.
+> >=20
+> > cfg80211 isn't just a mac80211 frontend ... ;-)
+> >=20
+> > Also, as Nicolas said, ath6kl_mgmt_tx() will crash after this patch if
+> > it's called in AP mode w/o a channel, so you need to think about that.
+>=20
+> It will crash unconditionally. All ath6kl_mgmt_tx()'s code paths access
+> chan->center_freq at some point.
 
-The patch depends on the 'rt2x00: get rid of static data queue descriptors'
-series.
----
- drivers/net/wireless/rt2x00/rt2400pci.c   |    1 -
- drivers/net/wireless/rt2x00/rt2500pci.c   |    1 -
- drivers/net/wireless/rt2x00/rt2500usb.c   |    1 -
- drivers/net/wireless/rt2x00/rt2800pci.c   |    1 -
- drivers/net/wireless/rt2x00/rt2800usb.c   |    2 --
- drivers/net/wireless/rt2x00/rt2x00.h      |    4 +++-
- drivers/net/wireless/rt2x00/rt2x00dev.c   |   18 ++++++++++++++++--
- drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +++---
- drivers/net/wireless/rt2x00/rt61pci.c     |    1 -
- drivers/net/wireless/rt2x00/rt73usb.c     |    1 -
- 10 files changed, 22 insertions(+), 14 deletions(-)
+Hello Nicolas,
+I'm also CCing Kalle Valo since get_maintainer.pl told me he is the guy for
+these kind of questions :-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index e1ec9a4..3d53a09 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1813,7 +1813,6 @@ static const struct rt2x00_ops rt2400pci_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
--	.extra_tx_headroom	= 0,
- 	.queue_init		= rt2400pci_queue_init,
- 	.lib			= &rt2400pci_rt2x00_ops,
- 	.hw			= &rt2400pci_mac80211_ops,
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index a1670e8..0ac5c58 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -2102,7 +2102,6 @@ static const struct rt2x00_ops rt2500pci_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
--	.extra_tx_headroom	= 0,
- 	.queue_init		= rt2500pci_queue_init,
- 	.lib			= &rt2500pci_rt2x00_ops,
- 	.hw			= &rt2500pci_mac80211_ops,
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index e5e5479..85acc79 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1913,7 +1913,6 @@ static const struct rt2x00_ops rt2500usb_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
--	.extra_tx_headroom	= TXD_DESC_SIZE,
- 	.queue_init		= rt2500usb_queue_init,
- 	.lib			= &rt2500usb_rt2x00_ops,
- 	.hw			= &rt2500usb_mac80211_ops,
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 260c8b4..7c74782 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1231,7 +1231,6 @@ static const struct rt2x00_ops rt2800pci_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
--	.extra_tx_headroom	= TXWI_DESC_SIZE,
- 	.queue_init		= rt2800pci_queue_init,
- 	.lib			= &rt2800pci_rt2x00_ops,
- 	.drv			= &rt2800pci_rt2800_ops,
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index b81d509..68ea00e 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -905,7 +905,6 @@ static const struct rt2x00_ops rt2800usb_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
--	.extra_tx_headroom	= TXINFO_DESC_SIZE + TXWI_DESC_SIZE,
- 	.queue_init		= rt2800usb_queue_init,
- 	.lib			= &rt2800usb_rt2x00_ops,
- 	.drv			= &rt2800usb_rt2800_ops,
-@@ -922,7 +921,6 @@ static const struct rt2x00_ops rt2800usb_ops_5592 = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
--	.extra_tx_headroom	= TXINFO_DESC_SIZE + TXWI_DESC_SIZE_5592,
- 	.queue_init		= rt2800usb_queue_init,
- 	.lib			= &rt2800usb_rt2x00_ops,
- 	.drv			= &rt2800usb_rt2800_ops,
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 2a17f7e..ee3fc57 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -648,7 +648,6 @@ struct rt2x00_ops {
- 	const unsigned int eeprom_size;
- 	const unsigned int rf_size;
- 	const unsigned int tx_queues;
--	const unsigned int extra_tx_headroom;
- 	void (*queue_init)(struct data_queue *queue);
- 	const struct rt2x00lib_ops *lib;
- 	const void *drv;
-@@ -1007,6 +1006,9 @@ struct rt2x00_dev {
- 	 */
- 	struct list_head bar_list;
- 	spinlock_t bar_list_lock;
-+
-+	/* Extra TX headroom required for alignment purposes. */
-+	unsigned int extra_tx_headroom;
- };
- 
- struct rt2x00_bar_list_entry {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index dff5012..f03e3bb 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -334,7 +334,7 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 	/*
- 	 * Remove the extra tx headroom from the skb.
- 	 */
--	skb_pull(entry->skb, rt2x00dev->ops->extra_tx_headroom);
-+	skb_pull(entry->skb, rt2x00dev->extra_tx_headroom);
- 
- 	/*
- 	 * Signal that the TX descriptor is no longer in the skb.
-@@ -1049,7 +1049,7 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	rt2x00dev->hw->extra_tx_headroom =
- 		max_t(unsigned int, IEEE80211_TX_STATUS_HEADROOM,
--		      rt2x00dev->ops->extra_tx_headroom);
-+		      rt2x00dev->extra_tx_headroom);
- 
- 	/*
- 	 * Take TX headroom required for alignment into account.
-@@ -1256,6 +1256,17 @@ static inline void rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->hw->wiphy->n_iface_combinations = 1;
- }
- 
-+static unsigned int rt2x00dev_extra_tx_headroom(struct rt2x00_dev *rt2x00dev)
-+{
-+	if (WARN_ON(!rt2x00dev->tx))
-+		return 0;
-+
-+	if (rt2x00_is_usb(rt2x00dev))
-+		return rt2x00dev->tx[0].winfo_size + rt2x00dev->tx[0].desc_size;
-+
-+	return rt2x00dev->tx[0].winfo_size;
-+}
-+
- /*
-  * driver allocation handlers.
-  */
-@@ -1330,6 +1341,9 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 	if (retval)
- 		goto exit;
- 
-+	/* Cache TX headroom value */
-+	rt2x00dev->extra_tx_headroom = rt2x00dev_extra_tx_headroom(rt2x00dev);
-+
- 	/*
- 	 * Determine which operating modes are supported, all modes
- 	 * which require beaconing, depend on the availability of
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index c4f1e2b..6c0a91f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -542,8 +542,8 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
- 	/*
- 	 * Add the requested extra tx headroom in front of the skb.
- 	 */
--	skb_push(entry->skb, rt2x00dev->ops->extra_tx_headroom);
--	memset(entry->skb->data, 0, rt2x00dev->ops->extra_tx_headroom);
-+	skb_push(entry->skb, rt2x00dev->extra_tx_headroom);
-+	memset(entry->skb->data, 0, rt2x00dev->extra_tx_headroom);
- 
- 	/*
- 	 * Call the driver's write_tx_data function, if it exists.
-@@ -596,7 +596,7 @@ static void rt2x00queue_bar_check(struct queue_entry *entry)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct ieee80211_bar *bar = (void *) (entry->skb->data +
--				    rt2x00dev->ops->extra_tx_headroom);
-+				    rt2x00dev->extra_tx_headroom);
- 	struct rt2x00_bar_list_entry *bar_entry;
- 
- 	if (likely(!ieee80211_is_back_req(bar->frame_control)))
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 17507d1..53754bc6 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -3066,7 +3066,6 @@ static const struct rt2x00_ops rt61pci_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
--	.extra_tx_headroom	= 0,
- 	.queue_init		= rt61pci_queue_init,
- 	.lib			= &rt61pci_rt2x00_ops,
- 	.hw			= &rt61pci_mac80211_ops,
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index b2e346a..1616ed4 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2400,7 +2400,6 @@ static const struct rt2x00_ops rt73usb_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
--	.extra_tx_headroom	= TXD_DESC_SIZE,
- 	.queue_init		= rt73usb_queue_init,
- 	.lib			= &rt73usb_rt2x00_ops,
- 	.hw			= &rt73usb_mac80211_ops,
--- 
-1.7.10
+I'm looking at ath6kl_mgmt_tx() in ath6kl/cfg80211.c and I've seen that the
+currently "configured" frequency can be obtained by reading the
+ath6kl_vif->ch_hint field.
 
+But, is this correct? I couldn't see any real relation between the ch_hint =
+field
+and the real frequency (probably because a lot of logic is hidden to the
+driver).
+I could only understand that the ch_hint field stores the frequency passed =
+as
+parameter during the connection, but I have found no guarantee that this is=
+ the
+really used one.
+
+Can someone please clarify on this?
+
+Cheers,
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--SNIs70sCzqvszXB4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRrM72AAoJEADl0hg6qKeOQRAP/j6R466TfHz3+uPYc5UfPOOZ
+20LdyLlERcCzRPgKoPlgnV3I4A6alcY9u06OHJBzJsGXibzcKkNPNp52LrqQRLwa
+BtiBdGQ1qpYBLRPWufsY7afO47mkdzZgxgTn6USG1Z/w2S+YLCGO05J+7FBoN2zl
+HqQLc89yoERYxfGXt9VXfZTN5FXgyPQW/QlJ21sw128I638RKacurGsFyQh7SzNZ
+oybkisgq+/GnlFphe5KFr/FlJB3iSxLaIqtBWys2Gj8ABsVXJrbn2wGKkmGxeY6F
+THvaps9pHJ0A6wUKBuoipyXr1aMmjnbXNZNuBTgdm6cjTy3q9v1j5+O3vsZtujKB
+RqPulxt2zsiZ3wx0OlbEgP5Gl84ONE4oR68mVdYSMY7MpJFU+RusaHiTv36P8omy
+Qh9DtmMxyG5q5kct4VUMezvZOfIgKnBWKX1TS576xl+4h2LxfCeEtNpxF/36nKNe
+NEpUJtzAiNPfYDcZ+4jWSlGclu+q10QmzpXlj+AN7tSgBCcdT+vW0Y0J3X2OS+SQ
+bkUVY4Go93ypKS/yAH7ZxjUG9FpPGNJo9E3yCmAbA3LAhjf0APdjOQdxxBazRMPp
+0Xl8b3OzvyJo0DIXbxAkAaf3Qb3OKpwwAwzR7+/jHVTttQPXHbP90xEQSyPDE71Z
+XAz4+u5YG6a40fdz+me1
+=J+v4
+-----END PGP SIGNATURE-----
+
+--SNIs70sCzqvszXB4--
