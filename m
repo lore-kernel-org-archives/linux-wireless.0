@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48795 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753554Ab3F0NJm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 09:09:42 -0400
-Message-ID: <1372338578.8160.7.camel@jlt4.sipsolutions.net> (sfid-20130627_150945_335919_ED8FE4E9)
-Subject: Re: [PATCHv4 05/18] cfg80211/mac80211: get mandatory rates based on
- rate flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 27 Jun 2013 15:09:38 +0200
-In-Reply-To: <1372337064-19254-6-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1372337064-19254-6-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1834 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758786Ab3FCRLu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 13:11:50 -0400
+Message-ID: <51ACCDFE.5090003@broadcom.com> (sfid-20130603_191154_653389_12C01A92)
+Date: Mon, 3 Jun 2013 19:10:22 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John Greene" <jogreene@redhat.com>
+Subject: using ieee80211_restart_hw()
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-06-27 at 14:44 +0200, Simon Wunderlich wrote:
+Hi Johannes,
 
-> -u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband)
-> +u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
-> +			      u32 rate_flags)
+In brcmsmac a fatal error in the device results in calling 
+ieee80211_restart_hw(). This was done under the assumption that mac80211 
+would reconfigure everything doing .start(), .add_interface() etc, but 
+looking at a log in redhat bugzilla makes me suspicious about that.
 
-I'm not sure that's the right API here, rate_flags doesn't make all that
-much sense when you want to specify the width, why not use the width you
-added in patch 1?
+The only reason I could find in ieee80211_reconfig is that 
+local->open_count would be zero, right?
 
-johannes
+At the time of the fatal error AMPDU packets were being transmitted so I 
+assume local->open_count would *not* be zero as it seems to match the 
+state of the netdev interface.
+
+Regards,
+Arend
+
+---8<--------------------------------------------------------------
+	/* everything else happens only if HW was up & running */
+	if (!local->open_count)
+		goto wake_up;
+
+	/*
+	 * Upon resume hardware can sometimes be goofy due to
+	 * various platform / driver / bus issues, so restarting
+	 * the device may at times not work immediately. Propagate
+	 * the error.
+	 */
+	res = drv_start(local);
 
 
