@@ -1,35 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14786 "EHLO mga09.intel.com"
+Received: from purkki.adurom.net ([80.68.90.206]:58711 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965491Ab3FTTfv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jun 2013 15:35:51 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: sanil gupta <sanilgupta12@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: RE: [Ilw] backtrack 5r3 not supporting intel centrino n 2230
-Date: Thu, 20 Jun 2013 19:35:27 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3019F10F5@HASMSX103.ger.corp.intel.com> (sfid-20130620_213559_290380_F922BDBD)
-References: <CAHd80D_Pt8Uj4K6kuYNcruvKA8YjYPrttoOptA74mQ-cgTpmhQ@mail.gmail.com>
-In-Reply-To: <CAHd80D_Pt8Uj4K6kuYNcruvKA8YjYPrttoOptA74mQ-cgTpmhQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1758645Ab3FCXCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 19:02:20 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Kirshenbaum Erez <erezk@wilocity.com>
+Cc: qca_vkondrat@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Fix channel index in WMI PCP start
+References: <1370251153-13791-1-git-send-email-erezk@wilocity.com>
+Date: Tue, 04 Jun 2013 02:02:19 +0300
+In-Reply-To: <1370251153-13791-1-git-send-email-erezk@wilocity.com>
+	(Kirshenbaum Erez's message of "Mon, 03 Jun 2013 12:19:13 +0300")
+Message-ID: <87hahe4x38.fsf@purkki.adurom.net> (sfid-20130604_010223_896182_3ED590CC)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Kirshenbaum Erez <erezk@wilocity.com> writes:
 
-I guess you want to send this question to the backtrack support people. We will help you if you use mainline kernel.
+> Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
 
-Thanks,
-       Emmanuel
+Please add "wil6210: " prefix to the title.
 
-From: ilw-bounces@linux.intel.com [mailto:ilw-bounces@linux.intel.com] On Behalf Of sanil gupta
-Sent: Thursday, June 20, 2013 10:01 PM
-To: linux-wireless@vger.kernel.org; ilw@linux.intel.com
-Subject: [Ilw] backtrack 5r3 not supporting intel centrino n 2230
-
-Hello
-I am a new user to the backtrack and very interested in doing it but the problem is that i can't use internet using backtrack 5r3 as my wireless card is intel centrino n 2230.I request you to please help me out with this problem as soon as possible
-thank you
+-- 
+Kalle Valo
