@@ -1,121 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40643 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755944Ab3FEVdn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 17:33:43 -0400
-Message-ID: <51AFAE94.5030007@candelatech.com> (sfid-20130605_233400_259087_4A0F314E)
-Date: Wed, 05 Jun 2013 14:33:08 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:33983 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753395Ab3FCUcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 16:32:13 -0400
+Message-ID: <51ACFD50.7000807@openwrt.org> (sfid-20130603_223307_576409_F75F65DC)
+Date: Mon, 03 Jun 2013 22:32:16 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-To: Tejun Heo <tj@kernel.org>
-CC: Rusty Russell <rusty@rustcorp.com.au>,
-	Joe Lawrence <joe.lawrence@stratus.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	stable@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>
-Subject: Re: stop_machine lockup issue in 3.9.y.
-References: <20130604100744.7cdf8777@jlaw-desktop.mno.stratus.com> <51AE1B81.20900@candelatech.com> <51AE27D5.7050202@candelatech.com> <87sj0xry1k.fsf@rustcorp.com.au> <20130605071539.GA3429@mtj.dyndns.org> <51AF6E54.3050108@candelatech.com> <20130605184807.GD10693@mtj.dyndns.org> <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com> <51AFA677.9010605@candelatech.com> <20130605211157.GK10693@mtj.dyndns.org>
-In-Reply-To: <20130605211157.GK10693@mtj.dyndns.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Jakub Kicinski <moorray@wp.pl>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 1/7] rt2x00: rt2x00dev: use rt2x00dev->tx->limit
+References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org> <1367421455-18463-2-git-send-email-juhosg@openwrt.org> <20130603190959.70b1f4d2@north>
+In-Reply-To: <20130603190959.70b1f4d2@north>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2013 02:11 PM, Tejun Heo wrote:
-> (cc'ing wireless crowd, tglx and Ingo.  The original thread is at
->   http://thread.gmane.org/gmane.linux.kernel/1500158/focus=55005 )
->
-> Hello, Ben.
->
-> On Wed, Jun 05, 2013 at 01:58:31PM -0700, Ben Greear wrote:
->> Hmm, wonder if I found it.  I previously saw times where it appears
->> jiffies does not increment.  __do_softirq has a break-out based on
->> jiffies timeout.  Maybe that is failing to get us out of __do_softirq
->> in my lockup case because for whatever reason the system cannot update
->> jiffies in this case?
+Hi Kuba!
+
+> On Wed,  1 May 2013 17:17:29 +0200, Gabor Juhos wrote:
+>> The TX data queue is initialized already when
+>> the rt2x00lib_probe_hw() function is called.
 >>
->> I added this (probably whitespace damaged) hack and now I have not been
->> able to reproduce the problem.
->
-> Ah, nice catch. :)
->
->> diff --git a/kernel/softirq.c b/kernel/softirq.c
->> index 14d7758..621ea3b 100644
->> --- a/kernel/softirq.c
->> +++ b/kernel/softirq.c
->> @@ -212,6 +212,7 @@ asmlinkage void __do_softirq(void)
->>          unsigned long end = jiffies + MAX_SOFTIRQ_TIME;
->>          int cpu;
->>          unsigned long old_flags = current->flags;
->> +       unsigned long loops = 0;
+>> Fetch the number of the queue entries from that
+>> instead of using the entry_num field of the data
+>> queue descriptor.
 >>
->>          /*
->>           * Mask out PF_MEMALLOC s current task context is borrowed for the
->> @@ -241,6 +242,7 @@ restart:
->>                          unsigned int vec_nr = h - softirq_vec;
->>                          int prev_count = preempt_count();
+>> The two values are the same, and the use of the
+>> rt2x00dev->tx->limit value allows us to get rid
+>> of a superfluous pointer dereference.
 >>
->> +                       loops++;
->>                          kstat_incr_softirqs_this_cpu(vec_nr);
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
 >>
->>                          trace_softirq_entry(vec_nr);
->> @@ -265,7 +267,7 @@ restart:
->>
->>          pending = local_softirq_pending();
->>          if (pending) {
->> -               if (time_before(jiffies, end) && !need_resched())
->> +               if (time_before(jiffies, end) && !need_resched() && (loops < 500))
->>                          goto restart;
->
-> So, softirq most likely kicked off from ath9k is rescheduling itself
-> to the extent where it ends up locking out the CPU completely.  The
-> problem is usually okay because the processing would break out in 2ms
-> but as jiffies is stopped in this case with all other CPUs trapped in
-> stop_machine, the loop never breaks and the machine hangs.  While
-> adding the counter limit probably isn't a bad idea, softirq requeueing
-> itself indefinitely sounds pretty buggy.
+>> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+>> index 90dc143..b287467 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+>> @@ -1077,7 +1077,7 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
+>>   		 */
+>>  		int kfifo_size =
+>>  			roundup_pow_of_two(rt2x00dev->ops->tx_queues *
+>> -					   rt2x00dev->ops->tx->entry_num *
+>> +					   rt2x00dev->tx->limit *
+>>  					   sizeof(u32));
+>>  
+>>  		status = kfifo_alloc(&rt2x00dev->txstatus_fifo, kfifo_size,
+> 
+> Unfortunately this does not work without your "get rid of
+> static data queue descriptors" series as well.
+> 
+> queue->limit is set when rt2x00lib_start is called, not on
+> probe. kfifo_alloc will fail with EINVAL here. 
 
-Just to be clear on the ath9k part for the wifi folks:
+You are right. I should have been more careful while I have tested this patch-set.
 
-This is basically un-patched 3.9.4, but I have 200 virtual stations
-configured on each of two ath9k radios.  I cannot reproduce the problem
-without ath9k, but I do not know for certain ath9k is the real
-culprit.
+> As a result support for all rt2x00 devices is broken on wireless-testing.
 
-In the case where I can most easily reproduce the lockup, ath9k virtual
-stations would be trying to associate, so I'd expect a fair amount
-of packet processing to be happening...
+Only rt2800 devices are affected. The offending code runs only if
+REQUIRE_TXSTATUS_FIFO is set in rt2x00dev->cap_flags which is not set for older
+chips.
 
-> ath9k people, do you guys have any idea what's going on?  Why would
-> softirq repeat itself indefinitely?
->
-> Ingo, Thomas, we're seeing a stop_machine hanging because
->
-> * All other CPUs entered IRQ disabled stage.  Jiffies is not being
->    updated.
->
-> * The last CPU get caught up executing softirq indefinitely.  As
->    jiffies doesn't get updated, it never breaks out of softirq
->    handling.  This is a deadlock.  This CPU won't break out of softirq
->    handling unless jiffies is updated and other CPUs can't do anything
->    until this CPU enters the same stop_machine stage.
->
-> Ben found out that breaking out of softirq handling after certain
-> number of repetitions makes the issue go away, which isn't a proper
-> fix but we might want anyway.  What do you guys think?
+> Maybe you can just post the mentioned series for inclusion?
 
-Thanks,
-Ben
+I will post a fix for the actual problem first, and will rebase the series on
+top of that.
 
+> I have been running with it since you posted it as RFC and
+> I did not notice any problems so far...
 
+Great!
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+-Gabor
