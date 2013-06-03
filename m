@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1743 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932269Ab3FFLVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 07:21:01 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 13/22] brcmfmac: Accept only first creditmap event.
-Date: Thu, 6 Jun 2013 13:17:58 +0200
-Message-ID: <1370517487-14395-14-git-send-email-arend@broadcom.com> (sfid-20130606_135029_585574_C36DD37E)
-In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:53655 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757296Ab3FCO5F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 10:57:05 -0400
+Message-ID: <1370271421.8227.14.camel@jlt4.sipsolutions.net> (sfid-20130603_165709_487024_D4744368)
+Subject: Re: [PATCH] cfg80211: fix deadlock in cfg80211_leave_mesh()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: thomas@cozybit.com, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org
+Date: Mon, 03 Jun 2013 16:57:01 +0200
+In-Reply-To: <20130601131916.GA2484@localhost> (sfid-20130601_152018_273852_3FE32A57)
+References: <20130601131916.GA2484@localhost>
+	 (sfid-20130601_152018_273852_3FE32A57)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Sat, 2013-06-01 at 09:19 -0400, Bob Copeland wrote:
+> As of "cfg80211/mac80211: use cfg80211 wdev mutex in mac80211",
+> mac80211 expects to be able to take the wdev mutex around sdata
+> accesses.  This causes a recursive deadlock since
+> __cfg80211_leave_mesh() already holds the wdev mutex.  Removing
+> the sdata_lock() calls in ieee80211_stop_mesh() alone won't fix
+> this, as the cancel_work_sync() in mesh runs the iface work,
+> and various work items also want to take the wdev lock (not
+> just in mesh, see e.g.  ieee80211_sta_rx_queued_mgmt().)
 
-During P2P testing it turned out that the firmware sents multiple
-multiple creditmap event messages. Only the first message from the
-firmware should be processed. Otherwise the firmware-signalled flow
-control can run haywire when it has packets outstanding in firmware.
+Ouch. My mistake, clearly.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    5 +++++
- 1 file changed, 5 insertions(+)
+> diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+> index 5dfb289..6344a81 100644
+> --- a/net/wireless/mesh.c
+> +++ b/net/wireless/mesh.c
+> @@ -250,7 +250,9 @@ static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
+>  	if (!wdev->mesh_id_len)
+>  		return -ENOTCONN;
+>  
+> +	wdev_unlock(wdev);
+>  	err = rdev_leave_mesh(rdev, dev);
+> +	wdev_lock(wdev);
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 17802a4..a4b9985 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -438,6 +438,7 @@ struct brcmf_fws_info {
- 	u32 fifo_delay_map;
- 	unsigned long borrow_defer_timestamp;
- 	bool bus_flow_blocked;
-+	bool creditmap_received;
- };
- 
- /*
-@@ -1432,6 +1433,10 @@ static int brcmf_fws_notify_credit_map(struct brcmf_if *ifp,
- 		brcmf_err("event payload too small (%d)\n", e->datalen);
- 		return -EINVAL;
- 	}
-+	if (fws->creditmap_received)
-+		return 0;
-+
-+	fws->creditmap_received = true;
- 
- 	brcmf_dbg(TRACE, "enter: credits %pM\n", credits);
- 	brcmf_fws_lock(ifp->drvr, flags);
--- 
-1.7.10.4
+I'm not really happy much with this, like you said, and it's also
+incomplete because the same can happen in an error path in mac80211 in
+rdev_join_mesh().
 
+I also don't really want to think about races with mesh_id_len,
+particularly in the join.
+
+However, I think that in mac80211 we can instead just remove the locking
+and the cancel_work_sync() since the latter will happen whenever the
+interface goes down, in a different code path outside of this. Just need
+to make sure the work can cope with running while the interface is not
+joined to a mesh, but I guess that's not going to be a big problem.
+
+johannes
 
