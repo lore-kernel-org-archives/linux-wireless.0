@@ -1,115 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:45241 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752854Ab3F0Mom (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:58942 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753768Ab3FCOvy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 08:44:42 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv4 07/18] mac80211: add radiotap flag and handling for 5/10 MHz
-Date: Thu, 27 Jun 2013 14:44:13 +0200
-Message-Id: <1372337064-19254-8-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144513_177953_822C5650)
-In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Mon, 3 Jun 2013 10:51:54 -0400
+Date: Mon, 3 Jun 2013 16:25:45 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] nl80211: allow sending CMD_FRAME without specifying
+ any frequency
+Message-ID: <20130603142545.GA1226@ritirata.org> (sfid-20130603_165156_761885_16068719)
+References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+ <51ACA309.60904@lri.fr>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="2fHTh5uZTiUOsy+g"
+In-Reply-To: <51ACA309.60904@lri.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireshark already defines radiotap channel flags for 5 and 10 MHz, so
-just use them in Linux radiotap too. Furthermore, add rx status flags to
-allow drivers to report when they received data on 5 or 10 MHz channels.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- include/net/ieee80211_radiotap.h |    4 ++++
- include/net/mac80211.h           |    4 ++++
- net/mac80211/rx.c                |   21 ++++++++++++---------
- 3 files changed, 20 insertions(+), 9 deletions(-)
+--2fHTh5uZTiUOsy+g
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index c6d07cb..8b5b714 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -230,6 +230,10 @@ enum ieee80211_radiotap_type {
- #define	IEEE80211_CHAN_PASSIVE	0x0200	/* Only passive scan allowed */
- #define	IEEE80211_CHAN_DYN	0x0400	/* Dynamic CCK-OFDM channel */
- #define	IEEE80211_CHAN_GFSK	0x0800	/* GFSK channel (FHSS PHY) */
-+#define	IEEE80211_CHAN_GSM	0x1000	/* GSM (900 MHz) */
-+#define	IEEE80211_CHAN_STURBO	0x2000	/* Static Turbo */
-+#define	IEEE80211_CHAN_HALF	0x4000	/* Half channel (10 MHz wide) */
-+#define	IEEE80211_CHAN_QUARTER	0x8000	/* Quarter channel (5 MHz wide) */
- 
- /* For IEEE80211_RADIOTAP_FLAGS */
- #define	IEEE80211_RADIOTAP_F_CFP	0x01	/* sent/received
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9445f38..ed3dd96 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -809,6 +809,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
-  *	is stored in the @ampdu_delimiter_crc field)
-  * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3
-+ * @RX_FLAG_10MHZ: 10 MHz (half channel) was used
-+ * @RX_FLAG_5MHZ: 5 MHz (quarter channel) was used
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -837,6 +839,8 @@ enum mac80211_rx_flags {
- 	RX_FLAG_80P80MHZ		= BIT(24),
- 	RX_FLAG_160MHZ			= BIT(25),
- 	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
-+	RX_FLAG_10MHZ			= BIT(28),
-+	RX_FLAG_5MHZ			= BIT(29),
- };
- 
- #define RX_FLAG_STBC_SHIFT		26
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a45e934..834ebd9 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -146,6 +146,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	struct ieee80211_radiotap_header *rthdr;
- 	unsigned char *pos;
- 	u16 rx_flags = 0;
-+	u16 channel_flags = 0;
- 	int mpdulen;
- 
- 	mpdulen = skb->len;
-@@ -220,20 +221,22 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	/* IEEE80211_RADIOTAP_CHANNEL */
- 	put_unaligned_le16(status->freq, pos);
- 	pos += 2;
-+	if (status->flag & RX_FLAG_10MHZ)
-+		channel_flags |= IEEE80211_CHAN_HALF;
-+	else if (status->flag & RX_FLAG_5MHZ)
-+		channel_flags |= IEEE80211_CHAN_QUARTER;
-+
- 	if (status->band == IEEE80211_BAND_5GHZ)
--		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ;
- 	else if (status->flag & (RX_FLAG_HT | RX_FLAG_VHT))
--		put_unaligned_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
- 	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
--		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
- 	else if (rate)
--		put_unaligned_le16(IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
- 	else
--		put_unaligned_le16(IEEE80211_CHAN_2GHZ, pos);
-+		channel_flags |= IEEE80211_CHAN_2GHZ;
-+	put_unaligned_le16(channel_flags, pos);
- 	pos += 2;
- 
- 	/* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
--- 
-1.7.10.4
+On Mon, Jun 03, 2013 at 04:07:05PM +0200, Nicolas Cavallari wrote:
+> On 03/06/2013 08:39, Antonio Quartulli wrote:
+> > From: Antonio Quartulli <antonio@open-mesh.com>
+> >=20
+> > Users may want to send a frame on the current channel
+> > without specifying it.
+> >=20
+> > Make mgmt_tx pass a NULL channel to mac80211 if none has
+> > been specified by the user.
+> >=20
+> > Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+> > ---
+> >  net/wireless/nl80211.c | 17 +++++++++++++----
+> >  1 file changed, 13 insertions(+), 4 deletions(-)
+> >=20
+>=20
+> Have you tested tracing or ath6kl ?
 
+no.
+For tracing I think I totally forgot to update the "prototype". For ath6kl I
+have no possibility since I have no hw using that driver :/
+
+The concern about ath6kl comes from the fact that it is a fullMAC driver?
+
+
+Cheers,
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--2fHTh5uZTiUOsy+g
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRrKdpAAoJEADl0hg6qKeOeQ4P/2mBLGs+AFpp8jePiAP7CPs9
+PP9/uFrmRa0PJsATdAY4XdAohmMyt5zM6r0wDoTfuQ/WGvF4xm+xBZa79Ju2o14h
+qz6I0RJm0HJbijmowj9pczkFbxK292a5ylbMgbUMfLdHeoxQoFXlKWeN/fGtTl3I
+1Eof14ciYPed/v46WJflWahlgGURMmOwndh3v7W0/nZb2wr1WGrUkCGi+Gh+cbny
+zWfiJWmUQBGlrPgr7oNMVbGGmfEoerlB0YOs5tVLYlii/nRTTj7VI7vO1AZVHZAS
+0++l/+Z2YKWLzQHGa9jove6JSfCpB7dVhL0FOvhY+5HGeuLnjB1CXV/j4SmbhuWj
+70s+SyWSmqb33qQIf9sks+swOFb+wsOdGG58ctuSgK5IDaxzk02nBByt2NavOnL7
+KqWnXU9qs9NzOY/Nhc50g0wAHPzdTRFae1y/40MLs7AidC8+AS8WZsqoqV+vbTcJ
+7X9JGd7S9uy+DQ4qWpZcT+fwLZWzNGbcZjHIhY0d/qiVUbh7EO0B0RJ6QBA+S8SY
+ecfGB0EsGkgCqHBYfX0az3OqAG6Yx64P1DUIKSiaAwwLb+l4EpM904iZWYTcvxoO
+yqKGWu4wkstQa9W6EeIvxcIEyEFzf7iFkG24rGU7yX7tY0+IRBQtqvVtdfcoY+t2
+Uzdufy3Be7zC2sMJ73+/
+=hKmH
+-----END PGP SIGNATURE-----
+
+--2fHTh5uZTiUOsy+g--
