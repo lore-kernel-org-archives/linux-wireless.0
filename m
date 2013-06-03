@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:52812 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752337Ab3FFIRN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 04:17:13 -0400
-Received: from mailout-de.gmx.net ([10.1.76.24]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0Lex3B-1U2QXX1un9-00qidu for
- <linux-wireless@vger.kernel.org>; Thu, 06 Jun 2013 10:17:12 +0200
-Message-ID: <51B04585.9020108@gmx.net> (sfid-20130606_101719_928154_D1774DFF)
-Date: Thu, 06 Jun 2013 10:17:09 +0200
-From: Oleksij Rempel <fishor@gmx.net>
-MIME-Version: 1.0
-To: "C.B. Wang" <wtwangcb@gmail.com>
-CC: Adrian Chadd <adrian@freebsd.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: carl9170:5/10 MHz Channel Support on carl9170
-References: <CAB-Tk70FmmfZOaJnWOubcOrP3MyXebTtrY936_4NROmf_76EZw@mail.gmail.com> <CAB-Tk73mTDsvf+MCEq5xfUBUtE4c6KfL2nkAcZe2LCY5pF=7RQ@mail.gmail.com> <CAJ-Vmok5yLZvstvYHi35ALWG3q8sVYLx_1PuhL31unOjxrg-4g@mail.gmail.com> <201306052335.25953.chunkeey@googlemail.com> <CAJ-Vmom6cmf-c-TJs5s9AvT953m0+tANVj_AxnSYwUCzegyPWQ@mail.gmail.com> <CAB-Tk7273qtgA0J-rvpFxNbMDErmXVdknybVOJmUTa73VhL1Cw@mail.gmail.com>
-In-Reply-To: <CAB-Tk7273qtgA0J-rvpFxNbMDErmXVdknybVOJmUTa73VhL1Cw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:53660 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757296Ab3FCO7N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 10:59:13 -0400
+Message-ID: <1370271547.8227.16.camel@jlt4.sipsolutions.net> (sfid-20130603_165926_231434_498F8381)
+Subject: Re: [PATCH 1/2] nl80211: allow sending CMD_FRAME without specifying
+ any frequency
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Date: Mon, 03 Jun 2013 16:59:07 +0200
+In-Reply-To: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 06.06.2013 10:07, schrieb C.B. Wang:
-> Spectral analysis isn't supported by any Atheros USB chipsets,is it?
+On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
+> From: Antonio Quartulli <antonio@open-mesh.com>
+> 
+> Users may want to send a frame on the current channel
+> without specifying it.
+> 
+> Make mgmt_tx pass a NULL channel to mac80211 if none has
+> been specified by the user.
 
-ar7010 devices theoretically should support it.
+cfg80211 isn't just a mac80211 frontend ... ;-)
 
-> The 802.11j standard defines 10mhz operation.I think it is mandatory.
-> You can get a copy here
-> http://www.it.iitb.ac.in/~mukesh/dokuwiki/lib/exe/fetch.php?cache=cache&media=mtp:802.11j-2004.pdf
->
-> No,I don't know any.Most devices that use ZyDaS chipset are b/g soloution.
-> It's rare even to see an a/b/g ZyDaS device.
->
-> Channel 183(4815mhz),185(4925mhz),187(4935mhz),189(4945mhz) should also
-> be added to the channel list of carl9170 driver.
->
+Also, as Nicolas said, ath6kl_mgmt_tx() will crash after this patch if
+it's called in AP mode w/o a channel, so you need to think about that.
 
+Tracing looks fine though.
+
+johannes
 
