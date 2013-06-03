@@ -1,48 +1,19 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43854 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934967Ab3FTHRd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jun 2013 03:17:33 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Fix race in heart beat polling
-Date: Thu, 20 Jun 2013 12:47:20 +0530
-Message-ID: <1371712640-12834-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130620_091737_777223_042D6741)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mout.gmx.net ([212.227.15.18]:59245 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751450Ab3FCH6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jun 2013 03:58:17 -0400
+Received: from mailout-de.gmx.net ([10.1.76.32]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0Mh7vz-1V5dV03Gfx-00MNAb for
+ <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 09:58:15 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 0/2] ath9k: add STBC Rx flags (repost untill some one asnwers)
+Date: Mon,  3 Jun 2013 09:57:57 +0200
+Message-Id: <1370246279-6536-1-git-send-email-linux@rempel-privat.de> (sfid-20130603_095822_916191_44997582)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-
-Make sure to cancel heart beat timer before
-freeing wmi to avoid potential NULL pointer
-dereference.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 6a67881..4f316bd 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1836,6 +1836,9 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
- 
- 	clear_bit(WMI_READY, &ar->flag);
- 
-+	if (ar->fw_recovery.enable)
-+		del_timer_sync(&ar->fw_recovery.hb_timer);
-+
- 	/*
- 	 * After wmi_shudown all WMI events will be dropped. We
- 	 * need to cleanup the buffers allocated in AP mode and
--- 
-1.7.9.5
-
+One more repost of old patches. I need, please, at least some kind of answer:
+"we don't wont patches from you" or "you are doing some thing wrong".
