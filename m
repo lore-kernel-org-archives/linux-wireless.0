@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43477 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166Ab3FZHhX (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:48117 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755301Ab3FCVmm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 03:37:23 -0400
-Message-ID: <1372232238.8157.2.camel@jlt4.sipsolutions.net> (sfid-20130626_093737_783507_5854A1CE)
-Subject: Re: [PATCH] cfg80211/mac80211: fix doc compilation warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 26 Jun 2013 09:37:18 +0200
-In-Reply-To: <1372189700-6247-1-git-send-email-michael.opdenacker@free-electrons.com>
-References: <1372189700-6247-1-git-send-email-michael.opdenacker@free-electrons.com>
+	Mon, 3 Jun 2013 17:42:42 -0400
+Received: by mail-we0-f182.google.com with SMTP id w58so2247635wes.27
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 14:42:41 -0700 (PDT)
+Message-ID: <1370295754.9091.26.camel@canaries64> (sfid-20130603_234247_630352_EF875F20)
+Subject: [PATCH 1/8] staging: vt6656: rf.c: IFRFbWriteEmbedded cleanup and
+ remove camel case
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 03 Jun 2013 22:42:34 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-25 at 21:48 +0200, Michael Opdenacker wrote:
-> This patch fixes countless "No description found for parameter"
-> warnings generating documentation (running "make htmldocs"),
-> because the comments do not match the actual prototypes in the code.
-> 
-> This issue didn't exist in 3.9. It may we worth fixing in 3.10
-> (if it's not too late).
+White space clean up.
 
-I think it's way late. Besides, all of this is already fixed in -next
-trees.
+Camel case changes;
+pDevice -> priv
+dwData -> data
+pbyData -> reg_data
 
+Functional change
+CONTROLnsRequestOut Length = ARRAY_SIZE(reg_data)
 
-> @@ -4153,6 +4153,7 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
->   * cfg80211_crit_proto_stopped() - indicate critical protocol stopped by driver.
->   *
->   * @wdev: the wireless device for which critical protocol is stopped.
-> + * @gfp: the type of memory to allocate (see kmalloc).
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rf.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-This is also wrong, the allocation flags don't really change the *type*
-of memory, but only *how* it is allocated.
-
-johannes
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index d27fa43..9fbef8c 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -707,17 +707,17 @@ const u8 RFaby11aChannelIndex[200] = {
+  * Return Value: true if succeeded; false if failed.
+  *
+  */
+-int IFRFbWriteEmbedded(struct vnt_private *pDevice, u32 dwData)
++int IFRFbWriteEmbedded(struct vnt_private *priv, u32 data)
+ {
+-	u8 pbyData[4];
++	u8 reg_data[4];
+ 
+-	pbyData[0] = (u8)dwData;
+-	pbyData[1] = (u8)(dwData >> 8);
+-	pbyData[2] = (u8)(dwData >> 16);
+-	pbyData[3] = (u8)(dwData >> 24);
++	reg_data[0] = (u8)data;
++	reg_data[1] = (u8)(data >> 8);
++	reg_data[2] = (u8)(data >> 16);
++	reg_data[3] = (u8)(data >> 24);
+ 
+-	CONTROLnsRequestOut(pDevice,
+-		MESSAGE_TYPE_WRITE_IFRF, 0, 0, 4, pbyData);
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_IFRF,
++				0, 0, ARRAY_SIZE(reg_data), reg_data);
+ 
+ 	return true;
+ }
+-- 
+1.8.1.2
 
