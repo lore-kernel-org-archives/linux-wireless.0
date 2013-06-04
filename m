@@ -1,78 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:48828 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502Ab3FIGNQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42280 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152Ab3FDVAL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jun 2013 02:13:16 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/6] wil6210: Derive IE's for AP
-Date: Sun, 9 Jun 2013 09:12:53 +0300
-Message-ID: <1370758375-16867-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130609_081319_172933_567490CF)
-In-Reply-To: <1370758375-16867-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1370758375-16867-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 4 Jun 2013 17:00:11 -0400
+Date: Tue, 4 Jun 2013 16:56:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, arend@broadcom.com
+Subject: Re: pull request: wireless 2013-06-03
+Message-ID: <20130604205630.GA11199@tuxdriver.com> (sfid-20130604_230019_877955_0A130DD9)
+References: <20130603184817.GD2727@tuxdriver.com>
+ <20130604.131813.134898245916084893.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130604.131813.134898245916084893.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When starting secure AP, in some cases wpa_s provides probe template but not
-probe/assoc IE's. In this case, derive missing IE's from probe.
+On Tue, Jun 04, 2013 at 01:18:13PM -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Mon, 3 Jun 2013 14:48:17 -0400
+> 
+> > Please let me know if there are problems!
+> 
+> Sorry, the broadcom brcmfmac changes need to go.
+> 
+> Some of those commits are cleanups, and some of them have the worst
+> commit log messages ever, the last one for example:
+> 
+> 0017-brcmsmac-fix-regression-observed-in-3.10-rc1.patch
+> 
+> has no explanation whatsoever of what the actual problem or regression
+> is, what aspect of the logic in that function is causing the problem,
+> and no explanation why making this function always return 'false' is a
+> reasonable fix.
+> 
+> That entire series is of very low quality, and even if it was in good
+> shape, at least half the changes are not appropriate at all this late
+> in the -rc series.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+OK, sorry Dave -- I knew better...
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 4eb05d0..189c307 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -402,6 +402,30 @@ static int wil_cfg80211_set_default_key(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static int wil_fix_bcon(struct wil6210_priv *wil,
-+			struct cfg80211_beacon_data *bcon)
-+{
-+	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
-+	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
-+	int rc = 0;
-+
-+	if (bcon->probe_resp_len <= hlen)
-+		return 0;
-+
-+	if (!bcon->proberesp_ies) {
-+		bcon->proberesp_ies = f->u.probe_resp.variable;
-+		bcon->proberesp_ies_len = bcon->probe_resp_len - hlen;
-+		rc = 1;
-+	}
-+	if (!bcon->assocresp_ies) {
-+		bcon->assocresp_ies = f->u.probe_resp.variable;
-+		bcon->assocresp_ies_len = bcon->probe_resp_len - hlen;
-+		rc = 1;
-+	}
-+
-+	return rc;
-+}
-+
- static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 				 struct net_device *ndev,
- 				 struct cfg80211_ap_settings *info)
-@@ -423,6 +447,9 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	print_hex_dump_bytes("SSID ", DUMP_PREFIX_OFFSET,
- 			     info->ssid, info->ssid_len);
- 
-+	if (wil_fix_bcon(wil, bcon))
-+		wil_dbg_misc(wil, "Fixed bcon\n");
-+
- 	rc = wil_reset(wil);
- 	if (rc)
- 		return rc;
+John
 -- 
-1.8.1.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
