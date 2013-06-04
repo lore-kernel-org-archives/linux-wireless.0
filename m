@@ -1,119 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38404 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752208Ab3FDLlN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 07:41:13 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from s72.web-hosting.com ([198.187.29.21]:33095 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899Ab3FDKOY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 06:14:24 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 12/13] rt2x00: rt2500usb: implement queue_init callback
-Date: Tue,  4 Jun 2013 13:40:49 +0200
-Message-Id: <1370346050-7047-13-git-send-email-juhosg@openwrt.org> (sfid-20130604_134119_542099_0D22FD4F)
-In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
-References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/6] ath9k: Fix ANI monitoring
+Date: Tue,  4 Jun 2013 15:41:31 +0530
+Message-Id: <1370340695-29003-2-git-send-email-sujith@msujith.org> (sfid-20130604_121427_395007_BE141C00)
+In-Reply-To: <1370340695-29003-1-git-send-email-sujith@msujith.org>
+References: <1370340695-29003-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The generic rt2x00 code has been changed to allow the
-drivers toimplement dynamic data_queue initialization.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Remove the static data queue descriptor structures
-and implement the queue_init callback instead.
+The commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
+changed various ANI operational parameters to address a specific
+card/environment. This is not really applicable for other cards
+in general usage.
 
-Compile tested only.
+As per internal documentation, lowering the immunity level can be
+done only after 5 periods have passed and the CCK/OFDM errors are
+below the low watermak threshold - which have been fixed at 300 and
+400 respectively by the sytems team.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Raising the immunity level can be done when CCK/OFDM errors exceed
+600 and 1000 (per second).
+
+Set these values once during attach.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/rt2x00/rt2500usb.c |   65 ++++++++++++++++++-------------
- 1 file changed, 37 insertions(+), 28 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c | 29 +++++++++++++++++------------
+ drivers/net/wireless/ath/ath9k/ani.h |  2 --
+ 2 files changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index a7f7b36..e5e5479 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1867,33 +1867,45 @@ static const struct rt2x00lib_ops rt2500usb_rt2x00_ops = {
- 	.config			= rt2500usb_config,
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 3ec4c53..1520e55 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -186,14 +186,6 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
+ 				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
+ 				     entry_ofdm->ofdm_weak_signal_on);
+ 	}
+-
+-	if (aniState->ofdmNoiseImmunityLevel >= ATH9K_ANI_OFDM_DEF_LEVEL) {
+-		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
+-		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI;
+-	} else {
+-		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI;
+-		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW;
+-	}
+ }
  
--static const struct data_queue_desc rt2500usb_queue_rx = {
--	.entry_num		= 32,
--	.data_size		= DATA_FRAME_SIZE,
--	.desc_size		= RXD_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_usb),
--};
-+static void rt2500usb_queue_init(struct data_queue *queue)
-+{
-+	switch (queue->qid) {
-+	case QID_RX:
-+		queue->limit = 32;
-+		queue->data_size = DATA_FRAME_SIZE;
-+		queue->desc_size = RXD_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_usb);
-+		break;
+ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
+@@ -439,12 +431,25 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		ofdmPhyErrRate, aniState->cckNoiseImmunityLevel,
+ 		cckPhyErrRate, aniState->ofdmsTurn);
  
--static const struct data_queue_desc rt2500usb_queue_tx = {
--	.entry_num		= 32,
--	.data_size		= DATA_FRAME_SIZE,
--	.desc_size		= TXD_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_usb),
--};
-+	case QID_AC_VO:
-+	case QID_AC_VI:
-+	case QID_AC_BE:
-+	case QID_AC_BK:
-+		queue->limit = 32;
-+		queue->data_size = DATA_FRAME_SIZE;
-+		queue->desc_size = TXD_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_usb);
-+		break;
+-	if (aniState->listenTime > ah->aniperiod) {
+-		if (cckPhyErrRate < ah->config.cck_trig_low &&
+-		    ofdmPhyErrRate < ah->config.ofdm_trig_low) {
++	if (aniState->listenTime > 5 * ah->aniperiod) {
++		/*
++		 * Check if we need to lower immunity if
++		 * 5 ani_periods have passed.
++		 */
++		if (ofdmPhyErrRate <= ah->config.ofdm_trig_low &&
++		    cckPhyErrRate <= ah->config.cck_trig_low) {
+ 			ath9k_hw_ani_lower_immunity(ah);
+ 			aniState->ofdmsTurn = !aniState->ofdmsTurn;
+-		} else if (ofdmPhyErrRate > ah->config.ofdm_trig_high) {
++		}
++		ath9k_ani_restart(ah);
++	} else if (aniState->listenTime > ah->aniperiod) {
++		/*
++		 * Check if immunity has to be raised,
++		 * (either OFDM or CCK).
++		 */
++		if (ofdmPhyErrRate > ah->config.ofdm_trig_high &&
++		    (cckPhyErrRate <= ah->config.cck_trig_high ||
++		     aniState->ofdmsTurn)) {
+ 			ath9k_hw_ani_ofdm_err_trigger(ah);
+ 			aniState->ofdmsTurn = false;
+ 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 78b9fa9..1088472 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -21,11 +21,9 @@
  
--static const struct data_queue_desc rt2500usb_queue_bcn = {
--	.entry_num		= 1,
--	.data_size		= MGMT_FRAME_SIZE,
--	.desc_size		= TXD_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_usb_bcn),
--};
-+	case QID_BEACON:
-+		queue->limit = 1;
-+		queue->data_size = MGMT_FRAME_SIZE;
-+		queue->desc_size = TXD_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_usb_bcn);
-+		break;
+ /* units are errors per second */
+ #define ATH9K_ANI_OFDM_TRIG_HIGH          3500
+-#define ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI 1000
  
--static const struct data_queue_desc rt2500usb_queue_atim = {
--	.entry_num		= 8,
--	.data_size		= DATA_FRAME_SIZE,
--	.desc_size		= TXD_DESC_SIZE,
--	.priv_size		= sizeof(struct queue_entry_priv_usb),
--};
-+	case QID_ATIM:
-+		queue->limit = 8;
-+		queue->data_size = DATA_FRAME_SIZE;
-+		queue->desc_size = TXD_DESC_SIZE;
-+		queue->priv_size = sizeof(struct queue_entry_priv_usb);
-+		break;
-+
-+	default:
-+		BUG();
-+		break;
-+	}
-+}
+ /* units are errors per second */
+ #define ATH9K_ANI_OFDM_TRIG_LOW           400
+-#define ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI 900
  
- static const struct rt2x00_ops rt2500usb_ops = {
- 	.name			= KBUILD_MODNAME,
-@@ -1902,10 +1914,7 @@ static const struct rt2x00_ops rt2500usb_ops = {
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
- 	.extra_tx_headroom	= TXD_DESC_SIZE,
--	.rx			= &rt2500usb_queue_rx,
--	.tx			= &rt2500usb_queue_tx,
--	.bcn			= &rt2500usb_queue_bcn,
--	.atim			= &rt2500usb_queue_atim,
-+	.queue_init		= rt2500usb_queue_init,
- 	.lib			= &rt2500usb_rt2x00_ops,
- 	.hw			= &rt2500usb_mac80211_ops,
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+ /* units are errors per second */
+ #define ATH9K_ANI_CCK_TRIG_HIGH           600
 -- 
-1.7.10
+1.8.3
 
