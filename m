@@ -1,98 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53620 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935060Ab3FSVGx (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:27665 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753197Ab3FDMK4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 17:06:53 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH-WN 3/3] wireless: Add comments about bss refcounting.
-Date: Wed, 19 Jun 2013 14:06:27 -0700
-Message-Id: <1371675987-28732-3-git-send-email-greearb@candelatech.com> (sfid-20130619_230655_497525_151BE004)
-In-Reply-To: <1371675987-28732-1-git-send-email-greearb@candelatech.com>
-References: <1371675987-28732-1-git-send-email-greearb@candelatech.com>
+	Tue, 4 Jun 2013 08:10:56 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: RE: [PATCH v8] cfg80211: P2P find phase offload
+Date: Tue, 4 Jun 2013 12:10:52 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A01ACFD04B@HASMSX105.ger.corp.intel.com> (sfid-20130604_141102_681522_FE2A7B53)
+References: <1370328271-9523-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1370328271-9523-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A01ACFCDFB@HASMSX105.ger.corp.intel.com>
+ <2446389.or6hSZ58yP@lx-vladimir>
+In-Reply-To: <2446389.or6hSZ58yP@lx-vladimir>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi Vladimir,
 
-Should help the next person that tries to understand
-the bss refcounting logic.
+BTW, in case that the probe response offload is enabled, do you think that the corresponding probe requests should be reported to the host? If this is not the case, the wpa_supplicant will not have the full list of p2p_peers.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+> > > + * @min_discoverable_interval: and
+> > > + * @max_discoverable_interval: min/max for random multiplier of
+> 100TU's
+> > > + *	for the listen state duration
+> > > + * @n_channels: number of channels to operate on
+> > > + * @channels: channels to operate on  */ struct
+> > > +cfg80211_p2p_find_params {
+> >
+> > The parameters are missing the listen channel (which is needed to the listen
+> phase).
+> 
+> There are n_channels and channels that define set of social channels to operate
+> on. It applies to both listen and search.
+> 
 
-This is against wireless-next.
+The wpa_supplicant defines a specific listen channel in wpas_p2p_init() and uses this channel in all the following flows. I think that this setting should be communicated to the driver and it should be distinguished from the channels used in search. 
 
- net/wireless/scan.c |    4 ++++
- net/wireless/sme.c  |    3 +++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+> > > +	u32 min_discoverable_interval;
+> > > +	u32 max_discoverable_interval;
+> >
+> > I do not see a real value for the max/min_discoverable_interval. Is there a
+> use case of specifying these limits and not using the default ones?
+> 
+> Spec says these parameters may be changed.
+> Practical use, suggested by spec:
+> 
+> - search-only P2P device may set
+> min_discoverable_interval = max_discoverable_interval = 0
+> - listen-most P2P device may set min_discoverable_interval >> 0 and
+> max_discoverable_interval >= min_discoverable_interval
+> 
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index abb0399..d2f4db0 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -623,6 +623,7 @@ static int cmp_bss(struct cfg80211_bss *a,
- 	}
- }
- 
-+/* Returned bss is reference counted and must be cleaned up appropriately. */
- struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 				      struct ieee80211_channel *channel,
- 				      const u8 *bssid,
-@@ -778,6 +779,7 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *dev,
- 	return true;
- }
- 
-+/* Returned bss is reference counted and must be cleaned up appropriately. */
- static struct cfg80211_internal_bss *
- cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 		    struct cfg80211_internal_bss *tmp)
-@@ -963,6 +965,7 @@ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
- 	return channel;
- }
- 
-+/* Returned bss is reference counted and must be cleaned up appropriately. */
- struct cfg80211_bss*
- cfg80211_inform_bss(struct wiphy *wiphy,
- 		    struct ieee80211_channel *channel,
-@@ -1020,6 +1023,7 @@ cfg80211_inform_bss(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(cfg80211_inform_bss);
- 
-+/* Returned bss is reference counted and must be cleaned up appropriately. */
- struct cfg80211_bss *
- cfg80211_inform_bss_frame(struct wiphy *wiphy,
- 			  struct ieee80211_channel *channel,
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 32dac8c..1d3cfb1 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -239,6 +239,7 @@ void cfg80211_conn_work(struct work_struct *work)
- 	rtnl_unlock();
- }
- 
-+/* Returned bss is reference counted and must be cleaned up appropriately. */
- static struct cfg80211_bss *cfg80211_get_conn_bss(struct wireless_dev *wdev)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-@@ -699,6 +700,7 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- }
- EXPORT_SYMBOL(cfg80211_connect_result);
- 
-+/* Consumes bss object one way or another */
- void __cfg80211_roamed(struct wireless_dev *wdev,
- 		       struct cfg80211_bss *bss,
- 		       const u8 *req_ie, size_t req_ie_len,
-@@ -775,6 +777,7 @@ void cfg80211_roamed(struct net_device *dev,
- }
- EXPORT_SYMBOL(cfg80211_roamed);
- 
-+/* Consumes bss object one way or another */
- void cfg80211_roamed_bss(struct net_device *dev,
- 			 struct cfg80211_bss *bss, const u8 *req_ie,
- 			 size_t req_ie_len, const u8 *resp_ie,
--- 
-1.7.3.4
+Ok.
 
+> > > + *
+> > > + * @start_p2p_find: start P2P find phase
+> > > + *	Parameters include IEs for probe/probe-resp frames;
+> > > + *	and channels to operate on.
+> > > + *	Parameters are not retained after call, driver need to copy data if
+> > > + *	it need it later.
+> > > + *	P2P find can't run concurrently with ROC or scan, and driver should
+> > > + *	check this.
+> >
+> > It might be good to define the exact semantics of p2p_find with regards to
+> ROC/Scan, i.e., when p2p_find is requested during ROC/scan, should the driver
+> save the request and handle it when the other operation is done, or should it
+> return EBUSY or something similar (and also what are the semantics when
+> requesting ROC/scan while p2p_find is in progress).
+> 
+> My opinion is ROC/scan collision with p2p_find is indication of error in the
+> supplicant; and proper response would be -EBUSY. Actually, code in nl80211
+> check for scan (see below), but ROC is harder to detect.
+> I'll add explanation to the comment - anyway Johannes wants me to fix for
+> genlmsg_end() never returning negative value.
+> 
+
+That sound reasonable.
+
+> > > +
+> > > +	if (rdev->scan_req)
+> > > +		return -EBUSY;
+> 
+> > > +
+> > > +	if (attr_freq) {
+> > > +		n_channels = validate_scan_freqs(attr_freq);
+> > > +		if (!n_channels)
+> > > +			return -EINVAL;
+> > > +
+> > > +		channels = kzalloc(n_channels * sizeof(*channels),
+> > > GFP_KERNEL);
+> > > +		if (!channels)
+> > > +			return -ENOMEM;
+> > > +
+> > > +		/* user specified, bail out if channel not found */
+> > > +		nla_for_each_nested(attr, attr_freq, tmp) {
+> > > +			struct ieee80211_channel *chan;
+> > > +
+> > > +			chan = ieee80211_get_channel(wiphy,
+> > > nla_get_u32(attr));
+> > > +
+> > > +			if (!chan) {
+> > > +				err = -EINVAL;
+> > > +				goto out_free;
+> > > +			}
+> > > +
+> > > +			/* ignore disabled channels */
+> > > +			if (chan->flags & IEEE80211_CHAN_DISABLED)
+> > > +				continue;
+> > > +
+> > > +			params.channels[i] = chan;
+> > > +			i++;
+> > > +		}
+> > > +		if (!i) {
+> > > +			err = -EINVAL;
+> > > +			goto out_free;
+> > > +		}
+> > > +
+> > > +		params.n_channels = i;
+> > > +		params.channels = channels;
+> > > +	}
+> > > +
+> >
+> > Do we need to set the default channels if the attribute is not set (or require
+> that this attribute will be part of the command).
+> 
+> Logic is the following:
+> - supplicant may omit channel list at all, this mean "use all social channels",
+> kind of default behavior
+> - supplicant may specify channel subset, in this case it should be not 
+empty.
+> 
+> I'll comment it too.
+> 
+> > > +
+> > > +	attr = info->attrs[NL80211_ATTR_IE_PROBE_RESP];
+> > > +	if (attr) {
+> > > +		params.probe_resp_ie_len = nla_len(attr);
+> > > +		params.probe_resp_ie = nla_data(attr);
+> > > +	}
+> >
+> > Is it valid to get Probe response IEs even if the driver did not report support
+> for it?
+> 
+> One can't do p2p_find if it does not reply to P2P discovery probes.
+> It is unrelated to answering probes in AP mode - driver may leave this to
+> supplicant.
+
+But you got NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD for driver that support probe response offloading. In case that the driver does not report this flag, wpa_supplicant should understand this and not configure the driver with the probe response IEs.
+
+Regards,
+
+Ilan.
