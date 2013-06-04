@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22052 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754893Ab3FTOr4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42784 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791Ab3FDVaX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jun 2013 10:47:56 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Kirshenbaum Erez <erezk@wilocity.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/1] wil6210: set vring index for all descriptors
-Date: Thu, 20 Jun 2013 17:47:53 +0300
-Message-ID: <6443787.Wu8jvXyzrb@lx-vladimir> (sfid-20130620_164800_173169_3F2BE9BC)
-In-Reply-To: <1371734684-4453-1-git-send-email-erezk@wilocity.com>
-References: <1371734684-4453-1-git-send-email-erezk@wilocity.com>
+	Tue, 4 Jun 2013 17:30:23 -0400
+Date: Tue, 4 Jun 2013 17:26:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Gustavo Padovan <gustavo.padovan@collabora.co.uk>,
+	Luciano Coelho <coelho@ti.com>
+Subject: wireless tree rebased (from 5/28), Broadcom bits dropped
+Message-ID: <20130604212602.GB11199@tuxdriver.com> (sfid-20130604_235307_771496_4C2FBAD1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, June 20, 2013 04:24:44 PM Kirshenbaum Erez wrote:
-> The vring index (MAC queue id) must be set in all TX descriptors
-> otherwise HW will fail to release descriptors for a specific vring
-> (disconnect or vring switch flows).
-> This is normally occurs when fragmentation required, if vring index
-> will not be the same for all SKB descriptors HW will fail to flush
-> this MAC queue.
-> 
-> Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
-> 
-Here is my
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+All,
 
-Thanks.
+Due to my poor judgment in accepting the brcmfmac/brcmsmac series,
+I've made a mess of the wireless tree.  To fix it, I have rebased from
+before that series was applied.  I'm sure there were other potential
+courses of action, but this is the one I chose...
+
+If you maintain a tree that pulls from wireless.git (and has done
+so within the past week), then you will need to rebase as well.
+This is particularly true if you wish for me to pull from your tree
+in the future.
+
+I sincerely apologize for the inconvenience.  I hope that it won't
+be happening again anytime soon (if at all).
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
