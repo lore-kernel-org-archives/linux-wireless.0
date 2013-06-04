@@ -1,37 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36236 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752763Ab3FLGhZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 02:37:25 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Calvin Owens <jcalvinowens@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] mac80211: ath9k: Use RCU protection calling ieee80211_get_tx_rates
-References: <20130609225120.GA2789@gmail.com>
-	<20130610042959.GA1902@gmail.com>
-	<1370950926.8356.14.camel@jlt4.sipsolutions.net>
-	<20130611171304.GA2189@gmail.com>
-	<1370980523.8356.70.camel@jlt4.sipsolutions.net>
-Date: Wed, 12 Jun 2013 09:37:18 +0300
-In-Reply-To: <1370980523.8356.70.camel@jlt4.sipsolutions.net> (Johannes Berg's
-	message of "Tue, 11 Jun 2013 21:55:23 +0200")
-Message-ID: <87ehc73kdd.fsf@purkki.adurom.net> (sfid-20130612_083728_111045_C185C19D)
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:40584
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754300Ab3FDNnp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 09:43:45 -0400
+Date: Tue, 4 Jun 2013 09:43:41 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: cw1200: add driver for the ST-E CW1100 & CW1200 WLAN chipsets
+Message-ID: <20130604134340.GA3813@shaftnet.org> (sfid-20130604_154402_723210_D714CC3B)
+References: <20130604130955.GA13788@debian>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J/dobhs11T7y2rNN"
+In-Reply-To: <20130604130955.GA13788@debian>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> Now the subject should no longer say "mac80211:" :)
+--J/dobhs11T7y2rNN
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-It did have a change to mac80211.h as well, but IMHO that should be in a
-separate patch.
+On Tue, Jun 04, 2013 at 06:09:55AM -0700, Dan Carpenter wrote:
+> The patch a910e4a94f69: "cw1200: add driver for the ST-E CW1100 &
+> CW1200 WLAN chipsets" from May 24, 2013, has poor input validation
+> so the user could write to arbitrary memory.
 
--- 
-Kalle Valo
+> Also I think this API looks like things which should be done with
+> normal ioctls.  This driver only lets you load the firmware using a
+> very ugly custom debugfs interface?
+
+No, this is a debugging interface designed to interact with the=20
+vendor-supplied testing tool and the passthrough API it requires.  The=20
+vendor tool controls the device init sequence, including special=20
+engineering firmware.
+
+Support for the ETF hooks is optional, and even if compiled in has to be=20
+explicitly enabled with a module parameter.
+
+> drivers/net/wireless/cw1200/debug.c
+>    454 =20
+>    455          if (!count)
+>    456                  goto done;
+>    457 =20
+>    458          if (copy_from_user(etf->buf + etf->written, user_buf + wr=
+itten,
+>    459                             count)) {
+>=20
+> "count" isn't capped so we could overwrite etf->written on the first
+> write and then write to arbitrary memery on the second write.
+
+Okay, that's easy enough to fix.  Thanks for pointing this out.
+
+I'll try to robustify this rather ugly interface as much as possible. =20
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Delray Beach, FL                          ^^ (email/xmpp) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--J/dobhs11T7y2rNN
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iD8DBQFRre8MPuLgii2759ARAjGaAKDY+wlBtk51HrS3tFlymBBA5fv4CACgy2Jr
+Qs78mzju6e0WHGmnuHC28Z0=
+=zQTF
+-----END PGP SIGNATURE-----
+
+--J/dobhs11T7y2rNN--
