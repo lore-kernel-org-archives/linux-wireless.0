@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from linode.cmadams.net ([209.123.162.222]:45864 "EHLO
-	linode.cmadams.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934929Ab3FTAeE (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58173 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753109Ab3FDPEL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 20:34:04 -0400
-Date: Wed, 19 Jun 2013 19:28:38 -0500
-From: Chris Adams <cma@cmadams.net>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: BCM4331 deauthenticates every five minutes
-Message-ID: <20130620002838.GA8252@cmadams.net> (sfid-20130620_023424_303420_96BC6964)
-References: <20130619160911.GB4784@cmadams.net>
- <51C1DDEB.3090701@lwfinger.net>
- <20130619164227.GC4784@cmadams.net>
- <CACna6rzbTHnyqs5SzTuYL7r_SW3iCNh0qqbnvfsF7Wspyhp1WA@mail.gmail.com>
- <20130619175850.GD4784@cmadams.net>
+	Tue, 4 Jun 2013 11:04:11 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v9] P2P find phase offload
+Date: Tue, 4 Jun 2013 18:03:10 +0300
+Message-ID: <1370358191-7103-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130604_170414_083585_5F1CC95D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130619175850.GD4784@cmadams.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Once upon a time, Chris Adams <cma@cmadams.net> said:
-> The AP appears to be an Adtran (don't know the model).
+- add listen_channel
+- comment on channel set assumption (either missing or non-empty set)
+- document expected behavior for p2p_find conflict with scan/ROC
+- document probe/probe-resp reporting assumption
+- remove check for genlmsg_end return value
 
-The issue appears to be specific to the Adtran AP combined with the b43
-device.  I have a D-Link DIR-625 at home (running OpenWRT 12.09, using
-ath9k wireless driver), and the MacBook seems to stay connected to it
-okay.
+Vladimir Kondratiev (1):
+  cfg80211: P2P find phase offload
+
+ include/net/cfg80211.h       |  72 +++++++++++++++++
+ include/uapi/linux/nl80211.h |  15 ++++
+ net/wireless/nl80211.c       | 181 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |  19 +++++
+ net/wireless/trace.h         |  42 ++++++++++
+ 5 files changed, 329 insertions(+)
 
 -- 
-Chris Adams <cma@cmadams.net>
+1.8.1.2
+
