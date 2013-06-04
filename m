@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54107 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753590Ab3FCRXR (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:52066 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992Ab3FDMHm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 13:23:17 -0400
-Message-ID: <1370280193.8227.25.camel@jlt4.sipsolutions.net> (sfid-20130603_192320_567646_9B4E267A)
-Subject: Re: using ieee80211_restart_hw()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Greene <jogreene@redhat.com>
-Date: Mon, 03 Jun 2013 19:23:13 +0200
-In-Reply-To: <51ACCDFE.5090003@broadcom.com>
-References: <51ACCDFE.5090003@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 4 Jun 2013 08:07:42 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20909.55274.250284.971849@gargle.gargle.HOWL> (sfid-20130604_140745_750819_270522F7)
+Date: Tue, 4 Jun 2013 17:34:58 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: Re: [PATCH 2/6] ath9k: Fix ANI monitoring
+In-Reply-To: <20909.54790.725704.860717@gargle.gargle.HOWL>
+References: <1370340695-29003-1-git-send-email-sujith@msujith.org>
+	<1370340695-29003-2-git-send-email-sujith@msujith.org>
+	<51ADD058.5000003@openwrt.org>
+	<20909.54201.497575.556986@gargle.gargle.HOWL>
+	<20909.54790.725704.860717@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Sujith Manoharan wrote:
+> Actually, the changes appear to have been merged internally, for QCA988x.
+> So, I am not sure if we can keep the ANI tweaks.
 
+Let's see if there is any improvement in this bug with
+these patches: https://bugzilla.kernel.org/show_bug.cgi?id=49201
 
-> In brcmsmac a fatal error in the device results in calling 
-> ieee80211_restart_hw(). This was done under the assumption that mac80211 
-> would reconfigure everything doing .start(), .add_interface() etc, but 
-> looking at a log in redhat bugzilla makes me suspicious about that.
-> 
-> The only reason I could find in ieee80211_reconfig is that 
-> local->open_count would be zero, right?
-> 
-> At the time of the fatal error AMPDU packets were being transmitted so I 
-> assume local->open_count would *not* be zero as it seems to match the 
-> state of the netdev interface.
-
-Not sure what you're asking ... restart_hw() should reconfigure
-everything just like you said, but maybe your driver is not cleaning up
-properly before the restart so something in there fails? restart_hw()
-expects to only do start/add_interface etc, not remove_interface/stop
-etc.
-
-johannes
-
+Sujith
