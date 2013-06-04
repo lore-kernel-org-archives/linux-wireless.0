@@ -1,93 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:42847
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750713Ab3FEEIX (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:35108 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752669Ab3FDXVp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 00:08:23 -0400
-Date: Wed, 5 Jun 2013 00:08:02 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>,
-	Ajitpal Singh <ajitpal.singh@stericsson.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cw1200: fix some obvious mistakes
-Message-ID: <20130605040802.GA22735@shaftnet.org> (sfid-20130605_060828_562694_2C6CDA4F)
-References: <1370126241-2528420-1-git-send-email-arnd@arndb.de>
- <8513280.folT80711V@wuerfel>
- <20130602144725.GC3875@shaftnet.org>
- <2014948.bdhzSga56L@wuerfel>
+	Tue, 4 Jun 2013 19:21:45 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: enable/disable tx_amsdu support via module parameter
+Date: Tue, 4 Jun 2013 16:20:38 -0700
+Message-ID: <1370388038-32440-1-git-send-email-bzhao@marvell.com> (sfid-20130605_012205_770984_5257FC83)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="IS0zKkzwUGydFO0o"
-In-Reply-To: <2014948.bdhzSga56L@wuerfel>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Avinash Patil <patila@marvell.com>
 
---IS0zKkzwUGydFO0o
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch disables tx_amsdu support in mwifiex by default.
+tx_amdsu support can be enabled via module parameter at load time.
 
-On Mon, Jun 03, 2013 at 10:40:42AM +0200, Arnd Bergmann wrote:
-> It's much better than what you have today, but not ideal because it
-> means the driver cannot be a loadable module any more.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/wmm.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-At least not when being built with platform data, anyway.
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 4be3d33..944e884 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -37,6 +37,9 @@
+ /* Offset for TOS field in the IP header */
+ #define IPTOS_OFFSET 5
+ 
++static bool enable_tx_amsdu;
++module_param(enable_tx_amsdu, bool, 0644);
++
+ /* WMM information IE */
+ static const u8 wmm_info_ie[] = { WLAN_EID_VENDOR_SPECIFIC, 0x07,
+ 	0x00, 0x50, 0xf2, 0x02,
+@@ -1233,7 +1236,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
+ 				mwifiex_send_delba(priv, tid_del, ra, 1);
+ 			}
+ 		}
+-		if (mwifiex_is_amsdu_allowed(priv, tid) &&
++		if (enable_tx_amsdu && mwifiex_is_amsdu_allowed(priv, tid) &&
+ 		    mwifiex_is_11n_aggragation_possible(priv, ptr,
+ 							adapter->tx_buf_size))
+ 			mwifiex_11n_aggregate_pkt(priv, ptr, INTF_HEADER_LEN,
+-- 
+1.8.2.3
 
-I suppose the next step here is to define some devicetree mappings for=20
-this device.
-
-> At least it's not in a released kernel yet.
-
-Given the boneheaded buffer overflow bug that was just pointed out (and=20
-fixed), I'm glad it's getting a lot more scrutiny.
-
-> Regarding a long-term solution, I think what we should do here is to
-> move the reset logic into the SDIO framework itself: We have similar
-> requirements even for eMMC and SD cards, where you need to provide
-> the correct voltage to a device on the MMC port in order for it to
-> work. Today this is supported to a varying degree on the MMC controller
-> level, where we hook into various frameworks (clk, reset-controller,
-> regulator, gpio, pinctrl, power domain) based on platformm data or
-> device tree information on the controller node.
-
-If I understand you correctly, the "traditional" platform data -- power=20
-supply, clock source, and gpio (ie POWERUP, RESET) lines would be=20
-brought up using this mechanism, in order to get the device to attach to=20
-the SDIO bus.  One wrinkle here is that the cw1200 has some minimum=20
-timing requirements between when each of those signals are brought up; I=20
-don't know if there's a way to encode that into the devicetree.
-
-But that's only half the equation.
-
-Once the device has identified it to the SDIO bus and the driver's=20
-probe() function is called, the other half of the platform data is=20
-needed to successfully probe the hardware.  Namely, the 'ref_clk' field.=20
-This would need to be made available to the probe() call (eg via=20
-func->dev.platform_data) but from what I can tell there's currently no=20
-mechanism to make that connection.
-
-Anyway, it's time for bed.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---IS0zKkzwUGydFO0o
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRrrmiPuLgii2759ARAhzEAJ9JnwOnKkTTsWbbNoznOJ6Ky/L8ggCgtKCx
-JognqIBHq43lFyi4EnYLOac=
-=kmhf
------END PGP SIGNATURE-----
-
---IS0zKkzwUGydFO0o--
