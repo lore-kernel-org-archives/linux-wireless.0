@@ -1,78 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:40179 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754435Ab3FRKPh (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:15422 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179Ab3FDSal (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 06:15:37 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] ath9k: Add PCI IDs for CUS217
-Date: Tue, 18 Jun 2013 15:42:36 +0530
-Message-Id: <1371550358-5920-1-git-send-email-sujith@msujith.org> (sfid-20130618_121551_786834_0DE8A7A1)
+	Tue, 4 Jun 2013 14:30:41 -0400
+Date: Tue, 4 Jun 2013 21:30:23 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Peer, Ilan" <ilan.peer@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
+Message-ID: <20130604183023.GB6172@jouni.qca.qualcomm.com> (sfid-20130604_203047_808166_3B3BA06C)
+References: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com>
+ <2442077.aHiBPHBLmq@lx-vladimir>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2442077.aHiBPHBLmq@lx-vladimir>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, Jun 04, 2013 at 07:47:20PM +0300, Vladimir Kondratiev wrote:
+> I am a bit confused. I supposed that if devices A and B (not in a group yet)
+> try to discover each other, it works like the following
+> 
+> A ---- probe-req  ---> B (now B knows A)
+> A <--- probe-resp ---- B (now A knows B)
 
-CUS217 is a card based on AR9462.
+This depends on what exactly you mean with "discover". Sure, it is known
+that there is a P2P peer in the environment if a Probe Request frame
+with P2P IE is received from it. However, that does not necessarily mean
+we know enough of that peer to initiate new P2P operations.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/init.c  |  2 ++
- drivers/net/wireless/ath/ath9k/pci.c   | 13 +++++++++++++
- 3 files changed, 16 insertions(+)
+> But if device is discovered by probe-resp only, it mean this should be
+> 
+> A ---- probe-req  ---> B
+> A <--- probe-resp ---- B (now A knows B)
+> A <--- probe-req  ---- B
+> A ---- probe-resp ---> B (now B knows A)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 1a0a168..04b2d3e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -633,6 +633,7 @@ void ath_ant_comb_update(struct ath_softc *sc);
- 
- #define ATH9K_PCI_CUS198 0x0001
- #define ATH9K_PCI_CUS230 0x0002
-+#define ATH9K_PCI_CUS217 0x0004
- 
- /*
-  * Default cache line size, in bytes.
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 0d17415..1e555d8 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -529,6 +529,8 @@ static void ath9k_init_platform(struct ath_softc *sc)
- 		ath_info(common, "Set parameters for %s\n",
- 			 (sc->driver_data & ATH9K_PCI_CUS198) ?
- 			 "CUS198" : "CUS230");
-+	} else if (sc->driver_data & ATH9K_PCI_CUS217) {
-+		ath_info(common, "CUS217 card detected\n");
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index ddf0d78..b096bb2 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -66,6 +66,19 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 
- 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
-+
-+	/* PCI-E CUS217 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0034,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x2116),
-+	  .driver_data = ATH9K_PCI_CUS217 },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0034,
-+			 0x11AD, /* LITEON */
-+			 0x6661),
-+	  .driver_data = ATH9K_PCI_CUS217 },
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0037) }, /* PCI-E  AR1111/AR9485 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0036) }, /* PCI-E  AR9565 */
+Probe Response frames include more information about the peer and that
+allows wpa_supplicant to complete the peer entry. This is the point when
+the peer is fully known and indicated to upper layers. The Probe Request
+frame RX case is just used internally within wpa_supplicant. (For
+completeness, number of other frames, i.e., P2P Action frames, can also
+complete the P2P peer entry, so this does not need to be Probe
+Response).
+
 -- 
-1.8.3.1
-
+Jouni Malinen                                            PGP id EFC895FA
