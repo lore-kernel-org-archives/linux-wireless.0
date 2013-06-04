@@ -1,53 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:33940 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755961Ab3FRP0f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 11:26:35 -0400
-Received: by mail-oa0-f47.google.com with SMTP id m1so5260708oag.34
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jun 2013 08:26:34 -0700 (PDT)
-Message-ID: <51C07C29.6070602@lwfinger.net> (sfid-20130618_172649_475423_18E50FBF)
-Date: Tue, 18 Jun 2013 10:26:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Paul Menzel <paulepanter@users.sourceforge.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Connection not established with Realtek RTL8188CUS based USB
- device (EDIMAX)
-References: <1371326265.9845.54.camel@mattotaupa>  <51BCD7BA.1040900@lwfinger.net> <1371505124.8902.72.camel@mattotaupa>  <51BF8B8D.3030603@lwfinger.net> <1371542085.7163.15.camel@mattotaupa>
-In-Reply-To: <1371542085.7163.15.camel@mattotaupa>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from arrakis.dune.hu ([78.24.191.176]:38345 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751674Ab3FDLlF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 07:41:05 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 02/13] rt2x00: rt2x00queue: remove qdesc parameter of rt2x00queue_alloc_entries
+Date: Tue,  4 Jun 2013 13:40:39 +0200
+Message-Id: <1370346050-7047-3-git-send-email-juhosg@openwrt.org> (sfid-20130604_134109_030685_31783492)
+In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2013 02:54 AM, Paul Menzel wrote:
-> Three more questions regarding this patch.
->
-> 1. Could you add `CC: stable@vger.kernel.org` to the patch so it gets
-> backported to the stable Linux kernel releases.
+The qdesc parameter is not used anymore, so remove that.
 
-I thought I had done that. In fact, the patch was Cc'd to stable, but I missed 
-the entry in the commit message. I have written to Stable to see what caqn be done.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-> 2. Does this fix a regression or did it never work with WEP/WPA(1)
-> networks before?
-
-It does fix a regression, but I have no idea when it happened.
-
-> 3. If wpa_supplicant only prints WPA to `/var/log/syslog`, can I be sure
-> this is *no* WPA2 network? Because I always thought this is a WPA2
-> network.
-
-The data in an "iwlist scan" will state the version of WPA in use. If it is 
-WPA2, you get a line with
-
-IE: IEEE 802.11i/WPA2 Version 1
-
-For WPA1, it is
-
-IE: WPA Version 1
-
-Larry
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 7f938a5..c12d1c8 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -1161,8 +1161,7 @@ void rt2x00queue_init_queues(struct rt2x00_dev *rt2x00dev)
+ 	}
+ }
+ 
+-static int rt2x00queue_alloc_entries(struct data_queue *queue,
+-				     const struct data_queue_desc *qdesc)
++static int rt2x00queue_alloc_entries(struct data_queue *queue)
+ {
+ 	struct queue_entry *entries;
+ 	unsigned int entry_size;
+@@ -1231,23 +1230,22 @@ int rt2x00queue_initialize(struct rt2x00_dev *rt2x00dev)
+ 	struct data_queue *queue;
+ 	int status;
+ 
+-	status = rt2x00queue_alloc_entries(rt2x00dev->rx, rt2x00dev->ops->rx);
++	status = rt2x00queue_alloc_entries(rt2x00dev->rx);
+ 	if (status)
+ 		goto exit;
+ 
+ 	tx_queue_for_each(rt2x00dev, queue) {
+-		status = rt2x00queue_alloc_entries(queue, rt2x00dev->ops->tx);
++		status = rt2x00queue_alloc_entries(queue);
+ 		if (status)
+ 			goto exit;
+ 	}
+ 
+-	status = rt2x00queue_alloc_entries(rt2x00dev->bcn, rt2x00dev->ops->bcn);
++	status = rt2x00queue_alloc_entries(rt2x00dev->bcn);
+ 	if (status)
+ 		goto exit;
+ 
+ 	if (test_bit(REQUIRE_ATIM_QUEUE, &rt2x00dev->cap_flags)) {
+-		status = rt2x00queue_alloc_entries(rt2x00dev->atim,
+-						   rt2x00dev->ops->atim);
++		status = rt2x00queue_alloc_entries(rt2x00dev->atim);
+ 		if (status)
+ 			goto exit;
+ 	}
+-- 
+1.7.10
 
