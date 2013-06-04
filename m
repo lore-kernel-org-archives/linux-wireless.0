@@ -1,69 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38745 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755672Ab3FRMTz (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:42593
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755963Ab3FDPJ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 08:19:55 -0400
-Message-ID: <1371557978.8318.10.camel@jlt4.sipsolutions.net> (sfid-20130618_141959_143093_BDED72EA)
-Subject: Re: [RFC 2/2] wireless:  Make sure __cfg80211_connect_result always
- puts bss.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 18 Jun 2013 14:19:38 +0200
-In-Reply-To: <1371515281-26879-2-git-send-email-greearb@candelatech.com> (sfid-20130618_022822_882338_7451297B)
-References: <1371515281-26879-1-git-send-email-greearb@candelatech.com>
-	 <1371515281-26879-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20130618_022822_882338_7451297B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 4 Jun 2013 11:09:26 -0400
+Date: Tue, 4 Jun 2013 11:09:10 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 4/4] cw1200: hwio: Remove an unnecessary goto
+Message-ID: <20130604150910.GA13278@shaftnet.org> (sfid-20130604_170951_004009_86991AF1)
+References: <60123fd3175b7cceadf6c335b12e58b797e18f65.1370356776.git.joe@perches.com>
+ <fd299c9ef87fe50c12af871d6bfcc92d7f6ef3dc.1370356776.git.joe@perches.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gBBFr7Ir9EOA20Yy"
+In-Reply-To: <fd299c9ef87fe50c12af871d6bfcc92d7f6ef3dc.1370356776.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-06-17 at 17:28 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Otherwise, we can leak a bss reference.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+
+--gBBFr7Ir9EOA20Yy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Jun 04, 2013 at 07:44:50AM -0700, Joe Perches wrote:
+> goto after return is wrong.
+>=20
+> The other code in this block needs to set an
+> error value then goto an error release block.
+>=20
+> This one doesn't need to release anything and
+> was likely a copy/paste remainder.
+>=20
+> Signed-off-by: Joe Perches <joe@perches.com>
+
+Acked-By: Solomon Peachy <pizza@shaftnet.org>
+
 > ---
->  net/wireless/sme.c |   11 +++++++++--
->  1 files changed, 9 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-> index 6066720..ea2ce33 100644
-> --- a/net/wireless/sme.c
-> +++ b/net/wireless/sme.c
-> @@ -420,6 +420,7 @@ void cfg80211_sme_failed_assoc(struct wireless_dev *wdev)
->  	schedule_work(&rdev->conn_work);
->  }
->  
-> +/** This method must consume bss one way or another */
->  void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
->  			       const u8 *req_ie, size_t req_ie_len,
->  			       const u8 *resp_ie, size_t resp_ie_len,
-> @@ -435,11 +436,17 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
->  	ASSERT_WDEV_LOCK(wdev);
->  
->  	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
-> -		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
-> +		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)) {
-> +		if (bss)
-> +			cfg80211_put_bss(wdev->wiphy, bss);
->  		return;
-> +	}
+>  drivers/net/wireless/cw1200/hwio.c | 1 -
+>  1 file changed, 1 deletion(-)
+>=20
+> diff --git a/drivers/net/wireless/cw1200/hwio.c b/drivers/net/wireless/cw=
+1200/hwio.c
+> index 142f45ef..dad3fb3 100644
+> --- a/drivers/net/wireless/cw1200/hwio.c
+> +++ b/drivers/net/wireless/cw1200/hwio.c
+> @@ -178,7 +178,6 @@ int cw1200_indirect_read(struct cw1200_common *priv, =
+u32 addr, void *buf,
+>  	if ((buf_len / 2) >=3D 0x1000) {
+>  		pr_err("Can't read more than 0xfff words.\n");
+>  		return -EINVAL;
+> -		goto out;
+>  	}
+> =20
+>  	priv->hwbus_ops->lock(priv->hwbus_priv);
+> --=20
+> 1.8.1.2.459.gbcd45b4.dirty
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-This is reasonable, though it'd be stupid to call it in this case, I'm
-not worried about leaking when the warning triggers.
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Delray Beach, FL                          ^^ (email/xmpp) ^^
+Quidquid latine dictum sit, altum viditur.
 
-> -	if (wdev->sme_state != CFG80211_SME_CONNECTING)
-> +	if (wdev->sme_state != CFG80211_SME_CONNECTING) {
-> +		if (bss)
-> +			cfg80211_put_bss(wdev->wiphy, bss);
->  		return;
-> +	}
+--gBBFr7Ir9EOA20Yy
+Content-Type: application/pgp-signature
 
-This code doesn't exist any more.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
 
-johannes
+iD8DBQFRrgMWPuLgii2759ARAlkLAKC9y/w/jHAkjnhViOUZS6AG6Kc89ACgvlIB
+tiLsCF7ClA23jyUZYw5ibjs=
+=Zt6e
+-----END PGP SIGNATURE-----
 
+--gBBFr7Ir9EOA20Yy--
