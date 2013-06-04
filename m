@@ -1,102 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:56498 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759434Ab3FCRQY (ORCPT
+Received: from szxga02-in.huawei.com ([119.145.14.65]:23530 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752834Ab3FDHI4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 13:16:24 -0400
-Date: Mon, 3 Jun 2013 19:14:30 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: ath6kl_mgmt_tx with NULL chan (was Re: [PATCH 1/2] nl80211: allow
- sending CMD_FRAME without specifying any frequency)
-Message-ID: <20130603171430.GE1226@ritirata.org> (sfid-20130603_191636_945457_F5ECC3BF)
-References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
- <1370271547.8227.16.camel@jlt4.sipsolutions.net>
- <51ACB068.8070006@lri.fr>
+	Tue, 4 Jun 2013 03:08:56 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: "David S. Miller" <davem@davemloft.net>
+CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [RESEND][PATCH 3/7] net, ipw2x00: remove redundant D0 power state set
+Date: Tue, 4 Jun 2013 15:07:54 +0800
+Message-ID: <1370329674-8360-1-git-send-email-wangyijing@huawei.com> (sfid-20130604_090901_493269_3FEBBBF0)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="SNIs70sCzqvszXB4"
-In-Reply-To: <51ACB068.8070006@lri.fr>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Pci_enable_device() will set device power state to D0,
+so it's no need to do it again in ipw2100_pci_init_one().
 
---SNIs70sCzqvszXB4
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/ipw2x00/ipw2100.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-On Mon, Jun 03, 2013 at 05:04:08PM +0200, Nicolas Cavallari wrote:
-> On 03/06/2013 16:59, Johannes Berg wrote:
-> > On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
-> >> From: Antonio Quartulli <antonio@open-mesh.com>
-> >>
-> >> Users may want to send a frame on the current channel
-> >> without specifying it.
-> >>
-> >> Make mgmt_tx pass a NULL channel to mac80211 if none has
-> >> been specified by the user.
-> >=20
-> > cfg80211 isn't just a mac80211 frontend ... ;-)
-> >=20
-> > Also, as Nicolas said, ath6kl_mgmt_tx() will crash after this patch if
-> > it's called in AP mode w/o a channel, so you need to think about that.
->=20
-> It will crash unconditionally. All ath6kl_mgmt_tx()'s code paths access
-> chan->center_freq at some point.
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index 15920aa..f8ab193 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -6242,8 +6242,6 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
+ 	if ((val & 0x0000ff00) != 0)
+ 		pci_write_config_dword(pci_dev, 0x40, val & 0xffff00ff);
+ 
+-	pci_set_power_state(pci_dev, PCI_D0);
+-
+ 	if (!ipw2100_hw_is_adapter_in_system(dev)) {
+ 		printk(KERN_WARNING DRV_NAME
+ 		       "Device not found via register read.\n");
+-- 
+1.7.1
 
-Hello Nicolas,
-I'm also CCing Kalle Valo since get_maintainer.pl told me he is the guy for
-these kind of questions :-)
 
-I'm looking at ath6kl_mgmt_tx() in ath6kl/cfg80211.c and I've seen that the
-currently "configured" frequency can be obtained by reading the
-ath6kl_vif->ch_hint field.
-
-But, is this correct? I couldn't see any real relation between the ch_hint =
-field
-and the real frequency (probably because a lot of logic is hidden to the
-driver).
-I could only understand that the ch_hint field stores the frequency passed =
-as
-parameter during the connection, but I have found no guarantee that this is=
- the
-really used one.
-
-Can someone please clarify on this?
-
-Cheers,
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---SNIs70sCzqvszXB4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRrM72AAoJEADl0hg6qKeOQRAP/j6R466TfHz3+uPYc5UfPOOZ
-20LdyLlERcCzRPgKoPlgnV3I4A6alcY9u06OHJBzJsGXibzcKkNPNp52LrqQRLwa
-BtiBdGQ1qpYBLRPWufsY7afO47mkdzZgxgTn6USG1Z/w2S+YLCGO05J+7FBoN2zl
-HqQLc89yoERYxfGXt9VXfZTN5FXgyPQW/QlJ21sw128I638RKacurGsFyQh7SzNZ
-oybkisgq+/GnlFphe5KFr/FlJB3iSxLaIqtBWys2Gj8ABsVXJrbn2wGKkmGxeY6F
-THvaps9pHJ0A6wUKBuoipyXr1aMmjnbXNZNuBTgdm6cjTy3q9v1j5+O3vsZtujKB
-RqPulxt2zsiZ3wx0OlbEgP5Gl84ONE4oR68mVdYSMY7MpJFU+RusaHiTv36P8omy
-Qh9DtmMxyG5q5kct4VUMezvZOfIgKnBWKX1TS576xl+4h2LxfCeEtNpxF/36nKNe
-NEpUJtzAiNPfYDcZ+4jWSlGclu+q10QmzpXlj+AN7tSgBCcdT+vW0Y0J3X2OS+SQ
-bkUVY4Go93ypKS/yAH7ZxjUG9FpPGNJo9E3yCmAbA3LAhjf0APdjOQdxxBazRMPp
-0Xl8b3OzvyJo0DIXbxAkAaf3Qb3OKpwwAwzR7+/jHVTttQPXHbP90xEQSyPDE71Z
-XAz4+u5YG6a40fdz+me1
-=J+v4
------END PGP SIGNATURE-----
-
---SNIs70sCzqvszXB4--
