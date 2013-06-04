@@ -1,134 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:53474 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531Ab3F1OuT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 10:50:19 -0400
-Message-ID: <1372431024.3301.277.camel@edumazet-glaptop> (sfid-20130628_165025_676180_92341180)
-Subject: Re: [PATCH] iwl3945: better skb management in rx path
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Paul Stewart <pstew@google.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Steinar H. Gunderson" <sesse@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Fri, 28 Jun 2013 07:50:24 -0700
-In-Reply-To: <CAMcMvshEdsFZ2PVEpaq0e2P4L+cksshjB56x2YvA4wt3T+3__w@mail.gmail.com>
-References: <1372421021.3301.263.camel@edumazet-glaptop>
-	 <CAMcMvshEdsFZ2PVEpaq0e2P4L+cksshjB56x2YvA4wt3T+3__w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:38366 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753979Ab3FDLlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 07:41:10 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 11/13] rt2x00: rt61pci: implement queue_init callback
+Date: Tue,  4 Jun 2013 13:40:48 +0200
+Message-Id: <1370346050-7047-12-git-send-email-juhosg@openwrt.org> (sfid-20130604_134118_127881_448C42E2)
+In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <edumazet@google.com>
+The generic rt2x00 code has been changed to allow the
+drivers toimplement dynamic data_queue initialization.
 
-On Fri, 2013-06-28 at 07:38 -0700, Paul Stewart wrote:
+Remove the static data queue descriptor structures
+and implement the queue_init callback instead.
 
-> Presumably this 256 is related to the "dev_alloc_skb(256)"?  It might
-> be worth making this a constant of some sort so they don't
-> inadvertently drift apart in the future.
-
-Hi Paul !
-
-Well, I can do that, but the 128 was not a constant to begin with ;)
-
-Thanks
-
-[PATCH v2] iwl3945: better skb management in rx path
-
-Steinar reported reallocations of skb->head with IPv6, leading to
-a warning in skb_try_coalesce()
-
-It turns out iwl3945 has several problems :
-
-1) skb->truesize is underestimated. 
-   We really consume PAGE_SIZE bytes for a fragment,
-   not the frame length.
-2) 128 bytes of initial headroom is a bit low and forces reallocations.
-3) We can avoid consuming a full page for small enough frames.
-
-Reported-by: Steinar H. Gunderson <sesse@google.com>
-Signed-off-by: Eric Dumazet <edumazet@google.com>
-Cc: Paul Stewart <pstew@google.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Tested-by: Jakub Kicinski <kubakici@wp.pl>
 ---
-v2: use a SMALL_PACKET_SIZE macro
+ drivers/net/wireless/rt2x00/rt61pci.c |   54 ++++++++++++++++++++-------------
+ 1 file changed, 33 insertions(+), 21 deletions(-)
 
- drivers/net/wireless/iwlegacy/3945.c |   32 +++++++++++++++----------
- 1 file changed, 20 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
-index c092033..38e6be6 100644
---- a/drivers/net/wireless/iwlegacy/3945.c
-+++ b/drivers/net/wireless/iwlegacy/3945.c
-@@ -475,6 +475,8 @@ il3945_is_network_packet(struct il_priv *il, struct ieee80211_hdr *header)
- 	}
- }
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 7e1759b3..17507d1 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -3025,26 +3025,40 @@ static const struct rt2x00lib_ops rt61pci_rt2x00_ops = {
+ 	.config			= rt61pci_config,
+ };
  
-+#define SMALL_PACKET_SIZE 256
+-static const struct data_queue_desc rt61pci_queue_rx = {
+-	.entry_num		= 32,
+-	.data_size		= DATA_FRAME_SIZE,
+-	.desc_size		= RXD_DESC_SIZE,
+-	.priv_size		= sizeof(struct queue_entry_priv_mmio),
+-};
++static void rt61pci_queue_init(struct data_queue *queue)
++{
++	switch (queue->qid) {
++	case QID_RX:
++		queue->limit = 32;
++		queue->data_size = DATA_FRAME_SIZE;
++		queue->desc_size = RXD_DESC_SIZE;
++		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
++		break;
+ 
+-static const struct data_queue_desc rt61pci_queue_tx = {
+-	.entry_num		= 32,
+-	.data_size		= DATA_FRAME_SIZE,
+-	.desc_size		= TXD_DESC_SIZE,
+-	.priv_size		= sizeof(struct queue_entry_priv_mmio),
+-};
++	case QID_AC_VO:
++	case QID_AC_VI:
++	case QID_AC_BE:
++	case QID_AC_BK:
++		queue->limit = 32;
++		queue->data_size = DATA_FRAME_SIZE;
++		queue->desc_size = TXD_DESC_SIZE;
++		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
++		break;
+ 
+-static const struct data_queue_desc rt61pci_queue_bcn = {
+-	.entry_num		= 4,
+-	.data_size		= 0, /* No DMA required for beacons */
+-	.desc_size		= TXINFO_SIZE,
+-	.priv_size		= sizeof(struct queue_entry_priv_mmio),
+-};
++	case QID_BEACON:
++		queue->limit = 4;
++		queue->data_size = 0; /* No DMA required for beacons */
++		queue->desc_size = TXINFO_SIZE;
++		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
++		break;
 +
- static void
- il3945_pass_packet_to_mac80211(struct il_priv *il, struct il_rx_buf *rxb,
- 			       struct ieee80211_rx_status *stats)
-@@ -483,14 +485,13 @@ il3945_pass_packet_to_mac80211(struct il_priv *il, struct il_rx_buf *rxb,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)IL_RX_DATA(pkt);
- 	struct il3945_rx_frame_hdr *rx_hdr = IL_RX_HDR(pkt);
- 	struct il3945_rx_frame_end *rx_end = IL_RX_END(pkt);
--	u16 len = le16_to_cpu(rx_hdr->len);
-+	u32 len = le16_to_cpu(rx_hdr->len);
- 	struct sk_buff *skb;
- 	__le16 fc = hdr->frame_control;
-+	u32 fraglen = PAGE_SIZE << il->hw_params.rx_page_order;
- 
- 	/* We received data from the HW, so stop the watchdog */
--	if (unlikely
--	    (len + IL39_RX_FRAME_SIZE >
--	     PAGE_SIZE << il->hw_params.rx_page_order)) {
-+	if (unlikely(len + IL39_RX_FRAME_SIZE > fraglen)) {
- 		D_DROP("Corruption detected!\n");
- 		return;
- 	}
-@@ -506,26 +507,33 @@ il3945_pass_packet_to_mac80211(struct il_priv *il, struct il_rx_buf *rxb,
- 		D_INFO("Woke queues - frame received on passive channel\n");
- 	}
- 
--	skb = dev_alloc_skb(128);
-+	skb = dev_alloc_skb(SMALL_PACKET_SIZE);
- 	if (!skb) {
- 		IL_ERR("dev_alloc_skb failed\n");
- 		return;
- 	}
- 
- 	if (!il3945_mod_params.sw_crypto)
--		il_set_decrypted_flag(il, (struct ieee80211_hdr *)rxb_addr(rxb),
-+		il_set_decrypted_flag(il, (struct ieee80211_hdr *)pkt,
- 				      le32_to_cpu(rx_end->status), stats);
- 
--	skb_add_rx_frag(skb, 0, rxb->page,
--			(void *)rx_hdr->payload - (void *)pkt, len,
--			len);
--
-+	/* If frame is small enough to fit into skb->head, copy it
-+	 * and do not consume a full page
-+	 */
-+	if (len <= SMALL_PACKET_SIZE) {
-+		skb_copy_to_linear_data(skb, rx_hdr->payload, len);
-+		skb->tail += len;
-+	} else {
-+		skb_add_rx_frag(skb, 0, rxb->page,
-+				(void *)rx_hdr->payload - (void *)pkt, len,
-+				fraglen);
-+		il->alloc_rxb_page--;
-+		rxb->page = NULL;
++	case QID_ATIM:
++		/* fallthrough */
++	default:
++		BUG();
++		break;
 +	}
- 	il_update_stats(il, false, fc, len);
- 	memcpy(IEEE80211_SKB_RXCB(skb), stats, sizeof(*stats));
++}
  
- 	ieee80211_rx(il->hw, skb);
--	il->alloc_rxb_page--;
--	rxb->page = NULL;
- }
- 
- #define IL_DELAY_NEXT_SCAN_AFTER_ASSOC (HZ*6)
-
+ static const struct rt2x00_ops rt61pci_ops = {
+ 	.name			= KBUILD_MODNAME,
+@@ -3053,9 +3067,7 @@ static const struct rt2x00_ops rt61pci_ops = {
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+ 	.extra_tx_headroom	= 0,
+-	.rx			= &rt61pci_queue_rx,
+-	.tx			= &rt61pci_queue_tx,
+-	.bcn			= &rt61pci_queue_bcn,
++	.queue_init		= rt61pci_queue_init,
+ 	.lib			= &rt61pci_rt2x00_ops,
+ 	.hw			= &rt61pci_mac80211_ops,
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-- 
+1.7.10
 
