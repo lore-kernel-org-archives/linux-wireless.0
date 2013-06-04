@@ -1,114 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:57298 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129Ab3FXRbS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 13:31:18 -0400
-References: <1371899605-30513-1-git-send-email-juhosg@openwrt.org>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1371899605-30513-1-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <BD31CA3E-8045-489B-86C8-CD9DC2244746@gmail.com> (sfid-20130624_193122_325212_CE9D1CC6)
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: read 5GHz TX power values from the correct offset
-Date: Mon, 24 Jun 2013 19:31:13 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:29014 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751812Ab3FDNz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 09:55:27 -0400
+Date: Tue, 4 Jun 2013 15:57:19 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 00/13] rt2x00: get rid of static data queue descriptors
+Message-ID: <20130604135718.GC17229@redhat.com> (sfid-20130604_155541_378292_FC43CD1D)
+References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 04, 2013 at 01:40:37PM +0200, Gabor Juhos wrote:
+> The patch-set depends on the following patch:
+> 
+> 'rt2x00: rt2x00queue: initialize data_queue fields earlier'
+> https://patchwork.kernel.org/patch/2655201/
+> 
+> Gabor Juhos (13):
+>   rt2x00: rt2x00queue: add priv_size field to struct data_queue
+>   rt2x00: rt2x00queue: remove qdesc parameter of
+>     rt2x00queue_alloc_entries
+>   rt2x00: rt2x00dev: use rt2x00dev->bcn->limit
+>   rt2x00: rt2x00queue: setup queue->threshold from queue->limit
+>   rt2x00: add queue_init callback to rt2x00_ops
+>   rt2x00: rt2800usb: implement queue_init callback
+>   rt2x00: rt2800pci: implement queue_init callback
+>   rt2x00: rt73usb: implement queue_init callback
+>   rt2x00: rt2400pci: implement queue_init callback
+>   rt2x00: rt2500pci: implement queue_init callback
+>   rt2x00: rt61pci: implement queue_init callback
+>   rt2x00: rt2500usb: implement queue_init callback
+>   rt2x00: remove data_queue_desc struct
 
+Looks good. For set:
 
-Sent from my iPad
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com> 
 
-On 22 jun. 2013, at 13:13, Gabor Juhos <juhosg@openwrt.org> wrote:
-
-> The current code uses the same index value both
-> for the channel information array and for the TX
-> power table. The index starts from 14, however the
-> index of the TX power table must start from zero.
-> 
-> Fix it, in order to get the correct TX power value
-> for a given channel.
-> 
-> The changes in rt61pci.c and rt73usb.c are compile
-> tested only.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Cc: stable@vger.kernel.org
-
-Acked-by: Gertjan van Wingerde
-
-Good catch. This can certainly explain why people were seeing bad results on the 5 GHz band.
-
-> ---
-> John,
-> 
-> If there is any chance for that, this should go
-> into 3.10. However the code is wrong since a few
-> years and nobody noticed that so far, so it is
-> not a big problem if it will be applied only in
-> 3.11.
-> 
-> -Gabor
-> ---
-> drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
-> drivers/net/wireless/rt2x00/rt61pci.c   |    3 ++-
-> drivers/net/wireless/rt2x00/rt73usb.c   |    3 ++-
-> 3 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 3aa30dd..4072242 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -6254,8 +6254,8 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->        default_power2 = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_A2);
-> 
->        for (i = 14; i < spec->num_channels; i++) {
-> -            info[i].default_power1 = default_power1[i];
-> -            info[i].default_power2 = default_power2[i];
-> +            info[i].default_power1 = default_power1[i - 14];
-> +            info[i].default_power2 = default_power2[i - 14];
->        }
->    }
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-> index 53754bc6..54d3ddf 100644
-> --- a/drivers/net/wireless/rt2x00/rt61pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
-> @@ -2825,7 +2825,8 @@ static int rt61pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->        tx_power = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_A_START);
->        for (i = 14; i < spec->num_channels; i++) {
->            info[i].max_power = MAX_TXPOWER;
-> -            info[i].default_power1 = TXPOWER_FROM_DEV(tx_power[i]);
-> +            info[i].default_power1 =
-> +                    TXPOWER_FROM_DEV(tx_power[i - 14]);
->        }
->    }
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-> index 1616ed4..1d3880e 100644
-> --- a/drivers/net/wireless/rt2x00/rt73usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
-> @@ -2167,7 +2167,8 @@ static int rt73usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->        tx_power = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_A_START);
->        for (i = 14; i < spec->num_channels; i++) {
->            info[i].max_power = MAX_TXPOWER;
-> -            info[i].default_power1 = TXPOWER_FROM_DEV(tx_power[i]);
-> +            info[i].default_power1 =
-> +                    TXPOWER_FROM_DEV(tx_power[i - 14]);
->        }
->    }
-> 
-> -- 
-> 1.7.10
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
