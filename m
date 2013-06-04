@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35035 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755908Ab3FLVNq (ORCPT
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:53658 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281Ab3FDKME convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 17:13:46 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211: Ensure tid_start_tx is protected by sta->lock.
-Date: Wed, 12 Jun 2013 14:08:44 -0700
-Message-Id: <1371071324-12440-1-git-send-email-greearb@candelatech.com> (sfid-20130612_231349_459253_446F29CA)
+	Tue, 4 Jun 2013 06:12:04 -0400
+Received: by mail-qa0-f52.google.com with SMTP id cr7so264608qab.11
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2013 03:12:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgXj8jCgDgvewgm1=QPsUwAKcgWYT-jne0tpnhH_M1GO_w@mail.gmail.com>
+References: <CADaB71PpUQar24AN4PtpVwACFVq-=VsbOsqUahPW=eh4wdpjLA@mail.gmail.com>
+ <CAGRGNgXj8jCgDgvewgm1=QPsUwAKcgWYT-jne0tpnhH_M1GO_w@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 4 Jun 2013 20:11:42 +1000
+Message-ID: <CAGRGNgWG0hR1WH5gteyoH6kKPq8qwvDAXkwRkX5d-uUCai-4OA@mail.gmail.com> (sfid-20130604_121207_911808_0BD01CBD)
+Subject: Re: I can't download "Intel(R) PRO/Wireless 2200BG Driver for Linux"
+To: Hyun-Su Lim <hyunsu.lim2@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi Hyunsu,
 
-All accesses of the tid_start_tx lock should be protected
-by sta->lock if there is any chance that another thread
-could still be accessing the sta object.
+On Tue, Jun 4, 2013 at 4:56 PM, Hyun-Su Lim <hyunsu.lim2@gmail.com> wrote:
+> Dear..
+>
+> I'm trying to find a driver of Intel(R) PRO/Wireless 2915ABG Network
+> Connection to use wireless network in my old laptop with Fedora18.
+> Very pleased to find Intel® PRO/Wireless 2200BG Driver for Linux and
+> followed your webpage but failed to get download files.
+> Because the download page didn't open at
+> http://ipw2200.sourceforge.net/firmware.php?i_agree_to_the_license=yes&f=ipw2200-fw-3.1.tgz.
+> I hope you can receive this e-mail and hope to get the driver which
+> can only solve this network connection problem.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- net/mac80211/ht.c       |    4 +++-
- net/mac80211/sta_info.h |    1 +
- 2 files changed, 4 insertions(+), 1 deletions(-)
+Your kernel should already have a driver for that card, all you need
+is the firmware.
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 0db25d4..87b8b23 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -283,13 +283,14 @@ void ieee80211_ba_session_work(struct work_struct *work)
- 				sta, tid, WLAN_BACK_RECIPIENT,
- 				WLAN_REASON_UNSPECIFIED, true);
- 
-+		spin_lock_bh(&sta->lock);
-+
- 		tid_tx = sta->ampdu_mlme.tid_start_tx[tid];
- 		if (tid_tx) {
- 			/*
- 			 * Assign it over to the normal tid_tx array
- 			 * where it "goes live".
- 			 */
--			spin_lock_bh(&sta->lock);
- 
- 			sta->ampdu_mlme.tid_start_tx[tid] = NULL;
- 			/* could there be a race? */
-@@ -302,6 +303,7 @@ void ieee80211_ba_session_work(struct work_struct *work)
- 			ieee80211_tx_ba_session_handle_start(sta, tid);
- 			continue;
- 		}
-+		spin_unlock_bh(&sta->lock);
- 
- 		tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
- 		if (tid_tx && test_and_clear_bit(HT_AGG_STATE_WANT_STOP,
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index c509423..de40c5b 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -204,6 +204,7 @@ struct tid_ampdu_rx {
-  *	driver requested to close until the work for it runs
-  * @mtx: mutex to protect all TX data (except non-NULL assignments
-  *	to tid_tx[idx], which are protected by the sta spinlock)
-+ *	tid_start_tx is also protected by sta->lock.
-  */
- struct sta_ampdu_mlme {
- 	struct mutex mtx;
--- 
-1.7.3.4
+Fedora should provide a package containing it. Install that.
 
+Thanks,
+
+--
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
