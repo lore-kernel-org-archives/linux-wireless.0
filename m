@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3422 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756468Ab3FSNIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 09:08:09 -0400
-Date: Wed, 19 Jun 2013 15:09:35 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	Marc MERLIN <marc@merlins.org>,
-	David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-Message-ID: <20130619130935.GA2580@redhat.com> (sfid-20130619_150817_714684_771259D4)
-References: <20130219040557.GB4778@merlins.org>
- <1361251033.19353.120.camel@edumazet-glaptop>
- <1361268221.8553.1.camel@jlt4.sipsolutions.net>
- <1361290909.19353.140.camel@edumazet-glaptop>
- <1361351538.8629.3.camel@jlt4.sipsolutions.net>
- <1361351703.8629.5.camel@jlt4.sipsolutions.net>
- <20130223061414.GA16883@merlins.org>
- <1361912099.8440.21.camel@jlt4.sipsolutions.net>
- <1371574361.3252.259.camel@edumazet-glaptop>
- <1371575087.22256.2.camel@jlt4.sipsolutions.net>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:15447 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752834Ab3FDHIc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 03:08:32 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: "David S. Miller" <davem@davemloft.net>
+CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, Jingoo Han <jg1.han@samsung.com>
+Subject: [RESEND][PATCH] net: wireless: iwlegacy: fix build error for il_pm_ops
+Date: Tue, 4 Jun 2013 15:07:12 +0800
+Message-ID: <1370329632-3556-1-git-send-email-wangyijing@huawei.com> (sfid-20130604_090851_214464_B0DC926A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1371575087.22256.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 18, 2013 at 07:04:47PM +0200, Johannes Berg wrote:
-> On Tue, 2013-06-18 at 09:52 -0700, Eric Dumazet wrote:
-> 
-> > > We'll be submitting a patch to make single pages default.
-> > 
-> > Do you think the same change would be possible for
-> > drivers/net/wireless/iwlegacy/4965-mac.c ?
-> 
-> Yes, Stanislaw?
+Fix build error for il_pm_ops if CONFIG_PM is set
+but CONFIG_PM_SLEEP is not set.
 
-Yes, I'll post 4965 patch.
+ERROR: "il_pm_ops" [drivers/net/wireless/iwlegacy/iwl4965.ko] undefined!
+ERROR: "il_pm_ops" [drivers/net/wireless/iwlegacy/iwl3945.ko] undefined!
+make[1]: *** [__modpost] Error 1
+make: *** [modules] Error 2
 
-Thanks
-Stanislaw
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/net/wireless/iwlegacy/common.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index f8246f2..4caaf52 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1832,16 +1832,16 @@ u32 il_usecs_to_beacons(struct il_priv *il, u32 usec, u32 beacon_interval);
+ __le32 il_add_beacon_time(struct il_priv *il, u32 base, u32 addon,
+ 			  u32 beacon_interval);
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ extern const struct dev_pm_ops il_pm_ops;
+ 
+ #define IL_LEGACY_PM_OPS	(&il_pm_ops)
+ 
+-#else /* !CONFIG_PM */
++#else /* !CONFIG_PM_SLEEP */
+ 
+ #define IL_LEGACY_PM_OPS	NULL
+ 
+-#endif /* !CONFIG_PM */
++#endif /* !CONFIG_PM_SLEEP */
+ 
+ /*****************************************************
+ *  Error Handling Debugging
+-- 
+1.7.1
+
+
