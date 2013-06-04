@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45383 "EHLO nbd.name"
+Received: from arrakis.dune.hu ([78.24.191.176]:38355 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752770Ab3FDLcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 07:32:45 -0400
-Message-ID: <51ADD058.5000003@openwrt.org> (sfid-20130604_133248_763952_2E72852D)
-Date: Tue, 04 Jun 2013 13:32:40 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/6] ath9k: Fix ANI monitoring
-References: <1370340695-29003-1-git-send-email-sujith@msujith.org> <1370340695-29003-2-git-send-email-sujith@msujith.org>
-In-Reply-To: <1370340695-29003-2-git-send-email-sujith@msujith.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1752208Ab3FDLlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 07:41:06 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 03/13] rt2x00: rt2x00dev: use rt2x00dev->bcn->limit
+Date: Tue,  4 Jun 2013 13:40:40 +0200
+Message-Id: <1370346050-7047-4-git-send-email-juhosg@openwrt.org> (sfid-20130604_134125_036793_9D81F6D7)
+In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-06-04 12:11 PM, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> The commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
-> changed various ANI operational parameters to address a specific
-> card/environment. This is not really applicable for other cards
-> in general usage.
-> 
-> As per internal documentation, lowering the immunity level can be
-> done only after 5 periods have passed and the CCK/OFDM errors are
-> below the low watermak threshold - which have been fixed at 300 and
-> 400 respectively by the sytems team.
-> 
-> Raising the immunity level can be done when CCK/OFDM errors exceed
-> 600 and 1000 (per second).
-> 
-> Set these values once during attach.
-> ---
-> diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-> index 78b9fa9..1088472 100644
-> --- a/drivers/net/wireless/ath/ath9k/ani.h
-> +++ b/drivers/net/wireless/ath/ath9k/ani.h
-> @@ -21,11 +21,9 @@
->  
->  /* units are errors per second */
->  #define ATH9K_ANI_OFDM_TRIG_HIGH          3500
-> -#define ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI 1000
->  
->  /* units are errors per second */
->  #define ATH9K_ANI_OFDM_TRIG_LOW           400
-> -#define ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI 900
->  
->  /* units are errors per second */
->  #define ATH9K_ANI_CCK_TRIG_HIGH           600
-> 
-With this patch, the raise-limit is always 3500, you should change it to
-1000 when removing the above-/below-INI distinction.
+The beacon data queue is initialized already,
+so fetch the number of the queue entries from
+that instead of using the entry_num field of
+the data queue descriptor.
 
-- Felix
+The two values are the same, and the use of the
+rt2x00dev->bcn->limit value allows us to get rid
+of a superfluous pointer dereference.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 6a20172..dff5012 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1336,7 +1336,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	 * beacon entries.
+ 	 */
+ 	rt2x00dev->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+-	if (rt2x00dev->ops->bcn->entry_num > 0)
++	if (rt2x00dev->bcn->limit > 0)
+ 		rt2x00dev->hw->wiphy->interface_modes |=
+ 		    BIT(NL80211_IFTYPE_ADHOC) |
+ 		    BIT(NL80211_IFTYPE_AP) |
+-- 
+1.7.10
+
