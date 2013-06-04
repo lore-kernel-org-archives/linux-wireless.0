@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:35108 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752669Ab3FDXVp (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:57034 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196Ab3FDKnf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 19:21:45 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: enable/disable tx_amsdu support via module parameter
-Date: Tue, 4 Jun 2013 16:20:38 -0700
-Message-ID: <1370388038-32440-1-git-send-email-bzhao@marvell.com> (sfid-20130605_012205_770984_5257FC83)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 4 Jun 2013 06:43:35 -0400
+Message-ID: <1370342611.8287.12.camel@jlt4.sipsolutions.net> (sfid-20130604_124338_594901_96D3A5E2)
+Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Date: Tue, 04 Jun 2013 12:43:31 +0200
+In-Reply-To: <1370328271-9523-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1370328271-9523-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1370328271-9523-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Tue, 2013-06-04 at 09:44 +0300, Vladimir Kondratiev wrote:
 
-This patch disables tx_amsdu support in mwifiex by default.
-tx_amdsu support can be enabled via module parameter at load time.
+> +	if (genlmsg_end(msg, hdr) < 0) {
+> +		nlmsg_free(msg);
+> +		return;
+> +	}
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/wmm.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+I'm guessing you're going to (have to) respin for Ilan's comments --
+please remove the bogus error checking here then, genlmsg_end() can only
+ever return >= 0 since it returns msg->len.
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 4be3d33..944e884 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -37,6 +37,9 @@
- /* Offset for TOS field in the IP header */
- #define IPTOS_OFFSET 5
- 
-+static bool enable_tx_amsdu;
-+module_param(enable_tx_amsdu, bool, 0644);
-+
- /* WMM information IE */
- static const u8 wmm_info_ie[] = { WLAN_EID_VENDOR_SPECIFIC, 0x07,
- 	0x00, 0x50, 0xf2, 0x02,
-@@ -1233,7 +1236,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
- 				mwifiex_send_delba(priv, tid_del, ra, 1);
- 			}
- 		}
--		if (mwifiex_is_amsdu_allowed(priv, tid) &&
-+		if (enable_tx_amsdu && mwifiex_is_amsdu_allowed(priv, tid) &&
- 		    mwifiex_is_11n_aggragation_possible(priv, ptr,
- 							adapter->tx_buf_size))
- 			mwifiex_11n_aggregate_pkt(priv, ptr, INTF_HEADER_LEN,
--- 
-1.8.2.3
+johannes
 
