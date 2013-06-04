@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3382 "EHLO mms2.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3543 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965010Ab3FTIdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jun 2013 04:33:38 -0400
-Message-ID: <51C2BE54.20509@broadcom.com> (sfid-20130620_103351_920745_152AD8C3)
-Date: Thu, 20 Jun 2013 10:33:24 +0200
+	id S1752154Ab3FDM67 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 08:58:59 -0400
+Message-ID: <51ADE47D.50700@broadcom.com> (sfid-20130604_145904_002860_D92B03BE)
+Date: Tue, 4 Jun 2013 14:58:37 +0200
 From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: "Chris Adams" <cma@cmadams.net>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	b43-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: BCM4331 deauthenticates every five minutes
-References: <20130619160911.GB4784@cmadams.net>
- <51C1DDEB.3090701@lwfinger.net> <20130619164227.GC4784@cmadams.net>
- <CACna6rzbTHnyqs5SzTuYL7r_SW3iCNh0qqbnvfsF7Wspyhp1WA@mail.gmail.com>
- <20130619175850.GD4784@cmadams.net> <51C21B7C.2030005@broadcom.com>
- <20130619211108.GG4784@cmadams.net>
-In-Reply-To: <20130619211108.GG4784@cmadams.net>
+To: "Stephen Warren" <swarren@wwwdotorg.org>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Subject: Re: Regression in 9390ace brcmfmac: free net device when
+ registration fails
+References: <51AD1F22.2080004@wwwdotorg.org>
+In-Reply-To: <51AD1F22.2080004@wwwdotorg.org>
 Content-Type: text/plain;
- charset=utf-8;
+ charset=iso-8859-1;
  format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/19/2013 11:11 PM, Chris Adams wrote:
-> Once upon a time, Arend van Spriel <arend@broadcom.com> said:
->> Can you make a capture using a wireless sniffer (using your thinkpad maybe)?
+On 06/04/2013 12:56 AM, Stephen Warren wrote:
+> (John, note that this commit is part of the pull request you sent to
+> Dave today)
 >
-> How would I go about doing that?  I've done lots of network debugging
-> with tcpdump and such, but not much wireless stuff.
+> Arend,
 >
+> Commit 9390ace "brcmfmac: free net device when registration fails"
+> causes a regression.
+>
+> I had the BCM4330 firmware present in my root fs, whereas my HW is a
+> BCM4329. With this patch applied, I get a kernel panic on boot. With it
+> reverted, I see that no issues of that nature. This is true in
+> next-20130531 (and also 5/30 and 6/1 but not earlier). A bisect of
+> Linus's tree followed by a merge of John's wireless pull request from
+> today pointed at this same commit.
 
-I use wireshark these days. If you install that you can use the steps 
-below and select the wireless interface in wireshark to capture. I use 
-wlan0 as interface name, but it may be different for you.
+Thanks, Stephen
 
-1. disable network-manager so it won't interfere.
-2. bring the interface down
-$ sudo ifconfig wlan0 down
-3. change interface type to monitor
-$ sudo iw dev wlan0 set type monitor
-4. bring up the interface
-$ sudo ifconfig wlan0 up
-5. start wireshark and select wlan0
-$ gksudo wireshark
+I will look into this.
 
-It will complain that running wireshark as root is not secure. If you 
-care about that, you should read [1].
+> Related: Since the two hardware require different firmware, I wonder why
+> the driver doesn't use a firmware filename that encodes the HW device ID
+> instead of using the same name for all HW. This means that when I move
+> my SD card between development systems, I have to copy different
+> firmware over the top. That's a little painful...
+
+I agree that for development switching cards it is kinda awkward and I 
+have been fooled by it as well. We may want to change or if your itch is 
+annoying enough feel free to send a patch for it ;-)
 
 Regards,
 Arend
 
-[1] 
-http://wiki.wireshark.org/Security#Administrator.2Froot_account_not_required.21
 
