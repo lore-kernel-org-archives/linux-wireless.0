@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:50150 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751285Ab3FZQh7 convert rfc822-to-8bit (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:20496 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966Ab3FDQrZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 12:37:59 -0400
+	Tue, 4 Jun 2013 12:47:25 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Peer, Ilan" <ilan.peer@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
+Date: Tue, 4 Jun 2013 19:47:20 +0300
+Message-ID: <2442077.aHiBPHBLmq@lx-vladimir> (sfid-20130604_184728_858908_C61975EC)
+In-Reply-To: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com>
+References: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CADDKRnCP_s2hL2wr8TsKeToNRt5nXF3NBYAqkmCCUPX8HbY_yQ@mail.gmail.com>
-References: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com>
-	<CADDKRnCP_s2hL2wr8TsKeToNRt5nXF3NBYAqkmCCUPX8HbY_yQ@mail.gmail.com>
-Date: Wed, 26 Jun 2013 18:37:57 +0200
-Message-ID: <CA+icZUXJK2ks7TQbH0AiPYAWrFuQC85Uw2sSM6d_YD5yS7unhA@mail.gmail.com> (sfid-20130626_183819_616341_FF862AC5)
-Subject: Re: [v3.10-rc2] iwlwifi regression
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: =?UTF-8?Q?J=C3=B6rg_Otte?= <jrg.otte@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 6:16 PM, Jörg Otte <jrg.otte@gmail.com> wrote:
-> 2013/5/25 Jörg Otte <jrg.otte@gmail.com>:
->> If iwlwifi/iwldvm are built into the kernel (no loadable modules)
->> following error is written to console and syslog since v3.10-rc:
->>
->> iwlwifi 0000:08:00.0: failed to load module iwldvm (error -38), is
->> dynamic loading enabled?
->>
->> reverting
->> commit 1618b2b02a3a0ee7a6863fed4b0d22e697e7e97c
->> Author: Johannes Berg <johannes.berg@intel.com>
->> Date:   Thu Apr 4 10:35:23 2013 +0200
->>     iwlwifi: print warning on request_module failure
->>
->> fixes the problem for me.
->>
->> Jörg
->>
->> I'm not subscribed,please CC me in answeres
->
-> We have rc-7 now and it's still not fixed. What is the problem?
->
+On Tuesday, June 04, 2013 05:35:30 PM Malinen, Jouni wrote:
+> 
+> On 6/4/13 5:29 PM, "Johannes Berg" <johannes@sipsolutions.net> wrote:
+> 
+> >On Tue, 2013-06-04 at 17:03 +0300, Vladimir Kondratiev wrote:
+> >
+> >> And, probes must be reported to the host in all cases, for wpa_s to
+> >>have peer list.
+> >> Need to add comment describing this.
+> >
+> >I don't think that's necessarily true. wpa_s will pre-build a list, but
+> >note that it doesn't make those peers as discovered and you can't really
+> >do anything with them. As such, I would argue that reporting probe
+> >requests ("probes") would be harmful and counter to one potential goal
+> >of this patch (powersaving.)
+> 
+> In general, I'd agree. However, I would like to get information of any
+> peer device being in active PBC mode. This would require either getting
+> those Probe Request frames or alternatively that being tracked in
+> kernel/driver/firmware with some access for wpa_supplicant to fetch
+> information of all STAs (list of MAC Address + UUID) that have indicated
+> active PBC mode within last 120 seconds.
+> 
+> - Jouni
 
-The patch is pending in wireless.git and is not in mainline, right.
-AFAICS there was a recent pull request... so should be in rc8.
+I am a bit confused. I supposed that if devices A and B (not in a group yet)
+try to discover each other, it works like the following
 
-commit 8edf3fd6eb0649b0f19363baf23bca39c6fbdba4
-"iwlwifi: don't print module loading error if not modular"
+A ---- probe-req  ---> B (now B knows A)
+A <--- probe-resp ---- B (now A knows B)
 
-- Sedat -
+But if device is discovered by probe-resp only, it mean this should be
 
-http://git.kernel.org/cgit/linux/kernel/git/linville/wireless.git/commit/?id=8edf3fd6eb0649b0f19363baf23bca39c6fbdba4
+A ---- probe-req  ---> B
+A <--- probe-resp ---- B (now A knows B)
+A <--- probe-req  ---- B
+A ---- probe-resp ---> B (now B knows A)
 
-> Thanks, Jörg
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+What is the case?
+
+Thanks, Vladimir
+
