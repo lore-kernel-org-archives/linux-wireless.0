@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:52635 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753197Ab3FEJrL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 05:47:11 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Antonio Quartulli <ordex@autistici.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [PATCH 1/2] nl80211: allow sending CMD_FRAME without specifying any frequency
-References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
-Date: Wed, 5 Jun 2013 12:47:01 +0300
-In-Reply-To: <1370241587-2609-1-git-send-email-ordex@autistici.org> (Antonio
-	Quartulli's message of "Mon, 3 Jun 2013 08:39:46 +0200")
-Message-ID: <877gi8khyi.fsf@kamboji.qca.qualcomm.com> (sfid-20130605_114714_485827_469A4DF2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:23414 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752044Ab3FDMRK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 08:17:10 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r54CHAwc016426
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Tue, 4 Jun 2013 08:17:10 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3.10] iwlegacy: fix rate control regression
+Date: Tue,  4 Jun 2013 14:19:10 +0200
+Message-Id: <1370348350-17193-1-git-send-email-sgruszka@redhat.com> (sfid-20130604_141714_011486_F966AE64)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Antonio Quartulli <ordex@autistici.org> writes:
+Since driver does not use control.rates[0].count, we have never set that
+variable. But currently, after rate control API rewrite, this is required
+by mac80211. Otherwise legacy rates control does not work and we transmit
+always at 1Mbit/s on pre 11n networks.
 
-> From: Antonio Quartulli <antonio@open-mesh.com>
->
-> Users may want to send a frame on the current channel
-> without specifying it.
->
-> Make mgmt_tx pass a NULL channel to mac80211 if none has
-> been specified by the user.
->
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-rs.c | 1 +
+ drivers/net/wireless/iwlegacy/4965-rs.c | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-Why? And what users are we talking about here? It would be nice if the
-commit log would give some context here for use who nothing about this
-patch. "Users may want" is not very informative :)
-
+diff --git a/drivers/net/wireless/iwlegacy/3945-rs.c b/drivers/net/wireless/iwlegacy/3945-rs.c
+index c9f197d..fe31590 100644
+--- a/drivers/net/wireless/iwlegacy/3945-rs.c
++++ b/drivers/net/wireless/iwlegacy/3945-rs.c
+@@ -816,6 +816,7 @@ out:
+ 		rs_sta->last_txrate_idx = idx;
+ 		info->control.rates[0].idx = rs_sta->last_txrate_idx;
+ 	}
++	info->control.rates[0].count = 1;
+ 
+ 	D_RATE("leave: %d\n", idx);
+ }
+diff --git a/drivers/net/wireless/iwlegacy/4965-rs.c b/drivers/net/wireless/iwlegacy/4965-rs.c
+index 1fc0b22..ed3c42a 100644
+--- a/drivers/net/wireless/iwlegacy/4965-rs.c
++++ b/drivers/net/wireless/iwlegacy/4965-rs.c
+@@ -2268,7 +2268,7 @@ il4965_rs_get_rate(void *il_r, struct ieee80211_sta *sta, void *il_sta,
+ 		info->control.rates[0].flags = 0;
+ 	}
+ 	info->control.rates[0].idx = rate_idx;
+-
++	info->control.rates[0].count = 1;
+ }
+ 
+ static void *
 -- 
-Kalle Valo
+1.7.11.7
+
