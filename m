@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:34725 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755311Ab3FDOpK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 10:45:10 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 4/4] cw1200: hwio: Remove an unnecessary goto
-Date: Tue,  4 Jun 2013 07:44:50 -0700
-Message-Id: <fd299c9ef87fe50c12af871d6bfcc92d7f6ef3dc.1370356776.git.joe@perches.com> (sfid-20130604_164533_006538_81EE9BA0)
-In-Reply-To: <60123fd3175b7cceadf6c335b12e58b797e18f65.1370356776.git.joe@perches.com>
-References: <60123fd3175b7cceadf6c335b12e58b797e18f65.1370356776.git.joe@perches.com>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:44408 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751416Ab3FDKp1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 06:45:27 -0400
+Received: by mail-lb0-f170.google.com with SMTP id t11so483694lbd.15
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2013 03:45:26 -0700 (PDT)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Use IEEE80211_TX_CTL_REQ_TX_STATUS on nullframes
+Date: Tue,  4 Jun 2013 12:44:52 +0200
+Message-Id: <1370342692-3191-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20130604_124530_003068_AA1D0C14)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-goto after return is wrong.
+The connection monitor needs to know the tx status of
+nullframes to work properly.
 
-The other code in this block needs to set an
-error value then goto an error release block.
-
-This one doesn't need to release anything and
-was likely a copy/paste remainder.
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
 ---
- drivers/net/wireless/cw1200/hwio.c | 1 -
- 1 file changed, 1 deletion(-)
+ net/mac80211/mlme.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/cw1200/hwio.c b/drivers/net/wireless/cw1200/hwio.c
-index 142f45ef..dad3fb3 100644
---- a/drivers/net/wireless/cw1200/hwio.c
-+++ b/drivers/net/wireless/cw1200/hwio.c
-@@ -178,7 +178,6 @@ int cw1200_indirect_read(struct cw1200_common *priv, u32 addr, void *buf,
- 	if ((buf_len / 2) >= 0x1000) {
- 		pr_err("Can't read more than 0xfff words.\n");
- 		return -EINVAL;
--		goto out;
- 	}
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 118540b..005fea5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -880,6 +880,10 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
  
- 	priv->hwbus_ops->lock(priv->hwbus_priv);
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
+ 					IEEE80211_TX_INTFL_OFFCHAN_TX_OK;
++
++	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
++		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
++
+ 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+ 			    IEEE80211_STA_CONNECTION_POLL))
+ 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_USE_MINRATE;
 -- 
-1.8.1.2.459.gbcd45b4.dirty
+1.8.1.2
 
