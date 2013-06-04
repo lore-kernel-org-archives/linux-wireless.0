@@ -1,77 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:41157 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775Ab3FWCN4 (ORCPT
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:43981 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503Ab3FDJQf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Jun 2013 22:13:56 -0400
-Date: Sun, 23 Jun 2013 03:13:51 +0100
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2013-06-23
-Message-ID: <20130623021351.GA2327@joana> (sfid-20130623_041401_006239_09EB6FB1)
+	Tue, 4 Jun 2013 05:16:35 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="fUYQa+Pmc3FrFX/N"
+In-Reply-To: <1370329674-8360-1-git-send-email-wangyijing@huawei.com>
+References: <1370329674-8360-1-git-send-email-wangyijing@huawei.com>
+Date: Tue, 4 Jun 2013 02:16:34 -0700
+Message-ID: <CA++WF2M0eW2ErthByhDjk1tEacgfo-Fw2pHP_UL4Be2fLDdmoQ@mail.gmail.com> (sfid-20130604_111654_053677_D27A5288)
+Subject: Re: [RESEND][PATCH 3/7] net, ipw2x00: remove redundant D0 power state set
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Yijing,
 
---fUYQa+Pmc3FrFX/N
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 4 June 2013 00:07, Yijing Wang <wangyijing@huawei.com> wrote:
+> Pci_enable_device() will set device power state to D0,
+> so it's no need to do it again in ipw2100_pci_init_one().
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Cc: netdev@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
 
-Hi John,
+Looks fine, thanks.
 
-A important fix to 3.10, this patch fixes an issues that was preventing the=
-=20
-l2cap info response command to be handled properly. Please pull. Thanks!
-
-        Gustavo
-       =20
----
-The following changes since commit fcb3701849957917a234a61b58ad70ed35c83eda:
-
-  brcmfmac: free primary net_device when brcmf_bus_start() fails (2013-06-1=
-3 13:24:12 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-
-for you to fetch changes up to 3f6fa3d489e127ca5a5b298eabac3ff5dbe0e112:
-
-  Bluetooth: Fix invalid length check in l2cap_information_rsp() (2013-06-2=
-3 00:24:58 +0100)
-
-----------------------------------------------------------------
-Jaganath Kanakkassery (1):
-      Bluetooth: Fix invalid length check in l2cap_information_rsp()
-
- net/bluetooth/l2cap_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---fUYQa+Pmc3FrFX/N
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRxlnfAAoJEPs3PUX4s20oCq8P/j8Yag3fDWz8CjlJbYVqMsMw
-wyEU825uw6WYYfGksV6lGGWWFlqPDuKcsQ/NosGB/I7Hn1m9CuIESeuowiu/aw+V
-ZfHLVMe3x5NH/7lwPELHemBwKTGRVahaC7itP8sqOah0x8XG6WrIN6L75l+RR+3y
-EV0y3lcDmRiNA/BP0EVuuhjORUpfKuoQrJSea+Q7vtk16aLutlohHo4gFlij4E54
-lOht8Rc+FVDhL86rqg0ZrtkWc1aSmjjMLFpWV0hEzk+TaU4P1I6AMT1kPEVjK+5D
-39R4Eskw29PqsQq5Iz9MdTlODol0RQ2AVnMjd26ICjZM3PjujG8AgHF0RNKwlZO2
-Mgh5Iredhm7yGHMqiZ05jaOB3UIakKufx3wjaRViXUIGAYHrxe1kZ3FMHYSOAr38
-TxPnj7s3p8OG/Qf3wyUp4Lwz2KK0uZSgluNfZV6Uj2fjWvDgDupNXrXF0uz+PaUW
-zhi6OH5ui3I+Gf9HXeolRs5A7xx4fB+h16yHhFkhqip3ZolRB8NL5wNYBnhT1cz3
-EWmoZsnfFrpX+oic96rL8+8jQSIv3wBth3wM4HE9lRKlP3F+rsUhRcw92VX33hgn
-rwxCtObpaMbvs/6pKgTEKwUGsUK3Vs1psMxZrBBvW7LA775/BSoBdDBTbxUnclU3
-yLJ4+4SiQ5ENLoVF4ogO
-=hO+l
------END PGP SIGNATURE-----
-
---fUYQa+Pmc3FrFX/N--
+Stanislav.
