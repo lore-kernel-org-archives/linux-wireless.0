@@ -1,71 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f172.google.com ([209.85.215.172]:55160 "EHLO
-	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757286Ab3FEUPT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 16:15:19 -0400
-Received: by mail-ea0-f172.google.com with SMTP id q10so85627eaj.3
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 13:15:18 -0700 (PDT)
-Message-ID: <1370463312.6213.17.camel@canaries64> (sfid-20130605_221525_924643_E29EB175)
-Subject: [PATCH 02/13] staging: vt6656: clean up MACvSetBBType
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 05 Jun 2013 21:15:12 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:38351 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751992Ab3FDLlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 07:41:06 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 01/13] rt2x00: rt2x00queue: add priv_size field to struct data_queue
+Date: Tue,  4 Jun 2013 13:40:38 +0200
+Message-Id: <1370346050-7047-2-git-send-email-juhosg@openwrt.org> (sfid-20130604_134120_921029_C6B90110)
+In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove internal white space and camel case.
+Add a new field into struct data_queue and store
+the size of the per-queue_entry private data in
+that. Additionally, use the new field in the
+rt2x00queue_alloc_entries function to compute
+the size of the queue entries for a given queue.
 
-Camel case changes;
-pDevice -> priv
-pbyData -> data
-byType -> type
+The patch does not change the current behaviour
+but makes it possible to remove the queue_desc
+parameter of the rt2x00queue_alloc_entries function.
+That will be done by a subsequent patch.
 
-Functional change
-CONTROLnsRequestOut Length = ARRAY_SIZE(data)
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/staging/vt6656/mac.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    5 +++--
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    2 ++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 89d700f..0f8132b8 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -84,20 +84,16 @@ void MACbShutdown(struct vnt_private *pDevice)
-                         );
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 5efbbbd..7f938a5 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -1173,7 +1173,7 @@ static int rt2x00queue_alloc_entries(struct data_queue *queue,
+ 	/*
+ 	 * Allocate all queue entries.
+ 	 */
+-	entry_size = sizeof(*entries) + qdesc->priv_size;
++	entry_size = sizeof(*entries) + queue->priv_size;
+ 	entries = kcalloc(queue->limit, entry_size, GFP_KERNEL);
+ 	if (!entries)
+ 		return -ENOMEM;
+@@ -1189,7 +1189,7 @@ static int rt2x00queue_alloc_entries(struct data_queue *queue,
+ 		entries[i].entry_idx = i;
+ 		entries[i].priv_data =
+ 		    QUEUE_ENTRY_PRIV_OFFSET(entries, i, queue->limit,
+-					    sizeof(*entries), qdesc->priv_size);
++					    sizeof(*entries), queue->priv_size);
+ 	}
+ 
+ #undef QUEUE_ENTRY_PRIV_OFFSET
+@@ -1329,6 +1329,7 @@ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
+ 	queue->data_size = qdesc->data_size;
+ 	queue->desc_size = qdesc->desc_size;
+ 	queue->winfo_size = qdesc->winfo_size;
++	queue->priv_size = qdesc->priv_size;
  }
  
--void MACvSetBBType(struct vnt_private *pDevice, u8 byType)
-+void MACvSetBBType(struct vnt_private *priv, u8 type)
- {
--	u8 pbyData[2];
-+	u8 data[2];
+ int rt2x00queue_allocate(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 4a7b34e..2cf4903 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -453,6 +453,7 @@ enum data_queue_flags {
+  * @cw_max: The cw max value for outgoing frames (field ignored in RX queue).
+  * @data_size: Maximum data size for the frames in this queue.
+  * @desc_size: Hardware descriptor size for the data in this queue.
++ * @priv_size: Size of per-queue_entry private data.
+  * @usb_endpoint: Device endpoint used for communication (USB only)
+  * @usb_maxpacket: Max packet size for given endpoint (USB only)
+  */
+@@ -481,6 +482,7 @@ struct data_queue {
+ 	unsigned short data_size;
+ 	unsigned char  desc_size;
+ 	unsigned char  winfo_size;
++	unsigned short priv_size;
  
--    pbyData[0] = byType;
--    pbyData[1] = EnCFG_BBType_MASK;
-+	data[0] = type;
-+	data[1] = EnCFG_BBType_MASK;
- 
--    CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_WRITE_MASK,
--                        MAC_REG_ENCFG0,
--                        MESSAGE_REQUEST_MACREG,
--                        2,
--                        pbyData
--                        );
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK,
-+		MAC_REG_ENCFG0, MESSAGE_REQUEST_MACREG,
-+		ARRAY_SIZE(data), data);
- }
- 
- /*
+ 	unsigned short usb_endpoint;
+ 	unsigned short usb_maxpacket;
 -- 
-1.8.1.2
-
-
+1.7.10
 
