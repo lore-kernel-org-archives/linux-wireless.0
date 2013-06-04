@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37294 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:58841 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754657Ab3FKLaV (ORCPT
+	with ESMTP id S1751127Ab3FDU2e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 07:30:21 -0400
-Message-ID: <1370950216.8356.10.camel@jlt4.sipsolutions.net> (sfid-20130611_133100_935359_1F1F244D)
-Subject: Re: [PATCH v2 2/2] mac80211: update mesh beacon on workqueue
+	Tue, 4 Jun 2013 16:28:34 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>,
-	Bob Copeland <me@bobcopeland.com>
-Date: Tue, 11 Jun 2013 13:30:16 +0200
-In-Reply-To: <1370895442-21784-2-git-send-email-thomas@cozybit.com> (sfid-20130610_221954_141807_F12A5B9B)
-References: <1370895442-21784-1-git-send-email-thomas@cozybit.com>
-	 <1370895442-21784-2-git-send-email-thomas@cozybit.com>
-	 (sfid-20130610_221954_141807_F12A5B9B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: make wiphy index start at 0 again
+Date: Tue,  4 Jun 2013 22:28:27 +0200
+Message-Id: <1370377707-23222-1-git-send-email-johannes@sipsolutions.net> (sfid-20130604_222837_513478_A7349E70)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-06-10 at 13:17 -0700, Thomas Pedersen wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> +	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-> +	u32 bit;
-> +
-> +	/* if we race with running work, worst case this work becomes a noop */
-> +	for_each_set_bit(bit, (unsigned long *)&changed,
-> +			 sizeof(changed) * BITS_PER_BYTE)
+The change to use atomic_inc_return() for assigning the wiphy
+index made the first wiphy index 1 instead of 0. This is fine,
+but we all habitually type "phy0" when we're testing, so make
+it go back to 0 instead of 1 by subtracting 1 from the index.
 
-This isn't valid, it happens to work on little endian platforms but will
-fail on big endian 64-bit ones, because you have this in memory (0 is
-the lowest order nibble):
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-76 54 32 10 -- -- -- --
-
-and now you point an unsigned long pointer to it, so you interpret the
-"--" as the lowest bits.
-
-
-More generally, I'd argue that mesh is being a bit odd here, flushing
-stations turing mesh stop can and will actually cause a BSS info update
-after the mesh interface has already been stopped (beaconing has been
-disabled in the driver.) This seems rather odd. Maybe it would be better
-to move the beacon update out of mesh_sta_cleanup() and into
-ieee80211_mesh_housekeeping() in some way? Although it'd also have to be
-done in the station handling in cfg.c but that shouldn't be a problem?
-
-Note also that the way you did this is rather odd, ieee80211_stop_mesh()
-could cause to schedule out to the workqueue for the update, but then
-the update won't happen. It's a bit racy though, because you could stop
-and restart the mesh and then the workqueue runs or something? Overall
-this approach seems a bit brittle?
-
-johannes
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 99d86dd..4224e75 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -301,6 +301,9 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ 		return NULL;
+ 	}
+ 
++	/* atomic_inc_return makes it start at 1, make it start at 0 */
++	rdev->wiphy_idx--;
++
+ 	/* give it a proper name */
+ 	dev_set_name(&rdev->wiphy.dev, PHY_NAME "%d", rdev->wiphy_idx);
+ 
+-- 
+1.8.0
 
