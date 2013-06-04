@@ -1,119 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:42947 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843Ab3FZINv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 04:13:51 -0400
-Message-ID: <1372234384.18889.37.camel@cumari.coelho.fi> (sfid-20130626_101414_288761_1786E587)
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-From: Luciano Coelho <coelho@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: <grant.likely@linaro.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <balbi@ti.com>
-Date: Wed, 26 Jun 2013 11:13:04 +0300
-In-Reply-To: <20130626062409.GK5523@atomide.com>
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-	 <1372189024.18889.19.camel@cumari.coelho.fi>
-	 <20130626062409.GK5523@atomide.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:38366 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751674Ab3FDLlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 07:41:07 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 05/13] rt2x00: add queue_init callback to rt2x00_ops
+Date: Tue,  4 Jun 2013 13:40:42 +0200
+Message-Id: <1370346050-7047-6-git-send-email-juhosg@openwrt.org> (sfid-20130604_134115_325463_61F131AA)
+In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tony,
+The driver uses static data structures for initializing
+specific fields of a given data queue. These static
+queue data descriptor structures are containing values
+which related to a given chipset.
 
-On Tue, 2013-06-25 at 23:24 -0700, Tony Lindgren wrote:
-> * Luciano Coelho <coelho@ti.com> [130625 12:43]:
-> > On Tue, 2013-06-25 at 11:35 +0300, Luciano Coelho wrote:
-> > > Add device tree bindings documentation for the TI WiLink modules.
-> > > Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
-> > > modules is supported.
-> > > 
-> > > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > > ---
+Even though the values are chip specific, the actual
+selection of the used structure is based on device
+specific vendor/product identifiers. This approach works,
+but it is not always reliable. Sometimes the vendor and/or
+device IDs of the PCI and USB devices contains improper
+values which makes it impossible to select the correct
+structure for such devices.
 
-[...]
+The patch adds a new callback to tr2x00_ops which
+is called after the chipset detection is finished.
+This allows the drivers to do dynamic initialization
+of the data_queue structure for a given queue based
+on the actual chipset.
 
-> > > +Optional properties:
-> > > +--------------------
-> > > +
-> > > +- refclock: the internal WLAN reference clock frequency (required for
-> > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-> > > +  following:
-> > > +	0 = 19.2 MHz
-> > > +	1 = 26.0 MHz
-> > > +	2 = 38.4 MHz
-> > > +	3 = 52.0 MHz
-> > > +	4 = 38.4 MHz, XTAL
-> > > +	5 = 26.0 MHz, XTAL
-> 
-> This is just the omap refclock, right? If so, you can just pass the
-> standard clock phandle. I know we don't yet have the DT clocks merged,
-> but Tero just posted another revision of those.
+After each driver implements the queue_init callback,
+the data_queue_desc structure will be removed.
 
-This is an internal clock.  This clock is part of the module that
-contains the WiLink chip.  It is not associated with the clocks in the
-main board (OMAP).
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h      |    1 +
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   22 +++++++++++++---------
+ 2 files changed, 14 insertions(+), 9 deletions(-)
 
-
-> > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> > > +  following:
-> > > +	0 = 19.200 MHz
-> > > +	1 = 26.000 MHz
-> > > +	2 = 38.400 MHz
-> > > +	3 = 52.000 MHz
-> > > +	4 = 16.368 MHz
-> > > +	5 = 32.736 MHz
-> > > +	6 = 16.800 MHz
-> > > +	7 = 33.600 MHz
-> 
-> Where does this clock come from? Maybe this can be set based on the
-> compatible value if it's completely internal?
-
-This is also a completely internal clock.  My "compatible" values are
-based on the WiLink chip itself, not in the module that contains the
-chip.  There are several modules and they are the ones that specify the
-clock frequencies.  This data I'm passing here is just to tell the
-WiLink chip which frequencies the module uses.
-
-My driver is for the WiLink chip itself, not to the module (in theory).
-So I think having the WiLink values as bindings would be more generic
-than having to specify values for each available module (eg.
-"lsr-research,tiwi-ble") and mapping those values to specific
-frequencies in the driver.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 7510723..2d2db64 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -653,6 +653,7 @@ struct rt2x00_ops {
+ 	const struct data_queue_desc *tx;
+ 	const struct data_queue_desc *bcn;
+ 	const struct data_queue_desc *atim;
++	void (*queue_init)(struct data_queue *queue);
+ 	const struct rt2x00lib_ops *lib;
+ 	const void *drv;
+ 	const struct ieee80211_ops *hw;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 3ae2264..2a99ff1 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -1306,8 +1306,6 @@ rt2x00queue_get_qdesc_by_qid(struct rt2x00_dev *rt2x00dev,
+ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
+ 			     struct data_queue *queue, enum data_queue_qid qid)
+ {
+-	const struct data_queue_desc *qdesc;
+-
+ 	mutex_init(&queue->status_lock);
+ 	spin_lock_init(&queue->tx_lock);
+ 	spin_lock_init(&queue->index_lock);
+@@ -1319,14 +1317,20 @@ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
+ 	queue->cw_min = 5;
+ 	queue->cw_max = 10;
  
-> > If this is okay for everyone, can I push this via my tree (which goes to
-> > linux-wireless->net->linus)? I think it makes more sense to send the
-> > documentation together with the patch that actually implements the DT
-> > node parsing in the driver.
-> 
-> If we can use the standard bindings, it might be worth waiting until
-> we have the DT clocks available as we have the pdata workaround merged
-> anyways. That's because then we don't need to support the custom
-> binding later on ;)
-
-I looked into Tero's patches and I considered using the generic clock
-bindings, but I think it doesn't make sense in this case.  The thing is
-that the module is not providing the clocks to the main board.  Neither
-is the WiLink chip consuming clocks from the main board.
-
-I thought about specifying clock providers and consumers to be used only
-by the module and WiLink chip, but I think it's overkill.  And we would
-also have to find a way to prevent the main clock framework from trying
-to handle them.
-
-So, my conclusion was that, even though these *are* clocks, from the
-main board's perspective they're just specifications of what the module
-looks like.
-
-Does this make sense?
-
---
-Cheers,
-Luca.
+-	qdesc = rt2x00queue_get_qdesc_by_qid(rt2x00dev, qid);
+-	BUG_ON(!qdesc);
++	if (rt2x00dev->ops->queue_init) {
++		rt2x00dev->ops->queue_init(queue);
++	} else {
++		const struct data_queue_desc *qdesc;
++
++		qdesc = rt2x00queue_get_qdesc_by_qid(rt2x00dev, qid);
++		BUG_ON(!qdesc);
+ 
+-	queue->limit = qdesc->entry_num;
+-	queue->data_size = qdesc->data_size;
+-	queue->desc_size = qdesc->desc_size;
+-	queue->winfo_size = qdesc->winfo_size;
+-	queue->priv_size = qdesc->priv_size;
++		queue->limit = qdesc->entry_num;
++		queue->data_size = qdesc->data_size;
++		queue->desc_size = qdesc->desc_size;
++		queue->winfo_size = qdesc->winfo_size;
++		queue->priv_size = qdesc->priv_size;
++	}
+ 
+ 	queue->threshold = DIV_ROUND_UP(queue->limit, 10);
+ }
+-- 
+1.7.10
 
