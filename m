@@ -1,62 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52521 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703Ab3FRAas (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 20:30:48 -0400
-Message-ID: <51BFAA34.1020407@candelatech.com> (sfid-20130618_023050_923624_4B8E0EEA)
-Date: Mon, 17 Jun 2013 17:30:44 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Lots of confusion on bss refcounting.
-References: <51BF5A53.8050100@candelatech.com>  (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net> <51BF5ED4.9010704@candelatech.com> <51BF8040.2000408@candelatech.com>
-In-Reply-To: <51BF8040.2000408@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from arrakis.dune.hu ([78.24.191.176]:38366 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751992Ab3FDLlJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 07:41:09 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 08/13] rt2x00: rt73usb: implement queue_init callback
+Date: Tue,  4 Jun 2013 13:40:45 +0200
+Message-Id: <1370346050-7047-9-git-send-email-juhosg@openwrt.org> (sfid-20130604_134124_212367_6193EF26)
+In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/17/2013 02:31 PM, Ben Greear wrote:
-> On 06/17/2013 12:09 PM, Ben Greear wrote:
->> On 06/17/2013 12:02 PM, Johannes Berg wrote:
->
->> The bss reference is passed back, and through luck or careful programming,
->> it *seems* that all paths related to calling ieee80211_rx_mgmt_assoc_resp
->> managed to consume the bss.
->>
->> I haven't figured out yet why this is not an erroneous put since I didn't
->> find the reference taken in the first place.
->>
->> I'm going to work on making some changes to the ref counting scheme
->> a bit.  I'd rather have the code perhaps take and put a few refs
->> it might otherwise skip to keep the ownership cleaner and make
->> the code easier to debug and understand...
->>
->> I'll post some for RFC when I make some progress.
->
-> I think I found at least some of the leaks.
->
-> In places like ieee80211_mgd_stop, we were calling ieee80211_destroy_assoc_data,
-> but it was not putting the bss reference.
->
-> I'll post some RFC patches in a minute or two...first is debugging
-> logic, second attempts to fix bss ref counting.  This needs more
-> testing before it is applied...we will continue testing it....
+The generic rt2x00 code has been changed to allow the
+drivers toimplement dynamic data_queue initialization.
 
-It seems that the wdev objects (struct wireless_dev) can also
-hold a reference to the bss.
+Remove the static data queue descriptor structures
+and implement the queue_init callback instead.
 
-Do you happen to know what code is responsible for destructing
-those objects?  I want to check to make sure it properly puts
-its reference.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt73usb.c |   54 ++++++++++++++++++++-------------
+ 1 file changed, 33 insertions(+), 21 deletions(-)
 
-Even after the patches posted I still see a few leaked bss objects...
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 377e09b..b2e346a 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2359,26 +2359,40 @@ static const struct rt2x00lib_ops rt73usb_rt2x00_ops = {
+ 	.config			= rt73usb_config,
+ };
+ 
+-static const struct data_queue_desc rt73usb_queue_rx = {
+-	.entry_num		= 32,
+-	.data_size		= DATA_FRAME_SIZE,
+-	.desc_size		= RXD_DESC_SIZE,
+-	.priv_size		= sizeof(struct queue_entry_priv_usb),
+-};
++static void rt73usb_queue_init(struct data_queue *queue)
++{
++	switch (queue->qid) {
++	case QID_RX:
++		queue->limit = 32;
++		queue->data_size = DATA_FRAME_SIZE;
++		queue->desc_size = RXD_DESC_SIZE;
++		queue->priv_size = sizeof(struct queue_entry_priv_usb);
++		break;
+ 
+-static const struct data_queue_desc rt73usb_queue_tx = {
+-	.entry_num		= 32,
+-	.data_size		= DATA_FRAME_SIZE,
+-	.desc_size		= TXD_DESC_SIZE,
+-	.priv_size		= sizeof(struct queue_entry_priv_usb),
+-};
++	case QID_AC_VO:
++	case QID_AC_VI:
++	case QID_AC_BE:
++	case QID_AC_BK:
++		queue->limit = 32;
++		queue->data_size = DATA_FRAME_SIZE;
++		queue->desc_size = TXD_DESC_SIZE;
++		queue->priv_size = sizeof(struct queue_entry_priv_usb);
++		break;
+ 
+-static const struct data_queue_desc rt73usb_queue_bcn = {
+-	.entry_num		= 4,
+-	.data_size		= MGMT_FRAME_SIZE,
+-	.desc_size		= TXINFO_SIZE,
+-	.priv_size		= sizeof(struct queue_entry_priv_usb),
+-};
++	case QID_BEACON:
++		queue->limit = 4;
++		queue->data_size = MGMT_FRAME_SIZE;
++		queue->desc_size = TXINFO_SIZE;
++		queue->priv_size = sizeof(struct queue_entry_priv_usb);
++		break;
++
++	case QID_ATIM:
++		/* fallthrough */
++	default:
++		BUG();
++		break;
++	}
++}
+ 
+ static const struct rt2x00_ops rt73usb_ops = {
+ 	.name			= KBUILD_MODNAME,
+@@ -2387,9 +2401,7 @@ static const struct rt2x00_ops rt73usb_ops = {
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+ 	.extra_tx_headroom	= TXD_DESC_SIZE,
+-	.rx			= &rt73usb_queue_rx,
+-	.tx			= &rt73usb_queue_tx,
+-	.bcn			= &rt73usb_queue_bcn,
++	.queue_init		= rt73usb_queue_init,
+ 	.lib			= &rt73usb_rt2x00_ops,
+ 	.hw			= &rt73usb_mac80211_ops,
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10
 
