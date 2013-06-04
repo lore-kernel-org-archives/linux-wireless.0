@@ -1,124 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:33800 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753546Ab3FIOfq (ORCPT
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:42573 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830Ab3FDTnM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jun 2013 10:35:46 -0400
-Cc: Kirshenbaum Erez <erezk@wilocity.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3] wil6210: Fix AP/PCP start flow
-Date: Sun, 9 Jun 2013 17:35:28 +0300
-Message-ID: <1370788528-16095-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130609_163548_805826_FC82B7AA)
+	Tue, 4 Jun 2013 15:43:12 -0400
+Received: by mail-bk0-f53.google.com with SMTP id mx10so398601bkb.40
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2013 12:43:11 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "C.B. Wang" <wtwangcb@gmail.com>
+Subject: Re: carl9170:5/10 MHz Channel Support on carl9170
+Date: Tue, 4 Jun 2013 21:43:06 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <CAB-Tk70FmmfZOaJnWOubcOrP3MyXebTtrY936_4NROmf_76EZw@mail.gmail.com>
+In-Reply-To: <CAB-Tk70FmmfZOaJnWOubcOrP3MyXebTtrY936_4NROmf_76EZw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201306042143.06998.chunkeey@googlemail.com> (sfid-20130604_214315_715421_EAFB73ED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kirshenbaum Erez <erezk@wilocity.com>
+On Tuesday, June 04, 2013 03:20:26 PM C.B. Wang wrote:
+> I want to know if the ar9170 chip support 5/10 mhz channels.
+Maybe. if you care about it, you'll have to look for clues in
+the original vendor driver (otus - was part of the kernel's staging/
+directory for < 2.6.39?) and the original vendor firmware 
+(ar9170fw - you can find a git-tree @ git.sipsolutions.com).
 
-WMI PCP Start flow should not be handled through:
-net_device_ops->ndo_open()->wil_up()->__wil_up()
-because it missing mandatory FW parameters (SSID,Channel,IEs, Security...).
+Anyway, if you need a definitive "yes" or "no", you should
+ask Qualcomm Atheros directly. As I can only tell something
+about the MAC [which does have a 802.11j Mode. It can be
+enabled by setting bit 3 in AR9170_MAC_REG_POWER_STATE_CTRL.]
+However, I don't have any information about the PHY/FEM/RF
+and BB.
+  
+> The datasheet says it supports 802.11j, but the carl9170 
+> driver does not provide support.
+Again, talk to Qualcomm Atheros to find out what needs to be
+done in order to support it.
 
-Prior to AP starting __wil_up() may be called with iftype set
-cfg80211_ops->change_virtual_intf(NL80211_IFTYPE_AP or STATION)
-depend on the application hostapd/wpa_supplicant/iw.
-there should not be an attempt to start an AP flow,
-AP/PCP start flow will be started latter by cfg80211_ops->start_ap().
+> Also the radio chip ar9104 has tuning range from 2.3-2.5ghz and
+> 4.9-6.1ghz,but the driver does not provide any support for these
+> super channels.
+Some AR9170 devices do indeed support the 4.9 GHz channels
+(out of the box). e.g.: 
+	Frequencies:
+	 * 4920 MHz [-16] (18.0 dBm)
+	 * 4940 MHz [-12] (18.0 dBm)
+	 * 4960 MHz [-8] (18.0 dBm)
+	 * 4980 MHz [-4] (18.0 dBm)
+	 * 5040 MHz [8] (18.0 dBm)
+	 * 5060 MHz [12] (18.0 dBm)
+	 * 5080 MHz [16] (18.0 dBm)
 
-Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 34 ---------------------------------
- 1 file changed, 34 deletions(-)
+However, the device needs to be calibrated for the frequencies
+to use them legally (the Japanese Market). Look in your kernel
+logs when the driver is loaded; There should be something like
+this:
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 8cafa45..0a2844c 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -286,10 +286,7 @@ static int __wil_up(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	struct wireless_dev *wdev = wil->wdev;
--	struct ieee80211_channel *channel = wdev->preset_chandef.chan;
- 	int rc;
--	int bi;
--	u16 wmi_nettype = wil_iftype_nl2wmi(wdev->iftype);
- 
- 	rc = wil_reset(wil);
- 	if (rc)
-@@ -300,32 +297,25 @@ static int __wil_up(struct wil6210_priv *wil)
- 	if (rc)
- 		return rc;
- 
--	/* FIXME Firmware works now in PBSS mode(ToDS=0, FromDS=0) */
--	wmi_nettype = wil_iftype_nl2wmi(NL80211_IFTYPE_ADHOC);
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_STATION:
- 		wil_dbg_misc(wil, "type: STATION\n");
--		bi = 0;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_AP:
- 		wil_dbg_misc(wil, "type: AP\n");
--		bi = 100;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 		wil_dbg_misc(wil, "type: P2P_CLIENT\n");
--		bi = 0;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_P2P_GO:
- 		wil_dbg_misc(wil, "type: P2P_GO\n");
--		bi = 100;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
- 		wil_dbg_misc(wil, "type: Monitor\n");
--		bi = 0;
- 		ndev->type = ARPHRD_IEEE80211_RADIOTAP;
- 		/* ARPHRD_IEEE80211 or ARPHRD_IEEE80211_RADIOTAP ? */
- 		break;
-@@ -333,33 +323,9 @@ static int __wil_up(struct wil6210_priv *wil)
- 		return -EOPNOTSUPP;
- 	}
- 
--	/* Apply profile in the following order: */
--	/* SSID and channel for the AP */
--	switch (wdev->iftype) {
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_P2P_GO:
--		if (wdev->ssid_len == 0) {
--			wil_err(wil, "SSID not set\n");
--			return -EINVAL;
--		}
--		rc = wmi_set_ssid(wil, wdev->ssid_len, wdev->ssid);
--		if (rc)
--			return rc;
--		break;
--	default:
--		break;
--	}
--
- 	/* MAC address - pre-requisite for other commands */
- 	wmi_set_mac_address(wil, ndev->dev_addr);
- 
--	/* Set up beaconing if required. */
--	if (bi > 0) {
--		rc = wmi_pcp_start(wil, bi, wmi_nettype,
--				   (channel ? channel->hw_value : 0));
--		if (rc)
--			return rc;
--	}
- 
- 	napi_enable(&wil->napi_rx);
- 	napi_enable(&wil->napi_tx);
--- 
-1.8.1.2
+> ath: EEPROM regdomain: 0x8xyz
+> ath: EEPROM indicates we should expect a country code
+> ath: doing EEPROM country->regdmn map search
+> ath: Country alpha2 being used: JP <--- JaPan
 
+If your country code is not "JP", then you'll have to talk to
+the manufacturer.
+
+Regards,
+	Chr
