@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:38942 "EHLO
-	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756019Ab3FLTCK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 15:02:10 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Ben Greear <greearb@candelatech.com>, Kalle Valo <kvalo@adurom.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Paul Stewart <pstew@chromium.org>
-Date: Wed, 12 Jun 2013 12:01:23 -0700
-Subject: RE: [PATCH] mwifiex: Add module parameter for regdomain
-Message-ID: <477F20668A386D41ADCC57781B1F70430EA268B4A3@SC-VEXCH1.marvell.com> (sfid-20130612_210214_546789_D44E087B)
-References: <1370904007-10959-1-git-send-email-bzhao@marvell.com>
- <877ghz3il6.fsf@purkki.adurom.net>
- <477F20668A386D41ADCC57781B1F70430EA268B457@SC-VEXCH1.marvell.com>
- <8738sn2mcf.fsf@purkki.adurom.net> <51B8C41E.7050907@candelatech.com>
-In-Reply-To: <51B8C41E.7050907@candelatech.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:43158 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751299Ab3FDKPr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jun 2013 06:15:47 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: add a tx control flag to indicate PS-Poll/uAPSD response
+Date: Tue,  4 Jun 2013 12:15:42 +0200
+Message-Id: <1370340942-34407-1-git-send-email-nbd@openwrt.org> (sfid-20130604_121549_627780_E16E91BC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h  | 3 +++
+ net/mac80211/sta_info.c | 4 +++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-> >> "iw reg set XX" or "country_code=XX" in hostapd.conf is a *user* hint.
-> >>
-> >> What we need here is a *driver* hint. Furthermore, with a driver
-> >> regulatory hint, the passive-scan and no-ibss flags are cleared so we
-> >> can start AP with hostapd on 5G band.
-> >
-> > So it's a driver hint which is coming from user space via a module
-> > parameter. IMHO you are abusing interfaces here. Is there any better way
-> > to solve your problem?
-> 
-> It would be nice to have some way to do this for ath9k and other NICs
-> as well.  Best I could come up with is a similar hack for ath9k.
-> 
-> I think part of the problem is that this config info needs to be
-> available very early in the module loading/init logic, so it's
-> too late to be configured using 'iw' or similar.
-
-Exactly. regulatory_hint () needs to be called right after wiphy registration.
-
-Thanks,
-Bing
-
-> 
-> Thanks,
-> Ben
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1f0014b..cb37f82 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -460,6 +460,8 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_CTL_DONTFRAG: Don't fragment this packet even if it
+  *	would be fragmented by size (this is optional, only used for
+  *	monitor injection).
++ * @IEEE80211_TX_CTL_PS_RESPONSE: This frame is a response to a poll
++ *	frame (PS-Poll or uAPSD).
+  *
+  * Note: If you have to add new flags to the enumeration, then don't
+  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
+@@ -495,6 +497,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_STATUS_EOSP		= BIT(28),
+ 	IEEE80211_TX_CTL_USE_MINRATE		= BIT(29),
+ 	IEEE80211_TX_CTL_DONTFRAG		= BIT(30),
++	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(31),
+ };
+ 
+ #define IEEE80211_TX_CTL_STBC_SHIFT		23
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index a04c5671..b429798 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1132,6 +1132,7 @@ static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
+ 	 * ends the poll/service period.
+ 	 */
+ 	info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER |
++		       IEEE80211_TX_CTL_PS_RESPONSE |
+ 		       IEEE80211_TX_STATUS_EOSP |
+ 		       IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 
+@@ -1269,7 +1270,8 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
+ 			 * STA may still remain is PS mode after this frame
+ 			 * exchange.
+ 			 */
+-			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
++			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER |
++				       IEEE80211_TX_CTL_PS_RESPONSE;
+ 
+ 			/*
+ 			 * Use MoreData flag to indicate whether there are
+-- 
+1.8.0.2
 
