@@ -1,85 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:63481 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756346Ab3FMRs3 (ORCPT
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:55160 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757286Ab3FEUPT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 13:48:29 -0400
-Date: Thu, 13 Jun 2013 18:48:25 +0100
-From: Gustavo Padovan <gustavo@padovan.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-06-13
-Message-ID: <20130613174825.GA28084@joana> (sfid-20130613_194845_909763_F6E29EDC)
-References: <20130613112228.GB17870@joana>
- <20130613171711.GB3246@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130613171711.GB3246@tuxdriver.com>
+	Wed, 5 Jun 2013 16:15:19 -0400
+Received: by mail-ea0-f172.google.com with SMTP id q10so85627eaj.3
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 13:15:18 -0700 (PDT)
+Message-ID: <1370463312.6213.17.camel@canaries64> (sfid-20130605_221525_924643_E29EB175)
+Subject: [PATCH 02/13] staging: vt6656: clean up MACvSetBBType
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Jun 2013 21:15:12 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Remove internal white space and camel case.
 
-* John W. Linville <linville@tuxdriver.com> [2013-06-13 13:17:12 -0400]:
+Camel case changes;
+pDevice -> priv
+pbyData -> data
+byType -> type
 
-> On Thu, Jun 13, 2013 at 12:22:28PM +0100, Gustavo Padovan wrote:
-> > Hi John,
-> > 
-> > A few important fixes to 3.10. The first one is a crash fix and talks by itself.
-> > Then we have the support for a device id, it should be fine if you want to
-> > remove this. Next there are two btmrvl fixes, one for a potential race
-> > condition that could make its main thread never stop and the other to fix the
-> > return code when a memory allocation fails. It was returning 0 instead of
-> > -ENOMEM. Last is a fix to an issue that affects at least some Thinkpad X60,
-> > Initialization on those laptops were failing due by unsupported cmd we were
-> > sending to the device. The patch fixes this by checking if the cmd is
-> > supported first.
-> > 
-> > Please pull or let me know of any concerns you may have.
-> > 
-> > 	Gustavo
-> > 
-> > ---
-> > The following changes since commit d90b9e29ec5fe7a08eb7965386ebb47615306584:
-> > 
-> >   Merge branch 'for-john' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2013-06-12 14:28:21 -0400)
-> > 
-> > are available in the git repository at:
-> > 
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-> > 
-> > for you to fetch changes up to 0e1aba9361bf292fbdca781d419dca67d6b9911f:
-> > 
-> >   Bluetooth: btmrvl: fix thread stopping race (2013-06-13 11:48:38 +0100)
-> > 
-> > ----------------------------------------------------------------
-> 
-> I applied these manually to the wireless tree:
-> 
-> > Anderson Lizardo (1):
-> >       Bluetooth: Fix crash in l2cap_build_cmd() with small MTU
-> > 
-> > Daniel Drake (1):
-> >       Bluetooth: btmrvl: fix thread stopping race
-> > 
-> > Johan Hedberg (1):
-> >       Bluetooth: Fix conditions for HCI_Delete_Stored_Link_Key
-> 
-> These I will manually apply to wireless-next:
-> 
-> > Cho, Yu-Chen (1):
-> >       Bluetooth: Add support for Mediatek Bluetooth device [0e8d:763f]
-> > 
-> > Wei Yongjun (1):
-> >       Bluetooth: btmrvl: fix error return code in btmrvl_sdio_card_to_host()
-> 
-> The device ID one might be OK, but it can wait for now.  The error
-> return code patch fixes the return code for a function whose return
-> code isn't actually checked, so it doesn't seem to need a quick fix.
+Functional change
+CONTROLnsRequestOut Length = ARRAY_SIZE(data)
 
-Oh, I missed that when applied this patch! Thanks a lot for pushing the
-patches, I'll update the bluetooth trees accordingly.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
 
-	Gustavo
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 89d700f..0f8132b8 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -84,20 +84,16 @@ void MACbShutdown(struct vnt_private *pDevice)
+                         );
+ }
+ 
+-void MACvSetBBType(struct vnt_private *pDevice, u8 byType)
++void MACvSetBBType(struct vnt_private *priv, u8 type)
+ {
+-	u8 pbyData[2];
++	u8 data[2];
+ 
+-    pbyData[0] = byType;
+-    pbyData[1] = EnCFG_BBType_MASK;
++	data[0] = type;
++	data[1] = EnCFG_BBType_MASK;
+ 
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_WRITE_MASK,
+-                        MAC_REG_ENCFG0,
+-                        MESSAGE_REQUEST_MACREG,
+-                        2,
+-                        pbyData
+-                        );
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK,
++		MAC_REG_ENCFG0, MESSAGE_REQUEST_MACREG,
++		ARRAY_SIZE(data), data);
+ }
+ 
+ /*
+-- 
+1.8.1.2
+
+
+
