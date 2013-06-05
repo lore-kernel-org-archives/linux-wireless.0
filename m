@@ -1,96 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4838 "EHLO mms2.broadcom.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:38092 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932351Ab3FFLTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 07:19:18 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 20/22] brcmfmac: add trace event for capturing BDC
- header
-Date: Thu, 6 Jun 2013 13:18:05 +0200
-Message-ID: <1370517487-14395-21-git-send-email-arend@broadcom.com> (sfid-20130606_131933_219721_3E7A6DC9)
-In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+	id S1755354Ab3FET57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 15:57:59 -0400
+Message-ID: <51AF9852.5020404@openwrt.org> (sfid-20130605_215803_985780_3F983F43)
+Date: Wed, 05 Jun 2013 21:58:10 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 1/2] rt2x00: convert rt2x00_ops.extra_tx_headroom to be
+ a fuction
+References: <1370429640-31565-1-git-send-email-juhosg@openwrt.org> <20130605125130.GA3367@redhat.com>
+In-Reply-To: <20130605125130.GA3367@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The BDC header contains PropTx TLV signals that are useful to capture
-for debugging. This event captures the header and tlv's in binary
-form. This can be post-processed using trace-cmd plugin.
+2013.06.05. 14:51 keltezéssel, Stanislaw Gruszka írta:
+> On Wed, Jun 05, 2013 at 12:53:59PM +0200, Gabor Juhos wrote:
+>> The rt2x00_ops structure has a static field to indicate
+>> the extra TX headroom size required for a given device.
+>> The drawback of this is that we have to use a separate
+>> rt2x00_ops structure for each chipset which requires
+>> different size.
+>>
+>> Convert the static field into a callback function.
+>> This allows the drivers to dynamically determine the
+>> extra TX headroom size based on the actual chipset.
+>> Also implement the the callback in the drivers which
+>> needs an extra TX headroom, and remove the field
+>> initialization from the others.
+>>
+>> Additionally, introduce a new extra_tx_headroom field
+>> in struct rt2x00_dev, initialize its value in the probe
+>> routine and use the cached value in the rest of the code.
+> 
+> Could we rather get rid of that extra_tx_headroom variable and use queue
+> parameters: winfo_size and desc_size ?
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |    3 +++
- .../net/wireless/brcm80211/brcmfmac/tracepoint.h   |   21 ++++++++++++++++++++
- 2 files changed, 24 insertions(+)
+Yes, it seems that we can compute the value of extra_tx_headrom from those
+fields. The driver uses the following values now:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-index 59c77aa..dd85401 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-@@ -30,6 +30,7 @@
- #include "dhd_bus.h"
- #include "fwsignal.h"
- #include "dhd_dbg.h"
-+#include "tracepoint.h"
- 
- struct brcmf_proto_cdc_dcmd {
- 	__le32 cmd;	/* dongle command value */
-@@ -292,6 +293,7 @@ void brcmf_proto_hdrpush(struct brcmf_pub *drvr, int ifidx, u8 offset,
- 	h->flags2 = 0;
- 	h->data_offset = offset;
- 	BDC_SET_IF_IDX(h, ifidx);
-+	trace_brcmf_bdchdr(pktbuf->data);
- }
- 
- int brcmf_proto_hdrpull(struct brcmf_pub *drvr, bool do_fws, u8 *ifidx,
-@@ -309,6 +311,7 @@ int brcmf_proto_hdrpull(struct brcmf_pub *drvr, bool do_fws, u8 *ifidx,
- 		return -EBADE;
- 	}
- 
-+	trace_brcmf_bdchdr(pktbuf->data);
- 	h = (struct brcmf_proto_bdc_header *)(pktbuf->data);
- 
- 	*ifidx = BDC_GET_IF_IDX(h);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h b/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
-index 9df1f7a..bc29171 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
-@@ -87,6 +87,27 @@ TRACE_EVENT(brcmf_hexdump,
- 	TP_printk("hexdump [length=%lu]", __entry->len)
- );
- 
-+TRACE_EVENT(brcmf_bdchdr,
-+	TP_PROTO(void *data),
-+	TP_ARGS(data),
-+	TP_STRUCT__entry(
-+		__field(u8, flags)
-+		__field(u8, prio)
-+		__field(u8, flags2)
-+		__field(u32, siglen)
-+		__dynamic_array(u8, signal, *((u8 *)data + 3) * 4)
-+	),
-+	TP_fast_assign(
-+		__entry->flags = *(u8 *)data;
-+		__entry->prio = *((u8 *)data + 1);
-+		__entry->flags2 = *((u8 *)data + 2);
-+		__entry->siglen = *((u8 *)data + 3) * 4;
-+		memcpy(__get_dynamic_array(signal),
-+		       (u8 *)data + 4, __entry->siglen);
-+	),
-+	TP_printk("bdc: prio=%d siglen=%d", __entry->prio, __entry->siglen)
-+);
-+
- #ifdef CONFIG_BRCM_TRACING
- 
- #undef TRACE_INCLUDE_PATH
--- 
-1.7.10.4
+driver/device    desc_size         winfo_size           extra_tx_headroom
 
+rt2400pci        TXD_DESC_SIZE     0                    0
+rt2500pci        TXD_DESC_SIZE     0                    0
+rt2800pci        TXD_DESC_SIZE     TXWI_DESC_SIZE       TXWI_DESC_SIZE
+rt61pci          TXD_DESC_SIZE     0                    0
 
+rt2500usb        TXD_DESC_SIZE     0                    TXD_DESC_SIZE
+rt2800usb        TXINFO_DESC_SIZE  TXWI_DESC_SIZE       TXINFO_DESC_SIZE +
+TXWI_DESC_SIZE
+rt2800usb/RT5592 TXINFO_DESC_SIZE  TXWI_DESC_SIZE_5592  TXINFO_DESC_SIZE +
+TXWI_DESC_SIZE_5592
+rt73usb          TXD_DESC_SIZE     0                    TXD_DESC_SIZE
+
+On USB devices we can get it from desc_size + winfo_size and on PCI/PCIe/SoC
+devices it equals with winfo_size. So the callbacks and the extra_tx_headroom
+field in rt2x00_ops can be removed.
+
+However I would keep the new extra_tx_headroom field in rt2x00_dev. It would
+ensure that we don't have to compute its value every time it is used.
+
+-Gabor
