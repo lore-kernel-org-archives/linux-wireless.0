@@ -1,83 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:32447 "EHLO mx4.wp.pl"
+Received: from mms1.broadcom.com ([216.31.210.17]:4957 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752777Ab3FGNgW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jun 2013 09:36:22 -0400
-Received: from 89-71-197-70.dynamic.chello.pl (HELO localhost.localdomain) (moorray3@[89.71.197.70])
-          (envelope-sender <moorray3@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with SMTP
-          for <linux-wireless@vger.kernel.org>; 7 Jun 2013 15:36:20 +0200
-From: Jakub Kicinski <moorray3@wp.pl>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	nietrywialneprzejscie@gmail.com
-Subject: [RFC 3/5] mac80211: always default to address compatible with mask
-Date: Fri,  7 Jun 2013 15:36:17 +0200
-Message-Id: <1370612179-24385-4-git-send-email-moorray3@wp.pl> (sfid-20130607_153627_906181_3EC15A43)
-In-Reply-To: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
-References: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
+	id S1752147Ab3FEIKa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 04:10:30 -0400
+Message-ID: <51AEF266.3050005@broadcom.com> (sfid-20130605_101035_925384_9819A510)
+Date: Wed, 5 Jun 2013 10:10:14 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>,
+	"Peer, Ilan" <ilan.peer@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
+References: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com>
+ <1370418378.8920.12.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1370418378.8920.12.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Kicinski <kubakici@wp.pl>
+On 06/05/2013 09:46 AM, Johannes Berg wrote:
+> On Tue, 2013-06-04 at 14:35 +0000, Malinen, Jouni wrote:
+>
+>> In general, I'd agree. However, I would like to get information of any
+>> peer device being in active PBC mode. This would require either getting
+>> those Probe Request frames
+>
+> I think I like that alternative better :-)
+>
+> I know I wouldn't find it quickly ... can you be more specific about
+> what "being in active PBC mode" means? Is that easily detectable?
+>
+> I'm thinking we should just document this (and be as specific about it
+> as we can) in the documentation for the offload feature.
 
-Currently default mac address for new interfaces
-is set to perm_addr. It can be addr_mask-wise
-incompatible with other addresses if user have
-changed address of existing interfaces manualy.
+Remark from the sideline. One of the motivations for the P2P find 
+offload (when done on the device) is that the host can sleep, right? So 
+how/when does wpa_s want these Probe Request frames. After the 
+driver/device completed the find?
 
-This is especially important after introduction
-of active monitors. We have to make sure that
-monitor interfaces have mac addresses that fall
-into addr_mask, otherwise hardware may not
-acknowledge frames.
+Regards,
+Arend
 
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
----
- net/mac80211/iface.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
-
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 38898b3..1f26980 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1468,17 +1468,7 @@ static void __ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 		return;
- 	}
- 
--	/*
--	 * Pick address of existing interface in case user changed
--	 * MAC address manually, default to perm_addr.
--	 */
--	m = local->hw.wiphy->perm_addr;
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
--			continue;
--		m = sdata->vif.addr;
--		break;
--	}
-+	m = perm_addr;
- 	start = ((u64)m[0] << 5*8) | ((u64)m[1] << 4*8) |
- 		((u64)m[2] << 3*8) | ((u64)m[3] << 2*8) |
- 		((u64)m[4] << 1*8) | ((u64)m[5] << 0*8);
-@@ -1529,6 +1519,15 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 
- 	mutex_lock(&local->iflist_mtx);
- 
-+	/* After manual mac change default addr may no longer fit into mask. */
-+	if (!is_zero_ether_addr(local->hw.wiphy->addr_mask) &&
-+	    !list_empty(&local->interfaces)) {
-+		sdata = list_first_entry(&local->interfaces,
-+					 struct ieee80211_sub_if_data,
-+					 list);
-+		memcpy(perm_addr, sdata->vif.addr, ETH_ALEN);
-+	}
-+
- 	switch (type) {
- 	case NL80211_IFTYPE_MONITOR:
- 		/* doesn't matter */
--- 
-1.8.1.4
 
