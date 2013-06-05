@@ -1,88 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3374 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932536Ab3FFLb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 07:31:56 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for 3.10 V2] brcmsmac: disable power-save related
- functions
-Date: Thu, 6 Jun 2013 13:29:56 +0200
-Message-ID: <1370518196-14840-1-git-send-email-arend@broadcom.com> (sfid-20130606_133159_632685_86BF336D)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55661 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756142Ab3FEOpO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 10:45:14 -0400
+Date: Wed, 5 Jun 2013 10:37:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Gustavo Padovan <gustavo.padovan@collabora.co.uk>,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: wireless tree rebased (from 5/28), Broadcom bits dropped
+Message-ID: <20130605143700.GA2271@tuxdriver.com> (sfid-20130605_164518_796664_91AD4F5D)
+References: <20130604212602.GB11199@tuxdriver.com>
+ <20130604215320.GC11199@tuxdriver.com>
+ <1370415586.8920.4.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370415586.8920.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a regression introduced by:
+On Wed, Jun 05, 2013 at 08:59:46AM +0200, Johannes Berg wrote:
+> On Tue, 2013-06-04 at 17:53 -0400, John W. Linville wrote:
+> > I messed this up too -- bad day...
+> > 
+> > If you pulled in between the earlier message and this one, please
+> > do so again.  If you saw this message before taking any action to
+> > clean-up my mess, then you are OK.
+> 
+> This was confusing, I think you rebased around some merges instead of
+> redoing the merges? My patches are in, but suddenly got new commit IDs,
+> e.g. fa331699d05ce1d0d4896eb4a137cfae50d7afde (new) vs.
+> c2c15e215e860c99b86ddfc4be4bb25cf180fed0 for "mac80211: work around
+> broken APs not including HT info".
+> 
+> This will cause git to pull them in again when I send a new pull
+> request, so it would have been nicer to redo the merges, but anyway ...
+> just a heads-up for everyone that here it's a bit confusing now.
+> 
+> johannes
 
-  commit 6da3b6c48d79da96a36c2632053cf4f53bf48fb2
-  Author: Hauke Mehrtens <hauke@hauke-m.de>
-  Date:   Sun Mar 24 01:45:52 2013 +0100
+You are right, I could have done it better with regard to your tree.
+I probably should redo that part.
 
-      brcmsmac: remove brcms_bss_cfg->associated
+The Bluetooth tree had pulled the wireless tree and applied their
+patches on top of the brcmfmac/brcmsmac series that I removed.  So,
+their pull couldn't be redone.
 
-The regression behaviour was described on mailing list.
+I think I can fix the wireless tree and preserve the original mac80211
+tree commits.  Everyone please hold off on doing anything else here, as
+I'm a bit busy and won't be able to get to this before this afternoon
+(Eastern USA time).
 
-http://mid.gmane.org/5197DC4F.7030503@broadcom.com:
-"On laptop I installed kernel with brcmsmac compiled as
-module. It comes up and associates during boot, but after
-logging in there is no connectivity. Triggering reassoc
-gives connectivity for some time, but after a while (1-2 min)
-it stops."
+Anyone object to one more wireless tree rebase today?
 
-Before the mentioned commit the return value of
-the function brcms_c_ps_allowed() was always false,
-which is desired behaviour as power-save is not
-supported at the moment. Therefor, the function is
-changed to just return false instead of simply
-reverting the mentioned commit.
-
-Bug: 58471 <https://bugzilla.kernel.org/show_bug.cgi?id=58471>
-
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi, John
-
-The commit message has been updated based on feedback
-from Kalle en Hauke.
-
-Gr. AvS
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   17 ++---------------
- 1 file changed, 2 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 28e7aee..9fd6f2f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -3074,21 +3074,8 @@ static void brcms_b_antsel_set(struct brcms_hardware *wlc_hw, u32 antsel_avail)
-  */
- static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
- {
--	/* disallow PS when one of the following global conditions meets */
--	if (!wlc->pub->associated)
--		return false;
--
--	/* disallow PS when one of these meets when not scanning */
--	if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
--		return false;
--
--	if (wlc->bsscfg->type == BRCMS_TYPE_AP)
--		return false;
--
--	if (wlc->bsscfg->type == BRCMS_TYPE_ADHOC)
--		return false;
--
--	return true;
-+	/* not supporting PS so always return false for now */
-+	return false;
- }
- 
- static void brcms_c_statsupd(struct brcms_c_info *wlc)
+John
 -- 
-1.7.10.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
