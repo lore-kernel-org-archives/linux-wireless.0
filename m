@@ -1,84 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:45490 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932065Ab3FEU2z (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:54661 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753725Ab3FEOJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 16:28:55 -0400
-Received: by mail-wi0-f175.google.com with SMTP id hn14so5207493wib.8
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 13:28:54 -0700 (PDT)
-Message-ID: <1370464127.6213.30.camel@canaries64> (sfid-20130605_222859_521492_DD8468C7)
-Subject: [PATCH 05/13] staging: vt6656: cleanup MACvRegBitsOff
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 05 Jun 2013 21:28:47 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Jun 2013 10:09:43 -0400
+Date: Wed, 5 Jun 2013 17:09:32 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] ath9k: limit multicast buffer hardware queue depth
+Message-ID: <20130605140932.GA8918@w1.fi> (sfid-20130605_160951_543901_807BC1CB)
+References: <1370280714-1594-1-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370280714-1594-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove internal white space and camel case.
+On Mon, Jun 03, 2013 at 07:31:54PM +0200, Felix Fietkau wrote:
+> The CAB (Content after Beacon) queue is used for beacon-triggered
+> transmission of buffered multicast frames. If lots of multicast frames
+> were buffered and this queue fills up, it drowns out all regular
+> traffic. To limit the damage that buffered traffic can do, try to limit
+> the queued data to becaon_interval / 8.
 
-Camel case changes;
-pDevice -> priv
-byRegOfs -> offset
-byBits -> bits
-pbyData -> data
+I'm not sure this would be compliant with the standard, but I guess
+something along these lines could be reasonable in some cases. However,
+it could be useful to take into account different DTIM Period parameters
+in the limit and instead of hardcoding this to one eight of the Beacon
+interval, the limit could be set based on Beacon interval * DTIM Period.
+Especially with large DTIM Period values, one eight of a Beacon interval
+may not be sufficient to handle even reasonable amount of group
+addressed frames.
 
-Functional change
-CONTROLnsRequestOut Length = ARRAY_SIZE(data)
-offset changed to u16
+Does this commit address More Data field updates when the driver decides
+to stop getting more frames without notifying mac80211 of this? The
+associated STAs would need to know when they can go back to sleep after
+the DTIM Beacon and the More Data field needs to be set to zero in the
+last frame the AP is sending out in the case this new limit is hit.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c | 17 ++++++-----------
- drivers/staging/vt6656/mac.h |  2 +-
- 2 files changed, 7 insertions(+), 12 deletions(-)
+> diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+> @@ -205,9 +205,15 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 56da5ef..77ec057 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -190,20 +190,15 @@ void MACvSetKeyEntry(struct vnt_private *priv, u16 key_ctl, u32 entry_idx,
+>  	while (skb) {
+>  		ath9k_tx_cabq(hw, skb);
+> +
+> +		if (sc->beacon.cabq_dur / 1000 - 1 >
+> +		    sc->cur_beacon_conf.beacon_interval / ATH_BCBUF)
+> +			break;
+> +
+>  		skb = ieee80211_get_buffered_bc(hw, vif);
+>  	}
+
+mac80211 handles the More Data field values based on what is actually
+buffered. I don't see how this patch would fix that either by modifying
+mac80211 to know that no more buffered frames are sent or by having the
+driver update the frame.
  
- }
- 
--void MACvRegBitsOff(struct vnt_private *pDevice, u8 byRegOfs, u8 byBits)
-+void MACvRegBitsOff(struct vnt_private *priv, u16 offset, u8 bits)
- {
--	u8 pbyData[2];
-+	u8 data[2];
- 
--    pbyData[0] = 0;
--    pbyData[1] = byBits;
-+	data[0] = 0;
-+	data[1] = bits;
- 
--    CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_WRITE_MASK,
--                        byRegOfs,
--                        MESSAGE_REQUEST_MACREG,
--                        2,
--                        pbyData
--                        );
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK,
-+		offset, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
- 
- void MACvRegBitsOn(struct vnt_private *pDevice, u8 byRegOfs, u8 byBits)
-diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
-index 548ab3c..4aa0f8d 100644
---- a/drivers/staging/vt6656/mac.h
-+++ b/drivers/staging/vt6656/mac.h
-@@ -408,7 +408,7 @@ void MACbShutdown(struct vnt_private *);
- void MACvSetBBType(struct vnt_private *, u8);
- void MACvDisableKeyEntry(struct vnt_private *, u32);
- void MACvSetKeyEntry(struct vnt_private *, u16, u32, u16, u8 *, u32 *);
--void MACvRegBitsOff(struct vnt_private *, u8, u8);
-+void MACvRegBitsOff(struct vnt_private *, u16, u8);
- void MACvRegBitsOn(struct vnt_private *, u8, u8);
- void MACvWriteWord(struct vnt_private *, u8, u16);
- void MACvWriteBSSIDAddress(struct vnt_private *, u8 *);
 -- 
-1.8.1.2
-
+Jouni Malinen                                            PGP id EFC895FA
