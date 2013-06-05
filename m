@@ -1,37 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38776 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755654Ab3FRMdB (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:40741 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753323Ab3FEM7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 08:33:01 -0400
-Message-ID: <1371558772.8318.11.camel@jlt4.sipsolutions.net> (sfid-20130618_143306_047911_8DA6B994)
-Subject: Re: [PATCH] nl80211: allow to register for mgmt frames without a
- matching pattern
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Date: Tue, 18 Jun 2013 14:32:52 +0200
-In-Reply-To: <1371558554-367-1-git-send-email-ordex@autistici.org>
-References: <1371558554-367-1-git-send-email-ordex@autistici.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Jun 2013 08:59:16 -0400
+Received: by mail-wi0-f181.google.com with SMTP id hi5so1246141wib.2
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 05:59:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201306042143.06998.chunkeey@googlemail.com>
+References: <CAB-Tk70FmmfZOaJnWOubcOrP3MyXebTtrY936_4NROmf_76EZw@mail.gmail.com>
+	<201306042143.06998.chunkeey@googlemail.com>
+Date: Wed, 5 Jun 2013 20:59:14 +0800
+Message-ID: <CAB-Tk73mTDsvf+MCEq5xfUBUtE4c6KfL2nkAcZe2LCY5pF=7RQ@mail.gmail.com> (sfid-20130605_145919_624823_A7AEFF07)
+Subject: Re: carl9170:5/10 MHz Channel Support on carl9170
+From: "C.B. Wang" <wtwangcb@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-18 at 14:29 +0200, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
-> 
-> It may be the case that a user wants to register for any
-> frame of a particular type.
-> 
-> Allow this operation by passing null as matching pattern and
-> 0 as pattern len when registering for the frame.
-> 
-> This is useful to wpa_supplicant when it wants to receive
-> any AUTH frame.
+Hi
 
-We can (and do) pass a 0-length pattern, any problem with that?
+I've read the "otus" vendor driver and found that in the source file
+/HalPlus/OTUS_FB50/hpreg.h on
+line 1915,the comment says "Temporary discard channel that BW < 20MHz
+(5 or 10MHz)   */
+                            /*   Our architecture does not implemnt it"
+I think either the driver does not implement the 5/10 channels or
+worse,the ar9170 chip does
+not support 5/10 mhz channel at all.
+But 802.11j has 10mhz channel support.To comply with the 802.11j
+standard,the chip should
+support 10mhz channel width.
 
-johannes
+I know ar9170 support 4.9ghz channels.But does it also support
+non-standard bands like 2.3ghz and 6.0ghz?
 
+Also the ar9170 MAC was indeed designed by ZyDaS berfore the company
+was taken over by
+Atheros.It has some problems with long distance links.
+
+On 6/5/13, Christian Lamparter <chunkeey@googlemail.com> wrote:
+> On Tuesday, June 04, 2013 03:20:26 PM C.B. Wang wrote:
+>> I want to know if the ar9170 chip support 5/10 mhz channels.
+> Maybe. if you care about it, you'll have to look for clues in
+> the original vendor driver (otus - was part of the kernel's staging/
+> directory for < 2.6.39?) and the original vendor firmware
+> (ar9170fw - you can find a git-tree @ git.sipsolutions.com).
+>
+> Anyway, if you need a definitive "yes" or "no", you should
+> ask Qualcomm Atheros directly. As I can only tell something
+> about the MAC [which does have a 802.11j Mode. It can be
+> enabled by setting bit 3 in AR9170_MAC_REG_POWER_STATE_CTRL.]
+> However, I don't have any information about the PHY/FEM/RF
+> and BB.
+>
+>> The datasheet says it supports 802.11j, but the carl9170
+>> driver does not provide support.
+> Again, talk to Qualcomm Atheros to find out what needs to be
+> done in order to support it.
+>
+>> Also the radio chip ar9104 has tuning range from 2.3-2.5ghz and
+>> 4.9-6.1ghz,but the driver does not provide any support for these
+>> super channels.
+> Some AR9170 devices do indeed support the 4.9 GHz channels
+> (out of the box). e.g.:
+> 	Frequencies:
+> 	 * 4920 MHz [-16] (18.0 dBm)
+> 	 * 4940 MHz [-12] (18.0 dBm)
+> 	 * 4960 MHz [-8] (18.0 dBm)
+> 	 * 4980 MHz [-4] (18.0 dBm)
+> 	 * 5040 MHz [8] (18.0 dBm)
+> 	 * 5060 MHz [12] (18.0 dBm)
+> 	 * 5080 MHz [16] (18.0 dBm)
+>
+> However, the device needs to be calibrated for the frequencies
+> to use them legally (the Japanese Market). Look in your kernel
+> logs when the driver is loaded; There should be something like
+> this:
+>
+>> ath: EEPROM regdomain: 0x8xyz
+>> ath: EEPROM indicates we should expect a country code
+>> ath: doing EEPROM country->regdmn map search
+>> ath: Country alpha2 being used: JP <--- JaPan
+>
+> If your country code is not "JP", then you'll have to talk to
+> the manufacturer.
+>
+> Regards,
+> 	Chr
+>
