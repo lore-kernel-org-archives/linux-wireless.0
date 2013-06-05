@@ -1,85 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:8322 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751655Ab3FYHGt convert rfc822-to-8bit (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:60647
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751803Ab3FELNG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 03:06:49 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: RE: [PATCH v10 2/2] cfg80211: P2P find phase offload
-Date: Tue, 25 Jun 2013 07:06:28 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A01AD22795@HASMSX106.ger.corp.intel.com> (sfid-20130625_090652_683282_B65752DA)
-References: <1372063757-24286-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1372063757-24286-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
-In-Reply-To: <1372063757-24286-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 5 Jun 2013 07:13:06 -0400
+Date: Wed, 5 Jun 2013 07:12:59 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: cw1200: add driver for the ST-E CW1100 & CW1200 WLAN chipsets
+Message-ID: <20130605111258.GA15549@shaftnet.org> (sfid-20130605_131310_599794_3FA58D8B)
+References: <20130604130955.GA13788@debian>
+ <20130604134340.GA3813@shaftnet.org>
+ <87d2s13rsm.fsf@purkki.adurom.net>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
+In-Reply-To: <87d2s13rsm.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  /**
-> + * struct cfg80211_p2p_find_params - parameters for P2P find
-> + * @probe_ie: extra IE's for probe frames
-> + * @probe_ie_len: length, bytes, of @probe_ie
-> + * @probe_resp_ie: extra IE's for probe response frames
-> + * @probe_resp_ie_len: length, bytes, of @probe_resp_ie
-> + *	Driver/firmware may add additional IE's as well as modify
-> + *	provided ones; typical IE's to be added are
-> + *	WLAN_EID_EXT_SUPP_RATES, WLAN_EID_DS_PARAMS,
-> + *	WLAN_EID_HT_CAPABILITY.
-> + * @min_discoverable_interval: and
-> + * @max_discoverable_interval: min/max for random multiplier of 100TU's
-> + *	for the listen state duration
-> + * @listen_channel: channels to listen on; not NULL
 
-s/channels/channel/  (only a single listen channel)
+--W/nzBZO5zC0uMSeA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> + * @start_p2p_find: start P2P find phase
-> + *	Parameters include IEs for probe/probe-resp frames;
-> + *	and channels to operate on.
-> + *	Parameters are not retained after call, driver need to copy data if
-> + *	it need it later.
-> + *	P2P find can't run concurrently with ROC or scan,
-> + *	conflict with scan detected by cfg80211 and -EBUSY returned;
-> + *	and driver should check for ROC and return -EBUSY to indicate conflict.
-> + *	While performing P2P discovery, driver should report received
-> + *	probe-request and probe-response frames via cfg80211_rx_mgmt
-> + *	accordingly to the rx mgmt filter, as set by mgmt_frame_register().
-> + *	If device indicates NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD, it
-> may
-> + *	reply some matching probes and replied probes may be not reported to
-> + *	the upper layers; otherwise it must not reply any probe.
+On Wed, Jun 05, 2013 at 11:06:33AM +0300, Kalle Valo wrote:
+> > I'll try to robustify this rather ugly interface as much as possible. =
+=20
+>=20
+> We have nl80211 testmode interface for just stuff like this. I recommend
+> using that instead of debugfs.
 
-Just to clarify something: even if the driver reports that it supports probe response offloading, can wpas choose not to use this capability and handle all the probe requests on its own (at least for debugging)? For example in case that the probe response IE len is zero, the driver can deduce the it should not respond to probe requests.
+When in the so-called etf_mode, the driver doesn't create a netdev.  It=20
+doesn't probe the hardware; it doesn't even (automatically) load=20
+firmware because it doesn't know what firmware to load.  The driver=20
+becomes a (mostly very dumb) conduit for messages to/from userspace.
 
-> @@ -1740,6 +1748,10 @@ enum nl80211_attrs {
-> 
->  	NL80211_ATTR_RXMGMT_FLAGS,
-> 
-> +	NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL,
-> +	NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL,
-> +	NL80211_ATTR_LISTEN_FREQ,
+That userspace in turn is a thin daemon that listens on a TCP socket and=20
+relays everything to/from a windows-only highly proprietary vendor tool. =
+=20
+Everything needed to initialize the hardware (even the dpll value), is=20
+obtained via these messages.
 
-You can use NL80211_ATTR_WIPHY_FREQ
+There's no inherent reason why this daemon couldn't use nl80211 instead,=20
+but IMO it's not worth the effort to rewrite the driver so it can bring=20
+up a netdev that (cleanly) fails everything other than nl80211 testcmds. =
+=20
+After all, it'll still be an opaque binary interface whether it uses=20
+nl80211, custom ioctls, or the existing debugfs interface.
 
-> +TRACE_EVENT(rdev_start_p2p_find,
-> +	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
-> +		 struct cfg80211_p2p_find_params *params),
-> +	TP_ARGS(wiphy, wdev, params),
-> +	TP_STRUCT__entry(
-> +		WIPHY_ENTRY
-> +		WDEV_ENTRY
-> +		__field(u32, min_di)
-> +		__field(u32, max_di)
-> +		__field(int, n_channels)
+If the existing debugfs interface is too ugly to stomach in the=20
+mainline, we're better off just stripping it out and maintaining it as=20
+an out-of-tree patch for the handful of users that need to use the=20
+vendor tools -- In other words, folks bringing up new hardware designs=20
+or obtaining FCC(etc) certification.
 
-Can you also add here the listen channel?
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Delray Beach, FL                          ^^ (email/xmpp) ^^
+Quidquid latine dictum sit, altum viditur.
 
-Thanks,
+--W/nzBZO5zC0uMSeA
+Content-Type: application/pgp-signature
 
-Ilan
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iD8DBQFRrx06PuLgii2759ARAg83AJ4yp+YliVb5n6Wgx5PZHhmPr8kmrgCfZBp/
+ZYpwburuPnkyHqIyPmMOW+U=
+=1ncT
+-----END PGP SIGNATURE-----
+
+--W/nzBZO5zC0uMSeA--
