@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39409 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755961Ab3FRP05 (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:42520 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757345Ab3FEUry (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 11:26:57 -0400
-Message-ID: <1371569205.8318.47.camel@jlt4.sipsolutions.net> (sfid-20130618_172700_083727_B0E6F6D0)
-Subject: Re: [RFC 2/2] mac80211:  Fix bss ref leak.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
+	Wed, 5 Jun 2013 16:47:54 -0400
+Received: by mail-ea0-f176.google.com with SMTP id o14so1521047eaj.21
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 13:47:53 -0700 (PDT)
+Message-ID: <1370465266.6213.42.camel@canaries64> (sfid-20130605_224757_420358_6FB5DAC9)
+Subject: [PATCH 11/13] staging: vt6656: clean up MACvEnableBarkerPreambleMd
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 18 Jun 2013 17:26:45 +0200
-In-Reply-To: <1371504746-8476-2-git-send-email-greearb@candelatech.com> (sfid-20130617_233256_432869_08F1495E)
-References: <1371504746-8476-1-git-send-email-greearb@candelatech.com>
-	 <1371504746-8476-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20130617_233256_432869_08F1495E)
+Date: Wed, 05 Jun 2013 21:47:46 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-06-17 at 14:32 -0700, greearb@candelatech.com wrote:
+Remove internal white space and camel case.
 
->  static void ieee80211_destroy_assoc_data(struct ieee80211_sub_if_data *sdata,
-> -					 bool assoc)
-> +					 bool assoc, bool put_bss)
+Camel case changes;
+pDevice -> priv
+pbyData -> data
 
-Do we _really_ need another argument? Shouldn't it always be put in the
-non-assoc case anyway, at least if non-NULL?
+Functional change
+CONTROLnsRequestOut Length = ARRAY_SIZE(data)
 
-> @@ -2415,6 +2415,10 @@ static void ieee80211_destroy_assoc_data(struct ieee80211_sub_if_data *sdata,
->  		ieee80211_vif_release_channel(sdata);
->  	}
->  
-> +	if (put_bss)
-> +		cfg80211_put_bss(sdata->local->hw.wiphy, assoc_data->bss);
-> +
-> +
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
-just one blank line
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 4038ad8..89bba7d 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -257,20 +257,15 @@ void MACvDisableProtectMD(struct vnt_private *priv)
+ 		MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ }
+ 
+-void MACvEnableBarkerPreambleMd(struct vnt_private *pDevice)
++void MACvEnableBarkerPreambleMd(struct vnt_private *priv)
+ {
+-	u8 pbyData[2];
++	u8 data[2];
+ 
+-    pbyData[0] = EnCFG_BarkerPream;
+-    pbyData[1] = EnCFG_BarkerPream;
++	data[0] = EnCFG_BarkerPream;
++	data[1] = EnCFG_BarkerPream;
+ 
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_WRITE_MASK,
+-                        MAC_REG_ENCFG2,
+-                        MESSAGE_REQUEST_MACREG,
+-                        2,
+-                        pbyData
+-                        );
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK, MAC_REG_ENCFG2,
++		MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ }
+ 
+ void MACvDisableBarkerPreambleMd(struct vnt_private *pDevice)
+-- 
+1.8.1.2
 
-> +	/** bss will be passed back to calling code, and that code must
-> +	 * deal with properly putting the reference.
-> +	 */
 
-/** is for kernel-doc only
-
->  	return RX_MGMT_CFG80211_RX_ASSOC;
-
-You're working on some pretty old code here ... If you want this to be
-in stable the patch really needs to be smaller, I think. And for
-mac80211-next this can't apply.
-
-johannes
 
