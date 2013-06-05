@@ -1,43 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:51175 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161534Ab3FUXee (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:33049 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932067Ab3FEUQq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jun 2013 19:34:34 -0400
-Received: by mail-qa0-f50.google.com with SMTP id l18so1007448qak.2
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Jun 2013 16:34:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51C2A567.2010409@rempel-privat.de>
-References: <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com>
-	<51C1B467.1030509@rempel-privat.de>
-	<20130619140905.GA14079@zenon.in.qult.net>
-	<1371651073.8349.19.camel@jlt4.sipsolutions.net>
-	<51C1C95C.8030301@rempel-privat.de>
-	<20130619175939.GA19405@zenon.in.qult.net>
-	<20130619180354.GB19405@zenon.in.qult.net>
-	<51C1FA76.3090109@rempel-privat.de>
-	<20130619193316.GA29582@zenon.in.qult.net>
-	<51C2942A.2080706@rempel-privat.de>
-	<20130620063925.GA3885@zenon.in.qult.net>
-	<51C2A567.2010409@rempel-privat.de>
-Date: Fri, 21 Jun 2013 19:34:33 -0400
-Message-ID: <CA++BO6SiZ6znCpWJqW6A=u+9UPMikJM=1FLS+g4a=3tFKTzefA@mail.gmail.com> (sfid-20130622_013439_909975_E51E5EF3)
-Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
-From: Corey Richardson <corey@octayn.net>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Ignacy Gawedzki <i@lri.fr>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 5 Jun 2013 16:16:46 -0400
+Received: by mail-ea0-f181.google.com with SMTP id a11so1520761eae.26
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 13:16:45 -0700 (PDT)
+Message-ID: <1370463399.6213.18.camel@canaries64> (sfid-20130605_221651_156582_1D701039)
+Subject: [PATCH 03/13] staging: vt6656: clean up MACvDisableKeyEntry
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Jun 2013 21:16:39 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 20, 2013 at 2:47 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> Question to Corey,
->
-> i assume your old AP was supporting only BG networks. And your new one,
-> which is working fine, supports N?
->
+Remove internal white space and camel case.
 
-Yes, this is true. It was also using TKIP encryption, if that is relevant.
+Camel case changes;
+pDevice -> priv
+uEntryIdx -> entry_idx
+byData -> data
+
+Removed wOffset and dead code
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 34 ++++++++++------------------------
+ 1 file changed, 10 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 0f8132b8..13c15fa 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -98,40 +98,26 @@ void MACvSetBBType(struct vnt_private *priv, u8 type)
+ 
+ /*
+  * Description:
+- *      Disable the Key Entry by MISCFIFO
++ *	Disable the Key Entry
+  *
+  * Parameters:
+- *  In:
+- *      dwIoBase        - Base Address for MAC
++ * In:
++ *	entry_idx - Base Address for MAC
+  *
+- *  Out:
+- *      none
++ * Out:
++ *	none
+  *
+  * Return Value: none
+  *
+  */
+-void MACvDisableKeyEntry(struct vnt_private *pDevice, u32 uEntryIdx)
++void MACvDisableKeyEntry(struct vnt_private *priv, u32 entry_idx)
+ {
+-	u16 wOffset;
+-	u8 byData;
+-
+-    byData = (u8) uEntryIdx;
++	u8 data;
+ 
+-    wOffset = MISCFIFO_KEYETRY0;
+-    wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
+-
+-    //VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset);
+-    //VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, 0);
+-    //VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
++	data = (u8)entry_idx;
+ 
+-    //issue write misc fifo command to device
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_CLRKEYENTRY,
+-                        0,
+-                        0,
+-                        1,
+-                        &byData
+-                        );
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_CLRKEYENTRY,
++		0, 0, sizeof(u8), &data);
+ }
+ 
+ /*
+-- 
+1.8.1.2
+
+
+
