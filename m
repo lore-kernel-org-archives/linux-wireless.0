@@ -1,68 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:39830 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752640Ab3FELJu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 07:09:50 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: "Arend van Spriel" <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"David Miller" <davem@davemloft.net>
-Subject: Re: [PATCH] brcmsmac: disable power-save related functions
-References: <1370419185-3977-1-git-send-email-arend@broadcom.com>
-	<878v2p3qst.fsf@purkki.adurom.net> <874ndd3q20.fsf@purkki.adurom.net>
-	<51AEFACD.7000902@broadcom.com>
-Date: Wed, 05 Jun 2013 14:09:47 +0300
-In-Reply-To: <51AEFACD.7000902@broadcom.com> (Arend van Spriel's message of
-	"Wed, 5 Jun 2013 10:46:05 +0200")
-Message-ID: <87zjv43jb8.fsf@purkki.adurom.net> (sfid-20130605_130953_730031_F3750563)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:60430 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757276Ab3FEUvu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 16:51:50 -0400
+Received: by mail-ea0-f173.google.com with SMTP id g15so1401541eak.4
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 13:51:49 -0700 (PDT)
+Message-ID: <1370465502.6213.46.camel@canaries64> (sfid-20130605_225154_424564_3B1B5A78)
+Subject: [PATCH 13/13] staging: vt6656: clean up MACvWriteBeaconInterval
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Jun 2013 21:51:42 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Arend van Spriel" <arend@broadcom.com> writes:
+Remove internal white space and camel case.
 
-> On 06/05/2013 10:44 AM, Kalle Valo wrote:
->> Kalle Valo <kvalo@adurom.com> writes:
->>
->>> "Arend van Spriel" <arend@broadcom.com> writes:
->>>
->>>> This patch fixes a regression introduced by:
->>>>
->>>>    commit 6da3b6c48d79da96a36c2632053cf4f53bf48fb2
->>>>    Author: Hauke Mehrtens <hauke@hauke-m.de>
->>>>    Date:   Sun Mar 24 01:45:52 2013 +0100
->>>>
->>>>        brcmsmac: remove brcms_bss_cfg->associated
->>>>
->>>> The regression behaviour is described in:
->>>>
->>>> http://www.spinics.net/lists/linux-wireless/msg107474.html
->>>
->>> The link is not a very reliable reference, it can die anytime and
->>> there's no way to know what message it refers to. Stating the message id
->>> would better. And the best would be to copy the full text to the commit
->>> log, it's only few lines anyway.
->>
->> Johannes gave a handy tip. Gmane has a service which uses message ids:
->>
->> http://mid.gmane.org/5197DC4F.7030503@broadcom.com
->>
->> If the link or service dies, one can find the email with the message id
->> visible from the link.
->>
->
-> What if gmane dies ;-)
+Camel case changes;
+pDevice -> priv
+pbyData -> data
+wInterval -> interval
 
-You missed my point. If gmane dies you do this:
+Functional change
+CONTROLnsRequestOut Length = ARRAY_SIZE(data)
 
-http://lmgtfy.com/?q=5197DC4F.7030503%40broadcom.com
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
 
-:D
-
-The id above is the real message id from the email, that's why you can
-use it to search from email archives, google and so on.
-
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index e255405..1d25722 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -279,18 +279,13 @@ void MACvDisableBarkerPreambleMd(struct vnt_private *priv)
+ 		MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ }
+ 
+-void MACvWriteBeaconInterval(struct vnt_private *pDevice, u16 wInterval)
++void MACvWriteBeaconInterval(struct vnt_private *priv, u16 interval)
+ {
+-	u8 pbyData[2];
+-
+-	pbyData[0] = (u8)(wInterval & 0xff);
+-	pbyData[1] = (u8)(wInterval >> 8);
+-
+-    CONTROLnsRequestOut(pDevice,
+-			MESSAGE_TYPE_WRITE,
+-			MAC_REG_BI,
+-			MESSAGE_REQUEST_MACREG,
+-			2,
+-			pbyData
+-			);
++	u8 data[2];
++
++	data[0] = (u8)(interval & 0xff);
++	data[1] = (u8)(interval >> 8);
++
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE, MAC_REG_BI,
++		MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ }
 -- 
-Kalle Valo
+1.8.1.2
+
+
+
