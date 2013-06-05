@@ -1,119 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:52742 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750771Ab3FYGOT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 02:14:19 -0400
-Received: from mailout-de.gmx.net ([10.1.76.35]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0M0euW-1U0EGV2AFK-00utjS for
- <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2013 08:14:17 +0200
-Message-ID: <51C93538.4050304@rempel-privat.de> (sfid-20130625_081422_969676_8DFCBA7C)
-Date: Tue, 25 Jun 2013 08:14:16 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37544 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756243Ab3FEOsV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 10:48:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Antonio Quartulli <ordex@autistici.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	<ath6kl-devel@qca.qualcomm.com>
+Subject: Re: [PATCHv3 3/4] ath6kl: make mgmt_tx accept a NULL channel
+References: <1370442893-1687-1-git-send-email-ordex@autistici.org>
+	<1370442893-1687-3-git-send-email-ordex@autistici.org>
+Date: Wed, 5 Jun 2013 17:48:15 +0300
+In-Reply-To: <1370442893-1687-3-git-send-email-ordex@autistici.org> (Antonio
+	Quartulli's message of "Wed, 5 Jun 2013 16:34:52 +0200")
+Message-ID: <87r4ggy5ow.fsf@kamboji.qca.qualcomm.com> (sfid-20130605_164824_954842_41B45A91)
 MIME-Version: 1.0
-To: Thomas Pedersen <thomas@cozybit.com>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Javier Cardona <javier@cozybit.com>
-Subject: Re: regression after, " ath9k_htc: Add support for mesh interfaces"
-References: <51C52E79.30104@rempel-privat.de> <CAG6hwVOCfDK9nkh3e0fFMGcWp8XLQnPC8TzQb9eET2fwFPq3SA@mail.gmail.com>
-In-Reply-To: <CAG6hwVOCfDK9nkh3e0fFMGcWp8XLQnPC8TzQb9eET2fwFPq3SA@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------050009030009090507060801"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------050009030009090507060801
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Antonio Quartulli <ordex@autistici.org> writes:
 
-Am 25.06.2013 02:54, schrieb Thomas Pedersen:
-> On Fri, Jun 21, 2013 at 9:56 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->> Hi Javier,
->>
->> i warning after patch "ath9k_htc: Add support for mesh interfaces".
->> I get this warning only on pc with CONFIG_MAC80211_MESH not set. Probably
->> you missed config check some where.
+> From: Antonio Quartulli <antonio@open-mesh.com>
 >
-> Where do you hit the warning?
+> cfg80211 passes a NULL channel to mgmt_tx if the frame has
+> to be sent on the one currently in use by the device.
+> Make the implementation of mgmt_tx correctly handle this
+> case
 >
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 
-on adapter init.
-see attachment.
+[...]
+
+> @@ -3175,10 +3175,17 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+>  {
+>  	struct ath6kl_vif *vif = ath6kl_vif_from_wdev(wdev);
+>  	struct ath6kl *ar = ath6kl_priv(vif->ndev);
+> -	u32 id;
+> +	u32 id, freq;
+>  	const struct ieee80211_mgmt *mgmt;
+>  	bool more_data, queued;
+>  
+> +	/* default to the current channel, but use the one specified as argument
+> +	 * if any
+> +	 */
+> +	freq = vif->ch_hint;
+> +	if (chan)
+> +		freq = chan->center_freq;
+
+Can you please add a check here:
+
+if (WARN_ON(chan == 0))
+   return -EINVAL;
+
+Just like Arend, I want to be sure that we don't submit value 0 to the
+firmware.
+
 -- 
-Regards,
-Oleksij
-
---------------050009030009090507060801
-Content-Type: text/plain; charset=UTF-8;
- name="log"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="log"
-
-WzMyMzQ0LjM5Mjk0N10gdXNiIDItNTogYXRoOWtfaHRjOiBGaXJtd2FyZSBodGNfOTI3MS5m
-dyByZXF1ZXN0ZWQKWzMyMzQ0LjM5MzE0MV0gdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgaW50
-ZXJmYWNlIGRyaXZlciBhdGg5a19odGMKWzMyMzQ0LjcyMDM0M10gdXNiIDItNTogYXRoOWtf
-aHRjOiBUcmFuc2ZlcnJlZCBGVzogaHRjXzkyNzEuZncsIHNpemU6IDUxMDAwClszMjM0NC45
-NTgwODRdIGF0aDlrX2h0YyAyLTU6MS4wOiBhdGg5a19odGM6IEhUQyBpbml0aWFsaXplZCB3
-aXRoIDMzIGNyZWRpdHMKWzMyMzQ1LjE0NjIyMF0gYXRoOWtfaHRjIDItNToxLjA6IGF0aDlr
-X2h0YzogRlcgVmVyc2lvbjogMS40ClszMjM0NS4xNDYyMjRdIGF0aDogRUVQUk9NIHJlZ2Rv
-bWFpbjogMHg4MDljClszMjM0NS4xNDYyMjZdIGF0aDogRUVQUk9NIGluZGljYXRlcyB3ZSBz
-aG91bGQgZXhwZWN0IGEgY291bnRyeSBjb2RlClszMjM0NS4xNDYyMjhdIGF0aDogZG9pbmcg
-RUVQUk9NIGNvdW50cnktPnJlZ2RtbiBtYXAgc2VhcmNoClszMjM0NS4xNDYyMjldIGF0aDog
-Y291bnRyeSBtYXBzIHRvIHJlZ2RtbiBjb2RlOiAweDUyClszMjM0NS4xNDYyMzJdIGF0aDog
-Q291bnRyeSBhbHBoYTIgYmVpbmcgdXNlZDogQ04KWzMyMzQ1LjE0NjIzM10gYXRoOiBSZWdw
-YWlyIHVzZWQ6IDB4NTIKWzMyMzQ1LjE0NjI3OV0gLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBd
-LS0tLS0tLS0tLS0tClszMjM0NS4xNDYyOTVdIFdBUk5JTkc6IGF0IC9ob21lL2xleC90bXAv
-bGluL2xpbnV4L25ldC93aXJlbGVzcy9jb3JlLmM6NDI5IHdpcGh5X3JlZ2lzdGVyKzB4NGMw
-LzB4NTAyIFtjZmc4MDIxMV0oKQpbMzIzNDUuMTQ2Mjk3XSBNb2R1bGVzIGxpbmtlZCBpbjog
-YXRoOWtfaHRjIGZ0ZGlfc2lvIHZib3hwY2koTykgdmJveG5ldGFkcChPKSB2Ym94bmV0Zmx0
-KE8pIHZib3hkcnYoTykgYm5lcCByZmNvbW0gYmx1ZXRvb3RoIGJpbmZtdF9taXNjIHNuZF9o
-ZGFfY29kZWNfaGRtaSBzbmRfaGRhX2NvZGVjX2lkdCBzbmRfaGRhX2ludGVsIHNuZF9oZGFf
-Y29kZWMgYXJjNCBzbmRfaHdkZXAgYXRoOWsgYXRoOWtfY29tbW9uIGF0aDlrX2h3IHNuZF9w
-Y21fb3NzIHNuZF9taXhlcl9vc3Mgc25kX3BjbSBhdGggbWFjODAyMTEgc25kX3BhZ2VfYWxs
-b2Mgc25kX3NlcV9kdW1teSBzbmRfc2VxX29zcyBzbmRfc2VxX21pZGkgY29yZXRlbXAgY2Zn
-ODAyMTEga3ZtX2ludGVsIHNuZF9yYXdtaWRpIHVzYl9zdG9yYWdlIGt2bSBzbmRfc2VxX21p
-ZGlfZXZlbnQgc25kX3NlcSBmaXJld2lyZV9vaGNpIHNuZF9zZXFfZGV2aWNlIGZpcmV3aXJl
-X2NvcmUgY3JjX2l0dV90IGxwY19pY2ggbWZkX2NvcmUgc2VyaW9fcmF3IHNyX21vZCBjZHJv
-bSBzbmRfdGltZXIgc25kIHNvdW5kY29yZQpbMzIzNDUuMTQ2MzM1XSBDUFU6IDAgUElEOiA1
-ODY3IENvbW06IGt3b3JrZXIvMDoyIFRhaW50ZWQ6IEcgICAgICAgICAgIE8gMy4xMC4wLXJj
-NC13bC1kaXJ0eSAjMTk0ClszMjM0NS4xNDYzMzddIEhhcmR3YXJlIG5hbWU6ICAgICAgICAg
-ICAgICAgICAgL0RHNDVJRCwgQklPUyBJREc0NTEwSC44NkEuMDEzNS4yMDExLjAyMjUuMTEw
-MCAwMi8yNS8yMDExClszMjM0NS4xNDYzNDNdIFdvcmtxdWV1ZTogZXZlbnRzIHJlcXVlc3Rf
-ZmlybXdhcmVfd29ya19mdW5jClszMjM0NS4xNDYzNDVdICAwMDAwMDAwMDAwMDAwMDAwIGZm
-ZmY4ODAxMTI5OGRiZjAgZmZmZmZmZmY4MTUyYTA2NSBmZmZmODgwMTEyOThkYzI4ClszMjM0
-NS4xNDYzNDldICBmZmZmZmZmZjgxMDQyZGQ3IDAwMDAwMDAwMDAwMDAwMDAgZmZmZjg4MDEx
-YTNlMDIwMCBmZmZmODgwMTFhM2UwMDAwClszMjM0NS4xNDYzNTNdICAwMDAwMDAwMGZmZmZm
-ZmVhIDAwMDAwMDAwMDAwMDAzNWUgZmZmZjg4MDExMjk4ZGMzOCBmZmZmZmZmZjgxMDQyZTA5
-ClszMjM0NS4xNDYzNTddIENhbGwgVHJhY2U6ClszMjM0NS4xNDYzNjNdICBbPGZmZmZmZmZm
-ODE1MmEwNjU+XSBkdW1wX3N0YWNrKzB4MTkvMHgxYgpbMzIzNDUuMTQ2MzY4XSAgWzxmZmZm
-ZmZmZjgxMDQyZGQ3Pl0gd2Fybl9zbG93cGF0aF9jb21tb24rMHg2NS8weDdkClszMjM0NS4x
-NDYzNzJdICBbPGZmZmZmZmZmODEwNDJlMDk+XSB3YXJuX3Nsb3dwYXRoX251bGwrMHgxYS8w
-eDFjClszMjM0NS4xNDYzODBdICBbPGZmZmZmZmZmYTAxZGJkNTA+XSB3aXBoeV9yZWdpc3Rl
-cisweDRjMC8weDUwMiBbY2ZnODAyMTFdClszMjM0NS4xNDYzODVdICBbPGZmZmZmZmZmODEx
-MDc5Njg+XSA/IF9fa21hbGxvYysweGVjLzB4ZmMKWzMyMzQ1LjE0NjM5NF0gIFs8ZmZmZmZm
-ZmZhMDI4M2MxYz5dID8gaWVlZTgwMjExX3JlZ2lzdGVyX2h3KzB4MWZhLzB4NmZjIFttYWM4
-MDIxMV0KWzMyMzQ1LjE0NjQwM10gIFs8ZmZmZmZmZmZhMDI4M2ViYz5dIGllZWU4MDIxMV9y
-ZWdpc3Rlcl9odysweDQ5YS8weDZmYyBbbWFjODAyMTFdClszMjM0NS4xNDY0MDldICBbPGZm
-ZmZmZmZmYTAyZWFiOGI+XSBhdGg5a19odGNfcHJvYmVfZGV2aWNlKzB4NzI0LzB4OGY1IFth
-dGg5a19odGNdClszMjM0NS4xNDY0MTRdICBbPGZmZmZmZmZmODE0NGUyMDc+XSA/IF9fa21h
-bGxvY19yZXNlcnZlLmlzcmEuNDMrMHgyYy8weDZhClszMjM0NS4xNDY0MTldICBbPGZmZmZm
-ZmZmODEzYjBkYjg+XSA/IHVzYl9zdWJtaXRfdXJiKzB4MzA4LzB4MzI1ClszMjM0NS4xNDY0
-MjRdICBbPGZmZmZmZmZmYTAyZTI3MGY+XSBhdGg5a19odGNfaHdfaW5pdCsweDExLzB4MmUg
-W2F0aDlrX2h0Y10KWzMyMzQ1LjE0NjQyOV0gIFs8ZmZmZmZmZmZhMDJlNDA2OD5dIGF0aDlr
-X2hpZl91c2JfZmlybXdhcmVfY2IrMHgxYTMvMHgxYjcgW2F0aDlrX2h0Y10KWzMyMzQ1LjE0
-NjQzM10gIFs8ZmZmZmZmZmY4MTM1NjY4Mj5dIHJlcXVlc3RfZmlybXdhcmVfd29ya19mdW5j
-KzB4MzUvMHg1MwpbMzIzNDUuMTQ2NDM3XSAgWzxmZmZmZmZmZjgxMDViMTMzPl0gcHJvY2Vz
-c19vbmVfd29yaysweDE4YS8weDI4YgpbMzIzNDUuMTQ2NDQwXSAgWzxmZmZmZmZmZjgxMDVi
-NjAyPl0gd29ya2VyX3RocmVhZCsweDEzMi8weDFmZQpbMzIzNDUuMTQ2NDQ0XSAgWzxmZmZm
-ZmZmZjgxMDViNGQwPl0gPyByZXNjdWVyX3RocmVhZCsweDI2ZC8weDI2ZApbMzIzNDUuMTQ2
-NDQ4XSAgWzxmZmZmZmZmZjgxMDYwMDZiPl0ga3RocmVhZCsweDhkLzB4OTUKWzMyMzQ1LjE0
-NjQ1MV0gIFs8ZmZmZmZmZmY4MTA1ZmZkZT5dID8gX19rdGhyZWFkX3BhcmttZSsweDY1LzB4
-NjUKWzMyMzQ1LjE0NjQ1NV0gIFs8ZmZmZmZmZmY4MTUyZWExYz5dIHJldF9mcm9tX2Zvcmsr
-MHg3Yy8weGIwClszMjM0NS4xNDY0NThdICBbPGZmZmZmZmZmODEwNWZmZGU+XSA/IF9fa3Ro
-cmVhZF9wYXJrbWUrMHg2NS8weDY1ClszMjM0NS4xNDY0NjFdIC0tLVsgZW5kIHRyYWNlIDgx
-NTFjNzNlOTE4YjhkYTkgXS0tLQpbMzIzNDUuMTQ3MDk4XSBhdGg5a19odGM6IEZhaWxlZCB0
-byBpbml0aWFsaXplIHRoZSBkZXZpY2UKWzMyMzQ1LjE3MTEyMF0gdXNiIDItNTogYXRoOWtf
-aHRjOiBVU0IgbGF5ZXIgZGVpbml0aWFsaXplZAoK
---------------050009030009090507060801--
+Kalle Valo
