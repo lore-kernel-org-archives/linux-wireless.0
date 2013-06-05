@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:59294 "EHLO mail.ispras.ru"
+Received: from purkki.adurom.net ([80.68.90.206]:45656 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758955Ab3FMU0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 16:26:44 -0400
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] orinoco_usb: fix memory leak in ezusb_access_ltv() when device disconnected
-Date: Fri, 14 Jun 2013 00:26:11 +0400
-Message-Id: <1371155171-15398-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130613_222702_704948_2B3A3FEA)
+	id S1753035Ab3FEIoJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 04:44:09 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: "Arend van Spriel" <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"David Miller" <davem@davemloft.net>
+Subject: Re: [PATCH] brcmsmac: disable power-save related functions
+References: <1370419185-3977-1-git-send-email-arend@broadcom.com>
+	<878v2p3qst.fsf@purkki.adurom.net>
+Date: Wed, 05 Jun 2013 11:44:07 +0300
+In-Reply-To: <878v2p3qst.fsf@purkki.adurom.net> (Kalle Valo's message of "Wed,
+	05 Jun 2013 11:28:02 +0300")
+Message-ID: <874ndd3q20.fsf@purkki.adurom.net> (sfid-20130605_104424_215873_6D3B127B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If "device is disconnected" check occurs to be true in ezusb_access_ltv(),
-it just return -ENODEV. But that means request_context is leaked since
-there are no any references to it anymore.
-The patch adds a call to ezusb_request_context_put() before return.
+Kalle Valo <kvalo@adurom.com> writes:
 
-Found by Linux Driver Verification project (linuxtesting.org).
+> "Arend van Spriel" <arend@broadcom.com> writes:
+>
+>> This patch fixes a regression introduced by:
+>>
+>>   commit 6da3b6c48d79da96a36c2632053cf4f53bf48fb2
+>>   Author: Hauke Mehrtens <hauke@hauke-m.de>
+>>   Date:   Sun Mar 24 01:45:52 2013 +0100
+>>
+>>       brcmsmac: remove brcms_bss_cfg->associated
+>>
+>> The regression behaviour is described in:
+>>
+>> http://www.spinics.net/lists/linux-wireless/msg107474.html
+>
+> The link is not a very reliable reference, it can die anytime and
+> there's no way to know what message it refers to. Stating the message id
+> would better. And the best would be to copy the full text to the commit
+> log, it's only few lines anyway.
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/net/wireless/orinoco/orinoco_usb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Johannes gave a handy tip. Gmane has a service which uses message ids:
 
-diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-index 1f9cb55..bdfe637 100644
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -881,7 +881,8 @@ static int ezusb_access_ltv(struct ezusb_priv *upriv,
- 
- 	if (!upriv->udev) {
- 		dbg("Device disconnected");
--		return -ENODEV;
-+		retval = -ENODEV;
-+		goto exit;
- 	}
- 
- 	if (upriv->read_urb->status != -EINPROGRESS)
+http://mid.gmane.org/5197DC4F.7030503@broadcom.com
+
+If the link or service dies, one can find the email with the message id
+visible from the link.
+
 -- 
-1.8.1.2
-
+Kalle Valo
