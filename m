@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2176 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757089Ab3FSP0O (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40147 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690Ab3FEISL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 11:26:14 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [RFC] P2P find phase offload
-Date: Wed, 19 Jun 2013 18:26:11 +0300
-Message-ID: <62351675.buL3FVoAHm@lx-vladimir> (sfid-20130619_172639_552853_C18521B2)
-In-Reply-To: <1370358191-7103-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1370358191-7103-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 5 Jun 2013 04:18:11 -0400
+Message-ID: <1370420283.8920.21.camel@jlt4.sipsolutions.net> (sfid-20130605_101816_955009_53C48465)
+Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>,
+	"Peer, Ilan" <ilan.peer@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>
+Date: Wed, 05 Jun 2013 10:18:03 +0200
+In-Reply-To: <51AEF266.3050005@broadcom.com>
+References: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com>
+	 <1370418378.8920.12.camel@jlt4.sipsolutions.net>
+	 <51AEF266.3050005@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2013-06-05 at 10:10 +0200, Arend van Spriel wrote:
+> On 06/05/2013 09:46 AM, Johannes Berg wrote:
+> > On Tue, 2013-06-04 at 14:35 +0000, Malinen, Jouni wrote:
+> >
+> >> In general, I'd agree. However, I would like to get information of any
+> >> peer device being in active PBC mode. This would require either getting
+> >> those Probe Request frames
+> >
+> > I think I like that alternative better :-)
+> >
+> > I know I wouldn't find it quickly ... can you be more specific about
+> > what "being in active PBC mode" means? Is that easily detectable?
+> >
+> > I'm thinking we should just document this (and be as specific about it
+> > as we can) in the documentation for the offload feature.
+> 
+> Remark from the sideline. One of the motivations for the P2P find 
+> offload (when done on the device) is that the host can sleep, right? So 
+> how/when does wpa_s want these Probe Request frames. After the 
+> driver/device completed the find?
 
-In discussion about P2P find phase offload, I see one bit that was not cleared,
-and want to discuss it prior to coding: probe replying policy.
+I don't think the device can really _sleep_ during this time, but it
+allows reducing CPU wakeups. If you really wanted to sleep then you'd
+have to buffer at least some information and have some sort of wakeup
+trigger. That'll probably be done eventually, but it's not the rationale
+here I think.
 
-option 1: all or nothing. If device indicates NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD, it should
-answer all matching probes, and wpa_s should never answer probes. If device don't indicate offload,
-it never answer probes and wpa_s do answer all matching probes.
+The way I see it, this patch allows being discoverable and discovering
+other peers with much less impact on CPU usage.
 
-option 2: flexible. If device indicates NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD, it may answer some
-matching probes, and wpa_s should answer ones that device missed for some reason. To enable this,
-add 'flags' parameter to cfg80211_rx_mgmt() saying whether frame was replied by device/driver.
+The next step would be P2P-listen offload, which is more interesting for
+being discoverable, and should also have probe request offload similar
+to what we're discussing here.
 
-Real question here is whether there are devices that can answer probes, but not always.
-If such devices are real, option 2 is better. I know that for 60g, I'd like to add some more
-bits to 'flags' from option 2, so I am biased to this option.
+johannes
 
-Comments?
