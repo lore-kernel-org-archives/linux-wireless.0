@@ -1,500 +1,284 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53795 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756694Ab3FCPnQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 11:43:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] cfg80211: take WoWLAN support information out of wiphy struct
-Date: Mon,  3 Jun 2013 17:42:08 +0200
-Message-Id: <1370274128-19293-1-git-send-email-johannes@sipsolutions.net> (sfid-20130603_174319_934231_ED080083)
+Received: from arrakis.dune.hu ([78.24.191.176]:47398 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751728Ab3FEKyG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 06:54:06 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/2] rt2x00: convert rt2x00_ops.extra_tx_headroom to be a fuction
+Date: Wed,  5 Jun 2013 12:53:59 +0200
+Message-Id: <1370429640-31565-1-git-send-email-juhosg@openwrt.org> (sfid-20130605_125413_347404_79EEB20F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The rt2x00_ops structure has a static field to indicate
+the extra TX headroom size required for a given device.
+The drawback of this is that we have to use a separate
+rt2x00_ops structure for each chipset which requires
+different size.
 
-There's no need to take up the space for devices that don't
-support WoWLAN, and most drivers can even make the support
-data static const (except where it's modified at runtime.)
+Convert the static field into a callback function.
+This allows the drivers to dynamically determine the
+extra TX headroom size based on the actual chipset.
+Also implement the the callback in the drivers which
+needs an extra TX headroom, and remove the field
+initialization from the others.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Additionally, introduce a new extra_tx_headroom field
+in struct rt2x00_dev, initialize its value in the probe
+routine and use the cached value in the rest of the code.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c  | 24 ++++++++-----
- drivers/net/wireless/ath/ath9k/init.c       | 20 ++++++-----
- drivers/net/wireless/iwlwifi/dvm/dev.h      |  3 ++
- drivers/net/wireless/iwlwifi/dvm/mac80211.c | 17 ++++-----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 26 +++++++-------
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  1 +
- drivers/net/wireless/mwifiex/cfg80211.c     | 16 ++++++---
- drivers/net/wireless/ti/wlcore/main.c       | 19 +++++-----
- include/net/cfg80211.h                      |  2 +-
- net/mac80211/main.c                         |  3 +-
- net/wireless/core.c                         | 20 ++++++-----
- net/wireless/nl80211.c                      | 56 ++++++++++++++---------------
- 12 files changed, 115 insertions(+), 92 deletions(-)
+The patch depends on the 'rt2x00: get rid of static data queue descriptors'
+series.
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c   |    1 -
+ drivers/net/wireless/rt2x00/rt2500pci.c   |    1 -
+ drivers/net/wireless/rt2x00/rt2500usb.c   |    8 +++++++-
+ drivers/net/wireless/rt2x00/rt2800pci.c   |    8 +++++++-
+ drivers/net/wireless/rt2x00/rt2800usb.c   |   13 +++++++++++--
+ drivers/net/wireless/rt2x00/rt2x00.h      |    5 ++++-
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |   10 ++++++++--
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +++---
+ drivers/net/wireless/rt2x00/rt61pci.c     |    1 -
+ drivers/net/wireless/rt2x00/rt73usb.c     |    8 +++++++-
+ 10 files changed, 47 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 5c9736a..f7995b2 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3679,6 +3679,20 @@ err:
- 	return NULL;
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index e1ec9a4..3d53a09 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1813,7 +1813,6 @@ static const struct rt2x00_ops rt2400pci_ops = {
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+-	.extra_tx_headroom	= 0,
+ 	.queue_init		= rt2400pci_queue_init,
+ 	.lib			= &rt2400pci_rt2x00_ops,
+ 	.hw			= &rt2400pci_mac80211_ops,
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index a1670e8..0ac5c58 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -2102,7 +2102,6 @@ static const struct rt2x00_ops rt2500pci_ops = {
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+-	.extra_tx_headroom	= 0,
+ 	.queue_init		= rt2500pci_queue_init,
+ 	.lib			= &rt2500pci_rt2x00_ops,
+ 	.hw			= &rt2500pci_mac80211_ops,
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index e5e5479..f8fa2a8 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1907,13 +1907,19 @@ static void rt2500usb_queue_init(struct data_queue *queue)
+ 	}
  }
  
-+#ifdef CONFIG_PM
-+static const struct wiphy_wowlan_support ath6kl_wowlan_support = {
-+	.flags = WIPHY_WOWLAN_MAGIC_PKT |
-+		 WIPHY_WOWLAN_DISCONNECT |
-+		 WIPHY_WOWLAN_GTK_REKEY_FAILURE  |
-+		 WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
-+		 WIPHY_WOWLAN_EAP_IDENTITY_REQ   |
-+		 WIPHY_WOWLAN_4WAY_HANDSHAKE,
-+	.n_patterns = WOW_MAX_FILTERS_PER_LIST,
-+	.pattern_min_len = 1,
-+	.pattern_max_len = WOW_PATTERN_SIZE,
-+};
-+#endif
++static unsigned int
++rt2500usb_extra_tx_headroom(struct rt2x00_dev *rt2x00dev)
++{
++	return TXD_DESC_SIZE;
++}
 +
- int ath6kl_cfg80211_init(struct ath6kl *ar)
- {
- 	struct wiphy *wiphy = ar->wiphy;
-@@ -3772,15 +3786,7 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
- 	wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
- 
- #ifdef CONFIG_PM
--	wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
--			      WIPHY_WOWLAN_DISCONNECT |
--			      WIPHY_WOWLAN_GTK_REKEY_FAILURE  |
--			      WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
--			      WIPHY_WOWLAN_EAP_IDENTITY_REQ   |
--			      WIPHY_WOWLAN_4WAY_HANDSHAKE;
--	wiphy->wowlan.n_patterns = WOW_MAX_FILTERS_PER_LIST;
--	wiphy->wowlan.pattern_min_len = 1;
--	wiphy->wowlan.pattern_max_len = WOW_PATTERN_SIZE;
-+	wiphy->wowlan = &ath6kl_wowlan_support;
- #endif
- 
- 	wiphy->max_sched_scan_ssids = MAX_PROBED_SSIDS;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 0237b28..f993362 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -755,6 +755,15 @@ static const struct ieee80211_iface_combination if_comb[] = {
+ static const struct rt2x00_ops rt2500usb_ops = {
+ 	.name			= KBUILD_MODNAME,
+ 	.max_ap_intf		= 1,
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+-	.extra_tx_headroom	= TXD_DESC_SIZE,
++	.extra_tx_headroom	= rt2500usb_extra_tx_headroom,
+ 	.queue_init		= rt2500usb_queue_init,
+ 	.lib			= &rt2500usb_rt2x00_ops,
+ 	.hw			= &rt2500usb_mac80211_ops,
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 260c8b4..4e69792 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1224,6 +1224,12 @@ static void rt2800pci_queue_init(struct data_queue *queue)
  	}
- };
- 
-+#ifdef CONFIG_PM
-+static const struct wiphy_wowlan_support ath9k_wowlan_support = {
-+	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
-+	.n_patterns = MAX_NUM_USER_PATTERN,
-+	.pattern_min_len = 1,
-+	.pattern_max_len = MAX_PATTERN_SIZE,
-+};
-+#endif
-+
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -797,15 +806,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- #ifdef CONFIG_PM_SLEEP
- 
- 	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
--	    device_can_wakeup(sc->dev)) {
--
--		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
--					  WIPHY_WOWLAN_DISCONNECT;
--		hw->wiphy->wowlan.n_patterns = MAX_NUM_USER_PATTERN;
--		hw->wiphy->wowlan.pattern_min_len = 1;
--		hw->wiphy->wowlan.pattern_max_len = MAX_PATTERN_SIZE;
--
--	}
-+	    device_can_wakeup(sc->dev))
-+		hw->wiphy->wowlan = &ath9k_wowlan_support;
- 
- 	atomic_set(&sc->wow_sleep_proc_intr, -1);
- 	atomic_set(&sc->wow_got_bmiss_intr, -1);
-diff --git a/drivers/net/wireless/iwlwifi/dvm/dev.h b/drivers/net/wireless/iwlwifi/dvm/dev.h
-index 71ea775..e71acfd 100644
---- a/drivers/net/wireless/iwlwifi/dvm/dev.h
-+++ b/drivers/net/wireless/iwlwifi/dvm/dev.h
-@@ -870,6 +870,9 @@ struct iwl_priv {
- 	__le64 replay_ctr;
- 	__le16 last_seq_ctl;
- 	bool have_rekey_data;
-+#ifdef CONFIG_PM_SLEEP
-+	struct wiphy_wowlan_support wowlan_support;
-+#endif
- 
- 	/* device_pointers: pointers to ucode event tables */
- 	struct {
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index cab23af..661b5e7 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -208,20 +208,21 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 	    priv->trans->ops->d3_suspend &&
- 	    priv->trans->ops->d3_resume &&
- 	    device_can_wakeup(priv->trans->dev)) {
--		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
--					  WIPHY_WOWLAN_DISCONNECT |
--					  WIPHY_WOWLAN_EAP_IDENTITY_REQ |
--					  WIPHY_WOWLAN_RFKILL_RELEASE;
-+		priv->wowlan_support.flags = WIPHY_WOWLAN_MAGIC_PKT |
-+					     WIPHY_WOWLAN_DISCONNECT |
-+					     WIPHY_WOWLAN_EAP_IDENTITY_REQ |
-+					     WIPHY_WOWLAN_RFKILL_RELEASE;
- 		if (!iwlwifi_mod_params.sw_crypto)
--			hw->wiphy->wowlan.flags |=
-+			priv->wowlan_support.flags |=
- 				WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
- 				WIPHY_WOWLAN_GTK_REKEY_FAILURE;
- 
--		hw->wiphy->wowlan.n_patterns = IWLAGN_WOWLAN_MAX_PATTERNS;
--		hw->wiphy->wowlan.pattern_min_len =
-+		priv->wowlan_support.n_patterns = IWLAGN_WOWLAN_MAX_PATTERNS;
-+		priv->wowlan_support.pattern_min_len =
- 					IWLAGN_WOWLAN_MIN_PATTERN_LEN;
--		hw->wiphy->wowlan.pattern_max_len =
-+		priv->wowlan_support.pattern_max_len =
- 					IWLAGN_WOWLAN_MAX_PATTERN_LEN;
-+		hw->wiphy->wowlan = &priv->wowlan_support;
- 	}
- #endif
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index dd158ec..827fa64 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -222,20 +222,20 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	    mvm->trans->ops->d3_suspend &&
- 	    mvm->trans->ops->d3_resume &&
- 	    device_can_wakeup(mvm->trans->dev)) {
--		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
--					  WIPHY_WOWLAN_DISCONNECT |
--					  WIPHY_WOWLAN_EAP_IDENTITY_REQ |
--					  WIPHY_WOWLAN_RFKILL_RELEASE;
-+		mvm->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
-+				    WIPHY_WOWLAN_DISCONNECT |
-+				    WIPHY_WOWLAN_EAP_IDENTITY_REQ |
-+				    WIPHY_WOWLAN_RFKILL_RELEASE;
- 		if (!iwlwifi_mod_params.sw_crypto)
--			hw->wiphy->wowlan.flags |=
--				WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
--				WIPHY_WOWLAN_GTK_REKEY_FAILURE |
--				WIPHY_WOWLAN_4WAY_HANDSHAKE;
--
--		hw->wiphy->wowlan.n_patterns = IWL_WOWLAN_MAX_PATTERNS;
--		hw->wiphy->wowlan.pattern_min_len = IWL_WOWLAN_MIN_PATTERN_LEN;
--		hw->wiphy->wowlan.pattern_max_len = IWL_WOWLAN_MAX_PATTERN_LEN;
--		hw->wiphy->wowlan.tcp = &iwl_mvm_wowlan_tcp_support;
-+			mvm->wowlan.flags |= WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
-+					     WIPHY_WOWLAN_GTK_REKEY_FAILURE |
-+					     WIPHY_WOWLAN_4WAY_HANDSHAKE;
-+
-+		mvm->wowlan.n_patterns = IWL_WOWLAN_MAX_PATTERNS;
-+		mvm->wowlan.pattern_min_len = IWL_WOWLAN_MIN_PATTERN_LEN;
-+		mvm->wowlan.pattern_max_len = IWL_WOWLAN_MAX_PATTERN_LEN;
-+		mvm->wowlan.tcp = &iwl_mvm_wowlan_tcp_support;
-+		hw->wiphy->wowlan = &mvm->wowlan;
- 	}
- #endif
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 8269bc5..b62a948 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -336,6 +336,7 @@ struct iwl_mvm {
- 	struct ieee80211_vif *p2p_device_vif;
- 
- #ifdef CONFIG_PM_SLEEP
-+	struct wiphy_wowlan_support wowlan;
- 	int gtk_ivlen, gtk_icvlen, ptk_ivlen, ptk_icvlen;
- #endif
- 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index e42b266..6007789 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2426,6 +2426,16 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- #endif
- };
- 
-+#ifdef CONFIG_PM
-+static const struct wiphy_wowlan_support mwifiex_wowlan_support = {
-+	.flags = WIPHY_WOWLAN_MAGIC_PKT,
-+	.n_patterns = MWIFIEX_MAX_FILTERS,
-+	.pattern_min_len = 1,
-+	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
-+	.max_pkt_offset = MWIFIEX_MAX_OFFSET_LEN,
-+};
-+#endif
-+
- /*
-  * This function registers the device with CFG802.11 subsystem.
-  *
-@@ -2483,11 +2493,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy_apply_custom_regulatory(wiphy, &mwifiex_world_regdom_custom);
- 
- #ifdef CONFIG_PM
--	wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT;
--	wiphy->wowlan.n_patterns = MWIFIEX_MAX_FILTERS;
--	wiphy->wowlan.pattern_min_len = 1;
--	wiphy->wowlan.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN;
--	wiphy->wowlan.max_pkt_offset = MWIFIEX_MAX_OFFSET_LEN;
-+	wiphy->wowlan = &mwifiex_wowlan_support;
- #endif
- 
- 	wiphy->probe_resp_offload = NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 953111a..796928b 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -6018,6 +6018,15 @@ int wlcore_free_hw(struct wl1271 *wl)
  }
- EXPORT_SYMBOL_GPL(wlcore_free_hw);
  
-+#ifdef CONFIG_PM
-+static const struct wiphy_wowlan_support wlcore_wowlan_support = {
-+	.flags = WIPHY_WOWLAN_ANY,
-+	.n_patterns = WL1271_MAX_RX_FILTERS,
-+	.pattern_min_len = 1,
-+	.pattern_max_len = WL1271_RX_FILTER_MAX_PATTERN_SIZE,
-+};
-+#endif
++static unsigned int
++rt2800pci_extra_tx_headroom(struct rt2x00_dev *rt2x00dev)
++{
++	return TXWI_DESC_SIZE;
++}
 +
- static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- {
- 	struct wl1271 *wl = context;
-@@ -6071,14 +6080,8 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	if (!ret) {
- 		wl->irq_wake_enabled = true;
- 		device_init_wakeup(wl->dev, 1);
--		if (pdata->pwr_in_suspend) {
--			wl->hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
--			wl->hw->wiphy->wowlan.n_patterns =
--				WL1271_MAX_RX_FILTERS;
--			wl->hw->wiphy->wowlan.pattern_min_len = 1;
--			wl->hw->wiphy->wowlan.pattern_max_len =
--				WL1271_RX_FILTER_MAX_PATTERN_SIZE;
--		}
-+		if (pdata->pwr_in_suspend)
-+			wl->hw->wiphy->wowlan = &wlcore_wowlan_support;
+ static const struct rt2x00_ops rt2800pci_ops = {
+ 	.name			= KBUILD_MODNAME,
+ 	.drv_data_size		= sizeof(struct rt2800_drv_data),
+@@ -1231,7 +1237,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+-	.extra_tx_headroom	= TXWI_DESC_SIZE,
++	.extra_tx_headroom	= rt2800pci_extra_tx_headroom,
+ 	.queue_init		= rt2800pci_queue_init,
+ 	.lib			= &rt2800pci_rt2x00_ops,
+ 	.drv			= &rt2800pci_rt2800_ops,
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index b81d509..57729a8 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -898,6 +898,15 @@ static void rt2800usb_queue_init(struct data_queue *queue)
  	}
- #endif
- 	disable_irq(wl->irq);
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6dd1959..6169fca 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2654,7 +2654,7 @@ struct wiphy {
- 	u32 hw_version;
+ }
  
- #ifdef CONFIG_PM
--	struct wiphy_wowlan_support wowlan;
-+	const struct wiphy_wowlan_support *wowlan;
- 	struct cfg80211_wowlan *wowlan_config;
- #endif
++static unsigned int
++rt2800usb_extra_tx_headroom(struct rt2x00_dev *rt2x00dev)
++{
++	if (rt2x00_rt(rt2x00dev, RT5592))
++		return TXINFO_DESC_SIZE + TXWI_DESC_SIZE_5592;
++
++	return TXINFO_DESC_SIZE + TXWI_DESC_SIZE;
++}
++
+ static const struct rt2x00_ops rt2800usb_ops = {
+ 	.name			= KBUILD_MODNAME,
+ 	.drv_data_size		= sizeof(struct rt2800_drv_data),
+@@ -905,7 +914,7 @@ static const struct rt2x00_ops rt2800usb_ops = {
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+-	.extra_tx_headroom	= TXINFO_DESC_SIZE + TXWI_DESC_SIZE,
++	.extra_tx_headroom	= rt2800usb_extra_tx_headroom,
+ 	.queue_init		= rt2800usb_queue_init,
+ 	.lib			= &rt2800usb_rt2x00_ops,
+ 	.drv			= &rt2800usb_rt2800_ops,
+@@ -922,7 +931,7 @@ static const struct rt2x00_ops rt2800usb_ops_5592 = {
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+-	.extra_tx_headroom	= TXINFO_DESC_SIZE + TXWI_DESC_SIZE_5592,
++	.extra_tx_headroom	= rt2800usb_extra_tx_headroom,
+ 	.queue_init		= rt2800usb_queue_init,
+ 	.lib			= &rt2800usb_rt2x00_ops,
+ 	.drv			= &rt2800usb_rt2800_ops,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 2a17f7e..41ca342 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -648,7 +648,7 @@ struct rt2x00_ops {
+ 	const unsigned int eeprom_size;
+ 	const unsigned int rf_size;
+ 	const unsigned int tx_queues;
+-	const unsigned int extra_tx_headroom;
++	unsigned int (*extra_tx_headroom)(struct rt2x00_dev *rt2x00dev);
+ 	void (*queue_init)(struct data_queue *queue);
+ 	const struct rt2x00lib_ops *lib;
+ 	const void *drv;
+@@ -1007,6 +1007,9 @@ struct rt2x00_dev {
+ 	 */
+ 	struct list_head bar_list;
+ 	spinlock_t bar_list_lock;
++
++	/* Extra TX headroom required for alignment purposes. */
++	unsigned int extra_tx_headroom;
+ };
  
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 1998f14..626c83c 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -686,8 +686,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		return -EINVAL;
+ struct rt2x00_bar_list_entry {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index dff5012..964bf1a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -334,7 +334,7 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	/*
+ 	 * Remove the extra tx headroom from the skb.
+ 	 */
+-	skb_pull(entry->skb, rt2x00dev->ops->extra_tx_headroom);
++	skb_pull(entry->skb, rt2x00dev->extra_tx_headroom);
  
- #ifdef CONFIG_PM
--	if ((hw->wiphy->wowlan.flags || hw->wiphy->wowlan.n_patterns) &&
--	    (!local->ops->suspend || !local->ops->resume))
-+	if (hw->wiphy->wowlan && (!local->ops->suspend || !local->ops->resume))
- 		return -EINVAL;
- #endif
+ 	/*
+ 	 * Signal that the TX descriptor is no longer in the skb.
+@@ -1049,7 +1049,7 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	rt2x00dev->hw->extra_tx_headroom =
+ 		max_t(unsigned int, IEEE80211_TX_STATUS_HEADROOM,
+-		      rt2x00dev->ops->extra_tx_headroom);
++		      rt2x00dev->extra_tx_headroom);
  
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 41cec17..f553b94 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -449,8 +449,13 @@ int wiphy_register(struct wiphy *wiphy)
- 	u16 ifmodes = wiphy->interface_modes;
- 
- #ifdef CONFIG_PM
--	if (WARN_ON((wiphy->wowlan.flags & WIPHY_WOWLAN_GTK_REKEY_FAILURE) &&
--		    !(wiphy->wowlan.flags & WIPHY_WOWLAN_SUPPORTS_GTK_REKEY)))
-+	if (WARN_ON(wiphy->wowlan &&
-+		    (wiphy->wowlan->flags & WIPHY_WOWLAN_GTK_REKEY_FAILURE) &&
-+		    !(wiphy->wowlan->flags & WIPHY_WOWLAN_SUPPORTS_GTK_REKEY)))
-+		return -EINVAL;
-+	if (WARN_ON(wiphy->wowlan &&
-+		    !wiphy->wowlan->flags && !wiphy->wowlan->n_patterns &&
-+		    !wiphy->wowlan->tcp))
- 		return -EINVAL;
- #endif
- 
-@@ -540,12 +545,11 @@ int wiphy_register(struct wiphy *wiphy)
+ 	/*
+ 	 * Take TX headroom required for alignment into account.
+@@ -1280,6 +1280,12 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 		}
  	}
  
- #ifdef CONFIG_PM
--	if (rdev->wiphy.wowlan.n_patterns) {
--		if (WARN_ON(!rdev->wiphy.wowlan.pattern_min_len ||
--			    rdev->wiphy.wowlan.pattern_min_len >
--			    rdev->wiphy.wowlan.pattern_max_len))
--			return -EINVAL;
--	}
-+	if (WARN_ON(rdev->wiphy.wowlan && rdev->wiphy.wowlan->n_patterns &&
-+		    (!rdev->wiphy.wowlan->pattern_min_len ||
-+		     rdev->wiphy.wowlan->pattern_min_len >
-+				rdev->wiphy.wowlan->pattern_max_len)))
-+		return -EINVAL;
- #endif
++	if (rt2x00dev->ops->extra_tx_headroom) {
++		/* Cache TX headroom value */
++		rt2x00dev->extra_tx_headroom =
++			rt2x00dev->ops->extra_tx_headroom(rt2x00dev);
++	}
++
+ 	spin_lock_init(&rt2x00dev->irqmask_lock);
+ 	mutex_init(&rt2x00dev->csr_mutex);
+ 	INIT_LIST_HEAD(&rt2x00dev->bar_list);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index c4f1e2b..6c0a91f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -542,8 +542,8 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
+ 	/*
+ 	 * Add the requested extra tx headroom in front of the skb.
+ 	 */
+-	skb_push(entry->skb, rt2x00dev->ops->extra_tx_headroom);
+-	memset(entry->skb->data, 0, rt2x00dev->ops->extra_tx_headroom);
++	skb_push(entry->skb, rt2x00dev->extra_tx_headroom);
++	memset(entry->skb->data, 0, rt2x00dev->extra_tx_headroom);
  
- 	/* check and set up bitrates */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 31d265f..34cac2f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -908,7 +908,7 @@ nla_put_failure:
- static int nl80211_send_wowlan_tcp_caps(struct cfg80211_registered_device *rdev,
- 					struct sk_buff *msg)
+ 	/*
+ 	 * Call the driver's write_tx_data function, if it exists.
+@@ -596,7 +596,7 @@ static void rt2x00queue_bar_check(struct queue_entry *entry)
  {
--	const struct wiphy_wowlan_tcp_support *tcp = rdev->wiphy.wowlan.tcp;
-+	const struct wiphy_wowlan_tcp_support *tcp = rdev->wiphy.wowlan->tcp;
- 	struct nlattr *nl_tcp;
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct ieee80211_bar *bar = (void *) (entry->skb->data +
+-				    rt2x00dev->ops->extra_tx_headroom);
++				    rt2x00dev->extra_tx_headroom);
+ 	struct rt2x00_bar_list_entry *bar_entry;
  
- 	if (!tcp)
-@@ -951,37 +951,37 @@ static int nl80211_send_wowlan(struct sk_buff *msg,
- {
- 	struct nlattr *nl_wowlan;
+ 	if (likely(!ieee80211_is_back_req(bar->frame_control)))
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 17507d1..53754bc6 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -3066,7 +3066,6 @@ static const struct rt2x00_ops rt61pci_ops = {
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+-	.extra_tx_headroom	= 0,
+ 	.queue_init		= rt61pci_queue_init,
+ 	.lib			= &rt61pci_rt2x00_ops,
+ 	.hw			= &rt61pci_mac80211_ops,
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index b2e346a..5545fa7 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2394,13 +2394,19 @@ static void rt73usb_queue_init(struct data_queue *queue)
+ 	}
+ }
  
--	if (!dev->wiphy.wowlan.flags && !dev->wiphy.wowlan.n_patterns)
-+	if (!dev->wiphy.wowlan)
- 		return 0;
- 
- 	nl_wowlan = nla_nest_start(msg, NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED);
- 	if (!nl_wowlan)
- 		return -ENOBUFS;
- 
--	if (((dev->wiphy.wowlan.flags & WIPHY_WOWLAN_ANY) &&
-+	if (((dev->wiphy.wowlan->flags & WIPHY_WOWLAN_ANY) &&
- 	     nla_put_flag(msg, NL80211_WOWLAN_TRIG_ANY)) ||
--	    ((dev->wiphy.wowlan.flags & WIPHY_WOWLAN_DISCONNECT) &&
-+	    ((dev->wiphy.wowlan->flags & WIPHY_WOWLAN_DISCONNECT) &&
- 	     nla_put_flag(msg, NL80211_WOWLAN_TRIG_DISCONNECT)) ||
--	    ((dev->wiphy.wowlan.flags & WIPHY_WOWLAN_MAGIC_PKT) &&
-+	    ((dev->wiphy.wowlan->flags & WIPHY_WOWLAN_MAGIC_PKT) &&
- 	     nla_put_flag(msg, NL80211_WOWLAN_TRIG_MAGIC_PKT)) ||
--	    ((dev->wiphy.wowlan.flags & WIPHY_WOWLAN_SUPPORTS_GTK_REKEY) &&
-+	    ((dev->wiphy.wowlan->flags & WIPHY_WOWLAN_SUPPORTS_GTK_REKEY) &&
- 	     nla_put_flag(msg, NL80211_WOWLAN_TRIG_GTK_REKEY_SUPPORTED)) ||
--	    ((dev->wiphy.wowlan.flags & WIPHY_WOWLAN_GTK_REKEY_FAILURE) &&
-+	    ((dev->wiphy.wowlan->flags & WIPHY_WOWLAN_GTK_REKEY_FAILURE) &&
- 	     nla_put_flag(msg, NL80211_WOWLAN_TRIG_GTK_REKEY_FAILURE)) ||
--	    ((dev->wiphy.wowlan.flags & WIPHY_WOWLAN_EAP_IDENTITY_REQ) &&
-+	    ((dev->wiphy.wowlan->flags & WIPHY_WOWLAN_EAP_IDENTITY_REQ) &&
- 	     nla_put_flag(msg, NL80211_WOWLAN_TRIG_EAP_IDENT_REQUEST)) ||
--	    ((dev->wiphy.wowlan.flags & WIPHY_WOWLAN_4WAY_HANDSHAKE) &&
-+	    ((dev->wiphy.wowlan->flags & WIPHY_WOWLAN_4WAY_HANDSHAKE) &&
- 	     nla_put_flag(msg, NL80211_WOWLAN_TRIG_4WAY_HANDSHAKE)) ||
--	    ((dev->wiphy.wowlan.flags & WIPHY_WOWLAN_RFKILL_RELEASE) &&
-+	    ((dev->wiphy.wowlan->flags & WIPHY_WOWLAN_RFKILL_RELEASE) &&
- 	     nla_put_flag(msg, NL80211_WOWLAN_TRIG_RFKILL_RELEASE)))
- 		return -ENOBUFS;
- 
--	if (dev->wiphy.wowlan.n_patterns) {
-+	if (dev->wiphy.wowlan->n_patterns) {
- 		struct nl80211_wowlan_pattern_support pat = {
--			.max_patterns = dev->wiphy.wowlan.n_patterns,
--			.min_pattern_len = dev->wiphy.wowlan.pattern_min_len,
--			.max_pattern_len = dev->wiphy.wowlan.pattern_max_len,
--			.max_pkt_offset = dev->wiphy.wowlan.max_pkt_offset,
-+			.max_patterns = dev->wiphy.wowlan->n_patterns,
-+			.min_pattern_len = dev->wiphy.wowlan->pattern_min_len,
-+			.max_pattern_len = dev->wiphy.wowlan->pattern_max_len,
-+			.max_pkt_offset = dev->wiphy.wowlan->max_pkt_offset,
- 		};
- 
- 		if (nla_put(msg, NL80211_WOWLAN_TRIG_PKT_PATTERN,
-@@ -7580,8 +7580,7 @@ static int nl80211_get_wowlan(struct sk_buff *skb, struct genl_info *info)
- 	void *hdr;
- 	u32 size = NLMSG_DEFAULT_SIZE;
- 
--	if (!rdev->wiphy.wowlan.flags && !rdev->wiphy.wowlan.n_patterns &&
--	    !rdev->wiphy.wowlan.tcp)
-+	if (!rdev->wiphy.wowlan)
- 		return -EOPNOTSUPP;
- 
- 	if (rdev->wiphy.wowlan_config && rdev->wiphy.wowlan_config->tcp) {
-@@ -7654,7 +7653,7 @@ static int nl80211_parse_wowlan_tcp(struct cfg80211_registered_device *rdev,
- 	u32 data_size, wake_size, tokens_size = 0, wake_mask_size;
- 	int err, port;
- 
--	if (!rdev->wiphy.wowlan.tcp)
-+	if (!rdev->wiphy.wowlan->tcp)
- 		return -EINVAL;
- 
- 	err = nla_parse(tb, MAX_NL80211_WOWLAN_TCP,
-@@ -7674,16 +7673,16 @@ static int nl80211_parse_wowlan_tcp(struct cfg80211_registered_device *rdev,
- 		return -EINVAL;
- 
- 	data_size = nla_len(tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD]);
--	if (data_size > rdev->wiphy.wowlan.tcp->data_payload_max)
-+	if (data_size > rdev->wiphy.wowlan->tcp->data_payload_max)
- 		return -EINVAL;
- 
- 	if (nla_get_u32(tb[NL80211_WOWLAN_TCP_DATA_INTERVAL]) >
--			rdev->wiphy.wowlan.tcp->data_interval_max ||
-+			rdev->wiphy.wowlan->tcp->data_interval_max ||
- 	    nla_get_u32(tb[NL80211_WOWLAN_TCP_DATA_INTERVAL]) == 0)
- 		return -EINVAL;
- 
- 	wake_size = nla_len(tb[NL80211_WOWLAN_TCP_WAKE_PAYLOAD]);
--	if (wake_size > rdev->wiphy.wowlan.tcp->wake_payload_max)
-+	if (wake_size > rdev->wiphy.wowlan->tcp->wake_payload_max)
- 		return -EINVAL;
- 
- 	wake_mask_size = nla_len(tb[NL80211_WOWLAN_TCP_WAKE_MASK]);
-@@ -7698,13 +7697,13 @@ static int nl80211_parse_wowlan_tcp(struct cfg80211_registered_device *rdev,
- 
- 		if (!tok->len || tokens_size % tok->len)
- 			return -EINVAL;
--		if (!rdev->wiphy.wowlan.tcp->tok)
-+		if (!rdev->wiphy.wowlan->tcp->tok)
- 			return -EINVAL;
--		if (tok->len > rdev->wiphy.wowlan.tcp->tok->max_len)
-+		if (tok->len > rdev->wiphy.wowlan->tcp->tok->max_len)
- 			return -EINVAL;
--		if (tok->len < rdev->wiphy.wowlan.tcp->tok->min_len)
-+		if (tok->len < rdev->wiphy.wowlan->tcp->tok->min_len)
- 			return -EINVAL;
--		if (tokens_size > rdev->wiphy.wowlan.tcp->tok->bufsize)
-+		if (tokens_size > rdev->wiphy.wowlan->tcp->tok->bufsize)
- 			return -EINVAL;
- 		if (tok->offset + tok->len > data_size)
- 			return -EINVAL;
-@@ -7712,7 +7711,7 @@ static int nl80211_parse_wowlan_tcp(struct cfg80211_registered_device *rdev,
- 
- 	if (tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ]) {
- 		seq = nla_data(tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ]);
--		if (!rdev->wiphy.wowlan.tcp->seq)
-+		if (!rdev->wiphy.wowlan->tcp->seq)
- 			return -EINVAL;
- 		if (seq->len == 0 || seq->len > 4)
- 			return -EINVAL;
-@@ -7793,12 +7792,11 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 	struct nlattr *tb[NUM_NL80211_WOWLAN_TRIG];
- 	struct cfg80211_wowlan new_triggers = {};
- 	struct cfg80211_wowlan *ntrig;
--	struct wiphy_wowlan_support *wowlan = &rdev->wiphy.wowlan;
-+	struct wiphy_wowlan_support *wowlan = rdev->wiphy.wowlan;
- 	int err, i;
- 	bool prev_enabled = rdev->wiphy.wowlan_config;
- 
--	if (!rdev->wiphy.wowlan.flags && !rdev->wiphy.wowlan.n_patterns &&
--	    !rdev->wiphy.wowlan.tcp)
-+	if (!wowlan)
- 		return -EOPNOTSUPP;
- 
- 	if (!info->attrs[NL80211_ATTR_WOWLAN_TRIGGERS]) {
++static unsigned int
++rt73usb_extra_tx_headroom(struct rt2x00_dev *rt2x00dev)
++{
++	return TXD_DESC_SIZE;
++}
++
+ static const struct rt2x00_ops rt73usb_ops = {
+ 	.name			= KBUILD_MODNAME,
+ 	.max_ap_intf		= 4,
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+-	.extra_tx_headroom	= TXD_DESC_SIZE,
++	.extra_tx_headroom	= rt73usb_extra_tx_headroom,
+ 	.queue_init		= rt73usb_queue_init,
+ 	.lib			= &rt73usb_rt2x00_ops,
+ 	.hw			= &rt73usb_mac80211_ops,
 -- 
-1.8.0
+1.7.10
 
