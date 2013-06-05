@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:50982 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754610Ab3FAL1Y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jun 2013 07:27:24 -0400
-Subject: [PATCH v2 26/29] ath10k: add txrx.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Sat, 01 Jun 2013 14:27:22 +0300
-Message-ID: <20130601112722.32443.14873.stgit@localhost6.localdomain6> (sfid-20130601_132727_307619_B6B0C5A0)
-In-Reply-To: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
-References: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
+Received: from mout.gmx.net ([212.227.15.18]:55672 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756134Ab3FEOqT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 10:46:19 -0400
+Received: from mailout-de.gmx.net ([10.1.76.12]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0Lhhfz-1U6YYt0o7t-00mrzm for
+ <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 16:46:18 +0200
+Message-ID: <51AF4F35.50503@rempel-privat.de> (sfid-20130605_164622_369906_3ED00354)
+Date: Wed, 05 Jun 2013 16:46:13 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Marc Kleine-Budde <mkl@blackshift.org>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH] ath9k_htc: fix skb_under_panic error
+References: <51ADBC01.6090202@blackshift.org> <1370371064-6903-1-git-send-email-linux@rempel-privat.de> <CAGXE3d9p7zkwfNJBJvPMc8XaKnb009pHpCXYweDjK4tv6PCkuA@mail.gmail.com> <51AF4AA7.6050005@blackshift.org>
+In-Reply-To: <51AF4AA7.6050005@blackshift.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/txrx.h |   39 ++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/txrx.h
+Am 05.06.2013 16:26, schrieb Marc Kleine-Budde:
+> On 06/05/2013 04:24 PM, Helmut Schaa wrote:
+>> On Tue, Jun 4, 2013 at 8:37 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>>> This error seems to be really rare, and we do not know real couse of it.
+>>> But, in any case, we should check size of head before reducing it.
+>>
+>> Mind to try the (completely untested) patch against wireless-testing instead?
+>> Helmut
+>
+> I will do, however I'm not in range of that USB wireless adapter for
+> about 1,5 weeks.
 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.h b/drivers/net/wireless/ath/ath10k/txrx.h
-new file mode 100644
-index 0000000..e78632a
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/txrx.h
-@@ -0,0 +1,39 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef _TXRX_H_
-+#define _TXRX_H_
-+
-+#include "htt.h"
-+
-+void ath10k_txrx_tx_unref(struct ath10k_htt *htt, struct sk_buff *txdesc);
-+void ath10k_txrx_tx_completed(struct ath10k_htt *htt,
-+			      const struct htt_tx_done *tx_done);
-+void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info);
-+
-+struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
-+				     const u8 *addr);
-+int ath10k_wait_for_peer_created(struct ath10k *ar, int vdev_id,
-+				 const u8 *addr);
-+int ath10k_wait_for_peer_deleted(struct ath10k *ar, int vdev_id,
-+				 const u8 *addr);
-+
-+void ath10k_peer_map_event(struct ath10k_htt *htt,
-+			   struct htt_peer_map_event *ev);
-+void ath10k_peer_unmap_event(struct ath10k_htt *htt,
-+			     struct htt_peer_unmap_event *ev);
-+
-+#endif
+Helmut, thank you for patch!
 
+i'll do regression test, but not week long test. So i probably won't 
+reproduce this issue.
+
+
+-- 
+Regards,
+Oleksij
