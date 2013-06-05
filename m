@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:48964 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893Ab3F0KrQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45632 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754761Ab3FFNPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 06:47:16 -0400
-Received: by mail-pb0-f47.google.com with SMTP id rr13so742958pbb.20
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jun 2013 03:47:16 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] mac80211: prevent the buffering or frame transmission to non-assoc mesh STA
-Date: Thu, 27 Jun 2013 18:42:56 +0800
-Message-Id: <1372329776-20363-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130627_124719_593550_11E11CA9)
+	Thu, 6 Jun 2013 09:15:15 -0400
+Date: Wed, 5 Jun 2013 16:19:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Gustavo Padovan <gustavo.padovan@collabora.co.uk>,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: wireless tree rebased (from 5/28), Broadcom bits dropped
+Message-ID: <20130605201901.GC15004@tuxdriver.com> (sfid-20130606_151523_398194_8538DBC8)
+References: <20130604212602.GB11199@tuxdriver.com>
+ <20130604215320.GC11199@tuxdriver.com>
+ <1370415586.8920.4.camel@jlt4.sipsolutions.net>
+ <20130605143700.GA2271@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130605143700.GA2271@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is intended to avoid the buffering to non-assoc mesh STA
-and also to avoid the triggering of frame to non-assoc mesh STA which
-could cause kernel panic in specific hw.
+On Wed, Jun 05, 2013 at 10:37:01AM -0400, John W. Linville wrote:
+> On Wed, Jun 05, 2013 at 08:59:46AM +0200, Johannes Berg wrote:
+> > On Tue, 2013-06-04 at 17:53 -0400, John W. Linville wrote:
 
-One of the examples, is kernel panic happens to ath9k if user space
-inserts the mesh STA and not proceed with the SAE and AMPE, and later
-the same mesh STA is detected again. The sta_state of the mesh STA remains
-at IEEE80211_STA_NONE and if the ieee80211_sta_ps_deliver_wakeup is called
-and subsequently the ath_tx_aggr_wakeup, the kernel panic due to
-ath_tx_node_init is not called before to initialize the require data
-structures.
+> I think I can fix the wireless tree and preserve the original mac80211
+> tree commits.  Everyone please hold off on doing anything else here, as
+> I'm a bit busy and won't be able to get to this before this afternoon
+> (Eastern USA time).
+> 
+> Anyone object to one more wireless tree rebase today?
 
-This issue is reported by Cedric Voncken before.
-http://www.spinics.net/lists/linux-wireless/msg106342.html
+I've redone the wireless tree now.  Please do the needful...
 
-[<831ea6b4>] ath_tx_aggr_wakeup+0x44/0xcc [ath9k]
-[<83084214>] ieee80211_sta_ps_deliver_wakeup+0xb8/0x208 [mac80211]
-[<830b9824>] ieee80211_mps_sta_status_update+0x94/0x108 [mac80211]
-[<83099398>] ieee80211_sta_ps_transition+0xc94/0x34d8 [mac80211]
-[<8022399c>] nf_iterate+0x98/0x104
-[<8309bb60>] ieee80211_sta_ps_transition+0x345c/0x34d8 [mac80211]
-
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
-v2: 
-	change the subject to be less ath9k-centric (Johannes)
-	push the checking higher to prevent buffering for non-assoc STA (Bob Copeland)
-
- net/mac80211/mesh_ps.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
-index 3b7bfc0..22290a9 100644
---- a/net/mac80211/mesh_ps.c
-+++ b/net/mac80211/mesh_ps.c
-@@ -229,6 +229,10 @@ void ieee80211_mps_sta_status_update(struct sta_info *sta)
- 	enum nl80211_mesh_power_mode pm;
- 	bool do_buffer;
- 
-+	/* For non-assoc STA, prevent buffering or frame transmission */
-+	if (sta->sta_state < IEEE80211_STA_ASSOC)
-+		return;
-+
- 	/*
- 	 * use peer-specific power mode if peering is established and the
- 	 * peer's power mode is known
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
