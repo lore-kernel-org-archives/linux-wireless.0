@@ -1,69 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:56358 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015Ab3FEUom (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 16:44:42 -0400
-Received: by mail-ee0-f46.google.com with SMTP id b15so637238eek.5
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 13:44:41 -0700 (PDT)
-Message-ID: <1370465077.6213.40.camel@canaries64> (sfid-20130605_224445_189923_8C95E305)
-Subject: [PATCH 09/13] staging: vt6656: clean up MACvEnableProtectMD
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 05 Jun 2013 21:44:37 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:28321 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752500Ab3FEILo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 04:11:44 -0400
+Date: Wed, 5 Jun 2013 10:13:35 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlegacy: fix error return code in il3945_pci_probe()
+Message-ID: <20130605081334.GB1510@redhat.com> (sfid-20130605_101153_596897_200A682F)
+References: <CAPgLHd8XdFPQ+HUq085qmge66dhMxJurrZ2Uwut4w6Pfh_sqhA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPgLHd8XdFPQ+HUq085qmge66dhMxJurrZ2Uwut4w6Pfh_sqhA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove internal white space and camel case.
+On Wed, Jun 05, 2013 at 10:16:33AM +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Fix to return a negative error code in the il3945_hw_set_hw_params() error
+> handling case instead of 0, as done elsewhere in this function.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Camel case changes;
-pDevice -> priv
-pbyData -> data
-
-Functional change
-CONTROLnsRequestOut Length = ARRAY_SIZE(data)
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index d274cae..3e5c816 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -235,20 +235,15 @@ void MACvWriteBSSIDAddress(struct vnt_private *priv, u8 *addr)
- 		MESSAGE_REQUEST_MACREG, ETH_ALEN, addr);
- }
- 
--void MACvEnableProtectMD(struct vnt_private *pDevice)
-+void MACvEnableProtectMD(struct vnt_private *priv)
- {
--	u8 pbyData[2];
-+	u8 data[2];
- 
--    pbyData[0] = EnCFG_ProtectMd;
--    pbyData[1] = EnCFG_ProtectMd;
-+	data[0] = EnCFG_ProtectMd;
-+	data[1] = EnCFG_ProtectMd;
- 
--    CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_WRITE_MASK,
--                        MAC_REG_ENCFG0,
--                        MESSAGE_REQUEST_MACREG,
--                        2,
--                        pbyData
--                        );
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK, MAC_REG_ENCFG0,
-+		MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
- 
- void MACvDisableProtectMD(struct vnt_private *pDevice)
--- 
-1.8.1.2
-
-
-
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
