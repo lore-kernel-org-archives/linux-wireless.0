@@ -1,77 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:33983 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753395Ab3FCUcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 16:32:13 -0400
-Message-ID: <51ACFD50.7000807@openwrt.org> (sfid-20130603_223307_576409_F75F65DC)
-Date: Mon, 03 Jun 2013 22:32:16 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: Jakub Kicinski <moorray@wp.pl>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 1/7] rt2x00: rt2x00dev: use rt2x00dev->tx->limit
-References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org> <1367421455-18463-2-git-send-email-juhosg@openwrt.org> <20130603190959.70b1f4d2@north>
-In-Reply-To: <20130603190959.70b1f4d2@north>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from diserzione.investici.org ([82.221.99.153]:39746 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756199Ab3FEOg6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 10:36:58 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv3 4/4] nl80211: allow sending CMD_FRAME without specifying any frequency
+Date: Wed,  5 Jun 2013 16:34:53 +0200
+Message-Id: <1370442893-1687-4-git-send-email-ordex@autistici.org> (sfid-20130605_163701_149532_9C3711EF)
+In-Reply-To: <1370442893-1687-1-git-send-email-ordex@autistici.org>
+References: <1370442893-1687-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kuba!
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-> On Wed,  1 May 2013 17:17:29 +0200, Gabor Juhos wrote:
->> The TX data queue is initialized already when
->> the rt2x00lib_probe_hw() function is called.
->>
->> Fetch the number of the queue entries from that
->> instead of using the entry_num field of the data
->> queue descriptor.
->>
->> The two values are the same, and the use of the
->> rt2x00dev->tx->limit value allows us to get rid
->> of a superfluous pointer dereference.
->>
->> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
->> ---
->>  drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
->> index 90dc143..b287467 100644
->> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
->> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
->> @@ -1077,7 +1077,7 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
->>   		 */
->>  		int kfifo_size =
->>  			roundup_pow_of_two(rt2x00dev->ops->tx_queues *
->> -					   rt2x00dev->ops->tx->entry_num *
->> +					   rt2x00dev->tx->limit *
->>  					   sizeof(u32));
->>  
->>  		status = kfifo_alloc(&rt2x00dev->txstatus_fifo, kfifo_size,
-> 
-> Unfortunately this does not work without your "get rid of
-> static data queue descriptors" series as well.
-> 
-> queue->limit is set when rt2x00lib_start is called, not on
-> probe. kfifo_alloc will fail with EINVAL here. 
+Users may want to send a frame on the current channel
+without specifying it.
 
-You are right. I should have been more careful while I have tested this patch-set.
+This is particularly useful for the correct implementation
+of the IBSS/RSN support in wpa_supplicant which requires to
+receive and send AUTH frames.
 
-> As a result support for all rt2x00 devices is broken on wireless-testing.
+Make mgmt_tx pass a NULL channel to the driver if none has
+been specified by the user.
 
-Only rt2800 devices are affected. The offending code runs only if
-REQUIRE_TXSTATUS_FIFO is set in rt2x00dev->cap_flags which is not set for older
-chips.
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
 
-> Maybe you can just post the mentioned series for inclusion?
+v3:
+- moved from 1/4 to 4/4
 
-I will post a fix for the actual problem first, and will rebase the series on
-top of that.
+ net/wireless/nl80211.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-> I have been running with it since you posted it as RFC and
-> I did not notice any problems so far...
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 88e820b..06af395 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7139,6 +7139,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 		return -EOPNOTSUPP;
+ 
+ 	switch (wdev->iftype) {
++	case NL80211_IFTYPE_P2P_DEVICE:
++		if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
++			return -EINVAL;
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+@@ -7146,7 +7149,6 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_P2P_GO:
+-	case NL80211_IFTYPE_P2P_DEVICE:
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+@@ -7174,9 +7176,15 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+-	err = nl80211_parse_chandef(rdev, info, &chandef);
+-	if (err)
+-		return err;
++	/* get the channel if any has been specified, otherwise pass NULL to
++	 * the driver. The latter will use the current one
++	 */
++	chandef.chan = NULL;
++	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
++		err = nl80211_parse_chandef(rdev, info, &chandef);
++		if (err)
++			return err;
++	}
+ 
+ 	if (!dont_wait_for_ack) {
+ 		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-- 
+1.8.1.5
 
-Great!
-
--Gabor
