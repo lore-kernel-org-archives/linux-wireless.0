@@ -1,57 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:57178 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899Ab3FDKO0 (ORCPT
+Received: from diserzione.investici.org ([82.221.99.153]:60825 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778Ab3FELzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 06:14:26 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/6] ath9k: Fix ANI levels
-Date: Tue,  4 Jun 2013 15:41:32 +0530
-Message-Id: <1370340695-29003-3-git-send-email-sujith@msujith.org> (sfid-20130604_121429_738953_A427FE03)
-In-Reply-To: <1370340695-29003-1-git-send-email-sujith@msujith.org>
-References: <1370340695-29003-1-git-send-email-sujith@msujith.org>
+	Wed, 5 Jun 2013 07:55:10 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv2 1/4] nl80211: allow sending CMD_FRAME without specifying any frequency
+Date: Wed,  5 Jun 2013 13:53:04 +0200
+Message-Id: <1370433187-1337-1-git-send-email-ordex@autistici.org> (sfid-20130605_135514_969968_9BF979B4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-The commit, "ath9k_hw: improve ANI processing and rx desensitizing parameters"
-modified the immunity level tables for both CCK and OFDM. Fix them
-so that the tables are in sync with the internal driver/codebase.
+Users may want to send a frame on the current channel
+without specifying it.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This is particularly useful for the correct implementation
+of the IBSS/RSN support in wpa_supplicant which requires to
+receive and send AUTH frames.
+
+Make mgmt_tx pass a NULL channel to the driver if none has
+been specified by the user.
+
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ net/wireless/nl80211.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 1520e55..c8595f4 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -46,8 +46,8 @@ static const struct ani_ofdm_level_entry ofdm_level_table[] = {
- 	{  5,  4,  1  }, /* lvl 5 */
- 	{  6,  5,  1  }, /* lvl 6 */
- 	{  7,  6,  1  }, /* lvl 7 */
--	{  7,  6,  0  }, /* lvl 8 */
--	{  7,  7,  0  }  /* lvl 9 */
-+	{  7,  7,  1  }, /* lvl 8 */
-+	{  7,  8,  0  }  /* lvl 9 */
- };
- #define ATH9K_ANI_OFDM_NUM_LEVEL \
- 	ARRAY_SIZE(ofdm_level_table)
-@@ -91,8 +91,8 @@ static const struct ani_cck_level_entry cck_level_table[] = {
- 	{  4,  0  }, /* lvl 4 */
- 	{  5,  0  }, /* lvl 5 */
- 	{  6,  0  }, /* lvl 6 */
--	{  6,  0  }, /* lvl 7 (only for high rssi) */
--	{  7,  0  }  /* lvl 8 (only for high rssi) */
-+	{  7,  0  }, /* lvl 7 (only for high rssi) */
-+	{  8,  0  }  /* lvl 8 (only for high rssi) */
- };
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 88e820b..06af395 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7139,6 +7139,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 		return -EOPNOTSUPP;
  
- #define ATH9K_ANI_CCK_NUM_LEVEL \
+ 	switch (wdev->iftype) {
++	case NL80211_IFTYPE_P2P_DEVICE:
++		if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
++			return -EINVAL;
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+@@ -7146,7 +7149,6 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_P2P_GO:
+-	case NL80211_IFTYPE_P2P_DEVICE:
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+@@ -7174,9 +7176,15 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+-	err = nl80211_parse_chandef(rdev, info, &chandef);
+-	if (err)
+-		return err;
++	/* get the channel if any has been specified, otherwise pass NULL to
++	 * the driver. The latter will use the current one
++	 */
++	chandef.chan = NULL;
++	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
++		err = nl80211_parse_chandef(rdev, info, &chandef);
++		if (err)
++			return err;
++	}
+ 
+ 	if (!dont_wait_for_ack) {
+ 		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
 -- 
-1.8.3
+1.8.1.5
 
