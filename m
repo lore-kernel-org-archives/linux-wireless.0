@@ -1,58 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:43109 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752756Ab3FXMGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 08:06:06 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
-CC: Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] nl80211: fix mgmt tx status and testmode reporting for netns
-Date: Mon, 24 Jun 2013 13:50:44 +0200
-Message-ID: <1372074644-15280-1-git-send-email-michal.kazior@tieto.com> (sfid-20130624_140622_807454_BC123040)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from diserzione.investici.org ([82.221.99.153]:39665 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756098Ab3FEOgy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 10:36:54 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: [PATCHv3 2/4] brcm80211: make mgmt_tx in brcmfmac accept a NULL channel
+Date: Wed,  5 Jun 2013 16:34:51 +0200
+Message-Id: <1370442893-1687-2-git-send-email-ordex@autistici.org> (sfid-20130605_163752_057287_6D994A44)
+In-Reply-To: <1370442893-1687-1-git-send-email-ordex@autistici.org>
+References: <1370442893-1687-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These two events were sent to the default network
-namespace.
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-This caused AP mode in a non-default netns to not
-work correctly. Mgmt tx status was multicasted to
-a different (default) netns instead of the one the
-AP was in.
+cfg80211 passes a NULL channel to mgmt_tx if the frame has
+to be sent on the one currently in use by the device.
+Make the implementation of mgmt_tx correctly handle this
+case
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: brcm80211-dev-list@broadcom.com
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- net/wireless/nl80211.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b14b7e3..7bafce2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6593,7 +6593,10 @@ void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
+v3:
+- read current freq from the firmware via BRCMF_C_GET_CHANNEL
+
+
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 6d758f2..8bd256b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3917,6 +3917,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	struct brcmf_fil_af_params_le *af_params;
+ 	bool ack;
+ 	s32 chan_nr;
++	u32 freq;
  
- 	nla_nest_end(skb, data);
- 	genlmsg_end(skb, hdr);
--	genlmsg_multicast(skb, 0, nl80211_testmode_mcgrp.id, gfp);
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -3929,6 +3930,8 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		return -EPERM;
+ 	}
+ 
++	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
 +
-+	rcu_read_lock();
-+	genlmsg_multicast_allns(skb, 0, nl80211_testmode_mcgrp.id, GFP_ATOMIC);
-+	rcu_read_unlock();
- }
- EXPORT_SYMBOL(cfg80211_testmode_event);
- #endif
-@@ -10028,7 +10031,8 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+ 	if (ieee80211_is_probe_resp(mgmt->frame_control)) {
+ 		/* Right now the only reason to get a probe response */
+ 		/* is for p2p listen response or for p2p GO from     */
+@@ -3944,7 +3947,6 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		ie_offset =  DOT11_MGMT_HDR_LEN +
+ 			     DOT11_BCN_PRB_FIXED_LEN;
+ 		ie_len = len - ie_offset;
+-		vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
+ 		if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif)
+ 			vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
+ 		err = brcmf_vif_set_mgmt_ie(vif,
+@@ -3968,8 +3970,15 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		memcpy(&af_params->bssid[0], &mgmt->bssid[0], ETH_ALEN);
+ 		/* Add the length exepted for 802.11 header  */
+ 		action_frame->len = cpu_to_le16(len - DOT11_MGMT_HDR_LEN);
+-		/* Add the channel */
+-		chan_nr = ieee80211_frequency_to_channel(chan->center_freq);
++		/* Add the channel. Use the one specified as parameter if any or
++		 * the current one (got from the firmware) otherwise
++		 */
++		if (chan)
++			freq = chan->center_freq;
++		else
++			brcmf_fil_cmd_int_get(vif->ifp, BRCMF_C_GET_CHANNEL,
++					      &freq);
++		chan_nr = ieee80211_frequency_to_channel(freq);
+ 		af_params->channel = cpu_to_le32(chan_nr);
  
- 	genlmsg_end(msg, hdr);
- 
--	genlmsg_multicast(msg, 0, nl80211_mlme_mcgrp.id, gfp);
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
- 	return;
- 
-  nla_put_failure:
+ 		memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
 -- 
-1.7.9.5
+1.8.1.5
 
