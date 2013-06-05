@@ -1,44 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f45.google.com ([209.85.212.45]:54288 "EHLO
-	mail-vb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753764Ab3F0OiY (ORCPT
+Received: from diserzione.investici.org ([82.221.99.153]:60894 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458Ab3FELzP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 10:38:24 -0400
-Message-ID: <51CC4E5D.10205@lwfinger.net> (sfid-20130627_163840_032549_46619398)
-Date: Thu, 27 Jun 2013 09:38:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Richard Genoud <richard.genoud@gmail.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: rtl8192cu: slow path warning
-References: <20130611123814.GA9854@lnx-rg> <20130626142241.GA13107@lnx-rg> <51CB0E9C.50408@lwfinger.net> <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
-In-Reply-To: <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 5 Jun 2013 07:55:15 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Subject: [PATCHv2 4/4] ath6kl: make mgmt_tx accept a NULL channel
+Date: Wed,  5 Jun 2013 13:53:07 +0200
+Message-Id: <1370433187-1337-4-git-send-email-ordex@autistici.org> (sfid-20130605_135523_296273_71D2C013)
+In-Reply-To: <1370433187-1337-1-git-send-email-ordex@autistici.org>
+References: <1370433187-1337-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/27/2013 02:33 AM, Richard Genoud wrote:
->
-> Yes, of course, you can add my
-> Reported-by: Richard Genoud <richard.genoud@gmail.com>
->
-> But the patch doesn't compile on my platform ( since I'm on ARM, I
-> haven't got a PCI bus, so rtlwifi/pci.c is not compiled ) :
->
-> ERROR: "rtl_lps_change_work_callback"
-> [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-I was planning on eventually reworking the problem to have only a single 
-instance of that INIT_WORK() macro, rather than one for PCI and one for USB. The 
-reason for delaying was that that fix would likely be too invasive for 3.10rc7 
-or for backporting to stable.
+cfg80211 passes a NULL channel to mgmt_tx if the frame has
+to be sent on the one currently in use by the device.
+Make the implementation of mgmt_tx correctly handle this
+case
 
-Let me create that patch and I will get you a copy.
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-Thanks for testing,
-
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index f7995b2..b542203 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3175,10 +3175,17 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ {
+ 	struct ath6kl_vif *vif = ath6kl_vif_from_wdev(wdev);
+ 	struct ath6kl *ar = ath6kl_priv(vif->ndev);
+-	u32 id;
++	u32 id, freq;
+ 	const struct ieee80211_mgmt *mgmt;
+ 	bool more_data, queued;
+ 
++	/* default to the current channel, but use the one specified as argument
++	 * if any
++	 */
++	freq = vif->ch_hint;
++	if (chan)
++		freq = chan->center_freq;
++
+ 	mgmt = (const struct ieee80211_mgmt *) buf;
+ 	if (vif->nw_type == AP_NETWORK && test_bit(CONNECTED, &vif->flags) &&
+ 	    ieee80211_is_probe_resp(mgmt->frame_control) &&
+@@ -3188,8 +3195,7 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		 * command to allow the target to fill in the generic IEs.
+ 		 */
+ 		*cookie = 0; /* TX status not supported */
+-		return ath6kl_send_go_probe_resp(vif, buf, len,
+-						 chan->center_freq);
++		return ath6kl_send_go_probe_resp(vif, buf, len, freq);
+ 	}
+ 
+ 	id = vif->send_action_id++;
+@@ -3205,17 +3211,14 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	/* AP mode Power saving processing */
+ 	if (vif->nw_type == AP_NETWORK) {
+-		queued = ath6kl_mgmt_powersave_ap(vif,
+-					id, chan->center_freq,
+-					wait, buf,
+-					len, &more_data, no_cck);
++		queued = ath6kl_mgmt_powersave_ap(vif, id, freq, wait, buf, len,
++						  &more_data, no_cck);
+ 		if (queued)
+ 			return 0;
+ 	}
+ 
+-	return ath6kl_wmi_send_mgmt_cmd(ar->wmi, vif->fw_vif_idx, id,
+-					chan->center_freq, wait,
+-					buf, len, no_cck);
++	return ath6kl_wmi_send_mgmt_cmd(ar->wmi, vif->fw_vif_idx, id, freq,
++					wait, buf, len, no_cck);
+ }
+ 
+ static void ath6kl_mgmt_frame_register(struct wiphy *wiphy,
+-- 
+1.8.1.5
 
