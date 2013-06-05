@@ -1,105 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38609 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238Ab3FKSVT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 14:21:19 -0400
-Message-ID: <1370974866.8356.60.camel@jlt4.sipsolutions.net> (sfid-20130611_202122_369239_844DFB56)
-Subject: Re: pull-request: iwlwifi-next 2013-06-11
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 11 Jun 2013 20:21:06 +0200
-In-Reply-To: <1370974531.8356.56.camel@jlt4.sipsolutions.net> (sfid-20130611_201543_141311_7A590D93)
-References: <1370974531.8356.56.camel@jlt4.sipsolutions.net>
-	 (sfid-20130611_201543_141311_7A590D93)
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-lDVxpaVAmJrjF5RwMYUV"
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:43957 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753530Ab3FELgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 07:36:52 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: cw1200: add driver for the ST-E CW1100 & CW1200 WLAN chipsets
+References: <20130604130955.GA13788@debian>
+	<20130604134340.GA3813@shaftnet.org>
+	<87d2s13rsm.fsf@purkki.adurom.net>
+	<20130605111258.GA15549@shaftnet.org>
+Date: Wed, 05 Jun 2013 14:36:51 +0300
+In-Reply-To: <20130605111258.GA15549@shaftnet.org> (Solomon Peachy's message
+	of "Wed, 5 Jun 2013 07:12:59 -0400")
+Message-ID: <87vc5s3i24.fsf@purkki.adurom.net> (sfid-20130605_133655_474765_AFE24874)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Solomon Peachy <pizza@shaftnet.org> writes:
 
---=-lDVxpaVAmJrjF5RwMYUV
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> On Wed, Jun 05, 2013 at 11:06:33AM +0300, Kalle Valo wrote:
+>> > I'll try to robustify this rather ugly interface as much as possible.  
+>> 
+>> We have nl80211 testmode interface for just stuff like this. I recommend
+>> using that instead of debugfs.
+>
+> When in the so-called etf_mode, the driver doesn't create a netdev.  It 
+> doesn't probe the hardware; it doesn't even (automatically) load 
+> firmware because it doesn't know what firmware to load.  The driver 
+> becomes a (mostly very dumb) conduit for messages to/from userspace.
+>
+> That userspace in turn is a thin daemon that listens on a TCP socket and 
+> relays everything to/from a windows-only highly proprietary vendor tool.  
+> Everything needed to initialize the hardware (even the dpll value), is 
+> obtained via these messages.
 
-Hi John,
+This is exactly what testmode was written for.
 
-Still it's mostly cleanups, with a few fixes thrown in. I had to merge
-wireless-next/master to get the interface combinations revert that I had
-to do due to my own stupidity :-)
+> There's no inherent reason why this daemon couldn't use nl80211 instead, 
+> but IMO it's not worth the effort to rewrite the driver so it can bring 
+> up a netdev that (cleanly) fails everything other than nl80211
+> testcmds.
 
-Emmanuel contributed two AP mode fixes, removed an unused field, fixed a
-comment and added a warning for something that shouldn't happen in
-practice, and I removed the declaration of a function that doesn't even
-exist and cleaned up a small include.
+What do you mean with bring up netdev? I don't understand.
 
-johannes
+Even now you call ieee80211_register_hw() before cw1200_debug_init(). At
+least from a quick look I don't see any technical reason why you can't
+use testmode (unless I'm missing something).
 
-The following changes since commit 8b3e7be437a6b62118d0485ad971e724afe23fdf=
-:
+And if there's a problem how testmode is implemented we can always fix
+it.
 
-  cw1200: Fix an assorted pile of checkpatch warnings. (2013-06-11 12:48:10=
- -0400)
+> After all, it'll still be an opaque binary interface whether it uses 
+> nl80211, custom ioctls, or the existing debugfs interface.
+>
+> If the existing debugfs interface is too ugly to stomach in the 
+> mainline, we're better off just stripping it out and maintaining it as 
+> an out-of-tree patch for the handful of users that need to use the 
+> vendor tools -- In other words, folks bringing up new hardware designs 
+> or obtaining FCC(etc) certification.
 
-are available in the git repository at:
+Again, this is exactly what testmode is for.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
-r-john
+We have been working hard to get rid of all sort ugly driver specific
+interfaces. If you don't want to use the proper interface then I guess
+it's better to remove the custom debugfs interface from cw1200.
 
-for you to fetch changes up to 8eb3871076875f247483f4a1fe6713e6d440c53e:
-
-  iwlwifi: mvm: Update the supported interface combinations (2013-06-11 20:=
-17:06 +0200)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (5):
-      iwlwifi: mvm: remove unused wait_for_ba field
-      iwlwifi: mvm: fix irrelevant comment
-      iwlwifi: ignore 0-length PHY DB sections
-      iwlwifi: mvm: properly tell the fw that a STA is awake
-      iwlwifi: mvm: don't set the MCAST queue in STA's queue list
-
-Ilan Peer (1):
-      iwlwifi: mvm: Update the supported interface combinations
-
-Johannes Berg (3):
-      iwlwifi: mvm: remove iwl_mvm_dbgfs_set_fw_dbg_log declaration
-      iwlwifi: include export.h instead of module.h
-      Merge remote-tracking branch 'wireless-next/master' into iwlwifi-next
-
- drivers/net/wireless/iwlwifi/iwl-drv.h      |  3 +--
- drivers/net/wireless/iwlwifi/iwl-phy-db.c   |  3 +++
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |  5 +----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  9 ++++-----
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  5 -----
- drivers/net/wireless/iwlwifi/mvm/sta.c      | 11 +----------
- drivers/net/wireless/iwlwifi/mvm/sta.h      |  2 --
- 7 files changed, 10 insertions(+), 28 deletions(-)
-
-
---=-lDVxpaVAmJrjF5RwMYUV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRt2qSAAoJEDBSmw7B7bqr/2wP/0NnzMcsbf4tbSiShlH19mPU
-NpcE88fJJdbJSqJZpx6rCCHLpfOT0Pq7q75FMGpfCCkL7mgir2RODSfNqpPqxUvi
-jin7+v6GG6qfbgfMJ/L1vkuIucaUHa91p6s81wXI0TUSSrhwJ20JbRHifFX3TGEy
-CRcr2FyaapWhiguxqQ38XjV6eE8Sp0cmK7yOim+Qx0FEOv9UMinwAU+tS7wLT55c
-/q+X7nRhsYHZ5b9h5K8My6WMiAPIq1hZU45J+op0HaUSPlnrwmZBELER0RrYI6oE
-7P55Gx1STYjBm9mgDYOhV0cCXQq5Yh0ja70oJ3ai/+RHybBtC5RPWYVQdNbuuIb/
-2Ie6eEinD/u2AchUksipwck5F7j2W/FR0VJXZiFeePwfEk7riuI/Mo1y+JzFMEVF
-WpQo23/YIkB5dkjeJQnME8SQm7rk1LE46Z0I9iNb1TQJpdoGVPATl6SETs4tCtBy
-w+W4ahk27jNdHIgz9OhuWzQ5y7tSqPkjlVRbAjlex7s0smBxBVkXMqcRPinjzXAA
-E6ZNHoS7i74HW+B6s47l9GZEHrmTvgm+zjDuaQWm3jXpMJCLtwlQtZxH5waXPDY2
-mLPTfq+YgWJNU8gOgSIoQgov63nC4ZqCM8UUO7ZZ2E2qnMeRDXXp/MXBHQvsJO2K
-F0gUK3/QOt+0GTaQHsGA
-=ijsy
------END PGP SIGNATURE-----
-
---=-lDVxpaVAmJrjF5RwMYUV--
-
+-- 
+Kalle Valo
