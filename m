@@ -1,116 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:40683 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754950Ab3F1Ji6 (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:61281 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757222Ab3FEUdL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 05:38:58 -0400
-Date: Fri, 28 Jun 2013 10:38:48 +0100
-From: Mark Rutland <mark.rutland@arm.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: "grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm@vger.kernel.org" <linux-arm@vger.kernel.org>
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-Message-ID: <20130628093848.GA2139@e106331-lin.cambridge.arm.com> (sfid-20130628_113918_866401_723A33C7)
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372149330-24335-1-git-send-email-coelho@ti.com>
+	Wed, 5 Jun 2013 16:33:11 -0400
+Received: by mail-ee0-f51.google.com with SMTP id e52so621931eek.10
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 13:33:09 -0700 (PDT)
+Message-ID: <1370464385.6213.32.camel@canaries64> (sfid-20130605_223315_525127_6A0E2D8A)
+Subject: [PATCH 06/13] staging: vt6656: clean up MACvRegBitsOn
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Jun 2013 21:33:05 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
-> Add device tree bindings documentation for the TI WiLink modules.
-> Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
-> modules is supported.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
-> 
-> I created a new directory under net to contain wireless bindings documentation.
-> 
-> The actual implementation in the driver will follow separately.
-> 
->  .../devicetree/bindings/net/wireless/ti-wilink.txt |   46 ++++++++++++++++++++
->  1 file changed, 46 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> new file mode 100644
-> index 0000000..d8e8bfbb
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> @@ -0,0 +1,46 @@
-> +TI WiLink Wireless Modules Device Tree Bindings
-> +===============================================
-> +
-> +The WiLink modules provide wireless connectivity, such as WLAN,
-> +Bluetooth, FM and NFC.
-> +
-> +There are several different modules available, which can be grouped by
-> +their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
-> +currently supported with device tree.
-> +
-> +Currently, only the WLAN portion of the modules is supported with
-> +device tree.
-> +
-> +Required properties:
-> +--------------------
-> +
-> +- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
-> +- interrupt-parent: the interrupt controller
-> +- interrupts: out-of-band WLAN interrupt
-> +	See the interrupt controller's bindings documentation for
-> +	detailed definition.
-> +
-> +Optional properties:
-> +--------------------
-> +
-> +- refclock: the internal WLAN reference clock frequency (required for
-> +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-> +  following:
-> +	0 = 19.2 MHz
-> +	1 = 26.0 MHz
-> +	2 = 38.4 MHz
-> +	3 = 52.0 MHz
-> +	4 = 38.4 MHz, XTAL
-> +	5 = 26.0 MHz, XTAL
-> +
-> +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> +  following:
-> +	0 = 19.200 MHz
-> +	1 = 26.000 MHz
-> +	2 = 38.400 MHz
-> +	3 = 52.000 MHz
-> +	4 = 16.368 MHz
-> +	5 = 32.736 MHz
-> +	6 = 16.800 MHz
-> +	7 = 33.600 MHz
+Remove internal white space and camel case.
 
-This looks suspiciously like what we have the common clock bindings for:
+Camel case changes;
+pDevice -> priv
+byRegOfs -> offset
+byBits -> bits
+pbyData -> data
 
-refclk {
-	compatible = "fixed-clock";
-	#clock-cells = <0>;
-	clock-frequency = <19200000>;
-}
+Functional change
+CONTROLnsRequestOut Length = ARRAY_SIZE(data)
+offset changed to u16
 
-wilink {
-	compatible = "ti,wilink7";
-	interrupt-parent = <&some_interrupt_controller>;
-	interrupts = <0 1 1>;
-	clocks = <&refclk>, <&refclk>;
-	clock-names = "refclk", "txoclk";
-};
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 17 ++++++-----------
+ drivers/staging/vt6656/mac.h |  2 +-
+ 2 files changed, 7 insertions(+), 12 deletions(-)
 
-Could you not use them?
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 77ec057..d690ef1 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -201,20 +201,15 @@ void MACvRegBitsOff(struct vnt_private *priv, u16 offset, u8 bits)
+ 		offset, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ }
+ 
+-void MACvRegBitsOn(struct vnt_private *pDevice, u8 byRegOfs, u8 byBits)
++void MACvRegBitsOn(struct vnt_private *priv, u16 offset, u8 bits)
+ {
+-	u8 pbyData[2];
++	u8 data[2];
+ 
+-    pbyData[0] = byBits;
+-    pbyData[1] = byBits;
++	data[0] = bits;
++	data[1] = bits;
+ 
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_WRITE_MASK,
+-                        byRegOfs,
+-                        MESSAGE_REQUEST_MACREG,
+-                        2,
+-                        pbyData
+-                        );
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK,
++		offset, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ }
+ 
+ void MACvWriteWord(struct vnt_private *pDevice, u8 byRegOfs, u16 wData)
+diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
+index 4aa0f8d..91964e8 100644
+--- a/drivers/staging/vt6656/mac.h
++++ b/drivers/staging/vt6656/mac.h
+@@ -409,7 +409,7 @@ void MACvSetBBType(struct vnt_private *, u8);
+ void MACvDisableKeyEntry(struct vnt_private *, u32);
+ void MACvSetKeyEntry(struct vnt_private *, u16, u32, u16, u8 *, u32 *);
+ void MACvRegBitsOff(struct vnt_private *, u16, u8);
+-void MACvRegBitsOn(struct vnt_private *, u8, u8);
++void MACvRegBitsOn(struct vnt_private *, u16, u8);
+ void MACvWriteWord(struct vnt_private *, u8, u16);
+ void MACvWriteBSSIDAddress(struct vnt_private *, u8 *);
+ void MACvEnableProtectMD(struct vnt_private *);
+-- 
+1.8.1.2
 
-Thanks,
-Mark.
+
+
