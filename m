@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:61500 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755654Ab3FKRLs (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45629 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751207Ab3FFNPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 13:11:48 -0400
-Received: by mail-pb0-f45.google.com with SMTP id mc8so8749496pbc.4
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2013 10:11:47 -0700 (PDT)
-Received: from [131.179.210.181] (Cs-210-181.CS.UCLA.EDU. [131.179.210.181])
-        by mx.google.com with ESMTPSA id z19sm6656257paf.12.2013.06.11.10.11.45
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Tue, 11 Jun 2013 10:11:46 -0700 (PDT)
-Message-ID: <51B75A50.1010407@gmail.com> (sfid-20130611_191158_665348_7AA92740)
-Date: Tue, 11 Jun 2013 10:11:44 -0700
-From: wen <allen.z.wen@gmail.com>
+	Thu, 6 Jun 2013 09:15:14 -0400
+Date: Wed, 5 Jun 2013 13:47:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Antonio Quartulli <ordex@autistici.org>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCHv4 2/4] brcm80211: make mgmt_tx in brcmfmac accept a NULL
+ channel
+Message-ID: <20130605174711.GB15004@tuxdriver.com> (sfid-20130606_151519_998193_41EDCE2D)
+References: <1370444989-2095-1-git-send-email-ordex@autistici.org>
+ <1370444989-2095-2-git-send-email-ordex@autistici.org>
+ <51AF5A92.9050906@broadcom.com>
+ <51AF5AB7.2070703@broadcom.com>
+ <1370446810.25710.6.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: How to change channel type b/t HT20 and HT40 in driver code (ath9k)?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370446810.25710.6.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Developers!
+On Wed, Jun 05, 2013 at 05:40:10PM +0200, Johannes Berg wrote:
+> On Wed, 2013-06-05 at 17:35 +0200, Arend van Spriel wrote:
+> > On 06/05/2013 05:34 PM, Arend van Spriel wrote:
+> > > On 06/05/2013 05:09 PM, Antonio Quartulli wrote:
+> > >> From: Antonio Quartulli <antonio@open-mesh.com>
+> > >>
+> > >> cfg80211 passes a NULL channel to mgmt_tx if the frame has
+> > >> to be sent on the one currently in use by the device.
+> > >> Make the implementation of mgmt_tx correctly handle this
+> > >> case
+> > >>
+> > >> Cc: Arend van Spriel <arend@broadcom.com>
+> > >> Cc: brcm80211-dev-list@broadcom.com
+> > >> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+> > >> ---
+> > >
+> > > For my name above you (or Johannes) can change 'Cc:' to 'Acked-by:'
+> > 
+> > Or John?
+> 
+> I think I'll take the whole series if that's ok with everyone, otherwise
+> we get synchronisation issues between John and myself :)
 
-I've been trying to implement Notify Channel Width for linux wireless
-compat driver.
+Yes, please.
 
-One thing need to be done is to change station's channel type between ht20
-and ht40 without interrupting data transmission.
-
-What I can do now is switching between ht20 rates and ht40 rates, but not
-channel type. For ap side, ieee80211_set_channel_type() works fine when
-called in function ieee80211_rx_h_action() to change ap channel type
-between ht20 and ht40. But on station side, I couldn't find a proper
-function within which to call ieee80211_set_channel_type(), and all my try
-caused kernel panic. Even calling ieee80211_set_channel_type() exactly the
-same way I do with ap on station side will crash system also.
-
-Could anybody give some hint on possible way (e.g. API) to change channel
-type between ht20 and ht40 on station side, please?
-
-Thanks in advance!
-
-Wen
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
