@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36933 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755993Ab3FLSwT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 14:52:19 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Paul Stewart <pstew@chromium.org>
-Subject: Re: [PATCH] mwifiex: Add module parameter for regdomain
-References: <1370904007-10959-1-git-send-email-bzhao@marvell.com>
-	<877ghz3il6.fsf@purkki.adurom.net>
-	<477F20668A386D41ADCC57781B1F70430EA268B457@SC-VEXCH1.marvell.com>
-Date: Wed, 12 Jun 2013 21:52:16 +0300
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430EA268B457@SC-VEXCH1.marvell.com>
-	(Bing Zhao's message of "Wed, 12 Jun 2013 10:43:19 -0700")
-Message-ID: <8738sn2mcf.fsf@purkki.adurom.net> (sfid-20130612_205223_491923_CF361C15)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45622 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751207Ab3FFNPL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 09:15:11 -0400
+Date: Wed, 5 Jun 2013 13:45:38 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Jakub Kicinski <kubakici@wp.pl>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Incorrect resolution of merge conflict in net/mac80211/iface.c
+Message-ID: <20130605174537.GA15004@tuxdriver.com> (sfid-20130606_151516_448330_0283B757)
+References: <20130605161445.309a2942@north>
+ <CAGXE3d_TRYRA-o0K+zL-76rp0Xsv98bQnOPRJVepAP+iogrsTg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXE3d_TRYRA-o0K+zL-76rp0Xsv98bQnOPRJVepAP+iogrsTg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bing Zhao <bzhao@marvell.com> writes:
+On Wed, Jun 05, 2013 at 04:37:21PM +0200, Helmut Schaa wrote:
+> On Wed, Jun 5, 2013 at 4:14 PM, Jakub Kicinski <kubakici@wp.pl> wrote:
+> > Hi John,
+> >
+> > I'm afraid merge in commit 84e46e17c8 of wireless-testing is
+> > not correct.  I don't know how would you like to resolve this
+> > technical error, I attach my fixup patch in case it will help
+> > you.  You may also want to take a look at commit a0f5d4b3a3
+> > of linux-next, I believe Stephen have merged two offending
+> > patches correctly there.
+> >
+> > BTW I think the way MAC addresses of active monitors are
+> > handled for devices that use address masks need some work
+> > on its own I hope to send a fix for that later this week.
+> 
+> Indeed, good catch. Stephens merge looks correct to me.
 
-> Hi Kalle,
->
->> > From: Avinash Patil <patila@marvell.com>
->> >
->> > Allow a regulatory domain country code to be specified at boot
->> > using a module argument.  This overrides the firmware regulatory
->> > mode.
->> >
->> > This patch also enables uAP to operate in 11a mode with hostapd.
->> >
->> > Signed-off-by: Avinash Patil <patila@marvell.com>
->> > Signed-off-by: Paul Stewart <pstew@chromium.org>
->> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
->> 
->> This looks ugly. Why can't you use the proper nl80211 interface and
->> instead want to add a driver specific hack?
->
-> "iw reg set XX" or "country_code=XX" in hostapd.conf is a *user* hint.
->
-> What we need here is a *driver* hint. Furthermore, with a driver
-> regulatory hint, the passive-scan and no-ibss flags are cleared so we
-> can start AP with hostapd on 5G band.
-
-So it's a driver hint which is coming from user space via a module
-parameter. IMHO you are abusing interfaces here. Is there any better way
-to solve your problem?
+Yep, looks fine -- thanks, Jakub!
 
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
