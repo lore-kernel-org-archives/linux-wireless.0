@@ -1,53 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:55032 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817Ab3FYPcY convert rfc822-to-8bit (ORCPT
+Received: from diserzione.investici.org ([82.221.99.153]:39709 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756113Ab3FEOg4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 11:32:24 -0400
-Received: by mail-ob0-f175.google.com with SMTP id xn12so12393228obc.34
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2013 08:32:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQnda59qziwwjVfH7zCmQipED7TuxsDg0RgWA7ZK78gALQ@mail.gmail.com>
-References: <1372171926-2686-1-git-send-email-zajec5@gmail.com>
-	<CA+BoTQnda59qziwwjVfH7zCmQipED7TuxsDg0RgWA7ZK78gALQ@mail.gmail.com>
-Date: Tue, 25 Jun 2013 17:32:23 +0200
-Message-ID: <CACna6rxHNko8i_CxnNNSV9kZCFgUENsaoaz93Pb8WJr24vJUfg@mail.gmail.com> (sfid-20130625_173227_085362_2EE7FB70)
-Subject: Re: [RFH][PATCH] bcma: add support for BCM43142
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
+	Wed, 5 Jun 2013 10:36:56 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Subject: [PATCHv3 3/4] ath6kl: make mgmt_tx accept a NULL channel
+Date: Wed,  5 Jun 2013 16:34:52 +0200
+Message-Id: <1370442893-1687-3-git-send-email-ordex@autistici.org> (sfid-20130605_163749_817007_28B40EA5)
+In-Reply-To: <1370442893-1687-1-git-send-email-ordex@autistici.org>
+References: <1370442893-1687-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/6/25 Michal Kazior <michal.kazior@tieto.com>:
-> On 25 June 2013 16:52, Rafał Miłecki <zajec5@gmail.com> wrote:
->> I got following problem with the patch:
->>   CC [M]  drivers/bcma/driver_chipcommon_pmu.o
->> drivers/bcma/driver_chipcommon_pmu.c: In function ‘bcma_pmu2_pll_init0’:
->> drivers/bcma/driver_chipcommon_pmu.c:128:5: warning: large integer implicitly truncated to unsigned type [-Woverflow]
->>
->> This is caused by:
->> mask = ~(BCMA_RES_4314_HT_AVAIL |
->>          BCMA_RES_4314_MACPHY_CLK_AVAIL);
->>
->> Any idea why
->> u32 mask = ~(BIT(28) | BIT(29))
->> causes that? :|
->>
->> I could expect that in case of using BIT(31), but not 28/29...
->
-> Are you perhaps compiling for a 64bit target? If so then I you're
-> dealing with a 64bit bitmask here. Negating ends up as an overflow as
-> you try to cram it into the 32bit var.
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-Ahh, thanks!
+cfg80211 passes a NULL channel to mgmt_tx if the frame has
+to be sent on the one currently in use by the device.
+Make the implementation of mgmt_tx correctly handle this
+case
 
-Is there any preferred solution for that?
-u32 mask = (u32)~(BIT(28) | BIT(29))
-u32 mask = ~(BIT(28) | BIT(29)) & 0xFFFF
-? I guess the first one looks nicer?
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index f7995b2..b542203 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3175,10 +3175,17 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ {
+ 	struct ath6kl_vif *vif = ath6kl_vif_from_wdev(wdev);
+ 	struct ath6kl *ar = ath6kl_priv(vif->ndev);
+-	u32 id;
++	u32 id, freq;
+ 	const struct ieee80211_mgmt *mgmt;
+ 	bool more_data, queued;
+ 
++	/* default to the current channel, but use the one specified as argument
++	 * if any
++	 */
++	freq = vif->ch_hint;
++	if (chan)
++		freq = chan->center_freq;
++
+ 	mgmt = (const struct ieee80211_mgmt *) buf;
+ 	if (vif->nw_type == AP_NETWORK && test_bit(CONNECTED, &vif->flags) &&
+ 	    ieee80211_is_probe_resp(mgmt->frame_control) &&
+@@ -3188,8 +3195,7 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		 * command to allow the target to fill in the generic IEs.
+ 		 */
+ 		*cookie = 0; /* TX status not supported */
+-		return ath6kl_send_go_probe_resp(vif, buf, len,
+-						 chan->center_freq);
++		return ath6kl_send_go_probe_resp(vif, buf, len, freq);
+ 	}
+ 
+ 	id = vif->send_action_id++;
+@@ -3205,17 +3211,14 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	/* AP mode Power saving processing */
+ 	if (vif->nw_type == AP_NETWORK) {
+-		queued = ath6kl_mgmt_powersave_ap(vif,
+-					id, chan->center_freq,
+-					wait, buf,
+-					len, &more_data, no_cck);
++		queued = ath6kl_mgmt_powersave_ap(vif, id, freq, wait, buf, len,
++						  &more_data, no_cck);
+ 		if (queued)
+ 			return 0;
+ 	}
+ 
+-	return ath6kl_wmi_send_mgmt_cmd(ar->wmi, vif->fw_vif_idx, id,
+-					chan->center_freq, wait,
+-					buf, len, no_cck);
++	return ath6kl_wmi_send_mgmt_cmd(ar->wmi, vif->fw_vif_idx, id, freq,
++					wait, buf, len, no_cck);
+ }
+ 
+ static void ath6kl_mgmt_frame_register(struct wiphy *wiphy,
 -- 
-Rafał
+1.8.1.5
+
