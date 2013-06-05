@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38182 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755681Ab3FRJgT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 05:36:19 -0400
-Message-ID: <1371548163.8318.2.camel@jlt4.sipsolutions.net> (sfid-20130618_113624_696931_05E0EB9D)
-Subject: Re: [PATCH] mac80211: allow key deletion for mesh interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>
-Date: Tue, 18 Jun 2013 11:36:03 +0200
-In-Reply-To: <CAEFj987DCjNuv+W3oSq6ubHwjnkmKgKvcDThhP8s9ZXBsKmcjg@mail.gmail.com> (sfid-20130618_110728_700495_DC4DE8F2)
-References: <CAEFj9864ioXkUy3Sg24k6vFTNR8ZfWj=to54J2VS=dvte+ExNA@mail.gmail.com>
-	 <CAEFj987DCjNuv+W3oSq6ubHwjnkmKgKvcDThhP8s9ZXBsKmcjg@mail.gmail.com>
-	 (sfid-20130618_110728_700495_DC4DE8F2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35290 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752290Ab3FELHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 07:07:11 -0400
+Message-ID: <51AF1BD6.1090402@hauke-m.de> (sfid-20130605_130725_377574_38E804CA)
+Date: Wed, 05 Jun 2013 13:07:02 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: Kalle Valo <kvalo@adurom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] brcmsmac: disable power-save related functions
+References: <1370419185-3977-1-git-send-email-arend@broadcom.com> <878v2p3qst.fsf@purkki.adurom.net> <874ndd3q20.fsf@purkki.adurom.net> <51AEFACD.7000902@broadcom.com>
+In-Reply-To: <51AEFACD.7000902@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-18 at 17:07 +0800, Yeoh Chun-Yeow wrote:
-> In sta_info_get_bss, should it be:
+On 06/05/2013 10:46 AM, Arend van Spriel wrote:
+> On 06/05/2013 10:44 AM, Kalle Valo wrote:
+>> Kalle Valo <kvalo@adurom.com> writes:
+>>
+>>> "Arend van Spriel" <arend@broadcom.com> writes:
+>>>
+>>>> This patch fixes a regression introduced by:
+>>>>
+>>>>    commit 6da3b6c48d79da96a36c2632053cf4f53bf48fb2
+>>>>    Author: Hauke Mehrtens <hauke@hauke-m.de>
+>>>>    Date:   Sun Mar 24 01:45:52 2013 +0100
+>>>>
+>>>>        brcmsmac: remove brcms_bss_cfg->associated
+>>>>
+>>>> The regression behaviour is described in:
+>>>>
+>>>> http://www.spinics.net/lists/linux-wireless/msg107474.html
+>>>
+>>> The link is not a very reliable reference, it can die anytime and
+>>> there's no way to know what message it refers to. Stating the message id
+>>> would better. And the best would be to copy the full text to the commit
+>>> log, it's only few lines anyway.
+>>
+>> Johannes gave a handy tip. Gmane has a service which uses message ids:
+>>
+>> http://mid.gmane.org/5197DC4F.7030503@broadcom.com
+>>
+>> If the link or service dies, one can find the email with the message id
+>> visible from the link.
+>>
 > 
-> if ((sta->sdata == sdata &&
->                      (sta->sdata->bss && sta->sdata->bss == sdata->bss))
+> What if gmane dies ;-)
 > 
-> in stead of
-> 
-> if ((sta->sdata == sdata ||
->                      (sta->sdata->bss && sta->sdata->bss == sdata->bss))
+> Gr. AvS
 
-What would the point be? Then we could just as well make it *only*
-	sta->sdata == sdata
-and it'd be the same as sta_info_get(). This is intentional for VLAN
-handling.
+There is also a bugzilla entry for this bug:
+https://bugzilla.kernel.org/show_bug.cgi?id=58471
 
-> Otherwise, it seems that we still manage to get sta pointer even the
-> bss is NULL.
-
-What's the problem with that? But if this is a problem maybe we need to
-explicitly check for non-NULL?
-
-johannes
-
+Hauke
