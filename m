@@ -1,111 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50269 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751971Ab3FNKs5 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22825 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904Ab3FEKPc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jun 2013 06:48:57 -0400
-Message-ID: <1371206930.8278.8.camel@jlt4.sipsolutions.net> (sfid-20130614_124900_055729_93C857CC)
-Subject: pull-request: iwlwifi-next 2013-06-14
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 14 Jun 2013 12:48:50 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-jatdQXumKhEx0wHPKSGv"
-Mime-Version: 1.0
+	Wed, 5 Jun 2013 06:15:32 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Antonio Quartulli <antonio@open-mesh.com>
+CC: Antonio Quartulli <ordex@autistici.org>,
+	Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>
+Subject: Re: ath6kl_mgmt_tx with NULL chan
+References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+	<1370271547.8227.16.camel@jlt4.sipsolutions.net>
+	<51ACB068.8070006@lri.fr> <20130603171430.GE1226@ritirata.org>
+	<8738swkhho.fsf@kamboji.qca.qualcomm.com>
+	<20130605100332.GB2349@open-mesh.com>
+Date: Wed, 5 Jun 2013 13:15:26 +0300
+In-Reply-To: <20130605100332.GB2349@open-mesh.com> (Antonio Quartulli's
+	message of "Wed, 5 Jun 2013 12:03:32 +0200")
+Message-ID: <87ppw0j22p.fsf@kamboji.qca.qualcomm.com> (sfid-20130605_121534_830396_5FB68498)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Antonio Quartulli <antonio@open-mesh.com> writes:
 
---=-jatdQXumKhEx0wHPKSGv
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> On Wed, Jun 05, 2013 at 02:57:07AM -0700, Kalle Valo wrote:
+>> Antonio Quartulli <ordex@autistici.org> writes:
+>> 
+>> > I'm looking at ath6kl_mgmt_tx() in ath6kl/cfg80211.c and I've seen that the
+>> > currently "configured" frequency can be obtained by reading the
+>> > ath6kl_vif->ch_hint field.
+>> >
+>> > But, is this correct?
+>> 
+>> I did a quick look. To me using ch_hint looks correct.
+>> 
+>> > I couldn't see any real relation between the ch_hint field and the
+>> > real frequency (probably because a lot of logic is hidden to the
+>> > driver). I could only understand that the ch_hint field stores the
+>> > frequency passed as parameter during the connection, but I have found
+>> > no guarantee that this is the really used one.
+>> 
+>> Can you be more specific, please?
+>> 
+>> To me it looks that ch_hint is used both with ath6kl_wmi_reconnect_cmd()
+>> and ath6kl_wmi_connect_cmd() commands, which both are used to connect to
+>> a network. I don't see any other variables used for specifying the
+>> frequency to the firmware. But I could just be blind...
+>
+> I agree with your analysis. My doubt came from the fact that I don't know what
+> the firmware does and I was wondering whether it could ignore the channel passed
+> as argument on connect for some reason.
 
-John,
+It might do that, I'm not involved with the firmware development.
 
-Here are some more things for -next. I will have another pull request
-some time next week because we're preparing to release the firmware for
-the 7000 series devices, and unfortunately that will require an API
-bump.
+> Actually the doubt was raised due to the variable name "ch_HINT".
 
-This time I have a number of cleanups, a small fix from Emmanuel and two
-performance improvements that combined reduce our driver's CPU
-utilisation as much as 75% in high TX-throughput scenarios.
+Yeah, the name is really misleading. But that's still legacy from the
+pre-cleanup driver, so I wouldn't worry about that too much.
 
-johannes
+> But you are the ath6k expert :-) Therefore I guess this can work.
 
+It should but you never know :)
 
-The following changes since commit 8eb3871076875f247483f4a1fe6713e6d440c53e=
-:
+But when modifying that code, please add a check to make sure that
+channel 0 is not used by accident.
 
-  iwlwifi: mvm: Update the supported interface combinations (2013-06-11 20:=
-17:06 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
-r-john
-
-for you to fetch changes up to adaf69186c24100d34c2fb107dacd33546cad3c5:
-
-  iwlwifi: mvm: remove obsolete comment (2013-06-13 16:43:16 +0200)
-
-----------------------------------------------------------------
-David Spinadel (1):
-      iwlwifi: remove calib channel section from PHY DB
-
-Emmanuel Grumbach (2):
-      iwlwifi: mvm: take the seqno from packet if transmit failed
-      iwlwifi: mvm: remove obsolete comment
-
-Johannes Berg (5):
-      iwlwifi: make TX seqno validation more efficient
-      iwlwifi: pcie: don't read INTA register in ICT IRQ handler
-      iwlwifi: reduce debug ifdefs using the optimiser
-      iwlwifi: mvm: mark scratch area in TX command
-      iwlwifi: create opmode/device dependencies
-
-Oren Givon (1):
-      iwlwifi: mvm: removed an unused parameter from a function
-
- drivers/net/wireless/iwlwifi/Makefile        |  6 ++--
- drivers/net/wireless/iwlwifi/dvm/main.c      |  7 -----
- drivers/net/wireless/iwlwifi/iwl-config.h    |  4 +++
- drivers/net/wireless/iwlwifi/iwl-debug.h     |  4 +++
- drivers/net/wireless/iwlwifi/iwl-modparams.h |  2 ++
- drivers/net/wireless/iwlwifi/iwl-phy-db.c    | 36 ++---------------------
- drivers/net/wireless/iwlwifi/mvm/d3.c        | 15 +++++-----
- drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h |  9 +++---
- drivers/net/wireless/iwlwifi/mvm/tx.c        |  5 ++--
- drivers/net/wireless/iwlwifi/pcie/drv.c      |  4 +++
- drivers/net/wireless/iwlwifi/pcie/internal.h |  2 ++
- drivers/net/wireless/iwlwifi/pcie/rx.c       | 44 ++++++++++--------------=
-----
- drivers/net/wireless/iwlwifi/pcie/tx.c       | 10 +++----
- 13 files changed, 58 insertions(+), 90 deletions(-)
-
-
---=-jatdQXumKhEx0wHPKSGv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRuvUSAAoJEDBSmw7B7bqrKpYP/1yiOO9Sk/YasYQ18M7e3P5X
-igYqdI+5yGGSxGdnKh1iWdGmsdJBzOFcdUxI7ml3O6l1ma74ldTrGXYH40Ke9AGb
-2t85oGifZkK9Xr2KHzvlM9RWx5bDfXWOxBtYL3e+b8bAVYVYSB7dASqm+ML+Kboz
-hWVGOGfPUAXj58pOi0p7Zaa9k6y5Afz2Ys7SwpIDnVLYGCRNqJvBnI4AhAd/CCHu
-WTFCx8L7sn4jevSczi4es+9U7xupmbzOKc81Qw6kgTKEO4o30GOKNxGZs7+BMBLa
-ZuT/VULmOnnkYl92m9E5gUjTUvw5D1MeM0vQzwwL71/fbhcN+djqRUt7z6iTlGqs
-jwLy/wlLY6hS0rK7dONoKWInaKbp6xMUHnbV5Q/bCBXpp8EUov2BnCeXpDqKG3cq
-mnLAH+2RjH9sKE4/R9MMsGYGi3DifSlvBmzYAuQlivU8KwC1UD8aHAhFzDJvJ426
-UxI8reTIcfDKTRapgxkMfmEUBiyv6XywVgoEa+eA4agDEtDZbgmEr8vZerCveS07
-jkz0yqrzTQBus8rC0FzjrjjMwCHbHvWYxr7AYaJBrXYb+KVcCUrrfw8uxnVs0Jc3
-ZXRUp3cBHm7HrOpnCHo5DYuriRV/z1/OK9yL5DCCgCOmoA5EEup4k0DHgG0XvTre
-e5orLHs397E+sv//xFfd
-=AjgW
------END PGP SIGNATURE-----
-
---=-jatdQXumKhEx0wHPKSGv--
-
+-- 
+Kalle Valo
