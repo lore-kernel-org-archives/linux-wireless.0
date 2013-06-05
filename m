@@ -1,64 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp06.msg.oleane.net ([62.161.4.6]:57860 "EHLO
-	smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517Ab3F0IJO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 04:09:14 -0400
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: "'Felix Fietkau'" <nbd@openwrt.org>
-Cc: <linux-wireless@vger.kernel.org>
-References: <1372267723-25072-1-git-send-email-jp.tosoni@acksys.fr> <51CB33D9.1070104@openwrt.org>
-In-Reply-To: <51CB33D9.1070104@openwrt.org>
-Subject: RE: [RFC] mac80211: Use libnl-configurable values for retry counts
-Date: Thu, 27 Jun 2013 10:09:09 +0200
-Message-ID: <003001ce730d$9a32e980$ce98bc80$@acksys.fr> (sfid-20130627_100923_688815_3F415100)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Received: from arrakis.dune.hu ([78.24.191.176]:47392 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751136Ab3FEKyG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 06:54:06 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 2/2] rt2x00: rt2800usb: nuke rt2800usb_ops_5592
+Date: Wed,  5 Jun 2013 12:54:00 +0200
+Message-Id: <1370429640-31565-2-git-send-email-juhosg@openwrt.org> (sfid-20130605_125410_728809_37BBAA4B)
+In-Reply-To: <1370429640-31565-1-git-send-email-juhosg@openwrt.org>
+References: <1370429640-31565-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First, thanks for your prompt reply and for pointing out my mistakes.
+It is exactly the same like the generic rt2800usb_ops.
+Remove the duplicate and use the generic ops for all
+devices.
 
-> > Use wiphy->retry_short for management frames.
-> > Use wiphy->retry_long for other frames.
-> That seems a bit arbitrary.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |   30 +++++-------------------------
+ 1 file changed, 5 insertions(+), 25 deletions(-)
 
-Indeed.
-Should I use the following?
-  retry_long for data frames subject to RTS
-  retry_short for all other frames.
-That looks closer to the descriptions in 802.11-2012.
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 57729a8..c065d43 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -924,23 +924,6 @@ static const struct rt2x00_ops rt2800usb_ops = {
+ #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+ };
  
-> > +	mp->max_retry = hw->conf.long_frame_max_tx_count;
-> minstrel_alloc is called at rate control init time. You're not making
-> max_retry configurable here, it'll pick the default value of
-> hw->conf.long_frame_max_tx_count and never update it again.
-
-Is it OK if I replace max_retry with the config values in minstrel_rate_init
-and minstrel_update_rates instead?
-Then we can get rid of max_retry completely?
-
-(Sorry, I got mixed in the never-ending sequence of callbacks :)
-
-> > diff --git a/net/mac80211/rc80211_minstrel.c
-> b/net/mac80211/rc80211_minstrel.c
-> > index ac7ef54..502d0c9 100644
-> > --- a/net/mac80211/rc80211_minstrel.c
-> > +++ b/net/mac80211/rc80211_minstrel.c
-> > @@ -592,11 +592,7 @@ minstrel_alloc(
-> >	/* maximum time that the hw is allowed to stay in one MRR  segment
-*/
-> >  	mp->segment_size = 6000;
-> >
-> > -	if (hw->max_rate_tries > 0)
-> > -		mp->max_retry = hw->max_rate_tries;
-> > -	else
-> > -		/* safe default, does not necessarily have to match hw
-properties */
-> > -		mp->max_retry = 7;
-> > +	mp->max_retry = hw->conf.long_frame_max_tx_count;> 
-> - Felix
-
-Jean-Pierre
+-static const struct rt2x00_ops rt2800usb_ops_5592 = {
+-	.name			= KBUILD_MODNAME,
+-	.drv_data_size		= sizeof(struct rt2800_drv_data),
+-	.max_ap_intf		= 8,
+-	.eeprom_size		= EEPROM_SIZE,
+-	.rf_size		= RF_SIZE,
+-	.tx_queues		= NUM_TX_QUEUES,
+-	.extra_tx_headroom	= rt2800usb_extra_tx_headroom,
+-	.queue_init		= rt2800usb_queue_init,
+-	.lib			= &rt2800usb_rt2x00_ops,
+-	.drv			= &rt2800usb_rt2800_ops,
+-	.hw			= &rt2800usb_mac80211_ops,
+-#ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-	.debugfs		= &rt2800_rt2x00debug,
+-#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+-};
+-
+ /*
+  * rt2800usb module information.
+  */
+@@ -1253,15 +1236,15 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ #endif
+ #ifdef CONFIG_RT2800USB_RT55XX
+ 	/* Arcadyan */
+-	{ USB_DEVICE(0x043e, 0x7a32), .driver_info = 5592 },
++	{ USB_DEVICE(0x043e, 0x7a32) },
+ 	/* AVM GmbH */
+-	{ USB_DEVICE(0x057c, 0x8501), .driver_info = 5592 },
++	{ USB_DEVICE(0x057c, 0x8501) },
+ 	/* D-Link DWA-160-B2 */
+-	{ USB_DEVICE(0x2001, 0x3c1a), .driver_info = 5592 },
++	{ USB_DEVICE(0x2001, 0x3c1a) },
+ 	/* Proware */
+-	{ USB_DEVICE(0x043e, 0x7a13), .driver_info = 5592 },
++	{ USB_DEVICE(0x043e, 0x7a13) },
+ 	/* Ralink */
+-	{ USB_DEVICE(0x148f, 0x5572), .driver_info = 5592 },
++	{ USB_DEVICE(0x148f, 0x5572) },
+ #endif
+ #ifdef CONFIG_RT2800USB_UNKNOWN
+ 	/*
+@@ -1366,9 +1349,6 @@ MODULE_LICENSE("GPL");
+ static int rt2800usb_probe(struct usb_interface *usb_intf,
+ 			   const struct usb_device_id *id)
+ {
+-	if (id->driver_info == 5592)
+-		return rt2x00usb_probe(usb_intf, &rt2800usb_ops_5592);
+-
+ 	return rt2x00usb_probe(usb_intf, &rt2800usb_ops);
+ }
+ 
+-- 
+1.7.10
 
