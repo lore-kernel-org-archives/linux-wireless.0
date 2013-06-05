@@ -1,66 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:47406 "EHLO mx3.wp.pl"
+Received: from mms1.broadcom.com ([216.31.210.17]:4887 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758953Ab3FCRKC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 13:10:02 -0400
-Date: Mon, 3 Jun 2013 19:09:59 +0200
-From: Jakub Kicinski <moorray@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 1/7] rt2x00: rt2x00dev: use
- rt2x00dev->tx->limit
-Message-ID: <20130603190959.70b1f4d2@north> (sfid-20130603_191010_698464_1D00E985)
-In-Reply-To: <1367421455-18463-2-git-send-email-juhosg@openwrt.org>
-References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
-	<1367421455-18463-2-git-send-email-juhosg@openwrt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1755387Ab3FEQ55 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 12:57:57 -0400
+Message-ID: <51AF6E0C.10004@broadcom.com> (sfid-20130605_185800_110954_6CA0065E)
+Date: Wed, 5 Jun 2013 18:57:48 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Samuel Ortiz" <sameo@linux.intel.com>,
+	"Gustavo Padovan" <gustavo.padovan@collabora.co.uk>,
+	"Luciano Coelho" <coelho@ti.com>
+Subject: Re: wireless tree rebased (from 5/28), Broadcom bits dropped
+References: <20130604212602.GB11199@tuxdriver.com>
+ <20130604215320.GC11199@tuxdriver.com>
+ <1370415586.8920.4.camel@jlt4.sipsolutions.net>
+ <20130605143700.GA2271@tuxdriver.com>
+In-Reply-To: <20130605143700.GA2271@tuxdriver.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gabor!
-
-On Wed,  1 May 2013 17:17:29 +0200, Gabor Juhos wrote:
-> The TX data queue is initialized already when
-> the rt2x00lib_probe_hw() function is called.
+On 06/05/2013 04:37 PM, John W. Linville wrote:
+> On Wed, Jun 05, 2013 at 08:59:46AM +0200, Johannes Berg wrote:
+>> On Tue, 2013-06-04 at 17:53 -0400, John W. Linville wrote:
+>>> I messed this up too -- bad day...
+>>>
+>>> If you pulled in between the earlier message and this one, please
+>>> do so again.  If you saw this message before taking any action to
+>>> clean-up my mess, then you are OK.
+>>
+>> This was confusing, I think you rebased around some merges instead of
+>> redoing the merges? My patches are in, but suddenly got new commit IDs,
+>> e.g. fa331699d05ce1d0d4896eb4a137cfae50d7afde (new) vs.
+>> c2c15e215e860c99b86ddfc4be4bb25cf180fed0 for "mac80211: work around
+>> broken APs not including HT info".
+>>
+>> This will cause git to pull them in again when I send a new pull
+>> request, so it would have been nicer to redo the merges, but anyway ...
+>> just a heads-up for everyone that here it's a bit confusing now.
+>>
+>> johannes
 >
-> Fetch the number of the queue entries from that
-> instead of using the entry_num field of the data
-> queue descriptor.
+> You are right, I could have done it better with regard to your tree.
+> I probably should redo that part.
 >
-> The two values are the same, and the use of the
-> rt2x00dev->tx->limit value allows us to get rid
-> of a superfluous pointer dereference.
+> The Bluetooth tree had pulled the wireless tree and applied their
+> patches on top of the brcmfmac/brcmsmac series that I removed.  So,
+> their pull couldn't be redone.
 >
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 90dc143..b287467 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -1077,7 +1077,7 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
->   		 */
->  		int kfifo_size =
->  			roundup_pow_of_two(rt2x00dev->ops->tx_queues *
-> -					   rt2x00dev->ops->tx->entry_num *
-> +					   rt2x00dev->tx->limit *
->  					   sizeof(u32));
->  
->  		status = kfifo_alloc(&rt2x00dev->txstatus_fifo, kfifo_size,
+> I think I can fix the wireless tree and preserve the original mac80211
+> tree commits.  Everyone please hold off on doing anything else here, as
+> I'm a bit busy and won't be able to get to this before this afternoon
+> (Eastern USA time).
+>
+> Anyone object to one more wireless tree rebase today?
 
-Unfortunately this does not work without your "get rid of
-static data queue descriptors" series as well.
+Sorry, John
 
-queue->limit is set when rt2x00lib_start is called, not on
-probe. kfifo_alloc will fail with EINVAL here. As a result
-support for all rt2x00 devices is broken on wireless-testing.
+I feel your pain and I guess I should. Another lesson learned.
 
-Maybe you can just post the mentioned series for inclusion?
-I have been running with it since you posted it as RFC and
-I did not notice any problems so far...
+Gr. AvS
 
- -- kuba
+
