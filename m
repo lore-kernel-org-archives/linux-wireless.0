@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gw90.de ([188.40.100.199]:55780 "EHLO mail.gw90.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935191Ab3FSWlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 18:41:24 -0400
-Received: from e178069037.adsl.alicedsl.de ([85.178.69.37] helo=[192.168.2.49])
-	by mail.gw90.de with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <paulepanter@users.sourceforge.net>)
-	id 1UpR49-0004tP-1X
-	for linux-wireless@vger.kernel.org; Wed, 19 Jun 2013 22:41:25 +0000
-Message-ID: <1371681682.11916.14.camel@mattotaupa> (sfid-20130620_004137_673775_5D7A8F73)
-Subject: Ralink RT2870: LED on device does not blink with 3.10-rc6+
-From: Paul Menzel <paulepanter@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 20 Jun 2013 00:41:22 +0200
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-FZrhWJyg9LXDbjnQNiuO"
-Mime-Version: 1.0
+Received: from diserzione.investici.org ([82.221.99.153]:60861 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458Ab3FELzN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 07:55:13 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: [PATCHv2 3/4] brcm80211: make mgmt_tx in brcmfmac accept a NULL channel
+Date: Wed,  5 Jun 2013 13:53:06 +0200
+Message-Id: <1370433187-1337-3-git-send-email-ordex@autistici.org> (sfid-20130605_135520_435407_B8D3BEF5)
+In-Reply-To: <1370433187-1337-1-git-send-email-ordex@autistici.org>
+References: <1370433187-1337-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Antonio Quartulli <antonio@open-mesh.com>
 
---=-FZrhWJyg9LXDbjnQNiuO
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+cfg80211 passes a NULL channel to mgmt_tx if the frame has
+to be sent on the one currently in use by the device.
+Make the implementation of mgmt_tx correctly handle this
+case
 
-Dear Linux Wireless folks,
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: brcm80211-dev-list@broadcom.com
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-
-with a self-built Linux 3.10-rc6+
-
-        $ git describe
-        v3.10-rc6-84-gc069114
-
-and a TRENDnet TEW624UB USB WLAN device
-
-        $ lsusb -s 001:005
-        Bus 001 Device 005: ID 148f:2870 Ralink Technology, Corp. RT2870 Wi=
-reless Adapter
-
-everything works fine, *but* in comparison to 3.9.6 the LED on the
-device is not working/blinking during traffic.
-
-Do I miss a Kconfig option or is this a regression?
-
-
-Thanks,
-
-Paul
-
---=-FZrhWJyg9LXDbjnQNiuO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEABECAAYFAlHCM5IACgkQPX1aK2wOHViLhwCdEdNcHzN9+WwnzOrwLLN2XYYi
-x98An1rDPk/52rMuiRhdMPrxLGbsimXo
-=FJZg
------END PGP SIGNATURE-----
-
---=-FZrhWJyg9LXDbjnQNiuO--
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 6d758f2..dcb0c00 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3917,6 +3917,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	struct brcmf_fil_af_params_le *af_params;
+ 	bool ack;
+ 	s32 chan_nr;
++	u32 freq;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -3968,8 +3969,13 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		memcpy(&af_params->bssid[0], &mgmt->bssid[0], ETH_ALEN);
+ 		/* Add the length exepted for 802.11 header  */
+ 		action_frame->len = cpu_to_le16(len - DOT11_MGMT_HDR_LEN);
+-		/* Add the channel */
+-		chan_nr = ieee80211_frequency_to_channel(chan->center_freq);
++		/* Add the channel. Default to the current one, but use the one
++		 * specified as parameter if any
++		 */
++		freq = cfg->channel;
++		if (chan)
++			freq = chan->center_freq;
++		chan_nr = ieee80211_frequency_to_channel(freq);
+ 		af_params->channel = cpu_to_le32(chan_nr);
+ 
+ 		memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
+-- 
+1.8.1.5
 
