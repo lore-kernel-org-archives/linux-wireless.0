@@ -1,47 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:31340 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753471Ab3FDOfc convert rfc822-to-8bit (ORCPT
+Received: from ht1.myhostedexchange.com ([69.50.2.37]:36904 "EHLO
+	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755451Ab3FEOxy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 10:35:32 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>
-CC: "Peer, Ilan" <ilan.peer@intel.com>,
+	Wed, 5 Jun 2013 10:53:54 -0400
+Date: Wed, 5 Jun 2013 16:51:57 +0200
+From: Antonio Quartulli <antonio@open-mesh.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Antonio Quartulli <ordex@autistici.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
-Date: Tue, 4 Jun 2013 14:35:30 +0000
-Message-ID: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com> (sfid-20130604_163537_329243_0AA83F3C)
-In-Reply-To: <1370356174.8287.16.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+	Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	"ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>
+Subject: Re: [PATCHv3 3/4] ath6kl: make mgmt_tx accept a NULL channel
+Message-ID: <20130605145157.GH2349@open-mesh.com> (sfid-20130605_165406_597882_C680D210)
+References: <1370442893-1687-1-git-send-email-ordex@autistici.org>
+ <1370442893-1687-3-git-send-email-ordex@autistici.org>
+ <87r4ggy5ow.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="Fnm8lRGFTVS/3GuM"
+In-Reply-To: <87r4ggy5ow.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--Fnm8lRGFTVS/3GuM
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jun 05, 2013 at 07:48:15AM -0700, Kalle Valo wrote:
+> Antonio Quartulli <ordex@autistici.org> writes:
+>=20
+> > From: Antonio Quartulli <antonio@open-mesh.com>
+> >
+> > cfg80211 passes a NULL channel to mgmt_tx if the frame has
+> > to be sent on the one currently in use by the device.
+> > Make the implementation of mgmt_tx correctly handle this
+> > case
+> >
+> > Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> > Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+> > Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+>=20
+> [...]
+>=20
+> > @@ -3175,10 +3175,17 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, =
+struct wireless_dev *wdev,
+> >  {
+> >  	struct ath6kl_vif *vif =3D ath6kl_vif_from_wdev(wdev);
+> >  	struct ath6kl *ar =3D ath6kl_priv(vif->ndev);
+> > -	u32 id;
+> > +	u32 id, freq;
+> >  	const struct ieee80211_mgmt *mgmt;
+> >  	bool more_data, queued;
+> > =20
+> > +	/* default to the current channel, but use the one specified as argum=
+ent
+> > +	 * if any
+> > +	 */
+> > +	freq =3D vif->ch_hint;
+> > +	if (chan)
+> > +		freq =3D chan->center_freq;
+>=20
+> Can you please add a check here:
+>=20
+> if (WARN_ON(chan =3D=3D 0))
+>    return -EINVAL;
 
-On 6/4/13 5:29 PM, "Johannes Berg" <johannes@sipsolutions.net> wrote:
+I think you meant (freq =3D=3D 0) ?
 
->On Tue, 2013-06-04 at 17:03 +0300, Vladimir Kondratiev wrote:
->
->> And, probes must be reported to the host in all cases, for wpa_s to
->>have peer list.
->> Need to add comment describing this.
->
->I don't think that's necessarily true. wpa_s will pre-build a list, but
->note that it doesn't make those peers as discovered and you can't really
->do anything with them. As such, I would argue that reporting probe
->requests ("probes") would be harmful and counter to one potential goal
->of this patch (powersaving.)
+>=20
+> Just like Arend, I want to be sure that we don't submit value 0 to the
+> firmware.
 
-In general, I'd agree. However, I would like to get information of any
-peer device being in active PBC mode. This would require either getting
-those Probe Request frames or alternatively that being tracked in
-kernel/driver/firmware with some access for wpa_supplicant to fetch
-information of all STAs (list of MAC Address + UUID) that have indicated
-active PBC mode within last 120 seconds.
+Yeah ok. In ath6kl, are you aware of any "firmware command" to get the chan=
+nel
+=66rom the device like I did for brcmfmac ?
 
-- Jouni
+I couldn't find any define matching *GET*CHAN*
 
+Regards,
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--Fnm8lRGFTVS/3GuM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRr1CNAAoJEADl0hg6qKeOY4cQAJJ6X9lTFYOo/h0R4tU5K14T
+cxIS2gzdzJ924ob6dmDBxcBh+PvB5DeUbheAUYcoHxnZFGPrQi6wC3TkeJzVWKS0
+qxJiplcPV97DZgBAB31mmKRCkVkzwxaOSc9Si2gHGIb7HtZTvQx3V4Xer9Z2Q1DJ
+V+xMFj/nL+fsh2JJpPCqWANLSsUE8F2Eny5r1ygJ33eOeYhnyi4aImqHVJ3Vjz7B
+dCSHmUtfKmQ+YTkScP/aAQ5oLZMZ7VPjmcK7pAhYUA/PwshrHVST/5sPF+IaQUwb
+fEoaXPUeJu10nnsfL6QZPUvKdNOPouidF2Swj08rsu/GgIITkB0Evl56UWezwrG/
+RUDg0nZosIzyzjtyLt1BOtkVDl1WnXtoYLGIcHqVrQZdLKo/FqBdbP5rOAsyH33E
+EGRzRvfRI8JgRUSfRbYEP5upTz1ZnIZF+RmzUZxGBC0/45puxeGJzjEt017UX2kT
+N8DhUB02CVCmZr0YHUQnbC2mmR094aN2h+OPfsF1AdTf+yYtRH4uOwF8JqyARrso
+ppcws4cvLOpYJZTbtLRaoDocqNoP8I0rTGzOQzbFvuFMVmdj9SUVoeOj9u4uvY++
+uz2YS/1lkCcVjGa2cFdty1aT7co4lCmGidlABa0N5PJNt3AA8jBkSvZP6ncoMEYk
+IiQJPSTTg31T+hbSmvt7
+=Fr4r
+-----END PGP SIGNATURE-----
+
+--Fnm8lRGFTVS/3GuM--
