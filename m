@@ -1,88 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:43050 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170Ab3FQQel (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12951 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530Ab3FEJ5N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 12:34:41 -0400
-Received: by mail-ea0-f181.google.com with SMTP id a15so1986514eae.12
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 09:34:40 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: update core (en|dis)abling functions
-Date: Mon, 17 Jun 2013 18:34:32 +0200
-Message-Id: <1371486872-13251-1-git-send-email-zajec5@gmail.com> (sfid-20130617_183445_161243_8B4F64F4)
+	Wed, 5 Jun 2013 05:57:13 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Antonio Quartulli <ordex@autistici.org>
+CC: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	<ath6kl-devel@qca.qualcomm.com>
+Subject: Re: ath6kl_mgmt_tx with NULL chan
+References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+	<1370271547.8227.16.camel@jlt4.sipsolutions.net>
+	<51ACB068.8070006@lri.fr> <20130603171430.GE1226@ritirata.org>
+Date: Wed, 5 Jun 2013 12:57:07 +0300
+In-Reply-To: <20130603171430.GE1226@ritirata.org> (Antonio Quartulli's message
+	of "Mon, 3 Jun 2013 19:14:30 +0200")
+Message-ID: <8738swkhho.fsf@kamboji.qca.qualcomm.com> (sfid-20130605_115717_115828_234029C1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Broadocm updated their code, this may be needed for newer hardware or
-some corner cases.
+Antonio Quartulli <ordex@autistici.org> writes:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/core.c |   28 +++++++++++++++++++++++++---
- 1 file changed, 25 insertions(+), 3 deletions(-)
+> On Mon, Jun 03, 2013 at 05:04:08PM +0200, Nicolas Cavallari wrote:
+>> On 03/06/2013 16:59, Johannes Berg wrote:
+>> > On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
+>> >> From: Antonio Quartulli <antonio@open-mesh.com>
+>> >>
+>> >> Users may want to send a frame on the current channel
+>> >> without specifying it.
+>> >>
+>> >> Make mgmt_tx pass a NULL channel to mac80211 if none has
+>> >> been specified by the user.
+>> > 
+>> > cfg80211 isn't just a mac80211 frontend ... ;-)
+>> > 
+>> > Also, as Nicolas said, ath6kl_mgmt_tx() will crash after this patch if
+>> > it's called in AP mode w/o a channel, so you need to think about that.
+>> 
+>> It will crash unconditionally. All ath6kl_mgmt_tx()'s code paths access
+>> chan->center_freq at some point.
+>
+> Hello Nicolas,
+> I'm also CCing Kalle Valo since get_maintainer.pl told me he is the guy for
+> these kind of questions :-)
+>
+> I'm looking at ath6kl_mgmt_tx() in ath6kl/cfg80211.c and I've seen that the
+> currently "configured" frequency can be obtained by reading the
+> ath6kl_vif->ch_hint field.
+>
+> But, is this correct?
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index 17b26ce..37a5ffe 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -9,6 +9,25 @@
- #include <linux/export.h>
- #include <linux/bcma/bcma.h>
- 
-+static bool bcma_core_wait_value(struct bcma_device *core, u16 reg, u32 mask,
-+				 u32 value, int timeout)
-+{
-+	unsigned long deadline = jiffies + timeout;
-+	u32 val;
-+
-+	do {
-+		val = bcma_aread32(core, reg);
-+		if ((val & mask) == value)
-+			return true;
-+		cpu_relax();
-+		udelay(10);
-+	} while (!time_after_eq(jiffies, deadline));
-+
-+	bcma_warn(core->bus, "Timeout waiting for register 0x%04X!\n", reg);
-+
-+	return false;
-+}
-+
- bool bcma_core_is_enabled(struct bcma_device *core)
- {
- 	if ((bcma_aread32(core, BCMA_IOCTL) & (BCMA_IOCTL_CLK | BCMA_IOCTL_FGC))
-@@ -25,13 +44,15 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
- 	if (bcma_aread32(core, BCMA_RESET_CTL) & BCMA_RESET_CTL_RESET)
- 		return;
- 
--	bcma_awrite32(core, BCMA_IOCTL, flags);
--	bcma_aread32(core, BCMA_IOCTL);
--	udelay(10);
-+	bcma_core_wait_value(core, BCMA_RESET_ST, ~0, 0, 300);
- 
- 	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
- 	bcma_aread32(core, BCMA_RESET_CTL);
- 	udelay(1);
-+
-+	bcma_awrite32(core, BCMA_IOCTL, flags);
-+	bcma_aread32(core, BCMA_IOCTL);
-+	udelay(10);
- }
- EXPORT_SYMBOL_GPL(bcma_core_disable);
- 
-@@ -43,6 +64,7 @@ int bcma_core_enable(struct bcma_device *core, u32 flags)
- 	bcma_aread32(core, BCMA_IOCTL);
- 
- 	bcma_awrite32(core, BCMA_RESET_CTL, 0);
-+	bcma_aread32(core, BCMA_RESET_CTL);
- 	udelay(1);
- 
- 	bcma_awrite32(core, BCMA_IOCTL, (BCMA_IOCTL_CLK | flags));
+I did a quick look. To me using ch_hint looks correct.
+
+> I couldn't see any real relation between the ch_hint field and the
+> real frequency (probably because a lot of logic is hidden to the
+> driver). I could only understand that the ch_hint field stores the
+> frequency passed as parameter during the connection, but I have found
+> no guarantee that this is the really used one.
+
+Can you be more specific, please?
+
+To me it looks that ch_hint is used both with ath6kl_wmi_reconnect_cmd()
+and ath6kl_wmi_connect_cmd() commands, which both are used to connect to
+a network. I don't see any other variables used for specifying the
+frequency to the firmware. But I could just be blind...
+
 -- 
-1.7.10.4
-
+Kalle Valo
