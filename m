@@ -1,103 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:45220 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111Ab3FQIw2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 04:52:28 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] ath9k: Fix ANI for AP mode
-Date: Mon, 17 Jun 2013 14:19:32 +0530
-Message-Id: <1371458972-2646-1-git-send-email-sujith@msujith.org> (sfid-20130617_105232_039842_2B023ACA)
+Received: from mga09.intel.com ([134.134.136.24]:59045 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755311Ab3FEQk5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 12:40:57 -0400
+Date: Wed, 5 Jun 2013 18:40:53 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Gustavo Padovan <gustavo.padovan@collabora.co.uk>,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: wireless tree rebased (from 5/28), Broadcom bits dropped
+Message-ID: <20130605164053.GI4793@zurbaran> (sfid-20130605_184100_217341_CE2AC93C)
+References: <20130604212602.GB11199@tuxdriver.com>
+ <20130604215320.GC11199@tuxdriver.com>
+ <1370415586.8920.4.camel@jlt4.sipsolutions.net>
+ <20130605143700.GA2271@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130605143700.GA2271@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi John,
 
-The commit "ath9k: Fix ANI monitoring" reverted an earlier
-commit that adjusted ANI to improve performance. But, this causes
-adverse effects in AP mode (as reported by Felix based on an OpenWrt
-report). Use the older INI/period configuration for now until more
-testing is done.
+On Wed, Jun 05, 2013 at 10:37:01AM -0400, John W. Linville wrote:
+> On Wed, Jun 05, 2013 at 08:59:46AM +0200, Johannes Berg wrote:
+> > On Tue, 2013-06-04 at 17:53 -0400, John W. Linville wrote:
+> > > I messed this up too -- bad day...
+> > > 
+> > > If you pulled in between the earlier message and this one, please
+> > > do so again.  If you saw this message before taking any action to
+> > > clean-up my mess, then you are OK.
+> > 
+> > This was confusing, I think you rebased around some merges instead of
+> > redoing the merges? My patches are in, but suddenly got new commit IDs,
+> > e.g. fa331699d05ce1d0d4896eb4a137cfae50d7afde (new) vs.
+> > c2c15e215e860c99b86ddfc4be4bb25cf180fed0 for "mac80211: work around
+> > broken APs not including HT info".
+> > 
+> > This will cause git to pull them in again when I send a new pull
+> > request, so it would have been nicer to redo the merges, but anyway ...
+> > just a heads-up for everyone that here it's a bit confusing now.
+> > 
+> > johannes
+> 
+> You are right, I could have done it better with regard to your tree.
+> I probably should redo that part.
+> 
+> The Bluetooth tree had pulled the wireless tree and applied their
+> patches on top of the brcmfmac/brcmsmac series that I removed.  So,
+> their pull couldn't be redone.
+> 
+> I think I can fix the wireless tree and preserve the original mac80211
+> tree commits.  Everyone please hold off on doing anything else here, as
+> I'm a bit busy and won't be able to get to this before this afternoon
+> (Eastern USA time).
+> 
+> Anyone object to one more wireless tree rebase today?
+I was about to send you a pull request against your 2nd rebase. I'll wait
+until the new one is done, please keep us posted.
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ani.c | 29 ++++++++++++-----------------
- drivers/net/wireless/ath/ath9k/ani.h |  7 ++++++-
- 2 files changed, 18 insertions(+), 18 deletions(-)
+Cheers,
+Samuel.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index a68beb1..4994bea 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -186,6 +186,14 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
- 				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
- 				     entry_ofdm->ofdm_weak_signal_on);
- 	}
-+
-+	if (aniState->ofdmNoiseImmunityLevel >= ATH9K_ANI_OFDM_DEF_LEVEL) {
-+		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
-+		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI;
-+	} else {
-+		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI;
-+		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW;
-+	}
- }
- 
- static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
-@@ -420,25 +428,12 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- 		ofdmPhyErrRate, aniState->cckNoiseImmunityLevel,
- 		cckPhyErrRate, aniState->ofdmsTurn);
- 
--	if (aniState->listenTime > 5 * ah->aniperiod) {
--		/*
--		 * Check if we need to lower immunity if
--		 * 5 ani_periods have passed.
--		 */
--		if (ofdmPhyErrRate <= ah->config.ofdm_trig_low &&
--		    cckPhyErrRate <= ah->config.cck_trig_low) {
-+	if (aniState->listenTime > ah->aniperiod) {
-+		if (cckPhyErrRate < ah->config.cck_trig_low &&
-+		    ofdmPhyErrRate < ah->config.ofdm_trig_low) {
- 			ath9k_hw_ani_lower_immunity(ah);
- 			aniState->ofdmsTurn = !aniState->ofdmsTurn;
--		}
--		ath9k_ani_restart(ah);
--	} else if (aniState->listenTime > ah->aniperiod) {
--		/*
--		 * Check if immunity has to be raised,
--		 * (either OFDM or CCK).
--		 */
--		if (ofdmPhyErrRate > ah->config.ofdm_trig_high &&
--		    (cckPhyErrRate <= ah->config.cck_trig_high ||
--		     aniState->ofdmsTurn)) {
-+		} else if (ofdmPhyErrRate > ah->config.ofdm_trig_high) {
- 			ath9k_hw_ani_ofdm_err_trigger(ah);
- 			aniState->ofdmsTurn = false;
- 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 77a06fd..a709490 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -20,8 +20,13 @@
- #define BEACON_RSSI(ahp) (ahp->stats.avgbrssi)
- 
- /* units are errors per second */
--#define ATH9K_ANI_OFDM_TRIG_HIGH          1000
-+#define ATH9K_ANI_OFDM_TRIG_HIGH          3500
- #define ATH9K_ANI_OFDM_TRIG_LOW           400
-+#define ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI 1000
-+
-+#define ATH9K_ANI_OFDM_TRIG_LOW           400
-+#define ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI 900
-+
- #define ATH9K_ANI_CCK_TRIG_HIGH           600
- #define ATH9K_ANI_CCK_TRIG_LOW            300
- 
 -- 
-1.8.3.1
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
