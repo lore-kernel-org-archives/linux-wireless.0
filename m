@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35078 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753288Ab3F0Q7P (ORCPT
+Received: from ht1.myhostedexchange.com ([69.50.2.37]:60815 "EHLO
+	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751803Ab3FEN7z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 12:59:15 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 11/18] ath9k: always use SIFS times from OFDM for 5/10 MHz
-Date: Thu, 27 Jun 2013 18:58:53 +0200
-Message-Id: <1372352340-20663-13-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_192030_223019_93278491)
-In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 5 Jun 2013 09:59:55 -0400
+Date: Wed, 5 Jun 2013 15:57:57 +0200
+From: Antonio Quartulli <antonio@open-mesh.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: Antonio Quartulli <ordex@autistici.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCHv2 3/4] brcm80211: make mgmt_tx in brcmfmac accept a NULL
+ channel
+Message-ID: <20130605135757.GF2349@open-mesh.com> (sfid-20130605_155958_686983_FC85C24D)
+References: <1370433187-1337-1-git-send-email-ordex@autistici.org>
+ <1370433187-1337-3-git-send-email-ordex@autistici.org>
+ <51AF42DC.3000001@broadcom.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="CGDBiGfvSTbxKZlW"
+In-Reply-To: <51AF42DC.3000001@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-5/10 MHz channels should always use SIFS times as defined in IEEE
-802.11-2012 18.4.4 (OFDM PHY characteristics). This makes it compatible
-to ath5k, which does the same.
+--CGDBiGfvSTbxKZlW
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/hw.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+On Wed, Jun 05, 2013 at 06:53:32AM -0700, Arend van Spriel wrote:
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 5324c33..b12cca4 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1069,7 +1069,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 11;
- 
--		sifstime *= 2;
-+		sifstime = 32;
- 		ack_offset = 16;
- 		slottime = 13;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
-@@ -1079,7 +1079,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 22;
- 
--		sifstime *= 4;
-+		sifstime = 64;
- 		ack_offset = 32;
- 		slottime = 21;
- 	} else {
-@@ -1116,7 +1116,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		ctstimeout += 48 - sifstime - ah->slottime;
- 	}
- 
--
- 	ath9k_hw_set_sifs_time(ah, sifstime);
- 	ath9k_hw_setslottime(ah, slottime);
- 	ath9k_hw_set_ack_timeout(ah, acktimeout);
--- 
-1.7.10.4
+[...]
 
+> > +		freq =3D cfg->channel;
+> > +		if (chan)
+> > +			freq =3D chan->center_freq;
+> > +		chan_nr =3D ieee80211_frequency_to_channel(freq);
+>=20
+> Could you get rid of 'freq' variable and use=20
+> ieee80211_frequency_to_channel() on cfg->channel or chan->center_freq.
+>=20
+
+I tried that, but the line indented below the if would be longer than 80 ch=
+ars
+and breaking it is quite ugly.
+
+> Another thing is that cfg->channel can be zero resulting in chan_nr=20
+> being zero. I had a quick look whether the device firmware can handle=20
+> this. I suspect not, but I will need to ask to be sure.
+>=20
+
+ok. But when cfg->channel is zero, where is the current freq stored?
+
+Regards,
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--CGDBiGfvSTbxKZlW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRr0PlAAoJEADl0hg6qKeOevEP/3oeGWaNjhqjF8uONN2gZzWo
+jri3/oaXOMyjUspiG9IbEb6qCEz7uQCiQNHxA5NyWYC3sDsfBomshnz8u1f3+Rl8
+KJz2JM6lo2k8mkKriivyqXR86vxb8AtzyyMzR7DPTFp3Wt36h1bNWfWaaRo1mfXL
+BwK0jwrS3l2nAz197oy6Epk0mz+noibYVGb5fRJ+Kh01Vpbvxs4cft2gmBmpHu9V
+0FeXU8PzJgA61K59TYAc8A5hPOSveoLRRFS27oQ7Z/DnW463gYSNn2LfA+yKtI9r
+0rz84mjod4LNIsRxkqArf7BeUikOlSicb2GNANWia/PD7bs1yNxPYDasBERziMbu
+f2GE+0DLQ9hAA3QxTY+tqKpAzppr1KEulZlBhfuY+hBdE50+1B2eUPwuT0yKGYqD
+9kAJzw121h+3oMBM04yookgmF4/7ogFeKtELpPsPwdNhkCnHYTtJk7NJMvG1Oo9R
+z56Eve92rl8Atk4iNJcb+R2Hh6ihu2kwL8N9xb7wN0+nDZm/1arNypI/k0x2MTW+
+eZU+fto2h3oq+wZNagnncClCij32DCNX+9Bqe3D4WI3CHL0SVotwHXU4CERf0zTJ
+EsK8hJKnuhwU7AwQRFRs/HDfLNlWo+tNLOTgcn1l95KL+iGHMhw5UTPUOcjvNKBc
+Mq9MRsvYcadQpSuwD/O2
+=1qcH
+-----END PGP SIGNATURE-----
+
+--CGDBiGfvSTbxKZlW--
