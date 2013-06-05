@@ -1,116 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mxout1.netvision.net.il ([194.90.9.20]:54026 "EHLO
-	mxout1.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab3FIICB (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:42847
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750713Ab3FEEIX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jun 2013 04:02:01 -0400
-Received: from localhost.localdomain ([82.166.196.250])
- by mxout1.netvision.net.il
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) with ESMTPA id <0MO400M098Z7VY60@mxout1.netvision.net.il> for
- linux-wireless@vger.kernel.org; Sun, 09 Jun 2013 11:01:58 +0300 (IDT)
-From: Kirshenbaum Erez <erezk@wilocity.com>
-To: qca_vkondrat@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org,
-	Kirshenbaum Erez <erezk@wilocity.com>
-Subject: [PATCH v2] wil6210: Fix AP/PCP start flow
-Date: Sun, 09 Jun 2013 10:01:32 +0300
-Message-id: <1370761292-13585-1-git-send-email-erezk@wilocity.com> (sfid-20130609_100205_557591_E35E1E62)
+	Wed, 5 Jun 2013 00:08:23 -0400
+Date: Wed, 5 Jun 2013 00:08:02 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+	Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>,
+	Ajitpal Singh <ajitpal.singh@stericsson.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cw1200: fix some obvious mistakes
+Message-ID: <20130605040802.GA22735@shaftnet.org> (sfid-20130605_060828_562694_2C6CDA4F)
+References: <1370126241-2528420-1-git-send-email-arnd@arndb.de>
+ <8513280.folT80711V@wuerfel>
+ <20130602144725.GC3875@shaftnet.org>
+ <2014948.bdhzSga56L@wuerfel>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="IS0zKkzwUGydFO0o"
+In-Reply-To: <2014948.bdhzSga56L@wuerfel>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Proper flow for starting AP is by the wil_cfg80211_start_ap call (.start_ap)
-Hostapd flow for AP mode will call first to __wil_up (.ndo_open)
-and wil_cfg80211_start_ap.
-All required parameters for AP mode are carry in the info structure of 
-.start_ap (SSID,Channel,BI,IEs, security ...) and missing in __wil_up.
 
-Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 35 ---------------------------------
- 1 file changed, 35 deletions(-)
+--IS0zKkzwUGydFO0o
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index c97b864..271ee22 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -286,41 +286,31 @@ static int __wil_up(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	struct wireless_dev *wdev = wil->wdev;
--	struct ieee80211_channel *channel = wdev->preset_chandef.chan;
- 	int rc;
--	int bi;
--	u16 wmi_nettype = wil_iftype_nl2wmi(wdev->iftype);
- 
- 	rc = wil_reset(wil);
- 	if (rc)
- 		return rc;
- 
--	/* FIXME Firmware works now in PBSS mode(ToDS=0, FromDS=0) */
--	wmi_nettype = wil_iftype_nl2wmi(NL80211_IFTYPE_ADHOC);
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_STATION:
- 		wil_dbg_misc(wil, "type: STATION\n");
--		bi = 0;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_AP:
- 		wil_dbg_misc(wil, "type: AP\n");
--		bi = 100;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 		wil_dbg_misc(wil, "type: P2P_CLIENT\n");
--		bi = 0;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_P2P_GO:
- 		wil_dbg_misc(wil, "type: P2P_GO\n");
--		bi = 100;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
- 		wil_dbg_misc(wil, "type: Monitor\n");
--		bi = 0;
- 		ndev->type = ARPHRD_IEEE80211_RADIOTAP;
- 		/* ARPHRD_IEEE80211 or ARPHRD_IEEE80211_RADIOTAP ? */
- 		break;
-@@ -328,34 +318,9 @@ static int __wil_up(struct wil6210_priv *wil)
- 		return -EOPNOTSUPP;
- 	}
- 
--	/* Apply profile in the following order: */
--	/* SSID and channel for the AP */
--	switch (wdev->iftype) {
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_P2P_GO:
--		if (wdev->ssid_len == 0) {
--			wil_err(wil, "SSID not set\n");
--			return -EINVAL;
--		}
--		rc = wmi_set_ssid(wil, wdev->ssid_len, wdev->ssid);
--		if (rc)
--			return rc;
--		break;
--	default:
--		break;
--	}
--
- 	/* MAC address - pre-requisite for other commands */
- 	wmi_set_mac_address(wil, ndev->dev_addr);
- 
--	/* Set up beaconing if required. */
--	if (bi > 0) {
--		rc = wmi_pcp_start(wil, bi, wmi_nettype,
--				   (channel ? channel->hw_value : 0));
--		if (rc)
--			return rc;
--	}
--
- 	/* Rx VRING. After MAC and beacon */
- 	wil_rx_init(wil);
- 
--- 
-1.7.11.7
+On Mon, Jun 03, 2013 at 10:40:42AM +0200, Arnd Bergmann wrote:
+> It's much better than what you have today, but not ideal because it
+> means the driver cannot be a loadable module any more.
 
+At least not when being built with platform data, anyway.
+
+I suppose the next step here is to define some devicetree mappings for=20
+this device.
+
+> At least it's not in a released kernel yet.
+
+Given the boneheaded buffer overflow bug that was just pointed out (and=20
+fixed), I'm glad it's getting a lot more scrutiny.
+
+> Regarding a long-term solution, I think what we should do here is to
+> move the reset logic into the SDIO framework itself: We have similar
+> requirements even for eMMC and SD cards, where you need to provide
+> the correct voltage to a device on the MMC port in order for it to
+> work. Today this is supported to a varying degree on the MMC controller
+> level, where we hook into various frameworks (clk, reset-controller,
+> regulator, gpio, pinctrl, power domain) based on platformm data or
+> device tree information on the controller node.
+
+If I understand you correctly, the "traditional" platform data -- power=20
+supply, clock source, and gpio (ie POWERUP, RESET) lines would be=20
+brought up using this mechanism, in order to get the device to attach to=20
+the SDIO bus.  One wrinkle here is that the cw1200 has some minimum=20
+timing requirements between when each of those signals are brought up; I=20
+don't know if there's a way to encode that into the devicetree.
+
+But that's only half the equation.
+
+Once the device has identified it to the SDIO bus and the driver's=20
+probe() function is called, the other half of the platform data is=20
+needed to successfully probe the hardware.  Namely, the 'ref_clk' field.=20
+This would need to be made available to the probe() call (eg via=20
+func->dev.platform_data) but from what I can tell there's currently no=20
+mechanism to make that connection.
+
+Anyway, it's time for bed.
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Delray Beach, FL                          ^^ (email/xmpp) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--IS0zKkzwUGydFO0o
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iD8DBQFRrrmiPuLgii2759ARAhzEAJ9JnwOnKkTTsWbbNoznOJ6Ky/L8ggCgtKCx
+JognqIBHq43lFyi4EnYLOac=
+=kmhf
+-----END PGP SIGNATURE-----
+
+--IS0zKkzwUGydFO0o--
