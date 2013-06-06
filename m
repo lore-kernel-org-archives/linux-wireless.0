@@ -1,76 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:65099 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755642Ab3FMRdC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 13:33:02 -0400
-Received: by mail-we0-f178.google.com with SMTP id u53so8353114wes.9
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2013 10:33:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130613173002.GC3246@tuxdriver.com>
-References: <1370904007-10959-1-git-send-email-bzhao@marvell.com>
-	<877ghz3il6.fsf@purkki.adurom.net>
-	<477F20668A386D41ADCC57781B1F70430EA268B457@SC-VEXCH1.marvell.com>
-	<8738sn2mcf.fsf@purkki.adurom.net>
-	<51B8C41E.7050907@candelatech.com>
-	<477F20668A386D41ADCC57781B1F70430EA268B4A3@SC-VEXCH1.marvell.com>
-	<20130613173002.GC3246@tuxdriver.com>
-Date: Thu, 13 Jun 2013 10:33:00 -0700
-Message-ID: <CAMcMvsgVHMzVY4fnW7n+vgdWKKVgvF+fJ93xvRkkfZUjxt-bBQ@mail.gmail.com> (sfid-20130613_193307_017815_B12CE271)
-Subject: Re: [PATCH] mwifiex: Add module parameter for regdomain
-From: Paul Stewart <pstew@chromium.org>
+Received: from mga03.intel.com ([143.182.124.21]:50894 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751003Ab3FFPUc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 11:20:32 -0400
+Date: Thu, 6 Jun 2013 17:20:19 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	Ben Greear <greearb@candelatech.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux NFC <linux-nfc@lists.01.org>
+Subject: [GIT] [3.10] NFC fixes
+Message-ID: <20130606152019.GT4793@zurbaran> (sfid-20130606_172035_949155_F73D8122)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 13, 2013 at 10:30 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
->
-> On Wed, Jun 12, 2013 at 12:01:23PM -0700, Bing Zhao wrote:
-> >
-> > > >> "iw reg set XX" or "country_code=XX" in hostapd.conf is a *user* hint.
-> > > >>
-> > > >> What we need here is a *driver* hint. Furthermore, with a driver
-> > > >> regulatory hint, the passive-scan and no-ibss flags are cleared so we
-> > > >> can start AP with hostapd on 5G band.
-> > > >
-> > > > So it's a driver hint which is coming from user space via a module
-> > > > parameter. IMHO you are abusing interfaces here. Is there any better way
-> > > > to solve your problem?
-> > >
-> > > It would be nice to have some way to do this for ath9k and other NICs
-> > > as well.  Best I could come up with is a similar hack for ath9k.
-> > >
-> > > I think part of the problem is that this config info needs to be
-> > > available very early in the module loading/init logic, so it's
-> > > too late to be configured using 'iw' or similar.
-> >
-> > Exactly. regulatory_hint () needs to be called right after wiphy registration.
->
-> It does seem a bit ugly.  But if Marvell wants it, I don't see any
-> "regulatory" argument to disallow something like this.
->
-> Does anyone have a better suggestion for a user interface for such
-> a feature?
+Hi John,
 
+This is the 2nd NFC pull request for 3.10.
 
-The only (slightly) cleaner thing I could think of is a module
-parameter to cfg80211 so all drivers in the system would be made aware
-of the boot-time regulatory domain.
+I wish this one could have been part of the first one, but we came back from
+the NFC plugfest with a few more LLCP fixes:
 
->
->
-> John
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
+- The well known services bitmask was sent with the wrong endianness and with
+  the first bit not set, which goes against the LLCP specifications. This
+  won't prevent most use cases and tests to pass, only picky implementations
+  seem to care about the WKS correctness.
+
+- We were ignoring RNRs and were sending our pending frames regardless. We
+  should just re-queue them and send a SYMM instead.
+
+- Non blocking LLCP connections were not handled properly as we found out
+  after implementing it from neard. Applications were immediatly woken up with
+  a SIGHUP and connection failed. This is fixed now, allowing us to have a
+  fully asynchronous NFC userspace daemon.
+
+Thanks in advance for pulling them in.
+
+The following changes since commit cee6dfa25831e0daac52fc582a04a7204f886220:
+
+  Revert "ath9k_hw: Update rx gain initval to improve rx sensitivity" (2013-06-05 10:42:29 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.10-2
+
+for you to fetch changes up to fcd335b0010aeafb6e3dfd46360778ce59e1e201:
+
+  NFC: llcp: Fix the well known services endianness (2013-06-06 16:43:51 +0200)
+
+----------------------------------------------------------------
+Samuel Ortiz (4):
+      NFC: llcp: Fix non blocking sockets connections
+      NFC: llcp: Do not send pending Tx frames when the remote is not ready
+      NFC: llcp: Set the LLC Link Management well known service bit
+      NFC: llcp: Fix the well known services endianness
+
+ net/nfc/llcp.h      |    1 +
+ net/nfc/llcp_core.c |    8 ++++++--
+ net/nfc/llcp_sock.c |    8 +++++---
+ 3 files changed, 12 insertions(+), 5 deletions(-)
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
