@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:39078 "EHLO arrakis.dune.hu"
+Received: from mms2.broadcom.com ([216.31.210.18]:4840 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695Ab3FXUc5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 16:32:57 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 2/3] rt2x00: rt2800lib: turn on secondary PAs/LNAs for 3T/3R devices
-Date: Mon, 24 Jun 2013 22:32:51 +0200
-Message-Id: <1372105972-3022-3-git-send-email-juhosg@openwrt.org> (sfid-20130624_223303_515340_B8A47A61)
-In-Reply-To: <1372105972-3022-1-git-send-email-juhosg@openwrt.org>
-References: <1372105972-3022-1-git-send-email-juhosg@openwrt.org>
+	id S932760Ab3FFLSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 07:18:47 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/22] brcmfmac: allow firmware-signal tlv to be longer
+ than specified
+Date: Thu, 6 Jun 2013 13:17:46 +0200
+Message-ID: <1370517487-14395-2-git-send-email-arend@broadcom.com> (sfid-20130606_131853_488591_08AF7B28)
+In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The secondary PAs/LNAs are turned on only for 2T/2R
-devices, however these are used for 3T/3R devices as
-well. Always turn those on if the device uses more
-than one tx/rx chains.
+The firmware-signal API specification defines length for the different
+tlv. During testing on different devices it turned out not all firmware
+used the tlv length according specification. Therefore the length check
+is made less strict with this patch.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-Changes in v2:
-  - fix a typo
-  - add Acked-by tags
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 4072242..b7119e3 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2678,16 +2678,16 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 5352dc1..d6f05ae 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1433,7 +1433,7 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
+ 		if (data_len < len + 2)
+ 			break;
  
- 	tx_pin = 0;
+-		if (len != brcmf_fws_get_tlv_len(fws, type))
++		if (len < brcmf_fws_get_tlv_len(fws, type))
+ 			break;
  
--	/* Turn on unused PA or LNA when not using 1T or 1R */
--	if (rt2x00dev->default_ant.tx_chain_num == 2) {
-+	if (rt2x00dev->default_ant.tx_chain_num > 1) {
-+		/* Turn on secondary PAs for 2T and for 3T devices*/
- 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
- 				   rf->channel > 14);
- 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
- 				   rf->channel <= 14);
- 	}
- 
--	/* Turn on unused PA or LNA when not using 1T or 1R */
--	if (rt2x00dev->default_ant.rx_chain_num == 2) {
-+	if (rt2x00dev->default_ant.rx_chain_num > 1) {
-+		/* Turn on secondary LNAs for 2R and for 3R devices */
- 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A1_EN, 1);
- 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G1_EN, 1);
- 	}
+ 		err = BRCMF_FWS_RET_OK_NOSCHEDULE;
 -- 
-1.7.10
+1.7.10.4
+
 
