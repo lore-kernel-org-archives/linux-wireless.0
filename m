@@ -1,95 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4844 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932802Ab3FFLTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 07:19:17 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/22] brcmfmac: remove fifo bitfield from
- brcmf_skbuff_cb::if_flags
-Date: Thu, 6 Jun 2013 13:17:47 +0200
-Message-ID: <1370517487-14395-3-git-send-email-arend@broadcom.com> (sfid-20130606_131931_414574_3B299B65)
-In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:49811 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698Ab3FFEIO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 00:08:14 -0400
+Message-ID: <1370491691.24311.326.camel@edumazet-glaptop> (sfid-20130606_060836_054281_40E7D0AA)
+Subject: Re: stop_machine lockup issue in 3.9.y.
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Tejun Heo <tj@kernel.org>, Rusty Russell <rusty@rustcorp.com.au>,
+	Joe Lawrence <joe.lawrence@stratus.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	stable@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>
+Date: Wed, 05 Jun 2013 21:08:11 -0700
+In-Reply-To: <51B00719.20406@candelatech.com>
+References: <51AE27D5.7050202@candelatech.com>
+	   <87sj0xry1k.fsf@rustcorp.com.au> <20130605071539.GA3429@mtj.dyndns.org>
+	   <51AF6E54.3050108@candelatech.com>
+	 <20130605184807.GD10693@mtj.dyndns.org>
+	   <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com>
+	   <51AFA677.9010605@candelatech.com>
+	 <20130605211157.GK10693@mtj.dyndns.org>
+	   <1370482492.24311.308.camel@edumazet-glaptop>
+	   <20130606031444.GA12335@mtj.dyndns.org>
+	  <1370489181.24311.318.camel@edumazet-glaptop>
+	  <51B004CD.6080007@candelatech.com>
+	 <1370490403.24311.322.camel@edumazet-glaptop>
+	 <51B00719.20406@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcmf_skbuff_cb structure contain if_flags and htod fields. Both
-have a bitfield defined to hold the fifo number. With a small code
-change we get rid of the fifo bitfield in if_flags.
+On Wed, 2013-06-05 at 20:50 -0700, Ben Greear wrote:
+> On 06/05/2013 08:46 PM, Eric Dumazet wrote:
+> >
+> > We use in Google a patch triggering warning is a thread holds the cpu
+> > without taking care to need_resched() for more than xx ms
+> 
+> Well, I'm sure that patch works nicely until the clock stops moving
+> forward :)
+> 
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+This is not using jiffies, but the clock used in kernel/sched/core.c,
+with ns resolution ;)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index d6f05ae..bc2edc0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -195,7 +195,6 @@ struct brcmf_skbuff_cb {
-  *	b[9]   - packet is a tx packet.
-  *	b[8]   - packet uses FIFO credit (non-pspoll).
-  *	b[7]   - interface in AP mode.
-- *	b[6:4] - AC FIFO number.
-  *	b[3:0] - interface index.
-  */
- #define BRCMF_SKB_IF_FLAGS_REQUESTED_MASK	0x0800
-@@ -208,8 +207,6 @@ struct brcmf_skbuff_cb {
- #define BRCMF_SKB_IF_FLAGS_CREDITCHECK_SHIFT	8
- #define BRCMF_SKB_IF_FLAGS_IF_AP_MASK		0x0080
- #define BRCMF_SKB_IF_FLAGS_IF_AP_SHIFT		7
--#define BRCMF_SKB_IF_FLAGS_FIFO_MASK		0x0070
--#define BRCMF_SKB_IF_FLAGS_FIFO_SHIFT		4
- #define BRCMF_SKB_IF_FLAGS_INDEX_MASK		0x000f
- #define BRCMF_SKB_IF_FLAGS_INDEX_SHIFT		0
- 
-@@ -1608,7 +1605,8 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
- }
- 
- static void
--brcmf_fws_rollback_toq(struct brcmf_fws_info *fws, struct sk_buff *skb)
-+brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
-+		       struct sk_buff *skb, int fifo)
- {
- 	/*
- 	put the packet back to the head of queue
-@@ -1622,11 +1620,9 @@ brcmf_fws_rollback_toq(struct brcmf_fws_info *fws, struct sk_buff *skb)
- 	enum brcmf_fws_skb_state state;
- 	struct sk_buff *pktout;
- 	int rc = 0;
--	int fifo;
- 	int hslot;
- 	u8 ifidx;
- 
--	fifo = brcmf_skb_if_flags_get_field(skb, FIFO);
- 	state = brcmf_skbcb(skb)->state;
- 	entry = brcmf_skbcb(skb)->mac;
- 
-@@ -1794,7 +1790,7 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
- 	return rc;
- 
- rollback:
--	brcmf_fws_rollback_toq(fws, skb);
-+	brcmf_fws_rollback_toq(fws, skb, fifo);
- 	return rc;
- }
- 
-@@ -1831,7 +1827,6 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 	brcmf_skb_if_flags_set_field(skb, INDEX, ifp->ifidx);
- 	if (!multicast)
- 		fifo = brcmf_fws_prio2fifo[skb->priority];
--	brcmf_skb_if_flags_set_field(skb, FIFO, fifo);
- 
- 	brcmf_dbg(TRACE, "ea=%pM, multi=%d, fifo=%d\n", eh->h_dest,
- 		  multicast, fifo);
--- 
-1.7.10.4
+> I'll post a patch with limit of 10 shortly.
+
+ok
 
 
