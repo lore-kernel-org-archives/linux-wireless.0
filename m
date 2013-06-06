@@ -1,118 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35092 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752817Ab3F0Q7R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 12:59:17 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 06/18] cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
-Date: Thu, 27 Jun 2013 18:58:48 +0200
-Message-Id: <1372352340-20663-8-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_185934_123842_3416E361)
-In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mms2.broadcom.com ([216.31.210.18]:4844 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932747Ab3FFLSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 07:18:47 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/22] brcmfmac: Correct creditmap when credit borrowing
+ is active.
+Date: Thu, 6 Jun 2013 13:17:54 +0200
+Message-ID: <1370517487-14395-10-git-send-email-arend@broadcom.com> (sfid-20130606_131854_068912_5B73BCF7)
+In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some regulations (like germany, but also FCC) express their transmission
-power limit in dBm/MHz or mW/MHz. To cope with that and be on the safe
-side, reduce the maximum power to half (10 MHz) or quarter (5 MHz)
-when operating on these reduced bandwidth channels.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+When credit borrowing is active the BE credits have been depleted,
+however the worker should still be scheduled. In case of credit
+borrowing correct credit map to make sure worker remains active.
 
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-Changes to PATCHv3:
- * consider max_reg_power, max_power might contain the hardware limit
----
- include/net/cfg80211.h |   27 +++++++++++++++++++++++++++
- net/mac80211/iface.c   |    2 +-
- net/mac80211/main.c    |    2 +-
- net/mac80211/mlme.c    |    3 ++-
- 4 files changed, 31 insertions(+), 3 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 83d52dc..69be9fe 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -461,6 +461,33 @@ ieee80211_chandef_rate_flags(struct cfg80211_chan_def *chandef)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 682ac62..abba7f7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1020,6 +1020,8 @@ static void brcmf_fws_return_credits(struct brcmf_fws_info *fws,
+ 	if (!credits)
+ 		return;
+ 
++	fws->fifo_credit_map |= 1 << fifo;
++
+ 	if ((fifo == BRCMF_FWS_FIFO_AC_BE) &&
+ 	    (fws->credits_borrowed[0])) {
+ 		for (lender_ac = BRCMF_FWS_FIFO_AC_VO; lender_ac >= 0;
+@@ -1041,7 +1043,6 @@ static void brcmf_fws_return_credits(struct brcmf_fws_info *fws,
+ 		}
+ 	}
+ 
+-	fws->fifo_credit_map |= 1 << fifo;
+ 	fws->fifo_credit[fifo] += credits;
  }
  
- /**
-+ * ieee80211_chandef_max_power - maximum transmission power for the chandef
-+ *
-+ * In some regulations, the transmit power may depend on the configured channel
-+ * bandwidth which may be defined as dBm/MHz. This function returns the actual
-+ * max_power for non-standard (20 MHz) channels.
-+ *
-+ * @chandef: channel definition for the channel
-+ *
-+ * Returns: maximum allowed transmission power in dBm for the chandef
-+ */
-+static inline int
-+ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
-+{
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		return min(chandef->chan->max_reg_power - 6,
-+			   chandef->chan->max_power);
-+	case NL80211_CHAN_WIDTH_10:
-+		return min(chandef->chan->max_reg_power - 3,
-+			   chandef->chan->max_power);
-+	default:
-+		break;
+@@ -1675,8 +1676,10 @@ static int brcmf_fws_borrow_credit(struct brcmf_fws_info *fws)
+ {
+ 	int lender_ac;
+ 
+-	if (time_after(fws->borrow_defer_timestamp, jiffies))
++	if (time_after(fws->borrow_defer_timestamp, jiffies)) {
++		fws->fifo_credit_map &= ~(1 << BRCMF_FWS_FIFO_AC_BE);
+ 		return -ENAVAIL;
 +	}
-+	return chandef->chan->max_power;
-+}
-+
-+/**
-  * enum survey_info_flags - survey information flags
-  *
-  * @SURVEY_INFO_NOISE_DBM: noise (in dBm) was filled in
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index a2a8250..093c34a 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -54,7 +54,7 @@ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
- 		return false;
+ 
+ 	for (lender_ac = 0; lender_ac <= BRCMF_FWS_FIFO_AC_VO; lender_ac++) {
+ 		if (fws->fifo_credit[lender_ac]) {
+@@ -1684,10 +1687,12 @@ static int brcmf_fws_borrow_credit(struct brcmf_fws_info *fws)
+ 			fws->fifo_credit[lender_ac]--;
+ 			if (fws->fifo_credit[lender_ac] == 0)
+ 				fws->fifo_credit_map &= ~(1 << lender_ac);
++			fws->fifo_credit_map |= (1 << BRCMF_FWS_FIFO_AC_BE);
+ 			brcmf_dbg(DATA, "borrow credit from: %d\n", lender_ac);
+ 			return 0;
+ 		}
  	}
++	fws->fifo_credit_map &= ~(1 << BRCMF_FWS_FIFO_AC_BE);
+ 	return -ENAVAIL;
+ }
  
--	power = chanctx_conf->def.chan->max_power;
-+	power = ieee80211_chandef_max_power(&chanctx_conf->def);
- 	rcu_read_unlock();
- 
- 	if (sdata->user_power_level != IEEE80211_UNSET_POWER_LEVEL)
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 626c83c..a1d51af 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -151,7 +151,7 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
- 		changed |= IEEE80211_CONF_CHANGE_SMPS;
- 	}
- 
--	power = chandef.chan->max_power;
-+	power = ieee80211_chandef_max_power(&chandef);
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index eb45c7e..63f8059 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -747,7 +747,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		*pos++ = WLAN_EID_PWR_CAPABILITY;
- 		*pos++ = 2;
- 		*pos++ = 0; /* min tx power */
--		*pos++ = chan->max_power; /* max tx power */
-+		 /* max tx power */
-+		*pos++ = ieee80211_chandef_max_power(&chanctx_conf->def);
- 
- 		/* 2. supported channels */
- 		/* TODO: get this in reg domain format */
 -- 
 1.7.10.4
+
 
