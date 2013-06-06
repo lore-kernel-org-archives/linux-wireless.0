@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39703 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932860Ab3FRRFb (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:24568 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932182Ab3FFK7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 13:05:31 -0400
-Message-ID: <1371575087.22256.2.camel@jlt4.sipsolutions.net> (sfid-20130618_190551_200433_4643406B)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	sgruszka@redhat.com
-Date: Tue, 18 Jun 2013 19:04:47 +0200
-In-Reply-To: <1371574361.3252.259.camel@edumazet-glaptop> (sfid-20130618_185301_249353_52D357F3)
-References: <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 <1361351703.8629.5.camel@jlt4.sipsolutions.net>
-	 <20130223061414.GA16883@merlins.org>
-	 <1361912099.8440.21.camel@jlt4.sipsolutions.net>
-	 <1371574361.3252.259.camel@edumazet-glaptop>
-	 (sfid-20130618_185301_249353_52D357F3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 6 Jun 2013 06:59:14 -0400
+MIME-Version: 1.0
+Message-ID: <20130606105746.GE12953@debian> (sfid-20130606_125920_380795_CDCD5275)
+Date: Thu, 6 Jun 2013 03:57:46 -0700 (PDT)
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch -next] cw1200: handle allocation failure in
+ wsm_event_indication()
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-18 at 09:52 -0700, Eric Dumazet wrote:
+Check for allocation failures and return -ENOMEM.  The caller
+already expects it.
 
-> > We'll be submitting a patch to make single pages default.
-> 
-> Do you think the same change would be possible for
-> drivers/net/wireless/iwlegacy/4965-mac.c ?
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Yes, Stanislaw?
-
-johannes
-
+diff --git a/drivers/net/wireless/cw1200/wsm.c b/drivers/net/wireless/cw1200/wsm.c
+index f3fd9b2..3ab25f6 100644
+--- a/drivers/net/wireless/cw1200/wsm.c
++++ b/drivers/net/wireless/cw1200/wsm.c
+@@ -929,6 +929,8 @@ static int wsm_event_indication(struct cw1200_common *priv, struct wsm_buf *buf)
+ 	}
+ 
+ 	event = kzalloc(sizeof(struct cw1200_wsm_event), GFP_KERNEL);
++	if (!event)
++		return -ENOMEM;
+ 
+ 	event->evt.id = __le32_to_cpu(WSM_GET32(buf));
+ 	event->evt.data = __le32_to_cpu(WSM_GET32(buf));
