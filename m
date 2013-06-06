@@ -1,36 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38908 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755896Ab3FKTzo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 15:55:44 -0400
-Message-ID: <1370980523.8356.70.camel@jlt4.sipsolutions.net> (sfid-20130611_215601_576625_C3CCAD3B)
-Subject: Re: [PATCH] mac80211: ath9k: Use RCU protection calling
- ieee80211_get_tx_rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Calvin Owens <jcalvinowens@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org
-Date: Tue, 11 Jun 2013 21:55:23 +0200
-In-Reply-To: <20130611171304.GA2189@gmail.com> (sfid-20130611_191323_492868_156158C4)
-References: <20130609225120.GA2789@gmail.com>
-	 <20130610042959.GA1902@gmail.com>
-	 <1370950926.8356.14.camel@jlt4.sipsolutions.net>
-	 <20130611171304.GA2189@gmail.com> (sfid-20130611_191323_492868_156158C4)
+Received: from bear.ext.ti.com ([192.94.94.41]:49105 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933238Ab3FFLsg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 07:48:36 -0400
+Message-ID: <1370519207.5502.5.camel@cumari.coelho.fi> (sfid-20130606_134856_787437_6A566BAF)
+Subject: Re: [PATCH 1/2] net: wireless: wl1251: Use module_spi_driver macro
+From: Luciano Coelho <coelho@ti.com>
+To: Sachin Kamat <sachin.kamat@linaro.org>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>
+Date: Thu, 6 Jun 2013 14:46:47 +0300
+In-Reply-To: <CAK9yfHzRHxJuzFW4OvLsQvoxT9LXYzwO+3i5nws8N6hO9HGq-Q@mail.gmail.com>
+References: <1369822703-27769-1-git-send-email-sachin.kamat@linaro.org>
+	 <CAK9yfHzRHxJuzFW4OvLsQvoxT9LXYzwO+3i5nws8N6hO9HGq-Q@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now the subject should no longer say "mac80211:" :)
+Hi Sachin,
 
-However... given that ieee80211_get_tx_rates() actually *copies* the
-rates into the parameter, I guess it should do the rcu_read_lock()
-internally. I guess I wasn't paying attention previously. Felix?
+On Thu, 2013-06-06 at 14:48 +0530, Sachin Kamat wrote:
+> On 29 May 2013 15:48, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+> > module_spi_driver() eliminates some boiler plate and makes code
+> > simpler.
+> >
+> > Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+> > ---
+> >  drivers/net/wireless/ti/wl1251/spi.c |   24 +-----------------------
+> >  1 file changed, 1 insertion(+), 23 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
+> > index 4c67c2f..dfd0877 100644
+> > --- a/drivers/net/wireless/ti/wl1251/spi.c
+> > +++ b/drivers/net/wireless/ti/wl1251/spi.c
+> > @@ -329,29 +329,7 @@ static struct spi_driver wl1251_spi_driver = {
+> >         .remove         = wl1251_spi_remove,
+> >  };
+> >
+> > -static int __init wl1251_spi_init(void)
+> > -{
+> > -       int ret;
+> > -
+> > -       ret = spi_register_driver(&wl1251_spi_driver);
+> > -       if (ret < 0) {
+> > -               wl1251_error("failed to register spi driver: %d", ret);
+> > -               goto out;
+> > -       }
+> > -
+> > -out:
+> > -       return ret;
+> > -}
+> > -
+> > -static void __exit wl1251_spi_exit(void)
+> > -{
+> > -       spi_unregister_driver(&wl1251_spi_driver);
+> > -
+> > -       wl1251_notice("unloaded");
+> > -}
+> > -
+> > -module_init(wl1251_spi_init);
+> > -module_exit(wl1251_spi_exit);
+> > +module_spi_driver(wl1251_spi_driver);
+> >
+> >  MODULE_LICENSE("GPL");
+> >  MODULE_AUTHOR("Kalle Valo <kvalo@adurom.com>");
+> > --
+> > 1.7.9.5
+> >
+> 
+> Gentle ping on this series John.
 
-johannes
+This is in my queue.  Haven't had the time to review and apply them yet.
+And these are not urgent changes, so they can wait a little while.
 
+--
+Luca.
 
