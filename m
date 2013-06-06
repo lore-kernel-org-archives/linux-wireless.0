@@ -1,153 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:43954 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.21]:34913 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902Ab3FXGLp (ORCPT
+	with ESMTP id S1752694Ab3FFEjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 02:11:45 -0400
+	Thu, 6 Jun 2013 00:39:17 -0400
 From: Sujith Manoharan <sujith@msujith.org>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] ath9k: Program initvals for AR9462 2.1
-Date: Mon, 24 Jun 2013 11:38:37 +0530
-Message-Id: <1372054117-4626-4-git-send-email-sujith@msujith.org> (sfid-20130624_081148_803636_60D8317D)
-In-Reply-To: <1372054117-4626-1-git-send-email-sujith@msujith.org>
-References: <1372054117-4626-1-git-send-email-sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: [PATCH v2] ath9k: Use minstrel rate control by default
+Date: Thu,  6 Jun 2013 10:06:29 +0530
+Message-Id: <1370493389-15807-1-git-send-email-sujith@msujith.org> (sfid-20130606_063922_140635_FAD0103F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
+The ath9k rate control algorithm has various architectural
+issues that make it a poor fit in scenarios like congested
+environments etc.
+
+An example: https://bugzilla.redhat.com/show_bug.cgi?id=927191
+
+Change the default to minstrel which is more robust in such cases.
+The ath9k RC code is left in the driver for now, maybe it can
+be removed altogether later on.
+
+Cc: stable@vger.kernel.org
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
 Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_hw.c | 59 +++++++++++++++++++++++++++++-
- 1 file changed, 57 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/Kconfig  | 10 +++++++---
+ drivers/net/wireless/ath/ath9k/Makefile |  2 +-
+ drivers/net/wireless/ath/ath9k/init.c   |  4 ----
+ drivers/net/wireless/ath/ath9k/rc.h     |  2 +-
+ 4 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 671aaa7..3101c39 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -24,6 +24,7 @@
- #include "ar955x_1p0_initvals.h"
- #include "ar9580_1p0_initvals.h"
- #include "ar9462_2p0_initvals.h"
-+#include "ar9462_2p1_initvals.h"
- #include "ar9565_1p0_initvals.h"
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 3b07851..760ab3f 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -84,13 +84,17 @@ config ATH9K_DFS_CERTIFIED
+ 	  developed. At this point enabling this option won't do anything
+ 	  except increase code size.
  
- /* General hardware code for the AR9003 hadware family */
-@@ -197,6 +198,31 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+-config ATH9K_RATE_CONTROL
++config ATH9K_LEGACY_RATE_CONTROL
+ 	bool "Atheros ath9k rate control"
+ 	depends on ATH9K
+-	default y
++	default n
+ 	---help---
+ 	  Say Y, if you want to use the ath9k specific rate control
+-	  module instead of minstrel_ht.
++	  module instead of minstrel_ht. Be warned that there are various
++	  issues with the ath9k RC and minstrel is a more robust algorithm.
++	  Note that even if this option is selected, "ath9k_rate_control"
++	  has to be passed to mac80211 using the module parameter,
++	  ieee80211_default_rc_algo.
  
- 		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
- 				ar9485_1_1_pcie_phy_clkreq_disable_L1);
-+	} else if (AR_SREV_9462_21(ah)) {
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
-+			       ar9462_2p1_mac_core);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
-+			       ar9462_2p1_mac_postamble);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
-+			       ar9462_2p1_baseband_core);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
-+			       ar9462_2p1_baseband_postamble);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
-+			       ar9462_2p1_radio_core);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST],
-+			       ar9462_2p1_radio_postamble);
-+		INIT_INI_ARRAY(&ah->ini_radio_post_sys2ant,
-+			       ar9462_2p1_radio_postamble_sys2ant);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
-+			       ar9462_2p1_soc_preamble);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
-+			       ar9462_2p1_soc_postamble);
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			       ar9462_2p1_common_rx_gain);
-+		INIT_INI_ARRAY(&ah->iniModesFastClock,
-+			       ar9462_2p1_modes_fast_clock);
-+		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
-+			       ar9462_2p1_baseband_core_txfir_coeff_japan_2484);
- 	} else if (AR_SREV_9462_20(ah)) {
+ config ATH9K_HTC
+        tristate "Atheros HTC based wireless cards support"
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 2ad8f94..75ee9e7 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -8,7 +8,7 @@ ath9k-y +=	beacon.o \
+ 		antenna.o
  
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE], ar9462_2p0_mac_core);
-@@ -407,6 +433,9 @@ static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
- 	else if (AR_SREV_9580(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9580_1p0_lowest_ob_db_tx_gain_table);
-+	else if (AR_SREV_9462_21(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9462_2p1_modes_low_ob_db_tx_gain);
- 	else if (AR_SREV_9462_20(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9462_modes_low_ob_db_tx_gain_table_2p0);
-@@ -438,6 +467,9 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
- 	else if (AR_SREV_9550(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar955x_1p0_modes_no_xpa_tx_gain_table);
-+	else if (AR_SREV_9462_21(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9462_2p1_modes_high_ob_db_tx_gain);
- 	else if (AR_SREV_9462_20(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9462_modes_high_ob_db_tx_gain_table_2p0);
-@@ -507,6 +539,9 @@ static void ar9003_tx_gain_table_mode4(struct ath_hw *ah)
- 	else if (AR_SREV_9580(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9580_1p0_mixed_ob_db_tx_gain_table);
-+	else if (AR_SREV_9462_21(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+		       ar9462_2p1_modes_mix_ob_db_tx_gain);
- 	else
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9300Modes_mixed_ob_db_tx_gain_table_2p2);
-@@ -584,6 +619,9 @@ static void ar9003_rx_gain_table_mode0(struct ath_hw *ah)
- 	} else if (AR_SREV_9580(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				ar9580_1p0_rx_gain_table);
-+	else if (AR_SREV_9462_21(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9462_2p1_common_rx_gain);
- 	else if (AR_SREV_9462_20(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				ar9462_common_rx_gain_table_2p0);
-@@ -606,6 +644,9 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
- 	else if (AR_SREV_9485_11(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			ar9485Common_wo_xlna_rx_gain_1_1);
-+	else if (AR_SREV_9462_21(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9462_2p1_common_wo_xlna_rx_gain);
- 	else if (AR_SREV_9462_20(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			ar9462_common_wo_xlna_rx_gain_table_2p0);
-@@ -627,7 +668,16 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
+ ath9k-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += mci.o
+-ath9k-$(CONFIG_ATH9K_RATE_CONTROL) += rc.o
++ath9k-$(CONFIG_ATH9K_LEGACY_RATE_CONTROL) += rc.o
+ ath9k-$(CONFIG_ATH9K_PCI) += pci.o
+ ath9k-$(CONFIG_ATH9K_AHB) += ahb.o
+ ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index db81acc..389ee1b 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -830,10 +830,6 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	sc->ant_rx = hw->wiphy->available_antennas_rx;
+ 	sc->ant_tx = hw->wiphy->available_antennas_tx;
  
- static void ar9003_rx_gain_table_mode2(struct ath_hw *ah)
- {
--	if (AR_SREV_9462_20(ah)) {
-+	if (AR_SREV_9462_21(ah)) {
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			       ar9462_2p1_common_mixed_rx_gain);
-+		INIT_INI_ARRAY(&ah->ini_modes_rxgain_bb_core,
-+			       ar9462_2p1_baseband_core_mix_rxgain);
-+		INIT_INI_ARRAY(&ah->ini_modes_rxgain_bb_postamble,
-+			       ar9462_2p1_baseband_postamble_mix_rxgain);
-+		INIT_INI_ARRAY(&ah->ini_modes_rxgain_5g_xlna,
-+			       ar9462_2p1_baseband_postamble_5g_xlna);
-+	} else if (AR_SREV_9462_20(ah)) {
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			       ar9462_common_mixed_rx_gain_table_2p0);
- 		INIT_INI_ARRAY(&ah->ini_modes_rxgain_bb_core,
-@@ -641,7 +691,12 @@ static void ar9003_rx_gain_table_mode2(struct ath_hw *ah)
+-#ifdef CONFIG_ATH9K_RATE_CONTROL
+-	hw->rate_control_algorithm = "ath9k_rate_control";
+-#endif
+-
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+ 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+ 			&sc->sbands[IEEE80211_BAND_2GHZ];
+diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
+index 267dbfc..b9a8738 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -231,7 +231,7 @@ static inline void ath_debug_stat_retries(struct ath_rate_priv *rc, int rix,
+ }
+ #endif
  
- static void ar9003_rx_gain_table_mode3(struct ath_hw *ah)
- {
--	if (AR_SREV_9462_20(ah)) {
-+	if (AR_SREV_9462_21(ah)) {
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			       ar9462_2p1_common_5g_xlna_only_rx_gain);
-+		INIT_INI_ARRAY(&ah->ini_modes_rxgain_5g_xlna,
-+			       ar9462_2p1_baseband_postamble_5g_xlna);
-+	} else if (AR_SREV_9462_20(ah)) {
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			       ar9462_2p0_5g_xlna_only_rxgain);
- 		INIT_INI_ARRAY(&ah->ini_modes_rxgain_5g_xlna,
+-#ifdef CONFIG_ATH9K_RATE_CONTROL
++#ifdef CONFIG_ATH9K_LEGACY_RATE_CONTROL
+ int ath_rate_control_register(void);
+ void ath_rate_control_unregister(void);
+ #else
 -- 
-1.8.3.1
+1.8.3
 
