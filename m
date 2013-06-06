@@ -1,70 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:49895 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752030Ab3F1TNO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:13:14 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 01/19] rt2x00: rt2800lib: add BBP register initialization for RT3593
-Date: Fri, 28 Jun 2013 21:12:15 +0200
-Message-Id: <1372446753-11408-2-git-send-email-juhosg@openwrt.org> (sfid-20130628_211356_456333_584939F5)
-In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
-References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:47160 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752871Ab3FFVQH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 17:16:07 -0400
+Message-ID: <51B0FBFC.8040809@candelatech.com> (sfid-20130606_231627_031056_7ACD6573)
+Date: Thu, 06 Jun 2013 14:15:40 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Tejun Heo <tj@kernel.org>
+CC: Eric Dumazet <eric.dumazet@gmail.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Joe Lawrence <joe.lawrence@stratus.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	stable@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>
+Subject: Re: stop_machine lockup issue in 3.9.y.
+References: <51AF6E54.3050108@candelatech.com> <20130605184807.GD10693@mtj.dyndns.org> <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com> <51AFA677.9010605@candelatech.com> <20130605211157.GK10693@mtj.dyndns.org> <1370482492.24311.308.camel@edumazet-glaptop> <20130606031444.GA12335@mtj.dyndns.org> <1370489181.24311.318.camel@edumazet-glaptop> <51B004CD.6080007@candelatech.com> <20130606205514.GC5045@htj.dyndns.org>
+In-Reply-To: <20130606205514.GC5045@htj.dyndns.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
+On 06/06/2013 01:55 PM, Tejun Heo wrote:
+> Hello, Ben.
+>
+> On Wed, Jun 05, 2013 at 08:41:01PM -0700, Ben Greear wrote:
+>> On 06/05/2013 08:26 PM, Eric Dumazet wrote:
+>>> On Wed, 2013-06-05 at 20:14 -0700, Tejun Heo wrote:
+>>>> Ah, so, that's why it's showing up now.  We probably have had the same
+>>>> issue all along but it used to be masked by the softirq limiting.  Do
+>>>> you care to revive the 10 iterations limit so that it's limited by
+>>>> both the count and timing?  We do wanna find out why softirq is
+>>>> spinning indefinitely tho.
+>>>
+>>> Yes, no problem, I can do that.
+>>
+>> Limiting it to 5000 fixes my problem, so if you wanted it larger than 10, that would
+>> be fine by me.
+>
+> First of all, kudos for tracking the issue down.  While the removal of
+> looping limit in softirq handling was the direct cause for making the
+> problem visible, it's very bothering that we have softirq runaway.
+> Finding out the perpetrator shouldn't be hard.  Something like the
+> following should work (untested).  Once we know which softirq (prolly
+> the network one), we can dig deeper.
 
-References:
-  NICInitRT3593BbpRegisters in chips/rt3593.c
-  NICInitBBP in common/rtmp_init.c
-  NICInitAsicFromEEPROM in common/rtmp_init.c
+The patch below assumes my fix is not in the code, right?
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+I'll work on this, but it will probably be next week before
+I have time...gotta catch up on some other things first.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 6f58ceb..32ecd1a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4505,6 +4505,22 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
- 	rt2800_disable_unused_dac_adc(rt2x00dev);
- }
- 
-+static void rt2800_init_bbp_3593(struct rt2x00_dev *rt2x00dev)
-+{
-+	rt2800_init_bbp_early(rt2x00dev);
-+
-+	rt2800_bbp_write(rt2x00dev, 79, 0x13);
-+	rt2800_bbp_write(rt2x00dev, 80, 0x05);
-+	rt2800_bbp_write(rt2x00dev, 81, 0x33);
-+	rt2800_bbp_write(rt2x00dev, 137, 0x0f);
-+
-+	rt2800_bbp_write(rt2x00dev, 84, 0x19);
-+
-+	/* Enable DC filter */
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT3593, REV_RT3593E))
-+		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
-+}
-+
- static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- {
- 	int ant, div_mode;
-@@ -4720,6 +4736,9 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	case RT3572:
- 		rt2800_init_bbp_3572(rt2x00dev);
- 		break;
-+	case RT3593:
-+		rt2800_init_bbp_3593(rt2x00dev);
-+		return;
- 	case RT5390:
- 	case RT5392:
- 		rt2800_init_bbp_53xx(rt2x00dev);
+Thanks,
+Ben
+
+
 -- 
-1.7.10
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
