@@ -1,49 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39495 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755971Ab3FRPxc (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:52159 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932892Ab3FFLvX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 11:53:32 -0400
-Message-ID: <1371570798.22256.1.camel@jlt4.sipsolutions.net> (sfid-20130618_175336_131118_FFF62E11)
-Subject: Re: [PATCHv3 07/18] mac80211: add radiotap flag and handling for
- 5/10 MHz
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Tue, 18 Jun 2013 17:53:18 +0200
-In-Reply-To: <20130618155051.GD27492@pandem0nium>
-References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1368702045-27598-8-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1371565626.8318.26.camel@jlt4.sipsolutions.net>
-	 <20130618155051.GD27492@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 6 Jun 2013 07:51:23 -0400
+Received: by mail-ob0-f178.google.com with SMTP id fb19so4477068obc.37
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jun 2013 04:51:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1370519207.5502.5.camel@cumari.coelho.fi>
+References: <1369822703-27769-1-git-send-email-sachin.kamat@linaro.org>
+	<CAK9yfHzRHxJuzFW4OvLsQvoxT9LXYzwO+3i5nws8N6hO9HGq-Q@mail.gmail.com>
+	<1370519207.5502.5.camel@cumari.coelho.fi>
+Date: Thu, 6 Jun 2013 17:21:22 +0530
+Message-ID: <CAK9yfHyg_4nD01SZB34mz0v=oLBZYDJApC7bP36YvpVywOfv0A@mail.gmail.com> (sfid-20130606_135129_312326_7909A5C2)
+Subject: Re: [PATCH 1/2] net: wireless: wl1251: Use module_spi_driver macro
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-18 at 17:50 +0200, Simon Wunderlich wrote:
+Hi Luciano,
 
-> Hmm, if this [1] is the official standard, then no, it is not defined. Don't
-> know when this was added in wireshark, and it was only added implicitly in
-> the code (no header files etc). But since it was there, I figured it would
-> be a good idea to re-use it (unaware that there was some "standard").
-> 
-> How shall we proceed, propose that on some radiotap mailing list officially?
+On 6 June 2013 17:16, Luciano Coelho <coelho@ti.com> wrote:
+> Hi Sachin,
+>
+> On Thu, 2013-06-06 at 14:48 +0530, Sachin Kamat wrote:
+>> On 29 May 2013 15:48, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+>> > module_spi_driver() eliminates some boiler plate and makes code
+>> > simpler.
+>> >
+>> > Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+>> > ---
+>> >  drivers/net/wireless/ti/wl1251/spi.c |   24 +-----------------------
+>> >  1 file changed, 1 insertion(+), 23 deletions(-)
+>> >
+>> > diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
+>> > index 4c67c2f..dfd0877 100644
+>> > --- a/drivers/net/wireless/ti/wl1251/spi.c
+>> > +++ b/drivers/net/wireless/ti/wl1251/spi.c
+>> > @@ -329,29 +329,7 @@ static struct spi_driver wl1251_spi_driver = {
+>> >         .remove         = wl1251_spi_remove,
+>> >  };
+>> >
+>> > -static int __init wl1251_spi_init(void)
+>> > -{
+>> > -       int ret;
+>> > -
+>> > -       ret = spi_register_driver(&wl1251_spi_driver);
+>> > -       if (ret < 0) {
+>> > -               wl1251_error("failed to register spi driver: %d", ret);
+>> > -               goto out;
+>> > -       }
+>> > -
+>> > -out:
+>> > -       return ret;
+>> > -}
+>> > -
+>> > -static void __exit wl1251_spi_exit(void)
+>> > -{
+>> > -       spi_unregister_driver(&wl1251_spi_driver);
+>> > -
+>> > -       wl1251_notice("unloaded");
+>> > -}
+>> > -
+>> > -module_init(wl1251_spi_init);
+>> > -module_exit(wl1251_spi_exit);
+>> > +module_spi_driver(wl1251_spi_driver);
+>> >
+>> >  MODULE_LICENSE("GPL");
+>> >  MODULE_AUTHOR("Kalle Valo <kvalo@adurom.com>");
+>> > --
+>> > 1.7.9.5
+>> >
+>>
+>> Gentle ping on this series John.
+>
+> This is in my queue.  Haven't had the time to review and apply them yet.
+> And these are not urgent changes, so they can wait a little while.
 
-Yes, see http://www.radiotap.org/Standardisation
+Sure. Thanks.
 
-> > > +	RX_FLAG_10MHZ			= BIT(26),
-> > > +	RX_FLAG_5MHZ			= BIT(27),
-> > 
-> > Does that make sense? We know what kind of channel we're on? Though it
-> > might be easier for the driver, so it may make sense I guess.
-> 
-> Yeah, it's a little easier for the driver, and I thought it would be
-> cleaner to get this reported through a flag.
 
-Yeah I tend to agree.
-
-johannes
-
+-- 
+With warm regards,
+Sachin
