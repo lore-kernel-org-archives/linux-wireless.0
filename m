@@ -1,101 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:26078 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754372Ab3FQRvq convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56322 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175Ab3FFX41 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 13:51:46 -0400
-Date: Mon, 17 Jun 2013 13:51:43 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Franky Lin <frankyl@broadcom.com>, rvossen@broadcom.com,
-	arend@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH] net: brcmfmac: add sdio chip id 0x4319
-Message-ID: <20130617175143.GR31667@titan.lakedaemon.net> (sfid-20130617_195153_366450_8DEAFF9C)
-References: <20130612222123.GB31667@titan.lakedaemon.net>
- <20130617161903.GN31667@titan.lakedaemon.net>
- <51BF498F.1010007@broadcom.com>
- <CACna6ryw=QeD5OuMWYoZLYzt9CBo+PO-SwygDY+SUaVxCYu0jA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6ryw=QeD5OuMWYoZLYzt9CBo+PO-SwygDY+SUaVxCYu0jA@mail.gmail.com>
+	Thu, 6 Jun 2013 19:56:27 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Fix merge conflict
+Date: Fri,  7 Jun 2013 05:23:38 +0530
+Message-Id: <1370562818-16530-1-git-send-email-sujith@msujith.org> (sfid-20130607_015633_695923_BA37DB8C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 17, 2013 at 07:45:25PM +0200, Rafał Miłecki wrote:
-> 2013/6/17 Franky Lin <frankyl@broadcom.com>:
-> > On 06/17/2013 09:19 AM, Jason Cooper wrote:
-> >>
-> >> Added Franky...
-> >>
-> >> On Wed, Jun 12, 2013 at 06:21:23PM -0400, Jason Cooper wrote:
-> >>>
-> >>> All,
-> >>>
-> >>> I have a Seagate Wireless Plus I am trying to put a vanilla kernel on
-> >>> (currently v3.10-rc5 for various omap DT bits).
-> >>>
-> >>> I have the board booting and running a debian rootfs on the HD.  I just
-> >>> got mmc to come up and I've discovered that the wireless card is vendor
-> >>> 0x02d0, device 0x4319.
-> >>>
-> >>> My hope, once I got to this point, was that I would be able to use
-> >>> the mainline, open source driver.  Unfortunately, it looks like brcmfmac
-> >>> lost support for the 0x4319 while it was in staging.
-> >>>
-> >>> The commit in question is:
-> >>>
-> >>>    4dad253 staging: brcm80211: remove code for unsupported chip
-> >>>
-> >>> Is adding it back in a bridge too far?
-> >>
-> >> It looks like only two things are needed, adding the chip id and then
-> >> setting the addresses.  Here's a preliminary patch to do just that.
-> >> Note, the addresses I have used are a straight copy from the 4329.  It
-> >> causes this:
-> >>
-> >> [   12.346466] mmcblk mmc0:0001: no of_node; not parsing pinctrl DT
-> >> [   12.353149] brcmfmac_sdio mmc0:0001:1: no of_node; not parsing pinctrl
-> >> DT
-> >> [   12.360717] brcmfmac_sdio mmc0:0001:2: no of_node; not parsing pinctrl
-> >> DT
-> >> [   12.368804] brcmfmac: brcmf_sdio_chip_drivestrengthinit: No SDIO Drive
-> >> strength init done for chip 4319 rev 1 pmurev 7
-> >> [   12.380462] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
-> >> F0:@0x00408=03, Err: -22
-> >> [   12.391906] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
-> >> F0:@0x00408=03, Err: -22
-> >> [   12.403289] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
-> >> F0:@0x00408=03, Err: -22
-> >> [   12.412261] brcmfmac: brcmf_sdio_regrw_helper: failed with -22
-> >> [   12.418457] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
-> >> F0:@0x00408=01, Err: -22
-> >> [   12.429718] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
-> >> F0:@0x00408=01, Err: -22
-> >> [   12.441101] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
-> >> F0:@0x00408=01, Err: -22
-> >> [   12.450073] brcmfmac: brcmf_sdio_regrw_helper: failed with -22
-> >>
-> >> I've taken a quick look at aosp, the provided GPL broadcom code, and I
-> >> haven't seen anything for the 4319 wrt to addresses.  How hard would it
-> >> be to get those addresses from you guys?
-> >
-> >
-> > Hi Jason,
-> >
-> > The major obstacle of adding 4319 support is the obsolete firmware. Since
-> > it's an EOL chip we are not planning to add the support to brcmfmac.
-> 
-> Does it mean, BCM4319 is a "new architecture" chipset, working
-> similarly to the already supported (in brcmfmac) chipsets?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-In older versions of the broadcom driver 4329 and 4319 were in the same
-code base.  There was minimal reference to 4319 beyond "I work with this
-chip id".  Hence my attempt.
+The option config option ATH9K_MAC_DEBUG has been removed
+in the commit, "ath9k: Remove MAC_DEBUG".
 
-Now I'm wondering how much effort there would be to adding legacy
-firmware support to brcmfmac.  I would only need AP mode to start with
-(yeah, no big deal ;-) ).
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig | 8 --------
+ 1 file changed, 8 deletions(-)
 
-thx,
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 3c2cbc9..760ab3f 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -84,14 +84,6 @@ config ATH9K_DFS_CERTIFIED
+ 	  developed. At this point enabling this option won't do anything
+ 	  except increase code size.
+ 
+-config ATH9K_MAC_DEBUG
+-	bool "Atheros MAC statistics"
+-	depends on ATH9K_DEBUGFS
+-	default y
+-	---help---
+-	  This option enables collection of statistics for Rx/Tx status
+-	  data and some other MAC related statistics
+-
+ config ATH9K_LEGACY_RATE_CONTROL
+ 	bool "Atheros ath9k rate control"
+ 	depends on ATH9K
+-- 
+1.8.3
 
-Jason.
