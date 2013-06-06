@@ -1,55 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:40481 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817Ab3FZLw5 (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:44380 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753216Ab3FFUzS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 07:52:57 -0400
-Date: Wed, 26 Jun 2013 13:52:55 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: pull request: bluetooth 2013-06-23
-Message-ID: <20130626115255.GA7940@amd.pavel.ucw.cz> (sfid-20130626_135328_776284_9F95DE41)
-References: <20130623021351.GA2327@joana>
- <20130625201217.GA13879@amd.pavel.ucw.cz>
- <E95EC814-F064-4AEB-AE13-79982D3BE5E8@holtmann.org>
- <20130625210039.GA28448@joana>
+	Thu, 6 Jun 2013 16:55:18 -0400
+Date: Thu, 6 Jun 2013 13:55:14 -0700
+From: Tejun Heo <tj@kernel.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Joe Lawrence <joe.lawrence@stratus.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	stable@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>
+Subject: Re: stop_machine lockup issue in 3.9.y.
+Message-ID: <20130606205514.GC5045@htj.dyndns.org> (sfid-20130606_225535_048052_6DD8A131)
+References: <51AF6E54.3050108@candelatech.com>
+ <20130605184807.GD10693@mtj.dyndns.org>
+ <51AF8D4B.4090407@candelatech.com>
+ <51AF91F5.6090801@candelatech.com>
+ <51AFA677.9010605@candelatech.com>
+ <20130605211157.GK10693@mtj.dyndns.org>
+ <1370482492.24311.308.camel@edumazet-glaptop>
+ <20130606031444.GA12335@mtj.dyndns.org>
+ <1370489181.24311.318.camel@edumazet-glaptop>
+ <51B004CD.6080007@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130625210039.GA28448@joana>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51B004CD.6080007@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue 2013-06-25 22:00:39, Gustavo Padovan wrote:
-> Hi Marcel,
-> 
-> * Marcel Holtmann <marcel@holtmann.org> [2013-06-25 13:49:19 -0700]:
-> 
-> > Hi Pavel,
-> > 
-> > >> Jaganath Kanakkassery (1):
-> > >>      Bluetooth: Fix invalid length check in l2cap_information_rsp()
-> > > 
-> > > Could we add the "3.10 vs. thinkpad x60" patch that fixes regression?
-> > > It is from Johan Hedberg…
-> > 
-> > that one went into net-next tree. It is scheduled for 3.11 right now.
-> > 
-> > After 3.10 is out, maybe it can go into -stable, but otherwise I think it is bit late now. Unless someone wants to cherry-pick it.
-> 
-> That patch is actually in 3.10 already, it was included in the last pull
-> request and John took it to wireless.git.
+Hello, Ben.
 
-Is it? I tried pulling yesterday (some updates) and today (no
-changes), am on:
+On Wed, Jun 05, 2013 at 08:41:01PM -0700, Ben Greear wrote:
+> On 06/05/2013 08:26 PM, Eric Dumazet wrote:
+> >On Wed, 2013-06-05 at 20:14 -0700, Tejun Heo wrote:
+> >>Ah, so, that's why it's showing up now.  We probably have had the same
+> >>issue all along but it used to be masked by the softirq limiting.  Do
+> >>you care to revive the 10 iterations limit so that it's limited by
+> >>both the count and timing?  We do wanna find out why softirq is
+> >>spinning indefinitely tho.
+> >
+> >Yes, no problem, I can do that.
+> 
+> Limiting it to 5000 fixes my problem, so if you wanted it larger than 10, that would
+> be fine by me.
 
-Linux amd 3.10.0-rc7+ #267 SMP Tue Jun 25 23:32:24 CEST 2013 i686
-GNU/Linux
+First of all, kudos for tracking the issue down.  While the removal of
+looping limit in softirq handling was the direct cause for making the
+problem visible, it's very bothering that we have softirq runaway.
+Finding out the perpetrator shouldn't be hard.  Something like the
+following should work (untested).  Once we know which softirq (prolly
+the network one), we can dig deeper.
 
-and bluetooth is still broken :-(.
-									Pavel
+Thanks.
+
+diff --git a/kernel/softirq.c b/kernel/softirq.c
+index b5197dc..5af3682 100644
+--- a/kernel/softirq.c
++++ b/kernel/softirq.c
+@@ -212,6 +212,7 @@ asmlinkage void __do_softirq(void)
+ 	unsigned long end = jiffies + MAX_SOFTIRQ_TIME;
+ 	int cpu;
+ 	unsigned long old_flags = current->flags;
++	int cnt = 0;
+ 
+ 	/*
+ 	 * Mask out PF_MEMALLOC s current task context is borrowed for the
+@@ -244,6 +245,9 @@ restart:
+ 			kstat_incr_softirqs_this_cpu(vec_nr);
+ 
+ 			trace_softirq_entry(vec_nr);
++			if (++cnt >= 5000 && cnt < 5010)
++				printk("XXX __do_softirq: stuck handling softirqs, cnt=%d action=%pf\n",
++				       cnt, h->action);
+ 			h->action(h);
+ 			trace_softirq_exit(vec_nr);
+ 			if (unlikely(prev_count != preempt_count())) {
+
+
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+tejun
