@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:53500 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756567Ab3FCPUo (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:60952 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753616Ab3FFJFF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 11:20:44 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 6 Jun 2013 05:05:05 -0400
+Received: by mail-wg0-f49.google.com with SMTP id a12so31103wgh.28
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jun 2013 02:05:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20908.45989.889590.158302@gargle.gargle.HOWL> (sfid-20130603_172048_417659_0547A758)
-Date: Mon, 3 Jun 2013 20:47:57 +0530
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: John Linville <linville@tuxdriver.com>,
+In-Reply-To: <51B04585.9020108@gmx.net>
+References: <CAB-Tk70FmmfZOaJnWOubcOrP3MyXebTtrY936_4NROmf_76EZw@mail.gmail.com>
+	<CAB-Tk73mTDsvf+MCEq5xfUBUtE4c6KfL2nkAcZe2LCY5pF=7RQ@mail.gmail.com>
+	<CAJ-Vmok5yLZvstvYHi35ALWG3q8sVYLx_1PuhL31unOjxrg-4g@mail.gmail.com>
+	<201306052335.25953.chunkeey@googlemail.com>
+	<CAJ-Vmom6cmf-c-TJs5s9AvT953m0+tANVj_AxnSYwUCzegyPWQ@mail.gmail.com>
+	<CAB-Tk7273qtgA0J-rvpFxNbMDErmXVdknybVOJmUTa73VhL1Cw@mail.gmail.com>
+	<51B04585.9020108@gmx.net>
+Date: Thu, 6 Jun 2013 17:05:03 +0800
+Message-ID: <CAB-Tk73j8b12viR49rO8RcrZLYA7_G8Ti-qiYZW-ZCnemeaA2Q@mail.gmail.com> (sfid-20130606_110512_086260_46EDB993)
+Subject: Re: carl9170:5/10 MHz Channel Support on carl9170
+From: "C.B. Wang" <wtwangcb@gmail.com>
+To: Oleksij Rempel <fishor@gmx.net>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/7] ath9k: Enable WoW only for AR9462
-In-Reply-To: <20130603150846.GB2146@redhat.com>
-References: <1370231369-16241-1-git-send-email-sujith@msujith.org>
-	<1370231369-16241-2-git-send-email-sujith@msujith.org>
-	<20130603150846.GB2146@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka wrote:
-> Do this feature will be added back in the future? If so, when? Or there
-> are some limitations regarding WoW support on older chips?
+>> True, but again look at the vendor driver. I think it should
+>> be very easy to implement "set coverage class". The slot time
+>> can be set by "AR9170_MAC_REG_SLOT_TIME" register and the ack
+>> timeout should be in "AR9170_MAC_REG_ACK_EXTENSION". That's
+>> all the information I have. So what are you waiting for
 
-WoW hasn't been tested or verified with ath9k using AR9280 at all, so we
-don't know what is missing in ath9k to handle the chip's peculiarities.
+In addition to what you have said above,can we also make longer range
+communication
+possible by sacrificing data rates and using 5/10 MHz narrow channels
+which is Atheros's
+extended range(xr) technology?
 
-> I'm asking because, we have RHEL customer that request WoWLAN support
-> for AR9280. I thought this will be matter of backport ath9k driver
-> from upstream to RHEL, since we have commits that add WoW for AR9002,
-> including AR9280. But since you're now removing that feature I'm a bit
-> worried. Will WoW be supported on AR9280, or we should rather ask
-> customer to use different chip i.e. AR9462 ?
 
-If AR9280 is used, getting support for WoW would be difficult. AR9462 has
-been through internal test-cycles for WoW, so it seems a more sensible choice.
-
-But, the AR9002-specific code can be retained in the driver if RH needs it.
-
-Sujith
+On 6/6/13, Oleksij Rempel <fishor@gmx.net> wrote:
+> Am 06.06.2013 10:07, schrieb C.B. Wang:
+>> Spectral analysis isn't supported by any Atheros USB chipsets,is it?
+>
+> ar7010 devices theoretically should support it.
+>
+>> The 802.11j standard defines 10mhz operation.I think it is mandatory.
+>> You can get a copy here
+>> http://www.it.iitb.ac.in/~mukesh/dokuwiki/lib/exe/fetch.php?cache=cache&media=mtp:802.11j-2004.pdf
+>>
+>> No,I don't know any.Most devices that use ZyDaS chipset are b/g
+>> soloution.
+>> It's rare even to see an a/b/g ZyDaS device.
+>>
+>> Channel 183(4815mhz),185(4925mhz),187(4935mhz),189(4945mhz) should also
+>> be added to the channel list of carl9170 driver.
+>>
+>
+>
+>
