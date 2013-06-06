@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18048 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751454Ab3FLOqQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 10:46:16 -0400
-Date: Wed, 12 Jun 2013 16:48:25 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jake Edge <jake@lwn.net>
-Subject: [PATCH 5/4] Revert "iwl4965: workaround connection regression on
- passive channel"
-Message-ID: <20130612144825.GC2698@redhat.com> (sfid-20130612_164619_411986_A5E68606)
-References: <1371048290-8015-1-git-send-email-sgruszka@redhat.com>
- <1371048290-8015-4-git-send-email-sgruszka@redhat.com>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:41272 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757182Ab3FFDOs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jun 2013 23:14:48 -0400
+Date: Wed, 5 Jun 2013 20:14:44 -0700
+From: Tejun Heo <tj@kernel.org>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Joe Lawrence <joe.lawrence@stratus.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	stable@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>
+Subject: Re: stop_machine lockup issue in 3.9.y.
+Message-ID: <20130606031444.GA12335@mtj.dyndns.org> (sfid-20130606_051452_841759_F6B1EC96)
+References: <51AE27D5.7050202@candelatech.com>
+ <87sj0xry1k.fsf@rustcorp.com.au>
+ <20130605071539.GA3429@mtj.dyndns.org>
+ <51AF6E54.3050108@candelatech.com>
+ <20130605184807.GD10693@mtj.dyndns.org>
+ <51AF8D4B.4090407@candelatech.com>
+ <51AF91F5.6090801@candelatech.com>
+ <51AFA677.9010605@candelatech.com>
+ <20130605211157.GK10693@mtj.dyndns.org>
+ <1370482492.24311.308.camel@edumazet-glaptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1371048290-8015-4-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1370482492.24311.308.camel@edumazet-glaptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit dd9c46408fdc07098333655ff27edf8cac8d9fcf.
+Hello, Eric.
 
-With "iwl{4965,3495): workaround for firmware frame tx rejection"
-patches we can enable IEEE80211_HW_REPORTS_TX_ACK_STATUS again.
+On Wed, Jun 05, 2013 at 06:34:52PM -0700, Eric Dumazet wrote:
+> > Ingo, Thomas, we're seeing a stop_machine hanging because
+> > 
+> > * All other CPUs entered IRQ disabled stage.  Jiffies is not being
+> >   updated.
+> > 
+> > * The last CPU get caught up executing softirq indefinitely.  As
+> >   jiffies doesn't get updated, it never breaks out of softirq
+> >   handling.  This is a deadlock.  This CPU won't break out of softirq
+> >   handling unless jiffies is updated and other CPUs can't do anything
+> >   until this CPU enters the same stop_machine stage.
+> > 
+> > Ben found out that breaking out of softirq handling after certain
+> > number of repetitions makes the issue go away, which isn't a proper
+> > fix but we might want anyway.  What do you guys think?
+> > 
+> 
+> Interesting....
+> 
+> Before 3.9 and commit c10d73671ad30f5469
+> ("softirq: reduce latencies") we used to limit the __do_softirq() loop
+> to 10.
 
-Tested-by: Jake Edge <jake@lwn.net>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Ah, so, that's why it's showing up now.  We probably have had the same
+issue all along but it used to be masked by the softirq limiting.  Do
+you care to revive the 10 iterations limit so that it's limited by
+both the count and timing?  We do wanna find out why softirq is
+spinning indefinitely tho.
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 1c44bb5..d287fd2 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -5759,7 +5759,8 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
- 	hw->flags =
- 	    IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_AMPDU_AGGREGATION |
- 	    IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC | IEEE80211_HW_SPECTRUM_MGMT |
--	    IEEE80211_HW_SUPPORTS_PS | IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-+	    IEEE80211_HW_REPORTS_TX_ACK_STATUS | IEEE80211_HW_SUPPORTS_PS |
-+	    IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
- 	if (il->cfg->sku & IL_SKU_N)
- 		hw->flags |=
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+Thanks.
+
 -- 
-1.7.11.7
-
+tejun
