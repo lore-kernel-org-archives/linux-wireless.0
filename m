@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53660 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757296Ab3FCO7N (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:59744 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756667Ab3FFD0Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 10:59:13 -0400
-Message-ID: <1370271547.8227.16.camel@jlt4.sipsolutions.net> (sfid-20130603_165926_231434_498F8381)
-Subject: Re: [PATCH 1/2] nl80211: allow sending CMD_FRAME without specifying
- any frequency
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Date: Mon, 03 Jun 2013 16:59:07 +0200
-In-Reply-To: <1370241587-2609-1-git-send-email-ordex@autistici.org>
-References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+	Wed, 5 Jun 2013 23:26:24 -0400
+Message-ID: <1370489181.24311.318.camel@edumazet-glaptop> (sfid-20130606_052641_527239_76C77823)
+Subject: Re: stop_machine lockup issue in 3.9.y.
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Joe Lawrence <joe.lawrence@stratus.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	stable@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>
+Date: Wed, 05 Jun 2013 20:26:21 -0700
+In-Reply-To: <20130606031444.GA12335@mtj.dyndns.org>
+References: <51AE27D5.7050202@candelatech.com>
+	 <87sj0xry1k.fsf@rustcorp.com.au> <20130605071539.GA3429@mtj.dyndns.org>
+	 <51AF6E54.3050108@candelatech.com> <20130605184807.GD10693@mtj.dyndns.org>
+	 <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com>
+	 <51AFA677.9010605@candelatech.com> <20130605211157.GK10693@mtj.dyndns.org>
+	 <1370482492.24311.308.camel@edumazet-glaptop>
+	 <20130606031444.GA12335@mtj.dyndns.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
+On Wed, 2013-06-05 at 20:14 -0700, Tejun Heo wrote:
+
 > 
-> Users may want to send a frame on the current channel
-> without specifying it.
-> 
-> Make mgmt_tx pass a NULL channel to mac80211 if none has
-> been specified by the user.
+> Ah, so, that's why it's showing up now.  We probably have had the same
+> issue all along but it used to be masked by the softirq limiting.  Do
+> you care to revive the 10 iterations limit so that it's limited by
+> both the count and timing?  We do wanna find out why softirq is
+> spinning indefinitely tho.
 
-cfg80211 isn't just a mac80211 frontend ... ;-)
-
-Also, as Nicolas said, ath6kl_mgmt_tx() will crash after this patch if
-it's called in AP mode w/o a channel, so you need to think about that.
-
-Tracing looks fine though.
-
-johannes
+Yes, no problem, I can do that.
 
