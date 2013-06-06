@@ -1,158 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:42725 "EHLO comal.ext.ti.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4842 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016Ab3F1NVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 09:21:45 -0400
-Message-ID: <1372425670.21065.61.camel@cumari.coelho.fi> (sfid-20130628_152151_478455_FBBB0C0C)
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-From: Luciano Coelho <coelho@ti.com>
-To: <mturquette@linaro.org>
-CC: <balbi@ti.com>, Mark Rutland <mark.rutland@arm.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm@vger.kernel.org" <linux-arm-kernel@lists.infradead.org>
-Date: Fri, 28 Jun 2013 16:21:10 +0300
-In-Reply-To: <20130628121859.GP11297@arwen.pp.htv.fi>
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-	 <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
-	 <1372413215.21065.41.camel@cumari.coelho.fi>
-	 <20130628102145.GB2139@e106331-lin.cambridge.arm.com>
-	 <1372415514.21065.50.camel@cumari.coelho.fi>
-	 <1372418531.21065.53.camel@cumari.coelho.fi>
-	 <20130628114129.GO11297@arwen.pp.htv.fi>
-	 <1372421632.21065.60.camel@cumari.coelho.fi>
-	 <20130628121859.GP11297@arwen.pp.htv.fi>
-Content-Type: text/plain; charset="UTF-8"
+	id S932598Ab3FFLSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 07:18:47 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 16/22] brcmfmac: Simplify counting transit count.
+Date: Thu, 6 Jun 2013 13:18:01 +0200
+Message-ID: <1370517487-14395-17-git-send-email-arend@broadcom.com> (sfid-20130606_131901_706990_56DAD30E)
+In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-06-28 at 15:18 +0300, Felipe Balbi wrote:
-> On Fri, Jun 28, 2013 at 03:13:52PM +0300, Luciano Coelho wrote:
-> > On Fri, 2013-06-28 at 14:41 +0300, Felipe Balbi wrote:
-> > > On Fri, Jun 28, 2013 at 02:22:11PM +0300, Luciano Coelho wrote:
-> > > > On Fri, 2013-06-28 at 13:31 +0300, Luciano Coelho wrote:
-> > > > > (fixed Mike's address)
-> > > > > 
-> > > > > On Fri, 2013-06-28 at 11:21 +0100, Mark Rutland wrote:
-> > > > > > On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
-> > > > > > > On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
-> > > > > > > > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
-> > > > > > > > > +Optional properties:
-> > > > > > > > > +--------------------
-> > > > > > > > > +
-> > > > > > > > > +- refclock: the internal WLAN reference clock frequency (required for
-> > > > > > > > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-> > > > > > > > > +  following:
-> > > > > > > > > +	0 = 19.2 MHz
-> > > > > > > > > +	1 = 26.0 MHz
-> > > > > > > > > +	2 = 38.4 MHz
-> > > > > > > > > +	3 = 52.0 MHz
-> > > > > > > > > +	4 = 38.4 MHz, XTAL
-> > > > > > > > > +	5 = 26.0 MHz, XTAL
-> > > > > > > > > +
-> > > > > > > > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> > > > > > > > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> > > > > > > > > +  following:
-> > > > > > > > > +	0 = 19.200 MHz
-> > > > > > > > > +	1 = 26.000 MHz
-> > > > > > > > > +	2 = 38.400 MHz
-> > > > > > > > > +	3 = 52.000 MHz
-> > > > > > > > > +	4 = 16.368 MHz
-> > > > > > > > > +	5 = 32.736 MHz
-> > > > > > > > > +	6 = 16.800 MHz
-> > > > > > > > > +	7 = 33.600 MHz
-> > > > > > > > 
-> > > > > > > > This looks suspiciously like what we have the common clock bindings for:
-> > > > > > > > 
-> > > > > > > > refclk {
-> > > > > > > > 	compatible = "fixed-clock";
-> > > > > > > > 	#clock-cells = <0>;
-> > > > > > > > 	clock-frequency = <19200000>;
-> > > > > > > > }
-> > > > > > > > 
-> > > > > > > > wilink {
-> > > > > > > > 	compatible = "ti,wilink7";
-> > > > > > > > 	interrupt-parent = <&some_interrupt_controller>;
-> > > > > > > > 	interrupts = <0 1 1>;
-> > > > > > > > 	clocks = <&refclk>, <&refclk>;
-> > > > > > > > 	clock-names = "refclk", "txoclk";
-> > > > > > > > };
-> > > > > > > > 
-> > > > > > > > Could you not use them?
-> > > > > > > 
-> > > > > > > Hmmm... this actually does look good.  But these are internal clocks in
-> > > > > > > the modules, they cannot be accessed from outside.  Does it make sense
-> > > > > > > to register them with the clock framework?
-> > > > > > 
-> > > > > > Given we already have a common way of describing clocks, I think it
-> > > > > > makes sense to use it -- people already understand the common bindings,
-> > > > > > and it's less code to add add to the kernel. I don't think the fact
-> > > > > > these clocks are internal should prevent us from describing them as we
-> > > > > > would an external clock.
-> > > > > 
-> > > > > Yes, I agree with you.  Thanks for the suggestion! I think it will look
-> > > > > much better.  And now that I dug a bit more into the code, I can see
-> > > > > that there are only structs being populated, so there shouldn't be any
-> > > > > other side-effects.
-> > > > 
-> > > > Hmmm, one thing that escaped me.  Besides the frequency, I also need a
-> > > > boolean that tells if the clock is XTAL or not.  I can't figure out how
-> > > > to pass this if I use the generic clock framework.  Any suggestions?
-> > > 
-> > > Could you use clock-output-names for that ?
-> > > 
-> > > XTAL clock:
-> > > 
-> > > refclk {
-> > > 	compatible = "fixed-clock";
-> > > 	#clock cells = <0>;
-> > > 	clock-frequency = <19200000>;
-> > > 	clock-output-names = "xtal";
-> > > };
-> > > 
-> > > non-XTAL clock:
-> > > 
-> > > refclk {
-> > > 	compatible = "fixed-clock";
-> > > 	#clock cells = <0>;
-> > > 	clock-frequency = <19200000>;
-> > > 	clock-output-names = "osc"; /* any better name ? */
-> > > };
-> > 
-> > This starts looking a bit hacky.  Using the output name as a flag is not
-> > very pretty.
-> > 
-> > I think it would be better to have a separate flag for it in the wlan
-> > node.  Like an optional "refclock-xtal" boolean or something.  The
-> > downside of this is that we would be adding information about the clock
-> > details in the wilink node. :(
-> > 
-> > OTOH, we could add a flag to the generic clock binding? A new optional
-> > boolean that tells whether the clock is XTAL or not:
-> > 
-> > refclk {
-> > 	compatible = "fixed-clock";
-> > 	#clock cells = <0>;
-> > 	clock-frequency = <19200000>;
-> > 	clock-xtal;
-> > };
-> > 
-> > Do you think that would make sense?
-> 
-> sure, that looks alright to me. Surely there are other devices out there
-> who want to know if the clock comes from a crystal or not ?!?
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Mike, what do you think about this idea? If it sounds okay to you, I can
-cook up a patch adding this flag.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   31 ++++++++------------
+ 1 file changed, 12 insertions(+), 19 deletions(-)
 
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 159ed1d..ea37bd4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -361,7 +361,6 @@ struct brcmf_fws_mac_descriptor {
+ 	u8 seq[BRCMF_FWS_FIFO_COUNT];
+ 	struct pktq psq;
+ 	int transit_count;
+-	int suppress_count;
+ 	int suppr_transit_count;
+ 	bool send_tim_signal;
+ 	u8 traffic_pending_bmp;
+@@ -1176,8 +1175,6 @@ static int brcmf_fws_enq(struct brcmf_fws_info *fws,
+ 
+ 	/* update the sk_buff state */
+ 	brcmf_skbcb(p)->state = state;
+-	if (state == BRCMF_FWS_SKBSTATE_SUPPRESSED)
+-		entry->suppress_count++;
+ 
+ 	/*
+ 	 * A packet has been pushed so update traffic
+@@ -1217,9 +1214,8 @@ static struct sk_buff *brcmf_fws_deq(struct brcmf_fws_info *fws, int fifo)
+ 		p = brcmu_pktq_mdeq(&entry->psq, pmsk << (fifo * 2), &prec_out);
+ 		if (p == NULL) {
+ 			if (entry->suppressed) {
+-				if (entry->suppr_transit_count >
+-				    entry->suppress_count)
+-					return NULL;
++				if (entry->suppr_transit_count)
++					continue;
+ 				entry->suppressed = false;
+ 				p = brcmu_pktq_mdeq(&entry->psq,
+ 						    1 << (fifo * 2), &prec_out);
+@@ -1270,12 +1266,9 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 	/* this packet was suppressed */
+ 	if (!entry->suppressed) {
+ 		entry->suppressed = true;
+-		entry->suppress_count = brcmu_pktq_mlen(&entry->psq,
+-							1 << (fifo * 2 + 1));
+ 		entry->suppr_transit_count = entry->transit_count;
+-		brcmf_dbg(DATA, "suppress %s: supp_cnt %d transit %d\n",
+-			  entry->name, entry->suppress_count,
+-			  entry->transit_count);
++		brcmf_dbg(DATA, "suppress %s: transit %d\n",
++			  entry->name, entry->transit_count);
+ 	}
+ 
+ 	entry->generation = genbit;
+@@ -1294,7 +1287,6 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 		 * wlfc cleanup
+ 		 */
+ 		brcmf_fws_hanger_mark_suppressed(&fws->hanger, hslot);
+-		entry->suppress_count++;
+ 	}
+ 
+ 	return ret;
+@@ -1339,6 +1331,9 @@ brcmf_fws_txs_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		return -EINVAL;
+ 	}
++	entry->transit_count--;
++	if (entry->suppressed && entry->suppr_transit_count)
++		entry->suppr_transit_count--;
+ 
+ 	brcmf_dbg(DATA, "%s flags %X htod %X\n", entry->name, skcb->if_flags,
+ 		  skcb->htod);
+@@ -1352,13 +1347,9 @@ brcmf_fws_txs_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
+ 	if (!remove_from_hanger)
+ 		ret = brcmf_fws_txstatus_suppressed(fws, fifo, skb, genbit);
+ 
+-	if (remove_from_hanger || ret) {
+-		entry->transit_count--;
+-		if (entry->suppressed)
+-			entry->suppr_transit_count--;
+-
++	if (remove_from_hanger || ret)
+ 		brcmf_txfinalize(fws->drvr, skb, true);
+-	}
++
+ 	return 0;
+ }
+ 
+@@ -1614,7 +1605,6 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 		free_ctr = entry->seq[fifo];
+ 		brcmf_skb_htod_tag_set_field(p, HSLOT, hslot);
+ 		brcmf_skb_htod_tag_set_field(p, FREERUN, free_ctr);
+-		entry->transit_count++;
+ 		rc = brcmf_fws_hanger_pushpkt(&fws->hanger, p, hslot);
+ 		if (rc)
+ 			brcmf_err("hanger push failed: rc=%d\n", rc);
+@@ -1768,6 +1758,9 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
+ 		goto rollback;
+ 	}
+ 
++	entry->transit_count++;
++	if (entry->suppressed)
++		entry->suppr_transit_count++;
+ 	entry->seq[fifo]++;
+ 	fws->stats.pkt2bus++;
+ 	if (brcmf_skbcb(skb)->if_flags & BRCMF_SKB_IF_FLAGS_CREDITCHECK_MASK) {
+-- 
+1.7.10.4
+
 
