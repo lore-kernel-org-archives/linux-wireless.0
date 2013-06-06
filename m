@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:41693 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.21]:44786 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752072Ab3FJIWc (ORCPT
+	with ESMTP id S1750698Ab3FFEIm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jun 2013 04:22:32 -0400
+	Thu, 6 Jun 2013 00:08:42 -0400
 From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH 1/3] ath9k_hw: Assign default xlna config for AR9485
-Date: Mon, 10 Jun 2013 13:49:38 +0530
-Message-Id: <1370852380-8335-1-git-send-email-sujith@msujith.org> (sfid-20130610_102236_355412_CED57796)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20912.2720.990590.284874@gargle.gargle.HOWL> (sfid-20130606_060846_588831_95B39904)
+Date: Thu, 6 Jun 2013 09:35:52 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, stable@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] ath9k: Use minstrel rate control by default
+In-Reply-To: <51B006AE.6080309@candelatech.com>
+References: <1370488216-11626-1-git-send-email-sujith@msujith.org>
+	<51B006AE.6080309@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Ben Greear wrote:
+> If you will just delete that code above, then you can compile in both ath9k
+> and minstrel rate controls and select at run-time by twiddling the mac80211
+> rate control module option.
 
-For AR9485 boards with XLNA, the default gpio config
-is not set correctly, fix this.
+I am not sure if a user is going to change the rate control at run-time by
+reloading mac80211 and what would be point in using ath9k RC which has basic
+connectivity problems ?
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 8 ++++++--
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 2 ++
- 2 files changed, 8 insertions(+), 2 deletions(-)
+> Last I tested there were still advantages to ath9k rate control in our environment,
+> (including when running through an attenuator and over-the-air),
+> so I think it should be left in to keep minstrel honest if nothing else.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index e6b92ff..25b8bbb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3563,14 +3563,18 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- {
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	int chain;
--	u32 regval;
-+	u32 regval, value;
- 	static const u32 switch_chain_reg[AR9300_MAX_CHAINS] = {
- 			AR_PHY_SWITCH_CHAIN_0,
- 			AR_PHY_SWITCH_CHAIN_1,
- 			AR_PHY_SWITCH_CHAIN_2,
- 	};
- 
--	u32 value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
-+	if (AR_SREV_9485(ah) && (ar9003_hw_get_rx_gain_idx(ah) == 0))
-+		ath9k_hw_cfg_output(ah, AR9300_EXT_LNA_CTL_GPIO_AR9485,
-+				    AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED);
-+
-+	value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
- 
- 	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index e717741..5013c73 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -351,6 +351,8 @@
- 
- #define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
- 
-+#define AR9300_EXT_LNA_CTL_GPIO_AR9485 9
-+
- /*
-  * AGC Field Definitions
-  */
--- 
-1.8.3
+ath9k RC shows slightly higher throughput numbers in an _ideal_ environment,
+but that is hardly the case in real-world usage. I agree that the code can
+be left in the driver, it will be useful for comparison with minstrel.
+
+Sujith
 
