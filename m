@@ -1,81 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:40638 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796Ab3FLEEK (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:54916 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3FFVgG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 00:04:10 -0400
-Received: by mail-ob0-f182.google.com with SMTP id va7so12603406obc.41
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2013 21:04:10 -0700 (PDT)
-Date: Tue, 11 Jun 2013 23:04:06 -0500
-From: Edward Seyler <epseyler@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Intel Centrino Wireless-N 2200 Tech Support
-Message-ID: <20130612040406.GA8429@GregoriusMagnus.arch> (sfid-20130612_060414_670691_A3D2E385)
-References: <20130611042801.GA217@FermiDesk>
- <CANUX_P0ddkfEY+hxir8=PGH1ocS5FQRFwvrm2otj3eTUkwJ+Gw@mail.gmail.com>
+	Thu, 6 Jun 2013 17:36:06 -0400
+Message-ID: <51B100C2.8070905@wwwdotorg.org> (sfid-20130606_233611_071533_750FD4DD)
+Date: Thu, 06 Jun 2013 15:36:02 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P0ddkfEY+hxir8=PGH1ocS5FQRFwvrm2otj3eTUkwJ+Gw@mail.gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Subject: Re: Regression in 9390ace brcmfmac: free net device when registration
+ fails
+References: <51AD1F22.2080004@wwwdotorg.org> <51ADE47D.50700@broadcom.com> <51B0FAC0.4080709@broadcom.com>
+In-Reply-To: <51B0FAC0.4080709@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 06/06/2013 03:10 PM, Arend van Spriel wrote:
+> On 06/04/13 14:58, Arend van Spriel wrote:
+>> On 06/04/2013 12:56 AM, Stephen Warren wrote:
+>>> (John, note that this commit is part of the pull request you sent to
+>>> Dave today)
+>>>
+>>> Arend,
+>>>
+>>> Commit 9390ace "brcmfmac: free net device when registration fails"
+>>> causes a regression.
+>>>
+>>> I had the BCM4330 firmware present in my root fs, whereas my HW is a
+>>> BCM4329. With this patch applied, I get a kernel panic on boot. With it
+>>> reverted, I see that no issues of that nature. This is true in
+>>> next-20130531 (and also 5/30 and 6/1 but not earlier). A bisect of
+>>> Linus's tree followed by a merge of John's wireless pull request from
+>>> today pointed at this same commit.
+>>
+>> Thanks, Stephen
+>>
+>> I will look into this.
 > 
-> This is really weird...
-> Can you compile with CONFIG_IWLWIFI_DEBUG?
-> I will then need a few debug prints.
-> I recently changed this flow to speed up the fw loading process on
-> platform that can afford a bit amount of DMA, but I just tested it
-> (again) and it works even if there is not big DMA chunk available.
+> Hi Stephen,
+> 
+> Can you try the attached patch? If it does not solve the issue, could
+> you provide a log.
 
+Yes, that works great, thanks.
 
+Tested-by: Stephen Warren <swarren@nvidia.com>
 
-I compiled with CONFIG_IWLWIFI_DEBUG.  I also absent mindedly enabled CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE--please let me know if you do not want this.  I can provide other debugging output, but I am sending this now in case I cannot respond promptly.
+>>> Related: Since the two hardware require different firmware, I wonder why
+>>> the driver doesn't use a firmware filename that encodes the HW device ID
+>>> instead of using the same name for all HW. This means that when I move
+>>> my SD card between development systems, I have to copy different
+>>> firmware over the top. That's a little painful...
+>>
+>> I agree that for development switching cards it is kinda awkward and I
+>> have been fooled by it as well. We may want to change or if your itch is
+>> annoying enough feel free to send a patch for it ;-)
+> 
+> We have a patch for this that we can submit to wireless-next.
 
-# echo 0xFFFFFFFF > /sys/module/iwlwifi/parameters/debug
-# dmesg | grep iwl
-
-
-[   10.116748] iwlwifi 0000:03:00.0: irq 43 for MSI/MSI-X
-[   10.234866] iwlwifi 0000:03:00.0: loaded firmware version 18.168.6.1
-[   10.362940] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG enabled
-[   10.362952] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
-[   10.362957] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING enabled
-[   10.362963] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
-[   10.362967] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P disabled
-[   10.362974] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R) Wireless-N 2200 BGN, REV=0x104
-[   10.363003] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[   10.377474] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-[ 1180.920142] iwlwifi 0000:03:00.0: U iwlagn_mac_start enter
-[ 1180.920152] iwlwifi 0000:03:00.0: I iwl_prep_station Add STA to driver ID 15: ff:ff:ff:ff:ff:ff
-[ 1180.920158] iwlwifi 0000:03:00.0: I iwl_prep_station Add STA to driver ID 14: ff:ff:ff:ff:ff:ff
-[ 1180.920163] iwlwifi 0000:03:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
-[ 1180.920171] iwlwifi 0000:03:00.0: U iwl_pcie_set_hw_ready hardware ready
-[ 1180.920173] iwlwifi 0000:03:00.0: U iwl_enable_rfkill_int Enabling rfkill interrupt
-[ 1180.920180] iwlwifi 0000:03:00.0: U iwl_pcie_apm_init Init card's basic functions
-[ 1180.920196] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[ 1180.928171] iwlwifi 0000:03:00.0: Radio type=0x2-0x0-0x0
-[ 1180.929423] iwlwifi 0000:03:00.0: U iwl_enable_interrupts Enabling interrupts
-[ 1180.929431] iwlwifi 0000:03:00.0: U iwl_pcie_load_section [0] uCode section being loaded...
-[ 1185.926627] iwlwifi 0000:03:00.0: Failed to load firmware chunk!
-[ 1185.926967] iwlwifi 0000:03:00.0: Could not load the [0] uCode section
-[ 1185.927256] iwlwifi 0000:03:00.0: U iwl_disable_interrupts Disabled interrupts
-[ 1185.927442] iwlwifi 0000:03:00.0: U iwl_pcie_apm_stop Stop card, put in low power state
-[ 1185.927449] iwlwifi 0000:03:00.0: U iwl_pcie_apm_stop_master stop master
-[ 1185.927465] iwlwifi 0000:03:00.0: U iwl_disable_interrupts Disabled interrupts
-[ 1185.927467] iwlwifi 0000:03:00.0: U iwl_enable_rfkill_int Enabling rfkill interrupt
-[ 1185.927470] iwlwifi 0000:03:00.0: Failed to run INIT ucode: -110
-[ 1185.927712] iwlwifi 0000:03:00.0: U iwl_down iwlwifi is going down
-[ 1185.927715] iwlwifi 0000:03:00.0: U iwl_scan_cancel_timeout Scan cancel timeout
-[ 1185.927718] iwlwifi 0000:03:00.0: U iwl_do_scan_abort Not performing scan to abort
-[ 1185.927721] iwlwifi 0000:03:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[ 1185.927725] iwlwifi 0000:03:00.0: U iwl_clear_ucode_stations No active stations found to be cleared
-[ 1185.927733] iwlwifi 0000:03:00.0: U iwl_disable_interrupts Disabled interrupts
-[ 1185.927738] iwlwifi 0000:03:00.0: U iwl_pcie_apm_stop Stop card, put in low power state
-[ 1185.927744] iwlwifi 0000:03:00.0: U iwl_pcie_apm_stop_master stop master
-[ 1185.927759] iwlwifi 0000:03:00.0: U iwl_disable_interrupts Disabled interrupts
-[ 1185.927761] iwlwifi 0000:03:00.0: U iwl_enable_rfkill_int Enabling rfkill interrupt
-[ 1185.927763] iwlwifi 0000:03:00.0: Unable to initialize device.
-
-
-
+Oh, great! If you could Cc me, that'd be helpful, since I'm not on that
+list. Thanks.
