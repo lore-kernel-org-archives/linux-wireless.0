@@ -1,78 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49105 "EHLO bear.ext.ti.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4844 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933238Ab3FFLsg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 07:48:36 -0400
-Message-ID: <1370519207.5502.5.camel@cumari.coelho.fi> (sfid-20130606_134856_787437_6A566BAF)
-Subject: Re: [PATCH 1/2] net: wireless: wl1251: Use module_spi_driver macro
-From: Luciano Coelho <coelho@ti.com>
-To: Sachin Kamat <sachin.kamat@linaro.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>
-Date: Thu, 6 Jun 2013 14:46:47 +0300
-In-Reply-To: <CAK9yfHzRHxJuzFW4OvLsQvoxT9LXYzwO+3i5nws8N6hO9HGq-Q@mail.gmail.com>
-References: <1369822703-27769-1-git-send-email-sachin.kamat@linaro.org>
-	 <CAK9yfHzRHxJuzFW4OvLsQvoxT9LXYzwO+3i5nws8N6hO9HGq-Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+	id S932802Ab3FFLTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 07:19:17 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 02/22] brcmfmac: remove fifo bitfield from
+ brcmf_skbuff_cb::if_flags
+Date: Thu, 6 Jun 2013 13:17:47 +0200
+Message-ID: <1370517487-14395-3-git-send-email-arend@broadcom.com> (sfid-20130606_131931_414574_3B299B65)
+In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sachin,
+The brcmf_skbuff_cb structure contain if_flags and htod fields. Both
+have a bitfield defined to hold the fifo number. With a small code
+change we get rid of the fifo bitfield in if_flags.
 
-On Thu, 2013-06-06 at 14:48 +0530, Sachin Kamat wrote:
-> On 29 May 2013 15:48, Sachin Kamat <sachin.kamat@linaro.org> wrote:
-> > module_spi_driver() eliminates some boiler plate and makes code
-> > simpler.
-> >
-> > Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> > ---
-> >  drivers/net/wireless/ti/wl1251/spi.c |   24 +-----------------------
-> >  1 file changed, 1 insertion(+), 23 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-> > index 4c67c2f..dfd0877 100644
-> > --- a/drivers/net/wireless/ti/wl1251/spi.c
-> > +++ b/drivers/net/wireless/ti/wl1251/spi.c
-> > @@ -329,29 +329,7 @@ static struct spi_driver wl1251_spi_driver = {
-> >         .remove         = wl1251_spi_remove,
-> >  };
-> >
-> > -static int __init wl1251_spi_init(void)
-> > -{
-> > -       int ret;
-> > -
-> > -       ret = spi_register_driver(&wl1251_spi_driver);
-> > -       if (ret < 0) {
-> > -               wl1251_error("failed to register spi driver: %d", ret);
-> > -               goto out;
-> > -       }
-> > -
-> > -out:
-> > -       return ret;
-> > -}
-> > -
-> > -static void __exit wl1251_spi_exit(void)
-> > -{
-> > -       spi_unregister_driver(&wl1251_spi_driver);
-> > -
-> > -       wl1251_notice("unloaded");
-> > -}
-> > -
-> > -module_init(wl1251_spi_init);
-> > -module_exit(wl1251_spi_exit);
-> > +module_spi_driver(wl1251_spi_driver);
-> >
-> >  MODULE_LICENSE("GPL");
-> >  MODULE_AUTHOR("Kalle Valo <kvalo@adurom.com>");
-> > --
-> > 1.7.9.5
-> >
-> 
-> Gentle ping on this series John.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-This is in my queue.  Haven't had the time to review and apply them yet.
-And these are not urgent changes, so they can wait a little while.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index d6f05ae..bc2edc0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -195,7 +195,6 @@ struct brcmf_skbuff_cb {
+  *	b[9]   - packet is a tx packet.
+  *	b[8]   - packet uses FIFO credit (non-pspoll).
+  *	b[7]   - interface in AP mode.
+- *	b[6:4] - AC FIFO number.
+  *	b[3:0] - interface index.
+  */
+ #define BRCMF_SKB_IF_FLAGS_REQUESTED_MASK	0x0800
+@@ -208,8 +207,6 @@ struct brcmf_skbuff_cb {
+ #define BRCMF_SKB_IF_FLAGS_CREDITCHECK_SHIFT	8
+ #define BRCMF_SKB_IF_FLAGS_IF_AP_MASK		0x0080
+ #define BRCMF_SKB_IF_FLAGS_IF_AP_SHIFT		7
+-#define BRCMF_SKB_IF_FLAGS_FIFO_MASK		0x0070
+-#define BRCMF_SKB_IF_FLAGS_FIFO_SHIFT		4
+ #define BRCMF_SKB_IF_FLAGS_INDEX_MASK		0x000f
+ #define BRCMF_SKB_IF_FLAGS_INDEX_SHIFT		0
+ 
+@@ -1608,7 +1605,8 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ }
+ 
+ static void
+-brcmf_fws_rollback_toq(struct brcmf_fws_info *fws, struct sk_buff *skb)
++brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
++		       struct sk_buff *skb, int fifo)
+ {
+ 	/*
+ 	put the packet back to the head of queue
+@@ -1622,11 +1620,9 @@ brcmf_fws_rollback_toq(struct brcmf_fws_info *fws, struct sk_buff *skb)
+ 	enum brcmf_fws_skb_state state;
+ 	struct sk_buff *pktout;
+ 	int rc = 0;
+-	int fifo;
+ 	int hslot;
+ 	u8 ifidx;
+ 
+-	fifo = brcmf_skb_if_flags_get_field(skb, FIFO);
+ 	state = brcmf_skbcb(skb)->state;
+ 	entry = brcmf_skbcb(skb)->mac;
+ 
+@@ -1794,7 +1790,7 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
+ 	return rc;
+ 
+ rollback:
+-	brcmf_fws_rollback_toq(fws, skb);
++	brcmf_fws_rollback_toq(fws, skb, fifo);
+ 	return rc;
+ }
+ 
+@@ -1831,7 +1827,6 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 	brcmf_skb_if_flags_set_field(skb, INDEX, ifp->ifidx);
+ 	if (!multicast)
+ 		fifo = brcmf_fws_prio2fifo[skb->priority];
+-	brcmf_skb_if_flags_set_field(skb, FIFO, fifo);
+ 
+ 	brcmf_dbg(TRACE, "ea=%pM, multi=%d, fifo=%d\n", eh->h_dest,
+ 		  multicast, fifo);
+-- 
+1.7.10.4
 
---
-Luca.
 
