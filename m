@@ -1,61 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:55920 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932141Ab3FFKdW convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 06:33:22 -0400
-Content-Type: text/plain; charset=US-ASCII
-Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
-Subject: Re: [PATCH] ath5k: make use of the new rate control API
-From: =?iso-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <51B063C7.5040509@openwrt.org>
-Date: Thu, 6 Jun 2013 12:33:22 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, mickflemm@gmail.com,
-	mcgrof@qca.qualcomm.com, rmanohar@qca.qualcomm.com,
-	adrian@freebsd.org, ath5k-devel@lists.ath5k.org,
-	bvahl@net.t-labs.tu-berlin.de
-Message-Id: <6E08D01A-502E-435D-BBD3-3DA3B40DC2BF@net.t-labs.tu-berlin.de> (sfid-20130606_123325_410312_D09B89D0)
-References: <1370509492-24293-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <51B063C7.5040509@openwrt.org>
-To: Felix Fietkau <nbd@openwrt.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:4838 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932351Ab3FFLTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jun 2013 07:19:18 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 20/22] brcmfmac: add trace event for capturing BDC
+ header
+Date: Thu, 6 Jun 2013 13:18:05 +0200
+Message-ID: <1370517487-14395-21-git-send-email-arend@broadcom.com> (sfid-20130606_131933_219721_3E7A6DC9)
+In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HI,
+The BDC header contains PropTx TLV signals that are useful to capture
+for debugging. This event captures the header and tlv's in binary
+form. This can be post-processed using trace-cmd plugin.
 
-> This patch is missing changes in the tx status path. At tx completion,
-> info->status.rates needs to be filled with the contents of bf->rates
-> before filling in retry counts.
-> 
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |    3 +++
+ .../net/wireless/brcm80211/brcmfmac/tracepoint.h   |   21 ++++++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-Thats right, I will fix this in V2.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+index 59c77aa..dd85401 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+@@ -30,6 +30,7 @@
+ #include "dhd_bus.h"
+ #include "fwsignal.h"
+ #include "dhd_dbg.h"
++#include "tracepoint.h"
+ 
+ struct brcmf_proto_cdc_dcmd {
+ 	__le32 cmd;	/* dongle command value */
+@@ -292,6 +293,7 @@ void brcmf_proto_hdrpush(struct brcmf_pub *drvr, int ifidx, u8 offset,
+ 	h->flags2 = 0;
+ 	h->data_offset = offset;
+ 	BDC_SET_IF_IDX(h, ifidx);
++	trace_brcmf_bdchdr(pktbuf->data);
+ }
+ 
+ int brcmf_proto_hdrpull(struct brcmf_pub *drvr, bool do_fws, u8 *ifidx,
+@@ -309,6 +311,7 @@ int brcmf_proto_hdrpull(struct brcmf_pub *drvr, bool do_fws, u8 *ifidx,
+ 		return -EBADE;
+ 	}
+ 
++	trace_brcmf_bdchdr(pktbuf->data);
+ 	h = (struct brcmf_proto_bdc_header *)(pktbuf->data);
+ 
+ 	*ifidx = BDC_GET_IF_IDX(h);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h b/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
+index 9df1f7a..bc29171 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
+@@ -87,6 +87,27 @@ TRACE_EVENT(brcmf_hexdump,
+ 	TP_printk("hexdump [length=%lu]", __entry->len)
+ );
+ 
++TRACE_EVENT(brcmf_bdchdr,
++	TP_PROTO(void *data),
++	TP_ARGS(data),
++	TP_STRUCT__entry(
++		__field(u8, flags)
++		__field(u8, prio)
++		__field(u8, flags2)
++		__field(u32, siglen)
++		__dynamic_array(u8, signal, *((u8 *)data + 3) * 4)
++	),
++	TP_fast_assign(
++		__entry->flags = *(u8 *)data;
++		__entry->prio = *((u8 *)data + 1);
++		__entry->flags2 = *((u8 *)data + 2);
++		__entry->siglen = *((u8 *)data + 3) * 4;
++		memcpy(__get_dynamic_array(signal),
++		       (u8 *)data + 4, __entry->siglen);
++	),
++	TP_printk("bdc: prio=%d siglen=%d", __entry->prio, __entry->siglen)
++);
++
+ #ifdef CONFIG_BRCM_TRACING
+ 
+ #undef TRACE_INCLUDE_PATH
+-- 
+1.7.10.4
 
->> 
->> +	txrate.count = bf->rates[0].count;
->> +
->> 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
->> 		ieee80211_get_hdrlen_from_skb(skb), padsize,
->> 		get_hw_packet_type(skb),
->> 		(ah->ah_txpower.txp_requested * 2),
->> 		hw_rate,
->> -		info->control.rates[0].count, keyidx, ah->ah_tx_ant, flags,
->> +		txrate.count, keyidx, ah->ah_tx_ant, flags,
->> 		cts_rate, duration);
->> 	if (ret)
->> 		goto err_unmap;
-> The txrate variable is pointless, you only use txrate.count where you
-> could also just use bf->rates[0].count directly.
-> 
-
-I will remove this variable.
-
-Thx for you review.
-
-Thomas
-
-> - Felix
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
