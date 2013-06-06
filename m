@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:65102 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047Ab3F0Njm (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:60706 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756409Ab3FFDqq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 09:39:42 -0400
-MIME-Version: 1.0
-In-Reply-To: <1372339810.8383.20.camel@cumari.coelho.fi>
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-	<51CBC1C8.1040301@gmail.com>
-	<1372322851.18889.53.camel@cumari.coelho.fi>
-	<20130627125131.GA27285@kahuna>
-	<1372337887.8383.12.camel@cumari.coelho.fi>
-	<CAGo_u6qbt9dANgKq49xR=1qsCpUBhmVaPL4EK04XvTw+=4Z23g@mail.gmail.com>
-	<1372339148.8383.17.camel@cumari.coelho.fi>
-	<51CC3CEE.3050004@ti.com>
-	<1372339810.8383.20.camel@cumari.coelho.fi>
-Date: Thu, 27 Jun 2013 08:39:40 -0500
-Message-ID: <CAGo_u6pWZX9gbHgBae=gcWk8i6-TnhxH1TdM9QdEDLTow6Pn5A@mail.gmail.com> (sfid-20130627_154001_389632_7A71904A)
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-From: Nishanth Menon <nm@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: grant.likely@linaro.org, rob.herring@calxeda.com,
-	devicetree-discuss@lists.ozlabs.org, linux-doc@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
-	linux-omap <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 5 Jun 2013 23:46:46 -0400
+Message-ID: <1370490403.24311.322.camel@edumazet-glaptop> (sfid-20130606_054705_362423_19659557)
+Subject: Re: stop_machine lockup issue in 3.9.y.
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Tejun Heo <tj@kernel.org>, Rusty Russell <rusty@rustcorp.com.au>,
+	Joe Lawrence <joe.lawrence@stratus.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	stable@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>
+Date: Wed, 05 Jun 2013 20:46:43 -0700
+In-Reply-To: <51B004CD.6080007@candelatech.com>
+References: <51AE27D5.7050202@candelatech.com>
+	  <87sj0xry1k.fsf@rustcorp.com.au> <20130605071539.GA3429@mtj.dyndns.org>
+	  <51AF6E54.3050108@candelatech.com> <20130605184807.GD10693@mtj.dyndns.org>
+	  <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com>
+	  <51AFA677.9010605@candelatech.com> <20130605211157.GK10693@mtj.dyndns.org>
+	  <1370482492.24311.308.camel@edumazet-glaptop>
+	  <20130606031444.GA12335@mtj.dyndns.org>
+	 <1370489181.24311.318.camel@edumazet-glaptop>
+	 <51B004CD.6080007@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 27, 2013 at 8:30 AM, Luciano Coelho <coelho@ti.com> wrote:
-> On Thu, 2013-06-27 at 08:23 -0500, Nishanth Menon wrote:
->> On 06/27/2013 08:19 AM, Luciano Coelho wrote:
->> > On Thu, 2013-06-27 at 08:15 -0500, Nishanth Menon wrote:
->> >> On Thu, Jun 27, 2013 at 7:58 AM, Luciano Coelho <coelho@ti.com> wrote:
->> >>> For the actual DTS files, I could add a wilink.dtsi with enumerations
->> >>> for these values so they could be used in the node definitions.  But I'm
->> >>> not sure it's going to be that valuable in the end.
->> >> The  way GPIO HIGH was defined might help to provide guidance I think :)
->> >
->> > Where? As far as I can see, the GPIO flags are defined in a bitmap.
->>
->> include/dt-bindings/gpio/gpio.h
->
-> Thanks! I don't see these macros used anywhere, though.
-umm... I'd think you have'nt looked deep enough / lists :)
+On Wed, 2013-06-05 at 20:41 -0700, Ben Greear wrote:
+> On 06/05/2013 08:26 PM, Eric Dumazet wrote:
+> > On Wed, 2013-06-05 at 20:14 -0700, Tejun Heo wrote:
+> >
+> >>
+> >> Ah, so, that's why it's showing up now.  We probably have had the same
+> >> issue all along but it used to be masked by the softirq limiting.  Do
+> >> you care to revive the 10 iterations limit so that it's limited by
+> >> both the count and timing?  We do wanna find out why softirq is
+> >> spinning indefinitely tho.
+> >
+> > Yes, no problem, I can do that.
+> 
+> Limiting it to 5000 fixes my problem, so if you wanted it larger than 10, that would
+> be fine by me.
+> 
+> I can send a version of my patch easily enough if we can agree on the max number of
+> loops (and if indeed my version of the patch is acceptable).
 
->
->> And corresponding kernel header:
->> include/linux/of_gpio.h
->
-> This seems to be a completely different thing.  This is the header that
-> contains the helper functions to get GPIO-related device tree nodes,
-> isn't it?
-That is true, but it also contains the flag for level which needs to
-be in sync with the gpio.h dts header.
->> just a hint. not saying frequencies were defined in header. for systems
->> that define frequencies - example cpufreq OPPs, clock node usage, we do
->> not use indexing to frequency, instead, that is the responsibility of
->> driver to convert frequency back to required index.
->> git grep frequency Documentation/devicetree/bindings gives you how the
->> precedence looks like.
->>
->> Personally, if given a choice, I'd go with actual frequencies rather
->> than indexes.
->
-> If I do that, I need to add also a separate flag to define whether the
-> XTAL clock is used or not.  For instance, we have 26MHz and 26MHz
-> crystal; and 38.4MHz and 38.4MHz crystal...
-Yes, you would have to. at the same time, it is easy for module maker
-to provide dtsi corresponding to exact h/w representation on his
-module using wilink chip without being worried about weird index value
-whose meaning is hidden in binding
-On the flip side, It also allows driver to reject frequencies /
-configurations that are not supported by the corresponding chip.
+Well, 10 was the prior limit and seems really fine.
 
-As I said, just my 2 cents. Personally, I'd like dts files to be as
-readable as c files without having to dig through bindings document.
+The non update on jiffies seems quite exceptional condition (I hope...)
 
-Regards,
-Nishanth Menon
+We use in Google a patch triggering warning is a thread holds the cpu
+without taking care to need_resched() for more than xx ms
+
+
+
