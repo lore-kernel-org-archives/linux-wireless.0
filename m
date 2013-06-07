@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:53658 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281Ab3FDKME convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 06:12:04 -0400
-Received: by mail-qa0-f52.google.com with SMTP id cr7so264608qab.11
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2013 03:12:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgXj8jCgDgvewgm1=QPsUwAKcgWYT-jne0tpnhH_M1GO_w@mail.gmail.com>
-References: <CADaB71PpUQar24AN4PtpVwACFVq-=VsbOsqUahPW=eh4wdpjLA@mail.gmail.com>
- <CAGRGNgXj8jCgDgvewgm1=QPsUwAKcgWYT-jne0tpnhH_M1GO_w@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 4 Jun 2013 20:11:42 +1000
-Message-ID: <CAGRGNgWG0hR1WH5gteyoH6kKPq8qwvDAXkwRkX5d-uUCai-4OA@mail.gmail.com> (sfid-20130604_121207_911808_0BD01CBD)
-Subject: Re: I can't download "Intel(R) PRO/Wireless 2200BG Driver for Linux"
-To: Hyun-Su Lim <hyunsu.lim2@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx3.wp.pl ([212.77.101.7]:39787 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752755Ab3FGNgW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jun 2013 09:36:22 -0400
+Received: from 89-71-197-70.dynamic.chello.pl (HELO localhost.localdomain) (moorray3@[89.71.197.70])
+          (envelope-sender <moorray3@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with SMTP
+          for <linux-wireless@vger.kernel.org>; 7 Jun 2013 15:36:20 +0200
+From: Jakub Kicinski <moorray3@wp.pl>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	nietrywialneprzejscie@gmail.com
+Subject: [RFC 2/5] mac80211: return new mac address as soon as possible
+Date: Fri,  7 Jun 2013 15:36:16 +0200
+Message-Id: <1370612179-24385-3-git-send-email-moorray3@wp.pl> (sfid-20130607_153631_478950_5E8205D8)
+In-Reply-To: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
+References: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hyunsu,
+From: Jakub Kicinski <kubakici@wp.pl>
 
-On Tue, Jun 4, 2013 at 4:56 PM, Hyun-Su Lim <hyunsu.lim2@gmail.com> wrote:
-> Dear..
->
-> I'm trying to find a driver of Intel(R) PRO/Wireless 2915ABG Network
-> Connection to use wireless network in my old laptop with Fedora18.
-> Very pleased to find Intel® PRO/Wireless 2200BG Driver for Linux and
-> followed your webpage but failed to get download files.
-> Because the download page didn't open at
-> http://ipw2200.sourceforge.net/firmware.php?i_agree_to_the_license=yes&f=ipw2200-fw-3.1.tgz.
-> I hope you can receive this e-mail and hope to get the driver which
-> can only solve this network connection problem.
+Once one of wiphy->addresses is found to be unused
+we can return from __ieee80211_assign_perm_addr and
+use it. The same for masked addresses.
 
-Your kernel should already have a driver for that card, all you need
-is the firmware.
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+---
+ net/mac80211/iface.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Fedora should provide a package containing it. Install that.
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index dbee397..38898b3 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1449,7 +1449,7 @@ static void __ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 		if (!used) {
+ 			memcpy(perm_addr, local->hw.wiphy->addresses[i].addr,
+ 			       ETH_ALEN);
+-			break;
++			return;
+ 		}
+ 	}
+ 
+@@ -1507,10 +1507,12 @@ static void __ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 
+ 		if (!used) {
+ 			memcpy(perm_addr, tmp_addr, ETH_ALEN);
+-			break;
++			return;
+ 		}
+ 		addr = (start & ~mask) | (val & mask);
+ 	} while (addr != start);
++
++	pr_debug("no free address found - using default\n");
+ }
+ 
+ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+-- 
+1.8.1.4
 
-Thanks,
-
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
