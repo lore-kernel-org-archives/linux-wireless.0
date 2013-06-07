@@ -1,36 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:59715 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754506Ab3FAOgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jun 2013 10:36:39 -0400
-Received: from mailout-de.gmx.net ([10.1.76.28]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0LeOot-1U4Yjz0EEX-00qAPl for
- <linux-wireless@vger.kernel.org>; Sat, 01 Jun 2013 16:36:38 +0200
-Message-ID: <51AA06F2.80706@rempel-privat.de> (sfid-20130601_163653_462046_0B2CB460)
-Date: Sat, 01 Jun 2013 16:36:34 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?TWF4aW1pbGlhbiBLw7xydGg=?= <maximilian.kuerth@gmx.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Documentation TL-WN822N
-References: <7743618.f9c36kTUXp@w0rk0n>
-In-Reply-To: <7743618.f9c36kTUXp@w0rk0n>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:48611 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756070Ab3FGRFv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jun 2013 13:05:51 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 3/5] mac80211: add functions to duplicate a cfg80211_beacon
+Date: Fri,  7 Jun 2013 19:05:43 +0200
+Message-Id: <1370624745-2267-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130607_190558_154349_9C007D77)
+In-Reply-To: <1370624745-2267-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1370624745-2267-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 01.06.2013 13:53, schrieb Maximilian Kürth:
-> Hello there,
->
-> i'm searching for the hardware documentation regarding the above hardware
-> (rev. 1). I need the information for a student work with the carl driver.
->
-> Thanks for any answers!
+For the channel switch announcement, it is required to set a new beacon
+after the driver arrived on the new channel. The new beacon will be set
+by nl80211, but is required to duplicate the beacon as the original
+memory within the netlink message will be gone. Add functions to
+duplicate and free these cfg80211 beacons.
 
-You should ask documentation for Atheros AR9170 and Atheros AR9102. But 
-why do you wont to work with AR9102? It has many problems with 802.11n, 
-which you probably wont be able to solve.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/mac80211/cfg.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3062210..1f8e5cf 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2775,6 +2775,82 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static void cfg80211_beacon_free(struct cfg80211_beacon_data *beacon)
++{
++	kfree(beacon->head);
++	kfree(beacon->tail);
++	kfree(beacon->beacon_ies);
++	kfree(beacon->proberesp_ies);
++	kfree(beacon->assocresp_ies);
++	kfree(beacon->probe_resp);
++	kfree(beacon);
++}
++
++static struct cfg80211_beacon_data *
++cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
++{
++	struct cfg80211_beacon_data *new_beacon;
++	new_beacon = kzalloc(sizeof(*new_beacon), GFP_KERNEL);
++	if (!beacon)
++		return NULL;
++
++	if (beacon->head_len) {
++		new_beacon->head = kmalloc(beacon->head_len, GFP_KERNEL);
++		new_beacon->head_len = beacon->head_len;
++		if (!new_beacon->head)
++			goto error;
++		memcpy((u8 *)new_beacon->head, beacon->head, beacon->head_len);
++	}
++	if (beacon->tail_len) {
++		new_beacon->tail = kmalloc(beacon->tail_len, GFP_KERNEL);
++		new_beacon->tail_len = beacon->tail_len;
++		if (!new_beacon->tail)
++			goto error;
++		memcpy((u8 *)new_beacon->tail, beacon->tail, beacon->tail_len);
++	}
++	if (beacon->beacon_ies_len) {
++		new_beacon->beacon_ies = kmalloc(beacon->beacon_ies_len,
++						 GFP_KERNEL);
++		new_beacon->beacon_ies_len = beacon->beacon_ies_len;
++		if (!new_beacon->beacon_ies)
++			goto error;
++		memcpy((u8 *)new_beacon->beacon_ies, beacon->beacon_ies,
++		       beacon->beacon_ies_len);
++	}
++	if (beacon->proberesp_ies_len) {
++		new_beacon->proberesp_ies = kmalloc(beacon->proberesp_ies_len,
++						    GFP_KERNEL);
++		new_beacon->proberesp_ies_len = beacon->proberesp_ies_len;
++		if (!new_beacon->proberesp_ies)
++			goto error;
++		memcpy((u8 *)new_beacon->proberesp_ies, beacon->proberesp_ies,
++		       beacon->proberesp_ies_len);
++	}
++	if (beacon->assocresp_ies_len) {
++		new_beacon->assocresp_ies = kmalloc(beacon->assocresp_ies_len,
++						    GFP_KERNEL);
++		new_beacon->assocresp_ies_len = beacon->assocresp_ies_len;
++		if (!new_beacon->assocresp_ies)
++			goto error;
++		memcpy((u8 *)new_beacon->assocresp_ies, beacon->assocresp_ies,
++		       beacon->assocresp_ies_len);
++	}
++	if (beacon->probe_resp_len) {
++		new_beacon->probe_resp = kmalloc(beacon->probe_resp_len,
++						 GFP_KERNEL);
++		new_beacon->probe_resp_len = beacon->probe_resp_len;
++		if (!new_beacon->probe_resp)
++			goto error;
++		memcpy((u8 *)new_beacon->probe_resp, beacon->probe_resp,
++		       beacon->probe_resp_len);
++	}
++
++	return new_beacon;
++error:
++	cfg80211_beacon_free(new_beacon);
++	return NULL;
++}
++
+ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			     struct ieee80211_channel *chan, bool offchan,
+ 			     unsigned int wait, const u8 *buf, size_t len,
 -- 
-Regards,
-Oleksij
+1.7.10.4
+
