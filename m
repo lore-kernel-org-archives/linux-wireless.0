@@ -1,76 +1,286 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:37329 "EHLO
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:39952 "EHLO
 	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755589Ab3FRPu5 (ORCPT
+	with ESMTP id S1755731Ab3FGRFu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 11:50:57 -0400
-Date: Tue, 18 Jun 2013 17:50:51 +0200
+	Fri, 7 Jun 2013 13:05:50 -0400
 From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org,
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
 	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv3 07/18] mac80211: add radiotap flag and handling for
- 5/10 MHz
-Message-ID: <20130618155051.GD27492@pandem0nium> (sfid-20130618_175106_074507_863B70C2)
-References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1368702045-27598-8-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1371565626.8318.26.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HWvPVVuAAfuRc6SZ"
-In-Reply-To: <1371565626.8318.26.camel@jlt4.sipsolutions.net>
+Subject: [PATCH 2/5] nl80211/cfg80211: add channel switch command
+Date: Fri,  7 Jun 2013 19:05:42 +0200
+Message-Id: <1370624745-2267-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130607_190600_193596_BDABA640)
+In-Reply-To: <1370624745-2267-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1370624745-2267-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+To allow channel switch announcements within beacons, add
+the channel switch command to nl80211/cfg80211. This is
+implementation is intended for AP and (later) IBSS mode.
 
---HWvPVVuAAfuRc6SZ
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+Changes to RFCv1:
+ * accept and pass CSA IEs and after-change IEs
+ * use parameter structure instead of individual parameters
+---
+ include/net/cfg80211.h       |   26 ++++++++++
+ include/uapi/linux/nl80211.h |   29 +++++++++++
+ net/wireless/nl80211.c       |  118 +++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 172 insertions(+), 1 deletion(-)
 
-On Tue, Jun 18, 2013 at 04:27:06PM +0200, Johannes Berg wrote:
-> On Thu, 2013-05-16 at 13:00 +0200, Simon Wunderlich wrote:
->=20
-> > Wireshark
->=20
-> doesn't really matter all that much, but I guess the radiotap standard
-> also defines it.
->=20
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4cdab6d..efff759 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -610,6 +610,29 @@ struct cfg80211_ap_settings {
+ 	bool radar_required;
+ };
+ 
++/* struct cfg80211_csa_settings - channel switch settings
++ *
++ * Used for channel switch
++ *
++ * @chandef: defines the channel to use after the switch
++ * @beacon_csa: beacon data while performing the switch
++ * @counter_offset_beacon: offset for the counter within the beacon (tail)
++ * @counter_offset_presp: offset for the counter within the probe response
++ * @beacon_after: beacon data to be used on the new channel
++ * @radar_required: whether radar detection is required on the new channel
++ * @block_tx: whether transmissions should be blocked while changing
++ * @count: number of beacons until switch
++ */
++struct cfg80211_csa_settings {
++	struct cfg80211_chan_def chandef;
++	struct cfg80211_beacon_data beacon_csa;
++	u16 counter_offset_beacon, counter_offset_presp;
++	struct cfg80211_beacon_data beacon_after;
++	bool radar_required;
++	bool block_tx;
++	u8 count;
++};
++
+ /**
+  * enum station_parameters_apply_mask - station parameter values to apply
+  * @STATION_PARAM_APPLY_UAPSD: apply new uAPSD parameters (uapsd_queues, max_sp)
+@@ -2272,6 +2295,9 @@ struct cfg80211_ops {
+ 				    u16 duration);
+ 	void	(*crit_proto_stop)(struct wiphy *wiphy,
+ 				   struct wireless_dev *wdev);
++	int	(*channel_switch)(struct wiphy *wiphy,
++				  struct net_device *dev,
++				  struct cfg80211_csa_settings *params);
+ };
+ 
+ /*
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5920715..71c85bd 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -648,6 +648,16 @@
+  * @NL80211_CMD_CRIT_PROTOCOL_STOP: Indicates the connection reliability can
+  *	return back to normal.
+  *
++ * @NL80211_CMD_CHANNEL_SWITCH: Perform a channel switch by announcing the
++ *	the new channel information (Channel Switch Announcement - CSA)
++ *	in the beacon for some time (as defined in the
++ *	%NL80211_ATTR_CH_SWITCH_COUNT parameter) and then change to the
++ *	new channel. Userspace provides the new channel information (using
++ *	%NL80211_ATTR_WIPHY_FREQ and the attributes determining channel
++ *	width). %NL80211_ATTR_CH_SWITCH_BLOCK_TX may be supplied to inform
++ *	other station that transmission must be blocked until the channel
++ *	switch is complete.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -810,6 +820,7 @@ enum nl80211_commands {
+ 	NL80211_CMD_CRIT_PROTOCOL_START,
+ 	NL80211_CMD_CRIT_PROTOCOL_STOP,
+ 
++	NL80211_CMD_CHANNEL_SWITCH,
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1436,6 +1447,18 @@ enum nl80211_commands {
+  *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
+  *	update a TDLS peer STA entry.
+  *
++ * @NL80211_ATTR_CH_SWITCH_COUNT: u32 attribute specifying the number of TBTT's
++ *	until the channel switch event.
++ * @NL80211_ATTR_CH_SWITCH_BLOCK_TX: flag attribute specifying that transmission
++ *	must be blocked on the current channel (before the channel switch
++ *	operation).
++ * @NL80211_ATTR_CSA_IES: Nested set of attributes containing the IE information
++ *	for the time while performing a channel switch.
++ * @NL80211_ATTR_CSA_C_OFF_BEACON: Offset of the channel switch counter
++ *	field in the beacons tail (%NL80211_ATTR_BEACON_TAIL).
++ * @NL80211_ATTR_CSA_C_OFF_PRESP: Offset of the channel switch counter
++ *	field in the probe response (%NL80211_ATTR_PROBE_RESP).
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1736,6 +1759,12 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PEER_AID,
+ 
++	NL80211_ATTR_CH_SWITCH_COUNT,
++	NL80211_ATTR_CH_SWITCH_BLOCK_TX,
++	NL80211_ATTR_CSA_IES,
++	NL80211_ATTR_CSA_C_OFF_BEACON,
++	NL80211_ATTR_CSA_C_OFF_PRESP,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1623f22..71b60da 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -349,6 +349,11 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_IE_RIC] = { .type = NLA_BINARY,
+ 				  .len = IEEE80211_MAX_DATA_LEN },
+ 	[NL80211_ATTR_PEER_AID] = { .type = NLA_U16 },
++	[NL80211_ATTR_CH_SWITCH_COUNT] = { .type = NLA_U32 },
++	[NL80211_ATTR_CH_SWITCH_BLOCK_TX] = { .type = NLA_FLAG },
++	[NL80211_ATTR_CSA_IES] = { .type = NLA_NESTED },
++	[NL80211_ATTR_CSA_C_OFF_BEACON] = { .type = NLA_U16 },
++	[NL80211_ATTR_CSA_C_OFF_PRESP] = { .type = NLA_U16 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -5529,6 +5534,109 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	return err;
+ }
+ 
++static int nl80211_channel_switch(struct sk_buff *skb,
++				  struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_csa_settings params;
++	struct nlattr *csa_ies[NL80211_ATTR_MAX+1];
++	u8 radar_detect_width = 0;
++	int err;
++
++	if (!rdev->ops->channel_switch)
++		return -EOPNOTSUPP;
++
++	/* may add IBSS support later */
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
++		return -EOPNOTSUPP;
++
++	memset(&params, 0, sizeof(params));
++
++	if (!info->attrs[NL80211_ATTR_WIPHY_FREQ] ||
++	    !info->attrs[NL80211_ATTR_CH_SWITCH_COUNT])
++		return -EINVAL;
++
++	/* only important for AP, IBSS and mesh create IEs internally */
++	if (!info->attrs[NL80211_ATTR_CSA_IES] ||
++	    !info->attrs[NL80211_ATTR_CSA_C_OFF_BEACON])
++		return -EINVAL;
++
++	/* useless if AP is not running */
++	if (!wdev->beacon_interval)
++		return -EINVAL;
++
++	params.count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
++
++	err = nl80211_parse_beacon(info->attrs, &params.beacon_after);
++	if (err)
++		return err;
++
++	err = nla_parse_nested(csa_ies, NL80211_ATTR_MAX,
++				   info->attrs[NL80211_ATTR_CSA_IES],
++				   nl80211_policy);
++	if (err)
++		return err;
++
++	err = nl80211_parse_beacon(csa_ies, &params.beacon_csa);
++	if (err)
++		return err;
++
++	params.counter_offset_beacon =
++		nla_get_u16(info->attrs[NL80211_ATTR_CSA_C_OFF_BEACON]);
++	if (params.counter_offset_beacon > params.beacon_csa.tail_len)
++		return -EINVAL;
++
++	/* sanity check - counter should be the same this should be the same */
++	if (params.beacon_csa.tail[params.counter_offset_beacon] !=
++	    params.count)
++		return -EINVAL;
++
++	if (info->attrs[NL80211_ATTR_CSA_C_OFF_PRESP]) {
++		params.counter_offset_presp =
++			nla_get_u16(info->attrs[NL80211_ATTR_CSA_C_OFF_PRESP]);
++		if (params.counter_offset_presp >
++		    params.beacon_csa.probe_resp_len)
++			return -EINVAL;
++
++		if (params.beacon_csa.probe_resp[params.counter_offset_presp] !=
++		    params.count)
++			return -EINVAL;
++	}
++
++	err = nl80211_parse_chandef(rdev, info, &params.chandef);
++	if (err)
++		return err;
++
++	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
++		return -EINVAL;
++
++	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
++	if (err < 0)
++		return err;
++
++	if (err)
++		radar_detect_width = BIT(params.chandef.width);
++	else
++		radar_detect_width = 0;
++
++	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
++					   params.chandef.chan,
++					   CHAN_MODE_SHARED,
++					   radar_detect_width);
++	if (err)
++		return err;
++
++	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
++		params.block_tx = true;
++
++	err = rdev->ops->channel_switch(&rdev->wiphy, dev, &params);
++
++	return err;
++}
++
+ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
+ 			    u32 seq, int flags,
+ 			    struct cfg80211_registered_device *rdev,
+@@ -8956,7 +9064,15 @@ static struct genl_ops nl80211_ops[] = {
+ 		.flags = GENL_ADMIN_PERM,
+ 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+-	}
++	},
++	{
++		.cmd = NL80211_CMD_CHANNEL_SWITCH,
++		.doit = nl80211_channel_switch,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++		NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+-- 
+1.7.10.4
 
-Hmm, if this [1] is the official standard, then no, it is not defined. Don't
-know when this was added in wireshark, and it was only added implicitly in
-the code (no header files etc). But since it was there, I figured it would
-be a good idea to re-use it (unaware that there was some "standard").
-
-How shall we proceed, propose that on some radiotap mailing list officially?
-
->=20
-> > +	RX_FLAG_10MHZ			=3D BIT(26),
-> > +	RX_FLAG_5MHZ			=3D BIT(27),
->=20
-> Does that make sense? We know what kind of channel we're on? Though it
-> might be easier for the driver, so it may make sense I guess.
-
-Yeah, it's a little easier for the driver, and I thought it would be
-cleaner to get this reported through a flag.
-
-Cheers,
-	Simon
-
-[1] http://www.radiotap.org/defined-fields/Channel
-
---HWvPVVuAAfuRc6SZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlHAgdsACgkQrzg/fFk7axa9dACfVP/e7DZv75Z1nsRVKvdk2PUo
-2DIAoNfKxk3vllHThprGHx1OpQyCIOnt
-=lrcB
------END PGP SIGNATURE-----
-
---HWvPVVuAAfuRc6SZ--
