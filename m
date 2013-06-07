@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28805 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752767Ab3FEIM7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 04:12:59 -0400
-Date: Wed, 5 Jun 2013 11:12:53 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: qca_vkondrat <qca_vkondrat@qca.qualcomm.com>,
-	"Peer, Ilan" <ilan.peer@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
-Message-ID: <20130605081253.GA4289@jouni.qca.qualcomm.com> (sfid-20130605_101322_092088_B545111C)
-References: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com>
- <1370418378.8920.12.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1370418378.8920.12.camel@jlt4.sipsolutions.net>
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57309 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753453Ab3FGMrt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jun 2013 08:47:49 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: make use of the new rate control API
+From: =?iso-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <51B1BCE1.6080200@openwrt.org>
+Date: Fri, 7 Jun 2013 14:47:51 +0200
+Cc: bvahl@net.t-labs.tu-berlin.de, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, rmanohar@qca.qualcomm.com
+Message-Id: <547C54A2-FC7E-43C6-BBC0-19C11F8F7BCA@net.t-labs.tu-berlin.de> (sfid-20130607_144752_427662_B36D20C4)
+References: <1370593505-4439-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <51B1BCE1.6080200@openwrt.org>
+To: Felix Fietkau <nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 05, 2013 at 09:46:18AM +0200, Johannes Berg wrote:
-> I know I wouldn't find it quickly ... can you be more specific about
-> what "being in active PBC mode" means? Is that easily detectable?
+Hi all,
 
-Having Device Password ID attribute in the WSC element set to 4
-(PushButton) in Probe Request frames (or Probe Response and Beacon
-frames in case of AP/GO).
+>>> 
+>>> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+>>> index 7f702fe..c63759f 100644
+>>> --- a/drivers/net/wireless/ath/ath5k/base.c
+>>> +++ b/drivers/net/wireless/ath/ath5k/base.c
+>>> @@ -1587,6 +1633,8 @@ ath5k_tx_frame_completed(struct ath5k_hw *ah, struct sk_buff *skb,
+>>> 
+>>> 	ieee80211_tx_info_clear_status(info);
+>>> 
+>>> +	memcpy(info->status.rates, bf->rates, sizeof(info->status.rates));
+>>> +
+>>> 	for (i = 0; i < ts->ts_final_idx; i++) {
+>>> 		struct ieee80211_tx_rate *r =
+>>> 			&info->status.rates[i];
+>> Please make sure that either this code is able to deal with a size
+>> mismatch of info->status.rates vs. bf->rates, or that it at least fails
+>> at compile time if the size of info->status.rate gets changed.
+>> 
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Good catch, V3 is coming.
+
+Thomas
+
+
+>> - Felix
+>> _______________________________________________
+>> ath5k-devel mailing list
+>> ath5k-devel@lists.ath5k.org
+>> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
+> 
