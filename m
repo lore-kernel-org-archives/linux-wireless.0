@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55791 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933051Ab3FRVga (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57603 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757026Ab3FGSOZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 17:36:30 -0400
-Message-ID: <51C0D2D8.3080207@candelatech.com> (sfid-20130618_233639_394762_E90AF0A6)
-Date: Tue, 18 Jun 2013 14:36:24 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Lots of confusion on bss refcounting.
-References: <51BF5A53.8050100@candelatech.com>    (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net>   <51BF5ED4.9010704@candelatech.com> <51BF8040.2000408@candelatech.com>   <51BFAA34.1020407@candelatech.com>  <1371559771.8318.12.camel@jlt4.sipsolutions.net>  <51C08119.3000407@candelatech.com> <1371570723.22256.0.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1371570723.22256.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 7 Jun 2013 14:14:25 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, nbd@nbd.name,
+	johannes@sipsolutions.net, bvahl@net.t-labs.tu-berlin.de
+Subject: [PATCH 1/3] mac80211: restructure tx_control_flag handling in ieee80211_tx_info
+Date: Fri,  7 Jun 2013 20:13:21 +0200
+Message-Id: <1370628803-28785-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130607_201438_956062_188A0359)
+In-Reply-To: <1370628803-28785-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1370628803-28785-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2013 08:52 AM, Johannes Berg wrote:
->
->>> You mean ->current_bss? That should be handled in all the callbacks in
->>> sme.c or so
->>
->> Looks like much of the action happens on work-queues.  I'm wondering if
->> we managed to delete wdev objects before we have completely cleaned up
->> in some cases...
->
-> Don't we flush work structs appropriately?
+All usable  bits in enum mac80211_tx_control_flags are depleted. In
+order to allow aditional control flag assigments, we introduce a
+new u16 variable ieee8011_tx_info->control.flags2 with its
+corresponding enum mac80211_tx_control_flags2. Such tx control flags
+within ieee80211_tx_info->flags that are only used in the tx path
+while ieee80211_tx_info->control is valid can be moved to
+ieee80211_tx_control->control.flags2.
 
-I'm still seeing leaks after all those patches I posted...so I'm still
-looking.  The leaked bss objects have a quite large refcount, in the
-hundreds after an hour or so of running, so this is probably more than
-a strange race somewhere.
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ include/net/mac80211.h |   12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-
-This code looks questionable in wireless/mlme.c
-
-int __cfg80211_mlme_assoc()
-.....
-
-It grabs a reference using cfg80211_get_bss, but it only
-does a put on the reference if there was an error code.
-
-The __cfg80211_mlme_auth a bit above always does a put on
-the reference.
-
-I'm thinking mlme_assoc should also always do put.  Any
-reason you can think of otherwise?
-
-Thanks,
-Ben
-
->
-> johannes
->
-
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a405a7a..2d8e461 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -500,6 +500,15 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(31),
+ };
+ 
++/**
++ * enum mac80211_tx_control_flags2 - control related flags to describe transmission information/status
++ *
++ * These flags are used with the @flags2 member of &ieee80211_tx_info inside control
++ * and are only available within the tx path where tx_info->control is valid.
++ */
++enum mac80211_tx_control_flags2 {
++};
++
+ #define IEEE80211_TX_CTL_STBC_SHIFT		23
+ 
+ /*
+@@ -675,7 +684,8 @@ struct ieee80211_tx_info {
+ 			/* NB: vif can be NULL for injected frames */
+ 			struct ieee80211_vif *vif;
+ 			struct ieee80211_key_conf *hw_key;
+-			/* 8 bytes free */
++			u16 flags2;
++			/* 6 bytes free */
+ 		} control;
+ 		struct {
+ 			struct ieee80211_tx_rate rates[IEEE80211_TX_MAX_RATES];
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.9.5
 
