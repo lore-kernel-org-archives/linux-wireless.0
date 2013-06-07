@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29014 "EHLO mx1.redhat.com"
+Received: from mx4.wp.pl ([212.77.101.8]:13858 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751812Ab3FDNz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 09:55:27 -0400
-Date: Tue, 4 Jun 2013 15:57:19 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 00/13] rt2x00: get rid of static data queue descriptors
-Message-ID: <20130604135718.GC17229@redhat.com> (sfid-20130604_155541_378292_FC43CD1D)
-References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370346050-7047-1-git-send-email-juhosg@openwrt.org>
+	id S1753333Ab3FGOEE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jun 2013 10:04:04 -0400
+Date: Fri, 7 Jun 2013 16:04:02 +0200
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	nietrywialneprzejscie@gmail.com
+Subject: Re: [RFC 4/5] mac80211: enforce address verification on monitors
+Message-ID: <20130607160402.49ea16c3@north> (sfid-20130607_160409_657773_53C9857A)
+In-Reply-To: <51B1E4F3.9020509@openwrt.org>
+References: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
+	<1370612179-24385-5-git-send-email-moorray3@wp.pl>
+	<51B1E4F3.9020509@openwrt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 04, 2013 at 01:40:37PM +0200, Gabor Juhos wrote:
-> The patch-set depends on the following patch:
-> 
-> 'rt2x00: rt2x00queue: initialize data_queue fields earlier'
-> https://patchwork.kernel.org/patch/2655201/
-> 
-> Gabor Juhos (13):
->   rt2x00: rt2x00queue: add priv_size field to struct data_queue
->   rt2x00: rt2x00queue: remove qdesc parameter of
->     rt2x00queue_alloc_entries
->   rt2x00: rt2x00dev: use rt2x00dev->bcn->limit
->   rt2x00: rt2x00queue: setup queue->threshold from queue->limit
->   rt2x00: add queue_init callback to rt2x00_ops
->   rt2x00: rt2800usb: implement queue_init callback
->   rt2x00: rt2800pci: implement queue_init callback
->   rt2x00: rt73usb: implement queue_init callback
->   rt2x00: rt2400pci: implement queue_init callback
->   rt2x00: rt2500pci: implement queue_init callback
->   rt2x00: rt61pci: implement queue_init callback
->   rt2x00: rt2500usb: implement queue_init callback
->   rt2x00: remove data_queue_desc struct
+On Fri, 07 Jun 2013 15:49:39 +0200, Felix Fietkau wrote:
+> On 2013-06-07 3:36 PM, Jakub Kicinski wrote:
+>> From: Jakub Kicinski <kubakici@wp.pl>
+>> 
+>> Mac address of passive monitor have to treated
+>> the same as address any other interface because
+>> type of interface can be changed or monitor can
+>> be later put into active mode.
+> It can't. There's checks preventing that. I'd prefer to leave that part
+> of the code as it is, the MAC address for normal monitor interfaces
+> should be ignored completely.
 
-Looks good. For set:
+I must have misread the code regarding active monitors then.
+Main motivation behind this patch was the first part though
+- user can change type of interface and once ignored address
+of monitor now becomes address of AP, sta etc. 
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com> 
-
+  -- kuba
