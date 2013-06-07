@@ -1,147 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:60340 "EHLO arroyo.ext.ti.com"
+Received: from nbd.name ([46.4.11.11]:42836 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753536Ab3FYUdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 16:33:36 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, <tony@atomide.com>
-Subject: [PATCH 5/5] wlcore: add device tree support to the sdio module
-Date: Tue, 25 Jun 2013 23:33:26 +0300
-Message-ID: <1372192406-29430-6-git-send-email-coelho@ti.com> (sfid-20130625_223353_057372_0158F176)
-In-Reply-To: <1372192406-29430-1-git-send-email-coelho@ti.com>
-References: <1372192406-29430-1-git-send-email-coelho@ti.com>
+	id S1751671Ab3FGK6s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jun 2013 06:58:48 -0400
+Message-ID: <51B1BCE1.6080200@openwrt.org> (sfid-20130607_125851_298965_52737352)
+Date: Fri, 07 Jun 2013 12:58:41 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, mickflemm@gmail.com,
+	mcgrof@qca.qualcomm.com, rmanohar@qca.qualcomm.com,
+	adrian@freebsd.org, ath5k-devel@lists.ath5k.org,
+	bvahl@net.t-labs.tu-berlin.de
+Subject: Re: [PATCH v2] ath5k: make use of the new rate control API
+References: <1370593505-4439-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1370593505-4439-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If platform data is not available, try to get the required information
-from the device tree.  Register an OF match table and parse the
-appropriate device tree nodes.
+On 2013-06-07 10:25 AM, Thomas Huehn wrote:
+> This patch enabels ath5k to use the new rate table to lookup each
+> mrr rate and retry information per packet.
+> 
+> Signed-off-by: Benjamin Vahl <bvahl@net.t-labs.tu-berlin.de>
+> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c         |   77 ++++++++++++++++++++-----
+>  drivers/net/wireless/ath/ath5k/base.h         |   14 +++--
+>  drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
+>  3 files changed, 72 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 7f702fe..c63759f 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -1587,6 +1633,8 @@ ath5k_tx_frame_completed(struct ath5k_hw *ah, struct sk_buff *skb,
+>  
+>  	ieee80211_tx_info_clear_status(info);
+>  
+> +	memcpy(info->status.rates, bf->rates, sizeof(info->status.rates));
+> +
+>  	for (i = 0; i < ts->ts_final_idx; i++) {
+>  		struct ieee80211_tx_rate *r =
+>  			&info->status.rates[i];
+Please make sure that either this code is able to deal with a size
+mismatch of info->status.rates vs. bf->rates, or that it at least fails
+at compile time if the size of info->status.rate gets changed.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/sdio.c |   75 ++++++++++++++++++++++++++++++---
- 1 file changed, 69 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 4c7e8ac..1ddda84 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -30,7 +30,7 @@
- #include <linux/mmc/sdio_ids.h>
- #include <linux/mmc/card.h>
- #include <linux/mmc/host.h>
--#include <linux/gpio.h>
-+#include <linux/of_irq.h>
- #include <linux/wl12xx.h>
- #include <linux/pm_runtime.h>
- #include <linux/printk.h>
-@@ -214,6 +214,49 @@ static struct wl1271_if_operations sdio_ops = {
- 	.set_block_size = wl1271_sdio_set_block_size,
- };
- 
-+static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
-+{
-+	struct wl12xx_platform_data *pdata;
-+	struct device_node *np = dev->of_node;
-+
-+	if (!np) {
-+		np = of_find_matching_node(NULL, dev->driver->of_match_table);
-+		if (!np) {
-+			dev_notice(dev, "device tree node not available\n");
-+			pdata = ERR_PTR(-ENODEV);
-+			goto out;
-+		}
-+	}
-+
-+	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
-+	if (!pdata) {
-+		dev_err(dev, "can't allocate platform data\n");
-+		pdata = ERR_PTR(-ENODEV);
-+		goto out;
-+	}
-+
-+	pdata->irq = irq_of_parse_and_map(np, 0);
-+	if (pdata->irq < 0) {
-+		dev_err(dev, "can't get interrupt gpio from the device tree\n");
-+		goto out_free;
-+	}
-+
-+	/* TODO: make sure we have this when needed (ie. for WL6 and WL7) */
-+	of_property_read_u32(np, "refclock", &pdata->board_ref_clock);
-+
-+	/* TODO: make sure we have this when needed (ie. for WL7) */
-+	of_property_read_u32(np, "tcxoclock", &pdata->board_tcxo_clock);
-+
-+	goto out;
-+
-+out_free:
-+	kfree(pdata);
-+	pdata = ERR_PTR(-ENODEV);
-+
-+out:
-+	return pdata;
-+}
-+
- static int wl1271_probe(struct sdio_func *func,
- 				  const struct sdio_device_id *id)
- {
-@@ -248,11 +291,22 @@ static int wl1271_probe(struct sdio_func *func,
- 	/* Use block mode for transferring over one block size of data */
- 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
- 
-+	/* The pdata allocated here is freed when the device is freed,
-+	 * so we don't need an additional out label to free it in case
-+	 * of error further on.
-+	 */
-+
-+	/* Try to get legacy platform data from the board file */
- 	pdev_data->pdata = wl12xx_get_platform_data();
- 	if (IS_ERR(pdev_data->pdata)) {
--		ret = PTR_ERR(pdev_data->pdata);
--		dev_err(glue->dev, "missing wlan platform data: %d\n", ret);
--		goto out_free_glue;
-+		dev_info(&func->dev,
-+			 "legacy platform data not found, trying device tree\n");
-+
-+		pdev_data->pdata = wlcore_get_pdata_from_of(&func->dev);
-+		if (IS_ERR(pdev_data->pdata)) {
-+			dev_err(&func->dev, "can't get platform data\n");
-+			goto out_free_glue;
-+		}
- 	}
- 
- 	/* if sdio can keep power while host is suspended, enable wow */
-@@ -386,16 +440,25 @@ static const struct dev_pm_ops wl1271_sdio_pm_ops = {
- };
- #endif
- 
-+static const struct of_device_id wlcore_sdio_of_match_table[] = {
-+	{ .compatible = "ti,wilink6" },
-+	{ .compatible = "ti,wilink7" },
-+	{ .compatible = "ti,wilink8" },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(of, wlcore_sdio_of_match_table);
-+
- static struct sdio_driver wl1271_sdio_driver = {
- 	.name		= "wl1271_sdio",
- 	.id_table	= wl1271_devices,
- 	.probe		= wl1271_probe,
- 	.remove		= wl1271_remove,
--#ifdef CONFIG_PM
- 	.drv = {
-+#ifdef CONFIG_PM
- 		.pm = &wl1271_sdio_pm_ops,
--	},
- #endif
-+		.of_match_table = of_match_ptr(wlcore_sdio_of_match_table),
-+	},
- };
- 
- static int __init wl1271_init(void)
--- 
-1.7.10.4
-
+- Felix
