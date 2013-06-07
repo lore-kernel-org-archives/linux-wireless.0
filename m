@@ -1,401 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:50877 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284Ab3FALYz (ORCPT
+Received: from mx3.wp.pl ([212.77.101.7]:16079 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753657Ab3FGQmO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jun 2013 07:24:55 -0400
-Subject: [PATCH v2 06/29] ath10k: add core.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Sat, 01 Jun 2013 14:24:50 +0300
-Message-ID: <20130601112450.32443.57832.stgit@localhost6.localdomain6> (sfid-20130601_132458_080413_1183B632)
-In-Reply-To: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
-References: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 7 Jun 2013 12:42:14 -0400
+Date: Fri, 7 Jun 2013 18:42:10 +0200
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	nietrywialneprzejscie@gmail.com
+Subject: Re: [RFC 4/5] mac80211: enforce address verification on monitors
+Message-ID: <20130607184210.200dbb52@north> (sfid-20130607_184217_839508_A51BFF6C)
+In-Reply-To: <51B1EDA8.10406@openwrt.org>
+References: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
+	<1370612179-24385-5-git-send-email-moorray3@wp.pl>
+	<51B1E4F3.9020509@openwrt.org>
+	<20130607160402.49ea16c3@north>
+	<51B1EDA8.10406@openwrt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h |  369 ++++++++++++++++++++++++++++++++
- 1 file changed, 369 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/core.h
+On Fri, 07 Jun 2013 16:26:48 +0200, Felix Fietkau wrote:
+>On 2013-06-07 4:04 PM, Jakub Kiciński wrote:
+>> On Fri, 07 Jun 2013 15:49:39 +0200, Felix Fietkau wrote:
+>>> On 2013-06-07 3:36 PM, Jakub Kicinski wrote:
+>>>> From: Jakub Kicinski <kubakici@wp.pl>
+>>>> 
+>>>> Mac address of passive monitor have to treated
+>>>> the same as address any other interface because
+>>>> type of interface can be changed or monitor can
+>>>> be later put into active mode.
+>>> It can't. There's checks preventing that. I'd prefer to leave that part
+>>> of the code as it is, the MAC address for normal monitor interfaces
+>>> should be ignored completely.
+>> 
+>> I must have misread the code regarding active monitors then.
+>> Main motivation behind this patch was the first part though
+>> - user can change type of interface and once ignored address
+>> of monitor now becomes address of AP, sta etc. 
+> I'm pretty sure that switching from monitor to something else is also
+> not supported.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-new file mode 100644
-index 0000000..539336d
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -0,0 +1,369 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _CORE_H_
-+#define _CORE_H_
-+
-+#include <linux/completion.h>
-+#include <linux/if_ether.h>
-+#include <linux/types.h>
-+#include <linux/pci.h>
-+
-+#include "htc.h"
-+#include "hw.h"
-+#include "targaddrs.h"
-+#include "wmi.h"
-+#include "../ath.h"
-+#include "../regd.h"
-+
-+#define MS(_v, _f) (((_v) & _f##_MASK) >> _f##_LSB)
-+#define SM(_v, _f) (((_v) << _f##_LSB) & _f##_MASK)
-+#define WO(_f)      ((_f##_OFFSET) >> 2)
-+
-+#define ATH10K_SCAN_ID 0
-+#define WMI_READY_TIMEOUT (5 * HZ)
-+#define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
-+
-+/* Antenna noise floor */
-+#define ATH10K_DEFAULT_NOISE_FLOOR -95
-+
-+struct ath10k;
-+
-+enum ath10k_bus {
-+	ATH10K_BUS_PCI,
-+};
-+
-+struct ath10k_skb_cb {
-+	dma_addr_t paddr;
-+	bool is_mapped;
-+	bool is_aborted;
-+
-+	struct {
-+		u8 vdev_id;
-+		u16 msdu_id;
-+		u8 tid;
-+		bool is_offchan;
-+		bool is_conf;
-+		bool discard;
-+		bool no_ack;
-+		u8 refcount;
-+		struct sk_buff *txfrag;
-+		struct sk_buff *msdu;
-+	} __packed htt;
-+
-+	/* 4 bytes left on 64bit arch */
-+} __packed;
-+
-+static inline struct ath10k_skb_cb *ATH10K_SKB_CB(struct sk_buff *skb)
-+{
-+	BUILD_BUG_ON(sizeof(struct ath10k_skb_cb) >
-+		     IEEE80211_TX_INFO_DRIVER_DATA_SIZE);
-+	return (struct ath10k_skb_cb *)&IEEE80211_SKB_CB(skb)->driver_data;
-+}
-+
-+static inline int ath10k_skb_map(struct device *dev, struct sk_buff *skb)
-+{
-+	if (ATH10K_SKB_CB(skb)->is_mapped)
-+		return -EINVAL;
-+
-+	ATH10K_SKB_CB(skb)->paddr = dma_map_single(dev, skb->data, skb->len,
-+						   DMA_TO_DEVICE);
-+
-+	if (unlikely(dma_mapping_error(dev, ATH10K_SKB_CB(skb)->paddr)))
-+		return -EIO;
-+
-+	ATH10K_SKB_CB(skb)->is_mapped = true;
-+	return 0;
-+}
-+
-+static inline int ath10k_skb_unmap(struct device *dev, struct sk_buff *skb)
-+{
-+	if (!ATH10K_SKB_CB(skb)->is_mapped)
-+		return -EINVAL;
-+
-+	dma_unmap_single(dev, ATH10K_SKB_CB(skb)->paddr, skb->len,
-+			 DMA_TO_DEVICE);
-+	ATH10K_SKB_CB(skb)->is_mapped = false;
-+	return 0;
-+}
-+
-+static inline u32 host_interest_item_address(u32 item_offset)
-+{
-+	return QCA988X_HOST_INTEREST_ADDRESS + item_offset;
-+}
-+
-+struct ath10k_bmi {
-+	bool done_sent;
-+};
-+
-+struct ath10k_wmi {
-+	enum ath10k_htc_ep_id eid;
-+	struct completion service_ready;
-+	struct completion unified_ready;
-+	atomic_t pending_tx_count;
-+	wait_queue_head_t wq;
-+
-+	struct sk_buff_head wmi_event_list;
-+	struct work_struct wmi_event_work;
-+};
-+
-+struct ath10k_peer_stat {
-+	u8 peer_macaddr[ETH_ALEN];
-+	u32 peer_rssi;
-+	u32 peer_tx_rate;
-+};
-+
-+struct ath10k_target_stats {
-+	/* PDEV stats */
-+	s32 ch_noise_floor;
-+	u32 tx_frame_count;
-+	u32 rx_frame_count;
-+	u32 rx_clear_count;
-+	u32 cycle_count;
-+	u32 phy_err_count;
-+	u32 chan_tx_power;
-+
-+	/* PDEV TX stats */
-+	s32 comp_queued;
-+	s32 comp_delivered;
-+	s32 msdu_enqued;
-+	s32 mpdu_enqued;
-+	s32 wmm_drop;
-+	s32 local_enqued;
-+	s32 local_freed;
-+	s32 hw_queued;
-+	s32 hw_reaped;
-+	s32 underrun;
-+	s32 tx_abort;
-+	s32 mpdus_requed;
-+	u32 tx_ko;
-+	u32 data_rc;
-+	u32 self_triggers;
-+	u32 sw_retry_failure;
-+	u32 illgl_rate_phy_err;
-+	u32 pdev_cont_xretry;
-+	u32 pdev_tx_timeout;
-+	u32 pdev_resets;
-+	u32 phy_underrun;
-+	u32 txop_ovf;
-+
-+	/* PDEV RX stats */
-+	s32 mid_ppdu_route_change;
-+	s32 status_rcvd;
-+	s32 r0_frags;
-+	s32 r1_frags;
-+	s32 r2_frags;
-+	s32 r3_frags;
-+	s32 htt_msdus;
-+	s32 htt_mpdus;
-+	s32 loc_msdus;
-+	s32 loc_mpdus;
-+	s32 oversize_amsdu;
-+	s32 phy_errs;
-+	s32 phy_err_drop;
-+	s32 mpdu_errs;
-+
-+	/* VDEV STATS */
-+
-+	/* PEER STATS */
-+	u8 peers;
-+	struct ath10k_peer_stat peer_stat[TARGET_NUM_PEERS];
-+
-+	/* TODO: Beacon filter stats */
-+
-+};
-+
-+#define ATH10K_MAX_NUM_PEER_IDS (1 << 11) /* htt rx_desc limit */
-+
-+struct ath10k_peer {
-+	struct list_head list;
-+	int vdev_id;
-+	u8 addr[ETH_ALEN];
-+	DECLARE_BITMAP(peer_ids, ATH10K_MAX_NUM_PEER_IDS);
-+	struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
-+};
-+
-+#define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
-+
-+struct ath10k_vif {
-+	u32 vdev_id;
-+	enum wmi_vdev_type vdev_type;
-+	enum wmi_vdev_subtype vdev_subtype;
-+	u32 beacon_interval;
-+	u32 dtim_period;
-+
-+	struct ath10k *ar;
-+	struct ieee80211_vif *vif;
-+
-+	struct ieee80211_key_conf *wep_keys[WMI_MAX_KEY_INDEX + 1];
-+	u8 def_wep_key_index;
-+
-+	u16 tx_seq_no;
-+
-+	union {
-+		struct {
-+			u8 bssid[ETH_ALEN];
-+			u32 uapsd;
-+		} sta;
-+		struct {
-+			/* 127 stations; wmi limit */
-+			u8 tim_bitmap[16];
-+			u8 tim_len;
-+			u32 ssid_len;
-+			u8 ssid[IEEE80211_MAX_SSID_LEN];
-+			bool hidden_ssid;
-+			/* P2P_IE with NoA attribute for P2P_GO case */
-+			u32 noa_len;
-+			u8 *noa_data;
-+		} ap;
-+		struct {
-+			u8 bssid[ETH_ALEN];
-+		} ibss;
-+	} u;
-+};
-+
-+struct ath10k_vif_iter {
-+	u32 vdev_id;
-+	struct ath10k_vif *arvif;
-+};
-+
-+struct ath10k_debug {
-+	struct dentry *debugfs_phy;
-+
-+	struct ath10k_target_stats target_stats;
-+	u32 wmi_service_bitmap[WMI_SERVICE_BM_SIZE];
-+
-+	struct completion event_stats_compl;
-+};
-+
-+struct ath10k {
-+	struct ath_common ath_common;
-+	struct ieee80211_hw *hw;
-+	struct device *dev;
-+	u8 mac_addr[ETH_ALEN];
-+
-+	u32 target_version;
-+	u8 fw_version_major;
-+	u32 fw_version_minor;
-+	u16 fw_version_release;
-+	u16 fw_version_build;
-+	u32 phy_capability;
-+	u32 hw_min_tx_power;
-+	u32 hw_max_tx_power;
-+	u32 ht_cap_info;
-+	u32 vht_cap_info;
-+
-+	struct targetdef *targetdef;
-+	struct hostdef *hostdef;
-+
-+	bool p2p;
-+
-+	struct {
-+		void *priv;
-+		enum ath10k_bus bus;
-+		const struct ath10k_hif_ops *ops;
-+	} hif;
-+
-+	struct ath10k_wmi wmi;
-+
-+	wait_queue_head_t event_queue;
-+	bool is_target_paused;
-+
-+	struct ath10k_bmi bmi;
-+
-+	struct ath10k_htc *htc;
-+	struct ath10k_htt *htt;
-+
-+	struct ath10k_hw_params {
-+		u32 id;
-+		const char *name;
-+		u32 patch_load_addr;
-+
-+		struct ath10k_hw_params_fw {
-+			const char *dir;
-+			const char *fw;
-+			const char *otp;
-+			const char *board;
-+		} fw;
-+	} hw_params;
-+
-+	struct {
-+		struct completion started;
-+		struct completion completed;
-+		struct completion on_channel;
-+		struct timer_list timeout;
-+		bool is_roc;
-+		bool in_progress;
-+		bool aborting;
-+		int vdev_id;
-+		int roc_freq;
-+	} scan;
-+
-+	struct {
-+		struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
-+	} mac;
-+
-+	/* should never be NULL; needed for regular htt rx */
-+	struct ieee80211_channel *rx_channel;
-+
-+	/* valid during scan; needed for mgmt rx during scan */
-+	struct ieee80211_channel *scan_channel;
-+
-+	int free_vdev_map;
-+	int monitor_vdev_id;
-+	bool monitor_enabled;
-+	bool monitor_present;
-+	unsigned int filter_flags;
-+
-+	struct wmi_pdev_set_wmm_params_arg wmm_params;
-+	struct completion install_key_done;
-+
-+	struct completion vdev_setup_done;
-+
-+	struct workqueue_struct *workqueue;
-+
-+	/* prevents concurrent FW reconfiguration */
-+	struct mutex conf_mutex;
-+
-+	/* protects shared structure data */
-+	spinlock_t data_lock;
-+
-+	struct list_head peers;
-+	wait_queue_head_t peer_mapping_wq;
-+
-+	struct work_struct offchan_tx_work;
-+	struct sk_buff_head offchan_tx_queue;
-+	struct completion offchan_tx_completed;
-+	struct sk_buff *offchan_tx_skb;
-+
-+#ifdef CONFIG_ATH10K_DEBUGFS
-+	struct ath10k_debug debug;
-+#endif
-+};
-+
-+struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
-+				  enum ath10k_bus bus,
-+				  const struct ath10k_hif_ops *hif_ops);
-+void ath10k_core_destroy(struct ath10k *ar);
-+
-+int ath10k_core_register(struct ath10k *ar);
-+void ath10k_core_unregister(struct ath10k *ar);
-+
-+int ath10k_core_target_suspend(struct ath10k *ar);
-+int ath10k_core_target_resume(struct ath10k *ar);
-+
-+#endif /* _CORE_H_ */
+Ok, let me explain what I mean to prevent by showing a command
+trace - running unpatched wireless-testing and patched iw [1].
 
+# lsmod | grep mac8
+# modprobe rt2800usb
+# iw dev wlan0 interface add wlan0-1 type managed
+# ip link
+75: wlan0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN qlen 1000
+    link/ether 00:4f:6a:06:57:90 brd ff:ff:ff:ff:ff:ff
+76: wlan0-1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN qlen 1000
+    link/ether 00:4f:6a:06:57:91 brd ff:ff:ff:ff:ff:ff
+
+Now I can start two hostapd on those interfaces and
+everything works just fine. 
+
+# iw dev wlan0-1 set type monitor
+# ip link set dev wlan0-1 address 00:00:fa:22:7c:00
+# iw dev wlan0-1 set type managed
+# ip link
+75: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000
+    link/ether 00:4f:6a:06:57:90 brd ff:ff:ff:ff:ff:ff
+76: wlan0-1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000
+    link/ether 00:00:fa:22:7c:00 brd ff:ff:ff:ff:ff:ff
+
+If I start hostapd on both interfaces now the one on wlan0-1
+will not work correctly (hw won't ack frames).
+
+Also I think it's possible to change active flag on a monitor
+while it's down (check in net/mac80211/cfg.c:75 only applies
+to interfaces that are up):
+
+# iw dev wlan0 interface add wlan0-1 type monitor flags active
+# iw dev wlan0-1 set monitor none
+# iw dev wlan0-1 set monitor active
+# iw dev wlan0-1 set monitor none
+
+  -- kuba
+
+[1] http://moorray.hopto.org/iw_active_monitors.patch
