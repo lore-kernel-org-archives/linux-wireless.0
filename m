@@ -1,58 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:52300 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750797Ab3FXMvs (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57040 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752152Ab3FGIZz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 08:51:48 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/4] ath9k: Add version macros for AR9462 2.1
-Date: Mon, 24 Jun 2013 18:18:43 +0530
-Message-Id: <1372078126-13602-1-git-send-email-sujith@msujith.org> (sfid-20130624_145151_330505_96C8DDA7)
+	Fri, 7 Jun 2013 04:25:55 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, nbd@nbd.name,
+	johannes@sipsolutions.net, mickflemm@gmail.com,
+	mcgrof@qca.qualcomm.com, rmanohar@qca.qualcomm.com,
+	adrian@freebsd.org, ath5k-devel@lists.ath5k.org,
+	bvahl@net.t-labs.tu-berlin.de
+Subject: [PATCH v2] ath5k: make use of the new rate control API
+Date: Fri,  7 Jun 2013 10:25:05 +0200
+Message-Id: <1370593505-4439-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130607_102601_191226_AF829C0B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This patch enabels ath5k to use the new rate table to lookup each
+mrr rate and retry information per packet.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Benjamin Vahl <bvahl@net.t-labs.tu-berlin.de>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/net/wireless/ath/ath9k/reg.h | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c         |   77 ++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath5k/base.h         |   14 +++--
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
+ 3 files changed, 72 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index f7c90cc..5af9744 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -806,6 +806,7 @@
- #define AR_SREV_REVISION_9580_10	4 /* AR9580 1.0 */
- #define AR_SREV_VERSION_9462		0x280
- #define AR_SREV_REVISION_9462_20	2
-+#define AR_SREV_REVISION_9462_21	3
- #define AR_SREV_VERSION_9565            0x2C0
- #define AR_SREV_REVISION_9565_10        0
- #define AR_SREV_VERSION_9550		0x400
-@@ -911,10 +912,18 @@
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 7f702fe..c63759f 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -60,6 +60,7 @@
  
- #define AR_SREV_9462(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462))
--
- #define AR_SREV_9462_20(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
--	((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_20))
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_20))
-+#define AR_SREV_9462_21(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_21))
-+#define AR_SREV_9462_20_OR_LATER(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
-+	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
-+#define AR_SREV_9462_21_OR_LATER(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
-+	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_21))
+ #include <asm/unaligned.h>
  
- #define AR_SREV_9565(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
++#include <net/mac80211.h>
+ #include "base.h"
+ #include "reg.h"
+ #include "debug.h"
+@@ -666,9 +667,46 @@ static enum ath5k_pkt_type get_hw_packet_type(struct sk_buff *skb)
+ 	return htype;
+ }
+ 
++static struct ieee80211_rate *
++ath5k_get_rate(const struct ieee80211_hw *hw,
++	       const struct ieee80211_tx_info *info,
++	       struct ath5k_buf *bf, int idx)
++{
++	/*
++	* convert a ieee80211_tx_rate RC-table entry to
++	* the respective ieee80211_rate struct
++	*/
++	if (bf->rates[idx].idx < 0) {
++		return NULL;
++	}
++
++	return &hw->wiphy->bands[info->band]->bitrates[ bf->rates[idx].idx ];
++}
++
++static u16
++ath5k_get_rate_hw_value(const struct ieee80211_hw *hw,
++			const struct ieee80211_tx_info *info,
++			struct ath5k_buf *bf, int idx)
++{
++	struct ieee80211_rate *rate;
++	u16 hw_rate;
++	u8 rc_flags;
++
++	rate = ath5k_get_rate(hw, info, bf, idx);
++	if (!rate)
++		return 0;
++
++	rc_flags = bf->rates[idx].flags;
++	hw_rate = (rc_flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE) ?
++		   rate->hw_value_short : rate->hw_value;
++
++	return hw_rate;
++}
++
+ static int
+ ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
+-		  struct ath5k_txq *txq, int padsize)
++		  struct ath5k_txq *txq, int padsize,
++		  struct ieee80211_tx_control *control)
+ {
+ 	struct ath5k_desc *ds = bf->desc;
+ 	struct sk_buff *skb = bf->skb;
+@@ -688,7 +726,11 @@ ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
+ 	bf->skbaddr = dma_map_single(ah->dev, skb->data, skb->len,
+ 			DMA_TO_DEVICE);
+ 
+-	rate = ieee80211_get_tx_rate(ah->hw, info);
++	ieee80211_get_tx_rates(info->control.vif, (control) ? control->sta : NULL, skb, bf->rates,
++			       ARRAY_SIZE(bf->rates));
++
++	rate = ath5k_get_rate(ah->hw, info, bf, 0);
++
+ 	if (!rate) {
+ 		ret = -EINVAL;
+ 		goto err_unmap;
+@@ -698,8 +740,8 @@ ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
+ 		flags |= AR5K_TXDESC_NOACK;
+ 
+ 	rc_flags = info->control.rates[0].flags;
+-	hw_rate = (rc_flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE) ?
+-		rate->hw_value_short : rate->hw_value;
++
++	hw_rate = ath5k_get_rate_hw_value(ah->hw, info, bf, 0);
+ 
+ 	pktlen = skb->len;
+ 
+@@ -722,12 +764,13 @@ ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
+ 		duration = le16_to_cpu(ieee80211_ctstoself_duration(ah->hw,
+ 			info->control.vif, pktlen, info));
+ 	}
++
+ 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
+ 		ieee80211_get_hdrlen_from_skb(skb), padsize,
+ 		get_hw_packet_type(skb),
+ 		(ah->ah_txpower.txp_requested * 2),
+ 		hw_rate,
+-		info->control.rates[0].count, keyidx, ah->ah_tx_ant, flags,
++		bf->rates[0].count, keyidx, ah->ah_tx_ant, flags,
+ 		cts_rate, duration);
+ 	if (ret)
+ 		goto err_unmap;
+@@ -736,13 +779,15 @@ ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
+ 	if (ah->ah_capabilities.cap_has_mrr_support) {
+ 		memset(mrr_rate, 0, sizeof(mrr_rate));
+ 		memset(mrr_tries, 0, sizeof(mrr_tries));
++
+ 		for (i = 0; i < 3; i++) {
+-			rate = ieee80211_get_alt_retry_rate(ah->hw, info, i);
++
++			rate = ath5k_get_rate(ah->hw, info, bf, i);
+ 			if (!rate)
+ 				break;
+ 
+-			mrr_rate[i] = rate->hw_value;
+-			mrr_tries[i] = info->control.rates[i + 1].count;
++			mrr_rate[i] = ath5k_get_rate_hw_value(ah->hw, info, bf, i);
++			mrr_tries[i] = bf->rates[i].count;
+ 		}
+ 
+ 		ath5k_hw_setup_mrr_tx_desc(ah, ds,
+@@ -1515,7 +1560,7 @@ unlock:
+ 
+ void
+ ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+-	       struct ath5k_txq *txq)
++	       struct ath5k_txq *txq, struct ieee80211_tx_control *control)
+ {
+ 	struct ath5k_hw *ah = hw->priv;
+ 	struct ath5k_buf *bf;
+@@ -1555,7 +1600,7 @@ ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 
+ 	bf->skb = skb;
+ 
+-	if (ath5k_txbuf_setup(ah, bf, txq, padsize)) {
++	if (ath5k_txbuf_setup(ah, bf, txq, padsize, control)) {
+ 		bf->skb = NULL;
+ 		spin_lock_irqsave(&ah->txbuflock, flags);
+ 		list_add_tail(&bf->list, &ah->txbuf);
+@@ -1571,7 +1616,8 @@ drop_packet:
+ 
+ static void
+ ath5k_tx_frame_completed(struct ath5k_hw *ah, struct sk_buff *skb,
+-			 struct ath5k_txq *txq, struct ath5k_tx_status *ts)
++			 struct ath5k_txq *txq, struct ath5k_tx_status *ts,
++			 struct ath5k_buf *bf)
+ {
+ 	struct ieee80211_tx_info *info;
+ 	u8 tries[3];
+@@ -1587,6 +1633,8 @@ ath5k_tx_frame_completed(struct ath5k_hw *ah, struct sk_buff *skb,
+ 
+ 	ieee80211_tx_info_clear_status(info);
+ 
++	memcpy(info->status.rates, bf->rates, sizeof(info->status.rates));
++
+ 	for (i = 0; i < ts->ts_final_idx; i++) {
+ 		struct ieee80211_tx_rate *r =
+ 			&info->status.rates[i];
+@@ -1663,7 +1711,7 @@ ath5k_tx_processq(struct ath5k_hw *ah, struct ath5k_txq *txq)
+ 
+ 			dma_unmap_single(ah->dev, bf->skbaddr, skb->len,
+ 					DMA_TO_DEVICE);
+-			ath5k_tx_frame_completed(ah, skb, txq, &ts);
++			ath5k_tx_frame_completed(ah, skb, txq, &ts, bf);
+ 		}
+ 
+ 		/*
+@@ -1917,7 +1965,7 @@ ath5k_beacon_send(struct ath5k_hw *ah)
+ 
+ 	skb = ieee80211_get_buffered_bc(ah->hw, vif);
+ 	while (skb) {
+-		ath5k_tx_queue(ah->hw, skb, ah->cabq);
++		ath5k_tx_queue(ah->hw, skb, ah->cabq, NULL);
+ 
+ 		if (ah->cabq->txq_len >= ah->cabq->txq_max)
+ 			break;
+@@ -2442,7 +2490,8 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
+ 			IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 			IEEE80211_HW_SIGNAL_DBM |
+ 			IEEE80211_HW_MFP_CAPABLE |
+-			IEEE80211_HW_REPORTS_TX_ACK_STATUS;
++			IEEE80211_HW_REPORTS_TX_ACK_STATUS |
++			IEEE80211_HW_SUPPORTS_RC_TABLE;
+ 
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_AP) |
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 6c94c7f..ca9a83c 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -47,6 +47,7 @@ struct ath5k_hw;
+ struct ath5k_txq;
+ struct ieee80211_channel;
+ struct ath_bus_ops;
++struct ieee80211_tx_control;
+ enum nl80211_iftype;
+ 
+ enum ath5k_srev_type {
+@@ -61,11 +62,12 @@ struct ath5k_srev_name {
+ };
+ 
+ struct ath5k_buf {
+-	struct list_head	list;
+-	struct ath5k_desc	*desc;	/* virtual addr of desc */
+-	dma_addr_t		daddr;	/* physical addr of desc */
+-	struct sk_buff		*skb;	/* skbuff for buf */
+-	dma_addr_t		skbaddr;/* physical addr of skb data */
++	struct list_head		list;
++	struct ath5k_desc		*desc;		/* virtual addr of desc */
++	dma_addr_t			daddr;		/* physical addr of desc */
++	struct sk_buff			*skb;		/* skbuff for buf */
++	dma_addr_t			skbaddr;	/* physical addr of skb data */
++	struct ieee80211_tx_rate	rates[4];	/* number of multi-rate stages */
+ };
+ 
+ struct ath5k_vif {
+@@ -103,7 +105,7 @@ int ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan);
+ void ath5k_txbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
+ void ath5k_rxbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
+ void ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+-		    struct ath5k_txq *txq);
++		    struct ath5k_txq *txq, struct ieee80211_tx_control *control);
+ 
+ const char *ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val);
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index 06f86f4..81b686c 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -66,7 +66,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 		return;
+ 	}
+ 
+-	ath5k_tx_queue(hw, skb, &ah->txqs[qnum]);
++	ath5k_tx_queue(hw, skb, &ah->txqs[qnum], control);
+ }
+ 
+ 
 -- 
-1.8.3.1
+1.7.9.5
 
