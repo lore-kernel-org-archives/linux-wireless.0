@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:54661 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753725Ab3FEOJn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 10:09:43 -0400
-Date: Wed, 5 Jun 2013 17:09:32 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] ath9k: limit multicast buffer hardware queue depth
-Message-ID: <20130605140932.GA8918@w1.fi> (sfid-20130605_160951_543901_807BC1CB)
-References: <1370280714-1594-1-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370280714-1594-1-git-send-email-nbd@openwrt.org>
+Received: from mout.gmx.net ([212.227.15.19]:51540 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750822Ab3FIQvf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jun 2013 12:51:35 -0400
+Received: from mailout-de.gmx.net ([10.1.76.4]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MRQfu-1UwlUD0jJQ-00Shjg for
+ <linux-wireless@vger.kernel.org>; Sun, 09 Jun 2013 18:51:33 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v5] ath9k_htc: add STBC TX support
+Date: Sun,  9 Jun 2013 18:51:24 +0200
+Message-Id: <1370796684-21022-1-git-send-email-linux@rempel-privat.de> (sfid-20130609_185138_576523_F1112648)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 03, 2013 at 07:31:54PM +0200, Felix Fietkau wrote:
-> The CAB (Content after Beacon) queue is used for beacon-triggered
-> transmission of buffered multicast frames. If lots of multicast frames
-> were buffered and this queue fills up, it drowns out all regular
-> traffic. To limit the damage that buffered traffic can do, try to limit
-> the queued data to becaon_interval / 8.
+All known ar7010+ar* device and current FW support STBC TX. This patch
+make use of it and suggest to send STBC if peer support it.
+I use wort "suggest" since currenly we have separate rate controller
+in FW which will make decision based on rate and hardware.
 
-I'm not sure this would be compliant with the standard, but I guess
-something along these lines could be reasonable in some cases. However,
-it could be useful to take into account different DTIM Period parameters
-in the limit and instead of hardcoding this to one eight of the Beacon
-interval, the limit could be set based on Beacon interval * DTIM Period.
-Especially with large DTIM Period values, one eight of a Beacon interval
-may not be sufficient to handle even reasonable amount of group
-addressed frames.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          | 1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 3 +++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 2 ++
+ 3 files changed, 6 insertions(+)
 
-Does this commit address More Data field updates when the driver decides
-to stop getting more frames without notifying mac80211 of this? The
-associated STAs would need to know when they can go back to sleep after
-the DTIM Beacon and the More Data field needs to be set to zero in the
-last frame the AP is sending out in the case this new limit is hit.
-
-> diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-> @@ -205,9 +205,15 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
-
->  	while (skb) {
->  		ath9k_tx_cabq(hw, skb);
-> +
-> +		if (sc->beacon.cabq_dur / 1000 - 1 >
-> +		    sc->cur_beacon_conf.beacon_interval / ATH_BCBUF)
-> +			break;
-> +
->  		skb = ieee80211_get_buffered_bc(hw, vif);
->  	}
-
-mac80211 handles the More Data field values based on what is actually
-buffered. I don't see how this patch would fix that either by modifying
-mac80211 to know that no more buffered frames are sent or by having the
-driver update the frame.
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 0085e64..6958103 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -142,6 +142,7 @@ struct ath9k_htc_target_aggr {
+ #define WLAN_RC_40_FLAG  0x02
+ #define WLAN_RC_SGI_FLAG 0x04
+ #define WLAN_RC_HT_FLAG  0x08
++#define ATH_RC_TX_STBC_FLAG 0x20
  
+ struct ath9k_htc_rateset {
+ 	u8 rs_nrates;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 59f6436..bb0ba9e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -517,6 +517,9 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
+ 	ath_dbg(common, CONFIG, "TX streams %d, RX streams: %d\n",
+ 		tx_streams, rx_streams);
+ 
++	if (tx_streams >= 2)
++		ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
++
+ 	if (tx_streams != rx_streams) {
+ 		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
+ 		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 34869c2..eaa94fe 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -627,6 +627,8 @@ static void ath9k_htc_setup_rate(struct ath9k_htc_priv *priv,
+ 		trate->rates.ht_rates.rs_nrates = j;
+ 
+ 		caps = WLAN_RC_HT_FLAG;
++		if (sta->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC)
++			caps |= ATH_RC_TX_STBC_FLAG;
+ 		if (sta->ht_cap.mcs.rx_mask[1])
+ 			caps |= WLAN_RC_DS_FLAG;
+ 		if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.8.1.2
+
