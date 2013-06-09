@@ -1,85 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mxout1.netvision.net.il ([194.90.9.20]:53971 "EHLO
-	mxout1.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965153Ab3FTOZf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25298 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742Ab3FIGNZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jun 2013 10:25:35 -0400
-Received: from localhost.localdomain ([82.166.196.250])
- by mxout1.netvision.net.il
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) with ESMTPA id <0MOP0071F41YR0E0@mxout1.netvision.net.il> for
- linux-wireless@vger.kernel.org; Thu, 20 Jun 2013 17:25:22 +0300 (IDT)
-From: Kirshenbaum Erez <erezk@wilocity.com>
-To: qca_vkondrat@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org,
-	Kirshenbaum Erez <erezk@wilocity.com>
-Subject: [PATCH 2/1] wil6210: set vring index for all descriptors
-Date: Thu, 20 Jun 2013 16:24:44 +0300
-Message-id: <1371734684-4453-1-git-send-email-erezk@wilocity.com> (sfid-20130620_162538_133676_969998EE)
+	Sun, 9 Jun 2013 02:13:25 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 5/6] wil6210: Send EAPOL frames using normal Tx queue
+Date: Sun, 9 Jun 2013 09:12:54 +0300
+Message-ID: <1370758375-16867-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130609_081328_743878_EA2D6FC0)
+In-Reply-To: <1370758375-16867-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1370758375-16867-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The vring index (MAC queue id) must be set in all TX descriptors
-otherwise HW will fail to release descriptors for a specific vring
-(disconnect or vring switch flows).
-This is normally occurs when fragmentation required, if vring index
-will not be the same for all SKB descriptors HW will fail to flush
-this MAC queue.
+No more need for special processing of EAPOL, FW can now send EAPOL frames
+using normal Tx queue for TID 0
 
-Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
+This fixes "schedule while atomic" bug - start_xmit called in softirq context;
+while WMI mechanism that was used may sleep.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/wil6210/txrx.c    | 20 ++++++++----------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  1 -
+ drivers/net/wireless/ath/wil6210/wmi.c     | 34 ------------------------------
+ 3 files changed, 9 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index e1c492b..73d6c2d 100644
+index 00dffed..e1c492b 100644
 --- a/drivers/net/wireless/ath/wil6210/txrx.c
 +++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -621,7 +621,8 @@ static struct vring *wil_find_tx_vring(struct wil6210_priv *wil,
- 	return NULL;
+@@ -768,18 +768,16 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 		wil_err(wil, "Xmit in monitor mode not supported\n");
+ 		goto drop;
+ 	}
+-	if (skb->protocol == cpu_to_be16(ETH_P_PAE)) {
+-		rc = wmi_tx_eapol(wil, skb);
+-	} else {
+-		/* find vring */
+-		vring = wil_find_tx_vring(wil, skb);
+-		if (!vring) {
+-			wil_err(wil, "No Tx VRING available\n");
+-			goto drop;
+-		}
+-		/* set up vring entry */
+-		rc = wil_tx_vring(wil, vring, skb);
++
++	/* find vring */
++	vring = wil_find_tx_vring(wil, skb);
++	if (!vring) {
++		wil_err(wil, "No Tx VRING available\n");
++		goto drop;
+ 	}
++	/* set up vring entry */
++	rc = wil_tx_vring(wil, vring, skb);
++
+ 	switch (rc) {
+ 	case 0:
+ 		/* statistics will be updated on the tx_complete */
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 373cf65..44fdab5 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -329,7 +329,6 @@ int wmi_set_ssid(struct wil6210_priv *wil, u8 ssid_len, const void *ssid);
+ int wmi_get_ssid(struct wil6210_priv *wil, u8 *ssid_len, void *ssid);
+ int wmi_set_channel(struct wil6210_priv *wil, int channel);
+ int wmi_get_channel(struct wil6210_priv *wil, int *channel);
+-int wmi_tx_eapol(struct wil6210_priv *wil, struct sk_buff *skb);
+ int wmi_del_cipher_key(struct wil6210_priv *wil, u8 key_index,
+ 		       const void *mac_addr);
+ int wmi_add_cipher_key(struct wil6210_priv *wil, u8 key_index,
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index ac4d26b..dc8059a 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -839,40 +839,6 @@ int wmi_p2p_cfg(struct wil6210_priv *wil, int channel)
+ 	return wmi_send(wil, WMI_P2P_CFG_CMDID, &cmd, sizeof(cmd));
  }
  
--static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len)
-+static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len,
-+			   int vring_index)
+-int wmi_tx_eapol(struct wil6210_priv *wil, struct sk_buff *skb)
+-{
+-	struct wmi_eapol_tx_cmd *cmd;
+-	struct ethhdr *eth;
+-	u16 eapol_len = skb->len - ETH_HLEN;
+-	void *eapol = skb->data + ETH_HLEN;
+-	uint i;
+-	int rc;
+-
+-	skb_set_mac_header(skb, 0);
+-	eth = eth_hdr(skb);
+-	wil_dbg_wmi(wil, "EAPOL %d bytes to %pM\n", eapol_len, eth->h_dest);
+-	for (i = 0; i < ARRAY_SIZE(wil->vring_tx); i++) {
+-		if (memcmp(wil->dst_addr[i], eth->h_dest, ETH_ALEN) == 0)
+-			goto found_dest;
+-	}
+-
+-	return -EINVAL;
+-
+- found_dest:
+-	/* find out eapol data & len */
+-	cmd = kzalloc(sizeof(*cmd) + eapol_len, GFP_KERNEL);
+-	if (!cmd)
+-		return -EINVAL;
+-
+-	memcpy(cmd->dst_mac, eth->h_dest, ETH_ALEN);
+-	cmd->eapol_len = cpu_to_le16(eapol_len);
+-	memcpy(cmd->eapol, eapol, eapol_len);
+-	rc = wmi_send(wil, WMI_EAPOL_TX_CMDID, cmd, sizeof(*cmd) + eapol_len);
+-	kfree(cmd);
+-
+-	return rc;
+-}
+-
+ int wmi_del_cipher_key(struct wil6210_priv *wil, u8 key_index,
+ 		       const void *mac_addr)
  {
- 	wil_desc_addr_set(&d->dma.addr, pa);
- 	d->dma.ip_length = 0;
-@@ -630,7 +631,7 @@ static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len)
- 	d->dma.error = 0;
- 	d->dma.status = 0; /* BIT(0) should be 0 for HW_OWNED */
- 	d->dma.length = cpu_to_le16((u16)len);
--	d->dma.d0 = 0;
-+	d->dma.d0 = (vring_index << DMA_CFG_DESC_TX_0_QID_POS);
- 	d->mac.d[0] = 0;
- 	d->mac.d[1] = 0;
- 	d->mac.d[2] = 0;
-@@ -684,7 +685,7 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
- 	if (unlikely(dma_mapping_error(dev, pa)))
- 		return -EINVAL;
- 	/* 1-st segment */
--	wil_tx_desc_map(d, pa, skb_headlen(skb));
-+	wil_tx_desc_map(d, pa, skb_headlen(skb), vring_index);
- 	d->mac.d[2] |= ((nr_frags + 1) <<
- 		       MAC_CFG_DESC_TX_2_NUM_OF_DESCRIPTORS_POS);
- 	if (nr_frags)
-@@ -701,7 +702,7 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
- 				DMA_TO_DEVICE);
- 		if (unlikely(dma_mapping_error(dev, pa)))
- 			goto dma_error;
--		wil_tx_desc_map(d, pa, len);
-+		wil_tx_desc_map(d, pa, len, vring_index);
- 		vring->ctx[i] = NULL;
- 		*_d = *d;
- 	}
-@@ -709,7 +710,6 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
- 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_EOP_POS);
- 	d->dma.d0 |= BIT(9); /* BUG: undocumented bit */
- 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_DMA_IT_POS);
--	d->dma.d0 |= (vring_index << DMA_CFG_DESC_TX_0_QID_POS);
- 	*_d = *d;
- 
- 	wil_hex_dump_txrx("Tx ", DUMP_PREFIX_NONE, 32, 4,
 -- 
-1.7.11.7
+1.8.1.2
 
