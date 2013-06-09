@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44197 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752284Ab3FLOpS (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25298 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696Ab3FIGNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 10:45:18 -0400
-Date: Wed, 12 Jun 2013 10:30:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Gustavo Padovan <gustavo.padovan@collabora.co.uk>,
-	Luciano Coelho <coelho@ti.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: pull request: wireless 2013-06-06
-Message-ID: <20130612143057.GA11589@tuxdriver.com> (sfid-20130612_164522_918925_80773096)
-References: <20130606190929.GB18827@tuxdriver.com>
- <20130611.222706.1492583255605214982.davem@davemloft.net>
+	Sun, 9 Jun 2013 02:13:24 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/6] wil6210: improve frame type reporting
+Date: Sun, 9 Jun 2013 09:12:52 +0300
+Message-ID: <1370758375-16867-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130609_081328_141083_6C7E6763)
+In-Reply-To: <1370758375-16867-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1370758375-16867-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130611.222706.1492583255605214982.davem@davemloft.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 11, 2013 at 10:27:06PM -0700, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Thu, 6 Jun 2013 15:09:30 -0400
-> 
-> > Johannes Berg (2):
-> >       mac80211: constify ieee802_11_parse_elems() argument
-> 
-> Such cleanups are absolutely, positively, not appropriate at this
-> time.
-> 
-> Sorry.
-> 
-> I still can't pull this.
+Report FC from the frame itself, as auxiliary information includes
+only frame subtype. This is preparation for future changes, when
+DMG beacon (extension frame) may be reported through wmi_evt_rx_mgmt()
 
-OK, a respin is coming.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Note to my feeder trees, another rebase is coming...
-
-John
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index cfcaf7b..ac4d26b 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -315,8 +315,8 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ 
+ 	wil_dbg_wmi(wil, "MGMT: channel %d MCS %d SNR %d\n",
+ 		    data->info.channel, data->info.mcs, data->info.snr);
+-	wil_dbg_wmi(wil, "status 0x%04x len %d stype %04x\n", d_status, d_len,
+-		    le16_to_cpu(data->info.stype));
++	wil_dbg_wmi(wil, "status 0x%04x len %d fc 0x%04x\n", d_status, d_len,
++		    le16_to_cpu(fc));
+ 	wil_dbg_wmi(wil, "qid %d mid %d cid %d\n",
+ 		    data->info.qid, data->info.mid, data->info.cid);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.1.2
+
