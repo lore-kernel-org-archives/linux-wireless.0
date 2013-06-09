@@ -1,41 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:50325 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755265Ab3FPQZm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Jun 2013 12:25:42 -0400
-Received: from mailout-de.gmx.net ([10.1.76.12]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0LcE27-1U4hks3zNt-00jW8p for
- <linux-wireless@vger.kernel.org>; Sun, 16 Jun 2013 18:25:40 +0200
-Message-ID: <51BDE700.6080503@rempel-privat.de> (sfid-20130616_182600_445109_8C7DDD27)
-Date: Sun, 16 Jun 2013 18:25:36 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:14012 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753751Ab3FILZe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jun 2013 07:25:34 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wil6210: fix name of tracing config option
+Date: Sun, 9 Jun 2013 14:25:30 +0300
+Message-ID: <11240049.FTSjXXmOrX@lx-vladimir> (sfid-20130609_132555_075405_F15D2B3D)
+In-Reply-To: <1370776205-3755-1-git-send-email-hauke@hauke-m.de>
+References: <1370776205-3755-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath9k: Add custom parameters for CUS198
-References: <1371144086-10150-1-git-send-email-sujith@msujith.org>
-In-Reply-To: <1371144086-10150-1-git-send-email-sujith@msujith.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 13.06.2013 19:21, schrieb Sujith Manoharan:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> CUS198 is a card based on AR9485. There are differences
-> between the base reference design HB125 and CUS198.
-> Identify such cards based on the PCI subsystem IDs and
-> set HW parameters appropriately.
->
-> Addresses this bug - https://bugzilla.kernel.org/show_bug.cgi?id=49201
+On Sunday, June 09, 2013 01:10:05 PM Hauke Mehrtens wrote:
+> Tracing in wil6210 is activated with WIL6210_TRACING and not with
+> ATH6KL_TRACING, this is used for the ath6kl driver. Rename the config
+> option.
+> 
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Thanks!!!
+Thanks for finding this.
 
-this patch made my day. I newer thought this adapter can provide good 
-performance. Now, I can even see WiFi of my neighbour.
+Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-
--- 
-Regards,
-Oleksij
