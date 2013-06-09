@@ -1,120 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:61567 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753676Ab3FCVty (ORCPT
+Received: from mxout1.netvision.net.il ([194.90.9.20]:54026 "EHLO
+	mxout1.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165Ab3FIICB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 17:49:54 -0400
-Received: by mail-wg0-f52.google.com with SMTP id z11so3721508wgg.7
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 14:49:53 -0700 (PDT)
-Message-ID: <1370296188.9091.31.camel@canaries64> (sfid-20130603_234957_697022_2736DF14)
-Subject: [PATCH 5/8] staging: vt6656: rf.c/h rename RFvRSSITodBm
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 03 Jun 2013 22:49:48 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 9 Jun 2013 04:02:01 -0400
+Received: from localhost.localdomain ([82.166.196.250])
+ by mxout1.netvision.net.il
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTPA id <0MO400M098Z7VY60@mxout1.netvision.net.il> for
+ linux-wireless@vger.kernel.org; Sun, 09 Jun 2013 11:01:58 +0300 (IDT)
+From: Kirshenbaum Erez <erezk@wilocity.com>
+To: qca_vkondrat@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org,
+	Kirshenbaum Erez <erezk@wilocity.com>
+Subject: [PATCH v2] wil6210: Fix AP/PCP start flow
+Date: Sun, 09 Jun 2013 10:01:32 +0300
+Message-id: <1370761292-13585-1-git-send-email-erezk@wilocity.com> (sfid-20130609_100205_557591_E35E1E62)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove camel case rename RFvRSSITodBm to vnt_rf_rssi_to_dbm
+Proper flow for starting AP is by the wil_cfg80211_start_ap call (.start_ap)
+Hostapd flow for AP mode will call first to __wil_up (.ndo_open)
+and wil_cfg80211_start_ap.
+All required parameters for AP mode are carry in the info structure of 
+.start_ap (SSID,Channel,BI,IEs, security ...) and missing in __wil_up.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
 ---
- drivers/staging/vt6656/bssdb.c | 6 +++---
- drivers/staging/vt6656/iwctl.c | 6 +++---
- drivers/staging/vt6656/rf.c    | 2 +-
- drivers/staging/vt6656/rf.h    | 2 +-
- 4 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 35 ---------------------------------
+ 1 file changed, 35 deletions(-)
 
-diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
-index ee79bbd..078d751 100644
---- a/drivers/staging/vt6656/bssdb.c
-+++ b/drivers/staging/vt6656/bssdb.c
-@@ -451,7 +451,7 @@ int BSSbInsertToBSSList(struct vnt_private *pDevice,
-     if (pDevice->bUpdateBBVGA) {
-         // Monitor if RSSI is too strong.
-         pBSSList->byRSSIStatCnt = 0;
--        RFvRSSITodBm(pDevice, (u8)(pRxPacket->uRSSI), &pBSSList->ldBmMAX);
-+	vnt_rf_rssi_to_dbm(pDevice, (u8)(pRxPacket->uRSSI), &pBSSList->ldBmMAX);
-         pBSSList->ldBmAverage[0] = pBSSList->ldBmMAX;
-         pBSSList->ldBmAverRange = pBSSList->ldBmMAX;
-         for (ii = 1; ii < RSSI_STAT_COUNT; ii++)
-@@ -578,7 +578,7 @@ int BSSbUpdateToBSSList(struct vnt_private *pDevice,
-     }
- 
-     if (pRxPacket->uRSSI != 0) {
--        RFvRSSITodBm(pDevice, (u8)(pRxPacket->uRSSI), &ldBm);
-+	vnt_rf_rssi_to_dbm(pDevice, (u8)(pRxPacket->uRSSI), &ldBm);
-         // Monitor if RSSI is too strong.
-         pBSSList->byRSSIStatCnt++;
-         pBSSList->byRSSIStatCnt %= RSSI_STAT_COUNT;
-@@ -1387,7 +1387,7 @@ if(pDevice->bLinkPass !=true)
- }
- else
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index c97b864..271ee22 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -286,41 +286,31 @@ static int __wil_up(struct wil6210_priv *wil)
  {
--   RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
-+	vnt_rf_rssi_to_dbm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
-    if(-ldBm < 50)  {
-    	RssiRatio = 4000;
-      }
-diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
-index d0cf7d8..af355d2 100644
---- a/drivers/staging/vt6656/iwctl.c
-+++ b/drivers/staging/vt6656/iwctl.c
-@@ -61,7 +61,7 @@ struct iw_statistics *iwctl_get_wireless_stats(struct net_device *dev)
- 	if (pDevice->scStatistic.LinkQuality > 100)
- 		pDevice->scStatistic.LinkQuality = 100;
- 	pDevice->wstats.qual.qual =(u8)pDevice->scStatistic.LinkQuality;
--	RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
-+	vnt_rf_rssi_to_dbm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
- 	pDevice->wstats.qual.level = ldBm;
- 	pDevice->wstats.qual.noise = 0;
- 	pDevice->wstats.qual.updated = 1;
-@@ -237,7 +237,7 @@ int iwctl_giwscan(struct net_device *dev, struct iw_request_info *info,
- 			// ADD quality
- 			memset(&iwe, 0, sizeof(iwe));
- 			iwe.cmd = IWEVQUAL;
--			RFvRSSITodBm(pDevice, (u8)(pBSS->uRSSI), &ldBm);
-+			vnt_rf_rssi_to_dbm(pDevice, (u8)(pBSS->uRSSI), &ldBm);
- 			iwe.u.qual.level = ldBm;
- 			iwe.u.qual.noise = 0;
+ 	struct net_device *ndev = wil_to_ndev(wil);
+ 	struct wireless_dev *wdev = wil->wdev;
+-	struct ieee80211_channel *channel = wdev->preset_chandef.chan;
+ 	int rc;
+-	int bi;
+-	u16 wmi_nettype = wil_iftype_nl2wmi(wdev->iftype);
  
-@@ -1427,7 +1427,7 @@ int iwctl_giwsens(struct net_device *dev, struct iw_request_info *info,
+ 	rc = wil_reset(wil);
+ 	if (rc)
+ 		return rc;
  
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " SIOCGIWSENS\n");
- 	if (pDevice->bLinkPass == true) {
--		RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
-+		vnt_rf_rssi_to_dbm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
- 		wrq->value = ldBm;
- 	} else {
- 		wrq->value = 0;
-diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
-index 1706d8d..bcc9632 100644
---- a/drivers/staging/vt6656/rf.c
-+++ b/drivers/staging/vt6656/rf.c
-@@ -943,7 +943,7 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
-  * Return Value: none
-  *
- -*/
--void RFvRSSITodBm(struct vnt_private *priv, u8 rssi, long *dbm)
-+void vnt_rf_rssi_to_dbm(struct vnt_private *priv, u8 rssi, long *dbm)
- {
- 	u8 idx = (((rssi & 0xc0) >> 6) & 0x03);
- 	long b = (rssi & 0x3f);
-diff --git a/drivers/staging/vt6656/rf.h b/drivers/staging/vt6656/rf.h
-index 1c0dd25..73abc5a 100644
---- a/drivers/staging/vt6656/rf.h
-+++ b/drivers/staging/vt6656/rf.h
-@@ -58,7 +58,7 @@ extern const u8 RFaby11aChannelIndex[200];
- int vnt_rf_write_embedded(struct vnt_private *, u32);
- int vnt_rf_setpower(struct vnt_private *, u32, u32);
- int vnt_rf_set_txpower(struct vnt_private *, u8, u32);
--void RFvRSSITodBm(struct vnt_private *, u8 byCurrRSSI, long *pldBm);
-+void vnt_rf_rssi_to_dbm(struct vnt_private *, u8, long *);
- void RFbRFTableDownload(struct vnt_private *pDevice);
+-	/* FIXME Firmware works now in PBSS mode(ToDS=0, FromDS=0) */
+-	wmi_nettype = wil_iftype_nl2wmi(NL80211_IFTYPE_ADHOC);
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_STATION:
+ 		wil_dbg_misc(wil, "type: STATION\n");
+-		bi = 0;
+ 		ndev->type = ARPHRD_ETHER;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 		wil_dbg_misc(wil, "type: AP\n");
+-		bi = 100;
+ 		ndev->type = ARPHRD_ETHER;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 		wil_dbg_misc(wil, "type: P2P_CLIENT\n");
+-		bi = 0;
+ 		ndev->type = ARPHRD_ETHER;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		wil_dbg_misc(wil, "type: P2P_GO\n");
+-		bi = 100;
+ 		ndev->type = ARPHRD_ETHER;
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		wil_dbg_misc(wil, "type: Monitor\n");
+-		bi = 0;
+ 		ndev->type = ARPHRD_IEEE80211_RADIOTAP;
+ 		/* ARPHRD_IEEE80211 or ARPHRD_IEEE80211_RADIOTAP ? */
+ 		break;
+@@ -328,34 +318,9 @@ static int __wil_up(struct wil6210_priv *wil)
+ 		return -EOPNOTSUPP;
+ 	}
  
- #endif /* __RF_H__ */
+-	/* Apply profile in the following order: */
+-	/* SSID and channel for the AP */
+-	switch (wdev->iftype) {
+-	case NL80211_IFTYPE_AP:
+-	case NL80211_IFTYPE_P2P_GO:
+-		if (wdev->ssid_len == 0) {
+-			wil_err(wil, "SSID not set\n");
+-			return -EINVAL;
+-		}
+-		rc = wmi_set_ssid(wil, wdev->ssid_len, wdev->ssid);
+-		if (rc)
+-			return rc;
+-		break;
+-	default:
+-		break;
+-	}
+-
+ 	/* MAC address - pre-requisite for other commands */
+ 	wmi_set_mac_address(wil, ndev->dev_addr);
+ 
+-	/* Set up beaconing if required. */
+-	if (bi > 0) {
+-		rc = wmi_pcp_start(wil, bi, wmi_nettype,
+-				   (channel ? channel->hw_value : 0));
+-		if (rc)
+-			return rc;
+-	}
+-
+ 	/* Rx VRING. After MAC and beacon */
+ 	wil_rx_init(wil);
+ 
 -- 
-1.8.1.2
+1.7.11.7
 
