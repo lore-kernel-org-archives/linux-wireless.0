@@ -1,120 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f180.google.com ([209.85.128.180]:42992 "EHLO
-	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755143Ab3F1ONL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 10:13:11 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+Received: from tex.lwn.net ([70.33.254.29]:33617 "EHLO vena.lwn.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752390Ab3FJUiu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jun 2013 16:38:50 -0400
+Date: Mon, 10 Jun 2013 14:38:48 -0600
+From: Jake Edge <jake@lwn.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Richard Genoud <richard.genoud@gmail.com>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: Initialize power-setting callback for USB devices
-Date: Fri, 28 Jun 2013 09:12:53 -0500
-Message-Id: <1372428773-9993-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130628_161321_283085_FC279345)
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx
+ rejection
+Message-ID: <20130610143848.7afd5acc@chukar.edge2.net> (sfid-20130610_223903_577888_E38EAB0A)
+In-Reply-To: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
+References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit a269913c5 entitled "rtlwifi: Rework rtl_lps_leave() and
-rtl_lps_enter() to use work queue" has two bugs for USB drivers.
-Firstly, the work queue in question was not initialized. Secondly,
-the callback routine used by this queue is contained within the
-file used for PCI devices. As a result, it is not available for
-architectures without PCI hardware.
+On Thu, 23 May 2013 14:20:56 +0200 Stanislaw Gruszka wrote:
+> Jake, please test this set and check if it not cause association
+> problems you reported earlier this month.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-by: Richard Genoud <richard.genoud@gmail.com>
-Tested-by: Richard Genoud <richard.genoud@gmail.com>
-Cc: Richard Genoud <richard.genoud@gmail.com>
-Cc: Stable <stable@vger.kernel.org> [3.10]
----
+sorry it took me so long to get back to this, but i just tested and it
+doesn't fix the problem here ...
 
-John,
+> Please apply it together with this mac80211 patch:
+> http://marc.info/?l=linux-wireless&m=136879090123023&w=2 
+> which I already posted and is queued to upstream. Not having
+> it may cause troubles and influence negatively this set test.
 
-Ideally, this patch should be pushed to the 3.10 stream; however, at this late time
-that is not possible. Please push it for 3.11 and the Cc to stable will get it
-into 3.10.X.
+I tried it on both 3.9 (without 4/4 since it doesn't have that
+workaround in it) and on 3.10-rc4 and in both cases, i get the same
+behavior: it tries to connect many times and fails, then eventually
+connects (after like 20 tries from KDE network manager) ...
 
-Larry
----
- drivers/net/wireless/rtlwifi/pci.c | 13 -------------
- drivers/net/wireless/rtlwifi/ps.c  | 12 ++++++++++++
- drivers/net/wireless/rtlwifi/ps.h  |  1 +
- drivers/net/wireless/rtlwifi/usb.c |  2 ++
- 4 files changed, 15 insertions(+), 13 deletions(-)
+jake
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index c97e9d3..e70b4ff 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -1008,19 +1008,6 @@ static void _rtl_pci_prepare_bcn_tasklet(struct ieee80211_hw *hw)
- 	return;
- }
- 
--static void rtl_lps_change_work_callback(struct work_struct *work)
--{
--	struct rtl_works *rtlworks =
--	    container_of(work, struct rtl_works, lps_change_work);
--	struct ieee80211_hw *hw = rtlworks->hw;
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--
--	if (rtlpriv->enter_ps)
--		rtl_lps_enter(hw);
--	else
--		rtl_lps_leave(hw);
--}
--
- static void _rtl_pci_init_trx_var(struct ieee80211_hw *hw)
- {
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
-index 884bcea..71e917d 100644
---- a/drivers/net/wireless/rtlwifi/ps.c
-+++ b/drivers/net/wireless/rtlwifi/ps.c
-@@ -611,6 +611,18 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 			MSECS(sleep_intv * mac->vif->bss_conf.beacon_int - 40));
- }
- 
-+void rtl_lps_change_work_callback(struct work_struct *work)
-+{
-+	struct rtl_works *rtlworks =
-+	    container_of(work, struct rtl_works, lps_change_work);
-+	struct ieee80211_hw *hw = rtlworks->hw;
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	if (rtlpriv->enter_ps)
-+		rtl_lps_enter(hw);
-+	else
-+		rtl_lps_leave(hw);
-+}
- 
- void rtl_swlps_wq_callback(void *data)
- {
-diff --git a/drivers/net/wireless/rtlwifi/ps.h b/drivers/net/wireless/rtlwifi/ps.h
-index 4d682b7..88bd76e 100644
---- a/drivers/net/wireless/rtlwifi/ps.h
-+++ b/drivers/net/wireless/rtlwifi/ps.h
-@@ -49,5 +49,6 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw);
- void rtl_swlps_rf_sleep(struct ieee80211_hw *hw);
- void rtl_p2p_ps_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state);
- void rtl_p2p_info(struct ieee80211_hw *hw, void *data, unsigned int len);
-+void rtl_lps_change_work_callback(struct work_struct *work);
- 
- #endif
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index a3532e0..1feebdc 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -1070,6 +1070,8 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	spin_lock_init(&rtlpriv->locks.usb_lock);
- 	INIT_WORK(&rtlpriv->works.fill_h2c_cmd,
- 		  rtl_fill_h2c_cmd_work_callback);
-+	INIT_WORK(&rtlpriv->works.lps_change_work,
-+		  rtl_lps_change_work_callback);
- 
- 	rtlpriv->usb_data_index = 0;
- 	init_completion(&rtlpriv->firmware_loading_complete);
 -- 
-1.8.1.4
-
+Jake Edge - LWN - jake@lwn.net - http://lwn.net
