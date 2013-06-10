@@ -1,72 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:43608
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751247Ab3FBN1g (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:36007 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751330Ab3FJWlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Jun 2013 09:27:36 -0400
-Date: Sun, 2 Jun 2013 09:27:21 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>,
-	Ajitpal Singh <ajitpal.singh@stericsson.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cw1200: fix some obvious mistakes
-Message-ID: <20130602132721.GB3875@shaftnet.org> (sfid-20130602_152816_316259_7DEC5BB0)
-References: <1370126241-2528420-1-git-send-email-arnd@arndb.de>
- <20130602122954.GA3875@shaftnet.org>
+	Mon, 10 Jun 2013 18:41:47 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH RESEND] mwifiex: fix regression issue for usb interface
+Date: Mon, 10 Jun 2013 15:39:41 -0700
+Message-ID: <1370903981-10891-1-git-send-email-bzhao@marvell.com> (sfid-20130611_004149_715362_2BB79CC1)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="f2QGlHpHGjS2mn6Y"
-In-Reply-To: <20130602122954.GA3875@shaftnet.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Amitkumar Karwar <akarwar@marvell.com>
 
---f2QGlHpHGjS2mn6Y
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+PATCH "mwifiex: scan delay timer cleanup in unload path" adds code
+to cancel scan delay timer in unload path. It causes a regression
+for USB interface.
 
-On Sun, Jun 02, 2013 at 08:29:54AM -0400, Solomon Peachy wrote:
-> > * Add comments about passing GPIO numbers in platform_data:
-> >   You should not use IORESOURCE_IO, which is for legacy ISA
-> >   I/O ports on PCs, not for GPIOs.
->=20
-> Fair enough.  The use of resources was something already in the driver=20
-> when I inherited it, but I've seen this pattern a lot elsewhere.  Is=20
-> there a specific driver I should reference instead?
+USB8797 card gets enumerated twice. First enumeration is for
+firmware download and second enumeration expects firmware
+initialization.
 
-Reading linux/ioport.h I don't see a type that seems to be a better fit.
-It's not MEM, REG, IRQ, DMA, or BUS.  IO seems to be the only type that=20
-fits.
+It was observed that we are trying del_timer_sync() without setting
+up the timer when remove handler is called after first enumeration.
 
-The reason the driver uses struct resources instead of straight-up=20
-numeric GPIO fields is for the 'name' field in the resources.=20
+This patch moves setup_timer() call to appropriate place so that
+timer is setup for both the enumerations.
 
-Given that the use of platform_data pretty much makes it impossible to=20
-have more than one of these devices in a system at a time, there doesn't=20
-seem to be a point to using named resources.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c | 81 ------------------------------------
+ drivers/net/wireless/mwifiex/main.c | 82 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 82 insertions(+), 81 deletions(-)
 
-So I'll change these resource lists to using straight-up ints.
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index c7f11c0..2fe31dc 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -52,84 +52,6 @@ static int mwifiex_add_bss_prio_tbl(struct mwifiex_private *priv)
+ 	return 0;
+ }
+ 
+-static void scan_delay_timer_fn(unsigned long data)
+-{
+-	struct mwifiex_private *priv = (struct mwifiex_private *)data;
+-	struct mwifiex_adapter *adapter = priv->adapter;
+-	struct cmd_ctrl_node *cmd_node, *tmp_node;
+-	unsigned long flags;
+-
+-	if (adapter->surprise_removed)
+-		return;
+-
+-	if (adapter->scan_delay_cnt == MWIFIEX_MAX_SCAN_DELAY_CNT) {
+-		/*
+-		 * Abort scan operation by cancelling all pending scan
+-		 * commands
+-		 */
+-		spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
+-		list_for_each_entry_safe(cmd_node, tmp_node,
+-					 &adapter->scan_pending_q, list) {
+-			list_del(&cmd_node->list);
+-			mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+-		}
+-		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
+-
+-		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+-		adapter->scan_processing = false;
+-		adapter->scan_delay_cnt = 0;
+-		adapter->empty_tx_q_cnt = 0;
+-		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+-
+-		if (priv->scan_request) {
+-			dev_dbg(adapter->dev, "info: aborting scan\n");
+-			cfg80211_scan_done(priv->scan_request, 1);
+-			priv->scan_request = NULL;
+-		} else {
+-			priv->scan_aborting = false;
+-			dev_dbg(adapter->dev, "info: scan already aborted\n");
+-		}
+-		goto done;
+-	}
+-
+-	if (!atomic_read(&priv->adapter->is_tx_received)) {
+-		adapter->empty_tx_q_cnt++;
+-		if (adapter->empty_tx_q_cnt == MWIFIEX_MAX_EMPTY_TX_Q_CNT) {
+-			/*
+-			 * No Tx traffic for 200msec. Get scan command from
+-			 * scan pending queue and put to cmd pending queue to
+-			 * resume scan operation
+-			 */
+-			adapter->scan_delay_cnt = 0;
+-			adapter->empty_tx_q_cnt = 0;
+-			spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
+-			cmd_node = list_first_entry(&adapter->scan_pending_q,
+-						    struct cmd_ctrl_node, list);
+-			list_del(&cmd_node->list);
+-			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
+-					       flags);
+-
+-			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
+-							true);
+-			queue_work(adapter->workqueue, &adapter->main_work);
+-			goto done;
+-		}
+-	} else {
+-		adapter->empty_tx_q_cnt = 0;
+-	}
+-
+-	/* Delay scan operation further by 20msec */
+-	mod_timer(&priv->scan_delay_timer, jiffies +
+-		  msecs_to_jiffies(MWIFIEX_SCAN_DELAY_MSEC));
+-	adapter->scan_delay_cnt++;
+-
+-done:
+-	if (atomic_read(&priv->adapter->is_tx_received))
+-		atomic_set(&priv->adapter->is_tx_received, false);
+-
+-	return;
+-}
+-
+ /*
+  * This function initializes the private structure and sets default
+  * values to the members.
+@@ -211,9 +133,6 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
+ 
+ 	priv->scan_block = false;
+ 
+-	setup_timer(&priv->scan_delay_timer, scan_delay_timer_fn,
+-		    (unsigned long)priv);
+-
+ 	return mwifiex_add_bss_prio_tbl(priv);
+ }
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 5bc7ef8..4858719 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -28,6 +28,84 @@ const char driver_version[] = "mwifiex " VERSION " (%s) ";
+ static char *cal_data_cfg;
+ module_param(cal_data_cfg, charp, 0);
+ 
++static void scan_delay_timer_fn(unsigned long data)
++{
++	struct mwifiex_private *priv = (struct mwifiex_private *)data;
++	struct mwifiex_adapter *adapter = priv->adapter;
++	struct cmd_ctrl_node *cmd_node, *tmp_node;
++	unsigned long flags;
++
++	if (adapter->surprise_removed)
++		return;
++
++	if (adapter->scan_delay_cnt == MWIFIEX_MAX_SCAN_DELAY_CNT) {
++		/*
++		 * Abort scan operation by cancelling all pending scan
++		 * commands
++		 */
++		spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
++		list_for_each_entry_safe(cmd_node, tmp_node,
++					 &adapter->scan_pending_q, list) {
++			list_del(&cmd_node->list);
++			mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		}
++		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
++
++		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
++		adapter->scan_processing = false;
++		adapter->scan_delay_cnt = 0;
++		adapter->empty_tx_q_cnt = 0;
++		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
++
++		if (priv->scan_request) {
++			dev_dbg(adapter->dev, "info: aborting scan\n");
++			cfg80211_scan_done(priv->scan_request, 1);
++			priv->scan_request = NULL;
++		} else {
++			priv->scan_aborting = false;
++			dev_dbg(adapter->dev, "info: scan already aborted\n");
++		}
++		goto done;
++	}
++
++	if (!atomic_read(&priv->adapter->is_tx_received)) {
++		adapter->empty_tx_q_cnt++;
++		if (adapter->empty_tx_q_cnt == MWIFIEX_MAX_EMPTY_TX_Q_CNT) {
++			/*
++			 * No Tx traffic for 200msec. Get scan command from
++			 * scan pending queue and put to cmd pending queue to
++			 * resume scan operation
++			 */
++			adapter->scan_delay_cnt = 0;
++			adapter->empty_tx_q_cnt = 0;
++			spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
++			cmd_node = list_first_entry(&adapter->scan_pending_q,
++						    struct cmd_ctrl_node, list);
++			list_del(&cmd_node->list);
++			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
++					       flags);
++
++			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
++							true);
++			queue_work(adapter->workqueue, &adapter->main_work);
++			goto done;
++		}
++	} else {
++		adapter->empty_tx_q_cnt = 0;
++	}
++
++	/* Delay scan operation further by 20msec */
++	mod_timer(&priv->scan_delay_timer, jiffies +
++		  msecs_to_jiffies(MWIFIEX_SCAN_DELAY_MSEC));
++	adapter->scan_delay_cnt++;
++
++done:
++	if (atomic_read(&priv->adapter->is_tx_received))
++		atomic_set(&priv->adapter->is_tx_received, false);
++
++	return;
++}
++
+ /*
+  * This function registers the device and performs all the necessary
+  * initializations.
+@@ -75,6 +153,10 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
+ 
+ 		adapter->priv[i]->adapter = adapter;
+ 		adapter->priv_num++;
++
++		setup_timer(&adapter->priv[i]->scan_delay_timer,
++			    scan_delay_timer_fn,
++			    (unsigned long)adapter->priv[i]);
+ 	}
+ 	mwifiex_init_lock_list(adapter);
+ 
+-- 
+1.8.2.3
 
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---f2QGlHpHGjS2mn6Y
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRq0g5PuLgii2759ARApvBAKCxR2BKY8faoJHAa/pQ7griEJY9fACg52zH
-LdvP9EyQ3uhrh0CfOSL5gF4=
-=BIQk
------END PGP SIGNATURE-----
-
---f2QGlHpHGjS2mn6Y--
