@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:57168 "EHLO
-	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752378Ab3F2LYT (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:41693 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752072Ab3FJIWc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Jun 2013 07:24:19 -0400
-Message-ID: <51CEC24F.3040609@openwrt.org> (sfid-20130629_132422_954579_1D416A8B)
-Date: Sat, 29 Jun 2013 13:17:35 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH 02/19] rt2x00: rt2800lib: add RFCSR register initialization
- for RT3593
-References: <51CE0330.7090007@gmail.com>
-In-Reply-To: <51CE0330.7090007@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 10 Jun 2013 04:22:32 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH 1/3] ath9k_hw: Assign default xlna config for AR9485
+Date: Mon, 10 Jun 2013 13:49:38 +0530
+Message-Id: <1370852380-8335-1-git-send-email-sujith@msujith.org> (sfid-20130610_102236_355412_CED57796)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013.06.28. 23:42 keltezéssel, Xose Vazquez Perez írta:
-> Gabor Juhos wrote:
-> 
->> Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
->> driver.
-> 
-> There is a more recent version: DPO_RT5572_LinuxSTA_2.6.1.3_20121022
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Yes, I know. However I wanted to test AP mode with the vendor driver and that is
-only supported in the '2.6.0.1_20120629' version.
+For AR9485 boards with XLNA, the default gpio config
+is not set correctly, fix this.
 
-> 
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index 32ecd1a..0041b2c 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> [...]
->> +	/* Initialize default register values */
->> +	rt2800_rfcsr_write(rt2x00dev, 1, 0x03);
->> +	rt2800_rfcsr_write(rt2x00dev, 3, 0x80);
-> 
-> from ./20120911_RT3573_Linux_STA_v2.5.0.0_Rev1_DPO/chips/rt3593.c
-> 
-> {RF_R02,                0x80}
-> 
-> but it was deleted in ./DPO_RT5572_LinuxSTA_2.6.1.3_20121022/chips/rt3593.c
-> 
-> Was it deliberate ? or a mistake ??
+Cc: stable@vger.kernel.org
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 8 ++++++--
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 2 ++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-It is intentional. The patch is based on the *2.6.0.1* driver, and the value is
-not present in that.
-
--Gabor
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index e6b92ff..25b8bbb 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3563,14 +3563,18 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ {
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	int chain;
+-	u32 regval;
++	u32 regval, value;
+ 	static const u32 switch_chain_reg[AR9300_MAX_CHAINS] = {
+ 			AR_PHY_SWITCH_CHAIN_0,
+ 			AR_PHY_SWITCH_CHAIN_1,
+ 			AR_PHY_SWITCH_CHAIN_2,
+ 	};
+ 
+-	u32 value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
++	if (AR_SREV_9485(ah) && (ar9003_hw_get_rx_gain_idx(ah) == 0))
++		ath9k_hw_cfg_output(ah, AR9300_EXT_LNA_CTL_GPIO_AR9485,
++				    AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED);
++
++	value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
+ 
+ 	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index e717741..5013c73 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -351,6 +351,8 @@
+ 
+ #define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
+ 
++#define AR9300_EXT_LNA_CTL_GPIO_AR9485 9
++
+ /*
+  * AGC Field Definitions
+  */
+-- 
+1.8.3
 
