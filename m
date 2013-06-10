@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:45656 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753035Ab3FEIoJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 04:44:09 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: "Arend van Spriel" <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"David Miller" <davem@davemloft.net>
-Subject: Re: [PATCH] brcmsmac: disable power-save related functions
-References: <1370419185-3977-1-git-send-email-arend@broadcom.com>
-	<878v2p3qst.fsf@purkki.adurom.net>
-Date: Wed, 05 Jun 2013 11:44:07 +0300
-In-Reply-To: <878v2p3qst.fsf@purkki.adurom.net> (Kalle Valo's message of "Wed,
-	05 Jun 2013 11:28:02 +0300")
-Message-ID: <874ndd3q20.fsf@purkki.adurom.net> (sfid-20130605_104424_215873_6D3B127B)
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:60386 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752370Ab3FJShl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jun 2013 14:37:41 -0400
+Received: by mail-ob0-f182.google.com with SMTP id va7so10624191obc.13
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jun 2013 11:37:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51B6043F.8010603@candelatech.com>
+References: <51782201.9070108@candelatech.com>
+	<CACna6rx9yb-gt-UCXy3CfSSuC=1_7Zh=294CrM0deDEgFDGCYw@mail.gmail.com>
+	<51B6043F.8010603@candelatech.com>
+Date: Mon, 10 Jun 2013 20:37:40 +0200
+Message-ID: <CACna6rynqCQTgaJzptjdQreQM4WLJW9MFKS3kBONaHNgkGsLRQ@mail.gmail.com> (sfid-20130610_203747_342156_5EB1D7A1)
+Subject: Re: Anyone know of a pci to multiple-mini-pci-e adapter?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@adurom.com> writes:
-
-> "Arend van Spriel" <arend@broadcom.com> writes:
+2013/6/10 Ben Greear <greearb@candelatech.com>:
+> On 06/10/2013 02:45 AM, Rafał Miłecki wrote:
+>>
+>> 2013/4/24 Ben Greear <greearb@candelatech.com>:
+>>>
+>>> I'm trying to find a way to cram multiple wifi NICs into a single
+>>> (x4 or higher) pcie slot.
+>>>
+>>> There are a great many pci-e to mini-pci-e adapters, but everything
+>>> I can find has only a single mini-pci-e slot on it....
+>>>
+>>> If someone knows of such a beast, or has suggestions for someone
+>>> who might could make them, please let me know.
+>>
+>>
+>> Ben, I wonder if you have found anything...?
 >
->> This patch fixes a regression introduced by:
->>
->>   commit 6da3b6c48d79da96a36c2632053cf4f53bf48fb2
->>   Author: Hauke Mehrtens <hauke@hauke-m.de>
->>   Date:   Sun Mar 24 01:45:52 2013 +0100
->>
->>       brcmsmac: remove brcms_bss_cfg->associated
->>
->> The regression behaviour is described in:
->>
->> http://www.spinics.net/lists/linux-wireless/msg107474.html
 >
-> The link is not a very reliable reference, it can die anytime and
-> there's no way to know what message it refers to. Stating the message id
-> would better. And the best would be to copy the full text to the commit
-> log, it's only few lines anyway.
+> I found a company that will make them for me, but I'll need to
+> order 200 of them as minimum order.
+>
+> Want some? :)
 
-Johannes gave a handy tip. Gmane has a service which uses message ids:
-
-http://mid.gmane.org/5197DC4F.7030503@broadcom.com
-
-If the link or service dies, one can find the email with the message id
-visible from the link.
+Maybe 2 ;) So you still have to found another ~100 people willing some ;)
 
 -- 
-Kalle Valo
+Rafał
