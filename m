@@ -1,49 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58292 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752368Ab3F2UIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Jun 2013 16:08:46 -0400
-Message-ID: <51CF3EC9.3000707@openwrt.org> (sfid-20130629_220849_160124_826ACAE2)
-Date: Sat, 29 Jun 2013 22:08:41 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: Use libnl-configurable values for retry counts
-References: <1372351227-25575-1-git-send-email-jp.tosoni@acksys.fr>
-In-Reply-To: <1372351227-25575-1-git-send-email-jp.tosoni@acksys.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from contumacia.investici.org ([178.255.144.35]:52878 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754658Ab3FKMWH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jun 2013 08:22:07 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv5 4/4] nl80211: allow sending CMD_FRAME without specifying any frequency
+Date: Tue, 11 Jun 2013 14:20:03 +0200
+Message-Id: <1370953203-4086-4-git-send-email-ordex@autistici.org> (sfid-20130611_142216_200377_4D8B4EB6)
+In-Reply-To: <1370953203-4086-1-git-send-email-ordex@autistici.org>
+References: <1370953203-4086-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-06-27 6:40 PM, Jean-Pierre Tosoni wrote:
-> From: J.P. Tosoni <jp.tosoni@acksys.fr>
-> 
-> In the rate control algorithms, the maximum retry count is limited by
-> a) a constant value obtained from the hardware driver
-> b) a constant limit (6ms) on the time allowed for all
->    retries of each frame.
-> 
-> Replace the retry count by existing configurable values from nl80211.
-> Use wiphy->retry_long for frames whose length exceed rts_threshold.
-> Use wiphy->retry_short for all other frames.
-> Check that the configured value does not exceed driver capabilities.
-> Use the new values as soon as the next frame is transmitted.
-> 
-> Caveat: the retry count for frames sent outside the context of a STA is
-> still taken from the hardware driver.
-> ---
-> What I am seeking with this patch:
-> I believe the configuration of the retries will help making recovery
-> much faster when an AP (in infrastructure mode) or a peer (in mesh
-> mode) suddenly disappears.
-I'm all for reducing retries, but I think the way you're applying the
-limit is problematic.
-If minstrel decides to use many retries for a high rate and you're
-simply cutting off all retries that exceed the configured limit, you're
-potentially inviting quite a bit of unnecessary packet loss.
-I'm planning to remove the use of retry rate slot 4 (fallback to lowest
-rate) from minstrel, since max_prob_rate should already provide quite
-decent reliability.
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-- Felix
+Users may want to send a frame on the current channel
+without specifying it.
+
+This is particularly useful for the correct implementation
+of the IBSS/RSN support in wpa_supplicant which requires to
+receive and send AUTH frames.
+
+Make mgmt_tx pass a NULL channel to the driver if none has
+been specified by the user.
+
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+
+v5:
+- return -EINVAL if NL80211_ATTR_WIPHY_FREQ is set while
+  NL80211_ATTR_OFFCHANNEL_TX_OK is not
+
+
+ net/wireless/nl80211.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 88e820b..d8f43df 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7139,6 +7139,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 		return -EOPNOTSUPP;
+ 
+ 	switch (wdev->iftype) {
++	case NL80211_IFTYPE_P2P_DEVICE:
++		if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
++			return -EINVAL;
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+@@ -7146,7 +7149,6 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_P2P_GO:
+-	case NL80211_IFTYPE_P2P_DEVICE:
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+@@ -7174,9 +7176,18 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+-	err = nl80211_parse_chandef(rdev, info, &chandef);
+-	if (err)
+-		return err;
++	/* get the channel if any has been specified, otherwise pass NULL to
++	 * the driver. The latter will use the current one
++	 */
++	chandef.chan = NULL;
++	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
++		err = nl80211_parse_chandef(rdev, info, &chandef);
++		if (err)
++			return err;
++	}
++
++	if (!chandef.chan && offchan)
++		return -EINVAL;
+ 
+ 	if (!dont_wait_for_ack) {
+ 		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-- 
+1.8.1.5
+
