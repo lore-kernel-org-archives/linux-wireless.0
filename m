@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:46513 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751907Ab3FRKzA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 06:55:00 -0400
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id r5IAt0GU030471
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Jun 2013 05:55:00 -0500
-Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id r5IAt0Mb022733
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Jun 2013 05:55:00 -0500
-Received: from [172.24.78.11] (h78-11.vpn.ti.com [172.24.78.11])	by
- dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id r5IAsw7e016335	for
- <linux-wireless@vger.kernel.org>; Tue, 18 Jun 2013 05:54:58 -0500
-Message-ID: <1371552898.10702.14.camel@cumari.coelho.fi> (sfid-20130618_125507_153954_2E66216D)
-Subject: wl12xx.git tree has been rebased (3.10)
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Date: Tue, 18 Jun 2013 13:54:58 +0300
+Received: from s3.sipsolutions.net ([144.76.43.152]:37317 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754717Ab3FKLmK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jun 2013 07:42:10 -0400
+Message-ID: <1370950926.8356.14.camel@jlt4.sipsolutions.net> (sfid-20130611_134236_910997_24D626A0)
+Subject: Re: [PATCH] mac80211: Fix bogus RCU warning from
+ ieee80211_get_tx_rates (Was: Re: rcu)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Calvin Owens <jcalvinowens@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 11 Jun 2013 13:42:06 +0200
+In-Reply-To: <20130610042959.GA1902@gmail.com> (sfid-20130610_063023_078105_2ADDB0AE)
+References: <20130609225120.GA2789@gmail.com>
+	 <20130610042959.GA1902@gmail.com> (sfid-20130610_063023_078105_2ADDB0AE)
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, 2013-06-09 at 23:29 -0500, Calvin Owens wrote:
+> rate_control_fill_sta_table(), whose sole caller is ieee80211_get_tx_rates(),
+> is guaranteed by mac80211 not to be called concurrently with
+> rate_control_set_rates() [1], the sole function that touches the rate table
+> pointer/data in struct ieee80211_sta. The RCU dereference is therefore safe.
 
-I have rebased the master branch of the wl12xx.git tree to sync with
-John's latest tree (based on 3.10-rc5). 
+No, this is wrong. ieee80211_get_tx_rates() can be called by drivers in
+any context and at any time, that was the whole point of using RCU here.
 
-I have also rebased the wl12xx-next branch, to reflect the rebases
-John's latest in wireless-next.
+This needs to be fixed in ath9k, calling ieee80211_get_tx_rates() must
+be done under RCU protection.
 
-Please update your local copies.
-
--- 
-Cheers,
-Luca.
+johannes
 
