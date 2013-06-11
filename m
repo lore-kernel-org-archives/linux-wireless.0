@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:42296 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753969Ab3FFG3v (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57842 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168Ab3FKRAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 02:29:51 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH] ath9k: Remove redundant code
-Date: Thu,  6 Jun 2013 11:57:01 +0530
-Message-Id: <1370500021-18722-2-git-send-email-sujith@msujith.org> (sfid-20130606_082956_198943_F4A65D50)
-In-Reply-To: <1370500021-18722-1-git-send-email-sujith@msujith.org>
-References: <1370500021-18722-1-git-send-email-sujith@msujith.org>
+	Tue, 11 Jun 2013 13:00:14 -0400
+Date: Tue, 11 Jun 2013 12:45:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Subject: Re: [PATCH RESEND] mwifiex: enable/disable tx_amsdu support via
+ module parameter
+Message-ID: <20130611164547.GC3196@tuxdriver.com> (sfid-20130611_190019_337625_64560DB0)
+References: <1370903998-10925-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370903998-10925-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+I have the original for this one too...
 
-The phy error mask registers are programmed already
-in ath9k_ani_restart(), so there is no need to set them
-in ath9k_ani_reset().
+On Mon, Jun 10, 2013 at 03:39:58PM -0700, Bing Zhao wrote:
+> From: Avinash Patil <patila@marvell.com>
+> 
+> This patch disables tx_amsdu support in mwifiex by default.
+> tx_amdsu support can be enabled via module parameter at load time.
+> 
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/wmm.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+> index 4be3d33..944e884 100644
+> --- a/drivers/net/wireless/mwifiex/wmm.c
+> +++ b/drivers/net/wireless/mwifiex/wmm.c
+> @@ -37,6 +37,9 @@
+>  /* Offset for TOS field in the IP header */
+>  #define IPTOS_OFFSET 5
+>  
+> +static bool enable_tx_amsdu;
+> +module_param(enable_tx_amsdu, bool, 0644);
+> +
+>  /* WMM information IE */
+>  static const u8 wmm_info_ie[] = { WLAN_EID_VENDOR_SPECIFIC, 0x07,
+>  	0x00, 0x50, 0xf2, 0x02,
+> @@ -1233,7 +1236,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
+>  				mwifiex_send_delba(priv, tid_del, ra, 1);
+>  			}
+>  		}
+> -		if (mwifiex_is_amsdu_allowed(priv, tid) &&
+> +		if (enable_tx_amsdu && mwifiex_is_amsdu_allowed(priv, tid) &&
+>  		    mwifiex_is_11n_aggragation_possible(priv, ptr,
+>  							adapter->tx_buf_size))
+>  			mwifiex_11n_aggregate_pkt(priv, ptr, INTF_HEADER_LEN,
+> -- 
+> 1.8.2.3
+> 
+> 
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ani.c | 11 -----------
- 1 file changed, 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 3ec4c53..059b756 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -368,18 +368,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
- 	ath9k_hw_set_ofdm_nil(ah, ofdm_nil, is_scanning);
- 	ath9k_hw_set_cck_nil(ah, cck_nil, is_scanning);
- 
--	/*
--	 * enable phy counters if hw supports or if not, enable phy
--	 * interrupts (so we can count each one)
--	 */
- 	ath9k_ani_restart(ah);
--
--	ENABLE_REGWRITE_BUFFER(ah);
--
--	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
--
--	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
- static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
 -- 
-1.8.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
