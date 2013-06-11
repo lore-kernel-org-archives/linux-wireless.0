@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:37154 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751270Ab3F1W0s (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37525 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754651Ab3FKMhq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 18:26:48 -0400
-Received: by mail-we0-f174.google.com with SMTP id q58so1642899wes.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Jun 2013 15:26:47 -0700 (PDT)
-Message-ID: <51CE0DA4.7090608@gmail.com> (sfid-20130629_002702_697280_C1D55286)
-Date: Sat, 29 Jun 2013 00:26:44 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: Gabor Juhos <juhosg@openwrt.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 19/19] rt2x00: rt2800usb: add USB device ID for Linksys
- AE3000
-Content-Type: text/plain; charset=UTF-8
+	Tue, 11 Jun 2013 08:37:46 -0400
+Message-ID: <1370954261.8356.39.camel@jlt4.sipsolutions.net> (sfid-20130611_143749_917948_6C931D54)
+Subject: Re: [PATCH v2] cfg80211: Allow TDLS peer AID to be configured for
+ VHT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 11 Jun 2013 14:37:41 +0200
+In-Reply-To: <20130527152402.GC12369@jouni.qca.qualcomm.com>
+References: <20130516171108.GA27497@jouni.qca.qualcomm.com>
+	 <1369427943.13623.8.camel@johannes>
+	 <20130527152402.GC12369@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gabor Juhos wrote:
+On Mon, 2013-05-27 at 18:24 +0300, Jouni Malinen wrote:
+> VHT uses peer AID in the PARTIAL_AID field in TDLS frames. The current
+> design for TDLS is to first add a dummy STA entry before completing TDLS
+> Setup and then update information on this STA entry based on what was
+> received from the peer during the setup exchange.
+> 
+> In theory, this could use NL80211_ATTR_STA_AID to set the peer AID just
+> like this is used in AP mode to set the AID of an association station.
+> However, existing cfg80211 validation rules prevent this attribute from
+> being used with set_station operation. To avoid interoperability issues
+> between different kernel and user space version combinations, introduce
+> a new nl80211 attribute for the purpose of setting TDLS peer AID. This
+> attribute can be used in both the new_station and set_station
+> operations. It is not supposed to be allowed to change the AID value
+> during the lifetime of the STA entry, but that validation is left for
+> drivers to do in the change_station callback.
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index c24c1fd..6136871 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -1183,6 +1183,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
->  	{ USB_DEVICE(0x04bb, 0x0944) },
->  	/* Linksys */
->  	{ USB_DEVICE(0x13b1, 0x002f) },
-> +	{ USB_DEVICE(0x13b1, 0x003b) },
->  	{ USB_DEVICE(0x1737, 0x0079) },
->  	/* Ralink */
->  	{ USB_DEVICE(0x148f, 0x3572) },
-> -- 
+Hmm. I guess I accidentally applied the first version, I've now applied
+the differences.
 
-You should separate RT3573 and RT3572 devices.
-Rename CONFIG_RT2800USB_RT35XX to CONFIG_RT2800USB_RT3572
-and do a new CONFIG_RT2800USB_RT3573 section.
+johannes
 
-
-And also you can add safely this usb-ids. All of them
-are RT3573 devices:
-
-0x1b75, 0x7733 AirLive 450Mbps Wireless-N Dual Band USB Adapter
-0x0b05, 0x17bc ASUS USB-N66 450Mbps Dual Band USB Adapter
-0x0b05, 0x17ad ASUS USB-N66 Dual Band N Network Adapter
-0x050d, 0x1103 Belkin Wireless Adapter
-0x148f, 0xf301 Cameo Ralink3573 3x3 single band USB dongle
-0x7392, 0x7733 Edimax
-0x0e66, 0x0020 Hawking HD45U Dual Band USB Wireless-N Adapter
-0x0e66, 0x0021 Hawking HD45U Dual Band Wls-450N Adapter
-0x04bb, 0x094e I-O DATA WN-AG450U Wireless LAN Adapter
-0x0789, 0x016b Logitec LAN-W450AN/U2
-0x0846, 0x9012 NETGEAR WNDA4100 N900 Wireless Dual Band USB Adapter
-0x0846, 0x9019 NETGEAR WNDA4200D Wireless Dual Band USB Adapter
-0x2019, 0xed19 Planex GW-USDual450
-0x148f, 0x3573 Ralink 802.11n USB Wireless LAN Card
-0x0df6, 0x0067 Sitecom Wireless Dualband Network Adapter N750 X6
-0x0df6, 0x006a Sitecom Wireless Dualband Network Adapter N900 X7
-0x0586, 0x3421 ZyXEL Dual-Band Wireless N450 USB Adapter
-
--thank you-
