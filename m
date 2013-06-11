@@ -1,57 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:49985 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752992Ab3F1TN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:13:27 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 18/19] rt2x00: rt2800usb: use correct [RT]XWI size for RT3593
-Date: Fri, 28 Jun 2013 21:12:32 +0200
-Message-Id: <1372446753-11408-19-git-send-email-juhosg@openwrt.org> (sfid-20130628_211340_763988_2C757BA0)
-In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
-References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:33609 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751903Ab3FKP6V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jun 2013 11:58:21 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, nbd@nbd.name,
+	johannes@sipsolutions.net, chunkeey@googlemail.com
+Subject: [PATCH] carl9170: make use of the new rate control API
+Date: Tue, 11 Jun 2013 17:57:17 +0200
+Message-Id: <1370966237-27716-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130611_175824_823018_A9EA2EE8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RT3593 chipset requires different [RT]XWI size
-values. Modify the driver to use the correct values.
+This patch enabels carl9170 to use the new rate table to lookup each
+mrr rate and retry information per packet.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Benjamin Vahl <bvahl@net.t-labs.tu-berlin.de>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/net/wireless/rt2x00/rt2800.h    |    1 +
- drivers/net/wireless/rt2x00/rt2800usb.c |    5 ++++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/carl9170/carl9170.h |    1 +
+ drivers/net/wireless/ath/carl9170/tx.c       |    8 +++++++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 1ba797b..a313241 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -2814,6 +2814,7 @@ enum rt2800_eeprom_word {
- #define TXWI_DESC_SIZE_5WORDS		(5 * sizeof(__le32))
+diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
+index 9dce106..ddaa149 100644
+--- a/drivers/net/wireless/ath/carl9170/carl9170.h
++++ b/drivers/net/wireless/ath/carl9170/carl9170.h
+@@ -322,6 +322,7 @@ struct ar9170 {
  
- #define RXWI_DESC_SIZE_4WORDS		(4 * sizeof(__le32))
-+#define RXWI_DESC_SIZE_5WORDS		(5 * sizeof(__le32))
- #define RXWI_DESC_SIZE_6WORDS		(6 * sizeof(__le32))
+ 	/* MAC */
+ 	enum carl9170_erp_modes erp_mode;
++	struct ieee80211_tx_rate rates[4];
  
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 840833b..c24c1fd 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -854,7 +854,10 @@ static void rt2800usb_queue_init(struct data_queue *queue)
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 	unsigned short txwi_size, rxwi_size;
+ 	/* PHY */
+ 	struct ieee80211_channel *channel;
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index c61cafa..d21c81d 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -266,6 +266,7 @@ static void carl9170_tx_release(struct kref *ref)
+ 	struct carl9170_tx_info *arinfo;
+ 	struct ieee80211_tx_info *txinfo;
+ 	struct sk_buff *skb;
++	int size;
  
--	if (rt2x00_rt(rt2x00dev, RT5592)) {
-+	if (rt2x00_rt(rt2x00dev, RT3593)) {
-+		txwi_size = TXWI_DESC_SIZE_4WORDS;
-+		rxwi_size = RXWI_DESC_SIZE_5WORDS;
-+	} else if (rt2x00_rt(rt2x00dev, RT5592)) {
- 		txwi_size = TXWI_DESC_SIZE_5WORDS;
- 		rxwi_size = RXWI_DESC_SIZE_6WORDS;
- 	} else {
+ 	arinfo = container_of(ref, struct carl9170_tx_info, ref);
+ 	txinfo = container_of((void *) arinfo, struct ieee80211_tx_info,
+@@ -324,6 +325,9 @@ static void carl9170_tx_release(struct kref *ref)
+ 		}
+ 	}
+ 
++	size = min_t(int, sizeof(txinfo->status.rates), sizeof(ar->rates));
++	memcpy(txinfo->status.rates, ar->rates, size);
++
+ 	skb_pull(skb, sizeof(struct _carl9170_tx_superframe));
+ 	ieee80211_tx_status_irqsafe(ar->hw, skb);
+ }
+@@ -982,6 +986,8 @@ static int carl9170_tx_prepare(struct ar9170 *ar,
+ 			txc->s.ampdu_settings, factor);
+ 	}
+ 
++	ieee80211_get_tx_rates(info->control.vif, sta, skb, ar->rates, ARRAY_SIZE(ar->rates));
++
+ 	/*
+ 	 * NOTE: For the first rate, the ERP & AMPDU flags are directly
+ 	 * taken from mac_control. For all fallback rate, the firmware
+@@ -989,7 +995,7 @@ static int carl9170_tx_prepare(struct ar9170 *ar,
+ 	 */
+ 	for (i = 0; i < CARL9170_TX_MAX_RATES; i++) {
+ 		__le32 phy_set;
+-		txrate = &info->control.rates[i];
++		txrate = &ar->rates[i];
+ 		if (txrate->idx < 0)
+ 			break;
+ 
 -- 
-1.7.10
+1.7.9.5
 
