@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:60478 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933755Ab3FSIjB (ORCPT
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:35099 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238Ab3FKRqb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 04:39:01 -0400
-Date: Wed, 19 Jun 2013 01:39:00 -0700 (PDT)
-Message-Id: <20130619.013900.786603036908799505.davem@davemloft.net> (sfid-20130619_103911_281043_10578155)
-To: johannes@sipsolutions.net
-Cc: torvalds@linux-foundation.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] nl80211: fix attrbuf access race by allocating a
- separate one
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1371630238.8349.6.camel@jlt4.sipsolutions.net>
-References: <CA+55aFz=eG5-zh1toHxrx=4Qm4DvwyiBCU3u-6tc0-utfZ6xiA@mail.gmail.com>
-	<1371628488.8349.3.camel@jlt4.sipsolutions.net>
-	<1371630238.8349.6.camel@jlt4.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 11 Jun 2013 13:46:31 -0400
+Received: by mail-bk0-f53.google.com with SMTP id e11so3537727bkh.12
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2013 10:46:29 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Subject: Re: [PATCH] carl9170: make use of the new rate control API
+Date: Tue, 11 Jun 2013 19:46:22 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nbd@nbd.name, johannes@sipsolutions.net
+References: <1370966237-27716-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1370966237-27716-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201306111946.22682.chunkeey@googlemail.com> (sfid-20130611_194635_172819_2E281405)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 19 Jun 2013 10:23:58 +0200
+On Tuesday, June 11, 2013 05:57:17 PM Thomas Huehn wrote:
+> This patch enabels carl9170 to use the new rate table to lookup each
+> mrr rate and retry information per packet.
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Since my commit 3713b4e364, nl80211_dump_wiphy() uses the global
-> nl80211_fam.attrbuf for parsing the incoming data. This wouldn't
-> be a problem if it only did so on the first dump iteration which
-> is locked against other commands in generic netlink, but due to
-> space constraints in cb->args (the needed state doesn't fit) I
-> decided to always parse the original message. That's racy though
-> since nl80211_fam.attrbuf could be used by some other parsing in
-> generic netlink concurrently.
-> 
-> For now, fix this by allocating a separate parse buffer (it's a
-> bit too big for the stack, currently 1448 bytes on 64-bit). For
-> -next, I'll change the code to parse into the global buffer in
-> the first round only and then allocate a smaller buffer to keep
-> the state in cb->args.
-> 
-> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+???
 
-Acked-by: David S. Miller <davem@davemloft.net>
+carl9170 already supports the new rate control API (Patch from 2013-04-23).
+<http://permalink.gmane.org/gmane.linux.kernel.wireless.general/107657>
+
+Can you please tell me what you think is missing?
+
+Regards,
+	Chr
+
