@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24568 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932182Ab3FFK7O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 06:59:14 -0400
-MIME-Version: 1.0
-Message-ID: <20130606105746.GE12953@debian> (sfid-20130606_125920_380795_CDCD5275)
-Date: Thu, 6 Jun 2013 03:57:46 -0700 (PDT)
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Solomon Peachy <pizza@shaftnet.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch -next] cw1200: handle allocation failure in
- wsm_event_indication()
-Content-Type: text/plain; charset=us-ascii
+Received: from tex.lwn.net ([70.33.254.29]:41456 "EHLO vena.lwn.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751332Ab3FKTRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jun 2013 15:17:07 -0400
+Date: Tue, 11 Jun 2013 13:17:04 -0600
+From: Jake Edge <jake@lwn.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx
+ rejection
+Message-ID: <20130611131704.7e59efbb@chukar.edge2.net> (sfid-20130611_211710_894204_12A7492B)
+In-Reply-To: <20130611160949.GA1696@redhat.com>
+References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
+	<20130610143848.7afd5acc@chukar.edge2.net>
+	<20130610214134.36085c4b@chukar.edge2.net>
+	<20130611160949.GA1696@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check for allocation failures and return -ENOMEM.  The caller
-already expects it.
+On Tue, 11 Jun 2013 18:09:50 +0200 Stanislaw Gruszka wrote:
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> I found a bug in one patch, perhaps it is a reason of failure.
+> Please apply patch 5/4 from here:
+> http://marc.info/?l=linux-wireless&m=136947199729148&q=raw 
+> and patch from the end of this email, which fix the bug.
+> 
+> Could you also recheck that "mac80211: fix direct probe auth" patch
+> is applied, note that it is included in 3.10-rc5 as commit
+> 6211dd12da609bc6893b9c3182630b494737ec4b
 
-diff --git a/drivers/net/wireless/cw1200/wsm.c b/drivers/net/wireless/cw1200/wsm.c
-index f3fd9b2..3ab25f6 100644
---- a/drivers/net/wireless/cw1200/wsm.c
-+++ b/drivers/net/wireless/cw1200/wsm.c
-@@ -929,6 +929,8 @@ static int wsm_event_indication(struct cw1200_common *priv, struct wsm_buf *buf)
- 	}
- 
- 	event = kzalloc(sizeof(struct cw1200_wsm_event), GFP_KERNEL);
-+	if (!event)
-+		return -ENOMEM;
- 
- 	event->evt.id = __le32_to_cpu(WSM_GET32(buf));
- 	event->evt.data = __le32_to_cpu(WSM_GET32(buf));
+yes, that mac80211 patch was applied to both 3.9 and 3.10-rc4 ... but I
+just built 3.10-rc5 (and confirmed that it does have that patch) with
+the 4 previous patches plus the new one above and my system connected
+just fine ... i switched back and forth a few times and all seems
+well ...
+
+looks like a good a set of patches for 3.11, though I imagine stable
+will stick with the other workaround ...
+
+thanks!
+
+jake
+
+-- 
+Jake Edge - LWN - jake@lwn.net - http://lwn.net
