@@ -1,122 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4847 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932561Ab3FFLSt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 07:18:49 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 22/22] brcmfmac: add debugfs statistics for
- firmware-signalling
-Date: Thu, 6 Jun 2013 13:18:07 +0200
-Message-ID: <1370517487-14395-23-git-send-email-arend@broadcom.com> (sfid-20130606_131906_046072_C46FA57E)
-In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:38594 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755957Ab3FKSPk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jun 2013 14:15:40 -0400
+Message-ID: <1370974531.8356.56.camel@jlt4.sipsolutions.net> (sfid-20130611_201543_141311_7A590D93)
+Subject: pull-request: iwlwifi-next 2013-06-11
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 11 Jun 2013 20:15:31 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-dgtfQRQNnyHtmp1W+P1D"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added statistics for flow-control and packets dropped by the
-driver.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c  |    8 +++++++-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |    3 +++
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   13 +++++++++----
- 3 files changed, 19 insertions(+), 5 deletions(-)
+--=-dgtfQRQNnyHtmp1W+P1D
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c
-index ce50686..c37b9d6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c
-@@ -156,8 +156,11 @@ ssize_t brcmf_debugfs_fws_stats_read(struct file *f, char __user *data,
- 			"txs_suppr_core:    %u\n"
- 			"txs_suppr_ps:      %u\n"
- 			"txs_tossed:        %u\n"
-+			"txs_host_tossed:   %u\n"
-+			"bus_flow_block:    %u\n"
-+			"fws_flow_block:    %u\n"
- 			"send_pkts:         BK:%u BE:%u VO:%u VI:%u BCMC:%u\n"
--			"fifo_credits_sent: BK:%u BE:%u VO:%u VI:%u BCMC:%u\n",
-+			"requested_sent:    BK:%u BE:%u VO:%u VI:%u BCMC:%u\n",
- 			fwstats->header_pulls,
- 			fwstats->header_only_pkt,
- 			fwstats->tlv_parse_failed,
-@@ -176,6 +179,9 @@ ssize_t brcmf_debugfs_fws_stats_read(struct file *f, char __user *data,
- 			fwstats->txs_supp_core,
- 			fwstats->txs_supp_ps,
- 			fwstats->txs_tossed,
-+			fwstats->txs_host_tossed,
-+			fwstats->bus_flow_block,
-+			fwstats->fws_flow_block,
- 			fwstats->send_pkts[0], fwstats->send_pkts[1],
- 			fwstats->send_pkts[2], fwstats->send_pkts[3],
- 			fwstats->send_pkts[4],
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-index 451ebac..0af1f5d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-@@ -157,6 +157,9 @@ struct brcmf_fws_stats {
- 	u32 txs_supp_core;
- 	u32 txs_supp_ps;
- 	u32 txs_tossed;
-+	u32 txs_host_tossed;
-+	u32 bus_flow_block;
-+	u32 fws_flow_block;
- };
- 
- struct brcmf_pub;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index b173311..d243e23 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -585,7 +585,7 @@ static int brcmf_fws_hanger_mark_suppressed(struct brcmf_fws_hanger *h,
- 	if (slot_id >= BRCMF_FWS_HANGER_MAXITEMS)
- 		return -ENOENT;
- 
--	if (h->items[slot_id].state != BRCMF_FWS_HANGER_ITEM_STATE_INUSE) {
-+	if (h->items[slot_id].state == BRCMF_FWS_HANGER_ITEM_STATE_FREE) {
- 		brcmf_err("entry not in use\n");
- 		return -EINVAL;
- 	}
-@@ -895,8 +895,10 @@ brcmf_fws_flow_control_check(struct brcmf_fws_info *fws, struct pktq *pq,
- 		brcmf_txflowblock_if(ifp,
- 				     BRCMF_NETIF_STOP_REASON_FWS_FC, false);
- 	if (!(ifp->netif_stop & BRCMF_NETIF_STOP_REASON_FWS_FC) &&
--	    pq->len >= BRCMF_FWS_FLOWCONTROL_HIWATER)
-+	    pq->len >= BRCMF_FWS_FLOWCONTROL_HIWATER) {
-+		fws->stats.fws_flow_block++;
- 		brcmf_txflowblock_if(ifp, BRCMF_NETIF_STOP_REASON_FWS_FC, true);
-+	}
- 	return;
- }
- 
-@@ -1297,9 +1299,10 @@ brcmf_fws_txs_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
- 	} else if (flags == BRCMF_FWS_TXSTATUS_FW_PS_SUPPRESS) {
- 		fws->stats.txs_supp_ps++;
- 		remove_from_hanger = false;
--	} else if ((flags == BRCMF_FWS_TXSTATUS_FW_TOSSED) ||
--		   (flags == BRCMF_FWS_TXSTATUS_HOST_TOSSED))
-+	} else if (flags == BRCMF_FWS_TXSTATUS_FW_TOSSED)
- 		fws->stats.txs_tossed++;
-+	else if (flags == BRCMF_FWS_TXSTATUS_HOST_TOSSED)
-+		fws->stats.txs_host_tossed++;
- 	else
- 		brcmf_err("unexpected txstatus\n");
- 
-@@ -2059,4 +2062,6 @@ void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked)
- 	fws->bus_flow_blocked = flow_blocked;
- 	if (!flow_blocked)
- 		brcmf_fws_schedule_deq(fws);
-+	else
-+		fws->stats.bus_flow_block++;
- }
--- 
-1.7.10.4
+Hi,
 
+For iwlwifi-next I only have a few cleanups:
+
+Emmanuel removed an unused field, fixed a comment and added a warning
+for something that shouldn't happen in practice, and I removed the
+declaration of a function that doesn't even exist.
+
+johannes
+
+The following changes since commit fded313ec045024d4f769ce6b3e41fe343c167b0=
+:
+
+  iwlwifi: mvm: don't request SMPS on non-STA iface (2013-06-05 09:06:13 +0=
+200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to 476a9e09cbe37bad93de6e460b76f89f3ad22c9b:
+
+  iwlwifi: ignore 0-length PHY DB sections (2013-06-11 20:12:02 +0200)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (3):
+      iwlwifi: mvm: remove unused wait_for_ba field
+      iwlwifi: mvm: fix irrelevant comment
+      iwlwifi: ignore 0-length PHY DB sections
+
+Johannes Berg (1):
+      iwlwifi: mvm: remove iwl_mvm_dbgfs_set_fw_dbg_log declaration
+
+ drivers/net/wireless/iwlwifi/iwl-phy-db.c   | 3 +++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 +--
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      | 5 -----
+ drivers/net/wireless/iwlwifi/mvm/sta.h      | 2 --
+ 4 files changed, 4 insertions(+), 9 deletions(-)
+
+
+--=-dgtfQRQNnyHtmp1W+P1D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRt2lDAAoJEDBSmw7B7bqrfaAP/0yrwk4KyYRRdlQ/hJfJjilk
+bzhrwbWHfiWOFOWctDQ2G/AMyba68wLc2Ors+GmWkwqnp6GlEXSJptNFnY1mZ3pK
+6UUDJl+y8prgByWrt/mmL0bS/xpVHmhr2JPI99S+lGXbaeMOLl5ljKryfdw1+WbQ
+oDoqaFUhZDYcnV+Qa7TM+t47gzaUrPsz7/RtzQakQHWVBkDI6y6g7T5B7a3dv7uM
+8j9Z8mJg4DLId7OVYo42leob3GjkQfWPFOuf3x9w2BWC0KzNzsnJ0co+kNmwrkGQ
+iXQIR9jedg/A156eIM24ECaDhB+g0g2JT28VMsv56RKCZ/I4yiGlSFf3uqDkJFi8
+kNLXCUPeFsKjlFbK4qTlDT0vV2+FTK8LwGQIdvGUcdwy9PMWPY2W8m5CPKMih4ja
+diZN2oYiUTWhPagowevIWdixPUtrSRNgll/bdAebg9hbkb/QIU1yUhIQNhFOD+NP
+fb0M+3QoLRe/2FhUz7b8yoUCxLzsZwK7nWlsGyTkDxFZdlcG0yl+QkfcDQIa0Tiz
+V+ttx0TK3BXa09zTf2sUa3KHbdB18BOWlJpJOGIwjo2FK8iHyYHCvMYMThllYJDe
+KWatCce2NfrAZspxtxZX4arYF2k2k/3oAlLxR5/8PwivXFoW7ENE51hjIFIhMX2U
+oD8RbHBCHtOTiKqWCFm5
+=EOQI
+-----END PGP SIGNATURE-----
+
+--=-dgtfQRQNnyHtmp1W+P1D--
 
