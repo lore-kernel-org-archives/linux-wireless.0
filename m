@@ -1,58 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37297 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755014Ab3FKLdB (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:65301 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753659Ab3FKL7V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 07:33:01 -0400
-Message-ID: <1370950378.8356.13.camel@jlt4.sipsolutions.net> (sfid-20130611_133319_481355_B34C88E3)
-Subject: Re: [PATCH v2 2/2] cfg80211/nl80211: Add packet coalesce support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>
-Date: Tue, 11 Jun 2013 13:32:58 +0200
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5950F313C2CB5@SC-VEXCH1.marvell.com>
-References: <5FF020A1CFFEEC49BD1E09530C4FF5950F313C2CB5@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 11 Jun 2013 07:59:21 -0400
+Date: Tue, 11 Jun 2013 13:57:22 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: Re: [PATCHv4 1/4] mac80211: make mgmt_tx accept a NULL channel
+Message-ID: <20130611115722.GD1466@ritirata.org> (sfid-20130611_135923_952339_15D8E136)
+References: <1370444989-2095-1-git-send-email-ordex@autistici.org>
+ <1370951718.8356.22.camel@jlt4.sipsolutions.net>
+ <1370951887.8356.23.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="SFyWQ0h3ruR435lw"
+In-Reply-To: <1370951887.8356.23.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-06-03 at 09:47 -0700, Amitkumar Karwar wrote:
 
-> "iw coalesce add" was used, because command for adding multiple rules
-> at the same time will be a bit lengthy(user will need to enter
-> multiple lists of packet patterns) and syntax check in iw will also
-> need some efforts. 
+--SFyWQ0h3ruR435lw
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I think that this is so much unlike all other nl80211 settings where
-they're either refused or replace previous ones entirely that I would
-rather not have it. Take connecting for instance, wext allowed you to
-set all parameters one by one, etc. This is a bit similar. Also, this
-disallows doing checks on the entire configuration easily.
+On Tue, Jun 11, 2013 at 01:58:07PM +0200, Johannes Berg wrote:
+> On Tue, 2013-06-11 at 13:55 +0200, Johannes Berg wrote:
+> > On Wed, 2013-06-05 at 17:09 +0200, Antonio Quartulli wrote:
+> >=20
+> > > +	if (need_offchan && !chan)
+> > > +		return -EINVAL;
+> >=20
+> > > @@ -2847,10 +2853,14 @@ static int ieee80211_mgmt_tx(struct wiphy *wi=
+phy, struct wireless_dev *wdev,
+> > >  		rcu_read_lock();
+> > >  		chanctx_conf =3D rcu_dereference(sdata->vif.chanctx_conf);
+> > > =20
+> > > -		if (chanctx_conf)
+> > > -			need_offchan =3D chan !=3D chanctx_conf->def.chan;
+> > > -		else
+> > > +		if (chanctx_conf) {
+> > > +			need_offchan =3D chan && (chan !=3D chanctx_conf->def.chan);
+> > > +		} else if (!chan) {
+> > > +			ret =3D -EINVAL;
+> > > +			goto out_unlock;
+> > > +		} else {
+> > >  			need_offchan =3D true;
+> > > +		}
+> > >  		rcu_read_unlock();
+> >=20
+> > It seems this would be clearer?
+> > http://p.sipsolutions.net/b8a03c85f0e8b89f.txt
+>=20
+> Actually, no, I like your version better.
 
-Personally, I see iw as a bit of a test tool so I'm not too concerned
-about its sometimes odd command line, but I know giving it lots of
-things can be awkward. For TCP wakeup, I've made it parse a small file,
-maybe that's an option here as well?
+uhm, having one else less looks better..why did you change your mind?
+Maybe you version is not entirely equivalent?
 
-> > Otherwise you're going to have very awkward races and need
-> > to always clear etc. The code would also be easier, though obviously
-> > you'd need to be able to specify multiple rules at the same time.
-> 
-> For "iw coalesce set" also user needs to always clear the settings
-> using "iw coalesce disable". Also similar to "coalesce set", for
-> "coalesce add" we clear the settings and free allocations while
-> unloading the driver.
-> 
-> Please let us know if you prefer "coalesce set" over "coalesce add".
 
-I would much prefer just having set/clear over piecewise configuration.
+--=20
+Antonio Quartulli
 
-johannes
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
 
+--SFyWQ0h3ruR435lw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRtxCiAAoJEADl0hg6qKeOHCoP/0RSurva4pXRIqK9V3GEEvl7
+KbS9guXF+Ls1ER4GqDNMr1qNJ0f7k4HvH5mB1iD6xWHCBwvlyXlGdGOnblQqaV4H
+Web2ZwtqYPaXVtGHtZgxI7yX5DgqWspKeyqOeA1u9NExbohCrV0Ehb2AQD/rborj
+oakvKTTY2YaNSeMR+58pdC8b9VTOogcalBTblKwPBD7twTkXA9gpjYYe1bU2ATAZ
+SuEqDwYCZERkkX/pebjTPgmoo2xehg2VwzGaiNxeuQDsFnQO6cHGw2n8Sjqq1LrI
+CXPQvFWYAC7N5xjdxabiCbEMoTEcDHd47w672AMwXKWrVGPNtCNO/H5aIM+ORDuF
+UYlhhgiF5uEIhuIvDx7utHc9LxkpLvBr5Lxru7huzV1X9uGA4JEzv7bg9Du8JMfI
+PJMdsLrsd0S4VkI9JSPFpovBYKss6OtXm16rITDsLe7HKOx1Zv4NwT2baeBda08a
+GskxVwYz+A3gWZp49LC6htcZZ0zLKG/dS8WzNE9jZtfLC31II5hLm63s9Y8rt2N5
+BM5FiP4s2121NsorlzG00/xKolL/WZiAGcJsc0liwqnwgb7+LUbrzm8JU7Y+hzfb
+lacN4RVFt45no+tLcEvshCNmmFGhaS+6wpTEfHwfKknHPPV3o4rTYRo2XtMrqbXl
+5jc4OhQ3eybsmjRlJ+oK
+=ot94
+-----END PGP SIGNATURE-----
+
+--SFyWQ0h3ruR435lw--
