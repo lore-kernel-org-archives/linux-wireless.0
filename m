@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43351 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756667Ab3FLVBK (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:50485 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458Ab3FKIou (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 17:01:10 -0400
-Message-ID: <1371070866.8601.42.camel@jlt4.sipsolutions.net> (sfid-20130612_230117_021752_746858C1)
-Subject: Re: kmemleak report related to ieee80211_start_tx_ba_session,
- tid_start_tx locking issues?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 12 Jun 2013 23:01:06 +0200
-In-Reply-To: <51B8E101.2050503@candelatech.com>
-References: <51B8BC3E.40905@candelatech.com>
-	  (sfid-20130612_202155_810155_8B14A60D) <1371069960.8601.35.camel@jlt4.sipsolutions.net>
-	 <51B8E101.2050503@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 11 Jun 2013 04:44:50 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH 2/2] mac80211: Fix rate control mask matching call
+Date: Tue, 11 Jun 2013 10:44:40 +0200
+Message-Id: <1370940280-7876-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130611_104455_181858_B1AE0A71)
+In-Reply-To: <1370940280-7876-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1370940280-7876-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-06-12 at 13:58 -0700, Ben Greear wrote:
+The order of parameters was mixed up, introduced in commit
+"mac80211: improve the rate control API"
 
-> > When did this report get printed?
-> 
-> I have a system with 100 or so stations constantly trying to
-> associate with a set of APs that can handle < 100.  This
-> effectively causes constant churn of re-associations and
-> associated logic...
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/mac80211/rate.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Right ... I figured it was this.
-
-> Good for shaking out bugs it seems :)
-> 
-> These and other leaks show up after a few minutes of
-> running this test scenario.  It's not a huge number of
-> leaks, however...so usually stations go away w/out leaking.
-
-That's not all too surprising really, the work should run quickly I
-guess.
-
-Anyway I guess kmemleak doesn't actually let you pinpoint when the leak
-occurred because it just scans periodically and not on every kfree, so
-n/m my question.
-
-
-> >   	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-> > +		kfree(sta->ampdu_mlme.tid_start_tx[i]);
-> >   		tid_tx = rcu_dereference_raw(sta->ampdu_mlme.tid_tx[i]);
-> >   		if (!tid_tx)
-> >   			continue;
-> 
-> Looks reasonable to me.  I was about to start testing similar logic
-> in sta_info_free(), but likely your patch is more proper.
-> 
-> I'll give it a try now.
-
-Thanks.
-
-johannes
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index d3f414f..a02bef3 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -615,7 +615,7 @@ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
+ 		if (rates[i].idx < 0)
+ 			break;
+ 
+-		rate_idx_match_mask(&rates[i], sband, mask, chan_width,
++		rate_idx_match_mask(&rates[i], sband, chan_width, mask,
+ 				    mcs_mask);
+ 	}
+ }
+-- 
+1.7.10.4
 
