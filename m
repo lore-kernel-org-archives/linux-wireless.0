@@ -1,102 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:42337 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755097Ab3F1KjV (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:49196 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab3FKFl3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 06:39:21 -0400
-Date: Fri, 28 Jun 2013 11:39:13 +0100
-From: Mark Rutland <mark.rutland@arm.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"mturquette@linaro.org" <mturquette@linaro.org>
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-Message-ID: <20130628103913.GD2139@e106331-lin.cambridge.arm.com> (sfid-20130628_123938_292694_B961F3D9)
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
- <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
- <1372413215.21065.41.camel@cumari.coelho.fi>
+	Tue, 11 Jun 2013 01:41:29 -0400
+Received: by mail-la0-f44.google.com with SMTP id er20so6485467lab.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jun 2013 22:41:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372413215.21065.41.camel@cumari.coelho.fi>
+In-Reply-To: <20130611042801.GA217@FermiDesk>
+References: <20130611042801.GA217@FermiDesk>
+Date: Tue, 11 Jun 2013 08:41:28 +0300
+Message-ID: <CANUX_P0ddkfEY+hxir8=PGH1ocS5FQRFwvrm2otj3eTUkwJ+Gw@mail.gmail.com> (sfid-20130611_074133_003190_DA7F71C6)
+Subject: Re: Intel Centrino Wireless-N 2200 Tech Support
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Edward Seyler <epseyler@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[resending again with the doubly corrected address for Mike Turquette,
-apologies for the spam]
+> # dmesg | grep iwl
+>
+> [    9.868028] iwlwifi 0000:03:00.0: irq 44 for MSI/MSI-X
+> [    9.942668] iwlwifi 0000:03:00.0: loaded firmware version 18.168.6.1
+> [   10.015848] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG disabled
+> [   10.015861] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
+> [   10.015866] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING enabled
+> [   10.015872] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
+> [   10.015877] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P enabled
+> [   10.015884] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R) Wireless-N 2200 BGN, REV=0x104
+> [   10.015912] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
+> [   10.056013] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
+> [  280.878663] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
+> [  280.886234] iwlwifi 0000:03:00.0: Radio type=0x2-0x0-0x0
+> [  285.886692] iwlwifi 0000:03:00.0: Failed to load firmware chunk!
+> [  285.886888] iwlwifi 0000:03:00.0: Could not load the [0] uCode section
+> [  285.887299] iwlwifi 0000:03:00.0: Failed to run INIT ucode: -110
+> [  285.887516] iwlwifi 0000:03:00.0: Unable to initialize device.
+>
 
-On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
-> On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
-> > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
-> > > +Optional properties:
-> > > +--------------------
-> > > +
-> > > +- refclock: the internal WLAN reference clock frequency (required for
-> > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-> > > +  following:
-> > > +	0 = 19.2 MHz
-> > > +	1 = 26.0 MHz
-> > > +	2 = 38.4 MHz
-> > > +	3 = 52.0 MHz
-> > > +	4 = 38.4 MHz, XTAL
-> > > +	5 = 26.0 MHz, XTAL
-> > > +
-> > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> > > +  following:
-> > > +	0 = 19.200 MHz
-> > > +	1 = 26.000 MHz
-> > > +	2 = 38.400 MHz
-> > > +	3 = 52.000 MHz
-> > > +	4 = 16.368 MHz
-> > > +	5 = 32.736 MHz
-> > > +	6 = 16.800 MHz
-> > > +	7 = 33.600 MHz
-> > 
-> > This looks suspiciously like what we have the common clock bindings for:
-> > 
-> > refclk {
-> > 	compatible = "fixed-clock";
-> > 	#clock-cells = <0>;
-> > 	clock-frequency = <19200000>;
-> > }
-> > 
-> > wilink {
-> > 	compatible = "ti,wilink7";
-> > 	interrupt-parent = <&some_interrupt_controller>;
-> > 	interrupts = <0 1 1>;
-> > 	clocks = <&refclk>, <&refclk>;
-> > 	clock-names = "refclk", "txoclk";
-> > };
-> > 
-> > Could you not use them?
-> 
-> Hmmm... this actually does look good.  But these are internal clocks in
-> the modules, they cannot be accessed from outside.  Does it make sense
-> to register them with the clock framework?
-
-Given we already have a common way of describing clocks, I think it
-makes sense to use it -- people already understand the common bindings,
-and it's less code to add add to the kernel. I don't think the fact
-these clocks are internal should prevent us from describing them as we
-would an external clock.
-
-Perhaps Mike Turquette [Cc'd] has an opinion on the matter. 
-
-Thanks,
-Mark.
-_______________________________________________
-devicetree-discuss mailing list
-devicetree-discuss@lists.ozlabs.org
-https://lists.ozlabs.org/listinfo/devicetree-discuss
-
-_______________________________________________
-devicetree-discuss mailing list
-devicetree-discuss@lists.ozlabs.org
-https://lists.ozlabs.org/listinfo/devicetree-discuss
-
+This is really weird...
+Can you compile with CONFIG_IWLWIFI_DEBUG?
+I will then need a few debug prints.
+I recently changed this flow to speed up the fw loading process on
+platform that can afford a bit amount of DMA, but I just tested it
+(again) and it works even if there is not big DMA chunk available.
