@@ -1,67 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [78.193.33.39] ([78.193.33.39]:48034 "EHLO qult.net"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752800Ab3FTGjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jun 2013 02:39:42 -0400
-Date: Thu, 20 Jun 2013 08:39:25 +0200
-From: Ignacy Gawedzki <i@lri.fr>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Corey Richardson <corey@octayn.net>
-Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
-Message-ID: <20130620063925.GA3885@zenon.in.qult.net> (sfid-20130620_083945_127765_B49F5F9E)
-References: <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com>
- <51C1B467.1030509@rempel-privat.de>
- <20130619140905.GA14079@zenon.in.qult.net>
- <1371651073.8349.19.camel@jlt4.sipsolutions.net>
- <51C1C95C.8030301@rempel-privat.de>
- <20130619175939.GA19405@zenon.in.qult.net>
- <20130619180354.GB19405@zenon.in.qult.net>
- <51C1FA76.3090109@rempel-privat.de>
- <20130619193316.GA29582@zenon.in.qult.net>
- <51C2942A.2080706@rempel-privat.de>
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:34976 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756333Ab3FKUcv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jun 2013 16:32:51 -0400
+Received: by mail-bk0-f45.google.com with SMTP id je9so2690090bkc.18
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2013 13:32:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51C2942A.2080706@rempel-privat.de>
+In-Reply-To: <1370950216.8356.10.camel@jlt4.sipsolutions.net>
+References: <1370895442-21784-1-git-send-email-thomas@cozybit.com>
+ <1370895442-21784-2-git-send-email-thomas@cozybit.com> <1370950216.8356.10.camel@jlt4.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Tue, 11 Jun 2013 13:32:30 -0700
+Message-ID: <CAG6hwVMYyDc29hYAfD6niMS-Ckx91xs0_K-nyaUCE4xZ8nDzYQ@mail.gmail.com> (sfid-20130611_223412_355838_765F90B9)
+Subject: Re: [PATCH v2 2/2] mac80211: update mesh beacon on workqueue
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 20, 2013 at 07:33:30AM +0200, thus spake Oleksij Rempel:
-> Am 19.06.2013 21:33, schrieb Ignacy Gawedzki:
-> >I tested the thing with at least three different APs:
-> >
-> >   - Netgear DG834Gv4 with latest firmware.
-> 
-> this one is BG with Broadcom BCM4318. Is here original firmware or openwrt?
+On Tue, Jun 11, 2013 at 4:30 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2013-06-10 at 13:17 -0700, Thomas Pedersen wrote:
+>
+>> +     struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+>> +     u32 bit;
+>> +
+>> +     /* if we race with running work, worst case this work becomes a noop */
+>> +     for_each_set_bit(bit, (unsigned long *)&changed,
+>> +                      sizeof(changed) * BITS_PER_BYTE)
+>
+> This isn't valid, it happens to work on little endian platforms but will
+> fail on big endian 64-bit ones, because you have this in memory (0 is
+> the lowest order nibble):
+>
+> 76 54 32 10 -- -- -- --
 
-Original firmware, since OpenWRT doesn't support the ADSL chip.
+> and now you point an unsigned long pointer to it, so you interpret the
+> "--" as the lowest bits.
 
-> >   - Netgear DG834Gv5 (don't know which firmware and can't check at this time).
-> 
-> this is BG with Conexant CX94610
-> 
-> >   - hostapd (can't say which version at this time either) with the same
-> >     ath9k_htc.
-> 
-> this one is actually BGN, did you configured it for N? Can you
-> please provide your hostapd.conf.
+OK I was just trying to make the compiler happy, but that makes sense.
+Assigning changed (u32) to an unsigned long then getting the address
+of that should move the u32 into the lower half of an unsigned long on
+a 64-bit BE system?
+Thanks for explaining this.
 
-I'll manage to get the configuration as soon as possible.  It seems the
-association problem went away since I patched the drivers on the AP too, so
-"unpatching" the drivers on the station is not enough to reproduce the
-problem.  I'll unpatch the drivers on the AP and re-run the test.
+> More generally, I'd argue that mesh is being a bit odd here, flushing
+> stations turing mesh stop can and will actually cause a BSS info update
+> after the mesh interface has already been stopped (beaconing has been
+> disabled in the driver.) This seems rather odd. Maybe it would be better
+> to move the beacon update out of mesh_sta_cleanup() and into
+> ieee80211_mesh_housekeeping() in some way? Although it'd also have to be
+> done in the station handling in cfg.c but that shouldn't be a problem?
 
-> Do you have problems on all 3 configurations?
+Yes it is odd to queue a bss info update but never do so. I don't know
+if it really matters though. The problem is mesh_sta_cleanup() is
+called from several paths: mac80211 mesh runtime, stop_mesh(), and
+cfg80211. I think this is a fairly clean way of satisfying all the
+users (mesh work queued from stop_mesh() is a noop if we check
+ifmsh->mesh_id_len instead of the wdev->mesh_id_len).
 
-On both Netgears for sure.  For hostapd I'll confirm that in a little while.
+It sounds like you'd like beacon updates to be asynchronous, which
+this patch already accomplishes :)
 
->                                               Can you please test it
-> with some N (HT) capable AP. But please, not with N-draft certified
-> AP.
+> Note also that the way you did this is rather odd, ieee80211_stop_mesh()
+> could cause to schedule out to the workqueue for the update, but then
+> the update won't happen. It's a bit racy though, because you could stop
+> and restart the mesh and then the workqueue runs or something? Overall
+> this approach seems a bit brittle?
 
-Is ath9k_htc N-capable?
+I guess if you clear the ifmsh->wrkq_flags at the end of stop_mesh()
+this wouldn't happen. Also as long as the check to ensure no mesh work
+is performed while not joined is in place, we should be ok.
 
--- 
-I used to have a sig, but I've stopped smoking now.
+--
+Thomas
