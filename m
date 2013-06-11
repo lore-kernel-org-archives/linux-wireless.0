@@ -1,32 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:50046 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752266Ab3FLF1J (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37294 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754657Ab3FKLaV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 01:27:09 -0400
-Date: Tue, 11 Jun 2013 22:27:06 -0700 (PDT)
-Message-Id: <20130611.222706.1492583255605214982.davem@davemloft.net> (sfid-20130612_072751_104839_5F29BCA5)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-06-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130606190929.GB18827@tuxdriver.com>
-References: <20130606190929.GB18827@tuxdriver.com>
+	Tue, 11 Jun 2013 07:30:21 -0400
+Message-ID: <1370950216.8356.10.camel@jlt4.sipsolutions.net> (sfid-20130611_133100_935359_1F1F244D)
+Subject: Re: [PATCH v2 2/2] mac80211: update mesh beacon on workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Bob Copeland <me@bobcopeland.com>
+Date: Tue, 11 Jun 2013 13:30:16 +0200
+In-Reply-To: <1370895442-21784-2-git-send-email-thomas@cozybit.com> (sfid-20130610_221954_141807_F12A5B9B)
+References: <1370895442-21784-1-git-send-email-thomas@cozybit.com>
+	 <1370895442-21784-2-git-send-email-thomas@cozybit.com>
+	 (sfid-20130610_221954_141807_F12A5B9B)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 6 Jun 2013 15:09:30 -0400
+On Mon, 2013-06-10 at 13:17 -0700, Thomas Pedersen wrote:
 
-> Johannes Berg (2):
->       mac80211: constify ieee802_11_parse_elems() argument
+> +	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+> +	u32 bit;
+> +
+> +	/* if we race with running work, worst case this work becomes a noop */
+> +	for_each_set_bit(bit, (unsigned long *)&changed,
+> +			 sizeof(changed) * BITS_PER_BYTE)
 
-Such cleanups are absolutely, positively, not appropriate at this
-time.
+This isn't valid, it happens to work on little endian platforms but will
+fail on big endian 64-bit ones, because you have this in memory (0 is
+the lowest order nibble):
 
-Sorry.
+76 54 32 10 -- -- -- --
 
-I still can't pull this.
+and now you point an unsigned long pointer to it, so you interpret the
+"--" as the lowest bits.
+
+
+More generally, I'd argue that mesh is being a bit odd here, flushing
+stations turing mesh stop can and will actually cause a BSS info update
+after the mesh interface has already been stopped (beaconing has been
+disabled in the driver.) This seems rather odd. Maybe it would be better
+to move the beacon update out of mesh_sta_cleanup() and into
+ieee80211_mesh_housekeeping() in some way? Although it'd also have to be
+done in the station handling in cfg.c but that shouldn't be a problem?
+
+Note also that the way you did this is rather odd, ieee80211_stop_mesh()
+could cause to schedule out to the workqueue for the update, but then
+the update won't happen. It's a bit racy though, because you could stop
+and restart the mesh and then the workqueue runs or something? Overall
+this approach seems a bit brittle?
+
+johannes
+
