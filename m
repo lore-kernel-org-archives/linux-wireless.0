@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33483 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753848Ab3FAMe1 (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:44255 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430Ab3FKS3z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jun 2013 08:34:27 -0400
-Cc: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ulf Samuelsson <ntp@emagii.com>
-Subject: Re: ath6kl_sdio blocked by RFKILL
-References: <51A4C6D6.1020002@emagii.com>
-Date: Sat, 1 Jun 2013 15:34:21 +0300
-In-Reply-To: <51A4C6D6.1020002@emagii.com> (Ulf Samuelsson's message of "Tue,
-	28 May 2013 17:01:42 +0200")
-Message-ID: <8738t2nh6a.fsf@kamboji.qca.qualcomm.com> (sfid-20130601_143429_560292_F7A9BA52)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 11 Jun 2013 14:29:55 -0400
+Received: by mail-ee0-f54.google.com with SMTP id t10so3692503eei.13
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2013 11:29:54 -0700 (PDT)
+References: <1370346050-7047-1-git-send-email-juhosg@openwrt.org> <20130604135718.GC17229@redhat.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <20130604135718.GC17229@redhat.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <92AE2CE1-2C38-4859-A8DA-D4B54EB04730@gmail.com> (sfid-20130611_203001_020545_3C221757)
+Cc: Gabor Juhos <juhosg@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 00/13] rt2x00: get rid of static data queue descriptors
+Date: Tue, 11 Jun 2013 20:29:51 +0200
+To: Stanislaw Gruszka <sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ulf Samuelsson <ntp@emagii.com> writes:
 
-> Have built the ath6kl_sdio driver for an Cortex-A5 chip using the
-> linux-3.6.9 kernel
-> File system built using Yocto  and Busybox RF-Kill.
->
-> Kernel Config contains:
->
-> CONFIG_RFKILL=m
-> CONFIG_RFKILL_LEDS=y
-> CONFIG_RFKILL_INPUT=y
-> # CONFIG_RFKILL_GPIO is not set
->
-> When I do
->
-> # ifconfig wlan0 up.
->
-> I get the error message:
->
-> ifconfig: SIOCSIFFLAGS: Operation not possible due to RF-kill
->
-> If I run "rfkill list" I get
->
-> 1: phy1: wlan
->         Soft blocked: yes
->         Hard blocked: no
->
->
-> If I try to unblock using "rfkill unblock all" or "wifi" or "wlan",
-> the soft block remains.
+Sent from my iPad
 
-Have you tried "rfkill unblock 1"?
+On 4 jun. 2013, at 15:57, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
--- 
-Kalle Valo
+> On Tue, Jun 04, 2013 at 01:40:37PM +0200, Gabor Juhos wrote:
+>> The patch-set depends on the following patch:
+>> 
+>> 'rt2x00: rt2x00queue: initialize data_queue fields earlier'
+>> https://patchwork.kernel.org/patch/2655201/
+>> 
+>> Gabor Juhos (13):
+>>  rt2x00: rt2x00queue: add priv_size field to struct data_queue
+>>  rt2x00: rt2x00queue: remove qdesc parameter of
+>>    rt2x00queue_alloc_entries
+>>  rt2x00: rt2x00dev: use rt2x00dev->bcn->limit
+>>  rt2x00: rt2x00queue: setup queue->threshold from queue->limit
+>>  rt2x00: add queue_init callback to rt2x00_ops
+>>  rt2x00: rt2800usb: implement queue_init callback
+>>  rt2x00: rt2800pci: implement queue_init callback
+>>  rt2x00: rt73usb: implement queue_init callback
+>>  rt2x00: rt2400pci: implement queue_init callback
+>>  rt2x00: rt2500pci: implement queue_init callback
+>>  rt2x00: rt61pci: implement queue_init callback
+>>  rt2x00: rt2500usb: implement queue_init callback
+>>  rt2x00: remove data_queue_desc struct
+> 
+> Looks good. For set:
+> 
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com> 
+
+Looks good to me as well. So, an
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+from me as well for the whole series.
+
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
