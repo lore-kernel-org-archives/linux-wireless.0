@@ -1,55 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49399 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757076Ab3FFDlc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34318 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755141Ab3FKVAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 23:41:32 -0400
-Message-ID: <51B004CD.6080007@candelatech.com> (sfid-20130606_054136_260906_6E8F9A5F)
-Date: Wed, 05 Jun 2013 20:41:01 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 11 Jun 2013 17:00:18 -0400
+Date: Tue, 11 Jun 2013 16:59:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Yunlian Jiang <yunlian@google.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	chaoming_li@realsil.com.cn, davem@davemloft.net
+Subject: Re: [PATCH] rtlwifi: initialize local array and set value.
+Message-ID: <20130611205911.GB2142@tuxdriver.com> (sfid-20130611_230021_946081_6A6225C1)
+References: <1370036721-18164-1-git-send-email-yunlian@google.com>
+ <20130603193947.GH2727@tuxdriver.com>
+ <CAMsPy2sqS8frL+Ybq2YT83ehfZ9bSgyfwuZmfDf1R4tCre8O1g@mail.gmail.com>
+ <20130603210707.GL2727@tuxdriver.com>
+ <CAMsPy2vQzhdy9xzUzk+xWt_EXDbFmGUStJPRXvr1LG85v-NVRQ@mail.gmail.com>
+ <CAMsPy2ufj3TjdWbpPKq7QqS_ELAmqhA_Djo6dwcevLym2PCkDQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: Tejun Heo <tj@kernel.org>, Rusty Russell <rusty@rustcorp.com.au>,
-	Joe Lawrence <joe.lawrence@stratus.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	stable@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>
-Subject: Re: stop_machine lockup issue in 3.9.y.
-References: <51AE27D5.7050202@candelatech.com>  <87sj0xry1k.fsf@rustcorp.com.au> <20130605071539.GA3429@mtj.dyndns.org>  <51AF6E54.3050108@candelatech.com> <20130605184807.GD10693@mtj.dyndns.org>  <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com>  <51AFA677.9010605@candelatech.com> <20130605211157.GK10693@mtj.dyndns.org>  <1370482492.24311.308.camel@edumazet-glaptop>  <20130606031444.GA12335@mtj.dyndns.org> <1370489181.24311.318.camel@edumazet-glaptop>
-In-Reply-To: <1370489181.24311.318.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMsPy2ufj3TjdWbpPKq7QqS_ELAmqhA_Djo6dwcevLym2PCkDQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2013 08:26 PM, Eric Dumazet wrote:
-> On Wed, 2013-06-05 at 20:14 -0700, Tejun Heo wrote:
->
->>
->> Ah, so, that's why it's showing up now.  We probably have had the same
->> issue all along but it used to be masked by the softirq limiting.  Do
->> you care to revive the 10 iterations limit so that it's limited by
->> both the count and timing?  We do wanna find out why softirq is
->> spinning indefinitely tho.
->
-> Yes, no problem, I can do that.
+It's in wireless-next...
 
-Limiting it to 5000 fixes my problem, so if you wanted it larger than 10, that would
-be fine by me.
+commit ec71997eff2231098212a99934c0fb987a9e6b04
+Author: Yunlian Jiang <yunlian@google.com>
+Date:   Fri May 31 14:45:21 2013 -0700
 
-I can send a version of my patch easily enough if we can agree on the max number of
-loops (and if indeed my version of the patch is acceptable).
+    rtlwifi: initialize local array and set value.
+    
+    GCC 4.8 is spitting out uninitialized-variable warnings against
+    "drivers/net/wireless/rtlwifi/rtl8192de/dm.c".
+    
+    drivers/net/wireless/rtlwifi/rtl8192de/dm.c:941:31:
+    error: 'ofdm_index_old[1]' may be used uninitialized in this
+    function [-Werror=maybe-uninitialized]
+         rtlpriv->dm.ofdm_index[i] = ofdm_index_old[i];
+    
+    This patch adds initialization to the variable and properly sets its value.
+    
+    Signed-off-by: Yunlian Jiang <yunlian@google.com>
+    Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Thanks,
-Ben
-
+On Tue, Jun 11, 2013 at 01:00:00PM -0700, Yunlian Jiang wrote:
+> John,
+>    Any update for this patch?
+>    Thanks
+> 
+> 
+> On Mon, Jun 3, 2013 at 2:17 PM, Yunlian Jiang <yunlian@google.com> wrote:
+> 
+> > John,
+> >    Yes, I intended for it to be there and please add it.
+> >
+> >    Thanks
+> >
+> >
+> > On Mon, Jun 3, 2013 at 2:07 PM, John W. Linville <linville@tuxdriver.com>wrote:
+> >
+> >> That would be perfectly fine.  Or, you can just acknowledge that you
+> >> intended for it to be there and I can add it myself.
+> >>
+> >> John
+> >>
+> >> On Mon, Jun 03, 2013 at 12:48:31PM -0700, Yunlian Jiang wrote:
+> >> > Sorry, can I re-upload the patch and set Signed-off-by me?
+> >> >
+> >> > Thanks
+> >> >
+> >> >
+> >> > On Mon, Jun 3, 2013 at 12:39 PM, John W. Linville <
+> >> linville@tuxdriver.com>wrote:
+> >> >
+> >> > > This patch is missing a Signed-off-by line...
+> >> > >
+> >> > > On Fri, May 31, 2013 at 02:45:21PM -0700, Yunlian Jiang wrote:
+> >> > > > GCC 4.8 is spitting out uninitialized-variable warnings against
+> >> > > > "drivers/net/wireless/rtlwifi/rtl8192de/dm.c".
+> >> > > >
+> >> > > > drivers/net/wireless/rtlwifi/rtl8192de/dm.c:941:31:
+> >> > > > error: 'ofdm_index_old[1]' may be used uninitialized in this
+> >> > > > function [-Werror=maybe-uninitialized]
+> >> > > >      rtlpriv->dm.ofdm_index[i] = ofdm_index_old[i];
+> >> > > >
+> >> > > > This patch adds initialization to the variable and properly sets its
+> >> > > value.
+> >> > > > ---
+> >> > > >  drivers/net/wireless/rtlwifi/rtl8192de/dm.c | 2 +-
+> >> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >> > > >
+> >> > > > diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> >> > > b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> >> > > > index 19a7655..47875ba 100644
+> >> > > > --- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> >> > > > +++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> >> > > > @@ -842,7 +842,7 @@ static void
+> >> > > rtl92d_dm_txpower_tracking_callback_thermalmeter(
+> >> > > >       long val_y, ele_c = 0;
+> >> > > >       u8 ofdm_index[2];
+> >> > > >       s8 cck_index = 0;
+> >> > > > -     u8 ofdm_index_old[2];
+> >> > > > +     u8 ofdm_index_old[2] = {0, 0};
+> >> > > >       s8 cck_index_old = 0;
+> >> > > >       u8 index;
+> >> > > >       int i;
+> >> > > > --
+> >> > > > 1.8.2.1
+> >> > > >
+> >> > > > --
+> >> > > > To unsubscribe from this list: send the line "unsubscribe
+> >> > > linux-wireless" in
+> >> > > > the body of a message to majordomo@vger.kernel.org
+> >> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> > > >
+> >> > >
+> >> > > --
+> >> > > John W. Linville                Someday the world will need a hero,
+> >> and you
+> >> > > linville@tuxdriver.com                  might be all we have.  Be
+> >> ready.
+> >> > >
+> >>
+> >> --
+> >> John W. Linville                Someday the world will need a hero, and
+> >> you
+> >> linville@tuxdriver.com                  might be all we have.  Be ready.
+> >>
+> >
+> >
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
