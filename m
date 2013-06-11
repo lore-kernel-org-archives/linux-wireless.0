@@ -1,95 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43608 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756252Ab3FRWE1 (ORCPT
+Received: from diserzione.investici.org ([82.221.99.153]:37222 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752443Ab3FKL6h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 18:04:27 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 6/6] wireless:  Add comments about bss refcounting.
-Date: Tue, 18 Jun 2013 15:03:37 -0700
-Message-Id: <1371593017-10985-6-git-send-email-greearb@candelatech.com> (sfid-20130619_000430_250528_BA838543)
-In-Reply-To: <1371593017-10985-1-git-send-email-greearb@candelatech.com>
-References: <1371593017-10985-1-git-send-email-greearb@candelatech.com>
+	Tue, 11 Jun 2013 07:58:37 -0400
+Date: Tue, 11 Jun 2013 13:56:37 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: Re: [PATCHv4 1/4] mac80211: make mgmt_tx accept a NULL channel
+Message-ID: <20130611115637.GC1466@ritirata.org> (sfid-20130611_135840_177343_DEBFBE88)
+References: <1370444989-2095-1-git-send-email-ordex@autistici.org>
+ <1370951718.8356.22.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="TiqCXmo5T1hvSQQg"
+In-Reply-To: <1370951718.8356.22.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
 
-Should help the next person that tries to understand
-the bss refcounting logic.
+--TiqCXmo5T1hvSQQg
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- net/wireless/scan.c |    4 ++++
- net/wireless/sme.c  |    3 +++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+On Tue, Jun 11, 2013 at 01:55:18PM +0200, Johannes Berg wrote:
+> On Wed, 2013-06-05 at 17:09 +0200, Antonio Quartulli wrote:
+>=20
+> > +	if (need_offchan && !chan)
+> > +		return -EINVAL;
+>=20
+> > @@ -2847,10 +2853,14 @@ static int ieee80211_mgmt_tx(struct wiphy *wiph=
+y, struct wireless_dev *wdev,
+> >  		rcu_read_lock();
+> >  		chanctx_conf =3D rcu_dereference(sdata->vif.chanctx_conf);
+> > =20
+> > -		if (chanctx_conf)
+> > -			need_offchan =3D chan !=3D chanctx_conf->def.chan;
+> > -		else
+> > +		if (chanctx_conf) {
+> > +			need_offchan =3D chan && (chan !=3D chanctx_conf->def.chan);
+> > +		} else if (!chan) {
+> > +			ret =3D -EINVAL;
+> > +			goto out_unlock;
+> > +		} else {
+> >  			need_offchan =3D true;
+> > +		}
+> >  		rcu_read_unlock();
+>=20
+> It seems this would be clearer?
+> http://p.sipsolutions.net/b8a03c85f0e8b89f.txt
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 542ff6d..834d2f9 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -622,6 +622,7 @@ static int cmp_bss(struct cfg80211_bss *a,
- 	}
- }
- 
-+/** Returned bss is reference counted and must be cleaned up appropriately. */
- struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 				      struct ieee80211_channel *channel,
- 				      const u8 *bssid,
-@@ -777,6 +778,7 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *dev,
- 	return true;
- }
- 
-+/** Returned bss is reference counted and must be cleaned up appropriately. */
- static struct cfg80211_internal_bss *
- cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 		    struct cfg80211_internal_bss *tmp)
-@@ -962,6 +964,7 @@ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
- 	return channel;
- }
- 
-+/** Returned bss is reference counted and must be cleaned up appropriately. */
- struct cfg80211_bss*
- cfg80211_inform_bss(struct wiphy *wiphy,
- 		    struct ieee80211_channel *channel,
-@@ -1019,6 +1022,7 @@ cfg80211_inform_bss(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(cfg80211_inform_bss);
- 
-+/** Returned bss is reference counted and must be cleaned up appropriately. */
- struct cfg80211_bss *
- cfg80211_inform_bss_frame(struct wiphy *wiphy,
- 			  struct ieee80211_channel *channel,
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index ea2ce33..d26cd68 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -263,6 +263,7 @@ void cfg80211_conn_work(struct work_struct *work)
- 	rtnl_unlock();
- }
- 
-+/** Returned bss is reference counted and must be cleaned up appropriately. */
- static struct cfg80211_bss *cfg80211_get_conn_bss(struct wireless_dev *wdev)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-@@ -579,6 +580,7 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- }
- EXPORT_SYMBOL(cfg80211_connect_result);
- 
-+/** Consumes bss object one way or another */
- void __cfg80211_roamed(struct wireless_dev *wdev,
- 		       struct cfg80211_bss *bss,
- 		       const u8 *req_ie, size_t req_ie_len,
-@@ -662,6 +664,7 @@ void cfg80211_roamed(struct net_device *dev,
- }
- EXPORT_SYMBOL(cfg80211_roamed);
- 
-+/** Consumes bss object one way or another */
- void cfg80211_roamed_bss(struct net_device *dev,
- 			 struct cfg80211_bss *bss, const u8 *req_ie,
- 			 size_t req_ie_len, const u8 *resp_ie,
--- 
-1.7.3.4
+agreed :)
 
+I'll include this change.
+
+Cheers,
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--TiqCXmo5T1hvSQQg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRtxB1AAoJEADl0hg6qKeOclIP/jyhgZrLSfy6NLtsOex+ljT6
+7FheupZ7o/6FS1fBFsxlo2y1/oiRyGdCfwpzD3BWtR3coYa7e2MntvYrmDeueVLI
+Zd00g8lTozbcJw/TtQoeDXK1uOqK3PsFVuKfOZcpDA40EkMtrYanMgoAVcvTK6Ki
+9gr3jDL01MVGg9ajsWM+D27ZWREKDmxQvfvfntdrB7yk8YONDWDZXpJMJ9ZAL2c9
+bzb6rJoDfYUwMZek2oXCQmWi2JvlYsUHqEiJo2c70Fuq9GwDJQ4dpECuDUeO9fHC
+840OogWwsyi1ALkuRMJZXI4mPzs4KFu/cf9LCOAbbF1gBsciycU1hEeuktFTBGZ/
+kclPwDGwNfgf9SR4oq/gEPQ3YqLLhtoohAOc/72VWNfzenYBE8oS/rSMtexYPkp7
+eLT7s02AG1vffQBgG+9y7/7b/JubHGMjz2tGYqCWpX2jAAkCaFQm+62/CWhtLPGz
+Irbeu4nMgxbVflbyMxEjbuHIpcE4XyGsNMR/Lfdqmd3y80hpvKmQ2+qIbWMcj4ub
+Hufcjd8Ja3o37FWxVZfvifFFgzq26fCDD7PvSlC82Ds0cJA+WG07n4POlCgPIJse
+zL5311XvcnniSjjVuaTos3qMFafL2ptOBA/Buvzhj6ZXoBoVDIXQfnJ9lMMCwxsJ
+uOuFnXW2AJnpXnA57Y28
+=76KS
+-----END PGP SIGNATURE-----
+
+--TiqCXmo5T1hvSQQg--
