@@ -1,127 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:60539 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757697Ab3FCV4i (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:52837 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643Ab3FKMWF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 17:56:38 -0400
-Received: by mail-we0-f173.google.com with SMTP id x55so2206044wes.4
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 14:56:37 -0700 (PDT)
-Message-ID: <1370296591.9091.36.camel@canaries64> (sfid-20130603_235641_584505_4FF5986A)
-Subject: [PATCH 8/8] staging: vt6656: rf.c: replace where priv->byCurPwr ==
- power.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 03 Jun 2013 22:56:31 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 11 Jun 2013 08:22:05 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: [PATCHv5 2/4] brcm80211: make mgmt_tx in brcmfmac accept a NULL channel
+Date: Tue, 11 Jun 2013 14:20:01 +0200
+Message-Id: <1370953203-4086-2-git-send-email-ordex@autistici.org> (sfid-20130611_142210_111527_8F795BDC)
+In-Reply-To: <1370953203-4086-1-git-send-email-ordex@autistici.org>
+References: <1370953203-4086-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-priv->byCurPwr always equals power in vnt_rf_set_txpower
-at switch (priv->byRFType)
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+cfg80211 passes a NULL channel to mgmt_tx if the frame has
+to be sent on the one currently in use by the device.
+Make the implementation of mgmt_tx correctly handle this
+case
+
+Cc: brcm80211-dev-list@broadcom.com
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- drivers/staging/vt6656/rf.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
-index 2152b44..2e8a964 100644
---- a/drivers/staging/vt6656/rf.c
-+++ b/drivers/staging/vt6656/rf.c
-@@ -798,11 +798,11 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 6d758f2..8bd256b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3917,6 +3917,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	struct brcmf_fil_af_params_le *af_params;
+ 	bool ack;
+ 	s32 chan_nr;
++	u32 freq;
  
- 	switch (priv->byRFType) {
- 	case RF_AL2230:
--		if (priv->byCurPwr >= AL2230_PWR_IDX_LEN)
-+		if (power >= AL2230_PWR_IDX_LEN)
- 			return false;
+ 	brcmf_dbg(TRACE, "Enter\n");
  
- 		ret &= vnt_rf_write_embedded(priv,
--			al2230_power_table[priv->byCurPwr]);
-+			al2230_power_table[power]);
+@@ -3929,6 +3930,8 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		return -EPERM;
+ 	}
  
- 		if (rate <= RATE_11M)
- 			ret &= vnt_rf_write_embedded(priv, 0x0001b400 +
-@@ -812,11 +812,11 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 				(BY_AL2230_REG_LEN << 3) + IFREGCTL_REGW);
- 		break;
- 	case RF_AL2230S:
--		if (priv->byCurPwr >= AL2230_PWR_IDX_LEN)
-+		if (power >= AL2230_PWR_IDX_LEN)
- 			return false;
++	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
++
+ 	if (ieee80211_is_probe_resp(mgmt->frame_control)) {
+ 		/* Right now the only reason to get a probe response */
+ 		/* is for p2p listen response or for p2p GO from     */
+@@ -3944,7 +3947,6 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		ie_offset =  DOT11_MGMT_HDR_LEN +
+ 			     DOT11_BCN_PRB_FIXED_LEN;
+ 		ie_len = len - ie_offset;
+-		vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
+ 		if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif)
+ 			vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
+ 		err = brcmf_vif_set_mgmt_ie(vif,
+@@ -3968,8 +3970,15 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		memcpy(&af_params->bssid[0], &mgmt->bssid[0], ETH_ALEN);
+ 		/* Add the length exepted for 802.11 header  */
+ 		action_frame->len = cpu_to_le16(len - DOT11_MGMT_HDR_LEN);
+-		/* Add the channel */
+-		chan_nr = ieee80211_frequency_to_channel(chan->center_freq);
++		/* Add the channel. Use the one specified as parameter if any or
++		 * the current one (got from the firmware) otherwise
++		 */
++		if (chan)
++			freq = chan->center_freq;
++		else
++			brcmf_fil_cmd_int_get(vif->ifp, BRCMF_C_GET_CHANNEL,
++					      &freq);
++		chan_nr = ieee80211_frequency_to_channel(freq);
+ 		af_params->channel = cpu_to_le32(chan_nr);
  
- 		ret &= vnt_rf_write_embedded(priv,
--			al2230_power_table[priv->byCurPwr]);
-+			al2230_power_table[power]);
- 
- 		if (rate <= RATE_11M) {
- 			ret &= vnt_rf_write_embedded(priv, 0x040c1400 +
-@@ -839,14 +839,14 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 			ret &= vnt_rf_write_embedded(priv, 0x221bb900 +
- 				(BY_AL7230_REG_LEN << 3)+IFREGCTL_REGW);
- 
--		if (priv->byCurPwr > AL7230_PWR_IDX_LEN)
-+		if (power > AL7230_PWR_IDX_LEN)
- 			return false;
- 
- 		/*
- 		* 0x080F1B00 for 3 wire control TxGain(D10)
- 		* and 0x31 as TX Gain value
- 		*/
--		power_setting = 0x080c0b00 | ((priv->byCurPwr) << 12) |
-+		power_setting = 0x080c0b00 | ((power) << 12) |
- 				(BY_AL7230_REG_LEN << 3) | IFREGCTL_REGW;
- 
- 		ret &= vnt_rf_write_embedded(priv, power_setting);
-@@ -854,20 +854,20 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 		break;
- 
- 	case RF_VT3226:
--		if (priv->byCurPwr >= VT3226_PWR_IDX_LEN)
-+		if (power >= VT3226_PWR_IDX_LEN)
- 			return false;
--		power_setting = ((0x3f - priv->byCurPwr) << 20) | (0x17 << 8) |
-+		power_setting = ((0x3f - power) << 20) | (0x17 << 8) |
- 				(BY_VT3226_REG_LEN << 3) | IFREGCTL_REGW;
- 
- 		ret &= vnt_rf_write_embedded(priv, power_setting);
- 
- 		break;
- 	case RF_VT3226D0:
--		if (priv->byCurPwr >= VT3226_PWR_IDX_LEN)
-+		if (power >= VT3226_PWR_IDX_LEN)
- 			return false;
- 
- 		if (rate <= RATE_11M) {
--			power_setting = ((0x3f-priv->byCurPwr) << 20) |
-+			power_setting = ((0x3f-power) << 20) |
- 				(0xe07 << 8) | (BY_VT3226_REG_LEN << 3) |
- 						IFREGCTL_REGW;
- 
-@@ -897,7 +897,7 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
- 					"@@@@ vnt_rf_set_txpower> 11G mode\n");
- 
--			power_setting = ((0x3f-priv->byCurPwr) << 20) |
-+			power_setting = ((0x3f-power) << 20) |
- 				(0x7 << 8) | (BY_VT3226_REG_LEN << 3) |
- 					IFREGCTL_REGW;
- 
-@@ -912,10 +912,10 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 		break;
- 
- 	case RF_VT3342A0:
--		if (priv->byCurPwr >= VT3342_PWR_IDX_LEN)
-+		if (power >= VT3342_PWR_IDX_LEN)
- 			return false;
- 
--		power_setting =  ((0x3F-priv->byCurPwr) << 20) |
-+		power_setting =  ((0x3F-power) << 20) |
- 			(0x27 << 8) | (BY_VT3342_REG_LEN << 3) |
- 					IFREGCTL_REGW;
- 
+ 		memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
 -- 
-1.8.1.2
+1.8.1.5
 
