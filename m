@@ -1,86 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61306 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636Ab3FIGNU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jun 2013 02:13:20 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 6/6] wil6210: Init Rx vring right after reset
-Date: Sun, 9 Jun 2013 09:12:55 +0300
-Message-ID: <1370758375-16867-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130609_081323_463409_C4620668)
-In-Reply-To: <1370758375-16867-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1370758375-16867-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3142 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756444Ab3FKU1U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jun 2013 16:27:20 -0400
+Message-ID: <51B7881B.9000408@broadcom.com> (sfid-20130611_222732_656740_4FBF3B1E)
+Date: Tue, 11 Jun 2013 22:27:07 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/22] brcmfmac: firmware-signalling fixes and
+ cleanup
+References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-at the vring initialisation, memory pool get allocated in the FW.
-Make it 1-st because FW need this memory pool to precess
-next commands
+On 06/06/2013 01:17 PM, Arend van Spriel wrote:
+> This series is intended for v3.11 and resolves a number of issues observed
+> testing firmware-signalling feature with power-save stations and P2P scenarios
+> as well as several patches for code cleanup.
+>
+> The series applies to the master branch of the wireless-next repository.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 7 +++++--
- drivers/net/wireless/ath/wil6210/main.c     | 8 +++++---
- 2 files changed, 10 insertions(+), 5 deletions(-)
+Hi John,
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 189c307..61c302a 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -454,6 +454,11 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	if (rc)
- 		return rc;
- 
-+	/* Rx VRING. */
-+	rc = wil_rx_init(wil);
-+	if (rc)
-+		return rc;
-+
- 	rc = wmi_set_ssid(wil, info->ssid_len, info->ssid);
- 	if (rc)
- 		return rc;
-@@ -482,8 +487,6 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	if (rc)
- 		return rc;
- 
--	/* Rx VRING. After MAC and beacon */
--	rc = wil_rx_init(wil);
- 
- 	netif_carrier_on(ndev);
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index c97b864..8cafa45 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -295,6 +295,11 @@ static int __wil_up(struct wil6210_priv *wil)
- 	if (rc)
- 		return rc;
- 
-+	/* Rx VRING. After MAC and beacon */
-+	rc = wil_rx_init(wil);
-+	if (rc)
-+		return rc;
-+
- 	/* FIXME Firmware works now in PBSS mode(ToDS=0, FromDS=0) */
- 	wmi_nettype = wil_iftype_nl2wmi(NL80211_IFTYPE_ADHOC);
- 	switch (wdev->iftype) {
-@@ -356,9 +361,6 @@ static int __wil_up(struct wil6210_priv *wil)
- 			return rc;
- 	}
- 
--	/* Rx VRING. After MAC and beacon */
--	wil_rx_init(wil);
--
- 	napi_enable(&wil->napi_rx);
- 	napi_enable(&wil->napi_tx);
- 
--- 
-1.8.1.2
+Did this series for 3.11 get lost somewhere or is it still on your queue?
+
+Regards,
+Arend
 
