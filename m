@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2414 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755087Ab3FRL3t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 07:29:49 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 0/8] brcmfmac: scatterlist support in sdio and cleanup
-Date: Tue, 18 Jun 2013 13:29:21 +0200
-Message-ID: <1371554970-23495-1-git-send-email-arend@broadcom.com> (sfid-20130618_133000_027699_E352BD2C)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:37265 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755152Ab3FKLPZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jun 2013 07:15:25 -0400
+Message-ID: <1370949320.8356.2.camel@jlt4.sipsolutions.net> (sfid-20130611_131534_931433_4BEBA03E)
+Subject: Re: [PATCH v2 1/2] mac80211: fix mesh deadlock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Bob Copeland <me@bobcopeland.com>
+Date: Tue, 11 Jun 2013 13:15:20 +0200
+In-Reply-To: <1370895442-21784-1-git-send-email-thomas@cozybit.com> (sfid-20130610_221953_296737_CF41059A)
+References: <1370895442-21784-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20130610_221953_296737_CF41059A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains mostly cleanup patches. The main change is the
-support for scatterlist api in sdio part of the brcmfmac driver.
+On Mon, 2013-06-10 at 13:17 -0700, Thomas Pedersen wrote:
+> The patch "cfg80211/mac80211: use cfg80211 wdev mutex in
+> mac80211" introduced several deadlocks by converting the
+> ifmsh->mtx to wdev->mtx. Solve these by:
+> 
+> 1. drop the cancel_work_sync() in ieee80211_stop_mesh().
+>    Instead make the mesh work conditional on whether the mesh
+>    is running or not.
+> 2. lock the mesh work with sdata_lock() to protect beacon
+>    updates and prevent races with wdev->mesh_id_len or
+>    cfg80211.
 
-The series is intended for v3.11 and applies to the master branch
-of the wireless-next repository.
+Applied, thanks.
 
-Arend van Spriel (4):
-  brcmfmac: rename variable prec to more appropriate name, ie. fifo
-  brcmfmac: remove dependency with nl80211.h
-  brcmfmac: consolidate mac_descriptor related function names
-  brcmfmac: simplify dpc handling using atomic operations
-
-Franky Lin (3):
-  brcmfmac: remove redundant chip ID check in dhd_sdio
-  brcmfmac: replace brcmf_sdioh_request_buffer with brcmf_sdio_buffrw
-  brcmfmac: add sdio sg list support
-
-Hante Meuleman (1):
-  brcmfmac: Only use credits for bcmc when firmware indicates it.
-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  179 ++++++++++++++++++--
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  114 +------------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  174 ++-----------------
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |    3 +-
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   96 +++++++----
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   15 +-
- 6 files changed, 252 insertions(+), 329 deletions(-)
-
--- 
-1.7.10.4
-
+johannes
 
