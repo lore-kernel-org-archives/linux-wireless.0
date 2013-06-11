@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:45915 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899Ab3FDKOa (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38807 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754551Ab3FKTYf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 06:14:30 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/6] ath9k: Remove redundant code
-Date: Tue,  4 Jun 2013 15:41:34 +0530
-Message-Id: <1370340695-29003-5-git-send-email-sujith@msujith.org> (sfid-20130604_121433_055049_8657BEA1)
-In-Reply-To: <1370340695-29003-1-git-send-email-sujith@msujith.org>
-References: <1370340695-29003-1-git-send-email-sujith@msujith.org>
+	Tue, 11 Jun 2013 15:24:35 -0400
+Message-ID: <1370978668.8356.67.camel@jlt4.sipsolutions.net> (sfid-20130611_212439_539392_32A4BA1D)
+Subject: Re: [PATCH] carl9170: make use of the new rate control API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas =?ISO-8859-1?Q?H=FChn?= <thomas@net.t-labs.tu-berlin.de>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nbd@nbd.name
+Date: Tue, 11 Jun 2013 21:24:28 +0200
+In-Reply-To: <1E3747D2-BD9C-4136-B17F-9227E24136D5@net.t-labs.tu-berlin.de>
+References: <1370966237-27716-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <201306111946.22682.chunkeey@googlemail.com>
+	 <1E3747D2-BD9C-4136-B17F-9227E24136D5@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, 2013-06-11 at 21:17 +0200, Thomas Hühn wrote:
+> Hi Christian,
+> 
+> I have not seen that patch in wireless-next, that's why I overlooked it… sorry.
+> 
+> > 
+> > ???
+> > 
+> > carl9170 already supports the new rate control API (Patch from 2013-04-23).
+> > <http://permalink.gmane.org/gmane.linux.kernel.wireless.general/107657>
+> > 
+> > Can you please tell me what you think is missing?
+> > 
+> 
+> You patch looks good to me.
+> As I just saw an ath9k patch for rcu protection when ieee80211_get_tx_rates() is called.
+> Should this be done in carl9170 as well ?
 
-The phy error mask registers are programmed already
-in ath9k_ani_restart(), so there is no need to set them
-in ath9k_ani_reset().
+I think that patch is wrong actually, probably should just do the rcu
+protection inside the function. However the patch is completely wrong
+anyway (C isn't python) so ...
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ani.c | 11 -----------
- 1 file changed, 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index c8595f4..a68beb1 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -360,18 +360,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
- 	ath9k_hw_set_ofdm_nil(ah, ofdm_nil, is_scanning);
- 	ath9k_hw_set_cck_nil(ah, cck_nil, is_scanning);
- 
--	/*
--	 * enable phy counters if hw supports or if not, enable phy
--	 * interrupts (so we can count each one)
--	 */
- 	ath9k_ani_restart(ah);
--
--	ENABLE_REGWRITE_BUFFER(ah);
--
--	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
--
--	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
- static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
--- 
-1.8.3
+johannes
 
