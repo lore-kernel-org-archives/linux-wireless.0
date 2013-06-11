@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:49908 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752396Ab3F1TNP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:13:15 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 06/19] rt2x00: rt2800lib: fix antenna configuration for RT3593
-Date: Fri, 28 Jun 2013 21:12:20 +0200
-Message-Id: <1372446753-11408-7-git-send-email-juhosg@openwrt.org> (sfid-20130628_211327_610536_55FB5B08)
-In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
-References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:37297 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755014Ab3FKLdB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jun 2013 07:33:01 -0400
+Message-ID: <1370950378.8356.13.camel@jlt4.sipsolutions.net> (sfid-20130611_133319_481355_B34C88E3)
+Subject: Re: [PATCH v2 2/2] cfg80211/nl80211: Add packet coalesce support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Luciano Coelho <coelho@ti.com>
+Date: Tue, 11 Jun 2013 13:32:58 +0200
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5950F313C2CB5@SC-VEXCH1.marvell.com>
+References: <5FF020A1CFFEEC49BD1E09530C4FF5950F313C2CB5@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the RT3593 chipset, BBP register 86 must be
-configured by different values based on the RX
-antenna numbers.
+On Mon, 2013-06-03 at 09:47 -0700, Amitkumar Karwar wrote:
 
-Configure this register from the 'rt2800_config_ant'
-function.
+> "iw coalesce add" was used, because command for adding multiple rules
+> at the same time will be a bit lengthy(user will need to enter
+> multiple lists of packet patterns) and syntax check in iw will also
+> need some efforts. 
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
+I think that this is so much unlike all other nl80211 settings where
+they're either refused or replace previous ones entirely that I would
+rather not have it. Take connecting for instance, wext allowed you to
+set all parameters one by one, etc. This is a bit similar. Also, this
+disallows doing checks on the entire configuration easily.
 
-Reference:
-  RT3593_CONFIG_SET_BY_ANTENNA in include/chip/rt3593.h
+Personally, I see iw as a bit of a test tool so I'm not too concerned
+about its sometimes odd command line, but I know giving it lots of
+things can be awkward. For TCP wakeup, I've made it parse a small file,
+maybe that's an option here as well?
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+> > Otherwise you're going to have very awkward races and need
+> > to always clear etc. The code would also be easier, though obviously
+> > you'd need to be able to specify multiple rules at the same time.
+> 
+> For "iw coalesce set" also user needs to always clear the settings
+> using "iw coalesce disable". Also similar to "coalesce set", for
+> "coalesce add" we clear the settings and free allocations while
+> unloading the driver.
+> 
+> Please let us know if you prefer "coalesce set" over "coalesce add".
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 6f6f48f..fa5bbae 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1804,6 +1804,13 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
- 
- 	rt2800_bbp_write(rt2x00dev, 3, r3);
- 	rt2800_bbp_write(rt2x00dev, 1, r1);
-+
-+	if (rt2x00_rt(rt2x00dev, RT3593)) {
-+		if (ant->rx_chain_num == 1)
-+			rt2800_bbp_write(rt2x00dev, 86, 0x00);
-+		else
-+			rt2800_bbp_write(rt2x00dev, 86, 0x46);
-+	}
- }
- EXPORT_SYMBOL_GPL(rt2800_config_ant);
- 
--- 
-1.7.10
+I would much prefer just having set/clear over piecewise configuration.
+
+johannes
 
