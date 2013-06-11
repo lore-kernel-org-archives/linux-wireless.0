@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38260 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756409Ab3FFDvK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 23:51:10 -0400
-Message-ID: <51B00719.20406@candelatech.com> (sfid-20130606_055126_811091_43C07D4A)
-Date: Wed, 05 Jun 2013 20:50:49 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: Tejun Heo <tj@kernel.org>, Rusty Russell <rusty@rustcorp.com.au>,
-	Joe Lawrence <joe.lawrence@stratus.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	stable@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>
-Subject: Re: stop_machine lockup issue in 3.9.y.
-References: <51AE27D5.7050202@candelatech.com>   <87sj0xry1k.fsf@rustcorp.com.au> <20130605071539.GA3429@mtj.dyndns.org>   <51AF6E54.3050108@candelatech.com> <20130605184807.GD10693@mtj.dyndns.org>   <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com>   <51AFA677.9010605@candelatech.com> <20130605211157.GK10693@mtj.dyndns.org>   <1370482492.24311.308.camel@edumazet-glaptop>   <20130606031444.GA12335@mtj.dyndns.org>  <1370489181.24311.318.camel@edumazet-glaptop>  <51B004CD.6080007@candelatech.com> <1370490403.24311.322.camel@edumazet-glaptop>
-In-Reply-To: <1370490403.24311.322.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from tex.lwn.net ([70.33.254.29]:35497 "EHLO vena.lwn.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754228Ab3FKDlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jun 2013 23:41:36 -0400
+Date: Mon, 10 Jun 2013 21:41:34 -0600
+From: Jake Edge <jake@lwn.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx
+ rejection
+Message-ID: <20130610214134.36085c4b@chukar.edge2.net> (sfid-20130611_054152_246938_416DADA6)
+In-Reply-To: <20130610143848.7afd5acc@chukar.edge2.net>
+References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
+	<20130610143848.7afd5acc@chukar.edge2.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2013 08:46 PM, Eric Dumazet wrote:
-> On Wed, 2013-06-05 at 20:41 -0700, Ben Greear wrote:
->> On 06/05/2013 08:26 PM, Eric Dumazet wrote:
->>> On Wed, 2013-06-05 at 20:14 -0700, Tejun Heo wrote:
->>>
->>>>
->>>> Ah, so, that's why it's showing up now.  We probably have had the same
->>>> issue all along but it used to be masked by the softirq limiting.  Do
->>>> you care to revive the 10 iterations limit so that it's limited by
->>>> both the count and timing?  We do wanna find out why softirq is
->>>> spinning indefinitely tho.
->>>
->>> Yes, no problem, I can do that.
->>
->> Limiting it to 5000 fixes my problem, so if you wanted it larger than 10, that would
->> be fine by me.
->>
->> I can send a version of my patch easily enough if we can agree on the max number of
->> loops (and if indeed my version of the patch is acceptable).
->
-> Well, 10 was the prior limit and seems really fine.
->
-> The non update on jiffies seems quite exceptional condition (I hope...)
->
-> We use in Google a patch triggering warning is a thread holds the cpu
-> without taking care to need_resched() for more than xx ms
+On Mon, 10 Jun 2013 14:38:48 -0600 Jake Edge wrote:
 
-Well, I'm sure that patch works nicely until the clock stops moving
-forward :)
+> > Please apply it together with this mac80211 patch:
+> > http://marc.info/?l=linux-wireless&m=136879090123023&w=2 
+> > which I already posted and is queued to upstream. Not having
+> > it may cause troubles and influence negatively this set test.
+> 
+> I tried it on both 3.9 (without 4/4 since it doesn't have that
+> workaround in it) and on 3.10-rc4 and in both cases, i get the same
+> behavior: it tries to connect many times and fails, then eventually
+> connects (after like 20 tries from KDE network manager) ...
 
-I'll post a patch with limit of 10 shortly.
+actually, i spoke too soon, the 3.10-rc4 has not been able to connect
+at all, after many hours of trying.  I manually went in and selected
+the other 2.4GHz SSID (rather than the 5GHz it had been trying) and it
+connected right away, fwiw ...
 
-Thanks,
-Ben
-
-
+jake
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Jake Edge - LWN - jake@lwn.net - http://lwn.net
