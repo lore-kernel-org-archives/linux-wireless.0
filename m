@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:11537 "EHLO mx3.wp.pl"
+Received: from nbd.name ([46.4.11.11]:49779 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753676Ab3FCNFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 09:05:10 -0400
-Date: Mon, 3 Jun 2013 15:05:03 +0200
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: fix sdata locking around
- __ieee80211_request_smps
-Message-ID: <20130603150503.787d2840@north> (sfid-20130603_150558_925578_7A3DAC3C)
-In-Reply-To: <1370260400-12149-1-git-send-email-johannes@sipsolutions.net>
-References: <1370260400-12149-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1751379Ab3FLJsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 05:48:09 -0400
+Message-ID: <51B843C9.9090500@openwrt.org> (sfid-20130612_114829_715942_7A14C831)
+Date: Wed, 12 Jun 2013 11:47:53 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Calvin Owens <jcalvinowens@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Use RCU protection in ieee80211_get_tx_rates()
+References: <20130609225120.GA2789@gmail.com> <20130610042959.GA1902@gmail.com> <1370950926.8356.14.camel@jlt4.sipsolutions.net> <20130611171304.GA2189@gmail.com> <1370980523.8356.70.camel@jlt4.sipsolutions.net> <20130612075634.GA1649@gmail.com> <20130612080042.GA1695@gmail.com>
+In-Reply-To: <20130612080042.GA1695@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon,  3 Jun 2013 13:53:20 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> My cfg80211/mac80211 locking unification broke the sdata
-> locking in ieee80211_set_power_mgmt, it needs to acquire
-> the lock for __ieee80211_request_smps(). Add the locking.
->
-> Reported-by: Jakub Kicinski <kubakici@wp.pl>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  net/mac80211/cfg.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 9034da1..3062210 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -2378,7 +2378,9 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
->  	local->dynamic_ps_forced_timeout = timeout;
->  
->  	/* no change, but if automatic follow powersave */
-> +	sdata_lock(sdata);
->  	__ieee80211_request_smps(sdata, sdata->u.mgd.req_smps);
-> +	sdata_unlock(sdata);
->  
->  	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
->  		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+On 2013-06-12 10:00 AM, Calvin Owens wrote:
+> Copying the rate table should be done in an RCU read-side critical
+> section.
+I think this approach is wrong. The sta entry is also under RCU
+protection (no locking for read access in that part of the code.
+In a normal driver tx path, no extra rcu_read_lock/rcu_read_unlock is
+needed. Only if the driver does some scheduling outside of the tx
+function (which ath9k does), this RCU warning appears.
 
-I can confirm that this patch fixes the reported warning.
+How about this change instead:
+---
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1570,6 +1570,8 @@ void ath_txq_schedule(struct ath_softc *
+ 	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
+ 		return;
+ 
++	rcu_read_lock();
++
+ 	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
+ 	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
+ 
+@@ -1608,8 +1610,10 @@ void ath_txq_schedule(struct ath_softc *
+ 
+ 		if (ac == last_ac ||
+ 		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
+-			return;
++			break;
+ 	}
++
++	rcu_read_unlock();
+ }
+ 
+ /***********/
 
-I had to double check that sdata_lock takes the wdev mutex
-though, because lockdep assert on cfg.c:2321 looks like this:
-
-lockdep_assert_held(&sdata->wdev.mtx)
-
-instead of:
-
-sdata_assert_lock(&sdata)
-
-just saying... :-)
-
- -- kuba
