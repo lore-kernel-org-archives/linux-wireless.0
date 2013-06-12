@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpe-075-189-159-031.nc.res.rr.com ([75.189.159.31]:35295 "EHLO
-	jgpicker.rdu.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758145Ab3FCNrw (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:51193 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753824Ab3FLHmm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 09:47:52 -0400
-From: John Greene <jogreene@redhat.com>
-To: linville@tuxdriver.com
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] brcmsmac: Reduce log spam in heavy tx, make err print in debug
-Date: Mon,  3 Jun 2013 09:47:39 -0400
-Message-Id: <1370267259-19712-1-git-send-email-jogreene@redhat.com> (sfid-20130603_154758_221201_49B0535E)
+	Wed, 12 Jun 2013 03:42:42 -0400
+Date: Wed, 12 Jun 2013 00:42:41 -0700 (PDT)
+Message-Id: <20130612.004241.761719664465563112.davem@davemloft.net> (sfid-20130612_094300_707449_AB2A5883)
+To: sujith@msujith.org
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-06-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20920.8752.339655.254147@gargle.gargle.HOWL>
+References: <20130611.222706.1492583255605214982.davem@davemloft.net>
+	<20130612.002103.916991474696226731.davem@davemloft.net>
+	<20920.8752.339655.254147@gargle.gargle.HOWL>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move message to debug mode to reduce log spam under heavy tx (iperf) load.
-This message prints in ht debug mode only:
-brcms_c_ampdu_dotxstatus_complete: Pkt tx suppressed, illegal channel
-possibly 153
+From: Sujith Manoharan <sujith@msujith.org>
+Date: Wed, 12 Jun 2013 12:54:32 +0530
 
-Signed-off-by: John Greene <jogreene@redhat.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> David Miller wrote:
+>> John, I also don't like the ATK9K Kconfig option name change added in
+>> this pull request, this is exactly the kind of thing that drives
+>> Linus insane.
+>> 
+>> Change the default, fine, but changing the name is unnecssary churn
+>> and adds a new config prompt that people are going to respond to
+>> incorrectly when they type "make oldconfig"
+> 
+> This was Linus' suggestion: https://patchwork.kernel.org/patch/2676971/
+> 
+> The RH bugzilla appears to be down at the moment, but more background
+> for the bug is here: https://bugzilla.redhat.com/show_bug.cgi?id=927191
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-index 1585cc5..bd98285 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-@@ -900,7 +900,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 		if (supr_status) {
- 			update_rate = false;
- 			if (supr_status == TX_STATUS_SUPR_BADCH) {
--				brcms_err(wlc->hw->d11core,
-+				brcms_dbg_ht(wlc->hw->d11core,
- 					  "%s: Pkt tx suppressed, illegal channel possibly %d\n",
- 					  __func__, CHSPEC_CHANNEL(
- 					  wlc->default_bss->chanspec));
--- 
-1.8.1.4
-
+Fair enough, I rescind my objection.
