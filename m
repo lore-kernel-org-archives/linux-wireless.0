@@ -1,59 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:53610 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751330Ab3FJWlv (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41698 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753844Ab3FLLzm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jun 2013 18:41:51 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH RESEND] mwifiex: enable/disable tx_amsdu support via module parameter
-Date: Mon, 10 Jun 2013 15:39:58 -0700
-Message-ID: <1370903998-10925-1-git-send-email-bzhao@marvell.com> (sfid-20130611_004153_818822_99BA7F55)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 12 Jun 2013 07:55:42 -0400
+Message-ID: <1371038139.8601.15.camel@jlt4.sipsolutions.net> (sfid-20130612_135546_273351_BB1BA039)
+Subject: Re: [QUERY] Intel Centrino Wireless-N 100 modules vs built-in
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nick Warne <nick@linicks.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 12 Jun 2013 13:55:39 +0200
+In-Reply-To: <1371037816.8601.13.camel@jlt4.sipsolutions.net> (sfid-20130612_135029_092653_B4030FFF)
+References: <20130612112326.GA10313@sauron>
+	 (sfid-20130612_133412_709863_242F03A2) <1371037816.8601.13.camel@jlt4.sipsolutions.net>
+	 (sfid-20130612_135029_092653_B4030FFF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
 
-This patch disables tx_amsdu support in mwifiex by default.
-tx_amdsu support can be enabled via module parameter at load time.
+> Newer versions of udev don't
+> respond negatively if they don't have the firmware while running from
+> initrd/initramfs, and will leave the driver's request pending to be
+> answered once the real filesystem is mounted.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/wmm.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+And by "newer", I really mean "anything not ancient", the version with
+the logic was 187, released almost a year ago :-)
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 4be3d33..944e884 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -37,6 +37,9 @@
- /* Offset for TOS field in the IP header */
- #define IPTOS_OFFSET 5
- 
-+static bool enable_tx_amsdu;
-+module_param(enable_tx_amsdu, bool, 0644);
-+
- /* WMM information IE */
- static const u8 wmm_info_ie[] = { WLAN_EID_VENDOR_SPECIFIC, 0x07,
- 	0x00, 0x50, 0xf2, 0x02,
-@@ -1233,7 +1236,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
- 				mwifiex_send_delba(priv, tid_del, ra, 1);
- 			}
- 		}
--		if (mwifiex_is_amsdu_allowed(priv, tid) &&
-+		if (enable_tx_amsdu && mwifiex_is_amsdu_allowed(priv, tid) &&
- 		    mwifiex_is_11n_aggragation_possible(priv, ptr,
- 							adapter->tx_buf_size))
- 			mwifiex_11n_aggregate_pkt(priv, ptr, INTF_HEADER_LEN,
--- 
-1.8.2.3
+johannes
 
