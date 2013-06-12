@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:50866 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752762Ab3FLHHP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 03:07:15 -0400
-Date: Wed, 12 Jun 2013 00:07:11 -0700 (PDT)
-Message-Id: <20130612.000711.759531077550828193.davem@davemloft.net> (sfid-20130612_090751_573250_444F58C7)
-To: johannes@sipsolutions.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-06-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1371018409.8601.2.camel@jlt4.sipsolutions.net>
-References: <20130606190929.GB18827@tuxdriver.com>
-	<20130611.222706.1492583255605214982.davem@davemloft.net>
-	<1371018409.8601.2.camel@jlt4.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from linicks.net ([87.127.191.50]:48647 "EHLO mail.linicks.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755634Ab3FLLeD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 07:34:03 -0400
+Date: Wed, 12 Jun 2013 12:23:26 +0100
+From: Nick Warne <nick@linicks.net>
+To: linux-wireless@vger.kernel.org
+Subject: [QUERY] Intel Centrino Wireless-N 100 modules vs built-in
+Message-ID: <20130612112326.GA10313@sauron> (sfid-20130612_133412_709863_242F03A2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 12 Jun 2013 08:26:49 +0200
+Dear Devs,
 
-> On Tue, 2013-06-11 at 22:27 -0700, David Miller wrote:
->> From: "John W. Linville" <linville@tuxdriver.com>
->> Date: Thu, 6 Jun 2013 15:09:30 -0400
->> 
->> > Johannes Berg (2):
->> >       mac80211: constify ieee802_11_parse_elems() argument
->> 
->> Such cleanups are absolutely, positively, not appropriate at this
->> time.
-> 
-> My other fix depends on this to not have a const warning. I can add a
-> cast to pretend the input isn't const at this point, but that seemed
-> like a bad idea as well.
+I have a strange query.  Building a custom kernel on my Samsung N145 notebook I came a cropper.
 
-I would combine the two changes into one commit, because then this
-necessity is clear and you can even explain this in the commit message
-so that there is no argument about the justification.
+05:00.0 Network controller: Intel Corporation Centrino Wireless-N 100
 
-Thanks.
+If I select:
 
+Device Drivers->Network Device Support->Wireless LAN
+
+<M>   Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate-N (iwlwifi)
+-M-   Intel Wireless WiFi DVM Firmware support
+
+all is hucky dory.  But if I build-in these drivers into kernel (<*>), on boot dmesg reports:
+
+[2.347954] iwlwifi 0000:05:00.0: request for firmware file 'iwlwifi-100-5.ucode' failed.
+[2.351885] iwlwifi 0000:05:00.0: no suitable firmware found!
+
+Am I missing something here - I don't quite understand why this happens?
+
+Any help appricated please.
+
+Please CC any replies please, I am not subscribed.
+
+Nick 
+-- 
+Free Software Foundation Associate Member 5508
+http://linicks.net/
