@@ -1,63 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33957 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756346Ab3FMRaR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 13:30:17 -0400
-Date: Thu, 13 Jun 2013 13:30:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Paul Stewart <pstew@chromium.org>
-Subject: Re: [PATCH] mwifiex: Add module parameter for regdomain
-Message-ID: <20130613173002.GC3246@tuxdriver.com> (sfid-20130613_193039_725780_B79B258C)
-References: <1370904007-10959-1-git-send-email-bzhao@marvell.com>
- <877ghz3il6.fsf@purkki.adurom.net>
- <477F20668A386D41ADCC57781B1F70430EA268B457@SC-VEXCH1.marvell.com>
- <8738sn2mcf.fsf@purkki.adurom.net>
- <51B8C41E.7050907@candelatech.com>
- <477F20668A386D41ADCC57781B1F70430EA268B4A3@SC-VEXCH1.marvell.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60296 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752168Ab3FLNqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 09:46:46 -0400
+Message-ID: <51B87BBD.9050905@hauke-m.de> (sfid-20130612_154649_574123_6C057AE4)
+Date: Wed, 12 Jun 2013 15:46:37 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430EA268B4A3@SC-VEXCH1.marvell.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 03/15] brcmsmac: remove brcms_bss_cfg->BSS
+References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de> <1364085963-25940-4-git-send-email-hauke@hauke-m.de> <51B07B23.1090205@broadcom.com>
+In-Reply-To: <51B07B23.1090205@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 12, 2013 at 12:01:23PM -0700, Bing Zhao wrote:
+On 06/06/2013 02:05 PM, Arend van Spriel wrote:
+> On 03/24/2013 01:45 AM, Hauke Mehrtens wrote:
+>> This was a read only member. The checks using BSS are replaced by
+>> better fitting checks of the new type member.
+>>
+>> The change in brcms_c_tbtt() was based on code from b43, in
+>> brcms_c_ps_allowed() the same happens with BSS being true or false,
+>> beaconing and probe responses are just needed in ap mode.
+>>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>   drivers/net/wireless/brcm80211/brcmsmac/main.c |   23
+>> +++++++++--------------
+>>   drivers/net/wireless/brcm80211/brcmsmac/main.h |    2 --
+>>   2 files changed, 9 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+>> b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+>> index 4e420ea..90e6c0d 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+>> @@ -1069,7 +1069,7 @@ brcms_b_txstatus(struct brcms_hardware *wlc_hw,
+>> bool bound, bool *fatal)
+>>
+>>   static void brcms_c_tbtt(struct brcms_c_info *wlc)
+>>   {
+>> -    if (!wlc->bsscfg->BSS)
+>> +    if (wlc->bsscfg->type == BRCMS_TYPE_ADHOC)
+>>           /*
+>>            * DirFrmQ is now valid...defer setting until end
+>>            * of ATIM window
 > 
-> > >> "iw reg set XX" or "country_code=XX" in hostapd.conf is a *user* hint.
-> > >>
-> > >> What we need here is a *driver* hint. Furthermore, with a driver
-> > >> regulatory hint, the passive-scan and no-ibss flags are cleared so we
-> > >> can start AP with hostapd on 5G band.
-> > >
-> > > So it's a driver hint which is coming from user space via a module
-> > > parameter. IMHO you are abusing interfaces here. Is there any better way
-> > > to solve your problem?
-> > 
-> > It would be nice to have some way to do this for ath9k and other NICs
-> > as well.  Best I could come up with is a similar hack for ath9k.
-> > 
-> > I think part of the problem is that this config info needs to be
-> > available very early in the module loading/init logic, so it's
-> > too late to be configured using 'iw' or similar.
+> Hi Hauke,
 > 
-> Exactly. regulatory_hint () needs to be called right after wiphy registration.
+> Sorry for such a late comment. It seem that the above change is
+> incosistent with the changes below. You probably need to change it.
 
-It does seem a bit ugly.  But if Marvell wants it, I don't see any
-"regulatory" argument to disallow something like this.
+Yes there is something wrong. I got confused with b43 which sets
+wlc->qvalid |= MCMD_DIRFRMQVAL; only in adhoc mode and not in ap mode.
 
-Does anyone have a better suggestion for a user interface for such
-a feature?
+I will create a patch and test this.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+>> @@ -7386,7 +7379,8 @@ void brcms_c_update_beacon(struct brcms_c_info
+>> *wlc)
+>>   {
+>>       struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
+>>
+>> -    if (bsscfg->up && !bsscfg->BSS)
+>> +    if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
+>> +               bsscfg->type == BRCMS_TYPE_ADHOC))
+>>           /* Clear the soft intmask */
+>>           wlc->defmacintmask &= ~MI_BCNTPL;
+>>   }
+>> @@ -7461,7 +7455,8 @@ void brcms_c_update_probe_resp(struct
+>> brcms_c_info *wlc, bool suspend)
+>>       struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
+>>
+>>       /* update AP or IBSS probe responses */
+>> -    if (bsscfg->up && !bsscfg->BSS)
+>> +    if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
+>> +               bsscfg->type == BRCMS_TYPE_ADHOC))
+>>           brcms_c_bss_update_probe_resp(wlc, bsscfg, suspend);
+>>   }
+>>
+> 
+> 
+
