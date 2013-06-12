@@ -1,61 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:55509 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042Ab3FCC6i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Jun 2013 22:58:38 -0400
-Received: by mail-pd0-f169.google.com with SMTP id y11so4967890pdj.0
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Jun 2013 19:58:38 -0700 (PDT)
-Received: from empty.site ([101.118.159.240])
-        by mx.google.com with ESMTPSA id fp2sm56915454pbb.36.2013.06.02.19.58.35
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sun, 02 Jun 2013 19:58:37 -0700 (PDT)
-Message-ID: <51AC0657.9090009@googlemail.com> (sfid-20130603_045915_156281_12D136E4)
-Date: Mon, 03 Jun 2013 12:58:31 +1000
-From: Gordian Klein <gordian.klein@googlemail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Wireless LED always on
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from mout.gmx.net ([212.227.17.22]:53176 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753594Ab3FLMk0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 08:40:26 -0400
+From: Dave Wiltshire <david.wiltshire@gmx.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	nsujir@broadcom.com, mchan@broadcom.com, rmody@brocade.com,
+	jcliburn@gmail.com, chris.snook@gmail.com,
+	jeffrey.t.kirsher@intel.com, bruce.w.allan@intel.com,
+	alexander.h.duyck@intel.com, cooldavid@cooldavid.org,
+	linux-driver@qlogic.com, linux-wimax@intel.com,
+	wimax@linuxwimax.org, linux-wireless@vger.kernel.org,
+	viro@zeniv.linux.org.uk, eparis@redhat.com, edumazet@google.com,
+	dev@openvswitch.org, jhs@mojatatu.com,
+	Dave Wiltshire <david.wiltshire@gmx.com>
+Subject: [PATCH 3/3] skbuff: Added new helper function skb_cow_clone_head.
+Date: Wed, 12 Jun 2013 22:40:11 +1000
+Message-Id: <1371040811-8319-2-git-send-email-david.wiltshire@gmx.com> (sfid-20130612_144039_802396_E890F2C6)
+In-Reply-To: <1371040811-8319-1-git-send-email-david.wiltshire@gmx.com>
+References: <1371030906-2396-1-git-send-email-david.wiltshire@gmx.com>
+ <1371040811-8319-1-git-send-email-david.wiltshire@gmx.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+In a few different drivers there is a check of (skb_cloned &&
+!skb_clone_writable) before then using pskb_expand_head to copy the skb
+if that is required. There are already some skb_cow_* functions for
+other conditions, so added this one and changed the call sites.
 
-i have a Sony Vaio SVS1511V9EB with an Intel(R) Centrino(R) Advanced-N
-6235 AGN wireless card. The card is working fine, but the wireless LED
-on my laptop is always on. No matter if i disable the wifi device via
-NetworkManager or "rfkill block all". I set the iwlwifi led_mode
-parameter to 1 (and to 2 for testing), but this didnt do anything to the
-LED, it was constantly on. Id like it to be off when the wifi device is
-disabled.
-This is a log of dmesg:
+Signed-off-by: Dave Wiltshire <david.wiltshire@gmx.com>
+---
+ include/linux/skbuff.h    |   14 ++++++++++++++
+ net/core/dev.c            |    8 ++------
+ net/openvswitch/actions.c |   22 +++++++---------------
+ net/sched/act_csum.c      |    8 ++------
+ net/sched/act_nat.c       |   18 +++++-------------
+ 5 files changed, 30 insertions(+), 40 deletions(-)
 
-# dmesg | grep iwl[    3.955915] iwlwifi 0000:02:00.0: irq 46 for MSI/MSI-X
-[    3.965170] iwlwifi 0000:02:00.0: loaded firmware version 18.168.6.1
-[    3.972206] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEBUG enabled
-[    3.972211] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
-[    3.972213] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
-[    3.972216] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
-[    3.972218] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_P2P disabled
-[    3.972221] iwlwifi 0000:02:00.0: Detected Intel(R) Centrino(R)
-Advanced-N 6235 AGN, REV=0xB0
-[    3.972302] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
-[    3.992851] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-[    4.977782] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
-[    4.985059] iwlwifi 0000:02:00.0: Radio type=0x2-0x1-0x0
-[    5.359698] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
-[    5.366473] iwlwifi 0000:02:00.0: Radio type=0x2-0x1-0x0
-
-I verified the led_mode parameter is set correctly with :
-
-# cat /sys/module/iwlwifi/parameters/led_mode
-1
-
-I am running openSuse 12.2 x64 with Kernel 3.9.3-10.g06ad9d8-desktop.
-
-Thanks for any hint.
-
-Gordian
+diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+index a7393ad..7d18541 100644
+--- a/include/linux/skbuff.h
++++ b/include/linux/skbuff.h
+@@ -2154,6 +2154,20 @@ static inline int skb_cow_head(struct sk_buff *skb, unsigned int headroom)
+ }
+ 
+ /**
++ * skb_cow_clone_head
++ * @skb: buffer to cow
++ * @len: length up to which to write
++ *
++ * This function is identical to skb_cow and sb_cow_head except that we
++ * replace the skb_cloned check by skb_cloned && !skb_clone_writable.
++ *
++ */
++static inline int skb_cow_clone_head(struct sk_buff *skb, unsigned int len)
++{
++	return __skb_cow(skb, 0, skb_cloned(skb) && !skb_clone_writable(skb, len));
++}
++
++/**
+  *	skb_padto	- pad an skbuff up to a minimal size
+  *	@skb: buffer to pad
+  *	@len: minimal length
+diff --git a/net/core/dev.c b/net/core/dev.c
+index fa007db..1fb1cf5 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -2222,12 +2222,8 @@ int skb_checksum_help(struct sk_buff *skb)
+ 	offset += skb->csum_offset;
+ 	BUG_ON(offset + sizeof(__sum16) > skb_headlen(skb));
+ 
+-	if (skb_cloned(skb) &&
+-	    !skb_clone_writable(skb, offset + sizeof(__sum16))) {
+-		ret = pskb_expand_head(skb, 0, 0, GFP_ATOMIC);
+-		if (ret)
+-			goto out;
+-	}
++	if (skb_cow_clone_head(skb, offset + sizeof(__sum16)))
++		goto out;
+ 
+ 	*(__sum16 *)(skb->data + offset) = csum_fold(csum);
+ out_set_summed:
+diff --git a/net/openvswitch/actions.c b/net/openvswitch/actions.c
+index 894b6cb..3d3a9d0 100644
+--- a/net/openvswitch/actions.c
++++ b/net/openvswitch/actions.c
+@@ -38,21 +38,13 @@
+ static int do_execute_actions(struct datapath *dp, struct sk_buff *skb,
+ 			const struct nlattr *attr, int len, bool keep_skb);
+ 
+-static int make_writable(struct sk_buff *skb, int write_len)
+-{
+-	if (!skb_cloned(skb) || skb_clone_writable(skb, write_len))
+-		return 0;
+-
+-	return pskb_expand_head(skb, 0, 0, GFP_ATOMIC);
+-}
+-
+ /* remove VLAN header from packet and update csum accordingly. */
+ static int __pop_vlan_tci(struct sk_buff *skb, __be16 *current_tci)
+ {
+ 	struct vlan_hdr *vhdr;
+ 	int err;
+ 
+-	err = make_writable(skb, VLAN_ETH_HLEN);
++	err = skb_cow_clone_head(skb, VLAN_ETH_HLEN);
+ 	if (unlikely(err))
+ 		return err;
+ 
+@@ -126,7 +118,7 @@ static int set_eth_addr(struct sk_buff *skb,
+ 			const struct ovs_key_ethernet *eth_key)
+ {
+ 	int err;
+-	err = make_writable(skb, ETH_HLEN);
++	err = skb_cow_clone_head(skb, ETH_HLEN);
+ 	if (unlikely(err))
+ 		return err;
+ 
+@@ -221,7 +213,7 @@ static int set_ipv4(struct sk_buff *skb, const struct ovs_key_ipv4 *ipv4_key)
+ 	struct iphdr *nh;
+ 	int err;
+ 
+-	err = make_writable(skb, skb_network_offset(skb) +
++	err = skb_cow_clone_head(skb, skb_network_offset(skb) +
+ 				 sizeof(struct iphdr));
+ 	if (unlikely(err))
+ 		return err;
+@@ -250,7 +242,7 @@ static int set_ipv6(struct sk_buff *skb, const struct ovs_key_ipv6 *ipv6_key)
+ 	__be32 *saddr;
+ 	__be32 *daddr;
+ 
+-	err = make_writable(skb, skb_network_offset(skb) +
++	err = skb_cow_clone_head(skb, skb_network_offset(skb) +
+ 			    sizeof(struct ipv6hdr));
+ 	if (unlikely(err))
+ 		return err;
+@@ -284,7 +276,7 @@ static int set_ipv6(struct sk_buff *skb, const struct ovs_key_ipv6 *ipv6_key)
+ 	return 0;
+ }
+ 
+-/* Must follow make_writable() since that can move the skb data. */
++/* Must follow skb_cow_clone_head() since that can move the skb data. */
+ static void set_tp_port(struct sk_buff *skb, __be16 *port,
+ 			 __be16 new_port, __sum16 *check)
+ {
+@@ -313,7 +305,7 @@ static int set_udp(struct sk_buff *skb, const struct ovs_key_udp *udp_port_key)
+ 	struct udphdr *uh;
+ 	int err;
+ 
+-	err = make_writable(skb, skb_transport_offset(skb) +
++	err = skb_cow_clone_head(skb, skb_transport_offset(skb) +
+ 				 sizeof(struct udphdr));
+ 	if (unlikely(err))
+ 		return err;
+@@ -333,7 +325,7 @@ static int set_tcp(struct sk_buff *skb, const struct ovs_key_tcp *tcp_port_key)
+ 	struct tcphdr *th;
+ 	int err;
+ 
+-	err = make_writable(skb, skb_transport_offset(skb) +
++	err = skb_cow_clone_head(skb, skb_transport_offset(skb) +
+ 				 sizeof(struct tcphdr));
+ 	if (unlikely(err))
+ 		return err;
+diff --git a/net/sched/act_csum.c b/net/sched/act_csum.c
+index 3a4c0ca..e7ff098 100644
+--- a/net/sched/act_csum.c
++++ b/net/sched/act_csum.c
+@@ -122,9 +122,7 @@ static void *tcf_csum_skb_nextlayer(struct sk_buff *skb,
+ 	int hl = ihl + jhl;
+ 
+ 	if (!pskb_may_pull(skb, ipl + ntkoff) || (ipl < hl) ||
+-	    (skb_cloned(skb) &&
+-	     !skb_clone_writable(skb, hl + ntkoff) &&
+-	     pskb_expand_head(skb, 0, 0, GFP_ATOMIC)))
++	    skb_cow_clone_head(skb, hl + ntkoff))
+ 		return NULL;
+ 	else
+ 		return (void *)(skb_network_header(skb) + ihl);
+@@ -382,9 +380,7 @@ static int tcf_csum_ipv4(struct sk_buff *skb, u32 update_flags)
+ 	}
+ 
+ 	if (update_flags & TCA_CSUM_UPDATE_FLAG_IPV4HDR) {
+-		if (skb_cloned(skb) &&
+-		    !skb_clone_writable(skb, sizeof(*iph) + ntkoff) &&
+-		    pskb_expand_head(skb, 0, 0, GFP_ATOMIC))
++		if (skb_cow_clone_head(skb, sizeof(*iph) + ntkoff))
+ 			goto fail;
+ 
+ 		ip_send_check(ip_hdr(skb));
+diff --git a/net/sched/act_nat.c b/net/sched/act_nat.c
+index 876f0ef..2b5b89c 100644
+--- a/net/sched/act_nat.c
++++ b/net/sched/act_nat.c
+@@ -144,9 +144,7 @@ static int tcf_nat(struct sk_buff *skb, const struct tc_action *a,
+ 		addr = iph->daddr;
+ 
+ 	if (!((old_addr ^ addr) & mask)) {
+-		if (skb_cloned(skb) &&
+-		    !skb_clone_writable(skb, sizeof(*iph) + noff) &&
+-		    pskb_expand_head(skb, 0, 0, GFP_ATOMIC))
++		if (skb_cow_clone_head(skb, sizeof(*iph) + noff))
+ 			goto drop;
+ 
+ 		new_addr &= mask;
+@@ -174,9 +172,7 @@ static int tcf_nat(struct sk_buff *skb, const struct tc_action *a,
+ 		struct tcphdr *tcph;
+ 
+ 		if (!pskb_may_pull(skb, ihl + sizeof(*tcph) + noff) ||
+-		    (skb_cloned(skb) &&
+-		     !skb_clone_writable(skb, ihl + sizeof(*tcph) + noff) &&
+-		     pskb_expand_head(skb, 0, 0, GFP_ATOMIC)))
++		    skb_cow_clone_head(skb, ihl + sizeof(*tcph) + noff))
+ 			goto drop;
+ 
+ 		tcph = (void *)(skb_network_header(skb) + ihl);
+@@ -188,9 +184,7 @@ static int tcf_nat(struct sk_buff *skb, const struct tc_action *a,
+ 		struct udphdr *udph;
+ 
+ 		if (!pskb_may_pull(skb, ihl + sizeof(*udph) + noff) ||
+-		    (skb_cloned(skb) &&
+-		     !skb_clone_writable(skb, ihl + sizeof(*udph) + noff) &&
+-		     pskb_expand_head(skb, 0, 0, GFP_ATOMIC)))
++		    skb_cow_clone_head(skb, ihl + sizeof(*udph) + noff))
+ 			goto drop;
+ 
+ 		udph = (void *)(skb_network_header(skb) + ihl);
+@@ -230,10 +224,8 @@ static int tcf_nat(struct sk_buff *skb, const struct tc_action *a,
+ 		if ((old_addr ^ addr) & mask)
+ 			break;
+ 
+-		if (skb_cloned(skb) &&
+-		    !skb_clone_writable(skb, ihl + sizeof(*icmph) +
+-					     sizeof(*iph) + noff) &&
+-		    pskb_expand_head(skb, 0, 0, GFP_ATOMIC))
++		if (skb_cow_clone_head(skb, ihl + sizeof(*icmph) +
++					    sizeof(*iph) + noff))
+ 			goto drop;
+ 
+ 		icmph = (void *)(skb_network_header(skb) + ihl);
+-- 
+1.7.10.4
 
