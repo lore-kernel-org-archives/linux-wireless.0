@@ -1,63 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4558 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755220Ab3FEOOQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 10:14:16 -0400
-Message-ID: <51AF47AF.9060802@broadcom.com> (sfid-20130605_161420_752342_FD021ABC)
-Date: Wed, 5 Jun 2013 16:14:07 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Antonio Quartulli" <antonio@open-mesh.com>
-cc: "Antonio Quartulli" <ordex@autistici.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCHv2 3/4] brcm80211: make mgmt_tx in brcmfmac accept a
- NULL channel
-References: <1370433187-1337-1-git-send-email-ordex@autistici.org>
- <1370433187-1337-3-git-send-email-ordex@autistici.org>
- <51AF42DC.3000001@broadcom.com> <20130605135757.GF2349@open-mesh.com>
-In-Reply-To: <20130605135757.GF2349@open-mesh.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:40699 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754660Ab3FLG07 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 02:26:59 -0400
+Message-ID: <1371018409.8601.2.camel@jlt4.sipsolutions.net> (sfid-20130612_082734_406810_12D5F55B)
+Subject: Re: pull request: wireless 2013-06-06
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 12 Jun 2013 08:26:49 +0200
+In-Reply-To: <20130611.222706.1492583255605214982.davem@davemloft.net> (sfid-20130612_072751_104839_5F29BCA5)
+References: <20130606190929.GB18827@tuxdriver.com>
+	 <20130611.222706.1492583255605214982.davem@davemloft.net>
+	 (sfid-20130612_072751_104839_5F29BCA5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2013 03:57 PM, Antonio Quartulli wrote:
-> On Wed, Jun 05, 2013 at 06:53:32AM -0700, Arend van Spriel wrote:
->
-> [...]
->
->>> +		freq = cfg->channel;
->>> +		if (chan)
->>> +			freq = chan->center_freq;
->>> +		chan_nr = ieee80211_frequency_to_channel(freq);
->>
->> Could you get rid of 'freq' variable and use
->> ieee80211_frequency_to_channel() on cfg->channel or chan->center_freq.
->>
->
-> I tried that, but the line indented below the if would be longer than 80 chars
-> and breaking it is quite ugly.
->
->> Another thing is that cfg->channel can be zero resulting in chan_nr
->> being zero. I had a quick look whether the device firmware can handle
->> this. I suspect not, but I will need to ask to be sure.
->>
->
-> ok. But when cfg->channel is zero, where is the current freq stored?
+On Tue, 2013-06-11 at 22:27 -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Thu, 6 Jun 2013 15:09:30 -0400
+> 
+> > Johannes Berg (2):
+> >       mac80211: constify ieee802_11_parse_elems() argument
+> 
+> Such cleanups are absolutely, positively, not appropriate at this
+> time.
 
-It is not. The rf on the device is set to a certain channel so it can be 
-retrieved from the device:
+My other fix depends on this to not have a const warning. I can add a
+cast to pretend the input isn't const at this point, but that seemed
+like a bad idea as well.
 
-brcmf_fil_cmd_int_get(vif->ifp, BRCMF_C_GET_CHANNEL, &freq);
-
-The vif pointer can be obtained using container_of() on the wdev. That 
-is done in mgmt_tx() already some lines above. May you should move 
-determining the vif pointer and do it unconditional.
-
-Regards,
-Arend
+johannes
 
 
