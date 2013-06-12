@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37388 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752443Ab3FKL6K (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:42295 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755279Ab3FLH10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 07:58:10 -0400
-Message-ID: <1370951887.8356.23.camel@jlt4.sipsolutions.net> (sfid-20130611_135813_449705_2CAF4F98)
-Subject: Re: [PATCHv4 1/4] mac80211: make mgmt_tx accept a NULL channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Date: Tue, 11 Jun 2013 13:58:07 +0200
-In-Reply-To: <1370951718.8356.22.camel@jlt4.sipsolutions.net> (sfid-20130611_135526_423082_5C4E5185)
-References: <1370444989-2095-1-git-send-email-ordex@autistici.org>
-	 <1370951718.8356.22.camel@jlt4.sipsolutions.net>
-	 (sfid-20130611_135526_423082_5C4E5185)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 12 Jun 2013 03:27:26 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20920.8752.339655.254147@gargle.gargle.HOWL> (sfid-20130612_092741_710220_07968AB9)
+Date: Wed, 12 Jun 2013 12:54:32 +0530
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-06-06
+In-Reply-To: <20130612.002103.916991474696226731.davem@davemloft.net>
+References: <20130606190929.GB18827@tuxdriver.com>
+	<20130611.222706.1492583255605214982.davem@davemloft.net>
+	<20130612.002103.916991474696226731.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-11 at 13:55 +0200, Johannes Berg wrote:
-> On Wed, 2013-06-05 at 17:09 +0200, Antonio Quartulli wrote:
+David Miller wrote:
+> John, I also don't like the ATK9K Kconfig option name change added in
+> this pull request, this is exactly the kind of thing that drives
+> Linus insane.
 > 
-> > +	if (need_offchan && !chan)
-> > +		return -EINVAL;
-> 
-> > @@ -2847,10 +2853,14 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
-> >  		rcu_read_lock();
-> >  		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-> >  
-> > -		if (chanctx_conf)
-> > -			need_offchan = chan != chanctx_conf->def.chan;
-> > -		else
-> > +		if (chanctx_conf) {
-> > +			need_offchan = chan && (chan != chanctx_conf->def.chan);
-> > +		} else if (!chan) {
-> > +			ret = -EINVAL;
-> > +			goto out_unlock;
-> > +		} else {
-> >  			need_offchan = true;
-> > +		}
-> >  		rcu_read_unlock();
-> 
-> It seems this would be clearer?
-> http://p.sipsolutions.net/b8a03c85f0e8b89f.txt
+> Change the default, fine, but changing the name is unnecssary churn
+> and adds a new config prompt that people are going to respond to
+> incorrectly when they type "make oldconfig"
 
-Actually, no, I like your version better.
+This was Linus' suggestion: https://patchwork.kernel.org/patch/2676971/
 
-johanes
+The RH bugzilla appears to be down at the moment, but more background
+for the bug is here: https://bugzilla.redhat.com/show_bug.cgi?id=927191
 
+Sujith
