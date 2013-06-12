@@ -1,121 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:62440 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519Ab3F1PFA (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:59726 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755220Ab3FLUgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 11:05:00 -0400
-Message-ID: <1372431906.3301.283.camel@edumazet-glaptop> (sfid-20130628_170513_843002_63FC6BD1)
-Subject: [PATCH v3] iwl3945: better skb management in rx path
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Paul Stewart <pstew@google.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Steinar H. Gunderson" <sesse@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Fri, 28 Jun 2013 08:05:06 -0700
-In-Reply-To: <1372431024.3301.277.camel@edumazet-glaptop>
-References: <1372421021.3301.263.camel@edumazet-glaptop>
-	 <CAMcMvshEdsFZ2PVEpaq0e2P4L+cksshjB56x2YvA4wt3T+3__w@mail.gmail.com>
-	 <1372431024.3301.277.camel@edumazet-glaptop>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 12 Jun 2013 16:36:04 -0400
+Date: Wed, 12 Jun 2013 13:36:03 -0700 (PDT)
+Message-Id: <20130612.133603.339419203281101086.davem@davemloft.net> (sfid-20130612_223629_181641_3D993815)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-06-12
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130612150926.GC11589@tuxdriver.com>
+References: <20130606190929.GB18827@tuxdriver.com>
+	<20130612150926.GC11589@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <edumazet@google.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 12 Jun 2013 11:09:26 -0400
 
-Steinar reported reallocations of skb->head with IPv6, leading to
-a warning in skb_try_coalesce()
+> For now I have dropped the mac80211 tree from this request.
+> We are developing a little backlog of fixes and I would like to
+> avoid introducing any more uncertainty to this pull request for the
+> 3.10 stream.  All the other bits are the same as what was in the
+> 2013-06-06 request, including the ath9k fixes intended to address
+> the problems observed by Linus w/ his Pixel, and a CVE fix for a
+> potential security issue in the b43 driver.
 
-It turns out iwl3945 has several problems :
-
-1) skb->truesize is underestimated. 
-   We really consume PAGE_SIZE bytes for a fragment,
-   not the frame length.
-2) 128 bytes of initial headroom is a bit low and forces reallocations.
-3) We can avoid consuming a full page for small enough frames.
-
-Reported-by: Steinar H. Gunderson <sesse@google.com>
-Signed-off-by: Eric Dumazet <edumazet@google.com>
-Cc: Paul Stewart <pstew@google.com>
----
-v3: use regular memcpy(skb_put(...),...)
-v2: SMALL_PACKET_SIZE define
-
- drivers/net/wireless/iwlegacy/3945.c |   31 +++++++++++++++----------
- 1 file changed, 19 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
-index c092033..f09e257 100644
---- a/drivers/net/wireless/iwlegacy/3945.c
-+++ b/drivers/net/wireless/iwlegacy/3945.c
-@@ -475,6 +475,8 @@ il3945_is_network_packet(struct il_priv *il, struct ieee80211_hdr *header)
- 	}
- }
- 
-+#define SMALL_PACKET_SIZE 256
-+
- static void
- il3945_pass_packet_to_mac80211(struct il_priv *il, struct il_rx_buf *rxb,
- 			       struct ieee80211_rx_status *stats)
-@@ -483,14 +485,13 @@ il3945_pass_packet_to_mac80211(struct il_priv *il, struct il_rx_buf *rxb,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)IL_RX_DATA(pkt);
- 	struct il3945_rx_frame_hdr *rx_hdr = IL_RX_HDR(pkt);
- 	struct il3945_rx_frame_end *rx_end = IL_RX_END(pkt);
--	u16 len = le16_to_cpu(rx_hdr->len);
-+	u32 len = le16_to_cpu(rx_hdr->len);
- 	struct sk_buff *skb;
- 	__le16 fc = hdr->frame_control;
-+	u32 fraglen = PAGE_SIZE << il->hw_params.rx_page_order;
- 
- 	/* We received data from the HW, so stop the watchdog */
--	if (unlikely
--	    (len + IL39_RX_FRAME_SIZE >
--	     PAGE_SIZE << il->hw_params.rx_page_order)) {
-+	if (unlikely(len + IL39_RX_FRAME_SIZE > fraglen)) {
- 		D_DROP("Corruption detected!\n");
- 		return;
- 	}
-@@ -506,26 +507,32 @@ il3945_pass_packet_to_mac80211(struct il_priv *il, struct il_rx_buf *rxb,
- 		D_INFO("Woke queues - frame received on passive channel\n");
- 	}
- 
--	skb = dev_alloc_skb(128);
-+	skb = dev_alloc_skb(SMALL_PACKET_SIZE);
- 	if (!skb) {
- 		IL_ERR("dev_alloc_skb failed\n");
- 		return;
- 	}
- 
- 	if (!il3945_mod_params.sw_crypto)
--		il_set_decrypted_flag(il, (struct ieee80211_hdr *)rxb_addr(rxb),
-+		il_set_decrypted_flag(il, (struct ieee80211_hdr *)pkt,
- 				      le32_to_cpu(rx_end->status), stats);
- 
--	skb_add_rx_frag(skb, 0, rxb->page,
--			(void *)rx_hdr->payload - (void *)pkt, len,
--			len);
--
-+	/* If frame is small enough to fit into skb->head, copy it
-+	 * and do not consume a full page
-+	 */
-+	if (len <= SMALL_PACKET_SIZE) {
-+		memcpy(skb_put(skb, len), rx_hdr->payload, len);
-+	} else {
-+		skb_add_rx_frag(skb, 0, rxb->page,
-+				(void *)rx_hdr->payload - (void *)pkt, len,
-+				fraglen);
-+		il->alloc_rxb_page--;
-+		rxb->page = NULL;
-+	}
- 	il_update_stats(il, false, fc, len);
- 	memcpy(IEEE80211_SKB_RXCB(skb), stats, sizeof(*stats));
- 
- 	ieee80211_rx(il->hw, skb);
--	il->alloc_rxb_page--;
--	rxb->page = NULL;
- }
- 
- #define IL_DELAY_NEXT_SCAN_AFTER_ASSOC (HZ*6)
-
-
+Pulled, thanks John.
