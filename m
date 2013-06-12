@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54945 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751454Ab3FLOmp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 10:42:45 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jake Edge <jake@lwn.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/4] iwlegacy: add il_{stop,wake}_queues_by_reason functions
-Date: Wed, 12 Jun 2013 16:44:48 +0200
-Message-Id: <1371048290-8015-2-git-send-email-sgruszka@redhat.com> (sfid-20130612_164248_348601_15823C17)
-In-Reply-To: <1371048290-8015-1-git-send-email-sgruszka@redhat.com>
-References: <1371048290-8015-1-git-send-email-sgruszka@redhat.com>
+Received: from mail.candelatech.com ([208.74.158.172]:55527 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754227Ab3FLUUU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 16:20:20 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC] mac80211:  Ensure tid_start_tx is protected by sta->lock.
+Date: Wed, 12 Jun 2013 13:20:09 -0700
+Message-Id: <1371068409-10407-1-git-send-email-greearb@candelatech.com> (sfid-20130612_222023_756658_E80BFC74)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add functions that will stop/wake all queues. Make them safe
-regarding multiple calls and when some ac are stopped/woke
-independently.
+From: Ben Greear <greearb@candelatech.com>
 
-Tested-by: Jake Edge <jake@lwn.net>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+I believe this is more correct, though it did not fix the
+memory leak I was chasing when I found this code.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/iwlegacy/common.h | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ net/mac80211/ht.c       |    5 ++++-
+ net/mac80211/sta_info.h |    1 +
+ 2 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 67da89b..83f8ed8 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1299,6 +1299,8 @@ struct il_priv {
- 	/* queue refcounts */
- #define IL_MAX_HW_QUEUES	32
- 	unsigned long queue_stopped[BITS_TO_LONGS(IL_MAX_HW_QUEUES)];
-+#define IL_STOP_REASON_PASSIVE	0
-+	unsigned long stop_reason;
- 	/* for each AC */
- 	atomic_t queue_stop_count[4];
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 0db25d4..c6256b4 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -283,13 +283,14 @@ void ieee80211_ba_session_work(struct work_struct *work)
+ 				sta, tid, WLAN_BACK_RECIPIENT,
+ 				WLAN_REASON_UNSPECIFIED, true);
  
-@@ -2291,6 +2293,26 @@ il_stop_queue(struct il_priv *il, struct il_tx_queue *txq)
- 		_il_stop_queue(il, ac);
- }
++		spin_lock_bh(&sta->lock);
++
+ 		tid_tx = sta->ampdu_mlme.tid_start_tx[tid];
+ 		if (tid_tx) {
+ 			/*
+ 			 * Assign it over to the normal tid_tx array
+ 			 * where it "goes live".
+ 			 */
+-			spin_lock_bh(&sta->lock);
  
-+static inline void
-+il_wake_queues_by_reason(struct il_priv *il, int reason)
-+{
-+	u8 ac;
-+
-+	if (test_and_clear_bit(reason, &il->stop_reason))
-+		for (ac = 0; ac < 4; ac++)
-+			_il_wake_queue(il, ac);
-+}
-+
-+static inline void
-+il_stop_queues_by_reason(struct il_priv *il, int reason)
-+{
-+	u8 ac;
-+
-+	if (!test_and_set_bit(reason, &il->stop_reason))
-+		for (ac = 0; ac < 4; ac++)
-+			_il_stop_queue(il, ac);
-+}
-+
- #ifdef ieee80211_stop_queue
- #undef ieee80211_stop_queue
- #endif
+ 			sta->ampdu_mlme.tid_start_tx[tid] = NULL;
+ 			/* could there be a race? */
+@@ -301,6 +302,8 @@ void ieee80211_ba_session_work(struct work_struct *work)
+ 
+ 			ieee80211_tx_ba_session_handle_start(sta, tid);
+ 			continue;
++		} else {
++			spin_unlock_bh(&sta->lock);
+ 		}
+ 
+ 		tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index c509423..0f85418 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -204,6 +204,7 @@ struct tid_ampdu_rx {
+  *	driver requested to close until the work for it runs
+  * @mtx: mutex to protect all TX data (except non-NULL assignments
+  *	to tid_tx[idx], which are protected by the sta spinlock)
++ *      tid_start_tx is also protected by sta->lock.
+  */
+ struct sta_ampdu_mlme {
+ 	struct mutex mtx;
 -- 
-1.7.11.7
+1.7.3.4
 
