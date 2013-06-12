@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43941 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887Ab3FJTpK (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:50866 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752762Ab3FLHHP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jun 2013 15:45:10 -0400
-Date: Mon, 10 Jun 2013 15:35:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-next 2013-06-05
-Message-ID: <20130610193520.GA10065@tuxdriver.com> (sfid-20130610_214514_845737_51678784)
-References: <1370416113.8920.10.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370416113.8920.10.camel@jlt4.sipsolutions.net>
+	Wed, 12 Jun 2013 03:07:15 -0400
+Date: Wed, 12 Jun 2013 00:07:11 -0700 (PDT)
+Message-Id: <20130612.000711.759531077550828193.davem@davemloft.net> (sfid-20130612_090751_573250_444F58C7)
+To: johannes@sipsolutions.net
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-06-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1371018409.8601.2.camel@jlt4.sipsolutions.net>
+References: <20130606190929.GB18827@tuxdriver.com>
+	<20130611.222706.1492583255605214982.davem@davemloft.net>
+	<1371018409.8601.2.camel@jlt4.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 05, 2013 at 09:08:33AM +0200, Johannes Berg wrote:
-> Hi,
-> 
-> And just like the fixes for old code never end, also the fixes for new
-> code :-) But I also have some new features. I also had to merge
-> wireless-next to get a cfg80211 change that the D3 test feature depends
-> on.
-> 
-> Here I mostly have various fixes for AP/GO mode, Bluetooth coexistence
-> and power save modes. The only new thing is the introduction of "D3
-> test" mode, accessible through debugfs for D3 firmware debugging.
-> 
-> Please pull.
-> 
-> Thanks,
-> johannes
-> 
-> The following changes since commit a910e4a94f6923c8c988565525f017f687bf7205:
-> 
->   cw1200: add driver for the ST-E CW1100 & CW1200 WLAN chipsets (2013-05-29 15:26:40 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> 
-> for you to fetch changes up to fded313ec045024d4f769ce6b3e41fe343c167b0:
-> 
->   iwlwifi: mvm: don't request SMPS on non-STA iface (2013-06-05 09:06:13 +0200)
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 12 Jun 2013 08:26:49 +0200
 
-Pulling now...
+> On Tue, 2013-06-11 at 22:27 -0700, David Miller wrote:
+>> From: "John W. Linville" <linville@tuxdriver.com>
+>> Date: Thu, 6 Jun 2013 15:09:30 -0400
+>> 
+>> > Johannes Berg (2):
+>> >       mac80211: constify ieee802_11_parse_elems() argument
+>> 
+>> Such cleanups are absolutely, positively, not appropriate at this
+>> time.
+> 
+> My other fix depends on this to not have a const warning. I can add a
+> cast to pretend the input isn't const at this point, but that seemed
+> like a bad idea as well.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I would combine the two changes into one commit, because then this
+necessity is clear and you can even explain this in the commit message
+so that there is no argument about the justification.
+
+Thanks.
+
