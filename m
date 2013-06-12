@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47612 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756019Ab3FLTAN (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:35760 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757951Ab3FLVT5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 15:00:13 -0400
-Date: Wed, 12 Jun 2013 14:53:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Thomas =?iso-8859-1?Q?H=FChn?= <thomas@net.t-labs.tu-berlin.de>,
-	linux-wireless@vger.kernel.org, nbd@nbd.name
-Subject: Re: [PATCH] carl9170: make use of the new rate control API
-Message-ID: <20130612185334.GH11589@tuxdriver.com> (sfid-20130612_210017_773056_89AA5276)
-References: <1370966237-27716-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
- <1E3747D2-BD9C-4136-B17F-9227E24136D5@net.t-labs.tu-berlin.de>
- <1370978668.8356.67.camel@jlt4.sipsolutions.net>
- <201306112149.09768.chunkeey@googlemail.com>
+	Wed, 12 Jun 2013 17:19:57 -0400
+Message-ID: <51B8E5FA.9040400@wwwdotorg.org> (sfid-20130612_232001_378635_C0FB25A0)
+Date: Wed, 12 Jun 2013 15:19:54 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201306112149.09768.chunkeey@googlemail.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Subject: Re: Regression in 9390ace brcmfmac: free net device when registration
+ fails
+References: <51AD1F22.2080004@wwwdotorg.org> <51ADE47D.50700@broadcom.com> <51B0FAC0.4080709@broadcom.com> <51B100C2.8070905@wwwdotorg.org>
+In-Reply-To: <51B100C2.8070905@wwwdotorg.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 11, 2013 at 09:49:09PM +0200, Christian Lamparter wrote:
-> On Tuesday, June 11, 2013 09:24:28 PM Johannes Berg wrote:
-> > On Tue, 2013-06-11 at 21:17 +0200, Thomas Hühn wrote:
-> > > Hi Christian,
-> > > 
-> > > I have not seen that patch in wireless-next, that's why I overlooked it... sorry.
-> You are right and it's not in wireless-testing.git either. That's a bit odd.
+On 06/06/2013 03:36 PM, Stephen Warren wrote:
+> On 06/06/2013 03:10 PM, Arend van Spriel wrote:
+>> On 06/04/13 14:58, Arend van Spriel wrote:
+>>> On 06/04/2013 12:56 AM, Stephen Warren wrote:
+>>>> (John, note that this commit is part of the pull request you sent to
+>>>> Dave today)
+>>>>
+>>>> Arend,
+>>>>
+>>>> Commit 9390ace "brcmfmac: free net device when registration fails"
+>>>> causes a regression.
+>>>>
+>>>> I had the BCM4330 firmware present in my root fs, whereas my HW is a
+>>>> BCM4329. With this patch applied, I get a kernel panic on boot. With it
+>>>> reverted, I see that no issues of that nature. This is true in
+>>>> next-20130531 (and also 5/30 and 6/1 but not earlier). A bisect of
+>>>> Linus's tree followed by a merge of John's wireless pull request from
+>>>> today pointed at this same commit.
+>>>
+>>> Thanks, Stephen
+>>>
+>>> I will look into this.
+>>
+>> Hi Stephen,
+>>
+>> Can you try the attached patch? If it does not solve the issue, could
+>> you provide a log.
 > 
-> John,
+> Yes, that works great, thanks.
 > 
-> was this patch overlooked/lost or was there a problem with it?
-> (Or: can you please put it into wireless-next)
+> Tested-by: Stephen Warren <swarren@nvidia.com>
 
-No idea, but I don't seem to have it.  Can you resend it?
-
-> > > > carl9170 already supports the new rate control API (Patch from 2013-04-23).
-> > > > <http://permalink.gmane.org/gmane.linux.kernel.wireless.general/107657>
-> > > > 
-> > > > Can you please tell me what you think is missing?
-> > > > 
-> > > 
-> > > You patch looks good to me.
-> > > As I just saw an ath9k patch for rcu protection when ieee80211_get_tx_rates() is called.
-> > > Should this be done in carl9170 as well ?
-> > 
-> > I think that patch is wrong actually, probably should just do the rcu
-> > protection inside the function. However the patch is completely wrong
-> > anyway (C isn't python) so ...
-> Uh, that's confusing. We are now talking about the patch from Thomas, right?
-> If so: the previous "new rate control api" feature patch for carl9170 should
-> be fine in this regard.
-> 
-> Regards,
-> 	Chr
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Did this patch get applied anywhere? I was hoping it'd go into 3.10-rc*
+given it's a user-triggerable backtrace introduced in 3.10-rc*.
