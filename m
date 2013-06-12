@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:51738 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755517Ab3FAL1E (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:36417 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754179Ab3FLJRG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jun 2013 07:27:04 -0400
-Subject: [PATCH v2 23/29] ath10k: add trace.c
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Sat, 01 Jun 2013 14:27:00 +0300
-Message-ID: <20130601112700.32443.38564.stgit@localhost6.localdomain6> (sfid-20130601_132707_746871_22F66641)
-In-Reply-To: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
-References: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 12 Jun 2013 05:17:06 -0400
+Message-ID: <1371028618.3252.57.camel@edumazet-glaptop> (sfid-20130612_111729_072888_7E2E1113)
+Subject: Re: [PATCH 1/3] skbuff: Update truesize in pskb_expand_head
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Dave Wiltshire <david.wiltshire@gmx.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, nsujir@broadcom.com,
+	mchan@broadcom.com, rmody@brocade.com, jcliburn@gmail.com,
+	chris.snook@gmail.com, jeffrey.t.kirsher@intel.com,
+	bruce.w.allan@intel.com, alexander.h.duyck@intel.com,
+	cooldavid@cooldavid.org, linux-driver@qlogic.com,
+	linux-wimax@intel.com, wimax@linuxwimax.org,
+	linux-wireless@vger.kernel.org, viro@zeniv.linux.org.uk,
+	eparis@redhat.com, edumazet@google.com, dev@openvswitch.org,
+	jhs@mojatatu.com
+Date: Wed, 12 Jun 2013 02:16:58 -0700
+In-Reply-To: <1371027934-1955-2-git-send-email-david.wiltshire@gmx.com>
+References: <1371027934-1955-1-git-send-email-david.wiltshire@gmx.com>
+	 <1371027934-1955-2-git-send-email-david.wiltshire@gmx.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/trace.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/trace.c
+On Wed, 2013-06-12 at 19:05 +1000, Dave Wiltshire wrote:
+> Some call sites to pskb_expand_head subsequently update the skb truesize
+> and others don't (even with non-zero arguments). This is likely a memory
+> audit leak. Fixed this up by moving the memory accounting to the
+> skbuff.c file and removing it from the calling sites.
+> 
+> Signed-off-by: Dave Wiltshire <david.wiltshire@gmx.com>
+> ---
+>  drivers/net/wireless/mwl8k.c |    1 -
+>  kernel/audit.c               |    2 --
+>  net/core/skbuff.c            |    1 +
+>  net/netlink/af_netlink.c     |    3 +--
+>  net/wireless/util.c          |    2 --
+>  5 files changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/trace.c b/drivers/net/wireless/ath/ath10k/trace.c
-new file mode 100644
-index 0000000..4a31e2c
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/trace.c
-@@ -0,0 +1,20 @@
-+/*
-+ * Copyright (c) 2012 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/module.h>
-+
-+#define CREATE_TRACE_POINTS
-+#include "trace.h"
+Ouch.
+
+Sorry, you cannot do that.
+
+skb->truesize is really complex, because there is a strong relation
+between skb->truesize and memory accounting on sockets.
+
+So pskb_expand_head() should not touch skb->truesize.
+
+Only callers can do that when needed, and if possible.
+
+An example of very careful truesize manipulation can be found in
+tcp_tso_segment()
+
+
 
