@@ -1,48 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:42362 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956Ab3F1XFD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 19:05:03 -0400
-Received: by mail-pa0-f45.google.com with SMTP id bi5so2953569pad.4
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Jun 2013 16:05:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1372431906.3301.283.camel@edumazet-glaptop>
-References: <1372421021.3301.263.camel@edumazet-glaptop>
-	<CAMcMvshEdsFZ2PVEpaq0e2P4L+cksshjB56x2YvA4wt3T+3__w@mail.gmail.com>
-	<1372431024.3301.277.camel@edumazet-glaptop>
-	<1372431906.3301.283.camel@edumazet-glaptop>
-Date: Sat, 29 Jun 2013 01:05:02 +0200
-Message-ID: <CAMQErF45ZTdBDuGJ_zOZ=v28=Fj+LSNowKt_Bn6UVi5h14gt5A@mail.gmail.com> (sfid-20130629_010512_524820_CE029D48)
-Subject: Re: [PATCH v3] iwl3945: better skb management in rx path
-From: "Steinar H. Gunderson" <sesse@google.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Paul Stewart <pstew@google.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:54945 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751454Ab3FLOmp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 10:42:45 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Jake Edge <jake@lwn.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/4] iwlegacy: add il_{stop,wake}_queues_by_reason functions
+Date: Wed, 12 Jun 2013 16:44:48 +0200
+Message-Id: <1371048290-8015-2-git-send-email-sgruszka@redhat.com> (sfid-20130612_164248_348601_15823C17)
+In-Reply-To: <1371048290-8015-1-git-send-email-sgruszka@redhat.com>
+References: <1371048290-8015-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/6/28 Eric Dumazet <eric.dumazet@gmail.com>:
-> Steinar reported reallocations of skb->head with IPv6, leading to
-> a warning in skb_try_coalesce()
->
-> It turns out iwl3945 has several problems :
->
-> 1) skb->truesize is underestimated.
->    We really consume PAGE_SIZE bytes for a fragment,
->    not the frame length.
-> 2) 128 bytes of initial headroom is a bit low and forces reallocations.
-> 3) We can avoid consuming a full page for small enough frames.
+Add functions that will stop/wake all queues. Make them safe
+regarding multiple calls and when some ac are stopped/woke
+independently.
 
-I'm running 3.9.8 plus this patch (hand-applied since GMail mangled
-it…), and so far, it seems to work fine. Well, network-manager still
-doesn't like Cisco's band-select feature, so from time to time I get
-network freezes while it's trying to roam from 5 GHz to 2.4 GHz, but
-that's hardly iwl3945's fault.
+Tested-by: Jake Edge <jake@lwn.net>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/common.h | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-/* Steinar */
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 67da89b..83f8ed8 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1299,6 +1299,8 @@ struct il_priv {
+ 	/* queue refcounts */
+ #define IL_MAX_HW_QUEUES	32
+ 	unsigned long queue_stopped[BITS_TO_LONGS(IL_MAX_HW_QUEUES)];
++#define IL_STOP_REASON_PASSIVE	0
++	unsigned long stop_reason;
+ 	/* for each AC */
+ 	atomic_t queue_stop_count[4];
+ 
+@@ -2291,6 +2293,26 @@ il_stop_queue(struct il_priv *il, struct il_tx_queue *txq)
+ 		_il_stop_queue(il, ac);
+ }
+ 
++static inline void
++il_wake_queues_by_reason(struct il_priv *il, int reason)
++{
++	u8 ac;
++
++	if (test_and_clear_bit(reason, &il->stop_reason))
++		for (ac = 0; ac < 4; ac++)
++			_il_wake_queue(il, ac);
++}
++
++static inline void
++il_stop_queues_by_reason(struct il_priv *il, int reason)
++{
++	u8 ac;
++
++	if (!test_and_set_bit(reason, &il->stop_reason))
++		for (ac = 0; ac < 4; ac++)
++			_il_stop_queue(il, ac);
++}
++
+ #ifdef ieee80211_stop_queue
+ #undef ieee80211_stop_queue
+ #endif
 -- 
-Software Engineer, Google Switzerland
+1.7.11.7
+
