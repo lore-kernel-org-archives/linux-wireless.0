@@ -1,79 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:47180 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757884Ab3FMWMx (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53860 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756876Ab3FLWNx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 18:12:53 -0400
-Message-ID: <51BA43DC.7050805@gmail.com> (sfid-20130614_001304_008395_20ED28BF)
-Date: Thu, 13 Jun 2013 23:12:44 +0100
-From: Dave Kilroy <kilroyd@googlemail.com>
+	Wed, 12 Jun 2013 18:13:53 -0400
+Message-ID: <51B8F299.4070104@candelatech.com> (sfid-20130613_001357_266405_785DC48B)
+Date: Wed, 12 Jun 2013 15:13:45 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: Re: [PATCH] orinoco_usb: fix memory leak in ezusb_access_ltv() when
- device disconnected
-References: <1371155171-15398-1-git-send-email-khoroshilov@ispras.ru>
-In-Reply-To: <1371155171-15398-1-git-send-email-khoroshilov@ispras.ru>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] mac80211: fix TX aggregation TID struct leak
+References: <1371070209-24107-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1371070209-24107-1-git-send-email-johannes@sipsolutions.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13/06/2013 21:26, Alexey Khoroshilov wrote:
-> If "device is disconnected" check occurs to be true in ezusb_access_ltv(),
-> it just return -ENODEV. But that means request_context is leaked since
-> there are no any references to it anymore.
-> The patch adds a call to ezusb_request_context_put() before return.
+On 06/12/2013 01:50 PM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> Found by Linux Driver Verification project (linuxtesting.org).
+> Ben reports that kmemleak is saying TX aggregation TID
+> structs are leaked. Given his workload, I suspect that
+> they're leaked because stations are destroyed before
+> their aggregation sessions get a chance to start. Fix
+> this by simply freeing structs that are not used yet.
 >
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> Reported-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
->   drivers/net/wireless/orinoco/orinoco_usb.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
+>   net/mac80211/sta_info.c | 1 +
+>   1 file changed, 1 insertion(+)
 >
-> diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-> index 1f9cb55..bdfe637 100644
-> --- a/drivers/net/wireless/orinoco/orinoco_usb.c
-> +++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-> @@ -881,7 +881,8 @@ static int ezusb_access_ltv(struct ezusb_priv *upriv,
->   
->   	if (!upriv->udev) {
->   		dbg("Device disconnected");
-> -		return -ENODEV;
-> +		retval = -ENODEV;
-> +		goto exit;
->   	}
->   
->   	if (upriv->read_urb->status != -EINPROGRESS)
-It looks like there is also loss of a request_context in
-ezusb_xmit after orinoco_process_xmit_skb fails. Something like
-the following should resolve it.
-
-The remaining request_context allocations look ok to me.
+> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> index b429798..aaf68d2 100644
+> --- a/net/mac80211/sta_info.c
+> +++ b/net/mac80211/sta_info.c
+> @@ -149,6 +149,7 @@ static void cleanup_single_sta(struct sta_info *sta)
+>   	 * directly by station destruction.
+>   	 */
+>   	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
+> +		kfree(sta->ampdu_mlme.tid_start_tx[i]);
+>   		tid_tx = rcu_dereference_raw(sta->ampdu_mlme.tid_tx[i]);
+>   		if (!tid_tx)
+>   			continue;
+>
 
 
-Dave.
----
-Apologies, this is cut+paste from an old tree and mangled to be
-diff-like. Untested. Uncompiled.
+This does fix the TID leakage for me.
 
-diff a/drivers/net/wireless/orinoco/orinoco_usb.c 
-b/drivers/net/wireless/orinoco/orinoco_usb.c
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -1194,8 +1194,10 @@ static netdev_tx_t ezusb_xmit(struct sk_buff 
-*skb, struct net_device *dev)
+Tested-by:  Ben Greear <greearb@candelatech.com>
 
-     err = orinoco_process_xmit_skb(skb, dev, priv, &tx_control,
-                        &mic[0]);
--    if (err)
-+    if (err) {
-+        ezusb_request_context_put(ctx);
-         goto drop;
-+    }
+Thanks,
+Ben
 
-     {
-         __le16 *tx_cntl = (__le16 *)buf;
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
