@@ -1,59 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:49043 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933144Ab3FRSSl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 14:18:41 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+Received: from mx1.redhat.com ([209.132.183.28]:38633 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756058Ab3FLOh1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 10:37:27 -0400
+Date: Wed, 12 Jun 2013 16:39:37 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jake Edge <jake@lwn.net>
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, stable <stable@kernel.org>
-Subject: [PATCH] rtlwifi: rtl8192cu: Fix duplicate if test
-Date: Tue, 18 Jun 2013 13:18:17 -0500
-Message-Id: <1371579497-5575-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130618_201854_534425_13554AB4)
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx
+ rejection
+Message-ID: <20130612143936.GB2698@redhat.com> (sfid-20130612_163750_397435_BDF0498E)
+References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
+ <20130610143848.7afd5acc@chukar.edge2.net>
+ <20130610214134.36085c4b@chukar.edge2.net>
+ <20130611160949.GA1696@redhat.com>
+ <20130611131704.7e59efbb@chukar.edge2.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130611131704.7e59efbb@chukar.edge2.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A typo causes routine rtl92cu_phy_rf6052_set_cck_txpower() to test the
-same condition twice. The problem was found using cppcheck-1.49, and the
-proper fix was verified against the pre-mac80211 version of the code.
+On Tue, Jun 11, 2013 at 01:17:04PM -0600, Jake Edge wrote:
+> looks like a good a set of patches for 3.11, though I imagine stable
+> will stick with the other workaround ...
 
-This patch was originally included as commit 1288aa4, but was accidentally
-reverted in a later patch.
+I plan to post them to -next. Thanks for testing!
 
-Reported-by: David Binderman <dcb314@hotmail.com> [original report]
-Reported-by: Andrea Morello <andrea.merello@gmail.com> [report of accidental reversion]
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: stable <stable@kernel.org>  [back to 2.6.39]
----
-
-John,
-
-Although this patch is trivial and could be included in the 3.10 stream,
-I think we should not burden DaveM nor Linus with it this late in the 3.10
-cycle. Please push it into the 3.11 stream.
-
-Thanks,
-
-Larry
----
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
-index 953f1a0..2119313 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
-@@ -104,7 +104,7 @@ void rtl92cu_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
- 			tx_agc[RF90_PATH_A] = 0x10101010;
- 			tx_agc[RF90_PATH_B] = 0x10101010;
- 		} else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
--			   TXHIGHPWRLEVEL_LEVEL1) {
-+			   TXHIGHPWRLEVEL_LEVEL2) {
- 			tx_agc[RF90_PATH_A] = 0x00000000;
- 			tx_agc[RF90_PATH_B] = 0x00000000;
- 		} else{
--- 
-1.8.1.4
-
+Stanislaw
