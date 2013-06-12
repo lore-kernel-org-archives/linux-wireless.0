@@ -1,76 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from diserzione.investici.org ([82.221.99.153]:37497 "EHLO
-	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861Ab3FCHEc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 03:04:32 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCH 2/2] mac80211: in mgmt_tx use the current channel if none has been specified
-Date: Mon,  3 Jun 2013 08:39:47 +0200
-Message-Id: <1370241587-2609-2-git-send-email-ordex@autistici.org> (sfid-20130603_090435_727410_099A6CFA)
-In-Reply-To: <1370241587-2609-1-git-send-email-ordex@autistici.org>
-References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
+Received: from purkki.adurom.net ([80.68.90.206]:36933 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755993Ab3FLSwT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 14:52:19 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Paul Stewart <pstew@chromium.org>
+Subject: Re: [PATCH] mwifiex: Add module parameter for regdomain
+References: <1370904007-10959-1-git-send-email-bzhao@marvell.com>
+	<877ghz3il6.fsf@purkki.adurom.net>
+	<477F20668A386D41ADCC57781B1F70430EA268B457@SC-VEXCH1.marvell.com>
+Date: Wed, 12 Jun 2013 21:52:16 +0300
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430EA268B457@SC-VEXCH1.marvell.com>
+	(Bing Zhao's message of "Wed, 12 Jun 2013 10:43:19 -0700")
+Message-ID: <8738sn2mcf.fsf@purkki.adurom.net> (sfid-20130612_205223_491923_CF361C15)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+Bing Zhao <bzhao@marvell.com> writes:
 
-In mgmt_tx, if no channel has been specified via cfg80211,
-use the current one.
+> Hi Kalle,
+>
+>> > From: Avinash Patil <patila@marvell.com>
+>> >
+>> > Allow a regulatory domain country code to be specified at boot
+>> > using a module argument.  This overrides the firmware regulatory
+>> > mode.
+>> >
+>> > This patch also enables uAP to operate in 11a mode with hostapd.
+>> >
+>> > Signed-off-by: Avinash Patil <patila@marvell.com>
+>> > Signed-off-by: Paul Stewart <pstew@chromium.org>
+>> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+>> 
+>> This looks ugly. Why can't you use the proper nl80211 interface and
+>> instead want to add a driver specific hack?
+>
+> "iw reg set XX" or "country_code=XX" in hostapd.conf is a *user* hint.
+>
+> What we need here is a *driver* hint. Furthermore, with a driver
+> regulatory hint, the passive-scan and no-ibss flags are cleared so we
+> can start AP with hostapd on 5G band.
 
-If the interface requires offchan (because disconnected or
-for other reasons) then fail.
+So it's a driver hint which is coming from user space via a module
+parameter. IMHO you are abusing interfaces here. Is there any better way
+to solve your problem?
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- net/mac80211/cfg.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9034da1..e6e41c7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2836,6 +2836,13 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		return -EOPNOTSUPP;
- 	}
- 
-+	/*
-+	 * configurations requiring offchan cannot work if no channel has been
-+	 * specified
-+	 */
-+	if (need_offchan && !chan)
-+		return -EINVAL;
-+
- 	mutex_lock(&local->mtx);
- 
- 	/* Check if the operating channel is the requested channel */
-@@ -2845,6 +2852,10 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		rcu_read_lock();
- 		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
- 
-+		/* if no channel was specified, use the current one */
-+		if (chanctx_conf && !chan)
-+			chan = chanctx_conf->def.chan;
-+
- 		if (chanctx_conf)
- 			need_offchan = chan != chanctx_conf->def.chan;
- 		else
-@@ -2852,6 +2863,12 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		rcu_read_unlock();
- 	}
- 
-+	/* at this point a channel should have been chosen */
-+	if (!chan) {
-+		ret = -EINVAL;
-+		goto out_unlock;
-+	}
-+
- 	if (need_offchan && !offchan) {
- 		ret = -EBUSY;
- 		goto out_unlock;
 -- 
-1.8.1.5
-
+Kalle Valo
