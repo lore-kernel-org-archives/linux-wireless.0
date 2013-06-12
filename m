@@ -1,70 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56308 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752203Ab3FFK0Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 06:26:24 -0400
-Message-ID: <51B063C7.5040509@openwrt.org> (sfid-20130606_122627_557234_C2B57338)
-Date: Thu, 06 Jun 2013 12:26:15 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47207 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757911Ab3FLSaK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 14:30:10 -0400
+Date: Wed, 12 Jun 2013 14:22:38 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux NFC <linux-nfc@ml01.01.org>
+Subject: Re: [GIT] [3.10] NFC fixes
+Message-ID: <20130612182238.GG11589@tuxdriver.com> (sfid-20130612_203014_759177_B62DA596)
+References: <20130606152019.GT4793@zurbaran>
 MIME-Version: 1.0
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, mickflemm@gmail.com,
-	mcgrof@qca.qualcomm.com, rmanohar@qca.qualcomm.com,
-	adrian@freebsd.org, ath5k-devel@lists.ath5k.org,
-	bvahl@net.t-labs.tu-berlin.de
-Subject: Re: [PATCH] ath5k: make use of the new rate control API
-References: <1370509492-24293-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <1370509492-24293-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130606152019.GT4793@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-06-06 11:04 AM, Thomas Huehn wrote:
-> This patch enabels ath5k to use the new rate table to lookup each
-> mrr rate and retry information per packet.
+Given recent events, I'm not sure that this is really acceptable as
+a fix request.  The service bit and endianness in particular don't
+sound like they are addressing big problems, and the other two don't
+sound like they are really fixing any regressions either.
+
+Can these wait for 3.11?
+
+John
+
+On Thu, Jun 06, 2013 at 05:20:19PM +0200, Samuel Ortiz wrote:
+> Hi John,
 > 
-> Signed-off-by: Benjamin Vahl <bvahl@net.t-labs.tu-berlin.de>
-> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-This patch is missing changes in the tx status path. At tx completion,
-info->status.rates needs to be filled with the contents of bf->rates
-before filling in retry counts.
+> This is the 2nd NFC pull request for 3.10.
+> 
+> I wish this one could have been part of the first one, but we came back from
+> the NFC plugfest with a few more LLCP fixes:
+> 
+> - The well known services bitmask was sent with the wrong endianness and with
+>   the first bit not set, which goes against the LLCP specifications. This
+>   won't prevent most use cases and tests to pass, only picky implementations
+>   seem to care about the WKS correctness.
+> 
+> - We were ignoring RNRs and were sending our pending frames regardless. We
+>   should just re-queue them and send a SYMM instead.
+> 
+> - Non blocking LLCP connections were not handled properly as we found out
+>   after implementing it from neard. Applications were immediatly woken up with
+>   a SIGHUP and connection failed. This is fixed now, allowing us to have a
+>   fully asynchronous NFC userspace daemon.
+> 
+> Thanks in advance for pulling them in.
+> 
+> The following changes since commit cee6dfa25831e0daac52fc582a04a7204f886220:
+> 
+>   Revert "ath9k_hw: Update rx gain initval to improve rx sensitivity" (2013-06-05 10:42:29 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.10-2
+> 
+> for you to fetch changes up to fcd335b0010aeafb6e3dfd46360778ce59e1e201:
+> 
+>   NFC: llcp: Fix the well known services endianness (2013-06-06 16:43:51 +0200)
+> 
+> ----------------------------------------------------------------
+> Samuel Ortiz (4):
+>       NFC: llcp: Fix non blocking sockets connections
+>       NFC: llcp: Do not send pending Tx frames when the remote is not ready
+>       NFC: llcp: Set the LLC Link Management well known service bit
+>       NFC: llcp: Fix the well known services endianness
+> 
+>  net/nfc/llcp.h      |    1 +
+>  net/nfc/llcp_core.c |    8 ++++++--
+>  net/nfc/llcp_sock.c |    8 +++++---
+>  3 files changed, 12 insertions(+), 5 deletions(-)
+> -- 
+> Intel Open Source Technology Centre
+> http://oss.intel.com/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
->  static int
->  ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
-> -		  struct ath5k_txq *txq, int padsize)
-> +		  struct ath5k_txq *txq, int padsize,
-> +		  struct ieee80211_tx_control *control)
->  {
->  	struct ath5k_desc *ds = bf->desc;
->  	struct sk_buff *skb = bf->skb;
->  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
->  	unsigned int pktlen, flags, keyidx = AR5K_TXKEYIX_INVALID;
->  	struct ieee80211_rate *rate;
-> +	struct ieee80211_tx_rate txrate;
->  	unsigned int mrr_rate[3], mrr_tries[3];
->  	int i, ret;
->  	u16 hw_rate;
-> @@ -722,12 +765,15 @@ ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
->  		duration = le16_to_cpu(ieee80211_ctstoself_duration(ah->hw,
->  			info->control.vif, pktlen, info));
->  	}
-> +
-> +	txrate.count = bf->rates[0].count;
-> +
->  	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
->  		ieee80211_get_hdrlen_from_skb(skb), padsize,
->  		get_hw_packet_type(skb),
->  		(ah->ah_txpower.txp_requested * 2),
->  		hw_rate,
-> -		info->control.rates[0].count, keyidx, ah->ah_tx_ant, flags,
-> +		txrate.count, keyidx, ah->ah_tx_ant, flags,
->  		cts_rate, duration);
->  	if (ret)
->  		goto err_unmap;
-The txrate variable is pointless, you only use txrate.count where you
-could also just use bf->rates[0].count directly.
-
-- Felix
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
