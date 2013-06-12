@@ -1,61 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51076 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754989Ab3FCTpO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 15:45:14 -0400
-Date: Mon, 3 Jun 2013 15:39:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Yunlian Jiang <yunlian@google.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	chaoming_li@realsil.com.cn, davem@davemloft.net
-Subject: Re: [PATCH] rtlwifi: initialize local array and set value.
-Message-ID: <20130603193947.GH2727@tuxdriver.com> (sfid-20130603_214518_003714_41A89291)
-References: <1370036721-18164-1-git-send-email-yunlian@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370036721-18164-1-git-send-email-yunlian@google.com>
+Received: from mout.gmx.net ([212.227.15.18]:61812 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755572Ab3FLJFU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 05:05:20 -0400
+From: Dave Wiltshire <david.wiltshire@gmx.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	nsujir@broadcom.com, mchan@broadcom.com, rmody@brocade.com,
+	jcliburn@gmail.com, chris.snook@gmail.com,
+	jeffrey.t.kirsher@intel.com, bruce.w.allan@intel.com,
+	alexander.h.duyck@intel.com, cooldavid@cooldavid.org,
+	linux-driver@qlogic.com, linux-wimax@intel.com,
+	wimax@linuxwimax.org, linux-wireless@vger.kernel.org,
+	viro@zeniv.linux.org.uk, eparis@redhat.com, edumazet@google.com,
+	dev@openvswitch.org, jhs@mojatatu.com,
+	Dave Wiltshire <david.wiltshire@gmx.com>
+Subject: [PATCH 0/3] skbuff: pskb_expand_head changes
+Date: Wed, 12 Jun 2013 19:05:31 +1000
+Message-Id: <1371027934-1955-1-git-send-email-david.wiltshire@gmx.com> (sfid-20130612_110547_472293_80C54C9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is missing a Signed-off-by line...
+This patchset applies against David Miller's net-next tree.
 
-On Fri, May 31, 2013 at 02:45:21PM -0700, Yunlian Jiang wrote:
-> GCC 4.8 is spitting out uninitialized-variable warnings against
-> "drivers/net/wireless/rtlwifi/rtl8192de/dm.c".  
-> 
-> drivers/net/wireless/rtlwifi/rtl8192de/dm.c:941:31: 
-> error: 'ofdm_index_old[1]' may be used uninitialized in this
-> function [-Werror=maybe-uninitialized]
->      rtlpriv->dm.ofdm_index[i] = ofdm_index_old[i];
-> 
-> This patch adds initialization to the variable and properly sets its value.
-> ---
->  drivers/net/wireless/rtlwifi/rtl8192de/dm.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> index 19a7655..47875ba 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> @@ -842,7 +842,7 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
->  	long val_y, ele_c = 0;
->  	u8 ofdm_index[2];
->  	s8 cck_index = 0;
-> -	u8 ofdm_index_old[2];
-> +	u8 ofdm_index_old[2] = {0, 0};
->  	s8 cck_index_old = 0;
->  	u8 index;
->  	int i;
-> -- 
-> 1.8.2.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+This is my first patch, so please let me know if I've done something
+wrong or could do something better (e.g. splitting the patch in a
+different way).
+
+I think there is a problem with memory accounting in pskb_expand_head.
+Some call sites update truesize while others don't. This means that the
+skbuff can change in size without truesize being updated. This seems
+incorrect to me. So I changed it. Perhaps I don't understand something,
+but I thought it best to generate the change and then ask. So is this
+correct?
+
+The other patches are from looking at all the call sites to
+pskb_expand_head and since I was doing that I cleaned some of them up.
+
+Dave Wiltshire (3):
+  skbuff: Update truesize in pskb_expand_head
+  skbuff: skb_cow_head not used in some drivers.
+  skbuff: Added new helper function skb_cow_clone_head.
+
+ drivers/net/ethernet/atheros/atl1c/atl1c_main.c   |    8 ++------
+ drivers/net/ethernet/atheros/atl1e/atl1e_main.c   |    8 ++------
+ drivers/net/ethernet/atheros/atlx/atl1.c          |    8 ++------
+ drivers/net/ethernet/broadcom/tg3.c               |    3 +--
+ drivers/net/ethernet/brocade/bna/bnad.c           |   11 +++--------
+ drivers/net/ethernet/intel/e1000/e1000_main.c     |    8 ++------
+ drivers/net/ethernet/intel/e1000e/netdev.c        |    8 ++------
+ drivers/net/ethernet/intel/igb/igb_main.c         |    7 ++-----
+ drivers/net/ethernet/intel/igbvf/netdev.c         |   11 +++--------
+ drivers/net/ethernet/intel/ixgb/ixgb_main.c       |    8 ++------
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c     |   10 +++-------
+ drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c |    7 ++-----
+ drivers/net/ethernet/jme.c                        |    3 +--
+ drivers/net/ethernet/qlogic/qlge/qlge_main.c      |    8 ++------
+ drivers/net/wimax/i2400m/netdev.c                 |    3 +--
+ drivers/net/wireless/mwl8k.c                      |    1 -
+ include/linux/skbuff.h                            |   14 +++++++++++++
+ kernel/audit.c                                    |    2 --
+ net/core/dev.c                                    |    8 ++------
+ net/core/skbuff.c                                 |    1 +
+ net/netlink/af_netlink.c                          |    3 +--
+ net/openvswitch/actions.c                         |   22 +++++++--------------
+ net/sched/act_csum.c                              |    8 ++------
+ net/sched/act_nat.c                               |   18 +++++------------
+ net/wireless/util.c                               |    2 --
+ 25 files changed, 62 insertions(+), 128 deletions(-)
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10.4
+
