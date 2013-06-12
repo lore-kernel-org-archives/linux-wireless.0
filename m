@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49051 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663Ab3F0Obc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 10:31:32 -0400
-Message-ID: <1372343489.8160.11.camel@jlt4.sipsolutions.net> (sfid-20130627_163134_761620_BA3A1452)
-Subject: Re: [PATCHv4 02/18] mac80211/rc80211: add chandef to rate
- initialization
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 27 Jun 2013 16:31:29 +0200
-In-Reply-To: <1372343457.8160.10.camel@jlt4.sipsolutions.net> (sfid-20130627_163106_779970_99BBA4BD)
-References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1372337064-19254-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1372337940.8160.3.camel@jlt4.sipsolutions.net>
-	 <20130627142754.GA19965@pandem0nium>
-	 <1372343457.8160.10.camel@jlt4.sipsolutions.net>
-	 (sfid-20130627_163106_779970_99BBA4BD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:38942 "EHLO
+	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756019Ab3FLTCK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jun 2013 15:02:10 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Ben Greear <greearb@candelatech.com>, Kalle Valo <kvalo@adurom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Paul Stewart <pstew@chromium.org>
+Date: Wed, 12 Jun 2013 12:01:23 -0700
+Subject: RE: [PATCH] mwifiex: Add module parameter for regdomain
+Message-ID: <477F20668A386D41ADCC57781B1F70430EA268B4A3@SC-VEXCH1.marvell.com> (sfid-20130612_210214_546789_D44E087B)
+References: <1370904007-10959-1-git-send-email-bzhao@marvell.com>
+ <877ghz3il6.fsf@purkki.adurom.net>
+ <477F20668A386D41ADCC57781B1F70430EA268B457@SC-VEXCH1.marvell.com>
+ <8738sn2mcf.fsf@purkki.adurom.net> <51B8C41E.7050907@candelatech.com>
+In-Reply-To: <51B8C41E.7050907@candelatech.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-06-27 at 16:30 +0200, Johannes Berg wrote:
-> On Thu, 2013-06-27 at 16:27 +0200, Simon Wunderlich wrote:
-> > On Thu, Jun 27, 2013 at 02:59:00PM +0200, Johannes Berg wrote:
-> > > On Thu, 2013-06-27 at 14:44 +0200, Simon Wunderlich wrote:
-> > > 
-> > > >  static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
-> > > > +			  struct cfg80211_chan_def *chandef,
-> > > 
-> > > I'd argue you can remove the sband pointer now, since the band is known
-> > > from the chandef?
-> > 
-> > Not really, these rate algos usually access sband->bitrates, and sband can not be
-> > derived from just the band and these others parameters (at least I miss to see how).
+
+> >> "iw reg set XX" or "country_code=XX" in hostapd.conf is a *user* hint.
+> >>
+> >> What we need here is a *driver* hint. Furthermore, with a driver
+> >> regulatory hint, the passive-scan and no-ibss flags are cleared so we
+> >> can start AP with hostapd on 5G band.
+> >
+> > So it's a driver hint which is coming from user space via a module
+> > parameter. IMHO you are abusing interfaces here. Is there any better way
+> > to solve your problem?
 > 
-> sband = hw->wiphy->bands[chandef->chan.band];
+> It would be nice to have some way to do this for ath9k and other NICs
+> as well.  Best I could come up with is a similar hack for ath9k.
+> 
+> I think part of the problem is that this config info needs to be
+> available very early in the module loading/init logic, so it's
+> too late to be configured using 'iw' or similar.
 
-might be more efficient to just pass it though :)
+Exactly. regulatory_hint () needs to be called right after wiphy registration.
 
-johannes
+Thanks,
+Bing
+
+> 
+> Thanks,
+> Ben
 
