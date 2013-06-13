@@ -1,48 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39395 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932559Ab3FRPUL (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:47180 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757884Ab3FMWMx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 11:20:11 -0400
-Message-ID: <1371568800.8318.44.camel@jlt4.sipsolutions.net> (sfid-20130618_172025_236593_A568303E)
-Subject: Re: [PATCHv2 2/5] nl80211/cfg80211: add channel switch command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Date: Tue, 18 Jun 2013 17:20:00 +0200
-In-Reply-To: <20130618151806.GB27492@pandem0nium>
-References: <1371212124-26264-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1371212124-26264-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1371567030.8318.34.camel@jlt4.sipsolutions.net>
-	 <20130618151806.GB27492@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Jun 2013 18:12:53 -0400
+Message-ID: <51BA43DC.7050805@gmail.com> (sfid-20130614_001304_008395_20ED28BF)
+Date: Thu, 13 Jun 2013 23:12:44 +0100
+From: Dave Kilroy <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: Re: [PATCH] orinoco_usb: fix memory leak in ezusb_access_ltv() when
+ device disconnected
+References: <1371155171-15398-1-git-send-email-khoroshilov@ispras.ru>
+In-Reply-To: <1371155171-15398-1-git-send-email-khoroshilov@ispras.ru>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-18 at 17:18 +0200, Simon Wunderlich wrote:
-> On Tue, Jun 18, 2013 at 04:50:30PM +0200, Johannes Berg wrote:
-> > 
-> > > + * @NL80211_CMD_CHANNEL_SWITCH: Perform a channel switch by announcing the
-> > > + *	the new channel information (Channel Switch Announcement - CSA)
-> > > + *	in the beacon for some time (as defined in the
-> > > + *	%NL80211_ATTR_CH_SWITCH_COUNT parameter) and then change to the
-> > > + *	new channel. Userspace provides the new channel information (using
-> > > + *	%NL80211_ATTR_WIPHY_FREQ and the attributes determining channel
-> > > + *	width). %NL80211_ATTR_CH_SWITCH_BLOCK_TX may be supplied to inform
-> > > + *	other station that transmission must be blocked until the channel
-> > > + *	switch is complete.
-> > 
-> > We probably need a flag to indicate that the command is available, since
-> > mac80211 might implement it but not all drivers will?
-> 
-> Yeah ... shall we announce it as CMD() in nl80211_send_wiphy()? Or feature
-> flag?
+On 13/06/2013 21:26, Alexey Khoroshilov wrote:
+> If "device is disconnected" check occurs to be true in ezusb_access_ltv(),
+> it just return -ENODEV. But that means request_context is leaked since
+> there are no any references to it anymore.
+> The patch adds a call to ezusb_request_context_put() before return.
+>
+> Found by Linux Driver Verification project (linuxtesting.org).
+>
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> ---
+>   drivers/net/wireless/orinoco/orinoco_usb.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+> index 1f9cb55..bdfe637 100644
+> --- a/drivers/net/wireless/orinoco/orinoco_usb.c
+> +++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+> @@ -881,7 +881,8 @@ static int ezusb_access_ltv(struct ezusb_priv *upriv,
+>   
+>   	if (!upriv->udev) {
+>   		dbg("Device disconnected");
+> -		return -ENODEV;
+> +		retval = -ENODEV;
+> +		goto exit;
+>   	}
+>   
+>   	if (upriv->read_urb->status != -EINPROGRESS)
+It looks like there is also loss of a request_context in
+ezusb_xmit after orinoco_process_xmit_skb fails. Something like
+the following should resolve it.
 
-CMD() works (make sure to only put it if split), but need a wiphy flag
-since mac80211 always implements it, I think.
+The remaining request_context allocations look ok to me.
 
-johannes
+
+Dave.
+---
+Apologies, this is cut+paste from an old tree and mangled to be
+diff-like. Untested. Uncompiled.
+
+diff a/drivers/net/wireless/orinoco/orinoco_usb.c 
+b/drivers/net/wireless/orinoco/orinoco_usb.c
+--- a/drivers/net/wireless/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+@@ -1194,8 +1194,10 @@ static netdev_tx_t ezusb_xmit(struct sk_buff 
+*skb, struct net_device *dev)
+
+     err = orinoco_process_xmit_skb(skb, dev, priv, &tx_control,
+                        &mic[0]);
+-    if (err)
++    if (err) {
++        ezusb_request_context_put(ctx);
+         goto drop;
++    }
+
+     {
+         __le16 *tx_cntl = (__le16 *)buf;
 
