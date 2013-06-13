@@ -1,50 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:60386 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752370Ab3FJShl convert rfc822-to-8bit (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:8513 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758569Ab3FMQxT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jun 2013 14:37:41 -0400
-Received: by mail-ob0-f182.google.com with SMTP id va7so10624191obc.13
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jun 2013 11:37:41 -0700 (PDT)
+	Thu, 13 Jun 2013 12:53:19 -0400
+Message-ID: <1371142391.2246.4.camel@bwh-desktop.uk.level5networks.com> (sfid-20130613_185340_098056_5F570C58)
+Subject: Re: [PATCH 3/3] skbuff: Added new helper function
+ skb_cow_clone_head.
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Dave Wiltshire <david.wiltshire@gmx.com>
+CC: <davem@davemloft.net>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <nsujir@broadcom.com>,
+	<mchan@broadcom.com>, <rmody@brocade.com>, <jcliburn@gmail.com>,
+	<chris.snook@gmail.com>, <jeffrey.t.kirsher@intel.com>,
+	<bruce.w.allan@intel.com>, <alexander.h.duyck@intel.com>,
+	<cooldavid@cooldavid.org>, <linux-driver@qlogic.com>,
+	<linux-wimax@intel.com>, <wimax@linuxwimax.org>,
+	<linux-wireless@vger.kernel.org>, <viro@zeniv.linux.org.uk>,
+	<eparis@redhat.com>, <edumazet@google.com>, <dev@openvswitch.org>,
+	<jhs@mojatatu.com>
+Date: Thu, 13 Jun 2013 17:53:11 +0100
+In-Reply-To: <1371040811-8319-2-git-send-email-david.wiltshire@gmx.com>
+References: <1371030906-2396-1-git-send-email-david.wiltshire@gmx.com>
+	 <1371040811-8319-1-git-send-email-david.wiltshire@gmx.com>
+	 <1371040811-8319-2-git-send-email-david.wiltshire@gmx.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <51B6043F.8010603@candelatech.com>
-References: <51782201.9070108@candelatech.com>
-	<CACna6rx9yb-gt-UCXy3CfSSuC=1_7Zh=294CrM0deDEgFDGCYw@mail.gmail.com>
-	<51B6043F.8010603@candelatech.com>
-Date: Mon, 10 Jun 2013 20:37:40 +0200
-Message-ID: <CACna6rynqCQTgaJzptjdQreQM4WLJW9MFKS3kBONaHNgkGsLRQ@mail.gmail.com> (sfid-20130610_203747_342156_5EB1D7A1)
-Subject: Re: Anyone know of a pci to multiple-mini-pci-e adapter?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/6/10 Ben Greear <greearb@candelatech.com>:
-> On 06/10/2013 02:45 AM, Rafał Miłecki wrote:
->>
->> 2013/4/24 Ben Greear <greearb@candelatech.com>:
->>>
->>> I'm trying to find a way to cram multiple wifi NICs into a single
->>> (x4 or higher) pcie slot.
->>>
->>> There are a great many pci-e to mini-pci-e adapters, but everything
->>> I can find has only a single mini-pci-e slot on it....
->>>
->>> If someone knows of such a beast, or has suggestions for someone
->>> who might could make them, please let me know.
->>
->>
->> Ben, I wonder if you have found anything...?
->
->
-> I found a company that will make them for me, but I'll need to
-> order 200 of them as minimum order.
->
-> Want some? :)
+On Wed, 2013-06-12 at 22:40 +1000, Dave Wiltshire wrote:
+> In a few different drivers there is a check of (skb_cloned &&
+> !skb_clone_writable) before then using pskb_expand_head to copy the skb
+> if that is required. There are already some skb_cow_* functions for
+> other conditions, so added this one and changed the call sites.
+> 
+> Signed-off-by: Dave Wiltshire <david.wiltshire@gmx.com>
+> ---
+>  include/linux/skbuff.h    |   14 ++++++++++++++
+>  net/core/dev.c            |    8 ++------
+>  net/openvswitch/actions.c |   22 +++++++---------------
+>  net/sched/act_csum.c      |    8 ++------
+>  net/sched/act_nat.c       |   18 +++++-------------
+>  5 files changed, 30 insertions(+), 40 deletions(-)
+> 
+> diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+> index a7393ad..7d18541 100644
+> --- a/include/linux/skbuff.h
+> +++ b/include/linux/skbuff.h
+> @@ -2154,6 +2154,20 @@ static inline int skb_cow_head(struct sk_buff *skb, unsigned int headroom)
+>  }
+>  
+>  /**
+> + * skb_cow_clone_head
 
-Maybe 2 ;) So you still have to found another ~100 people willing some ;)
+This is a missing a short description after the name.
+
+Ben.
+
+> + * @skb: buffer to cow
+> + * @len: length up to which to write
+> + *
+> + * This function is identical to skb_cow and sb_cow_head except that we
+> + * replace the skb_cloned check by skb_cloned && !skb_clone_writable.
+> + *
+> + */
+> +static inline int skb_cow_clone_head(struct sk_buff *skb, unsigned int len)
+> +{
+> +	return __skb_cow(skb, 0, skb_cloned(skb) && !skb_clone_writable(skb, len));
+> +}
+[...]
 
 -- 
-Rafał
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
