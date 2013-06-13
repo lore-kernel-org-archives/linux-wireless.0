@@ -1,50 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:59403 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753336Ab3F0Q7Q (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33955 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088Ab3FMRaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 12:59:16 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 13/18] ath9k: report 5/10 MHz channels
-Date: Thu, 27 Jun 2013 18:58:55 +0200
-Message-Id: <1372352340-20663-15-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_192030_122191_B6C93A78)
-In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Thu, 13 Jun 2013 13:30:15 -0400
+Date: Thu, 13 Jun 2013 13:17:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2013-06-13
+Message-ID: <20130613171711.GB3246@tuxdriver.com> (sfid-20130613_193019_681101_8A3ADD2D)
+References: <20130613112228.GB17870@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130613112228.GB17870@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/recv.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+On Thu, Jun 13, 2013 at 12:22:28PM +0100, Gustavo Padovan wrote:
+> Hi John,
+> 
+> A few important fixes to 3.10. The first one is a crash fix and talks by itself.
+> Then we have the support for a device id, it should be fine if you want to
+> remove this. Next there are two btmrvl fixes, one for a potential race
+> condition that could make its main thread never stop and the other to fix the
+> return code when a memory allocation fails. It was returning 0 instead of
+> -ENOMEM. Last is a fix to an issue that affects at least some Thinkpad X60,
+> Initialization on those laptops were failing due by unsupported cmd we were
+> sending to the device. The patch fixes this by checking if the cmd is
+> supported first.
+> 
+> Please pull or let me know of any concerns you may have.
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit d90b9e29ec5fe7a08eb7965386ebb47615306584:
+> 
+>   Merge branch 'for-john' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2013-06-12 14:28:21 -0400)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+> 
+> for you to fetch changes up to 0e1aba9361bf292fbdca781d419dca67d6b9911f:
+> 
+>   Bluetooth: btmrvl: fix thread stopping race (2013-06-13 11:48:38 +0100)
+> 
+> ----------------------------------------------------------------
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 865e043..0b0bc9d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -865,6 +865,17 @@ static int ath9k_process_rate(struct ath_common *common,
- 	band = hw->conf.chandef.chan->band;
- 	sband = hw->wiphy->bands[band];
- 
-+	switch (hw->conf.chandef.width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		rxs->flag |= RX_FLAG_5MHZ;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		rxs->flag |= RX_FLAG_10MHZ;
-+		break;
-+	default:
-+		break;
-+	}
-+
- 	if (rx_stats->rs_rate & 0x80) {
- 		/* HT rate */
- 		rxs->flag |= RX_FLAG_HT;
+I applied these manually to the wireless tree:
+
+> Anderson Lizardo (1):
+>       Bluetooth: Fix crash in l2cap_build_cmd() with small MTU
+> 
+> Daniel Drake (1):
+>       Bluetooth: btmrvl: fix thread stopping race
+> 
+> Johan Hedberg (1):
+>       Bluetooth: Fix conditions for HCI_Delete_Stored_Link_Key
+
+These I will manually apply to wireless-next:
+
+> Cho, Yu-Chen (1):
+>       Bluetooth: Add support for Mediatek Bluetooth device [0e8d:763f]
+> 
+> Wei Yongjun (1):
+>       Bluetooth: btmrvl: fix error return code in btmrvl_sdio_card_to_host()
+
+The device ID one might be OK, but it can wait for now.  The error
+return code patch fixes the return code for a function whose return
+code isn't actually checked, so it doesn't seem to need a quick fix.
+
+John
 -- 
-1.7.10.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
