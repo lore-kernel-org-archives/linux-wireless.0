@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:39787 "EHLO mx3.wp.pl"
+Received: from mga02.intel.com ([134.134.136.20]:60337 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752755Ab3FGNgW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jun 2013 09:36:22 -0400
-Received: from 89-71-197-70.dynamic.chello.pl (HELO localhost.localdomain) (moorray3@[89.71.197.70])
-          (envelope-sender <moorray3@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with SMTP
-          for <linux-wireless@vger.kernel.org>; 7 Jun 2013 15:36:20 +0200
-From: Jakub Kicinski <moorray3@wp.pl>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	nietrywialneprzejscie@gmail.com
-Subject: [RFC 2/5] mac80211: return new mac address as soon as possible
-Date: Fri,  7 Jun 2013 15:36:16 +0200
-Message-Id: <1370612179-24385-3-git-send-email-moorray3@wp.pl> (sfid-20130607_153631_478950_5E8205D8)
-In-Reply-To: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
-References: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
+	id S1756248Ab3FMJCr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Jun 2013 05:02:47 -0400
+Date: Thu, 13 Jun 2013 11:02:09 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux NFC <linux-nfc@ml01.01.org>
+Subject: Re: [GIT] [3.10] NFC fixes
+Message-ID: <20130613090209.GA7998@zurbaran> (sfid-20130613_110250_747815_816E03AB)
+References: <20130606152019.GT4793@zurbaran>
+ <20130612182238.GG11589@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130612182238.GG11589@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Kicinski <kubakici@wp.pl>
+Hi John,
 
-Once one of wiphy->addresses is found to be unused
-we can return from __ieee80211_assign_perm_addr and
-use it. The same for masked addresses.
+On Wed, Jun 12, 2013 at 02:22:38PM -0400, John W. Linville wrote:
+> Given recent events, I'm not sure that this is really acceptable as
+> a fix request.  The service bit and endianness in particular don't
+> sound like they are addressing big problems, and the other two don't
+> sound like they are really fixing any regressions either.
+> 
+> Can these wait for 3.11?
+I guess so, although they really are fixes.
+I'll queue them in nfc-next and will send you a pull request.
+Btw, are you going to merge wireless into wireless-next soon ?
 
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
----
- net/mac80211/iface.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Cheers,
+Samuel.
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index dbee397..38898b3 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1449,7 +1449,7 @@ static void __ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 		if (!used) {
- 			memcpy(perm_addr, local->hw.wiphy->addresses[i].addr,
- 			       ETH_ALEN);
--			break;
-+			return;
- 		}
- 	}
- 
-@@ -1507,10 +1507,12 @@ static void __ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 
- 		if (!used) {
- 			memcpy(perm_addr, tmp_addr, ETH_ALEN);
--			break;
-+			return;
- 		}
- 		addr = (start & ~mask) | (val & mask);
- 	} while (addr != start);
-+
-+	pr_debug("no free address found - using default\n");
- }
- 
- static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
 -- 
-1.8.1.4
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
