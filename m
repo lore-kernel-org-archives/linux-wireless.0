@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht1.myhostedexchange.com ([69.50.2.37]:10390 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757302Ab3FSTub (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34226 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756078Ab3FMRpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 15:50:31 -0400
-Date: Wed, 19 Jun 2013 21:48:27 +0200
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Antonio Quartulli <ordex@autistici.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH mac80211-next] brcm80211: fix null pointer access
-Message-ID: <20130619194827.GB1738@open-mesh.com> (sfid-20130619_215035_116222_B4EB0B79)
-References: <1371641731-1297-1-git-send-email-ordex@autistici.org>
- <20130619192714.GF12079@tuxdriver.com>
+	Thu, 13 Jun 2013 13:45:11 -0400
+Date: Thu, 13 Jun 2013 13:37:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k-devel@qca.qualcomm.com
+Subject: Re: Pull request: ath10k 20130612
+Message-ID: <20130613173715.GF3246@tuxdriver.com> (sfid-20130613_194517_160137_F4F9AD42)
+References: <87ppvrqjom.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="32u276st3Jlj2kUU"
-In-Reply-To: <20130619192714.GF12079@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87ppvrqjom.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---32u276st3Jlj2kUU
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, Jun 12, 2013 at 09:15:53PM +0300, Kalle Valo wrote:
+> Hi John,
+> 
+> here's the pull request for ath10k. This is the same version I submitted
+> June 1st for the second review, now it's just one big commit with the
+> necessary changes to Makefile and Kconfig in drivers/net/wireless/ath.
+> 
+> Please let me know if there are any problems.
+> 
+> Kalle
+> 
+> The following changes since commit 8b3e7be437a6b62118d0485ad971e724afe23fdf:
+> 
+>   cw1200: Fix an assorted pile of checkpatch warnings. (2013-06-11 12:48:10 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/kvalo/ath6kl.git for-linville-ath10k
+> 
+> for you to fetch changes up to 5e3dd157d7e70f0e3cea3f2573ed69fb156a19d5:
+> 
+>   ath10k: mac80211 driver for Qualcomm Atheros 802.11ac CQA98xx devices (2013-06-12 20:52:10 +0300)
 
-Hi John,
+Pulling now...
 
-On Wed, Jun 19, 2013 at 12:27:14PM -0700, John W. Linville wrote:
-> FWIW, driver fixes like this come to me rather than Johannes...
->=20
-
-I sent this to Johannes because this is fixing a patch I sent a couple of d=
-ays
-ago, and therefore I did not know if this patch was already in your tree or=
- not.
-
-Cheers,
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---32u276st3Jlj2kUU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRwgsLAAoJEADl0hg6qKeOIAwP/AzA0vAFqYzR0fuiRgryk2nR
-o/+QCU3tUpymFT/QA0Ig9Lob7UPKyRcVvVJ6cDJiHM3gjoYFtjbLq4nNEpK7oiLk
-Jx6/+OY6nd8oBHz4PEkAnpNYtRi4htd33z2McQbS/nD+KyJngQqmQIQVlhHYQZhF
-QFUlekNEcIcY1zlW7PAfZpHthCaeN/Wm4Yg0bqVUhZDWiiAlkSoITHQjX33m6eEW
-LJ+JeSQq3shR6KD5pb4TDgKjxy4AsaGc3bO6oQsz7k2g0UrQGgN9fEN3TaDUEYa5
-1zJsELa93LQo4cJz4CTucVuA0A9YxxTHMgvK00SEAM8UDYmHdlOCFpKPCFepSLTh
-KE7PnTYZSjTAfvrOZkOkZBT9JSAJlLdWuCxJn8dwrldOCmB3rJFc/rf7/Gypi0ln
-W5zvBBtVuf9v5yLGGexY6jYpTgbf1yOKtPv+veWomZqvk3y9NthZ8533624g2Alz
-+V2BeE3fkaZiJtnKhS5pmbJ4z/v1mAEji0DWRKa6ESMykil1myGATtUp0AdDq1pP
-RoctnIpkQtAjOcLqhdfdh9REgtftje1XbU3aqUxBI/QUVNWc+d5QjJjN34cuOcBe
-rSlqhjtjmenFQjPb9BPM2M6gKmG84Gu8nb8V7qacZfbylFuZpmx49DGIFWPF7vDE
-K9mpfXVMDDgtQ0iDjar6
-=M1BA
------END PGP SIGNATURE-----
-
---32u276st3Jlj2kUU--
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
