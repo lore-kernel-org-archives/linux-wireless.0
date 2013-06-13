@@ -1,92 +1,336 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:65301 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753659Ab3FKL7V (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:37982 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752535Ab3FMUNv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 07:59:21 -0400
-Date: Tue, 11 Jun 2013 13:57:22 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 13 Jun 2013 16:13:51 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: backports@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [PATCHv4 1/4] mac80211: make mgmt_tx accept a NULL channel
-Message-ID: <20130611115722.GD1466@ritirata.org> (sfid-20130611_135923_952339_15D8E136)
-References: <1370444989-2095-1-git-send-email-ordex@autistici.org>
- <1370951718.8356.22.camel@jlt4.sipsolutions.net>
- <1370951887.8356.23.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="SFyWQ0h3ruR435lw"
-In-Reply-To: <1370951887.8356.23.camel@jlt4.sipsolutions.net>
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH] backports: rename compat file descriptions
+Date: Thu, 13 Jun 2013 13:13:44 -0700
+Message-Id: <1371154424-18088-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130613_221356_551689_4A167844)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
---SFyWQ0h3ruR435lw
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Make these descriptions generic.
 
-On Tue, Jun 11, 2013 at 01:58:07PM +0200, Johannes Berg wrote:
-> On Tue, 2013-06-11 at 13:55 +0200, Johannes Berg wrote:
-> > On Wed, 2013-06-05 at 17:09 +0200, Antonio Quartulli wrote:
-> >=20
-> > > +	if (need_offchan && !chan)
-> > > +		return -EINVAL;
-> >=20
-> > > @@ -2847,10 +2853,14 @@ static int ieee80211_mgmt_tx(struct wiphy *wi=
-phy, struct wireless_dev *wdev,
-> > >  		rcu_read_lock();
-> > >  		chanctx_conf =3D rcu_dereference(sdata->vif.chanctx_conf);
-> > > =20
-> > > -		if (chanctx_conf)
-> > > -			need_offchan =3D chan !=3D chanctx_conf->def.chan;
-> > > -		else
-> > > +		if (chanctx_conf) {
-> > > +			need_offchan =3D chan && (chan !=3D chanctx_conf->def.chan);
-> > > +		} else if (!chan) {
-> > > +			ret =3D -EINVAL;
-> > > +			goto out_unlock;
-> > > +		} else {
-> > >  			need_offchan =3D true;
-> > > +		}
-> > >  		rcu_read_unlock();
-> >=20
-> > It seems this would be clearer?
-> > http://p.sipsolutions.net/b8a03c85f0e8b89f.txt
->=20
-> Actually, no, I like your version better.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ backport/compat/backport-3.11.c  |    2 +-
+ backport/compat/compat-2.6.25.c  |    2 +-
+ backport/compat/compat-2.6.26.c  |    2 +-
+ backport/compat/compat-2.6.27.c  |    2 +-
+ backport/compat/compat-2.6.28.c  |    2 +-
+ backport/compat/compat-2.6.29.c  |    2 +-
+ backport/compat/compat-2.6.32.c  |    2 +-
+ backport/compat/compat-2.6.33.c  |    2 +-
+ backport/compat/compat-2.6.34.c  |    2 +-
+ backport/compat/compat-2.6.35.c  |    2 +-
+ backport/compat/compat-2.6.36.c  |    2 +-
+ backport/compat/compat-2.6.37.c  |    2 +-
+ backport/compat/compat-2.6.39.c  |    2 +-
+ backport/compat/compat-3.0.c     |    2 +-
+ backport/compat/compat-3.1.c     |    2 +-
+ backport/compat/compat-3.3.c     |    2 +-
+ backport/compat/compat-3.4.c     |    2 +-
+ backport/compat/compat-3.5.c     |    2 +-
+ backport/compat/compat-3.7.c     |    2 +-
+ backport/compat/compat-3.8.c     |    2 +-
+ backport/compat/compat-3.9.c     |    2 +-
+ backport/compat/user_namespace.c |    3 +--
+ 22 files changed, 22 insertions(+), 23 deletions(-)
 
-uhm, having one else less looks better..why did you change your mind?
-Maybe you version is not entirely equivalent?
+diff --git a/backport/compat/backport-3.11.c b/backport/compat/backport-3.11.c
+index 72e0800..dc9073e 100644
+--- a/backport/compat/backport-3.11.c
++++ b/backport/compat/backport-3.11.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (c) 2013  Hauke Mehrtens <hauke@hauke-m.de>
+  *
+- * Compatibility file for Linux wireless for kernels 3.11.
++ * Backport functionality introduced in Linux 3.11.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+diff --git a/backport/compat/compat-2.6.25.c b/backport/compat/compat-2.6.25.c
+index 20cc3db..b1459f1 100644
+--- a/backport/compat/compat-2.6.25.c
++++ b/backport/compat/compat-2.6.25.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.25.
++ * Backport functionality introduced in Linux 2.6.25.
+  */
+ 
+ #include <linux/miscdevice.h>
+diff --git a/backport/compat/compat-2.6.26.c b/backport/compat/compat-2.6.26.c
+index 9063a6a..f80058a 100644
+--- a/backport/compat/compat-2.6.26.c
++++ b/backport/compat/compat-2.6.26.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.26.
++ * Backport functionality introduced in Linux 2.6.26.
+  *
+  * Copyright holders from ported work:
+  *
+diff --git a/backport/compat/compat-2.6.27.c b/backport/compat/compat-2.6.27.c
+index 79bbed5..cda98e8 100644
+--- a/backport/compat/compat-2.6.27.c
++++ b/backport/compat/compat-2.6.27.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.27
++ * Backport functionality introduced in Linux 2.6.27
+  */
+ #include <linux/debugfs.h>
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-2.6.28.c b/backport/compat/compat-2.6.28.c
+index 451e614..e47626b 100644
+--- a/backport/compat/compat-2.6.28.c
++++ b/backport/compat/compat-2.6.28.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.28.
++ * Backport functionality introduced in Linux 2.6.28.
+  */
+ 
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-2.6.29.c b/backport/compat/compat-2.6.29.c
+index 1beb718..d216407 100644
+--- a/backport/compat/compat-2.6.29.c
++++ b/backport/compat/compat-2.6.29.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.29.
++ * Backport functionality introduced in Linux 2.6.29.
+  */
+ 
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-2.6.32.c b/backport/compat/compat-2.6.32.c
+index 68ab03e..7d76b40 100644
+--- a/backport/compat/compat-2.6.32.c
++++ b/backport/compat/compat-2.6.32.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.32.
++ * Backport functionality introduced in Linux 2.6.32.
+  */
+ 
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-2.6.33.c b/backport/compat/compat-2.6.33.c
+index 565836c..b6115ba 100644
+--- a/backport/compat/compat-2.6.33.c
++++ b/backport/compat/compat-2.6.33.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.33.
++ * Backport functionality introduced in Linux 2.6.33.
+  */
+ 
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-2.6.34.c b/backport/compat/compat-2.6.34.c
+index 863be64..b257df1 100644
+--- a/backport/compat/compat-2.6.34.c
++++ b/backport/compat/compat-2.6.34.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.34.
++ * Backport functionality introduced in Linux 2.6.34.
+  */
+ 
+ #include <linux/mmc/sdio_func.h>
+diff --git a/backport/compat/compat-2.6.35.c b/backport/compat/compat-2.6.35.c
+index f6e2672..86ea557 100644
+--- a/backport/compat/compat-2.6.35.c
++++ b/backport/compat/compat-2.6.35.c
+@@ -6,7 +6,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.35.
++ * Backport functionality introduced in Linux 2.6.35.
+  */
+ 
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-2.6.36.c b/backport/compat/compat-2.6.36.c
+index 92ef827..ea6443d 100644
+--- a/backport/compat/compat-2.6.36.c
++++ b/backport/compat/compat-2.6.36.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.36.
++ * Backport functionality introduced in Linux 2.6.36.
+  */
+ 
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-2.6.37.c b/backport/compat/compat-2.6.37.c
+index 3ef2909..5c6cc7b 100644
+--- a/backport/compat/compat-2.6.37.c
++++ b/backport/compat/compat-2.6.37.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.37.
++ * Backport functionality introduced in Linux 2.6.37.
+  */
+ 
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-2.6.39.c b/backport/compat/compat-2.6.39.c
+index 0e36da8..62d8a66 100644
+--- a/backport/compat/compat-2.6.39.c
++++ b/backport/compat/compat-2.6.39.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 2.6.39.
++ * Backport functionality introduced in Linux 2.6.39.
+  */
+ 
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-3.0.c b/backport/compat/compat-3.0.c
+index f52392c..0a993d7 100644
+--- a/backport/compat/compat-3.0.c
++++ b/backport/compat/compat-3.0.c
+@@ -6,7 +6,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 3.0.
++ * Backport functionality introduced in Linux 3.0.
+  */
+ 
+ #include <linux/compat.h>
+diff --git a/backport/compat/compat-3.1.c b/backport/compat/compat-3.1.c
+index cb5d596..b876329 100644
+--- a/backport/compat/compat-3.1.c
++++ b/backport/compat/compat-3.1.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 3.1.
++ * Backport functionality introduced in Linux 3.1.
+  */
+ 
+ #include <linux/idr.h>
+diff --git a/backport/compat/compat-3.3.c b/backport/compat/compat-3.3.c
+index 8489344..a44f59d 100644
+--- a/backport/compat/compat-3.3.c
++++ b/backport/compat/compat-3.3.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 3.3.
++ * Backport functionality introduced in Linux 3.3.
+  */
+ 
+ #include <linux/kernel.h>
+diff --git a/backport/compat/compat-3.4.c b/backport/compat/compat-3.4.c
+index 1718cd2..b72c69c 100644
+--- a/backport/compat/compat-3.4.c
++++ b/backport/compat/compat-3.4.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 3.4.
++ * Backport functionality introduced in Linux 3.4.
+  */
+ 
+ #include <linux/fs.h>
+diff --git a/backport/compat/compat-3.5.c b/backport/compat/compat-3.5.c
+index 0355ed1..7068cfb 100644
+--- a/backport/compat/compat-3.5.c
++++ b/backport/compat/compat-3.5.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 3.5.
++ * Backport functionality introduced in Linux 3.5.
+  */
+ 
+ #include <linux/module.h>
+diff --git a/backport/compat/compat-3.7.c b/backport/compat/compat-3.7.c
+index 284e8dc..0f2d332 100644
+--- a/backport/compat/compat-3.7.c
++++ b/backport/compat/compat-3.7.c
+@@ -5,7 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels 3.7.
++ * Backport functionality introduced in Linux 3.7.
+  */
+ 
+ #include <linux/workqueue.h>
+diff --git a/backport/compat/compat-3.8.c b/backport/compat/compat-3.8.c
+index 5b1ead9..2884323 100644
+--- a/backport/compat/compat-3.8.c
++++ b/backport/compat/compat-3.8.c
+@@ -5,7 +5,7 @@
+  * Copyright (c) 2006-2012 Jiri Kosina
+  * Copyright (c) 2012  Luis R. Rodriguez <mcgrof@do-not-panic.com>
+  *
+- * Compatibility file for Linux wireless for kernels 3.8.
++ * Backport functionality introduced in Linux 3.8.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+diff --git a/backport/compat/compat-3.9.c b/backport/compat/compat-3.9.c
+index f81fe79..03f3af8 100644
+--- a/backport/compat/compat-3.9.c
++++ b/backport/compat/compat-3.9.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (c) 2013  Luis R. Rodriguez <mcgrof@do-not-panic.com>
+  *
+- * Compatibility file for Linux wireless for kernels 3.9.
++ * Backport functionality introduced in Linux 3.9.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+diff --git a/backport/compat/user_namespace.c b/backport/compat/user_namespace.c
+index 288efc0..6d01404 100644
+--- a/backport/compat/user_namespace.c
++++ b/backport/compat/user_namespace.c
+@@ -5,8 +5,7 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  *
+- * Compatibility file for Linux wireless for kernels backporting
+- * user_namespace.c
++ * Backport functionality introduced in Linux user_namespace.c
+  */
+ 
+ #include <linux/module.h>
+-- 
+1.7.10.4
 
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---SFyWQ0h3ruR435lw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRtxCiAAoJEADl0hg6qKeOHCoP/0RSurva4pXRIqK9V3GEEvl7
-KbS9guXF+Ls1ER4GqDNMr1qNJ0f7k4HvH5mB1iD6xWHCBwvlyXlGdGOnblQqaV4H
-Web2ZwtqYPaXVtGHtZgxI7yX5DgqWspKeyqOeA1u9NExbohCrV0Ehb2AQD/rborj
-oakvKTTY2YaNSeMR+58pdC8b9VTOogcalBTblKwPBD7twTkXA9gpjYYe1bU2ATAZ
-SuEqDwYCZERkkX/pebjTPgmoo2xehg2VwzGaiNxeuQDsFnQO6cHGw2n8Sjqq1LrI
-CXPQvFWYAC7N5xjdxabiCbEMoTEcDHd47w672AMwXKWrVGPNtCNO/H5aIM+ORDuF
-UYlhhgiF5uEIhuIvDx7utHc9LxkpLvBr5Lxru7huzV1X9uGA4JEzv7bg9Du8JMfI
-PJMdsLrsd0S4VkI9JSPFpovBYKss6OtXm16rITDsLe7HKOx1Zv4NwT2baeBda08a
-GskxVwYz+A3gWZp49LC6htcZZ0zLKG/dS8WzNE9jZtfLC31II5hLm63s9Y8rt2N5
-BM5FiP4s2121NsorlzG00/xKolL/WZiAGcJsc0liwqnwgb7+LUbrzm8JU7Y+hzfb
-lacN4RVFt45no+tLcEvshCNmmFGhaS+6wpTEfHwfKknHPPV3o4rTYRo2XtMrqbXl
-5jc4OhQ3eybsmjRlJ+oK
-=ot94
------END PGP SIGNATURE-----
-
---SFyWQ0h3ruR435lw--
