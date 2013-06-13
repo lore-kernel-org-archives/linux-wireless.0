@@ -1,66 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43158 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751299Ab3FDKPr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 06:15:47 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: add a tx control flag to indicate PS-Poll/uAPSD response
-Date: Tue,  4 Jun 2013 12:15:42 +0200
-Message-Id: <1370340942-34407-1-git-send-email-nbd@openwrt.org> (sfid-20130604_121549_627780_E16E91BC)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34232 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758842Ab3FMRpN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Jun 2013 13:45:13 -0400
+Date: Thu, 13 Jun 2013 13:32:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Subject: Re: Regression in 9390ace brcmfmac: free net device when
+ registration fails
+Message-ID: <20130613173213.GD3246@tuxdriver.com> (sfid-20130613_194521_813762_82A5FD66)
+References: <51AD1F22.2080004@wwwdotorg.org>
+ <51ADE47D.50700@broadcom.com>
+ <51B0FAC0.4080709@broadcom.com>
+ <51B100C2.8070905@wwwdotorg.org>
+ <51B8E5FA.9040400@wwwdotorg.org>
+ <51B97E56.4030701@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51B97E56.4030701@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/net/mac80211.h  | 3 +++
- net/mac80211/sta_info.c | 4 +++-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+On Thu, Jun 13, 2013 at 10:09:58AM +0200, Arend van Spriel wrote:
+> On 06/12/2013 11:19 PM, Stephen Warren wrote:
+> >On 06/06/2013 03:36 PM, Stephen Warren wrote:
+> >>On 06/06/2013 03:10 PM, Arend van Spriel wrote:
+> >>>On 06/04/13 14:58, Arend van Spriel wrote:
+> >>>>On 06/04/2013 12:56 AM, Stephen Warren wrote:
+> >>>>>(John, note that this commit is part of the pull request you sent to
+> >>>>>Dave today)
+> >>>>>
+> >>>>>Arend,
+> >>>>>
+> >>>>>Commit 9390ace "brcmfmac: free net device when registration fails"
+> >>>>>causes a regression.
+> >>>>>
+> >>>>>I had the BCM4330 firmware present in my root fs, whereas my HW is a
+> >>>>>BCM4329. With this patch applied, I get a kernel panic on boot. With it
+> >>>>>reverted, I see that no issues of that nature. This is true in
+> >>>>>next-20130531 (and also 5/30 and 6/1 but not earlier). A bisect of
+> >>>>>Linus's tree followed by a merge of John's wireless pull request from
+> >>>>>today pointed at this same commit.
+> >>>>
+> >>>>Thanks, Stephen
+> >>>>
+> >>>>I will look into this.
+> >>>
+> >>>Hi Stephen,
+> >>>
+> >>>Can you try the attached patch? If it does not solve the issue, could
+> >>>you provide a log.
+> >>
+> >>Yes, that works great, thanks.
+> >>
+> >>Tested-by: Stephen Warren <swarren@nvidia.com>
+> >
+> >Did this patch get applied anywhere? I was hoping it'd go into 3.10-rc*
+> >given it's a user-triggerable backtrace introduced in 3.10-rc*.
+> 
+> Hi Stephen,
+> 
+> The patch went into the wireless-next tree. Given recent events with
+> our patch series I am a bit more carsful to tag patches for 3.10.
+> Your issue is user-triggerable but the scenario to get there can be
+> avoided. But you are right it was introduced in the 3.10-rc cycle. I
+> leave it to John to decide.
+> 
+> Regards,
+> Arend
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1f0014b..cb37f82 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -460,6 +460,8 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_CTL_DONTFRAG: Don't fragment this packet even if it
-  *	would be fragmented by size (this is optional, only used for
-  *	monitor injection).
-+ * @IEEE80211_TX_CTL_PS_RESPONSE: This frame is a response to a poll
-+ *	frame (PS-Poll or uAPSD).
-  *
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-@@ -495,6 +497,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_STATUS_EOSP		= BIT(28),
- 	IEEE80211_TX_CTL_USE_MINRATE		= BIT(29),
- 	IEEE80211_TX_CTL_DONTFRAG		= BIT(30),
-+	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(31),
- };
- 
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index a04c5671..b429798 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1132,6 +1132,7 @@ static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
- 	 * ends the poll/service period.
- 	 */
- 	info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER |
-+		       IEEE80211_TX_CTL_PS_RESPONSE |
- 		       IEEE80211_TX_STATUS_EOSP |
- 		       IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
-@@ -1269,7 +1270,8 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 			 * STA may still remain is PS mode after this frame
- 			 * exchange.
- 			 */
--			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
-+			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER |
-+				       IEEE80211_TX_CTL_PS_RESPONSE;
- 
- 			/*
- 			 * Use MoreData flag to indicate whether there are
+I've just applied it to the wireless tree.  I doubt if it will make
+-rc6, but it might make the final 3.10.
+
+John
 -- 
-1.8.0.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
