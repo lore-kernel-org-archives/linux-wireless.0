@@ -1,52 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:57934 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933869Ab3FSPIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 11:08:16 -0400
-Received: from mailout-de.gmx.net ([10.1.76.28]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0Ls6Bl-1UAiy91y8N-013vkY for
- <linux-wireless@vger.kernel.org>; Wed, 19 Jun 2013 17:08:14 +0200
-Message-ID: <51C1C95C.8030301@rempel-privat.de> (sfid-20130619_170820_157825_1BF87D26)
-Date: Wed, 19 Jun 2013 17:08:12 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:41717 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751999Ab3FMP1r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Jun 2013 11:27:47 -0400
+Date: Thu, 13 Jun 2013 10:27:35 -0500
+From: Calvin Owens <jcalvinowens@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+	jcalvinowens@gmail.com
+Subject: Re: [PATCH] mac80211: Use RCU protection in ieee80211_get_tx_rates()
+Message-ID: <20130613152735.GA1822@gmail.com> (sfid-20130613_172808_083431_7F88832C)
+References: <20130609225120.GA2789@gmail.com>
+ <20130610042959.GA1902@gmail.com>
+ <1370950926.8356.14.camel@jlt4.sipsolutions.net>
+ <20130611171304.GA2189@gmail.com>
+ <1370980523.8356.70.camel@jlt4.sipsolutions.net>
+ <20130612075634.GA1649@gmail.com>
+ <20130612080042.GA1695@gmail.com>
+ <51B843C9.9090500@openwrt.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Ignacy Gawedzki <i@lri.fr>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Corey Richardson <corey@octayn.net>
-Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
-References: <20130619115809.GA26717@zenon.in.qult.net>  <51C1ACEC.2020703@rempel-privat.de>  <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com>  <51C1B467.1030509@rempel-privat.de>  <20130619140905.GA14079@zenon.in.qult.net>  (sfid-20130619_160921_593309_5728C3A1) <1371651073.8349.19.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1371651073.8349.19.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <51B843C9.9090500@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 19.06.2013 16:11, schrieb Johannes Berg:
-> Btw, I'm a bit confused -- are you using ath9k_htc as per the subject,
-> or ath9k?
+On Wednesday 06/12 at 11:47 +0200, Felix Fietkau wrote:
+> On 2013-06-12 10:00 AM, Calvin Owens wrote:
+> > Copying the rate table should be done in an RCU read-side critical
+> > section.
+> I think this approach is wrong. The sta entry is also under RCU
+> protection (no locking for read access in that part of the code.
+> In a normal driver tx path, no extra rcu_read_lock/rcu_read_unlock is
+> needed. Only if the driver does some scheduling outside of the tx
+> function (which ath9k does), this RCU warning appears.
+> 
+> How about this change instead:
+> ---
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -1570,6 +1570,8 @@ void ath_txq_schedule(struct ath_softc *
+>  	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
+>  		return;
+>  
+> +	rcu_read_lock();
+> +
+>  	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
+>  	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
+>  
+> @@ -1608,8 +1610,10 @@ void ath_txq_schedule(struct ath_softc *
+>  
+>  		if (ac == last_ac ||
+>  		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
+> -			return;
+> +			break;
+>  	}
+> +
+> +	rcu_read_unlock();
+>  }
+>  
+>  /***********/
 >
-> if it's ath9k_htc then I don't really understand why the patch that
-> *fixed* it for Corey *broke* it for you?
->
-> johannes
 
-It will be interesting to get some more info from Corey, about his 
-wireless setup.
+Yep, that stops the RCU warning for me.
 
-
-Ignacy wrote:
-> The station is unable to authenticate with WPA2 to the AP.  Interestingly
-> enough, if a monitor vif is created and upped beforehand, the authentication
-> succeeds.
-
-which looks more like power management issue.  If monitore mode is 
-enabled, no power sawing is done. But i use CFG80211_DEFAULT_PS=y on my 
-system too and didn't had this issue. Even power_save=on is working. 
-What else is different?
-
-Ignacy, Is it RPi +  TL-WN722NC?
-
--- 
-Regards,
-Oleksij
+Tested-by: Calvin Owens <jcalvinowens@gmail.com>
