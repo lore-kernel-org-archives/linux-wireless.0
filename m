@@ -1,74 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:33504 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423388Ab3FURjS (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:35943 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757233Ab3FMCy3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jun 2013 13:39:18 -0400
-Received: by mail-la0-f51.google.com with SMTP id fq12so7680757lab.10
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Jun 2013 10:39:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51C4843E.6040300@broadcom.com>
-References: <CA+7oygdbY=qoMZ=WfaqNW6HO2YwtnuFTUtDvO8rsqBjGATVNEQ@mail.gmail.com>
-	<51C4843E.6040300@broadcom.com>
-Date: Fri, 21 Jun 2013 13:39:16 -0400
-Message-ID: <CA+7oygdmJDdNM8SQxqnJW3Oxv0sCf=nSmxfw0rp=9SFwRFxgRQ@mail.gmail.com> (sfid-20130621_193921_415874_58D10101)
-Subject: Re: any AR7010+AR9287 cards still sold?
-From: George Nychis <gnychis@gmail.com>
+	Wed, 12 Jun 2013 22:54:29 -0400
+Message-ID: <1371092062.10688.36.camel@deadeye.wl.decadent.org.uk> (sfid-20130613_045433_686041_2BEB42A3)
+Subject: Re: [PATCH] brcmfmac: Turn off ARP offloading when configured for
+ AP.
+From: Ben Hutchings <ben@decadent.org.uk>
 To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: stable@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 13 Jun 2013 03:54:22 +0100
+In-Reply-To: <1370508957-12709-1-git-send-email-arend@broadcom.com>
+References: <1370508957-12709-1-git-send-email-arend@broadcom.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-iDhyeNChWM8sUMtNQCBu"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the responses! This is helpful. Many of them don't seem to
-be easily available in the US.  It looks like my two best bets are the
-Sony UWA-BR100, albeit a bit expensive at $60.  The other option seems
-to be hunting down a TL-WN821N v3 on eBay.  There are many TL-WN821N
-listed, it might be a matter of finding someone with some v3 models.
-Many of the other cards from that wiki seem to be more available in
-the UK (e.g., WNDA3200 and WLM-20U2).  The Xbox 360 adapters, despite
-being AR7010+AR9280 have some sort of custom firmware and are
-therefore not supported by ath9k_htc.  I found that out first hand,
-and someone put it on the wiki:
-http://wikidevi.com/wiki/Microsoft_Xbox_360_Wireless_N_Networking_Adapter
 
-If anyone out there has any other suggestions for easily available
-AR7010+AR9280/7 cards in the US, definitely point me in that
-direction.  I'll try to see if I can hunt down some TL-WN821Nv3
+--=-iDhyeNChWM8sUMtNQCBu
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks!
-George
+On Thu, 2013-06-06 at 10:55 +0200, Arend van Spriel wrote:
+> From: Hante Meuleman <meuleman@broadcom.com>
+>=20
+> [backport of upstream commit b3657453f16a7b84eab9b93bb9a9a2901ffc70af]
+[...]
 
-On Fri, Jun 21, 2013 at 12:50 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 06/21/13 17:19, George Nychis wrote:
->>
->> I'm trying to hunt down a USB AR7010+AR9287 combo, which I think is
->> the only 2-stream ath9k_htc combo (whose firmware is open sourced by
->> open-ath9k-htc-firmware).   I found on the linux-wireless wiki device
->> list that the TL-WN821Nv3 was of this combo.  I gambled and bought a
->> TL-WN821N on Amazon, but it ended up being a v4 with the ralink
->> chipset.
->>
->> Is there any other card out there still sold with the AR7010+AR9287
->> combo that might not be listed on the wiki page?
->>
->> Thanks a bunch.
->
->
-> Not much hits, but it lists some other devices:
->
-> http://wikidevi.com/wiki/Special:BrowseData/Wireless_adapter?Chip1_model=AR7010&Chip2_model=AR9287
->
-> Regards,
-> Arend
->
->> - George
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
+You didn't say which version(s) this is for, but it certainly doesn't
+apply to 3.2.
+
+Ben.
+
+--=20
+Ben Hutchings
+friends: People who know you well, but like you anyway.
+
+--=-iDhyeNChWM8sUMtNQCBu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAUbk0Xue/yOyVhhEJAQpJ4hAAnsM4jDC3Fm09LM/+jVTsHM5uDw5rNbcQ
+kMqIsFd3m91bKrb5lPyzxUf5B7PhByXeOzj4mkoEmzyEKtVokx/L8yZ1Mr/sE9CU
+l1UK3ZX21eplj19ceBvwkt9Pfx2FCQiKPbgQZFpx++/SfWpgh1A1fNfpTWZR5E6d
+HlKFYGOMZOjPL3UFqdhoWPYb0kmY80+tHeNPQftTTrwCwi34hxy6UCVgGAmiooiA
+2zvAXD7ukeTTUzAkaTywohGNHtKiuG/tRHB2qVywX4uUN5iNqy0T9TpZJHyY09RR
+2wpqY4kybSkFAA/UKISsbohCxoQcRl+Y3AlCSJT1Qs37+wHmfP82IZ7z/Zp/f3cu
+A3vPaRrixSqLphUFq7F9tx3CsbQOuzaLTp+c9sDmIqJzUq9gbzrjOCTPaAKm4RdS
+SwYbq3JTXdxvYxoM4mJnvwSZ7PXbGN9y8TvS+0kFvaQTZPBAR96n9pPDRvMk+1C8
+oGLuFPTk3c0zUj8CTBbIUWaNB/YdTQKDJdDEe+LG1p0vY9KZq6SAvXQXdhHqyZ65
+cc/Qu76fHwFka779vkxwdpyuXAYelrL2bYf3EtqLVKj8R3sTobzUTxYLMR3xN/SX
+MHJImqbciDTCpGy7Zat7BpZWZJwfS4ZhZs744JQDSPSsuCVxs/7igIQdHKJjyhH7
+mUMtS/81ZZI=
+=hQtH
+-----END PGP SIGNATURE-----
+
+--=-iDhyeNChWM8sUMtNQCBu--
