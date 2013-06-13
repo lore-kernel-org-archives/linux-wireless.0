@@ -1,42 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45632 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754761Ab3FFNPP (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:65099 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755642Ab3FMRdC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 09:15:15 -0400
-Date: Wed, 5 Jun 2013 16:19:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Gustavo Padovan <gustavo.padovan@collabora.co.uk>,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: wireless tree rebased (from 5/28), Broadcom bits dropped
-Message-ID: <20130605201901.GC15004@tuxdriver.com> (sfid-20130606_151523_398194_8538DBC8)
-References: <20130604212602.GB11199@tuxdriver.com>
- <20130604215320.GC11199@tuxdriver.com>
- <1370415586.8920.4.camel@jlt4.sipsolutions.net>
- <20130605143700.GA2271@tuxdriver.com>
+	Thu, 13 Jun 2013 13:33:02 -0400
+Received: by mail-we0-f178.google.com with SMTP id u53so8353114wes.9
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2013 10:33:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130605143700.GA2271@tuxdriver.com>
+In-Reply-To: <20130613173002.GC3246@tuxdriver.com>
+References: <1370904007-10959-1-git-send-email-bzhao@marvell.com>
+	<877ghz3il6.fsf@purkki.adurom.net>
+	<477F20668A386D41ADCC57781B1F70430EA268B457@SC-VEXCH1.marvell.com>
+	<8738sn2mcf.fsf@purkki.adurom.net>
+	<51B8C41E.7050907@candelatech.com>
+	<477F20668A386D41ADCC57781B1F70430EA268B4A3@SC-VEXCH1.marvell.com>
+	<20130613173002.GC3246@tuxdriver.com>
+Date: Thu, 13 Jun 2013 10:33:00 -0700
+Message-ID: <CAMcMvsgVHMzVY4fnW7n+vgdWKKVgvF+fJ93xvRkkfZUjxt-bBQ@mail.gmail.com> (sfid-20130613_193307_017815_B12CE271)
+Subject: Re: [PATCH] mwifiex: Add module parameter for regdomain
+From: Paul Stewart <pstew@chromium.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bing Zhao <bzhao@marvell.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 05, 2013 at 10:37:01AM -0400, John W. Linville wrote:
-> On Wed, Jun 05, 2013 at 08:59:46AM +0200, Johannes Berg wrote:
-> > On Tue, 2013-06-04 at 17:53 -0400, John W. Linville wrote:
+On Thu, Jun 13, 2013 at 10:30 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+>
+> On Wed, Jun 12, 2013 at 12:01:23PM -0700, Bing Zhao wrote:
+> >
+> > > >> "iw reg set XX" or "country_code=XX" in hostapd.conf is a *user* hint.
+> > > >>
+> > > >> What we need here is a *driver* hint. Furthermore, with a driver
+> > > >> regulatory hint, the passive-scan and no-ibss flags are cleared so we
+> > > >> can start AP with hostapd on 5G band.
+> > > >
+> > > > So it's a driver hint which is coming from user space via a module
+> > > > parameter. IMHO you are abusing interfaces here. Is there any better way
+> > > > to solve your problem?
+> > >
+> > > It would be nice to have some way to do this for ath9k and other NICs
+> > > as well.  Best I could come up with is a similar hack for ath9k.
+> > >
+> > > I think part of the problem is that this config info needs to be
+> > > available very early in the module loading/init logic, so it's
+> > > too late to be configured using 'iw' or similar.
+> >
+> > Exactly. regulatory_hint () needs to be called right after wiphy registration.
+>
+> It does seem a bit ugly.  But if Marvell wants it, I don't see any
+> "regulatory" argument to disallow something like this.
+>
+> Does anyone have a better suggestion for a user interface for such
+> a feature?
 
-> I think I can fix the wireless tree and preserve the original mac80211
-> tree commits.  Everyone please hold off on doing anything else here, as
-> I'm a bit busy and won't be able to get to this before this afternoon
-> (Eastern USA time).
-> 
-> Anyone object to one more wireless tree rebase today?
 
-I've redone the wireless tree now.  Please do the needful...
+The only (slightly) cleaner thing I could think of is a module
+parameter to cfg80211 so all drivers in the system would be made aware
+of the boot-time regulatory domain.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+>
+>
+> John
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
