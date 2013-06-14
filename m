@@ -1,68 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20312 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028Ab3FYJZE (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59379 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753719Ab3FNWsi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 05:25:04 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "Peer, Ilan" <ilan.peer@intel.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: Re: [PATCH v10 2/2] cfg80211: P2P find phase offload
-Date: Tue, 25 Jun 2013 12:25:00 +0300
-Message-ID: <1489286.dFNgzINo7e@lx-vladimir> (sfid-20130625_112510_228350_BD0B390B)
-In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A01AD22795@HASMSX106.ger.corp.intel.com>
-References: <1372063757-24286-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1372063757-24286-3-git-send-email-qca_vkondrat@qca.qualcomm.com> <CB3B3D4774441E42AA3EA0E1BA8230A01AD22795@HASMSX106.ger.corp.intel.com>
+	Fri, 14 Jun 2013 18:48:38 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r5EMmbg4020886
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Jun 2013 15:48:37 -0700
+Message-ID: <51BB9DC5.2020509@candelatech.com> (sfid-20130615_004841_632650_1CE63E73)
+Date: Fri, 14 Jun 2013 15:48:37 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: kmemleak report in 3.9.5+, related to cfg80211_inform_bss_frame
+References: <51B773B7.5090301@candelatech.com> <51B77594.20000@candelatech.com> <51B7C29C.1060701@candelatech.com>
+In-Reply-To: <51B7C29C.1060701@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, June 25, 2013 07:06:28 AM Peer, Ilan wrote:
-> > + * @listen_channel: channels to listen on; not NULL
-> 
-> s/channels/channel/  (only a single listen channel)
-Sure, thanks
+On 06/11/2013 05:36 PM, Ben Greear wrote:
+> On 06/11/2013 12:08 PM, Ben Greear wrote:
+>> On 06/11/2013 12:00 PM, Ben Greear wrote:
+>>> I see several reports similar to the one below while doing some
+>>> kmemleak testing on my 3.9.5+ tree (with local patches applied):
+>>>
+>>> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.9.dev.y/.git;a=summary
+>
+>>> The kmemleak report is below:
+>>>
+>>>
+>>> unreferenced object 0xffff8801c8e41e78 (size 192):
+>>>    comm "kworker/u:2", pid 157, jiffies 4295509873 (age 86582.869s)
+>>>    hex dump (first 32 bytes):
+>>>      41 0d 00 30 02 00 00 00 6b 6b 6b 6b 6b 6b 6b 6b  A..0....kkkkkkkk
+>>>      6b 6b 6b 6b 6b 6b 6b 6b 69 00 00 00 00 0c 2e 32  kkkkkkkki......2
+>>>    backtrace:
+>>>      [<ffffffff815de7bf>] kmemleak_alloc+0x73/0x98
+>>>      [<ffffffff8118b4d4>] slab_post_alloc_hook+0x28/0x2a
+>>>      [<ffffffff8118d605>] __kmalloc+0xf9/0x122
+>>>      [<ffffffffa027cb27>] cfg80211_inform_bss_frame+0x114/0x1f8 [cfg80211]
+>>>      [<ffffffffa03d6865>] ieee80211_bss_info_update+0x66/0x21f [mac80211]
+>>>      [<ffffffffa040aec6>] ieee80211_rx_bss_info+0x12f/0x1ca [mac80211]
+>>>      [<ffffffffa040b017>] ieee80211_rx_mgmt_probe_resp+0xb6/0x197 [mac80211]
+>>>      [<ffffffffa040e8a3>] ieee80211_sta_rx_queued_mgmt+0xdd/0x60e [mac80211]
+>>>      [<ffffffffa03df0ee>] ieee80211_iface_work+0x238/0x2cc [mac80211]
+>>>      [<ffffffff810b0cd3>] process_one_work+0x292/0x42e
+>>>      [<ffffffff810b36af>] worker_thread+0x14f/0x264
+>>>      [<ffffffff810b7bea>] kthread+0xc7/0xcf
+>>>      [<ffffffff815f64ec>] ret_from_fork+0x7c/0xb0
+>>>      [<ffffffffffffffff>] 0xffffffffffffffff
 
-<skip>
-> Just to clarify something: even if the driver reports that it supports probe response offloading, can wpas choose not to use this capability and handle all the probe requests on its own (at least for debugging)? For example in case that the probe response IE len is zero, the driver can deduce the it should not respond to probe requests.
+I am still working on trying to figure this one out.
 
-Problem is, some hardware do not let you to do so; it simply replies by itself.
-NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD indicates device __can__ answer. From this,
-wpa_s can conclude it may be answered by device probes that is may see or not.
-It is out of scope for this commit to specify how to tell to the device to not answer
-(I suppose to use debugfs for this)
+I've instrumented all (as far as I can tell) allocation points
+and destruction points for the ies, and I am keeping a separate
+list of structures to record some info about each ies.
 
-> 
-> > @@ -1740,6 +1748,10 @@ enum nl80211_attrs {
-> > 
-> >  	NL80211_ATTR_RXMGMT_FLAGS,
-> > 
-> > +	NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL,
-> > +	NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL,
-> > +	NL80211_ATTR_LISTEN_FREQ,
-> 
-> You can use NL80211_ATTR_WIPHY_FREQ
+I loaded up lots of stations, let them bounce around for a while,
+and then did an 'rmmod ath9k'.
 
-OK, will do so.
+I still see 14 ies entries in my debug list.  Should
+I expect to see zero ies data structures left after
+I rmmod all wifi drivers, or is it normal for a few
+to be left around?
 
-> 
-> > +TRACE_EVENT(rdev_start_p2p_find,
-> > +	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
-> > +		 struct cfg80211_p2p_find_params *params),
-> > +	TP_ARGS(wiphy, wdev, params),
-> > +	TP_STRUCT__entry(
-> > +		WIPHY_ENTRY
-> > +		WDEV_ENTRY
-> > +		__field(u32, min_di)
-> > +		__field(u32, max_di)
-> > +		__field(int, n_channels)
-> 
-> Can you also add here the listen channel?
 
-Sure
+Thanks,
+Ben
 
-Thanks, Vladimir
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
