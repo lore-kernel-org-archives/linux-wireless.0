@@ -1,85 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52362 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753676Ab3FCVPR (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58093 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753485Ab3FNXio (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 17:15:17 -0400
-Date: Mon, 3 Jun 2013 17:07:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Yunlian Jiang <yunlian@google.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	chaoming_li@realsil.com.cn, davem@davemloft.net
-Subject: Re: [PATCH] rtlwifi: initialize local array and set value.
-Message-ID: <20130603210707.GL2727@tuxdriver.com> (sfid-20130603_231520_706830_FCF3D790)
-References: <1370036721-18164-1-git-send-email-yunlian@google.com>
- <20130603193947.GH2727@tuxdriver.com>
- <CAMsPy2sqS8frL+Ybq2YT83ehfZ9bSgyfwuZmfDf1R4tCre8O1g@mail.gmail.com>
+	Fri, 14 Jun 2013 19:38:44 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r5ENchp9024782
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Jun 2013 16:38:44 -0700
+Message-ID: <51BBA983.5090704@candelatech.com> (sfid-20130615_013846_760802_5E47CDAB)
+Date: Fri, 14 Jun 2013 16:38:43 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMsPy2sqS8frL+Ybq2YT83ehfZ9bSgyfwuZmfDf1R4tCre8O1g@mail.gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Double 'put' of bss in mac80211/mlme.c?
+References: <51BBA888.7030309@candelatech.com>
+In-Reply-To: <51BBA888.7030309@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That would be perfectly fine.  Or, you can just acknowledge that you
-intended for it to be there and I can add it myself.
+On 06/14/2013 04:34 PM, Ben Greear wrote:
+> Looks like an easy way to leak ies would be to mess up the
+> ref counting on bss objects.
+>
+> While looking at such code, I found this in mac80211/mlme.c
+>
+> The destroy_assoc_data does a put_bss, and then it is put again
+> directly.  Is this on purpose, or would this effectively cause
+> a double-free?
+>
+>          if (!ieee80211_assoc_success(sdata, *bss, mgmt, len)) {
+>              /* oops -- internal error -- send timeout for now */
+>              ieee80211_destroy_assoc_data(sdata, false);
+>              cfg80211_put_bss(sdata->local->hw.wiphy, *bss);
+>              return RX_MGMT_CFG80211_ASSOC_TIMEOUT;
+>          }
+>
+> Thanks,
+> Ben
+>
 
-John
+Gah, nevermind...one is assoc_data->bss, the other is auth_data->bss.
 
-On Mon, Jun 03, 2013 at 12:48:31PM -0700, Yunlian Jiang wrote:
-> Sorry, can I re-upload the patch and set Signed-off-by me?
-> 
-> Thanks
-> 
-> 
-> On Mon, Jun 3, 2013 at 12:39 PM, John W. Linville <linville@tuxdriver.com>wrote:
-> 
-> > This patch is missing a Signed-off-by line...
-> >
-> > On Fri, May 31, 2013 at 02:45:21PM -0700, Yunlian Jiang wrote:
-> > > GCC 4.8 is spitting out uninitialized-variable warnings against
-> > > "drivers/net/wireless/rtlwifi/rtl8192de/dm.c".
-> > >
-> > > drivers/net/wireless/rtlwifi/rtl8192de/dm.c:941:31:
-> > > error: 'ofdm_index_old[1]' may be used uninitialized in this
-> > > function [-Werror=maybe-uninitialized]
-> > >      rtlpriv->dm.ofdm_index[i] = ofdm_index_old[i];
-> > >
-> > > This patch adds initialization to the variable and properly sets its
-> > value.
-> > > ---
-> > >  drivers/net/wireless/rtlwifi/rtl8192de/dm.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> > b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> > > index 19a7655..47875ba 100644
-> > > --- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> > > +++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> > > @@ -842,7 +842,7 @@ static void
-> > rtl92d_dm_txpower_tracking_callback_thermalmeter(
-> > >       long val_y, ele_c = 0;
-> > >       u8 ofdm_index[2];
-> > >       s8 cck_index = 0;
-> > > -     u8 ofdm_index_old[2];
-> > > +     u8 ofdm_index_old[2] = {0, 0};
-> > >       s8 cck_index_old = 0;
-> > >       u8 index;
-> > >       int i;
-> > > --
-> > > 1.8.2.1
-> > >
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe
-> > linux-wireless" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > >
-> >
-> > --
-> > John W. Linville                Someday the world will need a hero, and you
-> > linville@tuxdriver.com                  might be all we have.  Be ready.
-> >
+Thanks,
+Ben
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
