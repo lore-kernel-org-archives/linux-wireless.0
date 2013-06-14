@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:50493 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751179Ab3FDSh6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 14:37:58 -0400
-Received: from mailout-de.gmx.net ([10.1.76.27]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0Lj83k-1U728A1faw-00dBfK for
- <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2013 20:37:56 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH] ath9k_htc: fix skb_under_panic error
-Date: Tue,  4 Jun 2013 20:37:44 +0200
-Message-Id: <1370371064-6903-1-git-send-email-linux@rempel-privat.de> (sfid-20130604_203801_867171_A8EBD9A1)
-In-Reply-To: <51ADBC01.6090202@blackshift.org>
-References: <51ADBC01.6090202@blackshift.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50238 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753540Ab3FNRpK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jun 2013 13:45:10 -0400
+Date: Fri, 14 Jun 2013 13:35:54 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux NFC <linux-nfc@ml01.01.org>
+Subject: Re: [GIT] [3.11] NFC updates
+Message-ID: <20130614173554.GC28497@tuxdriver.com> (sfid-20130614_194519_327596_56780C0A)
+References: <20130614115038.GI7998@zurbaran>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130614115038.GI7998@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This error seems to be really rare, and we do not know real couse of it.
-But, in any case, we should check size of head before reducing it.
+On Fri, Jun 14, 2013 at 01:50:38PM +0200, Samuel Ortiz wrote:
+> Hi John,
+> 
+> This is the NFC pull request for 3.11. See below for all the details,
+> thanks in advance for pulling them in.
+> 
+> The following changes since commit b70727e8a61a8e6b4d818519b03fce2937d0ef40:
+> 
+>   Merge branch 'for-linville-ath10k' of git://github.com/kvalo/ath6kl (2013-06-13 13:54:21 -0400)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.11-1
+> 
+> for you to fetch changes up to bda7eb27635c4d7414fb05a5f55501b71f436cc0:
+> 
+>   NFC: mei_phy: Clean up file (2013-06-14 13:45:11 +0200)
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-Reported-by: Marc Kleine-Budde <mkl@blackshift.org>
----
- drivers/net/wireless/ath/ath9k/htc_hst.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Pulling now...
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index aac4a40..2901351 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -26,6 +26,12 @@ static int htc_issue_send(struct htc_target *target, struct sk_buff* skb,
- 	struct htc_endpoint *endpoint = &target->endpoint[epid];
- 	int status;
- 
-+	if (skb_headroom(skb) < len &&
-+	    pskb_expand_head(skb, len, 0, GFP_ATOMIC)) {
-+		dev_err(target->dev, "Unable to expand headrom to %d\n", len);
-+		return -ENOMEM;
-+	}
-+
- 	hdr = (struct htc_frame_hdr *)
- 		skb_push(skb, sizeof(struct htc_frame_hdr));
- 	hdr->endpoint_id = epid;
 -- 
-1.8.1.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
