@@ -1,113 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:60768 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755558Ab3FLJGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 05:06:19 -0400
-From: Dave Wiltshire <david.wiltshire@gmx.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	nsujir@broadcom.com, mchan@broadcom.com, rmody@brocade.com,
-	jcliburn@gmail.com, chris.snook@gmail.com,
-	jeffrey.t.kirsher@intel.com, bruce.w.allan@intel.com,
-	alexander.h.duyck@intel.com, cooldavid@cooldavid.org,
-	linux-driver@qlogic.com, linux-wimax@intel.com,
-	wimax@linuxwimax.org, linux-wireless@vger.kernel.org,
-	viro@zeniv.linux.org.uk, eparis@redhat.com, edumazet@google.com,
-	dev@openvswitch.org, jhs@mojatatu.com,
-	Dave Wiltshire <david.wiltshire@gmx.com>
-Subject: [PATCH 1/3] skbuff: Update truesize in pskb_expand_head
-Date: Wed, 12 Jun 2013 19:05:32 +1000
-Message-Id: <1371027934-1955-2-git-send-email-david.wiltshire@gmx.com> (sfid-20130612_110722_373837_BDE2C970)
-In-Reply-To: <1371027934-1955-1-git-send-email-david.wiltshire@gmx.com>
-References: <1371027934-1955-1-git-send-email-david.wiltshire@gmx.com>
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:44406 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753032Ab3FNSVZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jun 2013 14:21:25 -0400
+Received: by mail-pb0-f45.google.com with SMTP id mc8so823740pbc.4
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Jun 2013 11:21:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51B7A9FB.9020706@erley.org>
+References: <CA+7oyge=p5uTgCc+Veq-fZrH2Dd6Ew7OR8m0mz+e7+Ze+LNcYQ@mail.gmail.com>
+	<51B7A9FB.9020706@erley.org>
+Date: Fri, 14 Jun 2013 14:21:25 -0400
+Message-ID: <CA+7oyge65d5aMnYKMR+4-E4UzaaGyUMRF9h9UfOecKbgqMcsVQ@mail.gmail.com> (sfid-20130614_202129_856558_DC39332F)
+Subject: Re: where is ath9k debugfs?
+From: George Nychis <gnychis@gmail.com>
+To: Pat Erley <pat-lkml@erley.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some call sites to pskb_expand_head subsequently update the skb truesize
-and others don't (even with non-zero arguments). This is likely a memory
-audit leak. Fixed this up by moving the memory accounting to the
-skbuff.c file and removing it from the calling sites.
+Hi Pat,
 
-Signed-off-by: Dave Wiltshire <david.wiltshire@gmx.com>
----
- drivers/net/wireless/mwl8k.c |    1 -
- kernel/audit.c               |    2 --
- net/core/skbuff.c            |    1 +
- net/netlink/af_netlink.c     |    3 +--
- net/wireless/util.c          |    2 --
- 5 files changed, 2 insertions(+), 7 deletions(-)
+You're correct on this.  I always seem to forget about the distinction
+between ath9k and ath_htc.  Thanks a bunch!
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 6820fce..802c8d7 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -845,7 +845,6 @@ mwl8k_add_dma_header(struct mwl8k_priv *priv, struct sk_buff *skb,
- 					"Failed to reallocate TX buffer\n");
- 			return;
- 		}
--		skb->truesize += REDUCED_TX_HEADROOM;
- 	}
- 
- 	reqd_hdrlen = sizeof(*tr) + head_pad;
-diff --git a/kernel/audit.c b/kernel/audit.c
-index 21c7fa6..e05b57b 100644
---- a/kernel/audit.c
-+++ b/kernel/audit.c
-@@ -1157,7 +1157,6 @@ struct audit_buffer *audit_log_start(struct audit_context *ctx, gfp_t gfp_mask,
- static inline int audit_expand(struct audit_buffer *ab, int extra)
- {
- 	struct sk_buff *skb = ab->skb;
--	int oldtail = skb_tailroom(skb);
- 	int ret = pskb_expand_head(skb, 0, extra, ab->gfp_mask);
- 	int newtail = skb_tailroom(skb);
- 
-@@ -1166,7 +1165,6 @@ static inline int audit_expand(struct audit_buffer *ab, int extra)
- 		return 0;
- 	}
- 
--	skb->truesize += newtail - oldtail;
- 	return newtail;
- }
- 
-diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-index edf3757..125bb7e 100644
---- a/net/core/skbuff.c
-+++ b/net/core/skbuff.c
-@@ -1061,6 +1061,7 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
- 	if (!data)
- 		goto nodata;
- 	size = SKB_WITH_OVERHEAD(ksize(data));
-+	skb->truesize += size - skb_end_offset(skb);
- 
- 	/* Copy only real data... and, alas, header. This should be
- 	 * optimized for the cases when header is void.
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index 9b6b115..77fd986 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -1565,8 +1565,7 @@ static struct sk_buff *netlink_trim(struct sk_buff *skb, gfp_t allocation)
- 		skb = nskb;
- 	}
- 
--	if (!pskb_expand_head(skb, 0, -delta, allocation))
--		skb->truesize -= delta;
-+	pskb_expand_head(skb, 0, -delta, allocation);
- 
- 	return skb;
- }
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index f5ad4d9..5710aa2 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -533,8 +533,6 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
- 
- 		if (pskb_expand_head(skb, head_need, 0, GFP_ATOMIC))
- 			return -ENOMEM;
--
--		skb->truesize += head_need;
- 	}
- 
- 	if (encaps_data) {
--- 
-1.7.10.4
+- George
 
+On Tue, Jun 11, 2013 at 6:51 PM, Pat Erley <pat-lkml@erley.org> wrote:
+> On 06/11/2013 12:40 PM, George Nychis wrote:
+>>
+>> I have configured my kernel to use ath9k debugfs:
+>> $ grep ATH9K_DEBUGFS /boot/config-`uname -r`
+>> CONFIG_ATH9K_DEBUGFS=y
+>>
+>> The location of these debugfs files should be in
+>> /sys/kernel/debug/ath9k according to:
+>>
+>> http://wireless.kernel.org/en/users/Drivers/ath9k/debug#Debugfs_files_for_ath9k
+>>
+>> However, when I load the modules and plug in an ath9k device, I do not
+>> get any ath9k debugfs files:
+>> root@parallels:/sys# find /sys -name ath9k
+>> root@parallels:/sys# find /sys -name rx_chainmask
+>> root@parallels:/sys# find /sys -name disable_ani
+>> root@parallels:/sys#
+>>
+>> I do get the ieee80211 debug, though:
+>> # ls -l /sys/kernel/debug/ieee80211/
+>> total 0
+>> drwxr-xr-x 6 root root 0 Jun 11 12:30 phy0
+>>
+>> Do I need to pass some parameter to the kernel module on load to get
+>> the ath9k debugfs?  Am I missing something else?
+>>
+>> Thanks!
+>> George
+>
+>
+> Hi George,
+>
+> When you say 'plug in an ath9k device' I assume you mean you plug it in
+> before you boot?  There aren't any ath9k devices that I know of that use
+> USB.  I believe they're all handled by ath9k_htc.
+>
+> Aside from that, you found the right spot (/sys/kernel/debug/ieee80211/phyN)
+> for it to live.  What does dmesg say when you plug in/boot with the device?
+>
+> Pat
