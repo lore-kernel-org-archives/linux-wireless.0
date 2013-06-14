@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f176.google.com ([209.85.220.176]:46173 "EHLO
-	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751569Ab3F0Opi (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58504 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753398Ab3FNXed (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 10:45:38 -0400
-Message-ID: <51CC500C.9050602@lwfinger.net> (sfid-20130627_164556_267158_12462845)
-Date: Thu, 27 Jun 2013 09:45:32 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 14 Jun 2013 19:34:33 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r5ENYWtF024484
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Jun 2013 16:34:32 -0700
+Message-ID: <51BBA888.7030309@candelatech.com> (sfid-20130615_013436_943608_0F86F43A)
+Date: Fri, 14 Jun 2013 16:34:32 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Maxime Ripard <maxime.ripard@free-electrons.com>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-	Brian Lilly <brian@crystalfontz.com>,
-	Brent-Crosby <brent@crystalfontz.com>, Jim Wall <jimwall@q.com>,
-	Thomas Petazzoni <thomas@free-electrons.com>
-Subject: Re: RTL8192CU on ARM not working
-References: <20130627081225.GJ5803@lukather>
-In-Reply-To: <20130627081225.GJ5803@lukather>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Double 'put' of bss in mac80211/mlme.c?
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/27/2013 03:12 AM, Maxime Ripard wrote:
-> Hi everyone,
->
-> I'm currently trying to use a RTL8192CU on an ARM (Freescale imx28,
-> armv5) platform, using 3.10-rc3.
->
-> Trouble is, while the chip is correctly detected and you can use iw on it
-> without any problem it seems, once you start an association to an access
-> point, the association goes on, seems to associate, displaying a WARN()
-> message [1] and then, after what looks like a random amount of time (could
-> be right away, could be after a few minutes), deassociate [2].
->
-> During the time where it's associated, we never seem to transmit any
-> packets, while iw reports packets being sent, I guess we can assume that
-> they are actually never transmitted as well [3].
->
-> What seems odd to me as well is that the signal power reported for the access
-> point is excessively high when using iw scan (10 dbm), and once connected, the
-> signal strength is -64dbm, which makes quite a huge difference.
+Looks like an easy way to leak ies would be to mess up the
+ref counting on bss objects.
 
-That warning is under discussion. See the thread entitled "rtl8192cu: slow path 
-warning" in the linux-wireless ML. I will add you to the Cc list on those messages.
+While looking at such code, I found this in mac80211/mlme.c
 
-You should switch to kernel 3.10-rc7. There are a lot of changes to rtl8192cu in 
-that version that are not in -rc3. Those updates mostly affect WPA and WEP 
-encryption.
+The destroy_assoc_data does a put_bss, and then it is put again
+directly.  Is this on purpose, or would this effectively cause
+a double-free?
 
-I never take signal power values seriously. Just observe the comments scattered 
-throughout the code regarding them.
+		if (!ieee80211_assoc_success(sdata, *bss, mgmt, len)) {
+			/* oops -- internal error -- send timeout for now */
+			ieee80211_destroy_assoc_data(sdata, false);
+			cfg80211_put_bss(sdata->local->hw.wiphy, *bss);
+			return RX_MGMT_CFG80211_ASSOC_TIMEOUT;
+		}
 
-Larry
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
