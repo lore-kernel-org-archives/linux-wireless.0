@@ -1,253 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:45124 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622Ab3F0Moh (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:47078 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752461Ab3FNMPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 08:44:37 -0400
+	Fri, 14 Jun 2013 08:15:39 -0400
 From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv4 02/18] mac80211/rc80211: add chandef to rate initialization
-Date: Thu, 27 Jun 2013 14:44:08 +0200
-Message-Id: <1372337064-19254-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144449_052788_6E5B9F1B)
-In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCHv2 3/5] mac80211: add functions to duplicate a cfg80211_beacon
+Date: Fri, 14 Jun 2013 14:15:21 +0200
+Message-Id: <1371212124-26264-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130614_141544_164572_51003BD1)
+In-Reply-To: <1371212124-26264-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1371212124-26264-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-5 and 10 MHz support needs to know the current operating channel width,
-add the chandef to the rate control API.
+For the channel switch announcement, it is required to set a new beacon
+after the driver arrived on the new channel. The new beacon will be set
+by nl80211, but is required to duplicate the beacon as the original
+memory within the netlink message will be gone. Add functions to
+duplicate and free these cfg80211 beacons.
 
 Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/ath/ath9k/rc.c     |    2 ++
- drivers/net/wireless/iwlegacy/3945-rs.c |    1 +
- drivers/net/wireless/iwlegacy/4965-rs.c |    1 +
- drivers/net/wireless/iwlwifi/dvm/rs.c   |    3 ++-
- drivers/net/wireless/iwlwifi/mvm/rs.c   |    5 +++--
- drivers/net/wireless/rtlwifi/rc.c       |    1 +
- include/net/mac80211.h                  |    2 ++
- net/mac80211/rate.h                     |   22 +++++++++++++++++-----
- net/mac80211/rc80211_minstrel.c         |    3 ++-
- net/mac80211/rc80211_minstrel_ht.c      |   10 +++++++---
- net/mac80211/rc80211_pid_algo.c         |    1 +
- 11 files changed, 39 insertions(+), 12 deletions(-)
+ net/mac80211/cfg.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 7eb1f4b..a3c4ca0 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1275,6 +1275,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 64cf294..5ffc7d9 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2778,6 +2778,82 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 	return 0;
  }
  
- static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
-+			  struct cfg80211_chan_def *chandef,
-                           struct ieee80211_sta *sta, void *priv_sta)
- {
- 	struct ath_softc *sc = priv;
-@@ -1313,6 +1314,7 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- }
- 
- static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
-+			    struct cfg80211_chan_def *chandef,
- 			    struct ieee80211_sta *sta, void *priv_sta,
- 			    u32 changed)
- {
-diff --git a/drivers/net/wireless/iwlegacy/3945-rs.c b/drivers/net/wireless/iwlegacy/3945-rs.c
-index fe31590..aea667b 100644
---- a/drivers/net/wireless/iwlegacy/3945-rs.c
-+++ b/drivers/net/wireless/iwlegacy/3945-rs.c
-@@ -887,6 +887,7 @@ il3945_remove_debugfs(void *il, void *il_sta)
-  */
- static void
- il3945_rs_rate_init_stub(void *il_r, struct ieee80211_supported_band *sband,
-+			 struct cfg80211_chan_def *chandef,
- 			 struct ieee80211_sta *sta, void *il_sta)
- {
- }
-diff --git a/drivers/net/wireless/iwlegacy/4965-rs.c b/drivers/net/wireless/iwlegacy/4965-rs.c
-index ed3c42a..3ccbaf7 100644
---- a/drivers/net/wireless/iwlegacy/4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/4965-rs.c
-@@ -2803,6 +2803,7 @@ il4965_rs_remove_debugfs(void *il, void *il_sta)
-  */
- static void
- il4965_rs_rate_init_stub(void *il_r, struct ieee80211_supported_band *sband,
-+			 struct cfg80211_chan_def *chandef,
- 			 struct ieee80211_sta *sta, void *il_sta)
- {
- }
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rs.c b/drivers/net/wireless/iwlwifi/dvm/rs.c
-index 8fe76dc..3bf8ae0 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rs.c
-@@ -3338,7 +3338,8 @@ static void rs_remove_debugfs(void *priv, void *priv_sta)
-  * station is added we ignore it.
-  */
- static void rs_rate_init_stub(void *priv_r, struct ieee80211_supported_band *sband,
--			 struct ieee80211_sta *sta, void *priv_sta)
-+			      struct cfg80211_chan_def *chandef,
-+			      struct ieee80211_sta *sta, void *priv_sta)
- {
- }
- static struct rate_control_ops rs_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 31587a3..af27967 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -3165,8 +3165,9 @@ static void rs_remove_debugfs(void *mvm, void *mvm_sta)
-  * station is added we ignore it.
-  */
- static void rs_rate_init_stub(void *mvm_r,
--				 struct ieee80211_supported_band *sband,
--				 struct ieee80211_sta *sta, void *mvm_sta)
-+			      struct ieee80211_supported_band *sband,
-+			      struct cfg80211_chan_def *chandef,
-+			      struct ieee80211_sta *sta, void *mvm_sta)
- {
- }
- static struct rate_control_ops rs_mvm_ops = {
-diff --git a/drivers/net/wireless/rtlwifi/rc.c b/drivers/net/wireless/rtlwifi/rc.c
-index f9f059d..a98acef 100644
---- a/drivers/net/wireless/rtlwifi/rc.c
-+++ b/drivers/net/wireless/rtlwifi/rc.c
-@@ -218,6 +218,7 @@ static void rtl_tx_status(void *ppriv,
- 
- static void rtl_rate_init(void *ppriv,
- 			  struct ieee80211_supported_band *sband,
-+			  struct cfg80211_chan_def *chandef,
- 			  struct ieee80211_sta *sta, void *priv_sta)
- {
- }
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a405a7a..9445f38 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4202,8 +4202,10 @@ struct rate_control_ops {
- 
- 	void *(*alloc_sta)(void *priv, struct ieee80211_sta *sta, gfp_t gfp);
- 	void (*rate_init)(void *priv, struct ieee80211_supported_band *sband,
-+			  struct cfg80211_chan_def *chandef,
- 			  struct ieee80211_sta *sta, void *priv_sta);
- 	void (*rate_update)(void *priv, struct ieee80211_supported_band *sband,
-+			    struct cfg80211_chan_def *chandef,
- 			    struct ieee80211_sta *sta, void *priv_sta,
- 			    u32 changed);
- 	void (*free_sta)(void *priv, struct ieee80211_sta *sta,
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index d35a5dd..5dedc56 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -66,11 +66,12 @@ static inline void rate_control_rate_init(struct sta_info *sta)
- 	}
- 
- 	sband = local->hw.wiphy->bands[chanctx_conf->def.chan->band];
--	rcu_read_unlock();
- 
- 	ieee80211_sta_set_rx_nss(sta);
- 
--	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
-+	ref->ops->rate_init(ref->priv, sband, &chanctx_conf->def, ista,
-+			    priv_sta);
-+	rcu_read_unlock();
- 	set_sta_flag(sta, WLAN_STA_RATE_CONTROL);
- }
- 
-@@ -81,10 +82,21 @@ static inline void rate_control_rate_update(struct ieee80211_local *local,
- 	struct rate_control_ref *ref = local->rate_ctrl;
- 	struct ieee80211_sta *ista = &sta->sta;
- 	void *priv_sta = sta->rate_ctrl_priv;
-+	struct ieee80211_chanctx_conf *chanctx_conf;
- 
--	if (ref && ref->ops->rate_update)
--		ref->ops->rate_update(ref->priv, sband, ista,
--				      priv_sta, changed);
-+	if (ref && ref->ops->rate_update) {
-+		rcu_read_lock();
++static void cfg80211_beacon_free(struct cfg80211_beacon_data *beacon)
++{
++	kfree(beacon->head);
++	kfree(beacon->tail);
++	kfree(beacon->beacon_ies);
++	kfree(beacon->proberesp_ies);
++	kfree(beacon->assocresp_ies);
++	kfree(beacon->probe_resp);
++	kfree(beacon);
++}
 +
-+		chanctx_conf = rcu_dereference(sta->sdata->vif.chanctx_conf);
-+		if (WARN_ON(!chanctx_conf)) {
-+			rcu_read_unlock();
-+			return;
-+		}
++static struct cfg80211_beacon_data *
++cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
++{
++	struct cfg80211_beacon_data *new_beacon;
++	new_beacon = kzalloc(sizeof(*new_beacon), GFP_KERNEL);
++	if (!beacon)
++		return NULL;
 +
-+		ref->ops->rate_update(ref->priv, sband, &chanctx_conf->def,
-+				      ista, priv_sta, changed);
-+		rcu_read_unlock();
++	if (beacon->head_len) {
++		new_beacon->head = kmalloc(beacon->head_len, GFP_KERNEL);
++		new_beacon->head_len = beacon->head_len;
++		if (!new_beacon->head)
++			goto error;
++		memcpy((u8 *)new_beacon->head, beacon->head, beacon->head_len);
 +	}
- 	drv_sta_rc_update(local, sta->sdata, &sta->sta, changed);
- }
- 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index ac7ef54..5b25966 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -417,7 +417,8 @@ init_sample_table(struct minstrel_sta_info *mi)
- 
- static void
- minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
--               struct ieee80211_sta *sta, void *priv_sta)
-+		   struct cfg80211_chan_def *chandef,
-+		   struct ieee80211_sta *sta, void *priv_sta)
- {
- 	struct minstrel_sta_info *mi = priv_sta;
- 	struct minstrel_priv *mp = priv;
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 5b2d301..5256297 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -836,6 +836,7 @@ minstrel_ht_update_cck(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 
- static void
- minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
-+			struct cfg80211_chan_def *chandef,
-                         struct ieee80211_sta *sta, void *priv_sta)
- {
- 	struct minstrel_priv *mp = priv;
-@@ -931,22 +932,25 @@ use_legacy:
- 	memset(&msp->legacy, 0, sizeof(msp->legacy));
- 	msp->legacy.r = msp->ratelist;
- 	msp->legacy.sample_table = msp->sample_table;
--	return mac80211_minstrel.rate_init(priv, sband, sta, &msp->legacy);
-+	return mac80211_minstrel.rate_init(priv, sband, chandef, sta,
-+					   &msp->legacy);
- }
- 
- static void
- minstrel_ht_rate_init(void *priv, struct ieee80211_supported_band *sband,
-+		      struct cfg80211_chan_def *chandef,
-                       struct ieee80211_sta *sta, void *priv_sta)
- {
--	minstrel_ht_update_caps(priv, sband, sta, priv_sta);
-+	minstrel_ht_update_caps(priv, sband, chandef, sta, priv_sta);
- }
- 
- static void
- minstrel_ht_rate_update(void *priv, struct ieee80211_supported_band *sband,
-+			struct cfg80211_chan_def *chandef,
-                         struct ieee80211_sta *sta, void *priv_sta,
-                         u32 changed)
- {
--	minstrel_ht_update_caps(priv, sband, sta, priv_sta);
-+	minstrel_ht_update_caps(priv, sband, chandef, sta, priv_sta);
- }
- 
- static void *
-diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
-index 502d3ec..958fad0 100644
---- a/net/mac80211/rc80211_pid_algo.c
-+++ b/net/mac80211/rc80211_pid_algo.c
-@@ -293,6 +293,7 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
- 
- static void
- rate_control_pid_rate_init(void *priv, struct ieee80211_supported_band *sband,
-+			   struct cfg80211_chan_def *chandef,
- 			   struct ieee80211_sta *sta, void *priv_sta)
- {
- 	struct rc_pid_sta_info *spinfo = priv_sta;
++	if (beacon->tail_len) {
++		new_beacon->tail = kmalloc(beacon->tail_len, GFP_KERNEL);
++		new_beacon->tail_len = beacon->tail_len;
++		if (!new_beacon->tail)
++			goto error;
++		memcpy((u8 *)new_beacon->tail, beacon->tail, beacon->tail_len);
++	}
++	if (beacon->beacon_ies_len) {
++		new_beacon->beacon_ies = kmalloc(beacon->beacon_ies_len,
++						 GFP_KERNEL);
++		new_beacon->beacon_ies_len = beacon->beacon_ies_len;
++		if (!new_beacon->beacon_ies)
++			goto error;
++		memcpy((u8 *)new_beacon->beacon_ies, beacon->beacon_ies,
++		       beacon->beacon_ies_len);
++	}
++	if (beacon->proberesp_ies_len) {
++		new_beacon->proberesp_ies = kmalloc(beacon->proberesp_ies_len,
++						    GFP_KERNEL);
++		new_beacon->proberesp_ies_len = beacon->proberesp_ies_len;
++		if (!new_beacon->proberesp_ies)
++			goto error;
++		memcpy((u8 *)new_beacon->proberesp_ies, beacon->proberesp_ies,
++		       beacon->proberesp_ies_len);
++	}
++	if (beacon->assocresp_ies_len) {
++		new_beacon->assocresp_ies = kmalloc(beacon->assocresp_ies_len,
++						    GFP_KERNEL);
++		new_beacon->assocresp_ies_len = beacon->assocresp_ies_len;
++		if (!new_beacon->assocresp_ies)
++			goto error;
++		memcpy((u8 *)new_beacon->assocresp_ies, beacon->assocresp_ies,
++		       beacon->assocresp_ies_len);
++	}
++	if (beacon->probe_resp_len) {
++		new_beacon->probe_resp = kmalloc(beacon->probe_resp_len,
++						 GFP_KERNEL);
++		new_beacon->probe_resp_len = beacon->probe_resp_len;
++		if (!new_beacon->probe_resp)
++			goto error;
++		memcpy((u8 *)new_beacon->probe_resp, beacon->probe_resp,
++		       beacon->probe_resp_len);
++	}
++
++	return new_beacon;
++error:
++	cfg80211_beacon_free(new_beacon);
++	return NULL;
++}
++
+ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			     struct ieee80211_channel *chan, bool offchan,
+ 			     unsigned int wait, const u8 *buf, size_t len,
 -- 
 1.7.10.4
 
