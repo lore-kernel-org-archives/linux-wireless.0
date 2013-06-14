@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:45424 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603Ab3FREqJ (ORCPT
+Received: from mail-qe0-f54.google.com ([209.85.128.54]:33906 "EHLO
+	mail-qe0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751702Ab3FNMvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 00:46:09 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] initvals: Update inivals for AR9462 2.0
-Date: Tue, 18 Jun 2013 10:13:08 +0530
-Message-Id: <1371530590-15676-1-git-send-email-sujith@msujith.org> (sfid-20130618_064613_978303_D2D59C8C)
+	Fri, 14 Jun 2013 08:51:19 -0400
+Received: by mail-qe0-f54.google.com with SMTP id ne12so275146qeb.41
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Jun 2013 05:51:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130611161924.GB1696@redhat.com>
+References: <20120418203543.GA16000@x61.home> <20120425122554.GD2466@redhat.com>
+ <20120503182853.GA12461@mac.home> <20121226185425.GA12627@x61.home>
+ <20130107110759.GC6931@redhat.com> <20130603085239.GA26920@mac.home>
+ <20130603141804.GA2146@redhat.com> <CAJZjf_xoCOTFsLAB29uLKeW7+O+k255Amspn6GKFMysc7CTsBg@mail.gmail.com>
+ <CAJZjf_xGdvStOG0=FR2+2WsVcjyizQukH+RxysZf8f9-Tk9L9w@mail.gmail.com> <20130611161924.GB1696@redhat.com>
+From: Pedro Francisco <pedrogfrancisco@gmail.com>
+Date: Fri, 14 Jun 2013 13:50:58 +0100
+Message-ID: <CAJZjf_zOF=qGEE=pWDRe0YDpAYophm93cVM8pfuL0sTRGq56EA@mail.gmail.com> (sfid-20130614_145122_889096_DFA5D240)
+Subject: Re: Power saving features for iwl4965
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Tino Keitel <tino.keitel@tikei.de>,
+	ML linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, Jun 11, 2013 at 5:19 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Mon, Jun 10, 2013 at 08:31:33PM +0100, Pedro Francisco wrote:
+>> On Sun, Jun 9, 2013 at 1:28 AM, Pedro Francisco
+>> <pedrogfrancisco@gmail.com> wrote:
+>> > On Mon, Jun 3, 2013 at 3:18 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> >> On Mon, Jun 03, 2013 at 10:52:39AM +0200, Tino Keitel wrote:
+>> >>> (...)
+>> >>> It would be really nice to have proper power management in a current
+>> >>> kernel, as the laptop gets noticeably hotter with the current iwlegacy
+>> >>> driver.  That's why I still use a 3.1.10 kernel with an old
+>> >>> forward-ported iwlagn driver.
+>> >>
+>> >> Could you try this experimental patch? (...)
+>> >
+>> > I am trying the iwlegacy powersave patch along with CPU scheduler BFS
+>> > and IO scheduler BFQ.
+>> >
+>> > I've got this today: (...)
+>> >
+>> > (...)
+>> I also got a SYSASSERT:
+>> (...)
+>>
+>> I disabled powersave (but kept running the same kernel) and none of
+>> the errors appeared again.
+>
+> Yes, this seems to be iwlegacy PS issue and has to be fixed before
+> this patch could be applied.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- tools/initvals/ar9462_2p0_initvals.h | 2 +-
- tools/initvals/checksums.txt         | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+But is it a driver-only issue? I had assumed it was some sort of
+fireware+driver issue...
 
-diff --git a/tools/initvals/ar9462_2p0_initvals.h b/tools/initvals/ar9462_2p0_initvals.h
-index 999ab08..f00e945 100644
---- a/tools/initvals/ar9462_2p0_initvals.h
-+++ b/tools/initvals/ar9462_2p0_initvals.h
-@@ -78,7 +78,7 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
- 	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
- 	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
- 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
--	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
-+	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
- 	{0x0000a2d0, 0x00041981, 0x00041981, 0x00041981, 0x00041982},
- 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
- 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-diff --git a/tools/initvals/checksums.txt b/tools/initvals/checksums.txt
-index 551c3ba..e3632c8 100644
---- a/tools/initvals/checksums.txt
-+++ b/tools/initvals/checksums.txt
-@@ -139,7 +139,7 @@ ca6088034f339ea8f106f7f034d34baafec0c0ca        ar9340Modes_high_ob_db_tx_gain_t
- 1b9f617ab8c10ec0760e81fe61d469692f2acc29        ar9340_1p0_soc_preamble
- d9efd1c575ac43d60c310d717c59617a5323c111        ar9462_modes_fast_clock_2p0
- 222ed8213d3ffb0d12cf4c7019bdfd874e45c7d7        ar9462_pciephy_clkreq_enable_L1_2p0
--efb4c74c657dbc49ab80dd1d42a5b8e6ff0c3651        ar9462_2p0_baseband_postamble
-+d7a2102c22264c288fa3d9de27e5ae84b8f3812e        ar9462_2p0_baseband_postamble
- d0f7aff1a1ab7e6f6bbda0da067714459341ce5f        ar9462_common_rx_gain_table_2p0
- 2fbe90336971cd66f0264c0cc57605c2de069d5f        ar9462_pciephy_clkreq_disable_L1_2p0
- a3173672141a2ac797e660228d41a609f9ab2c4c        ar9462_pciephy_pll_on_clkreq_disable_L1_2p0
--- 
-1.8.3.1
+Will running with debug on help? Or is it easily reproducible on any
+iwl3945 / iwl4465 ?
 
+Because in my case (iwl3945) it happens after boot, no prior suspend
+to RAM is required to trigger the issues.
+
+P.S.: the demise of bugzilla.intellinuxwireless.org it's very
+difficult to find useful info about this. It would appear 4465 is just
+affected after suspend, believing the patch which disabled PS in 2009.
