@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:55746
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S932391Ab3FFKzp (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50239 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753552Ab3FNRpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 06:55:45 -0400
-Date: Thu, 6 Jun 2013 06:55:39 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] cw1200: remove an unreachable goto
-Message-ID: <20130606105538.GA6302@shaftnet.org> (sfid-20130606_125554_564282_C1401134)
-References: <20130606105145.GC12953@debian>
+	Fri, 14 Jun 2013 13:45:10 -0400
+Date: Fri, 14 Jun 2013 13:34:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-fixes 2013-06-14
+Message-ID: <20130614173419.GB28497@tuxdriver.com> (sfid-20130614_194535_515460_8B8F3073)
+References: <1371206567.8278.3.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="zhXaljGHf11kAtnf"
-In-Reply-To: <20130606105145.GC12953@debian>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1371206567.8278.3.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jun 14, 2013 at 12:42:47PM +0200, Johannes Berg wrote:
+> John,
+> 
+> I have two more fixes that I think would be worthwhile for 3.10 but
+> admittedly the scenario is somewhat unlikely, so if you want to hold
+> them for 3.11 I can live with that. In that case, I can put them into my
+> -next tree, or you can pull this into -next (but if you don't pull
+> wireless.git first you'd get some more fixes you already have.)
+> 
+> These two patches fix two issues with using rfkill randomly during
+> traffic, which would then cause our driver to stop working and not be
+> able to recover at all.
+> 
+> johannes
+> 
+> 
+> The following changes since commit 622ebe994f6866b8d46ee5d3bcc329ed65d3722d:
+> 
+>   iwlwifi: fix rate control regression (2013-06-12 14:13:39 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to 8a487b1a7432b20ff3f82387a8ce7555a964b44e:
+> 
+>   iwlwifi: pcie: wake the queue if stopped when being unmapped (2013-06-13 16:44:04 +0200)
+> 
+> ----------------------------------------------------------------
+> Emmanuel Grumbach (2):
+>       iwlwifi: pcie: fix race in queue unmapping
+>       iwlwifi: pcie: wake the queue if stopped when being unmapped
+> 
+>  drivers/net/wireless/iwlwifi/pcie/tx.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
 
---zhXaljGHf11kAtnf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It isn't obvious to me that these need to be included in 3.10.  I can
+pull this into wireless-next once the current stuff in wireless makes
+it to davem's tree.
 
-On Thu, Jun 06, 2013 at 03:51:45AM -0700, Dan Carpenter wrote:
-> The "return" is correct and the unreachable "goto" line is wrong.
-> I have deleted it.
+If you decide that these really need to go, please provide some more
+information on how likely users are to hit the bugs, or how serious
+the effects of that would be.
 
-A patch for this was posted earlier by Joe Perches.  It's in my tree=20
-now, awaiting merging.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---zhXaljGHf11kAtnf
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRsGqqPuLgii2759ARAoblAKCkhxFHuWE0yqltP41WOMDYtY/PiQCfVDVH
-s6eMr9j8F1eWgzz0l5K5ihA=
-=19T3
------END PGP SIGNATURE-----
-
---zhXaljGHf11kAtnf--
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
