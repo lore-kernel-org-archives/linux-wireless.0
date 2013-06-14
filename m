@@ -1,50 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:23530 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752834Ab3FDHI4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 03:08:56 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: "David S. Miller" <davem@davemloft.net>
-CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [RESEND][PATCH 3/7] net, ipw2x00: remove redundant D0 power state set
-Date: Tue, 4 Jun 2013 15:07:54 +0800
-Message-ID: <1370329674-8360-1-git-send-email-wangyijing@huawei.com> (sfid-20130604_090901_493269_3FEBBBF0)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from swan.laptop.org ([18.85.2.166]:57590 "EHLO swan.laptop.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753528Ab3FNT3L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jun 2013 15:29:11 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com, bzhao@marvell.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mwifiex: fix memory corruption when unsetting multicast list
+Message-Id: <20130614192424.9463CFAAC8@dev.laptop.org> (sfid-20130614_212914_879050_095BB740)
+Date: Fri, 14 Jun 2013 15:24:24 -0400 (EDT)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pci_enable_device() will set device power state to D0,
-so it's no need to do it again in ipw2100_pci_init_one().
+When trying to unset a previously-set multicast list (i.e. the new list
+has 0 entries), mwifiex_set_multicast_list() was calling down to
+mwifiex_request_set_multicast_list() while leaving
+mcast_list.num_multicast_addr as an uninitialized value.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
+We were arriving at mwifiex_cmd_mac_multicast_adr() which would then
+proceed to do an often huge memcpy of
+mcast_list.num_multicast_addr*ETH_ALEN bytes, causing memory corruption
+and hard to debug crashes.
+
+Fix this by setting mcast_list.num_multicast_addr to 0 when no multicast
+list is provided. Similarly, fix up the logic in
+mwifiex_request_set_multicast_list() to unset the multicast list that
+was previously sent to the hardware in such cases.
+
+Signed-off-by: Daniel Drake <dsd@laptop.org>
 ---
- drivers/net/wireless/ipw2x00/ipw2100.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/main.c      |  5 ++---
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 18 ++++++++----------
+ 2 files changed, 10 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 15920aa..f8ab193 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -6242,8 +6242,6 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 	if ((val & 0x0000ff00) != 0)
- 		pci_write_config_dword(pci_dev, 0x40, val & 0xffff00ff);
- 
--	pci_set_power_state(pci_dev, PCI_D0);
--
- 	if (!ipw2100_hw_is_adapter_in_system(dev)) {
- 		printk(KERN_WARNING DRV_NAME
- 		       "Device not found via register read.\n");
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 2eb88ea..4f5c37a 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -573,9 +573,8 @@ static void mwifiex_set_multicast_list(struct net_device *dev)
+ 		mcast_list.mode = MWIFIEX_ALL_MULTI_MODE;
+ 	} else {
+ 		mcast_list.mode = MWIFIEX_MULTICAST_MODE;
+-		if (netdev_mc_count(dev))
+-			mcast_list.num_multicast_addr =
+-				mwifiex_copy_mcast_addr(&mcast_list, dev);
++		mcast_list.num_multicast_addr =
++			mwifiex_copy_mcast_addr(&mcast_list, dev);
+ 	}
+ 	mwifiex_request_set_multicast_list(priv, &mcast_list);
+ }
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 1a8a19d..23aa910 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -104,16 +104,14 @@ int mwifiex_request_set_multicast_list(struct mwifiex_private *priv,
+ 		} else {
+ 			priv->curr_pkt_filter &=
+ 				~HostCmd_ACT_MAC_ALL_MULTICAST_ENABLE;
+-			if (mcast_list->num_multicast_addr) {
+-				dev_dbg(priv->adapter->dev,
+-					"info: Set multicast list=%d\n",
+-				       mcast_list->num_multicast_addr);
+-				/* Send multicast addresses to firmware */
+-				ret = mwifiex_send_cmd_async(priv,
+-					HostCmd_CMD_MAC_MULTICAST_ADR,
+-					HostCmd_ACT_GEN_SET, 0,
+-					mcast_list);
+-			}
++			dev_dbg(priv->adapter->dev,
++				"info: Set multicast list=%d\n",
++				mcast_list->num_multicast_addr);
++			/* Send multicast addresses to firmware */
++			ret = mwifiex_send_cmd_async(priv,
++				HostCmd_CMD_MAC_MULTICAST_ADR,
++				HostCmd_ACT_GEN_SET, 0,
++				mcast_list);
+ 		}
+ 	}
+ 	dev_dbg(priv->adapter->dev,
 -- 
-1.7.1
-
+1.8.1.4
 
