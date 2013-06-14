@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:41155 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755216Ab3FQJEi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 05:04:38 -0400
-Message-ID: <1371459876.3028.3.camel@cumari.coelho.fi> (sfid-20130617_110441_771889_99C02EB3)
-Subject: Re: [PATCH v2] wl18xx: use locally administered MAC address if not
- available from fuse
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <arik@wizery.com>, <eliad@wizery.com>
-Date: Mon, 17 Jun 2013 12:04:36 +0300
-In-Reply-To: <1368006896-24468-1-git-send-email-coelho@ti.com>
-References: <1368006896-24468-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50236 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753544Ab3FNRpK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jun 2013 13:45:10 -0400
+Date: Fri, 14 Jun 2013 13:32:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-next 2013-06-14
+Message-ID: <20130614173210.GA28497@tuxdriver.com> (sfid-20130614_194521_900412_8101F3FC)
+References: <1371206930.8278.8.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1371206930.8278.8.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-05-08 at 12:54 +0300, Luciano Coelho wrote:
-> In some R&D chips, the device may be left untrimmed and with the MAC
-> address missing from fuse ROM.  In order to support those devices,
-> apply a random locally administered MAC address instead.
+On Fri, Jun 14, 2013 at 12:48:50PM +0200, Johannes Berg wrote:
+> John,
 > 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+> Here are some more things for -next. I will have another pull request
+> some time next week because we're preparing to release the firmware for
+> the 7000 series devices, and unfortunately that will require an API
+> bump.
 > 
-> In v2:
+> This time I have a number of cleanups, a small fix from Emmanuel and two
+> performance improvements that combined reduce our driver's CPU
+> utilisation as much as 75% in high TX-throughput scenarios.
 > 
-> * use eth_random_addr() to generate the locally assigned address,
->   instead of hardcoding it. (thanks Johannes)
+> johannes
+> 
+> 
+> The following changes since commit 8eb3871076875f247483f4a1fe6713e6d440c53e:
+> 
+>   iwlwifi: mvm: Update the supported interface combinations (2013-06-11 20:17:06 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+> 
+> for you to fetch changes up to adaf69186c24100d34c2fb107dacd33546cad3c5:
+> 
+>   iwlwifi: mvm: remove obsolete comment (2013-06-13 16:43:16 +0200)
 
-Applied.
+Pulling now...
 
---
-Luca.
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
