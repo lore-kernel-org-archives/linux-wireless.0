@@ -1,258 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57845 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752182Ab3FKRAO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 13:00:14 -0400
-Date: Tue, 11 Jun 2013 12:45:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Subject: Re: [PATCH RESEND] mwifiex: fix regression issue for usb interface
-Message-ID: <20130611164528.GB3196@tuxdriver.com> (sfid-20130611_190022_483967_9AB7A4C5)
-References: <1370903981-10891-1-git-send-email-bzhao@marvell.com>
+Received: from mout.gmx.net ([212.227.15.18]:54179 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753936Ab3FOHYZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Jun 2013 03:24:25 -0400
+Received: from mailout-de.gmx.net ([10.1.76.20]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0Mfl1O-1Uztwp2tEa-00NDnW for
+ <linux-wireless@vger.kernel.org>; Sat, 15 Jun 2013 09:24:23 +0200
+Message-ID: <51BC16A2.8070104@rempel-privat.de> (sfid-20130615_092428_341770_32BC002F)
+Date: Sat, 15 Jun 2013 09:24:18 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370903981-10891-1-git-send-email-bzhao@marvell.com>
+To: George Nychis <gnychis@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>
+Subject: Re: unable to force transmission rate on injection
+References: <CA+7oygcTxgPiVbup6BT-+sJWFNy=nMTc8C7OeCew9Xc6WgQinw@mail.gmail.com>
+In-Reply-To: <CA+7oygcTxgPiVbup6BT-+sJWFNy=nMTc8C7OeCew9Xc6WgQinw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have the original patch.  Merging is a bit stalled at the moment,
-related to last weeks rebase of the wireless tree...
+Hi George,
 
-On Mon, Jun 10, 2013 at 03:39:41PM -0700, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> PATCH "mwifiex: scan delay timer cleanup in unload path" adds code
-> to cancel scan delay timer in unload path. It causes a regression
-> for USB interface.
-> 
-> USB8797 card gets enumerated twice. First enumeration is for
-> firmware download and second enumeration expects firmware
-> initialization.
-> 
-> It was observed that we are trying del_timer_sync() without setting
-> up the timer when remove handler is called after first enumeration.
-> 
-> This patch moves setup_timer() call to appropriate place so that
-> timer is setup for both the enumerations.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
->  drivers/net/wireless/mwifiex/init.c | 81 ------------------------------------
->  drivers/net/wireless/mwifiex/main.c | 82 +++++++++++++++++++++++++++++++++++++
->  2 files changed, 82 insertions(+), 81 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-> index c7f11c0..2fe31dc 100644
-> --- a/drivers/net/wireless/mwifiex/init.c
-> +++ b/drivers/net/wireless/mwifiex/init.c
-> @@ -52,84 +52,6 @@ static int mwifiex_add_bss_prio_tbl(struct mwifiex_private *priv)
->  	return 0;
->  }
->  
-> -static void scan_delay_timer_fn(unsigned long data)
-> -{
-> -	struct mwifiex_private *priv = (struct mwifiex_private *)data;
-> -	struct mwifiex_adapter *adapter = priv->adapter;
-> -	struct cmd_ctrl_node *cmd_node, *tmp_node;
-> -	unsigned long flags;
-> -
-> -	if (adapter->surprise_removed)
-> -		return;
-> -
-> -	if (adapter->scan_delay_cnt == MWIFIEX_MAX_SCAN_DELAY_CNT) {
-> -		/*
-> -		 * Abort scan operation by cancelling all pending scan
-> -		 * commands
-> -		 */
-> -		spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
-> -		list_for_each_entry_safe(cmd_node, tmp_node,
-> -					 &adapter->scan_pending_q, list) {
-> -			list_del(&cmd_node->list);
-> -			mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-> -		}
-> -		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
-> -
-> -		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
-> -		adapter->scan_processing = false;
-> -		adapter->scan_delay_cnt = 0;
-> -		adapter->empty_tx_q_cnt = 0;
-> -		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
-> -
-> -		if (priv->scan_request) {
-> -			dev_dbg(adapter->dev, "info: aborting scan\n");
-> -			cfg80211_scan_done(priv->scan_request, 1);
-> -			priv->scan_request = NULL;
-> -		} else {
-> -			priv->scan_aborting = false;
-> -			dev_dbg(adapter->dev, "info: scan already aborted\n");
-> -		}
-> -		goto done;
-> -	}
-> -
-> -	if (!atomic_read(&priv->adapter->is_tx_received)) {
-> -		adapter->empty_tx_q_cnt++;
-> -		if (adapter->empty_tx_q_cnt == MWIFIEX_MAX_EMPTY_TX_Q_CNT) {
-> -			/*
-> -			 * No Tx traffic for 200msec. Get scan command from
-> -			 * scan pending queue and put to cmd pending queue to
-> -			 * resume scan operation
-> -			 */
-> -			adapter->scan_delay_cnt = 0;
-> -			adapter->empty_tx_q_cnt = 0;
-> -			spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
-> -			cmd_node = list_first_entry(&adapter->scan_pending_q,
-> -						    struct cmd_ctrl_node, list);
-> -			list_del(&cmd_node->list);
-> -			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
-> -					       flags);
-> -
-> -			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
-> -							true);
-> -			queue_work(adapter->workqueue, &adapter->main_work);
-> -			goto done;
-> -		}
-> -	} else {
-> -		adapter->empty_tx_q_cnt = 0;
-> -	}
-> -
-> -	/* Delay scan operation further by 20msec */
-> -	mod_timer(&priv->scan_delay_timer, jiffies +
-> -		  msecs_to_jiffies(MWIFIEX_SCAN_DELAY_MSEC));
-> -	adapter->scan_delay_cnt++;
-> -
-> -done:
-> -	if (atomic_read(&priv->adapter->is_tx_received))
-> -		atomic_set(&priv->adapter->is_tx_received, false);
-> -
-> -	return;
-> -}
-> -
->  /*
->   * This function initializes the private structure and sets default
->   * values to the members.
-> @@ -211,9 +133,6 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
->  
->  	priv->scan_block = false;
->  
-> -	setup_timer(&priv->scan_delay_timer, scan_delay_timer_fn,
-> -		    (unsigned long)priv);
-> -
->  	return mwifiex_add_bss_prio_tbl(priv);
->  }
->  
-> diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-> index 5bc7ef8..4858719 100644
-> --- a/drivers/net/wireless/mwifiex/main.c
-> +++ b/drivers/net/wireless/mwifiex/main.c
-> @@ -28,6 +28,84 @@ const char driver_version[] = "mwifiex " VERSION " (%s) ";
->  static char *cal_data_cfg;
->  module_param(cal_data_cfg, charp, 0);
->  
-> +static void scan_delay_timer_fn(unsigned long data)
-> +{
-> +	struct mwifiex_private *priv = (struct mwifiex_private *)data;
-> +	struct mwifiex_adapter *adapter = priv->adapter;
-> +	struct cmd_ctrl_node *cmd_node, *tmp_node;
-> +	unsigned long flags;
-> +
-> +	if (adapter->surprise_removed)
-> +		return;
-> +
-> +	if (adapter->scan_delay_cnt == MWIFIEX_MAX_SCAN_DELAY_CNT) {
-> +		/*
-> +		 * Abort scan operation by cancelling all pending scan
-> +		 * commands
-> +		 */
-> +		spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
-> +		list_for_each_entry_safe(cmd_node, tmp_node,
-> +					 &adapter->scan_pending_q, list) {
-> +			list_del(&cmd_node->list);
-> +			mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-> +		}
-> +		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
-> +
-> +		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
-> +		adapter->scan_processing = false;
-> +		adapter->scan_delay_cnt = 0;
-> +		adapter->empty_tx_q_cnt = 0;
-> +		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
-> +
-> +		if (priv->scan_request) {
-> +			dev_dbg(adapter->dev, "info: aborting scan\n");
-> +			cfg80211_scan_done(priv->scan_request, 1);
-> +			priv->scan_request = NULL;
-> +		} else {
-> +			priv->scan_aborting = false;
-> +			dev_dbg(adapter->dev, "info: scan already aborted\n");
-> +		}
-> +		goto done;
-> +	}
-> +
-> +	if (!atomic_read(&priv->adapter->is_tx_received)) {
-> +		adapter->empty_tx_q_cnt++;
-> +		if (adapter->empty_tx_q_cnt == MWIFIEX_MAX_EMPTY_TX_Q_CNT) {
-> +			/*
-> +			 * No Tx traffic for 200msec. Get scan command from
-> +			 * scan pending queue and put to cmd pending queue to
-> +			 * resume scan operation
-> +			 */
-> +			adapter->scan_delay_cnt = 0;
-> +			adapter->empty_tx_q_cnt = 0;
-> +			spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
-> +			cmd_node = list_first_entry(&adapter->scan_pending_q,
-> +						    struct cmd_ctrl_node, list);
-> +			list_del(&cmd_node->list);
-> +			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
-> +					       flags);
-> +
-> +			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
-> +							true);
-> +			queue_work(adapter->workqueue, &adapter->main_work);
-> +			goto done;
-> +		}
-> +	} else {
-> +		adapter->empty_tx_q_cnt = 0;
-> +	}
-> +
-> +	/* Delay scan operation further by 20msec */
-> +	mod_timer(&priv->scan_delay_timer, jiffies +
-> +		  msecs_to_jiffies(MWIFIEX_SCAN_DELAY_MSEC));
-> +	adapter->scan_delay_cnt++;
-> +
-> +done:
-> +	if (atomic_read(&priv->adapter->is_tx_received))
-> +		atomic_set(&priv->adapter->is_tx_received, false);
-> +
-> +	return;
-> +}
-> +
->  /*
->   * This function registers the device and performs all the necessary
->   * initializations.
-> @@ -75,6 +153,10 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
->  
->  		adapter->priv[i]->adapter = adapter;
->  		adapter->priv_num++;
-> +
-> +		setup_timer(&adapter->priv[i]->scan_delay_timer,
-> +			    scan_delay_timer_fn,
-> +			    (unsigned long)adapter->priv[i]);
->  	}
->  	mwifiex_init_lock_list(adapter);
->  
-> -- 
-> 1.8.2.3
-> 
-> 
+ath9k_htc use internal rate controller which is located insight of 
+firmware. If you have time, i'll suggest to take it in your hands.
+
+Am 15.06.2013 01:58, schrieb George Nychis:
+> I have an ath9k_htc card that I am trying to force a transmission rate
+> on injection.  I did some digging around and found this patch from
+> Pavel:
+>
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/47441
+>
+> I updated and implemented that patch in to my kernel, and I see my
+> injected packets coming down through the code.  I see that the rates I
+> am trying to transmit pass the test to make sure that the rate is
+> available:
+>
+> [ 1244.647325] *** gnychis: OK on rate 540 -- idx: 11
+> [ 1244.682061] *** gnychis: OK on rate 480 -- idx: 10
+> [ 1244.741305] *** gnychis: OK on rate 360 -- idx: 9
+> ...
+>
+> And then I double checked to make sure that, given the flag,
+> ieee80211_tx_h_rate_ctrl() is *not* being called.  So, to the best of
+> my knowledge the patch supplied seems to keeping the supplied rate and
+> disabling rate control.
+>
+> But, for some reason it still keeps getting transmitted at a rate of
+> 1Mbps.  I have verified this with an independent receiver.  If I do a
+> pcapdump on the transmitting interface, I see two packets for every
+> transmission.  One at the rate I am trying to transmit at, and another
+> at 1Mbps:
+> http://users.ece.cmu.edu/~gnychis/bad_tx.pcap
+>
+> Am I missing something else in mac80211 to inject at a specific rate?
+>
+> Thanks!
+> George
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Oleksij
