@@ -1,212 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:60333 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753457Ab3FYUdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 16:33:32 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, <tony@atomide.com>
-Subject: [PATCH 2/5] wlcore: use irq_flags in pdata instead of hiding it behing a quirk
-Date: Tue, 25 Jun 2013 23:33:23 +0300
-Message-ID: <1372192406-29430-3-git-send-email-coelho@ti.com> (sfid-20130625_224200_134612_BA4F2C61)
-In-Reply-To: <1372192406-29430-1-git-send-email-coelho@ti.com>
-References: <1372192406-29430-1-git-send-email-coelho@ti.com>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:33257 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754517Ab3FOTdJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Jun 2013 15:33:09 -0400
+Received: by mail-lb0-f170.google.com with SMTP id t13so1498672lbd.15
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Jun 2013 12:33:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130614173419.GB28497@tuxdriver.com>
+References: <1371206567.8278.3.camel@jlt4.sipsolutions.net>
+	<20130614173419.GB28497@tuxdriver.com>
+Date: Sat, 15 Jun 2013 22:33:07 +0300
+Message-ID: <CANUX_P3s7RZt0geVDZwpjYXg58bA4e_Se40zKmCo2ZZYjj9ubA@mail.gmail.com> (sfid-20130615_213320_410889_71D8A767)
+Subject: Re: pull-request: iwlwifi-fixes 2013-06-14
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The platform_quirk element in the platform data was used to change the
-way the IRQ is triggered.  When set, the EDGE_IRQ quirk would change
-the irqflags used and treat edge trigger differently from the rest.
+>> I have two more fixes that I think would be worthwhile for 3.10 but
+>> admittedly the scenario is somewhat unlikely, so if you want to hold
+>> them for 3.11 I can live with that. In that case, I can put them into my
+>> -next tree, or you can pull this into -next (but if you don't pull
+>> wireless.git first you'd get some more fixes you already have.)
+>>
+>> These two patches fix two issues with using rfkill randomly during
+>> traffic, which would then cause our driver to stop working and not be
+>> able to recover at all.
+>>
+>> johannes
+>>
+>>
+>
+> It isn't obvious to me that these need to be included in 3.10.  I can
+> pull this into wireless-next once the current stuff in wireless makes
+> it to davem's tree.
+>
+> If you decide that these really need to go, please provide some more
+> information on how likely users are to hit the bugs, or how serious
+> the effects of that would be.
+>
 
-Instead of hiding this irq flag setting behind the quirk, export the
-whole irq_flags element and let the board file define what to use.
-This will be more meaningful than driver-specific quirks when we
-switch to DT.
+John, it is really your call. I understand these concerns in -rc5.
+For the first patch, I am not 100% sure that it fixes anything else
+that a print. It is obvious to me that without this patch, you might
+get an error in the log (I reproduced it a few times). I tend to say
+that the print is harmless though.
+The second patch fixes a real issue. The issue is hard to reproduce
+though. You need to get in a case where the queues are full (sw queues
+are stopped) and at that precise time, you need to free the Tx queues
+(RFkill - because any other flow would flush the queues first I
+think). If you got into that situation, then the queues would remain
+stopped after you switch the RFkill button again. So yes... Unlikely.
 
-Cc: Tony Lindgren <tony@atomide.com>
-Cc: Sekhar Nori <nsekhar@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- arch/arm/mach-davinci/board-da850-evm.c      |    2 +-
- arch/arm/mach-omap2/board-4430sdp.c          |    1 +
- arch/arm/mach-omap2/board-omap3evm.c         |    1 +
- arch/arm/mach-omap2/board-omap4panda.c       |    1 +
- arch/arm/mach-omap2/board-zoom-peripherals.c |    1 +
- drivers/net/wireless/ti/wlcore/debugfs.c     |    2 +-
- drivers/net/wireless/ti/wlcore/main.c        |   13 +++----------
- drivers/net/wireless/ti/wlcore/wlcore.h      |    5 ++---
- include/linux/wl12xx.h                       |    5 +----
- 9 files changed, 12 insertions(+), 19 deletions(-)
+I would still recommend distros (Stanislaw is CCed) to take both
+patches since they are really safe and can avoid issues.
 
-diff --git a/arch/arm/mach-davinci/board-da850-evm.c b/arch/arm/mach-davinci/board-da850-evm.c
-index 8a24b6c..d2a2a98 100644
---- a/arch/arm/mach-davinci/board-da850-evm.c
-+++ b/arch/arm/mach-davinci/board-da850-evm.c
-@@ -1377,8 +1377,8 @@ static const short da850_wl12xx_pins[] __initconst = {
- 
- static struct wl12xx_platform_data da850_wl12xx_wlan_data __initdata = {
- 	.irq			= -1,
-+	.irq_flags		= IRQF_TRIGGER_RISING,
- 	.board_ref_clock	= WL12XX_REFCLOCK_38,
--	.platform_quirks	= WL12XX_PLATFORM_QUIRK_EDGE_IRQ,
- };
- 
- static __init int da850_wl12xx_init(void)
-diff --git a/arch/arm/mach-omap2/board-4430sdp.c b/arch/arm/mach-omap2/board-4430sdp.c
-index 56a9a4f..c2334aa 100644
---- a/arch/arm/mach-omap2/board-4430sdp.c
-+++ b/arch/arm/mach-omap2/board-4430sdp.c
-@@ -693,6 +693,7 @@ static void __init omap4_sdp4430_wifi_mux_init(void)
- }
- 
- static struct wl12xx_platform_data omap4_sdp4430_wlan_data __initdata = {
-+	.irq_flags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
- 	.board_ref_clock = WL12XX_REFCLOCK_26,
- 	.board_tcxo_clock = WL12XX_TCXOCLOCK_26,
- };
-diff --git a/arch/arm/mach-omap2/board-omap3evm.c b/arch/arm/mach-omap2/board-omap3evm.c
-index f76d0de..a0c0adf 100644
---- a/arch/arm/mach-omap2/board-omap3evm.c
-+++ b/arch/arm/mach-omap2/board-omap3evm.c
-@@ -458,6 +458,7 @@ static struct platform_device omap3evm_wlan_regulator = {
- };
- 
- struct wl12xx_platform_data omap3evm_wlan_data __initdata = {
-+	.irq_flags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
- 	.board_ref_clock = WL12XX_REFCLOCK_38, /* 38.4 MHz */
- };
- #endif
-diff --git a/arch/arm/mach-omap2/board-omap4panda.c b/arch/arm/mach-omap2/board-omap4panda.c
-index 1e2c75e..ba00862 100644
---- a/arch/arm/mach-omap2/board-omap4panda.c
-+++ b/arch/arm/mach-omap2/board-omap4panda.c
-@@ -230,6 +230,7 @@ static struct platform_device omap_vwlan_device = {
- };
- 
- static struct wl12xx_platform_data omap_panda_wlan_data  __initdata = {
-+	.irq_flags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
- 	.board_ref_clock = WL12XX_REFCLOCK_38, /* 38.4 MHz */
- };
- 
-diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
-index a90375d..ced012c 100644
---- a/arch/arm/mach-omap2/board-zoom-peripherals.c
-+++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
-@@ -244,6 +244,7 @@ static struct platform_device *zoom_devices[] __initdata = {
- };
- 
- static struct wl12xx_platform_data omap_zoom_wlan_data __initdata = {
-+	.irq_flags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
- 	.board_ref_clock = WL12XX_REFCLOCK_26, /* 26 MHz */
- };
- 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index c3e1f79..5eff663 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -486,7 +486,7 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	DRIVER_STATE_PRINT_HEX(irq);
- 	/* TODO: ref_clock and tcxo_clock were moved to wl12xx priv */
- 	DRIVER_STATE_PRINT_HEX(hw_pg_ver);
--	DRIVER_STATE_PRINT_HEX(platform_quirks);
-+	DRIVER_STATE_PRINT_HEX(irq_flags);
- 	DRIVER_STATE_PRINT_HEX(chip.id);
- 	DRIVER_STATE_PRINT_STR(chip.fw_ver_str);
- 	DRIVER_STATE_PRINT_STR(chip.phy_fw_ver_str);
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index b8db55c..e7294b8 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -516,7 +516,7 @@ static int wlcore_irq_locked(struct wl1271 *wl)
- 	 * In case edge triggered interrupt must be used, we cannot iterate
- 	 * more than once without introducing race conditions with the hardirq.
- 	 */
--	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
-+	if (wl->irq_flags & IRQF_TRIGGER_RISING)
- 		loopcount = 1;
- 
- 	wl1271_debug(DEBUG_IRQ, "IRQ work");
-@@ -5765,7 +5765,6 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
- 	wl->ap_ps_map = 0;
- 	wl->ap_fw_ps_map = 0;
- 	wl->quirks = 0;
--	wl->platform_quirks = 0;
- 	wl->system_hlid = WL12XX_SYSTEM_HLID;
- 	wl->active_sta_count = 0;
- 	wl->active_link_count = 0;
-@@ -5901,7 +5900,6 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	struct platform_device *pdev = wl->pdev;
- 	struct wlcore_platdev_data *pdev_data = pdev->dev.platform_data;
- 	struct wl12xx_platform_data *pdata = pdev_data->pdata;
--	unsigned long irqflags;
- 	int ret;
- 
- 	if (fw) {
-@@ -5928,16 +5926,11 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	wlcore_adjust_conf(wl);
- 
- 	wl->irq = platform_get_irq(pdev, 0);
--	wl->platform_quirks = pdata->platform_quirks;
- 	wl->if_ops = pdev_data->if_ops;
--
--	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
--		irqflags = IRQF_TRIGGER_RISING;
--	else
--		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
-+	wl->irq_flags = pdata->irq_flags;
- 
- 	ret = request_threaded_irq(wl->irq, NULL, wlcore_irq,
--				   irqflags, pdev->name, wl);
-+				   wl->irq_flags, pdev->name, wl);
- 	if (ret < 0) {
- 		wl1271_error("request_irq() failed: %d", ret);
- 		goto out_free_nvs;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 0034979..8306bde 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -185,6 +185,8 @@ struct wl1271 {
- 
- 	int irq;
- 
-+	int irq_flags;
-+
- 	spinlock_t wl_lock;
- 
- 	enum wlcore_state state;
-@@ -384,9 +386,6 @@ struct wl1271 {
- 	/* Quirks of specific hardware revisions */
- 	unsigned int quirks;
- 
--	/* Platform limitations */
--	unsigned int platform_quirks;
--
- 	/* number of currently active RX BA sessions */
- 	int ba_rx_session_count;
- 
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index b516b4f..04e3096 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -57,15 +57,12 @@ struct wl1251_platform_data {
- 
- struct wl12xx_platform_data {
- 	int irq;
-+	unsigned long irq_flags;
- 	int board_ref_clock;
- 	int board_tcxo_clock;
--	unsigned long platform_quirks;
- 	bool pwr_in_suspend;
- };
- 
--/* Platform does not support level trigger interrupts */
--#define WL12XX_PLATFORM_QUIRK_EDGE_IRQ	BIT(0)
--
- #ifdef CONFIG_WILINK_PLATFORM_DATA
- 
- int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
--- 
-1.7.10.4
-
+Now you have all the data :-)
