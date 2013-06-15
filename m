@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:40412 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754331Ab3FCKCF (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:40049 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754226Ab3FOVIO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 06:02:05 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Sat, 15 Jun 2013 17:08:14 -0400
+Received: by mail-oa0-f49.google.com with SMTP id n9so2020675oag.22
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Jun 2013 14:08:13 -0700 (PDT)
+Message-ID: <51BCD7BA.1040900@lwfinger.net> (sfid-20130615_230826_596289_DC00B3A3)
+Date: Sat, 15 Jun 2013 16:08:10 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20908.26870.629833.926468@gargle.gargle.HOWL> (sfid-20130603_120208_963806_707BC41E)
-Date: Mon, 3 Jun 2013 15:29:18 +0530
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/2] ath9k: add STBC Rx flags (repost untill some one asnwers)
-In-Reply-To: <1370246279-6536-1-git-send-email-linux@rempel-privat.de>
-References: <1370246279-6536-1-git-send-email-linux@rempel-privat.de>
+To: Paul Menzel <paulepanter@users.sourceforge.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Connection not established with Realtek RTL8188CUS based USB
+ device (EDIMAX)
+References: <1371326265.9845.54.camel@mattotaupa>
+In-Reply-To: <1371326265.9845.54.camel@mattotaupa>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel wrote:
-> One more repost of old patches. I need, please, at least some kind of answer:
-> "we don't wont patches from you" or "you are doing some thing wrong".
+On 06/15/2013 02:57 PM, Paul Menzel wrote:
+> Dear Linux wireless folks,
+>
+>
+> hopefully I am contacting the correct list. I am not able to use the
+> Realtek RTL8188CUS based USB WLAN device Edimax EW-7811Un.
+>
+>          Bus 002 Device 005: ID 7392:7811 Edimax Technology Co., Ltd EW-7811Un 802.11n Wireless Adapter [Realtek RTL8188CUS]
+>
+> The device did not work with Debian Wheezy with Linux 3.2.x, Debian
+> Sid/unstable with Linux 3.9.x, Ubuntu 12.04 with Linux 3.2.12 to 3.5 and
+> Ubuntu 13.04 with Linux 3.8. The person, from whom the device is from,
+> claims the device once worked with Ubuntu, but I do not know which
+> version and what WLAN type(?) this was with.
+>
+> The behavior is always the same. The device is detected and the
+> NetworkManager applet `nm-applet` is also able to detect the available
+> networks. But wanting to connect to one and entering the correct
+> password, the connection cannot be established and I am asked for the
+> password again. I tested this with different systems and different
+> networks and also with wpa_supplicant. A Ralink based WLAN USB device
+> works just fine.
+>
+> The Realtek RTL8188CUS WLAN device works also fine under Microsoft
+> Windows, so the device is functional.
 
-Both the patches have already been merged in wireless-testing.
+Use a compat-wireless package from 3.10-rc1 or later. If that fails, then I will 
+give you a debug sequence to run.
 
-commit b0a1ae976d6cd40ff90ba87883e17eb2610dae3d
-Author: Oleksij Rempel <linux@rempel-privat.de>
-Date:   Fri May 24 20:30:59 2013 +0200
+Larry
 
-    ath9k: check for Rx-STBC flag and pass it to ieee80211
-    
-    This patch make use of STBC flag in DMA RX descriptor.
-    Only devices after ar9280 can provide this information.
-    
-    If card support it we will set HAVE_STBC flag, to show
-    clint programm thet STBC is supported but not received.
-    
-    Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-commit ab276103357637fb26cc851369b5abbdc42afbf4
-Author: Oleksij Rempel <linux@rempel-privat.de>
-Date:   Fri May 24 12:18:30 2013 +0200
-
-    ath9k: remove useless flag conversation.
-    
-    some flags used only outside of ath9k - In this case we can use
-    "enum mac80211_rx_flags" and pass it upstream without extra
-    conversation.
-    
-    Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Sujith
