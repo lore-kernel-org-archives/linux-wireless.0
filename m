@@ -1,246 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1758 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751794Ab3FZMUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 08:20:33 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 6/9] brcmfmac: tag packet in the netdev transmit
- callback
-Date: Wed, 26 Jun 2013 14:20:19 +0200
-Message-ID: <1372249222-4858-7-git-send-email-arend@broadcom.com> (sfid-20130626_142106_995630_F3986004)
-In-Reply-To: <1372249222-4858-1-git-send-email-arend@broadcom.com>
-References: <1372249222-4858-1-git-send-email-arend@broadcom.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:56422 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754849Ab3FPCS7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Jun 2013 22:18:59 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Sat, 15 Jun 2013 19:18:58 -0700
+Message-ID: <CAG=xfvNUkuQHQ8+PeOsL99zWhpVZtYkTZPbSSROB7J-4bxA4oQ@mail.gmail.com> (sfid-20130616_041926_351399_420B61D5)
+Subject: Lose AP-STA connection on changing channel width
+From: Zhe Wen <zhewen08@gmail.com>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Transmit packets needs to be tagged in order to receive a tx status
-feedback from the firmware. Determine the tag in the netdev transmit
-callback instead of determining the tag just before transfer to the
-device. This reduces the number of exception flows and hence makes
-the driver code simpler.
+Hello Developers!
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |  130 ++++++++------------
- 1 file changed, 48 insertions(+), 82 deletions(-)
+I am trying to change channel type/width (HT20/HT40+) on the both STA
+and AP side in a simple system consists of only 1 STA and the AP.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index e4fd13a..2b078a1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1575,21 +1575,14 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
- 	return 0;
- }
- 
--static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
-+static void brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
- 				   struct sk_buff *p)
- {
- 	struct brcmf_skbuff_cb *skcb = brcmf_skbcb(p);
- 	struct brcmf_fws_mac_descriptor *entry = skcb->mac;
--	int rc = 0;
--	bool first_time;
--	int hslot = BRCMF_FWS_HANGER_MAXITEMS;
--	u8 free_ctr;
- 	u8 flags;
- 
--	first_time = skcb->state != BRCMF_FWS_SKBSTATE_SUPPRESSED;
--
- 	brcmf_skb_if_flags_set_field(p, TRANSMIT, 1);
--	brcmf_skb_htod_tag_set_field(p, FIFO, fifo);
- 	brcmf_skb_htod_tag_set_field(p, GENERATION, entry->generation);
- 	flags = BRCMF_FWS_HTOD_FLAG_PKTFROMHOST;
- 	if (brcmf_skb_if_flags_get_field(p, REQUESTED)) {
-@@ -1600,80 +1593,36 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
- 		flags |= BRCMF_FWS_HTOD_FLAG_PKT_REQUESTED;
- 	}
- 	brcmf_skb_htod_tag_set_field(p, FLAGS, flags);
--	if (first_time) {
--		/* obtaining free slot may fail, but that will be caught
--		 * by the hanger push. This assures the packet has a BDC
--		 * header upon return.
--		 */
--		hslot = brcmf_fws_hanger_get_free_slot(&fws->hanger);
--		free_ctr = entry->seq[fifo];
--		brcmf_skb_htod_tag_set_field(p, HSLOT, hslot);
--		brcmf_skb_htod_tag_set_field(p, FREERUN, free_ctr);
--		rc = brcmf_fws_hanger_pushpkt(&fws->hanger, p, hslot);
--		if (rc)
--			brcmf_err("hanger push failed: rc=%d\n", rc);
--	}
--
--	if (rc == 0)
--		brcmf_fws_hdrpush(fws, p);
--
--	return rc;
-+	brcmf_fws_hdrpush(fws, p);
- }
- 
--static void
--brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
--		       struct sk_buff *skb, int fifo)
-+static void brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
-+				   struct sk_buff *skb, int fifo)
- {
--	/*
--	put the packet back to the head of queue
--
--	- suppressed packet goes back to suppress sub-queue
--	- pull out the header, if new or delayed packet
--
--	Note: hslot is used only when header removal is done.
--	*/
- 	struct brcmf_fws_mac_descriptor *entry;
--	enum brcmf_fws_skb_state state;
- 	struct sk_buff *pktout;
-+	int qidx, hslot;
- 	int rc = 0;
--	int hslot;
- 
--	state = brcmf_skbcb(skb)->state;
- 	entry = brcmf_skbcb(skb)->mac;
--	hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
--
--	if (entry != NULL) {
--		if (state == BRCMF_FWS_SKBSTATE_SUPPRESSED) {
--			/* wl-header is saved for suppressed packets */
--			pktout = brcmu_pktq_penq_head(&entry->psq, 2 * fifo + 1,
--						      skb);
--			if (pktout == NULL) {
--				brcmf_err("suppress queue full\n");
--				rc = -ENOSPC;
--			}
--		} else {
--			/* delay-q packets are going to delay-q */
--			pktout = brcmu_pktq_penq_head(&entry->psq,
--						      2 * fifo, skb);
--			if (pktout == NULL) {
--				brcmf_err("delay queue full\n");
--				rc = -ENOSPC;
--			}
--
--			/* free the hanger slot */
--			brcmf_fws_hanger_poppkt(&fws->hanger, hslot, &pktout,
--						true);
--
--			/* decrement sequence count */
--			entry->seq[fifo]--;
-+	if (entry->occupied) {
-+		qidx = 2 *fifo;
-+		if (brcmf_skbcb(skb)->state == BRCMF_FWS_SKBSTATE_SUPPRESSED)
-+			qidx++;
-+
-+		pktout = brcmu_pktq_penq_head(&entry->psq, qidx, skb);
-+		if (pktout == NULL) {
-+			brcmf_err("%s queue %d full\n", entry->name, qidx);
-+			rc = -ENOSPC;
- 		}
- 	} else {
--		brcmf_err("no mac entry linked\n");
-+		brcmf_err("%s entry removed\n", entry->name);
- 		rc = -ENOENT;
- 	}
- 
- 	if (rc) {
- 		fws->stats.rollback_failed++;
-+		hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
- 		brcmf_fws_txs_process(fws, BRCMF_FWS_TXSTATUS_HOST_TOSSED,
- 				      hslot, 0);
- 	} else {
-@@ -1720,15 +1669,10 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
- 	if (IS_ERR(entry))
- 		return PTR_ERR(entry);
- 
--	rc = brcmf_fws_precommit_skb(fws, fifo, skb);
--	if (rc < 0) {
--		fws->stats.generic_error++;
--		goto rollback;
--	}
--
--	brcmf_dbg(DATA, "%s flags %X htod %X\n", entry->name, skcb->if_flags,
--		  skcb->htod);
-+	brcmf_fws_precommit_skb(fws, fifo, skb);
- 	rc = brcmf_bus_txdata(bus, skb);
-+	brcmf_dbg(DATA, "%s flags %X htod %X bus_tx %d\n", entry->name,
-+		  skcb->if_flags, skcb->htod, rc);
- 	if (rc < 0) {
- 		brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
- 		goto rollback;
-@@ -1737,7 +1681,6 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
- 	entry->transit_count++;
- 	if (entry->suppressed)
- 		entry->suppr_transit_count++;
--	entry->seq[fifo]++;
- 	fws->stats.pkt2bus++;
- 	fws->stats.send_pkts[fifo]++;
- 	if (brcmf_skb_if_flags_get_field(skb, REQUESTED))
-@@ -1750,6 +1693,24 @@ rollback:
- 	return rc;
- }
- 
-+static int brcmf_fws_assign_htod(struct brcmf_fws_info *fws, struct sk_buff *p,
-+				  int fifo)
-+{
-+	struct brcmf_skbuff_cb *skcb = brcmf_skbcb(p);
-+	int rc, hslot;
-+
-+	hslot = brcmf_fws_hanger_get_free_slot(&fws->hanger);
-+	brcmf_skb_htod_tag_set_field(p, HSLOT, hslot);
-+	brcmf_skb_htod_tag_set_field(p, FREERUN, skcb->mac->seq[fifo]);
-+	brcmf_skb_htod_tag_set_field(p, FIFO, fifo);
-+	rc = brcmf_fws_hanger_pushpkt(&fws->hanger, p, hslot);
-+	if (!rc)
-+		skcb->mac->seq[fifo]++;
-+	else
-+		fws->stats.generic_error++;
-+	return rc;
-+}
-+
- int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- {
- 	struct brcmf_pub *drvr = ifp->drvr;
-@@ -1778,22 +1739,27 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 
- 	/* set control buffer information */
- 	skcb->if_flags = 0;
--	skcb->mac = brcmf_fws_macdesc_find(fws, ifp, eh->h_dest);
- 	skcb->state = BRCMF_FWS_SKBSTATE_NEW;
- 	brcmf_skb_if_flags_set_field(skb, INDEX, ifp->ifidx);
- 	if (!multicast)
- 		fifo = brcmf_fws_prio2fifo[skb->priority];
- 
--	brcmf_dbg(DATA, "%s mac %pM multi %d fifo %d\n", skcb->mac->name,
--		  eh->h_dest, multicast, fifo);
--
- 	brcmf_fws_lock(drvr, flags);
--	brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_DELAYED, fifo, skb);
- 	if (fifo != BRCMF_FWS_FIFO_AC_BE && fifo < BRCMF_FWS_FIFO_BCMC)
- 		fws->borrow_defer_timestamp = jiffies +
- 					      BRCMF_FWS_BORROW_DEFER_PERIOD;
-+
-+	skcb->mac = brcmf_fws_macdesc_find(fws, ifp, eh->h_dest);
-+	brcmf_dbg(DATA, "%s mac %pM multi %d fifo %d\n", skcb->mac->name,
-+		  eh->h_dest, multicast, fifo);
-+	if (!brcmf_fws_assign_htod(fws, skb, fifo)) {
-+		brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_DELAYED, fifo, skb);
-+		brcmf_fws_schedule_deq(fws);
-+	} else {
-+		brcmf_err("drop skb: no hanger slot\n");
-+		brcmu_pkt_buf_free_skb(skb);
-+	}
- 	brcmf_fws_unlock(drvr, flags);
--	brcmf_fws_schedule_deq(fws);
- 	return 0;
- }
- 
--- 
-1.7.10.4
+AP is started using hostapd under HT20 and STA thereafter connects to
+it using also HT20. But when AP changes its channel type to HT40+
+using ieee80211_set_channel_type() and ath9k_hw_set_channel_regs(), it
+will lose connection to STA. The way I do channel type change
+coordination is: STA sends an action frame to AP, AP sends back ACK
+frame and changes its channel type; STA changes its channel type on
+receiving the ACK.
+
+I read about this solution
+(http://eznemegy.blog.hu/2008/12/14/using_rt2x00_wireless_driver_with_hostapd/fullcommentlist/1)
+of hacking into hostapd, which didn't work...
+
+It would be great if you more experienced would love to help me with
+this problem!
+
+related code:
+
+/* zhe: on receiving NCW action frame */
+switch (mgmt->u.action.u.ht_ncw.action) {
+case WLAN_HT_ACTION_NOTIFY_CHANWIDTH:
+    printk("<1>zhe: ncw action frame received: %d\n",
+mgmt->u.action.u.ht_ncw.ncw_control);
+    // zhe: change channel width, init rate table
+    struct ieee80211_supported_band *sband;
+    sband = rx->local->hw.wiphy->bands[status->band];
+    u8 ncw = mgmt->u.action.u.ht_ncw.ncw_control;
+    enum nl80211_channel_type chantype;
+    switch (mgmt->u.action.u.ht_ncw.ncw_control) {
+    case WLAN_HT_NCW_CONTROL_20MHZ:
+        printk("<1>zhe: change to 20MHZ BW\n");
+        rx->sta->sta.ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+        rx->sta->sta.ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
+        local->hw.conf.channel_type = NL80211_CHAN_HT20;
+        chantype = NL80211_CHAN_HT20;
+        break;
+    case WLAN_HT_NCW_CONTROL_OTHER:
+        printk("<1>zhe: change to 40MHZ BW\n");
+        rx->sta->sta.ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_20;
+        rx->sta->sta.ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+        local->hw.conf.channel_type = NL80211_CHAN_HT40PLUS;
+        chantype = NL80211_CHAN_HT40PLUS;
+        break;
+    }
+    // on AP side, the implementation of RC_BW_CHANGED is exactly the same
+    // with the dirver build-in code for STA rate update
+    rate_control_rate_update(local, sband, rx->sta,IEEE80211_RC_BW_CHANGED);
+    ieee80211_set_channel_type(local, sdata, chantype);
+
+    int ret;
+    // i add this function, which calls ath9k_hw_set_channel_regs() to
+    // to config channel (e.g. CHANNEL_A_HT20, CHANNEL_A_HT40PLUS)
+    ret = ieee80211_hw_set_channel_type(local, chantype);
+
+    goto handled;
 
 
+Thanks in advance!!
+Zhe
+
+--
+Zhe Wen
