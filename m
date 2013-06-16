@@ -1,106 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:43971 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753395Ab3FCRe0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 13:34:26 -0400
-Received: by mail-pb0-f52.google.com with SMTP id xa12so5973160pbc.25
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 10:34:25 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	devel@lists.open80211s.org, javier@cozybit.com, ashok@cozybit.com
-Subject: [PATCH 1/2] iw: Allow user to provide freq during mesh join
-Date: Mon,  3 Jun 2013 10:34:18 -0700
-Message-Id: <1370280859-9860-1-git-send-email-ashok@cozybit.com> (sfid-20130603_193429_089368_B1F2BE9D)
+Received: from mout.gmx.net ([212.227.17.20]:50325 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755265Ab3FPQZm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Jun 2013 12:25:42 -0400
+Received: from mailout-de.gmx.net ([10.1.76.12]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0LcE27-1U4hks3zNt-00jW8p for
+ <linux-wireless@vger.kernel.org>; Sun, 16 Jun 2013 18:25:40 +0200
+Message-ID: <51BDE700.6080503@rempel-privat.de> (sfid-20130616_182600_445109_8C7DDD27)
+Date: Sun, 16 Jun 2013 18:25:36 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath9k: Add custom parameters for CUS198
+References: <1371144086-10150-1-git-send-email-sujith@msujith.org>
+In-Reply-To: <1371144086-10150-1-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow user to configure frequency and channel type during mesh join command.
+Am 13.06.2013 19:21, schrieb Sujith Manoharan:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> CUS198 is a card based on AR9485. There are differences
+> between the base reference design HB125 and CUS198.
+> Identify such cards based on the PCI subsystem IDs and
+> set HW parameters appropriately.
+>
+> Addresses this bug - https://bugzilla.kernel.org/show_bug.cgi?id=49201
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
----
- mesh.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 46 insertions(+), 3 deletions(-)
+Thanks!!!
 
-diff --git a/mesh.c b/mesh.c
-index 5a09b62..ec202c9 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -431,8 +431,18 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- {
- 	struct nlattr *container;
- 	float rate;
--	int bintval, dtim_period;
-+	int bintval, dtim_period, i;
- 	char *end;
-+	static const struct {
-+		const char *name;
-+		unsigned int val;
-+	} htmap[] = {
-+		{ .name = "HT20", .val = NL80211_CHAN_HT20, },
-+		{ .name = "HT40+", .val = NL80211_CHAN_HT40PLUS, },
-+		{ .name = "HT40-", .val = NL80211_CHAN_HT40MINUS, },
-+		{ .name = "NOHT", .val = NL80211_CHAN_NO_HT, },
-+	};
-+	unsigned int htval;
- 
- 	if (argc < 1)
- 		return 1;
-@@ -441,6 +451,37 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 	argc--;
- 	argv++;
- 
-+	/* freq */
-+	if (argc > 1 && strcmp(argv[0], "freq") == 0) {
-+		argv++;
-+		argc--;
-+
-+		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ,
-+			    strtoul(argv[0], &end, 10));
-+		if (*end != '\0')
-+			return 1;
-+		argv++;
-+		argc--;
-+
-+	}
-+
-+	/* channel type */
-+	if (argc) {
-+		for (i = 0; i < ARRAY_SIZE(htmap); i++) {
-+			if (strcasecmp(htmap[i].name, argv[0]) == 0) {
-+				htval = htmap[i].val;
-+				break;
-+			}
-+		}
-+		if (i != ARRAY_SIZE(htmap)) {
-+			NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+				    htval);
-+			argv++;
-+			argc--;
-+		}
-+
-+	}
-+
- 	if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
- 		argv++;
- 		argc--;
-@@ -506,11 +547,13 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
-+COMMAND(mesh, join, "<mesh ID> [freq in MHz] [HT20|HT40+|HT40-|NOHT]"
-+	" [mcast-rate <rate in Mbps>]"
- 	" [beacon-interval <time in TUs>] [dtim-period <value>]"
- 	" [vendor_sync on|off] [<param>=<value>]*",
- 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
--	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
-+	"Join a mesh with the given mesh ID with freq, mcast-rate, "
-+	"and mesh parameters.");
- 
- static int leave_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 		      struct nl_msg *msg, int argc, char **argv,
+this patch made my day. I newer thought this adapter can provide good 
+performance. Now, I can even see WiFi of my neighbour.
+
+
 -- 
-1.7.5.4
-
+Regards,
+Oleksij
