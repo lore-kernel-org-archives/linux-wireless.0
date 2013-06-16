@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.182]:47962 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753946Ab3FDP6K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 11:58:10 -0400
-Message-ID: <70baec5451fd0a9364c69fb06bdbf54a.squirrel@www.infidigm.net> (sfid-20130604_175813_616022_3F4E433A)
-In-Reply-To: <877gienh7k.fsf@kamboji.qca.qualcomm.com>
-References: <88f1398e0d87f1c79c5781f07bb7fb20.squirrel@www.infidigm.net>
-    <877gienh7k.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 4 Jun 2013 12:35:25 -0400
-Subject: Ath6kl feature request - list hw capabilities
-From: drwho@infidigm.net
-To: "Kalle Valo" <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.gw90.de ([188.40.100.199]:43198 "EHLO mail.gw90.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754913Ab3FPGbj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Jun 2013 02:31:39 -0400
+Received: from e178067086.adsl.alicedsl.de ([85.178.67.86] helo=[192.168.2.49])
+	by mail.gw90.de with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <paulepanter@users.sourceforge.net>)
+	id 1Uo6Ux-0006C1-Rp
+	for linux-wireless@vger.kernel.org; Sun, 16 Jun 2013 06:31:36 +0000
+Message-ID: <1371364286.4575.3.camel@mattotaupa> (sfid-20130616_083154_788336_24FFD6EB)
+Subject: <http://wireless.kernel.org/en/users/Download/stable>: Broken link
+ to
+ <http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/ChangeLog-3.2-wireless>
+From: Paul Menzel <paulepanter@users.sourceforge.net>
+To: linux-wireless@vger.kernel.org
+Date: Sun, 16 Jun 2013 08:31:26 +0200
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-dTdFmZdZrDYwV3kmnPUc"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using "iw list" with ath6k doesn't list any Capabilities like other
-drivers do.  Example using "iw list" with ath9k.....
 
-Band 1:
-Capabilities: 0x11ee
-	HT20/HT40
-	SM Power Save disabled
-	RX HT20 SGI
-	RX HT40 SGI
-	TX STBC
-	RX STBC 1-stream
-	Max AMSDU length: 3839 bytes
-	DSSS/CCK HT40
-Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-Minimum RX AMPDU time spacing: 8 usec (0x06)
-HT TX/RX MCS rate indexes supported: 0-15
-Frequencies:
+--=-dTdFmZdZrDYwV3kmnPUc
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Jon
+Dear Linux wireless folks,
+
+
+browsing through the =C2=BBstable =E2=80=93 Linux Wireless=C2=AB page [1], =
+I noticed that
+the ChangeLog-3.2-wireless link [2] is broken.
+
+        404 Not Found
+        The requested URL /kernel/compat-wireless-3-stable/v3.2/ChangeLog-3=
+.2-wireless was not found on this server.
+
+
+Thanks,
+
+Paul
+
+
+[1] http://wireless.kernel.org/en/users/Download/stable
+[2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/ChangeLog=
+-3.2-wireless
+
+--=-dTdFmZdZrDYwV3kmnPUc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEABECAAYFAlG9W78ACgkQPX1aK2wOHViTpACfbmAS5HbV8+B1EPHra1lTIRVK
+BSwAoIQA+V5qGTiM4MQnqbkHV+KRc5jz
+=WsSc
+-----END PGP SIGNATURE-----
+
+--=-dTdFmZdZrDYwV3kmnPUc--
 
