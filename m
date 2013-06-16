@@ -1,176 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:45432
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751409Ab3FBOrs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Jun 2013 10:47:48 -0400
-Date: Sun, 2 Jun 2013 10:47:26 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>,
-	Ajitpal Singh <ajitpal.singh@stericsson.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cw1200: fix some obvious mistakes
-Message-ID: <20130602144725.GC3875@shaftnet.org> (sfid-20130602_164754_592768_C2ED6FAC)
-References: <1370126241-2528420-1-git-send-email-arnd@arndb.de>
- <20130602122954.GA3875@shaftnet.org>
- <8513280.folT80711V@wuerfel>
+Received: from nm15.bullet.mail.ird.yahoo.com ([77.238.189.68]:27712 "EHLO
+	nm15.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755357Ab3FPRSC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Jun 2013 13:18:02 -0400
+Message-ID: <1371403080.55562.YahooMailNeo@web133204.mail.ir2.yahoo.com> (sfid-20130616_191807_933662_4A17C049)
+Date: Sun, 16 Jun 2013 18:18:00 +0100 (BST)
+From: Jorge Bueno Moreno <jorge_bueno_moreno@yahoo.es>
+Reply-To: Jorge Bueno Moreno <jorge_bueno_moreno@yahoo.es>
+Subject: ath9k problems in AP mode for 3.2 kernels / 3.10-rc1-2 compat-drivers
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="32u276st3Jlj2kUU"
-In-Reply-To: <8513280.folT80711V@wuerfel>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
---32u276st3Jlj2kUU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+My card is: TP-LINK Model No. TL-WN951N Ver 1.0 that shows as:
 
-On Sun, Jun 02, 2013 at 03:59:12PM +0200, Arnd Bergmann wrote:
-> The driver doesn't reliably build, and I'm trying to fix it.
-> From my perspective, we can just mark it 'depends on !ARM'
-> to get it off my radar, but other people are doing build
-> testing on x86 and will run into the same issues.
+phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81: mem=0xf8ee0000, irq=20
 
-AFAIK the only remaining build problem is when CONFIG_CW1200_SAGRAD is=20
-not defined so there's no "platform" data provided.
+and lspci:
 
-> If the hardware cannot be identified from register access, the
-> information should get passed through firmware. On most architectures
-> that means device tree data, on x86 that would be ACPI tables.
+05:05.0 Network controller: Atheros Communications Inc. AR5416 Wireless Network Adapter [AR5008 802.11(a)bgn] (rev 01)
+    Subsystem: Atheros Communications Inc. Device 3071
+    Flags: bus master, 66MHz, medium devsel, latency 168, IRQ 20
+    Memory at febc0000 (32-bit, non-prefetchable) [size=64K]
+    Capabilities: [40] #80 [0000]
+    Kernel driver in use: ath9k
 
-The cw1200 has specific reset sequencing requirements.  Some designs use=20
-a hardware reset circuit (such as the Sagrad EVK/Reference design), but=20
-most others use GPIOs for cost resons.
+It works in STA mode in my debian squeeze with kernel 2.6.32-48 but not very well in AP mode given that,
+as soon as hostapd is run to go AP mode I get:
 
-Without that reset sequence, the device will never attach itself to the=20
-SDIO bus so we will never get to the point where we can probe it via=20
-register accesses (and program the DPLL value) to discern enough=20
-information to load the appropriate firmware.
+Jun 16 12:33:33 hostname kernel: [   88.176476] irq 16: nobody cared (try booting with the "irqpoll" option)
+Jun 16 12:33:33 hostname kernel: [   88.176560] Pid: 0, comm: swapper Not tainted 2.6.32-5-686 #1
+Jun 16 12:33:33 hostname kernel: [   88.176565] Call Trace:
+Jun 16 12:33:33 hostname kernel: [   88.176578]  [<c106db4d>] ? __report_bad_irq+0x24/0x69
+Jun 16 12:33:33 hostname kernel: [   88.176587]  [<c106db54>] ? __report_bad_irq+0x2b/0x69
+Jun 16 12:33:33 hostname kernel: [   88.176595]  [<c106dc79>] ? note_interrupt+0xe7/0x13e
+Jun 16 12:33:33 hostname kernel: [   88.176603]  [<c106e1a7>] ? handle_fasteoi_irq+0x7a/0x97
+Jun 16 12:33:33 hostname kernel: [   88.176612]  [<c1004dd7>] ? handle_irq+0x17/0x1b
+Jun 16 12:33:33 hostname kernel: [   88.176620]  [<c1004659>] ? do_IRQ+0x38/0x89
+Jun 16 12:33:33 hostname kernel: [   88.176628]  [<c10037f0>] ? common_interrupt+0x30/0x38
+Jun 16 12:33:33 hostname kernel: [   88.176637]  [<c10088d3>] ? mwait_idle+0x62/0x6c
+Jun 16 12:33:33 hostname kernel: [   88.176645]  [<c1002377>] ? cpu_idle+0x89/0xa2
+Jun 16 12:33:33 hostname kernel: [   88.176649] handlers:
+Jun 16 12:33:33 hostname kernel: [   88.176704] [<f7ec4277>] (ata_sff_interrupt+0x0/0xa2 [libata])
+Jun 16 12:33:33 hostname kernel: [   88.176844] [<f7f169ad>] (usb_hcd_irq+0x0/0x71 [usbcore])
+Jun 16 12:33:33 hostname kernel: [   88.176970] [<f7c676bc>] (rtl8169_interrupt+0x0/0x342 [r8169])
+Jun 16 12:33:33 hostname kernel: [   88.177092] Disabling IRQ #16
 
-(The DPLL value is part of the so-called 'SDD' file, but that file is=20
- also tied to the specific implemntation.  You have to love those=20
- chicken-and-egg problems...)
+and the wireless card stops working.
 
-> The code does not look particularly off-the-shelf though:
-> static struct resource cw1200_href_resources[] =3D {
+As a workaround, I've been running the kernel with "irqpoll/irqfixup" option but now I needed to migrate to debian wheezy
+with kernel 3.2.46-1. With this version, kernel shows a similar error:
 
-That code is #ifdef'd out, and was purely left there as a reference. =20
-It's gone now.  :)
 
-> We can use platform_data if there is convincing evidence that people
-> are going to be using that in mainline kernels. However, your SDIO driver
-> doesn't actually do that, it just hardcodes settings in cw1200_sagrad.c
-> and calls a local function to get that data, rather than getting the data
-> from the dev_get_platdata() in it's probe callback at a point where
-> it knows the device is actually there.
+Jun 16 17:37:27 hostname kernel: [16005.334858] irq 16: nobody cared (try booting with the "irqpoll" option)
+Jun 16 17:37:27 hostname kernel: [16005.335085] Pid: 0, comm: swapper/1 Not tainted 3.2.0-4-686-pae #1 Debian 3.2.46-1
+Jun 16 17:37:27 hostname kernel: [16005.335094] Call Trace:
+Jun 16 17:37:27 hostname kernel: [16005.335117]  [<c1078f57>] ? __report_bad_irq+0x1c/0x8d
+Jun 16 17:37:27 hostname kernel: [16005.335132]  [<c107925a>] ? note_interrupt+0x11a/0x188
+Jun 16 17:37:27 hostname kernel: [16005.335146]  [<c1077be0>] ? handle_irq_event_percpu+0x13f/0x155
+Jun 16 17:37:27 hostname kernel: [16005.335160]  [<c107980a>] ? handle_level_irq+0x56/0x56
+Jun 16 17:37:27 hostname kernel: [16005.335173]  [<c1077c17>] ? handle_irq_event+0x21/0x3a
+Jun 16 17:37:27 hostname kernel: [16005.335186]  [<c107980a>] ? handle_level_irq+0x56/0x56
+Jun 16 17:37:27 hostname kernel: [16005.335199]  [<c107986a>] ? handle_fasteoi_irq+0x60/0x85
+Jun 16 17:37:27 hostname kernel: [16005.335207]  <IRQ>  [<c100c886>] ? do_IRQ+0x2e/0x76
+Jun 16 17:37:27 hostname kernel: [16005.335231]  [<c12c84f0>] ? common_interrupt+0x30/0x38
+Jun 16 17:37:27 hostname kernel: [16005.335245]  [<c103007b>] ? update_group_power+0x67/0xbf
+Jun 16 17:37:27 hostname kernel: [16005.335260]  [<c1199de9>] ? intel_idle+0xcc/0xfb
+Jun 16 17:37:27 hostname kernel: [16005.335274]  [<c120cc62>] ? cpuidle_idle_call+0xcc/0x142
+Jun 16 17:37:27 hostname kernel: [16005.335287]  [<c100ace9>] ? cpu_idle+0x8b/0xaf
+Jun 16 17:37:27 hostname kernel: [16005.335302]  [<c12ba6e6>] ? start_secondary+0x1be/0x1c3
+Jun 16 17:37:27 hostname kernel: [16005.335311] handlers:
+Jun 16 17:37:27 hostname kernel: [16005.335435] [<f84d1eca>] ata_bmdma_interrupt
+Jun 16 17:37:27 hostname kernel: [16005.335599] [<f846b4d5>] usb_hcd_irq
+Jun 16 17:37:27 hostname kernel: [16005.335734] [<f827321f>] rtl8169_interrupt
+Jun 16 17:37:27 hostname kernel: [16005.335869] Disabling IRQ #16
 
-As I mentioned earlier, we don't know the device is there until after we=20
-get enough information from the platform_data to power it up and deal=20
-with the finiky reset sequence.
+but hangs completely showing traces in console and needing a hard reboot.
 
-Basically the Sagrad SD-slot-form-factor EVK is a special case only=20
-meant for evaluation purposes.  The "normal" use case for thise driver=20
-is a hard-wired, permanently attached design.
-=20
-> If we only care about two cases a) a default sagrad card that can use
-> hardcoded data and b) a board that uses the same chip and requires
-> custom data, then I would suggest including the sagrad data in the
-> sdio driver as a default (as my patch does) but allow overriding
-> it with platform data.
+If I apply same workaround booting the kernel with "irqpoll/irqfixup" I can go AP mode, but as soon as a station tries to connect,
+I get these messages flooding logs and AP doesn't work at all (I have to ifdown the interface to stop log flooding):
 
-Yes, those are the only use cases we care about.  And that sounds like a=20
-viable approach, so I'll code that up.
+Jun 16 18:09:50 hostname kernel: [  170.379181] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x000264c0
+Jun 16 18:09:50 hostname kernel: [  170.388883] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+Jun 16 18:09:50 hostname kernel: [  170.744131] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x00006040
+Jun 16 18:09:50 hostname kernel: [  170.753829] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+Jun 16 18:09:50 hostname kernel: [  171.109084] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x00006040
+Jun 16 18:09:50 hostname kernel: [  171.118791] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+Jun 16 18:09:51 hostname kernel: [  171.474058] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x00006040
+Jun 16 18:09:51 hostname kernel: [  171.483760] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+Jun 16 18:09:51 hostname kernel: [  171.838977] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x00006040
+Jun 16 18:09:51 hostname kernel: [  171.848685] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+Jun 16 18:09:52 hostname kernel: [  172.203898] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x00006040
+Jun 16 18:09:52 hostname kernel: [  172.213600] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+Jun 16 18:09:52 hostname kernel: [  172.568817] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x00006040
+Jun 16 18:09:52 hostname kernel: [  172.578515] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+Jun 16 18:09:52 hostname kernel: [  172.933750] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x00006040
+Jun 16 18:09:52 hostname kernel: [  172.943450] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+...
+...
+Jun 16 18:10:12 hostname kernel: [  192.683280] ath: Failed to stop TX DMA, queues=0x001!
+Jun 16 18:10:12 hostname kernel: [  192.707757] ath: Failed to stop TX DMA, queues=0x001!
+Jun 16 18:10:12 hostname kernel: [  192.736734] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x00004040
+Jun 16 18:10:12 hostname kernel: [  192.756744] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+Jun 16 18:10:12 hostname kernel: [  192.791133] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020 DMADBG_7=0x00008040
+Jun 16 18:10:12 hostname kernel: [  192.807675] ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
 
-I guess adding a function along the lines of=20
-"cw1200_sdio_set_platform_data()" (to be called by the board/platform=20
-setup code) would be the right way to do this?
+I have compiled and tried latest stable driver version:
 
-As an aside, I wish I'd received this feedback a couple of months ago.
+backports-3.10-rc1-2.tar.bz2
 
-> The problem with this is that it is impossible to build a kernel that
-> supports both, or even two devices of the same type.
+and snapshot:
 
-Adding proper devicetree support will solve this problem down the line,=20
-but I don't think there's any way to fix this for non-DT systems thanks=20
-to that chicken-and-egg probing situation.
+backports-20130607.tar.bz2
 
-(I wish I had a DT-capable platform handy to develop against..)
+with same results.
 
-> I mean arch/arm/mach-nomadik, which is the platform that originally
-> defined NOMADIK_GPIO_TO_IRQ(). Note that in recent kernels, mach-ux500
-> also uses this macro internally, but it's already gone in nomadik
-> and will stop working in ux500 in the future.
 
-Ah, okay.  FWIW that was a leftover bit from the original driver authors=20
-who'd tied the code rather tightly to the ux500 platform.  That=20
-reference is gone now in any case.
 
-> I don't mind the backports supporting that, but we should probably
-> move on in mainline. The existance of backports is no excuse for
-> keeping around broken code.
+Final details on kernel driver versions used:
 
-I already have one patch queued up for backports to re-enable <2.6.36=20
-support, and I have no problem adding more. =20
+VERSION 2.6.32-48
 
-That said, until all SDIO/SPI-supporting targets in the mainline are=20
-converted to a devicetree (or equivalent) model, I imagine the=20
-platform_data crap will have to remain.
+2.6.32-5-686 #1 SMP Fri May 10 08:33:48 UTC 2013 i686
 
-> just look in include/linux/platform_data/. The most common type for
-> gpio numbers is 'int'.
+ath9k                 238533  0 
+ath                     6026  1 ath9k
+led_class               1757  1 ath9k
+mac80211              123754  1 ath9k
+cfg80211               87809  3 mac80211,ath,ath9k
 
-I've already posted a patch that converts them over.
+modinfo ath9k
+filename:       /lib/modules/2.6.32-5-686/kernel/drivers/net/wireless/ath/ath9k/ath9k.ko
+license:        Dual BSD/GPL
+description:    Support for Atheros 802.11n wireless LAN cards.
+author:         Atheros Communications
+alias:          pci:v0000168Cd0000002Esv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Dsv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Csv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Bsv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Asv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000029sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000027sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000024sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000023sv*sd*bc*sc*i*
+depends:        mac80211,led-class,ath,cfg80211
+vermagic:       2.6.32-5-686 SMP mod_unload modversions 686 
+parm:           nohwcrypt:Disable hardware encryption (int)
 
-> Sorry for misinterpreting that, the cw1200_sagrad file really looked
-> like it was written for some out-of-tree board and subsequently
-> all lines that didn't compile got commented out.
 
-No problem.  I just needed to make it clear that this driver did in fact=20
-work -- and it also compiled cleanly on x86_64 as long as the sagrad=20
-symbol was defined.
+VERSION 3.2.46-1
 
-> In fact my mobile phone has a cw1200 chip that was working until
-> recently. Now it just crashes when I do 'ifconfig wlan0 up'
-> or enable WLAN in the Android settings menu. :(
->=20
-> I'm not blaming you for that ;-)
+3.2.0-4-686-pae #1 SMP Debian 3.2.46-1 i686
 
-What model, out of curiousity?
-=20
-> I think the most important part is separating the generic sagrad
-> add-on card code from any platform-specific code and removing the
-> use of cw1200_get_platform_data() function that breaks the build.
+ath9k                  67806  0 
+ath9k_common           12648  1 ath9k
+ath9k_hw              311433  2 ath9k_common,ath9k
+ath                    17114  3 ath9k_hw,ath9k_common,ath9k
+mac80211              171389  1 ath9k
+cfg80211              113445  3 mac80211,ath,ath9k
 
-I'll convert SDIO driver to using the sagrad data as default and add a=20
-'set_platform_data' sort of function to allow it to be optionally=20
-overridden.  It shouldn't take long, and I'll post the patch as soon as=20
-I'm finished.
+modinfo ath9k
+filename:       /lib/modules/3.2.0-4-686-pae/kernel/drivers/net/wireless/ath/ath9k/ath9k.ko
+license:        Dual BSD/GPL
+description:    Support for Atheros 802.11n wireless LAN cards.
+author:         Atheros Communications
+alias:          pci:v0000168Cd00000037sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000034sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000033sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000032sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000030sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Esv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Dsv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Csv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Bsv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Asv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000029sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000027sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000024sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000023sv*sd*bc*sc*i*
+depends:        ath9k_hw,ath9k_common,mac80211,ath,cfg80211
+intree:         Y
+vermagic:       3.2.0-4-686-pae SMP mod_unload modversions 686 
+parm:           debug:Debugging mask (uint)
+parm:           nohwcrypt:Disable hardware encryption (int)
+parm:           blink:Enable LED blink on activity (int)
+parm:           btcoex_enable:Enable wifi-BT coexistence (int)
 
-(I don't know how long it'll take to get merged though.. none of the=20
- already-posted followup cw1200 patches have been merged into=20
- wireless-next yet)
 
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
 
---32u276st3Jlj2kUU
-Content-Type: application/pgp-signature
+Support/help to get this issue fixed will be much appreciated.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
+Thank you.
 
-iD8DBQFRq1r9PuLgii2759ARArx2AKCsMiKbe1uyzVd31gUNR8Uupbg2RwCcD0dd
-Zza70FpX3uyP/nQl0c4xpm8=
-=yW0L
------END PGP SIGNATURE-----
-
---32u276st3Jlj2kUU--
+Regards,
+Jorge.
