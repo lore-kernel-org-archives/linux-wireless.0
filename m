@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51131 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964832Ab3FSSkO (ORCPT
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:34167 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389Ab3FQXYm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 14:40:14 -0400
-Message-ID: <51C1FAFB.9090209@candelatech.com> (sfid-20130619_204023_806331_15CDF8EF)
-Date: Wed, 19 Jun 2013 11:39:55 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 17 Jun 2013 19:24:42 -0400
+Received: by mail-qa0-f53.google.com with SMTP id g10so1769542qah.5
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 16:24:42 -0700 (PDT)
 MIME-Version: 1.0
-To: Oleksij Rempel <linux@rempel-privat.de>
-CC: Ignacy Gawedzki <i@lri.fr>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Corey Richardson <corey@octayn.net>
-Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
-References: <20130619115809.GA26717@zenon.in.qult.net> <51C1ACEC.2020703@rempel-privat.de> <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com> <51C1B467.1030509@rempel-privat.de> <20130619140905.GA14079@zenon.in.qult.net> <1371651073.8349.19.camel@jlt4.sipsolutions.net> <51C1C95C.8030301@rempel-privat.de> <20130619175939.GA19405@zenon.in.qult.net> <20130619180354.GB19405@zenon.in.qult.net> <51C1FA76.3090109@rempel-privat.de>
-In-Reply-To: <51C1FA76.3090109@rempel-privat.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAJ-VmomOFZkr=-w6O1X_vq4=-jxJaSW429hu51ekEJf+1q-c-A@mail.gmail.com>
+References: <CAJ-VmonxpTv0=5M6faG=UzswdH=c4+L1HYMXatnmssx1Rz7vLQ@mail.gmail.com>
+ <CAGRGNgWJr=EahOWeQxpchCAyv5di-WnwyL9hvJa3XYFf64OSxg@mail.gmail.com> <CAJ-VmomOFZkr=-w6O1X_vq4=-jxJaSW429hu51ekEJf+1q-c-A@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 18 Jun 2013 09:24:21 +1000
+Message-ID: <CAGRGNgU5Tr4oPctTiceSx=2bujs1dt2v-woCZSE-QJxEZ7xzFA@mail.gmail.com> (sfid-20130618_012445_739393_773C6ED6)
+Subject: Re: ath3k hackery; doing it in userland
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/19/2013 11:37 AM, Oleksij Rempel wrote:
->
->
-> Am 19.06.2013 20:03, schrieb Ignacy Gawedzki:
->> On Wed, Jun 19, 2013 at 07:59:39PM +0200, thus spake Ignacy Gawedzki:
->>> On Wed, Jun 19, 2013 at 05:08:12PM +0200, thus spake Oleksij Rempel:
->>>> Ignacy, Is it RPi +  TL-WN722NC?
->>>
->>> Yes, absolutely, but it happens on a Dell XPS 13" as well (Ubuntu 13.04).
->>
->> BTW, removing CFG80211_DEFAULT_PS doesn't make any difference.
->
-> Can you please tell more about your access point:
-> - hardware
-> - firmware
-> - configuration
-> - "iw dev wlan0 scan dump"
+Hi Adrian,
 
-Does the ath9k_htc do it's own rate control, perhaps modelled on ath9k_rate_control
-algorithm?
+On 18 June 2013 05:05, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 16 June 2013 23:35, Julian Calaby <julian.calaby@gmail.com> wrote:
+>
+>> A further question: why isn't this in usb-modeswitch or some similar
+>> "make my dumb USB device work" system?
+>
+> Well, there's a couple of hoops needed to jump through in order to
+> make this thing work. It's not a "set this value to make it work",
+> it's "upload this firmware blob to make this thing work."
 
-If so, that could be the problem...it has issues with associating when
-network conditions are poor...
+Hence "some similar ...." - it's a dumb USB device - i.e. it boots up
+as a device that's just smart enough to accept a firmware blob then,
+as I recall from reading about their .... peculiarities, detaches and
+reattaches with a different VID / PID when that firmware is loaded.
+
+> I don't have any clue what the right order is to poke these BT devices
+> (and even when i was working at QCA, finding documentation on the
+> bluetooth devices was difficult!) and how they should behave. This
+> whole "it detaches right after I load the sysconfig file" thing is
+> quite annoying.
+
+I believe the detaching is expected =(
 
 Thanks,
-Ben
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
