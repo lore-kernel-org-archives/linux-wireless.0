@@ -1,84 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:48078 "EHLO bear.ext.ti.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:36845 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752701Ab3F0Irl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 04:47:41 -0400
-Message-ID: <1372322851.18889.53.camel@cumari.coelho.fi> (sfid-20130627_104756_508995_36C42F82)
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+	id S1751619Ab3FQJGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jun 2013 05:06:21 -0400
+Message-ID: <1371459978.3028.5.camel@cumari.coelho.fi> (sfid-20130617_110623_293401_FF73EF40)
+Subject: Re: [PATCH] wl12xx: increase minimum singlerole firmware version
+ required
 From: Luciano Coelho <coelho@ti.com>
-To: Nishanth Menon <menon.nishanth@gmail.com>
-CC: Nishanth Menon <nm@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<linux-omap@vger.kernel.org>, <linux-arm@vger.kernel.org>
-Date: Thu, 27 Jun 2013 11:47:31 +0300
-In-Reply-To: <51CBC1C8.1040301@gmail.com>
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-	 <51CBC1C8.1040301@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <tony@atomide.com>
+Date: Mon, 17 Jun 2013 12:06:18 +0300
+In-Reply-To: <1368172024-14746-1-git-send-email-coelho@ti.com>
+References: <1368172024-14746-1-git-send-email-coelho@ti.com>
 Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(added mailing lists and everyone back to the thread)
-
-On Wed, 2013-06-26 at 23:38 -0500, Nishanth Menon wrote:
-> On 06/25/2013 03:35 AM, Luciano Coelho wrote:
-> > +Optional properties:
-> > +--------------------
-> > +
-> > +- refclock: the internal WLAN reference clock frequency (required for
-> > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-> > +  following:
-> > +	0 = 19.2 MHz
-> > +	1 = 26.0 MHz
-> > +	2 = 38.4 MHz
-> > +	3 = 52.0 MHz
-> > +	4 = 38.4 MHz, XTAL
-> > +	5 = 26.0 MHz, XTAL
-> > +
-> > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> > +  following:
-> > +	0 = 19.200 MHz
-> > +	1 = 26.000 MHz
-> > +	2 = 38.400 MHz
-> > +	3 = 52.000 MHz
-> > +	4 = 16.368 MHz
-> > +	5 = 32.736 MHz
-> > +	6 = 16.800 MHz
-> > +	7 = 33.600 MHz
-> >
-> just a gentle query - why not use frequency itself here in Hz for 
-> refclock and txoclk?
-
-I thought about using the actual frequencies, but I decided not to do
-so, because I'd have to convert them to these values anyway.  These
-values are used to configure the firmware and it uses these
-"enumerations".
-
-
-> might not another option of using
-> node {
-> clocks=<&clk>;
-> }
+On Fri, 2013-05-10 at 10:47 +0300, Luciano Coelho wrote:
+> The minimum firmware version required for singlerole after recent
+> driver changes is 6/7.3.10.0.133.
 > 
-> Usually refclock is an external clock source, no?
+> Reported-by: Tony Lindgren <tony@atomide.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-No.  In the WiLink case, both refclock and tcxoclock are internal
-clocks.  They are in the module itself and what we need to do is tell
-the WiLink chip what the module's clocks look like.
-
-
-> the above allows you to do an devm_clk_get and clk_get_rate() to figure 
-> out the exact clock frequency.
-
-No, we can't use these calls, because they are internal clocks.
-
-Please see my more complete explanation as an answer to Tony's email.
-
-Thanks for your review!
+This patch has been pushed up and applied in v3.11-rc6.
 
 --
 Luca.
