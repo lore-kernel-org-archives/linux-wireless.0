@@ -1,126 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:55560 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964Ab3FXR36 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 13:29:58 -0400
-Received: by mail-we0-f175.google.com with SMTP id t59so8236783wes.6
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2013 10:29:57 -0700 (PDT)
-References: <1371911519-13135-1-git-send-email-juhosg@openwrt.org> <1371911519-13135-2-git-send-email-juhosg@openwrt.org>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1371911519-13135-2-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <CEA89371-4BFB-4663-BD89-FAE3E1D176D2@gmail.com> (sfid-20130624_193002_254684_342B492A)
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 2/2] rt2x00: rt2800: unify [RT]XWI_SIZE defines
-Date: Mon, 24 Jun 2013 19:29:54 +0200
-To: Gabor Juhos <juhosg@openwrt.org>
+Received: from plane.gmane.org ([80.91.229.3]:38949 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751222Ab3FQREM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jun 2013 13:04:12 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Uocqd-0004ko-6r
+	for linux-wireless@vger.kernel.org; Mon, 17 Jun 2013 19:04:07 +0200
+Received: from ip-109-84-0-66.web.vodafone.de ([109.84.0.66])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 19:04:07 +0200
+Received: from zielscheibe by ip-109-84-0-66.web.vodafone.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 19:04:07 +0200
+To: linux-wireless@vger.kernel.org
+From: Tobias Kluge <zielscheibe@gmail.com>
+Subject: Re: rtl8192cu fail to connect with a AP
+Date: Mon, 17 Jun 2013 17:03:50 +0000 (UTC)
+Message-ID: <loom.20130617T185506-165@post.gmane.org> (sfid-20130617_190415_769870_0C88B53A)
+References: <loom.20130617T154136-827@post.gmane.org> <51BF2996.9060102@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Larry Finger <Larry.Finger@...> writes:
+
+> 
+> On 06/17/2013 09:06 AM, Tobias Kluge wrote:
+> > Hi,
+> >
+> > I've recently bought a TP-Link TL-WN8200ND USB WiFi dongle, it uses the
+> > Realtek 8192cu chipset.
+> > After several attempts with different kernels (starting with 3.2.6) and
+> > compat-wireless drivers, I'm still running into the same problem. The device
+> > can successful scan for networks in reach, but cannot connect to any of
+> > them, regardless the encryption (tried every mode, including no encryption
+> > at all).
+> >
+> > At the moment I'm using the kernel release 3.10.0-rc6 and the device is
+> > still not recognized by the "rtl8192cu" driver module without manually
+> > setting the device ID into the SySFS
+> >
+> > "echo "2357 0100" > /sys/bus/usb/drivers/rtl8192cu/new_id"
+> 
+> No one had reported that this device used rtl8192cu, thus it is not in the 
+> device tables, nor is it in the USB database as shown by the bare entry in
+your 
+> lsusb output. Attached is a patch that will add your device to the tables.
+That 
+> will be submitted to the maintainer relatively soon.
+> 
+> There were a number of changes to that driver that just appeared in 3.10-rc6. 
+> These fixed a number of bug reports on the Red Hat bugzilla as shown in the 
+> commit message for commit 5b8df24. I had built 3.10-rc6 from the mainline git 
+> tree; however, I had not booted it till now. With it, my Edimax EW-7811Un 
+> adapter with an RTL8188CUS chip could connect to WEP, WPA1 and WPA2 APs; 
+> however, when I dug out my Alfa AWUS036NHR with an RTL8188RU chip, it
+could not 
+> connect to any of my APs. I now need to check the results for the 
+> wireless-testing git tree, which I normally use, to see if there is a
+difference 
+> in the two trees.
+> 
+> Larry
+> 
+> 
+> 
+> Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> ===================================================================
+> --- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> +++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+>  <at>  <at>  -359,6 +359,7  <at>  <at>  static struct usb_device_id
+rtl8192c_usb
+>  	{RTL_USB_DEVICE(0x2001, 0x330a, rtl92cu_hal_cfg)}, /*D-Link-Alpha*/
+>  	{RTL_USB_DEVICE(0x2019, 0xab2b, rtl92cu_hal_cfg)}, /*Planex -Abocom*/
+>  	{RTL_USB_DEVICE(0x20f4, 0x624d, rtl92cu_hal_cfg)}, /*TRENDNet*/
+> +	{RTL_USB_DEVICE(0x2357, 0x0100, rtl92cu_hal_cfg)}, /*TP-Link WN8200ND*/
+>  	{RTL_USB_DEVICE(0x7392, 0x7822, rtl92cu_hal_cfg)}, /*Edimax -Edimax*/
+>  	{}
+>  };
+> 
+> 
+
+Thank you for your effort Larry,
+
+compiled the latest stable kernel (3.9.6) with your fixed device table, the
+dongle is now recognized properly, when the module (rtl8192cu) is loaded.
+The connection issue to any AP still remains, with the same dmesg output. I
+don't believe that the changes you mentioned in 3.10.0-rc6 are the trouble
+makers with this device. I tried many different kernels before (3.26, 3.8.0
+binaries from the Ubuntu sources, 3.9.6, 3.10.0-rc6 build from scratch). I
+hope you can see some possibilities to fix this problem.
+
+Thank you in advance
+Tobias
 
 
-Sent from my iPad
-
-On 22 jun. 2013, at 16:31, Gabor Juhos <juhosg@openwrt.org> wrote:
-
-> Use common names instead of chip specific ones.
-> The patch contains no functional changes, but
-> it makes it easier to add support for further
-> descriptor sizes.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
-> drivers/net/wireless/rt2x00/rt2800.h    |   10 ++++++----
-> drivers/net/wireless/rt2x00/rt2800pci.c |    6 +++---
-> drivers/net/wireless/rt2x00/rt2800usb.c |    8 ++++----
-> 3 files changed, 13 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index a7630d5..fe43d01 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -2625,11 +2625,13 @@ struct mac_iveiv_entry {
-> /*
->  * DMA descriptor defines.
->  */
-> -#define TXWI_DESC_SIZE            (4 * sizeof(__le32))
-> -#define RXWI_DESC_SIZE            (4 * sizeof(__le32))
-> 
-> -#define TXWI_DESC_SIZE_5592        (5 * sizeof(__le32))
-> -#define RXWI_DESC_SIZE_5592        (6 * sizeof(__le32))
-> +#define TXWI_DESC_SIZE_4WORDS        (4 * sizeof(__le32))
-> +#define TXWI_DESC_SIZE_5WORDS        (5 * sizeof(__le32))
-> +
-> +#define RXWI_DESC_SIZE_4WORDS        (4 * sizeof(__le32))
-> +#define RXWI_DESC_SIZE_6WORDS        (6 * sizeof(__le32))
-> +
-> /*
->  * TX WI structure
->  */
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index e664918..0005562 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -1194,7 +1194,7 @@ static void rt2800pci_queue_init(struct data_queue *queue)
->        queue->limit = 128;
->        queue->data_size = AGGREGATION_SIZE;
->        queue->desc_size = RXD_DESC_SIZE;
-> -        queue->winfo_size = RXWI_DESC_SIZE;
-> +        queue->winfo_size = RXWI_DESC_SIZE_4WORDS;
->        queue->priv_size = sizeof(struct queue_entry_priv_mmio);
->        break;
-> 
-> @@ -1205,7 +1205,7 @@ static void rt2800pci_queue_init(struct data_queue *queue)
->        queue->limit = 64;
->        queue->data_size = AGGREGATION_SIZE;
->        queue->desc_size = TXD_DESC_SIZE;
-> -        queue->winfo_size = TXWI_DESC_SIZE;
-> +        queue->winfo_size = TXWI_DESC_SIZE_4WORDS;
->        queue->priv_size = sizeof(struct queue_entry_priv_mmio);
->        break;
-> 
-> @@ -1213,7 +1213,7 @@ static void rt2800pci_queue_init(struct data_queue *queue)
->        queue->limit = 8;
->        queue->data_size = 0; /* No DMA required for beacons */
->        queue->desc_size = TXD_DESC_SIZE;
-> -        queue->winfo_size = TXWI_DESC_SIZE;
-> +        queue->winfo_size = TXWI_DESC_SIZE_4WORDS;
->        queue->priv_size = sizeof(struct queue_entry_priv_mmio);
->        break;
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 7edd903..840833b 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -855,11 +855,11 @@ static void rt2800usb_queue_init(struct data_queue *queue)
->    unsigned short txwi_size, rxwi_size;
-> 
->    if (rt2x00_rt(rt2x00dev, RT5592)) {
-> -        txwi_size = TXWI_DESC_SIZE_5592;
-> -        rxwi_size = RXWI_DESC_SIZE_5592;
-> +        txwi_size = TXWI_DESC_SIZE_5WORDS;
-> +        rxwi_size = RXWI_DESC_SIZE_6WORDS;
->    } else {
-> -        txwi_size = TXWI_DESC_SIZE;
-> -        rxwi_size = RXWI_DESC_SIZE;
-> +        txwi_size = TXWI_DESC_SIZE_4WORDS;
-> +        rxwi_size = RXWI_DESC_SIZE_4WORDS;
->    }
-> 
->    switch (queue->qid) {
-> -- 
-> 1.7.10
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
