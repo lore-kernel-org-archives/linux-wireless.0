@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41698 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753844Ab3FLLzm (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41554 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849Ab3FQVzJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 07:55:42 -0400
-Message-ID: <1371038139.8601.15.camel@jlt4.sipsolutions.net> (sfid-20130612_135546_273351_BB1BA039)
-Subject: Re: [QUERY] Intel Centrino Wireless-N 100 modules vs built-in
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nick Warne <nick@linicks.net>
+	Mon, 17 Jun 2013 17:55:09 -0400
+Date: Mon, 17 Jun 2013 14:55:08 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Malcolm Priestley <tvboxspy@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 12 Jun 2013 13:55:39 +0200
-In-Reply-To: <1371037816.8601.13.camel@jlt4.sipsolutions.net> (sfid-20130612_135029_092653_B4030FFF)
-References: <20130612112326.GA10313@sauron>
-	 (sfid-20130612_133412_709863_242F03A2) <1371037816.8601.13.camel@jlt4.sipsolutions.net>
-	 (sfid-20130612_135029_092653_B4030FFF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH] staging: vt6656: mac.c MACvWriteMultiAddr: Remove
+ secondary variable byData1
+Message-ID: <20130617215508.GA6619@kroah.com> (sfid-20130617_235528_979825_D2BD9CD9)
+References: <1371504371.3546.6.camel@canaries64>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1371504371.3546.6.camel@canaries64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jun 17, 2013 at 10:26:11PM +0100, Malcolm Priestley wrote:
+> 
+> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+> ---
+>  drivers/staging/vt6656/mac.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+> index 87c7c8b..5e01be5 100644
+> --- a/drivers/staging/vt6656/mac.c
+> +++ b/drivers/staging/vt6656/mac.c
+> @@ -57,15 +57,13 @@ static int          msglevel                =MSG_LEVEL_INFO;
+>   */
+>  void MACvWriteMultiAddr(struct vnt_private *pDevice, u32 uByteIdx, u8 byData)
+>  {
+> -	u8 byData1;
+>  
+> -    byData1 = byData;
+>      CONTROLnsRequestOut(pDevice,
+>                          MESSAGE_TYPE_WRITE,
+>                          (u16) (MAC_REG_MAR0 + uByteIdx),
+>                          MESSAGE_REQUEST_MACREG,
+>                          1,
+> -                        &byData1);
+> +			&byData);
 
-> Newer versions of udev don't
-> respond negatively if they don't have the firmware while running from
-> initrd/initramfs, and will leave the driver's request pending to be
-> answered once the real filesystem is mounted.
+Why are we passing byData in here at all?  What is happening to it that
+it needs to be a pointer, and why does this function need it as well?
 
-And by "newer", I really mean "anything not ancient", the version with
-the logic was 187, released almost a year ago :-)
+Something doesn't seem right, care to track this down and fix it up
+properly?
 
-johannes
+thanks,
 
+greg k-h
