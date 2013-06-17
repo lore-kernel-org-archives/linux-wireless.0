@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f195.google.com ([209.85.212.195]:58493 "EHLO
-	mail-wi0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751418Ab3FDNdS (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:35311 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753537Ab3FQUke convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 09:33:18 -0400
-Received: by mail-wi0-f195.google.com with SMTP id hm9so56572wib.10
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2013 06:33:16 -0700 (PDT)
+	Mon, 17 Jun 2013 16:40:34 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h1so4051626oag.33
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 13:40:34 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 4 Jun 2013 21:20:26 +0800
-Message-ID: <CAB-Tk70FmmfZOaJnWOubcOrP3MyXebTtrY936_4NROmf_76EZw@mail.gmail.com> (sfid-20130604_153322_039655_7E812C87)
-Subject: carl9170:5/10 MHz Channel Support on carl9170
-From: "C.B. Wang" <wtwangcb@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CACna6rzDv1d4Znni+XUXprZp4RrFLr5yyBdJyPVLHB9n2U3_BQ@mail.gmail.com>
+References: <1371491780-23412-1-git-send-email-zajec5@gmail.com>
+	<CACna6rzDv1d4Znni+XUXprZp4RrFLr5yyBdJyPVLHB9n2U3_BQ@mail.gmail.com>
+Date: Mon, 17 Jun 2013 22:40:33 +0200
+Message-ID: <CACna6ryujzGPhtQ=aAeMegWE_MrZEGQWk+Ok3+Ww+PriDoZovg@mail.gmail.com> (sfid-20130617_224038_466832_4796118C)
+Subject: Re: [PATCH] ssb: add struct for serial flash
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I want to know if the ar9170 chip support 5/10 mhz channels.The
-datasheet says it supports
-802.11j,but the carl9170 driver does not provide support.
+2013/6/17 Rafał Miłecki <zajec5@gmail.com>:
+> 2013/6/17 Rafał Miłecki <zajec5@gmail.com>:
+>> This data allow writing for example MTD driver.
+>
+> To make this a bit more clear:
+>
+> Up until now, we were detecting flash model in
+> driver_chipcommon_sflash.c, but nothing more than that. It was printed
+> and that's all. Noone could read it's details or/and use it.
+>
+> As providing an access to the flash is usually a good idea, we need an
+> additional MTD driver for it. Such MTD driver needs some basic info
+> about flash. It's mapping address and size at least.
 
-Also the radio chip ar9104 has tuning range from 2.3-2.5ghz and
-4.9-6.1ghz,but the driver
-does not provide any support for these super channels.Isn't the ar9170
-chip doesn't support
-super channel,or the driver does not implement these features?
+As an example you can see drivers/mtd/devices/bcm47xxsflash.c which a
+driver for "bcma_sflash" platform device.
 
-
-
-                    c.b.wang
+-- 
+Rafał
