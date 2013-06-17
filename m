@@ -1,27 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42945 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752044Ab3FDKBk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 06:01:40 -0400
-Message-ID: <51ADBB01.90804@openwrt.org> (sfid-20130604_120142_983334_EA9D809A)
-Date: Tue, 04 Jun 2013 12:01:37 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com
-Subject: Re: [PATCH v2 2/2] ath9k: implement support for .release_buffered_frames()
-References: <1370293129-24331-1-git-send-email-nbd@openwrt.org> <1370293129-24331-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1370293129-24331-2-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-we0-f170.google.com ([74.125.82.170]:40546 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753765Ab3FQVUB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jun 2013 17:20:01 -0400
+Received: by mail-we0-f170.google.com with SMTP id w57so2832053wes.29
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 14:20:00 -0700 (PDT)
+Message-ID: <1371503994.3546.2.camel@canaries64> (sfid-20130617_232007_038959_815DCD77)
+Subject: [PATCH] staging: vt6656: mac.c pbyData Remove magic number array
+ size
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 17 Jun 2013 22:19:54 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-06-03 10:58 PM, Felix Fietkau wrote:
-> This adds support for PS-Poll and U-APSD driver-buffered frames (part of
-> an aggregation session).
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Don't merge this just yet, found some issues that I need to fix first.
+Array size always equals ARRAY_SIZE of pbyData
 
-- Felix
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 343db19..87c7c8b 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -101,7 +101,7 @@ void MACvSetBBType(struct vnt_private *pDevice, u8 byType)
+                         MESSAGE_TYPE_WRITE_MASK,
+                         MAC_REG_ENCFG0,
+                         MESSAGE_REQUEST_MACREG,
+-                        2,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ }
+@@ -232,7 +232,7 @@ void MACvSetKeyEntry(struct vnt_private *pDevice, u16 wKeyCtl, u32 uEntryIdx,
+                         MESSAGE_TYPE_SETKEY,
+                         wOffset,
+                         (u16)uKeyIdx,
+-                        24,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ 
+@@ -249,7 +249,7 @@ void MACvRegBitsOff(struct vnt_private *pDevice, u8 byRegOfs, u8 byBits)
+                         MESSAGE_TYPE_WRITE_MASK,
+                         byRegOfs,
+                         MESSAGE_REQUEST_MACREG,
+-                        2,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ }
+@@ -265,7 +265,7 @@ void MACvRegBitsOn(struct vnt_private *pDevice, u8 byRegOfs, u8 byBits)
+                         MESSAGE_TYPE_WRITE_MASK,
+                         byRegOfs,
+                         MESSAGE_REQUEST_MACREG,
+-                        2,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ }
+@@ -281,7 +281,7 @@ void MACvWriteWord(struct vnt_private *pDevice, u8 byRegOfs, u16 wData)
+                         MESSAGE_TYPE_WRITE,
+                         byRegOfs,
+                         MESSAGE_REQUEST_MACREG,
+-                        2,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ 
+@@ -302,7 +302,7 @@ void MACvWriteBSSIDAddress(struct vnt_private *pDevice, u8 *pbyEtherAddr)
+                         MESSAGE_TYPE_WRITE,
+                         MAC_REG_BSSID0,
+                         MESSAGE_REQUEST_MACREG,
+-                        6,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ }
+@@ -318,7 +318,7 @@ void MACvEnableProtectMD(struct vnt_private *pDevice)
+                         MESSAGE_TYPE_WRITE_MASK,
+                         MAC_REG_ENCFG0,
+                         MESSAGE_REQUEST_MACREG,
+-                        2,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ }
+@@ -334,7 +334,7 @@ void MACvDisableProtectMD(struct vnt_private *pDevice)
+                         MESSAGE_TYPE_WRITE_MASK,
+                         MAC_REG_ENCFG0,
+                         MESSAGE_REQUEST_MACREG,
+-                        2,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ }
+@@ -350,7 +350,7 @@ void MACvEnableBarkerPreambleMd(struct vnt_private *pDevice)
+                         MESSAGE_TYPE_WRITE_MASK,
+                         MAC_REG_ENCFG2,
+                         MESSAGE_REQUEST_MACREG,
+-                        2,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ }
+@@ -366,7 +366,7 @@ void MACvDisableBarkerPreambleMd(struct vnt_private *pDevice)
+                         MESSAGE_TYPE_WRITE_MASK,
+                         MAC_REG_ENCFG2,
+                         MESSAGE_REQUEST_MACREG,
+-                        2,
++			ARRAY_SIZE(pbyData),
+                         pbyData
+                         );
+ }
+@@ -382,7 +382,7 @@ void MACvWriteBeaconInterval(struct vnt_private *pDevice, u16 wInterval)
+ 			MESSAGE_TYPE_WRITE,
+ 			MAC_REG_BI,
+ 			MESSAGE_REQUEST_MACREG,
+-			2,
++			ARRAY_SIZE(pbyData),
+ 			pbyData
+ 			);
+ }
+-- 
+1.8.1.2
+
 
