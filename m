@@ -1,91 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:49948 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751960Ab3F1TNY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:13:24 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 09/19] rt2x00: rt2800lib: introduce rt2800_get_txmixer_gain_{24,5}g helpers
-Date: Fri, 28 Jun 2013 21:12:23 +0200
-Message-Id: <1372446753-11408-10-git-send-email-juhosg@openwrt.org> (sfid-20130628_211337_064564_E3A87746)
-In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
-References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:12206 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755570Ab3FQRpi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jun 2013 13:45:38 -0400
+Date: Mon, 17 Jun 2013 13:45:36 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: rvossen@broadcom.com, arend@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH] net: brcmfmac: add sdio chip id 0x4319
+Message-ID: <20130617174536.GQ31667@titan.lakedaemon.net> (sfid-20130617_194554_088453_A4C8D131)
+References: <20130612222123.GB31667@titan.lakedaemon.net>
+ <20130617161903.GN31667@titan.lakedaemon.net>
+ <51BF498F.1010007@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51BF498F.1010007@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the TX mixer gain reading code into separate
-helper functions in preparation for RT3593 support.
+On Mon, Jun 17, 2013 at 10:38:23AM -0700, Franky Lin wrote:
+> On 06/17/2013 09:19 AM, Jason Cooper wrote:
+> >Added Franky...
+> >
+> >On Wed, Jun 12, 2013 at 06:21:23PM -0400, Jason Cooper wrote:
+> >>All,
+> >>
+> >>I have a Seagate Wireless Plus I am trying to put a vanilla kernel on
+> >>(currently v3.10-rc5 for various omap DT bits).
+> >>
+> >>I have the board booting and running a debian rootfs on the HD.  I just
+> >>got mmc to come up and I've discovered that the wireless card is vendor
+> >>0x02d0, device 0x4319.
+> >>
+> >>My hope, once I got to this point, was that I would be able to use
+> >>the mainline, open source driver.  Unfortunately, it looks like brcmfmac
+> >>lost support for the 0x4319 while it was in staging.
+> >>
+> >>The commit in question is:
+> >>
+> >>   4dad253 staging: brcm80211: remove code for unsupported chip
+> >>
+> >>Is adding it back in a bridge too far?
+> >It looks like only two things are needed, adding the chip id and then
+> >setting the addresses.  Here's a preliminary patch to do just that.
+> >Note, the addresses I have used are a straight copy from the 4329.  It
+> >causes this:
+> >
+> >[   12.346466] mmcblk mmc0:0001: no of_node; not parsing pinctrl DT
+> >[   12.353149] brcmfmac_sdio mmc0:0001:1: no of_node; not parsing pinctrl DT
+> >[   12.360717] brcmfmac_sdio mmc0:0001:2: no of_node; not parsing pinctrl DT
+> >[   12.368804] brcmfmac: brcmf_sdio_chip_drivestrengthinit: No SDIO Drive strength init done for chip 4319 rev 1 pmurev 7
+> >[   12.380462] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=03, Err: -22
+> >[   12.391906] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=03, Err: -22
+> >[   12.403289] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=03, Err: -22
+> >[   12.412261] brcmfmac: brcmf_sdio_regrw_helper: failed with -22
+> >[   12.418457] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=01, Err: -22
+> >[   12.429718] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=01, Err: -22
+> >[   12.441101] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=01, Err: -22
+> >[   12.450073] brcmfmac: brcmf_sdio_regrw_helper: failed with -22
+> >
+> >I've taken a quick look at aosp, the provided GPL broadcom code, and I
+> >haven't seen anything for the 4319 wrt to addresses.  How hard would it
+> >be to get those addresses from you guys?
+> 
+> Hi Jason,
+> 
+> The major obstacle of adding 4319 support is the obsolete firmware.
+> Since it's an EOL chip we are not planning to add the support to
+> brcmfmac.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   38 +++++++++++++++++++------------
- 1 file changed, 24 insertions(+), 14 deletions(-)
+Let me guess, the firmware would have to be updated to work with
+brcmfmac?  What about adding a BRMCFMAC_LEGACY option to allow
+interfacing with the old firmware?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index cbc3dc3..6f23eb0 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6362,6 +6362,28 @@ int rt2800_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
- }
- EXPORT_SYMBOL_GPL(rt2800_read_eeprom_efuse);
- 
-+static u8 rt2800_get_txmixer_gain_24g(struct rt2x00_dev *rt2x00dev)
-+{
-+	u16 word;
-+
-+	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
-+	if ((word & 0x00ff) != 0x00ff)
-+		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
-+
-+	return 0;
-+}
-+
-+static u8 rt2800_get_txmixer_gain_5g(struct rt2x00_dev *rt2x00dev)
-+{
-+	u16 word;
-+
-+	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
-+	if ((word & 0x00ff) != 0x00ff)
-+		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
-+
-+	return 0;
-+}
-+
- static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-@@ -6456,13 +6478,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 		rt2x00_set_field16(&word, EEPROM_RSSI_BG_OFFSET1, 0);
- 	rt2800_eeprom_write(rt2x00dev, EEPROM_RSSI_BG, word);
- 
--	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
--	if ((word & 0x00ff) != 0x00ff) {
--		drv_data->txmixer_gain_24g =
--			rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
--	} else {
--		drv_data->txmixer_gain_24g = 0;
--	}
-+	drv_data->txmixer_gain_24g = rt2800_get_txmixer_gain_24g(rt2x00dev);
- 
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_BG2, &word);
- 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_BG2_OFFSET2)) > 10)
-@@ -6473,13 +6489,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 				   default_lna_gain);
- 	rt2800_eeprom_write(rt2x00dev, EEPROM_RSSI_BG2, word);
- 
--	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
--	if ((word & 0x00ff) != 0x00ff) {
--		drv_data->txmixer_gain_5g =
--			rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
--	} else {
--		drv_data->txmixer_gain_5g = 0;
--	}
-+	drv_data->txmixer_gain_5g = rt2800_get_txmixer_gain_5g(rt2x00dev);
- 
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_A, &word);
- 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_A_OFFSET0)) > 10)
--- 
-1.7.10
+It may be EOL, but new products are still shipping with this chip
+(Wireless Plus, other Azurewave products).
 
+thx,
+
+Jason.
