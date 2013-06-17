@@ -1,330 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:47995 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603Ab3FREqO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 00:46:14 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] initvals: Add ar9462_2p0_5g_xlna_only_rxgain table
-Date: Tue, 18 Jun 2013 10:13:10 +0530
-Message-Id: <1371530590-15676-3-git-send-email-sujith@msujith.org> (sfid-20130618_064617_494208_10CF9EC5)
-In-Reply-To: <1371530590-15676-1-git-send-email-sujith@msujith.org>
-References: <1371530590-15676-1-git-send-email-sujith@msujith.org>
+Received: from plane.gmane.org ([80.91.229.3]:51147 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751140Ab3FQOPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jun 2013 10:15:05 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1UoaD1-0002eA-Fd
+	for linux-wireless@vger.kernel.org; Mon, 17 Jun 2013 16:15:03 +0200
+Received: from ip-109-84-0-66.web.vodafone.de ([109.84.0.66])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 16:15:03 +0200
+Received: from zielscheibe by ip-109-84-0-66.web.vodafone.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 16:15:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Tobias Kluge <zielscheibe@gmail.com>
+Subject: rtl8192cu fail to connect with a AP
+Date: Mon, 17 Jun 2013 14:06:01 +0000 (UTC)
+Message-ID: <loom.20130617T154136-827@post.gmane.org> (sfid-20130617_161510_232068_9A0664B3)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- tools/initvals/ar9462_2p0_initvals.h | 260 +++++++++++++++++++++++++++++++++++
- tools/initvals/checksums.txt         |   1 +
- tools/initvals/initvals.c            |   2 +
- 3 files changed, 263 insertions(+)
+I've recently bought a TP-Link TL-WN8200ND USB WiFi dongle, it uses the
+Realtek 8192cu chipset.
+After several attempts with different kernels (starting with 3.2.6) and
+compat-wireless drivers, I'm still running into the same problem. The device
+can successful scan for networks in reach, but cannot connect to any of
+them, regardless the encryption (tried every mode, including no encryption
+at all). 
 
-diff --git a/tools/initvals/ar9462_2p0_initvals.h b/tools/initvals/ar9462_2p0_initvals.h
-index d402c5d..bcd0cae 100644
---- a/tools/initvals/ar9462_2p0_initvals.h
-+++ b/tools/initvals/ar9462_2p0_initvals.h
-@@ -1454,4 +1454,264 @@ static const u32 ar9462_2p0_baseband_postamble_5g_xlna[][5] = {
- 	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcfd5c782, 0xcfd5c282},
- };
- 
-+static const u32 ar9462_2p0_5g_xlna_only_rxgain[][2] = {
-+	/* Addr      allmodes  */
-+	{0x0000a000, 0x00010000},
-+	{0x0000a004, 0x00030002},
-+	{0x0000a008, 0x00050004},
-+	{0x0000a00c, 0x00810080},
-+	{0x0000a010, 0x00830082},
-+	{0x0000a014, 0x01810180},
-+	{0x0000a018, 0x01830182},
-+	{0x0000a01c, 0x01850184},
-+	{0x0000a020, 0x01890188},
-+	{0x0000a024, 0x018b018a},
-+	{0x0000a028, 0x018d018c},
-+	{0x0000a02c, 0x03820190},
-+	{0x0000a030, 0x03840383},
-+	{0x0000a034, 0x03880385},
-+	{0x0000a038, 0x038a0389},
-+	{0x0000a03c, 0x038c038b},
-+	{0x0000a040, 0x0390038d},
-+	{0x0000a044, 0x03920391},
-+	{0x0000a048, 0x03940393},
-+	{0x0000a04c, 0x03960395},
-+	{0x0000a050, 0x00000000},
-+	{0x0000a054, 0x00000000},
-+	{0x0000a058, 0x00000000},
-+	{0x0000a05c, 0x00000000},
-+	{0x0000a060, 0x00000000},
-+	{0x0000a064, 0x00000000},
-+	{0x0000a068, 0x00000000},
-+	{0x0000a06c, 0x00000000},
-+	{0x0000a070, 0x00000000},
-+	{0x0000a074, 0x00000000},
-+	{0x0000a078, 0x00000000},
-+	{0x0000a07c, 0x00000000},
-+	{0x0000a080, 0x29292929},
-+	{0x0000a084, 0x29292929},
-+	{0x0000a088, 0x29292929},
-+	{0x0000a08c, 0x29292929},
-+	{0x0000a090, 0x22292929},
-+	{0x0000a094, 0x1d1d2222},
-+	{0x0000a098, 0x0c111117},
-+	{0x0000a09c, 0x00030303},
-+	{0x0000a0a0, 0x00000000},
-+	{0x0000a0a4, 0x00000000},
-+	{0x0000a0a8, 0x00000000},
-+	{0x0000a0ac, 0x00000000},
-+	{0x0000a0b0, 0x00000000},
-+	{0x0000a0b4, 0x00000000},
-+	{0x0000a0b8, 0x00000000},
-+	{0x0000a0bc, 0x00000000},
-+	{0x0000a0c0, 0x001f0000},
-+	{0x0000a0c4, 0x01000101},
-+	{0x0000a0c8, 0x011e011f},
-+	{0x0000a0cc, 0x011c011d},
-+	{0x0000a0d0, 0x02030204},
-+	{0x0000a0d4, 0x02010202},
-+	{0x0000a0d8, 0x021f0200},
-+	{0x0000a0dc, 0x0302021e},
-+	{0x0000a0e0, 0x03000301},
-+	{0x0000a0e4, 0x031e031f},
-+	{0x0000a0e8, 0x0402031d},
-+	{0x0000a0ec, 0x04000401},
-+	{0x0000a0f0, 0x041e041f},
-+	{0x0000a0f4, 0x0502041d},
-+	{0x0000a0f8, 0x05000501},
-+	{0x0000a0fc, 0x051e051f},
-+	{0x0000a100, 0x06010602},
-+	{0x0000a104, 0x061f0600},
-+	{0x0000a108, 0x061d061e},
-+	{0x0000a10c, 0x07020703},
-+	{0x0000a110, 0x07000701},
-+	{0x0000a114, 0x00000000},
-+	{0x0000a118, 0x00000000},
-+	{0x0000a11c, 0x00000000},
-+	{0x0000a120, 0x00000000},
-+	{0x0000a124, 0x00000000},
-+	{0x0000a128, 0x00000000},
-+	{0x0000a12c, 0x00000000},
-+	{0x0000a130, 0x00000000},
-+	{0x0000a134, 0x00000000},
-+	{0x0000a138, 0x00000000},
-+	{0x0000a13c, 0x00000000},
-+	{0x0000a140, 0x001f0000},
-+	{0x0000a144, 0x01000101},
-+	{0x0000a148, 0x011e011f},
-+	{0x0000a14c, 0x011c011d},
-+	{0x0000a150, 0x02030204},
-+	{0x0000a154, 0x02010202},
-+	{0x0000a158, 0x021f0200},
-+	{0x0000a15c, 0x0302021e},
-+	{0x0000a160, 0x03000301},
-+	{0x0000a164, 0x031e031f},
-+	{0x0000a168, 0x0402031d},
-+	{0x0000a16c, 0x04000401},
-+	{0x0000a170, 0x041e041f},
-+	{0x0000a174, 0x0502041d},
-+	{0x0000a178, 0x05000501},
-+	{0x0000a17c, 0x051e051f},
-+	{0x0000a180, 0x06010602},
-+	{0x0000a184, 0x061f0600},
-+	{0x0000a188, 0x061d061e},
-+	{0x0000a18c, 0x07020703},
-+	{0x0000a190, 0x07000701},
-+	{0x0000a194, 0x00000000},
-+	{0x0000a198, 0x00000000},
-+	{0x0000a19c, 0x00000000},
-+	{0x0000a1a0, 0x00000000},
-+	{0x0000a1a4, 0x00000000},
-+	{0x0000a1a8, 0x00000000},
-+	{0x0000a1ac, 0x00000000},
-+	{0x0000a1b0, 0x00000000},
-+	{0x0000a1b4, 0x00000000},
-+	{0x0000a1b8, 0x00000000},
-+	{0x0000a1bc, 0x00000000},
-+	{0x0000a1c0, 0x00000000},
-+	{0x0000a1c4, 0x00000000},
-+	{0x0000a1c8, 0x00000000},
-+	{0x0000a1cc, 0x00000000},
-+	{0x0000a1d0, 0x00000000},
-+	{0x0000a1d4, 0x00000000},
-+	{0x0000a1d8, 0x00000000},
-+	{0x0000a1dc, 0x00000000},
-+	{0x0000a1e0, 0x00000000},
-+	{0x0000a1e4, 0x00000000},
-+	{0x0000a1e8, 0x00000000},
-+	{0x0000a1ec, 0x00000000},
-+	{0x0000a1f0, 0x00000396},
-+	{0x0000a1f4, 0x00000396},
-+	{0x0000a1f8, 0x00000396},
-+	{0x0000a1fc, 0x00000196},
-+	{0x0000b000, 0x00010000},
-+	{0x0000b004, 0x00030002},
-+	{0x0000b008, 0x00050004},
-+	{0x0000b00c, 0x00810080},
-+	{0x0000b010, 0x00830082},
-+	{0x0000b014, 0x01810180},
-+	{0x0000b018, 0x01830182},
-+	{0x0000b01c, 0x01850184},
-+	{0x0000b020, 0x02810280},
-+	{0x0000b024, 0x02830282},
-+	{0x0000b028, 0x02850284},
-+	{0x0000b02c, 0x02890288},
-+	{0x0000b030, 0x028b028a},
-+	{0x0000b034, 0x0388028c},
-+	{0x0000b038, 0x038a0389},
-+	{0x0000b03c, 0x038c038b},
-+	{0x0000b040, 0x0390038d},
-+	{0x0000b044, 0x03920391},
-+	{0x0000b048, 0x03940393},
-+	{0x0000b04c, 0x03960395},
-+	{0x0000b050, 0x00000000},
-+	{0x0000b054, 0x00000000},
-+	{0x0000b058, 0x00000000},
-+	{0x0000b05c, 0x00000000},
-+	{0x0000b060, 0x00000000},
-+	{0x0000b064, 0x00000000},
-+	{0x0000b068, 0x00000000},
-+	{0x0000b06c, 0x00000000},
-+	{0x0000b070, 0x00000000},
-+	{0x0000b074, 0x00000000},
-+	{0x0000b078, 0x00000000},
-+	{0x0000b07c, 0x00000000},
-+	{0x0000b080, 0x2a2d2f32},
-+	{0x0000b084, 0x21232328},
-+	{0x0000b088, 0x19191c1e},
-+	{0x0000b08c, 0x12141417},
-+	{0x0000b090, 0x07070e0e},
-+	{0x0000b094, 0x03030305},
-+	{0x0000b098, 0x00000003},
-+	{0x0000b09c, 0x00000000},
-+	{0x0000b0a0, 0x00000000},
-+	{0x0000b0a4, 0x00000000},
-+	{0x0000b0a8, 0x00000000},
-+	{0x0000b0ac, 0x00000000},
-+	{0x0000b0b0, 0x00000000},
-+	{0x0000b0b4, 0x00000000},
-+	{0x0000b0b8, 0x00000000},
-+	{0x0000b0bc, 0x00000000},
-+	{0x0000b0c0, 0x003f0020},
-+	{0x0000b0c4, 0x00400041},
-+	{0x0000b0c8, 0x0140005f},
-+	{0x0000b0cc, 0x0160015f},
-+	{0x0000b0d0, 0x017e017f},
-+	{0x0000b0d4, 0x02410242},
-+	{0x0000b0d8, 0x025f0240},
-+	{0x0000b0dc, 0x027f0260},
-+	{0x0000b0e0, 0x0341027e},
-+	{0x0000b0e4, 0x035f0340},
-+	{0x0000b0e8, 0x037f0360},
-+	{0x0000b0ec, 0x04400441},
-+	{0x0000b0f0, 0x0460045f},
-+	{0x0000b0f4, 0x0541047f},
-+	{0x0000b0f8, 0x055f0540},
-+	{0x0000b0fc, 0x057f0560},
-+	{0x0000b100, 0x06400641},
-+	{0x0000b104, 0x0660065f},
-+	{0x0000b108, 0x067e067f},
-+	{0x0000b10c, 0x07410742},
-+	{0x0000b110, 0x075f0740},
-+	{0x0000b114, 0x077f0760},
-+	{0x0000b118, 0x07800781},
-+	{0x0000b11c, 0x07a0079f},
-+	{0x0000b120, 0x07c107bf},
-+	{0x0000b124, 0x000007c0},
-+	{0x0000b128, 0x00000000},
-+	{0x0000b12c, 0x00000000},
-+	{0x0000b130, 0x00000000},
-+	{0x0000b134, 0x00000000},
-+	{0x0000b138, 0x00000000},
-+	{0x0000b13c, 0x00000000},
-+	{0x0000b140, 0x003f0020},
-+	{0x0000b144, 0x00400041},
-+	{0x0000b148, 0x0140005f},
-+	{0x0000b14c, 0x0160015f},
-+	{0x0000b150, 0x017e017f},
-+	{0x0000b154, 0x02410242},
-+	{0x0000b158, 0x025f0240},
-+	{0x0000b15c, 0x027f0260},
-+	{0x0000b160, 0x0341027e},
-+	{0x0000b164, 0x035f0340},
-+	{0x0000b168, 0x037f0360},
-+	{0x0000b16c, 0x04400441},
-+	{0x0000b170, 0x0460045f},
-+	{0x0000b174, 0x0541047f},
-+	{0x0000b178, 0x055f0540},
-+	{0x0000b17c, 0x057f0560},
-+	{0x0000b180, 0x06400641},
-+	{0x0000b184, 0x0660065f},
-+	{0x0000b188, 0x067e067f},
-+	{0x0000b18c, 0x07410742},
-+	{0x0000b190, 0x075f0740},
-+	{0x0000b194, 0x077f0760},
-+	{0x0000b198, 0x07800781},
-+	{0x0000b19c, 0x07a0079f},
-+	{0x0000b1a0, 0x07c107bf},
-+	{0x0000b1a4, 0x000007c0},
-+	{0x0000b1a8, 0x00000000},
-+	{0x0000b1ac, 0x00000000},
-+	{0x0000b1b0, 0x00000000},
-+	{0x0000b1b4, 0x00000000},
-+	{0x0000b1b8, 0x00000000},
-+	{0x0000b1bc, 0x00000000},
-+	{0x0000b1c0, 0x00000000},
-+	{0x0000b1c4, 0x00000000},
-+	{0x0000b1c8, 0x00000000},
-+	{0x0000b1cc, 0x00000000},
-+	{0x0000b1d0, 0x00000000},
-+	{0x0000b1d4, 0x00000000},
-+	{0x0000b1d8, 0x00000000},
-+	{0x0000b1dc, 0x00000000},
-+	{0x0000b1e0, 0x00000000},
-+	{0x0000b1e4, 0x00000000},
-+	{0x0000b1e8, 0x00000000},
-+	{0x0000b1ec, 0x00000000},
-+	{0x0000b1f0, 0x00000396},
-+	{0x0000b1f4, 0x00000396},
-+	{0x0000b1f8, 0x00000396},
-+	{0x0000b1fc, 0x00000196},
-+};
-+
- #endif /* INITVALS_9462_2P0_H */
-diff --git a/tools/initvals/checksums.txt b/tools/initvals/checksums.txt
-index 5cb85c8..758ff85 100644
---- a/tools/initvals/checksums.txt
-+++ b/tools/initvals/checksums.txt
-@@ -157,6 +157,7 @@ fd98d0361e085b102131c2dc07c601e0a7ccdd13        ar9462_2p0_radio_core
- c8dc777b012068116cd5282aade8eb460f397d20        ar9462_2p0_mac_postamble
- 72675fd0f308e6f31502e283119e12469d262f40        ar9462_common_mixed_rx_gain_table_2p0
- 185f0537e40b74dcc4db33c7e111c1bfe79f3104        ar9462_2p0_baseband_postamble_5g_xlna
-+72675fd0f308e6f31502e283119e12469d262f40        ar9462_2p0_5g_xlna_only_rxgain
- c8dc777b012068116cd5282aade8eb460f397d20        ar9485_1_1_mac_postamble
- 5d20e4848b97566ad55e0e95458463d622ee5480        ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1
- d9a90632a00a7b417154173b947dfffdeab23e51        ar9485Common_wo_xlna_rx_gain_1_1
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index f8a104a..2d1edba 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -318,6 +318,7 @@ struct initval_family {
- #define ar9300_jupiter_2p0_mac_postamble			ar9462_2p0_mac_postamble
- #define ar9300Common_mixed_rx_gain_table_jupiter_2p0		ar9462_common_mixed_rx_gain_table_2p0
- #define ar9300_jupiter_2p0_baseband_postamble_5g_xlna		ar9462_2p0_baseband_postamble_5g_xlna
-+#define ar9300Common_5g_xlna_only_rx_gain_table_jupiter_2p0	ar9462_2p0_5g_xlna_only_rxgain
- 
- #include "ar9300_jupiter20.ini"
- 
-@@ -904,6 +905,7 @@ static void ar9462_2p0_hw_print_initvals(bool check)
- 	INI_PRINT(ar9462_2p0_mac_postamble);
- 	INI_PRINT(ar9462_common_mixed_rx_gain_table_2p0);
- 	INI_PRINT(ar9462_2p0_baseband_postamble_5g_xlna);
-+	INI_PRINT(ar9462_2p0_5g_xlna_only_rxgain);
- }
- 
- static void ar9565_1p0_hw_print_initvals(bool check)
--- 
-1.8.3.1
+At the moment I'm using the kernel release 3.10.0-rc6 and the device is
+still not recognized by the "rtl8192cu" driver module without manually
+setting the device ID into the SySFS
+
+"echo "2357 0100" > /sys/bus/usb/drivers/rtl8192cu/new_id"
+
+here is the output of "lsusb"
+
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 004: ID 2357:0100  
+Bus 002 Device 003: ID 0c0b:b159 Dura Micro, Inc. (Acomdata) 
+Bus 002 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 005: ID 0d62:001c Darfon Electronics Corp. Benq X120 Internet
+Keyboard Pro
+Bus 001 Device 004: ID 09da:9090 A4 Tech Co., Ltd XL-750BK Laser Mouse
+Bus 001 Device 003: ID 148f:3072 Ralink Technology, Corp. RT3072 Wireless
+Adapter
+Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+
+dmesg output when the dongle becomes active (debug level 3 for the rtl8192cu
+module):
+[ 1651.800376] usb 2-1.6: USB disconnect, device number 5
+[ 1651.800471] ehci-pci 0000:00:1d.0: dma_pool_free ehci_qh,
+dfa0d4e0/fffff4e0 (bad dma)
+[ 1653.791055] usb 2-1.6: new high-speed USB device number 6 using ehci-pci
+[ 1653.866948] ehci-pci 0000:00:1d.0: dma_pool_free ehci_qh,
+dfa0d540/fffff540 (bad dma)
+[ 1690.240437] usbcore: registered new interface driver rtl8192cu
+[ 1710.493651] rtl8192cu: Chip version 0x11
+[ 1710.570428] rtl8192cu: MAC address: a0:f3:c1:29:e3:95
+[ 1710.570436] rtl8192cu: Board Type 0
+[ 1710.570672] rtlwifi: rx_max_size 15360, rx_urb_num 8, in_ep 1
+[ 1710.570677] cfg80211: Updating information on frequency 2412 MHz with
+regulatory rule:
+[ 1710.570679] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570681] cfg80211: Updating information on frequency 2417 MHz with
+regulatory rule:
+[ 1710.570684] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570685] cfg80211: Updating information on frequency 2422 MHz with
+regulatory rule:
+[ 1710.570687] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570689] cfg80211: Updating information on frequency 2427 MHz with
+regulatory rule:
+[ 1710.570691] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570693] cfg80211: Updating information on frequency 2432 MHz with
+regulatory rule:
+[ 1710.570695] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570697] cfg80211: Updating information on frequency 2437 MHz with
+regulatory rule:
+[ 1710.570699] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570700] cfg80211: Updating information on frequency 2442 MHz with
+regulatory rule:
+[ 1710.570702] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570704] cfg80211: Updating information on frequency 2447 MHz with
+regulatory rule:
+[ 1710.570706] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570708] cfg80211: Updating information on frequency 2452 MHz with
+regulatory rule:
+[ 1710.570710] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570712] cfg80211: Updating information on frequency 2457 MHz with
+regulatory rule:
+[ 1710.570714] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570715] cfg80211: Updating information on frequency 2462 MHz with
+regulatory rule:
+[ 1710.570717] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi,
+2000 mBm)
+[ 1710.570719] cfg80211: Disabling freq 2467 MHz as custom regd has no rule
+that fits it
+[ 1710.570721] cfg80211: Disabling freq 2472 MHz as custom regd has no rule
+that fits it
+[ 1710.570722] cfg80211: Disabling freq 2484 MHz as custom regd has no rule
+that fits it
+[ 1710.570752] rtl8192cu: Loading firmware rtlwifi/rtl8192cufw.bin
+[ 1710.570866] cfg80211: Ignoring regulatory request Set by core since the
+driver uses its own custom regulatory domain
+[ 1710.570975] ieee80211 phy3: Selected rate control algorithm 'rtl_rc'
+[ 1710.571427] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1710.571430] rtlwifi: wireless switch is on
+[ 1710.571675] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+
+
+dmesg output when connecting to my unsecured AP
+
+[ 1710.571430] rtlwifi: wireless switch is on
+[ 1710.571675] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1715.459587] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1720.455801] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1725.468154] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1730.464371] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1735.476568] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1740.472816] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1745.485169] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1750.481384] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1755.493613] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1760.489829] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1765.502183] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1770.498399] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1775.510626] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1780.506967] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1785.519180] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1790.515411] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1795.527640] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1800.523981] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1805.536210] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1810.532425] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1815.544779] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1820.540994] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1825.553224] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1830.549439] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=09
+[ 1833.830697] rtl8192cu:_rtl92cu_init_power_on():<0-0> Autoload Done!
+[ 1833.832420] rtl8192cu: MAC auto ON okay!
+[ 1833.865110] rtl8192cu: Tx queue select: 0x05
+[ 1833.865120] rtl8192cu:rtl92c_set_network_type():<0-0> Set Network type to
+NO LINK!
+[ 1833.865832] rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0> FALSE driver
+sleep or unload
+[ 1833.865853] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware
+Version(63), Signature(0x88c1),Size(32)
+[ 1834.218899] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1834.218927] rtl8192cu:rtl92cu_set_hw_reg():<0-0> Set
+HW_VAR_RETRY_LIMIT(0x00000004)
+[ 1834.230312] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+[ 1834.336021] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1834.345018] rtl8192cu:_rtl92cu_init_power_on():<0-0> Autoload Done!
+[ 1834.346728] rtl8192cu: MAC auto ON okay!
+[ 1834.379398] rtl8192cu: Tx queue select: 0x05
+[ 1834.379407] rtl8192cu:rtl92c_set_network_type():<0-0> Set Network type to
+NO LINK!
+[ 1834.380137] rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0> FALSE driver
+sleep or unload
+[ 1834.380157] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware
+Version(63), Signature(0x88c1),Size(32)
+[ 1834.737048] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1834.737083] rtl8192cu:rtl92cu_set_hw_reg():<0-0> Set
+HW_VAR_RETRY_LIMIT(0x00000004)
+[ 1834.748491] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+[ 1835.561793] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=08
+[ 1840.558008] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=08
+[ 1845.570238] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=08
+[ 1849.503068] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1849.512063] rtl8192cu:_rtl92cu_init_power_on():<0-0> Autoload Done!
+[ 1849.513775] rtl8192cu: MAC auto ON okay!
+[ 1849.546445] rtl8192cu: Tx queue select: 0x05
+[ 1849.546456] rtl8192cu:rtl92c_set_network_type():<0-0> Set Network type to
+NO LINK!
+[ 1849.547184] rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0> FALSE driver
+sleep or unload
+[ 1849.547205] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware
+Version(63), Signature(0x88c1),Size(32)
+[ 1849.900128] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1849.900153] rtl8192cu:rtl92cu_set_hw_reg():<0-0> Set
+HW_VAR_RETRY_LIMIT(0x00000004)
+[ 1849.911536] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+[ 1850.006348] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1850.152581] rtl8192cu:_rtl92cu_init_power_on():<0-0> Autoload Done!
+[ 1850.154316] rtl8192cu: MAC auto ON okay!
+[ 1850.186984] rtl8192cu: Tx queue select: 0x05
+[ 1850.186994] rtl8192cu:rtl92c_set_network_type():<0-0> Set Network type to
+NO LINK!
+[ 1850.187727] rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0> FALSE driver
+sleep or unload
+[ 1850.187747] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware
+Version(63), Signature(0x88c1),Size(32)
+[ 1850.540796] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1850.540822] rtl8192cu:rtl92cu_set_hw_reg():<0-0> Set
+HW_VAR_RETRY_LIMIT(0x00000004)
+[ 1850.552204] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+[ 1850.566578] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=08
+[ 1852.568943] wlan1: authenticate with 92:5f:2e:57:10:3b
+[ 1852.568949] wlan1: Allocated STA 92:5f:2e:57:10:3b
+[ 1852.580265] rtlwifi:rtl_op_bss_info_changed():<0-0> 92:5f:2e:57:10:3b
+[ 1852.580747] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1852.580795] wlan1: Inserted STA 92:5f:2e:57:10:3b
+[ 1852.580798] wlan1: direct probe to 92:5f:2e:57:10:3b (try 1/3)
+[ 1852.583216] wlan1: deauthenticating from 92:5f:2e:57:10:3b by local
+choice (reason=3)
+[ 1852.583306] wlan1: Removed STA 92:5f:2e:57:10:3b
+[ 1852.583377] rtlwifi:rtl_op_bss_info_changed():<0-0> 00:00:00:00:00:00
+[ 1852.583875] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1852.595156] wlan1: authenticate with 92:5f:2e:57:10:3b
+[ 1852.595161] wlan1: Allocated STA 92:5f:2e:57:10:3b
+[ 1852.606280] rtlwifi:rtl_op_bss_info_changed():<0-0> 92:5f:2e:57:10:3b
+[ 1852.606769] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1852.606810] wlan1: Inserted STA 92:5f:2e:57:10:3b
+[ 1852.606813] wlan1: direct probe to 92:5f:2e:57:10:3b (try 1/3)
+[ 1852.608051] wlan1: Destroyed STA 92:5f:2e:57:10:3b
+[ 1852.609213] wlan1: deauthenticating from 92:5f:2e:57:10:3b by local
+choice (reason=3)
+[ 1852.609276] wlan1: Removed STA 92:5f:2e:57:10:3b
+[ 1852.609325] rtlwifi:rtl_op_bss_info_changed():<0-0> 00:00:00:00:00:00
+[ 1852.609896] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1852.621171] wlan1: authenticate with 92:5f:2e:57:10:3b
+[ 1852.621174] wlan1: Allocated STA 92:5f:2e:57:10:3b
+[ 1852.632302] rtlwifi:rtl_op_bss_info_changed():<0-0> 92:5f:2e:57:10:3b
+[ 1852.632790] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1852.632824] wlan1: Inserted STA 92:5f:2e:57:10:3b
+[ 1852.632827] wlan1: direct probe to 92:5f:2e:57:10:3b (try 1/3)
+[ 1852.632875] wlan1: Destroyed STA 92:5f:2e:57:10:3b
+[ 1852.836210] wlan1: direct probe to 92:5f:2e:57:10:3b (try 2/3)
+[ 1853.040402] wlan1: direct probe to 92:5f:2e:57:10:3b (try 3/3)
+[ 1853.244553] wlan1: authentication with 92:5f:2e:57:10:3b timed out
+[ 1853.272625] wlan1: Removed STA 92:5f:2e:57:10:3b
+[ 1853.272691] rtlwifi:rtl_op_bss_info_changed():<0-0> 00:00:00:00:00:00
+[ 1853.273249] rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+[ 1853.304623] wlan1: Destroyed STA 92:5f:2e:57:10:3b
+[ 1855.578807] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=08
+[ 1860.575022] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=08
+
+My other USB WLAN dongle iwth a Ralink chipset works flawless with my PC and
+AP, so it seems not to be a PEBKAC problem on my side :)
+
+Please hit me if you need more information, Thanks in advance
+
+Tobias
+
 
