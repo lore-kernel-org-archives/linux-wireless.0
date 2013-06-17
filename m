@@ -1,75 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2403 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752991Ab3FEIj5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 04:39:57 -0400
-Message-ID: <51AEF8F4.2020809@broadcom.com> (sfid-20130605_104002_975273_929ACB5D)
-Date: Wed, 5 Jun 2013 10:38:12 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:61816 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752070Ab3FQTqJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jun 2013 15:46:09 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h1so3957963oag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 12:46:08 -0700 (PDT)
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>,
-	"Peer, Ilan" <ilan.peer@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
-References: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com>
- <1370418378.8920.12.camel@jlt4.sipsolutions.net>
- <51AEF266.3050005@broadcom.com>
- <1370420283.8920.21.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1370420283.8920.21.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+In-Reply-To: <201306172038.21642.florian@openwrt.org>
+References: <1371491780-23412-1-git-send-email-zajec5@gmail.com>
+	<201306172038.21642.florian@openwrt.org>
+Date: Mon, 17 Jun 2013 21:46:08 +0200
+Message-ID: <CACna6rzCDHx7s9hz0=yDYsMeb45KANW0mW8qe=uH8QJGV-64CA@mail.gmail.com> (sfid-20130617_214613_338120_0D6A2B33)
+Subject: Re: [PATCH] ssb: add struct for serial flash
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Florian Fainelli <florian@openwrt.org>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2013 10:18 AM, Johannes Berg wrote:
-> On Wed, 2013-06-05 at 10:10 +0200, Arend van Spriel wrote:
->> On 06/05/2013 09:46 AM, Johannes Berg wrote:
->>> On Tue, 2013-06-04 at 14:35 +0000, Malinen, Jouni wrote:
->>>
->>>> In general, I'd agree. However, I would like to get information of any
->>>> peer device being in active PBC mode. This would require either getting
->>>> those Probe Request frames
->>>
->>> I think I like that alternative better :-)
->>>
->>> I know I wouldn't find it quickly ... can you be more specific about
->>> what "being in active PBC mode" means? Is that easily detectable?
->>>
->>> I'm thinking we should just document this (and be as specific about it
->>> as we can) in the documentation for the offload feature.
->>
->> Remark from the sideline. One of the motivations for the P2P find
->> offload (when done on the device) is that the host can sleep, right? So
->> how/when does wpa_s want these Probe Request frames. After the
->> driver/device completed the find?
+2013/6/17 Florian Fainelli <florian@openwrt.org>:
+> Hello Rafal,
 >
-> I don't think the device can really _sleep_ during this time, but it
-> allows reducing CPU wakeups. If you really wanted to sleep then you'd
-> have to buffer at least some information and have some sort of wakeup
-> trigger. That'll probably be done eventually, but it's not the rationale
-> here I think.
-
-Right. Indeed meant CPU wakeups.
-
-> The way I see it, this patch allows being discoverable and discovering
-> other peers with much less impact on CPU usage.
+> Le lundi 17 juin 2013 18:56:20, Rafał Miłecki a écrit :
+>> This data allow writing for example MTD driver.
 >
-> The next step would be P2P-listen offload, which is more interesting for
-> being discoverable, and should also have probe request offload similar
-> to what we're discussing here.
+> Your commit message could probably have some more information, by looking at
+> the patch, it is not entirely clear to me what this does, especially as sflash
+> is just a write only structure?
 
+OK, no problem. I'll give people w little more time for comments, and
+then I'll submit next version.
 
-Ah, I thought that was included. The WFA spec is a bit confusing using 
-terms 'phases' and 'states'. There is a SCAN phase and a FIND phase. 
-During the FIND phase a device can be in SEARCH or LISTEN state. I know 
-it is all terminology, but I was confused. At least the commit message 
-seems to imply both states are offloaded.
-
-Regards,
-Arend
-
+-- 
+Rafał
