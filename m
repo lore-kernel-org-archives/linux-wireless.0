@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:41554 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849Ab3FQVzJ (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:60605 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610Ab3FQVer (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 17:55:09 -0400
-Date: Mon, 17 Jun 2013 14:55:08 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
+	Mon, 17 Jun 2013 17:34:47 -0400
+Received: by mail-we0-f171.google.com with SMTP id m46so2831294wev.30
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 14:34:45 -0700 (PDT)
+Message-ID: <1371504879.3546.11.camel@canaries64> (sfid-20130617_233458_331626_E77283E9)
+Subject: [PATCH] staging: vt6656: mac.c MACvDisableKeyEntry remove dead code
+ wOffset
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: vt6656: mac.c MACvWriteMultiAddr: Remove
- secondary variable byData1
-Message-ID: <20130617215508.GA6619@kroah.com> (sfid-20130617_235528_979825_D2BD9CD9)
-References: <1371504371.3546.6.camel@canaries64>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1371504371.3546.6.camel@canaries64>
+Date: Mon, 17 Jun 2013 22:34:39 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 17, 2013 at 10:26:11PM +0100, Malcolm Priestley wrote:
-> 
-> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> ---
->  drivers/staging/vt6656/mac.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-> index 87c7c8b..5e01be5 100644
-> --- a/drivers/staging/vt6656/mac.c
-> +++ b/drivers/staging/vt6656/mac.c
-> @@ -57,15 +57,13 @@ static int          msglevel                =MSG_LEVEL_INFO;
->   */
->  void MACvWriteMultiAddr(struct vnt_private *pDevice, u32 uByteIdx, u8 byData)
->  {
-> -	u8 byData1;
->  
-> -    byData1 = byData;
->      CONTROLnsRequestOut(pDevice,
->                          MESSAGE_TYPE_WRITE,
->                          (u16) (MAC_REG_MAR0 + uByteIdx),
->                          MESSAGE_REQUEST_MACREG,
->                          1,
-> -                        &byData1);
-> +			&byData);
 
-Why are we passing byData in here at all?  What is happening to it that
-it needs to be a pointer, and why does this function need it as well?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Something doesn't seem right, care to track this down and fix it up
-properly?
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index c707d86..e2c8e48 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -120,14 +120,10 @@ void MACvSetBBType(struct vnt_private *pDevice, u8 byType)
+  */
+ void MACvDisableKeyEntry(struct vnt_private *pDevice, u32 uEntryIdx)
+ {
+-	u16 wOffset;
+ 	u8 byData;
+ 
+     byData = (u8) uEntryIdx;
+ 
+-    wOffset = MISCFIFO_KEYETRY0;
+-    wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
+-
+     //issue write misc fifo command to device
+     CONTROLnsRequestOut(pDevice,
+                         MESSAGE_TYPE_CLRKEYENTRY,
+-- 
+1.8.1.2
 
-thanks,
 
-greg k-h
