@@ -1,71 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:58586 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933869Ab3FSR7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 13:59:31 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0M2Jbe-1TzSw01MlI-00s8jM for
- <linux-wireless@vger.kernel.org>; Wed, 19 Jun 2013 19:59:28 +0200
-Message-ID: <51C1F17D.5050604@gmx.de> (sfid-20130619_195934_050427_63CB633F)
-Date: Wed, 19 Jun 2013 19:59:25 +0200
-From: Lars Zastrow <Lars.Zastrow@gmx.de>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: backports@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Re: bug-report: Ralink corp. Device [1814:539a] - Kernel 3.8
- +
-References: <51BE8008.20302@gmx.de> <20130619131234.GB2580@redhat.com>
-In-Reply-To: <20130619131234.GB2580@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:35716 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096Ab3FQTDE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jun 2013 15:03:04 -0400
+Message-ID: <1371495758.8168.3.camel@jlt4.sipsolutions.net> (sfid-20130617_210308_521183_3595E468)
+Subject: Re: Lots of confusion on bss refcounting.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 17 Jun 2013 21:02:38 +0200
+In-Reply-To: <51BF5A53.8050100@candelatech.com> (sfid-20130617_205007_448068_E9E81DD2)
+References: <51BF5A53.8050100@candelatech.com>
+	 (sfid-20130617_205007_448068_E9E81DD2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 19.06.2013 15:12, schrieb Stanislaw Gruszka:
-> On Mon, Jun 17, 2013 at 05:18:32AM +0200, Lars Zastrow wrote:
->> Dear Team,
->>
->> I'am using the following wireless-network-device:
->>
->> Network controller [0280]: Ralink corp. Device [1814:539a]
->> Subsystem: Hewlett-Packard Company Device [103c:1839]
->> Kernel driver in use: rt2800pci
->>
->> I had problems with it since I bought my laptop... The driver was
->> unstable with the kernel I used back in autumn 2012. Howeverer, one
->> kernel-update fixed it. Must be something about 3.4x?
->>
->> It was defenetly working with the Kernels from 3.5 till 3.7 on
->> multible distros. 3.8 was bringing back the old Problems:
->>
->> - extremly low signal
->> - hard to establish a connection to any acess-point.
->>
->> The last "problematic" kernel I have testet was 3.9.5-1 on
->> Arch-Linux. Compiling the compat-drivers manually did not bring any
->> fix.
->>
->> I am currently using 3.7.4-1 wich is working.
-> This most likely is a RT5390 TX power problem I made on 3.8.
->
-> This patch should help:
-> https://git.kernel.org/cgit/linux/kernel/git/linville/wireless.git/commit/?id=8c8d2017ba25c510ddf093419048460db1109bc4
->
-> Stanislaw
-Yes, indeed! It helps.
+On Mon, 2013-06-17 at 11:49 -0700, Ben Greear wrote:
 
-Now it was possible to upgrade my kernel, without losing my 
-wireless-device to be usable. Thank you very much.
+> We create an assoc_data, assign a bss pointer in ieee80211_mgd_assoc,
+> but do not claim a reference.
 
-I'm afraid it is not a "flawless" experience.
+Heh, yeah, I was actually looking at this code too but didn't have time
+today to finish my thoughts ...
 
-On the git-page you mentioned:
+> Later, when deleting the assoc_data, the ref is not freed either,
+> except in one error path where it is explicitly freed:
+> 
+> 		if (!ieee80211_assoc_success(sdata, *bss, mgmt, len)) {
+> 			/* oops -- internal error -- send timeout for now */
+> 			ieee80211_destroy_assoc_data(sdata, false);
+> 			cfg80211_put_bss(sdata->local->hw.wiphy, *bss);
+> 			return RX_MGMT_CFG80211_ASSOC_TIMEOUT;
+> 		}
+> 
+> This seems ripe for bugs, if not already buggy.
+> 
+> Maybe we should be more explicit about always grabbing a ref when
+> we take a reference to the pointer, and always put it when we
+> destroy the pointer?
 
- > Once we implement proper TSSI tuning on 5390/3290 we can restore back 
-setting TX power by BBP_R1  register for those chips.
+I think the reference is actually given to mac80211 by cfg80211 in
+cfg80211_mlme_assoc(), so we shouldn't need to grab a reference?
+Although I'm certainly willing to change this and make cfg80211 always
+put the reference after calling rdev_assoc() so that the driver/mac80211
+would be responsible for obtaining its own if it needs to hang on to the
+struct.
 
-Is there any hope, that the driver will increase its performance one day?
-...there are better chips on the market, that is for sure.
+This does seem broken though.
 
-Regards
+johannes
 
-Lars Zastrow
