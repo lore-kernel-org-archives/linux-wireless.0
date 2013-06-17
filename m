@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:51254 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759643Ab3FCS01 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 14:26:27 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Huawei Yang <harvey.huawei.yang@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Date: Mon, 3 Jun 2013 11:24:15 -0700
-Subject: RE: [RFC PATCH 1/1] mwifiex: Remove stop_net_dev_queue operation
- when uap handling packets forwarding.
-Message-ID: <477F20668A386D41ADCC57781B1F70430E805C627A@SC-VEXCH1.marvell.com> (sfid-20130603_202650_947291_F47B44F9)
-References: <1370246060-9087-1-git-send-email-harvey.huawei.yang@gmail.com>
-In-Reply-To: <1370246060-9087-1-git-send-email-harvey.huawei.yang@gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:46188 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755145Ab3FQSMX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jun 2013 14:12:23 -0400
+Received: by mail-oa0-f44.google.com with SMTP id l10so3857231oag.17
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 11:12:22 -0700 (PDT)
+Message-ID: <51BF5184.1010303@lwfinger.net> (sfid-20130617_201234_388109_3CB97EE2)
+Date: Mon, 17 Jun 2013 13:12:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Tobias Kluge <zielscheibe@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192cu fail to connect with a AP
+References: <loom.20130617T154136-827@post.gmane.org> <51BF2996.9060102@lwfinger.net> <loom.20130617T185506-165@post.gmane.org>
+In-Reply-To: <loom.20130617T185506-165@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Huawei,
+On 06/17/2013 12:03 PM, Tobias Kluge wrote:
+>
+> compiled the latest stable kernel (3.9.6) with your fixed device table, the
+> dongle is now recognized properly, when the module (rtl8192cu) is loaded.
+> The connection issue to any AP still remains, with the same dmesg output. I
+> don't believe that the changes you mentioned in 3.10.0-rc6 are the trouble
+> makers with this device. I tried many different kernels before (3.26, 3.8.0
+> binaries from the Ubuntu sources, 3.9.6, 3.10.0-rc6 build from scratch). I
+> hope you can see some possibilities to fix this problem.
 
-Thanks for the patch.
+The changes in 3.10-rc6 *fix* many problems. They are not the source of them.
 
-> Under uap mode mwifiex may stop all net tx queues on forwarding packets. This may stop some tx queues
-> and they never have chance to be waked up... There is also no need to check tx_pending and stop
-> queues here. Because local host has such kind of check when transmitting packets and it's not proper
-> to have forwarding affect local transmitting.
-> 
-> Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
+Using the wireless-testing tree, my RTL8188RU will connect to a WPA2/AES AP. It 
+authenticates and associates with WPA1/TKIP and WEP APs, but there is no data 
+throughput. To me this indicates a problem with the wireless keys. I have no 
+idea (yet) why some chips are different than others.
 
-Reviewed-by: Avinash Patil <patila@marvell.com>
-Acked-by: Bing Zhao <bzhao@marvell.com>
 
-Thanks,
-Bing
-
-> ---
->  drivers/net/wireless/mwifiex/uap_txrx.c |    4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
-> index a018e42..11df2b2 100644
-> --- a/drivers/net/wireless/mwifiex/uap_txrx.c
-> +++ b/drivers/net/wireless/mwifiex/uap_txrx.c
-> @@ -95,10 +95,6 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
->  	atomic_inc(&adapter->tx_pending);
->  	atomic_inc(&adapter->pending_bridged_pkts);
-> 
-> -	if ((atomic_read(&adapter->tx_pending) >= MAX_TX_PENDING)) {
-> -		mwifiex_set_trans_start(priv->netdev);
-> -		mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
-> -	}
->  	return;
->  }
-> 
-> --
-> 1.7.10.4
+Larry
 
