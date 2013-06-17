@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:62294 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751421Ab3FZQQO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 12:16:14 -0400
+Received: from mout.gmx.net ([212.227.15.15]:54525 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755103Ab3FQDSe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Jun 2013 23:18:34 -0400
+Received: from mailout-de.gmx.net ([10.1.76.34]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MbeUV-1V5GYe03sb-00J3Y4 for
+ <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 05:18:33 +0200
+Message-ID: <51BE8008.20302@gmx.de> (sfid-20130617_051837_154291_7B24238B)
+Date: Mon, 17 Jun 2013 05:18:32 +0200
+From: Lars Zastrow <Lars.Zastrow@gmx.de>
 MIME-Version: 1.0
-In-Reply-To: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com>
-References: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com>
-Date: Wed, 26 Jun 2013 18:16:13 +0200
-Message-ID: <CADDKRnCP_s2hL2wr8TsKeToNRt5nXF3NBYAqkmCCUPX8HbY_yQ@mail.gmail.com> (sfid-20130626_181629_819050_E76B16EC)
-Subject: Re: [v3.10-rc2] iwlwifi regression
-From: =?UTF-8?Q?J=C3=B6rg_Otte?= <jrg.otte@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+To: backports@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: bug-report: Ralink corp. Device [1814:539a] - Kernel 3.8 +
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/5/25 Jörg Otte <jrg.otte@gmail.com>:
-> If iwlwifi/iwldvm are built into the kernel (no loadable modules)
-> following error is written to console and syslog since v3.10-rc:
->
-> iwlwifi 0000:08:00.0: failed to load module iwldvm (error -38), is
-> dynamic loading enabled?
->
-> reverting
-> commit 1618b2b02a3a0ee7a6863fed4b0d22e697e7e97c
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Thu Apr 4 10:35:23 2013 +0200
->     iwlwifi: print warning on request_module failure
->
-> fixes the problem for me.
->
-> Jörg
->
-> I'm not subscribed,please CC me in answeres
+Dear Team,
 
-We have rc-7 now and it's still not fixed. What is the problem?
+I'am using the following wireless-network-device:
 
-Thanks, Jörg
+Network controller [0280]: Ralink corp. Device [1814:539a]
+Subsystem: Hewlett-Packard Company Device [103c:1839]
+Kernel driver in use: rt2800pci
+
+I had problems with it since I bought my laptop... The driver was 
+unstable with the kernel I used back in autumn 2012. Howeverer, one 
+kernel-update fixed it. Must be something about 3.4x?
+
+It was defenetly working with the Kernels from 3.5 till 3.7 on multible 
+distros. 3.8 was bringing back the old Problems:
+
+- extremly low signal
+- hard to establish a connection to any acess-point.
+
+The last "problematic" kernel I have testet was 3.9.5-1 on Arch-Linux. 
+Compiling the compat-drivers manually did not bring any fix.
+
+I am currently using 3.7.4-1 wich is working.
+
+Best regards
+
+Lars Zastrow
