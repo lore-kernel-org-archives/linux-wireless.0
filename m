@@ -1,47 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50495 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934694Ab3FSU2n (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:50975 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724Ab3FQI5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 16:28:43 -0400
-Message-ID: <51C21476.2070401@candelatech.com> (sfid-20130619_222858_386253_F2EBD366)
-Date: Wed, 19 Jun 2013 13:28:38 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 2/2] cfg80211: hold BSS over association process
-References: <1371650017-14293-1-git-send-email-johannes@sipsolutions.net> <1371650017-14293-2-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1371650017-14293-2-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 17 Jun 2013 04:57:31 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2] ath9k: Fix ANI for AP mode
+Date: Mon, 17 Jun 2013 14:24:36 +0530
+Message-Id: <1371459276-4800-1-git-send-email-sujith@msujith.org> (sfid-20130617_105734_398323_22434D9D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/19/2013 06:53 AM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> This fixes the potential issue that the BSS struct that we use
-> and later assign to wdev->current_bss is removed from the scan
-> list while associating.
->
-> Also warn when we don't have a BSS struct in connect_result
-> unless it's from a driver that only has the connect() API.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I ran these two patches, plus my memory debugging patch
-on top of wireless-testing (in relatively light testing).
+The commit "ath9k: Fix ANI monitoring" reverted an earlier
+commit that adjusted ANI to improve performance. But, this causes
+adverse effects in AP mode (as reported by Felix based on an OpenWrt
+report). Use the older INI/period configuration for now until more
+testing is done.
 
-It appears to fix the leaks I was seeing.
+Cc: Felix Fietkau <nbd@openwrt.org>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+v2 - Earlier patch added a macro twice.
 
-Just to make sure I am not missing something:
+ drivers/net/wireless/ath/ath9k/ani.c | 29 ++++++++++++-----------------
+ drivers/net/wireless/ath/ath9k/ani.h |  6 +++++-
+ 2 files changed, 17 insertions(+), 18 deletions(-)
 
-mac80211 should never take an additional reference
-on the bss related to auth_data now?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index a68beb1..4994bea 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -186,6 +186,14 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
+ 				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
+ 				     entry_ofdm->ofdm_weak_signal_on);
+ 	}
++
++	if (aniState->ofdmNoiseImmunityLevel >= ATH9K_ANI_OFDM_DEF_LEVEL) {
++		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
++		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI;
++	} else {
++		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI;
++		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW;
++	}
+ }
+ 
+ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
+@@ -420,25 +428,12 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		ofdmPhyErrRate, aniState->cckNoiseImmunityLevel,
+ 		cckPhyErrRate, aniState->ofdmsTurn);
+ 
+-	if (aniState->listenTime > 5 * ah->aniperiod) {
+-		/*
+-		 * Check if we need to lower immunity if
+-		 * 5 ani_periods have passed.
+-		 */
+-		if (ofdmPhyErrRate <= ah->config.ofdm_trig_low &&
+-		    cckPhyErrRate <= ah->config.cck_trig_low) {
++	if (aniState->listenTime > ah->aniperiod) {
++		if (cckPhyErrRate < ah->config.cck_trig_low &&
++		    ofdmPhyErrRate < ah->config.ofdm_trig_low) {
+ 			ath9k_hw_ani_lower_immunity(ah);
+ 			aniState->ofdmsTurn = !aniState->ofdmsTurn;
+-		}
+-		ath9k_ani_restart(ah);
+-	} else if (aniState->listenTime > ah->aniperiod) {
+-		/*
+-		 * Check if immunity has to be raised,
+-		 * (either OFDM or CCK).
+-		 */
+-		if (ofdmPhyErrRate > ah->config.ofdm_trig_high &&
+-		    (cckPhyErrRate <= ah->config.cck_trig_high ||
+-		     aniState->ofdmsTurn)) {
++		} else if (ofdmPhyErrRate > ah->config.ofdm_trig_high) {
+ 			ath9k_hw_ani_ofdm_err_trigger(ah);
+ 			aniState->ofdmsTurn = false;
+ 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 77a06fd..b54a3fb 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -20,8 +20,12 @@
+ #define BEACON_RSSI(ahp) (ahp->stats.avgbrssi)
+ 
+ /* units are errors per second */
+-#define ATH9K_ANI_OFDM_TRIG_HIGH          1000
++#define ATH9K_ANI_OFDM_TRIG_HIGH           3500
++#define ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI 1000
++
+ #define ATH9K_ANI_OFDM_TRIG_LOW           400
++#define ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI 900
++
+ #define ATH9K_ANI_CCK_TRIG_HIGH           600
+ #define ATH9K_ANI_CCK_TRIG_LOW            300
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.3.1
 
