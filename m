@@ -1,60 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22856 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756677Ab3FCPuv (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:52565 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753314Ab3FQRp0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 11:50:51 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Kirshenbaum Erez <erezk@wilocity.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Fix channel index in WMI PCP start
-Date: Mon, 3 Jun 2013 18:50:47 +0300
-Message-ID: <1587839.LYoJ4ehe3P@lx-vladimir> (sfid-20130603_175055_625355_C556C21D)
-In-Reply-To: <1370251153-13791-1-git-send-email-erezk@wilocity.com>
-References: <1370251153-13791-1-git-send-email-erezk@wilocity.com>
+	Mon, 17 Jun 2013 13:45:26 -0400
+Received: by mail-ob0-f175.google.com with SMTP id xn12so3540248obc.34
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 10:45:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <51BF498F.1010007@broadcom.com>
+References: <20130612222123.GB31667@titan.lakedaemon.net>
+	<20130617161903.GN31667@titan.lakedaemon.net>
+	<51BF498F.1010007@broadcom.com>
+Date: Mon, 17 Jun 2013 19:45:25 +0200
+Message-ID: <CACna6ryw=QeD5OuMWYoZLYzt9CBo+PO-SwygDY+SUaVxCYu0jA@mail.gmail.com> (sfid-20130617_194702_322275_A6169970)
+Subject: Re: [RFC PATCH] net: brcmfmac: add sdio chip id 0x4319
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: Jason Cooper <jason@lakedaemon.net>, rvossen@broadcom.com,
+	arend@broadcom.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, June 03, 2013 12:19:13 PM Kirshenbaum Erez wrote:
-> Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
-> ---
->  drivers/net/wireless/ath/wil6210/wmi.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-> index 45b04e3..26f760a 100644
-> --- a/drivers/net/wireless/ath/wil6210/wmi.c
-> +++ b/drivers/net/wireless/ath/wil6210/wmi.c
-> @@ -724,7 +724,7 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype, u8 chan)
->  		.bcon_interval = cpu_to_le16(bi),
->  		.network_type = wmi_nettype,
->  		.disable_sec_offload = 1,
-> -		.channel = chan,
-> +		.channel = chan-1,
->  	};
+2013/6/17 Franky Lin <frankyl@broadcom.com>:
+> On 06/17/2013 09:19 AM, Jason Cooper wrote:
+>>
+>> Added Franky...
+>>
+>> On Wed, Jun 12, 2013 at 06:21:23PM -0400, Jason Cooper wrote:
+>>>
+>>> All,
+>>>
+>>> I have a Seagate Wireless Plus I am trying to put a vanilla kernel on
+>>> (currently v3.10-rc5 for various omap DT bits).
+>>>
+>>> I have the board booting and running a debian rootfs on the HD.  I just
+>>> got mmc to come up and I've discovered that the wireless card is vendor
+>>> 0x02d0, device 0x4319.
+>>>
+>>> My hope, once I got to this point, was that I would be able to use
+>>> the mainline, open source driver.  Unfortunately, it looks like brcmfmac
+>>> lost support for the 0x4319 while it was in staging.
+>>>
+>>> The commit in question is:
+>>>
+>>>    4dad253 staging: brcm80211: remove code for unsupported chip
+>>>
+>>> Is adding it back in a bridge too far?
+>>
+>> It looks like only two things are needed, adding the chip id and then
+>> setting the addresses.  Here's a preliminary patch to do just that.
+>> Note, the addresses I have used are a straight copy from the 4329.  It
+>> causes this:
+>>
+>> [   12.346466] mmcblk mmc0:0001: no of_node; not parsing pinctrl DT
+>> [   12.353149] brcmfmac_sdio mmc0:0001:1: no of_node; not parsing pinctrl
+>> DT
+>> [   12.360717] brcmfmac_sdio mmc0:0001:2: no of_node; not parsing pinctrl
+>> DT
+>> [   12.368804] brcmfmac: brcmf_sdio_chip_drivestrengthinit: No SDIO Drive
+>> strength init done for chip 4319 rev 1 pmurev 7
+>> [   12.380462] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
+>> F0:@0x00408=03, Err: -22
+>> [   12.391906] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
+>> F0:@0x00408=03, Err: -22
+>> [   12.403289] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
+>> F0:@0x00408=03, Err: -22
+>> [   12.412261] brcmfmac: brcmf_sdio_regrw_helper: failed with -22
+>> [   12.418457] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
+>> F0:@0x00408=01, Err: -22
+>> [   12.429718] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
+>> F0:@0x00408=01, Err: -22
+>> [   12.441101] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
+>> F0:@0x00408=01, Err: -22
+>> [   12.450073] brcmfmac: brcmf_sdio_regrw_helper: failed with -22
+>>
+>> I've taken a quick look at aosp, the provided GPL broadcom code, and I
+>> haven't seen anything for the 4319 wrt to addresses.  How hard would it
+>> be to get those addresses from you guys?
+>
+>
+> Hi Jason,
+>
+> The major obstacle of adding 4319 support is the obsolete firmware. Since
+> it's an EOL chip we are not planning to add the support to brcmfmac.
 
-Fix for this already merged, see commit
-adc2d12 - wil6210: channel off by 1
+Does it mean, BCM4319 is a "new architecture" chipset, working
+similarly to the already supported (in brcmfmac) chipsets?
 
-To make sure you are aligned, please, prior to sending patch,
-rebase on 'master' from
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+When thinking about "old architecture" I mean BCM43236, which AFAIR
+requires some different driver architecture with some extra memory
+sharing or sth.
 
->  	struct {
->  		struct wil6210_mbox_hdr_wmi wmi;
-> @@ -733,9 +733,9 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype, u8 chan)
->  
->  	if (!wil->secure_pcp)
->  		cmd.disable_sec = 1;
-> -
-> +	/* This may take some time (FW set/calibrate new freq) */
->  	rc = wmi_call(wil, WMI_PCP_START_CMDID, &cmd, sizeof(cmd),
-> -		      WMI_PCP_STARTED_EVENTID, &reply, sizeof(reply), 100);
-> +		      WMI_PCP_STARTED_EVENTID, &reply, sizeof(reply), 5000);
->  	if (rc)
->  		return rc;
-This chunk does not belong to this patch, yes?
-
-Thanks, Vladimir
+-- 
+Rafał
