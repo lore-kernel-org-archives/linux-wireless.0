@@ -1,80 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:50583 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752261Ab3FYVIF convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59694 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932860Ab3FRQeA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 17:08:05 -0400
-References: <1372193849-21630-1-git-send-email-juhosg@openwrt.org>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1372193849-21630-1-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <6746D568-D668-4A19-A5A0-2BE8B2E657F7@gmail.com> (sfid-20130625_230810_616358_9BE18D3B)
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"#@arrakis.dune.hu" <#@arrakis.dune.hu>,
-	"3.10@arrakis.dune.hu" <3.10@arrakis.dune.hu>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: rt2800lib: fix default TX power check for RT55xx
-Date: Tue, 25 Jun 2013 23:08:02 +0200
-To: Gabor Juhos <juhosg@openwrt.org>
+	Tue, 18 Jun 2013 12:34:00 -0400
+Message-ID: <51C08BF3.7050706@candelatech.com> (sfid-20130618_183431_733383_5DDA27D2)
+Date: Tue, 18 Jun 2013 09:33:55 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/2] mac80211:  Fix bss ref leak.
+References: <1371504746-8476-1-git-send-email-greearb@candelatech.com>  <1371504746-8476-2-git-send-email-greearb@candelatech.com>  (sfid-20130617_233256_432869_08F1495E) <1371569205.8318.47.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1371569205.8318.47.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 06/18/2013 08:26 AM, Johannes Berg wrote:
+> On Mon, 2013-06-17 at 14:32 -0700, greearb@candelatech.com wrote:
+>
+>>   static void ieee80211_destroy_assoc_data(struct ieee80211_sub_if_data *sdata,
+>> -					 bool assoc)
+>> +					 bool assoc, bool put_bss)
+>
+> Do we _really_ need another argument? Shouldn't it always be put in the
+> non-assoc case anyway, at least if non-NULL?
+
+I don't think so.  Check out the ieee80211_rx_mgmt_assoc_resp method.
+
+  	if (status_code != WLAN_STATUS_SUCCESS) {
+		sdata_info(sdata, "%pM denied association (code=%d)\n",
+			   mgmt->sa, status_code);
+		ieee80211_destroy_assoc_data(sdata, false, false);
+
+This passes in false as 'assoc', but we should not free bss here because
+it is being passed back to the calling method, and the return
+code of RX_MGMT_CFG80211_RX_ASSOC means bss should eventually
+be consumed by the cfg80211 logic.
+
+Of course, this is all 'as far as I can tell'.
+
+I sort of like the second boolean because it forces the caller to
+think about whether bss should be freed or not...
+
+Thanks,
+Ben
 
 
-Sent from my iPad
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-On 25 jun. 2013, at 22:57, Gabor Juhos <juhosg@openwrt.org> wrote:
-
-> The code writes the default_power2 value into the TX field
-> of the RFCSR50 register, however the condition in the if
-> statement uses default_power1. Due to this, wrong TX power
-> value might be written into the register.
-> 
-> Use the correct value in the condition to fix the issue.
-> 
-> Compile tested only.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Cc: stable@vger.kernel.org # 3.10
-
-Good catch. Thanks for spotting it.
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-
-> ---
-> John,
-> 
-> This is for 3.11. Even though the original code is introduced in
-> 3.10-rc2 phase, but it is already too late to fix it in 3.10.
-> 
-> -Gabor
-> ---
-> drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 25f7dbe..1f80ea5 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2392,7 +2392,7 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
->    rt2800_rfcsr_write(rt2x00dev, 49, rfcsr);
-> 
->    rt2800_rfcsr_read(rt2x00dev, 50, &rfcsr);
-> -    if (info->default_power1 > power_bound)
-> +    if (info->default_power2 > power_bound)
->        rt2x00_set_field8(&rfcsr, RFCSR50_TX, power_bound);
->    else
->        rt2x00_set_field8(&rfcsr, RFCSR50_TX, info->default_power2);
-> -- 
-> 1.7.10
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
