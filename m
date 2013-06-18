@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:49811 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698Ab3FFEIO (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:56703 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932625Ab3FRLp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 00:08:14 -0400
-Message-ID: <1370491691.24311.326.camel@edumazet-glaptop> (sfid-20130606_060836_054281_40E7D0AA)
-Subject: Re: stop_machine lockup issue in 3.9.y.
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Tejun Heo <tj@kernel.org>, Rusty Russell <rusty@rustcorp.com.au>,
-	Joe Lawrence <joe.lawrence@stratus.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	stable@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>
-Date: Wed, 05 Jun 2013 21:08:11 -0700
-In-Reply-To: <51B00719.20406@candelatech.com>
-References: <51AE27D5.7050202@candelatech.com>
-	   <87sj0xry1k.fsf@rustcorp.com.au> <20130605071539.GA3429@mtj.dyndns.org>
-	   <51AF6E54.3050108@candelatech.com>
-	 <20130605184807.GD10693@mtj.dyndns.org>
-	   <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com>
-	   <51AFA677.9010605@candelatech.com>
-	 <20130605211157.GK10693@mtj.dyndns.org>
-	   <1370482492.24311.308.camel@edumazet-glaptop>
-	   <20130606031444.GA12335@mtj.dyndns.org>
-	  <1370489181.24311.318.camel@edumazet-glaptop>
-	  <51B004CD.6080007@candelatech.com>
-	 <1370490403.24311.322.camel@edumazet-glaptop>
-	 <51B00719.20406@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 18 Jun 2013 07:45:28 -0400
+Date: Tue, 18 Jun 2013 13:43:26 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Revert "mac80211: in IBSS use the Auth frame to trigger
+ STA reinsertion"
+Message-ID: <20130618114326.GB1124@ritirata.org> (sfid-20130618_134827_182549_7FF3E141)
+References: <1371552313-3581-1-git-send-email-ordex@autistici.org>
+ <51C043FE.6050108@lri.fr>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="0OAP2g/MAC+5xKAE"
+In-Reply-To: <51C043FE.6050108@lri.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-06-05 at 20:50 -0700, Ben Greear wrote:
-> On 06/05/2013 08:46 PM, Eric Dumazet wrote:
-> >
-> > We use in Google a patch triggering warning is a thread holds the cpu
-> > without taking care to need_resched() for more than xx ms
-> 
-> Well, I'm sure that patch works nicely until the clock stops moving
-> forward :)
-> 
 
-This is not using jiffies, but the clock used in kernel/sched/core.c,
-with ns resolution ;)
+--0OAP2g/MAC+5xKAE
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> I'll post a patch with limit of 10 shortly.
+On Tue, Jun 18, 2013 at 01:26:54PM +0200, Nicolas Cavallari wrote:
+> On 18/06/2013 12:45, Antonio Quartulli wrote:
+> > -	if (auth && !sdata->u.ibss.auth_frame_registrations) {
+>=20
+> The sole purpose of the auth_frame_registrations field is to be checked b=
+y this code.
+> The field and the code maintaining this field can be removed now.
 
-ok
+Oh ok.
+I was just looking around to understand how that field was used.
 
+I'll send v2.
 
+Cheers,
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--0OAP2g/MAC+5xKAE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRwEfeAAoJEADl0hg6qKeOmKUP/1iZqlP/h+j5yWqaCPLrgx1K
+SPpNyAIE48IOheCw3813AWhEBII4FQb8HhZLSaLwzyKqCHy3eaHE4Eu5gZ4y8u4t
+r+qrlZyKMf/zGzOiGXaGjupQ1CAq/ephXiu6ct7EyTGA/WmrlfRHpMU0OiPCWsYf
+qVTZYfLHELYLSlNj458TqO85YsNAMCZ0aic1TsNgD58p/Igs3QT1TS0ecQPDgSKy
+d14/1uKmtad0ZFaNHE5naUW7Lpz076HyvMdwHfNU5ydDz2OjA9gmsRO9zulLHjFV
+XkEq/w2SKYxS8rebspipqRsPYG0ojh/G7+4irA2X1Rbjqjw25m9/iQXe69ZBjR7O
+rTcDTZ/Ujwpj2D4u2WI0ZAaCvewKHTaeXfbN+bmtdp/dh5BTGZc0thRHYi3oZ5ZY
+nnvXaBUo+K10r5UXXObNs4XO53EJ4g+m4jkN8Y25tyf0/HwazmRvDLAooip6gp0f
+W2y/aNIzo0YcE/KV8Zon8g4kuzeVbYV96WngF00S/8JYo7ay7yqfuQr4fZzI8Zob
+A6lP9VOwQHoj/HbLYqj9wrOHY5l7DILada9ef10AxjY4pLVEIZ7Tx73WdghsmdPq
+gUHTF7oPUj9jysjyMlDEkSbF2v4a3G0WC6y9qDldSEfrt0XYp45QNlqtrkdBuJp5
+9EIP23iUURRBkz72sb0O
+=K0r1
+-----END PGP SIGNATURE-----
+
+--0OAP2g/MAC+5xKAE--
