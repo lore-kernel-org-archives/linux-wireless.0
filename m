@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:60869 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751309Ab3FZGiA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39198 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932868Ab3FROVx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 02:38:00 -0400
-Date: Tue, 25 Jun 2013 23:37:58 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/5] wl1251: split wl251 platform data to a separate
- structure
-Message-ID: <20130626063758.GM5523@atomide.com> (sfid-20130626_083805_893301_68E2FA89)
-References: <1372192406-29430-1-git-send-email-coelho@ti.com>
- <1372192406-29430-2-git-send-email-coelho@ti.com>
- <1372227318.18889.23.camel@cumari.coelho.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372227318.18889.23.camel@cumari.coelho.fi>
+	Tue, 18 Jun 2013 10:21:53 -0400
+Message-ID: <1371565283.8318.21.camel@jlt4.sipsolutions.net> (sfid-20130618_162202_089871_42915D47)
+Subject: Re: [PATCHv3 05/18] mac80211: fix timing for 5 MHz and 10 MHz
+ channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Tue, 18 Jun 2013 16:21:23 +0200
+In-Reply-To: <1368702045-27598-6-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1368702045-27598-6-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Luciano Coelho <coelho@ti.com> [130625 23:21]:
-> On Tue, 2013-06-25 at 23:33 +0300, Luciano Coelho wrote:
-> > Move the wl1251 part of the wl12xx platform data structure into a new
-> > structure specifically for wl1251.  Change the platform data built-in
-> > block and board files accordingly.
-> > 
-> > Cc: Tony Lindgren <tony@atomide.com>
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
-> 
-> Hey Tony,
-> 
-> Is it okay if I send this patch via my tree? There are a couple of tiny
-> changes in a couple of OMAP board files...
 
-Yes that's fine, those should not conflict with anything else. For
-the arch/arm/*omap* parts:
+> +static inline int
+> +ieee80211_hw_get_divisor(struct ieee80211_hw *hw)
+> +{
+> +	switch (hw->conf.chandef.width) {
+> +	case NL80211_CHAN_WIDTH_5:
+> +		return 4;
+> +	case NL80211_CHAN_WIDTH_10:
+> +		return 2;
+> +	default:
+> +		return 1;
+> +	}
+> +}
 
-Acked-by: Tony Lindgren <tony@atomide.com>
+Using this function will break with drivers that use channel contexts,
+you really shouldn't do that.
+
+Also, you're disabling HT so why bother changing minstrel_ht?
+
+johannes
+
