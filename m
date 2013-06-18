@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:59430 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751506Ab3FXNc2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 09:32:28 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Bj?rn Mork <bjorn@mork.no>
-CC: Ben Hutchings <ben@decadent.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: RE: [PATCH] iwlwifi: add firmware for 7260 / 3160 devices
-Date: Mon, 24 Jun 2013 13:32:24 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3019F30D6@HASMSX103.ger.corp.intel.com> (sfid-20130624_153248_379549_89403BBB)
-References: <1372075552-3253-1-git-send-email-emmanuel.grumbach@intel.com>
- <874ncny79n.fsf@nemi.mork.no>
-In-Reply-To: <874ncny79n.fsf@nemi.mork.no>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:63415 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855Ab3FREJb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 00:09:31 -0400
+Received: by mail-pa0-f54.google.com with SMTP id kx10so3541509pab.27
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 21:09:31 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: allow key deletion for mesh interface
+Date: Tue, 18 Jun 2013 12:07:02 +0800
+Message-Id: <1371528422-20710-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130618_060934_526524_83376635)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gDQo+IFRoYW5rcy4gVGhhdCB3YXMgcXVpY2suIExvb2tpbmcgZ29vZCBzbyBmYXI6DQo+
-IA0KPiBuZW1pOi9ob21lL2Jqb3JuIyBkbWVzZ3xncmVwIGl3bA0KPiBbICAgIDQuNjg3MjgzXSBp
-d2x3aWZpIDAwMDA6MDM6MDAuMDogaXJxIDQ1IGZvciBNU0kvTVNJLVgNCj4gWyAgICA1LjE5NTA2
-MV0gaXdsd2lmaSAwMDAwOjAzOjAwLjA6IGxvYWRlZCBmaXJtd2FyZSB2ZXJzaW9uIDIyLjAuNy4w
-IG9wX21vZGUNCj4gaXdsbXZtDQo+IFsgICAgNS4yNDQ3MDldIGl3bHdpZmkgMDAwMDowMzowMC4w
-OiBEZXRlY3RlZCBJbnRlbChSKSBEdWFsIEJhbmQgV2lyZWxlc3MgQUMNCj4gNzI2MCwgUkVWPTB4
-MTQ0DQo+IFsgICAgNS4yNDQ4ODVdIGl3bHdpZmkgMDAwMDowMzowMC4wOiBMMSBEaXNhYmxlZDsg
-RW5hYmxpbmcgTDBTDQo+IFsgICAgNS4yNDUyNjBdIGl3bHdpZmkgMDAwMDowMzowMC4wOiBSRl9L
-SUxMIGJpdCB0b2dnbGVkIHRvIGVuYWJsZSByYWRpby4NCj4gWyAgICA1LjI0NTQ1Ml0gaXdsd2lm
-aSAwMDAwOjAzOjAwLjA6IEwxIERpc2FibGVkOyBFbmFibGluZyBMMFMNCj4gWyAgICA1LjQ4ODQy
-MV0gaWVlZTgwMjExIHBoeTA6IFNlbGVjdGVkIHJhdGUgY29udHJvbCBhbGdvcml0aG0gJ2l3bC1t
-dm0tcnMnDQo+IA0KDQpXYWl0aW5nIGZvciB5b3VyIGZlZWRiYWNrIDotKQ0K
+This is to support key deletion for mesh interface, especially
+to be used for key which is not deleted even with the deletion
+of peer mesh station.
+
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/cfg.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 64cf294..6ff3414 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -239,7 +239,10 @@ static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+ 	if (mac_addr) {
+ 		ret = -ENOENT;
+ 
+-		sta = sta_info_get_bss(sdata, mac_addr);
++		if (ieee80211_vif_is_mesh(&sdata->vif))
++			sta = sta_info_get(sdata, mac_addr);
++		else
++			sta = sta_info_get_bss(sdata, mac_addr);
+ 		if (!sta)
+ 			goto out_unlock;
+ 
+-- 
+1.7.0.4
+
