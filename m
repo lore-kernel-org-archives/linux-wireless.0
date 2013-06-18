@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42312 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007Ab3FQVbu (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38182 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755681Ab3FRJgT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 17:31:50 -0400
-Message-ID: <51BF8040.2000408@candelatech.com> (sfid-20130617_233153_299640_BDB1764F)
-Date: Mon, 17 Jun 2013 14:31:44 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Lots of confusion on bss refcounting.
-References: <51BF5A53.8050100@candelatech.com>  (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net> <51BF5ED4.9010704@candelatech.com>
-In-Reply-To: <51BF5ED4.9010704@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 18 Jun 2013 05:36:19 -0400
+Message-ID: <1371548163.8318.2.camel@jlt4.sipsolutions.net> (sfid-20130618_113624_696931_05E0EB9D)
+Subject: Re: [PATCH] mac80211: allow key deletion for mesh interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	"devel@lists.open80211s.org" <devel@lists.open80211s.org>
+Date: Tue, 18 Jun 2013 11:36:03 +0200
+In-Reply-To: <CAEFj987DCjNuv+W3oSq6ubHwjnkmKgKvcDThhP8s9ZXBsKmcjg@mail.gmail.com> (sfid-20130618_110728_700495_DC4DE8F2)
+References: <CAEFj9864ioXkUy3Sg24k6vFTNR8ZfWj=to54J2VS=dvte+ExNA@mail.gmail.com>
+	 <CAEFj987DCjNuv+W3oSq6ubHwjnkmKgKvcDThhP8s9ZXBsKmcjg@mail.gmail.com>
+	 (sfid-20130618_110728_700495_DC4DE8F2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/17/2013 12:09 PM, Ben Greear wrote:
-> On 06/17/2013 12:02 PM, Johannes Berg wrote:
+On Tue, 2013-06-18 at 17:07 +0800, Yeoh Chun-Yeow wrote:
+> In sta_info_get_bss, should it be:
+> 
+> if ((sta->sdata == sdata &&
+>                      (sta->sdata->bss && sta->sdata->bss == sdata->bss))
+> 
+> in stead of
+> 
+> if ((sta->sdata == sdata ||
+>                      (sta->sdata->bss && sta->sdata->bss == sdata->bss))
 
-> The bss reference is passed back, and through luck or careful programming,
-> it *seems* that all paths related to calling ieee80211_rx_mgmt_assoc_resp
-> managed to consume the bss.
->
-> I haven't figured out yet why this is not an erroneous put since I didn't
-> find the reference taken in the first place.
->
-> I'm going to work on making some changes to the ref counting scheme
-> a bit.  I'd rather have the code perhaps take and put a few refs
-> it might otherwise skip to keep the ownership cleaner and make
-> the code easier to debug and understand...
->
-> I'll post some for RFC when I make some progress.
+What would the point be? Then we could just as well make it *only*
+	sta->sdata == sdata
+and it'd be the same as sta_info_get(). This is intentional for VLAN
+handling.
 
-I think I found at least some of the leaks.
+> Otherwise, it seems that we still manage to get sta pointer even the
+> bss is NULL.
 
-In places like ieee80211_mgd_stop, we were calling ieee80211_destroy_assoc_data,
-but it was not putting the bss reference.
+What's the problem with that? But if this is a problem maybe we need to
+explicitly check for non-NULL?
 
-I'll post some RFC patches in a minute or two...first is debugging
-logic, second attempts to fix bss ref counting.  This needs more
-testing before it is applied...we will continue testing it....
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
