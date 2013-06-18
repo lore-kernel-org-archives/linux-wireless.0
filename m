@@ -1,169 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51968 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756703Ab3FGQMG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jun 2013 12:12:06 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH v3 1/3] ath9k: add support for IEEE80211_TX_CTL_PS_RESPONSE
-Date: Fri,  7 Jun 2013 18:12:00 +0200
-Message-Id: <1370621522-59812-1-git-send-email-nbd@openwrt.org> (sfid-20130607_181232_102329_A1764B24)
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:41684 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933041Ab3FRSZT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 14:25:19 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, stable <stable@vger.kernel.org>
+Subject: [PATCH V2] rtlwifi: rtl8192cu: Fix duplicate if test
+Date: Tue, 18 Jun 2013 13:25:05 -0500
+Message-Id: <1371579905-15613-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130618_202527_759550_0A4D31EC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the UAPSD hardware queue to get PS-Poll responses out as fast as
-possible and without backoff.
+A typo causes routine rtl92cu_phy_rf6052_set_cck_txpower() to test the
+same condition twice. The problem was found using cppcheck-1.49, and the
+proper fix was verified against the pre-mac80211 version of the code.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+This patch was originally included as commit 1288aa4, but was accidentally
+reverted in a later patch.
+
+Reported-by: David Binderman <dcb314@hotmail.com> [original report]
+Reported-by: Andrea Morello <andrea.merello@gmail.com> [report of accidental reversion]
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: stable <stable@vger.kernel.org>  [back to 2.6.39]
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/init.c  |  2 ++
- drivers/net/wireless/ath/ath9k/xmit.c  | 43 +++++++++++++++++++++-------------
- 3 files changed, 30 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 18fcee4..4f79827 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -296,6 +296,7 @@ struct ath_tx {
- 	struct ath_txq txq[ATH9K_NUM_TX_QUEUES];
- 	struct ath_descdma txdma;
- 	struct ath_txq *txq_map[IEEE80211_NUM_ACS];
-+	struct ath_txq *uapsdq;
- 	u32 txq_max_pending[IEEE80211_NUM_ACS];
- 	u16 max_aggr_framelen[IEEE80211_NUM_ACS][4][32];
- };
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 389ee1b..d65ee6e 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -432,6 +432,8 @@ static int ath9k_init_queues(struct ath_softc *sc)
- 	sc->config.cabqReadytime = ATH_CABQ_READY_TIME;
- 	ath_cabq_update(sc);
- 
-+	sc->tx.uapsdq = ath_txq_setup(sc, ATH9K_TX_QUEUE_UAPSD, 0);
-+
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
- 		sc->tx.txq_map[i] = ath_txq_setup(sc, ATH9K_TX_QUEUE_DATA, i);
- 		sc->tx.txq_map[i]->mac80211_qnum = i;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 1c9b1ba..3931bd8 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1681,8 +1681,9 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
- 	}
- }
- 
--static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
--			      struct sk_buff *skb, struct ath_tx_control *txctl)
-+static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_txq *txq,
-+			      struct ath_atx_tid *tid, struct sk_buff *skb,
-+			      struct ath_tx_control *txctl)
- {
- 	struct ath_frame_info *fi = get_frame_info(skb);
- 	struct list_head bf_head;
-@@ -1695,21 +1696,22 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
- 	 * - seqno is not within block-ack window
- 	 * - h/w queue depth exceeds low water mark
- 	 */
--	if (!skb_queue_empty(&tid->buf_q) || tid->paused ||
--	    !BAW_WITHIN(tid->seq_start, tid->baw_size, tid->seq_next) ||
--	    txctl->txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) {
-+	if ((!skb_queue_empty(&tid->buf_q) || tid->paused ||
-+	     !BAW_WITHIN(tid->seq_start, tid->baw_size, tid->seq_next) ||
-+	     txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) &&
-+	    txq != sc->tx.uapsdq) {
- 		/*
- 		 * Add this frame to software queue for scheduling later
- 		 * for aggregation.
- 		 */
--		TX_STAT_INC(txctl->txq->axq_qnum, a_queued_sw);
-+		TX_STAT_INC(txq->axq_qnum, a_queued_sw);
- 		__skb_queue_tail(&tid->buf_q, skb);
- 		if (!txctl->an || !txctl->an->sleeping)
--			ath_tx_queue_tid(txctl->txq, tid);
-+			ath_tx_queue_tid(txq, tid);
- 		return;
- 	}
- 
--	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
-+	bf = ath_tx_setup_buffer(sc, txq, tid, skb);
- 	if (!bf) {
- 		ieee80211_free_txskb(sc->hw, skb);
- 		return;
-@@ -1724,10 +1726,10 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
- 	ath_tx_addto_baw(sc, tid, bf->bf_state.seqno);
- 
- 	/* Queue to h/w without aggregation */
--	TX_STAT_INC(txctl->txq->axq_qnum, a_queued_hw);
-+	TX_STAT_INC(txq->axq_qnum, a_queued_hw);
- 	bf->bf_lastbf = bf;
--	ath_tx_fill_desc(sc, bf, txctl->txq, fi->framelen);
--	ath_tx_txqaddbuf(sc, txctl->txq, &bf_head, false);
-+	ath_tx_fill_desc(sc, bf, txq, fi->framelen);
-+	ath_tx_txqaddbuf(sc, txq, &bf_head, false);
- }
- 
- static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
-@@ -1935,6 +1937,12 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		txq->stopped = true;
- 	}
- 
-+	if (info->flags & IEEE80211_TX_CTL_PS_RESPONSE) {
-+		ath_txq_unlock(sc, txq);
-+		txq = sc->tx.uapsdq;
-+		ath_txq_lock(sc, txq);
-+	}
-+
- 	if (txctl->an && ieee80211_is_data_qos(hdr->frame_control)) {
- 		tidno = ieee80211_get_qos_ctl(hdr)[0] &
- 			IEEE80211_QOS_CTL_TID_MASK;
-@@ -1948,11 +1956,11 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		 * Try aggregation if it's a unicast data frame
- 		 * and the destination is HT capable.
- 		 */
--		ath_tx_send_ampdu(sc, tid, skb, txctl);
-+		ath_tx_send_ampdu(sc, txq, tid, skb, txctl);
- 		goto out;
- 	}
- 
--	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
-+	bf = ath_tx_setup_buffer(sc, txq, tid, skb);
- 	if (!bf) {
- 		if (txctl->paprd)
- 			dev_kfree_skb_any(skb);
-@@ -1967,7 +1975,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		bf->bf_state.bfs_paprd_timestamp = jiffies;
- 
- 	ath_set_rates(vif, sta, bf);
--	ath_tx_send_normal(sc, txctl->txq, tid, skb);
-+	ath_tx_send_normal(sc, txq, tid, skb);
- 
- out:
- 	ath_txq_unlock(sc, txq);
-@@ -2020,7 +2028,12 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 	}
- 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
-+	__skb_queue_tail(&txq->complete_q, skb);
-+
- 	q = skb_get_queue_mapping(skb);
-+	if (txq == sc->tx.uapsdq)
-+		txq = sc->tx.txq_map[q];
-+
- 	if (txq == sc->tx.txq_map[q]) {
- 		if (WARN_ON(--txq->pending_frames < 0))
- 			txq->pending_frames = 0;
-@@ -2031,8 +2044,6 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 			txq->stopped = false;
- 		}
- 	}
--
--	__skb_queue_tail(&txq->complete_q, skb);
- }
- 
- static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+John,
+
+Although this patch is trivial and could be included in the 3.10 stream,
+I think we should not burden DaveM nor Linus with it this late in the 3.10
+cycle. Please push it into the 3.11 stream.
+
+Thanks,
+
+Larry
+---
+
+V2 - Fix error in stable mailing address
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+index 953f1a0..2119313 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+@@ -104,7 +104,7 @@ void rtl92cu_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
+ 			tx_agc[RF90_PATH_A] = 0x10101010;
+ 			tx_agc[RF90_PATH_B] = 0x10101010;
+ 		} else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
+-			   TXHIGHPWRLEVEL_LEVEL1) {
++			   TXHIGHPWRLEVEL_LEVEL2) {
+ 			tx_agc[RF90_PATH_A] = 0x00000000;
+ 			tx_agc[RF90_PATH_B] = 0x00000000;
+ 		} else{
 -- 
-1.8.0.2
+1.8.1.4
 
