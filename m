@@ -1,78 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60348 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753777Ab3F1NxR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39492 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932364Ab3FRPwN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 09:53:17 -0400
-Date: Fri, 28 Jun 2013 15:53:14 +0200
-From: Maxime Ripard <maxime.ripard@free-electrons.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Richard Genoud <richard.genoud@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: rtl8192cu: slow path warning
-Message-ID: <20130628135314.GJ4319@lukather> (sfid-20130628_155333_631864_DCB0B642)
-References: <20130611123814.GA9854@lnx-rg>
- <20130626142241.GA13107@lnx-rg>
- <51CB0E9C.50408@lwfinger.net>
- <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
- <51CC8284.9070301@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LQAwcd5tHl0Qlnzi"
-In-Reply-To: <51CC8284.9070301@lwfinger.net>
+	Tue, 18 Jun 2013 11:52:13 -0400
+Message-ID: <1371570723.22256.0.camel@jlt4.sipsolutions.net> (sfid-20130618_175218_216759_83CD1FC4)
+Subject: Re: Lots of confusion on bss refcounting.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 18 Jun 2013 17:52:03 +0200
+In-Reply-To: <51C08119.3000407@candelatech.com>
+References: <51BF5A53.8050100@candelatech.com>
+	   (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net>
+	  <51BF5ED4.9010704@candelatech.com> <51BF8040.2000408@candelatech.com>
+	  <51BFAA34.1020407@candelatech.com>
+	 <1371559771.8318.12.camel@jlt4.sipsolutions.net>
+	 <51C08119.3000407@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---LQAwcd5tHl0Qlnzi
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> > You mean ->current_bss? That should be handled in all the callbacks in
+> > sme.c or so
+> 
+> Looks like much of the action happens on work-queues.  I'm wondering if
+> we managed to delete wdev objects before we have completely cleaned up
+> in some cases...
 
-Hi Larry,
+Don't we flush work structs appropriately?
 
-On Thu, Jun 27, 2013 at 01:20:52PM -0500, Larry Finger wrote:
-> A revised patch for the warning is attached. The fix relatively
-> simple and the only difference between this one and the earlier
-> version is that routine rtl_lps_change_work_callback() was moved
-> from pci.c to ps.c. As a result, it will be available for ARM and
-> other architectures without a PCI bus.
+johannes
 
-I just tested it on top of 3.10-rc7 with an imx28, and it works fine.
-
-You can add my
-Tested-by: Maxime Ripard <maxime.ripard@free-electrons.com>
-
-Thanks!
-Maxime
-
---=20
-Maxime Ripard, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
-
---LQAwcd5tHl0Qlnzi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRzZVJAAoJEBx+YmzsjxAg9fQQALhkCRClt1Y54AATGzKuQd4+
-9mHROC5pxaMSOvVKVBK84+tSaXw79FfDrjiFFKn/tTi3lcPTtO7d4N/l0Q/FQnso
-KT0P3KAcgStPb4OxeQ7IFpRXkJf/0MjVIpkFoBUEx20GoWxuxCR6qPngwlI8YU+m
-fQNW+zSNbzFPSzsxTJzVtewdNux7Gcdcy2+vCq020XqQvnOHEIuYd84ZHBs/pQoX
-DaefkrO2RS+TnXuGEGm/SeLDtsHFo+WJdDEziumcATIVHGoqe4QJGg5iXdSBg6Be
-Cw/NuhEtZy5pYpzGc15jIhldZAVO0UXUA7vCItI/TfugydcQHyb06kV28DeCO8bP
-U4C3UeDdJvPXd9dfoJoEGrJLLuCeGrjxV9G8stncCNg8OWEl/SeG63ib4B7TvVoL
-3pzQiJIydecbvxqrG03P/puleU5giy9DOnZ5w9CULdgD3XnQwrPBhBcL6h9RYLad
-bpKM2hb+XeZ7FtZ1NJC8E3nBvtf72Jcp7groxHl0miLQd2Xegf8KbdTBWjX6JUVU
-wMzkLTb0lDHqAk1pqakodVKwKEChBSE+eLrXvzrizjj3lz1CS88im8lzw7EmQOoB
-vl69Izck0ymvOb533iYJwPSHIeitAzzLJpA2E+Rnw86/EacLisaSucD3JoucuZHm
-lG0i70QgiDhQDB7dXkqq
-=1gK/
------END PGP SIGNATURE-----
-
---LQAwcd5tHl0Qlnzi--
