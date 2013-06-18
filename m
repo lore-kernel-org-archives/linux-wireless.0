@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38893 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:39495 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411Ab3FKTxz (ORCPT
+	with ESMTP id S1755971Ab3FRPxc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 15:53:55 -0400
-Message-ID: <1370980419.8356.68.camel@jlt4.sipsolutions.net> (sfid-20130611_215358_476304_9E2F846A)
-Subject: Re: [PATCH] carl9170: make use of the new rate control API
+	Tue, 18 Jun 2013 11:53:32 -0400
+Message-ID: <1371570798.22256.1.camel@jlt4.sipsolutions.net> (sfid-20130618_175336_131118_FFF62E11)
+Subject: Re: [PATCHv3 07/18] mac80211: add radiotap flag and handling for
+ 5/10 MHz
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linville@tuxdriver.com,
-	Thomas =?ISO-8859-1?Q?H=FChn?= <thomas@net.t-labs.tu-berlin.de>,
-	linux-wireless@vger.kernel.org, nbd@nbd.name
-Date: Tue, 11 Jun 2013 21:53:39 +0200
-In-Reply-To: <201306112149.09768.chunkeey@googlemail.com> (sfid-20130611_214914_098355_4B143C81)
-References: <1370966237-27716-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1E3747D2-BD9C-4136-B17F-9227E24136D5@net.t-labs.tu-berlin.de>
-	 <1370978668.8356.67.camel@jlt4.sipsolutions.net>
-	 <201306112149.09768.chunkeey@googlemail.com>
-	 (sfid-20130611_214914_098355_4B143C81)
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Tue, 18 Jun 2013 17:53:18 +0200
+In-Reply-To: <20130618155051.GD27492@pandem0nium>
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1368702045-27598-8-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1371565626.8318.26.camel@jlt4.sipsolutions.net>
+	 <20130618155051.GD27492@pandem0nium>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-11 at 21:49 +0200, Christian Lamparter wrote:
+On Tue, 2013-06-18 at 17:50 +0200, Simon Wunderlich wrote:
 
-> > > As I just saw an ath9k patch for rcu protection when ieee80211_get_tx_rates() is called.
-> > > Should this be done in carl9170 as well ?
+> Hmm, if this [1] is the official standard, then no, it is not defined. Don't
+> know when this was added in wireshark, and it was only added implicitly in
+> the code (no header files etc). But since it was there, I figured it would
+> be a good idea to re-use it (unaware that there was some "standard").
+> 
+> How shall we proceed, propose that on some radiotap mailing list officially?
+
+Yes, see http://www.radiotap.org/Standardisation
+
+> > > +	RX_FLAG_10MHZ			= BIT(26),
+> > > +	RX_FLAG_5MHZ			= BIT(27),
 > > 
-> > I think that patch is wrong actually, probably should just do the rcu
-> > protection inside the function. However the patch is completely wrong
-> > anyway (C isn't python) so ...
-> Uh, that's confusing. We are now talking about the patch from Thomas, right?
-> If so: the previous "new rate control api" feature patch for carl9170 should
-> be fine in this regard.
+> > Does that make sense? We know what kind of channel we're on? Though it
+> > might be easier for the driver, so it may make sense I guess.
+> 
+> Yeah, it's a little easier for the driver, and I thought it would be
+> cleaner to get this reported through a flag.
 
-No, Calvin Owens's patch.
+Yeah I tend to agree.
 
 johannes
-
 
