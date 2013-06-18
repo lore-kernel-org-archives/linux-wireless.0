@@ -1,41 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:13858 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753333Ab3FGOEE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jun 2013 10:04:04 -0400
-Date: Fri, 7 Jun 2013 16:04:02 +0200
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	nietrywialneprzejscie@gmail.com
-Subject: Re: [RFC 4/5] mac80211: enforce address verification on monitors
-Message-ID: <20130607160402.49ea16c3@north> (sfid-20130607_160409_657773_53C9857A)
-In-Reply-To: <51B1E4F3.9020509@openwrt.org>
-References: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
-	<1370612179-24385-5-git-send-email-moorray3@wp.pl>
-	<51B1E4F3.9020509@openwrt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from s72.web-hosting.com ([198.187.29.21]:45970 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788Ab3FREql (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 00:46:41 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/5] ath9k: Merge HWTIMER debug level with BTCOEX
+Date: Tue, 18 Jun 2013 10:13:39 +0530
+Message-Id: <1371530623-15746-1-git-send-email-sujith@msujith.org> (sfid-20130618_064643_582241_D18F0B04)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 07 Jun 2013 15:49:39 +0200, Felix Fietkau wrote:
-> On 2013-06-07 3:36 PM, Jakub Kicinski wrote:
->> From: Jakub Kicinski <kubakici@wp.pl>
->> 
->> Mac address of passive monitor have to treated
->> the same as address any other interface because
->> type of interface can be changed or monitor can
->> be later put into active mode.
-> It can't. There's checks preventing that. I'd prefer to leave that part
-> of the code as it is, the MAC address for normal monitor interfaces
-> should be ignored completely.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I must have misread the code regarding active monitors then.
-Main motivation behind this patch was the first part though
-- user can change type of interface and once ignored address
-of monitor now becomes address of AP, sta etc. 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath.h      | 13 ++++++-------
+ drivers/net/wireless/ath/ath9k/hw.c |  6 +++---
+ 2 files changed, 9 insertions(+), 10 deletions(-)
 
-  -- kuba
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 4521342..daeafef 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -239,13 +239,12 @@ enum ATH_DEBUG {
+ 	ATH_DBG_CONFIG		= 0x00000200,
+ 	ATH_DBG_FATAL		= 0x00000400,
+ 	ATH_DBG_PS		= 0x00000800,
+-	ATH_DBG_HWTIMER		= 0x00001000,
+-	ATH_DBG_BTCOEX		= 0x00002000,
+-	ATH_DBG_WMI		= 0x00004000,
+-	ATH_DBG_BSTUCK		= 0x00008000,
+-	ATH_DBG_MCI		= 0x00010000,
+-	ATH_DBG_DFS		= 0x00020000,
+-	ATH_DBG_WOW		= 0x00040000,
++	ATH_DBG_BTCOEX		= 0x00001000,
++	ATH_DBG_WMI		= 0x00002000,
++	ATH_DBG_BSTUCK		= 0x00004000,
++	ATH_DBG_MCI		= 0x00008000,
++	ATH_DBG_DFS		= 0x00010000,
++	ATH_DBG_WOW		= 0x00020000,
+ 	ATH_DBG_ANY		= 0xffffffff
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ca9d9cd..5324c33 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3042,7 +3042,7 @@ void ath9k_hw_gen_timer_start(struct ath_hw *ah,
+ 
+ 	timer_next = tsf + trig_timeout;
+ 
+-	ath_dbg(ath9k_hw_common(ah), HWTIMER,
++	ath_dbg(ath9k_hw_common(ah), BTCOEX,
+ 		"current tsf %x period %x timer_next %x\n",
+ 		tsf, timer_period, timer_next);
+ 
+@@ -3141,7 +3141,7 @@ void ath_gen_timer_isr(struct ath_hw *ah)
+ 		index = rightmost_index(timer_table, &thresh_mask);
+ 		timer = timer_table->timers[index];
+ 		BUG_ON(!timer);
+-		ath_dbg(common, HWTIMER, "TSF overflow for Gen timer %d\n",
++		ath_dbg(common, BTCOEX, "TSF overflow for Gen timer %d\n",
+ 			index);
+ 		timer->overflow(timer->arg);
+ 	}
+@@ -3150,7 +3150,7 @@ void ath_gen_timer_isr(struct ath_hw *ah)
+ 		index = rightmost_index(timer_table, &trigger_mask);
+ 		timer = timer_table->timers[index];
+ 		BUG_ON(!timer);
+-		ath_dbg(common, HWTIMER,
++		ath_dbg(common, BTCOEX,
+ 			"Gen timer[%d] trigger\n", index);
+ 		timer->trigger(timer->arg);
+ 	}
+-- 
+1.8.3.1
+
