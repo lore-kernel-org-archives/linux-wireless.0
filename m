@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51658 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750789Ab3FIQyQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jun 2013 12:54:16 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, rdunlap@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>, <stable@vger.kernel.org>
-Subject: [PATCH 3.1+] b43: ensue that BCMA is "y" when B43 is "y"
-Date: Sun,  9 Jun 2013 18:53:58 +0200
-Message-Id: <1370796838-5067-1-git-send-email-hauke@hauke-m.de> (sfid-20130609_185422_777117_742344E8)
+Received: from s3.sipsolutions.net ([144.76.43.152]:39206 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755798Ab3FROZP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 10:25:15 -0400
+Message-ID: <1371565505.8318.24.camel@jlt4.sipsolutions.net> (sfid-20130618_162533_226556_57F873BE)
+Subject: Re: [PATCHv3 06/18] mac80211: select and adjust bitrates according
+ for channel mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Tue, 18 Jun 2013 16:25:05 +0200
+In-Reply-To: <1368702045-27598-7-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1368702045-27598-7-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When b43 gets build into the kernel and it should use bcma we have to
-ensure that bcma was also build into the kernel and not as a module.
-In this patch this is also done for SSB, although you can not
-build b43 without ssb support for now.
+On Thu, 2013-05-16 at 13:00 +0200, Simon Wunderlich wrote:
+> The various components accessing the bitrates table must use consider
+> the used channel bandwidth to select only available rates or calculate
+> the bitrate correctly.
+> 
+> There are some rates in reduced bandwidth modes which can't be
+> represented as multiples of 500kbps, like 2.25 MBit/s in 5 MHz mode. The
+> standard suggests to round up to the next multiple of 500kbps, just do
+> that in mac80211 as well.
 
-This fixes a build problem reported by Randy Dunlap in
-5187EB95.2060605@infradead.org
+"suggests", heh ...
 
-Reported-By: Randy Dunlap <rdunlap@infradead.org>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/b43/Kconfig |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> @@ -4238,7 +4238,6 @@ rate_lowest_index(struct ieee80211_supported_band *sband,
+>  		  struct ieee80211_sta *sta)
+>  {
+>  	int i;
+> -
+>  	for (i = 0; i < sband->n_bitrates; i++)
 
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 83cfaf5..3f21e0b 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -28,7 +28,7 @@ config B43
- 
- config B43_BCMA
- 	bool "Support for BCMA bus"
--	depends on B43 && BCMA
-+	depends on B43 && (BCMA = y || BCMA = B43)
- 	default y
- 
- config B43_BCMA_EXTRA
-@@ -39,7 +39,7 @@ config B43_BCMA_EXTRA
- 
- config B43_SSB
- 	bool
--	depends on B43 && SSB
-+	depends on B43 && (SSB = y || SSB = B43)
- 	default y
- 
- # Auto-select SSB PCI-HOST support, if possible
--- 
-1.7.10.4
+please don't do that.
+
+>  		for (i = 0; i < params->supported_rates_len; i++) {
+>  			int rate = (params->supported_rates[i] & 0x7f) * 5;
+> +			int brate;
+>  			for (j = 0; j < sband->n_bitrates; j++) {
+> -				if (sband->bitrates[j].bitrate == rate)
+> +				brate = sband->bitrates[j].bitrate;
+> +				brate = DIV_ROUND_UP(brate, divisor);
+> +				if ((rate_flags & sband->bitrates[i].flags)
+> +				    != rate_flags)
+> +					continue;
+> +
+> +				if (brate == rate)
+>  					rates |= BIT(j);
+>  			}
+
+some refactoring might be useful ... having != at the start of a line is
+a really good sign for that ;-)
+
+johannes
 
