@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:50714 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751767Ab3FYIVj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38843 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962Ab3FRMtf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 04:21:39 -0400
-Received: by mail-ea0-f177.google.com with SMTP id j14so6611580eak.22
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2013 01:21:38 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] ssb: drop BROKEN from SSB_SFLASH
-Date: Tue, 25 Jun 2013 10:13:46 +0200
-Message-Id: <1372148026-9750-1-git-send-email-zajec5@gmail.com> (sfid-20130625_102144_262768_52A9944E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 18 Jun 2013 08:49:35 -0400
+Message-ID: <1371559771.8318.12.camel@jlt4.sipsolutions.net> (sfid-20130618_144939_247758_06C3183B)
+Subject: Re: Lots of confusion on bss refcounting.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 18 Jun 2013 14:49:31 +0200
+In-Reply-To: <51BFAA34.1020407@candelatech.com>
+References: <51BF5A53.8050100@candelatech.com>
+	  (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net>
+	 <51BF5ED4.9010704@candelatech.com> <51BF8040.2000408@candelatech.com>
+	 <51BFAA34.1020407@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With recent patches ssb can fetch info about serial flash and register
-it as a platform device. No more reasons to mark it BROKEN.
+On Mon, 2013-06-17 at 17:30 -0700, Ben Greear wrote:
+> On 06/17/2013 02:31 PM, Ben Greear wrote:
+> > On 06/17/2013 12:09 PM, Ben Greear wrote:
+> >> On 06/17/2013 12:02 PM, Johannes Berg wrote:
+> >
+> >> The bss reference is passed back, and through luck or careful programming,
+> >> it *seems* that all paths related to calling ieee80211_rx_mgmt_assoc_resp
+> >> managed to consume the bss.
+> >>
+> >> I haven't figured out yet why this is not an erroneous put since I didn't
+> >> find the reference taken in the first place.
+> >>
+> >> I'm going to work on making some changes to the ref counting scheme
+> >> a bit.  I'd rather have the code perhaps take and put a few refs
+> >> it might otherwise skip to keep the ownership cleaner and make
+> >> the code easier to debug and understand...
+> >>
+> >> I'll post some for RFC when I make some progress.
+> >
+> > I think I found at least some of the leaks.
+> >
+> > In places like ieee80211_mgd_stop, we were calling ieee80211_destroy_assoc_data,
+> > but it was not putting the bss reference.
+> >
+> > I'll post some RFC patches in a minute or two...first is debugging
+> > logic, second attempts to fix bss ref counting.  This needs more
+> > testing before it is applied...we will continue testing it....
+> 
+> It seems that the wdev objects (struct wireless_dev) can also
+> hold a reference to the bss.
+> 
+> Do you happen to know what code is responsible for destructing
+> those objects?  I want to check to make sure it properly puts
+> its reference.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
----
-Hauke: does it look OK for you? Did you give it a try?
----
- drivers/ssb/Kconfig                    |    2 +-
- drivers/ssb/driver_chipcommon_sflash.c |    8 +++-----
- 2 files changed, 4 insertions(+), 6 deletions(-)
+You mean ->current_bss? That should be handled in all the callbacks in
+sme.c or so 
 
-diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-index 4f0dd37..775251d 100644
---- a/drivers/ssb/Kconfig
-+++ b/drivers/ssb/Kconfig
-@@ -139,7 +139,7 @@ config SSB_DRIVER_MIPS
- 
- config SSB_SFLASH
- 	bool "SSB serial flash support"
--	depends on SSB_DRIVER_MIPS && BROKEN
-+	depends on SSB_DRIVER_MIPS
- 	default y
- 
- # Assumption: We are on embedded, if we compile the MIPS core.
-diff --git a/drivers/ssb/driver_chipcommon_sflash.c b/drivers/ssb/driver_chipcommon_sflash.c
-index e84cf04..50328de 100644
---- a/drivers/ssb/driver_chipcommon_sflash.c
-+++ b/drivers/ssb/driver_chipcommon_sflash.c
-@@ -151,8 +151,8 @@ int ssb_sflash_init(struct ssb_chipcommon *cc)
- 	sflash->size = sflash->blocksize * sflash->numblocks;
- 	sflash->present = true;
- 
--	pr_info("Found %s serial flash (blocksize: 0x%X, blocks: %d)\n",
--		e->name, e->blocksize, e->numblocks);
-+	pr_info("Found %s serial flash (size: %dKiB, blocksize: 0x%X, blocks: %d)\n",
-+		e->name, sflash->size / 1024, e->blocksize, e->numblocks);
- 
- 	/* Prepare platform device, but don't register it yet. It's too early,
- 	 * malloc (required by device_private_init) is not available yet. */
-@@ -160,7 +160,5 @@ int ssb_sflash_init(struct ssb_chipcommon *cc)
- 					 sflash->size;
- 	ssb_sflash_dev.dev.platform_data = sflash;
- 
--	pr_err("Serial flash support is not implemented yet!\n");
--
--	return -ENOTSUPP;
-+	return 0;
- }
--- 
-1.7.10.4
+johannes
 
