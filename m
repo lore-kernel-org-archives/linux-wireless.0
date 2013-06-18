@@ -1,38 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51713 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750789Ab3FIQ7w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jun 2013 12:59:52 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] bcma: activate PCI host option by default
-Date: Sun,  9 Jun 2013 18:59:42 +0200
-Message-Id: <1370797183-5510-1-git-send-email-hauke@hauke-m.de> (sfid-20130609_185956_220383_E2C85BED)
+Received: from s3.sipsolutions.net ([144.76.43.152]:39215 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755725Ab3FRO2u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 10:28:50 -0400
+Message-ID: <1371565727.8318.27.camel@jlt4.sipsolutions.net> (sfid-20130618_162854_155781_6405D74A)
+Subject: Re: [PATCHv3 09/18] mac80211: change IBSS channel state to chandef
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Tue, 18 Jun 2013 16:28:47 +0200
+In-Reply-To: <1368702045-27598-10-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1368702045-27598-10-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most users are using bcma with a PCIe card, activate support for
-this by default.
+On Thu, 2013-05-16 at 13:00 +0200, Simon Wunderlich wrote:
+> This should make some parts cleaner and is also required for handling
+> 5/10 MHz properly.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/Kconfig |    1 +
- 1 file changed, 1 insertion(+)
+Applied.
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 8b4221c..380a200 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -26,6 +26,7 @@ config BCMA_HOST_PCI_POSSIBLE
- config BCMA_HOST_PCI
- 	bool "Support for BCMA on PCI-host bus"
- 	depends on BCMA_HOST_PCI_POSSIBLE
-+	default y
- 
- config BCMA_DRIVER_PCI_HOSTMODE
- 	bool "Driver for PCI core working in hostmode"
--- 
-1.7.10.4
+johannes
 
