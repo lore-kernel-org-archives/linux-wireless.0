@@ -1,55 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:56118 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756639Ab3FSNix (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 09:38:53 -0400
-Received: from mailout-de.gmx.net ([10.1.76.1]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0ME0gb-1V61qO2yDv-00HNnV for
- <linux-wireless@vger.kernel.org>; Wed, 19 Jun 2013 15:38:51 +0200
-Message-ID: <51C1B467.1030509@rempel-privat.de> (sfid-20130619_153909_304190_A8504515)
-Date: Wed, 19 Jun 2013 15:38:47 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from mail.candelatech.com ([208.74.158.172]:55791 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933051Ab3FRVga (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 17:36:30 -0400
+Message-ID: <51C0D2D8.3080207@candelatech.com> (sfid-20130618_233639_394762_E90AF0A6)
+Date: Tue, 18 Jun 2013 14:36:24 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "Berg, Johannes" <johannes.berg@intel.com>
-CC: Ignacy Gawedzki <i@lri.fr>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
-References: <20130619115809.GA26717@zenon.in.qult.net> <51C1ACEC.2020703@rempel-privat.de> <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com>
-In-Reply-To: <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Lots of confusion on bss refcounting.
+References: <51BF5A53.8050100@candelatech.com>    (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net>   <51BF5ED4.9010704@candelatech.com> <51BF8040.2000408@candelatech.com>   <51BFAA34.1020407@candelatech.com>  <1371559771.8318.12.camel@jlt4.sipsolutions.net>  <51C08119.3000407@candelatech.com> <1371570723.22256.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1371570723.22256.0.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 19.06.2013 15:08, schrieb Berg, Johannes:
+On 06/18/2013 08:52 AM, Johannes Berg wrote:
 >
->>       mac80211: fix idle handling sequence
+>>> You mean ->current_bss? That should be handled in all the callbacks in
+>>> sme.c or so
 >>
->>       Corey Richardson reported that my idle handling cleanup
->>       (commit fd0f979a1b, "mac80211: simplify idle handling")
->>       broke ath9k_htc. The reason appears to be that it wants
->>       to go out of idle before switching channels. To fix it,
->>       reimplement that sequence.
->>
->>       Reported-by: Corey Richardson <corey@octayn.net>
->>       Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->>
->> Johannes, can you please take a look on it.
+>> Looks like much of the action happens on work-queues.  I'm wondering if
+>> we managed to delete wdev objects before we have completely cleaned up
+>> in some cases...
 >
-> Not very well, I don't know anything about ath9k. I'm willing to help out, but I can't really say what broke it.
+> Don't we flush work structs appropriately?
 
-hm.. looks like this code depends on power_save. is it correct?
+I'm still seeing leaks after all those patches I posted...so I'm still
+looking.  The leaked bss objects have a quite large refcount, in the
+hundreds after an hour or so of running, so this is probably more than
+a strange race somewhere.
 
-Ignacy,
 
-can you please take a look if power_save mode is enabled by you.
+This code looks questionable in wireless/mlme.c
 
-iw dev wlan0 get power_save
+int __cfg80211_mlme_assoc()
+.....
 
-if yes. Try to disable it.
+It grabs a reference using cfg80211_get_bss, but it only
+does a put on the reference if there was an error code.
 
-I think last week power_save was set to disabled by default. There are 
-too many bugs right now.
+The __cfg80211_mlme_auth a bit above always does a put on
+the reference.
+
+I'm thinking mlme_assoc should also always do put.  Any
+reason you can think of otherwise?
+
+Thanks,
+Ben
+
+>
+> johannes
+>
+
+
 -- 
-Regards,
-Oleksij
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
