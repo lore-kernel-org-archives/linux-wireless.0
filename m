@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from diserzione.investici.org ([82.221.99.153]:60861 "EHLO
-	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753458Ab3FELzN (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:45424 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603Ab3FREqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 07:55:13 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: [PATCHv2 3/4] brcm80211: make mgmt_tx in brcmfmac accept a NULL channel
-Date: Wed,  5 Jun 2013 13:53:06 +0200
-Message-Id: <1370433187-1337-3-git-send-email-ordex@autistici.org> (sfid-20130605_135520_435407_B8D3BEF5)
-In-Reply-To: <1370433187-1337-1-git-send-email-ordex@autistici.org>
-References: <1370433187-1337-1-git-send-email-ordex@autistici.org>
+	Tue, 18 Jun 2013 00:46:09 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] initvals: Update inivals for AR9462 2.0
+Date: Tue, 18 Jun 2013 10:13:08 +0530
+Message-Id: <1371530590-15676-1-git-send-email-sujith@msujith.org> (sfid-20130618_064613_978303_D2D59C8C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-cfg80211 passes a NULL channel to mgmt_tx if the frame has
-to be sent on the one currently in use by the device.
-Make the implementation of mgmt_tx correctly handle this
-case
-
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: brcm80211-dev-list@broadcom.com
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ tools/initvals/ar9462_2p0_initvals.h | 2 +-
+ tools/initvals/checksums.txt         | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 6d758f2..dcb0c00 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3917,6 +3917,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	struct brcmf_fil_af_params_le *af_params;
- 	bool ack;
- 	s32 chan_nr;
-+	u32 freq;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -3968,8 +3969,13 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		memcpy(&af_params->bssid[0], &mgmt->bssid[0], ETH_ALEN);
- 		/* Add the length exepted for 802.11 header  */
- 		action_frame->len = cpu_to_le16(len - DOT11_MGMT_HDR_LEN);
--		/* Add the channel */
--		chan_nr = ieee80211_frequency_to_channel(chan->center_freq);
-+		/* Add the channel. Default to the current one, but use the one
-+		 * specified as parameter if any
-+		 */
-+		freq = cfg->channel;
-+		if (chan)
-+			freq = chan->center_freq;
-+		chan_nr = ieee80211_frequency_to_channel(freq);
- 		af_params->channel = cpu_to_le32(chan_nr);
- 
- 		memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
+diff --git a/tools/initvals/ar9462_2p0_initvals.h b/tools/initvals/ar9462_2p0_initvals.h
+index 999ab08..f00e945 100644
+--- a/tools/initvals/ar9462_2p0_initvals.h
++++ b/tools/initvals/ar9462_2p0_initvals.h
+@@ -78,7 +78,7 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
+ 	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
+ 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
+-	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
++	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
+ 	{0x0000a2d0, 0x00041981, 0x00041981, 0x00041981, 0x00041982},
+ 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+diff --git a/tools/initvals/checksums.txt b/tools/initvals/checksums.txt
+index 551c3ba..e3632c8 100644
+--- a/tools/initvals/checksums.txt
++++ b/tools/initvals/checksums.txt
+@@ -139,7 +139,7 @@ ca6088034f339ea8f106f7f034d34baafec0c0ca        ar9340Modes_high_ob_db_tx_gain_t
+ 1b9f617ab8c10ec0760e81fe61d469692f2acc29        ar9340_1p0_soc_preamble
+ d9efd1c575ac43d60c310d717c59617a5323c111        ar9462_modes_fast_clock_2p0
+ 222ed8213d3ffb0d12cf4c7019bdfd874e45c7d7        ar9462_pciephy_clkreq_enable_L1_2p0
+-efb4c74c657dbc49ab80dd1d42a5b8e6ff0c3651        ar9462_2p0_baseband_postamble
++d7a2102c22264c288fa3d9de27e5ae84b8f3812e        ar9462_2p0_baseband_postamble
+ d0f7aff1a1ab7e6f6bbda0da067714459341ce5f        ar9462_common_rx_gain_table_2p0
+ 2fbe90336971cd66f0264c0cc57605c2de069d5f        ar9462_pciephy_clkreq_disable_L1_2p0
+ a3173672141a2ac797e660228d41a609f9ab2c4c        ar9462_pciephy_pll_on_clkreq_disable_L1_2p0
 -- 
-1.8.1.5
+1.8.3.1
 
