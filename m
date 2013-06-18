@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:41684 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933041Ab3FRSZT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 14:25:19 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, stable <stable@vger.kernel.org>
-Subject: [PATCH V2] rtlwifi: rtl8192cu: Fix duplicate if test
-Date: Tue, 18 Jun 2013 13:25:05 -0500
-Message-Id: <1371579905-15613-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130618_202527_759550_0A4D31EC)
+Received: from mms3.broadcom.com ([216.31.210.19]:2417 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755046Ab3FRL3t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 07:29:49 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 3/8] brcmfmac: remove dependency with nl80211.h
+Date: Tue, 18 Jun 2013 13:29:24 +0200
+Message-ID: <1371554970-23495-4-git-send-email-arend@broadcom.com> (sfid-20130618_132959_357907_4E058AB9)
+In-Reply-To: <1371554970-23495-1-git-send-email-arend@broadcom.com>
+References: <1371554970-23495-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A typo causes routine rtl92cu_phy_rf6052_set_cck_txpower() to test the
-same condition twice. The problem was found using cppcheck-1.49, and the
-proper fix was verified against the pre-mac80211 version of the code.
+The firmware-signalling code used NL80211_NUM_ACS, but it has
+its own definition enum brcmf_fws_fifo, which is more appropriate
+to use. This effectively removes the need to include nl80211.h.
 
-This patch was originally included as commit 1288aa4, but was accidentally
-reverted in a later patch.
-
-Reported-by: David Binderman <dcb314@hotmail.com> [original report]
-Reported-by: Andrea Morello <andrea.merello@gmail.com> [report of accidental reversion]
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: stable <stable@vger.kernel.org>  [back to 2.6.39]
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-John,
-
-Although this patch is trivial and could be included in the 3.10 stream,
-I think we should not burden DaveM nor Linus with it this late in the 3.10
-cycle. Please push it into the 3.11 stream.
-
-Thanks,
-
-Larry
----
-
-V2 - Fix error in stable mailing address
----
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
-index 953f1a0..2119313 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
-@@ -104,7 +104,7 @@ void rtl92cu_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
- 			tx_agc[RF90_PATH_A] = 0x10101010;
- 			tx_agc[RF90_PATH_B] = 0x10101010;
- 		} else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
--			   TXHIGHPWRLEVEL_LEVEL1) {
-+			   TXHIGHPWRLEVEL_LEVEL2) {
- 			tx_agc[RF90_PATH_A] = 0x00000000;
- 			tx_agc[RF90_PATH_B] = 0x00000000;
- 		} else{
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index e66b723..b702f3e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -22,7 +22,6 @@
+ #include <linux/etherdevice.h>
+ #include <linux/err.h>
+ #include <linux/jiffies.h>
+-#include <uapi/linux/nl80211.h>
+ #include <net/cfg80211.h>
+ 
+ #include <brcmu_utils.h>
+@@ -142,7 +141,7 @@ static const char *brcmf_fws_get_tlv_name(enum brcmf_fws_tlv_type id)
+ #define BRCMF_FWS_FLOWCONTROL_HIWATER			128
+ #define BRCMF_FWS_FLOWCONTROL_LOWATER			64
+ 
+-#define BRCMF_FWS_PSQ_PREC_COUNT		((NL80211_NUM_ACS + 1) * 2)
++#define BRCMF_FWS_PSQ_PREC_COUNT		((BRCMF_FWS_FIFO_COUNT + 1) * 2)
+ #define BRCMF_FWS_PSQ_LEN				256
+ 
+ #define BRCMF_FWS_HTOD_FLAG_PKTFROMHOST			0x01
 -- 
-1.8.1.4
+1.7.10.4
+
 
