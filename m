@@ -1,129 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35121 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753550Ab3F0Q7S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 12:59:18 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 18/18] ath5k: enable support for 5 MHz and 10 MHz channels
-Date: Thu, 27 Jun 2013 18:59:00 +0200
-Message-Id: <1372352340-20663-20-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_185928_009323_30A671B0)
-In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:2376 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754762Ab3FRL3t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 07:29:49 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 1/8] brcmfmac: Only use credits for bcmc when firmware
+ indicates it.
+Date: Tue, 18 Jun 2013 13:29:22 +0200
+Message-ID: <1371554970-23495-2-git-send-email-arend@broadcom.com> (sfid-20130618_132958_072512_4FC8C031)
+In-Reply-To: <1371554970-23495-1-git-send-email-arend@broadcom.com>
+References: <1371554970-23495-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath5k/ath5k.h        |    1 +
- drivers/net/wireless/ath/ath5k/base.c         |   25 ++++++++++++++++++++++---
- drivers/net/wireless/ath/ath5k/base.h         |    2 +-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
- 4 files changed, 25 insertions(+), 5 deletions(-)
+From: Hante Meuleman <meuleman@broadcom.com>
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 2d691b8..74bd54d 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -29,6 +29,7 @@
- #include <linux/average.h>
- #include <linux/leds.h>
- #include <net/mac80211.h>
-+#include <net/cfg80211.h>
+The firmware will sent an event message when bc/mc traffic should
+be sent to the device using credit mechanism.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |    3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   32 +++++++++++++++++++-
+ 2 files changed, 33 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+index 6ec5db9..e679214 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+@@ -101,7 +101,8 @@ struct brcmf_event;
+ 	BRCMF_ENUM_DEF(P2P_PROBEREQ_MSG, 72) \
+ 	BRCMF_ENUM_DEF(DCS_REQUEST, 73) \
+ 	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74) \
+-	BRCMF_ENUM_DEF(ACTION_FRAME_RX, 75)
++	BRCMF_ENUM_DEF(ACTION_FRAME_RX, 75) \
++	BRCMF_ENUM_DEF(BCMC_CREDIT_SUPPORT, 127)
  
- /* RX/TX descriptor hw structs
-  * TODO: Driver part should only see sw structs */
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 7c298af..48161ed 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -56,6 +56,7 @@
- #include <linux/etherdevice.h>
- #include <linux/nl80211.h>
- 
-+#include <net/cfg80211.h>
- #include <net/ieee80211_radiotap.h>
- 
- #include <asm/unaligned.h>
-@@ -443,11 +444,27 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
-  * Called with ah->lock.
-  */
- int
--ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
-+ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef)
- {
- 	ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
- 		  "channel set, resetting (%u -> %u MHz)\n",
--		  ah->curchan->center_freq, chan->center_freq);
-+		  ah->curchan->center_freq, chandef->chan->center_freq);
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		ah->ah_bwmode = AR5K_BWMODE_DEFAULT;
-+		break;
-+	case NL80211_CHAN_WIDTH_5:
-+		ah->ah_bwmode = AR5K_BWMODE_5MHZ;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		ah->ah_bwmode = AR5K_BWMODE_10MHZ;
-+		break;
-+	default:
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
- 
- 	/*
- 	 * To switch channels clear any pending DMA operations;
-@@ -455,7 +472,7 @@ ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
- 	 * hardware at the new frequency, and then re-enable
- 	 * the relevant bits of the h/w.
- 	 */
--	return ath5k_reset(ah, chan, true);
-+	return ath5k_reset(ah, chandef->chan, true);
+ #define BRCMF_ENUM_DEF(id, val) \
+ 	BRCMF_E_##id = (val),
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 70f70ce..1d8fa7d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -426,6 +426,7 @@ struct brcmf_fws_info {
+ 	struct brcmf_fws_stats stats;
+ 	struct brcmf_fws_hanger hanger;
+ 	enum brcmf_fws_fcmode fcmode;
++	bool bcmc_credit_check;
+ 	struct brcmf_fws_macdesc_table desc;
+ 	struct workqueue_struct *fws_wq;
+ 	struct work_struct fws_dequeue_work;
+@@ -1438,6 +1439,20 @@ static int brcmf_fws_notify_credit_map(struct brcmf_if *ifp,
+ 	return 0;
  }
  
- void ath5k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-@@ -2525,6 +2542,8 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
- 	/* SW support for IBSS_RSN is provided by mac80211 */
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
-+	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
++static int brcmf_fws_notify_bcmc_credit_support(struct brcmf_if *ifp,
++						const struct brcmf_event_msg *e,
++						void *data)
++{
++	struct brcmf_fws_info *fws = ifp->drvr->fws;
++	ulong flags;
 +
- 	/* both antennas can be configured as RX or TX */
- 	hw->wiphy->available_antennas_tx = 0x3;
- 	hw->wiphy->available_antennas_rx = 0x3;
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index ca9a83c..97469d0 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -101,7 +101,7 @@ void ath5k_set_beacon_filter(struct ieee80211_hw *hw, bool enable);
++	brcmf_fws_lock(ifp->drvr, flags);
++	if (fws)
++		fws->bcmc_credit_check = true;
++	brcmf_fws_unlock(ifp->drvr, flags);
++	return 0;
++}
++
+ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
+ 		      struct sk_buff *skb)
+ {
+@@ -1806,6 +1821,12 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		  eh->h_dest, multicast, fifo);
  
- void ath5k_update_bssid_mask_and_opmode(struct ath5k_hw *ah,
- 					struct ieee80211_vif *vif);
--int ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan);
-+int ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef);
- void ath5k_txbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
- void ath5k_rxbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
- void ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
-diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-index 81b686c..aa9d976 100644
---- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-+++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-@@ -202,7 +202,7 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
- 	mutex_lock(&ah->lock);
- 
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
--		ret = ath5k_chan_set(ah, conf->chandef.chan);
-+		ret = ath5k_chan_set(ah, &conf->chandef);
- 		if (ret < 0)
- 			goto unlock;
+ 	brcmf_fws_lock(drvr, flags);
++	/* multicast credit support is conditional, setting
++	 * flag to false to assure credit is consumed below.
++	 */
++	if (fws->bcmc_credit_check)
++		multicast = false;
++
+ 	if (skcb->mac->suppressed ||
+ 	    fws->bus_flow_blocked ||
+ 	    brcmf_fws_mac_desc_closed(fws, skcb->mac, fifo) ||
+@@ -1878,7 +1899,8 @@ static void brcmf_fws_dequeue_worker(struct work_struct *worker)
+ 	brcmf_fws_lock(fws->drvr, flags);
+ 	for (fifo = NL80211_NUM_ACS; fifo >= 0 && !fws->bus_flow_blocked;
+ 	     fifo--) {
+-		while (fws->fifo_credit[fifo]) {
++		while ((fws->fifo_credit[fifo]) || ((!fws->bcmc_credit_check) &&
++		       (fifo == BRCMF_FWS_FIFO_BCMC))) {
+ 			skb = brcmf_fws_deq(fws, fifo);
+ 			if (!skb)
+ 				break;
+@@ -1947,6 +1969,13 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
+ 		brcmf_err("register credit map handler failed\n");
+ 		goto fail;
  	}
++	rc = brcmf_fweh_register(drvr, BRCMF_E_BCMC_CREDIT_SUPPORT,
++				 brcmf_fws_notify_bcmc_credit_support);
++	if (rc < 0) {
++		brcmf_err("register bcmc credit handler failed\n");
++		brcmf_fweh_unregister(drvr, BRCMF_E_FIFO_CREDIT_MAP);
++		goto fail;
++	}
+ 
+ 	/* setting the iovar may fail if feature is unsupported
+ 	 * so leave the rc as is so driver initialization can
+@@ -1971,6 +2000,7 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
+ 	return 0;
+ 
+ fail_event:
++	brcmf_fweh_unregister(drvr, BRCMF_E_BCMC_CREDIT_SUPPORT);
+ 	brcmf_fweh_unregister(drvr, BRCMF_E_FIFO_CREDIT_MAP);
+ fail:
+ 	brcmf_fws_deinit(drvr);
 -- 
 1.7.10.4
+
 
