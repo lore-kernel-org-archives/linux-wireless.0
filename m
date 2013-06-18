@@ -1,101 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:45103 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755198Ab3F1KcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 06:32:10 -0400
-Message-ID: <1372415514.21065.50.camel@cumari.coelho.fi> (sfid-20130628_123241_148774_59CCE525)
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-From: Luciano Coelho <coelho@ti.com>
-To: Mark Rutland <mark.rutland@arm.com>, <mturquette@linaro.org>
-CC: "grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm@vger.kernel.org" <linux-arm@vger.kernel.org>
-Date: Fri, 28 Jun 2013 13:31:54 +0300
-In-Reply-To: <20130628102145.GB2139@e106331-lin.cambridge.arm.com>
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-	 <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
-	 <1372413215.21065.41.camel@cumari.coelho.fi>
-	 <20130628102145.GB2139@e106331-lin.cambridge.arm.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:39093 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932824Ab3FROCB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 10:02:01 -0400
+Message-ID: <1371564106.8318.18.camel@jlt4.sipsolutions.net> (sfid-20130618_160205_807979_971D783E)
+Subject: Re: [RFC 0/4] add master channel switch announcement support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Tue, 18 Jun 2013 16:01:46 +0200
+In-Reply-To: <20130611141811.GA9490@pandem0nium>
+References: <1367867635-3459-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1368439778.8300.20.camel@jlt4.sipsolutions.net>
+	 <20130514092734.GA16426@pandem0nium>
+	 <1370953885.8356.38.camel@jlt4.sipsolutions.net>
+	 <20130611141811.GA9490@pandem0nium>
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(fixed Mike's address)
+On Tue, 2013-06-11 at 16:18 +0200, Simon Wunderlich wrote:
 
-On Fri, 2013-06-28 at 11:21 +0100, Mark Rutland wrote:
-> On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
-> > On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
-> > > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
-> > > > +Optional properties:
-> > > > +--------------------
-> > > > +
-> > > > +- refclock: the internal WLAN reference clock frequency (required for
-> > > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-> > > > +  following:
-> > > > +	0 = 19.2 MHz
-> > > > +	1 = 26.0 MHz
-> > > > +	2 = 38.4 MHz
-> > > > +	3 = 52.0 MHz
-> > > > +	4 = 38.4 MHz, XTAL
-> > > > +	5 = 26.0 MHz, XTAL
-> > > > +
-> > > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> > > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> > > > +  following:
-> > > > +	0 = 19.200 MHz
-> > > > +	1 = 26.000 MHz
-> > > > +	2 = 38.400 MHz
-> > > > +	3 = 52.000 MHz
-> > > > +	4 = 16.368 MHz
-> > > > +	5 = 32.736 MHz
-> > > > +	6 = 16.800 MHz
-> > > > +	7 = 33.600 MHz
+> > > I was thinking about adding another callback function or option for that for drivers
+> > > who do the channel switch internally. Then we would only need mac80211 to adapt.
 > > > 
-> > > This looks suspiciously like what we have the common clock bindings for:
-> > > 
-> > > refclk {
-> > > 	compatible = "fixed-clock";
-> > > 	#clock-cells = <0>;
-> > > 	clock-frequency = <19200000>;
-> > > }
-> > > 
-> > > wilink {
-> > > 	compatible = "ti,wilink7";
-> > > 	interrupt-parent = <&some_interrupt_controller>;
-> > > 	interrupts = <0 1 1>;
-> > > 	clocks = <&refclk>, <&refclk>;
-> > > 	clock-names = "refclk", "txoclk";
-> > > };
-> > > 
-> > > Could you not use them?
+> > > Would that help, or what would be problematic?
 > > 
-> > Hmmm... this actually does look good.  But these are internal clocks in
-> > the modules, they cannot be accessed from outside.  Does it make sense
-> > to register them with the clock framework?
+> > I don't really know. If you look at what we do in managed mode now, some
+> > drivers will do the switching and report back when done.
 > 
-> Given we already have a common way of describing clocks, I think it
-> makes sense to use it -- people already understand the common bindings,
-> and it's less code to add add to the kernel. I don't think the fact
-> these clocks are internal should prevent us from describing them as we
-> would an external clock.
+> OK, maybe we should leave that open to people who implement that feature for
+> their respective drivers.
 
-Yes, I agree with you.  Thanks for the suggestion! I think it will look
-much better.  And now that I dug a bit more into the code, I can see
-that there are only structs being populated, so there shouldn't be any
-other side-effects.
+We just have to be aware of it and make the API "offloading-friendly"
 
+> What I'm concered about is to initiate a channel switch from userspace. This will be
+> required for IBSS-DFS: when a radar is detected and this event is sent to userspace, it
+> must react by initiating a channel switch.
 
-> Perhaps Mike Turquette [Cc'd] has an opinion on the matter. 
+Why would that not happen in the kernel directly?
 
-Experts' opinions are appreciated. :)
-
---
-Luca.
+johannes
 
