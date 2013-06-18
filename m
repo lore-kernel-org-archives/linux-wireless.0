@@ -1,27 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:59816 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751827Ab3FVPmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Jun 2013 11:42:25 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 0/3] rt2x00: rt2800: prepare for three-chain device support
-Date: Sat, 22 Jun 2013 17:42:11 +0200
-Message-Id: <1371915734-13966-1-git-send-email-juhosg@openwrt.org> (sfid-20130622_174240_126924_8490317F)
+Received: from mail.candelatech.com ([208.74.158.172]:52504 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703Ab3FRA2U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jun 2013 20:28:20 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC 2/2] wireless:  Make sure __cfg80211_connect_result always puts bss.
+Date: Mon, 17 Jun 2013 17:28:01 -0700
+Message-Id: <1371515281-26879-2-git-send-email-greearb@candelatech.com> (sfid-20130618_022822_882338_7451297B)
+In-Reply-To: <1371515281-26879-1-git-send-email-greearb@candelatech.com>
+References: <1371515281-26879-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gabor Juhos (3):
-  rt2x00: rt2800: increase EEPROM_SIZE to 512 bytes
-  rt2x00: rt2800lib: turn on secondary PAs/LNAs for 3T/3R devices
-  rt2x00: rt2800lib: turn on tertiary PAs/LNAs for 3T/3R devices
+From: Ben Greear <greearb@candelatech.com>
 
- drivers/net/wireless/rt2x00/rt2800.h    |    2 +-
- drivers/net/wireless/rt2x00/rt2800lib.c |   22 ++++++++++++++++++----
- 2 files changed, 19 insertions(+), 5 deletions(-)
+Otherwise, we can leak a bss reference.
 
---
-1.7.10
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/wireless/sme.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 6066720..ea2ce33 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -420,6 +420,7 @@ void cfg80211_sme_failed_assoc(struct wireless_dev *wdev)
+ 	schedule_work(&rdev->conn_work);
+ }
+ 
++/** This method must consume bss one way or another */
+ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 			       const u8 *req_ie, size_t req_ie_len,
+ 			       const u8 *resp_ie, size_t resp_ie_len,
+@@ -435,11 +436,17 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
+-		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
++		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)) {
++		if (bss)
++			cfg80211_put_bss(wdev->wiphy, bss);
+ 		return;
++	}
+ 
+-	if (wdev->sme_state != CFG80211_SME_CONNECTING)
++	if (wdev->sme_state != CFG80211_SME_CONNECTING) {
++		if (bss)
++			cfg80211_put_bss(wdev->wiphy, bss);
+ 		return;
++	}
+ 
+ 	nl80211_send_connect_result(wiphy_to_dev(wdev->wiphy), dev,
+ 				    bssid, req_ie, req_ie_len,
+-- 
+1.7.3.4
 
