@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46601 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753119Ab3FXTAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 15:00:50 -0400
-Message-ID: <51C89764.8000700@openwrt.org> (sfid-20130624_210111_086449_F3692AB1)
-Date: Mon, 24 Jun 2013 21:00:52 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:33940 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755961Ab3FRP0f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 11:26:35 -0400
+Received: by mail-oa0-f47.google.com with SMTP id m1so5260708oag.34
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jun 2013 08:26:34 -0700 (PDT)
+Message-ID: <51C07C29.6070602@lwfinger.net> (sfid-20130618_172649_475423_18E50FBF)
+Date: Tue, 18 Jun 2013 10:26:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH 2/3] rt2x00: rt2800lib: turn on secondary PAs/LNAs for
- 3T/3R devices
-References: <1371915734-13966-1-git-send-email-juhosg@openwrt.org> <1371915734-13966-3-git-send-email-juhosg@openwrt.org> <CAGXE3d9_zOt0h6WaWUedXnJu9yucJ=Jtaa8PPacz1-6G2Wf63w@mail.gmail.com>
-In-Reply-To: <CAGXE3d9_zOt0h6WaWUedXnJu9yucJ=Jtaa8PPacz1-6G2Wf63w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Paul Menzel <paulepanter@users.sourceforge.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Connection not established with Realtek RTL8188CUS based USB
+ device (EDIMAX)
+References: <1371326265.9845.54.camel@mattotaupa>  <51BCD7BA.1040900@lwfinger.net> <1371505124.8902.72.camel@mattotaupa>  <51BF8B8D.3030603@lwfinger.net> <1371542085.7163.15.camel@mattotaupa>
+In-Reply-To: <1371542085.7163.15.camel@mattotaupa>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013.06.24. 15:00 keltezéssel, Helmut Schaa írta:
-> On Sat, Jun 22, 2013 at 5:42 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
->> The secondary PAs/LNAs are turned on only for 2T/2R
->> devices, however these are used for 3T/3R devices as
->> well. Always turn those on if the device uses more
->> than one tx/rx chains.
->>
->> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
->> ---
->>  drivers/net/wireless/rt2x00/rt2800lib.c |    8 ++++----
->>  1 file changed, 4 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index 4072242..f4cd3d8 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> @@ -2678,16 +2678,16 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
->>
->>         tx_pin = 0;
->>
->> -       /* Turn on unused PA or LNA when not using 1T or 1R */
->> -       if (rt2x00dev->default_ant.tx_chain_num == 2) {
->> +       if (rt2x00dev->default_ant.tx_chain_num > 1) {
->> +               /* Turn on secondary PAs for 2T adn for 3T devices*/
-> 
-> Typo adn -> and.
-> 
-> Otherwise looks good to me.
+On 06/18/2013 02:54 AM, Paul Menzel wrote:
+> Three more questions regarding this patch.
+>
+> 1. Could you add `CC: stable@vger.kernel.org` to the patch so it gets
+> backported to the stable Linux kernel releases.
 
-Thanks, I will send a fixed version.
+I thought I had done that. In fact, the patch was Cc'd to stable, but I missed 
+the entry in the commit message. I have written to Stable to see what caqn be done.
 
--Gabor
+> 2. Does this fix a regression or did it never work with WEP/WPA(1)
+> networks before?
+
+It does fix a regression, but I have no idea when it happened.
+
+> 3. If wpa_supplicant only prints WPA to `/var/log/syslog`, can I be sure
+> this is *no* WPA2 network? Because I always thought this is a WPA2
+> network.
+
+The data in an "iwlist scan" will state the version of WPA in use. If it is 
+WPA2, you get a line with
+
+IE: IEEE 802.11i/WPA2 Version 1
+
+For WPA1, it is
+
+IE: WPA Version 1
+
+Larry
+
+
+
