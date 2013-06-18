@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:55930 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486Ab3FQUdK convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37826 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752774Ab3FRHcs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 16:33:10 -0400
-Received: by mail-oa0-f49.google.com with SMTP id n9so4077922oag.36
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 13:33:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rzCDHx7s9hz0=yDYsMeb45KANW0mW8qe=uH8QJGV-64CA@mail.gmail.com>
-References: <1371491780-23412-1-git-send-email-zajec5@gmail.com>
-	<201306172038.21642.florian@openwrt.org>
-	<CACna6rzCDHx7s9hz0=yDYsMeb45KANW0mW8qe=uH8QJGV-64CA@mail.gmail.com>
-Date: Mon, 17 Jun 2013 22:33:08 +0200
-Message-ID: <CACna6rwK5yE0gn59FTDG9C+pSTqGc3NFXPNXKY=Wv+wgOHQq=A@mail.gmail.com> (sfid-20130617_223315_007242_B8767C9A)
-Subject: Re: [PATCH] ssb: add struct for serial flash
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Florian Fainelli <florian@openwrt.org>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 18 Jun 2013 03:32:48 -0400
+Message-ID: <1371540696.8318.0.camel@jlt4.sipsolutions.net> (sfid-20130618_093306_674739_06FCD61A)
+Subject: Re: [PATCH] mac80211: allow key deletion for mesh interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Date: Tue, 18 Jun 2013 09:31:36 +0200
+In-Reply-To: <1371528422-20710-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130618_060934_033197_015BA4A8)
+References: <1371528422-20710-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20130618_060934_033197_015BA4A8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/6/17 Rafał Miłecki <zajec5@gmail.com>:
-> 2013/6/17 Florian Fainelli <florian@openwrt.org>:
->> Hello Rafal,
->>
->> Le lundi 17 juin 2013 18:56:20, Rafał Miłecki a écrit :
->>> This data allow writing for example MTD driver.
->>
->> Your commit message could probably have some more information, by looking at
->> the patch, it is not entirely clear to me what this does, especially as sflash
->> is just a write only structure?
->
-> OK, no problem. I'll give people w little more time for comments, and
-> then I'll submit next version.
+On Tue, 2013-06-18 at 12:07 +0800, Chun-Yeow Yeoh wrote:
+> This is to support key deletion for mesh interface, especially
+> to be used for key which is not deleted even with the deletion
+> of peer mesh station.
 
-It's already in wireless-next, so I'll explain this just in an e-mail.
-There is not much more to explain anyway ;)
+Can you explain which keys in mesh aren't deleted? It seems the
+per-station keys would be deleted when the station is deleted, and
+something like "GTK" would be deleted when leaving the mesh?
 
--- 
-Rafał
+johannes
+
