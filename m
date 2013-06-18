@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:60430 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757276Ab3FEUvu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:52521 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703Ab3FRAas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 16:51:50 -0400
-Received: by mail-ea0-f173.google.com with SMTP id g15so1401541eak.4
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 13:51:49 -0700 (PDT)
-Message-ID: <1370465502.6213.46.camel@canaries64> (sfid-20130605_225154_424564_3B1B5A78)
-Subject: [PATCH 13/13] staging: vt6656: clean up MACvWriteBeaconInterval
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 05 Jun 2013 21:51:42 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 17 Jun 2013 20:30:48 -0400
+Message-ID: <51BFAA34.1020407@candelatech.com> (sfid-20130618_023050_923624_4B8E0EEA)
+Date: Mon, 17 Jun 2013 17:30:44 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Lots of confusion on bss refcounting.
+References: <51BF5A53.8050100@candelatech.com>  (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net> <51BF5ED4.9010704@candelatech.com> <51BF8040.2000408@candelatech.com>
+In-Reply-To: <51BF8040.2000408@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove internal white space and camel case.
+On 06/17/2013 02:31 PM, Ben Greear wrote:
+> On 06/17/2013 12:09 PM, Ben Greear wrote:
+>> On 06/17/2013 12:02 PM, Johannes Berg wrote:
+>
+>> The bss reference is passed back, and through luck or careful programming,
+>> it *seems* that all paths related to calling ieee80211_rx_mgmt_assoc_resp
+>> managed to consume the bss.
+>>
+>> I haven't figured out yet why this is not an erroneous put since I didn't
+>> find the reference taken in the first place.
+>>
+>> I'm going to work on making some changes to the ref counting scheme
+>> a bit.  I'd rather have the code perhaps take and put a few refs
+>> it might otherwise skip to keep the ownership cleaner and make
+>> the code easier to debug and understand...
+>>
+>> I'll post some for RFC when I make some progress.
+>
+> I think I found at least some of the leaks.
+>
+> In places like ieee80211_mgd_stop, we were calling ieee80211_destroy_assoc_data,
+> but it was not putting the bss reference.
+>
+> I'll post some RFC patches in a minute or two...first is debugging
+> logic, second attempts to fix bss ref counting.  This needs more
+> testing before it is applied...we will continue testing it....
 
-Camel case changes;
-pDevice -> priv
-pbyData -> data
-wInterval -> interval
+It seems that the wdev objects (struct wireless_dev) can also
+hold a reference to the bss.
 
-Functional change
-CONTROLnsRequestOut Length = ARRAY_SIZE(data)
+Do you happen to know what code is responsible for destructing
+those objects?  I want to check to make sure it properly puts
+its reference.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c | 21 ++++++++-------------
- 1 file changed, 8 insertions(+), 13 deletions(-)
+Even after the patches posted I still see a few leaked bss objects...
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index e255405..1d25722 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -279,18 +279,13 @@ void MACvDisableBarkerPreambleMd(struct vnt_private *priv)
- 		MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
- 
--void MACvWriteBeaconInterval(struct vnt_private *pDevice, u16 wInterval)
-+void MACvWriteBeaconInterval(struct vnt_private *priv, u16 interval)
- {
--	u8 pbyData[2];
--
--	pbyData[0] = (u8)(wInterval & 0xff);
--	pbyData[1] = (u8)(wInterval >> 8);
--
--    CONTROLnsRequestOut(pDevice,
--			MESSAGE_TYPE_WRITE,
--			MAC_REG_BI,
--			MESSAGE_REQUEST_MACREG,
--			2,
--			pbyData
--			);
-+	u8 data[2];
-+
-+	data[0] = (u8)(interval & 0xff);
-+	data[1] = (u8)(interval >> 8);
-+
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE, MAC_REG_BI,
-+		MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
+Thanks,
+Ben
+
 -- 
-1.8.1.2
-
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
