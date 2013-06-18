@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:38169 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752448Ab3FCHlN (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39291 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753312Ab3FROtz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 03:41:13 -0400
-Date: Mon, 03 Jun 2013 00:41:12 -0700 (PDT)
-Message-Id: <20130603.004112.2164038601370585971.davem@davemloft.net> (sfid-20130603_094119_866151_7AEFEF03)
-To: jg1.han@samsung.com
-Cc: netdev@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com, linville@tuxdriver.com,
-	sgruszka@redhat.com, Larry.Finger@lwfinger.net,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: replace strict_strtoul() with kstrtoul()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <000f01ce5e99$00617fc0$01247f40$@samsung.com>
-References: <000f01ce5e99$00617fc0$01247f40$@samsung.com>
+	Tue, 18 Jun 2013 10:49:55 -0400
+Message-ID: <1371566972.8318.33.camel@jlt4.sipsolutions.net> (sfid-20130618_165003_350738_0932E37A)
+Subject: Re: [PATCHv2 3/5] mac80211: add functions to duplicate a
+ cfg80211_beacon
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Date: Tue, 18 Jun 2013 16:49:32 +0200
+In-Reply-To: <1371212124-26264-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1371212124-26264-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1371212124-26264-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jingoo Han <jg1.han@samsung.com>
-Date: Sat, 01 Jun 2013 16:24:06 +0900
+On Fri, 2013-06-14 at 14:15 +0200, Simon Wunderlich wrote:
 
-> The usage of strict_strtoul() is not preferred, because
-> strict_strtoul() is obsolete. Thus, kstrtoul() should be
-> used.
-> 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> +static struct cfg80211_beacon_data *
+> +cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
+> +{
+> +	struct cfg80211_beacon_data *new_beacon;
+> +	new_beacon = kzalloc(sizeof(*new_beacon), GFP_KERNEL);
+> +	if (!beacon)
+> +		return NULL;
 
-Applied.
+Why not allocate one bigger block and use pointers into it? There's no
+(reasonable) way that it'd get really big ...
+
+johannes
+
+
