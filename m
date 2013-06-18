@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34368 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751917Ab3FFEbD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39703 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932860Ab3FRRFb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 00:31:03 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20912.4064.404766.119533@gargle.gargle.HOWL> (sfid-20130606_063108_218910_1FA8746D)
-Date: Thu, 6 Jun 2013 09:58:16 +0530
-To: Ben Greear <greearb@candelatech.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] ath9k: Use minstrel rate control by default
-In-Reply-To: <51B00D50.9080606@candelatech.com>
-References: <1370488216-11626-1-git-send-email-sujith@msujith.org>
-	<51B006AE.6080309@candelatech.com>
-	<20912.2720.990590.284874@gargle.gargle.HOWL>
-	<51B00D50.9080606@candelatech.com>
+	Tue, 18 Jun 2013 13:05:31 -0400
+Message-ID: <1371575087.22256.2.camel@jlt4.sipsolutions.net> (sfid-20130618_190551_200433_4643406B)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
+	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	sgruszka@redhat.com
+Date: Tue, 18 Jun 2013 19:04:47 +0200
+In-Reply-To: <1371574361.3252.259.camel@edumazet-glaptop> (sfid-20130618_185301_249353_52D357F3)
+References: <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+	 <1361251033.19353.120.camel@edumazet-glaptop>
+	 <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	 <1361290909.19353.140.camel@edumazet-glaptop>
+	 <1361351538.8629.3.camel@jlt4.sipsolutions.net>
+	 <1361351703.8629.5.camel@jlt4.sipsolutions.net>
+	 <20130223061414.GA16883@merlins.org>
+	 <1361912099.8440.21.camel@jlt4.sipsolutions.net>
+	 <1371574361.3252.259.camel@edumazet-glaptop>
+	 (sfid-20130618_185301_249353_52D357F3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> Then default to minstrel, but no need to make people re-compile their
-> kernel to try a different rate control.  For some users/systems this is
-> effectively impossible, and for the rest, it is an extra bit of pain.
-> 
-> The point of leaving ath9k rate control in is exactly to help make sure
-> minstrel has something to compare against.  And if a user happens to know
-> they have a clean environment always and forever, then ath9k may be
-> the best solution for them.
-> 
-> It is a trivial amount of change to your patch to enable this
-> behaviour.  In fact, if you just remove the code I mentioned then
-> they will *automatically* get defaulted to minstrel regardless of
-> their kernel config.  The only way to use ath9k rate control after
-> that is to set the module option in mac80211 (and enable ath9k rate
-> control for compilation).
+On Tue, 2013-06-18 at 09:52 -0700, Eric Dumazet wrote:
 
-Yes, I think this can be done instead, since we have always had both
-ath9k RC and minstrel compiled in by default. I'll send a v2.
+> > We'll be submitting a patch to make single pages default.
+> 
+> Do you think the same change would be possible for
+> drivers/net/wireless/iwlegacy/4965-mac.c ?
 
-Sujith
+Yes, Stanislaw?
+
+johannes
+
