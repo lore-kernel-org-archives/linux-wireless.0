@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42280 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152Ab3FDVAL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38192 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755820Ab3FRJjl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 17:00:11 -0400
-Date: Tue, 4 Jun 2013 16:56:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, arend@broadcom.com
-Subject: Re: pull request: wireless 2013-06-03
-Message-ID: <20130604205630.GA11199@tuxdriver.com> (sfid-20130604_230019_877955_0A130DD9)
-References: <20130603184817.GD2727@tuxdriver.com>
- <20130604.131813.134898245916084893.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130604.131813.134898245916084893.davem@davemloft.net>
+	Tue, 18 Jun 2013 05:39:41 -0400
+Message-ID: <1371548362.8318.5.camel@jlt4.sipsolutions.net> (sfid-20130618_114004_936412_33B1DF45)
+Subject: Re: [PATCH] mac80211: allow key deletion for mesh interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Date: Tue, 18 Jun 2013 11:39:22 +0200
+In-Reply-To: <1371528422-20710-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130618_060934_033197_015BA4A8)
+References: <1371528422-20710-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20130618_060934_033197_015BA4A8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 04, 2013 at 01:18:13PM -0700, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 3 Jun 2013 14:48:17 -0400
-> 
-> > Please let me know if there are problems!
-> 
-> Sorry, the broadcom brcmfmac changes need to go.
-> 
-> Some of those commits are cleanups, and some of them have the worst
-> commit log messages ever, the last one for example:
-> 
-> 0017-brcmsmac-fix-regression-observed-in-3.10-rc1.patch
-> 
-> has no explanation whatsoever of what the actual problem or regression
-> is, what aspect of the logic in that function is causing the problem,
-> and no explanation why making this function always return 'false' is a
-> reasonable fix.
-> 
-> That entire series is of very low quality, and even if it was in good
-> shape, at least half the changes are not appropriate at all this late
-> in the -rc series.
+On Tue, 2013-06-18 at 12:07 +0800, Chun-Yeow Yeoh wrote:
 
-OK, sorry Dave -- I knew better...
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -239,7 +239,10 @@ static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+>  	if (mac_addr) {
+>  		ret = -ENOENT;
+>  
+> -		sta = sta_info_get_bss(sdata, mac_addr);
+> +		if (ieee80211_vif_is_mesh(&sdata->vif))
+> +			sta = sta_info_get(sdata, mac_addr);
+> +		else
+> +			sta = sta_info_get_bss(sdata, mac_addr);
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I don't see that this actually changes anything. The mesh sdata will
+have a NULL bss pointer, so the second condition in sta_info_get_bss()
+can't be true.
+
+Therefore, only the first condition can ever be considered, which is
+exactly the same as sta_info_get(), no?
+
+johannes
+
