@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:35562 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172Ab3F0G3b convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48572 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932426Ab3FRSpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 02:29:31 -0400
+	Tue, 18 Jun 2013 14:45:10 -0400
+Date: Tue, 18 Jun 2013 14:44:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-fixes 2013-06-14
+Message-ID: <20130618184407.GA12696@tuxdriver.com> (sfid-20130618_204515_489188_A15627A0)
+References: <1371206567.8278.3.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CA+icZUXJK2ks7TQbH0AiPYAWrFuQC85Uw2sSM6d_YD5yS7unhA@mail.gmail.com>
-References: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com>
-	<CADDKRnCP_s2hL2wr8TsKeToNRt5nXF3NBYAqkmCCUPX8HbY_yQ@mail.gmail.com>
-	<CA+icZUXJK2ks7TQbH0AiPYAWrFuQC85Uw2sSM6d_YD5yS7unhA@mail.gmail.com>
-Date: Thu, 27 Jun 2013 08:29:29 +0200
-Message-ID: <CA+icZUUvaBhMATa=nRg2BZjLeB5gw1pwkubnzePH=nr5kfqu6g@mail.gmail.com> (sfid-20130627_082947_382606_3E92C46D)
-Subject: Re: [v3.10-rc2] iwlwifi regression
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: =?UTF-8?Q?J=C3=B6rg_Otte?= <jrg.otte@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1371206567.8278.3.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 6:37 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
-> On Wed, Jun 26, 2013 at 6:16 PM, Jörg Otte <jrg.otte@gmail.com> wrote:
->> 2013/5/25 Jörg Otte <jrg.otte@gmail.com>:
->>> If iwlwifi/iwldvm are built into the kernel (no loadable modules)
->>> following error is written to console and syslog since v3.10-rc:
->>>
->>> iwlwifi 0000:08:00.0: failed to load module iwldvm (error -38), is
->>> dynamic loading enabled?
->>>
->>> reverting
->>> commit 1618b2b02a3a0ee7a6863fed4b0d22e697e7e97c
->>> Author: Johannes Berg <johannes.berg@intel.com>
->>> Date:   Thu Apr 4 10:35:23 2013 +0200
->>>     iwlwifi: print warning on request_module failure
->>>
->>> fixes the problem for me.
->>>
->>> Jörg
->>>
->>> I'm not subscribed,please CC me in answeres
->>
->> We have rc-7 now and it's still not fixed. What is the problem?
->>
->
-> The patch is pending in wireless.git and is not in mainline, right.
-> AFAICS there was a recent pull request... so should be in rc8.
->
-> commit 8edf3fd6eb0649b0f19363baf23bca39c6fbdba4
-> "iwlwifi: don't print module loading error if not modular"
->
-> - Sedat -
->
-> http://git.kernel.org/cgit/linux/kernel/git/linville/wireless.git/commit/?id=8edf3fd6eb0649b0f19363baf23bca39c6fbdba4
->
+On Fri, Jun 14, 2013 at 12:42:47PM +0200, Johannes Berg wrote:
+> John,
+> 
+> I have two more fixes that I think would be worthwhile for 3.10 but
+> admittedly the scenario is somewhat unlikely, so if you want to hold
+> them for 3.11 I can live with that. In that case, I can put them into my
+> -next tree, or you can pull this into -next (but if you don't pull
+> wireless.git first you'd get some more fixes you already have.)
+> 
+> These two patches fix two issues with using rfkill randomly during
+> traffic, which would then cause our driver to stop working and not be
+> able to recover at all.
+> 
+> johannes
+> 
+> 
+> The following changes since commit 622ebe994f6866b8d46ee5d3bcc329ed65d3722d:
+> 
+>   iwlwifi: fix rate control regression (2013-06-12 14:13:39 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to 8a487b1a7432b20ff3f82387a8ce7555a964b44e:
+> 
+>   iwlwifi: pcie: wake the queue if stopped when being unmapped (2013-06-13 16:44:04 +0200)
 
-Hi Jörg,
+Pulling now (to wireless-next)...
 
-the fix you are waiting for hit mainline several minutes ago.
-
-Regards,
-- Sedat -
-
-[1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=98b6ed0f2bf4abfb759206aa70690636372bdee7
-
->> Thanks, Jörg
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
