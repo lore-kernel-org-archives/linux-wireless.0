@@ -1,39 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:61816 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752070Ab3FQTqJ convert rfc822-to-8bit (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:42326 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933069Ab3FRQ2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 15:46:09 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h1so3957963oag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 12:46:08 -0700 (PDT)
+	Tue, 18 Jun 2013 12:28:03 -0400
+Date: Tue, 18 Jun 2013 18:27:57 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv3 05/18] mac80211: fix timing for 5 MHz and 10 MHz
+ channels
+Message-ID: <20130618162757.GA28106@pandem0nium> (sfid-20130618_182811_240430_DEE81417)
+References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1368702045-27598-6-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1371565283.8318.21.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <201306172038.21642.florian@openwrt.org>
-References: <1371491780-23412-1-git-send-email-zajec5@gmail.com>
-	<201306172038.21642.florian@openwrt.org>
-Date: Mon, 17 Jun 2013 21:46:08 +0200
-Message-ID: <CACna6rzCDHx7s9hz0=yDYsMeb45KANW0mW8qe=uH8QJGV-64CA@mail.gmail.com> (sfid-20130617_214613_338120_0D6A2B33)
-Subject: Re: [PATCH] ssb: add struct for serial flash
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Florian Fainelli <florian@openwrt.org>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="GvXjxJ+pjyke8COw"
+In-Reply-To: <1371565283.8318.21.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/6/17 Florian Fainelli <florian@openwrt.org>:
-> Hello Rafal,
->
-> Le lundi 17 juin 2013 18:56:20, Rafał Miłecki a écrit :
->> This data allow writing for example MTD driver.
->
-> Your commit message could probably have some more information, by looking at
-> the patch, it is not entirely clear to me what this does, especially as sflash
-> is just a write only structure?
 
-OK, no problem. I'll give people w little more time for comments, and
-then I'll submit next version.
+--GvXjxJ+pjyke8COw
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Rafał
+On Tue, Jun 18, 2013 at 04:21:23PM +0200, Johannes Berg wrote:
+>=20
+> > +static inline int
+> > +ieee80211_hw_get_divisor(struct ieee80211_hw *hw)
+> > +{
+> > +	switch (hw->conf.chandef.width) {
+> > +	case NL80211_CHAN_WIDTH_5:
+> > +		return 4;
+> > +	case NL80211_CHAN_WIDTH_10:
+> > +		return 2;
+> > +	default:
+> > +		return 1;
+> > +	}
+> > +}
+>=20
+> Using this function will break with drivers that use channel contexts,
+> you really shouldn't do that.
+Hmm ... yeah, you are right. I've used this a lot in the following patches,=
+ argh.
+
+Will find another solution.
+
+>=20
+> Also, you're disabling HT so why bother changing minstrel_ht?
+
+Mhm, yeah that is probably not neccesary. I'll remove that, however we reme=
+mber
+it once HT support should be added. ;)
+
+Thanks,
+	Simon
+
+--GvXjxJ+pjyke8COw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlHAio0ACgkQrzg/fFk7axb6dgCeKiARJMvnGfDMuVXA8Rvh3onu
+qsEAoJmzLAfNlcuCAQKxWUqMd7XHX36R
+=RB7Q
+-----END PGP SIGNATURE-----
+
+--GvXjxJ+pjyke8COw--
