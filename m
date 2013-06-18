@@ -1,86 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35114 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753533Ab3F0Q7S (ORCPT
+Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:58645 "EHLO
+	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755763Ab3FRXmG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 12:59:18 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 14/18] ath9k: set 5/10 MHz supported channels and fix bitrate
-Date: Thu, 27 Jun 2013 18:58:56 +0200
-Message-Id: <1372352340-20663-16-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_185935_250951_D0400F67)
-In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Tue, 18 Jun 2013 19:42:06 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/3] mwifiex: code rearrangement for better readability
+Date: Tue, 18 Jun 2013 16:36:56 -0700
+Message-ID: <1371598618-26593-1-git-send-email-bzhao@marvell.com> (sfid-20130619_014208_745055_BA573B08)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
-Changes to PATCHv4:
- * remove unused divisor line in the rate control
----
- drivers/net/wireless/ath/ath9k/init.c |   24 ++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/rc.c   |    5 +++++
- 2 files changed, 21 insertions(+), 8 deletions(-)
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index d0d3d2a..96b0d29 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -146,14 +146,22 @@ static struct ieee80211_rate ath9k_legacy_rates[] = {
- 	RATE(20, 0x1a, IEEE80211_RATE_SHORT_PREAMBLE),
- 	RATE(55, 0x19, IEEE80211_RATE_SHORT_PREAMBLE),
- 	RATE(110, 0x18, IEEE80211_RATE_SHORT_PREAMBLE),
--	RATE(60, 0x0b, 0),
--	RATE(90, 0x0f, 0),
--	RATE(120, 0x0a, 0),
--	RATE(180, 0x0e, 0),
--	RATE(240, 0x09, 0),
--	RATE(360, 0x0d, 0),
--	RATE(480, 0x08, 0),
--	RATE(540, 0x0c, 0),
-+	RATE(60, 0x0b, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(90, 0x0f, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(120, 0x0a, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(180, 0x0e, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(240, 0x09, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(360, 0x0d, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(480, 0x08, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(540, 0x0c, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
- };
+Use negative check (if(!bss_desc)) and return failure
+instead of failing a NULL check later in
+mwifiex_check_network_compatibility() routine.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 23aa910..15b5457 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -255,25 +255,24 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ 	}
  
- #ifdef CONFIG_MAC80211_LEDS
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index e41f563..5a69d9b 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1282,9 +1282,14 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
- 	int i, j = 0;
-+	u32 rate_flags = ieee80211_chandef_rate_flags(&sc->hw->conf.chandef);
- 
- 	for (i = 0; i < sband->n_bitrates; i++) {
- 		if (sta->supp_rates[sband->band] & BIT(i)) {
-+			if ((rate_flags & sband->bitrates[i].flags)
-+			    != rate_flags)
-+				continue;
+ 	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
++		u8 config_bands;
 +
- 			ath_rc_priv->neg_rates.rs_rates[j]
- 				= (sband->bitrates[i].bitrate * 2) / 10;
- 			j++;
+ 		/* Infra mode */
+ 		ret = mwifiex_deauthenticate(priv, NULL);
+ 		if (ret)
+ 			goto done;
+ 
+-		if (bss_desc) {
+-			u8 config_bands = 0;
++		if (!bss_desc)
++			return -1;
+ 
+-			if (mwifiex_band_to_radio_type((u8) bss_desc->bss_band)
+-			    == HostCmd_SCAN_RADIO_TYPE_BG)
+-				config_bands = BAND_B | BAND_G | BAND_GN |
+-					       BAND_GAC;
+-			else
+-				config_bands = BAND_A | BAND_AN | BAND_AAC;
++		if (mwifiex_band_to_radio_type(bss_desc->bss_band) ==
++						HostCmd_SCAN_RADIO_TYPE_BG)
++			config_bands = BAND_B | BAND_G | BAND_GN | BAND_GAC;
++		else
++			config_bands = BAND_A | BAND_AN | BAND_AAC;
+ 
+-			if (!((config_bands | adapter->fw_bands) &
+-			      ~adapter->fw_bands))
+-				adapter->config_bands = config_bands;
+-		}
++		if (!((config_bands | adapter->fw_bands) & ~adapter->fw_bands))
++			adapter->config_bands = config_bands;
+ 
+ 		ret = mwifiex_check_network_compatibility(priv, bss_desc);
+ 		if (ret)
 -- 
-1.7.10.4
+1.8.2.3
 
