@@ -1,110 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46890 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750830Ab3FXVDe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 17:03:34 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 3/3] rt2x00: rt2800lib: turn on tertiary PAs/LNAs for 3T/3R devices
-Date: Mon, 24 Jun 2013 23:03:24 +0200
-Message-Id: <1372107804-19679-4-git-send-email-juhosg@openwrt.org> (sfid-20130624_230340_292229_2E6B86B1)
-In-Reply-To: <1372107804-19679-1-git-send-email-juhosg@openwrt.org>
-References: <1372107804-19679-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:43608 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756252Ab3FRWE1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 18:04:27 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 6/6] wireless:  Add comments about bss refcounting.
+Date: Tue, 18 Jun 2013 15:03:37 -0700
+Message-Id: <1371593017-10985-6-git-send-email-greearb@candelatech.com> (sfid-20130619_000430_250528_BA838543)
+In-Reply-To: <1371593017-10985-1-git-send-email-greearb@candelatech.com>
+References: <1371593017-10985-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 3T/3R devices are using the tertiary PAs/LNAs
-however those are never turned on. Fix the code to
-turn on those on for such devices.
+From: Ben Greear <greearb@candelatech.com>
 
-Also modify the code to use switch statements to
-improve readability.
+Should help the next person that tries to understand
+the bss refcounting logic.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-Changes in v3:
- - also move setting of the primary PA of the 5GHz band into the first
-   switch statement
-Changes in v2:
- - use a switch statement to improve readability as suggested
-   by Gertjan
- - add detailed commit description
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   47 +++++++++++++++++++++++--------
- 1 file changed, 35 insertions(+), 12 deletions(-)
+ net/wireless/scan.c |    4 ++++
+ net/wireless/sme.c  |    3 +++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index b7119e3..25f7dbe 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2678,30 +2678,53 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 
- 	tx_pin = 0;
- 
--	if (rt2x00dev->default_ant.tx_chain_num > 1) {
--		/* Turn on secondary PAs for 2T and for 3T devices*/
-+	switch (rt2x00dev->default_ant.tx_chain_num) {
-+	case 3:
-+		/* Turn on tertiary PAs */
-+		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A2_EN,
-+				   rf->channel > 14);
-+		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G2_EN,
-+				   rf->channel <= 14);
-+		/* fall-through */
-+	case 2:
-+		/* Turn on secondary PAs */
- 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
- 				   rf->channel > 14);
- 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
- 				   rf->channel <= 14);
-+		/* fall-through */
-+	case 1:
-+		/* Turn on primary PAs */
-+		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN,
-+				   rf->channel > 14);
-+		if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags))
-+			rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
-+		else
-+			rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN,
-+					   rf->channel <= 14);
-+		break;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 542ff6d..834d2f9 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -622,6 +622,7 @@ static int cmp_bss(struct cfg80211_bss *a,
  	}
+ }
  
--	if (rt2x00dev->default_ant.rx_chain_num > 1) {
--		/* Turn on secondary LNAs for 2R and for 3R devices */
-+	switch (rt2x00dev->default_ant.rx_chain_num) {
-+	case 3:
-+		/* Turn on tertiary LNAs */
-+		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A2_EN, 1);
-+		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G2_EN, 1);
-+		/* fall-through */
-+	case 2:
-+		/* Turn on secondary LNAs */
- 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A1_EN, 1);
- 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G1_EN, 1);
-+		/* fall-through */
-+	case 1:
-+		/* Turn on primary LNAs */
-+		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A0_EN, 1);
-+		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G0_EN, 1);
-+		break;
- 	}
++/** Returned bss is reference counted and must be cleaned up appropriately. */
+ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
+ 				      struct ieee80211_channel *channel,
+ 				      const u8 *bssid,
+@@ -777,6 +778,7 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *dev,
+ 	return true;
+ }
  
--	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A0_EN, 1);
--	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G0_EN, 1);
- 	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_RFTR_EN, 1);
- 	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_TRSW_EN, 1);
--	if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags))
--		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
--	else
--		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN,
--				   rf->channel <= 14);
--	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN, rf->channel > 14);
++/** Returned bss is reference counted and must be cleaned up appropriately. */
+ static struct cfg80211_internal_bss *
+ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+ 		    struct cfg80211_internal_bss *tmp)
+@@ -962,6 +964,7 @@ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
+ 	return channel;
+ }
  
- 	rt2800_register_write(rt2x00dev, TX_PIN_CFG, tx_pin);
++/** Returned bss is reference counted and must be cleaned up appropriately. */
+ struct cfg80211_bss*
+ cfg80211_inform_bss(struct wiphy *wiphy,
+ 		    struct ieee80211_channel *channel,
+@@ -1019,6 +1022,7 @@ cfg80211_inform_bss(struct wiphy *wiphy,
+ }
+ EXPORT_SYMBOL(cfg80211_inform_bss);
  
++/** Returned bss is reference counted and must be cleaned up appropriately. */
+ struct cfg80211_bss *
+ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 			  struct ieee80211_channel *channel,
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index ea2ce33..d26cd68 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -263,6 +263,7 @@ void cfg80211_conn_work(struct work_struct *work)
+ 	rtnl_unlock();
+ }
+ 
++/** Returned bss is reference counted and must be cleaned up appropriately. */
+ static struct cfg80211_bss *cfg80211_get_conn_bss(struct wireless_dev *wdev)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+@@ -579,6 +580,7 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ }
+ EXPORT_SYMBOL(cfg80211_connect_result);
+ 
++/** Consumes bss object one way or another */
+ void __cfg80211_roamed(struct wireless_dev *wdev,
+ 		       struct cfg80211_bss *bss,
+ 		       const u8 *req_ie, size_t req_ie_len,
+@@ -662,6 +664,7 @@ void cfg80211_roamed(struct net_device *dev,
+ }
+ EXPORT_SYMBOL(cfg80211_roamed);
+ 
++/** Consumes bss object one way or another */
+ void cfg80211_roamed_bss(struct net_device *dev,
+ 			 struct cfg80211_bss *bss, const u8 *req_ie,
+ 			 size_t req_ie_len, const u8 *resp_ie,
 -- 
-1.7.10
+1.7.3.4
 
