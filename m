@@ -1,111 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4843 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932757Ab3FFLSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 07:18:47 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 04/22] brcmfmac: rework credit pickup to assure
- consistent handling
-Date: Thu, 6 Jun 2013 13:17:49 +0200
-Message-ID: <1370517487-14395-5-git-send-email-arend@broadcom.com> (sfid-20130606_131900_158095_11D714FD)
-In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:38745 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755672Ab3FRMTz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 08:19:55 -0400
+Message-ID: <1371557978.8318.10.camel@jlt4.sipsolutions.net> (sfid-20130618_141959_143093_BDED72EA)
+Subject: Re: [RFC 2/2] wireless:  Make sure __cfg80211_connect_result always
+ puts bss.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 18 Jun 2013 14:19:38 +0200
+In-Reply-To: <1371515281-26879-2-git-send-email-greearb@candelatech.com> (sfid-20130618_022822_882338_7451297B)
+References: <1371515281-26879-1-git-send-email-greearb@candelatech.com>
+	 <1371515281-26879-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20130618_022822_882338_7451297B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reworked brcmf_skb_pick_up_credit() so it can be used for both
-fcmode flavours in the same way.
+On Mon, 2013-06-17 at 17:28 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> Otherwise, we can leak a bss reference.
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  net/wireless/sme.c |   11 +++++++++--
+>  1 files changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+> index 6066720..ea2ce33 100644
+> --- a/net/wireless/sme.c
+> +++ b/net/wireless/sme.c
+> @@ -420,6 +420,7 @@ void cfg80211_sme_failed_assoc(struct wireless_dev *wdev)
+>  	schedule_work(&rdev->conn_work);
+>  }
+>  
+> +/** This method must consume bss one way or another */
+>  void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+>  			       const u8 *req_ie, size_t req_ie_len,
+>  			       const u8 *resp_ie, size_t resp_ie_len,
+> @@ -435,11 +436,17 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+>  	ASSERT_WDEV_LOCK(wdev);
+>  
+>  	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
+> -		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
+> +		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)) {
+> +		if (bss)
+> +			cfg80211_put_bss(wdev->wiphy, bss);
+>  		return;
+> +	}
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   30 +++++++++-----------
- 1 file changed, 13 insertions(+), 17 deletions(-)
+This is reasonable, though it'd be stupid to call it in this case, I'm
+not worried about leaking when the warning triggers.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index c1930ef5..a7a0247 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1040,24 +1040,21 @@ static void brcmf_fws_schedule_deq(struct brcmf_fws_info *fws)
- 		queue_work(fws->fws_wq, &fws->fws_dequeue_work);
- }
- 
--static void brcmf_skb_pick_up_credit(struct brcmf_fws_info *fws, int fifo,
-+static void brcmf_fws_skb_pickup_credit(struct brcmf_fws_info *fws, int fifo,
- 				     struct sk_buff *p)
- {
- 	struct brcmf_fws_mac_descriptor *entry = brcmf_skbcb(p)->mac;
- 
--	if (brcmf_skbcb(p)->if_flags & BRCMF_SKB_IF_FLAGS_CREDITCHECK_MASK) {
--		if (fws->fcmode != BRCMF_FWS_FCMODE_IMPLIED_CREDIT)
--			return;
-+	if (brcmf_skbcb(p)->if_flags & BRCMF_SKB_IF_FLAGS_CREDITCHECK_MASK)
- 		brcmf_fws_return_credits(fws, fifo, 1);
--	} else {
-+	else if (!brcmf_skb_if_flags_get_field(p, REQUESTED))
- 		/*
- 		 * if this packet did not count against FIFO credit, it
- 		 * must have taken a requested_credit from the destination
- 		 * entry (for pspoll etc.)
- 		 */
--		if (!brcmf_skb_if_flags_get_field(p, REQUESTED))
--			entry->requested_credit++;
--	}
-+		entry->requested_credit++;
-+
- 	brcmf_fws_schedule_deq(fws);
- }
- 
-@@ -1272,7 +1269,9 @@ brcmf_fws_txstatus_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
- 
- 	/* pick up the implicit credit from this packet */
- 	fifo = brcmf_skb_htod_tag_get_field(skb, FIFO);
--	brcmf_skb_pick_up_credit(fws, fifo, skb);
-+	if (fws->fcmode == BRCMF_FWS_FCMODE_IMPLIED_CREDIT ||
-+	    !(brcmf_skbcb(skb)->if_flags & BRCMF_SKB_IF_FLAGS_CREDITCHECK_MASK))
-+		brcmf_fws_skb_pickup_credit(fws, fifo, skb);
- 
- 	if (!remove_from_hanger)
- 		ret = brcmf_fws_txstatus_suppressed(fws, fifo, skb, genbit);
-@@ -1845,7 +1844,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 	} else {
- 		if (brcmf_fws_commit_skb(fws, fifo, skb))
- 			if (!multicast)
--				brcmf_skb_pick_up_credit(fws, fifo, skb);
-+				brcmf_fws_skb_pickup_credit(fws, fifo, skb);
- 	}
- 	brcmf_fws_unlock(drvr, flags);
- 	return 0;
-@@ -2053,18 +2052,15 @@ bool brcmf_fws_fc_active(struct brcmf_fws_info *fws)
- void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb)
- {
- 	ulong flags;
-+	int fifo;
- 
- 	brcmf_fws_lock(fws->drvr, flags);
- 	brcmf_fws_txstatus_process(fws, BRCMF_FWS_TXSTATUS_FW_TOSSED,
- 				   brcmf_skb_htod_tag_get_field(skb, HSLOT), 0);
- 	/* the packet never reached firmware so reclaim credit */
--	if (fws->fcmode == BRCMF_FWS_FCMODE_EXPLICIT_CREDIT &&
--	    brcmf_skbcb(skb)->if_flags & BRCMF_SKB_IF_FLAGS_CREDITCHECK_MASK) {
--		brcmf_fws_return_credits(fws,
--					 brcmf_skb_htod_tag_get_field(skb,
--								      FIFO),
--					 1);
--		brcmf_fws_schedule_deq(fws);
-+	if (fws->fcmode == BRCMF_FWS_FCMODE_EXPLICIT_CREDIT) {
-+		fifo = brcmf_skb_htod_tag_get_field(skb, FIFO);
-+		brcmf_fws_skb_pickup_credit(fws, fifo, skb);
- 	}
- 	brcmf_fws_unlock(fws->drvr, flags);
- }
--- 
-1.7.10.4
+> -	if (wdev->sme_state != CFG80211_SME_CONNECTING)
+> +	if (wdev->sme_state != CFG80211_SME_CONNECTING) {
+> +		if (bss)
+> +			cfg80211_put_bss(wdev->wiphy, bss);
+>  		return;
+> +	}
 
+This code doesn't exist any more.
+
+johannes
 
