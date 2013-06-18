@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48117 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788Ab3FRH3E (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39043 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932839Ab3FRNx1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 03:29:04 -0400
-Date: Tue, 18 Jun 2013 10:28:46 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
+	Tue, 18 Jun 2013 09:53:27 -0400
+Message-ID: <1371563594.8318.13.camel@jlt4.sipsolutions.net> (sfid-20130618_155342_373781_C5CED3F5)
+Subject: Re: pull-request: iwlwifi-fixes 2013-06-14
+From: Johannes Berg <johannes@sipsolutions.net>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] ath10k: off by one sanity check
-Message-ID: <20130618072846.GC12329@elgon.mountain> (sfid-20130618_092921_179841_684C7112)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 18 Jun 2013 15:53:14 +0200
+In-Reply-To: <20130614173419.GB28497@tuxdriver.com>
+References: <1371206567.8278.3.camel@jlt4.sipsolutions.net>
+	 <20130614173419.GB28497@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should be >= ARRAY_SIZE() instead of > ARRAY_SIZE().
+On Fri, 2013-06-14 at 13:34 -0400, John W. Linville wrote:
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> It isn't obvious to me that these need to be included in 3.10.  I can
+> pull this into wireless-next once the current stuff in wireless makes
+> it to davem's tree.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 8e4e832..c8e9056 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1772,7 +1772,7 @@ static irqreturn_t ath10k_pci_per_engine_handler(int irq, void *arg)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ce_id = irq - ar_pci->pdev->irq - MSI_ASSIGN_CE_INITIAL;
- 
--	if (ce_id < 0 || ce_id > ARRAY_SIZE(ar_pci->pipe_info)) {
-+	if (ce_id < 0 || ce_id >= ARRAY_SIZE(ar_pci->pipe_info)) {
- 		ath10k_warn("unexpected/invalid irq %d ce_id %d\n", irq, ce_id);
- 		return IRQ_HANDLED;
- 	}
+Please do, unless you changed your mind based on Emmanuel's reply.
+
+johannes
+
