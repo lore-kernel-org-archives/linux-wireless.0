@@ -1,51 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25791 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750846Ab3FYNms (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60452 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755589Ab3FRPrw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 09:42:48 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Arend van Spriel <arend@broadcom.com>, Peer@vger.kernel.org,
-	Ilan <ilan.peer@intel.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v12 0/2] P2P find phase offload
-Date: Tue, 25 Jun 2013 16:42:34 +0300
-Message-ID: <1372167756-17928-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130625_154251_747661_F71176A7)
+	Tue, 18 Jun 2013 11:47:52 -0400
+Message-ID: <51C08119.3000407@candelatech.com> (sfid-20130618_174801_680944_DCA016E7)
+Date: Tue, 18 Jun 2013 08:47:37 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Lots of confusion on bss refcounting.
+References: <51BF5A53.8050100@candelatech.com>   (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net>  <51BF5ED4.9010704@candelatech.com> <51BF8040.2000408@candelatech.com>  <51BFAA34.1020407@candelatech.com> <1371559771.8318.12.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1371559771.8318.12.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Addressing input by Ilan
+On 06/18/2013 05:49 AM, Johannes Berg wrote:
+> On Mon, 2013-06-17 at 17:30 -0700, Ben Greear wrote:
+>> On 06/17/2013 02:31 PM, Ben Greear wrote:
+>>> On 06/17/2013 12:09 PM, Ben Greear wrote:
+>>>> On 06/17/2013 12:02 PM, Johannes Berg wrote:
+>>>
+>>>> The bss reference is passed back, and through luck or careful programming,
+>>>> it *seems* that all paths related to calling ieee80211_rx_mgmt_assoc_resp
+>>>> managed to consume the bss.
+>>>>
+>>>> I haven't figured out yet why this is not an erroneous put since I didn't
+>>>> find the reference taken in the first place.
+>>>>
+>>>> I'm going to work on making some changes to the ref counting scheme
+>>>> a bit.  I'd rather have the code perhaps take and put a few refs
+>>>> it might otherwise skip to keep the ownership cleaner and make
+>>>> the code easier to debug and understand...
+>>>>
+>>>> I'll post some for RFC when I make some progress.
+>>>
+>>> I think I found at least some of the leaks.
+>>>
+>>> In places like ieee80211_mgd_stop, we were calling ieee80211_destroy_assoc_data,
+>>> but it was not putting the bss reference.
+>>>
+>>> I'll post some RFC patches in a minute or two...first is debugging
+>>> logic, second attempts to fix bss ref counting.  This needs more
+>>> testing before it is applied...we will continue testing it....
+>>
+>> It seems that the wdev objects (struct wireless_dev) can also
+>> hold a reference to the bss.
+>>
+>> Do you happen to know what code is responsible for destructing
+>> those objects?  I want to check to make sure it properly puts
+>> its reference.
+>
+> You mean ->current_bss? That should be handled in all the callbacks in
+> sme.c or so
 
-- remove NL80211_ATTR_LISTEN_FREQ, use NL80211_ATTR_WIPHY_FREQ instead
-- trace to include listen channel
+Looks like much of the action happens on work-queues.  I'm wondering if
+we managed to delete wdev objects before we have completely cleaned up
+in some cases...
 
-This time, only patch 2/2 changed.
+I was planning to add code to explicitly clean up current_bss if it
+is not NULL in whatever code actually does the final cleanup for
+wdev objects.
 
-Vladimir Kondratiev (2):
-  cfg80211: add 'flags' to cfg80211_rx_mgmt()
-  cfg80211: P2P find phase offload
+I didn't see an obvious cleanup method in sme.c, but will go look around
+some more...
 
- drivers/net/wireless/ath/ath6kl/wmi.c         |   7 +-
- drivers/net/wireless/ath/wil6210/wmi.c        |   2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c |   4 +-
- drivers/net/wireless/mwifiex/util.c           |   4 +-
- include/net/cfg80211.h                        |  79 ++++++++++-
- include/uapi/linux/nl80211.h                  |  27 ++++
- net/mac80211/rx.c                             |   3 +-
- net/wireless/mlme.c                           |   4 +-
- net/wireless/nl80211.c                        | 186 +++++++++++++++++++++++++-
- net/wireless/nl80211.h                        |   2 +-
- net/wireless/rdev-ops.h                       |  19 +++
- net/wireless/trace.h                          |  44 ++++++
- 12 files changed, 364 insertions(+), 17 deletions(-)
+Thanks,
+Ben
+
+>
+> johannes
+>
+
 
 -- 
-1.8.1.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
