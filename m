@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f170.google.com ([209.85.128.170]:60820 "EHLO
-	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752608Ab3F1TPx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:15:53 -0400
-Received: by mail-ve0-f170.google.com with SMTP id 14so2175963vea.15
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Jun 2013 12:15:52 -0700 (PDT)
-Message-ID: <51CDE0E6.4080305@lwfinger.net> (sfid-20130628_211606_009424_B88DF726)
-Date: Fri, 28 Jun 2013 14:15:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mout.gmx.net ([212.227.17.22]:64978 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756845Ab3FSSgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 14:36:45 -0400
+Received: from mailout-de.gmx.net ([10.1.76.1]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0Lds7x-1UP4u03mGR-00j0qR for
+ <linux-wireless@vger.kernel.org>; Wed, 19 Jun 2013 20:36:43 +0200
+Message-ID: <51C1FA33.2050308@rempel-privat.de> (sfid-20130619_203648_036997_823207CB)
+Date: Wed, 19 Jun 2013 20:36:35 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-To: "shiki.biomernok" <shiki.biomernok@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Fwd: Re: TP-Link 8200ND - rtl8192cu module not loading / working
-References: <51A77433.2060702@lwfinger.net> <51CAD0B8.3010303@gmail.com> <51CB1356.80306@lwfinger.net> <51CB250A.3060900@gmail.com> <51CB4E31.50502@lwfinger.net> <51CC0CD1.5000801@gmail.com> <51CC3F6E.4050308@gmail.com> <51CC5541.8010003@lwfinger.net> <51CC5B26.50605@gmail.com> <51CDAE50.3010107@lwfinger.net> <51CDD051.6060804@gmail.com>
-In-Reply-To: <51CDD051.6060804@gmail.com>
+To: Corey Richardson <corey@octayn.net>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Ignacy Gawedzki <i@lri.fr>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
+References: <20130619115809.GA26717@zenon.in.qult.net> <51C1ACEC.2020703@rempel-privat.de> <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com> <51C1B467.1030509@rempel-privat.de> <20130619140905.GA14079@zenon.in.qult.net> <1371651073.8349.19.camel@jlt4.sipsolutions.net> <51C1C95C.8030301@rempel-privat.de> <CA++BO6Rsys5Q_Wxuhcm+00uMvJq3HF2GcU7LmuVsYWq_BW-svw@mail.gmail.com>
+In-Reply-To: <CA++BO6Rsys5Q_Wxuhcm+00uMvJq3HF2GcU7LmuVsYWq_BW-svw@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/28/2013 01:05 PM, shiki.biomernok wrote:
-> Hello Larry!
+Am 19.06.2013 17:11, schrieb Corey Richardson:
+> On Wed, Jun 19, 2013 at 11:08 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>> Am 19.06.2013 16:11, schrieb Johannes Berg:
+>>>
+>>> Btw, I'm a bit confused -- are you using ath9k_htc as per the subject,
+>>> or ath9k?
+>>>
+>>> if it's ath9k_htc then I don't really understand why the patch that
+>>> *fixed* it for Corey *broke* it for you?
+>>>
+>>> johannes
+>>
+>>
+>> It will be interesting to get some more info from Corey, about his wireless
+>> setup.
+>>
 >
-> I'll only reply to you as you didn't CC the list with the driver (guess because
-> it's unreleased.)
->
-> Sadly, it isn't working either.
->
-> http://pastebin.com/Tv00kCuZ
->
-> No idea what could be the problem.
-> But no need to waste more time with it, I'm pretty sure you have your things to
-> do. I can just stick to the Intel one and that's all.
+> It seems many of my issues were related to a faulty WAP, once I
+> replaced it with a different one 90% of my problems went away. What
+> information do you want?
 
-Just like the other driver, it authenticated and associated. I guess it never 
-got the IP address.
+Every thing about your old WAP and symptoms of problems you had.
+- hardware. also you ath9k_htc adapter too
+- firmware
+- configuration
+- "iw dev wlan0 scan dump"
 
-I just sent it to you due to the size of the driver, and the fact that it was 
-not released. I put this one back on the list.
+Currently we have diffetrent mystical bugs, which are impossible to 
+reproduce some where else. So we will just collect every information we 
+can find.
 
-I just ordered an 8200ND through E-Bay. I'll let you know what I find when it 
-arrives.
-
-Larry
-
-
-
+-- 
+Regards,
+Oleksij
