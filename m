@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60487 "EHLO
-	sipsolutions.net" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751305Ab3FJG4x (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37692 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756656Ab3FSQDw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jun 2013 02:56:53 -0400
-Message-ID: <1370847386.8535.0.camel@jlt4.sipsolutions.net> (sfid-20130610_085656_698103_82279521)
-Subject: Re: [PATCH 2/2] mac80211: update mesh beacon on workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Date: Mon, 10 Jun 2013 08:56:26 +0200
-In-Reply-To: <CAG6hwVPbc=-airtoDSMmhzYQ+X64Qv42F+mnEQ5vbHjxC5wCew@mail.gmail.com> (sfid-20130610_044207_513100_0453AE65)
-References: <1370301943-13867-1-git-send-email-thomas@cozybit.com>
-	 <1370301943-13867-2-git-send-email-thomas@cozybit.com>
-	 <CAG6hwVPbc=-airtoDSMmhzYQ+X64Qv42F+mnEQ5vbHjxC5wCew@mail.gmail.com>
-	 (sfid-20130610_044207_513100_0453AE65)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 19 Jun 2013 12:03:52 -0400
+Message-ID: <51C1D654.2030908@candelatech.com> (sfid-20130619_180355_797521_C268367B)
+Date: Wed, 19 Jun 2013 09:03:32 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 2/2] cfg80211: hold BSS over association process
+References: <1371650017-14293-1-git-send-email-johannes@sipsolutions.net> <1371650017-14293-2-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1371650017-14293-2-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-06-09 at 19:41 -0700, Thomas Pedersen wrote:
+On 06/19/2013 06:53 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> This fixes the potential issue that the BSS struct that we use
+> and later assign to wdev->current_bss is removed from the scan
+> list while associating.
+>
+> Also warn when we don't have a BSS struct in connect_result
+> unless it's from a driver that only has the connect() API.
 
-> > +static void mesh_bss_info_changed(struct ieee80211_sub_if_data *sdata)
-> > +{
-> > +       struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-> > +#define TEST_CHANGED_BIT(bit) \
-> > +       test_and_clear_bit(bit, &ifmsh->mbss_changed)
-> > +
-> > +       u32 changed = TEST_CHANGED_BIT(BSS_CHANGED_BEACON) |
-> > +                     TEST_CHANGED_BIT(BSS_CHANGED_HT) |
-> > +                     TEST_CHANGED_BIT(BSS_CHANGED_BASIC_RATES) |
-> > +                     TEST_CHANGED_BIT(BSS_CHANGED_BEACON_INT);
-> > +#undef TEST_CHANGED_BIT
-> 
-> Uhhh we should read all the bits here. Will fix and resubmit as v2.
+This also looks OK to me, but I have not tested it.
 
-Now that you're quoting it I'd also say that the macro isn't really
-best, does removing it really make the code so much worse?
+Thanks,
+Ben
 
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
