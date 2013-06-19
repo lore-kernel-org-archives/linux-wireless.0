@@ -1,29 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:37831 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab3F0Nem (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 09:34:42 -0400
-Received: by mail-ee0-f49.google.com with SMTP id b57so399437eek.8
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jun 2013 06:34:41 -0700 (PDT)
-Message-ID: <51CC3F6E.4050308@gmail.com> (sfid-20130627_153445_909345_1B140AA4)
-Date: Thu, 27 Jun 2013 15:34:38 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: "shiki.biomernok" <shiki.biomernok@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Fwd: Re: TP-Link 8200ND - rtl8192cu module not loading / working
-References: <51A77433.2060702@lwfinger.net> <51CAD0B8.3010303@gmail.com> <51CB1356.80306@lwfinger.net> <51CB250A.3060900@gmail.com> <51CB4E31.50502@lwfinger.net> <51CC0CD1.5000801@gmail.com>
-In-Reply-To: <51CC0CD1.5000801@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from que11.charter.net ([209.225.8.21]:32953 "EHLO que11.charter.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934815Ab3FSSB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 14:01:28 -0400
+Received: from imp09 ([10.20.200.9]) by mta31.charter.net
+          (InterMail vM.8.01.05.02 201-2260-151-103-20110920) with ESMTP
+          id <20130619173639.YRMI24708.mta31.charter.net@imp09>
+          for <linux-wireless@vger.kernel.org>;
+          Wed, 19 Jun 2013 13:36:39 -0400
+Date: Wed, 19 Jun 2013 13:36:38 -0400
+From: rlwkayaker <rlwkayaker@charter.net>
+To: linux-wireless@vger.kernel.org
+Subject: Howto remove rfkill from kernel
+Message-ID: <20130619133638.3d183a00@compuzoo> (sfid-20130619_200132_693034_E98A3E8A)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/27/2013 11:58 AM, shiki.biomernok wrote:
-
-> @Xose: What does that mean for me? Am I trying the wrong driver?
-
-No, that should be the correct driver.
-But it looks like rtl8192cu wasn't tested enough with 2T2R(RTL8192CUS)
-devices.
+The rfkill "feature" has rendered the internal wireless of my
+Averatec 3260 laptop unusable.  It works fine with earlier
+kernels without this "feature".  How do I remove the rfkill
+"feature" from a custom built kernel?
