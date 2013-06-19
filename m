@@ -1,122 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36799 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964Ab3FXRYz (ORCPT
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:56753 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932860Ab3FSBqP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 13:24:55 -0400
-Message-ID: <1372094678.8439.24.camel@jlt4.sipsolutions.net> (sfid-20130624_192458_630453_0185A07B)
-Subject: pull-request: mac80211-next 2013-06-24
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 24 Jun 2013 19:24:38 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-h4rr0s1kRROlJMADPaDf"
-Mime-Version: 1.0
+	Tue, 18 Jun 2013 21:46:15 -0400
+MIME-Version: 1.0
+Date: Tue, 18 Jun 2013 15:46:13 -1000
+Message-ID: <CA+55aFxOde8n0M2=77-TQ2Ea9iz8s-e8zGFwjj6RVyMFXBgxEA@mail.gmail.com> (sfid-20130619_034626_299505_0F8D6B6B)
+Subject: nl80211 NULL pointer dereference
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hmm. Maybe this is old, but I don't think I've seen it before (who
+knows, maybe it has killed the machine before, I had a hard hang the
+other day).
 
---=-h4rr0s1kRROlJMADPaDf
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+It's a NULL pointer dereference in nl80211_set_reg() on my Pixel. The
+machine kind of stayed up afterwards, although with no working
+wireless, and it would not shut down cleanly presumably due to locks
+held etc.
 
-John,
+Any ideas? I'm including the few wireless-related messages that
+happened justr before the oops. Being a pixel, this is with the ath9k
+driver.
 
-As can be expected, I've accumulated a bunch more patches. Much of it is
-already trending towards fixes rather than new features, but some of
-those are there as well. I've removed the diffstat because git got
-confused about it, presumably because I merged mac80211 to resolve a
-conflict with the nl80211 fix. Anyway ...
+                     Linus
 
-Here we have a few memory leak fixes related to BSS struct handling
-mostly from Ben, including a fix for a more theoretical problem
-(associating while a BSS struct times out) from myself, a compilation
-warning fix from Arend, mesh fixes from Thomas, tracking the beacon
-bitrate (Alex), a bandwidth change event fix (Ilan) and some initial
-work for 5/10 MHz channels from Simon.
+---
+  wlp1s0: authenticate with 00:c0:23:ba:27:40
+  wlp1s0: send auth to 00:c0:23:ba:27:40 (try 1/3)
+  wlp1s0: authenticated
+  ath9k 0000:01:00.0 wlp1s0: disabling HT as WMM/QoS is not supported by the AP
+  ath9k 0000:01:00.0 wlp1s0: disabling VHT as WMM/QoS is not supported by the AP
+  wlp1s0: associate with 00:c0:23:ba:27:40 (try 1/3)
+  wlp1s0: RX AssocResp from 00:c0:23:ba:27:40 (capab=0x501 status=0 aid=4)
+  wlp1s0: associated
+  cfg80211: Calling CRDA for country: US
 
-Let me know if there are any issues.
-
-johannes
-
-
-The following changes since commit 795d855d56c6d172f50a974f603ba923ac93ee76=
-:
-
-  mac80211: Fix rate control mask matching call (2013-06-12 09:12:43 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
--john
-
-for you to fetch changes up to 6c7c4cbfd5f59c04a40af67ad72d14e19215ef36:
-
-  mac80211: initialize power mode for mesh STAs (2013-06-24 15:59:20 +0200)
-
-----------------------------------------------------------------
-Alexander Bondar (1):
-      mac80211: track AP's beacon rate and give it to the driver
-
-Antonio Quartulli (1):
-      Revert "mac80211: in IBSS use the Auth frame to trigger STA reinserti=
-on"
-
-Arend van Spriel (1):
-      cfg80211: fix compilation warning for cfg80211_leave_all()
-
-Ben Greear (4):
-      mac80211: Ensure tid_start_tx is protected by sta->lock
-      wireless: Make sure __cfg80211_connect_result always puts bss
-      wireless: add comments about bss refcounting
-      wireless: check for dangling wdev->current_bss pointer
-
-Ilan Peer (1):
-      mac80211: Fix VHT bandwidth change event
-
-Johannes Berg (6):
-      mac80211: fix TX aggregation TID struct leak
-      nl80211: fix attrbuf access race by allocating a separate one
-      Merge remote-tracking branch 'mac80211/master' into HEAD
-      nl80211: use small state buffer for wiphy_dump
-      cfg80211: require passing BSS struct back to cfg80211_assoc_timeout
-      cfg80211: hold BSS over association process
-
-Simon Wunderlich (5):
-      nl80211: use attributes to parse beacons
-      nl80211/cfg80211: add 5 and 10 MHz defines and wiphy flag
-      nl80211: add rate flags for 5/10 Mhz channels
-      mac80211: fix various components for the new 5 and 10 MHz widths
-      mac80211: change IBSS channel state to chandef
-
-Thomas Pedersen (3):
-      mac80211: update mesh beacon on workqueue
-      mac80211: allow self-protected frame tx without sta
-      mac80211: initialize power mode for mesh STAs
-
-
---=-h4rr0s1kRROlJMADPaDf
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRyIDWAAoJEDBSmw7B7bqreJ8QAJ30sORBYI8VnFqVwe6y0yhp
-1mR9F876Q4gkTXSGYoY1vtXWK2MpYQNCZgz8hAmjW8ZD44lsel+YJdp4P3K4rycr
-NzAdYf4Oc0vToOmq16pZT0mSfwmy+oxT/+WiWhYOCeLAYf234x1yuW6O3egOM6mB
-MjRwsHnv3YtIG5cDt7klwtIvgf1fswVGQ6My+r/iKXabRatrpQJEiv9tFYC72t0K
-bPban4vXwc+XB+ORvNPYCQq7FciZKK2ffDJUAWmTTGp6oLKogm73RBafQG6rE62u
-HCkdFuSJrOKos9KTi9+xZTspsw6YlJNlIRwKK4b1ovRE+eDihIX6/0sCs2fRowk5
-gnzPP7q2cOrLiEAGAUFeEMmPmpcONhvjK+XE2bA2UDhJBz2RFzu7hROb4KFX8s5C
-X2OUVciBboUDVEg8CvGA73LSEG1n8iEO3KpbFE/VwDcb5UF08PT3K4t/wZ5fuMCT
-ptqyT+ALxVJhsOq+0fYekZ4XDOOWV0uLVQZlP/malGxbNbvnI23LvJHNlZ4vp1Vv
-jh0ocILi+szHHK2EJ5IWfsS2L/1q/X8rxgUovmBdWwl+9MxQ1d21SptWZv8jHtEW
-w/rogHgmXjdqURGA2BeqFGXi/sMJU5NCEBwUDv7MxwCg1WA5Obbe3aniwNeoa9ZR
-TafCYE2eAhwWDOtKEZpZ
-=/kF/
------END PGP SIGNATURE-----
-
---=-h4rr0s1kRROlJMADPaDf--
-
+  BUG: unable to handle kernel NULL pointer dereference at           (null)
+  IP: [<ffffffffa02a77d3>] nl80211_set_reg+0x113/0x2c0 [cfg80211]
+  PGD 1459c3067 PUD 10f6fa067 PMD 0
+  Oops: 0000 [#1] SMP
+  Modules linked in: ftdi_sio tpm_tis tpm tpm_bios usb_storage fuse
+ebtable_nat nf_conntrack_netbios_ns nf_conntrack_broadcast
+ipt_MASQUERADE ip6table_nat nf_nat_ipv6 ip6table_mangle ip6t_REJECT
+nf_conntra
+   media chromeos_laptop snd_timer snd microcode lpc_ich rfkill
+soundcore mfd_core i2c_i801 uinput binfmt_misc dm_crypt i915
+i2c_algo_bit drm_kms_helper drm crc32_pclmul crc32c_intel
+ghash_clmulni_intel i2
+  CPU: 1 PID: 4859 Comm: crda Not tainted 3.10.0-rc6 #2
+  Hardware name: GOOGLE Link, BIOS          12/10/2012
+  RIP: 0010:[<ffffffffa02a77d3>]  [<ffffffffa02a77d3>]
+nl80211_set_reg+0x113/0x2c0 [cfg80211]
+  RSP: 0018:ffff8801277779f0  EFLAGS: 00010202
+  RAX: ffff8801456b0000 RBX: 0000000000000000 RCX: 0000000000000000
+  RDX: 00000000000000c0 RSI: 0000000000000000 RDI: 0000000000000000
+  RBP: ffff880127777a58 R08: 0000000000015d40 R09: ffff880141c8ecc0
+  R10: ffffffffa02a779a R11: 0000000000000004 R12: 0000000000000000
+  R13: ffff880141c8ecc0 R14: ffff88013af8d414 R15: ffff880127777a80
+  FS:  00007f2c82fb5740(0000) GS:ffff88014f280000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  CR2: 0000000000000000 CR3: 00000001459b2000 CR4: 00000000001407e0
+  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+  DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+  Call Trace:
+   [<ffffffff81531b44>] genl_family_rcv_msg+0x1f4/0x2e0
+   [<ffffffff81531cc1>] genl_rcv_msg+0x91/0xd0
+   [<ffffffff81531339>] netlink_rcv_skb+0xa9/0xc0
+   [<ffffffff81531758>] genl_rcv+0x28/0x40
+   [<ffffffff81530d62>] netlink_unicast+0x142/0x1f0
+   [<ffffffff815310ad>] netlink_sendmsg+0x29d/0x370
+   [<ffffffff814f22e9>] sock_sendmsg+0x99/0xd0
+   [<ffffffff814f270e>] ___sys_sendmsg+0x39e/0x3b0
+   [<ffffffff814f34f2>] __sys_sendmsg+0x42/0x80
+   [<ffffffff814f3542>] SyS_sendmsg+0x12/0x20
+   [<ffffffff81615e42>] system_call_fastpath+0x16/0x1b
+  Code: 60 10 41 0f b6 46 04 0f b6 fb 41 88 45 14 41 0f b6 46 05 41 88
+45 15 e8 8c c5 fe ff 84 c0 75 68 49 8b 47 20 4c 8b a0 10 01 00 00 <45>
+0f b7 34 24 41 83 ee 04 41 83 fe 03 7e 0e 41 0f b7 44 24 04
+  RIP  [<ffffffffa02a77d3>] nl80211_set_reg+0x113/0x2c0 [cfg80211]
+   RSP <ffff8801277779f0>
+  CR2: 0000000000000000
