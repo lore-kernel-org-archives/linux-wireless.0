@@ -1,155 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:42283
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752492Ab3FBMaW (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:53784 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756551Ab3FSNoe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Jun 2013 08:30:22 -0400
-Date: Sun, 2 Jun 2013 08:29:54 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>,
-	Ajitpal Singh <ajitpal.singh@stericsson.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cw1200: fix some obvious mistakes
-Message-ID: <20130602122954.GA3875@shaftnet.org> (sfid-20130602_143039_260111_BCCA01F9)
-References: <1370126241-2528420-1-git-send-email-arnd@arndb.de>
+	Wed, 19 Jun 2013 09:44:34 -0400
+Received: by mail-lb0-f182.google.com with SMTP id r11so4810727lbv.27
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jun 2013 06:44:32 -0700 (PDT)
+Message-ID: <51C1B5C3.8080604@cogentembedded.com> (sfid-20130619_154447_273345_A0667299)
+Date: Wed, 19 Jun 2013 17:44:35 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="pWyiEgJYm5f9v55/"
-In-Reply-To: <1370126241-2528420-1-git-send-email-arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	David Miller <davem@davemloft.net>,
+	John Linville <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: [PATCH] nl80211: fix attrbuf access race by allocating a separate
+ one
+References: <CA+55aFxOde8n0M2=77-TQ2Ea9iz8s-e8zGFwjj6RVyMFXBgxEA@mail.gmail.com>  <20130618.190632.33329016434510583.davem@davemloft.net>  <CA+55aFz=eG5-zh1toHxrx=4Qm4DvwyiBCU3u-6tc0-utfZ6xiA@mail.gmail.com>  (sfid-20130619_042459_700600_08CD35A3) <1371628488.8349.3.camel@jlt4.sipsolutions.net>  (sfid-20130619_095509_334897_6BA231FA) <1371630238.8349.6.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1371630238.8349.6.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello.
 
---pWyiEgJYm5f9v55/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 19-06-2013 12:23, Johannes Berg wrote:
 
-On Sun, Jun 02, 2013 at 12:37:21AM +0200, Arnd Bergmann wrote:
-> I got compile errors with the cw1200, which has lead me to take a
-> closer look. It seems the driver still has a number of issues,
-> and this addresses some of them and marks others as FIXME:
+> From: Johannes Berg <johannes.berg@intel.com>
 
-In short, NACK, at least not as posted.
+> Since my commit 3713b4e364, nl80211_dump_wiphy() uses the global
 
-The concerns are legitimate, but the time to object to such fundamental=20
-stuff was at some point during the past *seven* rounds of patches I=20
-posted over a period of nearly as many months.
+    Please also specify that commit's summary line in parens.
 
-Most of the objections you are raising are for deliberate=20
-design/implementation decisions I made to deal with the realities of the=20
-requirements of the cw1200 design and already-in-the-wild hardware that=20
-this driver has to support.
+> nl80211_fam.attrbuf for parsing the incoming data. This wouldn't
+> be a problem if it only did so on the first dump iteration which
+> is locked against other commands in generic netlink, but due to
+> space constraints in cb->args (the needed state doesn't fit) I
+> decided to always parse the original message. That's racy though
+> since nl80211_fam.attrbuf could be used by some other parsing in
+> generic netlink concurrently.
 
-> * The cw1200_sagrad.c file should not be there, hardcoding
->   hardware configuration in .c files has been obsolete since
->   Linux-2.4, so we should just remove it. Most of that file
->   was already commented out since it does not compile.
+> For now, fix this by allocating a separate parse buffer (it's a
+> bit too big for the stack, currently 1448 bytes on 64-bit). For
+> -next, I'll change the code to parse into the global buffer in
+> the first round only and then allocate a smaller buffer to keep
+> the state in cb->args.
 
-The problem with the cw1200 is that you need certain information about=20
-the hardware design in order to initialize it; this information has to=20
-come from somewhere.
+> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-The Sagrad wifi devices are available in a standard SD form factor=20
-reference design that plugs into a standard SDIO-supporing slot.  The=20
-cw1200_sagrad module is there to support these off-the-shelf devices.=20
+WBR, Sergei
 
-Requiring users to recompile their kernel or update their devicetree=20
-data for what amounts to an off-the-shelf hot-pluggable device is simply=20
-not acceptable.
-
-At the same time, if people plop the sagrad device directly on their=20
-board (or independently do a chip-down design) they may need to make=20
-changes to the platform data depending on how closely it tracks the=20
-Sagrad reference design.
-
-Further complicating things, there's no way to alter the SDIO=20
-vendor/device IDs that the device reports in order to distingish between=20
-any of this.
-
-If you have a better suggestion on how to handle this set of conflicting=20
-requirements then I'm all ears, but it's rather pointless to object to=20
-code that's ugly because it has to support ugly hardware.
-
-(That said, the commented-out bits in cw1200_sagrad are mostly there for=20
- documentation purposes, and it could be moved to a proper documentation=20
- file instead.)
-
-> * Move the parts of cw1200_sagrad.c that actually got used into
->   cw1200_sdio.c, because it doesn't build otherwise.
-
-The idea was that either you build cw1200_sagrad or provide your own=20
-platform_data.  I separated all of the implemenation-specific code out=20
-as cleanly as I could.
-
-> * Make the platform_data for the sdio driver private to
->   cw1200_sdio.c. The platform that was referenced here is
->   going to use device tree based probing only in the future,
->   which means the platform data has to go away anyway.
-
-When you say "the platform" what are you referring to?  SDIO?  There's=20
-no mention of any specific board (or even arch/subarch) in cw1200_sdio=20
-or cw1200_sagrad.
-
-In the real world, this driver will have to support non-devicetree=20
-operation for as long as Linux does, and indeed longer, thanks to=20
-compat-drivers/backports.
-
-And for what it's worth, none of the platforms I have access to have=20
-devicetree support since I'm stuck using vendor-supplied kernels.
-
-> * Move the platform_data for the spi driver to
->   include/linux/platform_data/net-cw1200.h where all other
->   drivers have their platform_data.
-
-Not all drivers, but fair enough.
-=20
-> * Add comments about passing GPIO numbers in platform_data:
->   You should not use IORESOURCE_IO, which is for legacy ISA
->   I/O ports on PCs, not for GPIOs.
-
-Fair enough.  The use of resources was something already in the driver=20
-when I inherited it, but I've seen this pattern a lot elsewhere.  Is=20
-there a specific driver I should reference instead?
-
-> It may actually be easier to remove the sdio driver entirely,
-> since it clearly doesn't work and requires a lot of cleanup.
-
-Several hundred thousand in-the-field devices already deployed with this=20
-driver clearly disagree with you.
-
-I've personally tested this driver on six different hardware platforms,=20
-using mainline kernels for some and vendor-supplied kernels for others. =20
-With module-down and SD-slot designs.  Others have tested other=20
-platforms.  Every configurable option and line item in both the SPI and=20
-SDIO platform data is there because it needs to be in order to support=20
-the variety of hardware designs already in the wild.
-
-This driver will also be part of the compat-drivers/backports project,=20
-and as such has to work within that framework as well.
-
-If you have constructive suggestions on how to handle this set of=20
-requirements in a cleaner manner, I'm all ears.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---pWyiEgJYm5f9v55/
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRqzrCPuLgii2759ARAlxLAJ9RD06bXE/Ei/ltAP/0aYXp7OdjWgCfZzE2
-R2Iv14gmrk/er+OBRMF3jbU=
-=OmG6
------END PGP SIGNATURE-----
-
---pWyiEgJYm5f9v55/--
