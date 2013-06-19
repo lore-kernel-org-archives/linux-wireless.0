@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:51103 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751746Ab3F0NYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 09:24:02 -0400
-Message-ID: <51CC3CEE.3050004@ti.com> (sfid-20130627_152407_323456_745408C1)
-Date: Thu, 27 Jun 2013 08:23:58 -0500
-From: Nishanth Menon <nm@ti.com>
+Received: from mail-qa0-f44.google.com ([209.85.216.44]:55918 "EHLO
+	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933836Ab3FSCwA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jun 2013 22:52:00 -0400
+Received: by mail-qa0-f44.google.com with SMTP id j8so142186qah.17
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jun 2013 19:51:59 -0700 (PDT)
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: <grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, Tony Lindgren <tony@atomide.com>,
-	linux-omap <linux-omap@vger.kernel.org>,
-	<linux-arm@vger.kernel.org>
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>  <51CBC1C8.1040301@gmail.com> <1372322851.18889.53.camel@cumari.coelho.fi>  <20130627125131.GA27285@kahuna> <1372337887.8383.12.camel@cumari.coelho.fi>  <CAGo_u6qbt9dANgKq49xR=1qsCpUBhmVaPL4EK04XvTw+=4Z23g@mail.gmail.com> <1372339148.8383.17.camel@cumari.coelho.fi>
-In-Reply-To: <1372339148.8383.17.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <1371593017-10985-6-git-send-email-greearb@candelatech.com>
+References: <1371593017-10985-1-git-send-email-greearb@candelatech.com> <1371593017-10985-6-git-send-email-greearb@candelatech.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 19 Jun 2013 12:51:38 +1000
+Message-ID: <CAGRGNgUUkVdes-QEz6n1nrvdgXwSb4cUKryPv9e1gZqgouhBhA@mail.gmail.com> (sfid-20130619_045203_430693_337122DC)
+Subject: Re: [PATCH 6/6] wireless: Add comments about bss refcounting.
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/27/2013 08:19 AM, Luciano Coelho wrote:
-> On Thu, 2013-06-27 at 08:15 -0500, Nishanth Menon wrote:
->> On Thu, Jun 27, 2013 at 7:58 AM, Luciano Coelho <coelho@ti.com> wrote:
->>> For the actual DTS files, I could add a wilink.dtsi with enumerations
->>> for these values so they could be used in the node definitions.  But I'm
->>> not sure it's going to be that valuable in the end.
->> The  way GPIO HIGH was defined might help to provide guidance I think :)
+Hi Ben,
+
+On Wed, Jun 19, 2013 at 8:03 AM,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
 >
-> Where? As far as I can see, the GPIO flags are defined in a bitmap.
+> Should help the next person that tries to understand
+> the bss refcounting logic.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  net/wireless/scan.c |    4 ++++
+>  net/wireless/sme.c  |    3 +++
+>  2 files changed, 7 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> index 542ff6d..834d2f9 100644
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
+> @@ -622,6 +622,7 @@ static int cmp_bss(struct cfg80211_bss *a,
+>         }
+>  }
+>
+> +/** Returned bss is reference counted and must be cleaned up appropriately. */
 
-include/dt-bindings/gpio/gpio.h
-And corresponding kernel header:
-include/linux/of_gpio.h
+/** is for kernel doc, I'm not sure that is valid kernel doc.
 
-just a hint. not saying frequencies were defined in header. for systems 
-that define frequencies - example cpufreq OPPs, clock node usage, we do 
-not use indexing to frequency, instead, that is the responsibility of 
-driver to convert frequency back to required index.
-git grep frequency Documentation/devicetree/bindings gives you how the 
-precedence looks like.
+Thanks,
 
-Personally, if given a choice, I'd go with actual frequencies rather 
-than indexes.
+--
+Julian Calaby
 
--- 
-Regards,
-Nishanth Menon
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
