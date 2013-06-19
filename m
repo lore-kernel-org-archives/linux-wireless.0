@@ -1,48 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43385 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934566Ab3FSO1r (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:45718 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935028Ab3FSWug (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 10:27:47 -0400
-Message-ID: <1371652060.8349.22.camel@jlt4.sipsolutions.net> (sfid-20130619_162750_542253_76255CCD)
-Subject: Re: [PATCH 1/6] wireless:  Add memory usage debugging.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Jun 2013 16:27:40 +0200
-In-Reply-To: <51C1BE8D.4020307@candelatech.com>
-References: <1371593017-10985-1-git-send-email-greearb@candelatech.com>
-	  (sfid-20130619_000356_212228_4AEA7C87) <1371635381.8349.9.camel@jlt4.sipsolutions.net>
-	 <51C1BE8D.4020307@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 19 Jun 2013 18:50:36 -0400
+Date: Wed, 19 Jun 2013 15:50:35 -0700 (PDT)
+Message-Id: <20130619.155035.459950131528536300.davem@davemloft.net> (sfid-20130620_005054_243081_4F4987A6)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-06-19
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130619194141.GH12079@tuxdriver.com>
+References: <20130619194141.GH12079@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-06-19 at 07:22 -0700, Ben Greear wrote:
-> > I'm not really sure this is worth it -- you found the bug with
-> > kmemleak() after all. Having very specific things for all of this
-> > doesn't really seem worth it.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 19 Jun 2013 15:41:41 -0400
+
+> One more late-breaking fix in the nl80211 code, the fix for the
+> nl80211_fam.attrbuf race Linus ran into and analysed.  Hopefully it
+> looks familiar... :-)
 > 
-> kmemleak didn't show the bss leaking though, so I spent several days
-> thinking ies pointers were being corrupted somehow.  I think the code
-> is not that intrusive, and since drivers also take bss refs, the problems
-> could come back in the future.
+> Let me know if there are problems!
 
-Fair enough, I'll think about it some more. I don't think drivers are
-really that much of a problem though.
-
-> I didn't actually audit the drivers since I am not using that hardware,
-> by the way.
-
-Right.
-
-> I started porting some patches to wireless-next yesterday..think that
-> would be a good enough tree to patch against?
-
-Probably OK, I only have few patches right now. I also just posted two
-patches to address parts of this problem though, can you review those
-too?
-
-johannes
-
+Easiest pull request ever :-)  Pulled, thanks John.
