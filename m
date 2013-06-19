@@ -1,83 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:49914 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751407Ab3F1TNQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:13:16 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 08/19] rt2x00: rt2800lib: fix default TX power values for RT3593
-Date: Fri, 28 Jun 2013 21:12:22 +0200
-Message-Id: <1372446753-11408-9-git-send-email-juhosg@openwrt.org> (sfid-20130628_211348_978015_D5C16E39)
-In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
-References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38135 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757362Ab3FSTPI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 15:15:08 -0400
+Date: Wed, 19 Jun 2013 15:05:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2013-06-19
+Message-ID: <20130619190518.GE12079@tuxdriver.com> (sfid-20130619_211513_285274_B72835E2)
+References: <1371659691.8349.24.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1371659691.8349.24.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TX power values in the EEPROM are using
-a different format for the RT3593 chip. The
-default TX power value uses bits 0..4 only.
-Bits 5..8 contains value for fine grained
-power control. Additionally, the lower and
-upper limits of the TX power values are the
-same for both bands.
+On Wed, Jun 19, 2013 at 06:34:51PM +0200, Johannes Berg wrote:
+> Hi John,
+> 
+> One more ...
+> 
+> This is just the fix for the nl80211_fam.attrbuf race Linus ran into and
+> analysed.
+> 
+> johannes
+> 
+> The following changes since commit 795d855d56c6d172f50a974f603ba923ac93ee76:
+> 
+>   mac80211: Fix rate control mask matching call (2013-06-12 09:12:43 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to 3a5a423bb958ad22eeccca66c533e85bf69ba10e:
+> 
+>   nl80211: fix attrbuf access race by allocating a separate one (2013-06-19 18:31:20 +0200)
+> 
+> ----------------------------------------------------------------
+> Johannes Berg (1):
+>       nl80211: fix attrbuf access race by allocating a separate one
+> 
+>  net/wireless/nl80211.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
 
-Improve the rt2800_txpower_to_dev function,
-in order to compute the correct default power
-values for the RT3593 chip as well.
+Pulling now...
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800.h    |    7 +++++++
- drivers/net/wireless/rt2x00/rt2800lib.c |    7 +++++++
- 2 files changed, 14 insertions(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index d3e8f6d..69749ba5 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -2603,6 +2603,10 @@ enum rt2800_eeprom_word {
- #define EEPROM_TXPOWER_A_1		FIELD16(0x00ff)
- #define EEPROM_TXPOWER_A_2		FIELD16(0xff00)
- 
-+/* EEPROM_TXPOWER_{A,G} fields for RT3593 */
-+#define EEPROM_TXPOWER_ALC		FIELD8(0x1f)
-+#define EEPROM_TXPOWER_FINE_CTRL	FIELD8(0xe0)
-+
- /*
-  * EEPROM temperature compensation boundaries 802.11A
-  * MINUS4: If the actual TSSI is below this boundary, tx power needs to be
-@@ -2884,6 +2888,9 @@ enum rt2800_eeprom_word {
- #define MAX_A_TXPOWER	15
- #define DEFAULT_TXPOWER	5
- 
-+#define MIN_A_TXPOWER_3593	0
-+#define MAX_A_TXPOWER_3593	31
-+
- #define TXPOWER_G_FROM_DEV(__txpower) \
- 	((__txpower) > MAX_G_TXPOWER) ? DEFAULT_TXPOWER : (__txpower)
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 9d05273..cbc3dc3 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2729,8 +2729,15 @@ static char rt2800_txpower_to_dev(struct rt2x00_dev *rt2x00dev,
- 				  unsigned int channel,
- 				  char txpower)
- {
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		txpower = rt2x00_get_field8(txpower, EEPROM_TXPOWER_ALC);
-+
- 	if (channel <= 14)
- 		return clamp_t(char, txpower, MIN_G_TXPOWER, MAX_G_TXPOWER);
-+
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		return clamp_t(char, txpower, MIN_A_TXPOWER_3593,
-+			       MAX_A_TXPOWER_3593);
- 	else
- 		return clamp_t(char, txpower, MIN_A_TXPOWER, MAX_A_TXPOWER);
- }
 -- 
-1.7.10
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
