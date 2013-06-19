@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3315 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899Ab3FXNql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 09:46:41 -0400
-Message-ID: <51C84DB4.9050703@broadcom.com> (sfid-20130624_154644_154619_F839374B)
-Date: Mon, 24 Jun 2013 15:46:28 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from [78.193.33.39] ([78.193.33.39]:45693 "EHLO qult.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S933869Ab3FSSEC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 14:04:02 -0400
+Date: Wed, 19 Jun 2013 20:03:54 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: Oleksij Rempel <linux@rempel-privat.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Corey Richardson <corey@octayn.net>
+Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
+Message-ID: <20130619180354.GB19405@zenon.in.qult.net> (sfid-20130619_200406_586598_E6986375)
+References: <20130619115809.GA26717@zenon.in.qult.net>
+ <51C1ACEC.2020703@rempel-privat.de>
+ <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com>
+ <51C1B467.1030509@rempel-privat.de>
+ <20130619140905.GA14079@zenon.in.qult.net>
+ <1371651073.8349.19.camel@jlt4.sipsolutions.net>
+ <51C1C95C.8030301@rempel-privat.de>
+ <20130619175939.GA19405@zenon.in.qult.net>
 MIME-Version: 1.0
-To: "Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	"Jouni Malinen" <jouni@qca.qualcomm.com>
-Subject: Re: [PATCH v10 1/2] cfg80211: add flags to cfg80211_rx_mgmt
-References: <1372063757-24286-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1372063757-24286-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-In-Reply-To: <1372063757-24286-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130619175939.GA19405@zenon.in.qult.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/24/2013 10:49 AM, Vladimir Kondratiev wrote:
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 6a43c34..29e733c 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -3856,6 +3856,8 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
->    * @sig_dbm: signal strength in mBm, or 0 if unknown
->    * @buf: Management frame (header + body)
->    * @len: length of the frame data
-> + * @flags: various flags, see NL80211_RXMGMT_FLAG_xxx defined in
-> + *	enum nl80211_rxmgmt_flags
+On Wed, Jun 19, 2013 at 07:59:39PM +0200, thus spake Ignacy Gawedzki:
+> On Wed, Jun 19, 2013 at 05:08:12PM +0200, thus spake Oleksij Rempel:
+> > Ignacy, Is it RPi +  TL-WN722NC?
+> 
+> Yes, absolutely, but it happens on a Dell XPS 13" as well (Ubuntu 13.04).
 
-It seems sufficient to say:
+BTW, removing CFG80211_DEFAULT_PS doesn't make any difference.
 
-@flags: flags as defined in enum nl80211_rxmgmt_flags
-
-Regards,
-Arend
-
->    * @gfp: context flags
-
-
+-- 
+Everything is more fun naked except cooking with grease.
