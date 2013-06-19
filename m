@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm22-vm6.bullet.mail.ird.yahoo.com ([212.82.109.225]:28464 "HELO
-	nm22-vm6.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750822Ab3FJOaW (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42586 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934071Ab3FSJtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jun 2013 10:30:22 -0400
-Date: Mon, 10 Jun 2013 18:23:17 +0400
-From: =?UTF-8?B?RnJhbsOnb2lz?= Ravaillac <neutrino.nuovo@yahoo.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: b43-dev <b43-dev@lists.infradead.org>
-Subject: [DEFECT] iw: No output if passive scanning is requested
-Message-ID: <20130610182317.3beb2841@lenovo-laptop> (sfid-20130610_163026_230235_31F64B44)
+	Wed, 19 Jun 2013 05:49:46 -0400
+Message-ID: <1371635381.8349.9.camel@jlt4.sipsolutions.net> (sfid-20130619_114949_316461_898454E7)
+Subject: Re: [PATCH 1/6] wireless:  Add memory usage debugging.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Jun 2013 11:49:41 +0200
+In-Reply-To: <1371593017-10985-1-git-send-email-greearb@candelatech.com> (sfid-20130619_000356_212228_4AEA7C87)
+References: <1371593017-10985-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20130619_000356_212228_4AEA7C87)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2013-06-18 at 15:03 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> The bss objects are reference counted, and the ies
+> are also tricky to keep track of.  Add option to
+> track allocation and freeing of the ies and bss objects,
+> and add debugfs files to show the current objects.
 
-Using b43 driver with newer kernels (namely, 3.8-1-686-pae from Debian
-and 3.10.0-rc4 from git) it isn't possible to perform passive scanning
-(in 2.4GHz band) using 'iw' tool. The command 'iw dev wlan0 scan
-passive' doesn't print any output. At the same time, a usual scan with
-sending probe requests ('iw wlan0 scan' or 'iwlist wlan0 scan') does
-work as expected.
+I'm not really sure this is worth it -- you found the bug with
+kmemleak() after all. Having very specific things for all of this
+doesn't really seem worth it.
 
-The radio module I'm using is
-05:00.0 Network controller [0280]: Broadcom Corporation BCM4312
-802.11b/g LP-PHY [14e4:4315] (rev 01)
+Either way though, I can't apply the patches since they won't apply. I
+realize that you're working on 3.9, but you're going to have to send me
+patches I can apply to one of my trees (and right now, not really
+mac80211 but mac80211-next)
 
-Copy of dmesg, lspci, lsmod, 'iw phy0 info' outputs and kernel config file
-is attached.
+johannes
 
-
-P.S. I'm not a developer nor programmer, but I'm ready to help to make
-linux better :)
-
---
-
-Ravaillac
