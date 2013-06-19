@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:63898 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752838Ab3FEIyD (ORCPT
+Received: from diserzione.investici.org ([82.221.99.153]:44106 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934052Ab3FSLhi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 04:54:03 -0400
-Received: by mail-ie0-f170.google.com with SMTP id e14so3065502iej.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 01:54:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1370371064-6903-1-git-send-email-linux@rempel-privat.de>
-References: <51ADBC01.6090202@blackshift.org>
-	<1370371064-6903-1-git-send-email-linux@rempel-privat.de>
-Date: Wed, 5 Jun 2013 10:54:02 +0200
-Message-ID: <CAGXE3d8YC-PVVfxNrbK4vYcxRAqe+zzwRCfJQuLk7merQsKE8Q@mail.gmail.com> (sfid-20130605_105414_311356_18655218)
-Subject: Re: [PATCH] ath9k_htc: fix skb_under_panic error
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 19 Jun 2013 07:37:38 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCH mac80211-next] brcm80211: fix null pointer access
+Date: Wed, 19 Jun 2013 13:35:31 +0200
+Message-Id: <1371641731-1297-1-git-send-email-ordex@autistici.org> (sfid-20130619_133742_645109_8CCE56D2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-On Tue, Jun 4, 2013 at 8:37 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> This error seems to be really rare, and we do not know real couse of it.
-> But, in any case, we should check size of head before reducing it.
+Do not unconditionally access the chan variable in
+brcmf_cfg80211_mgmt_tx() as it may be NULL.
+Use freq instead.
 
-We had a similar issue in rt2x00 quite some time ago.
+Introduced by c2ff8cad64233b539c71a27e2a6e324001143ef0
+("brcm80211: make mgmt_tx in brcmfmac accept a NULL channel")
 
-In general mac80211 should always reserve enough headroom as requested by
-the driver in hw->extra_tx_headroom. However, there is a chance that a frame is
-send to the driver again (see ieee80211_handle_filtered_frame). But if the frame
-payload (or head) was moved due to padding and was not restored before calling
-ieee80211_tx_status by the driver the second trip through the driver has reduced
-headroom and could lead to such an error.
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Quickly checking ath9k_htc it seems as if ath9k_htc_tx adds some padding
-but ath9k_htc_tx_process does not remove the padding when passing the frame
-back to mac80211.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 8bd256b..d316d62 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3985,8 +3985,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		       le16_to_cpu(action_frame->len));
+ 
+ 		brcmf_dbg(TRACE, "Action frame, cookie=%lld, len=%d, freq=%d\n",
+-			  *cookie, le16_to_cpu(action_frame->len),
+-			  chan->center_freq);
++			  *cookie, le16_to_cpu(action_frame->len), freq);
+ 
+ 		ack = brcmf_p2p_send_action_frame(cfg, cfg_to_ndev(cfg),
+ 						  af_params);
+-- 
+1.8.1.5
 
-Helmut
