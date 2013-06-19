@@ -1,108 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:49329 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238Ab3FKSbh convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43277 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756639Ab3FSNxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 14:31:37 -0400
-Received: by mail-ee0-f49.google.com with SMTP id b57so3884535eek.22
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2013 11:31:36 -0700 (PDT)
-References: <1370504180-10950-1-git-send-email-juhosg@openwrt.org> <1370504180-10950-2-git-send-email-juhosg@openwrt.org>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1370504180-10950-2-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <0ED4F231-072D-4227-9204-4930A0B24555@gmail.com> (sfid-20130611_203140_289704_BEB86597)
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v2 2/2] rt2x00: rt2800usb: nuke rt2800usb_ops_5592
-Date: Tue, 11 Jun 2013 20:31:35 +0200
-To: Gabor Juhos <juhosg@openwrt.org>
+	Wed, 19 Jun 2013 09:53:47 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] cfg80211: require passing BSS struct back to cfg80211_assoc_timeout
+Date: Wed, 19 Jun 2013 15:53:36 +0200
+Message-Id: <1371650017-14293-1-git-send-email-johannes@sipsolutions.net> (sfid-20130619_155405_104292_D5B25261)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
+Doing so will allow us to hold the BSS (not just ref it) over the
+association process, thus ensuring that it doesn't time out and
+gets invisible to the user (e.g. in 'iw wlan0 link'.)
 
-Sent from my iPad
+This also fixes a leak in mac80211 where it doesn't always release
+the BSS struct properly in all cases where calling this function.
+This leak was reported by Ben Greear.
 
-On 6 jun. 2013, at 09:36, Gabor Juhos <juhosg@openwrt.org> wrote:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h | 16 ++++++++--------
+ net/mac80211/mlme.c    | 15 +++++++--------
+ net/wireless/mlme.c    |  8 +++++---
+ 3 files changed, 20 insertions(+), 19 deletions(-)
 
-> It is exactly the same like the generic rt2800usb_ops.
-> Remove the duplicate and use the generic ops for all
-> devices.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e3a39fc..7b0730a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1459,7 +1459,8 @@ const u8 *ieee80211_bss_get_ie(struct cfg80211_bss *bss, u8 ie);
+  * This structure provides information needed to complete IEEE 802.11
+  * authentication.
+  *
+- * @bss: The BSS to authenticate with.
++ * @bss: The BSS to authenticate with, the callee must obtain a reference
++ *	to it if it needs to keep it.
+  * @auth_type: Authentication type (algorithm)
+  * @ie: Extra IEs to add to Authentication frame or %NULL
+  * @ie_len: Length of ie buffer in octets
+@@ -1497,11 +1498,10 @@ enum cfg80211_assoc_req_flags {
+  *
+  * This structure provides information needed to complete IEEE 802.11
+  * (re)association.
+- * @bss: The BSS to associate with. If the call is successful the driver
+- *	is given a reference that it must release, normally via a call to
+- *	cfg80211_send_rx_assoc(), or, if association timed out, with a
+- *	call to cfg80211_put_bss() (in addition to calling
+- *	cfg80211_send_assoc_timeout())
++ * @bss: The BSS to associate with. If the call is successful the driver is
++ *	given a reference that it must give back to cfg80211_send_rx_assoc()
++ *	or to cfg80211_assoc_timeout(). To ensure proper refcounting, new
++ *	association requests while already associating must be rejected.
+  * @ie: Extra IEs to add to (Re)Association Request frame or %NULL
+  * @ie_len: Length of ie buffer in octets
+  * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
+@@ -3522,11 +3522,11 @@ void cfg80211_rx_assoc_resp(struct net_device *dev,
+ /**
+  * cfg80211_assoc_timeout - notification of timed out association
+  * @dev: network device
+- * @addr: The MAC address of the device with which the association timed out
++ * @bss: The BSS entry with which association timed out.
+  *
+  * This function may sleep. The caller must hold the corresponding wdev's mutex.
+  */
+-void cfg80211_assoc_timeout(struct net_device *dev, const u8 *addr);
++void cfg80211_assoc_timeout(struct net_device *dev, struct cfg80211_bss *bss);
+ 
+ /**
+  * cfg80211_tx_mlme_mgmt - notification of transmitted deauth/disassoc frame
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e0939eb..08b3e71 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2722,8 +2722,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 		if (!ieee80211_assoc_success(sdata, bss, mgmt, len)) {
+ 			/* oops -- internal error -- send timeout for now */
+ 			ieee80211_destroy_assoc_data(sdata, false);
+-			cfg80211_put_bss(sdata->local->hw.wiphy, bss);
+-			cfg80211_assoc_timeout(sdata->dev, mgmt->bssid);
++			cfg80211_assoc_timeout(sdata->dev, bss);
+ 			return;
+ 		}
+ 		sdata_info(sdata, "associated\n");
+@@ -3440,13 +3439,10 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 	    time_after(jiffies, ifmgd->assoc_data->timeout)) {
+ 		if ((ifmgd->assoc_data->need_beacon && !ifmgd->have_beacon) ||
+ 		    ieee80211_do_assoc(sdata)) {
+-			u8 bssid[ETH_ALEN];
+-
+-			memcpy(bssid, ifmgd->assoc_data->bss->bssid, ETH_ALEN);
++			struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
+ 
+ 			ieee80211_destroy_assoc_data(sdata, false);
+-
+-			cfg80211_assoc_timeout(sdata->dev, bssid);
++			cfg80211_assoc_timeout(sdata->dev, bss);
+ 		}
+ 	} else if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started)
+ 		run_again(sdata, ifmgd->assoc_data->timeout);
+@@ -4372,8 +4368,11 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 	cancel_work_sync(&ifmgd->chswitch_work);
+ 
+ 	sdata_lock(sdata);
+-	if (ifmgd->assoc_data)
++	if (ifmgd->assoc_data) {
++		struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
+ 		ieee80211_destroy_assoc_data(sdata, false);
++		cfg80211_assoc_timeout(sdata->dev, bss);
++	}
+ 	if (ifmgd->auth_data)
+ 		ieee80211_destroy_auth_data(sdata, false);
+ 	del_timer_sync(&ifmgd->timer);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index a61a44b..dd6f79d 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -131,16 +131,18 @@ void cfg80211_auth_timeout(struct net_device *dev, const u8 *addr)
+ }
+ EXPORT_SYMBOL(cfg80211_auth_timeout);
+ 
+-void cfg80211_assoc_timeout(struct net_device *dev, const u8 *addr)
++void cfg80211_assoc_timeout(struct net_device *dev, struct cfg80211_bss *bss)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+ 
+-	trace_cfg80211_send_assoc_timeout(dev, addr);
++	trace_cfg80211_send_assoc_timeout(dev, bss->bssid);
+ 
+-	nl80211_send_assoc_timeout(rdev, dev, addr, GFP_KERNEL);
++	nl80211_send_assoc_timeout(rdev, dev, bss->bssid, GFP_KERNEL);
+ 	cfg80211_sme_assoc_timeout(wdev);
++
++	cfg80211_put_bss(wiphy, bss);
+ }
+ EXPORT_SYMBOL(cfg80211_assoc_timeout);
+ 
+-- 
+1.8.0
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
-> drivers/net/wireless/rt2x00/rt2800usb.c |   29 +++++------------------------
-> 1 file changed, 5 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 68ea00e..7edd903 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -914,22 +914,6 @@ static const struct rt2x00_ops rt2800usb_ops = {
-> #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
-> };
-> 
-> -static const struct rt2x00_ops rt2800usb_ops_5592 = {
-> -    .name            = KBUILD_MODNAME,
-> -    .drv_data_size        = sizeof(struct rt2800_drv_data),
-> -    .max_ap_intf        = 8,
-> -    .eeprom_size        = EEPROM_SIZE,
-> -    .rf_size        = RF_SIZE,
-> -    .tx_queues        = NUM_TX_QUEUES,
-> -    .queue_init        = rt2800usb_queue_init,
-> -    .lib            = &rt2800usb_rt2x00_ops,
-> -    .drv            = &rt2800usb_rt2800_ops,
-> -    .hw            = &rt2800usb_mac80211_ops,
-> -#ifdef CONFIG_RT2X00_LIB_DEBUGFS
-> -    .debugfs        = &rt2800_rt2x00debug,
-> -#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
-> -};
-> -
-> /*
->  * rt2800usb module information.
->  */
-> @@ -1242,15 +1226,15 @@ static struct usb_device_id rt2800usb_device_table[] = {
-> #endif
-> #ifdef CONFIG_RT2800USB_RT55XX
->    /* Arcadyan */
-> -    { USB_DEVICE(0x043e, 0x7a32), .driver_info = 5592 },
-> +    { USB_DEVICE(0x043e, 0x7a32) },
->    /* AVM GmbH */
-> -    { USB_DEVICE(0x057c, 0x8501), .driver_info = 5592 },
-> +    { USB_DEVICE(0x057c, 0x8501) },
->    /* D-Link DWA-160-B2 */
-> -    { USB_DEVICE(0x2001, 0x3c1a), .driver_info = 5592 },
-> +    { USB_DEVICE(0x2001, 0x3c1a) },
->    /* Proware */
-> -    { USB_DEVICE(0x043e, 0x7a13), .driver_info = 5592 },
-> +    { USB_DEVICE(0x043e, 0x7a13) },
->    /* Ralink */
-> -    { USB_DEVICE(0x148f, 0x5572), .driver_info = 5592 },
-> +    { USB_DEVICE(0x148f, 0x5572) },
-> #endif
-> #ifdef CONFIG_RT2800USB_UNKNOWN
->    /*
-> @@ -1355,9 +1339,6 @@ MODULE_LICENSE("GPL");
-> static int rt2800usb_probe(struct usb_interface *usb_intf,
->               const struct usb_device_id *id)
-> {
-> -    if (id->driver_info == 5592)
-> -        return rt2x00usb_probe(usb_intf, &rt2800usb_ops_5592);
-> -
->    return rt2x00usb_probe(usb_intf, &rt2800usb_ops);
-> }
-> 
-> -- 
-> 1.7.10
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
