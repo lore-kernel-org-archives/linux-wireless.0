@@ -1,62 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55661 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756142Ab3FEOpO (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43275 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756551Ab3FSNxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 10:45:14 -0400
-Date: Wed, 5 Jun 2013 10:37:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Gustavo Padovan <gustavo.padovan@collabora.co.uk>,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: wireless tree rebased (from 5/28), Broadcom bits dropped
-Message-ID: <20130605143700.GA2271@tuxdriver.com> (sfid-20130605_164518_796664_91AD4F5D)
-References: <20130604212602.GB11199@tuxdriver.com>
- <20130604215320.GC11199@tuxdriver.com>
- <1370415586.8920.4.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370415586.8920.4.camel@jlt4.sipsolutions.net>
+	Wed, 19 Jun 2013 09:53:47 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] cfg80211: hold BSS over association process
+Date: Wed, 19 Jun 2013 15:53:37 +0200
+Message-Id: <1371650017-14293-2-git-send-email-johannes@sipsolutions.net> (sfid-20130619_155405_759729_971ECA04)
+In-Reply-To: <1371650017-14293-1-git-send-email-johannes@sipsolutions.net>
+References: <1371650017-14293-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 05, 2013 at 08:59:46AM +0200, Johannes Berg wrote:
-> On Tue, 2013-06-04 at 17:53 -0400, John W. Linville wrote:
-> > I messed this up too -- bad day...
-> > 
-> > If you pulled in between the earlier message and this one, please
-> > do so again.  If you saw this message before taking any action to
-> > clean-up my mess, then you are OK.
-> 
-> This was confusing, I think you rebased around some merges instead of
-> redoing the merges? My patches are in, but suddenly got new commit IDs,
-> e.g. fa331699d05ce1d0d4896eb4a137cfae50d7afde (new) vs.
-> c2c15e215e860c99b86ddfc4be4bb25cf180fed0 for "mac80211: work around
-> broken APs not including HT info".
-> 
-> This will cause git to pull them in again when I send a new pull
-> request, so it would have been nicer to redo the merges, but anyway ...
-> just a heads-up for everyone that here it's a bit confusing now.
-> 
-> johannes
+From: Johannes Berg <johannes.berg@intel.com>
 
-You are right, I could have done it better with regard to your tree.
-I probably should redo that part.
+This fixes the potential issue that the BSS struct that we use
+and later assign to wdev->current_bss is removed from the scan
+list while associating.
 
-The Bluetooth tree had pulled the wireless tree and applied their
-patches on top of the brcmfmac/brcmsmac series that I removed.  So,
-their pull couldn't be redone.
+Also warn when we don't have a BSS struct in connect_result
+unless it's from a driver that only has the connect() API.
 
-I think I can fix the wireless tree and preserve the original mac80211
-tree commits.  Everyone please hold off on doing anything else here, as
-I'm a bit busy and won't be able to get to this before this afternoon
-(Eastern USA time).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/mlme.c |  4 ++++
+ net/wireless/sme.c  | 15 ++++++++++-----
+ 2 files changed, 14 insertions(+), 5 deletions(-)
 
-Anyone object to one more wireless tree rebase today?
-
-John
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index dd6f79d..bfac5e1 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -38,6 +38,7 @@ void cfg80211_rx_assoc_resp(struct net_device *dev, struct cfg80211_bss *bss,
+ 	 * frame instead of reassoc.
+ 	 */
+ 	if (cfg80211_sme_rx_assoc_resp(wdev, status_code)) {
++		cfg80211_unhold_bss(bss_from_pub(bss));
+ 		cfg80211_put_bss(wiphy, bss);
+ 		return;
+ 	}
+@@ -142,6 +143,7 @@ void cfg80211_assoc_timeout(struct net_device *dev, struct cfg80211_bss *bss)
+ 	nl80211_send_assoc_timeout(rdev, dev, bss->bssid, GFP_KERNEL);
+ 	cfg80211_sme_assoc_timeout(wdev);
+ 
++	cfg80211_unhold_bss(bss_from_pub(bss));
+ 	cfg80211_put_bss(wiphy, bss);
+ }
+ EXPORT_SYMBOL(cfg80211_assoc_timeout);
+@@ -309,6 +311,8 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 		goto out;
+ 
+ 	err = rdev_assoc(rdev, dev, req);
++	if (!err)
++		cfg80211_hold_bss(bss_from_pub(req->bss));
+ 
+ out:
+ 	if (err)
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index ae7e2cb..c0bf781 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -615,19 +615,24 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 		kfree(wdev->connect_keys);
+ 		wdev->connect_keys = NULL;
+ 		wdev->ssid_len = 0;
+-		cfg80211_put_bss(wdev->wiphy, bss);
++		if (bss) {
++			cfg80211_unhold_bss(bss_from_pub(bss));
++			cfg80211_put_bss(wdev->wiphy, bss);
++		}
+ 		return;
+ 	}
+ 
+-	if (!bss)
++	if (!bss) {
++		WARN_ON_ONCE(!wiphy_to_dev(wdev->wiphy)->ops->connect);
+ 		bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
+ 				       wdev->ssid, wdev->ssid_len,
+ 				       WLAN_CAPABILITY_ESS,
+ 				       WLAN_CAPABILITY_ESS);
+-	if (WARN_ON(!bss))
+-		return;
++		if (WARN_ON(!bss))
++			return;
++		cfg80211_hold_bss(bss_from_pub(bss));
++	}
+ 
+-	cfg80211_hold_bss(bss_from_pub(bss));
+ 	wdev->current_bss = bss_from_pub(bss);
+ 
+ 	cfg80211_upload_connect_keys(wdev);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0
+
