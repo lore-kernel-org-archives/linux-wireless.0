@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.u-psud.fr ([129.175.33.42]:64527 "EHLO smtp2.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757296Ab3FCPEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 11:04:12 -0400
-Message-ID: <51ACB068.8070006@lri.fr> (sfid-20130603_170414_595385_4FA3EC7A)
-Date: Mon, 03 Jun 2013 17:04:08 +0200
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:43356 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934108Ab3FSPsC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 11:48:02 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Paul Stewart <pstew@chromium.org>
+Date: Wed, 19 Jun 2013 08:45:44 -0700
+Subject: RE: [PATCH 2/3] mwifiex: add basic 11h support for station
+Message-ID: <477F20668A386D41ADCC57781B1F70430EA2BD5148@SC-VEXCH1.marvell.com> (sfid-20130619_174807_395069_EAC08E5F)
+References: <1371598618-26593-1-git-send-email-bzhao@marvell.com>
+ <1371598618-26593-2-git-send-email-bzhao@marvell.com>
+ <20130619142446.GC12079@tuxdriver.com>
+In-Reply-To: <20130619142446.GC12079@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Antonio Quartulli <ordex@autistici.org>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [PATCH 1/2] nl80211: allow sending CMD_FRAME without specifying
- any frequency
-References: <1370241587-2609-1-git-send-email-ordex@autistici.org> <1370271547.8227.16.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1370271547.8227.16.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/2013 16:59, Johannes Berg wrote:
-> On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
->> From: Antonio Quartulli <antonio@open-mesh.com>
->>
->> Users may want to send a frame on the current channel
->> without specifying it.
->>
->> Make mgmt_tx pass a NULL channel to mac80211 if none has
->> been specified by the user.
-> 
-> cfg80211 isn't just a mac80211 frontend ... ;-)
-> 
-> Also, as Nicolas said, ath6kl_mgmt_tx() will crash after this patch if
-> it's called in AP mode w/o a channel, so you need to think about that.
+Hi John,
 
-It will crash unconditionally. All ath6kl_mgmt_tx()'s code paths access
-chan->center_freq at some point.
+Thanks for your comment.
+
+> > @@ -427,6 +427,13 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+> >
+> >  		break;
+> >
+> > +	case EVENT_CHANNEL_SWITCH_ANN:
+> > +		dev_dbg(adapter->dev, "event: Channel Switch Announcement\n");
+> > +		ret = mwifiex_send_cmd_async(priv,
+> > +			HostCmd_CMD_802_11_DEAUTHENTICATE,
+> > +			HostCmd_ACT_GEN_SET, 0,
+> > +			priv->curr_bss_params.bss_descriptor.mac_address);
+> > +
+> >  	default:
+> >  		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
+> >  			eventcause);
+> 
+> Do you mean for this case to fall-through to the default case?
+
+No. I will fix it in v2.
+
+Thanks,
+Bing
+
