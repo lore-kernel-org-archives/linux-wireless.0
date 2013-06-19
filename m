@@ -1,41 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:49984 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752495Ab3F1TN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:13:27 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 16/19] rt2x00: rt2800lib: enable RF3053 support
-Date: Fri, 28 Jun 2013 21:12:30 +0200
-Message-Id: <1372446753-11408-17-git-send-email-juhosg@openwrt.org> (sfid-20130628_211338_976801_0C4D95BB)
-In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
-References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:37195 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934714Ab3FSTae convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 15:30:34 -0400
+Received: by mail-ob0-f181.google.com with SMTP id 16so6431956obc.12
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jun 2013 12:30:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130619175850.GD4784@cmadams.net>
+References: <20130619160911.GB4784@cmadams.net>
+	<51C1DDEB.3090701@lwfinger.net>
+	<20130619164227.GC4784@cmadams.net>
+	<CACna6rzbTHnyqs5SzTuYL7r_SW3iCNh0qqbnvfsF7Wspyhp1WA@mail.gmail.com>
+	<20130619175850.GD4784@cmadams.net>
+Date: Wed, 19 Jun 2013 21:30:33 +0200
+Message-ID: <CACna6ryFzp_g2tOGguqjvFiEcU6q8KqF4rk_BBxmS=bNRWjY7A@mail.gmail.com> (sfid-20130619_213045_084355_515AA02A)
+Subject: Re: BCM4331 deauthenticates every five minutes
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	b43-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support for the RF3053 has been implemented in
-the previous changes, so it is safe to mark it
-supported in the driver.
+2013/6/19 Chris Adams <cma@cmadams.net>:
+> Once upon a time, Rafał Miłecki <zajec5@gmail.com> said:
+>> I don't know how/if driver can be responsible for such reconnects.
+>> Over all it just TX and RX packets, right? Loosing a signal is
+>> something different, that can be related to the driver's bug. But as
+>> this happens every 5 minutes... I don't know.
+>>
+>> Did you try connecting to this AP with any other card and using
+>> similar kernel? I wonder if this can be some supplicant / mac80211
+>> stack issue...
+>
+> I just fired up my Thinkpad T510 with an Intel "Centrino Ultimate-N
+> 6300" using iwlwifi, and it stays connected (does not appear to drop any
+> packets).  This is also Fedora 18 x86_64 (slightly older kernel, but
+> I've had the problem on the MacBook since I installed it).  There are
+> other people in the office with the same MacBook hardware (but running
+> OS X) that don't appear to be having any trouble either.
+>
+> The AP appears to be an Adtran (don't know the model).
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
- 1 file changed, 1 insertion(+)
+Thanks for info/testing. I still wonder how driver's code can cause
+any disconnections happening exactly every 5 minutes... Any idea
+anyone?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 0a0f96f..b7fa8f9 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6949,6 +6949,7 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RF3021:
- 	case RF3022:
- 	case RF3052:
-+	case RF3053:
- 	case RF3290:
- 	case RF3320:
- 	case RF3322:
+One bug that was recently discovered and that sits in b43's code is
+passive scanning. For some reason it seems b43 doesn't do passive
+scanning, I didn't have time to debug that yet. I wonder if this can
+affect connection stability anyhow.
+
+Perhaps you could try performing manual scanning every ~minute? It's
+really just a crazy guess, I don't have any idea why it could help.
+But it's so trivial you may want to give it a try.
+
 -- 
-1.7.10
-
+Rafał
