@@ -1,94 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59104 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657Ab3FLAgp (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38653 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964812Ab3FSTpU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 20:36:45 -0400
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r5C0aian023055
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2013 17:36:45 -0700
-Message-ID: <51B7C29C.1060701@candelatech.com> (sfid-20130612_023649_288031_BB39D70C)
-Date: Tue, 11 Jun 2013 17:36:44 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 19 Jun 2013 15:45:20 -0400
+Date: Wed, 19 Jun 2013 15:41:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless 2013-06-19
+Message-ID: <20130619194141.GH12079@tuxdriver.com> (sfid-20130619_214541_508446_B08D44F2)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: kmemleak report in 3.9.5+, related to cfg80211_inform_bss_frame
-References: <51B773B7.5090301@candelatech.com> <51B77594.20000@candelatech.com>
-In-Reply-To: <51B77594.20000@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="MGYHOYXEY6WxJCY8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/11/2013 12:08 PM, Ben Greear wrote:
-> On 06/11/2013 12:00 PM, Ben Greear wrote:
->> I see several reports similar to the one below while doing some
->> kmemleak testing on my 3.9.5+ tree (with local patches applied):
->>
->> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.9.dev.y/.git;a=summary
 
->> The kmemleak report is below:
->>
->>
->> unreferenced object 0xffff8801c8e41e78 (size 192):
->>    comm "kworker/u:2", pid 157, jiffies 4295509873 (age 86582.869s)
->>    hex dump (first 32 bytes):
->>      41 0d 00 30 02 00 00 00 6b 6b 6b 6b 6b 6b 6b 6b  A..0....kkkkkkkk
->>      6b 6b 6b 6b 6b 6b 6b 6b 69 00 00 00 00 0c 2e 32  kkkkkkkki......2
->>    backtrace:
->>      [<ffffffff815de7bf>] kmemleak_alloc+0x73/0x98
->>      [<ffffffff8118b4d4>] slab_post_alloc_hook+0x28/0x2a
->>      [<ffffffff8118d605>] __kmalloc+0xf9/0x122
->>      [<ffffffffa027cb27>] cfg80211_inform_bss_frame+0x114/0x1f8 [cfg80211]
->>      [<ffffffffa03d6865>] ieee80211_bss_info_update+0x66/0x21f [mac80211]
->>      [<ffffffffa040aec6>] ieee80211_rx_bss_info+0x12f/0x1ca [mac80211]
->>      [<ffffffffa040b017>] ieee80211_rx_mgmt_probe_resp+0xb6/0x197 [mac80211]
->>      [<ffffffffa040e8a3>] ieee80211_sta_rx_queued_mgmt+0xdd/0x60e [mac80211]
->>      [<ffffffffa03df0ee>] ieee80211_iface_work+0x238/0x2cc [mac80211]
->>      [<ffffffff810b0cd3>] process_one_work+0x292/0x42e
->>      [<ffffffff810b36af>] worker_thread+0x14f/0x264
->>      [<ffffffff810b7bea>] kthread+0xc7/0xcf
->>      [<ffffffff815f64ec>] ret_from_fork+0x7c/0xb0
->>      [<ffffffffffffffff>] 0xffffffffffffffff
+--MGYHOYXEY6WxJCY8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Something else came to mind on this.
+Dave,
 
-To determine if we should delete an old pointer to memory,
-we do an rcu_access_pointer to read the old value, and
-we are assigning with rcu_assign_pointer.
+One more late-breaking fix in the nl80211 code, the fix for the
+nl80211_fam.attrbuf race Linus ran into and analysed.  Hopefully it
+looks familiar... :-)
 
-Could this be racing so that rcu_access_pointer returns NULL
-when looking for the old pointer, but other threads manage
-to set the pointer more than once, leaking all but the last
-to be set?
+Let me know if there are problems!
 
-For instance, this code:
+John
 
-	if (found) {
-		/* Update IEs */
-		if (rcu_access_pointer(tmp->pub.proberesp_ies)) {
-			const struct cfg80211_bss_ies *old;
+---
 
-			old = rcu_access_pointer(found->pub.proberesp_ies);
+The following changes since commit eb064c3b49931dc73bba59887019c7f5cb97d322:
 
-			rcu_assign_pointer(found->pub.proberesp_ies,
-					   tmp->pub.proberesp_ies);
-			/* Override possible earlier Beacon frame IEs */
-			rcu_assign_pointer(found->pub.ies,
-					   tmp->pub.proberesp_ies);
-			if (old)
-				kfree_rcu((struct cfg80211_bss_ies *)old,
-					  rcu_head);
+  vxlan: fix check for migration of static entry (2013-06-19 00:50:58 -0700)
 
+are available in the git repository at:
 
-I don't see a huge number of leaks..but they are definitely
-accumulating if kmemleak is to be believed...
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-d=
+avem
 
-Thanks,
-Ben
+for you to fetch changes up to 4067c666f2dccf56f5db5c182713e68c40d46013:
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless into for-davem (2013-06-19 15:24:36 -0400)
 
+----------------------------------------------------------------
+
+Johannes Berg (1):
+      nl80211: fix attrbuf access race by allocating a separate one
+
+John W. Linville (2):
+      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless i=
+nto for-davem
+
+ net/wireless/nl80211.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d5aed3b..b14b7e3 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1564,12 +1564,17 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, =
+struct netlink_callback *cb)
+ 	struct cfg80211_registered_device *dev;
+ 	s64 filter_wiphy =3D -1;
+ 	bool split =3D false;
+-	struct nlattr **tb =3D nl80211_fam.attrbuf;
++	struct nlattr **tb;
+ 	int res;
+=20
++	/* will be zeroed in nlmsg_parse() */
++	tb =3D kmalloc(sizeof(*tb) * (NL80211_ATTR_MAX + 1), GFP_KERNEL);
++	if (!tb)
++		return -ENOMEM;
++
+ 	mutex_lock(&cfg80211_mutex);
+ 	res =3D nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
+-			  tb, nl80211_fam.maxattr, nl80211_policy);
++			  tb, NL80211_ATTR_MAX, nl80211_policy);
+ 	if (res =3D=3D 0) {
+ 		split =3D tb[NL80211_ATTR_SPLIT_WIPHY_DUMP];
+ 		if (tb[NL80211_ATTR_WIPHY])
+@@ -1583,6 +1588,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, st=
+ruct netlink_callback *cb)
+ 			netdev =3D dev_get_by_index(sock_net(skb->sk), ifidx);
+ 			if (!netdev) {
+ 				mutex_unlock(&cfg80211_mutex);
++				kfree(tb);
+ 				return -ENODEV;
+ 			}
+ 			if (netdev->ieee80211_ptr) {
+@@ -1593,6 +1599,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, st=
+ruct netlink_callback *cb)
+ 			dev_put(netdev);
+ 		}
+ 	}
++	kfree(tb);
+=20
+ 	list_for_each_entry(dev, &cfg80211_rdev_list, list) {
+ 		if (!net_eq(wiphy_net(&dev->wiphy), sock_net(skb->sk)))
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--MGYHOYXEY6WxJCY8
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRwgl1AAoJEJctW/TcYTgGg8gP/AxX2R/LwGHAWcqKzBuKXvlk
+Eir0rGZWXt+Pnv72wLmmx0CsLNBDZ+uAttkooWPcdFnk8a7MENqJY2Jsj+GFlVZ9
+Ug/3FkRiQz6dr7X2IRi8PKbl4+SR8NyG53Yvp1JPmKnonpq5ibHeZn3WbxBgBWbj
+4aBQ/hXYjri5tyayCx4F/Y8BOzUQFJM+jx13xaUwaROL4uNgufUwvV256SJQNTet
+yA+mPA5QJZE95QO4vt0Z42dg66H602sd6rR/S4evFBhfisRTRT35VL2v99vRK1zE
+H4SnfGnW/KKXYNRML2qaBTMIuhsCaNNg57PUPoKdSiUEEIgHawqUjcx2ULFab4+7
+YCYypLTQ2+HlQHgegYParZfD/Kn8SNOBcxabgeGhbw2uzAfhYoP1V8XNQTy0yZYC
+VayzWPJSiF+QD179fIngfrIpjTWiSKZakOJOpul0LqlNz35RqhEpZCjJtE71TdME
+UmXSklFBfnj/qSP2L1ejRV++8PB4IZ30npD+XUHfV0kKs4kvbl0P0Ss5ZlHWfAhN
+vyP/A+JkiA1JEo4/Pe7u4ndmR4VfrfBM2/OcISVPq1YTzespySJlMo3KRbhp/PZO
+g0hBkuUTh/DaIhXP4poOfxCJA1l9CG23PODONNAdON815KZRfRfn8XCkHN0LTeF5
+lWgG7j1dS+To9x/u4K7H
+=39VE
+-----END PGP SIGNATURE-----
+
+--MGYHOYXEY6WxJCY8--
