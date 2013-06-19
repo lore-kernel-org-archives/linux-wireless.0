@@ -1,71 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45549 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757400Ab3FTPXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jun 2013 11:23:55 -0400
-Message-ID: <1371741886.10995.3.camel@dcbw.foobar.com> (sfid-20130620_172359_118751_6F5CB170)
-Subject: Re: BCM4331 deauthenticates every five minutes
-From: Dan Williams <dcbw@redhat.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Chris Adams <cma@cmadams.net>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev@lists.infradead.org,
+Received: from mail-ye0-f179.google.com ([209.85.213.179]:48641 "EHLO
+	mail-ye0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934547Ab3FSQf6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 12:35:58 -0400
+Received: by mail-ye0-f179.google.com with SMTP id r3so1855281yen.38
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jun 2013 09:35:57 -0700 (PDT)
+Message-ID: <51C1DDEB.3090701@lwfinger.net> (sfid-20130619_183601_451780_4626BD28)
+Date: Wed, 19 Jun 2013 11:35:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Chris Adams <cma@cmadams.net>
+CC: b43-dev@lists.infradead.org,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 20 Jun 2013 10:24:46 -0500
-In-Reply-To: <51C2BE54.20509@broadcom.com>
+Subject: Re: BCM4331 deauthenticates every five minutes
 References: <20130619160911.GB4784@cmadams.net>
-	 <51C1DDEB.3090701@lwfinger.net> <20130619164227.GC4784@cmadams.net>
-	 <CACna6rzbTHnyqs5SzTuYL7r_SW3iCNh0qqbnvfsF7Wspyhp1WA@mail.gmail.com>
-	 <20130619175850.GD4784@cmadams.net> <51C21B7C.2030005@broadcom.com>
-	 <20130619211108.GG4784@cmadams.net> <51C2BE54.20509@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+In-Reply-To: <20130619160911.GB4784@cmadams.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-06-20 at 10:33 +0200, Arend van Spriel wrote:
-> On 06/19/2013 11:11 PM, Chris Adams wrote:
-> > Once upon a time, Arend van Spriel <arend@broadcom.com> said:
-> >> Can you make a capture using a wireless sniffer (using your thinkpad maybe)?
-> >
-> > How would I go about doing that?  I've done lots of network debugging
-> > with tcpdump and such, but not much wireless stuff.
-> >
-> 
-> I use wireshark these days. If you install that you can use the steps 
-> below and select the wireless interface in wireshark to capture. I use 
-> wlan0 as interface name, but it may be different for you.
-> 
-> 1. disable network-manager so it won't interfere.
+On 06/19/2013 11:09 AM, Chris Adams wrote:
+> I have a MacBook Pro 8,2 with the BCM4331 wireless chip.  I pulled the
+> firmware (666.2, 2011-02-23 01:15:07) using b43-fwcutter, and am running
+> Fedora 18 (tried up to kernel 3.9.6-200.fc18.x86_64 from updates/testing
+> with the same results).
+>
+> My problem is that it deauthenticates from the AP every 5 minutes (it
+> then immediately reconnects).  From what I've read, it looks like this
+> chip is a little "different"; any ideas/suggestions to help get this
+> working better?
+>
+> Example dmesg chunk:
+>
+> [  948.115374] wlan0: associated
+> [ 1249.636655] wlan0: deauthenticated from 00:a0:c8:xx:xx:xx (Reason: 1)
 
-It should be enough run "nmcli nm wifi off" and then un-rfkill the
-interface, and NM will leave it alone until you turn wifi back on.  It
-will also remove the interface from wpa_supplicant.
+My table shows that a "Reason 1" deauthentication is for "unspecified reasons". 
+Does anyone know why these might occur?
 
-Dan
+What type of encryption are you using? If it is a re-keying type such as TKIP, 
+what is the interval? You should find that on the setup page of the access point.
 
-> 2. bring the interface down
-> $ sudo ifconfig wlan0 down
-> 3. change interface type to monitor
-> $ sudo iw dev wlan0 set type monitor
-> 4. bring up the interface
-> $ sudo ifconfig wlan0 up
-> 5. start wireshark and select wlan0
-> $ gksudo wireshark
-> 
-> It will complain that running wireshark as root is not secure. If you 
-> care about that, you should read [1].
-> 
-> Regards,
-> Arend
-> 
-> [1] 
-> http://wiki.wireshark.org/Security#Administrator.2Froot_account_not_required.21
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+BTW, your mailer is set up strangely. I get your address when I do a plain 
+Reply, but a Reply All from Thunderbird only got the b43-dev mailing list. I had 
+to add your address manually.
+
+I also added the linux-wireless ML to the reply as some of my questions are more 
+likely to be answered there.
+
+Larry
+
 
 
