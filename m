@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52387 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751505Ab3FZSc7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 14:32:59 -0400
-Message-ID: <51CB33D9.1070104@openwrt.org> (sfid-20130626_203302_156121_D0101952)
-Date: Wed, 26 Jun 2013 20:32:57 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33044 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934417Ab3FSOaN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 10:30:13 -0400
+Date: Wed, 19 Jun 2013 10:24:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Paul Stewart <pstew@chromium.org>
+Subject: Re: [PATCH 2/3] mwifiex: add basic 11h support for station
+Message-ID: <20130619142446.GC12079@tuxdriver.com> (sfid-20130619_163020_244389_332C217F)
+References: <1371598618-26593-1-git-send-email-bzhao@marvell.com>
+ <1371598618-26593-2-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: Use libnl-configurable values for retry counts
-References: <1372267723-25072-1-git-send-email-jp.tosoni@acksys.fr>
-In-Reply-To: <1372267723-25072-1-git-send-email-jp.tosoni@acksys.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1371598618-26593-2-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-06-26 7:28 PM, Jean-Pierre Tosoni wrote:
-> From: J.P. Tosoni <jp.tosoni@acksys.fr>
+On Tue, Jun 18, 2013 at 04:36:57PM -0700, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
 > 
-> In the rate control algorithms, the maximum retry count is limited by
-> a) a constant value obtained from the hardware driver
-> b) a constant limit (6ms) on the time allowed for all
->    retries of each frame.
+> This patch adds code to parse requested AP's 11h capabilities
+> and add 11h information in association request.
 > 
-> Replace the retry count by existing configurable values from nl80211.
-> Use wiphy->retry_short for management frames.
-> Use wiphy->retry_long for other frames.
-That seems a bit arbitrary.
+> Also, deauth is sent to the AP after receiving channel switch
+> announcement event from firmware. This happens when AP advertises
+> WLAN_EID_CHANNEL_SWITCH IE in it's beacon.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> Signed-off-by: Paul Stewart <pstew@chromium.org>
+> ---
 
-> diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-> index ac7ef54..502d0c9 100644
-> --- a/net/mac80211/rc80211_minstrel.c
-> +++ b/net/mac80211/rc80211_minstrel.c
-> @@ -592,11 +592,7 @@ minstrel_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
->  	/* maximum time that the hw is allowed to stay in one MRR segment */
->  	mp->segment_size = 6000;
+>  drivers/net/wireless/mwifiex/sta_event.c |   7 +++
+
+> diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+> index 41aafc7..0f7b4cf 100644
+> --- a/drivers/net/wireless/mwifiex/sta_event.c
+> +++ b/drivers/net/wireless/mwifiex/sta_event.c
+> @@ -427,6 +427,13 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
 >  
-> -	if (hw->max_rate_tries > 0)
-> -		mp->max_retry = hw->max_rate_tries;
-> -	else
-> -		/* safe default, does not necessarily have to match hw properties */
-> -		mp->max_retry = 7;
-> +	mp->max_retry = hw->conf.long_frame_max_tx_count;
-minstrel_alloc is called at rate control init time. You're not making
-max_retry configurable here, it'll pick the default value of
-hw->conf.long_frame_max_tx_count and never update it again.
+>  		break;
+>  
+> +	case EVENT_CHANNEL_SWITCH_ANN:
+> +		dev_dbg(adapter->dev, "event: Channel Switch Announcement\n");
+> +		ret = mwifiex_send_cmd_async(priv,
+> +			HostCmd_CMD_802_11_DEAUTHENTICATE,
+> +			HostCmd_ACT_GEN_SET, 0,
+> +			priv->curr_bss_params.bss_descriptor.mac_address);
+> +
+>  	default:
+>  		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
+>  			eventcause);
 
-- Felix
+Do you mean for this case to fall-through to the default case?
+
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
