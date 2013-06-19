@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:32360 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752432Ab3FGNgV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jun 2013 09:36:21 -0400
-Received: from 89-71-197-70.dynamic.chello.pl (HELO localhost.localdomain) (moorray3@[89.71.197.70])
-          (envelope-sender <moorray3@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with SMTP
-          for <linux-wireless@vger.kernel.org>; 7 Jun 2013 15:36:19 +0200
-From: Jakub Kicinski <moorray3@wp.pl>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	nietrywialneprzejscie@gmail.com
-Subject: [RFC 0/5] Fix mac addr enforcement on monitor interfaces
-Date: Fri,  7 Jun 2013 15:36:14 +0200
-Message-Id: <1370612179-24385-1-git-send-email-moorray3@wp.pl> (sfid-20130607_153625_109656_EE0E6951)
+Received: from s3.sipsolutions.net ([144.76.43.152]:43330 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756558Ab3FSONe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 10:13:34 -0400
+Message-ID: <1371651211.8349.20.camel@jlt4.sipsolutions.net> (sfid-20130619_161337_897598_0DD42CC2)
+Subject: Re: [RFC 2/2] mac80211:  Fix bss ref leak.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Jun 2013 16:13:31 +0200
+In-Reply-To: <51C08BF3.7050706@candelatech.com>
+References: <1371504746-8476-1-git-send-email-greearb@candelatech.com>
+	  <1371504746-8476-2-git-send-email-greearb@candelatech.com>
+	  (sfid-20130617_233256_432869_08F1495E) <1371569205.8318.47.camel@jlt4.sipsolutions.net>
+	 <51C08BF3.7050706@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Kicinski <kubakici@wp.pl>
+On Tue, 2013-06-18 at 09:33 -0700, Ben Greear wrote:
+> On 06/18/2013 08:26 AM, Johannes Berg wrote:
+> > On Mon, 2013-06-17 at 14:32 -0700, greearb@candelatech.com wrote:
+> >
+> >>   static void ieee80211_destroy_assoc_data(struct ieee80211_sub_if_data *sdata,
+> >> -					 bool assoc)
+> >> +					 bool assoc, bool put_bss)
+> >
+> > Do we _really_ need another argument? Shouldn't it always be put in the
+> > non-assoc case anyway, at least if non-NULL?
+> 
+> I don't think so.  Check out the ieee80211_rx_mgmt_assoc_resp method.
+> 
+>   	if (status_code != WLAN_STATUS_SUCCESS) {
+> 		sdata_info(sdata, "%pM denied association (code=%d)\n",
+> 			   mgmt->sa, status_code);
+> 		ieee80211_destroy_assoc_data(sdata, false, false);
+> 
+> This passes in false as 'assoc', but we should not free bss here because
+> it is being passed back to the calling method, and the return
+> code of RX_MGMT_CFG80211_RX_ASSOC means bss should eventually
+> be consumed by the cfg80211 logic.
+> 
+> Of course, this is all 'as far as I can tell'.
+> 
+> I sort of like the second boolean because it forces the caller to
+> think about whether bss should be freed or not...
 
-It's still possible for users to hurt themselves 
-by setting incompatible mac addresses on hardware
-that needs conformance to addr_mask. This series
-aims to fix that and improve address assignment to
-active monitors.
+I just posted a patch to hand it back and never free it in mac80211 at
+all, that also allows cfg80211_hold_bss() it across the assoc process
+which fixes a (possibly more theoretical) expiry issue.
 
-Unfortunately there is a merge conflict in mac80211.git
-and mac80211-next.git between:
-
-ac20976dca mac80211: Allow single vif mac address change with addr_mask
-and
-31eba5bc56 mac80211: support active monitor interfaces
-
-so I got confused and based the series on
-wireless-testing.git. Is this acceptable?
-
-Jakub Kicinski (5):
-  mac80211: introduce __ieee80211_assign_perm_addr
-  mac80211: return new mac address as soon as possible
-  mac80211: always default to address compatible with mask
-  mac80211: enforce address verification on monitors
-  mac80211: assign right mac addr to active monitors
-
- net/mac80211/cfg.c         |   2 +-
- net/mac80211/ieee80211_i.h |   2 +-
- net/mac80211/iface.c       | 197 ++++++++++++++++++++++-----------------------
- net/mac80211/main.c        |   2 +-
- 4 files changed, 99 insertions(+), 104 deletions(-)
-
--- 
-1.8.1.4
+johannes
 
