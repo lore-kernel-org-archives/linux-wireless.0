@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55835 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752791Ab3F0Mok (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50495 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934694Ab3FSU2n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 08:44:40 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Wed, 19 Jun 2013 16:28:43 -0400
+Message-ID: <51C21476.2070401@candelatech.com> (sfid-20130619_222858_386253_F2EBD366)
+Date: Wed, 19 Jun 2013 13:28:38 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv4 09/18] mac80211: return if IBSS chandef can not be used
-Date: Thu, 27 Jun 2013 14:44:15 +0200
-Message-Id: <1372337064-19254-10-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144458_250621_30320449)
-In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 2/2] cfg80211: hold BSS over association process
+References: <1371650017-14293-1-git-send-email-johannes@sipsolutions.net> <1371650017-14293-2-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1371650017-14293-2-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was originally designed to fail when a 40+/40- mode can not be
-used, but basic modes (such as 5/10/20 MHz) must be handled
-with an error.
+On 06/19/2013 06:53 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> This fixes the potential issue that the BSS struct that we use
+> and later assign to wdev->current_bss is removed from the scan
+> list while associating.
+>
+> Also warn when we don't have a BSS struct in connect_result
+> unless it's from a driver that only has the connect() API.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
- net/mac80211/ibss.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+I ran these two patches, plus my memory debugging patch
+on top of wireless-testing (in relatively light testing).
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 0bad948..2021b11 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -85,6 +85,14 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 
- 	chandef = ifibss->chandef;
- 	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef)) {
-+		if (chandef.width == NL80211_CHAN_WIDTH_5 ||
-+		    chandef.width == NL80211_CHAN_WIDTH_10 ||
-+		    chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
-+		    chandef.width == NL80211_CHAN_WIDTH_20) {
-+			sdata_info(sdata,
-+				   "Failed to join IBSS, beacons forbidden\n");
-+			return;
-+		}
- 		chandef.width = NL80211_CHAN_WIDTH_20;
- 		chandef.center_freq1 = chan->center_freq;
- 	}
+It appears to fix the leaks I was seeing.
+
+Just to make sure I am not missing something:
+
+mac80211 should never take an additional reference
+on the bss related to auth_data now?
+
+Thanks,
+Ben
+
 -- 
-1.7.10.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
