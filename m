@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:36712 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753657Ab3FEQQQ (ORCPT
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:32512 "EHLO
+	mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933862Ab3FSJ2e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 12:16:16 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20911.25503.889346.781590@gargle.gargle.HOWL> (sfid-20130605_181619_780001_3FC78D79)
-Date: Wed, 5 Jun 2013 21:43:19 +0530
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/7] ath9k: Enable WoW only for AR9462
-In-Reply-To: <CAD2nsn0=W+KU4S7cOzAQ1C5mt_GUzAYDNjtwhjvw-C7NM_4eQQ@mail.gmail.com>
-References: <1370231369-16241-1-git-send-email-sujith@msujith.org>
-	<1370231369-16241-2-git-send-email-sujith@msujith.org>
-	<20130603150846.GB2146@redhat.com>
-	<20908.45989.889590.158302@gargle.gargle.HOWL>
-	<CAD2nsn0=W+KU4S7cOzAQ1C5mt_GUzAYDNjtwhjvw-C7NM_4eQQ@mail.gmail.com>
+	Wed, 19 Jun 2013 05:28:34 -0400
+Received: from eucpsbgm2.samsung.com (unknown [203.254.199.245])
+ by mailout2.w1.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0MOM002PRVESDLA0@mailout2.w1.samsung.com> for
+ linux-wireless@vger.kernel.org; Wed, 19 Jun 2013 10:28:31 +0100 (BST)
+Received: from CAMNPWMFITZJOH ([106.1.222.14])
+ by eusync1.samsung.com (Oracle Communications Messaging Server 7u4-23.01
+ (7.0.4.23.0) 64bit (built Aug 10 2011))
+ with ESMTPA id <0MOM00B9FVNG3410@eusync1.samsung.com> for
+ linux-wireless@vger.kernel.org; Wed, 19 Jun 2013 10:28:31 +0100 (BST)
+Reply-to: m.fitzjohn@samsung.com
+From: Mark Fitzjohn <m.fitzjohn@samsung.com>
+To: linux-wireless@vger.kernel.org
+Subject: mac80211: impact of netif_carrier_off during roaming
+Date: Wed, 19 Jun 2013 10:28:28 +0100
+Message-id: <004401ce6ccf$5b69e620$123db260$%fitzjohn@samsung.com> (sfid-20130619_112839_840707_F89EB4D8)
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi wrote:
-> i remember i tested wow with AR9462, AR9485, AR9280, AR9287, though quirky
-> with AR9002 families. Does it really makes sense to remove them ? Its bit
-> painful to find the bugs in HAL code when we do it later, thoughts ?
+Hi
 
-WoW has to be tested quite a bit for it to be fully operational and it's largely
-affected by the platform/chip quirks. Our internal test cycles cover various aspects
-of WoW to make sure it doesn't affect normal usage and we never covered
-the AR9002 family. Keeping untested, possibly incomplete code is not really useful...
+I've noticed that during roaming triggered by detection of a significantly
+better AP in wpa_supplicant that mac80211 calls netif_carrier_off and then
+netif_carrier_on when associated with the new AP.
 
-Stanislaw raised a concern about a potential RH customer - if that happens, the patch
-can be reverted (though, AR9462 would be a much better choice).
+Does this have any detrimental impact on applications using the wifi
+connection or is the assumption that as long as the roam happens in a
+reasonable time then applications should tolerate it?
 
-Sujith
+Just wondering if signalling the netif_carrier_off only when the current AP
+is lost and there is no immediate alternative AP for the network available
+was considered?
+
+Thanks
+Mark
+
+
