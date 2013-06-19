@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49048 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663Ab3F0ObC (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33874 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756819Ab3FSREd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 10:31:02 -0400
-Message-ID: <1372343457.8160.10.camel@jlt4.sipsolutions.net> (sfid-20130627_163106_779970_99BBA4BD)
-Subject: Re: [PATCHv4 02/18] mac80211/rc80211: add chandef to rate
- initialization
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 27 Jun 2013 16:30:57 +0200
-In-Reply-To: <20130627142754.GA19965@pandem0nium>
-References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1372337064-19254-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1372337940.8160.3.camel@jlt4.sipsolutions.net>
-	 <20130627142754.GA19965@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 19 Jun 2013 13:04:33 -0400
+Message-ID: <51C1E49C.1070802@candelatech.com> (sfid-20130619_190436_128496_919F6A7A)
+Date: Wed, 19 Jun 2013 10:04:28 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] nl80211: fix attrbuf access race by allocating a separate
+ one
+References: <CA+55aFxOde8n0M2=77-TQ2Ea9iz8s-e8zGFwjj6RVyMFXBgxEA@mail.gmail.com>   <20130618.190632.33329016434510583.davem@davemloft.net>   <CA+55aFz=eG5-zh1toHxrx=4Qm4DvwyiBCU3u-6tc0-utfZ6xiA@mail.gmail.com>   (sfid-20130619_042459_700600_08CD35A3) <1371628488.8349.3.camel@jlt4.sipsolutions.net>   (sfid-20130619_095509_334897_6BA231FA) <1371630238.8349.6.camel@jlt4.sipsolutions.net>  <51C1E2FF.3030309@candelatech.com> <1371661217.8349.26.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1371661217.8349.26.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-06-27 at 16:27 +0200, Simon Wunderlich wrote:
-> On Thu, Jun 27, 2013 at 02:59:00PM +0200, Johannes Berg wrote:
-> > On Thu, 2013-06-27 at 14:44 +0200, Simon Wunderlich wrote:
-> > 
-> > >  static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
-> > > +			  struct cfg80211_chan_def *chandef,
-> > 
-> > I'd argue you can remove the sband pointer now, since the band is known
-> > from the chandef?
-> 
-> Not really, these rate algos usually access sband->bitrates, and sband can not be
-> derived from just the band and these others parameters (at least I miss to see how).
+On 06/19/2013 10:00 AM, Johannes Berg wrote:
+> On Wed, 2013-06-19 at 09:57 -0700, Ben Greear wrote:
+>> On 06/19/2013 01:23 AM, Johannes Berg wrote:
+>>> From: Johannes Berg <johannes.berg@intel.com>
+>>>
+>>> Since my commit 3713b4e364, nl80211_dump_wiphy() uses the global
+>
+>> The commit mentioned above (3713b4e364) is in 3.9.6,
+>
+> It isn't according to my git. :-)
 
-sband = hw->wiphy->bands[chandef->chan.band];
+Ahh, I was thinking that if 'git show foo' showed it, it was in that branch,
+but I suppose that is not actually the case.
 
-no?
+Sorry about that.
 
-> > Also, I'm not sure why you'd need this in rate_update, it should be good
-> > enough in rate_init, no?
-> 
-> Hm, minstrel_ht seems to be the only use of this function anyway. It calls
-> minstrel_ht_update_caps() for both rate_init and rate_update, and since both
-> calls had the same parameter it felt naturally and more easy to change both
-> the same way. Also this function calls rate_init from minstrel as fallback.
+Thanks,
+Ben
 
-Ok, fair enough.
+>
+> johannes
+>
 
-johannes
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
