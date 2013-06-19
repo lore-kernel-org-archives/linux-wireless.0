@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32588 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621Ab3FYHCy (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53615 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935060Ab3FSVGp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 03:02:54 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Arend van Spriel <arend@broadcom.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v11 0/2] P2P find phase offload
-Date: Tue, 25 Jun 2013 10:02:39 +0300
-Message-ID: <1372143761-21473-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130625_090257_870699_88628EC9)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 19 Jun 2013 17:06:45 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH-WN 1/3] wireless: Make sure __cfg80211_connect_result always puts bss.
+Date: Wed, 19 Jun 2013 14:06:25 -0700
+Message-Id: <1371675987-28732-1-git-send-email-greearb@candelatech.com> (sfid-20130619_230648_480145_A5400A87)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Addressed input from Arend and Johannes:
+From: Ben Greear <greearb@candelatech.com>
 
-- shorter comment for @flags for cfg80211_rx_mgmt()
-- enum nl80211_rxmgmt_flags to define raw values, don't use BIT()
+Otherwise, we can leak a bss reference.
 
-Actually, only patch 1/2 changed, but I am sending both to avoid any confusion
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-Vladimir Kondratiev (2):
-  cfg80211: add 'flags' to cfg80211_rx_mgmt()
-  cfg80211: P2P find phase offload
+This is against wireless-next.
 
- drivers/net/wireless/ath/ath6kl/wmi.c         |   7 +-
- drivers/net/wireless/ath/wil6210/wmi.c        |   2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c |   4 +-
- drivers/net/wireless/mwifiex/util.c           |   4 +-
- include/net/cfg80211.h                        |  79 ++++++++++-
- include/uapi/linux/nl80211.h                  |  29 ++++
- net/mac80211/rx.c                             |   3 +-
- net/wireless/mlme.c                           |   4 +-
- net/wireless/nl80211.c                        | 187 +++++++++++++++++++++++++-
- net/wireless/nl80211.h                        |   2 +-
- net/wireless/rdev-ops.h                       |  19 +++
- net/wireless/trace.h                          |  42 ++++++
- 12 files changed, 365 insertions(+), 17 deletions(-)
+ net/wireless/sme.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index c0bf781..32dac8c 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -557,6 +557,7 @@ static DECLARE_WORK(cfg80211_disconnect_work, disconnect_work);
+  * SME event handling
+  */
+ 
++/* This method must consume bss one way or another */
+ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 			       const u8 *req_ie, size_t req_ie_len,
+ 			       const u8 *resp_ie, size_t resp_ie_len,
+@@ -572,8 +573,10 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
+-		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
++		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)) {
++		cfg80211_put_bss(wdev->wiphy, bss);
+ 		return;
++	}
+ 
+ 	nl80211_send_connect_result(wiphy_to_dev(wdev->wiphy), dev,
+ 				    bssid, req_ie, req_ie_len,
 -- 
-1.8.1.2
+1.7.3.4
 
