@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34231 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756388Ab3FMRpM (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51131 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964832Ab3FSSkO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 13:45:12 -0400
-Date: Thu, 13 Jun 2013 13:34:00 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com
-Subject: Re: Pull request: ath6kl 20130612
-Message-ID: <20130613173359.GE3246@tuxdriver.com> (sfid-20130613_194524_707966_A0935F7D)
-References: <87d2rrqin8.fsf@kamboji.qca.qualcomm.com>
+	Wed, 19 Jun 2013 14:40:14 -0400
+Message-ID: <51C1FAFB.9090209@candelatech.com> (sfid-20130619_204023_806331_15CDF8EF)
+Date: Wed, 19 Jun 2013 11:39:55 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87d2rrqin8.fsf@kamboji.qca.qualcomm.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+CC: Ignacy Gawedzki <i@lri.fr>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Corey Richardson <corey@octayn.net>
+Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
+References: <20130619115809.GA26717@zenon.in.qult.net> <51C1ACEC.2020703@rempel-privat.de> <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com> <51C1B467.1030509@rempel-privat.de> <20130619140905.GA14079@zenon.in.qult.net> <1371651073.8349.19.camel@jlt4.sipsolutions.net> <51C1C95C.8030301@rempel-privat.de> <20130619175939.GA19405@zenon.in.qult.net> <20130619180354.GB19405@zenon.in.qult.net> <51C1FA76.3090109@rempel-privat.de>
+In-Reply-To: <51C1FA76.3090109@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 12, 2013 at 09:38:19PM +0300, Kalle Valo wrote:
-> Hi John,
-> 
-> here are few simple patches for ath6kl. We have a suspend crash fix for
-> USB from Shafi, use of mac_pton(), a compiler warning fix and a fix for
-> module initialisation error path.
-> 
-> Kalle
-> 
-> The following changes since commit 3e817f086f06069a23b797ee2279bbae638d5edc:
-> 
->   cw1200: remove unused including <linux/version.h> (2013-05-30 14:45:25 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://github.com/kvalo/ath6kl.git for-linville
-> 
-> for you to fetch changes up to 37291fc61253cd34db40b7a60be4497db776db41:
-> 
->   ath6kl: Unify sg_sz and buf_sz in ath6kl_sdio_alloc_prep_scat_req() (2013-06-01 15:16:33 +0300)
+On 06/19/2013 11:37 AM, Oleksij Rempel wrote:
+>
+>
+> Am 19.06.2013 20:03, schrieb Ignacy Gawedzki:
+>> On Wed, Jun 19, 2013 at 07:59:39PM +0200, thus spake Ignacy Gawedzki:
+>>> On Wed, Jun 19, 2013 at 05:08:12PM +0200, thus spake Oleksij Rempel:
+>>>> Ignacy, Is it RPi +  TL-WN722NC?
+>>>
+>>> Yes, absolutely, but it happens on a Dell XPS 13" as well (Ubuntu 13.04).
+>>
+>> BTW, removing CFG80211_DEFAULT_PS doesn't make any difference.
+>
+> Can you please tell more about your access point:
+> - hardware
+> - firmware
+> - configuration
+> - "iw dev wlan0 scan dump"
 
-Pulling now...
+Does the ath9k_htc do it's own rate control, perhaps modelled on ath9k_rate_control
+algorithm?
+
+If so, that could be the problem...it has issues with associating when
+network conditions are poor...
+
+Thanks,
+Ben
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
