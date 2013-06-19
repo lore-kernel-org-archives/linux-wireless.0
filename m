@@ -1,79 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3043 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753209Ab3FFMIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 08:08:44 -0400
-Message-ID: <51B07B23.1090205@broadcom.com> (sfid-20130606_140847_833296_AC93542F)
-Date: Thu, 6 Jun 2013 14:05:55 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from linode.cmadams.net ([209.123.162.222]:45373 "EHLO
+	linode.cmadams.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757021Ab3FSRBL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 13:01:11 -0400
+Date: Wed, 19 Jun 2013 11:42:27 -0500
+From: Chris Adams <cmadams@cmadams.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: b43-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: BCM4331 deauthenticates every five minutes
+Message-ID: <20130619164227.GC4784@cmadams.net> (sfid-20130619_190114_722179_27E402A5)
+References: <20130619160911.GB4784@cmadams.net>
+ <51C1DDEB.3090701@lwfinger.net>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 03/15] brcmsmac: remove brcms_bss_cfg->BSS
-References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
- <1364085963-25940-4-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1364085963-25940-4-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51C1DDEB.3090701@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/24/2013 01:45 AM, Hauke Mehrtens wrote:
-> This was a read only member. The checks using BSS are replaced by
-> better fitting checks of the new type member.
->
-> The change in brcms_c_tbtt() was based on code from b43, in
-> brcms_c_ps_allowed() the same happens with BSS being true or false,
-> beaconing and probe responses are just needed in ap mode.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/main.c |   23 +++++++++--------------
->   drivers/net/wireless/brcm80211/brcmsmac/main.h |    2 --
->   2 files changed, 9 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> index 4e420ea..90e6c0d 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> @@ -1069,7 +1069,7 @@ brcms_b_txstatus(struct brcms_hardware *wlc_hw, bool bound, bool *fatal)
->
->   static void brcms_c_tbtt(struct brcms_c_info *wlc)
->   {
-> -	if (!wlc->bsscfg->BSS)
-> +	if (wlc->bsscfg->type == BRCMS_TYPE_ADHOC)
->   		/*
->   		 * DirFrmQ is now valid...defer setting until end
->   		 * of ATIM window
+Once upon a time, Larry Finger <Larry.Finger@lwfinger.net> said:
+> What type of encryption are you using? If it is a re-keying type
+> such as TKIP, what is the interval? You should find that on the
+> setup page of the access point.
 
-Hi Hauke,
+I don't have access to the management of this particular AP (work
+environment), but "iw dev wlan0 scan dump" says CCMP.
 
-Sorry for such a late comment. It seem that the above change is 
-incosistent with the changes below. You probably need to change it.
+> BTW, your mailer is set up strangely. I get your address when I do a
+> plain Reply, but a Reply All from Thunderbird only got the b43-dev
+> mailing list. I had to add your address manually.
 
-Gr. AvS
+I'm using Mutt, which sets "Mail-Followup-To: <listaddr>" for configured
+mailing lists.  If you were just replying to the b43-dev list, a CC to
+me isn't really needed (I subscribed before sending; didn't know if
+non-subscribers were allowed to send messages).
 
-> @@ -7386,7 +7379,8 @@ void brcms_c_update_beacon(struct brcms_c_info *wlc)
->   {
->   	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
->
-> -	if (bsscfg->up && !bsscfg->BSS)
-> +	if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
-> +			   bsscfg->type == BRCMS_TYPE_ADHOC))
->   		/* Clear the soft intmask */
->   		wlc->defmacintmask &= ~MI_BCNTPL;
->   }
-> @@ -7461,7 +7455,8 @@ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
->   	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
->
->   	/* update AP or IBSS probe responses */
-> -	if (bsscfg->up && !bsscfg->BSS)
-> +	if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
-> +			   bsscfg->type == BRCMS_TYPE_ADHOC))
->   		brcms_c_bss_update_probe_resp(wlc, bsscfg, suspend);
->   }
->
-
-
+-- 
+Chris Adams <cmadams@cmadams.net>
