@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60248 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757337Ab3FMPaK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 11:30:10 -0400
-Date: Thu, 13 Jun 2013 11:18:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@ml01.01.org>
-Subject: Re: [GIT] [3.10] NFC fixes
-Message-ID: <20130613151821.GA3246@tuxdriver.com> (sfid-20130613_173019_173118_CAABDEC0)
-References: <20130606152019.GT4793@zurbaran>
- <20130612182238.GG11589@tuxdriver.com>
- <20130613090209.GA7998@zurbaran>
+Received: from [78.193.33.39] ([78.193.33.39]:45980 "EHLO qult.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S934566Ab3FSTgd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jun 2013 15:36:33 -0400
+Date: Wed, 19 Jun 2013 21:36:24 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Corey Richardson <corey@octayn.net>
+Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
+Message-ID: <20130619193624.GB29582@zenon.in.qult.net> (sfid-20130619_213637_665987_CF0EFD8E)
+References: <51C1ACEC.2020703@rempel-privat.de>
+ <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com>
+ <51C1B467.1030509@rempel-privat.de>
+ <20130619140905.GA14079@zenon.in.qult.net>
+ <1371651073.8349.19.camel@jlt4.sipsolutions.net>
+ <51C1C95C.8030301@rempel-privat.de>
+ <20130619175939.GA19405@zenon.in.qult.net>
+ <20130619180354.GB19405@zenon.in.qult.net>
+ <51C1FA76.3090109@rempel-privat.de>
+ <51C1FAFB.9090209@candelatech.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130613090209.GA7998@zurbaran>
+In-Reply-To: <51C1FAFB.9090209@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 13, 2013 at 11:02:09AM +0200, Samuel Ortiz wrote:
-> Hi John,
-> 
-> On Wed, Jun 12, 2013 at 02:22:38PM -0400, John W. Linville wrote:
-> > Given recent events, I'm not sure that this is really acceptable as
-> > a fix request.  The service bit and endianness in particular don't
-> > sound like they are addressing big problems, and the other two don't
-> > sound like they are really fixing any regressions either.
-> > 
-> > Can these wait for 3.11?
-> I guess so, although they really are fixes.
+On Wed, Jun 19, 2013 at 11:39:55AM -0700, thus spake Ben Greear:
+> Does the ath9k_htc do it's own rate control, perhaps modelled on
+> ath9k_rate_control algorithm?
 
-I don't doubt that they are fixes, but I think that Dave is trying
-to clamp down to only 'important' fixes -- data loss, crashes, etc.
+Do you mean ATH9K_LEGACY_RATE_CONTROL ?
 
-> I'll queue them in nfc-next and will send you a pull request.
-> Btw, are you going to merge wireless into wireless-next soon ?
+> If so, that could be the problem...it has issues with associating when
+> network conditions are poor...
 
-I merged the wireless tree into wireless-next yesterday.
+Frankly, I doubt this is the case.  With so many different setups, and the AP
+is like one meter away from the station right now.
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The groove will take you through times without money
+much better than money will take you through times without groove.
