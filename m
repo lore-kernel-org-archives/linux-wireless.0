@@ -1,91 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58830 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734Ab3FDUW7 (ORCPT
+Received: from mxout1.netvision.net.il ([194.90.9.20]:53971 "EHLO
+	mxout1.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965153Ab3FTOZf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 16:22:59 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: fix potential deadlock regression
-Date: Tue,  4 Jun 2013 22:22:50 +0200
-Message-Id: <1370377370-23055-1-git-send-email-johannes@sipsolutions.net> (sfid-20130604_222302_547381_9A036ACD)
+	Thu, 20 Jun 2013 10:25:35 -0400
+Received: from localhost.localdomain ([82.166.196.250])
+ by mxout1.netvision.net.il
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTPA id <0MOP0071F41YR0E0@mxout1.netvision.net.il> for
+ linux-wireless@vger.kernel.org; Thu, 20 Jun 2013 17:25:22 +0300 (IDT)
+From: Kirshenbaum Erez <erezk@wilocity.com>
+To: qca_vkondrat@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org,
+	Kirshenbaum Erez <erezk@wilocity.com>
+Subject: [PATCH 2/1] wil6210: set vring index for all descriptors
+Date: Thu, 20 Jun 2013 16:24:44 +0300
+Message-id: <1371734684-4453-1-git-send-email-erezk@wilocity.com> (sfid-20130620_162538_133676_969998EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The vring index (MAC queue id) must be set in all TX descriptors
+otherwise HW will fail to release descriptors for a specific vring
+(disconnect or vring switch flows).
+This is normally occurs when fragmentation required, if vring index
+will not be the same for all SKB descriptors HW will fail to flush
+this MAC queue.
 
-My big locking cleanups caused a problem by registering the
-rfkill instance with the RTNL held, while the callback also
-acquires the RTNL. This potentially causes a deadlock since
-the two locks used (rfkill mutex and RTNL) can be acquired
-in two different orders. Fix this by (un)registering rfkill
-without holding the RTNL. This needs to be done after the
-device struct is registered, but that can also be done w/o
-holding the RTNL.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
 ---
- net/wireless/core.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/wil6210/txrx.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 221e76b..99d86dd 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -555,14 +555,18 @@ int wiphy_register(struct wiphy *wiphy)
- 	/* check and set up bitrates */
- 	ieee80211_set_bitrate_flags(wiphy);
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index e1c492b..73d6c2d 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -621,7 +621,8 @@ static struct vring *wil_find_tx_vring(struct wil6210_priv *wil,
+ 	return NULL;
+ }
  
--	rtnl_lock();
- 
- 	res = device_add(&rdev->wiphy.dev);
-+	if (res)
-+		return res;
-+
-+	res = rfkill_register(rdev->rfkill);
- 	if (res) {
--		rtnl_unlock();
-+		device_del(&rdev->wiphy.dev);
- 		return res;
+-static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len)
++static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len,
++			   int vring_index)
+ {
+ 	wil_desc_addr_set(&d->dma.addr, pa);
+ 	d->dma.ip_length = 0;
+@@ -630,7 +631,7 @@ static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len)
+ 	d->dma.error = 0;
+ 	d->dma.status = 0; /* BIT(0) should be 0 for HW_OWNED */
+ 	d->dma.length = cpu_to_le16((u16)len);
+-	d->dma.d0 = 0;
++	d->dma.d0 = (vring_index << DMA_CFG_DESC_TX_0_QID_POS);
+ 	d->mac.d[0] = 0;
+ 	d->mac.d[1] = 0;
+ 	d->mac.d[2] = 0;
+@@ -684,7 +685,7 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	if (unlikely(dma_mapping_error(dev, pa)))
+ 		return -EINVAL;
+ 	/* 1-st segment */
+-	wil_tx_desc_map(d, pa, skb_headlen(skb));
++	wil_tx_desc_map(d, pa, skb_headlen(skb), vring_index);
+ 	d->mac.d[2] |= ((nr_frags + 1) <<
+ 		       MAC_CFG_DESC_TX_2_NUM_OF_DESCRIPTORS_POS);
+ 	if (nr_frags)
+@@ -701,7 +702,7 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 				DMA_TO_DEVICE);
+ 		if (unlikely(dma_mapping_error(dev, pa)))
+ 			goto dma_error;
+-		wil_tx_desc_map(d, pa, len);
++		wil_tx_desc_map(d, pa, len, vring_index);
+ 		vring->ctx[i] = NULL;
+ 		*_d = *d;
  	}
+@@ -709,7 +710,6 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_EOP_POS);
+ 	d->dma.d0 |= BIT(9); /* BUG: undocumented bit */
+ 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_DMA_IT_POS);
+-	d->dma.d0 |= (vring_index << DMA_CFG_DESC_TX_0_QID_POS);
+ 	*_d = *d;
  
-+	rtnl_lock();
- 	/* set up regulatory info */
- 	wiphy_regulatory_register(wiphy);
- 
-@@ -589,17 +593,6 @@ int wiphy_register(struct wiphy *wiphy)
- 
- 	cfg80211_debugfs_rdev_add(rdev);
- 
--	res = rfkill_register(rdev->rfkill);
--	if (res) {
--		device_del(&rdev->wiphy.dev);
--
--		debugfs_remove_recursive(rdev->wiphy.debugfsdir);
--		list_del_rcu(&rdev->list);
--		wiphy_regulatory_deregister(wiphy);
--		rtnl_unlock();
--		return res;
--	}
--
- 	rdev->wiphy.registered = true;
- 	rtnl_unlock();
- 	return 0;
-@@ -636,11 +629,11 @@ void wiphy_unregister(struct wiphy *wiphy)
- 		rtnl_unlock();
- 		__count == 0; }));
- 
-+	rfkill_unregister(rdev->rfkill);
-+
- 	rtnl_lock();
- 	rdev->wiphy.registered = false;
- 
--	rfkill_unregister(rdev->rfkill);
--
- 	BUG_ON(!list_empty(&rdev->wdev_list));
- 
- 	/*
+ 	wil_hex_dump_txrx("Tx ", DUMP_PREFIX_NONE, 32, 4,
 -- 
-1.8.0
+1.7.11.7
 
