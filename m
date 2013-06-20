@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:42607 "EHLO mga03.intel.com"
+Received: from nbd.name ([46.4.11.11]:35434 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934520Ab3FSNJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 09:09:03 -0400
-From: "Berg, Johannes" <johannes.berg@intel.com>
-To: Oleksij Rempel <linux@rempel-privat.de>,
-	Ignacy Gawedzki <i@lri.fr>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [ath9k-devel] ath9k_htc: station unable to authenticate
-Date: Wed, 19 Jun 2013 13:08:50 +0000
-Message-ID: <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com> (sfid-20130619_150907_877643_49120EBD)
-References: <20130619115809.GA26717@zenon.in.qult.net>
- <51C1ACEC.2020703@rempel-privat.de>
-In-Reply-To: <51C1ACEC.2020703@rempel-privat.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S965398Ab3FTNLf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jun 2013 09:11:35 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH] ath9k: fix queue depth accounting in ath_tx_txqaddbuf
+Date: Thu, 20 Jun 2013 15:11:31 +0200
+Message-Id: <1371733891-20996-1-git-send-email-nbd@openwrt.org> (sfid-20130620_151138_373367_DC2A7777)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IA0KPiAgICAgIG1hYzgwMjExOiBmaXggaWRsZSBoYW5kbGluZyBzZXF1ZW5jZQ0KPiANCj4gICAg
-ICBDb3JleSBSaWNoYXJkc29uIHJlcG9ydGVkIHRoYXQgbXkgaWRsZSBoYW5kbGluZyBjbGVhbnVw
-DQo+ICAgICAgKGNvbW1pdCBmZDBmOTc5YTFiLCAibWFjODAyMTE6IHNpbXBsaWZ5IGlkbGUgaGFu
-ZGxpbmciKQ0KPiAgICAgIGJyb2tlIGF0aDlrX2h0Yy4gVGhlIHJlYXNvbiBhcHBlYXJzIHRvIGJl
-IHRoYXQgaXQgd2FudHMNCj4gICAgICB0byBnbyBvdXQgb2YgaWRsZSBiZWZvcmUgc3dpdGNoaW5n
-IGNoYW5uZWxzLiBUbyBmaXggaXQsDQo+ICAgICAgcmVpbXBsZW1lbnQgdGhhdCBzZXF1ZW5jZS4N
-Cj4gDQo+ICAgICAgUmVwb3J0ZWQtYnk6IENvcmV5IFJpY2hhcmRzb24gPGNvcmV5QG9jdGF5bi5u
-ZXQ+DQo+ICAgICAgU2lnbmVkLW9mZi1ieTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0Bp
-bnRlbC5jb20+DQo+IA0KPiBKb2hhbm5lcywgY2FuIHlvdSBwbGVhc2UgdGFrZSBhIGxvb2sgb24g
-aXQuDQoNCk5vdCB2ZXJ5IHdlbGwsIEkgZG9uJ3Qga25vdyBhbnl0aGluZyBhYm91dCBhdGg5ay4g
-SSdtIHdpbGxpbmcgdG8gaGVscCBvdXQsIGJ1dCBJIGNhbid0IHJlYWxseSBzYXkgd2hhdCBicm9r
-ZSBpdC4NCg0Kam9oYW5uZXMNCg0KSW50ZWwgR21iSApEb3JuYWNoZXIgU3RyYXNzZSAxCjg1NjIy
-IEZlbGRraXJjaGVuL011ZW5jaGVuLCBEZXV0c2NobGFuZApTaXR6IGRlciBHZXNlbGxzY2hhZnQ6
-IEZlbGRraXJjaGVuIGJlaSBNdWVuY2hlbgpHZXNjaGFlZnRzZnVlaHJlcjogQ2hyaXN0aWFuIExh
-bXByZWNodGVyLCBIYW5uZXMgU2Nod2FkZXJlciwgRG91Z2xhcyBMdXNrClJlZ2lzdGVyZ2VyaWNo
-dDogTXVlbmNoZW4gSFJCIDQ3NDU2ClVzdC4tSWROci4vVkFUIFJlZ2lzdHJhdGlvbiBOby46IERF
-MTI5Mzg1ODk1CkNpdGliYW5rIEZyYW5rZnVydCBhLk0uIChCTFogNTAyIDEwOSAwMCkgNjAwMTE5
-MDUyCg==
+ath_tx_txqaddbuf assumes that all the linked buffers in the queue passed
+to it are part of the same A-MPDU or MPDU. The CAB queue rework violates
+this assumption, which can cause the internal queue depth to go
+negative.
+Fix this by increasing the counter for all slots of [bf, bf->bf_lastbf]
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 7e19d9b..bfb58a5 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1778,9 +1778,13 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 	}
+ 
+ 	if (!internal) {
+-		txq->axq_depth++;
+-		if (bf_is_ampdu_not_probing(bf))
+-			txq->axq_ampdu_depth++;
++		while (bf) {
++			txq->axq_depth++;
++			if (bf_is_ampdu_not_probing(bf))
++				txq->axq_ampdu_depth++;
++
++			bf = bf->bf_lastbf->bf_next;
++		}
+ 	}
+ }
+ 
+-- 
+1.8.0.2
 
