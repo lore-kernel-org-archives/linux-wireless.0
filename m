@@ -1,39 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38186 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755519Ab3FRJhO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 05:37:14 -0400
-Message-ID: <1371548225.8318.3.camel@jlt4.sipsolutions.net> (sfid-20130618_113717_888844_67B2D2CC)
-Subject: Re: [PATCH] mac80211: allow key deletion for mesh interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>
-Date: Tue, 18 Jun 2013 11:37:05 +0200
-In-Reply-To: <1371548163.8318.2.camel@jlt4.sipsolutions.net> (sfid-20130618_113624_696931_05E0EB9D)
-References: <CAEFj9864ioXkUy3Sg24k6vFTNR8ZfWj=to54J2VS=dvte+ExNA@mail.gmail.com>
-	 <CAEFj987DCjNuv+W3oSq6ubHwjnkmKgKvcDThhP8s9ZXBsKmcjg@mail.gmail.com>
-	 (sfid-20130618_110728_700495_DC4DE8F2) <1371548163.8318.2.camel@jlt4.sipsolutions.net>
-	 (sfid-20130618_113624_696931_05E0EB9D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from [78.193.33.39] ([78.193.33.39]:48034 "EHLO qult.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752800Ab3FTGjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jun 2013 02:39:42 -0400
+Date: Thu, 20 Jun 2013 08:39:25 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Corey Richardson <corey@octayn.net>
+Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
+Message-ID: <20130620063925.GA3885@zenon.in.qult.net> (sfid-20130620_083945_127765_B49F5F9E)
+References: <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com>
+ <51C1B467.1030509@rempel-privat.de>
+ <20130619140905.GA14079@zenon.in.qult.net>
+ <1371651073.8349.19.camel@jlt4.sipsolutions.net>
+ <51C1C95C.8030301@rempel-privat.de>
+ <20130619175939.GA19405@zenon.in.qult.net>
+ <20130619180354.GB19405@zenon.in.qult.net>
+ <51C1FA76.3090109@rempel-privat.de>
+ <20130619193316.GA29582@zenon.in.qult.net>
+ <51C2942A.2080706@rempel-privat.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51C2942A.2080706@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-18 at 11:36 +0200, Johannes Berg wrote:
-
-> > Otherwise, it seems that we still manage to get sta pointer even the
-> > bss is NULL.
+On Thu, Jun 20, 2013 at 07:33:30AM +0200, thus spake Oleksij Rempel:
+> Am 19.06.2013 21:33, schrieb Ignacy Gawedzki:
+> >I tested the thing with at least three different APs:
+> >
+> >   - Netgear DG834Gv4 with latest firmware.
 > 
-> What's the problem with that? But if this is a problem maybe we need to
-> explicitly check for non-NULL?
+> this one is BG with Broadcom BCM4318. Is here original firmware or openwrt?
 
-I should pay attention ... we already check for non-NULL, so I don't
-understand what you're trying to say at all.
+Original firmware, since OpenWRT doesn't support the ADSL chip.
 
-Maybe you're looking at old code?
+> >   - Netgear DG834Gv5 (don't know which firmware and can't check at this time).
+> 
+> this is BG with Conexant CX94610
+> 
+> >   - hostapd (can't say which version at this time either) with the same
+> >     ath9k_htc.
+> 
+> this one is actually BGN, did you configured it for N? Can you
+> please provide your hostapd.conf.
 
-johannes
+I'll manage to get the configuration as soon as possible.  It seems the
+association problem went away since I patched the drivers on the AP too, so
+"unpatching" the drivers on the station is not enough to reproduce the
+problem.  I'll unpatch the drivers on the AP and re-run the test.
 
+> Do you have problems on all 3 configurations?
+
+On both Netgears for sure.  For hostapd I'll confirm that in a little while.
+
+>                                               Can you please test it
+> with some N (HT) capable AP. But please, not with N-draft certified
+> AP.
+
+Is ath9k_htc N-capable?
+
+-- 
+I used to have a sig, but I've stopped smoking now.
