@@ -1,33 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25917 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753323Ab3FAMdm (ORCPT
+Received: from mxout1.netvision.net.il ([194.90.9.20]:47609 "EHLO
+	mxout1.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965093Ab3FTNqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jun 2013 08:33:42 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <drwho@infidigm.net>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
-Subject: Re: Ath6kl:  how to set custom mac address?
-References: <88f1398e0d87f1c79c5781f07bb7fb20.squirrel@www.infidigm.net>
-Date: Sat, 1 Jun 2013 15:33:35 +0300
-In-Reply-To: <88f1398e0d87f1c79c5781f07bb7fb20.squirrel@www.infidigm.net>
-	(drwho@infidigm.net's message of "Fri, 26 Apr 2013 13:41:05 -0400")
-Message-ID: <877gienh7k.fsf@kamboji.qca.qualcomm.com> (sfid-20130601_143358_035757_A905208D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 20 Jun 2013 09:46:14 -0400
+Received: from localhost.localdomain ([82.166.196.250])
+ by mxout1.netvision.net.il
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTPA id <0MOP007E628VQQC0@mxout1.netvision.net.il> for
+ linux-wireless@vger.kernel.org; Thu, 20 Jun 2013 16:46:13 +0300 (IDT)
+From: Kirshenbaum Erez <erezk@wilocity.com>
+To: qca_vkondrat@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org,
+	Kirshenbaum Erez <erezk@wilocity.com>
+Subject: [PATCH 2/2] wil6210: add HW write-back option in TX descriptor
+Date: Thu, 20 Jun 2013 15:45:40 +0300
+Message-id: <1371732340-4149-1-git-send-email-erezk@wilocity.com> (sfid-20130620_154641_762881_D2787FD3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<drwho@infidigm.net> writes:
+Map BIT 9 in TX DMA DWARD 0 as HW write back option.
+We must turn on this option in the last TX descriptor,
+this is required for old HW compatability.
+This option indicate to HW that WB is required for this descriptor.
 
-> Is there a way to set the mac address on an ath6kl device?  For example
-> when loading the module?
->
-> insmod ath6kl_core.ko mac=55:66:77:88:AA:BB
->
-> or with ifconfig / ip?
+Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 2 +-
+ drivers/net/wireless/ath/wil6210/txrx.h | 4 ++++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-This is not supported at the moment, sorry.
-
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index b79ba10..c3e763c 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -709,7 +709,7 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	}
+ 	/* for the last seg only */
+ 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_EOP_POS);
+-	d->dma.d0 |= BIT(9); /* BUG: undocumented bit */
++	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_MARK_WB_POS);
+ 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_DMA_IT_POS);
+ 	*_d = *d;
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index 23c0781..859aea6 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -201,6 +201,10 @@ struct vring_tx_mac {
+ #define DMA_CFG_DESC_TX_0_CMD_EOP_LEN 1
+ #define DMA_CFG_DESC_TX_0_CMD_EOP_MSK 0x100
+ 
++#define DMA_CFG_DESC_TX_0_CMD_MARK_WB_POS 9
++#define DMA_CFG_DESC_TX_0_CMD_MARK_WB_LEN 1
++#define DMA_CFG_DESC_TX_0_CMD_MARK_WB_MSK 0x200
++
+ #define DMA_CFG_DESC_TX_0_CMD_DMA_IT_POS 10
+ #define DMA_CFG_DESC_TX_0_CMD_DMA_IT_LEN 1
+ #define DMA_CFG_DESC_TX_0_CMD_DMA_IT_MSK 0x400
 -- 
-Kalle Valo
+1.7.11.7
+
