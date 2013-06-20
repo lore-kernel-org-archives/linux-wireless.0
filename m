@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43316 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756585Ab3FLUuO (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29529 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935370Ab3FTNzs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 16:50:14 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: greearb@candelatech.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix TX aggregation TID struct leak
-Date: Wed, 12 Jun 2013 22:50:09 +0200
-Message-Id: <1371070209-24107-1-git-send-email-johannes@sipsolutions.net> (sfid-20130612_225018_678692_D7CFA8A4)
+	Thu, 20 Jun 2013 09:55:48 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Kirshenbaum Erez <erezk@wilocity.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] wil6210: set vring index for all descriptors
+Date: Thu, 20 Jun 2013 16:55:44 +0300
+Message-ID: <2097949.LkKlZN97tx@lx-vladimir> (sfid-20130620_155551_316788_6001BCCA)
+In-Reply-To: <1371732325-4112-1-git-send-email-erezk@wilocity.com>
+References: <1371732325-4112-1-git-send-email-erezk@wilocity.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thursday, June 20, 2013 03:45:25 PM Kirshenbaum Erez wrote:
+> The vring index (MAC queue id) must be set in all TX descriptors
+> otherwise HW will fail to release descriptors for a specific vring  
+> (disconnect or vring switch flows).
+> This is normally occurs when fragmentation required, if vring index 
+> will not be the same for all SKB descriptors HW will fail to flush this 
+> MAC queue.
+> 
+> Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
+> ---
+>  drivers/net/wireless/ath/wil6210/txrx.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+> index e1c492b..b79ba10 100644
+> --- a/drivers/net/wireless/ath/wil6210/txrx.c
+> +++ b/drivers/net/wireless/ath/wil6210/txrx.c
+> @@ -621,7 +621,8 @@ static struct vring *wil_find_tx_vring(struct wil6210_priv *wil,
+>  	return NULL;
+>  }
+>  
+> -static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len)
+> +static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len,
+> +			   int vring_index)
+>  {
+>  	wil_desc_addr_set(&d->dma.addr, pa);
+>  	d->dma.ip_length = 0;
+> @@ -631,6 +632,7 @@ static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len)
+>  	d->dma.status = 0; /* BIT(0) should be 0 for HW_OWNED */
+>  	d->dma.length = cpu_to_le16((u16)len);
+>  	d->dma.d0 = 0;
+Then, remove line above
+> +	d->dma.d0 = (vring_index << DMA_CFG_DESC_TX_0_QID_POS);
+>  	d->mac.d[0] = 0;
+>  	d->mac.d[1] = 0;
+>  	d->mac.d[2] = 0;
+<skip>
 
-Ben reports that kmemleak is saying TX aggregation TID
-structs are leaked. Given his workload, I suspect that
-they're leaked because stations are destroyed before
-their aggregation sessions get a chance to start. Fix
-this by simply freeing structs that are not used yet.
+The rest looks fine
 
-Reported-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index b429798..aaf68d2 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -149,6 +149,7 @@ static void cleanup_single_sta(struct sta_info *sta)
- 	 * directly by station destruction.
- 	 */
- 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-+		kfree(sta->ampdu_mlme.tid_start_tx[i]);
- 		tid_tx = rcu_dereference_raw(sta->ampdu_mlme.tid_tx[i]);
- 		if (!tid_tx)
- 			continue;
--- 
-1.8.0
-
+Thanks, Vladimir
