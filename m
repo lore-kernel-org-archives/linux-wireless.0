@@ -1,67 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47160 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752871Ab3FFVQH (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:42768 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840Ab3FTIaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 17:16:07 -0400
-Message-ID: <51B0FBFC.8040809@candelatech.com> (sfid-20130606_231627_031056_7ACD6573)
-Date: Thu, 06 Jun 2013 14:15:40 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Tejun Heo <tj@kernel.org>
-CC: Eric Dumazet <eric.dumazet@gmail.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Joe Lawrence <joe.lawrence@stratus.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	stable@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>
-Subject: Re: stop_machine lockup issue in 3.9.y.
-References: <51AF6E54.3050108@candelatech.com> <20130605184807.GD10693@mtj.dyndns.org> <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com> <51AFA677.9010605@candelatech.com> <20130605211157.GK10693@mtj.dyndns.org> <1370482492.24311.308.camel@edumazet-glaptop> <20130606031444.GA12335@mtj.dyndns.org> <1370489181.24311.318.camel@edumazet-glaptop> <51B004CD.6080007@candelatech.com> <20130606205514.GC5045@htj.dyndns.org>
-In-Reply-To: <20130606205514.GC5045@htj.dyndns.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 20 Jun 2013 04:30:09 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH 3.9/3.10] ath9k_htc: Handle IDLE state transition properly
+Date: Thu, 20 Jun 2013 13:57:07 +0530
+Message-Id: <1371716827-3720-1-git-send-email-sujith@msujith.org> (sfid-20130620_103016_166188_0FFE296D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2013 01:55 PM, Tejun Heo wrote:
-> Hello, Ben.
->
-> On Wed, Jun 05, 2013 at 08:41:01PM -0700, Ben Greear wrote:
->> On 06/05/2013 08:26 PM, Eric Dumazet wrote:
->>> On Wed, 2013-06-05 at 20:14 -0700, Tejun Heo wrote:
->>>> Ah, so, that's why it's showing up now.  We probably have had the same
->>>> issue all along but it used to be masked by the softirq limiting.  Do
->>>> you care to revive the 10 iterations limit so that it's limited by
->>>> both the count and timing?  We do wanna find out why softirq is
->>>> spinning indefinitely tho.
->>>
->>> Yes, no problem, I can do that.
->>
->> Limiting it to 5000 fixes my problem, so if you wanted it larger than 10, that would
->> be fine by me.
->
-> First of all, kudos for tracking the issue down.  While the removal of
-> looping limit in softirq handling was the direct cause for making the
-> problem visible, it's very bothering that we have softirq runaway.
-> Finding out the perpetrator shouldn't be hard.  Something like the
-> following should work (untested).  Once we know which softirq (prolly
-> the network one), we can dig deeper.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The patch below assumes my fix is not in the code, right?
+Make sure that a chip reset is done when IDLE is turned
+off - this fixes authentication timeouts.
 
-I'll work on this, but it will probably be next week before
-I have time...gotta catch up on some other things first.
+Cc: stable@vger.kernel.org
+Reported-by: Ignacy Gawedzki <i@lri.fr>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index eaa94fe..fba6ea7 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1183,7 +1183,7 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
+ 		mutex_lock(&priv->htc_pm_lock);
+ 
+ 		priv->ps_idle = !!(conf->flags & IEEE80211_CONF_IDLE);
+-		if (priv->ps_idle)
++		if (!priv->ps_idle)
+ 			chip_reset = true;
+ 
+ 		mutex_unlock(&priv->htc_pm_lock);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.3.1
 
