@@ -1,35 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:45891 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755880Ab3FCPUo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 11:20:44 -0400
-Received: by mail-ob0-f172.google.com with SMTP id wo10so7438805obc.17
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 08:20:43 -0700 (PDT)
-Date: Mon, 3 Jun 2013 11:19:42 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: thomas@cozybit.com, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org
-Subject: Re: [PATCH] cfg80211: fix deadlock in cfg80211_leave_mesh()
-Message-ID: <20130603151942.GF8644@localhost> (sfid-20130603_172047_250916_D4C06B33)
-References: <20130601131916.GA2484@localhost>
- <1370271421.8227.14.camel@jlt4.sipsolutions.net>
+Received: from mms3.broadcom.com ([216.31.210.19]:3297 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753983Ab3FTIgy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jun 2013 04:36:54 -0400
+Message-ID: <51C2BF1A.5010908@broadcom.com> (sfid-20130620_103707_860428_4B105EA0)
+Date: Thu, 20 Jun 2013 10:36:42 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370271421.8227.14.camel@jlt4.sipsolutions.net>
+To: "Chris Adams" <cma@cmadams.net>
+cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	b43-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: BCM4331 deauthenticates every five minutes
+References: <20130619160911.GB4784@cmadams.net>
+ <51C1DDEB.3090701@lwfinger.net> <20130619164227.GC4784@cmadams.net>
+ <CACna6rzbTHnyqs5SzTuYL7r_SW3iCNh0qqbnvfsF7Wspyhp1WA@mail.gmail.com>
+ <20130619175850.GD4784@cmadams.net> <51C21B7C.2030005@broadcom.com>
+ <20130619211108.GG4784@cmadams.net> <51C2BE54.20509@broadcom.com>
+In-Reply-To: <51C2BE54.20509@broadcom.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 03, 2013 at 04:57:01PM +0200, Johannes Berg wrote:
-> However, I think that in mac80211 we can instead just remove the locking
-> and the cancel_work_sync() since the latter will happen whenever the
-> interface goes down, in a different code path outside of this. Just need
-> to make sure the work can cope with running while the interface is not
-> joined to a mesh, but I guess that's not going to be a big problem.
+On 06/20/2013 10:33 AM, Arend van Spriel wrote:
+> On 06/19/2013 11:11 PM, Chris Adams wrote:
+>> Once upon a time, Arend van Spriel <arend@broadcom.com> said:
+>>> Can you make a capture using a wireless sniffer (using your thinkpad
+>>> maybe)?
+>>
+>> How would I go about doing that?  I've done lots of network debugging
+>> with tcpdump and such, but not much wireless stuff.
+>>
+>
+> I use wireshark these days. If you install that you can use the steps
+> below and select the wireless interface in wireshark to capture. I use
+> wlan0 as interface name, but it may be different for you.
+>
+> 1. disable network-manager so it won't interfere.
+> 2. bring the interface down
+> $ sudo ifconfig wlan0 down
+> 3. change interface type to monitor
+> $ sudo iw dev wlan0 set type monitor
+> 4. bring up the interface
+> $ sudo ifconfig wlan0 up
+> 5. start wireshark and select wlan0
+> $ gksudo wireshark
+>
+> It will complain that running wireshark as root is not secure. If you
+> care about that, you should read [1].
 
-Yeah, that would be a better approach.  We (myself or Thomas) can give
-that a shot today.
+Forgot a step. You need to select a channel. You can do that before 
+starting a capture in wireshark: $ sudo iw dev wlan0 set channel 5
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> Regards,
+> Arend
+>
+> [1]
+> http://wiki.wireshark.org/Security#Administrator.2Froot_account_not_required.21
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
