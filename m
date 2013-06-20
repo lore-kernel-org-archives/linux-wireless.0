@@ -1,121 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:47078 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461Ab3FNMPj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jun 2013 08:15:39 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCHv2 3/5] mac80211: add functions to duplicate a cfg80211_beacon
-Date: Fri, 14 Jun 2013 14:15:21 +0200
-Message-Id: <1371212124-26264-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130614_141544_164572_51003BD1)
-In-Reply-To: <1371212124-26264-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1371212124-26264-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mx1.redhat.com ([209.132.183.28]:45549 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757400Ab3FTPXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jun 2013 11:23:55 -0400
+Message-ID: <1371741886.10995.3.camel@dcbw.foobar.com> (sfid-20130620_172359_118751_6F5CB170)
+Subject: Re: BCM4331 deauthenticates every five minutes
+From: Dan Williams <dcbw@redhat.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Chris Adams <cma@cmadams.net>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	b43-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 20 Jun 2013 10:24:46 -0500
+In-Reply-To: <51C2BE54.20509@broadcom.com>
+References: <20130619160911.GB4784@cmadams.net>
+	 <51C1DDEB.3090701@lwfinger.net> <20130619164227.GC4784@cmadams.net>
+	 <CACna6rzbTHnyqs5SzTuYL7r_SW3iCNh0qqbnvfsF7Wspyhp1WA@mail.gmail.com>
+	 <20130619175850.GD4784@cmadams.net> <51C21B7C.2030005@broadcom.com>
+	 <20130619211108.GG4784@cmadams.net> <51C2BE54.20509@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the channel switch announcement, it is required to set a new beacon
-after the driver arrived on the new channel. The new beacon will be set
-by nl80211, but is required to duplicate the beacon as the original
-memory within the netlink message will be gone. Add functions to
-duplicate and free these cfg80211 beacons.
+On Thu, 2013-06-20 at 10:33 +0200, Arend van Spriel wrote:
+> On 06/19/2013 11:11 PM, Chris Adams wrote:
+> > Once upon a time, Arend van Spriel <arend@broadcom.com> said:
+> >> Can you make a capture using a wireless sniffer (using your thinkpad maybe)?
+> >
+> > How would I go about doing that?  I've done lots of network debugging
+> > with tcpdump and such, but not much wireless stuff.
+> >
+> 
+> I use wireshark these days. If you install that you can use the steps 
+> below and select the wireless interface in wireshark to capture. I use 
+> wlan0 as interface name, but it may be different for you.
+> 
+> 1. disable network-manager so it won't interfere.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/mac80211/cfg.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 76 insertions(+)
+It should be enough run "nmcli nm wifi off" and then un-rfkill the
+interface, and NM will leave it alone until you turn wifi back on.  It
+will also remove the interface from wpa_supplicant.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 64cf294..5ffc7d9 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2778,6 +2778,82 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static void cfg80211_beacon_free(struct cfg80211_beacon_data *beacon)
-+{
-+	kfree(beacon->head);
-+	kfree(beacon->tail);
-+	kfree(beacon->beacon_ies);
-+	kfree(beacon->proberesp_ies);
-+	kfree(beacon->assocresp_ies);
-+	kfree(beacon->probe_resp);
-+	kfree(beacon);
-+}
-+
-+static struct cfg80211_beacon_data *
-+cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
-+{
-+	struct cfg80211_beacon_data *new_beacon;
-+	new_beacon = kzalloc(sizeof(*new_beacon), GFP_KERNEL);
-+	if (!beacon)
-+		return NULL;
-+
-+	if (beacon->head_len) {
-+		new_beacon->head = kmalloc(beacon->head_len, GFP_KERNEL);
-+		new_beacon->head_len = beacon->head_len;
-+		if (!new_beacon->head)
-+			goto error;
-+		memcpy((u8 *)new_beacon->head, beacon->head, beacon->head_len);
-+	}
-+	if (beacon->tail_len) {
-+		new_beacon->tail = kmalloc(beacon->tail_len, GFP_KERNEL);
-+		new_beacon->tail_len = beacon->tail_len;
-+		if (!new_beacon->tail)
-+			goto error;
-+		memcpy((u8 *)new_beacon->tail, beacon->tail, beacon->tail_len);
-+	}
-+	if (beacon->beacon_ies_len) {
-+		new_beacon->beacon_ies = kmalloc(beacon->beacon_ies_len,
-+						 GFP_KERNEL);
-+		new_beacon->beacon_ies_len = beacon->beacon_ies_len;
-+		if (!new_beacon->beacon_ies)
-+			goto error;
-+		memcpy((u8 *)new_beacon->beacon_ies, beacon->beacon_ies,
-+		       beacon->beacon_ies_len);
-+	}
-+	if (beacon->proberesp_ies_len) {
-+		new_beacon->proberesp_ies = kmalloc(beacon->proberesp_ies_len,
-+						    GFP_KERNEL);
-+		new_beacon->proberesp_ies_len = beacon->proberesp_ies_len;
-+		if (!new_beacon->proberesp_ies)
-+			goto error;
-+		memcpy((u8 *)new_beacon->proberesp_ies, beacon->proberesp_ies,
-+		       beacon->proberesp_ies_len);
-+	}
-+	if (beacon->assocresp_ies_len) {
-+		new_beacon->assocresp_ies = kmalloc(beacon->assocresp_ies_len,
-+						    GFP_KERNEL);
-+		new_beacon->assocresp_ies_len = beacon->assocresp_ies_len;
-+		if (!new_beacon->assocresp_ies)
-+			goto error;
-+		memcpy((u8 *)new_beacon->assocresp_ies, beacon->assocresp_ies,
-+		       beacon->assocresp_ies_len);
-+	}
-+	if (beacon->probe_resp_len) {
-+		new_beacon->probe_resp = kmalloc(beacon->probe_resp_len,
-+						 GFP_KERNEL);
-+		new_beacon->probe_resp_len = beacon->probe_resp_len;
-+		if (!new_beacon->probe_resp)
-+			goto error;
-+		memcpy((u8 *)new_beacon->probe_resp, beacon->probe_resp,
-+		       beacon->probe_resp_len);
-+	}
-+
-+	return new_beacon;
-+error:
-+	cfg80211_beacon_free(new_beacon);
-+	return NULL;
-+}
-+
- static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			     struct ieee80211_channel *chan, bool offchan,
- 			     unsigned int wait, const u8 *buf, size_t len,
--- 
-1.7.10.4
+Dan
+
+> 2. bring the interface down
+> $ sudo ifconfig wlan0 down
+> 3. change interface type to monitor
+> $ sudo iw dev wlan0 set type monitor
+> 4. bring up the interface
+> $ sudo ifconfig wlan0 up
+> 5. start wireshark and select wlan0
+> $ gksudo wireshark
+> 
+> It will complain that running wireshark as root is not secure. If you 
+> care about that, you should read [1].
+> 
+> Regards,
+> Arend
+> 
+> [1] 
+> http://wiki.wireshark.org/Security#Administrator.2Froot_account_not_required.21
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
