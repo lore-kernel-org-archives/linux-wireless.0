@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:46188 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755145Ab3FQSMX (ORCPT
+Received: from mta21.charter.net ([216.33.127.81]:56758 "EHLO
+	mta21.charter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934375Ab3FTAVp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 14:12:23 -0400
-Received: by mail-oa0-f44.google.com with SMTP id l10so3857231oag.17
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2013 11:12:22 -0700 (PDT)
-Message-ID: <51BF5184.1010303@lwfinger.net> (sfid-20130617_201234_388109_3CB97EE2)
-Date: Mon, 17 Jun 2013 13:12:20 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Tobias Kluge <zielscheibe@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192cu fail to connect with a AP
-References: <loom.20130617T154136-827@post.gmane.org> <51BF2996.9060102@lwfinger.net> <loom.20130617T185506-165@post.gmane.org>
-In-Reply-To: <loom.20130617T185506-165@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 19 Jun 2013 20:21:45 -0400
+Date: Wed, 19 Jun 2013 20:21:42 -0400
+From: rlwkayaker <rlwkayaker@charter.net>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: Howto remove rfkill from kernel
+Message-ID: <20130619202142.25307130@compuzoo> (sfid-20130620_022200_384215_A5B74561)
+In-Reply-To: <20130620000941.GL31667@titan.lakedaemon.net>
+References: <20130619133638.3d183a00@compuzoo>
+	<1371682734.1051.0.camel@dcbw.foobar.com>
+	<20130619200356.741ec084@compuzoo>
+	<20130620000941.GL31667@titan.lakedaemon.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/17/2013 12:03 PM, Tobias Kluge wrote:
->
-> compiled the latest stable kernel (3.9.6) with your fixed device table, the
-> dongle is now recognized properly, when the module (rtl8192cu) is loaded.
-> The connection issue to any AP still remains, with the same dmesg output. I
-> don't believe that the changes you mentioned in 3.10.0-rc6 are the trouble
-> makers with this device. I tried many different kernels before (3.26, 3.8.0
-> binaries from the Ubuntu sources, 3.9.6, 3.10.0-rc6 build from scratch). I
-> hope you can see some possibilities to fix this problem.
+On Wed, 19 Jun 2013 20:09:41 -0400
+Jason Cooper <jason@lakedaemon.net> wrote:
 
-The changes in 3.10-rc6 *fix* many problems. They are not the source of them.
+> On Wed, Jun 19, 2013 at 08:03:56PM -0400, rlwkayaker wrote:
+> > rfkill has a hard block on the wireless.
+> 
+> Is this system dual-boot with windows?  If so, boot into
+> windows and enable wireless via the usual mechanisms.  Then
+> reboot into Linux.
+> 
+> hth,
+> 
+> Jason.
 
-Using the wireless-testing tree, my RTL8188RU will connect to a WPA2/AES AP. It 
-authenticates and associates with WPA1/TKIP and WEP APs, but there is no data 
-throughput. To me this indicates a problem with the wireless keys. I have no 
-idea (yet) why some chips are different than others.
+No, there is nothing on this system but Linux.  At the moment,
+only antiX-13.
 
-
-Larry
-
+Richard
