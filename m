@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3669 "EHLO mms2.broadcom.com"
+Received: from plane.gmane.org ([80.91.229.3]:35015 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753568Ab3FEPez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 11:34:55 -0400
-Message-ID: <51AF5A92.9050906@broadcom.com> (sfid-20130605_173457_982343_F5DC544C)
-Date: Wed, 5 Jun 2013 17:34:42 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Antonio Quartulli" <ordex@autistici.org>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Antonio Quartulli" <antonio@open-mesh.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCHv4 2/4] brcm80211: make mgmt_tx in brcmfmac accept a
- NULL channel
-References: <1370444989-2095-1-git-send-email-ordex@autistici.org>
- <1370444989-2095-2-git-send-email-ordex@autistici.org>
-In-Reply-To: <1370444989-2095-2-git-send-email-ordex@autistici.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S965398Ab3FTNMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jun 2013 09:12:03 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Upeef-0002dn-OK
+	for linux-wireless@vger.kernel.org; Thu, 20 Jun 2013 15:12:01 +0200
+Received: from 59.Red-79-144-39.dynamicIP.rima-tde.net ([79.144.39.59])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2013 15:12:01 +0200
+Received: from rtpardavila by 59.Red-79-144-39.dynamicIP.rima-tde.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2013 15:12:01 +0200
+To: linux-wireless@vger.kernel.org
+From: Ricardo <rtpardavila@gmail.com>
+Subject: Patch availability
+Date: Thu, 20 Jun 2013 13:11:45 +0000 (UTC)
+Message-ID: <loom.20130620T150951-145@post.gmane.org> (sfid-20130620_151207_300757_F090363A)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2013 05:09 PM, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
->
-> cfg80211 passes a NULL channel to mgmt_tx if the frame has
-> to be sent on the one currently in use by the device.
-> Make the implementation of mgmt_tx correctly handle this
-> case
->
-> Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: brcm80211-dev-list@broadcom.com
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> ---
+Hi,
 
-For my name above you (or Johannes) can change 'Cc:' to 'Acked-by:'
+My name is Ricardo and I am very interested on these patches, are them
+available for download?
 
-Gr. AvS
+Currently, I am working with ath5k patched with GCDC patches, but I prefer
+to work with an ath9k patched driver since it is easier to get ath9k cards
+nowadays.
 
-> v3:
-> - read current freq from the firmware via BRCMF_C_GET_CHANNEL
->
->   drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 15 ++++++++++++---
->   1 file changed, 12 insertions(+), 3 deletions(-)
->
+If I can help in anything (development, testing), just let me know.
 
+Regards, Ricardo.
 
