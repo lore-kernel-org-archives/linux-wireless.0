@@ -1,109 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34913 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752694Ab3FFEjR (ORCPT
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:39235 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239Ab3FUGxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 00:39:17 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: [PATCH v2] ath9k: Use minstrel rate control by default
-Date: Thu,  6 Jun 2013 10:06:29 +0530
-Message-Id: <1370493389-15807-1-git-send-email-sujith@msujith.org> (sfid-20130606_063922_140635_FAD0103F)
+	Fri, 21 Jun 2013 02:53:47 -0400
+Received: by mail-pb0-f42.google.com with SMTP id un1so7349874pbc.15
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2013 23:53:47 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>, marco@cozybit.com,
+	Bob Copeland <me@bobcopeland.com>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/2] mac80211: initialize power mode for mesh STAs
+Date: Thu, 20 Jun 2013 23:50:59 -0700
+Message-Id: <1371797459-16585-2-git-send-email-thomas@cozybit.com> (sfid-20130621_085350_298875_3D27B183)
+In-Reply-To: <1371797459-16585-1-git-send-email-thomas@cozybit.com>
+References: <1371797459-16585-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Previously the default mesh STA nonpeer power mode was
+UNKNOWN (0) make the default mesh STA power mode ACTIVE,
+to prevent unnecessary  frame buffering while peering is
+not yet complete. Fixes a panic in ath9k_htc when adding
+stations from userspace, and mcast buffered frames are
+later released.
 
-The ath9k rate control algorithm has various architectural
-issues that make it a poor fit in scenarios like congested
-environments etc.
+Thanks to Bob Copeland for his help debugging this.
 
-An example: https://bugzilla.redhat.com/show_bug.cgi?id=927191
-
-Change the default to minstrel which is more robust in such cases.
-The ath9k RC code is left in the driver for now, maybe it can
-be removed altogether later on.
-
-Cc: stable@vger.kernel.org
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/Kconfig  | 10 +++++++---
- drivers/net/wireless/ath/ath9k/Makefile |  2 +-
- drivers/net/wireless/ath/ath9k/init.c   |  4 ----
- drivers/net/wireless/ath/ath9k/rc.h     |  2 +-
- 4 files changed, 9 insertions(+), 9 deletions(-)
+ net/mac80211/sta_info.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 3b07851..760ab3f 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -84,13 +84,17 @@ config ATH9K_DFS_CERTIFIED
- 	  developed. At this point enabling this option won't do anything
- 	  except increase code size.
- 
--config ATH9K_RATE_CONTROL
-+config ATH9K_LEGACY_RATE_CONTROL
- 	bool "Atheros ath9k rate control"
- 	depends on ATH9K
--	default y
-+	default n
- 	---help---
- 	  Say Y, if you want to use the ath9k specific rate control
--	  module instead of minstrel_ht.
-+	  module instead of minstrel_ht. Be warned that there are various
-+	  issues with the ath9k RC and minstrel is a more robust algorithm.
-+	  Note that even if this option is selected, "ath9k_rate_control"
-+	  has to be passed to mac80211 using the module parameter,
-+	  ieee80211_default_rc_algo.
- 
- config ATH9K_HTC
-        tristate "Atheros HTC based wireless cards support"
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 2ad8f94..75ee9e7 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -8,7 +8,7 @@ ath9k-y +=	beacon.o \
- 		antenna.o
- 
- ath9k-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += mci.o
--ath9k-$(CONFIG_ATH9K_RATE_CONTROL) += rc.o
-+ath9k-$(CONFIG_ATH9K_LEGACY_RATE_CONTROL) += rc.o
- ath9k-$(CONFIG_ATH9K_PCI) += pci.o
- ath9k-$(CONFIG_ATH9K_AHB) += ahb.o
- ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index db81acc..389ee1b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -830,10 +830,6 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	sc->ant_rx = hw->wiphy->available_antennas_rx;
- 	sc->ant_tx = hw->wiphy->available_antennas_tx;
- 
--#ifdef CONFIG_ATH9K_RATE_CONTROL
--	hw->rate_control_algorithm = "ath9k_rate_control";
--#endif
--
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
- 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
- 			&sc->sbands[IEEE80211_BAND_2GHZ];
-diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
-index 267dbfc..b9a8738 100644
---- a/drivers/net/wireless/ath/ath9k/rc.h
-+++ b/drivers/net/wireless/ath/ath9k/rc.h
-@@ -231,7 +231,7 @@ static inline void ath_debug_stat_retries(struct ath_rate_priv *rc, int rix,
- }
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index aaf68d2..aeb967a 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -347,6 +347,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) &&
+ 	    !sdata->u.mesh.user_mpm)
+ 		init_timer(&sta->plink_timer);
++	sta->nonpeer_pm = NL80211_MESH_POWER_ACTIVE;
  #endif
  
--#ifdef CONFIG_ATH9K_RATE_CONTROL
-+#ifdef CONFIG_ATH9K_LEGACY_RATE_CONTROL
- int ath_rate_control_register(void);
- void ath_rate_control_unregister(void);
- #else
+ 	memcpy(sta->sta.addr, addr, ETH_ALEN);
 -- 
-1.8.3
+1.7.10.4
 
