@@ -1,65 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:60706 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756409Ab3FFDqq (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:44073 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597Ab3FVPYb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 23:46:46 -0400
-Message-ID: <1370490403.24311.322.camel@edumazet-glaptop> (sfid-20130606_054705_362423_19659557)
-Subject: Re: stop_machine lockup issue in 3.9.y.
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Tejun Heo <tj@kernel.org>, Rusty Russell <rusty@rustcorp.com.au>,
-	Joe Lawrence <joe.lawrence@stratus.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	stable@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>
-Date: Wed, 05 Jun 2013 20:46:43 -0700
-In-Reply-To: <51B004CD.6080007@candelatech.com>
-References: <51AE27D5.7050202@candelatech.com>
-	  <87sj0xry1k.fsf@rustcorp.com.au> <20130605071539.GA3429@mtj.dyndns.org>
-	  <51AF6E54.3050108@candelatech.com> <20130605184807.GD10693@mtj.dyndns.org>
-	  <51AF8D4B.4090407@candelatech.com> <51AF91F5.6090801@candelatech.com>
-	  <51AFA677.9010605@candelatech.com> <20130605211157.GK10693@mtj.dyndns.org>
-	  <1370482492.24311.308.camel@edumazet-glaptop>
-	  <20130606031444.GA12335@mtj.dyndns.org>
-	 <1370489181.24311.318.camel@edumazet-glaptop>
-	 <51B004CD.6080007@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 22 Jun 2013 11:24:31 -0400
+Message-ID: <51C5C1AB.9050303@candelatech.com> (sfid-20130622_172438_049623_211DD306)
+Date: Sat, 22 Jun 2013 08:24:27 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@adurom.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/6] wireless:  Add memory usage debugging.
+References: <1371593017-10985-1-git-send-email-greearb@candelatech.com> <87fvwa1qoh.fsf@purkki.adurom.net>
+In-Reply-To: <87fvwa1qoh.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-06-05 at 20:41 -0700, Ben Greear wrote:
-> On 06/05/2013 08:26 PM, Eric Dumazet wrote:
-> > On Wed, 2013-06-05 at 20:14 -0700, Tejun Heo wrote:
-> >
-> >>
-> >> Ah, so, that's why it's showing up now.  We probably have had the same
-> >> issue all along but it used to be masked by the softirq limiting.  Do
-> >> you care to revive the 10 iterations limit so that it's limited by
-> >> both the count and timing?  We do wanna find out why softirq is
-> >> spinning indefinitely tho.
-> >
-> > Yes, no problem, I can do that.
-> 
-> Limiting it to 5000 fixes my problem, so if you wanted it larger than 10, that would
-> be fine by me.
-> 
-> I can send a version of my patch easily enough if we can agree on the max number of
-> loops (and if indeed my version of the patch is acceptable).
+On 06/22/2013 01:43 AM, Kalle Valo wrote:
+> greearb@candelatech.com writes:
+>
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> The bss objects are reference counted, and the ies
+>> are also tricky to keep track of.  Add option to
+>> track allocation and freeing of the ies and bss objects,
+>> and add debugfs files to show the current objects.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>
+> [...]
+>
+>> +config CFG80211_MEM_DEBUGGING
+>> +	bool "cfg80211 memory debugging logic"
+>> +	default n
+>> +	depends on CFG80211_DEBUGFS
+>> +	---help---
+>> +	  Enable this if you want to debug memory handling for bss and ies
+>> +	  objects.  New debugfs files: ieee80211/all_ies and all_bss will
+>> +	  be created to display these objects.  This has a moderate CPU cost
+>> +	  and uses a bit more memory than normal, but otherwise is not very
+>> +	  expensive.
+>> +
+>> +	  If unsure, say N.
+>
+> IMHO having a new Kconfig option is overkill. Can we use something more
+> generic, like CFG80211_DEVELOPER_WARNINGS, for this?
 
-Well, 10 was the prior limit and seems really fine.
+That would be fine with me.  It does cause some extra list walkings and
+memory usage, so I wasn't sure it should go in by default.
 
-The non update on jiffies seems quite exceptional condition (I hope...)
+Unless we are actually leaking things, the lists should remain relatively
+short, and probably not walked all *that* often, so maybe it would be OK....
 
-We use in Google a patch triggering warning is a thread holds the cpu
-without taking care to need_resched() for more than xx ms
+Thanks,
+Ben
 
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
