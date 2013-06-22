@@ -1,151 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:63182 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752274Ab3FJUTu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jun 2013 16:19:50 -0400
-Received: by mail-pd0-f177.google.com with SMTP id p10so2306454pdj.36
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jun 2013 13:19:50 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 1/2] mac80211: fix mesh deadlock
-Date: Mon, 10 Jun 2013 13:17:21 -0700
-Message-Id: <1370895442-21784-1-git-send-email-thomas@cozybit.com> (sfid-20130610_221954_862723_54F55330)
+Received: from arrakis.dune.hu ([78.24.191.176]:59801 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751711Ab3FVPmW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Jun 2013 11:42:22 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 2/3] rt2x00: rt2800lib: turn on secondary PAs/LNAs for 3T/3R devices
+Date: Sat, 22 Jun 2013 17:42:13 +0200
+Message-Id: <1371915734-13966-3-git-send-email-juhosg@openwrt.org> (sfid-20130622_174238_555666_3D45F57D)
+In-Reply-To: <1371915734-13966-1-git-send-email-juhosg@openwrt.org>
+References: <1371915734-13966-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "cfg80211/mac80211: use cfg80211 wdev mutex in
-mac80211" introduced several deadlocks by converting the
-ifmsh->mtx to wdev->mtx. Solve these by:
+The secondary PAs/LNAs are turned on only for 2T/2R
+devices, however these are used for 3T/3R devices as
+well. Always turn those on if the device uses more
+than one tx/rx chains.
 
-1. drop the cancel_work_sync() in ieee80211_stop_mesh().
-   Instead make the mesh work conditional on whether the mesh
-   is running or not.
-2. lock the mesh work with sdata_lock() to protect beacon
-   updates and prevent races with wdev->mesh_id_len or
-   cfg80211.
-
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- net/mac80211/mesh.c       |   29 +++++++++++++++++------------
- net/mac80211/mesh_plink.c |    7 +------
- 2 files changed, 18 insertions(+), 18 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 73a597b..d5faf91 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -579,9 +579,7 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata)
- 	mesh_path_expire(sdata);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 4072242..f4cd3d8 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2678,16 +2678,16 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
  
- 	changed = mesh_accept_plinks_update(sdata);
--	sdata_lock(sdata);
- 	ieee80211_mbss_info_change_notify(sdata, changed);
--	sdata_unlock(sdata);
+ 	tx_pin = 0;
  
- 	mod_timer(&ifmsh->housekeeping_timer,
- 		  round_jiffies(jiffies +
-@@ -788,12 +786,10 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.bss_conf.enable_beacon = false;
- 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
--	sdata_lock(sdata);
- 	bcn = rcu_dereference_protected(ifmsh->beacon,
- 					lockdep_is_held(&sdata->wdev.mtx));
- 	rcu_assign_pointer(ifmsh->beacon, NULL);
- 	kfree_rcu(bcn, rcu_head);
--	sdata_unlock(sdata);
- 
- 	/* flush STAs and mpaths on this iface */
- 	sta_info_flush(sdata);
-@@ -806,14 +802,6 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	del_timer_sync(&sdata->u.mesh.housekeeping_timer);
- 	del_timer_sync(&sdata->u.mesh.mesh_path_root_timer);
- 	del_timer_sync(&sdata->u.mesh.mesh_path_timer);
--	/*
--	 * If the timer fired while we waited for it, it will have
--	 * requeued the work. Now the work will be running again
--	 * but will not rearm the timer again because it checks
--	 * whether the interface is running, which, at this point,
--	 * it no longer is.
--	 */
--	cancel_work_sync(&sdata->work);
- 
- 	local->fif_other_bss--;
- 	atomic_dec(&local->iff_allmultis);
-@@ -954,6 +942,12 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_mgmt *mgmt;
- 	u16 stype;
- 
-+	sdata_lock(sdata);
-+
-+	/* mesh already went down */
-+	if (!sdata->wdev.mesh_id_len)
-+		goto out;
-+
- 	rx_status = IEEE80211_SKB_RXCB(skb);
- 	mgmt = (struct ieee80211_mgmt *) skb->data;
- 	stype = le16_to_cpu(mgmt->frame_control) & IEEE80211_FCTL_STYPE;
-@@ -971,12 +965,20 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_mesh_rx_mgmt_action(sdata, mgmt, skb->len, rx_status);
- 		break;
+-	/* Turn on unused PA or LNA when not using 1T or 1R */
+-	if (rt2x00dev->default_ant.tx_chain_num == 2) {
++	if (rt2x00dev->default_ant.tx_chain_num > 1) {
++		/* Turn on secondary PAs for 2T adn for 3T devices*/
+ 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
+ 				   rf->channel > 14);
+ 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
+ 				   rf->channel <= 14);
  	}
-+out:
-+	sdata_unlock(sdata);
- }
  
- void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 
-+	sdata_lock(sdata);
-+
-+	/* mesh already went down */
-+	if (!sdata->wdev.mesh_id_len)
-+		goto out;
-+
- 	if (ifmsh->preq_queue_len &&
- 	    time_after(jiffies,
- 		       ifmsh->last_preq + msecs_to_jiffies(ifmsh->mshcfg.dot11MeshHWMPpreqMinInterval)))
-@@ -996,6 +998,9 @@ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
- 
- 	if (test_and_clear_bit(MESH_WORK_DRIFT_ADJUST, &ifmsh->wrkq_flags))
- 		mesh_sync_adjust_tbtt(sdata);
-+
-+out:
-+	sdata_unlock(sdata);
- }
- 
- void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local)
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 6c4da99..09bebed 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -517,9 +517,7 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_mps_frame_release(sta, elems);
- out:
- 	rcu_read_unlock();
--	sdata_lock(sdata);
- 	ieee80211_mbss_info_change_notify(sdata, changed);
--	sdata_unlock(sdata);
- }
- 
- static void mesh_plink_timer(unsigned long data)
-@@ -1070,9 +1068,6 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
- 
- 	rcu_read_unlock();
- 
--	if (changed) {
--		sdata_lock(sdata);
-+	if (changed)
- 		ieee80211_mbss_info_change_notify(sdata, changed);
--		sdata_unlock(sdata);
--	}
- }
+-	/* Turn on unused PA or LNA when not using 1T or 1R */
+-	if (rt2x00dev->default_ant.rx_chain_num == 2) {
++	if (rt2x00dev->default_ant.rx_chain_num > 1) {
++		/* Turn on secondary LNAs for 2R and for 3R devices */
+ 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A1_EN, 1);
+ 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G1_EN, 1);
+ 	}
 -- 
-1.7.10.4
+1.7.10
 
