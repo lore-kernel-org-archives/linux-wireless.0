@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:40442 "EHLO mga03.intel.com"
+Received: from mout.gmx.net ([212.227.17.20]:59321 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751330Ab3FKFgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 01:36:49 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Deniz Kazanci <kazancid@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>
-Subject: RE: [Ilw] IMPO: URGENT: LINUX IWLEGACY WIRELESS DRIVERS & LINUX
- VERSION	QUESTION
-Date: Tue, 11 Jun 2013 05:36:31 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3019D8A22@HASMSX103.ger.corp.intel.com> (sfid-20130611_073652_905067_426E3042)
-References: <CADvhgjjp2dSCB1yNkOp-XaTkBNQXo3uqaBKU10HVgVwrXPs0jg@mail.gmail.com>
-In-Reply-To: <CADvhgjjp2dSCB1yNkOp-XaTkBNQXo3uqaBKU10HVgVwrXPs0jg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	id S1750767Ab3FVE42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Jun 2013 00:56:28 -0400
+Received: from mailout-de.gmx.net ([10.1.76.34]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0M1kdo-1U2P6f17mM-00tky9 for
+ <linux-wireless@vger.kernel.org>; Sat, 22 Jun 2013 06:56:27 +0200
+Message-ID: <51C52E79.30104@rempel-privat.de> (sfid-20130622_065641_930269_3FE280AA)
+Date: Sat, 22 Jun 2013 06:56:25 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
+To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Javier Cardona <javier@cozybit.com>
+Subject: regression after, " ath9k_htc: Add support for mesh interfaces"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQpQbGVhc2UgcmVzZW5kIHdpdGhvdXQgc3ViamVjdCBpbiBjYXBpdGFscywgdGhlbiB5b3UnbGwg
-aGF2ZSBhIGNoYW5jZSB0byBnbyB0cm91Z2ggdGhlIHNwYW0gZmlsdGVyIG9mIHRoZSBtYWlsaW5n
-IGxpc3QuDQoNCg0KSGVsbG8sDQoNCldlIGFyZSBuZXcgdG8gbGludXggZW52aXJvbm1lbnQgYWZ0
-ZXIgV2luZG93czsgYW5kIGhhdmUgYSBMZW5vdm8gVjIwMCB3aGljaA0KaGFzIGFuIEludGVswq4g
-UFJPL1dpcmVsZXNzIDM5NDVBQkcgY2FyZC4gV2Ugd291bGQgbGlrZSB0byBkb3dubG9hZCBGZWRv
-cmENCjE4IG9yIE9wZW5TdXNlIDEyLjMuDQoNCkkgbmVlZCB5b3VyIHVyZ2VudCBoZWxwIHdpdGgg
-dGhlIGZvbGxvd2luZyBpdGVtcyBwbGVhc2U6DQoxLiBIb3cgZG8gd2UgY2hhbmdlIHRoZSB0ZXJt
-aW5hbCBpbnRvIHJvb3Qgd2hlbiB3ZSBhcmUgbG9nZ2VkIGluIGZyb20gdGhlDQphZG1pbmlzdHJh
-dGl2ZSBwcml2aWxpZ2VkIHVzZXIgYWNjb3VudD8NCjIuIEluIHRoZSBodHRwOi8vd2lyZWxlc3Mu
-a2VybmVsLm9yZy9lbi91c2Vycy9Ecml2ZXJzL2l3bGVnYWN5IHNpdGUsIDUNCmRpZmZlcmVudCBs
-aW5rcyB0byBmaXJtd2FyZSBpcyBnaXZlbiBhcyBiZWxvdzoNCktlcm5lbHMgwqAvIEZpcm13YXJl
-DQoyLjYuMjQrIMKgLyBpd2x3aWZpLTM5NDUtdWNvZGUtMi4xNC4xLjUudGd6DQoyLjYuMjQrIMKg
-LyBpd2x3aWZpLTM5NDUtdWNvZGUtMTUuMjguMS42LnRneg0KMi42LjI0KyDCoC8gaXdsd2lmaS0z
-OTQ1LXVjb2RlLTE1LjI4LjEuOC50Z3oNCjIuNi4yOSsgwqAvIGl3bHdpZmktMzk0NS11Y29kZS0x
-NS4yOC4yLjgudGd6DQoyLjYuMjkrIMKgLyBpd2x3aWZpLTM5NDUtdWNvZGUtMTUuMzIuMi45LnRn
-eg0KV2hpY2ggb2YgdGhlIGFib3ZlIHByb2dyYW1zIGRvIHdlIGhhdmUgdG8gcnVuIG9uIHRoZSBs
-YWJ0b3AgcGxlYXNlPyBXaGF0DQp3b3VsZCBiZSB0aGUgc3RlcHMgdG8gaW5zdGFsbCB0aGUgZHJp
-dmVyIHBsZWFzZSBpbiBwbGFpbiBFbmdsaXNoLSB3ZSBmb3VuZA0KdGhlIGxhbmd1YWdlIGdpdmVu
-IGluIHRoZSB3ZWJzaXRlIHF1aXRlIGRpZmZpY3VsdCB0byB1bmRlcnN0YW5kPyBUaGFuayB5b3Uu
-Lg0KMy4gV2UgYXJlIHVzaW5nIGhlIGxhYnRvYiBmb3IgYnVzaW5lc3MgcHVycG9zZXMgaG93ZXZl
-ciB1c2Ugb2YgaW50ZXJuZXQgYW5kDQpvdXRsb29rIGFsb25nIHdpdGggdGhlIG9mZmljZSBwcm9k
-dWN0cyBzb21lIChhbHNvIFByb2plY3QgTWFuYWdlbWVudCBUb29scw0KbGlrZSBNUyBQcm9qZWN0
-IHNvbWV0aW1lcyksIHNvbWUgbXVzaWMgbGlzdGVuaW5nIGFuZCBzb21lIHZpZGVvIHdhdGNoaW5n
-DQpzdWZmaWNlIG91ciBuZWVkcyBvZiB0aGUgY29tcHV0ZXIuIEFtb25nIE9wZW5TdXNlIGFuZCBG
-ZWRvcmEgKG9yIG90aGVycyksDQp3aGljaCBvbmUgb2YgdGhlIHByb2R1Y3RzIHdvdWxkIHlvdSBy
-ZWNvbW1lbmQgYXMgcGVyIGJlaW5nIHVzZXIgZnJpZW5kbHksDQpyZWxpYWJsZSwgZmFzdCBwbGVh
-c2Ugd2l0aCBhIExlbm92byBWMjAwIHBsZWFzZT8NCg0KV2UgYXJlIGxvb2tpbmcgZm9yd2FyZCB0
-byBoZWFyaW5nIGJhY2sgZnJvbSB5b3Ugc29vbi4gVGhhbmsgeW91IGtpbmRseSBmb3INCnlvdXIg
-aW5mb3JtYXRpb24gYW5kIGF0dGVudGlvbi4NCg0KS2luZCBSZWdhcmRzLA0KRGVuaXogS0FaQU5D
-SQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0KQSBtZW1iZXIgb2YgdGhlIEludGVsIENvcnBvcmF0aW9uIGdyb3Vw
-IG9mIGNvbXBhbmllcwoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFp
-biBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQg
-cmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3Ry
-aWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwg
-cGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMuCg==
+Hi Javier,
 
+i warning after patch "ath9k_htc: Add support for mesh interfaces".
+I get this warning only on pc with CONFIG_MAC80211_MESH not set. 
+Probably you missed config check some where.
+
+commit 594e65b633e0b76db1d8e7359e4efb2d60fba20d
+Author: Javier Cardona <javier@cozybit.com>
+Date:   Wed May 8 10:16:46 2013 -0700
+
+     ath9k_htc: Add support for mesh interfaces
+
+     More specifically, enable AP-style beaconing on mesh
+     ifaces and change the hw capabilities to reflect mesh
+     support.
+
+     Coexistence with a virtual STA interface was tested as
+     working fine.
+
+     Signed-off-by: Javier Cardona <javier@cozybit.com>
+     [rebase, add iface combinations]
+     Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+-- 
+Regards,
+Oleksij
