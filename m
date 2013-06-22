@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36524 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939Ab3FXPpk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 11:45:40 -0400
-Message-ID: <1372088725.8439.18.camel@jlt4.sipsolutions.net> (sfid-20130624_174543_162498_0E63FFED)
-Subject: Re: [PATCH 3.9 4/4] iwlwifi: mvm: reduce the number of supported
- interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	stable@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Mon, 24 Jun 2013 17:45:25 +0200
-In-Reply-To: <20130624152631.GA13886@kroah.com> (sfid-20130624_172553_217110_C6225AB7)
-References: <1372079945-7445-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1372079945-7445-4-git-send-email-emmanuel.grumbach@intel.com>
-	 <20130624152631.GA13886@kroah.com> (sfid-20130624_172553_217110_C6225AB7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:46224 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754586Ab3FVKjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Jun 2013 06:39:31 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 3.10] ath9k: fix an RCU issue in calling ieee80211_get_tx_rates
+Date: Sat, 22 Jun 2013 12:39:26 +0200
+Message-Id: <1371897566-47892-1-git-send-email-nbd@openwrt.org> (sfid-20130622_123944_463809_318A4F13)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-06-24 at 08:26 -0700, Greg Kroah-Hartman wrote:
-> On Mon, Jun 24, 2013 at 04:19:05PM +0300, Emmanuel Grumbach wrote:
-> > The driver in 3.9 can't support more than one interface
-> > concurrently. The parameters given to cfg80211 were wrong.
-> > Next versions are fixed by allowing concurrent interfaces.
-> > This is why you won't see this patch upstream.
-> 
-> So this isn't an issue in 3.10 at all?
+ath_txq_schedule is called outside of the drv_tx call, so it needs RCU
+protection.
 
-The dangers of stable-only patches ... I think this was actually
-introduced into 3.9 only in my commit
-2e8a935b639356f8397d39b118ac914d99b55871 ("iwlwifi: mvm: remove
-P2P_DEVICE support"). Sorry about that.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index bfb58a5..c59ae43 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1673,6 +1673,8 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
+ 		return;
+ 
++	rcu_read_lock();
++
+ 	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
+ 	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
+ 
+@@ -1711,8 +1713,10 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 
+ 		if (ac == last_ac ||
+ 		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
+-			return;
++			break;
+ 	}
++
++	rcu_read_unlock();
+ }
+ 
+ /***********/
+-- 
+1.8.0.2
 
