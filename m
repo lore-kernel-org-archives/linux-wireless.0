@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33163 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756667Ab3FSOSk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 10:18:40 -0400
-Date: Wed, 19 Jun 2013 07:19:20 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: stable@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] brcmfmac: Turn off ARP offloading when configured for AP.
-Message-ID: <20130619141920.GB7395@kroah.com> (sfid-20130619_161843_985635_7945F800)
-References: <1370508957-12709-1-git-send-email-arend@broadcom.com>
- <51C15D4D.6040009@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51C15D4D.6040009@broadcom.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:47472 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758318Ab3FVOcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Jun 2013 10:32:03 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/2] rt2x00: rt2800pci: don't use TXWI_DESC_SIZE directly
+Date: Sat, 22 Jun 2013 16:31:58 +0200
+Message-Id: <1371911519-13135-1-git-send-email-juhosg@openwrt.org> (sfid-20130622_163213_219619_A52B24D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 19, 2013 at 09:27:09AM +0200, Arend van Spriel wrote:
-> On 06/06/2013 10:55 AM, Arend van Spriel wrote:
-> >From: Hante Meuleman <meuleman@broadcom.com>
-> 
-> Hi Greg,
-> 
-> I noticed your review announcement for v3.9.7 and did not see the
-> change below. I sent it to stable because the original upstream
-> commit did not apply. Did I miss some step in the process?
+Different chipsets may use different TXWI descriptor
+size. Instead of using a hardcoded value, use the
+'queue->winfo_size' which holds the correct value for
+a given device.
 
-Ah, somehow I missed your patch, sorry about that, I do have it in my
-mbox.  What kernel tree(s) do you want it to be applied to?  I'll pick
-it up in my next round of releases.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-thanks,
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 7c74782..e664918 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -637,6 +637,7 @@ static void rt2800pci_write_tx_desc(struct queue_entry *entry,
+ 	struct queue_entry_priv_mmio *entry_priv = entry->priv_data;
+ 	__le32 *txd = entry_priv->desc;
+ 	u32 word;
++	const unsigned int txwi_size = entry->queue->winfo_size;
+ 
+ 	/*
+ 	 * The buffers pointed by SD_PTR0/SD_LEN0 and SD_PTR1/SD_LEN1
+@@ -659,14 +660,14 @@ static void rt2800pci_write_tx_desc(struct queue_entry *entry,
+ 			   !test_bit(ENTRY_TXD_MORE_FRAG, &txdesc->flags));
+ 	rt2x00_set_field32(&word, TXD_W1_BURST,
+ 			   test_bit(ENTRY_TXD_BURST, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXD_W1_SD_LEN0, TXWI_DESC_SIZE);
++	rt2x00_set_field32(&word, TXD_W1_SD_LEN0, txwi_size);
+ 	rt2x00_set_field32(&word, TXD_W1_LAST_SEC0, 0);
+ 	rt2x00_set_field32(&word, TXD_W1_DMA_DONE, 0);
+ 	rt2x00_desc_write(txd, 1, word);
+ 
+ 	word = 0;
+ 	rt2x00_set_field32(&word, TXD_W2_SD_PTR1,
+-			   skbdesc->skb_dma + TXWI_DESC_SIZE);
++			   skbdesc->skb_dma + txwi_size);
+ 	rt2x00_desc_write(txd, 2, word);
+ 
+ 	word = 0;
+-- 
+1.7.10
 
-greg k-h
