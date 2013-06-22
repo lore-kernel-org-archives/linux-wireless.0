@@ -1,64 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42986 "EHLO mx1.redhat.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:43059 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752163Ab3FNNQO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jun 2013 09:16:14 -0400
-Date: Fri, 14 Jun 2013 15:18:29 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Pedro Francisco <pedrogfrancisco@gmail.com>
-Cc: Tino Keitel <tino.keitel@tikei.de>,
-	ML linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Power saving features for iwl4965
-Message-ID: <20130614131829.GA5125@redhat.com> (sfid-20130614_151617_857513_65E54C3C)
-References: <20120425122554.GD2466@redhat.com>
- <20120503182853.GA12461@mac.home>
- <20121226185425.GA12627@x61.home>
- <20130107110759.GC6931@redhat.com>
- <20130603085239.GA26920@mac.home>
- <20130603141804.GA2146@redhat.com>
- <CAJZjf_xoCOTFsLAB29uLKeW7+O+k255Amspn6GKFMysc7CTsBg@mail.gmail.com>
- <CAJZjf_xGdvStOG0=FR2+2WsVcjyizQukH+RxysZf8f9-Tk9L9w@mail.gmail.com>
- <20130611161924.GB1696@redhat.com>
- <CAJZjf_zOF=qGEE=pWDRe0YDpAYophm93cVM8pfuL0sTRGq56EA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZjf_zOF=qGEE=pWDRe0YDpAYophm93cVM8pfuL0sTRGq56EA@mail.gmail.com>
+	id S1752937Ab3FVLN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Jun 2013 07:13:29 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>, stable@vger.kernel.org
+Subject: [PATCH] rt2x00: read 5GHz TX power values from the correct offset
+Date: Sat, 22 Jun 2013 13:13:25 +0200
+Message-Id: <1371899605-30513-1-git-send-email-juhosg@openwrt.org> (sfid-20130622_131340_975313_658E328D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 14, 2013 at 01:50:58PM +0100, Pedro Francisco wrote:
-> >> >> Could you try this experimental patch? (...)
-> >> >
-> >> > I am trying the iwlegacy powersave patch along with CPU scheduler BFS
-> >> > and IO scheduler BFQ.
-> >> >
-> >> > I've got this today: (...)
-> >> >
-> >> > (...)
-> >> I also got a SYSASSERT:
-> >> (...)
-> >>
-> >> I disabled powersave (but kept running the same kernel) and none of
-> >> the errors appeared again.
-> >
-> > Yes, this seems to be iwlegacy PS issue and has to be fixed before
-> > this patch could be applied.
-> 
-> But is it a driver-only issue? I had assumed it was some sort of
-> fireware+driver issue...
-Looks like driver issue or firmware issue that can be workaround in 
-the driver.
+The current code uses the same index value both
+for the channel information array and for the TX
+power table. The index starts from 14, however the
+index of the TX power table must start from zero.
 
-> Will running with debug on help? Or is it easily reproducible on any
-> iwl3945 / iwl4465 ?
-> 
-> Because in my case (iwl3945) it happens after boot, no prior suspend
-> to RAM is required to trigger the issues.
-I can reproduce microcode error on iwl4965 by reloading modules. Looks
-like we put device in sleep mode and it can not be properly booted when
-driver initalize. I did not yet test patch on iwl3945. When I'll do
-this, I think I'll be able to reproduce problems you discovered. If not
-I'll ask for more debug info.
+Fix it, in order to get the correct TX power value
+for a given channel.
 
-Thanks
-Stanislaw
+The changes in rt61pci.c and rt73usb.c are compile
+tested only.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Cc: stable@vger.kernel.org
+---
+John,
+
+If there is any chance for that, this should go
+into 3.10. However the code is wrong since a few
+years and nobody noticed that so far, so it is
+not a big problem if it will be applied only in
+3.11.
+
+-Gabor
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt61pci.c   |    3 ++-
+ drivers/net/wireless/rt2x00/rt73usb.c   |    3 ++-
+ 3 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 3aa30dd..4072242 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6254,8 +6254,8 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		default_power2 = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_A2);
+ 
+ 		for (i = 14; i < spec->num_channels; i++) {
+-			info[i].default_power1 = default_power1[i];
+-			info[i].default_power2 = default_power2[i];
++			info[i].default_power1 = default_power1[i - 14];
++			info[i].default_power2 = default_power2[i - 14];
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 53754bc6..54d3ddf 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2825,7 +2825,8 @@ static int rt61pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		tx_power = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_A_START);
+ 		for (i = 14; i < spec->num_channels; i++) {
+ 			info[i].max_power = MAX_TXPOWER;
+-			info[i].default_power1 = TXPOWER_FROM_DEV(tx_power[i]);
++			info[i].default_power1 =
++					TXPOWER_FROM_DEV(tx_power[i - 14]);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 1616ed4..1d3880e 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2167,7 +2167,8 @@ static int rt73usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		tx_power = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_A_START);
+ 		for (i = 14; i < spec->num_channels; i++) {
+ 			info[i].max_power = MAX_TXPOWER;
+-			info[i].default_power1 = TXPOWER_FROM_DEV(tx_power[i]);
++			info[i].default_power1 =
++					TXPOWER_FROM_DEV(tx_power[i - 14]);
+ 		}
+ 	}
+ 
+-- 
+1.7.10
+
