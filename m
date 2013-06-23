@@ -1,41 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:56890 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932998Ab3FSCGf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27083 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227Ab3FWKAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 22:06:35 -0400
-Date: Tue, 18 Jun 2013 19:06:32 -0700 (PDT)
-Message-Id: <20130618.190632.33329016434510583.davem@davemloft.net> (sfid-20130619_040651_984166_CBBBC2F3)
-To: torvalds@linux-foundation.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: nl80211 NULL pointer dereference
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CA+55aFxOde8n0M2=77-TQ2Ea9iz8s-e8zGFwjj6RVyMFXBgxEA@mail.gmail.com>
-References: <CA+55aFxOde8n0M2=77-TQ2Ea9iz8s-e8zGFwjj6RVyMFXBgxEA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 23 Jun 2013 06:00:37 -0400
+Cc: Kirshenbaum Erez <erezk@wilocity.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/2] wil6210: set vring index for all descriptors
+Date: Sun, 23 Jun 2013 12:59:34 +0300
+Message-ID: <1371981575-14395-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130623_120043_275129_1E641B9D)
+In-Reply-To: <1371981575-14395-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1371981575-14395-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 18 Jun 2013 15:46:13 -1000
+From: Kirshenbaum Erez <erezk@wilocity.com>
 
-> Hmm. Maybe this is old, but I don't think I've seen it before (who
-> knows, maybe it has killed the machine before, I had a hard hang the
-> other day).
-> 
-> It's a NULL pointer dereference in nl80211_set_reg() on my Pixel. The
-> machine kind of stayed up afterwards, although with no working
-> wireless, and it would not shut down cleanly presumably due to locks
-> held etc.
-> 
-> Any ideas? I'm including the few wireless-related messages that
-> happened justr before the oops. Being a pixel, this is with the ath9k
-> driver.
+The vring index (MAC queue id) must be set in all TX descriptors
+otherwise HW will fail to release descriptors for a specific vring
+(disconnect or vring switch flows).
+This is normally occurs when fragmentation required, if vring index
+will not be the same for all SKB descriptors HW will fail to flush
+this MAC queue.
 
-nl80211_set_reg() is really careful about validating which netlink
-attributes the user has specified, and either not dereferencing or
-signalling an error when NULL is seen.
+Signed-off-by: Kirshenbaum Erez <erezk@wilocity.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Hmmm...
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index e1c492b..73d6c2d 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -621,7 +621,8 @@ static struct vring *wil_find_tx_vring(struct wil6210_priv *wil,
+ 	return NULL;
+ }
+ 
+-static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len)
++static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len,
++			   int vring_index)
+ {
+ 	wil_desc_addr_set(&d->dma.addr, pa);
+ 	d->dma.ip_length = 0;
+@@ -630,7 +631,7 @@ static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len)
+ 	d->dma.error = 0;
+ 	d->dma.status = 0; /* BIT(0) should be 0 for HW_OWNED */
+ 	d->dma.length = cpu_to_le16((u16)len);
+-	d->dma.d0 = 0;
++	d->dma.d0 = (vring_index << DMA_CFG_DESC_TX_0_QID_POS);
+ 	d->mac.d[0] = 0;
+ 	d->mac.d[1] = 0;
+ 	d->mac.d[2] = 0;
+@@ -684,7 +685,7 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	if (unlikely(dma_mapping_error(dev, pa)))
+ 		return -EINVAL;
+ 	/* 1-st segment */
+-	wil_tx_desc_map(d, pa, skb_headlen(skb));
++	wil_tx_desc_map(d, pa, skb_headlen(skb), vring_index);
+ 	d->mac.d[2] |= ((nr_frags + 1) <<
+ 		       MAC_CFG_DESC_TX_2_NUM_OF_DESCRIPTORS_POS);
+ 	if (nr_frags)
+@@ -701,7 +702,7 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 				DMA_TO_DEVICE);
+ 		if (unlikely(dma_mapping_error(dev, pa)))
+ 			goto dma_error;
+-		wil_tx_desc_map(d, pa, len);
++		wil_tx_desc_map(d, pa, len, vring_index);
+ 		vring->ctx[i] = NULL;
+ 		*_d = *d;
+ 	}
+@@ -709,7 +710,6 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_EOP_POS);
+ 	d->dma.d0 |= BIT(9); /* BUG: undocumented bit */
+ 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_DMA_IT_POS);
+-	d->dma.d0 |= (vring_index << DMA_CFG_DESC_TX_0_QID_POS);
+ 	*_d = *d;
+ 
+ 	wil_hex_dump_txrx("Tx ", DUMP_PREFIX_NONE, 32, 4,
+-- 
+1.8.1.2
+
