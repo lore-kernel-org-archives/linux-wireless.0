@@ -1,87 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18439 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388Ab3FENad (ORCPT
+Received: from mail-yh0-f46.google.com ([209.85.213.46]:39168 "EHLO
+	mail-yh0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002Ab3FWXPG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 09:30:33 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>,
-	"Peer, Ilan" <ilan.peer@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
-Date: Wed, 5 Jun 2013 16:30:29 +0300
-Message-ID: <1894431.CPHELQbCIP@lx-vladimir> (sfid-20130605_153036_996563_651ED03A)
-In-Reply-To: <1370418780.8920.19.camel@jlt4.sipsolutions.net>
-References: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com> <2109265.XIVW7kjjZK@lx-vladimir> <1370418780.8920.19.camel@jlt4.sipsolutions.net>
+	Sun, 23 Jun 2013 19:15:06 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org,
+	=?UTF-8?q?Axel=20K=C3=B6llhofer?= <AxelKoellhofer@web.de>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH] rtlwifi: rtl8723ae: Fix typo in firmware names
+Date: Sun, 23 Jun 2013 18:14:43 -0500
+Message-Id: <1372029283-20824-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130624_011518_180724_9115B5A4)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, June 05, 2013 09:53:00 AM Johannes Berg wrote:
-> > When reporting probes, driver/firmware may do its best to filter out
-> > probes that would not be replied with probe-resp accordingly to the
-> > P2P rules for active device configuration.
-> 
-> This I think should be more specific. "[W]ould not be replied" is
-> clearly one step, but in an environment where you actually want to
-> offload the P2P probe responses that is pretty much useless. I'd rather
-> say something like:
-> 
-> ---
-> When probe response offload it supported, the device should not report
-> probe requests to the host that it already responded to. It must report
-> (and therefore not respond to) probe requests that indicate the sending
-> device is in active PBC mode (specifically, <...add more details...>).
-> It may also drop invalid or malformed probe requests or ones that would
-> not be replied to for other reasons.
-> ---
+The driver loads its firmware from files rtlwifi/rtl8723fw*.bin, but the
+MODULE_FIRMWARE macros refer to rtlwifi/RTL8723aefw*.bin.
 
-> 
-> I think this would be a reasonable tradeoff. It means that if a probe
-> request is actually reported, wpa_supplicant must reply to it, and we
-> don't have to get into the business of having to decide whether or not
-> it needs to respond.
-> 
-> Alternatively, we could specify that the device _must_ respond if
-> offload is supported, and then report it.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>  [3.8+]
+Reported-by: Axel Köllhofer <AxelKoellhofer@web.de>
+---
 
-I like this alternative. Except, reporting is accordingly to the rx filter.
-wpa_s may be not interesting in probes at all, or want only ones with PBC.
-If device answer probes in firmware, this would reduce CPU wake-ups.
+John,
 
-> 
-> However, we need to clearly specify this so that we don't get two
-> responses, one from the device and one from wpa_s. If there's no way to
-> specify this, we need to introduce a "reply already sent" flag into the
-> frame reporting.
+This patch can be pushed to the 3.11 stream. It is a bug, but it has
+little consequence.
 
-Said above translates to all-or-nothing approach w.r.t. responses:
+Larry
+---
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-- If device indicate probe-resp offload, it must reply all probes, supplicant
-must not send probe-resp.
-- If device does not indicate probe-resp offload, it should never send
-probe-resp by itself; it should report all matching probes
-and supplicant will generate probe-resp.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
+index e4c4cdc..d9ee2ef 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
+@@ -251,7 +251,7 @@ static struct rtl_hal_cfg rtl8723ae_hal_cfg = {
+ 	.bar_id = 2,
+ 	.write_readback = true,
+ 	.name = "rtl8723ae_pci",
+-	.fw_name = "rtlwifi/rtl8723aefw.bin",
++	.fw_name = "rtlwifi/rtl8723fw.bin",
+ 	.ops = &rtl8723ae_hal_ops,
+ 	.mod_params = &rtl8723ae_mod_params,
+ 	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
+@@ -353,8 +353,8 @@ MODULE_AUTHOR("Realtek WlanFAE	<wlanfae@realtek.com>");
+ MODULE_AUTHOR("Larry Finger	<Larry.Finger@lwfinger.net>");
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Realtek 8723E 802.11n PCI wireless");
+-MODULE_FIRMWARE("rtlwifi/rtl8723aefw.bin");
+-MODULE_FIRMWARE("rtlwifi/rtl8723aefw_B.bin");
++MODULE_FIRMWARE("rtlwifi/rtl8723fw.bin");
++MODULE_FIRMWARE("rtlwifi/rtl8723fw_B.bin");
+ 
+ module_param_named(swenc, rtl8723ae_mod_params.sw_crypto, bool, 0444);
+ module_param_named(debug, rtl8723ae_mod_params.debug, int, 0444);
+-- 
+1.8.1.4
 
-Regarding what probes to report, I'd specify relaxed requirements
-for the driver:
-
-- in non-offload case, driver must report all matching probes
-(but may just report all, and wpa_s will filter)
-- in offload case, must report matching probes if rx filter says so. It is not
-neccessary to report all probes that device replied to.
-
-I don't want to force firmware or driver to parse probes to detect PBC; if we
-got frame to the host, from power perspective there is no much difference who
-will filter it - driver or wpa_s; and wpa_s already do this parsing.
-
-For PBC - can one specify "probes with PBC" using existing rx filter mechanism?
-
-Also, I feel this explanation get large, it deserves separate comment block,
-it is overkill for start_p2p_find comment. Maybe do it in another patch?
-
-Thanks, Vladimir
