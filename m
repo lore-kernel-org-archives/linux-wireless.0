@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:55551 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933077Ab3FFLsd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 07:48:33 -0400
-Received: by mail-ie0-f170.google.com with SMTP id e14so6797992iej.15
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jun 2013 04:48:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51AF6F5D.5020400@rempel-privat.de>
-References: <51ADBC01.6090202@blackshift.org>
-	<1370371064-6903-1-git-send-email-linux@rempel-privat.de>
-	<CAGXE3d9p7zkwfNJBJvPMc8XaKnb009pHpCXYweDjK4tv6PCkuA@mail.gmail.com>
-	<51AF4AA7.6050005@blackshift.org>
-	<51AF4F35.50503@rempel-privat.de>
-	<51AF6F5D.5020400@rempel-privat.de>
-Date: Thu, 6 Jun 2013 13:48:32 +0200
-Message-ID: <CAGXE3d-kg7k=R81mKcqMfM9FFBDn0A9RNYmuTdQHXRUX37QhsA@mail.gmail.com> (sfid-20130606_134856_188078_8FC8DF7E)
-Subject: Re: [PATCH] ath9k_htc: fix skb_under_panic error
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Marc Kleine-Budde <mkl@blackshift.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from arrakis.dune.hu ([78.24.191.176]:46883 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750837Ab3FXVDd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jun 2013 17:03:33 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 1/3] rt2x00: rt2800: increase EEPROM_SIZE to 512 bytes
+Date: Mon, 24 Jun 2013 23:03:22 +0200
+Message-Id: <1372107804-19679-2-git-send-email-juhosg@openwrt.org> (sfid-20130624_230339_027008_65D944FE)
+In-Reply-To: <1372107804-19679-1-git-send-email-juhosg@openwrt.org>
+References: <1372107804-19679-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 5, 2013 at 7:03 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> I was running two stream netperf test for 2 hours without visible
-> regressions.
+Ralink 3T chipsets are using a different EEPROM
+layout than the others. The EEPROM on these devices
+contain more data than the others which does not fit
+into 272 byte which the rt2800 driver actually uses.
 
-With or without your pskb_expand_head patch applied?
+The Ralink reference driver defines EEPROM_SIZE to
+512/1024 bytes for PCI/USB devices respectively.
 
-Thanks,
-Helmut
+Increase the EEPROM_SIZE constant to 512 bytes, in
+order to make room for EEPROM data of 3T devices.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+Changes in v3: ---
+Changes in v2: add Acked-by tags
+---
+ drivers/net/wireless/rt2x00/rt2800.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index fe43d01..d78c495 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -100,7 +100,7 @@
+ #define CSR_REG_BASE			0x1000
+ #define CSR_REG_SIZE			0x0800
+ #define EEPROM_BASE			0x0000
+-#define EEPROM_SIZE			0x0110
++#define EEPROM_SIZE			0x0200
+ #define BBP_BASE			0x0000
+ #define BBP_SIZE			0x00ff
+ #define RF_BASE				0x0004
+-- 
+1.7.10
+
