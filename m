@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29998 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161243Ab3FUM0k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jun 2013 08:26:40 -0400
-Date: Fri, 21 Jun 2013 15:26:20 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] ipw2x00: printing the wrong array in debug code
-Message-ID: <20130621122620.GC24059@elgon.mountain> (sfid-20130621_142645_266015_E6CB07E4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from arrakis.dune.hu ([78.24.191.176]:39075 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751683Ab3FXUc4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jun 2013 16:32:56 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 1/3] rt2x00: rt2800: increase EEPROM_SIZE to 512 bytes
+Date: Mon, 24 Jun 2013 22:32:50 +0200
+Message-Id: <1372105972-3022-2-git-send-email-juhosg@openwrt.org> (sfid-20130624_223305_423033_DB6416FA)
+In-Reply-To: <1372105972-3022-1-git-send-email-juhosg@openwrt.org>
+References: <1372105972-3022-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch complains that this is a read past the end of the array.  It
-turns out we are printing the wrong array here.
+Ralink 3T chipsets are using a different EEPROM
+layout than the others. The EEPROM on these devices
+contain more data than the others which does not fit
+into 272 byte which the rt2800 driver actually uses.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+The Ralink reference driver defines EEPROM_SIZE to
+512/1024 bytes for PCI/USB devices respectively.
 
-diff --git a/drivers/net/wireless/ipw2x00/libipw_rx.c b/drivers/net/wireless/ipw2x00/libipw_rx.c
-index 95a1ca1..9ffe659 100644
---- a/drivers/net/wireless/ipw2x00/libipw_rx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_rx.c
-@@ -1195,7 +1195,7 @@ static int libipw_parse_info_param(struct libipw_info_element
- #ifdef CONFIG_LIBIPW_DEBUG
- 				p += snprintf(p, sizeof(rates_str) -
- 					      (p - rates_str), "%02X ",
--					      network->rates[i]);
-+					      network->rates_ex[i]);
- #endif
- 				if (libipw_is_ofdm_rate
- 				    (info_element->data[i])) {
+Increase the EEPROM_SIZE constant to 512 bytes, in
+order to make room for EEPROM data of 3T devices.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+Changes in v2: add Acked-by tags
+---
+ drivers/net/wireless/rt2x00/rt2800.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index fe43d01..d78c495 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -100,7 +100,7 @@
+ #define CSR_REG_BASE			0x1000
+ #define CSR_REG_SIZE			0x0800
+ #define EEPROM_BASE			0x0000
+-#define EEPROM_SIZE			0x0110
++#define EEPROM_SIZE			0x0200
+ #define BBP_BASE			0x0000
+ #define BBP_SIZE			0x00ff
+ #define RF_BASE				0x0004
+-- 
+1.7.10
+
