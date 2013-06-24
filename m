@@ -1,203 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1762 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751447Ab3FZMUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 08:20:33 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 4/9] brcmfmac: use unified dongle address preparation
- function
-Date: Wed, 26 Jun 2013 14:20:17 +0200
-Message-ID: <1372249222-4858-5-git-send-email-arend@broadcom.com> (sfid-20130626_142043_135652_31FA9D84)
-In-Reply-To: <1372249222-4858-1-git-send-email-arend@broadcom.com>
-References: <1372249222-4858-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s72.web-hosting.com ([198.187.29.21]:48238 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152Ab3FXMvz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jun 2013 08:51:55 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 4/4] ath9k: Add support for AR9462 2.1
+Date: Mon, 24 Jun 2013 18:18:46 +0530
+Message-Id: <1372078126-13602-4-git-send-email-sujith@msujith.org> (sfid-20130624_145159_443502_CACCDE22)
+In-Reply-To: <1372078126-13602-1-git-send-email-sujith@msujith.org>
+References: <1372078126-13602-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Introduce a unified dongle backplane address preparation function
-brcmf_sdio_addrprep to replace duplicate address prep code.
+Various parts of the HW code are applicable for
+both v2.0 and v2.1.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   79 +++++++-------------
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    3 -
- 2 files changed, 27 insertions(+), 55 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 7 ++++---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 6 +++---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 4 ++--
+ drivers/net/wireless/ath/ath9k/hw.c            | 2 +-
+ 4 files changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index c9c5ad2..70cd0e9 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -162,7 +162,7 @@ int brcmf_sdio_intr_unregister(struct brcmf_sdio_dev *sdiodev)
- 	return 0;
- }
- 
--int
-+static int
- brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 1e86977..d105e43 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3606,7 +3606,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 	 *   7:4 R/W  SWITCH_TABLE_COM_SPDT_WLAN_IDLE
+ 	 * SWITCH_TABLE_COM_SPDT_WLAN_IDLE
+ 	 */
+-	if (AR_SREV_9462_20(ah) || AR_SREV_9565(ah)) {
++	if (AR_SREV_9462_20_OR_LATER(ah) || AR_SREV_9565(ah)) {
+ 		value = ar9003_switch_com_spdt_get(ah, is2ghz);
+ 		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
+ 				AR_SWITCH_TABLE_COM_SPDT_ALL, value);
+@@ -4059,8 +4059,9 @@ static void ar9003_hw_thermo_cal_apply(struct ath_hw *ah)
  {
- 	int err = 0, i;
-@@ -193,12 +193,33 @@ brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- 	return err;
- }
+ 	u32 data, ko, kg;
  
-+static int
-+brcmf_sdio_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
-+{
-+	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
-+	int err = 0;
+-	if (!AR_SREV_9462_20(ah))
++	if (!AR_SREV_9462_20_OR_LATER(ah))
+ 		return;
 +
-+	if (bar0 != sdiodev->sbwad) {
-+		err = brcmf_sdcard_set_sbaddr_window(sdiodev, bar0);
-+		if (err)
-+			return err;
-+
-+		sdiodev->sbwad = bar0;
-+	}
-+
-+	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+
-+	if (width == 4)
-+		*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
-+	return 0;
-+}
-+
- int
- brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 			void *data, bool write)
- {
- 	u8 func_num, reg_size;
--	u32 bar;
- 	s32 retry = 0;
- 	int ret;
- 
-@@ -218,18 +239,7 @@ brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		func_num = SDIO_FUNC_1;
- 		reg_size = 4;
- 
--		/* Set the window for SB core register */
--		bar = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
--		if (bar != sdiodev->sbwad) {
--			ret = brcmf_sdcard_set_sbaddr_window(sdiodev, bar);
--			if (ret != 0) {
--				memset(data, 0xFF, reg_size);
--				return ret;
--			}
--			sdiodev->sbwad = bar;
--		}
--		addr &= SBSDIO_SB_OFT_ADDR_MASK;
--		addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+		brcmf_sdio_addrprep(sdiodev, reg_size, &addr);
+ 	ar9300_otp_read_word(ah, 1, &data);
+ 	ko = data & 0xff;
+ 	kg = (data >> 8) & 0xff;
+@@ -4752,7 +4753,7 @@ tempslope:
+ 			      AR_PHY_TPC_19_ALPHA_THERM, temp_slope);
  	}
  
- 	do {
-@@ -452,28 +462,6 @@ static int brcmf_sdio_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	return ret;
- }
+-	if (AR_SREV_9462_20(ah))
++	if (AR_SREV_9462_20_OR_LATER(ah))
+ 		REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
+ 			      AR_PHY_TPC_19_B1_ALPHA_THERM, temp_slope);
  
--static int brcmf_sdcard_recv_prepare(struct brcmf_sdio_dev *sdiodev, uint fn,
--				     uint width, u32 *addr)
--{
--	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
--	int err = 0;
--
--	if (bar0 != sdiodev->sbwad) {
--		err = brcmf_sdcard_set_sbaddr_window(sdiodev, bar0);
--		if (err)
--			return err;
--
--		sdiodev->sbwad = bar0;
--	}
--
--	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
--
--	if (width == 4)
--		*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
--
--	return 0;
--}
--
- int
- brcmf_sdcard_recv_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 		      uint flags, u8 *buf, uint nbytes)
-@@ -508,7 +496,7 @@ brcmf_sdcard_recv_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 		  fn, addr, pkt->len);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index df84d20..1f694ab 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -743,7 +743,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 		ar9003_hw_prog_ini(ah, &ah->iniMac[i], modesIndex);
+ 		ar9003_hw_prog_ini(ah, &ah->iniBB[i], modesIndex);
+ 		ar9003_hw_prog_ini(ah, &ah->iniRadio[i], modesIndex);
+-		if (i == ATH_INI_POST && AR_SREV_9462_20(ah))
++		if (i == ATH_INI_POST && AR_SREV_9462_20_OR_LATER(ah))
+ 			ar9003_hw_prog_ini(ah,
+ 					   &ah->ini_radio_post_sys2ant,
+ 					   modesIndex);
+@@ -754,7 +754,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 	 */
+ 	REG_WRITE_ARRAY(&ah->iniModesRxGain, 1, regWrites);
  
- 	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
--	err = brcmf_sdcard_recv_prepare(sdiodev, fn, width, &addr);
-+	err = brcmf_sdio_addrprep(sdiodev, width, &addr);
- 	if (err)
- 		goto done;
+-	if (AR_SREV_9462_20(ah)) {
++	if (AR_SREV_9462_20_OR_LATER(ah)) {
+ 		/*
+ 		 * CUS217 mix LNA mode.
+ 		 */
+@@ -1512,7 +1512,7 @@ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
+ 	ar9003_hw_prog_ini(ah, &ah->iniBB[ATH_INI_POST], modesIndex);
+ 	ar9003_hw_prog_ini(ah, &ah->iniRadio[ATH_INI_POST], modesIndex);
  
-@@ -532,7 +520,7 @@ int brcmf_sdcard_recv_chain(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 		  fn, addr, pktq->qlen);
+-	if (AR_SREV_9462_20(ah))
++	if (AR_SREV_9462_20_OR_LATER(ah))
+ 		ar9003_hw_prog_ini(ah, &ah->ini_radio_post_sys2ant,
+ 				   modesIndex);
  
- 	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
--	err = brcmf_sdcard_recv_prepare(sdiodev, fn, width, &addr);
-+	err = brcmf_sdio_addrprep(sdiodev, width, &addr);
- 	if (err)
- 		goto done;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 5013c73..d4d39f3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -954,7 +954,7 @@
+ #define AR_PHY_TPC_5_B1         (AR_SM1_BASE + 0x208)
+ #define AR_PHY_TPC_6_B1         (AR_SM1_BASE + 0x20c)
+ #define AR_PHY_TPC_11_B1        (AR_SM1_BASE + 0x220)
+-#define AR_PHY_PDADC_TAB_1	(AR_SM1_BASE + (AR_SREV_AR9462(ah) ? \
++#define AR_PHY_PDADC_TAB_1	(AR_SM1_BASE + (AR_SREV_9462_20_OR_LATER(ah) ? \
+ 					0x280 : 0x240))
+ #define AR_PHY_TPC_19_B1	(AR_SM1_BASE + 0x240)
+ #define AR_PHY_TPC_19_B1_ALPHA_THERM		0xff
+@@ -1048,7 +1048,7 @@
+ #define AR_GLB_GPIO_CONTROL	(AR_GLB_BASE)
+ #define AR_PHY_GLB_CONTROL	(AR_GLB_BASE + 0x44)
+ #define AR_GLB_SCRATCH(_ah)	(AR_GLB_BASE + \
+-					(AR_SREV_9462_20(_ah) ? 0x4c : 0x50))
++					(AR_SREV_9462_20_OR_LATER(_ah) ? 0x4c : 0x50))
+ #define AR_GLB_STATUS		(AR_GLB_BASE + 0x48)
  
-@@ -570,33 +558,20 @@ brcmf_sdcard_send_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 		      uint flags, struct sk_buff *pkt)
- {
- 	uint width;
--	uint bar0 = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
- 	int err = 0;
- 	struct sk_buff_head pkt_list;
+ /*
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5324c33..4ca0cb0 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2599,7 +2599,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		if (!(ah->ent_mode & AR_ENT_OTP_49GHZ_DISABLE))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_MCI;
  
- 	brcmf_dbg(SDIO, "fun = %d, addr = 0x%x, size = %d\n",
- 		  fn, addr, pkt->len);
+-		if (AR_SREV_9462_20(ah))
++		if (AR_SREV_9462_20_OR_LATER(ah))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_RTT;
+ 	}
  
--	if (bar0 != sdiodev->sbwad) {
--		err = brcmf_sdcard_set_sbaddr_window(sdiodev, bar0);
--		if (err)
--			goto done;
--
--		sdiodev->sbwad = bar0;
--	}
--
--	addr &= SBSDIO_SB_OFT_ADDR_MASK;
--
- 	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
--	if (width == 4)
--		addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+	brcmf_sdio_addrprep(sdiodev, width, &addr);
- 
- 	skb_queue_head_init(&pkt_list);
- 	skb_queue_tail(&pkt_list, pkt);
- 	err = brcmf_sdio_buffrw(sdiodev, fn, true, addr, &pkt_list);
- 	skb_dequeue_tail(&pkt_list);
- 
--done:
- 	return err;
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index 69c03fe..09786a5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -249,9 +249,6 @@ extern int brcmf_sdcard_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
- extern int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev);
- extern int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev);
- 
--extern int brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev,
--					  u32 address);
--
- /* attach, return handler on success, NULL if failed.
-  *  The handler shall be provided by all subsequent calls. No local cache
-  *  cfghdl points to the starting address of pci device mapped memory
 -- 
-1.7.10.4
-
+1.8.3.1
 
