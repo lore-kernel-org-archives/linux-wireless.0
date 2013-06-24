@@ -1,36 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:46701 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750872Ab3FXAo3 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:39911 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751902Ab3FXGLj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jun 2013 20:44:29 -0400
-Received: by mail-bk0-f49.google.com with SMTP id mz10so3943188bkb.8
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Jun 2013 17:44:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1371847733.8936.6.camel@jlt4.sipsolutions.net>
-References: <1371803215-2685-1-git-send-email-yeohchunyeow@gmail.com>
-	<1371847733.8936.6.camel@jlt4.sipsolutions.net>
-Date: Mon, 24 Jun 2013 08:44:27 +0800
-Message-ID: <CAEFj987XScpYpfgcW1x85MMd+ZV-5UO41nH5kFkSmg106KBh5A@mail.gmail.com> (sfid-20130624_024445_685253_B03D54CA)
-Subject: Re: [PATCH] mac80211: fix the kernel panic on ath_tx_aggr_wakeup on mesh
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 24 Jun 2013 02:11:39 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] ath9k: Add version macros for AR9462 2.1
+Date: Mon, 24 Jun 2013 11:38:35 +0530
+Message-Id: <1372054117-4626-2-git-send-email-sujith@msujith.org> (sfid-20130624_081142_910520_F2C68310)
+In-Reply-To: <1372054117-4626-1-git-send-email-sujith@msujith.org>
+References: <1372054117-4626-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'd like to have a less ath9k-centric description, and particularly
-> subject, please.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Alright. But Bob has commented on this patch so may need to take
-further investigation.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/reg.h | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-> I think you misspelled that :)
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index f7c90cc..5af9744 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -806,6 +806,7 @@
+ #define AR_SREV_REVISION_9580_10	4 /* AR9580 1.0 */
+ #define AR_SREV_VERSION_9462		0x280
+ #define AR_SREV_REVISION_9462_20	2
++#define AR_SREV_REVISION_9462_21	3
+ #define AR_SREV_VERSION_9565            0x2C0
+ #define AR_SREV_REVISION_9565_10        0
+ #define AR_SREV_VERSION_9550		0x400
+@@ -911,10 +912,18 @@
+ 
+ #define AR_SREV_9462(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462))
+-
+ #define AR_SREV_9462_20(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
+-	((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_20))
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_20))
++#define AR_SREV_9462_21(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_21))
++#define AR_SREV_9462_20_OR_LATER(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
++	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
++#define AR_SREV_9462_21_OR_LATER(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
++	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_21))
+ 
+ #define AR_SREV_9565(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
+-- 
+1.8.3.1
 
-Opps....
-
-----
-Chun-Yeow
