@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40147 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690Ab3FEISL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 04:18:11 -0400
-Message-ID: <1370420283.8920.21.camel@jlt4.sipsolutions.net> (sfid-20130605_101816_955009_53C48465)
-Subject: Re: [PATCH v8] cfg80211: P2P find phase offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>,
-	"Peer, Ilan" <ilan.peer@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>
-Date: Wed, 05 Jun 2013 10:18:03 +0200
-In-Reply-To: <51AEF266.3050005@broadcom.com>
-References: <8887AA04B7EC49479420AE48C5F94A930EF6C0AA@NASANEXD02D.na.qualcomm.com>
-	 <1370418378.8920.12.camel@jlt4.sipsolutions.net>
-	 <51AEF266.3050005@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:1264 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750939Ab3FXNTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jun 2013 09:19:42 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Dor Shaish <dor.shaish@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.9 2/4] iwlwifi: mvm: don't use cts to self
+Date: Mon, 24 Jun 2013 16:19:03 +0300
+Message-Id: <1372079945-7445-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130624_152233_732483_0DB34676)
+In-Reply-To: <1372079945-7445-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1372079945-7445-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-06-05 at 10:10 +0200, Arend van Spriel wrote:
-> On 06/05/2013 09:46 AM, Johannes Berg wrote:
-> > On Tue, 2013-06-04 at 14:35 +0000, Malinen, Jouni wrote:
-> >
-> >> In general, I'd agree. However, I would like to get information of any
-> >> peer device being in active PBC mode. This would require either getting
-> >> those Probe Request frames
-> >
-> > I think I like that alternative better :-)
-> >
-> > I know I wouldn't find it quickly ... can you be more specific about
-> > what "being in active PBC mode" means? Is that easily detectable?
-> >
-> > I'm thinking we should just document this (and be as specific about it
-> > as we can) in the documentation for the offload feature.
-> 
-> Remark from the sideline. One of the motivations for the P2P find 
-> offload (when done on the device) is that the host can sleep, right? So 
-> how/when does wpa_s want these Probe Request frames. After the 
-> driver/device completed the find?
+From: Dor Shaish <dor.shaish@intel.com>
 
-I don't think the device can really _sleep_ during this time, but it
-allows reducing CPU wakeups. If you really wanted to sleep then you'd
-have to buffer at least some information and have some sort of wakeup
-trigger. That'll probably be done eventually, but it's not the rationale
-here I think.
+commit cc7ee2bab3d90b0a09651dcfa2d0c9ec1a115bc8 upstream.
 
-The way I see it, this patch allows being discoverable and discovering
-other peers with much less impact on CPU usage.
+The current fw doesn't currently support cts to self. There
+is a bug in the fw that prevents us from using cts to self.
+Use full protection (including RTS) for now.
 
-The next step would be P2P-listen offload, which is more interesting for
-being discoverable, and should also have probe request offload similar
-to what we're discussing here.
+Signed-off-by: Dor Shaish <dor.shaish@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index bf76b17..864cd6d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -553,9 +553,9 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ 	if (vif->bss_conf.qos)
+ 		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
+ 
++	/* Don't use cts to self as the fw doesn't support it currently. */
+ 	if (vif->bss_conf.use_cts_prot)
+-		cmd->protection_flags |= cpu_to_le32(MAC_PROT_FLG_TGG_PROTECT |
+-						     MAC_PROT_FLG_SELF_CTS_EN);
++		cmd->protection_flags |= cpu_to_le32(MAC_PROT_FLG_TGG_PROTECT);
+ 
+ 	/*
+ 	 * I think that we should enable these 2 flags regardless the HT PROT
+-- 
+1.7.10.4
 
