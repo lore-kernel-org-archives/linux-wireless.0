@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39780 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:36194 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268Ab3FEGeM (ORCPT
+	with ESMTP id S1750783Ab3FXOJF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 02:34:12 -0400
-Message-ID: <1370414046.8920.1.camel@jlt4.sipsolutions.net> (sfid-20130605_083415_449648_2715E178)
-Subject: Re: [wireless-regdb] [PATCH] regulatory: enable channels 52-64 and
- 100-144 for world roaming
+	Mon, 24 Jun 2013 10:09:05 -0400
+Message-ID: <1372082937.8439.9.camel@jlt4.sipsolutions.net> (sfid-20130624_160910_302187_E8877430)
+Subject: Re: [PATCH v10 1/2] cfg80211: add flags to cfg80211_rx_mgmt
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: bzhao@marvell.com, wireless-regdb@lists.infradead.org,
-	mcgrof@do-not-panic.com
-Date: Wed, 05 Jun 2013 08:34:06 +0200
-In-Reply-To: <1368738412-7740-1-git-send-email-johannes@sipsolutions.net>
-References: <1368738412-7740-1-git-send-email-johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Date: Mon, 24 Jun 2013 16:08:57 +0200
+In-Reply-To: <1372063757-24286-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1372063757-24286-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1372063757-24286-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-16 at 23:06 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If allowed in a country, these channels typically require DFS
-> so mark them as such. Channel 144 is a bit special, it's coming
-> into use now to allow more VHT 80 channels, but world roaming
-> with passive scanning is acceptable anyway. It seems fairly
-> unlikely that it'll be used as the control channel for a VHT
-> AP, but it needs to be present to allow a full VHT connection
-> to an AP that uses it as one of the secondary channels.
-> 
-> Also enable VHT 160 on these channels, and also for channels
-> 36-48 to be able to use VHT 160 there.
+On Mon, 2013-06-24 at 11:49 +0300, Vladimir Kondratiev wrote:
 
-You guys all get a few more days for comments, then I'm merging this
-next Monday. I really think it's the right thing to do, there's no
-reason to prohibit passive scanning on radar channels that I know of.
+> +/**
+> + * enum nl80211_rxmgmt_flags - flags for cfg80211_rx_mgmt
+> + *
+> + * Defined are bits, to be used in form like
+> + * BIT(NL80211_RXMGMT_FLAG_xxx)
+> + *
+> + * @NL80211_RXMGMT_FLAG_REPLIED: frame was replied by device/driver.
+> + */
+> +enum nl80211_rxmgmt_flags {
+> +	NL80211_RXMGMT_FLAG_REPLIED,
+> +};
+
+I think you should define the bitmasks, i.e. use
+
+NL80211_RXMGMT_FLAG_REPLIED	= 1<<0,
+
+I think that'd be clearer, and userspace doesn't even always have a
+BIT() macro.
 
 johannes
 
