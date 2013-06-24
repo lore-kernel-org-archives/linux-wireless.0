@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:40584
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754300Ab3FDNnp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 09:43:45 -0400
-Date: Tue, 4 Jun 2013 09:43:41 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: cw1200: add driver for the ST-E CW1100 & CW1200 WLAN chipsets
-Message-ID: <20130604134340.GA3813@shaftnet.org> (sfid-20130604_154402_723210_D714CC3B)
-References: <20130604130955.GA13788@debian>
+Received: from arrakis.dune.hu ([78.24.191.176]:46601 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753119Ab3FXTAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jun 2013 15:00:50 -0400
+Message-ID: <51C89764.8000700@openwrt.org> (sfid-20130624_210111_086449_F3692AB1)
+Date: Mon, 24 Jun 2013 21:00:52 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="J/dobhs11T7y2rNN"
-In-Reply-To: <20130604130955.GA13788@debian>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH 2/3] rt2x00: rt2800lib: turn on secondary PAs/LNAs for
+ 3T/3R devices
+References: <1371915734-13966-1-git-send-email-juhosg@openwrt.org> <1371915734-13966-3-git-send-email-juhosg@openwrt.org> <CAGXE3d9_zOt0h6WaWUedXnJu9yucJ=Jtaa8PPacz1-6G2Wf63w@mail.gmail.com>
+In-Reply-To: <CAGXE3d9_zOt0h6WaWUedXnJu9yucJ=Jtaa8PPacz1-6G2Wf63w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2013.06.24. 15:00 keltezéssel, Helmut Schaa írta:
+> On Sat, Jun 22, 2013 at 5:42 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+>> The secondary PAs/LNAs are turned on only for 2T/2R
+>> devices, however these are used for 3T/3R devices as
+>> well. Always turn those on if the device uses more
+>> than one tx/rx chains.
+>>
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2800lib.c |    8 ++++----
+>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index 4072242..f4cd3d8 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -2678,16 +2678,16 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+>>
+>>         tx_pin = 0;
+>>
+>> -       /* Turn on unused PA or LNA when not using 1T or 1R */
+>> -       if (rt2x00dev->default_ant.tx_chain_num == 2) {
+>> +       if (rt2x00dev->default_ant.tx_chain_num > 1) {
+>> +               /* Turn on secondary PAs for 2T adn for 3T devices*/
+> 
+> Typo adn -> and.
+> 
+> Otherwise looks good to me.
 
---J/dobhs11T7y2rNN
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks, I will send a fixed version.
 
-On Tue, Jun 04, 2013 at 06:09:55AM -0700, Dan Carpenter wrote:
-> The patch a910e4a94f69: "cw1200: add driver for the ST-E CW1100 &
-> CW1200 WLAN chipsets" from May 24, 2013, has poor input validation
-> so the user could write to arbitrary memory.
-
-> Also I think this API looks like things which should be done with
-> normal ioctls.  This driver only lets you load the firmware using a
-> very ugly custom debugfs interface?
-
-No, this is a debugging interface designed to interact with the=20
-vendor-supplied testing tool and the passthrough API it requires.  The=20
-vendor tool controls the device init sequence, including special=20
-engineering firmware.
-
-Support for the ETF hooks is optional, and even if compiled in has to be=20
-explicitly enabled with a module parameter.
-
-> drivers/net/wireless/cw1200/debug.c
->    454 =20
->    455          if (!count)
->    456                  goto done;
->    457 =20
->    458          if (copy_from_user(etf->buf + etf->written, user_buf + wr=
-itten,
->    459                             count)) {
->=20
-> "count" isn't capped so we could overwrite etf->written on the first
-> write and then write to arbitrary memery on the second write.
-
-Okay, that's easy enough to fix.  Thanks for pointing this out.
-
-I'll try to robustify this rather ugly interface as much as possible. =20
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---J/dobhs11T7y2rNN
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRre8MPuLgii2759ARAjGaAKDY+wlBtk51HrS3tFlymBBA5fv4CACgy2Jr
-Qs78mzju6e0WHGmnuHC28Z0=
-=zQTF
------END PGP SIGNATURE-----
-
---J/dobhs11T7y2rNN--
+-Gabor
