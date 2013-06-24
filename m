@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:64092 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751309Ab3FZG5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 02:57:31 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
-CC: Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2] ath10k: leave MMIC generation to the HW
-Date: Wed, 26 Jun 2013 08:57:24 +0200
-Message-ID: <1372229844-7987-1-git-send-email-michal.kazior@tieto.com> (sfid-20130626_085734_584220_B80B878E)
-In-Reply-To: <1372060350-31460-4-git-send-email-michal.kazior@tieto.com>
-References: <1372060350-31460-4-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:36170 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006Ab3FXN6r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jun 2013 09:58:47 -0400
+Message-ID: <1372082323.8439.6.camel@jlt4.sipsolutions.net> (sfid-20130624_155850_321046_483D8A8B)
+Subject: Re: [PATCH] cfg80211: fix compilation warning for
+ cfg80211_leave_all()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 24 Jun 2013 15:58:43 +0200
+In-Reply-To: <1371984681-3384-1-git-send-email-arend@broadcom.com>
+References: <1371984681-3384-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently HW doesn't require us to generate MMIC
-for TKIP suite.
+On Sun, 2013-06-23 at 12:51 +0200, Arend van Spriel wrote:
+> The following compilation issue popped up moving from v3.10-rc1 to
+> v3.10-rc6 after merging wireless-testing.
+> 
+> net/wireless/sysfs.c:86:13: error: 'cfg80211_leave_all' defined
+> but not used [-Werror=unused-function]
+> 
+> The function is only called when CONFIG_PM is enabled. Moving the
+> function under CONFIG_PM as well.
 
-Each frame was 8 bytes longer than it should be
-and some APs would drop frames that exceed 1520
-bytes of 802.11 payload. This could be observed
-during throughput tests or fragmented IP traffic.
+Applied.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |    1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 4867f30..bfee06d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -56,7 +56,6 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 		key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
--		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
- 		arg.key_cipher = WMI_CIPHER_TKIP;
- 		arg.key_txmic_len = 8;
- 		arg.key_rxmic_len = 8;
--- 
-1.7.9.5
+johannes
 
