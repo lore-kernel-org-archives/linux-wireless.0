@@ -1,86 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:57547 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754410Ab3FOUT2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jun 2013 16:19:28 -0400
-Received: from mailout-de.gmx.net ([10.1.76.31]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0MWdT3-1Uqx4m1Ex1-00XweT for
- <linux-wireless@vger.kernel.org>; Sat, 15 Jun 2013 22:19:27 +0200
-Message-ID: <51BCCC4C.9090605@rempel-privat.de> (sfid-20130615_221932_410522_C83DFE1F)
-Date: Sat, 15 Jun 2013 22:19:24 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: George Nychis <gnychis@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>
-Subject: Re: unable to force transmission rate on injection
-References: <CA+7oygcTxgPiVbup6BT-+sJWFNy=nMTc8C7OeCew9Xc6WgQinw@mail.gmail.com> <51BC16A2.8070104@rempel-privat.de> <CA+7oygfLTK87AugE7u7jeLJW=46+Aa-TvcA99foAONxEFECLRg@mail.gmail.com>
-In-Reply-To: <CA+7oygfLTK87AugE7u7jeLJW=46+Aa-TvcA99foAONxEFECLRg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:55490 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791Ab3FXVTn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jun 2013 17:19:43 -0400
+Received: by mail-ee0-f54.google.com with SMTP id t10so6321550eei.41
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2013 14:19:41 -0700 (PDT)
+References: <1372107804-19679-1-git-send-email-juhosg@openwrt.org> <1372107804-19679-4-git-send-email-juhosg@openwrt.org>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <1372107804-19679-4-git-send-email-juhosg@openwrt.org>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <27D52B4B-B53E-45D8-A326-813F3B2C7F5F@gmail.com> (sfid-20130624_231946_110315_30570B04)
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH v3 3/3] rt2x00: rt2800lib: turn on tertiary PAs/LNAs for 3T/3R devices
+Date: Mon, 24 Jun 2013 23:19:37 +0200
+To: Gabor Juhos <juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi George,
-
-Am 15.06.2013 21:58, schrieb George Nychis:
-> Hi Oleksij,
->
-> Thanks for the heads up that the rate control is in the firmware.  I
-> hadn't realized this was open source.  I'll look through it and see
-> what I can do.  If anyone out there already has a pre-baked version of
-> the firmware to fix this, just let me know.  Otherwise, I'll post a
-> patch when done.
-
-you are welcome.
-I don't think some one already done this.
 
 
-> On Sat, Jun 15, 2013 at 3:24 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->> Hi George,
->>
->> ath9k_htc use internal rate controller which is located insight of firmware.
->> If you have time, i'll suggest to take it in your hands.
->>
->> Am 15.06.2013 01:58, schrieb George Nychis:
->>>
->>> I have an ath9k_htc card that I am trying to force a transmission rate
->>> on injection.  I did some digging around and found this patch from
->>> Pavel:
->>>
->>> http://article.gmane.org/gmane.linux.kernel.wireless.general/47441
->>>
->>> I updated and implemented that patch in to my kernel, and I see my
->>> injected packets coming down through the code.  I see that the rates I
->>> am trying to transmit pass the test to make sure that the rate is
->>> available:
->>>
->>> [ 1244.647325] *** gnychis: OK on rate 540 -- idx: 11
->>> [ 1244.682061] *** gnychis: OK on rate 480 -- idx: 10
->>> [ 1244.741305] *** gnychis: OK on rate 360 -- idx: 9
->>> ...
->>>
->>> And then I double checked to make sure that, given the flag,
->>> ieee80211_tx_h_rate_ctrl() is *not* being called.  So, to the best of
->>> my knowledge the patch supplied seems to keeping the supplied rate and
->>> disabling rate control.
->>>
->>> But, for some reason it still keeps getting transmitted at a rate of
->>> 1Mbps.  I have verified this with an independent receiver.  If I do a
->>> pcapdump on the transmitting interface, I see two packets for every
->>> transmission.  One at the rate I am trying to transmit at, and another
->>> at 1Mbps:
->>> http://users.ece.cmu.edu/~gnychis/bad_tx.pcap
->>>
->>> Am I missing something else in mac80211 to inject at a specific rate?
->>>
->>> Thanks!
->>> George
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->>> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sent from my iPad
 
--- 
-Regards,
-Oleksij
+On 24 jun. 2013, at 23:03, Gabor Juhos <juhosg@openwrt.org> wrote:
+
+> The 3T/3R devices are using the tertiary PAs/LNAs
+> however those are never turned on. Fix the code to
+> turn on those on for such devices.
+> 
+> Also modify the code to use switch statements to
+> improve readability.
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+> ---
+> Changes in v3:
+> - also move setting of the primary PA of the 5GHz band into the first
+>   switch statement
+> Changes in v2:
+> - use a switch statement to improve readability as suggested
+>   by Gertjan
+> - add detailed commit description
+> ---
+> drivers/net/wireless/rt2x00/rt2800lib.c |   47 +++++++++++++++++++++++--------
+> 1 file changed, 35 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index b7119e3..25f7dbe 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2678,30 +2678,53 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+> 
+>    tx_pin = 0;
+> 
+> -    if (rt2x00dev->default_ant.tx_chain_num > 1) {
+> -        /* Turn on secondary PAs for 2T and for 3T devices*/
+> +    switch (rt2x00dev->default_ant.tx_chain_num) {
+> +    case 3:
+> +        /* Turn on tertiary PAs */
+> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A2_EN,
+> +                   rf->channel > 14);
+> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G2_EN,
+> +                   rf->channel <= 14);
+> +        /* fall-through */
+> +    case 2:
+> +        /* Turn on secondary PAs */
+>        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
+>                   rf->channel > 14);
+>        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
+>                   rf->channel <= 14);
+> +        /* fall-through */
+> +    case 1:
+> +        /* Turn on primary PAs */
+> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN,
+> +                   rf->channel > 14);
+> +        if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags))
+> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
+> +        else
+> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN,
+> +                       rf->channel <= 14);
+> +        break;
+>    }
+> 
+> -    if (rt2x00dev->default_ant.rx_chain_num > 1) {
+> -        /* Turn on secondary LNAs for 2R and for 3R devices */
+> +    switch (rt2x00dev->default_ant.rx_chain_num) {
+> +    case 3:
+> +        /* Turn on tertiary LNAs */
+> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A2_EN, 1);
+> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G2_EN, 1);
+> +        /* fall-through */
+> +    case 2:
+> +        /* Turn on secondary LNAs */
+>        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A1_EN, 1);
+>        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G1_EN, 1);
+> +        /* fall-through */
+> +    case 1:
+> +        /* Turn on primary LNAs */
+> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A0_EN, 1);
+> +        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G0_EN, 1);
+> +        break;
+>    }
+> 
+> -    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A0_EN, 1);
+> -    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G0_EN, 1);
+>    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_RFTR_EN, 1);
+>    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_TRSW_EN, 1);
+> -    if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags))
+> -        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
+> -    else
+> -        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN,
+> -                   rf->channel <= 14);
+> -    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN, rf->channel > 14);
+> 
+>    rt2800_register_write(rt2x00dev, TX_PIN_CFG, tx_pin);
+> 
+> -- 
+> 1.7.10
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
