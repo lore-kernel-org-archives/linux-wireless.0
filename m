@@ -1,251 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:46635 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751093Ab3FYNmv (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:43954 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751902Ab3FXGLp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 09:42:51 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Arend van Spriel <arend@broadcom.com>, Peer@vger.kernel.org,
-	Ilan <ilan.peer@intel.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v12 1/2] cfg80211: add 'flags' to cfg80211_rx_mgmt()
-Date: Tue, 25 Jun 2013 16:42:35 +0300
-Message-ID: <1372167756-17928-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130625_154255_569400_F6543B3D)
-In-Reply-To: <1372167756-17928-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1372167756-17928-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 24 Jun 2013 02:11:45 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] ath9k: Program initvals for AR9462 2.1
+Date: Mon, 24 Jun 2013 11:38:37 +0530
+Message-Id: <1372054117-4626-4-git-send-email-sujith@msujith.org> (sfid-20130624_081148_803636_60D8317D)
+In-Reply-To: <1372054117-4626-1-git-send-email-sujith@msujith.org>
+References: <1372054117-4626-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flags intended to report various auxiliary information.
-Introduced flag NL80211_RXMGMT_FLAG_REPLIED to report
-whether frame was replied by the device/driver.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/wmi.c         |  7 +++----
- drivers/net/wireless/ath/wil6210/wmi.c        |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c |  4 ++--
- drivers/net/wireless/mwifiex/util.c           |  4 ++--
- include/net/cfg80211.h                        |  3 ++-
- include/uapi/linux/nl80211.h                  | 13 +++++++++++++
- net/mac80211/rx.c                             |  3 +--
- net/wireless/mlme.c                           |  4 ++--
- net/wireless/nl80211.c                        |  6 ++++--
- net/wireless/nl80211.h                        |  2 +-
- 10 files changed, 31 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 59 +++++++++++++++++++++++++++++-
+ 1 file changed, 57 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 87aefb4..546d5da 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -568,8 +568,8 @@ static int ath6kl_wmi_rx_probe_req_event_rx(struct wmi *wmi, u8 *datap, int len,
- 		   dlen, freq, vif->probe_req_report);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 671aaa7..3101c39 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -24,6 +24,7 @@
+ #include "ar955x_1p0_initvals.h"
+ #include "ar9580_1p0_initvals.h"
+ #include "ar9462_2p0_initvals.h"
++#include "ar9462_2p1_initvals.h"
+ #include "ar9565_1p0_initvals.h"
  
- 	if (vif->probe_req_report || vif->nw_type == AP_NETWORK)
--		cfg80211_rx_mgmt(&vif->wdev, freq, 0,
--				 ev->data, dlen, GFP_ATOMIC);
-+		cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0,
-+				 GFP_ATOMIC);
+ /* General hardware code for the AR9003 hadware family */
+@@ -197,6 +198,31 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
  
- 	return 0;
- }
-@@ -608,8 +608,7 @@ static int ath6kl_wmi_rx_action_event_rx(struct wmi *wmi, u8 *datap, int len,
- 		return -EINVAL;
- 	}
- 	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u freq=%u\n", dlen, freq);
--	cfg80211_rx_mgmt(&vif->wdev, freq, 0,
--			 ev->data, dlen, GFP_ATOMIC);
-+	cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0, GFP_ATOMIC);
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
+ 				ar9485_1_1_pcie_phy_clkreq_disable_L1);
++	} else if (AR_SREV_9462_21(ah)) {
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
++			       ar9462_2p1_mac_core);
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
++			       ar9462_2p1_mac_postamble);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
++			       ar9462_2p1_baseband_core);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
++			       ar9462_2p1_baseband_postamble);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
++			       ar9462_2p1_radio_core);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST],
++			       ar9462_2p1_radio_postamble);
++		INIT_INI_ARRAY(&ah->ini_radio_post_sys2ant,
++			       ar9462_2p1_radio_postamble_sys2ant);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
++			       ar9462_2p1_soc_preamble);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
++			       ar9462_2p1_soc_postamble);
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			       ar9462_2p1_common_rx_gain);
++		INIT_INI_ARRAY(&ah->iniModesFastClock,
++			       ar9462_2p1_modes_fast_clock);
++		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
++			       ar9462_2p1_baseband_core_txfir_coeff_japan_2484);
+ 	} else if (AR_SREV_9462_20(ah)) {
  
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index dc8059a..21c791e 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -339,7 +339,7 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
- 		}
- 	} else {
- 		cfg80211_rx_mgmt(wil->wdev, freq, signal,
--				 (void *)rx_mgmt_frame, d_len, GFP_KERNEL);
-+				 (void *)rx_mgmt_frame, d_len, 0, GFP_KERNEL);
- 	}
- }
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE], ar9462_2p0_mac_core);
+@@ -407,6 +433,9 @@ static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
+ 	else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9580_1p0_lowest_ob_db_tx_gain_table);
++	else if (AR_SREV_9462_21(ah))
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			ar9462_2p1_modes_low_ob_db_tx_gain);
+ 	else if (AR_SREV_9462_20(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9462_modes_low_ob_db_tx_gain_table_2p0);
+@@ -438,6 +467,9 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
+ 	else if (AR_SREV_9550(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar955x_1p0_modes_no_xpa_tx_gain_table);
++	else if (AR_SREV_9462_21(ah))
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			ar9462_2p1_modes_high_ob_db_tx_gain);
+ 	else if (AR_SREV_9462_20(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9462_modes_high_ob_db_tx_gain_table_2p0);
+@@ -507,6 +539,9 @@ static void ar9003_tx_gain_table_mode4(struct ath_hw *ah)
+ 	else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9580_1p0_mixed_ob_db_tx_gain_table);
++	else if (AR_SREV_9462_21(ah))
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++		       ar9462_2p1_modes_mix_ob_db_tx_gain);
+ 	else
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9300Modes_mixed_ob_db_tx_gain_table_2p2);
+@@ -584,6 +619,9 @@ static void ar9003_rx_gain_table_mode0(struct ath_hw *ah)
+ 	} else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 				ar9580_1p0_rx_gain_table);
++	else if (AR_SREV_9462_21(ah))
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++				ar9462_2p1_common_rx_gain);
+ 	else if (AR_SREV_9462_20(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 				ar9462_common_rx_gain_table_2p0);
+@@ -606,6 +644,9 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
+ 	else if (AR_SREV_9485_11(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 			ar9485Common_wo_xlna_rx_gain_1_1);
++	else if (AR_SREV_9462_21(ah))
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			ar9462_2p1_common_wo_xlna_rx_gain);
+ 	else if (AR_SREV_9462_20(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 			ar9462_common_wo_xlna_rx_gain_table_2p0);
+@@ -627,7 +668,16 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
  
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 79555f0..d7a9745 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -1430,7 +1430,7 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
- 					      IEEE80211_BAND_5GHZ);
- 
- 	wdev = &ifp->vif->wdev;
--	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len,
-+	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len, 0,
- 			 GFP_ATOMIC);
- 
- 	kfree(mgmt_frame);
-@@ -1895,7 +1895,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 					      IEEE80211_BAND_2GHZ :
- 					      IEEE80211_BAND_5GHZ);
- 
--	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len,
-+	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0,
- 			 GFP_ATOMIC);
- 
- 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index e57ac0d..5d9e150 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -171,8 +171,8 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 	rx_pd->rx_pkt_length = cpu_to_le16(pkt_len);
- 
- 	cfg80211_rx_mgmt(priv->wdev, priv->roc_cfg.chan.center_freq,
--			 CAL_RSSI(rx_pd->snr, rx_pd->nf),
--			 skb->data, pkt_len, GFP_ATOMIC);
-+			 CAL_RSSI(rx_pd->snr, rx_pd->nf), skb->data, pkt_len,
-+			 0, GFP_ATOMIC);
- 
- 	return 0;
- }
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6a43c34..8347500 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3856,6 +3856,7 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
-  * @sig_dbm: signal strength in mBm, or 0 if unknown
-  * @buf: Management frame (header + body)
-  * @len: length of the frame data
-+ * @flags: flags, as defined in enum nl80211_rxmgmt_flags
-  * @gfp: context flags
-  *
-  * This function is called whenever an Action frame is received for a station
-@@ -3867,7 +3868,7 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
-  * driver is responsible for rejecting the frame.
-  */
- bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_dbm,
--		      const u8 *buf, size_t len, gfp_t gfp);
-+		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
- 
- /**
-  * cfg80211_mgmt_tx_status - notification of TX status for management frame
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index ca6facf..f125d2c 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1436,6 +1436,8 @@ enum nl80211_commands {
-  *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
-  *	update a TDLS peer STA entry.
-  *
-+ * @NL80211_ATTR_RXMGMT_FLAGS: flags for cfg80211_rx_mgmt, u32
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1736,6 +1738,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_PEER_AID,
- 
-+	NL80211_ATTR_RXMGMT_FLAGS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3754,4 +3758,13 @@ enum nl80211_crit_proto_id {
- /* maximum duration for critical protocol measures */
- #define NL80211_CRIT_PROTO_MAX_DURATION		5000 /* msec */
- 
-+/**
-+ * enum nl80211_rxmgmt_flags - flags for cfg80211_rx_mgmt
-+ *
-+ * @NL80211_RXMGMT_FLAG_REPLIED: frame was replied by device/driver.
-+ */
-+enum nl80211_rxmgmt_flags {
-+	NL80211_RXMGMT_FLAG_REPLIED = (1 << 0),
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 23dbcfc..3f7fa49 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2635,8 +2635,7 @@ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
- 		sig = status->signal;
- 
- 	if (cfg80211_rx_mgmt(&rx->sdata->wdev, status->freq, sig,
--			     rx->skb->data, rx->skb->len,
--			     GFP_ATOMIC)) {
-+			     rx->skb->data, rx->skb->len, 0, GFP_ATOMIC)) {
- 		if (rx->sta)
- 			rx->sta->rx_packets++;
- 		dev_kfree_skb(rx->skb);
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index a61a44b..74b1856 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -615,7 +615,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- }
- 
- bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
--		      const u8 *buf, size_t len, gfp_t gfp)
-+		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
+ static void ar9003_rx_gain_table_mode2(struct ath_hw *ah)
  {
- 	struct wiphy *wiphy = wdev->wiphy;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-@@ -658,7 +658,7 @@ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
- 		/* Indicate the received Action frame to user space */
- 		if (nl80211_send_mgmt(rdev, wdev, reg->nlportid,
- 				      freq, sig_mbm,
--				      buf, len, gfp))
-+				      buf, len, flags, gfp))
- 			continue;
+-	if (AR_SREV_9462_20(ah)) {
++	if (AR_SREV_9462_21(ah)) {
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			       ar9462_2p1_common_mixed_rx_gain);
++		INIT_INI_ARRAY(&ah->ini_modes_rxgain_bb_core,
++			       ar9462_2p1_baseband_core_mix_rxgain);
++		INIT_INI_ARRAY(&ah->ini_modes_rxgain_bb_postamble,
++			       ar9462_2p1_baseband_postamble_mix_rxgain);
++		INIT_INI_ARRAY(&ah->ini_modes_rxgain_5g_xlna,
++			       ar9462_2p1_baseband_postamble_5g_xlna);
++	} else if (AR_SREV_9462_20(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 			       ar9462_common_mixed_rx_gain_table_2p0);
+ 		INIT_INI_ARRAY(&ah->ini_modes_rxgain_bb_core,
+@@ -641,7 +691,12 @@ static void ar9003_rx_gain_table_mode2(struct ath_hw *ah)
  
- 		result = true;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 57be2f4..65c5578 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9962,7 +9962,7 @@ EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, u32 nlportid,
- 		      int freq, int sig_dbm,
--		      const u8 *buf, size_t len, gfp_t gfp)
-+		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
+ static void ar9003_rx_gain_table_mode3(struct ath_hw *ah)
  {
- 	struct net_device *netdev = wdev->netdev;
- 	struct sk_buff *msg;
-@@ -9985,7 +9985,9 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, freq) ||
- 	    (sig_dbm &&
- 	     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm)) ||
--	    nla_put(msg, NL80211_ATTR_FRAME, len, buf))
-+	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
-+	    (flags &&
-+	     nla_put_u32(msg, NL80211_ATTR_RXMGMT_FLAGS, flags)))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index a4073e8..3b51a76 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -66,7 +66,7 @@ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, u32 nlpid,
- 		      int freq, int sig_dbm,
--		      const u8 *buf, size_t len, gfp_t gfp);
-+		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
- 
- void
- nl80211_radar_notify(struct cfg80211_registered_device *rdev,
+-	if (AR_SREV_9462_20(ah)) {
++	if (AR_SREV_9462_21(ah)) {
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			       ar9462_2p1_common_5g_xlna_only_rx_gain);
++		INIT_INI_ARRAY(&ah->ini_modes_rxgain_5g_xlna,
++			       ar9462_2p1_baseband_postamble_5g_xlna);
++	} else if (AR_SREV_9462_20(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 			       ar9462_2p0_5g_xlna_only_rxgain);
+ 		INIT_INI_ARRAY(&ah->ini_modes_rxgain_5g_xlna,
 -- 
-1.8.1.2
+1.8.3.1
 
