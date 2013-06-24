@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38807 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754551Ab3FKTYf (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:53603 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237Ab3FXRcL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 15:24:35 -0400
-Message-ID: <1370978668.8356.67.camel@jlt4.sipsolutions.net> (sfid-20130611_212439_539392_32A4BA1D)
-Subject: Re: [PATCH] carl9170: make use of the new rate control API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas =?ISO-8859-1?Q?H=FChn?= <thomas@net.t-labs.tu-berlin.de>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nbd@nbd.name
-Date: Tue, 11 Jun 2013 21:24:28 +0200
-In-Reply-To: <1E3747D2-BD9C-4136-B17F-9227E24136D5@net.t-labs.tu-berlin.de>
-References: <1370966237-27716-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <201306111946.22682.chunkeey@googlemail.com>
-	 <1E3747D2-BD9C-4136-B17F-9227E24136D5@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 24 Jun 2013 13:32:11 -0400
+Received: by mail-wg0-f49.google.com with SMTP id a12so8738686wgh.16
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2013 10:32:10 -0700 (PDT)
+References: <1371915734-13966-1-git-send-email-juhosg@openwrt.org> <1371915734-13966-2-git-send-email-juhosg@openwrt.org>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <1371915734-13966-2-git-send-email-juhosg@openwrt.org>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <2DDF15FE-CA30-4683-ABFE-63204952F561@gmail.com> (sfid-20130624_193214_880657_8A0CA9B5)
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 1/3] rt2x00: rt2800: increase EEPROM_SIZE to 512 bytes
+Date: Mon, 24 Jun 2013 19:32:07 +0200
+To: Gabor Juhos <juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-11 at 21:17 +0200, Thomas Hühn wrote:
-> Hi Christian,
-> 
-> I have not seen that patch in wireless-next, that's why I overlooked it… sorry.
-> 
-> > 
-> > ???
-> > 
-> > carl9170 already supports the new rate control API (Patch from 2013-04-23).
-> > <http://permalink.gmane.org/gmane.linux.kernel.wireless.general/107657>
-> > 
-> > Can you please tell me what you think is missing?
-> > 
-> 
-> You patch looks good to me.
-> As I just saw an ath9k patch for rcu protection when ieee80211_get_tx_rates() is called.
-> Should this be done in carl9170 as well ?
 
-I think that patch is wrong actually, probably should just do the rcu
-protection inside the function. However the patch is completely wrong
-anyway (C isn't python) so ...
 
-johannes
+Sent from my iPad
 
+On 22 jun. 2013, at 17:42, Gabor Juhos <juhosg@openwrt.org> wrote:
+
+> Ralink 3T chipsets are using a different EEPROM
+> layout than the others. The EEPROM on these devices
+> contain more data than the others which does not fit
+> into 272 byte which the rt2800 driver actually uses.
+> 
+> The Ralink reference driver defines EEPROM_SIZE to
+> 512/1024 bytes for PCI/USB devices respectively.
+> 
+> Increase the EEPROM_SIZE constant to 512 bytes, in
+> order to make room for EEPROM data of 3T devices.
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+> ---
+> drivers/net/wireless/rt2x00/rt2800.h |    2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index fe43d01..d78c495 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -100,7 +100,7 @@
+> #define CSR_REG_BASE            0x1000
+> #define CSR_REG_SIZE            0x0800
+> #define EEPROM_BASE            0x0000
+> -#define EEPROM_SIZE            0x0110
+> +#define EEPROM_SIZE            0x0200
+> #define BBP_BASE            0x0000
+> #define BBP_SIZE            0x00ff
+> #define RF_BASE                0x0004
+> -- 
+> 1.7.10
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
