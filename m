@@ -1,83 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:12206 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755570Ab3FQRpi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36144 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999Ab3FXNs5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 13:45:38 -0400
-Date: Mon, 17 Jun 2013 13:45:36 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: rvossen@broadcom.com, arend@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH] net: brcmfmac: add sdio chip id 0x4319
-Message-ID: <20130617174536.GQ31667@titan.lakedaemon.net> (sfid-20130617_194554_088453_A4C8D131)
-References: <20130612222123.GB31667@titan.lakedaemon.net>
- <20130617161903.GN31667@titan.lakedaemon.net>
- <51BF498F.1010007@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51BF498F.1010007@broadcom.com>
+	Mon, 24 Jun 2013 09:48:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: add rate control table update driver method
+Date: Mon, 24 Jun 2013 15:48:53 +0200
+Message-Id: <1372081733-31671-1-git-send-email-johannes@sipsolutions.net> (sfid-20130624_154900_678351_B192FD1F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 17, 2013 at 10:38:23AM -0700, Franky Lin wrote:
-> On 06/17/2013 09:19 AM, Jason Cooper wrote:
-> >Added Franky...
-> >
-> >On Wed, Jun 12, 2013 at 06:21:23PM -0400, Jason Cooper wrote:
-> >>All,
-> >>
-> >>I have a Seagate Wireless Plus I am trying to put a vanilla kernel on
-> >>(currently v3.10-rc5 for various omap DT bits).
-> >>
-> >>I have the board booting and running a debian rootfs on the HD.  I just
-> >>got mmc to come up and I've discovered that the wireless card is vendor
-> >>0x02d0, device 0x4319.
-> >>
-> >>My hope, once I got to this point, was that I would be able to use
-> >>the mainline, open source driver.  Unfortunately, it looks like brcmfmac
-> >>lost support for the 0x4319 while it was in staging.
-> >>
-> >>The commit in question is:
-> >>
-> >>   4dad253 staging: brcm80211: remove code for unsupported chip
-> >>
-> >>Is adding it back in a bridge too far?
-> >It looks like only two things are needed, adding the chip id and then
-> >setting the addresses.  Here's a preliminary patch to do just that.
-> >Note, the addresses I have used are a straight copy from the 4329.  It
-> >causes this:
-> >
-> >[   12.346466] mmcblk mmc0:0001: no of_node; not parsing pinctrl DT
-> >[   12.353149] brcmfmac_sdio mmc0:0001:1: no of_node; not parsing pinctrl DT
-> >[   12.360717] brcmfmac_sdio mmc0:0001:2: no of_node; not parsing pinctrl DT
-> >[   12.368804] brcmfmac: brcmf_sdio_chip_drivestrengthinit: No SDIO Drive strength init done for chip 4319 rev 1 pmurev 7
-> >[   12.380462] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=03, Err: -22
-> >[   12.391906] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=03, Err: -22
-> >[   12.403289] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=03, Err: -22
-> >[   12.412261] brcmfmac: brcmf_sdio_regrw_helper: failed with -22
-> >[   12.418457] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=01, Err: -22
-> >[   12.429718] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=01, Err: -22
-> >[   12.441101] brcmfmac: brcmf_sdioh_request_byte: Failed to write byte F0:@0x00408=01, Err: -22
-> >[   12.450073] brcmfmac: brcmf_sdio_regrw_helper: failed with -22
-> >
-> >I've taken a quick look at aosp, the provided GPL broadcom code, and I
-> >haven't seen anything for the 4319 wrt to addresses.  How hard would it
-> >be to get those addresses from you guys?
-> 
-> Hi Jason,
-> 
-> The major obstacle of adding 4319 support is the obsolete firmware.
-> Since it's an EOL chip we are not planning to add the support to
-> brcmfmac.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Let me guess, the firmware would have to be updated to work with
-brcmfmac?  What about adding a BRMCFMAC_LEGACY option to allow
-interfacing with the old firmware?
+Add an update method that to the driver for those drivers
+that want to use the rate table directly, rather than doing
+per packet lookups in it.
 
-It may be EOL, but new products are still shipping with this chip
-(Wireless Plus, other Azurewave products).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h    |  6 ++++++
+ net/mac80211/driver-ops.h | 14 ++++++++++++++
+ net/mac80211/rate.c       |  3 +++
+ net/mac80211/trace.h      | 35 ++++++++++++++++-------------------
+ 4 files changed, 39 insertions(+), 19 deletions(-)
 
-thx,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5b7a3da..168e50e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2431,6 +2431,9 @@ enum ieee80211_roc_type {
+  *	uses hardware rate control (%IEEE80211_HW_HAS_RATE_CONTROL) since
+  *	otherwise the rate control algorithm is notified directly.
+  *	Must be atomic.
++ * @sta_rate_tbl_update: Notifies the driver that the rate table changed. This
++ *	is only used if the configured rate control algorithm actually uses
++ *	the new rate table API, and is therefore optional. Must be atomic.
+  *
+  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
+  *	bursting) for a hardware TX queue.
+@@ -2728,6 +2731,9 @@ struct ieee80211_ops {
+ 			      struct ieee80211_vif *vif,
+ 			      struct ieee80211_sta *sta,
+ 			      u32 changed);
++	void (*sta_rate_tbl_update)(struct ieee80211_hw *hw,
++				    struct ieee80211_vif *vif,
++				    struct ieee80211_sta *sta);
+ 	int (*conf_tx)(struct ieee80211_hw *hw,
+ 		       struct ieee80211_vif *vif, u16 ac,
+ 		       const struct ieee80211_tx_queue_params *params);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index b931c96..6f395d1 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -600,6 +600,20 @@ static inline void drv_sta_rc_update(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline void drv_sta_rate_tbl_update(struct ieee80211_local *local,
++					   struct ieee80211_sub_if_data *sdata,
++					   struct ieee80211_sta *sta)
++{
++	sdata = get_bss_sdata(sdata);
++	check_sdata_in_driver(sdata);
++
++	trace_drv_sta_rate_tbl_update(local, sdata, sta);
++	if (local->ops->sta_rate_tbl_update)
++		local->ops->sta_rate_tbl_update(&local->hw, &sdata->vif, sta);
++
++	trace_drv_return_void(local);
++}
++
+ static inline int drv_conf_tx(struct ieee80211_local *local,
+ 			      struct ieee80211_sub_if_data *sdata, u16 ac,
+ 			      const struct ieee80211_tx_queue_params *params)
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 30d58d2..d93c857 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -694,6 +694,7 @@ int rate_control_set_rates(struct ieee80211_hw *hw,
+ 			   struct ieee80211_sta *pubsta,
+ 			   struct ieee80211_sta_rates *rates)
+ {
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	struct ieee80211_sta_rates *old;
+ 
+ 	/*
+@@ -707,6 +708,8 @@ int rate_control_set_rates(struct ieee80211_hw *hw,
+ 	if (old)
+ 		kfree_rcu(old, rcu_head);
+ 
++	drv_sta_rate_tbl_update(hw_to_local(hw), sta->sdata, pubsta);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(rate_control_set_rates);
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index c215fafd7..306c645 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -773,7 +773,7 @@ TRACE_EVENT(drv_sta_rc_update,
+ 	)
+ );
+ 
+-TRACE_EVENT(drv_sta_add,
++DECLARE_EVENT_CLASS(local_sdata_sta_evt,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
+ 		 struct ieee80211_sta *sta),
+@@ -798,29 +798,26 @@ TRACE_EVENT(drv_sta_add,
+ 	)
+ );
+ 
+-TRACE_EVENT(drv_sta_remove,
++
++DEFINE_EVENT(local_sdata_sta_evt, drv_sta_add,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
+ 		 struct ieee80211_sta *sta),
++	TP_ARGS(local, sdata, sta)
++);
+ 
+-	TP_ARGS(local, sdata, sta),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-		VIF_ENTRY
+-		STA_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-		VIF_ASSIGN;
+-		STA_ASSIGN;
+-	),
++DEFINE_EVENT(local_sdata_sta_evt, drv_sta_remove,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta),
++	TP_ARGS(local, sdata, sta)
++);
+ 
+-	TP_printk(
+-		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT,
+-		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG
+-	)
++DEFINE_EVENT(local_sdata_sta_evt, drv_sta_rate_tbl_update,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta),
++	TP_ARGS(local, sdata, sta)
+ );
+ 
+ TRACE_EVENT(drv_conf_tx,
+-- 
+1.8.0
 
-Jason.
