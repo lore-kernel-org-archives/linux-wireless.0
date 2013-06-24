@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:49777 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161389Ab3FUCmU (ORCPT
+Received: from mail-vb0-f54.google.com ([209.85.212.54]:38566 "EHLO
+	mail-vb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751049Ab3FXJIg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jun 2013 22:42:20 -0400
-Received: by mail-wg0-f47.google.com with SMTP id l18so5997566wgh.2
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2013 19:42:19 -0700 (PDT)
+	Mon, 24 Jun 2013 05:08:36 -0400
+Received: by mail-vb0-f54.google.com with SMTP id q12so7899777vbe.27
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2013 02:08:35 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 21 Jun 2013 10:42:19 +0800
-Message-ID: <CAPgLHd8BRGbdCOaoy6E4QBVEbZRnKkHwgrWsodJwYLVs+S=KaQ@mail.gmail.com> (sfid-20130621_044224_273882_AC818743)
-Subject: [PATCH] ipw2200: fix error return code in ipw_load()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: stas.yakovlev@gmail.com, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+From: Han Jiang <jianghan08@gmail.com>
+Date: Mon, 24 Jun 2013 17:08:15 +0800
+Message-ID: <CAPf_=6cn_aBY0XeP3LN4KSrgkM4JGF19ue3AC-YjwB0Y3P7tpA@mail.gmail.com> (sfid-20130624_110839_288021_C257E2EA)
+Subject: About old stable compat-wireless releases
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Hi,
 
-Fix to return -ENOMEM in the ipw_rx_queue_alloc() error handling
-case instead of 0, as done elsewhere in this function.
+I just found that those old drivers in the following page are no
+longer available:
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/ipw2x00/ipw2200.c | 1 +
- 1 file changed, 1 insertion(+)
+http://wireless.kernel.org/en/users/Download/stable/
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 4ed5e45..6b823a1 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -3548,6 +3548,7 @@ static int ipw_load(struct ipw_priv *priv)
- 		ipw_rx_queue_reset(priv, priv->rxq);
- 	if (!priv->rxq) {
- 		IPW_ERROR("Unable to initialize Rx queue\n");
-+		rc = -ENOMEM;
- 		goto error;
- 	}
- 
+Is it possible to download them anywhere else?
 
+Thanks!
+
+
+--
+Han Jiang
+
+Team of Search Engine and Web Mining,
+School of Electronic Engineering and Computer Science,
+Peking University, China
