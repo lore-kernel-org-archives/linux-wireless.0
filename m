@@ -1,83 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swan.laptop.org ([18.85.2.166]:57590 "EHLO swan.laptop.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753528Ab3FNT3L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jun 2013 15:29:11 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com, bzhao@marvell.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mwifiex: fix memory corruption when unsetting multicast list
-Message-Id: <20130614192424.9463CFAAC8@dev.laptop.org> (sfid-20130614_212914_879050_095BB740)
-Date: Fri, 14 Jun 2013 15:24:24 -0400 (EDT)
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:55034 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986Ab3FXNAH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jun 2013 09:00:07 -0400
+Received: by mail-ie0-f175.google.com with SMTP id a13so24870079iee.34
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2013 06:00:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1371915734-13966-3-git-send-email-juhosg@openwrt.org>
+References: <1371915734-13966-1-git-send-email-juhosg@openwrt.org>
+	<1371915734-13966-3-git-send-email-juhosg@openwrt.org>
+Date: Mon, 24 Jun 2013 15:00:05 +0200
+Message-ID: <CAGXE3d9_zOt0h6WaWUedXnJu9yucJ=Jtaa8PPacz1-6G2Wf63w@mail.gmail.com> (sfid-20130624_150011_472944_25BEBDFC)
+Subject: Re: [PATCH 2/3] rt2x00: rt2800lib: turn on secondary PAs/LNAs for
+ 3T/3R devices
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When trying to unset a previously-set multicast list (i.e. the new list
-has 0 entries), mwifiex_set_multicast_list() was calling down to
-mwifiex_request_set_multicast_list() while leaving
-mcast_list.num_multicast_addr as an uninitialized value.
+On Sat, Jun 22, 2013 at 5:42 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> The secondary PAs/LNAs are turned on only for 2T/2R
+> devices, however these are used for 3T/3R devices as
+> well. Always turn those on if the device uses more
+> than one tx/rx chains.
+>
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 4072242..f4cd3d8 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2678,16 +2678,16 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+>
+>         tx_pin = 0;
+>
+> -       /* Turn on unused PA or LNA when not using 1T or 1R */
+> -       if (rt2x00dev->default_ant.tx_chain_num == 2) {
+> +       if (rt2x00dev->default_ant.tx_chain_num > 1) {
+> +               /* Turn on secondary PAs for 2T adn for 3T devices*/
 
-We were arriving at mwifiex_cmd_mac_multicast_adr() which would then
-proceed to do an often huge memcpy of
-mcast_list.num_multicast_addr*ETH_ALEN bytes, causing memory corruption
-and hard to debug crashes.
+Typo adn -> and.
 
-Fix this by setting mcast_list.num_multicast_addr to 0 when no multicast
-list is provided. Similarly, fix up the logic in
-mwifiex_request_set_multicast_list() to unset the multicast list that
-was previously sent to the hardware in such cases.
-
-Signed-off-by: Daniel Drake <dsd@laptop.org>
----
- drivers/net/wireless/mwifiex/main.c      |  5 ++---
- drivers/net/wireless/mwifiex/sta_ioctl.c | 18 ++++++++----------
- 2 files changed, 10 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 2eb88ea..4f5c37a 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -573,9 +573,8 @@ static void mwifiex_set_multicast_list(struct net_device *dev)
- 		mcast_list.mode = MWIFIEX_ALL_MULTI_MODE;
- 	} else {
- 		mcast_list.mode = MWIFIEX_MULTICAST_MODE;
--		if (netdev_mc_count(dev))
--			mcast_list.num_multicast_addr =
--				mwifiex_copy_mcast_addr(&mcast_list, dev);
-+		mcast_list.num_multicast_addr =
-+			mwifiex_copy_mcast_addr(&mcast_list, dev);
- 	}
- 	mwifiex_request_set_multicast_list(priv, &mcast_list);
- }
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 1a8a19d..23aa910 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -104,16 +104,14 @@ int mwifiex_request_set_multicast_list(struct mwifiex_private *priv,
- 		} else {
- 			priv->curr_pkt_filter &=
- 				~HostCmd_ACT_MAC_ALL_MULTICAST_ENABLE;
--			if (mcast_list->num_multicast_addr) {
--				dev_dbg(priv->adapter->dev,
--					"info: Set multicast list=%d\n",
--				       mcast_list->num_multicast_addr);
--				/* Send multicast addresses to firmware */
--				ret = mwifiex_send_cmd_async(priv,
--					HostCmd_CMD_MAC_MULTICAST_ADR,
--					HostCmd_ACT_GEN_SET, 0,
--					mcast_list);
--			}
-+			dev_dbg(priv->adapter->dev,
-+				"info: Set multicast list=%d\n",
-+				mcast_list->num_multicast_addr);
-+			/* Send multicast addresses to firmware */
-+			ret = mwifiex_send_cmd_async(priv,
-+				HostCmd_CMD_MAC_MULTICAST_ADR,
-+				HostCmd_ACT_GEN_SET, 0,
-+				mcast_list);
- 		}
- 	}
- 	dev_dbg(priv->adapter->dev,
--- 
-1.8.1.4
-
+Otherwise looks good to me.
+Helmut
