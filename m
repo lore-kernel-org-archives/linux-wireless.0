@@ -1,82 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35563 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755298Ab3FKQqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 12:46:42 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 3.10] rt2800: fix RT5390 & RT3290 TX power settings regression
-Date: Tue, 11 Jun 2013 18:48:53 +0200
-Message-Id: <1370969333-4649-1-git-send-email-sgruszka@redhat.com> (sfid-20130611_184652_026579_C4F4EEA4)
+Received: from s3.sipsolutions.net ([144.76.43.152]:39519 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054Ab3FYIuH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jun 2013 04:50:07 -0400
+Message-ID: <1372150202.8372.4.camel@jlt4.sipsolutions.net> (sfid-20130625_105017_737660_42C7D9A4)
+Subject: Re: [PATCH v2] nl80211: fix mgmt tx status and testmode reporting
+ for netns
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 25 Jun 2013 10:50:02 +0200
+In-Reply-To: <1372144637-1676-1-git-send-email-michal.kazior@tieto.com>
+References: <1372074644-15280-1-git-send-email-michal.kazior@tieto.com>
+	 <1372144637-1676-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My change:
+On Tue, 2013-06-25 at 09:17 +0200, Michal Kazior wrote:
+> These two events were sent to the default network
+> namespace.
+> 
+> This caused AP mode in a non-default netns to not
+> work correctly. Mgmt tx status was multicasted to
+> a different (default) netns instead of the one the
+> AP was in.
 
-commit cee2c7315f60beeff6137ee59e99acc77d636eeb
-Author: Stanislaw Gruszka <sgruszka@redhat.com>
-Date:   Fri Oct 5 13:44:09 2012 +0200
+Applied, thanks.
 
-    rt2800: use BBP_R1 for setting tx power
-
-unfortunately does not work well with RT5390 and RT3290 chips as they
-require different temperature compensation TX power settings (TSSI
-tuning). Since that commit make wireless connection very unstable on
-those chips, restore previous behavior to fix regression. Once we
-implement proper TSSI tuning on 5390/3290 we can restore back setting
-TX power by BBP_R1 register for those chips.
-
-Reported-and-tested-by: Mike Romberg <mike-romberg@comcast.net>
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c | 29 ++++++++++++++++++-----------
- 1 file changed, 18 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 92849e5..8b679df 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2634,19 +2634,26 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 	 * TODO: we do not use +6 dBm option to do not increase power beyond
- 	 * regulatory limit, however this could be utilized for devices with
- 	 * CAPABILITY_POWER_LIMIT.
-+	 *
-+	 * TODO: add different temperature compensation code for RT3290 & RT5390
-+	 * to allow to use BBP_R1 for those chips.
- 	 */
--	rt2800_bbp_read(rt2x00dev, 1, &r1);
--	if (delta <= -12) {
--		power_ctrl = 2;
--		delta += 12;
--	} else if (delta <= -6) {
--		power_ctrl = 1;
--		delta += 6;
--	} else {
--		power_ctrl = 0;
-+	if (!rt2x00_rt(rt2x00dev, RT3290) &&
-+	    !rt2x00_rt(rt2x00dev, RT5390)) {
-+		rt2800_bbp_read(rt2x00dev, 1, &r1);
-+		if (delta <= -12) {
-+			power_ctrl = 2;
-+			delta += 12;
-+		} else if (delta <= -6) {
-+			power_ctrl = 1;
-+			delta += 6;
-+		} else {
-+			power_ctrl = 0;
-+		}
-+		rt2x00_set_field8(&r1, BBP1_TX_POWER_CTRL, power_ctrl);
-+		rt2800_bbp_write(rt2x00dev, 1, r1);
- 	}
--	rt2x00_set_field8(&r1, BBP1_TX_POWER_CTRL, power_ctrl);
--	rt2800_bbp_write(rt2x00dev, 1, r1);
-+
- 	offset = TX_PWR_CFG_0;
- 
- 	for (i = 0; i < EEPROM_TXPOWER_BYRATE_SIZE; i += 2) {
--- 
-1.7.11.7
+johannes
 
