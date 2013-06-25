@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53860 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756876Ab3FLWNx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 18:13:53 -0400
-Message-ID: <51B8F299.4070104@candelatech.com> (sfid-20130613_001357_266405_785DC48B)
-Date: Wed, 12 Jun 2013 15:13:45 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:60327 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753566Ab3FYUd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jun 2013 16:33:29 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, <tony@atomide.com>
+Subject: [PATCH 0/5] wilink: add device tree support
+Date: Tue, 25 Jun 2013 23:33:21 +0300
+Message-ID: <1372192406-29430-1-git-send-email-coelho@ti.com> (sfid-20130625_224207_163287_2288A67B)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: fix TX aggregation TID struct leak
-References: <1371070209-24107-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1371070209-24107-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/12/2013 01:50 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Ben reports that kmemleak is saying TX aggregation TID
-> structs are leaked. Given his workload, I suspect that
-> they're leaked because stations are destroyed before
-> their aggregation sessions get a chance to start. Fix
-> this by simply freeing structs that are not used yet.
->
-> Reported-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->   net/mac80211/sta_info.c | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> index b429798..aaf68d2 100644
-> --- a/net/mac80211/sta_info.c
-> +++ b/net/mac80211/sta_info.c
-> @@ -149,6 +149,7 @@ static void cleanup_single_sta(struct sta_info *sta)
->   	 * directly by station destruction.
->   	 */
->   	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-> +		kfree(sta->ampdu_mlme.tid_start_tx[i]);
->   		tid_tx = rcu_dereference_raw(sta->ampdu_mlme.tid_tx[i]);
->   		if (!tid_tx)
->   			continue;
->
+Hi,
 
+This patch series add device tree support to the wlcore_sdio driver,
+which is used by WiLink6, WiLink7 and WiLink8.
 
-This does fix the TID leakage for me.
+The first patches do some clean-up to make the data needed in the
+wilink device tree node smaller.  The last patch implements the actual
+device tree node parsing in wlcore_sdio.
 
-Tested-by:  Ben Greear <greearb@candelatech.com>
+The DTS file changes will be sent separately, since they need to go
+via different trees.
 
-Thanks,
-Ben
+--
+Luca.
+
+Luciano Coelho (5):
+  wl1251: split wl251 platform data to a separate structure
+  wlcore: use irq_flags in pdata instead of hiding it behing a quirk
+  wlcore: remove pwr_in_suspend from platform data
+  wlcore: always use one-shot IRQ
+  wlcore: add device tree support to the sdio module
+
+ arch/arm/mach-davinci/board-da850-evm.c        |    2 +-
+ arch/arm/mach-omap2/board-4430sdp.c            |    1 +
+ arch/arm/mach-omap2/board-omap3evm.c           |    1 +
+ arch/arm/mach-omap2/board-omap3pandora.c       |    4 +-
+ arch/arm/mach-omap2/board-omap4panda.c         |    1 +
+ arch/arm/mach-omap2/board-rx51-peripherals.c   |    2 +-
+ arch/arm/mach-omap2/board-zoom-peripherals.c   |    1 +
+ drivers/net/wireless/ti/wilink_platform_data.c |   37 ++++++++++--
+ drivers/net/wireless/ti/wl1251/sdio.c          |   12 ++--
+ drivers/net/wireless/ti/wl1251/spi.c           |    2 +-
+ drivers/net/wireless/ti/wlcore/debugfs.c       |    2 +-
+ drivers/net/wireless/ti/wlcore/main.c          |   16 ++---
+ drivers/net/wireless/ti/wlcore/sdio.c          |   77 +++++++++++++++++++++---
+ drivers/net/wireless/ti/wlcore/wlcore.h        |    5 +-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h      |    1 +
+ include/linux/wl12xx.h                         |   28 +++++++--
+ 16 files changed, 147 insertions(+), 45 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
