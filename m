@@ -1,60 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:36417 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754179Ab3FLJRG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 05:17:06 -0400
-Message-ID: <1371028618.3252.57.camel@edumazet-glaptop> (sfid-20130612_111729_072888_7E2E1113)
-Subject: Re: [PATCH 1/3] skbuff: Update truesize in pskb_expand_head
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Dave Wiltshire <david.wiltshire@gmx.com>
-Cc: davem@davemloft.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, nsujir@broadcom.com,
-	mchan@broadcom.com, rmody@brocade.com, jcliburn@gmail.com,
-	chris.snook@gmail.com, jeffrey.t.kirsher@intel.com,
-	bruce.w.allan@intel.com, alexander.h.duyck@intel.com,
-	cooldavid@cooldavid.org, linux-driver@qlogic.com,
-	linux-wimax@intel.com, wimax@linuxwimax.org,
-	linux-wireless@vger.kernel.org, viro@zeniv.linux.org.uk,
-	eparis@redhat.com, edumazet@google.com, dev@openvswitch.org,
-	jhs@mojatatu.com
-Date: Wed, 12 Jun 2013 02:16:58 -0700
-In-Reply-To: <1371027934-1955-2-git-send-email-david.wiltshire@gmx.com>
-References: <1371027934-1955-1-git-send-email-david.wiltshire@gmx.com>
-	 <1371027934-1955-2-git-send-email-david.wiltshire@gmx.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx4.wp.pl ([212.77.101.8]:56598 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751631Ab3FYTQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jun 2013 15:16:30 -0400
+Date: Tue, 25 Jun 2013 21:18:51 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 0/3] rt2x00: rt2800: prepare for
+ three-chain device support
+Message-ID: <20130625191851.GA7881@localhost.localdomain> (sfid-20130625_211633_784670_698753C1)
+References: <1371915734-13966-1-git-send-email-juhosg@openwrt.org>
+ <20130624160031.GD2460@localhost.localdomain>
+ <51C8994E.4040809@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51C8994E.4040809@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-06-12 at 19:05 +1000, Dave Wiltshire wrote:
-> Some call sites to pskb_expand_head subsequently update the skb truesize
-> and others don't (even with non-zero arguments). This is likely a memory
-> audit leak. Fixed this up by moving the memory accounting to the
-> skbuff.c file and removing it from the calling sites.
-> 
-> Signed-off-by: Dave Wiltshire <david.wiltshire@gmx.com>
-> ---
->  drivers/net/wireless/mwl8k.c |    1 -
->  kernel/audit.c               |    2 --
->  net/core/skbuff.c            |    1 +
->  net/netlink/af_netlink.c     |    3 +--
->  net/wireless/util.c          |    2 --
->  5 files changed, 2 insertions(+), 7 deletions(-)
+On Mon, Jun 24, 2013 at 09:09:02PM +0200, Gabor Juhos wrote:
+> I'm testing these patches on a Linksys AE3000 device which also uses the RT3573
+> chip. I have an almost complete patch-set which allows me to use the device in
+> STA and in AP mode, however I still have to resolve a few problems.
 
-Ouch.
+Cool, waiting for the post ... :-)
 
-Sorry, you cannot do that.
-
-skb->truesize is really complex, because there is a strong relation
-between skb->truesize and memory accounting on sockets.
-
-So pskb_expand_head() should not touch skb->truesize.
-
-Only callers can do that when needed, and if possible.
-
-An example of very careful truesize manipulation can be found in
-tcp_tso_segment()
-
-
-
+Stanislaw
