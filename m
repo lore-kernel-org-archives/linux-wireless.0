@@ -1,162 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27665 "EHLO mga01.intel.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:58833 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753197Ab3FDMK4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 08:10:56 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: RE: [PATCH v8] cfg80211: P2P find phase offload
-Date: Tue, 4 Jun 2013 12:10:52 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A01ACFD04B@HASMSX105.ger.corp.intel.com> (sfid-20130604_141102_681522_FE2A7B53)
-References: <1370328271-9523-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1370328271-9523-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A01ACFCDFB@HASMSX105.ger.corp.intel.com>
- <2446389.or6hSZ58yP@lx-vladimir>
-In-Reply-To: <2446389.or6hSZ58yP@lx-vladimir>
-Content-Type: text/plain; charset="us-ascii"
+	id S1751326Ab3FYLMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jun 2013 07:12:44 -0400
+Date: Tue, 25 Jun 2013 14:12:34 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: <grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<tony@atomide.com>, <linux-omap@vger.kernel.org>,
+	<linux-arm@vger.kernel.org>
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+Message-ID: <20130625111234.GJ15407@arwen.pp.htv.fi> (sfid-20130625_131305_307275_0D36BCDA)
+Reply-To: <balbi@ti.com>
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="5me2qT3T17SWzdxI"
+In-Reply-To: <1372149330-24335-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vladimir,
+--5me2qT3T17SWzdxI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-BTW, in case that the probe response offload is enabled, do you think that the corresponding probe requests should be reported to the host? If this is not the case, the wpa_supplicant will not have the full list of p2p_peers.
+Hi,
 
-> > > + * @min_discoverable_interval: and
-> > > + * @max_discoverable_interval: min/max for random multiplier of
-> 100TU's
-> > > + *	for the listen state duration
-> > > + * @n_channels: number of channels to operate on
-> > > + * @channels: channels to operate on  */ struct
-> > > +cfg80211_p2p_find_params {
-> >
-> > The parameters are missing the listen channel (which is needed to the listen
-> phase).
-> 
-> There are n_channels and channels that define set of social channels to operate
-> on. It applies to both listen and search.
-> 
+On Tue, Jun 25, 2013 at 11:35:30AM +0300, Luciano Coelho wrote:
+> Add device tree bindings documentation for the TI WiLink modules.
+> Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
+> modules is supported.
+>=20
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+>=20
+> I created a new directory under net to contain wireless bindings document=
+ation.
+>=20
+> The actual implementation in the driver will follow separately.
+>=20
+>  .../devicetree/bindings/net/wireless/ti-wilink.txt |   46 ++++++++++++++=
+++++++
+>  1 file changed, 46 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/ti-wil=
+ink.txt
+>=20
+> diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt=
+ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+> new file mode 100644
+> index 0000000..d8e8bfbb
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+> @@ -0,0 +1,46 @@
+> +TI WiLink Wireless Modules Device Tree Bindings
+> +=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> +
+> +The WiLink modules provide wireless connectivity, such as WLAN,
+> +Bluetooth, FM and NFC.
+> +
+> +There are several different modules available, which can be grouped by
+> +their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
+> +currently supported with device tree.
+> +
+> +Currently, only the WLAN portion of the modules is supported with
+> +device tree.
+> +
+> +Required properties:
+> +--------------------
+> +
+> +- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
+> +- interrupt-parent: the interrupt controller
+> +- interrupts: out-of-band WLAN interrupt
+> +	See the interrupt controller's bindings documentation for
+> +	detailed definition.
+> +
+> +Optional properties:
+> +--------------------
+> +
+> +- refclock: the internal WLAN reference clock frequency (required for
+> +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
+> +  following:
+> +	0 =3D 19.2 MHz
+> +	1 =3D 26.0 MHz
+> +	2 =3D 38.4 MHz
+> +	3 =3D 52.0 MHz
+> +	4 =3D 38.4 MHz, XTAL
+> +	5 =3D 26.0 MHz, XTAL
+> +
+> +- tcxoclock: the internal WLAN TCXO clock frequency (required for
+> +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
+> +  following:
+> +	0 =3D 19.200 MHz
+> +	1 =3D 26.000 MHz
+> +	2 =3D 38.400 MHz
+> +	3 =3D 52.000 MHz
+> +	4 =3D 16.368 MHz
+> +	5 =3D 32.736 MHz
+> +	6 =3D 16.800 MHz
+> +	7 =3D 33.600 MHz
 
-The wpa_supplicant defines a specific listen channel in wpas_p2p_init() and uses this channel in all the following flows. I think that this setting should be communicated to the driver and it should be distinguished from the channels used in search. 
+DTS files are pre-processed, so you could add defines in a header and
+share the header between DTS and driver. Could help you having:
 
-> > > +	u32 min_discoverable_interval;
-> > > +	u32 max_discoverable_interval;
-> >
-> > I do not see a real value for the max/min_discoverable_interval. Is there a
-> use case of specifying these limits and not using the default ones?
-> 
-> Spec says these parameters may be changed.
-> Practical use, suggested by spec:
-> 
-> - search-only P2P device may set
-> min_discoverable_interval = max_discoverable_interval = 0
-> - listen-most P2P device may set min_discoverable_interval >> 0 and
-> max_discoverable_interval >= min_discoverable_interval
-> 
+tcxoclock =3D WILINK_19_200MHz;
 
-Ok.
+instead of
 
-> > > + *
-> > > + * @start_p2p_find: start P2P find phase
-> > > + *	Parameters include IEs for probe/probe-resp frames;
-> > > + *	and channels to operate on.
-> > > + *	Parameters are not retained after call, driver need to copy data if
-> > > + *	it need it later.
-> > > + *	P2P find can't run concurrently with ROC or scan, and driver should
-> > > + *	check this.
-> >
-> > It might be good to define the exact semantics of p2p_find with regards to
-> ROC/Scan, i.e., when p2p_find is requested during ROC/scan, should the driver
-> save the request and handle it when the other operation is done, or should it
-> return EBUSY or something similar (and also what are the semantics when
-> requesting ROC/scan while p2p_find is in progress).
-> 
-> My opinion is ROC/scan collision with p2p_find is indication of error in the
-> supplicant; and proper response would be -EBUSY. Actually, code in nl80211
-> check for scan (see below), but ROC is harder to detect.
-> I'll add explanation to the comment - anyway Johannes wants me to fix for
-> genlmsg_end() never returning negative value.
-> 
+tcxoclock =3D 0;
 
-That sound reasonable.
+--=20
+balbi
 
-> > > +
-> > > +	if (rdev->scan_req)
-> > > +		return -EBUSY;
-> 
-> > > +
-> > > +	if (attr_freq) {
-> > > +		n_channels = validate_scan_freqs(attr_freq);
-> > > +		if (!n_channels)
-> > > +			return -EINVAL;
-> > > +
-> > > +		channels = kzalloc(n_channels * sizeof(*channels),
-> > > GFP_KERNEL);
-> > > +		if (!channels)
-> > > +			return -ENOMEM;
-> > > +
-> > > +		/* user specified, bail out if channel not found */
-> > > +		nla_for_each_nested(attr, attr_freq, tmp) {
-> > > +			struct ieee80211_channel *chan;
-> > > +
-> > > +			chan = ieee80211_get_channel(wiphy,
-> > > nla_get_u32(attr));
-> > > +
-> > > +			if (!chan) {
-> > > +				err = -EINVAL;
-> > > +				goto out_free;
-> > > +			}
-> > > +
-> > > +			/* ignore disabled channels */
-> > > +			if (chan->flags & IEEE80211_CHAN_DISABLED)
-> > > +				continue;
-> > > +
-> > > +			params.channels[i] = chan;
-> > > +			i++;
-> > > +		}
-> > > +		if (!i) {
-> > > +			err = -EINVAL;
-> > > +			goto out_free;
-> > > +		}
-> > > +
-> > > +		params.n_channels = i;
-> > > +		params.channels = channels;
-> > > +	}
-> > > +
-> >
-> > Do we need to set the default channels if the attribute is not set (or require
-> that this attribute will be part of the command).
-> 
-> Logic is the following:
-> - supplicant may omit channel list at all, this mean "use all social channels",
-> kind of default behavior
-> - supplicant may specify channel subset, in this case it should be not 
-empty.
-> 
-> I'll comment it too.
-> 
-> > > +
-> > > +	attr = info->attrs[NL80211_ATTR_IE_PROBE_RESP];
-> > > +	if (attr) {
-> > > +		params.probe_resp_ie_len = nla_len(attr);
-> > > +		params.probe_resp_ie = nla_data(attr);
-> > > +	}
-> >
-> > Is it valid to get Probe response IEs even if the driver did not report support
-> for it?
-> 
-> One can't do p2p_find if it does not reply to P2P discovery probes.
-> It is unrelated to answering probes in AP mode - driver may leave this to
-> supplicant.
+--5me2qT3T17SWzdxI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-But you got NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD for driver that support probe response offloading. In case that the driver does not report this flag, wpa_supplicant should understand this and not configure the driver with the probe response IEs.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-Regards,
+iQIcBAEBAgAGBQJRyXshAAoJEIaOsuA1yqREI/kP/Anb/WgcZ8t4LW9t+gT/DbFR
+n7Z0VUSfs0P7+lq52eNWKPaxHSnqcS+kN7Ao9UI8qC3O/LWckz1NKRDgA33W6h40
+37uT7rh3xpe3QKpXrYhxyjgEzwkr4cbxeEyjW9s1uHbcqWLAd/kL2ON4FxvT3vm+
+6p2TBOnORp07PG7Hw/+SlzxP54vkq/CextoGpkK/xnzn3G0HJPOmpUCaOIB6nFqB
+O9hKB0u7mHYUxtAhhdM396pN8c2OZNiQq8D5UhrGg//f/QouLEIOY+Z5/56zpvh1
+zKXeMJQTYpJ7VbbHse6qlrwZBtJL8Two3FAXLd0J3SGpdHXSZUZydZfmnsax++Py
+1bKuhA9elrrLD2TUfry1kxrtV/FjnNrsvsJeRdfN0nEuF1B9NTW0OsBehkXhn11W
+8dJiXUU6Q6P+uWdtj8I1ikO99+nDjUj9xmHQi/Bhi2i537ik9fAPTQkHW3zHhtmS
+rbo6YdKCHpmm1ndeu/4unnk0ZY0SbuUsGRL6d8roRrEoKmntGVgipjABgwCXPHPN
+T5jpTGXz0/wg/JXXTAsrOmxUOfGMBntDeZ3SFSCzkCXcs88VuSrvDZc95JoRpfzL
+4C7pYG5VPqHnH+2Lj72PBp6BagFRQOawe2vjrgGjgH/GNObvHwMDI0ZLO9hFcQgB
+gyfoq4+8UI5lG82BitCj
+=4ZiW
+-----END PGP SIGNATURE-----
 
-Ilan.
+--5me2qT3T17SWzdxI--
