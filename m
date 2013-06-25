@@ -1,44 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:59423 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753423Ab3F0Q7S (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51990 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242Ab3FYRaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 12:59:18 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 10/18] nl80211: allow 5 and 10 MHz channels for IBSS
-Date: Thu, 27 Jun 2013 18:58:52 +0200
-Message-Id: <1372352340-20663-12-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_185936_868475_CE0C4805)
-In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Tue, 25 Jun 2013 13:30:11 -0400
+Date: Tue, 25 Jun 2013 13:23:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [RFC][PATCH] b43: replace B43_BCMA_EXTRA with modparam
+ allhwsupport
+Message-ID: <20130625172305.GA31220@tuxdriver.com> (sfid-20130625_193020_463222_982A2381)
+References: <1372174495-14471-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1372174495-14471-1-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whether the wiphy supports it or not is already checked, so what is left
-is to enable these channel types.
+Seems OK to me...
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/wireless/nl80211.c |    2 ++
- 1 file changed, 2 insertions(+)
+On Tue, Jun 25, 2013 at 05:34:55PM +0200, Rafał Miłecki wrote:
+> This allows enabling support for extra hardware with just a module
+> param, without kernel/module recompilation.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  drivers/net/wireless/b43/Kconfig |    6 ------
+>  drivers/net/wireless/b43/main.c  |   16 ++++++++++++++--
+>  2 files changed, 14 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+> index 3f21e0b..51ff0b1 100644
+> --- a/drivers/net/wireless/b43/Kconfig
+> +++ b/drivers/net/wireless/b43/Kconfig
+> @@ -31,12 +31,6 @@ config B43_BCMA
+>  	depends on B43 && (BCMA = y || BCMA = B43)
+>  	default y
+>  
+> -config B43_BCMA_EXTRA
+> -	bool "Hardware support that overlaps with the brcmsmac driver"
+> -	depends on B43_BCMA
+> -	default n if BRCMSMAC
+> -	default y
+> -
+>  config B43_SSB
+>  	bool
+>  	depends on B43 && (SSB = y || SSB = B43)
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> index a95b77a..583993c 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -113,13 +113,19 @@ static int b43_modparam_pio = 0;
+>  module_param_named(pio, b43_modparam_pio, int, 0644);
+>  MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
+>  
+> +#ifdef CONFIG_BRCMSMAC
+> +static int modparam_allhwsupport;
+> +#else
+> +static int modparam_allhwsupport = 1;
+> +#endif
+> +module_param_named(allhwsupport, modparam_allhwsupport, int, 0444);
+> +MODULE_PARM_DESC(allhwsupport, "Enable support for all hardware (even it if overlaps with the brcmsmac driver)");
+> +
+>  #ifdef CONFIG_B43_BCMA
+>  static const struct bcma_device_id b43_bcma_tbl[] = {
+>  	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x11, BCMA_ANY_CLASS),
+> -#ifdef CONFIG_B43_BCMA_EXTRA
+>  	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x17, BCMA_ANY_CLASS),
+>  	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x18, BCMA_ANY_CLASS),
+> -#endif
+>  	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x1D, BCMA_ANY_CLASS),
+>  	BCMA_CORETABLE_END
+>  };
+> @@ -5396,6 +5402,12 @@ static int b43_bcma_probe(struct bcma_device *core)
+>  	struct b43_wl *wl;
+>  	int err;
+>  
+> +	if (!modparam_allhwsupport &&
+> +	    (core->id.rev == 0x17 || core->id.rev == 0x18)) {
+> +		pr_err("Support for cores revisions 0x17 and 0x18 disabled by module param allhwsupport=0. Try b43.allhwsupport=1\n");
+> +		return -ENOTSUPP;
+> +	}
+> +
+>  	dev = b43_bus_dev_bcma_init(core);
+>  	if (!dev)
+>  		return -ENODEV;
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ebd889d..10755dc 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6300,6 +6300,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 
- 	switch (ibss.chandef.width) {
-+	case NL80211_CHAN_WIDTH_5:
-+	case NL80211_CHAN_WIDTH_10:
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 		break;
- 	case NL80211_CHAN_WIDTH_20:
 -- 
-1.7.10.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
