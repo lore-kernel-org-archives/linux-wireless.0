@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:49691 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750800Ab3F2Foq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Jun 2013 01:44:46 -0400
-Message-ID: <51CE6FB5.2000706@01019freenet.de> (sfid-20130629_074453_735318_D0E644DF)
-Date: Sat, 29 Jun 2013 07:25:09 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32588 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621Ab3FYHCy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jun 2013 03:02:54 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v11 0/2] P2P find phase offload
+Date: Tue, 25 Jun 2013 10:02:39 +0300
+Message-ID: <1372143761-21473-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130625_090257_870699_88628EC9)
 MIME-Version: 1.0
-To: Gabor Juhos <juhosg@openwrt.org>,
-	John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 01/19] rt2x00: rt2800lib: add BBP register
- initialization for RT3593
-References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org> <1372446753-11408-2-git-send-email-juhosg@openwrt.org>
-In-Reply-To: <1372446753-11408-2-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gabor,
+Addressed input from Arend and Johannes:
 
-thanks for your submission. I tried to test it, but stuck at the problem
-mentioned below.
+- shorter comment for @flags for cfg80211_rx_mgmt()
+- enum nl80211_rxmgmt_flags to define raw values, don't use BIT()
 
+Actually, only patch 1/2 changed, but I am sending both to avoid any confusion
 
-Regards,
-Andreas
+Vladimir Kondratiev (2):
+  cfg80211: add 'flags' to cfg80211_rx_mgmt()
+  cfg80211: P2P find phase offload
 
-Gabor Juhos wrote:
-> Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-> driver.
-> 
-> References:
->   NICInitRT3593BbpRegisters in chips/rt3593.c
->   NICInitBBP in common/rtmp_init.c
->   NICInitAsicFromEEPROM in common/rtmp_init.c
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |   19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 6f58ceb..32ecd1a 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -4505,6 +4505,22 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
->  	rt2800_disable_unused_dac_adc(rt2x00dev);
->  }
->  
-> +static void rt2800_init_bbp_3593(struct rt2x00_dev *rt2x00dev)
-> +{
-> +	rt2800_init_bbp_early(rt2x00dev);
-> +
-> +	rt2800_bbp_write(rt2x00dev, 79, 0x13);
-> +	rt2800_bbp_write(rt2x00dev, 80, 0x05);
-> +	rt2800_bbp_write(rt2x00dev, 81, 0x33);
-> +	rt2800_bbp_write(rt2x00dev, 137, 0x0f);
-> +
-> +	rt2800_bbp_write(rt2x00dev, 84, 0x19);
-> +
-> +	/* Enable DC filter */
-> +	if (rt2x00_rt_rev_gte(rt2x00dev, RT3593, REV_RT3593E))
+ drivers/net/wireless/ath/ath6kl/wmi.c         |   7 +-
+ drivers/net/wireless/ath/wil6210/wmi.c        |   2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c |   4 +-
+ drivers/net/wireless/mwifiex/util.c           |   4 +-
+ include/net/cfg80211.h                        |  79 ++++++++++-
+ include/uapi/linux/nl80211.h                  |  29 ++++
+ net/mac80211/rx.c                             |   3 +-
+ net/wireless/mlme.c                           |   4 +-
+ net/wireless/nl80211.c                        | 187 +++++++++++++++++++++++++-
+ net/wireless/nl80211.h                        |   2 +-
+ net/wireless/rdev-ops.h                       |  19 +++
+ net/wireless/trace.h                          |  42 ++++++
+ 12 files changed, 365 insertions(+), 17 deletions(-)
 
-Where is REV_RT3593E defined?
+-- 
+1.8.1.2
 
-/tmp/backports-20130617/drivers/net/wireless/rt2x00/rt2800lib.c: In
-function ‘rt2800_init_bbp_3593’:
-/tmp/backports-20130617/drivers/net/wireless/rt2x00/rt2800lib.c:5325:43:
-error: ‘REV_RT3593E’ undeclared (first use in this function)
-
-
-Thanks,
-Andreas
