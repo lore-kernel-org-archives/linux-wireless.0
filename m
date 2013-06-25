@@ -1,697 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:46503 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752792Ab3FALYr (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:2859 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742Ab3FYHC5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jun 2013 07:24:47 -0400
-Subject: [PATCH v2 05/29] ath10k: add core.c
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Sat, 01 Jun 2013 14:24:43 +0300
-Message-ID: <20130601112443.32443.40061.stgit@localhost6.localdomain6> (sfid-20130601_132450_731505_8198642F)
-In-Reply-To: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
-References: <20130601111820.32443.46794.stgit@localhost6.localdomain6>
+	Tue, 25 Jun 2013 03:02:57 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v11 1/2] cfg80211: add 'flags' to cfg80211_rx_mgmt()
+Date: Tue, 25 Jun 2013 10:02:40 +0300
+Message-ID: <1372143761-21473-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130625_090301_258270_D9B2E219)
+In-Reply-To: <1372143761-21473-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1372143761-21473-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |  665 ++++++++++++++++++++++++++++++++
- 1 file changed, 665 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/core.c
+Flags intended to report various auxiliary information.
+Introduced flag NL80211_RXMGMT_FLAG_REPLIED to report
+whether frame was replied by the device/driver.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-new file mode 100644
-index 0000000..2b3426b
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -0,0 +1,665 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/wmi.c         |  7 +++----
+ drivers/net/wireless/ath/wil6210/wmi.c        |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c |  4 ++--
+ drivers/net/wireless/mwifiex/util.c           |  4 ++--
+ include/net/cfg80211.h                        |  3 ++-
+ include/uapi/linux/nl80211.h                  | 13 +++++++++++++
+ net/mac80211/rx.c                             |  3 +--
+ net/wireless/mlme.c                           |  4 ++--
+ net/wireless/nl80211.c                        |  6 ++++--
+ net/wireless/nl80211.h                        |  2 +-
+ 10 files changed, 31 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 87aefb4..546d5da 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -568,8 +568,8 @@ static int ath6kl_wmi_rx_probe_req_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 		   dlen, freq, vif->probe_req_report);
+ 
+ 	if (vif->probe_req_report || vif->nw_type == AP_NETWORK)
+-		cfg80211_rx_mgmt(&vif->wdev, freq, 0,
+-				 ev->data, dlen, GFP_ATOMIC);
++		cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0,
++				 GFP_ATOMIC);
+ 
+ 	return 0;
+ }
+@@ -608,8 +608,7 @@ static int ath6kl_wmi_rx_action_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 		return -EINVAL;
+ 	}
+ 	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u freq=%u\n", dlen, freq);
+-	cfg80211_rx_mgmt(&vif->wdev, freq, 0,
+-			 ev->data, dlen, GFP_ATOMIC);
++	cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0, GFP_ATOMIC);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index dc8059a..21c791e 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -339,7 +339,7 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ 		}
+ 	} else {
+ 		cfg80211_rx_mgmt(wil->wdev, freq, signal,
+-				 (void *)rx_mgmt_frame, d_len, GFP_KERNEL);
++				 (void *)rx_mgmt_frame, d_len, 0, GFP_KERNEL);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index 79555f0..d7a9745 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -1430,7 +1430,7 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
+ 					      IEEE80211_BAND_5GHZ);
+ 
+ 	wdev = &ifp->vif->wdev;
+-	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len,
++	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len, 0,
+ 			 GFP_ATOMIC);
+ 
+ 	kfree(mgmt_frame);
+@@ -1895,7 +1895,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
+ 					      IEEE80211_BAND_2GHZ :
+ 					      IEEE80211_BAND_5GHZ);
+ 
+-	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len,
++	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0,
+ 			 GFP_ATOMIC);
+ 
+ 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index e57ac0d..5d9e150 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -171,8 +171,8 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+ 	rx_pd->rx_pkt_length = cpu_to_le16(pkt_len);
+ 
+ 	cfg80211_rx_mgmt(priv->wdev, priv->roc_cfg.chan.center_freq,
+-			 CAL_RSSI(rx_pd->snr, rx_pd->nf),
+-			 skb->data, pkt_len, GFP_ATOMIC);
++			 CAL_RSSI(rx_pd->snr, rx_pd->nf), skb->data, pkt_len,
++			 0, GFP_ATOMIC);
+ 
+ 	return 0;
+ }
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6a43c34..8347500 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3856,6 +3856,7 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
+  * @sig_dbm: signal strength in mBm, or 0 if unknown
+  * @buf: Management frame (header + body)
+  * @len: length of the frame data
++ * @flags: flags, as defined in enum nl80211_rxmgmt_flags
+  * @gfp: context flags
+  *
+  * This function is called whenever an Action frame is received for a station
+@@ -3867,7 +3868,7 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
+  * driver is responsible for rejecting the frame.
+  */
+ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_dbm,
+-		      const u8 *buf, size_t len, gfp_t gfp);
++		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
+ 
+ /**
+  * cfg80211_mgmt_tx_status - notification of TX status for management frame
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index ca6facf..f125d2c 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1436,6 +1436,8 @@ enum nl80211_commands {
+  *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
+  *	update a TDLS peer STA entry.
+  *
++ * @NL80211_ATTR_RXMGMT_FLAGS: flags for cfg80211_rx_mgmt, u32
 + *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1736,6 +1738,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PEER_AID,
+ 
++	NL80211_ATTR_RXMGMT_FLAGS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3754,4 +3758,13 @@ enum nl80211_crit_proto_id {
+ /* maximum duration for critical protocol measures */
+ #define NL80211_CRIT_PROTO_MAX_DURATION		5000 /* msec */
+ 
++/**
++ * enum nl80211_rxmgmt_flags - flags for cfg80211_rx_mgmt
 + *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ * @NL80211_RXMGMT_FLAG_REPLIED: frame was replied by device/driver.
 + */
-+
-+#include <linux/module.h>
-+#include <linux/firmware.h>
-+
-+#include "core.h"
-+#include "mac.h"
-+#include "htc.h"
-+#include "hif.h"
-+#include "wmi.h"
-+#include "bmi.h"
-+#include "debug.h"
-+#include "htt.h"
-+
-+unsigned int ath10k_debug_mask;
-+static bool uart_print;
-+static unsigned int ath10k_p2p;
-+module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
-+module_param(uart_print, bool, 0644);
-+module_param_named(p2p, ath10k_p2p, uint, 0644);
-+MODULE_PARM_DESC(debug_mask, "Debugging mask");
-+MODULE_PARM_DESC(uart_print, "Uart target debugging");
-+MODULE_PARM_DESC(p2p, "Enable ath10k P2P support");
-+
-+static const struct ath10k_hw_params ath10k_hw_params_list[] = {
-+	{
-+		.id = QCA988X_HW_1_0_VERSION,
-+		.name = "qca988x hw1.0",
-+		.patch_load_addr = QCA988X_HW_1_0_PATCH_LOAD_ADDR,
-+		.fw = {
-+			.dir = QCA988X_HW_1_0_FW_DIR,
-+			.fw = QCA988X_HW_1_0_FW_FILE,
-+			.otp = QCA988X_HW_1_0_OTP_FILE,
-+			.board = QCA988X_HW_1_0_BOARD_DATA_FILE,
-+		},
-+	},
-+	{
-+		.id = QCA988X_HW_2_0_VERSION,
-+		.name = "qca988x hw2.0",
-+		.patch_load_addr = QCA988X_HW_2_0_PATCH_LOAD_ADDR,
-+		.fw = {
-+			.dir = QCA988X_HW_2_0_FW_DIR,
-+			.fw = QCA988X_HW_2_0_FW_FILE,
-+			.otp = QCA988X_HW_2_0_OTP_FILE,
-+			.board = QCA988X_HW_2_0_BOARD_DATA_FILE,
-+		},
-+	},
++enum nl80211_rxmgmt_flags {
++	NL80211_RXMGMT_FLAG_REPLIED = (1 << 0),
 +};
 +
-+static void ath10k_send_suspend_complete(struct ath10k *ar)
-+{
-+	ath10k_dbg(ATH10K_DBG_CORE, "%s\n", __func__);
-+
-+	ar->is_target_paused = true;
-+	wake_up(&ar->event_queue);
-+}
-+
-+static int ath10k_check_fw_version(struct ath10k *ar)
-+{
-+	char version[32];
-+
-+	if (ar->fw_version_major >= SUPPORTED_FW_MAJOR &&
-+	    ar->fw_version_minor >= SUPPORTED_FW_MINOR &&
-+	    ar->fw_version_release >= SUPPORTED_FW_RELEASE &&
-+	    ar->fw_version_build >= SUPPORTED_FW_BUILD)
-+		return 0;
-+
-+	snprintf(version, sizeof(version), "%u.%u.%u.%u",
-+		 SUPPORTED_FW_MAJOR, SUPPORTED_FW_MINOR,
-+		 SUPPORTED_FW_RELEASE, SUPPORTED_FW_BUILD);
-+
-+	ath10k_warn("WARNING: Firmware version %s is not officially supported.\n",
-+		    ar->hw->wiphy->fw_version);
-+	ath10k_warn("Please upgrade to version %s (or newer)\n", version);
-+
-+	return 0;
-+}
-+
-+static int ath10k_init_connect_htc(struct ath10k *ar)
-+{
-+	int status;
-+
-+	status = ath10k_wmi_connect_htc_service(ar);
-+	if (status)
-+		goto conn_fail;
-+
-+	/* Start HTC */
-+	status = ath10k_htc_start(ar->htc);
-+	if (status)
-+		goto conn_fail;
-+
-+	/* Wait for WMI event to be ready */
-+	status = ath10k_wmi_wait_for_service_ready(ar);
-+	if (status <= 0) {
-+		ath10k_warn("wmi service ready event not received");
-+		status = -ETIMEDOUT;
-+		goto timeout;
-+	}
-+
-+	ath10k_dbg(ATH10K_DBG_CORE, "core wmi ready\n");
-+	return 0;
-+
-+timeout:
-+	ath10k_htc_stop(ar->htc);
-+conn_fail:
-+	return status;
-+}
-+
-+static int ath10k_init_configure_target(struct ath10k *ar)
-+{
-+	u32 param_host;
-+	int ret;
-+
-+	/* tell target which HTC version it is used*/
-+	ret = ath10k_bmi_write32(ar, hi_app_host_interest,
-+				 HTC_PROTOCOL_VERSION);
-+	if (ret) {
-+		ath10k_err("settings HTC version failed\n");
-+		return ret;
-+	}
-+
-+	/* set the firmware mode to STA/IBSS/AP */
-+	ret = ath10k_bmi_read32(ar, hi_option_flag, &param_host);
-+	if (ret) {
-+		ath10k_err("setting firmware mode (1/2) failed\n");
-+		return ret;
-+	}
-+
-+	/* TODO following parameters need to be re-visited. */
-+	/* num_device */
-+	param_host |= (1 << HI_OPTION_NUM_DEV_SHIFT);
-+	/* Firmware mode */
-+	/* FIXME: Why FW_MODE_AP ??.*/
-+	param_host |= (HI_OPTION_FW_MODE_AP << HI_OPTION_FW_MODE_SHIFT);
-+	/* mac_addr_method */
-+	param_host |= (1 << HI_OPTION_MAC_ADDR_METHOD_SHIFT);
-+	/* firmware_bridge */
-+	param_host |= (0 << HI_OPTION_FW_BRIDGE_SHIFT);
-+	/* fwsubmode */
-+	param_host |= (0 << HI_OPTION_FW_SUBMODE_SHIFT);
-+
-+	ret = ath10k_bmi_write32(ar, hi_option_flag, param_host);
-+	if (ret) {
-+		ath10k_err("setting firmware mode (2/2) failed\n");
-+		return ret;
-+	}
-+
-+	/* We do all byte-swapping on the host */
-+	ret = ath10k_bmi_write32(ar, hi_be, 0);
-+	if (ret) {
-+		ath10k_err("setting host CPU BE mode failed\n");
-+		return ret;
-+	}
-+
-+	/* FW descriptor/Data swap flags */
-+	ret = ath10k_bmi_write32(ar, hi_fw_swap, 0);
-+
-+	if (ret) {
-+		ath10k_err("setting FW data/desc swap flags failed\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
-+						   const char *dir,
-+						   const char *file)
-+{
-+	char filename[100];
-+	const struct firmware *fw;
-+	int ret;
-+
-+	if (file == NULL)
-+		return ERR_PTR(-ENOENT);
-+
-+	if (dir == NULL)
-+		dir = ".";
-+
-+	snprintf(filename, sizeof(filename), "%s/%s", dir, file);
-+	ret = request_firmware(&fw, filename, ar->dev);
-+	if (ret)
-+		return ERR_PTR(ret);
-+
-+	return fw;
-+}
-+
-+static int ath10k_push_board_ext_data(struct ath10k *ar,
-+				      const struct firmware *fw)
-+{
-+	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
-+	u32 board_ext_data_size = QCA988X_BOARD_EXT_DATA_SZ;
-+	u32 board_ext_data_addr;
-+	int ret;
-+
-+	ret = ath10k_bmi_read32(ar, hi_board_ext_data, &board_ext_data_addr);
-+	if (ret) {
-+		ath10k_err("could not read board ext data addr (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	ath10k_dbg(ATH10K_DBG_CORE,
-+		   "ath10k: Board extended Data download addr: 0x%x\n",
-+		   board_ext_data_addr);
-+
-+	if (board_ext_data_addr == 0)
-+		return 0;
-+
-+	if (fw->size != (board_data_size + board_ext_data_size)) {
-+		ath10k_err("invalid board (ext) data sizes %zu != %d+%d\n",
-+			   fw->size, board_data_size, board_ext_data_size);
-+		return -EINVAL;
-+	}
-+
-+	ret = ath10k_bmi_write_memory(ar, board_ext_data_addr,
-+				      fw->data + board_data_size,
-+				      board_ext_data_size);
-+	if (ret) {
-+		ath10k_err("could not write board ext data (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_bmi_write32(ar, hi_board_ext_data_config,
-+				 (board_ext_data_size << 16) | 1);
-+	if (ret) {
-+		ath10k_err("could not write board ext data bit (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath10k_download_board_data(struct ath10k *ar)
-+{
-+	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
-+	u32 address;
-+	const struct firmware *fw;
-+	int ret;
-+
-+	fw = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir,
-+				  ar->hw_params.fw.board);
-+	if (IS_ERR(fw)) {
-+		ath10k_err("could not fetch board data fw file (%ld)\n",
-+			   PTR_ERR(fw));
-+		return PTR_ERR(fw);
-+	}
-+
-+	ret = ath10k_push_board_ext_data(ar, fw);
-+	if (ret) {
-+		ath10k_err("could not push board ext data (%d)\n", ret);
-+		goto exit;
-+	}
-+
-+	ret = ath10k_bmi_read32(ar, hi_board_data, &address);
-+	if (ret) {
-+		ath10k_err("could not read board data addr (%d)\n", ret);
-+		goto exit;
-+	}
-+
-+	ret = ath10k_bmi_write_memory(ar, address, fw->data,
-+				      min_t(u32, board_data_size, fw->size));
-+	if (ret) {
-+		ath10k_err("could not write board data (%d)\n", ret);
-+		goto exit;
-+	}
-+
-+	ret = ath10k_bmi_write32(ar, hi_board_data_initialized, 1);
-+	if (ret) {
-+		ath10k_err("could not write board data bit (%d)\n", ret);
-+		goto exit;
-+	}
-+
-+exit:
-+	release_firmware(fw);
-+	return ret;
-+}
-+
-+static int ath10k_download_and_run_otp(struct ath10k *ar)
-+{
-+	const struct firmware *fw;
-+	u32 address;
-+	u32 exec_param;
-+	int ret;
-+
-+	/* OTP is optional */
-+
-+	if (ar->hw_params.fw.otp == NULL) {
-+		ath10k_info("otp file not defined\n");
-+		return 0;
-+	}
-+
-+	address = ar->hw_params.patch_load_addr;
-+
-+	fw = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir,
-+				  ar->hw_params.fw.otp);
-+	if (IS_ERR(fw)) {
-+		ath10k_warn("could not fetch otp (%ld)\n", PTR_ERR(fw));
-+		return 0;
-+	}
-+
-+	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
-+	if (ret) {
-+		ath10k_err("could not write otp (%d)\n", ret);
-+		goto exit;
-+	}
-+
-+	exec_param = 0;
-+	ret = ath10k_bmi_execute(ar, address, &exec_param);
-+	if (ret) {
-+		ath10k_err("could not execute otp (%d)\n", ret);
-+		goto exit;
-+	}
-+
-+exit:
-+	release_firmware(fw);
-+	return ret;
-+}
-+
-+static int ath10k_download_fw(struct ath10k *ar)
-+{
-+	const struct firmware *fw;
-+	u32 address;
-+	int ret;
-+
-+	if (ar->hw_params.fw.fw == NULL)
-+		return -EINVAL;
-+
-+	address = ar->hw_params.patch_load_addr;
-+
-+	fw = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir,
-+				  ar->hw_params.fw.fw);
-+	if (IS_ERR(fw)) {
-+		ath10k_err("could not fetch fw (%ld)\n", PTR_ERR(fw));
-+		return PTR_ERR(fw);
-+	}
-+
-+	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
-+	if (ret) {
-+		ath10k_err("could not write fw (%d)\n", ret);
-+		goto exit;
-+	}
-+
-+exit:
-+	release_firmware(fw);
-+	return ret;
-+}
-+
-+static int ath10k_init_download_firmware(struct ath10k *ar)
-+{
-+	int ret;
-+
-+	ret = ath10k_download_board_data(ar);
-+	if (ret)
-+		return ret;
-+
-+	ret = ath10k_download_and_run_otp(ar);
-+	if (ret)
-+		return ret;
-+
-+	ret = ath10k_download_fw(ar);
-+	if (ret)
-+		return ret;
-+
-+	return ret;
-+}
-+
-+static int ath10k_init_uart(struct ath10k *ar)
-+{
-+	int ret;
-+
-+	/*
-+	 * Explicitly setting UART prints to zero as target turns it on
-+	 * based on scratch registers.
-+	 */
-+	ret = ath10k_bmi_write32(ar, hi_serial_enable, 0);
-+	if (ret) {
-+		ath10k_warn("could not disable UART prints (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	if (!uart_print) {
-+		ath10k_info("UART prints disabled\n");
-+		return 0;
-+	}
-+
-+	ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin, 7);
-+	if (ret) {
-+		ath10k_warn("could not enable UART prints (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_bmi_write32(ar, hi_serial_enable, 1);
-+	if (ret) {
-+		ath10k_warn("could not enable UART prints (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	ath10k_info("UART prints enabled\n");
-+	return 0;
-+}
-+
-+static int ath10k_init_hw_params(struct ath10k *ar)
-+{
-+	const struct ath10k_hw_params *uninitialized_var(hw_params);
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
-+		hw_params = &ath10k_hw_params_list[i];
-+
-+		if (hw_params->id == ar->target_version)
-+			break;
-+	}
-+
-+	if (i == ARRAY_SIZE(ath10k_hw_params_list)) {
-+		ath10k_err("Unsupported hardware version: 0x%x\n",
-+			   ar->target_version);
-+		return -EINVAL;
-+	}
-+
-+	ar->hw_params = *hw_params;
-+
-+	ath10k_info("Hardware name %s version 0x%x\n",
-+		    ar->hw_params.name, ar->target_version);
-+
-+	return 0;
-+}
-+
-+struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
-+				  enum ath10k_bus bus,
-+				  const struct ath10k_hif_ops *hif_ops)
-+{
-+	struct ath10k *ar;
-+
-+	ar = ath10k_mac_create();
-+	if (!ar)
-+		return NULL;
-+
-+	ar->ath_common.priv = ar;
-+	ar->ath_common.hw = ar->hw;
-+
-+	ar->p2p = !!ath10k_p2p;
-+	ar->dev = dev;
-+
-+	ar->hif.priv = hif_priv;
-+	ar->hif.ops = hif_ops;
-+	ar->hif.bus = bus;
-+
-+	ar->free_vdev_map = 0xFF; /* 8 vdevs */
-+
-+	init_completion(&ar->scan.started);
-+	init_completion(&ar->scan.completed);
-+	init_completion(&ar->scan.on_channel);
-+
-+	init_completion(&ar->install_key_done);
-+	init_completion(&ar->vdev_setup_done);
-+
-+	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
-+
-+	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
-+	if (!ar->workqueue)
-+		goto err_wq;
-+
-+	mutex_init(&ar->conf_mutex);
-+	spin_lock_init(&ar->data_lock);
-+
-+	INIT_LIST_HEAD(&ar->peers);
-+	init_waitqueue_head(&ar->peer_mapping_wq);
-+
-+	init_completion(&ar->offchan_tx_completed);
-+	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
-+	skb_queue_head_init(&ar->offchan_tx_queue);
-+
-+	init_waitqueue_head(&ar->event_queue);
-+
-+	return ar;
-+
-+err_wq:
-+	ath10k_mac_destroy(ar);
-+	return NULL;
-+}
-+EXPORT_SYMBOL(ath10k_core_create);
-+
-+void ath10k_core_destroy(struct ath10k *ar)
-+{
-+	flush_workqueue(ar->workqueue);
-+	destroy_workqueue(ar->workqueue);
-+
-+	ath10k_mac_destroy(ar);
-+}
-+EXPORT_SYMBOL(ath10k_core_destroy);
-+
-+
-+int ath10k_core_register(struct ath10k *ar)
-+{
-+	struct ath10k_htc_ops htc_ops;
-+	struct bmi_target_info target_info;
-+	int status;
-+
-+	memset(&target_info, 0, sizeof(target_info));
-+	status = ath10k_bmi_get_target_info(ar, &target_info);
-+	if (status)
-+		goto err;
-+
-+	ar->target_version = target_info.version;
-+	ar->hw->wiphy->hw_version = target_info.version;
-+
-+	status = ath10k_init_hw_params(ar);
-+	if (status)
-+		goto err;
-+
-+	if (ath10k_init_configure_target(ar)) {
-+		status = -EINVAL;
-+		goto err;
-+	}
-+
-+	status = ath10k_init_download_firmware(ar);
-+	if (status)
-+		goto err;
-+
-+	status = ath10k_init_uart(ar);
-+	if (status)
-+		goto err;
-+
-+	htc_ops.target_send_suspend_complete = ath10k_send_suspend_complete;
-+
-+	ar->htc = ath10k_htc_create(ar, &htc_ops);
-+	if (IS_ERR(ar->htc)) {
-+		status = PTR_ERR(ar->htc);
-+		ath10k_err("could not create HTC (%d)\n", status);
-+		goto err;
-+	}
-+
-+	status = ath10k_bmi_done(ar);
-+	if (status)
-+		goto err_htc_destroy;
-+
-+	status = ath10k_wmi_attach(ar);
-+	if (status) {
-+		ath10k_err("WMI attach failed: %d\n", status);
-+		goto err_htc_destroy;
-+	}
-+
-+	status = ath10k_htc_wait_target(ar->htc);
-+	if (status)
-+		goto err_wmi_detach;
-+
-+	ar->htt = ath10k_htt_attach(ar);
-+	if (!ar->htt) {
-+		status = -ENOMEM;
-+		goto err_wmi_detach;
-+	}
-+
-+	status = ath10k_init_connect_htc(ar);
-+	if (status)
-+		goto err_htt_detach;
-+
-+	ath10k_info("firmware %s booted\n", ar->hw->wiphy->fw_version);
-+
-+	status = ath10k_check_fw_version(ar);
-+	if (status)
-+		goto err_disconnect_htc;
-+
-+	status = ath10k_wmi_cmd_init(ar);
-+	if (status) {
-+		ath10k_err("could not send WMI init command (%d)\n", status);
-+		goto err_disconnect_htc;
-+	}
-+
-+	status = ath10k_wmi_wait_for_unified_ready(ar);
-+	if (status <= 0) {
-+		ath10k_err("wmi unified ready event not received\n");
-+		status = -ETIMEDOUT;
-+		goto err_disconnect_htc;
-+	}
-+
-+	status = ath10k_htt_attach_target(ar->htt);
-+	if (status)
-+		goto err_disconnect_htc;
-+
-+	status = ath10k_mac_register(ar);
-+	if (status)
-+		goto err_disconnect_htc;
-+
-+	status = ath10k_debug_create(ar);
-+	if (status) {
-+		ath10k_err("unable to initialize debugfs\n");
-+		goto err_unregister_mac;
-+	}
-+
-+	return 0;
-+
-+err_unregister_mac:
-+	ath10k_mac_unregister(ar);
-+err_disconnect_htc:
-+	ath10k_htc_stop(ar->htc);
-+err_htt_detach:
-+	ath10k_htt_detach(ar->htt);
-+err_wmi_detach:
-+	ath10k_wmi_detach(ar);
-+err_htc_destroy:
-+	ath10k_htc_destroy(ar->htc);
-+err:
-+	return status;
-+}
-+EXPORT_SYMBOL(ath10k_core_register);
-+
-+void ath10k_core_unregister(struct ath10k *ar)
-+{
-+	/* We must unregister from mac80211 before we stop HTC and HIF.
-+	 * Otherwise we will fail to submit commands to FW and mac80211 will be
-+	 * unhappy about callback failures. */
-+	ath10k_mac_unregister(ar);
-+	ath10k_htc_stop(ar->htc);
-+	ath10k_htt_detach(ar->htt);
-+	ath10k_wmi_detach(ar);
-+	ath10k_htc_destroy(ar->htc);
-+}
-+EXPORT_SYMBOL(ath10k_core_unregister);
-+
-+int ath10k_core_target_suspend(struct ath10k *ar)
-+{
-+	int ret;
-+
-+	ath10k_dbg(ATH10K_DBG_CORE, "%s: called", __func__);
-+
-+	ret = ath10k_wmi_pdev_suspend_target(ar);
-+	if (ret)
-+		ath10k_warn("could not suspend target (%d)\n", ret);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(ath10k_core_target_suspend);
-+
-+int ath10k_core_target_resume(struct ath10k *ar)
-+{
-+	int ret;
-+
-+	ath10k_dbg(ATH10K_DBG_CORE, "%s: called", __func__);
-+
-+	ret = ath10k_wmi_pdev_resume_target(ar);
-+	if (ret)
-+		ath10k_warn("could not resume target (%d)\n", ret);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(ath10k_core_target_resume);
-+
-+MODULE_AUTHOR("Qualcomm Atheros");
-+MODULE_DESCRIPTION("Core module for QCA988X PCIe devices.");
-+MODULE_LICENSE("Dual BSD/GPL");
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 23dbcfc..3f7fa49 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2635,8 +2635,7 @@ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
+ 		sig = status->signal;
+ 
+ 	if (cfg80211_rx_mgmt(&rx->sdata->wdev, status->freq, sig,
+-			     rx->skb->data, rx->skb->len,
+-			     GFP_ATOMIC)) {
++			     rx->skb->data, rx->skb->len, 0, GFP_ATOMIC)) {
+ 		if (rx->sta)
+ 			rx->sta->rx_packets++;
+ 		dev_kfree_skb(rx->skb);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index a61a44b..74b1856 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -615,7 +615,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ }
+ 
+ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
+-		      const u8 *buf, size_t len, gfp_t gfp)
++		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
+ {
+ 	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+@@ -658,7 +658,7 @@ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
+ 		/* Indicate the received Action frame to user space */
+ 		if (nl80211_send_mgmt(rdev, wdev, reg->nlportid,
+ 				      freq, sig_mbm,
+-				      buf, len, gfp))
++				      buf, len, flags, gfp))
+ 			continue;
+ 
+ 		result = true;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 57be2f4..65c5578 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9962,7 +9962,7 @@ EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
+ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 		      struct wireless_dev *wdev, u32 nlportid,
+ 		      int freq, int sig_dbm,
+-		      const u8 *buf, size_t len, gfp_t gfp)
++		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
+ {
+ 	struct net_device *netdev = wdev->netdev;
+ 	struct sk_buff *msg;
+@@ -9985,7 +9985,9 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, freq) ||
+ 	    (sig_dbm &&
+ 	     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm)) ||
+-	    nla_put(msg, NL80211_ATTR_FRAME, len, buf))
++	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
++	    (flags &&
++	     nla_put_u32(msg, NL80211_ATTR_RXMGMT_FLAGS, flags)))
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index a4073e8..3b51a76 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -66,7 +66,7 @@ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
+ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 		      struct wireless_dev *wdev, u32 nlpid,
+ 		      int freq, int sig_dbm,
+-		      const u8 *buf, size_t len, gfp_t gfp);
++		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
+ 
+ void
+ nl80211_radar_notify(struct cfg80211_registered_device *rdev,
+-- 
+1.8.1.2
 
