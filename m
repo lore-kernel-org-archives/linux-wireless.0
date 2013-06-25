@@ -1,34 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:41463 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477Ab3FEAtI (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:51166 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751525Ab3FYIfj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 20:49:08 -0400
-Received: by mail-qa0-f50.google.com with SMTP id l18so136778qak.9
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2013 17:49:07 -0700 (PDT)
+	Tue, 25 Jun 2013 04:35:39 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<linux-omap@vger.kernel.org>, <linux-arm@vger.kernel.org>
+Subject: [PATCH] Documentation: dt: bindings: TI WiLink modules
+Date: Tue, 25 Jun 2013 11:35:30 +0300
+Message-ID: <1372149330-24335-1-git-send-email-coelho@ti.com> (sfid-20130625_103602_798801_64E3586F)
 MIME-Version: 1.0
-Date: Tue, 4 Jun 2013 17:49:07 -0700
-Message-ID: <CAJ-Vmo=2oBy7kVN5dTx1TLfEER77tOYQXTz6WoG6Q=4A0kOgmw@mail.gmail.com> (sfid-20130605_024912_062818_EB1FC871)
-Subject: 4.9GHz and 5.8GHz regulatory entries?
-From: Adrian Chadd <adrian@freebsd.org>
-To: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Add device tree bindings documentation for the TI WiLink modules.
+Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
+modules is supported.
 
-I'm hacking at the support needed for 4.9 and 5.8GHz NICs in FreeBSD.
-Well, there's support for them (and they work!) but I'm doing up some
-regulatory entries for them.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
 
-So, has anyone looked at adding 4.9 and 5.8GHz regulatory domain
-entries to db.txt in Linux, for regulatory domains that allow them to
-be used unlicenced?
+I created a new directory under net to contain wireless bindings documentation.
 
-Thanks,
+The actual implementation in the driver will follow separately.
 
+ .../devicetree/bindings/net/wireless/ti-wilink.txt |   46 ++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
 
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+new file mode 100644
+index 0000000..d8e8bfbb
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+@@ -0,0 +1,46 @@
++TI WiLink Wireless Modules Device Tree Bindings
++===============================================
++
++The WiLink modules provide wireless connectivity, such as WLAN,
++Bluetooth, FM and NFC.
++
++There are several different modules available, which can be grouped by
++their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
++currently supported with device tree.
++
++Currently, only the WLAN portion of the modules is supported with
++device tree.
++
++Required properties:
++--------------------
++
++- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
++- interrupt-parent: the interrupt controller
++- interrupts: out-of-band WLAN interrupt
++	See the interrupt controller's bindings documentation for
++	detailed definition.
++
++Optional properties:
++--------------------
++
++- refclock: the internal WLAN reference clock frequency (required for
++  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
++  following:
++	0 = 19.2 MHz
++	1 = 26.0 MHz
++	2 = 38.4 MHz
++	3 = 52.0 MHz
++	4 = 38.4 MHz, XTAL
++	5 = 26.0 MHz, XTAL
++
++- tcxoclock: the internal WLAN TCXO clock frequency (required for
++  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
++  following:
++	0 = 19.200 MHz
++	1 = 26.000 MHz
++	2 = 38.400 MHz
++	3 = 52.000 MHz
++	4 = 16.368 MHz
++	5 = 32.736 MHz
++	6 = 16.800 MHz
++	7 = 33.600 MHz
+-- 
+1.7.10.4
 
-Adrian
