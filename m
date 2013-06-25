@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37741 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753010Ab3FXTAK (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20312 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028Ab3FYJZE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 15:00:10 -0400
-Date: Mon, 24 Jun 2013 14:46:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2013-06-23
-Message-ID: <20130624184613.GE1997@tuxdriver.com> (sfid-20130624_210056_185134_A1DCA520)
-References: <20130623022356.GB2327@joana>
+	Tue, 25 Jun 2013 05:25:04 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "Peer, Ilan" <ilan.peer@intel.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: Re: [PATCH v10 2/2] cfg80211: P2P find phase offload
+Date: Tue, 25 Jun 2013 12:25:00 +0300
+Message-ID: <1489286.dFNgzINo7e@lx-vladimir> (sfid-20130625_112510_228350_BD0B390B)
+In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A01AD22795@HASMSX106.ger.corp.intel.com>
+References: <1372063757-24286-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1372063757-24286-3-git-send-email-qca_vkondrat@qca.qualcomm.com> <CB3B3D4774441E42AA3EA0E1BA8230A01AD22795@HASMSX106.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130623022356.GB2327@joana>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 23, 2013 at 03:23:56AM +0100, Gustavo Padovan wrote:
-> Hi John,
+On Tuesday, June 25, 2013 07:06:28 AM Peer, Ilan wrote:
+> > + * @listen_channel: channels to listen on; not NULL
 > 
-> Here goes a set of patches to 3.11. The biggest work here is from Andre Guedes
-> on the move of the Discovery to use the new request framework. Other than that
-> Johan provided a bunch of fixes to the L2CAP code. The rest are just small
-> fixes and clean ups. 
-> 
-> Please pull or let me know of any problem! Thanks.
-> 
-> 	Gustavo
-> 
-> ---
-> The following changes since commit b887664d882ee4f6a67e0bf05e5f141d32fcc067:
-> 
->   mwifiex: channel switch handling for station (2013-06-19 15:28:43 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
-> 
-> for you to fetch changes up to b8f4e068004859eefac7b1ced59ddb67ca6d2d80:
-> 
->   Bluetooth: Improve comments on the HCI_Delete_Store_Link_Key issue (2013-06-23 03:05:47 +0100)
+> s/channels/channel/  (only a single listen channel)
+Sure, thanks
 
-Pulling now...
+<skip>
+> Just to clarify something: even if the driver reports that it supports probe response offloading, can wpas choose not to use this capability and handle all the probe requests on its own (at least for debugging)? For example in case that the probe response IE len is zero, the driver can deduce the it should not respond to probe requests.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Problem is, some hardware do not let you to do so; it simply replies by itself.
+NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD indicates device __can__ answer. From this,
+wpa_s can conclude it may be answered by device probes that is may see or not.
+It is out of scope for this commit to specify how to tell to the device to not answer
+(I suppose to use debugfs for this)
+
+> 
+> > @@ -1740,6 +1748,10 @@ enum nl80211_attrs {
+> > 
+> >  	NL80211_ATTR_RXMGMT_FLAGS,
+> > 
+> > +	NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL,
+> > +	NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL,
+> > +	NL80211_ATTR_LISTEN_FREQ,
+> 
+> You can use NL80211_ATTR_WIPHY_FREQ
+
+OK, will do so.
+
+> 
+> > +TRACE_EVENT(rdev_start_p2p_find,
+> > +	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
+> > +		 struct cfg80211_p2p_find_params *params),
+> > +	TP_ARGS(wiphy, wdev, params),
+> > +	TP_STRUCT__entry(
+> > +		WIPHY_ENTRY
+> > +		WDEV_ENTRY
+> > +		__field(u32, min_di)
+> > +		__field(u32, max_di)
+> > +		__field(int, n_channels)
+> 
+> Can you also add here the listen channel?
+
+Sure
+
+Thanks, Vladimir
