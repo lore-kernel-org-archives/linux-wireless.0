@@ -1,111 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:43259 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899Ab3FDKO2 (ORCPT
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:40220 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721Ab3FYUGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 06:14:28 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/6] ath9k: Fix ofdm weak signal configuration
-Date: Tue,  4 Jun 2013 15:41:33 +0530
-Message-Id: <1370340695-29003-4-git-send-email-sujith@msujith.org> (sfid-20130604_121431_570835_5E04EC36)
-In-Reply-To: <1370340695-29003-1-git-send-email-sujith@msujith.org>
-References: <1370340695-29003-1-git-send-email-sujith@msujith.org>
+	Tue, 25 Jun 2013 16:06:10 -0400
+Received: by mail-bk0-f52.google.com with SMTP id d7so4598171bkh.25
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2013 13:06:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51C93538.4050304@rempel-privat.de>
+References: <51C52E79.30104@rempel-privat.de> <CAG6hwVOCfDK9nkh3e0fFMGcWp8XLQnPC8TzQb9eET2fwFPq3SA@mail.gmail.com>
+ <51C93538.4050304@rempel-privat.de>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Tue, 25 Jun 2013 13:05:48 -0700
+Message-ID: <CAG6hwVMa+i=wXRyfcwaXH8NesCXgKXW6Ad4dzgd9DZONGYA=xQ@mail.gmail.com> (sfid-20130625_220613_933336_C5862ABD)
+Subject: Re: regression after, " ath9k_htc: Add support for mesh interfaces"
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Javier Cardona <javier@cozybit.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, Jun 24, 2013 at 11:14 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> Am 25.06.2013 02:54, schrieb Thomas Pedersen:
+>
+>> On Fri, Jun 21, 2013 at 9:56 PM, Oleksij Rempel <linux@rempel-privat.de>
+>> wrote:
+>>>
+>>> Hi Javier,
+>>>
+>>> i warning after patch "ath9k_htc: Add support for mesh interfaces".
+>>> I get this warning only on pc with CONFIG_MAC80211_MESH not set. Probably
+>>> you missed config check some where.
+>>
+>>
+>> Where do you hit the warning?
+>>
+>
+> on adapter init.
+> see attachment.
 
-The commit, "ath9k_hw: improve ANI processing and rx desensitizing parameters"
-removed code setting various phy registers holding threshold values.
+That warning is triggered by wiphy_verify_combinations():
 
-This is likely required for OFDM weak signal detection to function
-correctly, so add them, but skip AR9462 and AR9565.
+                        if (WARN_ON((wiphy->interface_modes & types) != types))
+                                return -EINVAL;
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 60 +++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
+But before that, the mesh iftype bit is cleared in ieee80211_register_hw():
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 83e0385..bc48312 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -906,6 +906,11 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_channel *chan = ah->curchan;
- 	struct ar5416AniState *aniState = &ah->ani;
-+	int m1ThreshLow, m2ThreshLow;
-+	int m1Thresh, m2Thresh;
-+	int m2CountThr, m2CountThrLow;
-+	int m1ThreshLowExt, m2ThreshLowExt;
-+	int m1ThreshExt, m2ThreshExt;
- 	s32 value, value2;
- 
- 	switch (cmd & ah->ani_function) {
-@@ -919,6 +924,61 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
- 		 */
- 		u32 on = param ? 1 : 0;
- 
-+		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
-+			goto skip_ws_det;
-+
-+		m1ThreshLow = on ?
-+			aniState->iniDef.m1ThreshLow : m1ThreshLow_off;
-+		m2ThreshLow = on ?
-+			aniState->iniDef.m2ThreshLow : m2ThreshLow_off;
-+		m1Thresh = on ?
-+			aniState->iniDef.m1Thresh : m1Thresh_off;
-+		m2Thresh = on ?
-+			aniState->iniDef.m2Thresh : m2Thresh_off;
-+		m2CountThr = on ?
-+			aniState->iniDef.m2CountThr : m2CountThr_off;
-+		m2CountThrLow = on ?
-+			aniState->iniDef.m2CountThrLow : m2CountThrLow_off;
-+		m1ThreshLowExt = on ?
-+			aniState->iniDef.m1ThreshLowExt : m1ThreshLowExt_off;
-+		m2ThreshLowExt = on ?
-+			aniState->iniDef.m2ThreshLowExt : m2ThreshLowExt_off;
-+		m1ThreshExt = on ?
-+			aniState->iniDef.m1ThreshExt : m1ThreshExt_off;
-+		m2ThreshExt = on ?
-+			aniState->iniDef.m2ThreshExt : m2ThreshExt_off;
-+
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
-+			      AR_PHY_SFCORR_LOW_M1_THRESH_LOW,
-+			      m1ThreshLow);
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
-+			      AR_PHY_SFCORR_LOW_M2_THRESH_LOW,
-+			      m2ThreshLow);
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR,
-+			      AR_PHY_SFCORR_M1_THRESH,
-+			      m1Thresh);
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR,
-+			      AR_PHY_SFCORR_M2_THRESH,
-+			      m2Thresh);
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR,
-+			      AR_PHY_SFCORR_M2COUNT_THR,
-+			      m2CountThr);
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
-+			      AR_PHY_SFCORR_LOW_M2COUNT_THR_LOW,
-+			      m2CountThrLow);
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
-+			      AR_PHY_SFCORR_EXT_M1_THRESH_LOW,
-+			      m1ThreshLowExt);
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
-+			      AR_PHY_SFCORR_EXT_M2_THRESH_LOW,
-+			      m2ThreshLowExt);
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
-+			      AR_PHY_SFCORR_EXT_M1_THRESH,
-+			      m1ThreshExt);
-+		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
-+			      AR_PHY_SFCORR_EXT_M2_THRESH,
-+			      m2ThreshExt);
-+skip_ws_det:
- 		if (on)
- 			REG_SET_BIT(ah, AR_PHY_SFCORR_LOW,
- 				    AR_PHY_SFCORR_LOW_USE_SELF_CORR_LOW);
--- 
-1.8.3
+#ifndef CONFIG_MAC80211_MESH
+        /* mesh depends on Kconfig, but drivers should set it if they want */
+        local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
+#endif
 
+It seems the intention was to avoid an #ifdef CONFIG_MAC80211_MESH in
+every driver, but then mac80211 also has to clear the MESH_POINT bit
+for each ieee80211_iface_limit? I don't really see a cleaner way of
+resolving this.
+
+Johannes?
+
+--
+Thomas
