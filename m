@@ -1,86 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:16079 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753657Ab3FGQmO convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:46635 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751093Ab3FYNmv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jun 2013 12:42:14 -0400
-Date: Fri, 7 Jun 2013 18:42:10 +0200
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	nietrywialneprzejscie@gmail.com
-Subject: Re: [RFC 4/5] mac80211: enforce address verification on monitors
-Message-ID: <20130607184210.200dbb52@north> (sfid-20130607_184217_839508_A51BFF6C)
-In-Reply-To: <51B1EDA8.10406@openwrt.org>
-References: <1370612179-24385-1-git-send-email-moorray3@wp.pl>
-	<1370612179-24385-5-git-send-email-moorray3@wp.pl>
-	<51B1E4F3.9020509@openwrt.org>
-	<20130607160402.49ea16c3@north>
-	<51B1EDA8.10406@openwrt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 25 Jun 2013 09:42:51 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>, Peer@vger.kernel.org,
+	Ilan <ilan.peer@intel.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v12 1/2] cfg80211: add 'flags' to cfg80211_rx_mgmt()
+Date: Tue, 25 Jun 2013 16:42:35 +0300
+Message-ID: <1372167756-17928-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130625_154255_569400_F6543B3D)
+In-Reply-To: <1372167756-17928-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1372167756-17928-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 07 Jun 2013 16:26:48 +0200, Felix Fietkau wrote:
->On 2013-06-07 4:04 PM, Jakub Kiciński wrote:
->> On Fri, 07 Jun 2013 15:49:39 +0200, Felix Fietkau wrote:
->>> On 2013-06-07 3:36 PM, Jakub Kicinski wrote:
->>>> From: Jakub Kicinski <kubakici@wp.pl>
->>>> 
->>>> Mac address of passive monitor have to treated
->>>> the same as address any other interface because
->>>> type of interface can be changed or monitor can
->>>> be later put into active mode.
->>> It can't. There's checks preventing that. I'd prefer to leave that part
->>> of the code as it is, the MAC address for normal monitor interfaces
->>> should be ignored completely.
->> 
->> I must have misread the code regarding active monitors then.
->> Main motivation behind this patch was the first part though
->> - user can change type of interface and once ignored address
->> of monitor now becomes address of AP, sta etc. 
-> I'm pretty sure that switching from monitor to something else is also
-> not supported.
+Flags intended to report various auxiliary information.
+Introduced flag NL80211_RXMGMT_FLAG_REPLIED to report
+whether frame was replied by the device/driver.
 
-Ok, let me explain what I mean to prevent by showing a command
-trace - running unpatched wireless-testing and patched iw [1].
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/wmi.c         |  7 +++----
+ drivers/net/wireless/ath/wil6210/wmi.c        |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c |  4 ++--
+ drivers/net/wireless/mwifiex/util.c           |  4 ++--
+ include/net/cfg80211.h                        |  3 ++-
+ include/uapi/linux/nl80211.h                  | 13 +++++++++++++
+ net/mac80211/rx.c                             |  3 +--
+ net/wireless/mlme.c                           |  4 ++--
+ net/wireless/nl80211.c                        |  6 ++++--
+ net/wireless/nl80211.h                        |  2 +-
+ 10 files changed, 31 insertions(+), 17 deletions(-)
 
-# lsmod | grep mac8
-# modprobe rt2800usb
-# iw dev wlan0 interface add wlan0-1 type managed
-# ip link
-75: wlan0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN qlen 1000
-    link/ether 00:4f:6a:06:57:90 brd ff:ff:ff:ff:ff:ff
-76: wlan0-1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN qlen 1000
-    link/ether 00:4f:6a:06:57:91 brd ff:ff:ff:ff:ff:ff
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 87aefb4..546d5da 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -568,8 +568,8 @@ static int ath6kl_wmi_rx_probe_req_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 		   dlen, freq, vif->probe_req_report);
+ 
+ 	if (vif->probe_req_report || vif->nw_type == AP_NETWORK)
+-		cfg80211_rx_mgmt(&vif->wdev, freq, 0,
+-				 ev->data, dlen, GFP_ATOMIC);
++		cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0,
++				 GFP_ATOMIC);
+ 
+ 	return 0;
+ }
+@@ -608,8 +608,7 @@ static int ath6kl_wmi_rx_action_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 		return -EINVAL;
+ 	}
+ 	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u freq=%u\n", dlen, freq);
+-	cfg80211_rx_mgmt(&vif->wdev, freq, 0,
+-			 ev->data, dlen, GFP_ATOMIC);
++	cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0, GFP_ATOMIC);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index dc8059a..21c791e 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -339,7 +339,7 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ 		}
+ 	} else {
+ 		cfg80211_rx_mgmt(wil->wdev, freq, signal,
+-				 (void *)rx_mgmt_frame, d_len, GFP_KERNEL);
++				 (void *)rx_mgmt_frame, d_len, 0, GFP_KERNEL);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index 79555f0..d7a9745 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -1430,7 +1430,7 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
+ 					      IEEE80211_BAND_5GHZ);
+ 
+ 	wdev = &ifp->vif->wdev;
+-	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len,
++	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len, 0,
+ 			 GFP_ATOMIC);
+ 
+ 	kfree(mgmt_frame);
+@@ -1895,7 +1895,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
+ 					      IEEE80211_BAND_2GHZ :
+ 					      IEEE80211_BAND_5GHZ);
+ 
+-	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len,
++	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0,
+ 			 GFP_ATOMIC);
+ 
+ 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index e57ac0d..5d9e150 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -171,8 +171,8 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+ 	rx_pd->rx_pkt_length = cpu_to_le16(pkt_len);
+ 
+ 	cfg80211_rx_mgmt(priv->wdev, priv->roc_cfg.chan.center_freq,
+-			 CAL_RSSI(rx_pd->snr, rx_pd->nf),
+-			 skb->data, pkt_len, GFP_ATOMIC);
++			 CAL_RSSI(rx_pd->snr, rx_pd->nf), skb->data, pkt_len,
++			 0, GFP_ATOMIC);
+ 
+ 	return 0;
+ }
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6a43c34..8347500 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3856,6 +3856,7 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
+  * @sig_dbm: signal strength in mBm, or 0 if unknown
+  * @buf: Management frame (header + body)
+  * @len: length of the frame data
++ * @flags: flags, as defined in enum nl80211_rxmgmt_flags
+  * @gfp: context flags
+  *
+  * This function is called whenever an Action frame is received for a station
+@@ -3867,7 +3868,7 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
+  * driver is responsible for rejecting the frame.
+  */
+ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_dbm,
+-		      const u8 *buf, size_t len, gfp_t gfp);
++		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
+ 
+ /**
+  * cfg80211_mgmt_tx_status - notification of TX status for management frame
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index ca6facf..f125d2c 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1436,6 +1436,8 @@ enum nl80211_commands {
+  *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
+  *	update a TDLS peer STA entry.
+  *
++ * @NL80211_ATTR_RXMGMT_FLAGS: flags for cfg80211_rx_mgmt, u32
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1736,6 +1738,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PEER_AID,
+ 
++	NL80211_ATTR_RXMGMT_FLAGS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3754,4 +3758,13 @@ enum nl80211_crit_proto_id {
+ /* maximum duration for critical protocol measures */
+ #define NL80211_CRIT_PROTO_MAX_DURATION		5000 /* msec */
+ 
++/**
++ * enum nl80211_rxmgmt_flags - flags for cfg80211_rx_mgmt
++ *
++ * @NL80211_RXMGMT_FLAG_REPLIED: frame was replied by device/driver.
++ */
++enum nl80211_rxmgmt_flags {
++	NL80211_RXMGMT_FLAG_REPLIED = (1 << 0),
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 23dbcfc..3f7fa49 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2635,8 +2635,7 @@ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
+ 		sig = status->signal;
+ 
+ 	if (cfg80211_rx_mgmt(&rx->sdata->wdev, status->freq, sig,
+-			     rx->skb->data, rx->skb->len,
+-			     GFP_ATOMIC)) {
++			     rx->skb->data, rx->skb->len, 0, GFP_ATOMIC)) {
+ 		if (rx->sta)
+ 			rx->sta->rx_packets++;
+ 		dev_kfree_skb(rx->skb);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index a61a44b..74b1856 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -615,7 +615,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ }
+ 
+ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
+-		      const u8 *buf, size_t len, gfp_t gfp)
++		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
+ {
+ 	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+@@ -658,7 +658,7 @@ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
+ 		/* Indicate the received Action frame to user space */
+ 		if (nl80211_send_mgmt(rdev, wdev, reg->nlportid,
+ 				      freq, sig_mbm,
+-				      buf, len, gfp))
++				      buf, len, flags, gfp))
+ 			continue;
+ 
+ 		result = true;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 57be2f4..65c5578 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9962,7 +9962,7 @@ EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
+ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 		      struct wireless_dev *wdev, u32 nlportid,
+ 		      int freq, int sig_dbm,
+-		      const u8 *buf, size_t len, gfp_t gfp)
++		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
+ {
+ 	struct net_device *netdev = wdev->netdev;
+ 	struct sk_buff *msg;
+@@ -9985,7 +9985,9 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, freq) ||
+ 	    (sig_dbm &&
+ 	     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm)) ||
+-	    nla_put(msg, NL80211_ATTR_FRAME, len, buf))
++	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
++	    (flags &&
++	     nla_put_u32(msg, NL80211_ATTR_RXMGMT_FLAGS, flags)))
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index a4073e8..3b51a76 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -66,7 +66,7 @@ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
+ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 		      struct wireless_dev *wdev, u32 nlpid,
+ 		      int freq, int sig_dbm,
+-		      const u8 *buf, size_t len, gfp_t gfp);
++		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
+ 
+ void
+ nl80211_radar_notify(struct cfg80211_registered_device *rdev,
+-- 
+1.8.1.2
 
-Now I can start two hostapd on those interfaces and
-everything works just fine. 
-
-# iw dev wlan0-1 set type monitor
-# ip link set dev wlan0-1 address 00:00:fa:22:7c:00
-# iw dev wlan0-1 set type managed
-# ip link
-75: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000
-    link/ether 00:4f:6a:06:57:90 brd ff:ff:ff:ff:ff:ff
-76: wlan0-1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000
-    link/ether 00:00:fa:22:7c:00 brd ff:ff:ff:ff:ff:ff
-
-If I start hostapd on both interfaces now the one on wlan0-1
-will not work correctly (hw won't ack frames).
-
-Also I think it's possible to change active flag on a monitor
-while it's down (check in net/mac80211/cfg.c:75 only applies
-to interfaces that are up):
-
-# iw dev wlan0 interface add wlan0-1 type monitor flags active
-# iw dev wlan0-1 set monitor none
-# iw dev wlan0-1 set monitor active
-# iw dev wlan0-1 set monitor none
-
-  -- kuba
-
-[1] http://moorray.hopto.org/iw_active_monitors.patch
