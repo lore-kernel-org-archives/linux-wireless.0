@@ -1,51 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43461 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751309Ab3FZHbb (ORCPT
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:56546 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788Ab3FYTvL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 03:31:31 -0400
-Message-ID: <1372231882.8157.0.camel@jlt4.sipsolutions.net> (sfid-20130626_093133_906362_434B7761)
-Subject: Re: regression after, " ath9k_htc: Add support for mesh interfaces"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Javier Cardona <javier@cozybit.com>
-Date: Wed, 26 Jun 2013 09:31:22 +0200
-In-Reply-To: <CAG6hwVMa+i=wXRyfcwaXH8NesCXgKXW6Ad4dzgd9DZONGYA=xQ@mail.gmail.com> (sfid-20130625_220609_973590_1D631910)
-References: <51C52E79.30104@rempel-privat.de>
-	 <CAG6hwVOCfDK9nkh3e0fFMGcWp8XLQnPC8TzQb9eET2fwFPq3SA@mail.gmail.com>
-	 <51C93538.4050304@rempel-privat.de>
-	 <CAG6hwVMa+i=wXRyfcwaXH8NesCXgKXW6Ad4dzgd9DZONGYA=xQ@mail.gmail.com>
-	 (sfid-20130625_220609_973590_1D631910)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 25 Jun 2013 15:51:11 -0400
+Received: by mail-oa0-f51.google.com with SMTP id i4so13885390oah.38
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2013 12:51:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAOiHx=mHVhg93pRyq7Qg1H9iTnScGtCUeOoxBxpeHuH6pW2XYQ@mail.gmail.com>
+References: <1372174495-14471-1-git-send-email-zajec5@gmail.com>
+	<CAOiHx=mHVhg93pRyq7Qg1H9iTnScGtCUeOoxBxpeHuH6pW2XYQ@mail.gmail.com>
+Date: Tue, 25 Jun 2013 21:51:11 +0200
+Message-ID: <CACna6rz=LQkaz+b+-gqnXYOL=bJfAVSiU4v50NPeRytmB_y5fw@mail.gmail.com> (sfid-20130625_215114_475528_C114E5F5)
+Subject: Re: [RFC][PATCH] b43: replace B43_BCMA_EXTRA with modparam allhwsupport
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Jonas Gorski <jogo@openwrt.org>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-25 at 13:05 -0700, Thomas Pedersen wrote:
+2013/6/25 Jonas Gorski <jogo@openwrt.org>:
+> On Tue, Jun 25, 2013 at 5:34 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> This allows enabling support for extra hardware with just a module
+>> param, without kernel/module recompilation.
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>>  drivers/net/wireless/b43/Kconfig |    6 ------
+>>  drivers/net/wireless/b43/main.c  |   16 ++++++++++++++--
+>>  2 files changed, 14 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+>> index 3f21e0b..51ff0b1 100644
+>> --- a/drivers/net/wireless/b43/Kconfig
+>> +++ b/drivers/net/wireless/b43/Kconfig
+>> @@ -31,12 +31,6 @@ config B43_BCMA
+>>         depends on B43 && (BCMA = y || BCMA = B43)
+>>         default y
+>>
+>> -config B43_BCMA_EXTRA
+>> -       bool "Hardware support that overlaps with the brcmsmac driver"
+>> -       depends on B43_BCMA
+>> -       default n if BRCMSMAC
+>> -       default y
+>> -
+>>  config B43_SSB
+>>         bool
+>>         depends on B43 && (SSB = y || SSB = B43)
+>> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+>> index a95b77a..583993c 100644
+>> --- a/drivers/net/wireless/b43/main.c
+>> +++ b/drivers/net/wireless/b43/main.c
+>> @@ -113,13 +113,19 @@ static int b43_modparam_pio = 0;
+>>  module_param_named(pio, b43_modparam_pio, int, 0644);
+>>  MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
+>>
+>> +#ifdef CONFIG_BRCMSMAC
+>
+> This is only defined if BRCMSMAC is built-in, but not if it is built
+> as a module; then it's CONFIG_BRCMSMAC_MODULE, which is probably not
+> what you want. To easily catch both, use IS_ENABLED(CONFIG_BRCMSMAC).
+>
+>> +static int modparam_allhwsupport;
+>> +#else
+>> +static int modparam_allhwsupport = 1;
+>> +#endif
+>
+> And since IS_ENABLED returns 0 or 1 you should be able to reduce it to one line:
+>
+> static int modparam_allhwsupport = !IS_ENABLED(CONFIG_BRCMSMAC);
 
-> That warning is triggered by wiphy_verify_combinations():
-> 
->                         if (WARN_ON((wiphy->interface_modes & types) != types))
->                                 return -EINVAL;
-> 
-> But before that, the mesh iftype bit is cleared in ieee80211_register_hw():
-> 
-> #ifndef CONFIG_MAC80211_MESH
->         /* mesh depends on Kconfig, but drivers should set it if they want */
->         local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
-> #endif
-> 
-> It seems the intention was to avoid an #ifdef CONFIG_MAC80211_MESH in
-> every driver, but then mac80211 also has to clear the MESH_POINT bit
-> for each ieee80211_iface_limit? I don't really see a cleaner way of
-> resolving this.
+I love learning new tricks all the time :)
 
-The problem is that the data structures there are const, so we can't
-modify them. I think the other drivers just have an #ifdef on
-MAC80211_MESH or so in there.
-
-johannes
-
+-- 
+Rafał
