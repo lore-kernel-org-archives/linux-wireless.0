@@ -1,108 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33095 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899Ab3FDKOY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 06:14:24 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/6] ath9k: Fix ANI monitoring
-Date: Tue,  4 Jun 2013 15:41:31 +0530
-Message-Id: <1370340695-29003-2-git-send-email-sujith@msujith.org> (sfid-20130604_121427_395007_BE141C00)
-In-Reply-To: <1370340695-29003-1-git-send-email-sujith@msujith.org>
-References: <1370340695-29003-1-git-send-email-sujith@msujith.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:60340 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753536Ab3FYUdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jun 2013 16:33:36 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, <tony@atomide.com>
+Subject: [PATCH 5/5] wlcore: add device tree support to the sdio module
+Date: Tue, 25 Jun 2013 23:33:26 +0300
+Message-ID: <1372192406-29430-6-git-send-email-coelho@ti.com> (sfid-20130625_223353_057372_0158F176)
+In-Reply-To: <1372192406-29430-1-git-send-email-coelho@ti.com>
+References: <1372192406-29430-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+If platform data is not available, try to get the required information
+from the device tree.  Register an OF match table and parse the
+appropriate device tree nodes.
 
-The commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
-changed various ANI operational parameters to address a specific
-card/environment. This is not really applicable for other cards
-in general usage.
-
-As per internal documentation, lowering the immunity level can be
-done only after 5 periods have passed and the CCK/OFDM errors are
-below the low watermak threshold - which have been fixed at 300 and
-400 respectively by the sytems team.
-
-Raising the immunity level can be done when CCK/OFDM errors exceed
-600 and 1000 (per second).
-
-Set these values once during attach.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 29 +++++++++++++++++------------
- drivers/net/wireless/ath/ath9k/ani.h |  2 --
- 2 files changed, 17 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ti/wlcore/sdio.c |   75 ++++++++++++++++++++++++++++++---
+ 1 file changed, 69 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 3ec4c53..1520e55 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -186,14 +186,6 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
- 				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
- 				     entry_ofdm->ofdm_weak_signal_on);
- 	}
--
--	if (aniState->ofdmNoiseImmunityLevel >= ATH9K_ANI_OFDM_DEF_LEVEL) {
--		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
--		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI;
--	} else {
--		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI;
--		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW;
--	}
- }
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 4c7e8ac..1ddda84 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -30,7 +30,7 @@
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/host.h>
+-#include <linux/gpio.h>
++#include <linux/of_irq.h>
+ #include <linux/wl12xx.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/printk.h>
+@@ -214,6 +214,49 @@ static struct wl1271_if_operations sdio_ops = {
+ 	.set_block_size = wl1271_sdio_set_block_size,
+ };
  
- static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
-@@ -439,12 +431,25 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- 		ofdmPhyErrRate, aniState->cckNoiseImmunityLevel,
- 		cckPhyErrRate, aniState->ofdmsTurn);
- 
--	if (aniState->listenTime > ah->aniperiod) {
--		if (cckPhyErrRate < ah->config.cck_trig_low &&
--		    ofdmPhyErrRate < ah->config.ofdm_trig_low) {
-+	if (aniState->listenTime > 5 * ah->aniperiod) {
-+		/*
-+		 * Check if we need to lower immunity if
-+		 * 5 ani_periods have passed.
-+		 */
-+		if (ofdmPhyErrRate <= ah->config.ofdm_trig_low &&
-+		    cckPhyErrRate <= ah->config.cck_trig_low) {
- 			ath9k_hw_ani_lower_immunity(ah);
- 			aniState->ofdmsTurn = !aniState->ofdmsTurn;
--		} else if (ofdmPhyErrRate > ah->config.ofdm_trig_high) {
++static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
++{
++	struct wl12xx_platform_data *pdata;
++	struct device_node *np = dev->of_node;
++
++	if (!np) {
++		np = of_find_matching_node(NULL, dev->driver->of_match_table);
++		if (!np) {
++			dev_notice(dev, "device tree node not available\n");
++			pdata = ERR_PTR(-ENODEV);
++			goto out;
 +		}
-+		ath9k_ani_restart(ah);
-+	} else if (aniState->listenTime > ah->aniperiod) {
-+		/*
-+		 * Check if immunity has to be raised,
-+		 * (either OFDM or CCK).
-+		 */
-+		if (ofdmPhyErrRate > ah->config.ofdm_trig_high &&
-+		    (cckPhyErrRate <= ah->config.cck_trig_high ||
-+		     aniState->ofdmsTurn)) {
- 			ath9k_hw_ani_ofdm_err_trigger(ah);
- 			aniState->ofdmsTurn = false;
- 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 78b9fa9..1088472 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -21,11 +21,9 @@
++	}
++
++	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
++	if (!pdata) {
++		dev_err(dev, "can't allocate platform data\n");
++		pdata = ERR_PTR(-ENODEV);
++		goto out;
++	}
++
++	pdata->irq = irq_of_parse_and_map(np, 0);
++	if (pdata->irq < 0) {
++		dev_err(dev, "can't get interrupt gpio from the device tree\n");
++		goto out_free;
++	}
++
++	/* TODO: make sure we have this when needed (ie. for WL6 and WL7) */
++	of_property_read_u32(np, "refclock", &pdata->board_ref_clock);
++
++	/* TODO: make sure we have this when needed (ie. for WL7) */
++	of_property_read_u32(np, "tcxoclock", &pdata->board_tcxo_clock);
++
++	goto out;
++
++out_free:
++	kfree(pdata);
++	pdata = ERR_PTR(-ENODEV);
++
++out:
++	return pdata;
++}
++
+ static int wl1271_probe(struct sdio_func *func,
+ 				  const struct sdio_device_id *id)
+ {
+@@ -248,11 +291,22 @@ static int wl1271_probe(struct sdio_func *func,
+ 	/* Use block mode for transferring over one block size of data */
+ 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
  
- /* units are errors per second */
- #define ATH9K_ANI_OFDM_TRIG_HIGH          3500
--#define ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI 1000
++	/* The pdata allocated here is freed when the device is freed,
++	 * so we don't need an additional out label to free it in case
++	 * of error further on.
++	 */
++
++	/* Try to get legacy platform data from the board file */
+ 	pdev_data->pdata = wl12xx_get_platform_data();
+ 	if (IS_ERR(pdev_data->pdata)) {
+-		ret = PTR_ERR(pdev_data->pdata);
+-		dev_err(glue->dev, "missing wlan platform data: %d\n", ret);
+-		goto out_free_glue;
++		dev_info(&func->dev,
++			 "legacy platform data not found, trying device tree\n");
++
++		pdev_data->pdata = wlcore_get_pdata_from_of(&func->dev);
++		if (IS_ERR(pdev_data->pdata)) {
++			dev_err(&func->dev, "can't get platform data\n");
++			goto out_free_glue;
++		}
+ 	}
  
- /* units are errors per second */
- #define ATH9K_ANI_OFDM_TRIG_LOW           400
--#define ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI 900
+ 	/* if sdio can keep power while host is suspended, enable wow */
+@@ -386,16 +440,25 @@ static const struct dev_pm_ops wl1271_sdio_pm_ops = {
+ };
+ #endif
  
- /* units are errors per second */
- #define ATH9K_ANI_CCK_TRIG_HIGH           600
++static const struct of_device_id wlcore_sdio_of_match_table[] = {
++	{ .compatible = "ti,wilink6" },
++	{ .compatible = "ti,wilink7" },
++	{ .compatible = "ti,wilink8" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, wlcore_sdio_of_match_table);
++
+ static struct sdio_driver wl1271_sdio_driver = {
+ 	.name		= "wl1271_sdio",
+ 	.id_table	= wl1271_devices,
+ 	.probe		= wl1271_probe,
+ 	.remove		= wl1271_remove,
+-#ifdef CONFIG_PM
+ 	.drv = {
++#ifdef CONFIG_PM
+ 		.pm = &wl1271_sdio_pm_ops,
+-	},
+ #endif
++		.of_match_table = of_match_ptr(wlcore_sdio_of_match_table),
++	},
+ };
+ 
+ static int __init wl1271_init(void)
 -- 
-1.8.3
+1.7.10.4
 
