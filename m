@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:33257 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754517Ab3FOTdJ (ORCPT
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:40918 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751774Ab3FZS7q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jun 2013 15:33:09 -0400
-Received: by mail-lb0-f170.google.com with SMTP id t13so1498672lbd.15
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Jun 2013 12:33:07 -0700 (PDT)
+	Wed, 26 Jun 2013 14:59:46 -0400
+Received: by mail-ie0-f180.google.com with SMTP id f4so30594706iea.25
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jun 2013 11:59:45 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130614173419.GB28497@tuxdriver.com>
-References: <1371206567.8278.3.camel@jlt4.sipsolutions.net>
-	<20130614173419.GB28497@tuxdriver.com>
-Date: Sat, 15 Jun 2013 22:33:07 +0300
-Message-ID: <CANUX_P3s7RZt0geVDZwpjYXg58bA4e_Se40zKmCo2ZZYjj9ubA@mail.gmail.com> (sfid-20130615_213320_410889_71D8A767)
-Subject: Re: pull-request: iwlwifi-fixes 2013-06-14
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
+In-Reply-To: <1372231882.8157.0.camel@jlt4.sipsolutions.net>
+References: <51C52E79.30104@rempel-privat.de> <CAG6hwVOCfDK9nkh3e0fFMGcWp8XLQnPC8TzQb9eET2fwFPq3SA@mail.gmail.com>
+ <51C93538.4050304@rempel-privat.de> <CAG6hwVMa+i=wXRyfcwaXH8NesCXgKXW6Ad4dzgd9DZONGYA=xQ@mail.gmail.com>
+ <1372231882.8157.0.camel@jlt4.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Wed, 26 Jun 2013 11:52:35 -0700
+Message-ID: <CAG6hwVNk-sA_RFYJN+MzSURwWZYd-X3Uu8g2sRP8AfyKWQUQbw@mail.gmail.com> (sfid-20130626_205949_151864_EDB89FF1)
+Subject: Re: regression after, " ath9k_htc: Add support for mesh interfaces"
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Javier Cardona <javier@cozybit.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> I have two more fixes that I think would be worthwhile for 3.10 but
->> admittedly the scenario is somewhat unlikely, so if you want to hold
->> them for 3.11 I can live with that. In that case, I can put them into my
->> -next tree, or you can pull this into -next (but if you don't pull
->> wireless.git first you'd get some more fixes you already have.)
->>
->> These two patches fix two issues with using rfkill randomly during
->> traffic, which would then cause our driver to stop working and not be
->> able to recover at all.
->>
->> johannes
->>
->>
+On Wed, Jun 26, 2013 at 12:31 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2013-06-25 at 13:05 -0700, Thomas Pedersen wrote:
 >
-> It isn't obvious to me that these need to be included in 3.10.  I can
-> pull this into wireless-next once the current stuff in wireless makes
-> it to davem's tree.
+>> That warning is triggered by wiphy_verify_combinations():
+>>
+>>                         if (WARN_ON((wiphy->interface_modes & types) != types))
+>>                                 return -EINVAL;
+>>
+>> But before that, the mesh iftype bit is cleared in ieee80211_register_hw():
+>>
+>> #ifndef CONFIG_MAC80211_MESH
+>>         /* mesh depends on Kconfig, but drivers should set it if they want */
+>>         local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
+>> #endif
+>>
+>> It seems the intention was to avoid an #ifdef CONFIG_MAC80211_MESH in
+>> every driver, but then mac80211 also has to clear the MESH_POINT bit
+>> for each ieee80211_iface_limit? I don't really see a cleaner way of
+>> resolving this.
 >
-> If you decide that these really need to go, please provide some more
-> information on how likely users are to hit the bugs, or how serious
-> the effects of that would be.
->
+> The problem is that the data structures there are const, so we can't
+> modify them. I think the other drivers just have an #ifdef on
+> MAC80211_MESH or so in there.
 
-John, it is really your call. I understand these concerns in -rc5.
-For the first patch, I am not 100% sure that it fixes anything else
-that a print. It is obvious to me that without this patch, you might
-get an error in the log (I reproduced it a few times). I tend to say
-that the print is harmless though.
-The second patch fixes a real issue. The issue is hard to reproduce
-though. You need to get in a case where the queues are full (sw queues
-are stopped) and at that precise time, you need to free the Tx queues
-(RFkill - because any other flow would flush the queues first I
-think). If you got into that situation, then the queues would remain
-stopped after you switch the RFkill button again. So yes... Unlikely.
+Indeed, ath5k and rt2x00 at least already do this.
 
-I would still recommend distros (Stanislaw is CCed) to take both
-patches since they are really safe and can avoid issues.
+Thanks,
 
-Now you have all the data :-)
+--
+Thomas
