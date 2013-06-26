@@ -1,70 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:50984 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751863Ab3FTGrO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jun 2013 02:47:14 -0400
-Received: from mailout-de.gmx.net ([10.1.76.20]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0LiFq9-1UT8BW0frv-00nQ5P for
- <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2013 08:47:13 +0200
-Message-ID: <51C2A567.2010409@rempel-privat.de> (sfid-20130620_084717_513035_401FA804)
-Date: Thu, 20 Jun 2013 08:47:03 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Ignacy Gawedzki <i@lri.fr>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Corey Richardson <corey@octayn.net>
-Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
-References: <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com> <51C1B467.1030509@rempel-privat.de> <20130619140905.GA14079@zenon.in.qult.net> <1371651073.8349.19.camel@jlt4.sipsolutions.net> <51C1C95C.8030301@rempel-privat.de> <20130619175939.GA19405@zenon.in.qult.net> <20130619180354.GB19405@zenon.in.qult.net> <51C1FA76.3090109@rempel-privat.de> <20130619193316.GA29582@zenon.in.qult.net> <51C2942A.2080706@rempel-privat.de> <20130620063925.GA3885@zenon.in.qult.net>
-In-Reply-To: <20130620063925.GA3885@zenon.in.qult.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from smtp26.msg.oleane.net ([62.161.4.26]:38537 "EHLO
+	smtp26.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841Ab3FZR2u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jun 2013 13:28:50 -0400
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp26.msg.oleane.net (MTA) with ESMTP id r5QHSmaL031493
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Jun 2013 19:28:48 +0200
+From: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
+To: linux-wireless@vger.kernel.org
+Cc: "J.P. Tosoni" <jp.tosoni@acksys.fr>
+Subject: [RFC] mac80211: Use libnl-configurable values for retry counts
+Date: Wed, 26 Jun 2013 19:28:43 +0200
+Message-Id: <1372267723-25072-1-git-send-email-jp.tosoni@acksys.fr> (sfid-20130626_192854_423262_C776B6B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 20.06.2013 08:39, schrieb Ignacy Gawedzki:
-> On Thu, Jun 20, 2013 at 07:33:30AM +0200, thus spake Oleksij Rempel:
->> Am 19.06.2013 21:33, schrieb Ignacy Gawedzki:
->>> I tested the thing with at least three different APs:
->>>
->>>    - Netgear DG834Gv4 with latest firmware.
->>
->> this one is BG with Broadcom BCM4318. Is here original firmware or openwrt?
->
-> Original firmware, since OpenWRT doesn't support the ADSL chip.
->
->>>    - Netgear DG834Gv5 (don't know which firmware and can't check at this time).
->>
->> this is BG with Conexant CX94610
->>
->>>    - hostapd (can't say which version at this time either) with the same
->>>      ath9k_htc.
->>
->> this one is actually BGN, did you configured it for N? Can you
->> please provide your hostapd.conf.
->
-> I'll manage to get the configuration as soon as possible.  It seems the
-> association problem went away since I patched the drivers on the AP too, so
-> "unpatching" the drivers on the station is not enough to reproduce the
-> problem.  I'll unpatch the drivers on the AP and re-run the test.
->
->> Do you have problems on all 3 configurations?
->
-> On both Netgears for sure.  For hostapd I'll confirm that in a little while.
->
->>                                                Can you please test it
->> with some N (HT) capable AP. But please, not with N-draft certified
->> AP.
->
-> Is ath9k_htc N-capable?
+From: J.P. Tosoni <jp.tosoni@acksys.fr>
 
-Yes, if hostapd configured properly.
+In the rate control algorithms, the maximum retry count is limited by
+a) a constant value obtained from the hardware driver
+b) a constant limit (6ms) on the time allowed for all
+   retries of each frame.
 
-Question to Corey,
+Replace the retry count by existing configurable values from nl80211.
+Use wiphy->retry_short for management frames.
+Use wiphy->retry_long for other frames.
+Check that the configured value does not exceed driver capabilities.
 
-i assume your old AP was supporting only BG networks. And your new one, 
-which is working fine, supports N?
+Caveat: in minstrel rate control, the retry count is reused for each
+rate of the rate table, potentially resulting in 4*max_retry retries.
+---
+Please comment on the patch and the caveat above, then I'll proceed
+to update iw and to change the hard limit of 30 retries in ath9k.
 
+ net/mac80211/cfg.c              |    4 ++++
+ net/mac80211/rate.c             |    2 +-
+ net/mac80211/rc80211_minstrel.c |    6 +-----
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 082f270..4d3eb56 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2203,11 +2203,15 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 	if (changed & WIPHY_PARAM_RETRY_SHORT) {
+ 		if (wiphy->retry_short > IEEE80211_MAX_TX_RETRY)
+ 			return -EINVAL;
++		if (wiphy->retry_short > local->hw.max_rate_tries)
++			return -EINVAL;
+ 		local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
+ 	}
+ 	if (changed & WIPHY_PARAM_RETRY_LONG) {
+ 		if (wiphy->retry_long > IEEE80211_MAX_TX_RETRY)
+ 			return -EINVAL;
++		if (wiphy->retry_long > local->hw.max_rate_tries)
++			return -EINVAL;
+ 		local->hw.conf.long_frame_max_tx_count = wiphy->retry_long;
+ 	}
+ 	if (changed &
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index a02bef3..9be3006 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -266,7 +266,7 @@ static void __rate_control_send_low(struct ieee80211_hw *hw,
+ 
+ 	info->control.rates[0].count =
+ 		(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
+-		1 : hw->max_rate_tries;
++		1 : hw->conf.short_frame_max_tx_count;
+ 
+ 	info->control.skip_table = 1;
+ }
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index ac7ef54..502d0c9 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -592,11 +592,7 @@ minstrel_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
+ 	/* maximum time that the hw is allowed to stay in one MRR segment */
+ 	mp->segment_size = 6000;
+ 
+-	if (hw->max_rate_tries > 0)
+-		mp->max_retry = hw->max_rate_tries;
+-	else
+-		/* safe default, does not necessarily have to match hw properties */
+-		mp->max_retry = 7;
++	mp->max_retry = hw->conf.long_frame_max_tx_count;
+ 
+ 	if (hw->max_rates >= 4)
+ 		mp->has_mrr = true;
 -- 
-Regards,
-Oleksij
+1.7.2.5
+
