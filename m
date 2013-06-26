@@ -1,118 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55818 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687Ab3F0Moj (ORCPT
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:18294 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751309Ab3FZGYO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 08:44:39 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv4 06/18] cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
-Date: Thu, 27 Jun 2013 14:44:12 +0200
-Message-Id: <1372337064-19254-7-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144541_816457_671E3552)
-In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 26 Jun 2013 02:24:14 -0400
+Date: Tue, 25 Jun 2013 23:24:09 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: grant.likely@linaro.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+Message-ID: <20130626062409.GK5523@atomide.com> (sfid-20130626_082418_460453_AF411992)
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
+ <1372189024.18889.19.camel@cumari.coelho.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372189024.18889.19.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some regulations (like germany, but also FCC) express their transmission
-power limit in dBm/MHz or mW/MHz. To cope with that and be on the safe
-side, reduce the maximum power to half (10 MHz) or quarter (5 MHz)
-when operating on these reduced bandwidth channels.
+* Luciano Coelho <coelho@ti.com> [130625 12:43]:
+> (oh crap, now *really* fixed the ARM mailing list address)
+> 
+> On Tue, 2013-06-25 at 11:35 +0300, Luciano Coelho wrote:
+> > Add device tree bindings documentation for the TI WiLink modules.
+> > Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
+> > modules is supported.
+> > 
+> > Signed-off-by: Luciano Coelho <coelho@ti.com>
+> > ---
+> > 
+> > I created a new directory under net to contain wireless bindings documentation.
+> > 
+> > The actual implementation in the driver will follow separately.
+> > 
+> >  .../devicetree/bindings/net/wireless/ti-wilink.txt |   46 ++++++++++++++++++++
+> >  1 file changed, 46 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+> > 
+> > diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+> > new file mode 100644
+> > index 0000000..d8e8bfbb
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+> > @@ -0,0 +1,46 @@
+> > +TI WiLink Wireless Modules Device Tree Bindings
+> > +===============================================
+> > +
+> > +The WiLink modules provide wireless connectivity, such as WLAN,
+> > +Bluetooth, FM and NFC.
+> > +
+> > +There are several different modules available, which can be grouped by
+> > +their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
+> > +currently supported with device tree.
+> > +
+> > +Currently, only the WLAN portion of the modules is supported with
+> > +device tree.
+> > +
+> > +Required properties:
+> > +--------------------
+> > +
+> > +- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
+> > +- interrupt-parent: the interrupt controller
+> > +- interrupts: out-of-band WLAN interrupt
+> > +	See the interrupt controller's bindings documentation for
+> > +	detailed definition.
+> > +
+> > +Optional properties:
+> > +--------------------
+> > +
+> > +- refclock: the internal WLAN reference clock frequency (required for
+> > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
+> > +  following:
+> > +	0 = 19.2 MHz
+> > +	1 = 26.0 MHz
+> > +	2 = 38.4 MHz
+> > +	3 = 52.0 MHz
+> > +	4 = 38.4 MHz, XTAL
+> > +	5 = 26.0 MHz, XTAL
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+This is just the omap refclock, right? If so, you can just pass the
+standard clock phandle. I know we don't yet have the DT clocks merged,
+but Tero just posted another revision of those.
 
----
-Changes to PATCHv3:
- * consider max_reg_power, max_power might contain the hardware limit
----
- include/net/cfg80211.h |   27 +++++++++++++++++++++++++++
- net/mac80211/iface.c   |    2 +-
- net/mac80211/main.c    |    2 +-
- net/mac80211/mlme.c    |    3 ++-
- 4 files changed, 31 insertions(+), 3 deletions(-)
+> > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
+> > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
+> > +  following:
+> > +	0 = 19.200 MHz
+> > +	1 = 26.000 MHz
+> > +	2 = 38.400 MHz
+> > +	3 = 52.000 MHz
+> > +	4 = 16.368 MHz
+> > +	5 = 32.736 MHz
+> > +	6 = 16.800 MHz
+> > +	7 = 33.600 MHz
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a0c5e04..cbe7b91 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -461,6 +461,33 @@ ieee80211_chandef_rate_flags(struct cfg80211_chan_def *chandef)
- }
+Where does this clock come from? Maybe this can be set based on the
+compatible value if it's completely internal?
  
- /**
-+ * ieee80211_chandef_max_power - maximum transmission power for the chandef
-+ *
-+ * In some regulations, the transmit power may depend on the configured channel
-+ * bandwidth which may be defined as dBm/MHz. This function returns the actual
-+ * max_power for non-standard (20 MHz) channels.
-+ *
-+ * @chandef: channel definition for the channel
-+ *
-+ * Returns: maximum allowed transmission power in dBm for the chandef
-+ */
-+static inline int
-+ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
-+{
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		return min(chandef->chan->max_reg_power - 6,
-+			   chandef->chan->max_power);
-+	case NL80211_CHAN_WIDTH_10:
-+		return min(chandef->chan->max_reg_power - 3,
-+			   chandef->chan->max_power);
-+	default:
-+		break;
-+	}
-+	return chandef->chan->max_power;
-+}
-+
-+/**
-  * enum survey_info_flags - survey information flags
-  *
-  * @SURVEY_INFO_NOISE_DBM: noise (in dBm) was filled in
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index a2a8250..093c34a 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -54,7 +54,7 @@ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
- 		return false;
- 	}
- 
--	power = chanctx_conf->def.chan->max_power;
-+	power = ieee80211_chandef_max_power(&chanctx_conf->def);
- 	rcu_read_unlock();
- 
- 	if (sdata->user_power_level != IEEE80211_UNSET_POWER_LEVEL)
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 626c83c..a1d51af 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -151,7 +151,7 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
- 		changed |= IEEE80211_CONF_CHANGE_SMPS;
- 	}
- 
--	power = chandef.chan->max_power;
-+	power = ieee80211_chandef_max_power(&chandef);
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 3848b8a..5c1de81 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -747,7 +747,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		*pos++ = WLAN_EID_PWR_CAPABILITY;
- 		*pos++ = 2;
- 		*pos++ = 0; /* min tx power */
--		*pos++ = chan->max_power; /* max tx power */
-+		 /* max tx power */
-+		*pos++ = ieee80211_chandef_max_power(&chanctx_conf->def);
- 
- 		/* 2. supported channels */
- 		/* TODO: get this in reg domain format */
--- 
-1.7.10.4
+> If this is okay for everyone, can I push this via my tree (which goes to
+> linux-wireless->net->linus)? I think it makes more sense to send the
+> documentation together with the patch that actually implements the DT
+> node parsing in the driver.
 
+If we can use the standard bindings, it might be worth waiting until
+we have the DT clocks available as we have the pdata workaround merged
+anyways. That's because then we don't need to support the custom
+binding later on ;)
+
+Regards,
+
+Tony
