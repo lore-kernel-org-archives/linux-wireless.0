@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39859 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:44849 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752369Ab3FEG7u (ORCPT
+	with ESMTP id S1752210Ab3FZPRi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 02:59:50 -0400
-Message-ID: <1370415586.8920.4.camel@jlt4.sipsolutions.net> (sfid-20130605_085953_537710_C5DC5D6F)
-Subject: Re: wireless tree rebased (from 5/28), Broadcom bits dropped
+	Wed, 26 Jun 2013 11:17:38 -0400
+Message-ID: <1372259854.13529.14.camel@jlt4.sipsolutions.net> (sfid-20130626_171749_096804_D9BCCD9F)
+Subject: Re: [PATCH v12 1/2] cfg80211: add 'flags' to cfg80211_rx_mgmt()
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Gustavo Padovan <gustavo.padovan@collabora.co.uk>,
-	Luciano Coelho <coelho@ti.com>
-Date: Wed, 05 Jun 2013 08:59:46 +0200
-In-Reply-To: <20130604215320.GC11199@tuxdriver.com> (sfid-20130605_000022_753591_1B1E52D0)
-References: <20130604212602.GB11199@tuxdriver.com>
-	 <20130604215320.GC11199@tuxdriver.com>
-	 (sfid-20130605_000022_753591_1B1E52D0)
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Date: Wed, 26 Jun 2013 17:17:34 +0200
+In-Reply-To: <1372167756-17928-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1372167756-17928-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1372167756-17928-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-04 at 17:53 -0400, John W. Linville wrote:
-> I messed this up too -- bad day...
-> 
-> If you pulled in between the earlier message and this one, please
-> do so again.  If you saw this message before taking any action to
-> clean-up my mess, then you are OK.
+On Tue, 2013-06-25 at 16:42 +0300, Vladimir Kondratiev wrote:
 
-This was confusing, I think you rebased around some merges instead of
-redoing the merges? My patches are in, but suddenly got new commit IDs,
-e.g. fa331699d05ce1d0d4896eb4a137cfae50d7afde (new) vs.
-c2c15e215e860c99b86ddfc4be4bb25cf180fed0 for "mac80211: work around
-broken APs not including HT info".
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -1436,6 +1436,8 @@ enum nl80211_commands {
+>   *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
+>   *	update a TDLS peer STA entry.
+>   *
+> + * @NL80211_ATTR_RXMGMT_FLAGS: flags for cfg80211_rx_mgmt, u32
 
-This will cause git to pull them in again when I send a new pull
-request, so it would have been nicer to redo the merges, but anyway ...
-just a heads-up for everyone that here it's a bit confusing now.
+That's a little insufficient, don't you think? cfg80211_rx_mgmt()
+doesn't even really make sense to userspace, you should point to the
+nl80211 event and maybe even reference this new attribute in the command
+description.
+
+> +/**
+> + * enum nl80211_rxmgmt_flags - flags for cfg80211_rx_mgmt
+> + *
+> + * @NL80211_RXMGMT_FLAG_REPLIED: frame was replied by device/driver.
+> + */
+> +enum nl80211_rxmgmt_flags {
+> +	NL80211_RXMGMT_FLAG_REPLIED = (1 << 0),
+
+No need for parentheses.
+
+>  bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
+> -		      const u8 *buf, size_t len, gfp_t gfp)
+> +		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
+
+I'm starting to wonder if this function has too many arguments?
+Thoughts? Maybe it should get a struct or so? Not really sure ... could
+just be a worthwhile cleanup afterwards?
 
 johannes
 
