@@ -1,103 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:54136 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752753Ab3FCDwW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Jun 2013 23:52:22 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/7] ath9k: Set ofdmWeakSigDetect directly
-Date: Mon,  3 Jun 2013 09:19:27 +0530
-Message-Id: <1370231369-16241-5-git-send-email-sujith@msujith.org> (sfid-20130603_055227_237218_EF8ACD16)
-In-Reply-To: <1370231369-16241-1-git-send-email-sujith@msujith.org>
-References: <1370231369-16241-1-git-send-email-sujith@msujith.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:1762 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751447Ab3FZMUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jun 2013 08:20:33 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 4/9] brcmfmac: use unified dongle address preparation
+ function
+Date: Wed, 26 Jun 2013 14:20:17 +0200
+Message-ID: <1372249222-4858-5-git-send-email-arend@broadcom.com> (sfid-20130626_142043_135652_31FA9D84)
+In-Reply-To: <1372249222-4858-1-git-send-email-arend@broadcom.com>
+References: <1372249222-4858-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Franky Lin <frankyl@broadcom.com>
 
-The macros ATH9K_ANI_USE_OFDM_WEAK_SIG can be removed.
+Introduce a unified dongle backplane address preparation function
+brcmf_sdio_addrprep to replace duplicate address prep code.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c        | 6 +-----
- drivers/net/wireless/ath/ath9k/ani.h        | 6 +-----
- drivers/net/wireless/ath/ath9k/ar5008_phy.c | 2 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 2 +-
- 4 files changed, 4 insertions(+), 12 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   79 +++++++-------------
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    3 -
+ 2 files changed, 27 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 734e72d..ba0bad6 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -505,14 +505,10 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
- 		struct ar5416AniState *ani = &chan->ani;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index c9c5ad2..70cd0e9 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -162,7 +162,7 @@ int brcmf_sdio_intr_unregister(struct brcmf_sdio_dev *sdiodev)
+ 	return 0;
+ }
  
- 		ani->spurImmunityLevel = ATH9K_ANI_SPUR_IMMUNE_LVL;
--
- 		ani->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
--
- 		ani->mrcCCK = AR_SREV_9300_20_OR_LATER(ah) ? true : false;
--
- 		ani->ofdmsTurn = true;
--
--		ani->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
-+		ani->ofdmWeakSigDetect = true;
- 		ani->cckNoiseImmunityLevel = ATH9K_ANI_CCK_DEF_LEVEL;
- 		ani->ofdmNoiseImmunityLevel = ATH9K_ANI_OFDM_DEF_LEVEL;
+-int
++static int
+ brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+ {
+ 	int err = 0, i;
+@@ -193,12 +193,33 @@ brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+ 	return err;
+ }
+ 
++static int
++brcmf_sdio_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
++{
++	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
++	int err = 0;
++
++	if (bar0 != sdiodev->sbwad) {
++		err = brcmf_sdcard_set_sbaddr_window(sdiodev, bar0);
++		if (err)
++			return err;
++
++		sdiodev->sbwad = bar0;
++	}
++
++	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
++
++	if (width == 4)
++		*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++
++	return 0;
++}
++
+ int
+ brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 			void *data, bool write)
+ {
+ 	u8 func_num, reg_size;
+-	u32 bar;
+ 	s32 retry = 0;
+ 	int ret;
+ 
+@@ -218,18 +239,7 @@ brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		func_num = SDIO_FUNC_1;
+ 		reg_size = 4;
+ 
+-		/* Set the window for SB core register */
+-		bar = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+-		if (bar != sdiodev->sbwad) {
+-			ret = brcmf_sdcard_set_sbaddr_window(sdiodev, bar);
+-			if (ret != 0) {
+-				memset(data, 0xFF, reg_size);
+-				return ret;
+-			}
+-			sdiodev->sbwad = bar;
+-		}
+-		addr &= SBSDIO_SB_OFT_ADDR_MASK;
+-		addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++		brcmf_sdio_addrprep(sdiodev, reg_size, &addr);
  	}
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 07079f2..c585e05 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -34,11 +34,7 @@
- #define ATH9K_ANI_CCK_TRIG_LOW            300
  
- #define ATH9K_ANI_NOISE_IMMUNE_LVL        4
--#define ATH9K_ANI_USE_OFDM_WEAK_SIG       true
--#define ATH9K_ANI_CCK_WEAK_SIG_THR        false
--
- #define ATH9K_ANI_SPUR_IMMUNE_LVL         3
--
- #define ATH9K_ANI_FIRSTEP_LVL             2
- 
- #define ATH9K_ANI_RSSI_THR_HIGH           40
-@@ -107,7 +103,7 @@ struct ar5416AniState {
- 	u8 mrcCCK;
- 	u8 spurImmunityLevel;
- 	u8 firstepLevel;
--	u8 ofdmWeakSigDetect;
-+	bool ofdmWeakSigDetect;
- 	u32 listenTime;
- 	u32 ofdmPhyErrCount;
- 	u32 cckPhyErrCount;
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 391da5a..92b79a2 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -1251,7 +1251,7 @@ static void ar5008_hw_ani_cache_ini_regs(struct ath_hw *ah)
- 	/* these levels just got reset to defaults by the INI */
- 	aniState->spurImmunityLevel = ATH9K_ANI_SPUR_IMMUNE_LVL;
- 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
--	aniState->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
-+	aniState->ofdmWeakSigDetect = true;
- 	aniState->mrcCCK = false; /* not available on pre AR9003 */
+ 	do {
+@@ -452,28 +462,6 @@ static int brcmf_sdio_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	return ret;
  }
  
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index e1714d7..53562a4 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1214,7 +1214,7 @@ static void ar9003_hw_ani_cache_ini_regs(struct ath_hw *ah)
- 	/* these levels just got reset to defaults by the INI */
- 	aniState->spurImmunityLevel = ATH9K_ANI_SPUR_IMMUNE_LVL;
- 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
--	aniState->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
-+	aniState->ofdmWeakSigDetect = true;
- 	aniState->mrcCCK = true;
+-static int brcmf_sdcard_recv_prepare(struct brcmf_sdio_dev *sdiodev, uint fn,
+-				     uint width, u32 *addr)
+-{
+-	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+-	int err = 0;
+-
+-	if (bar0 != sdiodev->sbwad) {
+-		err = brcmf_sdcard_set_sbaddr_window(sdiodev, bar0);
+-		if (err)
+-			return err;
+-
+-		sdiodev->sbwad = bar0;
+-	}
+-
+-	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
+-
+-	if (width == 4)
+-		*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+-
+-	return 0;
+-}
+-
+ int
+ brcmf_sdcard_recv_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
+ 		      uint flags, u8 *buf, uint nbytes)
+@@ -508,7 +496,7 @@ brcmf_sdcard_recv_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
+ 		  fn, addr, pkt->len);
+ 
+ 	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
+-	err = brcmf_sdcard_recv_prepare(sdiodev, fn, width, &addr);
++	err = brcmf_sdio_addrprep(sdiodev, width, &addr);
+ 	if (err)
+ 		goto done;
+ 
+@@ -532,7 +520,7 @@ int brcmf_sdcard_recv_chain(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
+ 		  fn, addr, pktq->qlen);
+ 
+ 	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
+-	err = brcmf_sdcard_recv_prepare(sdiodev, fn, width, &addr);
++	err = brcmf_sdio_addrprep(sdiodev, width, &addr);
+ 	if (err)
+ 		goto done;
+ 
+@@ -570,33 +558,20 @@ brcmf_sdcard_send_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
+ 		      uint flags, struct sk_buff *pkt)
+ {
+ 	uint width;
+-	uint bar0 = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+ 	int err = 0;
+ 	struct sk_buff_head pkt_list;
+ 
+ 	brcmf_dbg(SDIO, "fun = %d, addr = 0x%x, size = %d\n",
+ 		  fn, addr, pkt->len);
+ 
+-	if (bar0 != sdiodev->sbwad) {
+-		err = brcmf_sdcard_set_sbaddr_window(sdiodev, bar0);
+-		if (err)
+-			goto done;
+-
+-		sdiodev->sbwad = bar0;
+-	}
+-
+-	addr &= SBSDIO_SB_OFT_ADDR_MASK;
+-
+ 	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
+-	if (width == 4)
+-		addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++	brcmf_sdio_addrprep(sdiodev, width, &addr);
+ 
+ 	skb_queue_head_init(&pkt_list);
+ 	skb_queue_tail(&pkt_list, pkt);
+ 	err = brcmf_sdio_buffrw(sdiodev, fn, true, addr, &pkt_list);
+ 	skb_dequeue_tail(&pkt_list);
+ 
+-done:
+ 	return err;
  }
  
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+index 69c03fe..09786a5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+@@ -249,9 +249,6 @@ extern int brcmf_sdcard_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
+ extern int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev);
+ extern int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev);
+ 
+-extern int brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev,
+-					  u32 address);
+-
+ /* attach, return handler on success, NULL if failed.
+  *  The handler shall be provided by all subsequent calls. No local cache
+  *  cfghdl points to the starting address of pci device mapped memory
 -- 
-1.8.3
+1.7.10.4
+
 
