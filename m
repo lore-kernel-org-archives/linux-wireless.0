@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:42487 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899Ab3FDKOc (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43477 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166Ab3FZHhX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 06:14:32 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/6] ath9k: Remove unused ANI macros
-Date: Tue,  4 Jun 2013 15:41:35 +0530
-Message-Id: <1370340695-29003-6-git-send-email-sujith@msujith.org> (sfid-20130604_121434_716269_61595F59)
-In-Reply-To: <1370340695-29003-1-git-send-email-sujith@msujith.org>
-References: <1370340695-29003-1-git-send-email-sujith@msujith.org>
+	Wed, 26 Jun 2013 03:37:23 -0400
+Message-ID: <1372232238.8157.2.camel@jlt4.sipsolutions.net> (sfid-20130626_093737_783507_5854A1CE)
+Subject: Re: [PATCH] cfg80211/mac80211: fix doc compilation warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 26 Jun 2013 09:37:18 +0200
+In-Reply-To: <1372189700-6247-1-git-send-email-michael.opdenacker@free-electrons.com>
+References: <1372189700-6247-1-git-send-email-michael.opdenacker@free-electrons.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, 2013-06-25 at 21:48 +0200, Michael Opdenacker wrote:
+> This patch fixes countless "No description found for parameter"
+> warnings generating documentation (running "make htmldocs"),
+> because the comments do not match the actual prototypes in the code.
+> 
+> This issue didn't exist in 3.9. It may we worth fixing in 3.10
+> (if it's not too late).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ani.h | 11 -----------
- 1 file changed, 11 deletions(-)
+I think it's way late. Besides, all of this is already fixed in -next
+trees.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 1088472..b75aea2 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -21,17 +21,10 @@
- 
- /* units are errors per second */
- #define ATH9K_ANI_OFDM_TRIG_HIGH          3500
--
--/* units are errors per second */
- #define ATH9K_ANI_OFDM_TRIG_LOW           400
--
--/* units are errors per second */
- #define ATH9K_ANI_CCK_TRIG_HIGH           600
--
--/* units are errors per second */
- #define ATH9K_ANI_CCK_TRIG_LOW            300
- 
--#define ATH9K_ANI_NOISE_IMMUNE_LVL        4
- #define ATH9K_ANI_SPUR_IMMUNE_LVL         3
- #define ATH9K_ANI_FIRSTEP_LVL             2
- 
-@@ -43,10 +36,6 @@
- /* in ms */
- #define ATH9K_ANI_POLLINTERVAL            1000
- 
--#define HAL_NOISE_IMMUNE_MAX              4
--#define HAL_SPUR_IMMUNE_MAX               7
--#define HAL_FIRST_STEP_MAX                2
--
- #define ATH9K_SIG_FIRSTEP_SETTING_MIN     0
- #define ATH9K_SIG_FIRSTEP_SETTING_MAX     20
- #define ATH9K_SIG_SPUR_IMM_SETTING_MIN    0
--- 
-1.8.3
+
+> @@ -4153,6 +4153,7 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
+>   * cfg80211_crit_proto_stopped() - indicate critical protocol stopped by driver.
+>   *
+>   * @wdev: the wireless device for which critical protocol is stopped.
+> + * @gfp: the type of memory to allocate (see kmalloc).
+
+This is also wrong, the allocation flags don't really change the *type*
+of memory, but only *how* it is allocated.
+
+johannes
 
