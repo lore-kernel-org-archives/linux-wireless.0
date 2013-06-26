@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:60785 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756816Ab3FLWCD (ORCPT
+Received: from smtp03.msg.oleane.net ([62.161.4.3]:52751 "EHLO
+	smtp03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631Ab3FZJgR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jun 2013 18:02:03 -0400
-Date: Wed, 12 Jun 2013 15:01:59 -0700 (PDT)
-Message-Id: <20130612.150159.936180836505278347.davem@davemloft.net> (sfid-20130613_000213_106471_E0627815)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2013-06-11
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130611190546.GE3196@tuxdriver.com>
-References: <20130611190546.GE3196@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
+	Wed, 26 Jun 2013 05:36:17 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+References: <1372174262-13526-1-git-send-email-cedric.voncken@acksys.fr>	 (sfid-20130625_205307_645728_289E3D48) <1372232028.8157.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1372232028.8157.1.camel@jlt4.sipsolutions.net>
+Subject: RE: [PATCH] wireless: vlan priority handling in WMM
+Date: Wed, 26 Jun 2013 11:36:13 +0200
+Message-ID: <059a01ce7250$9980fa80$cc82ef80$@acksys.fr> (sfid-20130626_113620_627997_FE6531B8)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 11 Jun 2013 15:05:48 -0400
 
-> This pull request is intended for the 3.11 stream...
-> 
-> One big highlight is the cw1200 driver the ST-E CW1100 & CW1200
-> WLAN chipsets.  This one has been lingering for a while, lacking
-> some review comments.  Once started getting pulled into linux-next,
-> it got a bit more attention and a number of improvements were made
-> over the initial cut.  No doubt there will be more changes ahead,
-> but I think it is looking alright at this point.
-> 
-> Along with that, there is the usual flurry of updates to the mac80211
-> core and the iwlwifi, mwifiex, ath9k, rt2x00, wil6210, and other
-> drivers.  A few of the highlights are some rt2x00 refactoring/cleanup
-> by Gabor Juhos, some rt2800 hardware support enhancements by Stanislaw
-> Gruszka, some iwlwifi power management updates from Alexander Bondar,
-> some enhanced bcma SPROM support from Rafa©© Mi©©ecki, and a variety
-> of other things here and there.
+>>On Tue, 2013-06-25 at 17:31 +0200, cedric.voncken@acksys.fr wrote:
+>> From: Cedric Voncken <cedric.voncken@acksys.fr>
+>> 
+>> If the VLAN priority is set in skb->vlan_tci use it to determine the WMM priority.
 
-Pulled, thanks John.
+>What's the VLAN priority? How are you even running 802.1q on top of wifi? heh.
+I used the wireless as bridge (The wireless vif client is bridged with my eth0). The VLAN tag is already present in frame when I received it from eth0. The eth0 driver set the skb->vlan_tci. 
+
+>> @@ -694,6 +695,10 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
+>>  	if (skb->priority >= 256 && skb->priority <= 263)
+>>  		return skb->priority - 256;
+>>  
+>> +	vlan_priority = (skb->vlan_tci >> 13) & 0x07;
+
+>Are there no symbolic constants for this?
+Fix in V2
+
+>> +		if (vlan_priority > 0)
+>> +			return vlan_priority;
+
+>I think you got indentation a bit confused :-)
+Sorry, it will fix in V2.
+
+Cedric
+
+
