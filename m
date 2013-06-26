@@ -1,29 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:56525 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752838Ab3FDLtv (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41135 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349Ab3FZPPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 07:49:51 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Wed, 26 Jun 2013 11:15:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iw: fix incorrect bit shifting in print_ht_mcs
+Date: Wed, 26 Jun 2013 11:07:40 -0400
+Message-Id: <1372259260-7061-1-git-send-email-linville@tuxdriver.com> (sfid-20130626_171517_427761_C5668667)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20909.54201.497575.556986@gargle.gargle.HOWL> (sfid-20130604_134954_971519_398F2A2C)
-Date: Tue, 4 Jun 2013 17:17:05 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/6] ath9k: Fix ANI monitoring
-In-Reply-To: <51ADD058.5000003@openwrt.org>
-References: <1370340695-29003-1-git-send-email-sujith@msujith.org>
-	<1370340695-29003-2-git-send-email-sujith@msujith.org>
-	<51ADD058.5000003@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> With this patch, the raise-limit is always 3500, you should change it to
-> 1000 when removing the above-/below-INI distinction.
+From: "John W. Linville" <linville@tuxdriver.com>
 
-Thanks, I'll fix this and send a v2.
+>From a Coverity run on version 3.10:
 
-Sujith
+iw-3.10/util.c:569:result_independent_of_operands –
+	"mcs[10] >> 8" is 0 regardless of the values of its operands. This occurs as the bitwise first operand of '&'.
+
+This seems more like what was intended...
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/util.c b/util.c
+index d8b76ee..e3d0c27 100644
+--- a/util.c
++++ b/util.c
+@@ -574,7 +574,7 @@ void print_ht_mcs(const __u8 *mcs)
+ 	unsigned int tx_max_num_spatial_streams, max_rx_supp_data_rate;
+ 	bool tx_mcs_set_defined, tx_mcs_set_equal, tx_unequal_modulation;
+ 
+-	max_rx_supp_data_rate = ((mcs[10] >> 8) & ((mcs[11] & 0x3) << 8));
++	max_rx_supp_data_rate = (mcs[10] & ((mcs[11] & 0x3) << 8));
+ 	tx_mcs_set_defined = !!(mcs[12] & (1 << 0));
+ 	tx_mcs_set_equal = !(mcs[12] & (1 << 1));
+ 	tx_max_num_spatial_streams = ((mcs[12] >> 2) & 3) + 1;
+-- 
+1.8.1.4
+
