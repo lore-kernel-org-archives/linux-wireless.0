@@ -1,78 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:58645 "EHLO
-	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755763Ab3FRXmG (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:40481 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751817Ab3FZLw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 19:42:06 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/3] mwifiex: code rearrangement for better readability
-Date: Tue, 18 Jun 2013 16:36:56 -0700
-Message-ID: <1371598618-26593-1-git-send-email-bzhao@marvell.com> (sfid-20130619_014208_745055_BA573B08)
+	Wed, 26 Jun 2013 07:52:57 -0400
+Date: Wed, 26 Jun 2013 13:52:55 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: pull request: bluetooth 2013-06-23
+Message-ID: <20130626115255.GA7940@amd.pavel.ucw.cz> (sfid-20130626_135328_776284_9F95DE41)
+References: <20130623021351.GA2327@joana>
+ <20130625201217.GA13879@amd.pavel.ucw.cz>
+ <E95EC814-F064-4AEB-AE13-79982D3BE5E8@holtmann.org>
+ <20130625210039.GA28448@joana>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130625210039.GA28448@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Tue 2013-06-25 22:00:39, Gustavo Padovan wrote:
+> Hi Marcel,
+> 
+> * Marcel Holtmann <marcel@holtmann.org> [2013-06-25 13:49:19 -0700]:
+> 
+> > Hi Pavel,
+> > 
+> > >> Jaganath Kanakkassery (1):
+> > >>      Bluetooth: Fix invalid length check in l2cap_information_rsp()
+> > > 
+> > > Could we add the "3.10 vs. thinkpad x60" patch that fixes regression?
+> > > It is from Johan Hedberg…
+> > 
+> > that one went into net-next tree. It is scheduled for 3.11 right now.
+> > 
+> > After 3.10 is out, maybe it can go into -stable, but otherwise I think it is bit late now. Unless someone wants to cherry-pick it.
+> 
+> That patch is actually in 3.10 already, it was included in the last pull
+> request and John took it to wireless.git.
 
-Use negative check (if(!bss_desc)) and return failure
-instead of failing a NULL check later in
-mwifiex_check_network_compatibility() routine.
+Is it? I tried pulling yesterday (some updates) and today (no
+changes), am on:
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sta_ioctl.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+Linux amd 3.10.0-rc7+ #267 SMP Tue Jun 25 23:32:24 CEST 2013 i686
+GNU/Linux
 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 23aa910..15b5457 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -255,25 +255,24 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 	}
- 
- 	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
-+		u8 config_bands;
-+
- 		/* Infra mode */
- 		ret = mwifiex_deauthenticate(priv, NULL);
- 		if (ret)
- 			goto done;
- 
--		if (bss_desc) {
--			u8 config_bands = 0;
-+		if (!bss_desc)
-+			return -1;
- 
--			if (mwifiex_band_to_radio_type((u8) bss_desc->bss_band)
--			    == HostCmd_SCAN_RADIO_TYPE_BG)
--				config_bands = BAND_B | BAND_G | BAND_GN |
--					       BAND_GAC;
--			else
--				config_bands = BAND_A | BAND_AN | BAND_AAC;
-+		if (mwifiex_band_to_radio_type(bss_desc->bss_band) ==
-+						HostCmd_SCAN_RADIO_TYPE_BG)
-+			config_bands = BAND_B | BAND_G | BAND_GN | BAND_GAC;
-+		else
-+			config_bands = BAND_A | BAND_AN | BAND_AAC;
- 
--			if (!((config_bands | adapter->fw_bands) &
--			      ~adapter->fw_bands))
--				adapter->config_bands = config_bands;
--		}
-+		if (!((config_bands | adapter->fw_bands) & ~adapter->fw_bands))
-+			adapter->config_bands = config_bands;
- 
- 		ret = mwifiex_check_network_compatibility(priv, bss_desc);
- 		if (ret)
+and bluetooth is still broken :-(.
+									Pavel
 -- 
-1.8.2.3
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
