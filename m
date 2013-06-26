@@ -1,62 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4847 "EHLO mms2.broadcom.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:41245 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932757Ab3FFLTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 07:19:17 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 07/22] brcmfmac: On bus flow control use fw signalling
- or netif.
-Date: Thu, 6 Jun 2013 13:17:52 +0200
-Message-ID: <1370517487-14395-8-git-send-email-arend@broadcom.com> (sfid-20130606_131921_256883_72F204E1)
-In-Reply-To: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-References: <1370517487-14395-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752233Ab3FZRzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jun 2013 13:55:24 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 3/5] rt2x00: rt2800lib: introduce rt2800_eeprom_read_from_array helper
+Date: Wed, 26 Jun 2013 19:55:16 +0200
+Message-Id: <1372269318-30233-4-git-send-email-juhosg@openwrt.org> (sfid-20130626_195529_043514_8E517F5F)
+In-Reply-To: <1372269318-30233-1-git-send-email-juhosg@openwrt.org>
+References: <1372269318-30233-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Add a new helper function and use that for reading
+single elements of various arrays in the EEPROM.
 
-Currently on a bus flow control both fws is informed and netif queue
-gets closed. In case of fw signalling enabled, let the flow control
-be handled by fw signalling only.
+The patch does not change the current behaviour,
+but it allows to use sequential values for the
+rt2800_eeprom_word enums. The conversion will be
+implemented in a subsequent change.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |   13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |   23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 2fee9b6..6d6ff33 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -269,11 +269,14 @@ void brcmf_txflowblock(struct device *dev, bool state)
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	brcmf_fws_bus_blocked(drvr, state);
--
--	for (i = 0; i < BRCMF_MAX_IFS; i++)
--		brcmf_txflowblock_if(drvr->iflist[i],
--				     BRCMF_NETIF_STOP_REASON_BLOCK_BUS, state);
-+	if (brcmf_fws_fc_active(drvr->fws)) {
-+		brcmf_fws_bus_blocked(drvr, state);
-+	} else {
-+		for (i = 0; i < BRCMF_MAX_IFS; i++)
-+			brcmf_txflowblock_if(drvr->iflist[i],
-+					     BRCMF_NETIF_STOP_REASON_BLOCK_BUS,
-+					     state);
-+	}
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 522f0b1..b59772a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -239,6 +239,14 @@ static void rt2800_eeprom_write(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_eeprom_write(rt2x00dev, word, data);
  }
  
- void brcmf_rx_frames(struct device *dev, struct sk_buff_head *skb_list)
++static void rt2800_eeprom_read_from_array(struct rt2x00_dev *rt2x00dev,
++					  const enum rt2800_eeprom_word array,
++					  unsigned int offset,
++					  u16 *data)
++{
++	rt2x00_eeprom_read(rt2x00dev, array + offset, data);
++}
++
+ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u32 reg;
+@@ -2995,8 +3003,8 @@ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
+ 		 * .11b data rate need add additional 4dbm
+ 		 * when calculating eirp txpower.
+ 		 */
+-		rt2800_eeprom_read(rt2x00dev, EEPROM_TXPOWER_BYRATE + 1,
+-				   &eeprom);
++		rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
++					      1, &eeprom);
+ 		criterion = rt2x00_get_field16(eeprom,
+ 					       EEPROM_TXPOWER_BYRATE_RATE0);
+ 
+@@ -3101,8 +3109,8 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_register_read(rt2x00dev, offset, &reg);
+ 
+ 		/* read the next four txpower values */
+-		rt2800_eeprom_read(rt2x00dev, EEPROM_TXPOWER_BYRATE + i,
+-				   &eeprom);
++		rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
++					      i, &eeprom);
+ 
+ 		is_rate_b = i ? 0 : 1;
+ 		/*
+@@ -3150,8 +3158,8 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
+ 		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE3, txpower);
+ 
+ 		/* read the next four txpower values */
+-		rt2800_eeprom_read(rt2x00dev, EEPROM_TXPOWER_BYRATE + i + 1,
+-				   &eeprom);
++		rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_TXPOWER_BYRATE,
++					      i + 1, &eeprom);
+ 
+ 		is_rate_b = 0;
+ 		/*
+@@ -4579,7 +4587,8 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	for (i = 0; i < EEPROM_BBP_SIZE; i++) {
+-		rt2800_eeprom_read(rt2x00dev, EEPROM_BBP_START + i, &eeprom);
++		rt2800_eeprom_read_from_array(rt2x00dev, EEPROM_BBP_START, i,
++					      &eeprom);
+ 
+ 		if (eeprom != 0xffff && eeprom != 0x0000) {
+ 			reg_id = rt2x00_get_field16(eeprom, EEPROM_BBP_REG_ID);
 -- 
-1.7.10.4
-
+1.7.10
 
