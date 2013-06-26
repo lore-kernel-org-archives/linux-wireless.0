@@ -1,45 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [78.193.33.39] ([78.193.33.39]:45673 "EHLO qult.net"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S933869Ab3FSR7x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 13:59:53 -0400
-Date: Wed, 19 Jun 2013 19:59:39 +0200
-From: Ignacy Gawedzki <i@lri.fr>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Corey Richardson <corey@octayn.net>
-Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
-Message-ID: <20130619175939.GA19405@zenon.in.qult.net> (sfid-20130619_195955_907441_3050C61C)
-References: <20130619115809.GA26717@zenon.in.qult.net>
- <51C1ACEC.2020703@rempel-privat.de>
- <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com>
- <51C1B467.1030509@rempel-privat.de>
- <20130619140905.GA14079@zenon.in.qult.net>
- <1371651073.8349.19.camel@jlt4.sipsolutions.net>
- <51C1C95C.8030301@rempel-privat.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:1758 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751794Ab3FZMUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jun 2013 08:20:33 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 6/9] brcmfmac: tag packet in the netdev transmit
+ callback
+Date: Wed, 26 Jun 2013 14:20:19 +0200
+Message-ID: <1372249222-4858-7-git-send-email-arend@broadcom.com> (sfid-20130626_142106_995630_F3986004)
+In-Reply-To: <1372249222-4858-1-git-send-email-arend@broadcom.com>
+References: <1372249222-4858-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51C1C95C.8030301@rempel-privat.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 19, 2013 at 05:08:12PM +0200, thus spake Oleksij Rempel:
-> Ignacy wrote:
-> >The station is unable to authenticate with WPA2 to the AP.  Interestingly
-> >enough, if a monitor vif is created and upped beforehand, the authentication
-> >succeeds.
-> 
-> which looks more like power management issue.  If monitore mode is
-> enabled, no power sawing is done. But i use CFG80211_DEFAULT_PS=y on
-> my system too and didn't had this issue. Even power_save=on is
-> working. What else is different?
-> 
-> Ignacy, Is it RPi +  TL-WN722NC?
+Transmit packets needs to be tagged in order to receive a tx status
+feedback from the firmware. Determine the tag in the netdev transmit
+callback instead of determining the tag just before transfer to the
+device. This reduces the number of exception flows and hence makes
+the driver code simpler.
 
-Yes, absolutely, but it happens on a Dell XPS 13" as well (Ubuntu 13.04).
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |  130 ++++++++------------
+ 1 file changed, 48 insertions(+), 82 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index e4fd13a..2b078a1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1575,21 +1575,14 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
+ 	return 0;
+ }
+ 
+-static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
++static void brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 				   struct sk_buff *p)
+ {
+ 	struct brcmf_skbuff_cb *skcb = brcmf_skbcb(p);
+ 	struct brcmf_fws_mac_descriptor *entry = skcb->mac;
+-	int rc = 0;
+-	bool first_time;
+-	int hslot = BRCMF_FWS_HANGER_MAXITEMS;
+-	u8 free_ctr;
+ 	u8 flags;
+ 
+-	first_time = skcb->state != BRCMF_FWS_SKBSTATE_SUPPRESSED;
+-
+ 	brcmf_skb_if_flags_set_field(p, TRANSMIT, 1);
+-	brcmf_skb_htod_tag_set_field(p, FIFO, fifo);
+ 	brcmf_skb_htod_tag_set_field(p, GENERATION, entry->generation);
+ 	flags = BRCMF_FWS_HTOD_FLAG_PKTFROMHOST;
+ 	if (brcmf_skb_if_flags_get_field(p, REQUESTED)) {
+@@ -1600,80 +1593,36 @@ static int brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 		flags |= BRCMF_FWS_HTOD_FLAG_PKT_REQUESTED;
+ 	}
+ 	brcmf_skb_htod_tag_set_field(p, FLAGS, flags);
+-	if (first_time) {
+-		/* obtaining free slot may fail, but that will be caught
+-		 * by the hanger push. This assures the packet has a BDC
+-		 * header upon return.
+-		 */
+-		hslot = brcmf_fws_hanger_get_free_slot(&fws->hanger);
+-		free_ctr = entry->seq[fifo];
+-		brcmf_skb_htod_tag_set_field(p, HSLOT, hslot);
+-		brcmf_skb_htod_tag_set_field(p, FREERUN, free_ctr);
+-		rc = brcmf_fws_hanger_pushpkt(&fws->hanger, p, hslot);
+-		if (rc)
+-			brcmf_err("hanger push failed: rc=%d\n", rc);
+-	}
+-
+-	if (rc == 0)
+-		brcmf_fws_hdrpush(fws, p);
+-
+-	return rc;
++	brcmf_fws_hdrpush(fws, p);
+ }
+ 
+-static void
+-brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
+-		       struct sk_buff *skb, int fifo)
++static void brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
++				   struct sk_buff *skb, int fifo)
+ {
+-	/*
+-	put the packet back to the head of queue
+-
+-	- suppressed packet goes back to suppress sub-queue
+-	- pull out the header, if new or delayed packet
+-
+-	Note: hslot is used only when header removal is done.
+-	*/
+ 	struct brcmf_fws_mac_descriptor *entry;
+-	enum brcmf_fws_skb_state state;
+ 	struct sk_buff *pktout;
++	int qidx, hslot;
+ 	int rc = 0;
+-	int hslot;
+ 
+-	state = brcmf_skbcb(skb)->state;
+ 	entry = brcmf_skbcb(skb)->mac;
+-	hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
+-
+-	if (entry != NULL) {
+-		if (state == BRCMF_FWS_SKBSTATE_SUPPRESSED) {
+-			/* wl-header is saved for suppressed packets */
+-			pktout = brcmu_pktq_penq_head(&entry->psq, 2 * fifo + 1,
+-						      skb);
+-			if (pktout == NULL) {
+-				brcmf_err("suppress queue full\n");
+-				rc = -ENOSPC;
+-			}
+-		} else {
+-			/* delay-q packets are going to delay-q */
+-			pktout = brcmu_pktq_penq_head(&entry->psq,
+-						      2 * fifo, skb);
+-			if (pktout == NULL) {
+-				brcmf_err("delay queue full\n");
+-				rc = -ENOSPC;
+-			}
+-
+-			/* free the hanger slot */
+-			brcmf_fws_hanger_poppkt(&fws->hanger, hslot, &pktout,
+-						true);
+-
+-			/* decrement sequence count */
+-			entry->seq[fifo]--;
++	if (entry->occupied) {
++		qidx = 2 *fifo;
++		if (brcmf_skbcb(skb)->state == BRCMF_FWS_SKBSTATE_SUPPRESSED)
++			qidx++;
++
++		pktout = brcmu_pktq_penq_head(&entry->psq, qidx, skb);
++		if (pktout == NULL) {
++			brcmf_err("%s queue %d full\n", entry->name, qidx);
++			rc = -ENOSPC;
+ 		}
+ 	} else {
+-		brcmf_err("no mac entry linked\n");
++		brcmf_err("%s entry removed\n", entry->name);
+ 		rc = -ENOENT;
+ 	}
+ 
+ 	if (rc) {
+ 		fws->stats.rollback_failed++;
++		hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
+ 		brcmf_fws_txs_process(fws, BRCMF_FWS_TXSTATUS_HOST_TOSSED,
+ 				      hslot, 0);
+ 	} else {
+@@ -1720,15 +1669,10 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
+ 	if (IS_ERR(entry))
+ 		return PTR_ERR(entry);
+ 
+-	rc = brcmf_fws_precommit_skb(fws, fifo, skb);
+-	if (rc < 0) {
+-		fws->stats.generic_error++;
+-		goto rollback;
+-	}
+-
+-	brcmf_dbg(DATA, "%s flags %X htod %X\n", entry->name, skcb->if_flags,
+-		  skcb->htod);
++	brcmf_fws_precommit_skb(fws, fifo, skb);
+ 	rc = brcmf_bus_txdata(bus, skb);
++	brcmf_dbg(DATA, "%s flags %X htod %X bus_tx %d\n", entry->name,
++		  skcb->if_flags, skcb->htod, rc);
+ 	if (rc < 0) {
+ 		brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
+ 		goto rollback;
+@@ -1737,7 +1681,6 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
+ 	entry->transit_count++;
+ 	if (entry->suppressed)
+ 		entry->suppr_transit_count++;
+-	entry->seq[fifo]++;
+ 	fws->stats.pkt2bus++;
+ 	fws->stats.send_pkts[fifo]++;
+ 	if (brcmf_skb_if_flags_get_field(skb, REQUESTED))
+@@ -1750,6 +1693,24 @@ rollback:
+ 	return rc;
+ }
+ 
++static int brcmf_fws_assign_htod(struct brcmf_fws_info *fws, struct sk_buff *p,
++				  int fifo)
++{
++	struct brcmf_skbuff_cb *skcb = brcmf_skbcb(p);
++	int rc, hslot;
++
++	hslot = brcmf_fws_hanger_get_free_slot(&fws->hanger);
++	brcmf_skb_htod_tag_set_field(p, HSLOT, hslot);
++	brcmf_skb_htod_tag_set_field(p, FREERUN, skcb->mac->seq[fifo]);
++	brcmf_skb_htod_tag_set_field(p, FIFO, fifo);
++	rc = brcmf_fws_hanger_pushpkt(&fws->hanger, p, hslot);
++	if (!rc)
++		skcb->mac->seq[fifo]++;
++	else
++		fws->stats.generic_error++;
++	return rc;
++}
++
+ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ {
+ 	struct brcmf_pub *drvr = ifp->drvr;
+@@ -1778,22 +1739,27 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 
+ 	/* set control buffer information */
+ 	skcb->if_flags = 0;
+-	skcb->mac = brcmf_fws_macdesc_find(fws, ifp, eh->h_dest);
+ 	skcb->state = BRCMF_FWS_SKBSTATE_NEW;
+ 	brcmf_skb_if_flags_set_field(skb, INDEX, ifp->ifidx);
+ 	if (!multicast)
+ 		fifo = brcmf_fws_prio2fifo[skb->priority];
+ 
+-	brcmf_dbg(DATA, "%s mac %pM multi %d fifo %d\n", skcb->mac->name,
+-		  eh->h_dest, multicast, fifo);
+-
+ 	brcmf_fws_lock(drvr, flags);
+-	brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_DELAYED, fifo, skb);
+ 	if (fifo != BRCMF_FWS_FIFO_AC_BE && fifo < BRCMF_FWS_FIFO_BCMC)
+ 		fws->borrow_defer_timestamp = jiffies +
+ 					      BRCMF_FWS_BORROW_DEFER_PERIOD;
++
++	skcb->mac = brcmf_fws_macdesc_find(fws, ifp, eh->h_dest);
++	brcmf_dbg(DATA, "%s mac %pM multi %d fifo %d\n", skcb->mac->name,
++		  eh->h_dest, multicast, fifo);
++	if (!brcmf_fws_assign_htod(fws, skb, fifo)) {
++		brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_DELAYED, fifo, skb);
++		brcmf_fws_schedule_deq(fws);
++	} else {
++		brcmf_err("drop skb: no hanger slot\n");
++		brcmu_pkt_buf_free_skb(skb);
++	}
+ 	brcmf_fws_unlock(drvr, flags);
+-	brcmf_fws_schedule_deq(fws);
+ 	return 0;
+ }
+ 
 -- 
-P.S.  All information contained in the above letter is false,
-      for reasons of military security.
+1.7.10.4
+
+
