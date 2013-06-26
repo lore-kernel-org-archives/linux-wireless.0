@@ -1,104 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:37579 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430Ab3FKSZa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 14:25:30 -0400
-Received: by mail-ea0-f181.google.com with SMTP id a15so4041498eae.12
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2013 11:25:29 -0700 (PDT)
-References: <1370969333-4649-1-git-send-email-sgruszka@redhat.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1370969333-4649-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <DD2B8C0B-3AFD-447C-8562-DA74792F2EC5@gmail.com> (sfid-20130611_202533_954486_ACFA2EFB)
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 3.10] rt2800: fix RT5390 & RT3290 TX power settings regression
-Date: Tue, 11 Jun 2013 20:25:26 +0200
-To: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1761 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751421Ab3FZMUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jun 2013 08:20:33 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 1/9] brcmfmac: simplify transmit path
+Date: Wed, 26 Jun 2013 14:20:14 +0200
+Message-ID: <1372249222-4858-2-git-send-email-arend@broadcom.com> (sfid-20130626_142042_487601_E8C807F1)
+In-Reply-To: <1372249222-4858-1-git-send-email-arend@broadcom.com>
+References: <1372249222-4858-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When getting a transmit packet from the networking layer simply
+enqueue the packet unconditional and have it handled by the dequeue
+worker. The transfer of the packet to the bus-specific driver part
+is now done from one context.
+
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   54 ++------------------
+ 1 file changed, 5 insertions(+), 49 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 13e75c4..41f902d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1707,37 +1707,6 @@ static int brcmf_fws_borrow_credit(struct brcmf_fws_info *fws)
+ 	return -ENAVAIL;
+ }
+ 
+-static int brcmf_fws_consume_credit(struct brcmf_fws_info *fws, int fifo,
+-				    struct sk_buff *skb)
+-{
+-	struct brcmf_fws_mac_descriptor *entry = brcmf_skbcb(skb)->mac;
+-	int *credit = &fws->fifo_credit[fifo];
+-
+-	if (fifo != BRCMF_FWS_FIFO_AC_BE)
+-		fws->borrow_defer_timestamp = jiffies +
+-					      BRCMF_FWS_BORROW_DEFER_PERIOD;
+-
+-	if (!(*credit)) {
+-		/* Try to borrow a credit from other queue */
+-		if (fifo != BRCMF_FWS_FIFO_AC_BE ||
+-		    (brcmf_fws_borrow_credit(fws) != 0)) {
+-			brcmf_dbg(DATA, "ac=%d, credits depleted\n", fifo);
+-			return -ENAVAIL;
+-		}
+-	} else {
+-		(*credit)--;
+-		if (!(*credit))
+-			fws->fifo_credit_map &= ~(1 << fifo);
+-	}
+-
+-	brcmf_fws_macdesc_use_req_credit(entry, skb);
+-
+-	brcmf_dbg(DATA, "ac=%d, credits=%02d:%02d:%02d:%02d\n", fifo,
+-		  fws->fifo_credit[0], fws->fifo_credit[1],
+-		  fws->fifo_credit[2], fws->fifo_credit[3]);
+-	return 0;
+-}
+-
+ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
+ 				struct sk_buff *skb)
+ {
+@@ -1819,25 +1788,12 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		  eh->h_dest, multicast, fifo);
+ 
+ 	brcmf_fws_lock(drvr, flags);
+-	/* multicast credit support is conditional, setting
+-	 * flag to false to assure credit is consumed below.
+-	 */
+-	if (fws->bcmc_credit_check)
+-		multicast = false;
+-
+-	if (skcb->mac->suppressed ||
+-	    fws->bus_flow_blocked ||
+-	    brcmf_fws_macdesc_closed(fws, skcb->mac, fifo) ||
+-	    brcmu_pktq_mlen(&skcb->mac->psq, 3 << (fifo * 2)) ||
+-	    (!multicast &&
+-	     brcmf_fws_consume_credit(fws, fifo, skb) < 0)) {
+-		/* enqueue the packet in delayQ */
+-		drvr->fws->fifo_delay_map |= 1 << fifo;
+-		brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_DELAYED, fifo, skb);
+-	} else {
+-		brcmf_fws_commit_skb(fws, fifo, skb);
+-	}
++	brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_DELAYED, fifo, skb);
++	if (fifo != BRCMF_FWS_FIFO_AC_BE && fifo < BRCMF_FWS_FIFO_BCMC)
++		fws->borrow_defer_timestamp = jiffies +
++					      BRCMF_FWS_BORROW_DEFER_PERIOD;
+ 	brcmf_fws_unlock(drvr, flags);
++	brcmf_fws_schedule_deq(fws);
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
 
 
-Sent from my iPad
-
-On 11 jun. 2013, at 18:48, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-
-> My change:
-> 
-> commit cee2c7315f60beeff6137ee59e99acc77d636eeb
-> Author: Stanislaw Gruszka <sgruszka@redhat.com>
-> Date:   Fri Oct 5 13:44:09 2012 +0200
-> 
->    rt2800: use BBP_R1 for setting tx power
-> 
-> unfortunately does not work well with RT5390 and RT3290 chips as they
-> require different temperature compensation TX power settings (TSSI
-> tuning). Since that commit make wireless connection very unstable on
-> those chips, restore previous behavior to fix regression. Once we
-> implement proper TSSI tuning on 5390/3290 we can restore back setting
-> TX power by BBP_R1 register for those chips.
-> 
-> Reported-and-tested-by: Mike Romberg <mike-romberg@comcast.net>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
-> drivers/net/wireless/rt2x00/rt2800lib.c | 29 ++++++++++++++++++-----------
-> 1 file changed, 18 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 92849e5..8b679df 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2634,19 +2634,26 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
->     * TODO: we do not use +6 dBm option to do not increase power beyond
->     * regulatory limit, however this could be utilized for devices with
->     * CAPABILITY_POWER_LIMIT.
-> +     *
-> +     * TODO: add different temperature compensation code for RT3290 & RT5390
-> +     * to allow to use BBP_R1 for those chips.
->     */
-> -    rt2800_bbp_read(rt2x00dev, 1, &r1);
-> -    if (delta <= -12) {
-> -        power_ctrl = 2;
-> -        delta += 12;
-> -    } else if (delta <= -6) {
-> -        power_ctrl = 1;
-> -        delta += 6;
-> -    } else {
-> -        power_ctrl = 0;
-> +    if (!rt2x00_rt(rt2x00dev, RT3290) &&
-> +        !rt2x00_rt(rt2x00dev, RT5390)) {
-> +        rt2800_bbp_read(rt2x00dev, 1, &r1);
-> +        if (delta <= -12) {
-> +            power_ctrl = 2;
-> +            delta += 12;
-> +        } else if (delta <= -6) {
-> +            power_ctrl = 1;
-> +            delta += 6;
-> +        } else {
-> +            power_ctrl = 0;
-> +        }
-> +        rt2x00_set_field8(&r1, BBP1_TX_POWER_CTRL, power_ctrl);
-> +        rt2800_bbp_write(rt2x00dev, 1, r1);
->    }
-> -    rt2x00_set_field8(&r1, BBP1_TX_POWER_CTRL, power_ctrl);
-> -    rt2800_bbp_write(rt2x00dev, 1, r1);
-> +
->    offset = TX_PWR_CFG_0;
-> 
->    for (i = 0; i < EEPROM_TXPOWER_BYRATE_SIZE; i += 2) {
-> -- 
-> 1.7.11.7
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
