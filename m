@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53615 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935060Ab3FSVGp (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:59750 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752841Ab3FZWJl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 17:06:45 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH-WN 1/3] wireless: Make sure __cfg80211_connect_result always puts bss.
-Date: Wed, 19 Jun 2013 14:06:25 -0700
-Message-Id: <1371675987-28732-1-git-send-email-greearb@candelatech.com> (sfid-20130619_230648_480145_A5400A87)
+	Wed, 26 Jun 2013 18:09:41 -0400
+Received: by mail-pd0-f179.google.com with SMTP id q10so3839pdj.38
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jun 2013 15:09:41 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: ath9k <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux@rempel-privat.de, Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH] ath9k_htc: ifdef out IFTYPE_MESH advertisement
+Date: Wed, 26 Jun 2013 15:06:58 -0700
+Message-Id: <1372284419-13945-1-git-send-email-thomas@cozybit.com> (sfid-20130627_000944_562338_ECFEAF34)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+This is needed so the interface combination can still be
+validated when CONFIG_MAC80211_MESH is not enabled.
+Otherwise wiphy registration fails.
 
-Otherwise, we can leak a bss reference.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-This is against wireless-next.
-
- net/wireless/sme.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index c0bf781..32dac8c 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -557,6 +557,7 @@ static DECLARE_WORK(cfg80211_disconnect_work, disconnect_work);
-  * SME event handling
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index bb0ba9e..07ca932 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -701,8 +701,10 @@ static const struct ieee80211_iface_limit if_limits[] = {
+ 	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
+ 				 BIT(NL80211_IFTYPE_P2P_CLIENT) },
+ 	{ .max = 2,	.types = BIT(NL80211_IFTYPE_AP) |
+-				 BIT(NL80211_IFTYPE_P2P_GO) |
+-				 BIT(NL80211_IFTYPE_MESH_POINT) },
++#ifdef CONFIG_MAC80211_MESH
++				 BIT(NL80211_IFTYPE_MESH_POINT) |
++#endif
++				 BIT(NL80211_IFTYPE_P2P_GO) },
+ };
  
-+/* This method must consume bss one way or another */
- void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       const u8 *req_ie, size_t req_ie_len,
- 			       const u8 *resp_ie, size_t resp_ie_len,
-@@ -572,8 +573,10 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 	ASSERT_WDEV_LOCK(wdev);
- 
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
--		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
-+		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)) {
-+		cfg80211_put_bss(wdev->wiphy, bss);
- 		return;
-+	}
- 
- 	nl80211_send_connect_result(wiphy_to_dev(wdev->wiphy), dev,
- 				    bssid, req_ie, req_ie_len,
+ static const struct ieee80211_iface_combination if_comb = {
 -- 
-1.7.3.4
+1.7.10.4
 
