@@ -1,27 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46875 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750830Ab3FXVDd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 17:03:33 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 0/3] rt2x00: rt2800: prepare for three-chain device support
-Date: Mon, 24 Jun 2013 23:03:21 +0200
-Message-Id: <1372107804-19679-1-git-send-email-juhosg@openwrt.org> (sfid-20130624_230335_790997_D8CF759D)
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:42151 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751309Ab3FZGi6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jun 2013 02:38:58 -0400
+Date: Tue, 25 Jun 2013 23:38:56 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/5] wlcore: use irq_flags in pdata instead of hiding
+ it behing a quirk
+Message-ID: <20130626063855.GN5523@atomide.com> (sfid-20130626_083900_349777_DB66D95D)
+References: <1372192406-29430-1-git-send-email-coelho@ti.com>
+ <1372192406-29430-3-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372192406-29430-3-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gabor Juhos (3):
-  rt2x00: rt2800: increase EEPROM_SIZE to 512 bytes
-  rt2x00: rt2800lib: turn on secondary PAs/LNAs for 3T/3R devices
-  rt2x00: rt2800lib: turn on tertiary PAs/LNAs for 3T/3R devices
+* Luciano Coelho <coelho@ti.com> [130625 13:39]:
+> The platform_quirk element in the platform data was used to change the
+> way the IRQ is triggered.  When set, the EDGE_IRQ quirk would change
+> the irqflags used and treat edge trigger differently from the rest.
+> 
+> Instead of hiding this irq flag setting behind the quirk, export the
+> whole irq_flags element and let the board file define what to use.
+> This will be more meaningful than driver-specific quirks when we
+> switch to DT.
+> 
 
- drivers/net/wireless/rt2x00/rt2800.h    |    2 +-
- drivers/net/wireless/rt2x00/rt2800lib.c |   47 +++++++++++++++++++++++--------
- 2 files changed, 36 insertions(+), 13 deletions(-)
+Acked-by: Tony Lindgren <tony@atomide.com>
 
---
-1.7.10
-
+> Cc: Sekhar Nori <nsekhar@ti.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
