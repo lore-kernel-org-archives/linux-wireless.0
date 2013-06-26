@@ -1,84 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:62704 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754692Ab3FKL5Y (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41138 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581Ab3FZPPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 07:57:24 -0400
-Date: Tue, 11 Jun 2013 13:55:25 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 26 Jun 2013 11:15:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [PATCHv4 4/4] nl80211: allow sending CMD_FRAME without
- specifying any frequency
-Message-ID: <20130611115525.GB1466@ritirata.org> (sfid-20130611_135727_136516_39F75DFD)
-References: <1370444989-2095-1-git-send-email-ordex@autistici.org>
- <1370444989-2095-4-git-send-email-ordex@autistici.org>
- <1370951598.8356.21.camel@jlt4.sipsolutions.net>
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iw: reorder some code in iw_connect to avoid a potential memory leak
+Date: Wed, 26 Jun 2013 11:07:16 -0400
+Message-Id: <1372259236-6968-1-git-send-email-linville@tuxdriver.com> (sfid-20130626_171519_724165_C3A7D8F6)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="7iMSBzlTiPOCCT2k"
-In-Reply-To: <1370951598.8356.21.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
 
---7iMSBzlTiPOCCT2k
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>From Coverity run on version 3.10:
 
-On Tue, Jun 11, 2013 at 01:53:18PM +0200, Johannes Berg wrote:
-> > +	/* get the channel if any has been specified, otherwise pass NULL to
-> > +	 * the driver. The latter will use the current one
-> > +	 */
-> > +	chandef.chan =3D NULL;
-> > +	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
-> > +		err =3D nl80211_parse_chandef(rdev, info, &chandef);
-> > +		if (err)
-> > +			return err;
-> > +	}
->=20
-> I think not specifying a channel but setting
-> NL80211_ATTR_OFFCHANNEL_TX_OK must be an error.
+iw-3.10/connect.c:104:leaked_storage –
+	Variable "conn_argv" going out of scope leaks the storage it points to.
 
-You are right. Indeed this check is done in mac80211. Other drivers do not =
-use
-NL80211_ATTR_OFFCHANNEL_TX_OK at all. But for consistency I guess it would =
-be
-correct to do the check here too.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ connect.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-I'll send a new version including this change.
+diff --git a/connect.c b/connect.c
+index 74e4578..fb3b2fe 100644
+--- a/connect.c
++++ b/connect.c
+@@ -94,15 +94,15 @@ static int iw_connect(struct nl80211_state *state, struct nl_cb *cb,
+ 		argv++;
+ 	}
+ 
++	err = __prepare_listen_events(state);
++	if (err)
++		return err;
++
+ 	conn_argc = 3 + argc;
+ 	conn_argv = calloc(conn_argc, sizeof(*conn_argv));
+ 	if (!conn_argv)
+ 		return -ENOMEM;
+ 
+-	err = __prepare_listen_events(state);
+-	if (err)
+-		return err;
+-
+ 	conn_argv[0] = dev;
+ 	conn_argv[1] = "connect";
+ 	conn_argv[2] = "establish";
+-- 
+1.8.1.4
 
-Cheers,
-
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---7iMSBzlTiPOCCT2k
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRtxAtAAoJEADl0hg6qKeOTKgP/3tBW1xBFid91DhZLhg8ujOq
-Nu5pUixhqFcsXWgfGQ3axOQ1FUhF5wD5nxpC0bZcHVbQe+w9gZ0yEsqQIvLQml41
-ndYXQtqYeRg7W7ARekJc8KNtIt5tLsSDb05yvHmqJ4rcduUHZXhRwCeOv+yqacok
-KUyo8+AO9TzL9VJYg2blqs0PBEQyE8oQBzuPyu12wTu79X9KmRJ1MQeYKbrcy4/w
-FI3Irt9WRFJ/ecl0Oe6/wQwwhVHguPAfPFoQ1FpZz35uG/t0qQTECysyM32wvkrj
-mQucAJb8P4sxUqEczN3qKyfuEU02CE6O180x1NHDu0tJvtpkVf8Jki3gKfPDllLc
-t+jpNk+MSOfQ0GB22LW+MTtBQKjgfGXv6XhZmM3NPiurKnaDt5Ctewnc7QcpogeB
-q9qBdAt5u4cSFPnNgBCkYQP8xtQl97EBdACKGydonldaZdxJ/GmHeRYGSA53gHpz
-Jfbf9ftykOXeBNAXNM16HrhsGBZRKmEjSPIl8kYYi0Osra/w9j13b/T/aKxNcYT6
-/1lHxPvJZQrRGinqpkMe0rw8sA/ghZfpL23o9Y5vsx6JaKxtNk6NGfsjfZQscu72
-cM48/SskuLm4l2EO8qBp6gDAO9dcImXjklhlbud67++Np8a2itYmWeAkQ5C+KtAk
-GjMbPWemxJ58pijwIRAF
-=Gm1G
------END PGP SIGNATURE-----
-
---7iMSBzlTiPOCCT2k--
