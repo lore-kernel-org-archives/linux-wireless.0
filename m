@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55873 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751685Ab3F0QHy (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:59431 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622Ab3F0Q7S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 12:07:54 -0400
-Date: Thu, 27 Jun 2013 18:07:48 +0200
+	Thu, 27 Jun 2013 12:59:18 -0400
 From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org,
+Cc: linux-wireless@vger.kernel.org,
 	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
 	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv4 01/18] nl80211: add scan width to bss and scan request
-Message-ID: <20130627160748.GC19965@pandem0nium> (sfid-20130627_180757_466590_0BFFDBD1)
-References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1372337064-19254-2-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1372337877.8160.2.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DSayHWYpDlRfCAAQ"
-In-Reply-To: <1372337877.8160.2.camel@jlt4.sipsolutions.net>
+Subject: [PATCHv5 16/18] ath5k: report 5/10 MHz channels
+Date: Thu, 27 Jun 2013 18:58:58 +0200
+Message-Id: <1372352340-20663-18-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_185924_899249_0E129C6C)
+In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
---DSayHWYpDlRfCAAQ
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index ce67ab7..260a6fc 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1400,6 +1400,16 @@ ath5k_receive_frame(struct ath5k_hw *ah, struct sk_buff *skb,
+ 
+ 	rxs->rate_idx = ath5k_hw_to_driver_rix(ah, rs->rs_rate);
+ 	rxs->flag |= ath5k_rx_decrypted(ah, skb, rs);
++	switch (ah->ah_bwmode) {
++	case AR5K_BWMODE_5MHZ:
++		rxs->flag |= RX_FLAG_5MHZ;
++		break;
++	case AR5K_BWMODE_10MHZ:
++		rxs->flag |= RX_FLAG_10MHZ;
++		break;
++	default:
++		break;
++	}
+ 
+ 	if (rxs->rate_idx >= 0 && rs->rs_rate ==
+ 	    ah->sbands[ah->curchan->band].bitrates[rxs->rate_idx].hw_value_short)
+-- 
+1.7.10.4
 
-On Thu, Jun 27, 2013 at 02:57:57PM +0200, Johannes Berg wrote:
-> On Thu, 2013-06-27 at 14:44 +0200, Simon Wunderlich wrote:
->=20
-> > + * @NL80211_BSS_CHAN_WIDTH_20: control channel is 20 MHz wide or compa=
-tible
-> > + * @NL80211_BSS_CHAN_WIDTH_10: control channel is 10 MHz wide
-> > + * @NL80211_BSS_CHAN_WIDTH_5: control channel is 10 MHz wide
->=20
-> copy/paste error
-
-Thanks
->=20
-> This also looks incomplete? You say you add it to scan but didn't
-> really?
-
-yeah, I'm only changing the structs because it is only used in IBSS internal
-scanning for now. Will change the title of the patch.
-
-Thanks,
-	Simon
-
---DSayHWYpDlRfCAAQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlHMY1QACgkQrzg/fFk7axYThQCeMJtIg4AB9Ro1uvAF2cmZEO2p
-wtEAnjDnJ8q+2SogRKc1M8gH8ZVGkAyK
-=i4fC
------END PGP SIGNATURE-----
-
---DSayHWYpDlRfCAAQ--
