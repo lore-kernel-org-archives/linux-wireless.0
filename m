@@ -1,62 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38843 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962Ab3FRMtf (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:59407 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753379Ab3F0Q7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 08:49:35 -0400
-Message-ID: <1371559771.8318.12.camel@jlt4.sipsolutions.net> (sfid-20130618_144939_247758_06C3183B)
-Subject: Re: Lots of confusion on bss refcounting.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 18 Jun 2013 14:49:31 +0200
-In-Reply-To: <51BFAA34.1020407@candelatech.com>
-References: <51BF5A53.8050100@candelatech.com>
-	  (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net>
-	 <51BF5ED4.9010704@candelatech.com> <51BF8040.2000408@candelatech.com>
-	 <51BFAA34.1020407@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Jun 2013 12:59:17 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv5 05/18] cfg80211/mac80211: get mandatory rates based on rate flags
+Date: Thu, 27 Jun 2013 18:58:46 +0200
+Message-Id: <1372352340-20663-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_185922_976124_7F1F7751)
+In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-06-17 at 17:30 -0700, Ben Greear wrote:
-> On 06/17/2013 02:31 PM, Ben Greear wrote:
-> > On 06/17/2013 12:09 PM, Ben Greear wrote:
-> >> On 06/17/2013 12:02 PM, Johannes Berg wrote:
-> >
-> >> The bss reference is passed back, and through luck or careful programming,
-> >> it *seems* that all paths related to calling ieee80211_rx_mgmt_assoc_resp
-> >> managed to consume the bss.
-> >>
-> >> I haven't figured out yet why this is not an erroneous put since I didn't
-> >> find the reference taken in the first place.
-> >>
-> >> I'm going to work on making some changes to the ref counting scheme
-> >> a bit.  I'd rather have the code perhaps take and put a few refs
-> >> it might otherwise skip to keep the ownership cleaner and make
-> >> the code easier to debug and understand...
-> >>
-> >> I'll post some for RFC when I make some progress.
-> >
-> > I think I found at least some of the leaks.
-> >
-> > In places like ieee80211_mgd_stop, we were calling ieee80211_destroy_assoc_data,
-> > but it was not putting the bss reference.
-> >
-> > I'll post some RFC patches in a minute or two...first is debugging
-> > logic, second attempts to fix bss ref counting.  This needs more
-> > testing before it is applied...we will continue testing it....
-> 
-> It seems that the wdev objects (struct wireless_dev) can also
-> hold a reference to the bss.
-> 
-> Do you happen to know what code is responsible for destructing
-> those objects?  I want to check to make sure it properly puts
-> its reference.
+Mandatory rates for 5 and 10 MHz are different from the rates used for
+20 MHz in 2.4 GHz mode, as they use OFDM only.
 
-You mean ->current_bss? That should be handled in all the callbacks in
-sme.c or so 
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 
-johannes
+---
+Changes to PATCHv4:
+ * it is now based on scan_width instead of rate flags
+---
+ include/net/cfg80211.h |    4 +++-
+ net/mac80211/ibss.c    |   19 +++++++++++++++----
+ net/wireless/mesh.c    |    5 ++++-
+ net/wireless/util.c    |   14 ++++++++++----
+ 4 files changed, 32 insertions(+), 10 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 820cce5..83d52dc 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3069,11 +3069,13 @@ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
+ /**
+  * ieee80211_mandatory_rates - get mandatory rates for a given band
+  * @sband: the band to look for rates in
++ * @scan_width: width of the control channel
+  *
+  * This function returns a bitmap of the mandatory rates for the given
+  * band, bits are set according to the rate position in the bitrates array.
+  */
+-u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband);
++u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
++			      enum nl80211_bss_scan_width scan_width);
+ 
+ /*
+  * Radiotap parsing functions -- for controlled injection support
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index fa91df8..d0c27dc 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -376,6 +376,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	struct sta_info *sta;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_supported_band *sband;
++	enum nl80211_bss_scan_width scan_width;
+ 	int band;
+ 
+ 	/*
+@@ -404,6 +405,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON_ONCE(!chanctx_conf))
+ 		return NULL;
+ 	band = chanctx_conf->def.chan->band;
++	scan_width = cfg80211_chandef_to_scan_width(&chanctx_conf->def);
+ 	rcu_read_unlock();
+ 
+ 	sta = sta_info_alloc(sdata, addr, GFP_KERNEL);
+@@ -417,7 +419,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	/* make sure mandatory rates are always added */
+ 	sband = local->hw.wiphy->bands[band];
+ 	sta->sta.supp_rates[band] = supp_rates |
+-			ieee80211_mandatory_rates(sband);
++			ieee80211_mandatory_rates(sband, scan_width);
+ 
+ 	return ieee80211_ibss_finish_sta(sta, auth);
+ }
+@@ -499,6 +501,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 	u64 beacon_timestamp, rx_timestamp;
+ 	u32 supp_rates = 0;
+ 	enum ieee80211_band band = rx_status->band;
++	enum nl80211_bss_scan_width scan_width;
+ 	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
+ 	bool rates_updated = false;
+ 
+@@ -527,9 +530,15 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 
+ 				prev_rates = sta->sta.supp_rates[band];
+ 				/* make sure mandatory rates are always added */
++				scan_width = NL80211_BSS_CHAN_WIDTH_20;
++				if (rx_status->flag & RX_FLAG_5MHZ)
++					scan_width = NL80211_BSS_CHAN_WIDTH_5;
++				if (rx_status->flag & RX_FLAG_10MHZ)
++					scan_width = NL80211_BSS_CHAN_WIDTH_10;
++
+ 				sta->sta.supp_rates[band] = supp_rates |
+-					ieee80211_mandatory_rates(sband);
+-
++					ieee80211_mandatory_rates(sband,
++								  scan_width);
+ 				if (sta->sta.supp_rates[band] != prev_rates) {
+ 					ibss_dbg(sdata,
+ 						 "updated supp_rates set for %pM based on beacon/probe_resp (0x%x -> 0x%x)\n",
+@@ -663,6 +672,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ 	struct sta_info *sta;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_supported_band *sband;
++	enum nl80211_bss_scan_width scan_width;
+ 	int band;
+ 
+ 	/*
+@@ -688,6 +698,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 	}
+ 	band = chanctx_conf->def.chan->band;
++	scan_width = cfg80211_chandef_to_scan_width(&chanctx_conf->def);
+ 	rcu_read_unlock();
+ 
+ 	sta = sta_info_alloc(sdata, addr, GFP_ATOMIC);
+@@ -699,7 +710,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ 	/* make sure mandatory rates are always added */
+ 	sband = local->hw.wiphy->bands[band];
+ 	sta->sta.supp_rates[band] = supp_rates |
+-			ieee80211_mandatory_rates(sband);
++			ieee80211_mandatory_rates(sband, scan_width);
+ 
+ 	spin_lock(&ifibss->incomplete_lock);
+ 	list_add(&sta->list, &ifibss->incomplete_stations);
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 30c4920..0553fd4 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -167,9 +167,12 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	 * basic rates
+ 	 */
+ 	if (!setup->basic_rates) {
++		enum nl80211_bss_scan_width scan_width;
+ 		struct ieee80211_supported_band *sband =
+ 				rdev->wiphy.bands[setup->chandef.chan->band];
+-		setup->basic_rates = ieee80211_mandatory_rates(sband);
++		scan_width = cfg80211_chandef_to_scan_width(&setup->chandef);
++		setup->basic_rates = ieee80211_mandatory_rates(sband,
++							       scan_width);
+ 	}
+ 
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef))
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 74458b7..ce090c1 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -33,7 +33,8 @@ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
+ }
+ EXPORT_SYMBOL(ieee80211_get_response_rate);
+ 
+-u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband)
++u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
++			      enum nl80211_bss_scan_width scan_width)
+ {
+ 	struct ieee80211_rate *bitrates;
+ 	u32 mandatory_rates = 0;
+@@ -43,10 +44,15 @@ u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband)
+ 	if (WARN_ON(!sband))
+ 		return 1;
+ 
+-	if (sband->band == IEEE80211_BAND_2GHZ)
+-		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
+-	else
++	if (sband->band == IEEE80211_BAND_2GHZ) {
++		if (scan_width == NL80211_BSS_CHAN_WIDTH_5 ||
++		    scan_width == NL80211_BSS_CHAN_WIDTH_10)
++			mandatory_flag = IEEE80211_RATE_MANDATORY_G;
++		else
++			mandatory_flag = IEEE80211_RATE_MANDATORY_B;
++	} else {
+ 		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
++	}
+ 
+ 	bitrates = sband->bitrates;
+ 	for (i = 0; i < sband->n_bitrates; i++)
+-- 
+1.7.10.4
 
