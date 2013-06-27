@@ -1,74 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:45848 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755209Ab3F1Ikg (ORCPT
+Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:56108 "EHLO
+	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751569Ab3F0OSJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jun 2013 04:40:36 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 1/2] nl80211: enable HT overrides for ibss
-Date: Fri, 28 Jun 2013 10:39:58 +0200
-Message-Id: <1372408799-25651-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130628_104130_339289_C8388365)
+	Thu, 27 Jun 2013 10:18:09 -0400
+Date: Thu, 27 Jun 2013 19:33:58 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: Jonathan Bither <jonbither@gmail.com>, "j@w1.fi" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	Matt Smith <smithm@qca.qualcomm.com>
+Subject: Re: ACS and Hostapd
+Message-ID: <20130627140358.GC440@markyou.marvell.com> (sfid-20130627_161815_465191_8857E37D)
+References: <20121123081444.GA6028@markyou.marvell.com>
+ <20121211194249.GT15974@pogo>
+ <50C9F3FA.6000906@gmail.com>
+ <7DDF37406E10F0438561DBB78326DF390391C15265@SC-VEXCH1.marvell.com>
+ <CAB=NE6WYYzgOWeG=2UHccp74=-qp2Cvv=SZGY75+5jN4-y0orA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAB=NE6WYYzgOWeG=2UHccp74=-qp2Cvv=SZGY75+5jN4-y0orA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- include/net/cfg80211.h |    5 +++++
- net/wireless/nl80211.c |   13 +++++++++++++
- 2 files changed, 18 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7b0730a..836b7e2 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1592,6 +1592,9 @@ struct cfg80211_disassoc_request {
-  *	user space. Otherwise, port is marked authorized by default.
-  * @basic_rates: bitmap of basic rates to use when creating the IBSS
-  * @mcast_rate: per-band multicast rate index + 1 (0: disabled)
-+ * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
-+ *   will be used in ht_capa.  Un-supported values will be ignored.
-+ * @ht_capa_mask:  The bits of ht_capa which are to be used.
-  */
- struct cfg80211_ibss_params {
- 	u8 *ssid;
-@@ -1605,6 +1608,8 @@ struct cfg80211_ibss_params {
- 	bool privacy;
- 	bool control_port;
- 	int mcast_rate[IEEE80211_NUM_BANDS];
-+	struct ieee80211_ht_cap ht_capa;
-+	struct ieee80211_ht_cap ht_capa_mask;
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7dc3343..d74230c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6344,6 +6344,19 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
-+		memcpy(&ibss.ht_capa_mask,
-+		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]),
-+		       sizeof(ibss.ht_capa_mask));
-+
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
-+		if (!info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
-+			return -EINVAL;
-+		memcpy(&ibss.ht_capa,
-+		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]),
-+		       sizeof(ibss.ht_capa));
-+	}
-+
- 	if (info->attrs[NL80211_ATTR_MCAST_RATE] &&
- 	    !nl80211_parse_mcast_rate(rdev, ibss.mcast_rate,
- 			nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
--- 
-1.7.10.4
+On Thu, Dec 13, 2012 at 12:33:06PM -0800, Luis R. Rodriguez wrote:
+> On Thu, Dec 13, 2012 at 10:54 AM, Yogesh Powar <yogeshp@marvell.com> wrote:
+> > Hi Jouni/Luis,
+> >
+> > It seems that, we have some resources that can be utilized to test this
+> > feature of ACS for hostapd.
+> >
+> > Before we begin on this work of Luis and optimize/enhance it further, would you
+> > like to recommend some immediate changes from the last test results?
+> 
+> By my part:
+> 
+> The algorithm I wrote was pretty complex and although I did review it
+> with some folks who liked it and it made sense the algorithm can be
+> simplified by taking the input elements and using a multiplier for
+> each one and letting the user configure the multiplier. In other words
+> all the log stuff I did and linearizing it some way was not all that
+> necessary except for mental masturbation.
+> 
+> Apart from that its just a matter of testing and proving it works.
+Hi Luis,
+   We tried your code of ACS from hostapd mailing list archieve, after
+resolving some merge conflicts, on latest hostapd. Following are some
+of our observations
 
+a) The code can work for the drivers that dont support offchannel-tx.
+   For such drivers, setting channel_time_tx to zero will make
+   interference factor to depend only on busy time from passive
+   listener's point of view.
+b) HT 40 Mhz might have some issues with current ACS. When primary
+   channel with least interference factor is selected secondary channel
+   is set to offset from the primary instead of actual secondary
+   channel.
+
+Apart from the existing complex logic, explained here
+http://wireless.kernel.org/en/users/Documentation/acs, can simple scan
+based ACS algorithm feasible?
+
+Lets say one just scans all the channel and gathers the beacons. Based
+on the information based on collected beacons one can find out which
+channel has least number of APs residing. One can even look into
+detail IE informations in the beacons for detail study of wireless
+environment.
+
+This could help drivers that do not have access to parameters needed for
+interference factor calculation.
+
+Thanks
+Yogesh
