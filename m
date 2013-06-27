@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52504 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703Ab3FRA2U (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55873 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752687Ab3F0Mol (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 20:28:20 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 2/2] wireless:  Make sure __cfg80211_connect_result always puts bss.
-Date: Mon, 17 Jun 2013 17:28:01 -0700
-Message-Id: <1371515281-26879-2-git-send-email-greearb@candelatech.com> (sfid-20130618_022822_882338_7451297B)
-In-Reply-To: <1371515281-26879-1-git-send-email-greearb@candelatech.com>
-References: <1371515281-26879-1-git-send-email-greearb@candelatech.com>
+	Thu, 27 Jun 2013 08:44:41 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 10/18] nl80211: allow 5 and 10 MHz channels for IBSS
+Date: Thu, 27 Jun 2013 14:44:16 +0200
+Message-Id: <1372337064-19254-11-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144539_528516_F9A32A9D)
+In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Whether the wiphy supports it or not is already checked, so what is left
+is to enable these channel types.
 
-Otherwise, we can leak a bss reference.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- net/wireless/sme.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+ net/wireless/nl80211.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 6066720..ea2ce33 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -420,6 +420,7 @@ void cfg80211_sme_failed_assoc(struct wireless_dev *wdev)
- 	schedule_work(&rdev->conn_work);
- }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ebd889d..10755dc 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6300,6 +6300,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
  
-+/** This method must consume bss one way or another */
- void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       const u8 *req_ie, size_t req_ie_len,
- 			       const u8 *resp_ie, size_t resp_ie_len,
-@@ -435,11 +436,17 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 	ASSERT_WDEV_LOCK(wdev);
- 
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
--		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
-+		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)) {
-+		if (bss)
-+			cfg80211_put_bss(wdev->wiphy, bss);
- 		return;
-+	}
- 
--	if (wdev->sme_state != CFG80211_SME_CONNECTING)
-+	if (wdev->sme_state != CFG80211_SME_CONNECTING) {
-+		if (bss)
-+			cfg80211_put_bss(wdev->wiphy, bss);
- 		return;
-+	}
- 
- 	nl80211_send_connect_result(wiphy_to_dev(wdev->wiphy), dev,
- 				    bssid, req_ie, req_ie_len,
+ 	switch (ibss.chandef.width) {
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 		break;
+ 	case NL80211_CHAN_WIDTH_20:
 -- 
-1.7.3.4
+1.7.10.4
 
