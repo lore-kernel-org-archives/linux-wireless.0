@@ -1,90 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:51166 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751525Ab3FYIfj (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:36389 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751819Ab3F0NPv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 04:35:39 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<linux-omap@vger.kernel.org>, <linux-arm@vger.kernel.org>
-Subject: [PATCH] Documentation: dt: bindings: TI WiLink modules
-Date: Tue, 25 Jun 2013 11:35:30 +0300
-Message-ID: <1372149330-24335-1-git-send-email-coelho@ti.com> (sfid-20130625_103602_798801_64E3586F)
+	Thu, 27 Jun 2013 09:15:51 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1372337887.8383.12.camel@cumari.coelho.fi>
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
+	<51CBC1C8.1040301@gmail.com>
+	<1372322851.18889.53.camel@cumari.coelho.fi>
+	<20130627125131.GA27285@kahuna>
+	<1372337887.8383.12.camel@cumari.coelho.fi>
+Date: Thu, 27 Jun 2013 08:15:49 -0500
+Message-ID: <CAGo_u6qbt9dANgKq49xR=1qsCpUBhmVaPL4EK04XvTw+=4Z23g@mail.gmail.com> (sfid-20130627_151609_453270_710EB986)
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+From: Nishanth Menon <nm@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: grant.likely@linaro.org, rob.herring@calxeda.com,
+	devicetree-discuss@lists.ozlabs.org, linux-doc@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
+	linux-omap <linux-omap@vger.kernel.org>,
+	linux-arm@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree bindings documentation for the TI WiLink modules.
-Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
-modules is supported.
+On Thu, Jun 27, 2013 at 7:58 AM, Luciano Coelho <coelho@ti.com> wrote:
+> On Thu, 2013-06-27 at 07:51 -0500, Nishanth Menon wrote:
+>> On 11:47-20130627, Luciano Coelho wrote:
+>> > (added mailing lists and everyone back to the thread)
+>> >
+>> > On Wed, 2013-06-26 at 23:38 -0500, Nishanth Menon wrote:
+>> > > On 06/25/2013 03:35 AM, Luciano Coelho wrote:
+>> > > > +Optional properties:
+>> > > > +--------------------
+>> > > > +
+>> > > > +- refclock: the internal WLAN reference clock frequency (required for
+>> > > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
+>> > > > +  following:
+>> > > > +       0 = 19.2 MHz
+>> > > > +       1 = 26.0 MHz
+>> > > > +       2 = 38.4 MHz
+>> > > > +       3 = 52.0 MHz
+>> > > > +       4 = 38.4 MHz, XTAL
+>> > > > +       5 = 26.0 MHz, XTAL
+>> > > > +
+>> > > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
+>> > > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
+>> > > > +  following:
+>> > > > +       0 = 19.200 MHz
+>> > > > +       1 = 26.000 MHz
+>> > > > +       2 = 38.400 MHz
+>> > > > +       3 = 52.000 MHz
+>> > > > +       4 = 16.368 MHz
+>> > > > +       5 = 32.736 MHz
+>> > > > +       6 = 16.800 MHz
+>> > > > +       7 = 33.600 MHz
+>> > > >
+>> > > just a gentle query - why not use frequency itself here in Hz for
+>> > > refclock and txoclk?
+>> >
+>> > I thought about using the actual frequencies, but I decided not to do
+>> > so, because I'd have to convert them to these values anyway.  These
+>> > values are used to configure the firmware and it uses these
+>> > "enumerations".
+>> Could we not hide this under preprocessor macros instead? just wondering
+>> of txoclock = <6>; kind of usage.. easy to make mistakes and easier to
+>> confuse a new reader :).
+>
+> Yes, I guess we could create some preprocessor macros for this.  But the
+> documentation would remain the same.  I can't add preprocessor macros to
+> the bindings documentation. ;)
+>
+> For the actual DTS files, I could add a wilink.dtsi with enumerations
+> for these values so they could be used in the node definitions.  But I'm
+> not sure it's going to be that valuable in the end.
+The  way GPIO HIGH was defined might help to provide guidance I think :)
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
-
-I created a new directory under net to contain wireless bindings documentation.
-
-The actual implementation in the driver will follow separately.
-
- .../devicetree/bindings/net/wireless/ti-wilink.txt |   46 ++++++++++++++++++++
- 1 file changed, 46 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-new file mode 100644
-index 0000000..d8e8bfbb
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-@@ -0,0 +1,46 @@
-+TI WiLink Wireless Modules Device Tree Bindings
-+===============================================
-+
-+The WiLink modules provide wireless connectivity, such as WLAN,
-+Bluetooth, FM and NFC.
-+
-+There are several different modules available, which can be grouped by
-+their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
-+currently supported with device tree.
-+
-+Currently, only the WLAN portion of the modules is supported with
-+device tree.
-+
-+Required properties:
-+--------------------
-+
-+- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
-+- interrupt-parent: the interrupt controller
-+- interrupts: out-of-band WLAN interrupt
-+	See the interrupt controller's bindings documentation for
-+	detailed definition.
-+
-+Optional properties:
-+--------------------
-+
-+- refclock: the internal WLAN reference clock frequency (required for
-+  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-+  following:
-+	0 = 19.2 MHz
-+	1 = 26.0 MHz
-+	2 = 38.4 MHz
-+	3 = 52.0 MHz
-+	4 = 38.4 MHz, XTAL
-+	5 = 26.0 MHz, XTAL
-+
-+- tcxoclock: the internal WLAN TCXO clock frequency (required for
-+  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-+  following:
-+	0 = 19.200 MHz
-+	1 = 26.000 MHz
-+	2 = 38.400 MHz
-+	3 = 52.000 MHz
-+	4 = 16.368 MHz
-+	5 = 32.736 MHz
-+	6 = 16.800 MHz
-+	7 = 33.600 MHz
--- 
-1.7.10.4
-
+Regards,
+NM
