@@ -1,67 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50275 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759251Ab3FCQRA (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:43064 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753722Ab3F0O16 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 12:17:00 -0400
-Message-ID: <51ACC16F.5030602@candelatech.com> (sfid-20130603_181704_199513_58A68C82)
-Date: Mon, 03 Jun 2013 09:16:47 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 27 Jun 2013 10:27:58 -0400
+Date: Thu, 27 Jun 2013 16:27:54 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv4 02/18] mac80211/rc80211: add chandef to rate
+ initialization
+Message-ID: <20130627142754.GA19965@pandem0nium> (sfid-20130627_162806_745256_B5DE3F3E)
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1372337064-19254-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1372337940.8160.3.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-CC: Adrian Chadd <adrian@freebsd.org>,
-	ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] AR9287; WiFi AP Mode - Increase interbeacon duration
- of 100ms
-References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com> <CAJ-VmomYF3ziqhykXMK5U+SJPYiNWmijdf0VhKDK33BVbSKNrQ@mail.gmail.com> <1365346495.79596.YahooMailNeo@web193506.mail.sg3.yahoo.com> <1366084534.24187.YahooMailNeo@web193501.mail.sg3.yahoo.com> <CAJ-Vmoki6FUETFLkThp1AvZ3R_2kCd5Ro83OuvsfW0nZ5pfJ2w@mail.gmail.com> <1366194814.88121.YahooMailNeo@web193506.mail.sg3.yahoo.com> <CAJ-Vmokx0MbTC47+0fcRt9yQshfTaPEDte2A=7Ycn2bzwLSPxg@mail.gmail.com> <1366248389.18545.YahooMailNeo@web193503.mail.sg3.yahoo.com> <CAJ-VmomXz93U7HCmscd=NVZKQ+RFbty+Xh_wcOPYEDhX57ptbw@mail.gmail.com> <1366281249.7026.YahooMailNeo@web193504.mail.sg3.yahoo.com> <CAJ-VmokO+Tc+5k+=d2qiZSFQtrLFaHuYgpPK7r_OO5PKBue_TQ@mail.gmail.com> <1369118418.41680.YahooMailNeo@web193504.mail.sg3.yahoo.com> <CAJ-Vmo=533O+3tDhjbzyOd1PRMX0kJB8guCc_9xyiHioifteJg@mail.gmail.com> <1369642207.73507.YahooMailNeo@web193501.mail.sg3.yahoo.com> <1370254531.75129.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-In-Reply-To: <1370254531.75129.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="1yeeQ81UyVL57Vl7"
+In-Reply-To: <1372337940.8160.3.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/03/2013 03:15 AM, sandeep suresh wrote:
-> Hello All,
->      Gentle reminder; really will be greatful, if you can give me some directions on this, Please.
-> Regards
-> Sandeep
->
-> *From:* sandeep suresh <sandeep.suresh@yahoo.co.in>
-> *To:* Adrian Chadd <adrian@freebsd.org>; ath9k-devel <ath9k-devel@lists.ath9k.org>
-> *Cc:* "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-> *Sent:* Monday, 27 May 2013 1:40 PM
-> *Subject:* AR9287; WiFi AP Mode - Increase interbeacon duration of 100ms
->
-> Hello All,
->      This is regarding the inter beacon timing for AR9287 WiFi module when configured in WiFi Access Point mode. In this mode, the beacons are generated every
-> 100ms by the WiFi AP. I have the following questions:
-> 1. As per documentation available on the internet, the minimum inter beacon timing is 100ms. But can we increase the the inter beacon timing above this value?
-> say 250ms, 500ms etc
-> 2. As per standard, does increase in inter beacon time > 100ms, have any impact on the WiFi Clients connected to AR9287 WiFi AP? Even though I might test with
-> some WiFi clients without any side effects but there may be some WiFi clients (which I might be unaware of )that might not work.
-> 3. Has anyone attempted to do this? Please let me know if you have any observations on this?
 
-We have been using a default of 250ms beacon timer for years in our ath9k APs.  Seems to work
-just fine, but we mostly use them for internal testing with other ath9k systems acting as
-the stations.
+--1yeeQ81UyVL57Vl7
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-Ben
+On Thu, Jun 27, 2013 at 02:59:00PM +0200, Johannes Berg wrote:
+> On Thu, 2013-06-27 at 14:44 +0200, Simon Wunderlich wrote:
+>=20
+> >  static void ath_rate_init(void *priv, struct ieee80211_supported_band =
+*sband,
+> > +			  struct cfg80211_chan_def *chandef,
+>=20
+> I'd argue you can remove the sband pointer now, since the band is known
+> from the chandef?
 
-> Thanks & regards
-> Sandeep
->
->
->
->
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
+Not really, these rate algos usually access sband->bitrates, and sband can =
+not be
+derived from just the band and these others parameters (at least I miss to =
+see how).
+>=20
+> Also, I'm not sure why you'd need this in rate_update, it should be good
+> enough in rate_init, no?
 
+Hm, minstrel_ht seems to be the only use of this function anyway. It calls
+minstrel_ht_update_caps() for both rate_init and rate_update, and since both
+calls had the same parameter it felt naturally and more easy to change both
+the same way. Also this function calls rate_init from minstrel as fallback.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+I don't really care, if you think it's akward I can certainly teach minstre=
+l_ht
+to store the chandef in its private memory.
 
+Cheers,
+	Simon
+
+--1yeeQ81UyVL57Vl7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlHMS+oACgkQrzg/fFk7axZLIwCeOM7Vy0HKIxwZ8dKP+4Ym7f2s
+08IAn1K9BuZIi83X0sfeB/y5GJeMA+1g
+=kDvf
+-----END PGP SIGNATURE-----
+
+--1yeeQ81UyVL57Vl7--
