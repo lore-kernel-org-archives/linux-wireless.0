@@ -1,67 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38092 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755354Ab3FET57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 15:57:59 -0400
-Message-ID: <51AF9852.5020404@openwrt.org> (sfid-20130605_215803_985780_3F983F43)
-Date: Wed, 05 Jun 2013 21:58:10 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from mail-we0-f181.google.com ([74.125.82.181]:35562 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172Ab3F0G3b convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jun 2013 02:29:31 -0400
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 1/2] rt2x00: convert rt2x00_ops.extra_tx_headroom to be
- a fuction
-References: <1370429640-31565-1-git-send-email-juhosg@openwrt.org> <20130605125130.GA3367@redhat.com>
-In-Reply-To: <20130605125130.GA3367@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CA+icZUXJK2ks7TQbH0AiPYAWrFuQC85Uw2sSM6d_YD5yS7unhA@mail.gmail.com>
+References: <CADDKRnBf4i8ZQ4EXC15Sa6z9CZ55w0vBDnXG26sjWgdO9zH45w@mail.gmail.com>
+	<CADDKRnCP_s2hL2wr8TsKeToNRt5nXF3NBYAqkmCCUPX8HbY_yQ@mail.gmail.com>
+	<CA+icZUXJK2ks7TQbH0AiPYAWrFuQC85Uw2sSM6d_YD5yS7unhA@mail.gmail.com>
+Date: Thu, 27 Jun 2013 08:29:29 +0200
+Message-ID: <CA+icZUUvaBhMATa=nRg2BZjLeB5gw1pwkubnzePH=nr5kfqu6g@mail.gmail.com> (sfid-20130627_082947_382606_3E92C46D)
+Subject: Re: [v3.10-rc2] iwlwifi regression
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: =?UTF-8?Q?J=C3=B6rg_Otte?= <jrg.otte@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013.06.05. 14:51 keltez�ssel, Stanislaw Gruszka �rta:
-> On Wed, Jun 05, 2013 at 12:53:59PM +0200, Gabor Juhos wrote:
->> The rt2x00_ops structure has a static field to indicate
->> the extra TX headroom size required for a given device.
->> The drawback of this is that we have to use a separate
->> rt2x00_ops structure for each chipset which requires
->> different size.
+On Wed, Jun 26, 2013 at 6:37 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Wed, Jun 26, 2013 at 6:16 PM, Jörg Otte <jrg.otte@gmail.com> wrote:
+>> 2013/5/25 Jörg Otte <jrg.otte@gmail.com>:
+>>> If iwlwifi/iwldvm are built into the kernel (no loadable modules)
+>>> following error is written to console and syslog since v3.10-rc:
+>>>
+>>> iwlwifi 0000:08:00.0: failed to load module iwldvm (error -38), is
+>>> dynamic loading enabled?
+>>>
+>>> reverting
+>>> commit 1618b2b02a3a0ee7a6863fed4b0d22e697e7e97c
+>>> Author: Johannes Berg <johannes.berg@intel.com>
+>>> Date:   Thu Apr 4 10:35:23 2013 +0200
+>>>     iwlwifi: print warning on request_module failure
+>>>
+>>> fixes the problem for me.
+>>>
+>>> Jörg
+>>>
+>>> I'm not subscribed,please CC me in answeres
 >>
->> Convert the static field into a callback function.
->> This allows the drivers to dynamically determine the
->> extra TX headroom size based on the actual chipset.
->> Also implement the the callback in the drivers which
->> needs an extra TX headroom, and remove the field
->> initialization from the others.
+>> We have rc-7 now and it's still not fixed. What is the problem?
 >>
->> Additionally, introduce a new extra_tx_headroom field
->> in struct rt2x00_dev, initialize its value in the probe
->> routine and use the cached value in the rest of the code.
-> 
-> Could we rather get rid of that extra_tx_headroom variable and use queue
-> parameters: winfo_size and desc_size ?
+>
+> The patch is pending in wireless.git and is not in mainline, right.
+> AFAICS there was a recent pull request... so should be in rc8.
+>
+> commit 8edf3fd6eb0649b0f19363baf23bca39c6fbdba4
+> "iwlwifi: don't print module loading error if not modular"
+>
+> - Sedat -
+>
+> http://git.kernel.org/cgit/linux/kernel/git/linville/wireless.git/commit/?id=8edf3fd6eb0649b0f19363baf23bca39c6fbdba4
+>
 
-Yes, it seems that we can compute the value of extra_tx_headrom from those
-fields. The driver uses the following values now:
+Hi Jörg,
 
-driver/device    desc_size         winfo_size           extra_tx_headroom
+the fix you are waiting for hit mainline several minutes ago.
 
-rt2400pci        TXD_DESC_SIZE     0                    0
-rt2500pci        TXD_DESC_SIZE     0                    0
-rt2800pci        TXD_DESC_SIZE     TXWI_DESC_SIZE       TXWI_DESC_SIZE
-rt61pci          TXD_DESC_SIZE     0                    0
+Regards,
+- Sedat -
 
-rt2500usb        TXD_DESC_SIZE     0                    TXD_DESC_SIZE
-rt2800usb        TXINFO_DESC_SIZE  TXWI_DESC_SIZE       TXINFO_DESC_SIZE +
-TXWI_DESC_SIZE
-rt2800usb/RT5592 TXINFO_DESC_SIZE  TXWI_DESC_SIZE_5592  TXINFO_DESC_SIZE +
-TXWI_DESC_SIZE_5592
-rt73usb          TXD_DESC_SIZE     0                    TXD_DESC_SIZE
+[1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=98b6ed0f2bf4abfb759206aa70690636372bdee7
 
-On USB devices we can get it from desc_size + winfo_size and on PCI/PCIe/SoC
-devices it equals with winfo_size. So the callbacks and the extra_tx_headroom
-field in rt2x00_ops can be removed.
-
-However I would keep the new extra_tx_headroom field in rt2x00_dev. It would
-ensure that we don't have to compute its value every time it is used.
-
--Gabor
+>> Thanks, Jörg
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
