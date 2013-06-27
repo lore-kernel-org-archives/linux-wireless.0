@@ -1,30 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:56598 "EHLO mx4.wp.pl"
+Received: from comal.ext.ti.com ([198.47.26.152]:49432 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751631Ab3FYTQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 15:16:30 -0400
-Date: Tue, 25 Jun 2013 21:18:51 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 0/3] rt2x00: rt2800: prepare for
- three-chain device support
-Message-ID: <20130625191851.GA7881@localhost.localdomain> (sfid-20130625_211633_784670_698753C1)
-References: <1371915734-13966-1-git-send-email-juhosg@openwrt.org>
- <20130624160031.GD2460@localhost.localdomain>
- <51C8994E.4040809@openwrt.org>
+	id S1752643Ab3F0M6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jun 2013 08:58:17 -0400
+Message-ID: <1372337887.8383.12.camel@cumari.coelho.fi> (sfid-20130627_145858_200803_10D12FF0)
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+From: Luciano Coelho <coelho@ti.com>
+To: Nishanth Menon <nm@ti.com>
+CC: Nishanth Menon <menon.nishanth@gmail.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<tony@atomide.com>, <linux-omap@vger.kernel.org>,
+	<linux-arm@vger.kernel.org>
+Date: Thu, 27 Jun 2013 15:58:07 +0300
+In-Reply-To: <20130627125131.GA27285@kahuna>
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
+	 <51CBC1C8.1040301@gmail.com> <1372322851.18889.53.camel@cumari.coelho.fi>
+	 <20130627125131.GA27285@kahuna>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51C8994E.4040809@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 24, 2013 at 09:09:02PM +0200, Gabor Juhos wrote:
-> I'm testing these patches on a Linksys AE3000 device which also uses the RT3573
-> chip. I have an almost complete patch-set which allows me to use the device in
-> STA and in AP mode, however I still have to resolve a few problems.
+On Thu, 2013-06-27 at 07:51 -0500, Nishanth Menon wrote:
+> On 11:47-20130627, Luciano Coelho wrote:
+> > (added mailing lists and everyone back to the thread)
+> > 
+> > On Wed, 2013-06-26 at 23:38 -0500, Nishanth Menon wrote:
+> > > On 06/25/2013 03:35 AM, Luciano Coelho wrote:
+> > > > +Optional properties:
+> > > > +--------------------
+> > > > +
+> > > > +- refclock: the internal WLAN reference clock frequency (required for
+> > > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
+> > > > +  following:
+> > > > +	0 = 19.2 MHz
+> > > > +	1 = 26.0 MHz
+> > > > +	2 = 38.4 MHz
+> > > > +	3 = 52.0 MHz
+> > > > +	4 = 38.4 MHz, XTAL
+> > > > +	5 = 26.0 MHz, XTAL
+> > > > +
+> > > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
+> > > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
+> > > > +  following:
+> > > > +	0 = 19.200 MHz
+> > > > +	1 = 26.000 MHz
+> > > > +	2 = 38.400 MHz
+> > > > +	3 = 52.000 MHz
+> > > > +	4 = 16.368 MHz
+> > > > +	5 = 32.736 MHz
+> > > > +	6 = 16.800 MHz
+> > > > +	7 = 33.600 MHz
+> > > >
+> > > just a gentle query - why not use frequency itself here in Hz for 
+> > > refclock and txoclk?
+> > 
+> > I thought about using the actual frequencies, but I decided not to do
+> > so, because I'd have to convert them to these values anyway.  These
+> > values are used to configure the firmware and it uses these
+> > "enumerations".
+> Could we not hide this under preprocessor macros instead? just wondering
+> of txoclock = <6>; kind of usage.. easy to make mistakes and easier to
+> confuse a new reader :).
 
-Cool, waiting for the post ... :-)
+Yes, I guess we could create some preprocessor macros for this.  But the
+documentation would remain the same.  I can't add preprocessor macros to
+the bindings documentation. ;)
 
-Stanislaw
+For the actual DTS files, I could add a wilink.dtsi with enumerations
+for these values so they could be used in the node definitions.  But I'm
+not sure it's going to be that valuable in the end.
+
+--
+Luca.
+
