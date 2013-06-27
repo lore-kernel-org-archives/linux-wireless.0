@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tex.lwn.net ([70.33.254.29]:41456 "EHLO vena.lwn.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751332Ab3FKTRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 15:17:07 -0400
-Date: Tue, 11 Jun 2013 13:17:04 -0600
-From: Jake Edge <jake@lwn.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:49048 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663Ab3F0ObC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jun 2013 10:31:02 -0400
+Message-ID: <1372343457.8160.10.camel@jlt4.sipsolutions.net> (sfid-20130627_163106_779970_99BBA4BD)
+Subject: Re: [PATCHv4 02/18] mac80211/rc80211: add chandef to rate
+ initialization
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFT/RFC 0/4] iwlegacy: workaround for firmware frame tx
- rejection
-Message-ID: <20130611131704.7e59efbb@chukar.edge2.net> (sfid-20130611_211710_894204_12A7492B)
-In-Reply-To: <20130611160949.GA1696@redhat.com>
-References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
-	<20130610143848.7afd5acc@chukar.edge2.net>
-	<20130610214134.36085c4b@chukar.edge2.net>
-	<20130611160949.GA1696@redhat.com>
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Thu, 27 Jun 2013 16:30:57 +0200
+In-Reply-To: <20130627142754.GA19965@pandem0nium>
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1372337064-19254-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1372337940.8160.3.camel@jlt4.sipsolutions.net>
+	 <20130627142754.GA19965@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 11 Jun 2013 18:09:50 +0200 Stanislaw Gruszka wrote:
-
-> I found a bug in one patch, perhaps it is a reason of failure.
-> Please apply patch 5/4 from here:
-> http://marc.info/?l=linux-wireless&m=136947199729148&q=raw 
-> and patch from the end of this email, which fix the bug.
+On Thu, 2013-06-27 at 16:27 +0200, Simon Wunderlich wrote:
+> On Thu, Jun 27, 2013 at 02:59:00PM +0200, Johannes Berg wrote:
+> > On Thu, 2013-06-27 at 14:44 +0200, Simon Wunderlich wrote:
+> > 
+> > >  static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+> > > +			  struct cfg80211_chan_def *chandef,
+> > 
+> > I'd argue you can remove the sband pointer now, since the band is known
+> > from the chandef?
 > 
-> Could you also recheck that "mac80211: fix direct probe auth" patch
-> is applied, note that it is included in 3.10-rc5 as commit
-> 6211dd12da609bc6893b9c3182630b494737ec4b
+> Not really, these rate algos usually access sband->bitrates, and sband can not be
+> derived from just the band and these others parameters (at least I miss to see how).
 
-yes, that mac80211 patch was applied to both 3.9 and 3.10-rc4 ... but I
-just built 3.10-rc5 (and confirmed that it does have that patch) with
-the 4 previous patches plus the new one above and my system connected
-just fine ... i switched back and forth a few times and all seems
-well ...
+sband = hw->wiphy->bands[chandef->chan.band];
 
-looks like a good a set of patches for 3.11, though I imagine stable
-will stick with the other workaround ...
+no?
 
-thanks!
+> > Also, I'm not sure why you'd need this in rate_update, it should be good
+> > enough in rate_init, no?
+> 
+> Hm, minstrel_ht seems to be the only use of this function anyway. It calls
+> minstrel_ht_update_caps() for both rate_init and rate_update, and since both
+> calls had the same parameter it felt naturally and more easy to change both
+> the same way. Also this function calls rate_init from minstrel as fallback.
 
-jake
+Ok, fair enough.
 
--- 
-Jake Edge - LWN - jake@lwn.net - http://lwn.net
+johannes
+
