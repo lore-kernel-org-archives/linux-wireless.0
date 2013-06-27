@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33564 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751326Ab3FASGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jun 2013 14:06:51 -0400
-Message-ID: <51AA3832.2070605@hauke-m.de> (sfid-20130601_200657_584923_E6208459)
-Date: Sat, 01 Jun 2013 20:06:42 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Marc_Mar=ED?= <5.markmb.5@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Intel Centrino Advanced N 6200 and Debian 7
-References: <CA+nFU8T5Ja9jg_E7=Y4TbsT+OxJfNy=x18CMm3VUA9BcKb1+WA@mail.gmail.com>
-In-Reply-To: <CA+nFU8T5Ja9jg_E7=Y4TbsT+OxJfNy=x18CMm3VUA9BcKb1+WA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55835 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752791Ab3F0Mok (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jun 2013 08:44:40 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 09/18] mac80211: return if IBSS chandef can not be used
+Date: Thu, 27 Jun 2013 14:44:15 +0200
+Message-Id: <1372337064-19254-10-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144458_250621_30320449)
+In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/01/2013 07:57 PM, Marc Marí wrote:
-> Hello everyone
-> 
-> I recently changed my wireless card from a Broadcom (very bad
-> supported) to a Intel Centrino Advanced N 6200. In Fedora, it works
-> well, but I prefer Debian, and I'll change again, but in a Debian 7
-> live CD (I need my laptop, so I can't stay several days with a half
-> installation) the wifi doesn't work (kernel 3.2.0-4). This is the
-> error
-> 
-> Jun  1 17:36:54 localhost kernel: [ 1355.505261] iwlwifi 0000:03:00.0:
-> Unsupported (too old) EEPROM VER=0x416 < 0x423 CALIB=0x5 < 0x4
+This was originally designed to fail when a 40+/40- mode can not be
+used, but basic modes (such as 5/10/20 MHz) must be handled
+with an error.
 
-This looks like you bought an engineering sample and not a device that
-should be sold to end users. This device is not supported and you
-probably have to buy a different one.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ net/mac80211/ibss.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-> Jun  1 17:36:54 localhost kernel: [ 1355.505393] iwlwifi: probe of
-> 0000:03:00.0 failed with error -22
-> 
-> Searching the web, it seems that the error is not very common, but is
-> a weird thing, so I am asking for any support in this.
-> 
-> Thank you in advance
-> Marc
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 0bad948..2021b11 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -85,6 +85,14 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	chandef = ifibss->chandef;
+ 	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef)) {
++		if (chandef.width == NL80211_CHAN_WIDTH_5 ||
++		    chandef.width == NL80211_CHAN_WIDTH_10 ||
++		    chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
++		    chandef.width == NL80211_CHAN_WIDTH_20) {
++			sdata_info(sdata,
++				   "Failed to join IBSS, beacons forbidden\n");
++			return;
++		}
+ 		chandef.width = NL80211_CHAN_WIDTH_20;
+ 		chandef.center_freq1 = chan->center_freq;
+ 	}
+-- 
+1.7.10.4
 
