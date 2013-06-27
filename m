@@ -1,115 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:54834 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758421Ab3FCVrZ (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55818 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752687Ab3F0Moj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 17:47:25 -0400
-Received: by mail-wi0-f174.google.com with SMTP id c10so3157407wiw.13
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 14:47:24 -0700 (PDT)
-Message-ID: <1370296040.9091.29.camel@canaries64> (sfid-20130603_234728_595177_B44BABDE)
-Subject: [PATCH 3/8] staging: vt6656: rf.c/h rename RFbSetPower
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 03 Jun 2013 22:47:20 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Jun 2013 08:44:39 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 06/18] cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
+Date: Thu, 27 Jun 2013 14:44:12 +0200
+Message-Id: <1372337064-19254-7-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144541_816457_671E3552)
+In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove camel case rename RFbSetPower to vnt_rf_setpower
+Some regulations (like germany, but also FCC) express their transmission
+power limit in dBm/MHz or mW/MHz. To cope with that and be on the safe
+side, reduce the maximum power to half (10 MHz) or quarter (5 MHz)
+when operating on these reduced bandwidth channels.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+
 ---
- drivers/staging/vt6656/rf.c   |  2 +-
- drivers/staging/vt6656/rf.h   |  2 +-
- drivers/staging/vt6656/rxtx.c | 19 +++++++++----------
- drivers/staging/vt6656/wcmd.c |  8 ++++----
- 4 files changed, 15 insertions(+), 16 deletions(-)
+Changes to PATCHv3:
+ * consider max_reg_power, max_power might contain the hardware limit
+---
+ include/net/cfg80211.h |   27 +++++++++++++++++++++++++++
+ net/mac80211/iface.c   |    2 +-
+ net/mac80211/main.c    |    2 +-
+ net/mac80211/mlme.c    |    3 ++-
+ 4 files changed, 31 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
-index 8c10886..7e6e386 100644
---- a/drivers/staging/vt6656/rf.c
-+++ b/drivers/staging/vt6656/rf.c
-@@ -735,7 +735,7 @@ int vnt_rf_write_embedded(struct vnt_private *priv, u32 data)
-  * Return Value: true if succeeded; false if failed.
-  *
-  */
--int RFbSetPower(struct vnt_private *priv, u32 rate, u32 channel)
-+int vnt_rf_setpower(struct vnt_private *priv, u32 rate, u32 channel)
- {
- 	int ret = true;
- 	u8 power = priv->byCCKPwr;
-diff --git a/drivers/staging/vt6656/rf.h b/drivers/staging/vt6656/rf.h
-index 9de28c0..62fcfc6 100644
---- a/drivers/staging/vt6656/rf.h
-+++ b/drivers/staging/vt6656/rf.h
-@@ -56,7 +56,7 @@
- extern const u8 RFaby11aChannelIndex[200];
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a0c5e04..cbe7b91 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -461,6 +461,33 @@ ieee80211_chandef_rate_flags(struct cfg80211_chan_def *chandef)
+ }
  
- int vnt_rf_write_embedded(struct vnt_private *, u32);
--int RFbSetPower(struct vnt_private *, u32 uRATE, u32 uCH);
-+int vnt_rf_setpower(struct vnt_private *, u32, u32);
- int RFbRawSetPower(struct vnt_private *, u8 byPwr, u32 uRATE);
- void RFvRSSITodBm(struct vnt_private *, u8 byCurrRSSI, long *pldBm);
- void RFbRFTableDownload(struct vnt_private *pDevice);
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 9bf2f8d..d29d4b2 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -1720,11 +1720,11 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-     // 2004.11.11 Kyle -- Using OFDM power to tx MngPkt will decrease the connection capability.
-     //                    And cmd timer will wait data pkt TX finish before scanning so it's OK
-     //                    to set power here.
--    if (pMgmt->eScanState != WMAC_NO_SCANNING) {
--        RFbSetPower(pDevice, wCurrentRate, pDevice->byCurrentCh);
--    } else {
--        RFbSetPower(pDevice, wCurrentRate, pMgmt->uCurrChannel);
--    }
-+	if (pMgmt->eScanState != WMAC_NO_SCANNING)
-+		vnt_rf_setpower(pDevice, wCurrentRate, pDevice->byCurrentCh);
-+	else
-+		vnt_rf_setpower(pDevice, wCurrentRate, pMgmt->uCurrChannel);
-+
-     pDevice->wCurrentRate = wCurrentRate;
- 
-     //Set packet type
-@@ -2098,11 +2098,10 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
-     // 2004.11.11 Kyle -- Using OFDM power to tx MngPkt will decrease the connection capability.
-     //                    And cmd timer will wait data pkt TX finish before scanning so it's OK
-     //                    to set power here.
--    if (pMgmt->eScanState != WMAC_NO_SCANNING) {
--        RFbSetPower(pDevice, wCurrentRate, pDevice->byCurrentCh);
--    } else {
--        RFbSetPower(pDevice, wCurrentRate, pMgmt->uCurrChannel);
--    }
-+	if (pMgmt->eScanState != WMAC_NO_SCANNING)
-+		vnt_rf_setpower(pDevice, wCurrentRate, pDevice->byCurrentCh);
-+	else
-+		vnt_rf_setpower(pDevice, wCurrentRate, pMgmt->uCurrChannel);
- 
-     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"vDMA0_tx_80211: p80211Header->sA3.wFrameCtl = %x \n", p80211Header->sA3.wFrameCtl);
- 
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index 0013cb7..8cd45e3 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -905,11 +905,11 @@ void vRunCommand(struct vnt_private *pDevice)
-             break;
- 
-         case WLAN_CMD_SETPOWER_START:
-+		vnt_rf_setpower(pDevice, pDevice->wCurrentRate,
-+							pMgmt->uCurrChannel);
- 
--            RFbSetPower(pDevice, pDevice->wCurrentRate, pMgmt->uCurrChannel);
--
--            s_bCommandComplete(pDevice);
--            break;
-+		s_bCommandComplete(pDevice);
+ /**
++ * ieee80211_chandef_max_power - maximum transmission power for the chandef
++ *
++ * In some regulations, the transmit power may depend on the configured channel
++ * bandwidth which may be defined as dBm/MHz. This function returns the actual
++ * max_power for non-standard (20 MHz) channels.
++ *
++ * @chandef: channel definition for the channel
++ *
++ * Returns: maximum allowed transmission power in dBm for the chandef
++ */
++static inline int
++ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
++{
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_5:
++		return min(chandef->chan->max_reg_power - 6,
++			   chandef->chan->max_power);
++	case NL80211_CHAN_WIDTH_10:
++		return min(chandef->chan->max_reg_power - 3,
++			   chandef->chan->max_power);
++	default:
 +		break;
++	}
++	return chandef->chan->max_power;
++}
++
++/**
+  * enum survey_info_flags - survey information flags
+  *
+  * @SURVEY_INFO_NOISE_DBM: noise (in dBm) was filled in
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index a2a8250..093c34a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -54,7 +54,7 @@ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
+ 		return false;
+ 	}
  
-         case WLAN_CMD_CHANGE_ANTENNA_START:
-             DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Change from Antenna%d to", (int)pDevice->dwRxAntennaSel);
+-	power = chanctx_conf->def.chan->max_power;
++	power = ieee80211_chandef_max_power(&chanctx_conf->def);
+ 	rcu_read_unlock();
+ 
+ 	if (sdata->user_power_level != IEEE80211_UNSET_POWER_LEVEL)
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 626c83c..a1d51af 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -151,7 +151,7 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
+ 		changed |= IEEE80211_CONF_CHANGE_SMPS;
+ 	}
+ 
+-	power = chandef.chan->max_power;
++	power = ieee80211_chandef_max_power(&chandef);
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 3848b8a..5c1de81 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -747,7 +747,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 		*pos++ = WLAN_EID_PWR_CAPABILITY;
+ 		*pos++ = 2;
+ 		*pos++ = 0; /* min tx power */
+-		*pos++ = chan->max_power; /* max tx power */
++		 /* max tx power */
++		*pos++ = ieee80211_chandef_max_power(&chanctx_conf->def);
+ 
+ 		/* 2. supported channels */
+ 		/* TODO: get this in reg domain format */
 -- 
-1.8.1.2
+1.7.10.4
 
