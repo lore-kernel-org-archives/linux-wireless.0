@@ -1,74 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:51041 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752446Ab3FEMI2 (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55895 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752723Ab3F0Mon (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 08:08:28 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Solomon Peachy <pizza@shaftnet.org>
-Subject: Re: [PATCH] cw1200: fix some obvious mistakes
-Date: Wed, 5 Jun 2013 14:08:03 +0200
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>,
-	Ajitpal Singh <ajitpal.singh@stericsson.com>,
-	linux-wireless@vger.kernel.org
-References: <1370126241-2528420-1-git-send-email-arnd@arndb.de> <2014948.bdhzSga56L@wuerfel> <20130605040802.GA22735@shaftnet.org>
-In-Reply-To: <20130605040802.GA22735@shaftnet.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201306051408.03931.arnd@arndb.de> (sfid-20130605_140846_259872_A92B42E2)
+	Thu, 27 Jun 2013 08:44:43 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 18/18] ath5k: enable support for 5 MHz and 10 MHz channels
+Date: Thu, 27 Jun 2013 14:44:24 +0200
+Message-Id: <1372337064-19254-19-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144501_858490_8703C3A9)
+In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 05 June 2013, Solomon Peachy wrote:
-> > Regarding a long-term solution, I think what we should do here is to
-> > move the reset logic into the SDIO framework itself: We have similar
-> > requirements even for eMMC and SD cards, where you need to provide
-> > the correct voltage to a device on the MMC port in order for it to
-> > work. Today this is supported to a varying degree on the MMC controller
-> > level, where we hook into various frameworks (clk, reset-controller,
-> > regulator, gpio, pinctrl, power domain) based on platformm data or
-> > device tree information on the controller node.
-> 
-> If I understand you correctly, the "traditional" platform data -- power 
-> supply, clock source, and gpio (ie POWERUP, RESET) lines would be 
-> brought up using this mechanism, in order to get the device to attach to 
-> the SDIO bus.  One wrinkle here is that the cw1200 has some minimum 
-> timing requirements between when each of those signals are brought up; I 
-> don't know if there's a way to encode that into the devicetree.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h        |    1 +
+ drivers/net/wireless/ath/ath5k/base.c         |   25 ++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath5k/base.h         |    2 +-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
+ 4 files changed, 25 insertions(+), 5 deletions(-)
 
-If there is a way to know the timings by the SDIO device ID, we should
-not need device tree data. However, if the timings need to be set up
-right in order to find out the device ID, I think they should go into
-the device tree.
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 2d691b8..74bd54d 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -29,6 +29,7 @@
+ #include <linux/average.h>
+ #include <linux/leds.h>
+ #include <net/mac80211.h>
++#include <net/cfg80211.h>
+ 
+ /* RX/TX descriptor hw structs
+  * TODO: Driver part should only see sw structs */
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 7c298af..48161ed 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -56,6 +56,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/nl80211.h>
+ 
++#include <net/cfg80211.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+ #include <asm/unaligned.h>
+@@ -443,11 +444,27 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+  * Called with ah->lock.
+  */
+ int
+-ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
++ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef)
+ {
+ 	ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
+ 		  "channel set, resetting (%u -> %u MHz)\n",
+-		  ah->curchan->center_freq, chan->center_freq);
++		  ah->curchan->center_freq, chandef->chan->center_freq);
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_20:
++	case NL80211_CHAN_WIDTH_20_NOHT:
++		ah->ah_bwmode = AR5K_BWMODE_DEFAULT;
++		break;
++	case NL80211_CHAN_WIDTH_5:
++		ah->ah_bwmode = AR5K_BWMODE_5MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_10:
++		ah->ah_bwmode = AR5K_BWMODE_10MHZ;
++		break;
++	default:
++		WARN_ON(1);
++		return -EINVAL;
++	}
+ 
+ 	/*
+ 	 * To switch channels clear any pending DMA operations;
+@@ -455,7 +472,7 @@ ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
+ 	 * hardware at the new frequency, and then re-enable
+ 	 * the relevant bits of the h/w.
+ 	 */
+-	return ath5k_reset(ah, chan, true);
++	return ath5k_reset(ah, chandef->chan, true);
+ }
+ 
+ void ath5k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+@@ -2525,6 +2542,8 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
+ 	/* SW support for IBSS_RSN is provided by mac80211 */
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 
++	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
++
+ 	/* both antennas can be configured as RX or TX */
+ 	hw->wiphy->available_antennas_tx = 0x3;
+ 	hw->wiphy->available_antennas_rx = 0x3;
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index ca9a83c..97469d0 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -101,7 +101,7 @@ void ath5k_set_beacon_filter(struct ieee80211_hw *hw, bool enable);
+ 
+ void ath5k_update_bssid_mask_and_opmode(struct ath5k_hw *ah,
+ 					struct ieee80211_vif *vif);
+-int ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan);
++int ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef);
+ void ath5k_txbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
+ void ath5k_rxbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
+ void ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index 81b686c..aa9d976 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -202,7 +202,7 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_lock(&ah->lock);
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+-		ret = ath5k_chan_set(ah, conf->chandef.chan);
++		ret = ath5k_chan_set(ah, &conf->chandef);
+ 		if (ret < 0)
+ 			goto unlock;
+ 	}
+-- 
+1.7.10.4
 
-> But that's only half the equation.
-> 
-> Once the device has identified it to the SDIO bus and the driver's 
-> probe() function is called, the other half of the platform data is 
-> needed to successfully probe the hardware.  Namely, the 'ref_clk' field. 
-> This would need to be made available to the probe() call (eg via 
-> func->dev.platform_data) but from what I can tell there's currently no 
-> mechanism to make that connection.
-
-I may not following right what you say here, but I think we need two
-separate platform_data structures, one for the SDIO pins, used by the
-SDIO layer to set up the clocks and regulators, and a separate
-platform_data structure specific to the actual SDIO device, which is
-used by the cw1200 driver and attached to the sdio_func.
-
-I think mmc_attach_sdio would be the right place to pass down the
-platform_data from the host to the func, if set by the platform.
-I notice that this function already sets up the voltage and the
-power domain for the card, so adding any further clock/reset/...
-code could also be done there, or you model the reset line through
-a power domain.
-In case of DT booting, we would do the respective thing and
-add the device_node pointer for the children of the mmc host to
-the sdio devices. We don't currently do that, but it would be
-straightforward to add as well.
-
-	Arnd
