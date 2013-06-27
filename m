@@ -1,78 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:8513 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758569Ab3FMQxT (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:45241 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752854Ab3F0Mom (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jun 2013 12:53:19 -0400
-Message-ID: <1371142391.2246.4.camel@bwh-desktop.uk.level5networks.com> (sfid-20130613_185340_098056_5F570C58)
-Subject: Re: [PATCH 3/3] skbuff: Added new helper function
- skb_cow_clone_head.
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Dave Wiltshire <david.wiltshire@gmx.com>
-CC: <davem@davemloft.net>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <nsujir@broadcom.com>,
-	<mchan@broadcom.com>, <rmody@brocade.com>, <jcliburn@gmail.com>,
-	<chris.snook@gmail.com>, <jeffrey.t.kirsher@intel.com>,
-	<bruce.w.allan@intel.com>, <alexander.h.duyck@intel.com>,
-	<cooldavid@cooldavid.org>, <linux-driver@qlogic.com>,
-	<linux-wimax@intel.com>, <wimax@linuxwimax.org>,
-	<linux-wireless@vger.kernel.org>, <viro@zeniv.linux.org.uk>,
-	<eparis@redhat.com>, <edumazet@google.com>, <dev@openvswitch.org>,
-	<jhs@mojatatu.com>
-Date: Thu, 13 Jun 2013 17:53:11 +0100
-In-Reply-To: <1371040811-8319-2-git-send-email-david.wiltshire@gmx.com>
-References: <1371030906-2396-1-git-send-email-david.wiltshire@gmx.com>
-	 <1371040811-8319-1-git-send-email-david.wiltshire@gmx.com>
-	 <1371040811-8319-2-git-send-email-david.wiltshire@gmx.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	Thu, 27 Jun 2013 08:44:42 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 07/18] mac80211: add radiotap flag and handling for 5/10 MHz
+Date: Thu, 27 Jun 2013 14:44:13 +0200
+Message-Id: <1372337064-19254-8-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144513_177953_822C5650)
+In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-06-12 at 22:40 +1000, Dave Wiltshire wrote:
-> In a few different drivers there is a check of (skb_cloned &&
-> !skb_clone_writable) before then using pskb_expand_head to copy the skb
-> if that is required. There are already some skb_cow_* functions for
-> other conditions, so added this one and changed the call sites.
-> 
-> Signed-off-by: Dave Wiltshire <david.wiltshire@gmx.com>
-> ---
->  include/linux/skbuff.h    |   14 ++++++++++++++
->  net/core/dev.c            |    8 ++------
->  net/openvswitch/actions.c |   22 +++++++---------------
->  net/sched/act_csum.c      |    8 ++------
->  net/sched/act_nat.c       |   18 +++++-------------
->  5 files changed, 30 insertions(+), 40 deletions(-)
-> 
-> diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
-> index a7393ad..7d18541 100644
-> --- a/include/linux/skbuff.h
-> +++ b/include/linux/skbuff.h
-> @@ -2154,6 +2154,20 @@ static inline int skb_cow_head(struct sk_buff *skb, unsigned int headroom)
->  }
->  
->  /**
-> + * skb_cow_clone_head
+Wireshark already defines radiotap channel flags for 5 and 10 MHz, so
+just use them in Linux radiotap too. Furthermore, add rx status flags to
+allow drivers to report when they received data on 5 or 10 MHz channels.
 
-This is a missing a short description after the name.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ include/net/ieee80211_radiotap.h |    4 ++++
+ include/net/mac80211.h           |    4 ++++
+ net/mac80211/rx.c                |   21 ++++++++++++---------
+ 3 files changed, 20 insertions(+), 9 deletions(-)
 
-Ben.
-
-> + * @skb: buffer to cow
-> + * @len: length up to which to write
-> + *
-> + * This function is identical to skb_cow and sb_cow_head except that we
-> + * replace the skb_cloned check by skb_cloned && !skb_clone_writable.
-> + *
-> + */
-> +static inline int skb_cow_clone_head(struct sk_buff *skb, unsigned int len)
-> +{
-> +	return __skb_cow(skb, 0, skb_cloned(skb) && !skb_clone_writable(skb, len));
-> +}
-[...]
-
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index c6d07cb..8b5b714 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -230,6 +230,10 @@ enum ieee80211_radiotap_type {
+ #define	IEEE80211_CHAN_PASSIVE	0x0200	/* Only passive scan allowed */
+ #define	IEEE80211_CHAN_DYN	0x0400	/* Dynamic CCK-OFDM channel */
+ #define	IEEE80211_CHAN_GFSK	0x0800	/* GFSK channel (FHSS PHY) */
++#define	IEEE80211_CHAN_GSM	0x1000	/* GSM (900 MHz) */
++#define	IEEE80211_CHAN_STURBO	0x2000	/* Static Turbo */
++#define	IEEE80211_CHAN_HALF	0x4000	/* Half channel (10 MHz wide) */
++#define	IEEE80211_CHAN_QUARTER	0x8000	/* Quarter channel (5 MHz wide) */
+ 
+ /* For IEEE80211_RADIOTAP_FLAGS */
+ #define	IEEE80211_RADIOTAP_F_CFP	0x01	/* sent/received
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9445f38..ed3dd96 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -809,6 +809,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+  *	is stored in the @ampdu_delimiter_crc field)
+  * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3
++ * @RX_FLAG_10MHZ: 10 MHz (half channel) was used
++ * @RX_FLAG_5MHZ: 5 MHz (quarter channel) was used
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -837,6 +839,8 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_80P80MHZ		= BIT(24),
+ 	RX_FLAG_160MHZ			= BIT(25),
+ 	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
++	RX_FLAG_10MHZ			= BIT(28),
++	RX_FLAG_5MHZ			= BIT(29),
+ };
+ 
+ #define RX_FLAG_STBC_SHIFT		26
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a45e934..834ebd9 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -146,6 +146,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	struct ieee80211_radiotap_header *rthdr;
+ 	unsigned char *pos;
+ 	u16 rx_flags = 0;
++	u16 channel_flags = 0;
+ 	int mpdulen;
+ 
+ 	mpdulen = skb->len;
+@@ -220,20 +221,22 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	/* IEEE80211_RADIOTAP_CHANNEL */
+ 	put_unaligned_le16(status->freq, pos);
+ 	pos += 2;
++	if (status->flag & RX_FLAG_10MHZ)
++		channel_flags |= IEEE80211_CHAN_HALF;
++	else if (status->flag & RX_FLAG_5MHZ)
++		channel_flags |= IEEE80211_CHAN_QUARTER;
++
+ 	if (status->band == IEEE80211_BAND_5GHZ)
+-		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ;
+ 	else if (status->flag & (RX_FLAG_HT | RX_FLAG_VHT))
+-		put_unaligned_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
+ 	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
+-		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
+ 	else if (rate)
+-		put_unaligned_le16(IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
+ 	else
+-		put_unaligned_le16(IEEE80211_CHAN_2GHZ, pos);
++		channel_flags |= IEEE80211_CHAN_2GHZ;
++	put_unaligned_le16(channel_flags, pos);
+ 	pos += 2;
+ 
+ 	/* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+1.7.10.4
 
