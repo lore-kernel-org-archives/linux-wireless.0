@@ -1,119 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:51000 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531Ab3F0J6p (ORCPT
+Received: from smtp06.msg.oleane.net ([62.161.4.6]:48211 "EHLO
+	smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752024Ab3F0Qkd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 05:58:45 -0400
-Received: by mail-ea0-f175.google.com with SMTP id z7so273138eaf.6
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jun 2013 02:58:44 -0700 (PDT)
-Message-ID: <51CC0CD1.5000801@gmail.com> (sfid-20130627_115849_377082_9A14318B)
-Date: Thu, 27 Jun 2013 11:58:41 +0200
-From: "shiki.biomernok" <shiki.biomernok@gmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org, xose.vazquez@gmail.com
-Subject: Re: Fwd: Re: TP-Link 8200ND - rtl8192cu module not loading / working
-References: <51A77433.2060702@lwfinger.net> <51CAD0B8.3010303@gmail.com> <51CB1356.80306@lwfinger.net> <51CB250A.3060900@gmail.com> <51CB4E31.50502@lwfinger.net>
-In-Reply-To: <51CB4E31.50502@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 27 Jun 2013 12:40:33 -0400
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp06.msg.oleane.net (MTA) with ESMTP id r5RGeVWK016849
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Jun 2013 18:40:31 +0200
+From: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
+To: linux-wireless@vger.kernel.org
+Cc: "J.P. Tosoni" <jp.tosoni@acksys.fr>
+Subject: [RFC v2] mac80211: Use libnl-configurable values for retry counts
+Date: Thu, 27 Jun 2013 18:40:27 +0200
+Message-Id: <1372351227-25575-1-git-send-email-jp.tosoni@acksys.fr> (sfid-20130627_184036_911240_4D3EDD74)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have tried to patch my driver but it wouldn't work.
-Sent only Larry a message, because I couldn't figure it out why it 
-wouldn't work.
+From: J.P. Tosoni <jp.tosoni@acksys.fr>
 
-Only now I realized that I didn't patch the uncompressed driver itself, 
-but this whole "package".
-(Sorry when I tried it yesterday, it was already kinda late.)
+In the rate control algorithms, the maximum retry count is limited by
+a) a constant value obtained from the hardware driver
+b) a constant limit (6ms) on the time allowed for all
+   retries of each frame.
 
-I also sent him answers about the questions he asked:
-- Forced module loading: I use Xubuntu with my own kernel config. (See: 
-http://pastebin.com/MR0FHS9w)
-- Iwlwifi problem: I did have kernel panic with -rc4, but it's gone 
-since -rc6.
-(Though I didn't test it that thorough.)
+Replace the retry count by existing configurable values from nl80211.
+Use wiphy->retry_long for frames whose length exceed rts_threshold.
+Use wiphy->retry_short for all other frames.
+Check that the configured value does not exceed driver capabilities.
+Use the new values as soon as the next frame is transmitted.
 
-@Xose: What does that mean for me? Am I trying the wrong driver?
+Caveat: the retry count for frames sent outside the context of a STA is
+still taken from the hardware driver.
+---
+What I am seeking with this patch:
+I believe the configuration of the retries will help making recovery
+much faster when an AP (in infrastructure mode) or a peer (in mesh
+mode) suddenly disappears.
 
-By the way guys... how will the closed-source driver help with the 
-open-source one?
-I mean, I'm sure it will work/load for the device. But people been 
-complaining about it.
-Thought I could help to fix it up for this specific chip.
-(I curse the guy who said this will work under Linux. Argl.)
+>From Felix Fietkau's comments:
+- short retries arbitrarily reserved for management frames: now it depends on
+the use_rts flag which is set when frame length > rts_threshold, which matches
+the standard.
+- "minstrel_alloc ... never update (long_frame_max_tx_count) again"
+The value is now directly used each time we send a frame, the configuration
+should now apply immediately. (not yet tested, need to change iw)
 
-On 2013-06-26 22:25, Larry Finger wrote:
-> On 06/26/2013 12:29 PM, shiki.biomernok wrote:
->> Hello Larry/Mailing list!
->>
->> I have compiled and installed the new wireless-testing kernel from git.
->> I'm sure I used the new kernel, as the device lighted up as soon as I 
->> plugged
->> in. (And I got some new atheros ac module at "make oldconfig".)
->> There was no need for manual echo or modprobe.
->>
->> Yet, the device is not working. It dies at the very same step.
->> Here is the dmesg: http://pastebin.com/C1MNdFiw
->>
->> Please, let me know if I can help with anything.
->> Any debug option, patch or things like that.
->>
->> My offer is still there Larry, I'm willing to give you a full SSH 
->> access to the
->> machine with this stuff plugged in.
->> Besides that, I have no other idea.
->>
->>
->> ! My router runs OpenWRT (latest stable), so I could also gather info 
->> from
->> there. If it's possible.
->> (I checked dmesg but there is nothing. Only some non-crucial info 
->> about the
->> generic eth ports and such.)
->>
->> Thank you for the help.
->>
->> (By the way if the chip is rare (no other people will benefit), then 
->> I can just
->> get it back and ask for a refund. But if others use it as well, then 
->> it's not a
->> waste of time... I guess.)
->
-> I think the TP-Link 8200ND is relatively new. You have version 0x11 
-> for your chip, and mine is 0x10. That could be a difference.
->
-> Whay are you forcing the module loading? As indicated by the (F) in 
-> the traceback, it looks as if all of them are being forced.
->
-> [   13.111932] BUG: unable to handle kernel NULL pointer dereference 
-> at 0000000000000005
-> [   13.111943] IP: [<ffffffffa03196c7>] iwl_dbgfs_register+0x27/0x70 
-> [iwldvm]
-> [   13.111944] PGD 0
-> [   13.111945] Oops: 0000 [#1] PREEMPT SMP
-> [   13.111964] Modules linked in: arc4(F) snd_hda_codec(F) 
-> snd_hwdep(F) snd_pcm(F) iwldvm(F+) snd_page_alloc(F) thinkpad_acpi(F) 
-> nvram(F) mac80211(F) snd_seq_midi(F) i915(F+) snd_seq_midi_event(F) 
-> drm_kms_helper(F) snd_rawmidi(F) drm(F) snd_seq(F) snd_timer(F) 
-> coretemp(F) snd_seq_device(F) r592(F) i2c_algo_bit(F) snd(F) 
-> iwlwifi(F) soundcore(F) tpm_tis(F) memstick(F) btusb(F) microcode(F) 
-> psmouse(F) bluetooth(F) serio_raw(F) wmi(F) cfg80211(F) video(F) 
-> lpc_ich(F) hid_generic(F) usbhid(F) hid(F) sdhci_pci(F) sdhci(F) 
-> ahci(F) libahci(F) e1000e(F) ptp(F) pps_core(F)
-> [   13.111967] CPU: 1 PID: 741 Comm: modprobe Tainted: GF 
-> 3.10.0-rc7-wl-x1-1000hz-wifitesting #1
-> [   13.111968] Hardware name: LENOVO 208252G/208252G, BIOS 6FET92WW 
-> (3.22 ) 12/14/2011
-> [   13.111969] task: ffff8801a3f5d640 ti: ffff8801a1b9e000 task.ti: 
-> ffff8801a1b9e000
-> [   13.111975] RIP: 0010:[<ffffffffa03196c7>] [<ffffffffa03196c7>] 
-> iwl_dbgfs_register+0x27/0x70 [iwldvm]
->
-> To help us debug this matter, the attached patch will let you compile 
-> the vendor driver that you downloaded from the vendor site.
->
-> Larry
->
->
+ net/mac80211/cfg.c  |    6 ++++++
+ net/mac80211/rate.c |   31 ++++++++++++++++++++++++++++++-
+ 2 files changed, 36 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 082f270..4f43beb 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2203,11 +2203,17 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 	if (changed & WIPHY_PARAM_RETRY_SHORT) {
+ 		if (wiphy->retry_short > IEEE80211_MAX_TX_RETRY)
+ 			return -EINVAL;
++		if (wiphy->retry_short >
++				local->hw.max_rate_tries*local->hw.max_rates)
++			return -EINVAL;
+ 		local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
+ 	}
+ 	if (changed & WIPHY_PARAM_RETRY_LONG) {
+ 		if (wiphy->retry_long > IEEE80211_MAX_TX_RETRY)
+ 			return -EINVAL;
++		if (wiphy->retry_long >
++				local->hw.max_rate_tries*local->hw.max_rates)
++			return -EINVAL;
+ 		local->hw.conf.long_frame_max_tx_count = wiphy->retry_long;
+ 	}
+ 	if (changed &
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index a02bef3..a8eaca1 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -537,18 +537,42 @@ static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
+ {
+ 	struct ieee80211_sta_rates *ratetbl = NULL;
+ 	int i;
++	int max_retries;
+ 
+ 	if (sta && !info->control.skip_table)
+ 		ratetbl = rcu_dereference(sta->rates);
+ 
++	if (sta) {
++		struct ieee80211_hw *hw;
++
++		hw = &container_of(sta, struct sta_info, sta)->local->hw;
++		if (info->control.use_rts)
++			max_retries = hw->conf.long_frame_max_tx_count;
++		else
++			max_retries = hw->conf.short_frame_max_tx_count;
++	} else {
++		/*
++		 * No STA, we cannot access hw. Set to a max value, so that
++		 * the values computed by the rate control algorithm will be
++		 * used unlimited.
++		 */
++		max_retries = max_rates * 256; /* garanteed max value of u8 */
++	}
++
+ 	/* Fill remaining rate slots with data from the sta rate table. */
+ 	max_rates = min_t(int, max_rates, IEEE80211_TX_RATE_TABLE_SIZE);
+ 	for (i = 0; i < max_rates; i++) {
+-		if (i < ARRAY_SIZE(info->control.rates) &&
++		if (max_retries <= 0) {
++			rates[i].idx = -1;
++			rates[i].count = 0;
++		} else if (i < ARRAY_SIZE(info->control.rates) &&
+ 		    info->control.rates[i].idx >= 0 &&
+ 		    info->control.rates[i].count) {
+ 			if (rates != info->control.rates)
+ 				rates[i] = info->control.rates[i];
++			if (max_retries < rates[i].count) {
++				rates[i].count = max_retries;
++			}
+ 		} else if (ratetbl) {
+ 			rates[i].idx = ratetbl->rate[i].idx;
+ 			rates[i].flags = ratetbl->rate[i].flags;
+@@ -558,6 +582,9 @@ static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
+ 				rates[i].count = ratetbl->rate[i].count_cts;
+ 			else
+ 				rates[i].count = ratetbl->rate[i].count;
++			if (max_retries < rates[i].count) {
++				rates[i].count = max_retries;
++			}
+ 		} else {
+ 			rates[i].idx = -1;
+ 			rates[i].count = 0;
+@@ -565,6 +592,8 @@ static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
+ 
+ 		if (rates[i].idx < 0 || !rates[i].count)
+ 			break;
++
++		max_retries -= rates[i].count;
+ 	}
+ }
+ 
+-- 
+1.7.2.5
 
