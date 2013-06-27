@@ -1,93 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:40741 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753323Ab3FEM7Q (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55855 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752798Ab3F0Mok (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jun 2013 08:59:16 -0400
-Received: by mail-wi0-f181.google.com with SMTP id hi5so1246141wib.2
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jun 2013 05:59:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201306042143.06998.chunkeey@googlemail.com>
-References: <CAB-Tk70FmmfZOaJnWOubcOrP3MyXebTtrY936_4NROmf_76EZw@mail.gmail.com>
-	<201306042143.06998.chunkeey@googlemail.com>
-Date: Wed, 5 Jun 2013 20:59:14 +0800
-Message-ID: <CAB-Tk73mTDsvf+MCEq5xfUBUtE4c6KfL2nkAcZe2LCY5pF=7RQ@mail.gmail.com> (sfid-20130605_145919_624823_A7AEFF07)
-Subject: Re: carl9170:5/10 MHz Channel Support on carl9170
-From: "C.B. Wang" <wtwangcb@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 27 Jun 2013 08:44:40 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 11/18] ath9k: always use SIFS times from OFDM for 5/10 MHz
+Date: Thu, 27 Jun 2013 14:44:17 +0200
+Message-Id: <1372337064-19254-12-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144543_653263_051ADFE2)
+In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+5/10 MHz channels should always use SIFS times as defined in IEEE
+802.11-2012 18.4.4 (OFDM PHY characteristics). This makes it compatible
+to ath5k, which does the same.
 
-I've read the "otus" vendor driver and found that in the source file
-/HalPlus/OTUS_FB50/hpreg.h on
-line 1915,the comment says "Temporary discard channel that BW < 20MHz
-(5 or 10MHz)   */
-                            /*   Our architecture does not implemnt it"
-I think either the driver does not implement the 5/10 channels or
-worse,the ar9170 chip does
-not support 5/10 mhz channel at all.
-But 802.11j has 10mhz channel support.To comply with the 802.11j
-standard,the chip should
-support 10mhz channel width.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-I know ar9170 support 4.9ghz channels.But does it also support
-non-standard bands like 2.3ghz and 6.0ghz?
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5324c33..b12cca4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1069,7 +1069,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+ 		    tx_lat += 11;
+ 
+-		sifstime *= 2;
++		sifstime = 32;
+ 		ack_offset = 16;
+ 		slottime = 13;
+ 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
+@@ -1079,7 +1079,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+ 		    tx_lat += 22;
+ 
+-		sifstime *= 4;
++		sifstime = 64;
+ 		ack_offset = 32;
+ 		slottime = 21;
+ 	} else {
+@@ -1116,7 +1116,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		ctstimeout += 48 - sifstime - ah->slottime;
+ 	}
+ 
+-
+ 	ath9k_hw_set_sifs_time(ah, sifstime);
+ 	ath9k_hw_setslottime(ah, slottime);
+ 	ath9k_hw_set_ack_timeout(ah, acktimeout);
+-- 
+1.7.10.4
 
-Also the ar9170 MAC was indeed designed by ZyDaS berfore the company
-was taken over by
-Atheros.It has some problems with long distance links.
-
-On 6/5/13, Christian Lamparter <chunkeey@googlemail.com> wrote:
-> On Tuesday, June 04, 2013 03:20:26 PM C.B. Wang wrote:
->> I want to know if the ar9170 chip support 5/10 mhz channels.
-> Maybe. if you care about it, you'll have to look for clues in
-> the original vendor driver (otus - was part of the kernel's staging/
-> directory for < 2.6.39?) and the original vendor firmware
-> (ar9170fw - you can find a git-tree @ git.sipsolutions.com).
->
-> Anyway, if you need a definitive "yes" or "no", you should
-> ask Qualcomm Atheros directly. As I can only tell something
-> about the MAC [which does have a 802.11j Mode. It can be
-> enabled by setting bit 3 in AR9170_MAC_REG_POWER_STATE_CTRL.]
-> However, I don't have any information about the PHY/FEM/RF
-> and BB.
->
->> The datasheet says it supports 802.11j, but the carl9170
->> driver does not provide support.
-> Again, talk to Qualcomm Atheros to find out what needs to be
-> done in order to support it.
->
->> Also the radio chip ar9104 has tuning range from 2.3-2.5ghz and
->> 4.9-6.1ghz,but the driver does not provide any support for these
->> super channels.
-> Some AR9170 devices do indeed support the 4.9 GHz channels
-> (out of the box). e.g.:
-> 	Frequencies:
-> 	 * 4920 MHz [-16] (18.0 dBm)
-> 	 * 4940 MHz [-12] (18.0 dBm)
-> 	 * 4960 MHz [-8] (18.0 dBm)
-> 	 * 4980 MHz [-4] (18.0 dBm)
-> 	 * 5040 MHz [8] (18.0 dBm)
-> 	 * 5060 MHz [12] (18.0 dBm)
-> 	 * 5080 MHz [16] (18.0 dBm)
->
-> However, the device needs to be calibrated for the frequencies
-> to use them legally (the Japanese Market). Look in your kernel
-> logs when the driver is loaded; There should be something like
-> this:
->
->> ath: EEPROM regdomain: 0x8xyz
->> ath: EEPROM indicates we should expect a country code
->> ath: doing EEPROM country->regdmn map search
->> ath: Country alpha2 being used: JP <--- JaPan
->
-> If your country code is not "JP", then you'll have to talk to
-> the manufacturer.
->
-> Regards,
-> 	Chr
->
