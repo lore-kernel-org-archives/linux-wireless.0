@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55381 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837Ab3FORLT (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:56979 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752933Ab3F0Tpi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jun 2013 13:11:19 -0400
-Message-ID: <1371316275.8319.0.camel@jlt4.sipsolutions.net> (sfid-20130615_191123_283633_56E96FDF)
-Subject: Re: kmemleak report in 3.9.5+, related to cfg80211_inform_bss_frame
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sat, 15 Jun 2013 19:11:15 +0200
-In-Reply-To: <51BB9DC5.2020509@candelatech.com> (sfid-20130615_004841_632650_1CE63E73)
-References: <51B773B7.5090301@candelatech.com>
-	 <51B77594.20000@candelatech.com> <51B7C29C.1060701@candelatech.com>
-	 <51BB9DC5.2020509@candelatech.com> (sfid-20130615_004841_632650_1CE63E73)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Jun 2013 15:45:38 -0400
+Received: by mail-wg0-f52.google.com with SMTP id b12so926796wgh.7
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jun 2013 12:45:36 -0700 (PDT)
+Message-ID: <51CC965E.8040606@gmail.com> (sfid-20130627_214541_511959_C7D52D22)
+Date: Thu, 27 Jun 2013 21:45:34 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: "shiki.biomernok" <shiki.biomernok@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Fwd: Re: TP-Link 8200ND - rtl8192cu module not loading / working
+References: <51A77433.2060702@lwfinger.net> <51CAD0B8.3010303@gmail.com> <51CB1356.80306@lwfinger.net> <51CB250A.3060900@gmail.com> <51CB4E31.50502@lwfinger.net> <51CC0CD1.5000801@gmail.com> <51CC3F6E.4050308@gmail.com> <51CC5541.8010003@lwfinger.net>
+In-Reply-To: <51CC5541.8010003@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-06-14 at 15:48 -0700, Ben Greear wrote:
+On 06/27/2013 05:07 PM, Larry Finger wrote:
 
-> I've instrumented all (as far as I can tell) allocation points
-> and destruction points for the ies, and I am keeping a separate
-> list of structures to record some info about each ies.
-> 
-> I loaded up lots of stations, let them bounce around for a while,
-> and then did an 'rmmod ath9k'.
-> 
-> I still see 14 ies entries in my debug list.  Should
-> I expect to see zero ies data structures left after
-> I rmmod all wifi drivers, or is it normal for a few
-> to be left around?
+> On 06/27/2013 08:34 AM, Xose Vazquez Perez wrote:
 
-No, that's decidedly not normal, but that's pretty much just what
-kmemleak already told us, no? Good to verify, but doesn't really help
-pinpoint the problem either, I'd say :-(
+>> But it looks like rtl8192cu wasn't tested enough with 2T2R(RTL8192CUS)
+>> devices.
 
-johannes
+> The code in wireless-testing works fine on my Edimax EW-7811Un, which reports as an RTL8192CUS. 
 
+But Edimax EW-7811Un is a 1T1R device.
