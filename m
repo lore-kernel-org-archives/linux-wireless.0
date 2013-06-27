@@ -1,56 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:56449 "EHLO
-	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752807Ab3FYSwz (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35092 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752817Ab3F0Q7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jun 2013 14:52:55 -0400
-Received: from smtp26.msg.oleane.net (smtp26.mail.priv [172.17.20.148])
-	by smtp-out06.msg.oleane.net with ESMTP id r5PFpuw0025165
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2013 17:51:56 +0200
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp26.msg.oleane.net (MTA) with ESMTP id r5PFVU6u018724
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2013 17:31:30 +0200
-From: cedric.voncken@acksys.fr
-To: linux-wireless@vger.kernel.org
-Cc: Cedric Voncken <cedric.voncken@acksys.fr>
-Subject: [PATCH] wireless: vlan priority handling in WMM
-Date: Tue, 25 Jun 2013 17:31:02 +0200
-Message-Id: <1372174262-13526-1-git-send-email-cedric.voncken@acksys.fr> (sfid-20130625_205307_645728_289E3D48)
+	Thu, 27 Jun 2013 12:59:17 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv5 06/18] cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
+Date: Thu, 27 Jun 2013 18:58:48 +0200
+Message-Id: <1372352340-20663-8-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_185934_123842_3416E361)
+In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Cedric Voncken <cedric.voncken@acksys.fr>
+Some regulations (like germany, but also FCC) express their transmission
+power limit in dBm/MHz or mW/MHz. To cope with that and be on the safe
+side, reduce the maximum power to half (10 MHz) or quarter (5 MHz)
+when operating on these reduced bandwidth channels.
 
-If the VLAN priority is set in skb->vlan_tci use it to determine the WMM priority.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 
-Signed-off-by: Cedric Voncken <cedric.voncken@acksys.fr>
 ---
- net/wireless/util.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Changes to PATCHv3:
+ * consider max_reg_power, max_power might contain the hardware limit
+---
+ include/net/cfg80211.h |   27 +++++++++++++++++++++++++++
+ net/mac80211/iface.c   |    2 +-
+ net/mac80211/main.c    |    2 +-
+ net/mac80211/mlme.c    |    3 ++-
+ 4 files changed, 31 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 74458b7..6f57ae7 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -685,6 +685,7 @@ EXPORT_SYMBOL(ieee80211_amsdu_to_8023s);
- unsigned int cfg80211_classify8021d(struct sk_buff *skb)
- {
- 	unsigned int dscp;
-+	unsigned char vlan_priority;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 83d52dc..69be9fe 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -461,6 +461,33 @@ ieee80211_chandef_rate_flags(struct cfg80211_chan_def *chandef)
+ }
  
- 	/* skb->priority values from 256->263 are magic values to
- 	 * directly indicate a specific 802.1d priority.  This is used
-@@ -694,6 +695,10 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
- 	if (skb->priority >= 256 && skb->priority <= 263)
- 		return skb->priority - 256;
- 
-+	vlan_priority = (skb->vlan_tci >> 13) & 0x07;
-+		if (vlan_priority > 0)
-+			return vlan_priority;
+ /**
++ * ieee80211_chandef_max_power - maximum transmission power for the chandef
++ *
++ * In some regulations, the transmit power may depend on the configured channel
++ * bandwidth which may be defined as dBm/MHz. This function returns the actual
++ * max_power for non-standard (20 MHz) channels.
++ *
++ * @chandef: channel definition for the channel
++ *
++ * Returns: maximum allowed transmission power in dBm for the chandef
++ */
++static inline int
++ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
++{
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_5:
++		return min(chandef->chan->max_reg_power - 6,
++			   chandef->chan->max_power);
++	case NL80211_CHAN_WIDTH_10:
++		return min(chandef->chan->max_reg_power - 3,
++			   chandef->chan->max_power);
++	default:
++		break;
++	}
++	return chandef->chan->max_power;
++}
 +
- 	switch (skb->protocol) {
- 	case htons(ETH_P_IP):
- 		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
++/**
+  * enum survey_info_flags - survey information flags
+  *
+  * @SURVEY_INFO_NOISE_DBM: noise (in dBm) was filled in
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index a2a8250..093c34a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -54,7 +54,7 @@ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
+ 		return false;
+ 	}
+ 
+-	power = chanctx_conf->def.chan->max_power;
++	power = ieee80211_chandef_max_power(&chanctx_conf->def);
+ 	rcu_read_unlock();
+ 
+ 	if (sdata->user_power_level != IEEE80211_UNSET_POWER_LEVEL)
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 626c83c..a1d51af 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -151,7 +151,7 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
+ 		changed |= IEEE80211_CONF_CHANGE_SMPS;
+ 	}
+ 
+-	power = chandef.chan->max_power;
++	power = ieee80211_chandef_max_power(&chandef);
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index eb45c7e..63f8059 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -747,7 +747,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 		*pos++ = WLAN_EID_PWR_CAPABILITY;
+ 		*pos++ = 2;
+ 		*pos++ = 0; /* min tx power */
+-		*pos++ = chan->max_power; /* max tx power */
++		 /* max tx power */
++		*pos++ = ieee80211_chandef_max_power(&chanctx_conf->def);
+ 
+ 		/* 2. supported channels */
+ 		/* TODO: get this in reg domain format */
 -- 
-1.7.2.5
+1.7.10.4
 
