@@ -1,88 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38594 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755957Ab3FKSPk (ORCPT
+Received: from mail-vb0-f45.google.com ([209.85.212.45]:54288 "EHLO
+	mail-vb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764Ab3F0OiY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 14:15:40 -0400
-Message-ID: <1370974531.8356.56.camel@jlt4.sipsolutions.net> (sfid-20130611_201543_141311_7A590D93)
-Subject: pull-request: iwlwifi-next 2013-06-11
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 11 Jun 2013 20:15:31 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-dgtfQRQNnyHtmp1W+P1D"
-Mime-Version: 1.0
+	Thu, 27 Jun 2013 10:38:24 -0400
+Message-ID: <51CC4E5D.10205@lwfinger.net> (sfid-20130627_163840_032549_46619398)
+Date: Thu, 27 Jun 2013 09:38:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Richard Genoud <richard.genoud@gmail.com>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: rtl8192cu: slow path warning
+References: <20130611123814.GA9854@lnx-rg> <20130626142241.GA13107@lnx-rg> <51CB0E9C.50408@lwfinger.net> <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
+In-Reply-To: <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 06/27/2013 02:33 AM, Richard Genoud wrote:
+>
+> Yes, of course, you can add my
+> Reported-by: Richard Genoud <richard.genoud@gmail.com>
+>
+> But the patch doesn't compile on my platform ( since I'm on ARM, I
+> haven't got a PCI bus, so rtlwifi/pci.c is not compiled ) :
+>
+> ERROR: "rtl_lps_change_work_callback"
+> [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
 
---=-dgtfQRQNnyHtmp1W+P1D
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I was planning on eventually reworking the problem to have only a single 
+instance of that INIT_WORK() macro, rather than one for PCI and one for USB. The 
+reason for delaying was that that fix would likely be too invasive for 3.10rc7 
+or for backporting to stable.
 
-Hi,
+Let me create that patch and I will get you a copy.
 
-For iwlwifi-next I only have a few cleanups:
+Thanks for testing,
 
-Emmanuel removed an unused field, fixed a comment and added a warning
-for something that shouldn't happen in practice, and I removed the
-declaration of a function that doesn't even exist.
+Larry
 
-johannes
-
-The following changes since commit fded313ec045024d4f769ce6b3e41fe343c167b0=
-:
-
-  iwlwifi: mvm: don't request SMPS on non-STA iface (2013-06-05 09:06:13 +0=
-200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
-r-john
-
-for you to fetch changes up to 476a9e09cbe37bad93de6e460b76f89f3ad22c9b:
-
-  iwlwifi: ignore 0-length PHY DB sections (2013-06-11 20:12:02 +0200)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (3):
-      iwlwifi: mvm: remove unused wait_for_ba field
-      iwlwifi: mvm: fix irrelevant comment
-      iwlwifi: ignore 0-length PHY DB sections
-
-Johannes Berg (1):
-      iwlwifi: mvm: remove iwl_mvm_dbgfs_set_fw_dbg_log declaration
-
- drivers/net/wireless/iwlwifi/iwl-phy-db.c   | 3 +++
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 +--
- drivers/net/wireless/iwlwifi/mvm/mvm.h      | 5 -----
- drivers/net/wireless/iwlwifi/mvm/sta.h      | 2 --
- 4 files changed, 4 insertions(+), 9 deletions(-)
-
-
---=-dgtfQRQNnyHtmp1W+P1D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRt2lDAAoJEDBSmw7B7bqrfaAP/0yrwk4KyYRRdlQ/hJfJjilk
-bzhrwbWHfiWOFOWctDQ2G/AMyba68wLc2Ors+GmWkwqnp6GlEXSJptNFnY1mZ3pK
-6UUDJl+y8prgByWrt/mmL0bS/xpVHmhr2JPI99S+lGXbaeMOLl5ljKryfdw1+WbQ
-oDoqaFUhZDYcnV+Qa7TM+t47gzaUrPsz7/RtzQakQHWVBkDI6y6g7T5B7a3dv7uM
-8j9Z8mJg4DLId7OVYo42leob3GjkQfWPFOuf3x9w2BWC0KzNzsnJ0co+kNmwrkGQ
-iXQIR9jedg/A156eIM24ECaDhB+g0g2JT28VMsv56RKCZ/I4yiGlSFf3uqDkJFi8
-kNLXCUPeFsKjlFbK4qTlDT0vV2+FTK8LwGQIdvGUcdwy9PMWPY2W8m5CPKMih4ja
-diZN2oYiUTWhPagowevIWdixPUtrSRNgll/bdAebg9hbkb/QIU1yUhIQNhFOD+NP
-fb0M+3QoLRe/2FhUz7b8yoUCxLzsZwK7nWlsGyTkDxFZdlcG0yl+QkfcDQIa0Tiz
-V+ttx0TK3BXa09zTf2sUa3KHbdB18BOWlJpJOGIwjo2FK8iHyYHCvMYMThllYJDe
-KWatCce2NfrAZspxtxZX4arYF2k2k/3oAlLxR5/8PwivXFoW7ENE51hjIFIhMX2U
-oD8RbHBCHtOTiKqWCFm5
-=EOQI
------END PGP SIGNATURE-----
-
---=-dgtfQRQNnyHtmp1W+P1D--
 
