@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:57799 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756845Ab3FSShr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 14:37:47 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0LxZpd-1UDz4z0vCl-017FLq for
- <linux-wireless@vger.kernel.org>; Wed, 19 Jun 2013 20:37:46 +0200
-Message-ID: <51C1FA76.3090109@rempel-privat.de> (sfid-20130619_203750_769415_7F4070C8)
-Date: Wed, 19 Jun 2013 20:37:42 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Ignacy Gawedzki <i@lri.fr>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Corey Richardson <corey@octayn.net>
-Subject: Re: [ath9k-devel] ath9k_htc: station unable to authenticate
-References: <20130619115809.GA26717@zenon.in.qult.net> <51C1ACEC.2020703@rempel-privat.de> <1DC40B07CD6EC041A66726C271A73AE61AA312F5@IRSMSX102.ger.corp.intel.com> <51C1B467.1030509@rempel-privat.de> <20130619140905.GA14079@zenon.in.qult.net> <1371651073.8349.19.camel@jlt4.sipsolutions.net> <51C1C95C.8030301@rempel-privat.de> <20130619175939.GA19405@zenon.in.qult.net> <20130619180354.GB19405@zenon.in.qult.net>
-In-Reply-To: <20130619180354.GB19405@zenon.in.qult.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55903 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752972Ab3F0Moo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jun 2013 08:44:44 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 13/18] ath9k: report 5/10 MHz channels
+Date: Thu, 27 Jun 2013 14:44:19 +0200
+Message-Id: <1372337064-19254-14-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144450_828350_9C3701A7)
+In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-
-Am 19.06.2013 20:03, schrieb Ignacy Gawedzki:
-> On Wed, Jun 19, 2013 at 07:59:39PM +0200, thus spake Ignacy Gawedzki:
->> On Wed, Jun 19, 2013 at 05:08:12PM +0200, thus spake Oleksij Rempel:
->>> Ignacy, Is it RPi +  TL-WN722NC?
->>
->> Yes, absolutely, but it happens on a Dell XPS 13" as well (Ubuntu 13.04).
->
-> BTW, removing CFG80211_DEFAULT_PS doesn't make any difference.
-
-Can you please tell more about your access point:
-- hardware
-- firmware
-- configuration
-- "iw dev wlan0 scan dump"
-
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 865e043..0b0bc9d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -865,6 +865,17 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	band = hw->conf.chandef.chan->band;
+ 	sband = hw->wiphy->bands[band];
+ 
++	switch (hw->conf.chandef.width) {
++	case NL80211_CHAN_WIDTH_5:
++		rxs->flag |= RX_FLAG_5MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_10:
++		rxs->flag |= RX_FLAG_10MHZ;
++		break;
++	default:
++		break;
++	}
++
+ 	if (rx_stats->rs_rate & 0x80) {
+ 		/* HT rate */
+ 		rxs->flag |= RX_FLAG_HT;
 -- 
-Regards,
-Oleksij
+1.7.10.4
+
