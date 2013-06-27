@@ -1,83 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53629 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755177Ab3FCOru (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 10:47:50 -0400
-Message-ID: <1370270859.8227.4.camel@jlt4.sipsolutions.net> (sfid-20130603_164753_265310_2A6F7781)
-Subject: pull-request: mac80211 2013-06-03
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 03 Jun 2013 16:47:39 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-5EOJ8XMZftJXdPEX6ZXF"
-Mime-Version: 1.0
+Received: from comal.ext.ti.com ([198.47.26.152]:49081 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752703Ab3F0Mvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jun 2013 08:51:50 -0400
+Date: Thu, 27 Jun 2013 07:51:32 -0500
+From: Nishanth Menon <nm@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: Nishanth Menon <menon.nishanth@gmail.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<tony@atomide.com>, <linux-omap@vger.kernel.org>,
+	<linux-arm@vger.kernel.org>
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+Message-ID: <20130627125131.GA27285@kahuna> (sfid-20130627_145212_278959_8C521F6F)
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
+ <51CBC1C8.1040301@gmail.com>
+ <1372322851.18889.53.camel@cumari.coelho.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1372322851.18889.53.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11:47-20130627, Luciano Coelho wrote:
+> (added mailing lists and everyone back to the thread)
+> 
+> On Wed, 2013-06-26 at 23:38 -0500, Nishanth Menon wrote:
+> > On 06/25/2013 03:35 AM, Luciano Coelho wrote:
+> > > +Optional properties:
+> > > +--------------------
+> > > +
+> > > +- refclock: the internal WLAN reference clock frequency (required for
+> > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
+> > > +  following:
+> > > +	0 = 19.2 MHz
+> > > +	1 = 26.0 MHz
+> > > +	2 = 38.4 MHz
+> > > +	3 = 52.0 MHz
+> > > +	4 = 38.4 MHz, XTAL
+> > > +	5 = 26.0 MHz, XTAL
+> > > +
+> > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
+> > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
+> > > +  following:
+> > > +	0 = 19.200 MHz
+> > > +	1 = 26.000 MHz
+> > > +	2 = 38.400 MHz
+> > > +	3 = 52.000 MHz
+> > > +	4 = 16.368 MHz
+> > > +	5 = 32.736 MHz
+> > > +	6 = 16.800 MHz
+> > > +	7 = 33.600 MHz
+> > >
+> > just a gentle query - why not use frequency itself here in Hz for 
+> > refclock and txoclk?
+> 
+> I thought about using the actual frequencies, but I decided not to do
+> so, because I'd have to convert them to these values anyway.  These
+> values are used to configure the firmware and it uses these
+> "enumerations".
+Could we not hide this under preprocessor macros instead? just wondering
+of txoclock = <6>; kind of usage.. easy to make mistakes and easier to
+confuse a new reader :).
 
---=-5EOJ8XMZftJXdPEX6ZXF
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+just my 2 cents.
+> 
+> 
+> > might not another option of using
+> > node {
+> > clocks=<&clk>;
+> > }
+> > 
+> > Usually refclock is an external clock source, no?
+> 
+> No.  In the WiLink case, both refclock and tcxoclock are internal
+> clocks.  They are in the module itself and what we need to do is tell
+> the WiLink chip what the module's clocks look like.
+> 
+> 
+> > the above allows you to do an devm_clk_get and clk_get_rate() to figure 
+> > out the exact clock frequency.
+> 
+> No, we can't use these calls, because they are internal clocks.
+> 
+> Please see my more complete explanation as an answer to Tony's email.
+K thanks.
+> 
+> Thanks for your review!
 
-John,
+Glad to be of help.
 
-Here's one more fix for mac80211 (along with a constify patch it depends
-on) to work around problems with certain (broken) APs that forget to
-include HT IEs in their association responses.
-
-johannes
-
-
-The following changes since commit ac20976dcaeea3e77e40e9aac8f3799d2a22ea2b=
-:
-
-  mac80211: Allow single vif mac address change with addr_mask (2013-05-27 =
-11:26:48 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to c2c15e215e860c99b86ddfc4be4bb25cf180fed0:
-
-  mac80211: work around broken APs not including HT info (2013-05-29 00:56:=
-13 +0200)
-
-----------------------------------------------------------------
-Johannes Berg (2):
-      mac80211: constify ieee802_11_parse_elems() argument
-      mac80211: work around broken APs not including HT info
-
- net/mac80211/ieee80211_i.h |  5 +--
- net/mac80211/mlme.c        | 87 ++++++++++++++++++++++++++++++++++++++++++=
-----
- net/mac80211/util.c        |  4 +--
- 3 files changed, 85 insertions(+), 11 deletions(-)
-
-
---=-5EOJ8XMZftJXdPEX6ZXF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRrKyLAAoJEDBSmw7B7bqrC7MP/3RNaIH8/slTCwY4IIaWjYmz
-/zre/LZr5KcG3wMNqL9QAhCq0GKrFJhLvlKcqtSBGZt9Tus1tfDnH0Y66kb+wva2
-tN3g8580etYNJ+lKbS/yNzbHqMoszVdNGUiGSAV3QWS09KQ0EdY1KdINBLk1+6yE
-KLh6PaLyj7CgzX1hjig8jo0YXgYOE40kXLNHnPqqZFvK46rF9CL6Gw8V+jZsMq55
-zIqTeAwLx16Nwso6xkzSgnjVYbv8SRdHDOEdtHaODmqvBTKqWxWTyqyA36i87C21
-KiWWRfufVNoNQy4OLUUJkmLnfjgv1F2gFzH5bibI3TOfJgqloh6Xwr49xq0ddHwd
-0GWJggzV6g4nNYMJGMErwOrAfZ4dIjYf47Ui6ySnrHnsg4N9BO9pyFlvSswmU6hn
-tI5e5RrFZJ1a38TZO0M59NsKikJ3C7ryUpd+x2x0k1zJ5ROWOCFN9RGtTFZJpXBC
-1aXJDAw7P/qLyIg6e/E8KwuYmNkn0qKPSnJNNOS1aCFqr5D4DL8u3HivHt2GZ6Mj
-U61VNeh4wuytAzcQwSORn+/Ccf+1en+0WDoeSIY4/eX7o0UkY+S97wmWYoG9aY+4
-VtsFP/nrAlm31EGszi7nym8jPefMPAcgvMtXA0jxLsV28Rup5X9d5CwDXqw/bjK/
-rsCgaOErARkGxmBSNUIR
-=L/wh
------END PGP SIGNATURE-----
-
---=-5EOJ8XMZftJXdPEX6ZXF--
-
+-- 
+Regards,
+Nishanth Menon
