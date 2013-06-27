@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1834 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758786Ab3FCRLu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 13:11:50 -0400
-Message-ID: <51ACCDFE.5090003@broadcom.com> (sfid-20130603_191154_653389_12C01A92)
-Date: Mon, 3 Jun 2013 19:10:22 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John Greene" <jogreene@redhat.com>
-Subject: using ieee80211_restart_hw()
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35078 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753288Ab3F0Q7P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jun 2013 12:59:15 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv5 11/18] ath9k: always use SIFS times from OFDM for 5/10 MHz
+Date: Thu, 27 Jun 2013 18:58:53 +0200
+Message-Id: <1372352340-20663-13-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_192030_223019_93278491)
+In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+5/10 MHz channels should always use SIFS times as defined in IEEE
+802.11-2012 18.4.4 (OFDM PHY characteristics). This makes it compatible
+to ath5k, which does the same.
 
-In brcmsmac a fatal error in the device results in calling 
-ieee80211_restart_hw(). This was done under the assumption that mac80211 
-would reconfigure everything doing .start(), .add_interface() etc, but 
-looking at a log in redhat bugzilla makes me suspicious about that.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-The only reason I could find in ieee80211_reconfig is that 
-local->open_count would be zero, right?
-
-At the time of the fatal error AMPDU packets were being transmitted so I 
-assume local->open_count would *not* be zero as it seems to match the 
-state of the netdev interface.
-
-Regards,
-Arend
-
----8<--------------------------------------------------------------
-	/* everything else happens only if HW was up & running */
-	if (!local->open_count)
-		goto wake_up;
-
-	/*
-	 * Upon resume hardware can sometimes be goofy due to
-	 * various platform / driver / bus issues, so restarting
-	 * the device may at times not work immediately. Propagate
-	 * the error.
-	 */
-	res = drv_start(local);
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5324c33..b12cca4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1069,7 +1069,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+ 		    tx_lat += 11;
+ 
+-		sifstime *= 2;
++		sifstime = 32;
+ 		ack_offset = 16;
+ 		slottime = 13;
+ 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
+@@ -1079,7 +1079,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+ 		    tx_lat += 22;
+ 
+-		sifstime *= 4;
++		sifstime = 64;
+ 		ack_offset = 32;
+ 		slottime = 21;
+ 	} else {
+@@ -1116,7 +1116,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		ctstimeout += 48 - sifstime - ah->slottime;
+ 	}
+ 
+-
+ 	ath9k_hw_set_sifs_time(ah, sifstime);
+ 	ath9k_hw_setslottime(ah, slottime);
+ 	ath9k_hw_set_ack_timeout(ah, acktimeout);
+-- 
+1.7.10.4
 
