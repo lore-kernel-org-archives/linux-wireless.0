@@ -1,143 +1,363 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp06.msg.oleane.net ([62.161.4.6]:48211 "EHLO
-	smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024Ab3F0Qkd (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:59315 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030Ab3F0Q7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jun 2013 12:40:33 -0400
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp06.msg.oleane.net (MTA) with ESMTP id r5RGeVWK016849
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Jun 2013 18:40:31 +0200
-From: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
-To: linux-wireless@vger.kernel.org
-Cc: "J.P. Tosoni" <jp.tosoni@acksys.fr>
-Subject: [RFC v2] mac80211: Use libnl-configurable values for retry counts
-Date: Thu, 27 Jun 2013 18:40:27 +0200
-Message-Id: <1372351227-25575-1-git-send-email-jp.tosoni@acksys.fr> (sfid-20130627_184036_911240_4D3EDD74)
+	Thu, 27 Jun 2013 12:59:09 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv5 01/18] nl80211: add scan width to bss and scan request structs
+Date: Thu, 27 Jun 2013 18:58:42 +0200
+Message-Id: <1372352340-20663-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_185914_854446_9FE7EBB5)
+In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: J.P. Tosoni <jp.tosoni@acksys.fr>
+To allow scanning and working with 5 MHz and 10 MHz BSS, extend the
+inform bss commands and add wrappers to take 5 and 10 MHz bss into
+account.
 
-In the rate control algorithms, the maximum retry count is limited by
-a) a constant value obtained from the hardware driver
-b) a constant limit (6ms) on the time allowed for all
-   retries of each frame.
-
-Replace the retry count by existing configurable values from nl80211.
-Use wiphy->retry_long for frames whose length exceed rts_threshold.
-Use wiphy->retry_short for all other frames.
-Check that the configured value does not exceed driver capabilities.
-Use the new values as soon as the next frame is transmitted.
-
-Caveat: the retry count for frames sent outside the context of a STA is
-still taken from the hardware driver.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
-What I am seeking with this patch:
-I believe the configuration of the retries will help making recovery
-much faster when an AP (in infrastructure mode) or a peer (in mesh
-mode) suddenly disappears.
+Changes to PATCHv4:
+ * fix copy/paste error
+---
+ include/net/cfg80211.h       |   54 +++++++++++++++++++++++++++++++++++++++---
+ include/uapi/linux/nl80211.h |   18 ++++++++++++++
+ net/wireless/nl80211.c       |    1 +
+ net/wireless/scan.c          |   31 ++++++++++++++----------
+ net/wireless/trace.h         |   12 ++++++----
+ 5 files changed, 97 insertions(+), 19 deletions(-)
 
->From Felix Fietkau's comments:
-- short retries arbitrarily reserved for management frames: now it depends on
-the use_rts flag which is set when frame length > rts_threshold, which matches
-the standard.
-- "minstrel_alloc ... never update (long_frame_max_tx_count) again"
-The value is now directly used each time we send a frame, the configuration
-should now apply immediately. (not yet tested, need to change iw)
-
- net/mac80211/cfg.c  |    6 ++++++
- net/mac80211/rate.c |   31 ++++++++++++++++++++++++++++++-
- 2 files changed, 36 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 082f270..4f43beb 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2203,11 +2203,17 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- 	if (changed & WIPHY_PARAM_RETRY_SHORT) {
- 		if (wiphy->retry_short > IEEE80211_MAX_TX_RETRY)
- 			return -EINVAL;
-+		if (wiphy->retry_short >
-+				local->hw.max_rate_tries*local->hw.max_rates)
-+			return -EINVAL;
- 		local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
- 	}
- 	if (changed & WIPHY_PARAM_RETRY_LONG) {
- 		if (wiphy->retry_long > IEEE80211_MAX_TX_RETRY)
- 			return -EINVAL;
-+		if (wiphy->retry_long >
-+				local->hw.max_rate_tries*local->hw.max_rates)
-+			return -EINVAL;
- 		local->hw.conf.long_frame_max_tx_count = wiphy->retry_long;
- 	}
- 	if (changed &
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index a02bef3..a8eaca1 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -537,18 +537,42 @@ static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
- {
- 	struct ieee80211_sta_rates *ratetbl = NULL;
- 	int i;
-+	int max_retries;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e3a39fc..820cce5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1285,6 +1285,7 @@ struct cfg80211_ssid {
+  * @n_ssids: number of SSIDs
+  * @channels: channels to scan on.
+  * @n_channels: total number of channels to scan
++ * @scan_width: channel width for scanning
+  * @ie: optional information element(s) to add into Probe Request or %NULL
+  * @ie_len: length of ie in octets
+  * @flags: bit field of flags controlling operation
+@@ -1300,6 +1301,7 @@ struct cfg80211_scan_request {
+ 	struct cfg80211_ssid *ssids;
+ 	int n_ssids;
+ 	u32 n_channels;
++	enum nl80211_bss_scan_width scan_width;
+ 	const u8 *ie;
+ 	size_t ie_len;
+ 	u32 flags;
+@@ -1333,6 +1335,7 @@ struct cfg80211_match_set {
+  * @ssids: SSIDs to scan for (passed in the probe_reqs in active scans)
+  * @n_ssids: number of SSIDs
+  * @n_channels: total number of channels to scan
++ * @scan_width: channel width for scanning
+  * @interval: interval between each scheduled scan cycle
+  * @ie: optional information element(s) to add into Probe Request or %NULL
+  * @ie_len: length of ie in octets
+@@ -1352,6 +1355,7 @@ struct cfg80211_sched_scan_request {
+ 	struct cfg80211_ssid *ssids;
+ 	int n_ssids;
+ 	u32 n_channels;
++	enum nl80211_bss_scan_width scan_width;
+ 	u32 interval;
+ 	const u8 *ie;
+ 	size_t ie_len;
+@@ -1403,6 +1407,7 @@ struct cfg80211_bss_ies {
+  * for use in scan results and similar.
+  *
+  * @channel: channel this BSS is on
++ * @scan_width: width of the control channel
+  * @bssid: BSSID of the BSS
+  * @beacon_interval: the beacon interval as from the frame
+  * @capability: the capability field in host byte order
+@@ -1424,6 +1429,7 @@ struct cfg80211_bss_ies {
+  */
+ struct cfg80211_bss {
+ 	struct ieee80211_channel *channel;
++	enum nl80211_bss_scan_width scan_width;
  
- 	if (sta && !info->control.skip_table)
- 		ratetbl = rcu_dereference(sta->rates);
+ 	const struct cfg80211_bss_ies __rcu *ies;
+ 	const struct cfg80211_bss_ies __rcu *beacon_ies;
+@@ -3379,10 +3385,11 @@ void cfg80211_sched_scan_results(struct wiphy *wiphy);
+ void cfg80211_sched_scan_stopped(struct wiphy *wiphy);
  
-+	if (sta) {
-+		struct ieee80211_hw *hw;
+ /**
+- * cfg80211_inform_bss_frame - inform cfg80211 of a received BSS frame
++ * cfg80211_inform_bss_width_frame - inform cfg80211 of a received BSS frame
+  *
+  * @wiphy: the wiphy reporting the BSS
+  * @channel: The channel the frame was received on
++ * @scan_width: width of the control channel
+  * @mgmt: the management frame (probe response or beacon)
+  * @len: length of the management frame
+  * @signal: the signal strength, type depends on the wiphy's signal_type
+@@ -3395,16 +3402,29 @@ void cfg80211_sched_scan_stopped(struct wiphy *wiphy);
+  * Or %NULL on error.
+  */
+ struct cfg80211_bss * __must_check
++cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
++				struct ieee80211_channel *channel,
++				enum nl80211_bss_scan_width scan_width,
++				struct ieee80211_mgmt *mgmt, size_t len,
++				s32 signal, gfp_t gfp);
 +
-+		hw = &container_of(sta, struct sta_info, sta)->local->hw;
-+		if (info->control.use_rts)
-+			max_retries = hw->conf.long_frame_max_tx_count;
-+		else
-+			max_retries = hw->conf.short_frame_max_tx_count;
-+	} else {
-+		/*
-+		 * No STA, we cannot access hw. Set to a max value, so that
-+		 * the values computed by the rate control algorithm will be
-+		 * used unlimited.
-+		 */
-+		max_retries = max_rates * 256; /* garanteed max value of u8 */
++static inline struct cfg80211_bss * __must_check
+ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 			  struct ieee80211_channel *channel,
+ 			  struct ieee80211_mgmt *mgmt, size_t len,
+-			  s32 signal, gfp_t gfp);
++			  s32 signal, gfp_t gfp)
++{
++	return cfg80211_inform_bss_width_frame(wiphy, channel,
++					       NL80211_BSS_CHAN_WIDTH_20,
++					       mgmt, len, signal, gfp);
++}
+ 
+ /**
+  * cfg80211_inform_bss - inform cfg80211 of a new BSS
+  *
+  * @wiphy: the wiphy reporting the BSS
+  * @channel: The channel the frame was received on
++ * @scan_width: width of the control channel
+  * @bssid: the BSSID of the BSS
+  * @tsf: the TSF sent by the peer in the beacon/probe response (or 0)
+  * @capability: the capability field sent by the peer
+@@ -3421,11 +3441,26 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+  * Or %NULL on error.
+  */
+ struct cfg80211_bss * __must_check
++cfg80211_inform_bss_width(struct wiphy *wiphy,
++			  struct ieee80211_channel *channel,
++			  enum nl80211_bss_scan_width scan_width,
++			  const u8 *bssid, u64 tsf, u16 capability,
++			  u16 beacon_interval, const u8 *ie, size_t ielen,
++			  s32 signal, gfp_t gfp);
++
++static inline struct cfg80211_bss * __must_check
+ cfg80211_inform_bss(struct wiphy *wiphy,
+ 		    struct ieee80211_channel *channel,
+ 		    const u8 *bssid, u64 tsf, u16 capability,
+ 		    u16 beacon_interval, const u8 *ie, size_t ielen,
+-		    s32 signal, gfp_t gfp);
++		    s32 signal, gfp_t gfp)
++{
++	return cfg80211_inform_bss_width(wiphy, channel,
++					 NL80211_BSS_CHAN_WIDTH_20,
++					 bssid, tsf, capability,
++					 beacon_interval, ie, ielen, signal,
++					 gfp);
++}
+ 
+ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
+ 				      struct ieee80211_channel *channel,
+@@ -3471,6 +3506,19 @@ void cfg80211_put_bss(struct wiphy *wiphy, struct cfg80211_bss *bss);
+  */
+ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *bss);
+ 
++static inline enum nl80211_bss_scan_width
++cfg80211_chandef_to_scan_width(const struct cfg80211_chan_def *chandef)
++{
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_5:
++		return NL80211_BSS_CHAN_WIDTH_5;
++	case NL80211_CHAN_WIDTH_10:
++		return NL80211_BSS_CHAN_WIDTH_10;
++	default:
++		return NL80211_BSS_CHAN_WIDTH_20;
 +	}
++}
 +
- 	/* Fill remaining rate slots with data from the sta rate table. */
- 	max_rates = min_t(int, max_rates, IEEE80211_TX_RATE_TABLE_SIZE);
- 	for (i = 0; i < max_rates; i++) {
--		if (i < ARRAY_SIZE(info->control.rates) &&
-+		if (max_retries <= 0) {
-+			rates[i].idx = -1;
-+			rates[i].count = 0;
-+		} else if (i < ARRAY_SIZE(info->control.rates) &&
- 		    info->control.rates[i].idx >= 0 &&
- 		    info->control.rates[i].count) {
- 			if (rates != info->control.rates)
- 				rates[i] = info->control.rates[i];
-+			if (max_retries < rates[i].count) {
-+				rates[i].count = max_retries;
-+			}
- 		} else if (ratetbl) {
- 			rates[i].idx = ratetbl->rate[i].idx;
- 			rates[i].flags = ratetbl->rate[i].flags;
-@@ -558,6 +582,9 @@ static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
- 				rates[i].count = ratetbl->rate[i].count_cts;
- 			else
- 				rates[i].count = ratetbl->rate[i].count;
-+			if (max_retries < rates[i].count) {
-+				rates[i].count = max_retries;
-+			}
- 		} else {
- 			rates[i].idx = -1;
- 			rates[i].count = 0;
-@@ -565,6 +592,8 @@ static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
+ /**
+  * cfg80211_rx_mlme_mgmt - notification of processed MLME management frame
+  * @dev: network device
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 861e5eb..39609d5 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2773,6 +2773,21 @@ enum nl80211_chan_width {
+ };
  
- 		if (rates[i].idx < 0 || !rates[i].count)
- 			break;
+ /**
++ * enum nl80211_bss_scan_width - control channel width for a BSS
++ *
++ * These values are used with the %NL80211_BSS_CHAN_WIDTH attribute.
++ *
++ * @NL80211_BSS_CHAN_WIDTH_20: control channel is 20 MHz wide or compatible
++ * @NL80211_BSS_CHAN_WIDTH_10: control channel is 10 MHz wide
++ * @NL80211_BSS_CHAN_WIDTH_5: control channel is 5 MHz wide
++ */
++enum nl80211_bss_scan_width {
++	NL80211_BSS_CHAN_WIDTH_20,
++	NL80211_BSS_CHAN_WIDTH_10,
++	NL80211_BSS_CHAN_WIDTH_5,
++};
 +
-+		max_retries -= rates[i].count;
- 	}
++/**
+  * enum nl80211_bss - netlink attributes for a BSS
+  *
+  * @__NL80211_BSS_INVALID: invalid
+@@ -2796,6 +2811,8 @@ enum nl80211_chan_width {
+  * @NL80211_BSS_BEACON_IES: binary attribute containing the raw information
+  *	elements from a Beacon frame (bin); not present if no Beacon frame has
+  *	yet been received
++ * @NL80211_BSS_CHAN_WIDTH: channel width of the control channel
++ *	(u32, enum nl80211_bss_scan_width)
+  * @__NL80211_BSS_AFTER_LAST: internal
+  * @NL80211_BSS_MAX: highest BSS attribute
+  */
+@@ -2812,6 +2829,7 @@ enum nl80211_bss {
+ 	NL80211_BSS_STATUS,
+ 	NL80211_BSS_SEEN_MS_AGO,
+ 	NL80211_BSS_BEACON_IES,
++	NL80211_BSS_CHAN_WIDTH,
+ 
+ 	/* keep last */
+ 	__NL80211_BSS_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 3b7fb5c..ebd889d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5619,6 +5619,7 @@ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
+ 		goto nla_put_failure;
+ 	if (nla_put_u16(msg, NL80211_BSS_CAPABILITY, res->capability) ||
+ 	    nla_put_u32(msg, NL80211_BSS_FREQUENCY, res->channel->center_freq) ||
++	    nla_put_u32(msg, NL80211_BSS_CHAN_WIDTH, res->scan_width) ||
+ 	    nla_put_u32(msg, NL80211_BSS_SEEN_MS_AGO,
+ 			jiffies_to_msecs(jiffies - intbss->ts)))
+ 		goto nla_put_failure;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index dd01b58..cbe4d27 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -650,6 +650,8 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *dev,
+ 			continue;
+ 		if (bss->pub.channel != new->pub.channel)
+ 			continue;
++		if (bss->pub.scan_width != new->pub.scan_width)
++			continue;
+ 		if (rcu_access_pointer(bss->pub.beacon_ies))
+ 			continue;
+ 		ies = rcu_access_pointer(bss->pub.ies);
+@@ -867,11 +869,12 @@ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
  }
  
+ struct cfg80211_bss*
+-cfg80211_inform_bss(struct wiphy *wiphy,
+-		    struct ieee80211_channel *channel,
+-		    const u8 *bssid, u64 tsf, u16 capability,
+-		    u16 beacon_interval, const u8 *ie, size_t ielen,
+-		    s32 signal, gfp_t gfp)
++cfg80211_inform_bss_width(struct wiphy *wiphy,
++			  struct ieee80211_channel *channel,
++			  enum nl80211_bss_scan_width scan_width,
++			  const u8 *bssid, u64 tsf, u16 capability,
++			  u16 beacon_interval, const u8 *ie, size_t ielen,
++			  s32 signal, gfp_t gfp)
+ {
+ 	struct cfg80211_bss_ies *ies;
+ 	struct cfg80211_internal_bss tmp = {}, *res;
+@@ -889,6 +892,7 @@ cfg80211_inform_bss(struct wiphy *wiphy,
+ 
+ 	memcpy(tmp.pub.bssid, bssid, ETH_ALEN);
+ 	tmp.pub.channel = channel;
++	tmp.pub.scan_width = scan_width;
+ 	tmp.pub.signal = signal;
+ 	tmp.pub.beacon_interval = beacon_interval;
+ 	tmp.pub.capability = capability;
+@@ -921,13 +925,14 @@ cfg80211_inform_bss(struct wiphy *wiphy,
+ 	/* cfg80211_bss_update gives us a referenced result */
+ 	return &res->pub;
+ }
+-EXPORT_SYMBOL(cfg80211_inform_bss);
++EXPORT_SYMBOL(cfg80211_inform_bss_width);
+ 
+ struct cfg80211_bss *
+-cfg80211_inform_bss_frame(struct wiphy *wiphy,
+-			  struct ieee80211_channel *channel,
+-			  struct ieee80211_mgmt *mgmt, size_t len,
+-			  s32 signal, gfp_t gfp)
++cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
++				struct ieee80211_channel *channel,
++				enum nl80211_bss_scan_width scan_width,
++				struct ieee80211_mgmt *mgmt, size_t len,
++				s32 signal, gfp_t gfp)
+ {
+ 	struct cfg80211_internal_bss tmp = {}, *res;
+ 	struct cfg80211_bss_ies *ies;
+@@ -937,7 +942,8 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 	BUILD_BUG_ON(offsetof(struct ieee80211_mgmt, u.probe_resp.variable) !=
+ 			offsetof(struct ieee80211_mgmt, u.beacon.variable));
+ 
+-	trace_cfg80211_inform_bss_frame(wiphy, channel, mgmt, len, signal);
++	trace_cfg80211_inform_bss_width_frame(wiphy, channel, scan_width, mgmt,
++					      len, signal);
+ 
+ 	if (WARN_ON(!mgmt))
+ 		return NULL;
+@@ -972,6 +978,7 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 	
+ 	memcpy(tmp.pub.bssid, mgmt->bssid, ETH_ALEN);
+ 	tmp.pub.channel = channel;
++	tmp.pub.scan_width = scan_width;
+ 	tmp.pub.signal = signal;
+ 	tmp.pub.beacon_interval = le16_to_cpu(mgmt->u.probe_resp.beacon_int);
+ 	tmp.pub.capability = le16_to_cpu(mgmt->u.probe_resp.capab_info);
+@@ -987,7 +994,7 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 	/* cfg80211_bss_update gives us a referenced result */
+ 	return &res->pub;
+ }
+-EXPORT_SYMBOL(cfg80211_inform_bss_frame);
++EXPORT_SYMBOL(cfg80211_inform_bss_width_frame);
+ 
+ void cfg80211_ref_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
+ {
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index e1534baf..09af6eb 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2391,26 +2391,30 @@ TRACE_EVENT(cfg80211_get_bss,
+ 		  __entry->capa_mask, __entry->capa_val)
+ );
+ 
+-TRACE_EVENT(cfg80211_inform_bss_frame,
++TRACE_EVENT(cfg80211_inform_bss_width_frame,
+ 	TP_PROTO(struct wiphy *wiphy, struct ieee80211_channel *channel,
++		 enum nl80211_bss_scan_width scan_width,
+ 		 struct ieee80211_mgmt *mgmt, size_t len,
+ 		 s32 signal),
+-	TP_ARGS(wiphy, channel, mgmt, len, signal),
++	TP_ARGS(wiphy, channel, scan_width, mgmt, len, signal),
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
+ 		CHAN_ENTRY
++		__field(enum nl80211_bss_scan_width, scan_width)
+ 		__dynamic_array(u8, mgmt, len)
+ 		__field(s32, signal)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		CHAN_ASSIGN(channel);
++		__entry->scan_width = scan_width;
+ 		if (mgmt)
+ 			memcpy(__get_dynamic_array(mgmt), mgmt, len);
+ 		__entry->signal = signal;
+ 	),
+-	TP_printk(WIPHY_PR_FMT ", " CHAN_PR_FMT "signal: %d",
+-		  WIPHY_PR_ARG, CHAN_PR_ARG, __entry->signal)
++	TP_printk(WIPHY_PR_FMT ", " CHAN_PR_FMT "(scan_width: %d) signal: %d",
++		  WIPHY_PR_ARG, CHAN_PR_ARG, __entry->scan_width,
++		  __entry->signal)
+ );
+ 
+ DECLARE_EVENT_CLASS(cfg80211_bss_evt,
 -- 
-1.7.2.5
+1.7.10.4
 
