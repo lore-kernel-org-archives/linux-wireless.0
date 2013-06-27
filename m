@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39232 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541Ab3FROgo (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47783 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843Ab3F0APJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 10:36:44 -0400
-Message-ID: <1371566195.8318.28.camel@jlt4.sipsolutions.net> (sfid-20130618_163655_706112_5E6F0D08)
-Subject: Re: [PATCHv2] Revert "mac80211: in IBSS use the Auth frame to
- trigger STA reinsertion"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Date: Tue, 18 Jun 2013 16:36:35 +0200
-In-Reply-To: <1371558040-2821-1-git-send-email-ordex@autistici.org>
-References: <1371558040-2821-1-git-send-email-ordex@autistici.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 26 Jun 2013 20:15:09 -0400
+Date: Wed, 26 Jun 2013 20:05:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-next 2013-06-25
+Message-ID: <20130627000558.GB2139@tuxdriver.com> (sfid-20130627_021514_012700_B7702232)
+References: <1372160186.8372.13.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372160186.8372.13.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-18 at 14:20 +0200, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
+On Tue, Jun 25, 2013 at 01:36:26PM +0200, Johannes Berg wrote:
+> Hi John,
 > 
-> This reverts commit 6d810f10325522cfcf498dc6d64b9f96e1f5153f
+> This is hopefully going to be the last big pull request for
+> iwlwifi-next, luckily it actually mostly removes code ;-)
 > 
-> In this way an IBSS station will not use the AUTH messages
-> to trigger a state reinitialisation anymore.
+> Emmanuel removed some unneeded/unsupported module parameters and adds a
+> Bluetooth 1x1 lookup-table for some upcoming products. From Alex I have
+> an older patch to add low-power receive support, this depended on a
+> mac80211 commit that only just came in with the merge from wireless-next
+> I did. Ilan made beacon timings better, and Eytan added some debug
+> statements for thermal throttling. I have a few cleanups, a fix for a
+> long-standing but rare warning, and, arguably the most important patch
+> here, the firmware API version bump for the 7260/3160 devices.
 > 
-> The behaviour was racy and was not working properly.
-> It has been introduced to help wpa_supplicant to support
-> IBSS/RSN, however all the logic is now getting moved into
-> wpa_s itself which will also be in charge of handling the
-> AUTH messages thanks to the mgmt frame registration.
+> Let me know if there are any issues.
 > 
-> If userspace does not register for receiving AUTH frames
-> then mac80211 will still reply by itself.
+> johannes
 > 
-> At the same time, the auth frame registration counter can be
-> removed since it is not needed anymore.
+> 
+> 
+> The following changes since commit 9fbdc75116f7a2b183464d42f3abccb616584105:
+> 
+>   Merge branch 'for-upstream' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next (2013-06-24 14:45:50 -0400)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+> 
+> for you to fetch changes up to bd4ace2a36e7c87bb5f3eceb54d3b304d395dcf0:
+> 
+>   iwlwifi: mvm: Add support for Low Power RX (2013-06-25 12:21:19 +0200)
 
-Applied.
+Pulling now...
 
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
