@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:37157 "EHLO
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:59380 "EHLO
 	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756529Ab3FDOP1 (ORCPT
+	with ESMTP id S1752817Ab3F0Q7P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 10:15:27 -0400
-Date: Tue, 4 Jun 2013 16:15:22 +0200
+	Thu, 27 Jun 2013 12:59:15 -0400
 From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: "C.B. Wang" <wtwangcb@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: carl9170:5/10 MHz Channel Support on carl9170
-Message-ID: <20130604141522.GA13816@pandem0nium> (sfid-20130604_161533_937872_4D1DA089)
-References: <CAB-Tk70nqYw8a57suVZdLcfJ+cUPSkYMXw3q1kqaO=r8jv7_hA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="vtzGhvizbBRQ85DL"
-In-Reply-To: <CAB-Tk70nqYw8a57suVZdLcfJ+cUPSkYMXw3q1kqaO=r8jv7_hA@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv5 09/18] mac80211: return if IBSS chandef can not be used
+Date: Thu, 27 Jun 2013 18:58:51 +0200
+Message-Id: <1372352340-20663-11-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_185937_953998_5600FE28)
+In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This was originally designed to fail when a 40+/40- mode can not be
+used, but basic modes (such as 5/10/20 MHz) must be handled
+with an error.
 
---vtzGhvizbBRQ85DL
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ net/mac80211/ibss.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-On Tue, Jun 04, 2013 at 09:13:27PM +0800, C.B. Wang wrote:
-> I want to know if the ar9170 chip support 5/10 mhz channels.The
-> datasheet says it supports
-> 802.11j,but the carl9170 driver does not provide support.
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 6adc5af..2e0256b 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -85,6 +85,14 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	chandef = ifibss->chandef;
+ 	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef)) {
++		if (chandef.width == NL80211_CHAN_WIDTH_5 ||
++		    chandef.width == NL80211_CHAN_WIDTH_10 ||
++		    chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
++		    chandef.width == NL80211_CHAN_WIDTH_20) {
++			sdata_info(sdata,
++				   "Failed to join IBSS, beacons forbidden\n");
++			return;
++		}
+ 		chandef.width = NL80211_CHAN_WIDTH_20;
+ 		chandef.center_freq1 = chan->center_freq;
+ 	}
+-- 
+1.7.10.4
 
-I don't know if the carl9170 or the chip really supports that. Mac80211
-currently does not support 5/10 MHz, but there is currently a patchset
-pending to add this feature. If you want, you can apply that and play
-with it.
-
-It would still require to patch the carl9170 driver, the patchset
-currently only adds support for ath5k/ath9k. Also the "super" channels
-would have to be added.
-
-Cheers,
-	Simon
-
---vtzGhvizbBRQ85DL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlGt9noACgkQrzg/fFk7axarfQCgiqOau6ScCjnupTWp1sYOVJsE
-UxcAoJtx+TmMbqA3SN6vlMAOMtY7pEst
-=w7aA
------END PGP SIGNATURE-----
-
---vtzGhvizbBRQ85DL--
