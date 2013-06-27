@@ -1,141 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44809 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751349Ab3FZPNX (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:45103 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752687Ab3F0Moc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 11:13:23 -0400
-Message-ID: <1372259597.13529.11.camel@jlt4.sipsolutions.net> (sfid-20130626_171326_711500_FF331C93)
-Subject: Re: [PATCH v4 2/2] cfg80211/nl80211: Add packet coalesce support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
+	Thu, 27 Jun 2013 08:44:32 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Wed, 26 Jun 2013 17:13:17 +0200
-In-Reply-To: <1372212237-5687-2-git-send-email-bzhao@marvell.com>
-References: <1372212237-5687-1-git-send-email-bzhao@marvell.com>
-	 <1372212237-5687-2-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 00/18] Add support for 5 and 10 MHz channels
+Date: Thu, 27 Jun 2013 14:44:06 +0200
+Message-Id: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144444_153497_BDE1150F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-06-25 at 19:03 -0700, Bing Zhao wrote:
+This patchset adds support for 5 and 10 MHz in nl80211/cfg80211/mac80211
+and enables support in ath5k and ath9k, which already support this feature
+on the driver side. 5 and 10 MHz wide channels might be useful for:
 
-> +/**
-> + * struct cfg80211_coalesce - Packet coalescing settings
-> + *
-> + * This structure defines coalescing settings.
-> + * @rules: array of coalesce rules
-> + * @n_rules: number of rules
-> + */
-> +struct cfg80211_coalesce {
-> +	struct cfg80211_coalesce_rules **rules;
+ * long shot links, as the transmissions are more robust
+ * future support for 802.11y which allows some 5 and 10 MHz channels in
+   3.6 GHz range
+ * future support for 802.11p which uses 10 MHz in 5.9 GHz range
+ * ... and more "special" applications.
 
-I don't really see why this should be a double pointer? The
-coalesce_rules struct is small enough that you could just allocate an
-array of that, no?
+This patchset enables 5 and 10 MHz channels only for OFDM, and without
+HT/MIMO/aggregation (for now). Support may be added later.
 
->  /**
-> + * struct wiphy_coalesce_support - coalesce support data
-> + * @n_rules: maximum number of coalesce rules
-> + * @n_patterns: number of supported patterns
-> + *	(see nl80211.h for the pattern definition)
-> + * @pattern_max_len: maximum length of each pattern
-> + * @pattern_min_len: minimum length of each pattern
-> + * @max_pkt_offset: maximum Rx packet offset
+Changes to PATCHv3:
 
-Should there be any limits on the timer? Will the firmware actually work
-if I set it to (useless) values like 2^32-1 msecs?
+ * some patches dropped which were already merged by Johannes
+ * add new patches:
+	* nl80211: add scan width to bss and scan request
+	* mac80211/rc80211: add chandef to rate initialization
+	* cfg80211/mac80211: get mandatory rates based on rate flags
+	* mac80211: allow scanning for 5/10 MHz channels in IBSS
+	* mac80211: return if IBSS chandef can not be used
+ * add scan/bss handling support for 5/10 MHz (see new patches above)
+ * add chandef parameter to rate control API (see new patches above)
+ * never access hw.conf to acquire the current channel width/chandef
+   -> this should (in theory?) make this usable in chanctx drivers as well
+ * fix txpower according to Felix' suggestion
+ * various smaller fixes
 
-Also -- is n_patterns per rule, or global? It seems global, but in the
-rules you can have multiple patterns per rule?
+As always, any comments are appreciated!
+Cheers,
+        Simon
 
-> +/**
->   * enum nl80211_commands - supported nl80211 commands
->   *
->   * @NL80211_CMD_UNSPEC: unspecified command to catch errors
-> @@ -648,6 +673,10 @@
->   * @NL80211_CMD_CRIT_PROTOCOL_STOP: Indicates the connection reliability can
->   *	return back to normal.
->   *
-> + * @NL80211_CMD_GET_COALESCE: Get currently supported coalesce rules.
-> + *
-> + * @NL80211_CMD_SET_COALESCE: Configure coalesce rules or clear existing rules.
+Simon Wunderlich (18):
+  nl80211: add scan width to bss and scan request
+  mac80211/rc80211: add chandef to rate initialization
+  mac80211: fix timing for 5 MHz and 10 MHz channels
+  mac80211: select and adjust bitrates according to channel mode
+  cfg80211/mac80211: get mandatory rates based on rate flags
+  cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
+  mac80211: add radiotap flag and handling for 5/10 MHz
+  mac80211: allow scanning for 5/10 MHz channels in IBSS
+  mac80211: return if IBSS chandef can not be used
+  nl80211: allow 5 and 10 MHz channels for IBSS
+  ath9k: always use SIFS times from OFDM for 5/10 MHz
+  ath9k: use chandef instead of channel_type
+  ath9k: report 5/10 MHz channels
+  ath9k: set 5/10 MHz supported channels and fix bitrate
+  ath9k: announce that ath9k supports 5/10 MHz
+  ath5k: report 5/10 MHz channels
+  ath5k: set 5/10 MHz supported channels and fix duration
+  ath5k: enable support for 5 MHz and 10 MHz channels
 
-I'd prefer no space between the two :)
+ drivers/net/wireless/ath/ath5k/ath5k.h        |    1 +
+ drivers/net/wireless/ath/ath5k/base.c         |   59 ++++++--
+ drivers/net/wireless/ath/ath5k/base.h         |    2 +-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
+ drivers/net/wireless/ath/ath5k/pcu.c          |    2 +
+ drivers/net/wireless/ath/ath5k/qcu.c          |   25 +++-
+ drivers/net/wireless/ath/ath9k/common.c       |   67 +++++----
+ drivers/net/wireless/ath/ath9k/common.h       |    3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    5 +-
+ drivers/net/wireless/ath/ath9k/hw.c           |    5 +-
+ drivers/net/wireless/ath/ath9k/init.c         |   29 ++--
+ drivers/net/wireless/ath/ath9k/main.c         |    8 +-
+ drivers/net/wireless/ath/ath9k/rc.c           |   12 +-
+ drivers/net/wireless/ath/ath9k/recv.c         |   11 ++
+ drivers/net/wireless/iwlegacy/3945-rs.c       |    1 +
+ drivers/net/wireless/iwlegacy/4965-rs.c       |    1 +
+ drivers/net/wireless/iwlwifi/dvm/rs.c         |    3 +-
+ drivers/net/wireless/iwlwifi/mvm/rs.c         |    5 +-
+ drivers/net/wireless/rtlwifi/rc.c             |    1 +
+ include/net/cfg80211.h                        |   85 ++++++++++-
+ include/net/ieee80211_radiotap.h              |    4 +
+ include/net/mac80211.h                        |    6 +
+ include/uapi/linux/nl80211.h                  |   18 +++
+ net/mac80211/cfg.c                            |   47 +++---
+ net/mac80211/ibss.c                           |  126 ++++++++++++----
+ net/mac80211/ieee80211_i.h                    |   43 +++++-
+ net/mac80211/iface.c                          |    2 +-
+ net/mac80211/main.c                           |   12 +-
+ net/mac80211/mesh.c                           |    2 +-
+ net/mac80211/mesh_plink.c                     |    2 +-
+ net/mac80211/mlme.c                           |   96 +++++++------
+ net/mac80211/rate.c                           |   50 ++++---
+ net/mac80211/rate.h                           |   22 ++-
+ net/mac80211/rc80211_minstrel.c               |   33 ++++-
+ net/mac80211/rc80211_minstrel_ht.c            |   15 +-
+ net/mac80211/rc80211_pid_algo.c               |    1 +
+ net/mac80211/rx.c                             |   28 ++--
+ net/mac80211/scan.c                           |   72 ++++++++--
+ net/mac80211/status.c                         |   17 ++-
+ net/mac80211/tx.c                             |   24 +++-
+ net/mac80211/util.c                           |  190 ++++++++++++++++++++-----
+ net/wireless/mesh.c                           |    5 +-
+ net/wireless/nl80211.c                        |    3 +
+ net/wireless/scan.c                           |   31 ++--
+ net/wireless/trace.h                          |   12 +-
+ net/wireless/util.c                           |   14 +-
+ 46 files changed, 887 insertions(+), 315 deletions(-)
 
-> +struct nl80211_coalesce_rule_support {
-> +	__u32 max_rules;
-> +	struct nl80211_pattern_support pat;
-
-(timing stuff would also go here, I suppose)
-
-> +static int nl80211_parse_coalesce_rule(struct cfg80211_registered_device *rdev,
-> +				       struct nlattr *rule,
-> +				       struct cfg80211_coalesce_rules *new_rule)
-> +{
-> +	int err, i;
-> +	const struct wiphy_coalesce_support *coalesce = rdev->wiphy.coalesce;
-> +	struct nlattr *tb[NUM_NL80211_ATTR_COALESCE_RULE], *pat;
-> +	int rem, pat_len, mask_len, pkt_offset, n_patterns = 0;
-> +	struct nlattr *pat_tb[NUM_NL80211_PKTPAT];
-> +
-> +	err = nla_parse(tb, NL80211_ATTR_COALESCE_RULE_MAX, nla_data(rule),
-> +			nla_len(rule), nl80211_coalesce_policy);
-> +	if (err)
-> +		return err;
-> +
-> +	memset(new_rule, 0, sizeof(*new_rule));
-> +	new_rule->delay = nla_get_u32(tb[NL80211_ATTR_COALESCE_RULE_DELAY]);
-
-no check that it actually exists?
-
-> +	new_rule->condition =
-> +		nla_get_u32(tb[NL80211_ATTR_COALESCE_RULE_CONDITION]);
-
-ditto. easy to crash, no?
-
-> +static int nl80211_set_coalesce(struct sk_buff *skb, struct genl_info *info)
-> +{
-> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-> +	const struct wiphy_coalesce_support *coalesce = rdev->wiphy.coalesce;
-> +	struct cfg80211_coalesce_rules new_rule = {};
-> +	struct cfg80211_coalesce_rules *nrule;
-> +	struct cfg80211_coalesce *new_coalesce;
-> +	int err, rem_rule;
-> +	struct nlattr *rule;
-> +
-> +	if (!rdev->wiphy.coalesce)
-> +		return -EOPNOTSUPP;
-> +	if (!rdev->ops->set_coalesce)
-> +		return -EOPNOTSUPP;
-
-could combine the conditions :)
-
-> +	new_coalesce = kzalloc(sizeof(*new_coalesce), GFP_KERNEL);
-> +	new_coalesce->rules = kcalloc(coalesce->n_rules,
-> +					sizeof(void *), GFP_KERNEL);
-
-*kaboom*
-
-> +	cfg80211_rdev_free_coalesce(rdev->coalesce);
-> +	rdev->coalesce = new_coalesce;
-> +
-> +	err = rdev->ops->set_coalesce(&rdev->wiphy, rdev->coalesce);
-> +	if (err)
-> +		goto error;
-> +
-> +	return 0;
-> +error:
-> +	cfg80211_rdev_free_coalesce(new_coalesce);
-
-*kaboom* if it ever fails, and you then do get_coalesce -- should
-probably assign only after setting the new value successfully?
-
-johannes
+-- 
+1.7.10.4
 
