@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37525 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754651Ab3FKMhq (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55907 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975Ab3F0Moo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jun 2013 08:37:46 -0400
-Message-ID: <1370954261.8356.39.camel@jlt4.sipsolutions.net> (sfid-20130611_143749_917948_6C931D54)
-Subject: Re: [PATCH v2] cfg80211: Allow TDLS peer AID to be configured for
- VHT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 11 Jun 2013 14:37:41 +0200
-In-Reply-To: <20130527152402.GC12369@jouni.qca.qualcomm.com>
-References: <20130516171108.GA27497@jouni.qca.qualcomm.com>
-	 <1369427943.13623.8.camel@johannes>
-	 <20130527152402.GC12369@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Jun 2013 08:44:44 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 15/18] ath9k: announce that ath9k supports 5/10 MHz
+Date: Thu, 27 Jun 2013 14:44:21 +0200
+Message-Id: <1372337064-19254-16-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130627_144456_279042_28CC3E19)
+In-Reply-To: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372337064-19254-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-05-27 at 18:24 +0300, Jouni Malinen wrote:
-> VHT uses peer AID in the PARTIAL_AID field in TDLS frames. The current
-> design for TDLS is to first add a dummy STA entry before completing TDLS
-> Setup and then update information on this STA entry based on what was
-> received from the peer during the setup exchange.
-> 
-> In theory, this could use NL80211_ATTR_STA_AID to set the peer AID just
-> like this is used in AP mode to set the AID of an association station.
-> However, existing cfg80211 validation rules prevent this attribute from
-> being used with set_station operation. To avoid interoperability issues
-> between different kernel and user space version combinations, introduce
-> a new nl80211 attribute for the purpose of setting TDLS peer AID. This
-> attribute can be used in both the new_station and set_station
-> operations. It is not supposed to be allowed to change the AID value
-> during the lifetime of the STA entry, but that validation is left for
-> drivers to do in the change_station callback.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Hmm. I guess I accidentally applied the first version, I've now applied
-the differences.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 96b0d29..f6ae49f 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -844,6 +844,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+ 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
++	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
+ 
+ #ifdef CONFIG_PM_SLEEP
+ 	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
+-- 
+1.7.10.4
 
