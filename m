@@ -1,72 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:58527 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759104Ab3FCQxu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 12:53:50 -0400
-Received: by mail-pb0-f50.google.com with SMTP id wy17so5898641pbc.23
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 09:53:50 -0700 (PDT)
-From: Colleen Twitty <colleen@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Subject: [PATCH 2/2] mac80211: expire mesh peers based on mesh configuration
-Date: Mon,  3 Jun 2013 09:53:40 -0700
-Message-Id: <1370278420-10135-2-git-send-email-colleen@cozybit.com> (sfid-20130603_185353_906709_4AD3F232)
-In-Reply-To: <1370278420-10135-1-git-send-email-colleen@cozybit.com>
-References: <1370278420-10135-1-git-send-email-colleen@cozybit.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:49948 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751960Ab3F1TNY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jun 2013 15:13:24 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 09/19] rt2x00: rt2800lib: introduce rt2800_get_txmixer_gain_{24,5}g helpers
+Date: Fri, 28 Jun 2013 21:12:23 +0200
+Message-Id: <1372446753-11408-10-git-send-email-juhosg@openwrt.org> (sfid-20130628_211337_064564_E3A87746)
+In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The time it takes to see the peer link expire may differ
-by a minute since sta_expire() is run once a minute as a
-mesh housekeeping task.
+Move the TX mixer gain reading code into separate
+helper functions in preparation for RT3593 support.
 
-Signed-off-by: Colleen Twitty <colleen@cozybit.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- net/mac80211/cfg.c  |    2 ++
- net/mac80211/mesh.c |    2 +-
- net/mac80211/mesh.h |    1 -
- 3 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |   38 +++++++++++++++++++------------
+ 1 file changed, 24 insertions(+), 14 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1a89c80..97bb950 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1856,6 +1856,8 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 	if (_chg_mesh_attr(NL80211_MESHCONF_AWAKE_WINDOW, mask))
- 		conf->dot11MeshAwakeWindowDuration =
- 			nconf->dot11MeshAwakeWindowDuration;
-+	if (_chg_mesh_attr(NL80211_MESHCONF_PLINK_TIMEOUT, mask))
-+		conf->plink_timeout = nconf->plink_timeout;
- 	ieee80211_mbss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- 	return 0;
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index cbc3dc3..6f23eb0 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6362,6 +6362,28 @@ int rt2800_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
  }
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 6952760..37a0533 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -573,7 +573,7 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	u32 changed;
+ EXPORT_SYMBOL_GPL(rt2800_read_eeprom_efuse);
  
--	ieee80211_sta_expire(sdata, IEEE80211_MESH_PEER_INACTIVITY_LIMIT);
-+	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
- 	mesh_path_expire(sdata);
++static u8 rt2800_get_txmixer_gain_24g(struct rt2x00_dev *rt2x00dev)
++{
++	u16 word;
++
++	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
++	if ((word & 0x00ff) != 0x00ff)
++		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
++
++	return 0;
++}
++
++static u8 rt2800_get_txmixer_gain_5g(struct rt2x00_dev *rt2x00dev)
++{
++	u16 word;
++
++	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
++	if ((word & 0x00ff) != 0x00ff)
++		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
++
++	return 0;
++}
++
+ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
+@@ -6456,13 +6478,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		rt2x00_set_field16(&word, EEPROM_RSSI_BG_OFFSET1, 0);
+ 	rt2800_eeprom_write(rt2x00dev, EEPROM_RSSI_BG, word);
  
- 	changed = mesh_accept_plinks_update(sdata);
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index da15877..faf6ce4 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -188,7 +188,6 @@ struct mesh_rmc {
- 	u32 idx_mask;
- };
+-	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
+-	if ((word & 0x00ff) != 0x00ff) {
+-		drv_data->txmixer_gain_24g =
+-			rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
+-	} else {
+-		drv_data->txmixer_gain_24g = 0;
+-	}
++	drv_data->txmixer_gain_24g = rt2800_get_txmixer_gain_24g(rt2x00dev);
  
--#define IEEE80211_MESH_PEER_INACTIVITY_LIMIT (1800 * HZ)
- #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_BG2, &word);
+ 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_BG2_OFFSET2)) > 10)
+@@ -6473,13 +6489,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 				   default_lna_gain);
+ 	rt2800_eeprom_write(rt2x00dev, EEPROM_RSSI_BG2, word);
  
- #define MESH_PATH_EXPIRE (600 * HZ)
+-	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
+-	if ((word & 0x00ff) != 0x00ff) {
+-		drv_data->txmixer_gain_5g =
+-			rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
+-	} else {
+-		drv_data->txmixer_gain_5g = 0;
+-	}
++	drv_data->txmixer_gain_5g = rt2800_get_txmixer_gain_5g(rt2x00dev);
+ 
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_A, &word);
+ 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_A_OFFSET0)) > 10)
 -- 
-1.7.9.5
+1.7.10
 
