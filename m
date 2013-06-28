@@ -1,58 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta21.charter.net ([216.33.127.81]:61759 "EHLO
-	mta21.charter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935406Ab3FTAD7 (ORCPT
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:41833 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755407Ab3F1KVz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 20:03:59 -0400
-Date: Wed, 19 Jun 2013 20:03:56 -0400
-From: rlwkayaker <rlwkayaker@charter.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Howto remove rfkill from kernel
-Message-ID: <20130619200356.741ec084@compuzoo> (sfid-20130620_020405_910767_0AFB94FE)
-In-Reply-To: <1371682734.1051.0.camel@dcbw.foobar.com>
-References: <20130619133638.3d183a00@compuzoo>
-	<1371682734.1051.0.camel@dcbw.foobar.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 28 Jun 2013 06:21:55 -0400
+Date: Fri, 28 Jun 2013 11:21:45 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm@vger.kernel.org" <linux-arm@vger.kernel.org>,
+	mturquette@ti.com
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+Message-ID: <20130628102145.GB2139@e106331-lin.cambridge.arm.com> (sfid-20130628_122217_375025_83B0FFBC)
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
+ <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
+ <1372413215.21065.41.camel@cumari.coelho.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372413215.21065.41.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 19 Jun 2013 17:58:54 -0500
-Dan Williams <dcbw@redhat.com> wrote:
-
-> On Wed, 2013-06-19 at 13:36 -0400, rlwkayaker wrote:
-> > The rfkill "feature" has rendered the internal wireless of my
-> > Averatec 3260 laptop unusable.  It works fine with earlier
-> > kernels without this "feature".  How do I remove the rfkill
-> > "feature" from a custom built kernel?
+On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
+> On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
+> > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
+> > > +Optional properties:
+> > > +--------------------
+> > > +
+> > > +- refclock: the internal WLAN reference clock frequency (required for
+> > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
+> > > +  following:
+> > > +	0 = 19.2 MHz
+> > > +	1 = 26.0 MHz
+> > > +	2 = 38.4 MHz
+> > > +	3 = 52.0 MHz
+> > > +	4 = 38.4 MHz, XTAL
+> > > +	5 = 26.0 MHz, XTAL
+> > > +
+> > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
+> > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
+> > > +  following:
+> > > +	0 = 19.200 MHz
+> > > +	1 = 26.000 MHz
+> > > +	2 = 38.400 MHz
+> > > +	3 = 52.000 MHz
+> > > +	4 = 16.368 MHz
+> > > +	5 = 32.736 MHz
+> > > +	6 = 16.800 MHz
+> > > +	7 = 33.600 MHz
+> > 
+> > This looks suspiciously like what we have the common clock bindings for:
+> > 
+> > refclk {
+> > 	compatible = "fixed-clock";
+> > 	#clock-cells = <0>;
+> > 	clock-frequency = <19200000>;
+> > }
+> > 
+> > wilink {
+> > 	compatible = "ti,wilink7";
+> > 	interrupt-parent = <&some_interrupt_controller>;
+> > 	interrupts = <0 1 1>;
+> > 	clocks = <&refclk>, <&refclk>;
+> > 	clock-names = "refclk", "txoclk";
+> > };
+> > 
+> > Could you not use them?
 > 
-> Best thing to do is figure out why this is happening, and fix
-> it.  What kernels worked?  What kernels fail?  What wifi card
-> do you have, and was it the card the laptop originally came
-> with?
-> 
-> Dan
-> 
-I have been using 2.6.32-5-686 successfully with Debian
-Squeeze.  Earlier kernels native to Debian Lenny and Etch also
-worked well.  I tried to update to Debian Wheezy which uses
-3.2.0.4 and ran into many problems, including the rfkill
-"feature".  I gave up on Wheezy and I tried Gentoo, with it's
-3.? kernel and the same rfkill problem, among others. I am
-currently using 3.7.10-antiX which works very well in this
-laptop, except for rfkill "feature". rfkill has a hard block on
-the wireless.  The internal card is original and uses the
-rt2500pci module. I can, and do, temporarily, use a PCMCIA
-wireless card in that laptop successfully and rfkill doesn't
-interfere. I don't find this to be a good solution.  I would
-rather go back to the internal card without the PCMCIA appendage
-protruding from the side of the machine.
+> Hmmm... this actually does look good.  But these are internal clocks in
+> the modules, they cannot be accessed from outside.  Does it make sense
+> to register them with the clock framework?
 
-I have spent a lot of time trying various "fixes" identified on
-the Internet.  I'm left with building a kernel without rfkill,
-using the PCMCIA card or scrapping my favorite laptop because
-somebody decided to put this "feature" in the kernel with
-inadequate information.
+Given we already have a common way of describing clocks, I think it
+makes sense to use it -- people already understand the common bindings,
+and it's less code to add add to the kernel. I don't think the fact
+these clocks are internal should prevent us from describing them as we
+would an external clock.
 
-Richard
+Perhaps Mike Turquette [Cc'd] has an opinion on the matter. 
+
+Thanks,
+Mark.
