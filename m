@@ -1,50 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:55770 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934462Ab3FSQ5q convert rfc822-to-8bit (ORCPT
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:42337 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755097Ab3F1KjV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jun 2013 12:57:46 -0400
-Received: by mail-ob0-f173.google.com with SMTP id wc20so6314322obb.32
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jun 2013 09:57:45 -0700 (PDT)
+	Fri, 28 Jun 2013 06:39:21 -0400
+Date: Fri, 28 Jun 2013 11:39:13 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"mturquette@linaro.org" <mturquette@linaro.org>
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+Message-ID: <20130628103913.GD2139@e106331-lin.cambridge.arm.com> (sfid-20130628_123938_292694_B961F3D9)
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
+ <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
+ <1372413215.21065.41.camel@cumari.coelho.fi>
 MIME-Version: 1.0
-In-Reply-To: <20130619164227.GC4784@cmadams.net>
-References: <20130619160911.GB4784@cmadams.net>
-	<51C1DDEB.3090701@lwfinger.net>
-	<20130619164227.GC4784@cmadams.net>
-Date: Wed, 19 Jun 2013 18:57:45 +0200
-Message-ID: <CACna6rzbTHnyqs5SzTuYL7r_SW3iCNh0qqbnvfsF7Wspyhp1WA@mail.gmail.com> (sfid-20130619_185751_579944_9097F2B0)
-Subject: Re: BCM4331 deauthenticates every five minutes
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372413215.21065.41.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/6/19 Chris Adams <cmadams@cmadams.net>:
-> Once upon a time, Larry Finger <Larry.Finger@lwfinger.net> said:
->> What type of encryption are you using? If it is a re-keying type
->> such as TKIP, what is the interval? You should find that on the
->> setup page of the access point.
->
-> I don't have access to the management of this particular AP (work
-> environment), but "iw dev wlan0 scan dump" says CCMP.
+[resending again with the doubly corrected address for Mike Turquette,
+apologies for the spam]
 
-I think some key interval applies not only to the TKIP, but also other
-keys. For example GTK (which is part of WPA2 with it's 4-way
-handshake). GTK is Group Temporal Key, and Broadcom's router have a
-setting called "GTK rotation interval". I guess PMK/PTK also can have
-some intervals.
+On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
+> On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
+> > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
+> > > +Optional properties:
+> > > +--------------------
+> > > +
+> > > +- refclock: the internal WLAN reference clock frequency (required for
+> > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
+> > > +  following:
+> > > +	0 = 19.2 MHz
+> > > +	1 = 26.0 MHz
+> > > +	2 = 38.4 MHz
+> > > +	3 = 52.0 MHz
+> > > +	4 = 38.4 MHz, XTAL
+> > > +	5 = 26.0 MHz, XTAL
+> > > +
+> > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
+> > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
+> > > +  following:
+> > > +	0 = 19.200 MHz
+> > > +	1 = 26.000 MHz
+> > > +	2 = 38.400 MHz
+> > > +	3 = 52.000 MHz
+> > > +	4 = 16.368 MHz
+> > > +	5 = 32.736 MHz
+> > > +	6 = 16.800 MHz
+> > > +	7 = 33.600 MHz
+> > 
+> > This looks suspiciously like what we have the common clock bindings for:
+> > 
+> > refclk {
+> > 	compatible = "fixed-clock";
+> > 	#clock-cells = <0>;
+> > 	clock-frequency = <19200000>;
+> > }
+> > 
+> > wilink {
+> > 	compatible = "ti,wilink7";
+> > 	interrupt-parent = <&some_interrupt_controller>;
+> > 	interrupts = <0 1 1>;
+> > 	clocks = <&refclk>, <&refclk>;
+> > 	clock-names = "refclk", "txoclk";
+> > };
+> > 
+> > Could you not use them?
+> 
+> Hmmm... this actually does look good.  But these are internal clocks in
+> the modules, they cannot be accessed from outside.  Does it make sense
+> to register them with the clock framework?
 
-I don't know how/if driver can be responsible for such reconnects.
-Over all it just TX and RX packets, right? Loosing a signal is
-something different, that can be related to the driver's bug. But as
-this happens every 5 minutes... I don't know.
+Given we already have a common way of describing clocks, I think it
+makes sense to use it -- people already understand the common bindings,
+and it's less code to add add to the kernel. I don't think the fact
+these clocks are internal should prevent us from describing them as we
+would an external clock.
 
-Did you try connecting to this AP with any other card and using
-similar kernel? I wonder if this can be some supplicant / mac80211
-stack issue...
+Perhaps Mike Turquette [Cc'd] has an opinion on the matter. 
 
--- 
-Rafał
+Thanks,
+Mark.
+_______________________________________________
+devicetree-discuss mailing list
+devicetree-discuss@lists.ozlabs.org
+https://lists.ozlabs.org/listinfo/devicetree-discuss
+
+_______________________________________________
+devicetree-discuss mailing list
+devicetree-discuss@lists.ozlabs.org
+https://lists.ozlabs.org/listinfo/devicetree-discuss
+
