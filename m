@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43613 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756331Ab3FRWEe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 18:04:34 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 3/6] wireless:  Make sure __cfg80211_connect_result always puts bss.
-Date: Tue, 18 Jun 2013 15:03:34 -0700
-Message-Id: <1371593017-10985-3-git-send-email-greearb@candelatech.com> (sfid-20130619_000436_473916_2DB180AE)
-In-Reply-To: <1371593017-10985-1-git-send-email-greearb@candelatech.com>
-References: <1371593017-10985-1-git-send-email-greearb@candelatech.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:49967 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752992Ab3F1TNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jun 2013 15:13:25 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 10/19] rt2x00: rt2800lib: hardcode TX mixer gain values for RT3593
+Date: Fri, 28 Jun 2013 21:12:24 +0200
+Message-Id: <1372446753-11408-11-git-send-email-juhosg@openwrt.org> (sfid-20130628_211330_808854_046E875A)
+In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+The reference code uses hardcoded zero TX mixer gain value
+for RT3593. Do the same in the rt2x00 driver.
 
-Otherwise, we can leak a bss reference.
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Reference:
+  NICReadEEPROMParameters in common/rtmp_init.c
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- net/wireless/sme.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 6066720..ea2ce33 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -420,6 +420,7 @@ void cfg80211_sme_failed_assoc(struct wireless_dev *wdev)
- 	schedule_work(&rdev->conn_work);
- }
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 6f23eb0..ea9b98d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6366,6 +6366,9 @@ static u8 rt2800_get_txmixer_gain_24g(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u16 word;
  
-+/** This method must consume bss one way or another */
- void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       const u8 *req_ie, size_t req_ie_len,
- 			       const u8 *resp_ie, size_t resp_ie_len,
-@@ -435,11 +436,17 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 	ASSERT_WDEV_LOCK(wdev);
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		return 0;
++
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
+ 	if ((word & 0x00ff) != 0x00ff)
+ 		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
+@@ -6377,6 +6380,9 @@ static u8 rt2800_get_txmixer_gain_5g(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u16 word;
  
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
--		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
-+		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)) {
-+		if (bss)
-+			cfg80211_put_bss(wdev->wiphy, bss);
- 		return;
-+	}
- 
--	if (wdev->sme_state != CFG80211_SME_CONNECTING)
-+	if (wdev->sme_state != CFG80211_SME_CONNECTING) {
-+		if (bss)
-+			cfg80211_put_bss(wdev->wiphy, bss);
- 		return;
-+	}
- 
- 	nl80211_send_connect_result(wiphy_to_dev(wdev->wiphy), dev,
- 				    bssid, req_ie, req_ie_len,
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		return 0;
++
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
+ 	if ((word & 0x00ff) != 0x00ff)
+ 		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
 -- 
-1.7.3.4
+1.7.10
 
