@@ -1,85 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:58942 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753768Ab3FCOvy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 10:51:54 -0400
-Date: Mon, 3 Jun 2013 16:25:45 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] nl80211: allow sending CMD_FRAME without specifying
- any frequency
-Message-ID: <20130603142545.GA1226@ritirata.org> (sfid-20130603_165156_761885_16068719)
-References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
- <51ACA309.60904@lri.fr>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="2fHTh5uZTiUOsy+g"
-In-Reply-To: <51ACA309.60904@lri.fr>
+Received: from arrakis.dune.hu ([78.24.191.176]:49914 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751407Ab3F1TNQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jun 2013 15:13:16 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 08/19] rt2x00: rt2800lib: fix default TX power values for RT3593
+Date: Fri, 28 Jun 2013 21:12:22 +0200
+Message-Id: <1372446753-11408-9-git-send-email-juhosg@openwrt.org> (sfid-20130628_211348_978015_D5C16E39)
+In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The TX power values in the EEPROM are using
+a different format for the RT3593 chip. The
+default TX power value uses bits 0..4 only.
+Bits 5..8 contains value for fine grained
+power control. Additionally, the lower and
+upper limits of the TX power values are the
+same for both bands.
 
---2fHTh5uZTiUOsy+g
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Improve the rt2800_txpower_to_dev function,
+in order to compute the correct default power
+values for the RT3593 chip as well.
 
-On Mon, Jun 03, 2013 at 04:07:05PM +0200, Nicolas Cavallari wrote:
-> On 03/06/2013 08:39, Antonio Quartulli wrote:
-> > From: Antonio Quartulli <antonio@open-mesh.com>
-> >=20
-> > Users may want to send a frame on the current channel
-> > without specifying it.
-> >=20
-> > Make mgmt_tx pass a NULL channel to mac80211 if none has
-> > been specified by the user.
-> >=20
-> > Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> > ---
-> >  net/wireless/nl80211.c | 17 +++++++++++++----
-> >  1 file changed, 13 insertions(+), 4 deletions(-)
-> >=20
->=20
-> Have you tested tracing or ath6kl ?
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |    7 +++++++
+ drivers/net/wireless/rt2x00/rt2800lib.c |    7 +++++++
+ 2 files changed, 14 insertions(+)
 
-no.
-For tracing I think I totally forgot to update the "prototype". For ath6kl I
-have no possibility since I have no hw using that driver :/
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index d3e8f6d..69749ba5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2603,6 +2603,10 @@ enum rt2800_eeprom_word {
+ #define EEPROM_TXPOWER_A_1		FIELD16(0x00ff)
+ #define EEPROM_TXPOWER_A_2		FIELD16(0xff00)
+ 
++/* EEPROM_TXPOWER_{A,G} fields for RT3593 */
++#define EEPROM_TXPOWER_ALC		FIELD8(0x1f)
++#define EEPROM_TXPOWER_FINE_CTRL	FIELD8(0xe0)
++
+ /*
+  * EEPROM temperature compensation boundaries 802.11A
+  * MINUS4: If the actual TSSI is below this boundary, tx power needs to be
+@@ -2884,6 +2888,9 @@ enum rt2800_eeprom_word {
+ #define MAX_A_TXPOWER	15
+ #define DEFAULT_TXPOWER	5
+ 
++#define MIN_A_TXPOWER_3593	0
++#define MAX_A_TXPOWER_3593	31
++
+ #define TXPOWER_G_FROM_DEV(__txpower) \
+ 	((__txpower) > MAX_G_TXPOWER) ? DEFAULT_TXPOWER : (__txpower)
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 9d05273..cbc3dc3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2729,8 +2729,15 @@ static char rt2800_txpower_to_dev(struct rt2x00_dev *rt2x00dev,
+ 				  unsigned int channel,
+ 				  char txpower)
+ {
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		txpower = rt2x00_get_field8(txpower, EEPROM_TXPOWER_ALC);
++
+ 	if (channel <= 14)
+ 		return clamp_t(char, txpower, MIN_G_TXPOWER, MAX_G_TXPOWER);
++
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		return clamp_t(char, txpower, MIN_A_TXPOWER_3593,
++			       MAX_A_TXPOWER_3593);
+ 	else
+ 		return clamp_t(char, txpower, MIN_A_TXPOWER, MAX_A_TXPOWER);
+ }
+-- 
+1.7.10
 
-The concern about ath6kl comes from the fact that it is a fullMAC driver?
-
-
-Cheers,
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---2fHTh5uZTiUOsy+g
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRrKdpAAoJEADl0hg6qKeOeQ4P/2mBLGs+AFpp8jePiAP7CPs9
-PP9/uFrmRa0PJsATdAY4XdAohmMyt5zM6r0wDoTfuQ/WGvF4xm+xBZa79Ju2o14h
-qz6I0RJm0HJbijmowj9pczkFbxK292a5ylbMgbUMfLdHeoxQoFXlKWeN/fGtTl3I
-1Eof14ciYPed/v46WJflWahlgGURMmOwndh3v7W0/nZb2wr1WGrUkCGi+Gh+cbny
-zWfiJWmUQBGlrPgr7oNMVbGGmfEoerlB0YOs5tVLYlii/nRTTj7VI7vO1AZVHZAS
-0++l/+Z2YKWLzQHGa9jove6JSfCpB7dVhL0FOvhY+5HGeuLnjB1CXV/j4SmbhuWj
-70s+SyWSmqb33qQIf9sks+swOFb+wsOdGG58ctuSgK5IDaxzk02nBByt2NavOnL7
-KqWnXU9qs9NzOY/Nhc50g0wAHPzdTRFae1y/40MLs7AidC8+AS8WZsqoqV+vbTcJ
-7X9JGd7S9uy+DQ4qWpZcT+fwLZWzNGbcZjHIhY0d/qiVUbh7EO0B0RJ6QBA+S8SY
-ecfGB0EsGkgCqHBYfX0az3OqAG6Yx64P1DUIKSiaAwwLb+l4EpM904iZWYTcvxoO
-yqKGWu4wkstQa9W6EeIvxcIEyEFzf7iFkG24rGU7yX7tY0+IRBQtqvVtdfcoY+t2
-Uzdufy3Be7zC2sMJ73+/
-=hKmH
------END PGP SIGNATURE-----
-
---2fHTh5uZTiUOsy+g--
