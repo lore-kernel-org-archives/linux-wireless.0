@@ -1,75 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41932 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752039Ab3FQTJN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jun 2013 15:09:13 -0400
-Message-ID: <51BF5ED4.9010704@candelatech.com> (sfid-20130617_210916_835053_92650BEE)
-Date: Mon, 17 Jun 2013 12:09:08 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Lots of confusion on bss refcounting.
-References: <51BF5A53.8050100@candelatech.com>  (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1371495758.8168.3.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from arrakis.dune.hu ([78.24.191.176]:49968 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753041Ab3F1TN0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jun 2013 15:13:26 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 13/19] rt2x00: rt2800lib: add rf_vals for RF3053
+Date: Fri, 28 Jun 2013 21:12:27 +0200
+Message-Id: <1372446753-11408-14-git-send-email-juhosg@openwrt.org> (sfid-20130628_211332_799950_FD3087B8)
+In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/17/2013 12:02 PM, Johannes Berg wrote:
-> On Mon, 2013-06-17 at 11:49 -0700, Ben Greear wrote:
->
->> We create an assoc_data, assign a bss pointer in ieee80211_mgd_assoc,
->> but do not claim a reference.
->
-> Heh, yeah, I was actually looking at this code too but didn't have time
-> today to finish my thoughts ...
->
->> Later, when deleting the assoc_data, the ref is not freed either,
->> except in one error path where it is explicitly freed:
->>
->> 		if (!ieee80211_assoc_success(sdata, *bss, mgmt, len)) {
->> 			/* oops -- internal error -- send timeout for now */
->> 			ieee80211_destroy_assoc_data(sdata, false);
->> 			cfg80211_put_bss(sdata->local->hw.wiphy, *bss);
->> 			return RX_MGMT_CFG80211_ASSOC_TIMEOUT;
->> 		}
->>
->> This seems ripe for bugs, if not already buggy.
->>
->> Maybe we should be more explicit about always grabbing a ref when
->> we take a reference to the pointer, and always put it when we
->> destroy the pointer?
->
-> I think the reference is actually given to mac80211 by cfg80211 in
-> cfg80211_mlme_assoc(), so we shouldn't need to grab a reference?
-> Although I'm certainly willing to change this and make cfg80211 always
-> put the reference after calling rdev_assoc() so that the driver/mac80211
-> would be responsible for obtaining its own if it needs to hang on to the
-> struct.
->
-> This does seem broken though.
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-The bss reference is passed back, and through luck or careful programming,
-it *seems* that all paths related to calling ieee80211_rx_mgmt_assoc_resp
-managed to consume the bss.
+References:
+  FreqItems3053 in chips/rt3593.c
 
-I haven't figured out yet why this is not an erroneous put since I didn't
-find the reference taken in the first place.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   70 +++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
 
-I'm going to work on making some changes to the ref counting scheme
-a bit.  I'd rather have the code perhaps take and put a few refs
-it might otherwise skip to keep the ownership cleaner and make
-the code easier to debug and understand...
-
-I'll post some for RFC when I make some progress.
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index bc21a57..6dcf03a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6962,6 +6962,72 @@ static const struct rf_channel rf_vals_5592_xtal40[] = {
+ 	{196, 83, 0, 12, 1},
+ };
+ 
++static const struct rf_channel rf_vals_3053[] = {
++	/* Channel, N, R, K */
++	{1, 241, 2, 2},
++	{2, 241, 2, 7},
++	{3, 242, 2, 2},
++	{4, 242, 2, 7},
++	{5, 243, 2, 2},
++	{6, 243, 2, 7},
++	{7, 244, 2, 2},
++	{8, 244, 2, 7},
++	{9, 245, 2, 2},
++	{10, 245, 2, 7},
++	{11, 246, 2, 2},
++	{12, 246, 2, 7},
++	{13, 247, 2, 2},
++	{14, 248, 2, 4},
++
++	{36, 0x56, 0, 4},
++	{38, 0x56, 0, 6},
++	{40, 0x56, 0, 8},
++	{44, 0x57, 0, 0},
++	{46, 0x57, 0, 2},
++	{48, 0x57, 0, 4},
++	{52, 0x57, 0, 8},
++	{54, 0x57, 0, 10},
++	{56, 0x58, 0, 0},
++	{60, 0x58, 0, 4},
++	{62, 0x58, 0, 6},
++	{64, 0x58, 0, 8},
++
++	{100, 0x5B, 0, 8},
++	{102, 0x5B, 0, 10},
++	{104, 0x5C, 0, 0},
++	{108, 0x5C, 0, 4},
++	{110, 0x5C, 0, 6},
++	{112, 0x5C, 0, 8},
++
++	/* NOTE: Channel 114 has been removed intentionally.
++	 * The EEPROM contains no TX power values for that,
++	 * and it is disabled in the vendor driver as well.
++	 */
++
++	{116, 0x5D, 0, 0},
++	{118, 0x5D, 0, 2},
++	{120, 0x5D, 0, 4},
++	{124, 0x5D, 0, 8},
++	{126, 0x5D, 0, 10},
++	{128, 0x5E, 0, 0},
++	{132, 0x5E, 0, 4},
++	{134, 0x5E, 0, 6},
++	{136, 0x5E, 0, 8},
++	{140, 0x5F, 0, 0},
++
++	{149, 0x5F, 0, 9},
++	{151, 0x5F, 0, 11},
++	{153, 0x60, 0, 1},
++	{157, 0x60, 0, 5},
++	{159, 0x60, 0, 7},
++	{161, 0x60, 0, 9},
++	{165, 0x61, 0, 1},
++	{167, 0x61, 0, 3},
++	{169, 0x61, 0, 5},
++	{171, 0x61, 0, 7},
++	{173, 0x61, 0, 9},
++};
++
+ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct hw_mode_spec *spec = &rt2x00dev->spec;
+@@ -7053,6 +7119,10 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		spec->supported_bands |= SUPPORT_BAND_5GHZ;
+ 		spec->num_channels = ARRAY_SIZE(rf_vals_3x);
+ 		spec->channels = rf_vals_3x;
++	} else if (rt2x00_rf(rt2x00dev, RF3053)) {
++		spec->supported_bands |= SUPPORT_BAND_5GHZ;
++		spec->num_channels = ARRAY_SIZE(rf_vals_3053);
++		spec->channels = rf_vals_3053;
+ 	} else if (rt2x00_rf(rt2x00dev, RF5592)) {
+ 		spec->supported_bands |= SUPPORT_BAND_5GHZ;
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10
 
