@@ -1,66 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55708 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932499Ab3FRP7g (ORCPT
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:42207 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754879Ab3F1Kdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 11:59:36 -0400
-Message-ID: <51C083E0.9020600@candelatech.com> (sfid-20130618_175943_415343_F4C5118E)
-Date: Tue, 18 Jun 2013 08:59:28 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 28 Jun 2013 06:33:42 -0400
+Date: Fri, 28 Jun 2013 11:33:34 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"mturquette@linaro.org"@arm.com
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+Message-ID: <20130628103334.GC2139@e106331-lin.cambridge.arm.com> (sfid-20130628_123346_773888_C4697BCE)
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
+ <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
+ <1372413215.21065.41.camel@cumari.coelho.fi>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Lots of confusion on bss refcounting.
-References: <51BF5A53.8050100@candelatech.com>    (sfid-20130617_205007_448068_E9E81DD2) <1371495758.8168.3.camel@jlt4.sipsolutions.net>   <51BF5ED4.9010704@candelatech.com> <51BF8040.2000408@candelatech.com>   <51BFAA34.1020407@candelatech.com>  <1371559771.8318.12.camel@jlt4.sipsolutions.net>  <51C08119.3000407@candelatech.com> <1371570723.22256.0.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1371570723.22256.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372413215.21065.41.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2013 08:52 AM, Johannes Berg wrote:
->
->>> You mean ->current_bss? That should be handled in all the callbacks in
->>> sme.c or so
->>
->> Looks like much of the action happens on work-queues.  I'm wondering if
->> we managed to delete wdev objects before we have completely cleaned up
->> in some cases...
->
-> Don't we flush work structs appropriately?
+[resending with the correct address for Mike Turquette]
 
-Looks like it, from core.c in the netdev event handler:
+On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
+> On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
+> > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
+> > > +Optional properties:
+> > > +--------------------
+> > > +
+> > > +- refclock: the internal WLAN reference clock frequency (required for
+> > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
+> > > +  following:
+> > > +	0 = 19.2 MHz
+> > > +	1 = 26.0 MHz
+> > > +	2 = 38.4 MHz
+> > > +	3 = 52.0 MHz
+> > > +	4 = 38.4 MHz, XTAL
+> > > +	5 = 26.0 MHz, XTAL
+> > > +
+> > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
+> > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
+> > > +  following:
+> > > +	0 = 19.200 MHz
+> > > +	1 = 26.000 MHz
+> > > +	2 = 38.400 MHz
+> > > +	3 = 52.000 MHz
+> > > +	4 = 16.368 MHz
+> > > +	5 = 32.736 MHz
+> > > +	6 = 16.800 MHz
+> > > +	7 = 33.600 MHz
+> > 
+> > This looks suspiciously like what we have the common clock bindings for:
+> > 
+> > refclk {
+> > 	compatible = "fixed-clock";
+> > 	#clock-cells = <0>;
+> > 	clock-frequency = <19200000>;
+> > }
+> > 
+> > wilink {
+> > 	compatible = "ti,wilink7";
+> > 	interrupt-parent = <&some_interrupt_controller>;
+> > 	interrupts = <0 1 1>;
+> > 	clocks = <&refclk>, <&refclk>;
+> > 	clock-names = "refclk", "txoclk";
+> > };
+> > 
+> > Could you not use them?
+> 
+> Hmmm... this actually does look good.  But these are internal clocks in
+> the modules, they cannot be accessed from outside.  Does it make sense
+> to register them with the clock framework?
 
-		/*
-		 * Ensure that all events have been processed and
-		 * freed.
-		 */
-		cfg80211_process_wdev_events(wdev);
+Given we already have a common way of describing clocks, I think it
+makes sense to use it -- people already understand the common bindings,
+and it's less code to add add to the kernel. I don't think the fact
+these clocks are internal should prevent us from describing them as we
+would an external clock.
 
-
-          /* I just added this to see if it helps... */
-		if (WARN_ON(wdev->current_bss)) {
-			cfg80211_unhold_bss(wdev->current_bss);
-			cfg80211_put_bss(wdev->wiphy, &wdev->current_bss->pub);
-			SET_BSS(wdev, NULL);
-		}
-		break;
-
-Some of the unregister and similar sme.c calls that should be cleaning up
-the current_bss have some early returns if state does not match expected
-value.  If the warning above hits, then probably we are hitting those
-somehow.
-
-If not, then I'll keep looking :)
+Perhaps Mike Turquette [Cc'd] has an opinion on the matter. 
 
 Thanks,
-Ben
-
->
-> johannes
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Mark.
+_______________________________________________
+devicetree-discuss mailing list
+devicetree-discuss@lists.ozlabs.org
+https://lists.ozlabs.org/listinfo/devicetree-discuss
 
