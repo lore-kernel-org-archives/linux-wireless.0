@@ -1,130 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2376 "EHLO mms3.broadcom.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:49908 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754762Ab3FRL3t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 07:29:49 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 1/8] brcmfmac: Only use credits for bcmc when firmware
- indicates it.
-Date: Tue, 18 Jun 2013 13:29:22 +0200
-Message-ID: <1371554970-23495-2-git-send-email-arend@broadcom.com> (sfid-20130618_132958_072512_4FC8C031)
-In-Reply-To: <1371554970-23495-1-git-send-email-arend@broadcom.com>
-References: <1371554970-23495-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752396Ab3F1TNP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jun 2013 15:13:15 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 06/19] rt2x00: rt2800lib: fix antenna configuration for RT3593
+Date: Fri, 28 Jun 2013 21:12:20 +0200
+Message-Id: <1372446753-11408-7-git-send-email-juhosg@openwrt.org> (sfid-20130628_211327_610536_55FB5B08)
+In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On the RT3593 chipset, BBP register 86 must be
+configured by different values based on the RX
+antenna numbers.
 
-The firmware will sent an event message when bc/mc traffic should
-be sent to the device using credit mechanism.
+Configure this register from the 'rt2800_config_ant'
+function.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
+
+Reference:
+  RT3593_CONFIG_SET_BY_ANTENNA in include/chip/rt3593.h
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |    3 +-
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   32 +++++++++++++++++++-
- 2 files changed, 33 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-index 6ec5db9..e679214 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-@@ -101,7 +101,8 @@ struct brcmf_event;
- 	BRCMF_ENUM_DEF(P2P_PROBEREQ_MSG, 72) \
- 	BRCMF_ENUM_DEF(DCS_REQUEST, 73) \
- 	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74) \
--	BRCMF_ENUM_DEF(ACTION_FRAME_RX, 75)
-+	BRCMF_ENUM_DEF(ACTION_FRAME_RX, 75) \
-+	BRCMF_ENUM_DEF(BCMC_CREDIT_SUPPORT, 127)
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 6f6f48f..fa5bbae 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1804,6 +1804,13 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
  
- #define BRCMF_ENUM_DEF(id, val) \
- 	BRCMF_E_##id = (val),
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 70f70ce..1d8fa7d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -426,6 +426,7 @@ struct brcmf_fws_info {
- 	struct brcmf_fws_stats stats;
- 	struct brcmf_fws_hanger hanger;
- 	enum brcmf_fws_fcmode fcmode;
-+	bool bcmc_credit_check;
- 	struct brcmf_fws_macdesc_table desc;
- 	struct workqueue_struct *fws_wq;
- 	struct work_struct fws_dequeue_work;
-@@ -1438,6 +1439,20 @@ static int brcmf_fws_notify_credit_map(struct brcmf_if *ifp,
- 	return 0;
- }
- 
-+static int brcmf_fws_notify_bcmc_credit_support(struct brcmf_if *ifp,
-+						const struct brcmf_event_msg *e,
-+						void *data)
-+{
-+	struct brcmf_fws_info *fws = ifp->drvr->fws;
-+	ulong flags;
+ 	rt2800_bbp_write(rt2x00dev, 3, r3);
+ 	rt2800_bbp_write(rt2x00dev, 1, r1);
 +
-+	brcmf_fws_lock(ifp->drvr, flags);
-+	if (fws)
-+		fws->bcmc_credit_check = true;
-+	brcmf_fws_unlock(ifp->drvr, flags);
-+	return 0;
-+}
-+
- int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
- 		      struct sk_buff *skb)
- {
-@@ -1806,6 +1821,12 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 		  eh->h_dest, multicast, fifo);
- 
- 	brcmf_fws_lock(drvr, flags);
-+	/* multicast credit support is conditional, setting
-+	 * flag to false to assure credit is consumed below.
-+	 */
-+	if (fws->bcmc_credit_check)
-+		multicast = false;
-+
- 	if (skcb->mac->suppressed ||
- 	    fws->bus_flow_blocked ||
- 	    brcmf_fws_mac_desc_closed(fws, skcb->mac, fifo) ||
-@@ -1878,7 +1899,8 @@ static void brcmf_fws_dequeue_worker(struct work_struct *worker)
- 	brcmf_fws_lock(fws->drvr, flags);
- 	for (fifo = NL80211_NUM_ACS; fifo >= 0 && !fws->bus_flow_blocked;
- 	     fifo--) {
--		while (fws->fifo_credit[fifo]) {
-+		while ((fws->fifo_credit[fifo]) || ((!fws->bcmc_credit_check) &&
-+		       (fifo == BRCMF_FWS_FIFO_BCMC))) {
- 			skb = brcmf_fws_deq(fws, fifo);
- 			if (!skb)
- 				break;
-@@ -1947,6 +1969,13 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
- 		brcmf_err("register credit map handler failed\n");
- 		goto fail;
- 	}
-+	rc = brcmf_fweh_register(drvr, BRCMF_E_BCMC_CREDIT_SUPPORT,
-+				 brcmf_fws_notify_bcmc_credit_support);
-+	if (rc < 0) {
-+		brcmf_err("register bcmc credit handler failed\n");
-+		brcmf_fweh_unregister(drvr, BRCMF_E_FIFO_CREDIT_MAP);
-+		goto fail;
++	if (rt2x00_rt(rt2x00dev, RT3593)) {
++		if (ant->rx_chain_num == 1)
++			rt2800_bbp_write(rt2x00dev, 86, 0x00);
++		else
++			rt2800_bbp_write(rt2x00dev, 86, 0x46);
 +	}
+ }
+ EXPORT_SYMBOL_GPL(rt2800_config_ant);
  
- 	/* setting the iovar may fail if feature is unsupported
- 	 * so leave the rc as is so driver initialization can
-@@ -1971,6 +2000,7 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
- 	return 0;
- 
- fail_event:
-+	brcmf_fweh_unregister(drvr, BRCMF_E_BCMC_CREDIT_SUPPORT);
- 	brcmf_fweh_unregister(drvr, BRCMF_E_FIFO_CREDIT_MAP);
- fail:
- 	brcmf_fws_deinit(drvr);
 -- 
-1.7.10.4
-
+1.7.10
 
