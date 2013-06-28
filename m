@@ -1,77 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59379 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753719Ab3FNWsi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jun 2013 18:48:38 -0400
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r5EMmbg4020886
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Jun 2013 15:48:37 -0700
-Message-ID: <51BB9DC5.2020509@candelatech.com> (sfid-20130615_004841_632650_1CE63E73)
-Date: Fri, 14 Jun 2013 15:48:37 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:37014 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755198Ab3F1LWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jun 2013 07:22:48 -0400
+Message-ID: <1372418531.21065.53.camel@cumari.coelho.fi> (sfid-20130628_132305_743888_F6104BB3)
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+From: Luciano Coelho <coelho@ti.com>
+To: Mark Rutland <mark.rutland@arm.com>
+CC: <mturquette@linaro.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm@vger.kernel.org" <linux-arm-kernel@lists.infradead.org>
+Date: Fri, 28 Jun 2013 14:22:11 +0300
+In-Reply-To: <1372415514.21065.50.camel@cumari.coelho.fi>
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
+	 <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
+	 <1372413215.21065.41.camel@cumari.coelho.fi>
+	 <20130628102145.GB2139@e106331-lin.cambridge.arm.com>
+	 <1372415514.21065.50.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: kmemleak report in 3.9.5+, related to cfg80211_inform_bss_frame
-References: <51B773B7.5090301@candelatech.com> <51B77594.20000@candelatech.com> <51B7C29C.1060701@candelatech.com>
-In-Reply-To: <51B7C29C.1060701@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/11/2013 05:36 PM, Ben Greear wrote:
-> On 06/11/2013 12:08 PM, Ben Greear wrote:
->> On 06/11/2013 12:00 PM, Ben Greear wrote:
->>> I see several reports similar to the one below while doing some
->>> kmemleak testing on my 3.9.5+ tree (with local patches applied):
->>>
->>> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.9.dev.y/.git;a=summary
->
->>> The kmemleak report is below:
->>>
->>>
->>> unreferenced object 0xffff8801c8e41e78 (size 192):
->>>    comm "kworker/u:2", pid 157, jiffies 4295509873 (age 86582.869s)
->>>    hex dump (first 32 bytes):
->>>      41 0d 00 30 02 00 00 00 6b 6b 6b 6b 6b 6b 6b 6b  A..0....kkkkkkkk
->>>      6b 6b 6b 6b 6b 6b 6b 6b 69 00 00 00 00 0c 2e 32  kkkkkkkki......2
->>>    backtrace:
->>>      [<ffffffff815de7bf>] kmemleak_alloc+0x73/0x98
->>>      [<ffffffff8118b4d4>] slab_post_alloc_hook+0x28/0x2a
->>>      [<ffffffff8118d605>] __kmalloc+0xf9/0x122
->>>      [<ffffffffa027cb27>] cfg80211_inform_bss_frame+0x114/0x1f8 [cfg80211]
->>>      [<ffffffffa03d6865>] ieee80211_bss_info_update+0x66/0x21f [mac80211]
->>>      [<ffffffffa040aec6>] ieee80211_rx_bss_info+0x12f/0x1ca [mac80211]
->>>      [<ffffffffa040b017>] ieee80211_rx_mgmt_probe_resp+0xb6/0x197 [mac80211]
->>>      [<ffffffffa040e8a3>] ieee80211_sta_rx_queued_mgmt+0xdd/0x60e [mac80211]
->>>      [<ffffffffa03df0ee>] ieee80211_iface_work+0x238/0x2cc [mac80211]
->>>      [<ffffffff810b0cd3>] process_one_work+0x292/0x42e
->>>      [<ffffffff810b36af>] worker_thread+0x14f/0x264
->>>      [<ffffffff810b7bea>] kthread+0xc7/0xcf
->>>      [<ffffffff815f64ec>] ret_from_fork+0x7c/0xb0
->>>      [<ffffffffffffffff>] 0xffffffffffffffff
+On Fri, 2013-06-28 at 13:31 +0300, Luciano Coelho wrote:
+> (fixed Mike's address)
+> 
+> On Fri, 2013-06-28 at 11:21 +0100, Mark Rutland wrote:
+> > On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
+> > > On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
+> > > > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
+> > > > > +Optional properties:
+> > > > > +--------------------
+> > > > > +
+> > > > > +- refclock: the internal WLAN reference clock frequency (required for
+> > > > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
+> > > > > +  following:
+> > > > > +	0 = 19.2 MHz
+> > > > > +	1 = 26.0 MHz
+> > > > > +	2 = 38.4 MHz
+> > > > > +	3 = 52.0 MHz
+> > > > > +	4 = 38.4 MHz, XTAL
+> > > > > +	5 = 26.0 MHz, XTAL
+> > > > > +
+> > > > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
+> > > > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
+> > > > > +  following:
+> > > > > +	0 = 19.200 MHz
+> > > > > +	1 = 26.000 MHz
+> > > > > +	2 = 38.400 MHz
+> > > > > +	3 = 52.000 MHz
+> > > > > +	4 = 16.368 MHz
+> > > > > +	5 = 32.736 MHz
+> > > > > +	6 = 16.800 MHz
+> > > > > +	7 = 33.600 MHz
+> > > > 
+> > > > This looks suspiciously like what we have the common clock bindings for:
+> > > > 
+> > > > refclk {
+> > > > 	compatible = "fixed-clock";
+> > > > 	#clock-cells = <0>;
+> > > > 	clock-frequency = <19200000>;
+> > > > }
+> > > > 
+> > > > wilink {
+> > > > 	compatible = "ti,wilink7";
+> > > > 	interrupt-parent = <&some_interrupt_controller>;
+> > > > 	interrupts = <0 1 1>;
+> > > > 	clocks = <&refclk>, <&refclk>;
+> > > > 	clock-names = "refclk", "txoclk";
+> > > > };
+> > > > 
+> > > > Could you not use them?
+> > > 
+> > > Hmmm... this actually does look good.  But these are internal clocks in
+> > > the modules, they cannot be accessed from outside.  Does it make sense
+> > > to register them with the clock framework?
+> > 
+> > Given we already have a common way of describing clocks, I think it
+> > makes sense to use it -- people already understand the common bindings,
+> > and it's less code to add add to the kernel. I don't think the fact
+> > these clocks are internal should prevent us from describing them as we
+> > would an external clock.
+> 
+> Yes, I agree with you.  Thanks for the suggestion! I think it will look
+> much better.  And now that I dug a bit more into the code, I can see
+> that there are only structs being populated, so there shouldn't be any
+> other side-effects.
 
-I am still working on trying to figure this one out.
+Hmmm, one thing that escaped me.  Besides the frequency, I also need a
+boolean that tells if the clock is XTAL or not.  I can't figure out how
+to pass this if I use the generic clock framework.  Any suggestions?
 
-I've instrumented all (as far as I can tell) allocation points
-and destruction points for the ies, and I am keeping a separate
-list of structures to record some info about each ies.
-
-I loaded up lots of stations, let them bounce around for a while,
-and then did an 'rmmod ath9k'.
-
-I still see 14 ies entries in my debug list.  Should
-I expect to see zero ies data structures left after
-I rmmod all wifi drivers, or is it normal for a few
-to be left around?
-
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--
+Luca.
 
