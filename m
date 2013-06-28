@@ -1,93 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:60899 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751450Ab3FCH6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 03:58:19 -0400
-Received: from mailout-de.gmx.net ([10.1.76.32]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0MQsuO-1UpPxU069e-00UMDH for
- <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2013 09:58:18 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v4 2/2] ath9k: check for Rx-STBC flag and pass it to ieee80211
-Date: Mon,  3 Jun 2013 09:57:59 +0200
-Message-Id: <1370246279-6536-3-git-send-email-linux@rempel-privat.de> (sfid-20130603_095825_362696_7E2273A6)
-In-Reply-To: <1370246279-6536-1-git-send-email-linux@rempel-privat.de>
-References: <1370246279-6536-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-ea0-f182.google.com ([209.85.215.182]:39428 "EHLO
+	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755346Ab3F1RgA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jun 2013 13:36:00 -0400
+Received: by mail-ea0-f182.google.com with SMTP id d10so1189626eaj.13
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Jun 2013 10:35:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CALyZvKxCYaU47jb98FcbwNSMxnQ8pVCj17MYm0B3V99Uw2_nDA@mail.gmail.com>
+References: <CALyZvKxCYaU47jb98FcbwNSMxnQ8pVCj17MYm0B3V99Uw2_nDA@mail.gmail.com>
+Date: Fri, 28 Jun 2013 18:35:58 +0100
+Message-ID: <CALyZvKyXf_PutHs0KN010phQsJCLWJG1fV=0mrtAOCtfyVGT+g@mail.gmail.com> (sfid-20130628_193604_587770_3E147CB7)
+Subject: Fwd: HP6715b laptop's wireless radio on LED went off after 1st boot
+ of 3.9.6 from 3.4.4 - please help / any ideas ?
+From: Jason Vas Dias <jason.vas.dias@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch make use of STBC flag in DMA RX descriptor.
-Only devices after ar9280 can provide this information.
+Hi - I'd really appreciate some help with this - anyone know how to
+force b43  firmware
+download with udev to a device that does not appear in lspci output
+because a button
+is seen as being in the "off" state ( my broadcom 4311 SSB wireless -
+dmesg logs from
+when button was in "on" state available showing PCI address ) .
+Anyone running a HP 6715b
+laptop with b43-phy-es loaded into 3.9.6 successfully ?  Was fine with
+3.4.4 but then firmware
+download occurred and since then no wireless (blue led off after bios
+post) . Any ideas pls ?
+Thx, Jason
+---------- Forwarded message ----------
+From: Jason Vas Dias <jason.vas.dias@gmail.com>
+Date: Thu, 27 Jun 2013 21:38:30 +0100
+Subject: HP6715b laptop's wireless radio on LED went off after 1st
+boot of 3.9.6 from 3.4.4 - please help / any ideas ?
+To: linux-kernel@vger.kernel.org
 
-If card support it we will set HAVE_STBC flag, to show
-clint programm thet STBC is supported but not received.
-
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/init.c | 10 ++++++++--
- drivers/net/wireless/ath/ath9k/mac.c  |  5 +++++
- drivers/net/wireless/ath/ath9k/mac.h  |  3 ++-
- 3 files changed, 15 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index aba4151..b9c97d4 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -21,6 +21,7 @@
- #include <linux/ath9k_platform.h>
- #include <linux/module.h>
- #include <linux/relay.h>
-+#include <net/ieee80211_radiotap.h>
- 
- #include "ath9k.h"
- 
-@@ -769,8 +770,13 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 		IEEE80211_HW_SUPPORTS_RC_TABLE;
- 
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
--		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
-+		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
-+
-+		if (AR_SREV_9280_20_OR_LATER(ah))
-+			hw->radiotap_mcs_details |=
-+				IEEE80211_RADIOTAP_MCS_HAVE_STBC;
-+	}
- 
- 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index a52081d..d055e38 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -593,6 +593,11 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 		(ads.ds_rxstatus3 & AR_GI) ? RX_FLAG_SHORT_GI : 0;
- 	rs->flag |=
- 		(ads.ds_rxstatus3 & AR_2040) ? RX_FLAG_40MHZ : 0;
-+	if (AR_SREV_9280_20_OR_LATER(ah))
-+		rs->flag |=
-+			(ads.ds_rxstatus3 & AR_STBC) ?
-+				/* we can only Nss=1 STBC */
-+				(1 << RX_FLAG_STBC_SHIFT) : 0;
- 
- 	if (ads.ds_rxstatus8 & AR_PreDelimCRCErr)
- 		rs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 3f1e775..b02dfce 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -534,7 +534,8 @@ struct ar5416_desc {
- #define AR_2040             0x00000002
- #define AR_Parallel40       0x00000004
- #define AR_Parallel40_S     2
--#define AR_RxStatusRsvd30   0x000000f8
-+#define AR_STBC             0x00000008 /* on ar9280 and later */
-+#define AR_RxStatusRsvd30   0x000000f0
- #define AR_RxAntenna	    0xffffff00
- #define AR_RxAntenna_S	    8
- 
--- 
-1.8.1.2
-
+After building and installing 3.9.6 kernel & modules on
+my 2.2ghz HP6715b x86-64 Turion dual core laptop ,
+which has always run Linux with no b43 wireless problems
+since 2007, now has no access to its onboard broadcom 4311
+wireless radio .  I had always used the b43
+driver with the correct firmware installed
+under /lib/firmware/b43 with b43-fwcutter
+as per instructions at http://wireless.kernel.org/en/users/Drivers/b43
+, which I've just now redone again, but since booting
+3.9.6, which I believe resulted in a firmware download
+via udev at first boot, the wireless radio "on" blue LED
+indicator goes off after BIOS POST .  It has always been
+the case that if the blue LED indicator is off after BIOS
+POST ,  then the kernel does not see the device, and I
+have no wireless until a hard poweroff and pressing
+the touch sensitive wireless on button during BIOS POST.
+But now the wireless LED goes on for @ 1 second during
+BIOS POST , and never comes on again ,  and there are
+no responses to touching wireless-on button after reboot,
+though there are to other buttons next to it.  In short,
+I've lost wireless access (and home internet access for
+my pc - I'm sending this from my mobile) . Can anyone help?
+How can I force the card to download the re-installed
+b43-fwcutter firmware, if the device no longer appears
+in lspci output?  Anyway to force the kernel to ignore
+the wireless button ( it could be that the kernel & bios
+think this button is in the off state - any way to force
+its state to "on") ?  Any ideas / suggestions would be much
+appreciated.
+Thanks & Regards, Jason
