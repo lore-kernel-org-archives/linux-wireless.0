@@ -1,115 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:34374 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683Ab3FZLaH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jun 2013 07:30:07 -0400
-Received: by mail-ea0-f177.google.com with SMTP id j14so7404472eak.36
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Jun 2013 04:30:06 -0700 (PDT)
-Message-ID: <51CAD0B8.3010303@gmail.com> (sfid-20130626_133039_465950_78A3B95F)
-Date: Wed, 26 Jun 2013 13:30:00 +0200
-From: "shiki.biomernok" <shiki.biomernok@gmail.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:43582 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752773Ab3F1LmL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jun 2013 07:42:11 -0400
+Date: Fri, 28 Jun 2013 14:41:29 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: Mark Rutland <mark.rutland@arm.com>, <mturquette@linaro.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm@vger.kernel.org" <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+Message-ID: <20130628114129.GO11297@arwen.pp.htv.fi> (sfid-20130628_134229_315823_C3952E3F)
+Reply-To: <balbi@ti.com>
+References: <1372149330-24335-1-git-send-email-coelho@ti.com>
+ <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
+ <1372413215.21065.41.camel@cumari.coelho.fi>
+ <20130628102145.GB2139@e106331-lin.cambridge.arm.com>
+ <1372415514.21065.50.camel@cumari.coelho.fi>
+ <1372418531.21065.53.camel@cumari.coelho.fi>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Fwd: Re: TP-Link 8200ND - rtl8192cu module not loading / working
-References: <51A77433.2060702@lwfinger.net>
-In-Reply-To: <51A77433.2060702@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="AKkMM/tm2Mk6Yn/s"
+In-Reply-To: <1372418531.21065.53.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone!
+--AKkMM/tm2Mk6Yn/s
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-CC'ing my original message that I sent to Larry.
-It's been a while, but I've been busy and I couldn't fiddle with the 
-wireless device.
+On Fri, Jun 28, 2013 at 02:22:11PM +0300, Luciano Coelho wrote:
+> On Fri, 2013-06-28 at 13:31 +0300, Luciano Coelho wrote:
+> > (fixed Mike's address)
+> >=20
+> > On Fri, 2013-06-28 at 11:21 +0100, Mark Rutland wrote:
+> > > On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
+> > > > On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
+> > > > > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
+> > > > > > +Optional properties:
+> > > > > > +--------------------
+> > > > > > +
+> > > > > > +- refclock: the internal WLAN reference clock frequency (requi=
+red for
+> > > > > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of =
+the
+> > > > > > +  following:
+> > > > > > +	0 =3D 19.2 MHz
+> > > > > > +	1 =3D 26.0 MHz
+> > > > > > +	2 =3D 38.4 MHz
+> > > > > > +	3 =3D 52.0 MHz
+> > > > > > +	4 =3D 38.4 MHz, XTAL
+> > > > > > +	5 =3D 26.0 MHz, XTAL
+> > > > > > +
+> > > > > > +- tcxoclock: the internal WLAN TCXO clock frequency (required =
+for
+> > > > > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of t=
+he
+> > > > > > +  following:
+> > > > > > +	0 =3D 19.200 MHz
+> > > > > > +	1 =3D 26.000 MHz
+> > > > > > +	2 =3D 38.400 MHz
+> > > > > > +	3 =3D 52.000 MHz
+> > > > > > +	4 =3D 16.368 MHz
+> > > > > > +	5 =3D 32.736 MHz
+> > > > > > +	6 =3D 16.800 MHz
+> > > > > > +	7 =3D 33.600 MHz
+> > > > >=20
+> > > > > This looks suspiciously like what we have the common clock bindin=
+gs for:
+> > > > >=20
+> > > > > refclk {
+> > > > > 	compatible =3D "fixed-clock";
+> > > > > 	#clock-cells =3D <0>;
+> > > > > 	clock-frequency =3D <19200000>;
+> > > > > }
+> > > > >=20
+> > > > > wilink {
+> > > > > 	compatible =3D "ti,wilink7";
+> > > > > 	interrupt-parent =3D <&some_interrupt_controller>;
+> > > > > 	interrupts =3D <0 1 1>;
+> > > > > 	clocks =3D <&refclk>, <&refclk>;
+> > > > > 	clock-names =3D "refclk", "txoclk";
+> > > > > };
+> > > > >=20
+> > > > > Could you not use them?
+> > > >=20
+> > > > Hmmm... this actually does look good.  But these are internal clock=
+s in
+> > > > the modules, they cannot be accessed from outside.  Does it make se=
+nse
+> > > > to register them with the clock framework?
+> > >=20
+> > > Given we already have a common way of describing clocks, I think it
+> > > makes sense to use it -- people already understand the common binding=
+s,
+> > > and it's less code to add add to the kernel. I don't think the fact
+> > > these clocks are internal should prevent us from describing them as we
+> > > would an external clock.
+> >=20
+> > Yes, I agree with you.  Thanks for the suggestion! I think it will look
+> > much better.  And now that I dug a bit more into the code, I can see
+> > that there are only structs being populated, so there shouldn't be any
+> > other side-effects.
+>=20
+> Hmmm, one thing that escaped me.  Besides the frequency, I also need a
+> boolean that tells if the clock is XTAL or not.  I can't figure out how
+> to pass this if I use the generic clock framework.  Any suggestions?
 
-Basically it's a 8192cu device. Larry suspected it's not, but I think he 
-saw the advertisement displayed on top of the TP-Link page.
-I even mailed TP-Link, and here is the reply:
+Could you use clock-output-names for that ?
 
-    The chipset is Realtek RTL8192CU and you can download the driver
-    from
-    http://www.realtek.com/downloads/downloadsView.aspx?Langid=1&PNid=21&PFid=48&Level=5&Conn=4&DownTypeID=3&GetDown=false&Downloads=true.
-    Thank you.
+XTAL clock:
 
-Tested with many kernels, but none of them worked.
-Ubuntu 13.04 (both stock + updated), Fedora (Schrodinger-1), Fedora Beta 
-(Schrodinger), openSUSE (normal+tumbleweed).
-I even tried the latest kernels since 3.10-rc4. (latest I tried is -rc7)
+refclk {
+	compatible =3D "fixed-clock";
+	#clock cells =3D <0>;
+	clock-frequency =3D <19200000>;
+	clock-output-names =3D "xtal";
+};
 
-Basically this device *should* work with the 8192cu driver, but it just 
-won't.
-If you just plug it in, nothing happens.
-You have to first:
-$ modprobe 8192cu
-$ echo 2357 0100 > /sys/bus/usb/drivers/rtl8192cu/new_id
+non-XTAL clock:
 
-Then it lights up, it shows up in NM-Applet. But it won't work.
-I tried enabling the realtek debug option at the kernel driver, but it 
-didn't help.
-Even with that, I only see the authentication failed messages.
+refclk {
+	compatible =3D "fixed-clock";
+	#clock cells =3D <0>;
+	clock-frequency =3D <19200000>;
+	clock-output-names =3D "osc"; /* any better name ? */
+};
 
-Dmesg shows the errors: http://pastebin.com/QCfXYCZ1
+--=20
+balbi
 
+--AKkMM/tm2Mk6Yn/s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Hope you guys can come up with some tips/ideas.
-Ps.: I hope you don't mind the CC Larry.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-Best regards,
+iQIcBAEBAgAGBQJRzXZpAAoJEIaOsuA1yqREpDMP/jbHHQ1Jyhg2J9Z0lPTKg6dw
+GU2mSD1LJx4mZqPQUHNHzZozuJTIMkKZNzXGd6nkAjI1+7jsEBJkN/fAOdERrEzP
+FrckjCk/+gb0Wl3ROag/ZMMQg9onO6KWp/qecwOqti3G0rk+/spsli9OZUO2ub1y
+rRd4bm28qid+bykaV5ZCwmZ9IlJXX8///Nl/aViscpiHTHLiPx0e9+dCFnoqTQN7
+X8SyjuANmTtwGvpXpP2/b1oMiI9PDbIxPrAeqm+IL9jP67zeD1gYo+Rxfe63nqSE
+E8oCPCHL2d55BVAP4PgkuJgGZX7k4Ts0rU1YQZ28SjdG5Wl/ieIE7n1XM/xBq2BU
+aLm3Ua6Wqsx9lQhXiyF7SsAenN/gwTkV+4Y7acbYjvM1UJwDfODQsxHFqPHQvd0I
+QXqJOS+ffe3XZwuamgSu5hhClM2cGvA0r5va4HICojKeRGfBQhtc/vHh9s6n6Uzj
+Z8RHsCA4c/+44Ah9+d+mKUVVV/rEFi9V3YcBeKkxYVJ98TDpcbAMw949Ie9m/RSU
+w+JDlgGRwq+Ts6USkZ3nyPUZguhSuZPh0QvbCn5sfFPfR1nHJ4DY+HWP507MFV+V
+3EQtt+KXpp3P1Bkd7mc2NwBORoxREKl/5ugbTScUNDglM+wcPQozXBVF/vHGr2py
+lZic5Dq/viEFe73aA8Ub
+=Z66b
+-----END PGP SIGNATURE-----
 
-
--------- Original Message --------
-Subject: 	Re: TP-Link 8200ND - rtl8192cu module not loading / working
-Date: 	Thu, 30 May 2013 10:45:55 -0500
-From: 	Larry Finger <Larry.Finger@lwfinger.net>
-To: 	Me <shiki.biomernok@gmail.com>
-CC: 	wlanfae@realtek.com
-
-
-
-On 05/29/2013 02:21 PM, I wrote:
-> Dear Realtek!
->
-> I just bought a TP-Link 8200ND wireless USB device, that uses the Realtek
-> rtl8192cu driver. The driver is included in every recent kernel, but I can't use it.
->
-> Things I tried:
-> - Plug it in: It only shows a blank string at "lsusb".
-> - Loading the module by hand: "lsusb" is still empty, but "dmesg" shows the
-> module is loaded, and I can mess around under /sys/bus/usb/drivers/8192cu/
-> - Adding a new ID from the Debian wiki for known devices.
-> This works as far as "dmesg" is concerned. It will say I connected a new device,
-> like a Realtek wifi USB device. BUT I still don't have anything in my network
-> manager/ifconfig/rfkill. Nothing.
->
-> This is what I see in lsusb:
-> Bus 002 Device 002: ID 2357:0100
->
->
-> I would be more than willing to help you guys out with this.
-> Can even set up my laptop with SSH so you could debug/develop/reboot whatever
-> you need.
-
-In the future, I will refuse to answer your e-mails regarding wireless devices
-*UNLESS* you also Cc a wireless mailing list. The "best" option would be
-linux-wireless@vger.kernel.org. If you have any questions about why I insist on
-this, please read the following two links as to why emailing a single person
-directly is usually not a good thing, and causes extra work on a single person:
-     http://www.arm.linux.org.uk/news/?newsitem=11
-     http://www.eyrie.org/~eagle/faqs/questions.html
-
-I cannot add you to the list as that would expose your email address on a public
-forum, and I will not create a second breach of etiquette just because you
-already did one.
-
-Your device is *NOT* an RTL8192CU device. I wondered when I saw the 300 Mbps,
-but I was certain when I saw it was a dual-band device.
-
-I have a driver for your device, but I will not tell you how to get it until you
-place a proper request on some mailing list!
-
-Larry
-
-
-
+--AKkMM/tm2Mk6Yn/s--
