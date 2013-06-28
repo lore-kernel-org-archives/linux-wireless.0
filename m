@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50755 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756211Ab3FCTPI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 15:15:08 -0400
-Date: Mon, 3 Jun 2013 15:05:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2013-06-03
-Message-ID: <20130603190554.GG2727@tuxdriver.com> (sfid-20130603_211515_373871_7CE8BB91)
-References: <1370270859.8227.4.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370270859.8227.4.camel@jlt4.sipsolutions.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:49929 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752543Ab3F1TNS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jun 2013 15:13:18 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 17/19] rt2x00: rt2800lib: enable RT3593 support
+Date: Fri, 28 Jun 2013 21:12:31 +0200
+Message-Id: <1372446753-11408-18-git-send-email-juhosg@openwrt.org> (sfid-20130628_211326_979395_5654B69F)
+In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 03, 2013 at 04:47:39PM +0200, Johannes Berg wrote:
-> John,
-> 
-> Here's one more fix for mac80211 (along with a constify patch it depends
-> on) to work around problems with certain (broken) APs that forget to
-> include HT IEs in their association responses.
-> 
-> johannes
-> 
-> 
-> The following changes since commit ac20976dcaeea3e77e40e9aac8f3799d2a22ea2b:
-> 
->   mac80211: Allow single vif mac address change with addr_mask (2013-05-27 11:26:48 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to c2c15e215e860c99b86ddfc4be4bb25cf180fed0:
-> 
->   mac80211: work around broken APs not including HT info (2013-05-29 00:56:13 +0200)
+Support for the RT3593 has been implemented in
+the previous changes, so it is safe to mark it
+supported in the driver.
 
-Pulling now...
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index b7fa8f9..d20c9f3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -7637,6 +7637,7 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
+ 	case RT3352:
+ 	case RT3390:
+ 	case RT3572:
++	case RT3593:
+ 	case RT5390:
+ 	case RT5392:
+ 	case RT5592:
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10
+
