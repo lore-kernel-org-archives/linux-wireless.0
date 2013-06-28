@@ -1,62 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54267 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758041Ab3FCSQI (ORCPT
+Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:49796 "EHLO
+	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751316Ab3F1Tyg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jun 2013 14:16:08 -0400
-Message-ID: <1370283363.8227.27.camel@jlt4.sipsolutions.net> (sfid-20130603_201611_634982_A8794125)
-Subject: Re: [PATCH 2/2] mac80211: in mgmt_tx use the current channel if
- none has been specified
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Date: Mon, 03 Jun 2013 20:16:03 +0200
-In-Reply-To: <20130603180320.GF1226@ritirata.org>
-References: <1370241587-2609-1-git-send-email-ordex@autistici.org>
-	 <1370241587-2609-2-git-send-email-ordex@autistici.org>
-	 <1370271690.8227.18.camel@jlt4.sipsolutions.net>
-	 <20130603180320.GF1226@ritirata.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 28 Jun 2013 15:54:36 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v5 1/2] iw: use updated structures and enums for packet pattern
+Date: Fri, 28 Jun 2013 12:53:44 -0700
+Message-ID: <1372449225-10652-1-git-send-email-bzhao@marvell.com> (sfid-20130628_215439_809135_44360D85)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-06-03 at 20:03 +0200, Antonio Quartulli wrote:
-> On Mon, Jun 03, 2013 at 05:01:30PM +0200, Johannes Berg wrote:
-> > On Mon, 2013-06-03 at 08:39 +0200, Antonio Quartulli wrote:
-> > 
-> > > @@ -2845,6 +2852,10 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
-> > >  		rcu_read_lock();
-> > >  		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-> > >  
-> > > +		/* if no channel was specified, use the current one */
-> > > +		if (chanctx_conf && !chan)
-> > > +			chan = chanctx_conf->def.chan;
-> > > +
-> > >  		if (chanctx_conf)
-> > >  			need_offchan = chan != chanctx_conf->def.chan;
-> > >  		else
-> > > @@ -2852,6 +2863,12 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
-> > >  		rcu_read_unlock();
-> > >  	}
-> > >  
-> > > +	/* at this point a channel should have been chosen */
-> > > +	if (!chan) {
-> > > +		ret = -EINVAL;
-> > > +		goto out_unlock;
-> > > +	}
-> > > +
-> > 
-> > These two changes make no sense at all. If you look at the function
-> > you'll see that "chan" isn't used at all after the check, 
-> 
-> uhm? it is passed to ieee80211_start_roc_work() right after (this part has not
-> been changed).
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-> 2904         ret = ieee80211_start_roc_work(local, sdata, chan,
+They are renamed in new nl80211.h so that they can be used for
+new feature. This patch uses those updated structures and enums
+to make the code look nicer.
 
-No, you can't get there without need_offchan.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+depends on nl80211.h patch:
+cfg80211/nl80211: rename packet pattern related structures and enums
 
-johannes
+v3: use new structure/enum names to make the code look nicer
+v5: no change since v3. Resend as v5 series
+
+ info.c   |  2 +-
+ wowlan.c | 32 ++++++++++++++++----------------
+ 2 files changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/info.c b/info.c
+index 54d9a8d..d893ffc 100644
+--- a/info.c
++++ b/info.c
+@@ -432,7 +432,7 @@ broken_combination:
+ 			[NL80211_WOWLAN_TRIG_RFKILL_RELEASE] = { .type = NLA_FLAG },
+ 			[NL80211_WOWLAN_TRIG_TCP_CONNECTION] = { .type = NLA_NESTED },
+ 		};
+-		struct nl80211_wowlan_pattern_support *pat;
++		struct nl80211_pattern_support *pat;
+ 		int err;
+ 
+ 		err = nla_parse_nested(tb_wowlan, MAX_NL80211_WOWLAN_TRIG,
+diff --git a/wowlan.c b/wowlan.c
+index b4a2715..d323ca7 100644
+--- a/wowlan.c
++++ b/wowlan.c
+@@ -261,11 +261,11 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
+ 			}
+ 
+ 			pattern = nla_nest_start(patterns, ++patnum);
+-			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_MASK,
++			NLA_PUT(patterns, NL80211_PKTPAT_MASK,
+ 				DIV_ROUND_UP(patlen, 8), mask);
+-			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_PATTERN,
+-				patlen, pat);
+-			NLA_PUT_U32(patterns, NL80211_WOWLAN_PKTPAT_OFFSET, pkt_offset);
++			NLA_PUT(patterns, NL80211_PKTPAT_PATTERN, patlen, pat);
++			NLA_PUT_U32(patterns, NL80211_PKTPAT_OFFSET,
++				    pkt_offset);
+ 			nla_nest_end(patterns, pattern);
+ 			free(mask);
+ 			free(pat);
+@@ -356,29 +356,29 @@ static int print_wowlan_handler(struct nl_msg *msg, void *arg)
+ 		nla_for_each_nested(pattern,
+ 				    trig[NL80211_WOWLAN_TRIG_PKT_PATTERN],
+ 				    rem_pattern) {
+-			struct nlattr *patattr[NUM_NL80211_WOWLAN_PKTPAT];
++			struct nlattr *patattr[NUM_NL80211_PKTPAT];
+ 			int i, patlen, masklen, pkt_offset;
+ 			uint8_t *mask, *pat;
+-			nla_parse(patattr, MAX_NL80211_WOWLAN_PKTPAT,
+-				  nla_data(pattern), nla_len(pattern),
+-				  NULL);
+-			if (!patattr[NL80211_WOWLAN_PKTPAT_MASK] ||
+-			    !patattr[NL80211_WOWLAN_PKTPAT_PATTERN] ||
+-			    !patattr[NL80211_WOWLAN_PKTPAT_OFFSET]) {
++			nla_parse(patattr, MAX_NL80211_PKTPAT,
++				  nla_data(pattern), nla_len(pattern), NULL);
++			if (!patattr[NL80211_PKTPAT_MASK] ||
++			    !patattr[NL80211_PKTPAT_PATTERN] ||
++			    !patattr[NL80211_PKTPAT_OFFSET]) {
+ 				printf(" * (invalid pattern specification)\n");
+ 				continue;
+ 			}
+-			masklen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
+-			patlen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
+-			pkt_offset = nla_get_u32(patattr[NL80211_WOWLAN_PKTPAT_OFFSET]);
++			masklen = nla_len(patattr[NL80211_PKTPAT_MASK]);
++			patlen = nla_len(patattr[NL80211_PKTPAT_PATTERN]);
++			pkt_offset =
++				nla_get_u32(patattr[NL80211_PKTPAT_OFFSET]);
+ 			if (DIV_ROUND_UP(patlen, 8) != masklen) {
+ 				printf(" * (invalid pattern specification)\n");
+ 				continue;
+ 			}
+ 			printf(" * wake up on packet offset: %d", pkt_offset);
+ 			printf(" pattern: ");
+-			pat = nla_data(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
+-			mask = nla_data(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
++			pat = nla_data(patattr[NL80211_PKTPAT_PATTERN]);
++			mask = nla_data(patattr[NL80211_PKTPAT_MASK]);
+ 			for (i = 0; i < patlen; i++) {
+ 				if (mask[i / 8] & (1 << (i % 8)))
+ 					printf("%.2x", pat[i]);
+-- 
+1.8.0
 
