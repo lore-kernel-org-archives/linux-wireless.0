@@ -1,40 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:58116 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907Ab3FDUSO (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47094 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab3F2W7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 16:18:14 -0400
-Date: Tue, 04 Jun 2013 13:18:13 -0700 (PDT)
-Message-Id: <20130604.131813.134898245916084893.davem@davemloft.net> (sfid-20130604_221910_591796_A119E8D4)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-06-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130603184817.GD2727@tuxdriver.com>
-References: <20130603184817.GD2727@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 29 Jun 2013 18:59:16 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [WT PATCH 1/6] mac80211: Add debugfs file to show station-hash counts.
+Date: Sat, 29 Jun 2013 15:58:53 -0700
+Message-Id: <1372546738-25827-1-git-send-email-greearb@candelatech.com> (sfid-20130630_005921_608423_933F950E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 3 Jun 2013 14:48:17 -0400
+From: Ben Greear <greearb@candelatech.com>
 
-> Please let me know if there are problems!
+Helps debug bad hash spreads, like when you have lots of
+station interfaces all connected to the same AP.
 
-Sorry, the broadcom brcmfmac changes need to go.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/debugfs.c |   37 +++++++++++++++++++++++++++++++++++++
+ 1 files changed, 37 insertions(+), 0 deletions(-)
 
-Some of those commits are cleanups, and some of them have the worst
-commit log messages ever, the last one for example:
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index b0e32d6..2bbe377 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -175,8 +175,44 @@ static ssize_t queues_read(struct file *file, char __user *user_buf,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, res);
+ }
+ 
++static ssize_t sta_hash_read(struct file *file, char __user *user_buf,
++			     size_t count, loff_t *ppos)
++{
++	struct ieee80211_local *local = file->private_data;
++	int mxln = STA_HASH_SIZE * 10;
++	char *buf = kzalloc(mxln, GFP_KERNEL);
++	int q, res = 0;
++	struct sta_info *sta;
++
++	if (!buf)
++		return 0;
++
++	mutex_lock(&local->sta_mtx);
++	for (q = 0; q < STA_HASH_SIZE; q++) {
++		int cnt = 0;
++		sta = local->sta_hash[q];
++		while (sta) {
++			cnt++;
++			sta = sta->hnext;
++		}
++		if (cnt) {
++			res += sprintf(buf + res, "%i: %i\n", q, cnt);
++			if (res >= (STA_HASH_SIZE * 10)) {
++				res = STA_HASH_SIZE * 10;
++				break;
++			}
++		}
++	}
++	mutex_unlock(&local->sta_mtx);
++
++	q = simple_read_from_buffer(user_buf, count, ppos, buf, res);
++	kfree(buf);
++	return q;
++}
++
+ DEBUGFS_READONLY_FILE_OPS(hwflags);
+ DEBUGFS_READONLY_FILE_OPS(queues);
++DEBUGFS_READONLY_FILE_OPS(sta_hash);
+ 
+ /* statistics stuff */
+ 
+@@ -245,6 +281,7 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_ADD(total_ps_buffered);
+ 	DEBUGFS_ADD(wep_iv);
+ 	DEBUGFS_ADD(queues);
++	DEBUGFS_ADD(sta_hash);
+ #ifdef CONFIG_PM
+ 	DEBUGFS_ADD_MODE(reset, 0200);
+ #endif
+-- 
+1.7.3.4
 
-0017-brcmsmac-fix-regression-observed-in-3.10-rc1.patch
-
-has no explanation whatsoever of what the actual problem or regression
-is, what aspect of the logic in that function is causing the problem,
-and no explanation why making this function always return 'false' is a
-reasonable fix.
-
-That entire series is of very low quality, and even if it was in good
-shape, at least half the changes are not appropriate at all this late
-in the -rc series.
