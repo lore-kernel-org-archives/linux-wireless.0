@@ -1,92 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:41346 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751964Ab3FREqv (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47106 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab3F2W7t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 00:46:51 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/5] ath9k: Modify IDs to identify CUS230
-Date: Tue, 18 Jun 2013 10:13:43 +0530
-Message-Id: <1371530623-15746-5-git-send-email-sujith@msujith.org> (sfid-20130618_064653_721327_B8CDD478)
-In-Reply-To: <1371530623-15746-1-git-send-email-sujith@msujith.org>
-References: <1371530623-15746-1-git-send-email-sujith@msujith.org>
+	Sat, 29 Jun 2013 18:59:49 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [WT PATCH 6/6] mac80211: Tell user why beacons fail to parse.
+Date: Sat, 29 Jun 2013 15:58:58 -0700
+Message-Id: <1372546738-25827-6-git-send-email-greearb@candelatech.com> (sfid-20130630_005952_096446_C7F6AD26)
+In-Reply-To: <1372546738-25827-1-git-send-email-greearb@candelatech.com>
+References: <1372546738-25827-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Ben Greear <greearb@candelatech.com>
 
-CUS198 and CUS230 are similar cards, both
-are AR9485 + xLNA solutions. But, the subsystem IDs
-differ - identify CUS230 explicitly to make things
-clearer.
+Should help better debug dodgy APs and such.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h | 1 +
- drivers/net/wireless/ath/ath9k/init.c  | 7 +++++--
- drivers/net/wireless/ath/ath9k/pci.c   | 6 ++++--
- 3 files changed, 10 insertions(+), 4 deletions(-)
+ net/mac80211/ieee80211_i.h |    2 +
+ net/mac80211/mlme.c        |    4 +-
+ net/mac80211/scan.c        |    6 +++
+ net/mac80211/util.c        |   79 +++++++++++++++++++++++++++++++++++++++----
+ 4 files changed, 81 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 74965ee..1a0a168 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -632,6 +632,7 @@ void ath_ant_comb_update(struct ath_softc *sc);
- /********************/
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f36f120..809c9a5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -110,6 +110,7 @@ struct ieee80211_bss {
  
- #define ATH9K_PCI_CUS198 0x0001
-+#define ATH9K_PCI_CUS230 0x0002
+ 	/* Keep track of what bits of information we have valid info for. */
+ 	u8 valid_data;
++	char corrupt_elems_msg[80];
+ };
  
- /*
-  * Default cache line size, in bytes.
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 7c2ed1c..0d17415 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -521,11 +521,14 @@ static void ath9k_init_platform(struct ath_softc *sc)
- 	if (common->bus_ops->ath_bus_type != ATH_PCI)
- 		return;
+ /**
+@@ -1258,6 +1259,7 @@ struct ieee802_11_elems {
  
--	if (sc->driver_data & ATH9K_PCI_CUS198) {
-+	if (sc->driver_data & (ATH9K_PCI_CUS198 |
-+			       ATH9K_PCI_CUS230)) {
- 		ah->config.xlna_gpio = 9;
- 		ah->config.xatten_margin_cfg = true;
+ 	/* whether a parse error occurred while retrieving these elements */
+ 	bool parse_error;
++	char parse_err_msg[80];
+ };
  
--		ath_info(common, "Set parameters for CUS198\n");
-+		ath_info(common, "Set parameters for %s\n",
-+			 (sc->driver_data & ATH9K_PCI_CUS198) ?
-+			 "CUS198" : "CUS230");
+ static inline struct ieee80211_local *hw_to_local(
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ae31968..42edd6c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4341,8 +4341,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 				corrupt_type = "beacon";
+ 		} else if (bss->corrupt_data & IEEE80211_BSS_CORRUPT_PROBE_RESP)
+ 			corrupt_type = "probe response";
+-		sdata_info(sdata, "associating with AP with corrupt %s\n",
+-			   corrupt_type);
++		sdata_info(sdata, "associating with AP with corrupt %s, reason: %s\n",
++			   corrupt_type, bss->corrupt_elems_msg);
  	}
- }
  
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 4ac00b4..ddf0d78 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -51,16 +51,18 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 			 PCI_VENDOR_ID_AZWAVE,
- 			 0x2126),
- 	  .driver_data = ATH9K_PCI_CUS198 },
-+
-+	/* PCI-E CUS230 */
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0032,
- 			 PCI_VENDOR_ID_AZWAVE,
- 			 0x2152),
--	  .driver_data = ATH9K_PCI_CUS198 },
-+	  .driver_data = ATH9K_PCI_CUS230 },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0032,
- 			 PCI_VENDOR_ID_FOXCONN,
- 			 0xE075),
--	  .driver_data = ATH9K_PCI_CUS198 },
-+	  .driver_data = ATH9K_PCI_CUS230 },
+ 	return 0;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 1b122a7..9dc9c98 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -86,6 +86,8 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 		bss->device_ts_presp = rx_status->device_timestamp;
  
- 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
+ 	if (elems->parse_error) {
++		strncpy(bss->corrupt_elems_msg, elems->parse_err_msg,
++			sizeof(bss->corrupt_elems_msg));
+ 		if (beacon)
+ 			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_BEACON;
+ 		else
+@@ -95,6 +97,10 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_BEACON;
+ 		else
+ 			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_PROBE_RESP;
++		if (!(bss->corrupt_data &
++		      (IEEE80211_BSS_CORRUPT_BEACON |
++		       IEEE80211_BSS_CORRUPT_PROBE_RESP)))
++			bss->corrupt_elems_msg[0] = 0;
+ 	}
+ 
+ 	/* save the ERP value so that it is available at association time */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 2265445..7e6a4f3 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -692,6 +692,10 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 
+ 		if (elen > left) {
+ 			elems->parse_error = true;
++			snprintf(elems->parse_err_msg,
++				 sizeof(elems->parse_err_msg),
++				 "elen: %hhu > left: %zu",
++				 elen, left);
+ 			break;
+ 		}
+ 
+@@ -731,6 +735,9 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 		 */
+ 			if (test_bit(id, seen_elems)) {
+ 				elems->parse_error = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "seen id: %i already", id);
+ 				left -= elen;
+ 				pos += elen;
+ 				continue;
+@@ -762,8 +769,14 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 			if (elen >= sizeof(struct ieee80211_tim_ie)) {
+ 				elems->tim = (void *)pos;
+ 				elems->tim_len = elen;
+-			} else
++			} else {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "EID_TIM size wrong, elen: %hhu  sizeof(tim_ie): %zu",
++					 elen,
++					 sizeof(struct ieee80211_tim_ie));
++			}
+ 			break;
+ 		case WLAN_EID_CHALLENGE:
+ 			elems->challenge = pos;
+@@ -806,32 +819,61 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 		case WLAN_EID_HT_CAPABILITY:
+ 			if (elen >= sizeof(struct ieee80211_ht_cap))
+ 				elems->ht_cap_elem = (void *)pos;
+-			else
++			else {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "HT_CAPAB size wrong, elen: %hhu  sizeof(ht_cap): %zu",
++					 elen,
++					 sizeof(struct ieee80211_ht_cap));
++			}
+ 			break;
+ 		case WLAN_EID_HT_OPERATION:
+ 			if (elen >= sizeof(struct ieee80211_ht_operation))
+ 				elems->ht_operation = (void *)pos;
+-			else
++			else {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "HT_OPER size wrong, elen: %hhu  sizeof(ht_oper): %zu",
++					 elen,
++					 sizeof(struct ieee80211_ht_operation));
++			}
+ 			break;
+ 		case WLAN_EID_VHT_CAPABILITY:
+ 			if (elen >= sizeof(struct ieee80211_vht_cap))
+ 				elems->vht_cap_elem = (void *)pos;
+-			else
++			else {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "EID_VHT size wrong, elen: %hhu  sizeof(vht_cap): %zu",
++					 elen,
++					 sizeof(struct ieee80211_vht_cap));
++			}
+ 			break;
+ 		case WLAN_EID_VHT_OPERATION:
+ 			if (elen >= sizeof(struct ieee80211_vht_operation))
+ 				elems->vht_operation = (void *)pos;
+-			else
++			else {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "VHT_OPER size wrong, elen: %hhu  sizeof(vht_oper): %zu",
++					 elen,
++					 sizeof(struct ieee80211_vht_operation));
++			}
+ 			break;
+ 		case WLAN_EID_OPMODE_NOTIF:
+ 			if (elen > 0)
+ 				elems->opmode_notif = pos;
+-			else
++			else {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "OPMODE_NOTIF has elen > 0: %hhu",
++					 elen);
++			}
+ 			break;
+ 		case WLAN_EID_MESH_ID:
+ 			elems->mesh_id = pos;
+@@ -840,8 +882,14 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 		case WLAN_EID_MESH_CONFIG:
+ 			if (elen >= sizeof(struct ieee80211_meshconf_ie))
+ 				elems->mesh_config = (void *)pos;
+-			else
++			else {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "MESH_CONFIG size wrong, elen: %hhu  sizeof(meshconf_ie): %zu",
++					 elen,
++					 sizeof(struct ieee80211_meshconf_ie));
++			}
+ 			break;
+ 		case WLAN_EID_PEER_MGMT:
+ 			elems->peering = pos;
+@@ -866,12 +914,23 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 		case WLAN_EID_RANN:
+ 			if (elen >= sizeof(struct ieee80211_rann_ie))
+ 				elems->rann = (void *)pos;
+-			else
++			else {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "EID_RANN size wrong, elen: %hhu  sizeof(rann_ie): %zu",
++					 elen,
++					 sizeof(struct ieee80211_rann_ie));
++			}
+ 			break;
+ 		case WLAN_EID_CHANNEL_SWITCH:
+ 			if (elen != sizeof(struct ieee80211_channel_sw_ie)) {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "CH_SWITCH size wrong, elen: %hhu  sizeof(sw_ie): %zu",
++					 elen,
++					 sizeof(struct ieee80211_channel_sw_ie));
+ 				break;
+ 			}
+ 			elems->ch_switch_ie = (void *)pos;
+@@ -925,6 +984,10 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 		case WLAN_EID_PWR_CONSTRAINT:
+ 			if (elen != 1) {
+ 				elem_parse_failed = true;
++				snprintf(elems->parse_err_msg,
++					 sizeof(elems->parse_err_msg),
++					 "PWR_CONSTRAINT size not 1, elen: %hhu",
++					 elen);
+ 				break;
+ 			}
+ 			elems->pwr_constr_elem = pos;
 -- 
-1.8.3.1
+1.7.3.4
 
