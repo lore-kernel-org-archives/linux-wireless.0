@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:50894 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751003Ab3FFPUc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jun 2013 11:20:32 -0400
-Date: Thu, 6 Jun 2013 17:20:19 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@lists.01.org>
-Subject: [GIT] [3.10] NFC fixes
-Message-ID: <20130606152019.GT4793@zurbaran> (sfid-20130606_172035_949155_F73D8122)
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:57168 "EHLO
+	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752378Ab3F2LYT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Jun 2013 07:24:19 -0400
+Message-ID: <51CEC24F.3040609@openwrt.org> (sfid-20130629_132422_954579_1D416A8B)
+Date: Sat, 29 Jun 2013 13:17:35 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH 02/19] rt2x00: rt2800lib: add RFCSR register initialization
+ for RT3593
+References: <51CE0330.7090007@gmail.com>
+In-Reply-To: <51CE0330.7090007@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+2013.06.28. 23:42 keltezéssel, Xose Vazquez Perez írta:
+> Gabor Juhos wrote:
+> 
+>> Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+>> driver.
+> 
+> There is a more recent version: DPO_RT5572_LinuxSTA_2.6.1.3_20121022
 
-This is the 2nd NFC pull request for 3.10.
+Yes, I know. However I wanted to test AP mode with the vendor driver and that is
+only supported in the '2.6.0.1_20120629' version.
 
-I wish this one could have been part of the first one, but we came back from
-the NFC plugfest with a few more LLCP fixes:
+> 
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index 32ecd1a..0041b2c 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> [...]
+>> +	/* Initialize default register values */
+>> +	rt2800_rfcsr_write(rt2x00dev, 1, 0x03);
+>> +	rt2800_rfcsr_write(rt2x00dev, 3, 0x80);
+> 
+> from ./20120911_RT3573_Linux_STA_v2.5.0.0_Rev1_DPO/chips/rt3593.c
+> 
+> {RF_R02,                0x80}
+> 
+> but it was deleted in ./DPO_RT5572_LinuxSTA_2.6.1.3_20121022/chips/rt3593.c
+> 
+> Was it deliberate ? or a mistake ??
 
-- The well known services bitmask was sent with the wrong endianness and with
-  the first bit not set, which goes against the LLCP specifications. This
-  won't prevent most use cases and tests to pass, only picky implementations
-  seem to care about the WKS correctness.
+It is intentional. The patch is based on the *2.6.0.1* driver, and the value is
+not present in that.
 
-- We were ignoring RNRs and were sending our pending frames regardless. We
-  should just re-queue them and send a SYMM instead.
+-Gabor
 
-- Non blocking LLCP connections were not handled properly as we found out
-  after implementing it from neard. Applications were immediatly woken up with
-  a SIGHUP and connection failed. This is fixed now, allowing us to have a
-  fully asynchronous NFC userspace daemon.
 
-Thanks in advance for pulling them in.
-
-The following changes since commit cee6dfa25831e0daac52fc582a04a7204f886220:
-
-  Revert "ath9k_hw: Update rx gain initval to improve rx sensitivity" (2013-06-05 10:42:29 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.10-2
-
-for you to fetch changes up to fcd335b0010aeafb6e3dfd46360778ce59e1e201:
-
-  NFC: llcp: Fix the well known services endianness (2013-06-06 16:43:51 +0200)
-
-----------------------------------------------------------------
-Samuel Ortiz (4):
-      NFC: llcp: Fix non blocking sockets connections
-      NFC: llcp: Do not send pending Tx frames when the remote is not ready
-      NFC: llcp: Set the LLC Link Management well known service bit
-      NFC: llcp: Fix the well known services endianness
-
- net/nfc/llcp.h      |    1 +
- net/nfc/llcp_core.c |    8 ++++++--
- net/nfc/llcp_sock.c |    8 +++++---
- 3 files changed, 12 insertions(+), 5 deletions(-)
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
