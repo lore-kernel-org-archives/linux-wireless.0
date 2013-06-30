@@ -1,90 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:42803 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920Ab3FXRm4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jun 2013 13:42:56 -0400
-Received: by mail-we0-f180.google.com with SMTP id w56so8550122wes.11
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2013 10:42:55 -0700 (PDT)
-References: <1371915734-13966-1-git-send-email-juhosg@openwrt.org> <1371915734-13966-4-git-send-email-juhosg@openwrt.org>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1371915734-13966-4-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <3B42FB1E-C6CE-4580-9C71-47BB609B4CB8@gmail.com> (sfid-20130624_194300_524149_771CDCAF)
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 3/3] rt2x00: rt2800lib: turn on tertiary PAs/LNAs for 3T/3R devices
-Date: Mon, 24 Jun 2013 19:42:51 +0200
-To: Gabor Juhos <juhosg@openwrt.org>
+Received: from mout3.freenet.de ([195.4.92.93]:41839 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750976Ab3F3JDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Jun 2013 05:03:10 -0400
+Date: Sun, 30 Jun 2013 10:59:30 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+To: Gabor Juhos <juhosg@openwrt.org>,
+	John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 00/19] rt2x00: add experimental support for RT3593
+Message-ID: <20130630105930.7f53165a@dualc.maya.org> (sfid-20130630_110315_143211_40776EDB)
+In-Reply-To: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+References: <1372446753-11408-1-git-send-email-juhosg@openwrt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gabor,
+Hello Gabor,
 
-Sent from my iPad
+bad guy is back again :-)
 
-On 22 jun. 2013, at 17:42, Gabor Juhos <juhosg@openwrt.org> wrote:
+Gabor Juhos wrote:
+> This patch-set implements experiemental support for the
+> RT3593 chipset. The patches are tested on the Linksys
+> AE3000 USB device only, however other USB devices which
+> are using the RT3573 chips might work as well.
 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> ---
-> drivers/net/wireless/rt2x00/rt2800lib.c |   14 ++++++++++++++
-> 1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index f4cd3d8..664e9e1 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2684,12 +2684,26 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
->                   rf->channel > 14);
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
->                   rf->channel <= 14);
-> +
-> +        if (rt2x00dev->default_ant.tx_chain_num > 2) {
-> +            /* Turn on tertiary PAs for 3T devices */
-> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A2_EN,
-> +                    rf->channel > 14);
-> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G2_EN,
-> +                    rf->channel <= 14);
-> +        }
->    }
-> 
->    if (rt2x00dev->default_ant.rx_chain_num > 1) {
->        /* Turn on secondary LNAs for 2R and for 3R devices */
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A1_EN, 1);
->        rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G1_EN, 1);
-> +
-> +        if (rt2x00dev->default_ant.rx_chain_num > 2) {
-> +            /* Turn on tertiary LNAs for 3R devices */
-> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A2_EN, 1);
-> +            rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G2_EN, 1);
-> +        }
->    }
+I did another test with raspberry pi. Same network parameters (2.4 GHz,
+40MHz, eap-tls, ccmp/ccmp) but this time w/o any other load on the
+wlan. But there is a reinforced-concrete floor between AP and STA.
 
-Stylistic I would prefer the if outside of if block you included it in.
-Something like:
+netperf with rt2800usb / backports-20130617 / kernel 3.6.11 gives:
 
-if (tx_chain_num > 2) {
-     /* Turn on tertiary PAs for 3T devices */
-}
-if (tx_chain_num > 1) {
-    /* Turn on secondary PAs for 2T and for 3T devices */
-}
-/* Turn on primary PAs for 1T, 2T and for 3T devices */
+MIGRATED TCP STREAM TEST from 0.0.0.0 () port 0 AF_INET to server port 0 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
 
-At least to me this is easier to read.
+ 87380  16384  16384    10.39      28.16   
+MIGRATED TCP MAERTS TEST from 0.0.0.0 () port 0 AF_INET from server port 0 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
 
-Alternatively it could be changed to a switch statement wit fall-through cases for the number of RX/TX streams. 
+ 87380  16384  16384    10.00      30.23   
+TCP SENDFILE TEST from 0.0.0.0 () port 0 AF_INET to server port 0 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
 
-> 
->    rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A0_EN, 1);
-> -- 
-> 1.7.10
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 87380  16384  16384    10.35      27.69
+
+
+Same with DPO_RT5572_LinuxSTA_2.6.1.3_20121022
+
+MIGRATED TCP STREAM TEST from 0.0.0.0 () port 0 AF_INET to server port 0 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.01      97.95   
+MIGRATED TCP MAERTS TEST from 0.0.0.0 () port 0 AF_INET from server port 0 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.01     121.69   
+TCP SENDFILE TEST from 0.0.0.0 () port 0 AF_INET to server port 0 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.01      82.75
+
+If you compare the result w/ rt2800usb/AE3000 with rt2800usb/rt3572[1]
+you can see: no difference :-(.
+
+
+Kind regards,
+Andreas
+
+[1] http://comments.gmane.org/gmane.linux.drivers.rt2x00.user/1992
