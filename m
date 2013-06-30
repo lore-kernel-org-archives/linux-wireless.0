@@ -1,45 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48819 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932860Ab3FRTAK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jun 2013 15:00:10 -0400
-Date: Tue, 18 Jun 2013 14:45:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull request: TI wireless drivers 2013-06-18 (for 3.11)
-Message-ID: <20130618184538.GB12696@tuxdriver.com> (sfid-20130618_210021_669239_035E4457)
-References: <1371552937.10702.15.camel@cumari.coelho.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1371552937.10702.15.camel@cumari.coelho.fi>
+Received: from nbd.name ([46.4.11.11]:51865 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751249Ab3F3KCW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Jun 2013 06:02:22 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH] ath9k: fix tx pending frames accounting for dropped packets
+Date: Sun, 30 Jun 2013 12:02:13 +0200
+Message-Id: <1372586533-50293-1-git-send-email-nbd@openwrt.org> (sfid-20130630_120225_749032_9B7D67C0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 18, 2013 at 01:55:37PM +0300, Luciano Coelho wrote:
-> Hi John,
-> 
-> Here are a few patches intended for 3.11.  There's nothing major.  A
-> bunch of bug fixes here and there, a hardware bug workaround and some
-> small clean-ups.
-> 
-> Please let me know if you have any problems with it!
-> 
-> The following changes since commit 1105a13bb8ad29cf83d46989ee462d196038be87:
-> 
->   orinoco_usb: fix memory leak in ezusb_access_ltv() when device disconnected (2013-06-14 13:37:16 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
-> 
-> for you to fetch changes up to 789e90e567d7d93edc1b2001d17209c21cc37850:
-> 
->   net: wireless: wl1251: Fix commenting style (2013-06-17 12:24:09 +0300)
+When dropping packets that have gone far enough into the tx path, the
+pending frame counter needs to be decreased.
 
-Pulling now...
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 44 ++++++++++++++++++++++-------------
+ 1 file changed, 28 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index c59ae43..9279927 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -146,6 +146,28 @@ static void ath_set_rates(struct ieee80211_vif *vif, struct ieee80211_sta *sta,
+ 			       ARRAY_SIZE(bf->rates));
+ }
+ 
++static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
++			     struct sk_buff *skb)
++{
++	int q;
++
++	q = skb_get_queue_mapping(skb);
++	if (txq == sc->tx.uapsdq)
++		txq = sc->tx.txq_map[q];
++
++	if (txq != sc->tx.txq_map[q])
++		return;
++
++	if (WARN_ON(--txq->pending_frames < 0))
++		txq->pending_frames = 0;
++
++	if (txq->stopped &&
++	    txq->pending_frames < sc->tx.txq_max_pending[q]) {
++		ieee80211_wake_queue(sc->hw, q);
++		txq->stopped = false;
++	}
++}
++
+ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ {
+ 	struct ath_txq *txq = tid->ac->txq;
+@@ -167,6 +189,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 		if (!bf) {
+ 			bf = ath_tx_setup_buffer(sc, txq, tid, skb);
+ 			if (!bf) {
++				ath_txq_skb_done(sc, txq, skb);
+ 				ieee80211_free_txskb(sc->hw, skb);
+ 				continue;
+ 			}
+@@ -811,6 +834,7 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 		if (!bf) {
+ 			__skb_unlink(skb, &tid->buf_q);
++			ath_txq_skb_done(sc, txq, skb);
+ 			ieee80211_free_txskb(sc->hw, skb);
+ 			continue;
+ 		}
+@@ -1824,6 +1848,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	bf = ath_tx_setup_buffer(sc, txq, tid, skb);
+ 	if (!bf) {
++		ath_txq_skb_done(sc, txq, skb);
+ 		ieee80211_free_txskb(sc->hw, skb);
+ 		return;
+ 	}
+@@ -2090,6 +2115,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 
+ 	bf = ath_tx_setup_buffer(sc, txq, tid, skb);
+ 	if (!bf) {
++		ath_txq_skb_done(sc, txq, skb);
+ 		if (txctl->paprd)
+ 			dev_kfree_skb_any(skb);
+ 		else
+@@ -2189,7 +2215,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
+-	int q, padpos, padsize;
++	int padpos, padsize;
+ 	unsigned long flags;
+ 
+ 	ath_dbg(common, XMIT, "TX complete: skb: %p\n", skb);
+@@ -2225,21 +2251,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ 
+ 	__skb_queue_tail(&txq->complete_q, skb);
+-
+-	q = skb_get_queue_mapping(skb);
+-	if (txq == sc->tx.uapsdq)
+-		txq = sc->tx.txq_map[q];
+-
+-	if (txq == sc->tx.txq_map[q]) {
+-		if (WARN_ON(--txq->pending_frames < 0))
+-			txq->pending_frames = 0;
+-
+-		if (txq->stopped &&
+-		    txq->pending_frames < sc->tx.txq_max_pending[q]) {
+-			ieee80211_wake_queue(sc->hw, q);
+-			txq->stopped = false;
+-		}
+-	}
++	ath_txq_skb_done(sc, txq, skb);
+ }
+ 
+ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0.2
+
