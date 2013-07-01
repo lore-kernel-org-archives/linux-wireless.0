@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:62190 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCVA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:21:00 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rq2so1348766pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:59 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 25/53] wireless-regdb: DK, Denmark - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:14 -0700
-Message-Id: <1374027522-18488-26-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043607_027207_41C8621B)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from nbd.name ([46.4.11.11]:35192 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753233Ab3GAJE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jul 2013 05:04:29 -0400
+Message-ID: <51D1461B.3040905@openwrt.org> (sfid-20130701_110436_690324_D95DF5D0)
+Date: Mon, 01 Jul 2013 11:04:27 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] mac80211: Use libnl-configurable values for retry counts
+References: <1372351227-25575-1-git-send-email-jp.tosoni@acksys.fr> <51CF3EC9.3000707@openwrt.org> <000401ce7635$de99d1d0$9bcd7570$@acksys.fr>
+In-Reply-To: <000401ce7635$de99d1d0$9bcd7570$@acksys.fr>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 2013-07-01 10:34 AM, Jean-Pierre Tosoni wrote:
+> Thanks Felix.
+> 
+> I am using the ath9k, but I have seen this in the b43 driver:
+> 
+>                 rates[0].count = dev->wl->hw->conf.short_frame_max_tx_count;
+> 
+> Do you think that short/long_frame_max_tx_count should rather be applied at
+> the driver level (not mac80211) ?
+> The ath9k driver currently enforces a minimum retry count of 30 (constant),
+> it could be replaced with short/long_frame_max_tx_count ?
+No, I think driver level is even more wrong than generic mac80211 rate
+table code. The driver doesn't know more than mac80211 about how to
+properly distribute a limited set of retries across different rates.
+The only place that can properly control this is the rate control module.
+The ath9k retry count of 30 that you're mentioning is software retry -
+you should leave that one alone for now and focus on hardware retries.
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
-
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 94be114..26cc023 100644
---- a/db.txt
-+++ b/db.txt
-@@ -236,9 +236,9 @@ country DE: DFS-ETSI
- 
- country DK: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
+- Felix
 
