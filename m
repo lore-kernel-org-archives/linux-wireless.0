@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38334 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510Ab3GHO4U (ORCPT
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:57251 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755057Ab3GAUz0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:20 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 1 Jul 2013 16:55:26 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: backports@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 16/18] ath5k: report 5/10 MHz channels
-Date: Mon,  8 Jul 2013 16:56:04 +0200
-Message-Id: <1373295366-12823-17-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_172039_870499_4F659D5C)
-In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 0/3] backports: backport alx
+Date: Mon,  1 Jul 2013 13:55:17 -0700
+Message-Id: <1372712120-16606-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130701_225529_112852_15F3046E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath5k/base.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index ce67ab7..260a6fc 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1400,6 +1400,16 @@ ath5k_receive_frame(struct ath5k_hw *ah, struct sk_buff *skb,
- 
- 	rxs->rate_idx = ath5k_hw_to_driver_rix(ah, rs->rs_rate);
- 	rxs->flag |= ath5k_rx_decrypted(ah, skb, rs);
-+	switch (ah->ah_bwmode) {
-+	case AR5K_BWMODE_5MHZ:
-+		rxs->flag |= RX_FLAG_5MHZ;
-+		break;
-+	case AR5K_BWMODE_10MHZ:
-+		rxs->flag |= RX_FLAG_10MHZ;
-+		break;
-+	default:
-+		break;
-+	}
- 
- 	if (rxs->rate_idx >= 0 && rs->rs_rate ==
- 	    ah->sbands[ah->curchan->band].bitrates[rxs->rate_idx].hw_value_short)
+Johannes threw alx upstream, this fixes the backport based on
+the new shiny code.
+
+Luis R. Rodriguez (3):
+  backports: remove alx extra patch
+  backports: add new alx upstream backport
+  backports: add SPEED_UNKNOWN and DUPLEX_UNKNOWN
+
+ backport/backport-include/linux/ethtool.h          |    8 ++
+ .../network/0001-netdev_ops/alx.patch              |   11 ++
+ .../network/0001-netdev_ops/mwifiex.patch          |    2 +-
+ .../network/0007-pci_dev_dev_flags/INFO            |   28 +++++
+ .../network/0007-pci_dev_dev_flags/alx.patch       |   13 +++
+ .../drivers_net_ethernet_atheros_alx_main.patch    |   24 ++++
+ .../drivers_net_ethernet_atheros_alx_main.patch    |   14 +++
+ .../drivers_net_ethernet_atheros_alx_main.patch    |   58 +++++++++
+ .../drivers_net_ethernet_atheros_alx_main.patch    |   13 +++
+ ...drivers_net_wireless_rtlwifi_rtl8192cu_sw.patch |    2 +-
+ .../network/0001-backport-alx/alx.patch            |  123 --------------------
+ .../network/0002-alx-make-kconfig/alx.patch        |   32 -----
+ .../0003-alx-deactivate-loopback-test/alx.patch    |   25 ----
+ 13 files changed, 171 insertions(+), 182 deletions(-)
+ create mode 100644 patches/collateral-evolutions/network/0001-netdev_ops/alx.patch
+ create mode 100644 patches/collateral-evolutions/network/0007-pci_dev_dev_flags/INFO
+ create mode 100644 patches/collateral-evolutions/network/0007-pci_dev_dev_flags/alx.patch
+ create mode 100644 patches/collateral-evolutions/network/11-dev-pm-ops/drivers_net_ethernet_atheros_alx_main.patch
+ create mode 100644 patches/collateral-evolutions/network/25-multicast-list_head/drivers_net_ethernet_atheros_alx_main.patch
+ create mode 100644 patches/collateral-evolutions/network/40-netdev-hw-features/drivers_net_ethernet_atheros_alx_main.patch
+ create mode 100644 patches/collateral-evolutions/network/61-netdev-addr_assign_type/drivers_net_ethernet_atheros_alx_main.patch
+ delete mode 100644 patches/unified-drivers/network/0001-backport-alx/alx.patch
+ delete mode 100644 patches/unified-drivers/network/0002-alx-make-kconfig/alx.patch
+ delete mode 100644 patches/unified-drivers/network/0003-alx-deactivate-loopback-test/alx.patch
+
 -- 
 1.7.10.4
 
