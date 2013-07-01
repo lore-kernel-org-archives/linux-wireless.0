@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:57692 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755438Ab3GDBFI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:05:08 -0400
-Received: by mail-pa0-f52.google.com with SMTP id kq13so765531pab.11
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:08 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 03/53] wireless-regdb: CA, Canada - enable VHT80
-Date: Wed,  3 Jul 2013 18:03:59 -0700
-Message-Id: <1372899889-19183-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_030526_693912_23ABAC2C)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:47495 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752888Ab3GAHsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jul 2013 03:48:21 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 06/20] rt2x00: rt2800lib: fix BBP1_TX_ANTENNA field configuration for 3T devices
+Date: Mon,  1 Jul 2013 09:47:45 +0200
+Message-Id: <1372664879-18474-7-git-send-email-juhosg@openwrt.org> (sfid-20130701_094856_446260_5E83AB66)
+In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+The field must be set to 2 instead of 0 for
+devices with three TX chains.
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and increases the max EIRP on two
-5 GHz bands.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- db.txt |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index a6c23bd..37a13c6 100644
---- a/db.txt
-+++ b/db.txt
-@@ -142,10 +142,10 @@ country BZ:
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index b6f456c..6f6f48f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1764,7 +1764,7 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
+ 			rt2x00_set_field8(&r1, BBP1_TX_ANTENNA, 2);
+ 		break;
+ 	case 3:
+-		rt2x00_set_field8(&r1, BBP1_TX_ANTENNA, 0);
++		rt2x00_set_field8(&r1, BBP1_TX_ANTENNA, 2);
+ 		break;
+ 	}
  
- country CA:
- 	(2402 - 2472 @ 40), (3, 27)
--	(5170 - 5250 @ 40), (3, 17)
--	(5250 - 5330 @ 40), (3, 20), DFS
--	(5490 - 5710 @ 40), (3, 20), DFS
--	(5735 - 5835 @ 40), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
- 
- country CH: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.7.10.4
+1.7.10
 
