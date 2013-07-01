@@ -1,235 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:51886 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753227Ab3GBO4h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 10:56:37 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>
-Subject: [PATCH v2 1/9] wl1251: split wl251 platform data to a separate structure
-Date: Tue, 2 Jul 2013 17:55:40 +0300
-Message-ID: <1372776948-24840-2-git-send-email-coelho@ti.com> (sfid-20130702_165840_793098_C69B6374)
-In-Reply-To: <1372776948-24840-1-git-send-email-coelho@ti.com>
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from arrakis.dune.hu ([78.24.191.176]:47512 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752956Ab3GAHsc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jul 2013 03:48:32 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 13/20] rt2x00: rt2800lib: add default_power3 field for three-chain devices
+Date: Mon,  1 Jul 2013 09:47:52 +0200
+Message-Id: <1372664879-18474-14-git-send-email-juhosg@openwrt.org> (sfid-20130701_094838_704455_6B5720D8)
+In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the wl1251 part of the wl12xx platform data structure into a new
-structure specifically for wl1251.  Change the platform data built-in
-block and board files accordingly.
+The actual code uses two default TX power values.
+This is enough for 1T and for 2T devices however
+on 3T devices another value is needed for the third
+chain.
 
-Cc: Tony Lindgren <tony@atomide.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Acked-by: Tony Lindgren <tony@atomide.com>
+Add a new field to struct channel_info and initialize
+it from the 'rt2800_probe_hw_mode' function. Also modify
+the 'rt2800_config_channel' to handle the new field as
+well.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- arch/arm/mach-omap2/board-omap3pandora.c       |    4 +--
- arch/arm/mach-omap2/board-rx51-peripherals.c   |    2 +-
- drivers/net/wireless/ti/wilink_platform_data.c |   37 ++++++++++++++++++++----
- drivers/net/wireless/ti/wl1251/sdio.c          |   12 ++++----
- drivers/net/wireless/ti/wl1251/spi.c           |    2 +-
- include/linux/wl12xx.h                         |   22 +++++++++++++-
- 6 files changed, 62 insertions(+), 17 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |   22 ++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
+ 2 files changed, 23 insertions(+)
 
-diff --git a/arch/arm/mach-omap2/board-omap3pandora.c b/arch/arm/mach-omap2/board-omap3pandora.c
-index 28133d5..bf06d95 100644
---- a/arch/arm/mach-omap2/board-omap3pandora.c
-+++ b/arch/arm/mach-omap2/board-omap3pandora.c
-@@ -540,7 +540,7 @@ static struct spi_board_info omap3pandora_spi_board_info[] __initdata = {
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index f079d70..bc21a57 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2769,6 +2769,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 						     info->default_power1);
+ 	info->default_power2 = rt2800_txpower_to_dev(rt2x00dev, rf->channel,
+ 						     info->default_power2);
++	if (rt2x00dev->default_ant.tx_chain_num > 2)
++		info->default_power3 =
++			rt2800_txpower_to_dev(rt2x00dev, rf->channel,
++					      info->default_power3);
  
- static void __init pandora_wl1251_init(void)
- {
--	struct wl12xx_platform_data pandora_wl1251_pdata;
-+	struct wl1251_platform_data pandora_wl1251_pdata;
- 	int ret;
+ 	switch (rt2x00dev->chip.rf) {
+ 	case RF2020:
+@@ -6964,6 +6968,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	struct channel_info *info;
+ 	char *default_power1;
+ 	char *default_power2;
++	char *default_power3;
+ 	unsigned int i;
+ 	u16 eeprom;
+ 	u32 reg;
+@@ -7116,9 +7121,17 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	default_power1 = rt2800_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_BG1);
+ 	default_power2 = rt2800_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_BG2);
  
- 	memset(&pandora_wl1251_pdata, 0, sizeof(pandora_wl1251_pdata));
-@@ -554,7 +554,7 @@ static void __init pandora_wl1251_init(void)
- 		goto fail_irq;
- 
- 	pandora_wl1251_pdata.use_eeprom = true;
--	ret = wl12xx_set_platform_data(&pandora_wl1251_pdata);
-+	ret = wl1251_set_platform_data(&pandora_wl1251_pdata);
- 	if (ret < 0)
- 		goto fail_irq;
- 
-diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
-index 18ca61e..733f3f2 100644
---- a/arch/arm/mach-omap2/board-rx51-peripherals.c
-+++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
-@@ -80,7 +80,7 @@ enum {
- 	RX51_SPI_MIPID,		/* LCD panel */
- };
- 
--static struct wl12xx_platform_data wl1251_pdata;
-+static struct wl1251_platform_data wl1251_pdata;
- static struct tsc2005_platform_data tsc2005_pdata;
- 
- #if defined(CONFIG_SENSORS_LIS3_I2C) || defined(CONFIG_SENSORS_LIS3_I2C_MODULE)
-diff --git a/drivers/net/wireless/ti/wilink_platform_data.c b/drivers/net/wireless/ti/wilink_platform_data.c
-index 998e958..a92bd3e 100644
---- a/drivers/net/wireless/ti/wilink_platform_data.c
-+++ b/drivers/net/wireless/ti/wilink_platform_data.c
-@@ -23,17 +23,17 @@
- #include <linux/err.h>
- #include <linux/wl12xx.h>
- 
--static struct wl12xx_platform_data *platform_data;
-+static struct wl12xx_platform_data *wl12xx_platform_data;
- 
- int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
- {
--	if (platform_data)
-+	if (wl12xx_platform_data)
- 		return -EBUSY;
- 	if (!data)
- 		return -EINVAL;
- 
--	platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
--	if (!platform_data)
-+	wl12xx_platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
-+	if (!wl12xx_platform_data)
- 		return -ENOMEM;
- 
- 	return 0;
-@@ -41,9 +41,34 @@ int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
- 
- struct wl12xx_platform_data *wl12xx_get_platform_data(void)
- {
--	if (!platform_data)
-+	if (!wl12xx_platform_data)
- 		return ERR_PTR(-ENODEV);
- 
--	return platform_data;
-+	return wl12xx_platform_data;
- }
- EXPORT_SYMBOL(wl12xx_get_platform_data);
++	if (rt2x00dev->default_ant.tx_chain_num > 2)
++		default_power3 = rt2800_eeprom_addr(rt2x00dev,
++						    EEPROM_EXT_TXPOWER_BG3);
++	else
++		default_power3 = NULL;
 +
-+static struct wl1251_platform_data *wl1251_platform_data;
-+
-+int __init wl1251_set_platform_data(const struct wl1251_platform_data *data)
-+{
-+	if (wl1251_platform_data)
-+		return -EBUSY;
-+	if (!data)
-+		return -EINVAL;
-+
-+	wl1251_platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
-+	if (!wl1251_platform_data)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
-+struct wl1251_platform_data *wl1251_get_platform_data(void)
-+{
-+	if (!wl1251_platform_data)
-+		return ERR_PTR(-ENODEV);
-+
-+	return wl1251_platform_data;
-+}
-+EXPORT_SYMBOL(wl1251_get_platform_data);
-diff --git a/drivers/net/wireless/ti/wl1251/sdio.c b/drivers/net/wireless/ti/wl1251/sdio.c
-index e2b3d9c..b75a37a 100644
---- a/drivers/net/wireless/ti/wl1251/sdio.c
-+++ b/drivers/net/wireless/ti/wl1251/sdio.c
-@@ -227,7 +227,7 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 	struct wl1251 *wl;
- 	struct ieee80211_hw *hw;
- 	struct wl1251_sdio *wl_sdio;
--	const struct wl12xx_platform_data *wl12xx_board_data;
-+	const struct wl1251_platform_data *wl1251_board_data;
- 
- 	hw = wl1251_alloc_hw();
- 	if (IS_ERR(hw))
-@@ -254,11 +254,11 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 	wl->if_priv = wl_sdio;
- 	wl->if_ops = &wl1251_sdio_ops;
- 
--	wl12xx_board_data = wl12xx_get_platform_data();
--	if (!IS_ERR(wl12xx_board_data)) {
--		wl->set_power = wl12xx_board_data->set_power;
--		wl->irq = wl12xx_board_data->irq;
--		wl->use_eeprom = wl12xx_board_data->use_eeprom;
-+	wl1251_board_data = wl1251_get_platform_data();
-+	if (!IS_ERR(wl1251_board_data)) {
-+		wl->set_power = wl1251_board_data->set_power;
-+		wl->irq = wl1251_board_data->irq;
-+		wl->use_eeprom = wl1251_board_data->use_eeprom;
+ 	for (i = 0; i < 14; i++) {
+ 		info[i].default_power1 = default_power1[i];
+ 		info[i].default_power2 = default_power2[i];
++		if (default_power3)
++			info[i].default_power3 = default_power3[i];
  	}
  
- 	if (wl->irq) {
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index c7dc6fe..6bbbfe6 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -238,7 +238,7 @@ static const struct wl1251_if_operations wl1251_spi_ops = {
+ 	if (spec->num_channels > 14) {
+@@ -7127,9 +7140,18 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		default_power2 = rt2800_eeprom_addr(rt2x00dev,
+ 						    EEPROM_TXPOWER_A2);
  
- static int wl1251_spi_probe(struct spi_device *spi)
- {
--	struct wl12xx_platform_data *pdata;
-+	struct wl1251_platform_data *pdata;
- 	struct ieee80211_hw *hw;
- 	struct wl1251 *wl;
- 	int ret;
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index a54fe82..b516b4f 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -48,11 +48,15 @@ enum {
- 	WL12XX_TCXOCLOCK_33_6	= 7, /* 33.6 MHz */
++		if (rt2x00dev->default_ant.tx_chain_num > 2)
++			default_power3 =
++				rt2800_eeprom_addr(rt2x00dev,
++						   EEPROM_EXT_TXPOWER_A3);
++		else
++			default_power3 = NULL;
++
+ 		for (i = 14; i < spec->num_channels; i++) {
+ 			info[i].default_power1 = default_power1[i - 14];
+ 			info[i].default_power2 = default_power2[i - 14];
++			if (default_power3)
++				info[i].default_power3 = default_power3[i - 14];
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index ee3fc57..fe4c572 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -211,6 +211,7 @@ struct channel_info {
+ 	short max_power;
+ 	short default_power1;
+ 	short default_power2;
++	short default_power3;
  };
  
--struct wl12xx_platform_data {
-+struct wl1251_platform_data {
- 	void (*set_power)(bool enable);
- 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
- 	int irq;
- 	bool use_eeprom;
-+};
-+
-+struct wl12xx_platform_data {
-+	int irq;
- 	int board_ref_clock;
- 	int board_tcxo_clock;
- 	unsigned long platform_quirks;
-@@ -68,6 +72,10 @@ int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
- 
- struct wl12xx_platform_data *wl12xx_get_platform_data(void);
- 
-+int wl1251_set_platform_data(const struct wl1251_platform_data *data);
-+
-+struct wl1251_platform_data *wl1251_get_platform_data(void);
-+
- #else
- 
- static inline
-@@ -82,6 +90,18 @@ struct wl12xx_platform_data *wl12xx_get_platform_data(void)
- 	return ERR_PTR(-ENODATA);
- }
- 
-+static inline
-+int wl1251_set_platform_data(const struct wl1251_platform_data *data)
-+{
-+	return -ENOSYS;
-+}
-+
-+static inline
-+struct wl1251_platform_data *wl1251_get_platform_data(void)
-+{
-+	return ERR_PTR(-ENODATA);
-+}
-+
- #endif
- 
- #endif
+ /*
 -- 
-1.7.10.4
+1.7.10
 
