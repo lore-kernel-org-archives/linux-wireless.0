@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.newportit.com ([74.50.55.245]:52726 "EHLO wapdot.org"
+Received: from arrakis.dune.hu ([78.24.191.176]:47439 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751341Ab3GJFoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 01:44:34 -0400
-Message-ID: <51DCF4BF.5010900@newportit.com> (sfid-20130710_074437_678260_73623F17)
-Date: Tue, 09 Jul 2013 22:44:31 -0700
-From: Steve Freitas <steve@newportit.com>
-MIME-Version: 1.0
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [Ilw] Re: Slow throughput on Ultimate-N 6300
-References: <51BBF4F1.1050301@newportit.com> <51DCDD54.9090100@newportit.com> <0BA3FCBA62E2DC44AF3030971E174FB3019FFDDF@HASMSX103.ger.corp.intel.com>
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3019FFDDF@HASMSX103.ger.corp.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1752457Ab3GAHsP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jul 2013 03:48:15 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 02/20] rt2x00: rt2800lib: add BBP register initialization for RT3593
+Date: Mon,  1 Jul 2013 09:47:41 +0200
+Message-Id: <1372664879-18474-3-git-send-email-juhosg@openwrt.org> (sfid-20130701_094818_897789_C73631A5)
+In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel,
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-Thank you for your quick response!
+References:
+  NICInitRT3593BbpRegisters in chips/rt3593.c
+  NICInitBBP in common/rtmp_init.c
+  NICInitAsicFromEEPROM in common/rtmp_init.c
 
-It is a regression. I regularly had 300 Mbps speeds on this very access 
-point, but it was years ago, in the 2.6 kernel series. However, I 
-believe, from extensive online searches, that Intel has disabled the N 
-functionality in the firmware on Linux, ostensibly until they (you? :-) 
-) can fix whatever problem they were seeing. With the demise of the 
-Intel Linux Wireless bug tracker, though, public tracking of the bug has 
-been impossible. There are now-dead links to the defunct bug tracker 
-over this very issue.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-Sadly I only get 2 MByte/s on N, and under 1 MByte/s G.
-
-I have not tried another access point in ages. Tired of replacing fried 
-Netgears and Dlinks and Belkins, I've converted all my friends and 
-families to Apple's access points. I'll try to locate something else and 
-see how it goes.
-
-Thanks again,
-
-Steve
-
-On 07/09/13 22:35, Grumbach, Emmanuel wrote:
->>> I understand that it's well-known that N is broken for Linux on this
->>> wireless chipset. You can add me to the list of those suffering under
->>> it. Can you provide me with a status update on work performed towards
->>> resolution of this issue?
->>>
->>> I'm on Debian unstable, kernel 3.9 amd64, using iwlwifi wireless
->>> firmware version 9.221.4.1 build 25532 on a Thinkpad T410, and I'm
->>> connected to an Apple Airport Extreme base station (3rd generation).
->>>
-> Is this a regression?
-> Has it worked better before?
->
-> Also - did you try another access point? I seem to remember that we have had issues against Apple's access points.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 6f58ceb..32ecd1a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4505,6 +4505,22 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_disable_unused_dac_adc(rt2x00dev);
+ }
+ 
++static void rt2800_init_bbp_3593(struct rt2x00_dev *rt2x00dev)
++{
++	rt2800_init_bbp_early(rt2x00dev);
++
++	rt2800_bbp_write(rt2x00dev, 79, 0x13);
++	rt2800_bbp_write(rt2x00dev, 80, 0x05);
++	rt2800_bbp_write(rt2x00dev, 81, 0x33);
++	rt2800_bbp_write(rt2x00dev, 137, 0x0f);
++
++	rt2800_bbp_write(rt2x00dev, 84, 0x19);
++
++	/* Enable DC filter */
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT3593, REV_RT3593E))
++		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
++}
++
+ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int ant, div_mode;
+@@ -4720,6 +4736,9 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	case RT3572:
+ 		rt2800_init_bbp_3572(rt2x00dev);
+ 		break;
++	case RT3593:
++		rt2800_init_bbp_3593(rt2x00dev);
++		return;
+ 	case RT5390:
+ 	case RT5392:
+ 		rt2800_init_bbp_53xx(rt2x00dev);
+-- 
+1.7.10
 
