@@ -1,230 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43295 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754169Ab3GPKpY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 06:45:24 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/2] cfg80211: add beacon measurements command
-Date: Tue, 16 Jul 2013 13:45:16 +0300
-Message-Id: <1373971517-315-2-git-send-email-johannes@sipsolutions.net> (sfid-20130716_124530_633655_046612BB)
-In-Reply-To: <1373971517-315-1-git-send-email-johannes@sipsolutions.net>
-References: <1373971517-315-1-git-send-email-johannes@sipsolutions.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:51918 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753024Ab3GAILM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jul 2013 04:11:12 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 03/20] rt2x00: rt2800lib: add RFCSR register initialization for RT3593
+Date: Mon,  1 Jul 2013 09:47:42 +0200
+Message-Id: <1372664879-18474-4-git-send-email-juhosg@openwrt.org> (sfid-20130701_101150_203618_808C2EFC)
+In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-This new nl80211 command allow a user space application to
-instruct the WiFi stack to let all the beacons through so
-that measurements can be conducted on these beacons (i.e.
-RSSI etc...)
+References:
+  NICInitRT3593RFRegisters in chips/rt3593.c
+  RT3593LoadRFNormalModeSetup in chips/rt3593.c
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- include/net/cfg80211.h       | 12 ++++++++++++
- include/uapi/linux/nl80211.h | 10 ++++++++++
- net/wireless/nl80211.c       | 32 +++++++++++++++++++++++++++++++-
- net/wireless/rdev-ops.h      | 13 +++++++++++++
- net/wireless/trace.h         | 17 +++++++++++++++++
- 5 files changed, 83 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rt2x00/rt2800.h    |   10 +++
+ drivers/net/wireless/rt2x00/rt2800lib.c |  122 +++++++++++++++++++++++++++++++
+ 2 files changed, 132 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index aeaf6df..019e256 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2139,6 +2139,10 @@ struct cfg80211_update_ft_ies_params {
-  * @crit_proto_stop: Indicates critical protocol no longer needs increased link
-  *	reliability. This operation can not fail.
-  * @set_coalesce: Set coalesce parameters.
-+ *
-+ * @beacon_measurement: Start / stops the beacon measurement. When enabled,
-+ *	beacons should be let through cfg80211 to proceed to measurements (e.g.
-+ *	RSSI analysis).
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -2376,6 +2380,10 @@ struct cfg80211_ops {
- 				   struct wireless_dev *wdev);
- 	int	(*set_coalesce)(struct wiphy *wiphy,
- 				struct cfg80211_coalesce *coalesce);
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 02bc80d..47aceae 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2093,6 +2093,10 @@ struct mac_iveiv_entry {
+ #define RFCSR17_R			FIELD8(0x20)
+ #define RFCSR17_CODE                   FIELD8(0x7f)
+ 
++/* RFCSR 18 */
++#define RFCSR18_XO_TUNE_BYPASS		FIELD8(0x40)
 +
-+	int	(*beacon_measurement)(struct wiphy *wiphy,
-+				      struct wireless_dev *wdev,
-+				      bool state);
- };
++
+ /*
+  * RFCSR 20:
+  */
+@@ -2174,6 +2178,12 @@ struct mac_iveiv_entry {
+  */
+ #define RFCSR50_TX			FIELD8(0x3f)
+ #define RFCSR50_EP			FIELD8(0xc0)
++/* bits for RT3593*/
++#define RFCSR50_TX_LO2_EN		FIELD8(0x10)
++
++/* RFCSR 51 */
++/* bits for RT3593*/
++#define RFCSR51_BITS24			FIELD8(0x1c)
  
  /*
-@@ -2441,6 +2449,9 @@ struct cfg80211_ops {
-  * @WIPHY_FLAG_OFFCHAN_TX: Device supports direct off-channel TX.
-  * @WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL: Device supports remain-on-channel call.
-  * @WIPHY_FLAG_SUPPORTS_5_10_MHZ: Device supports 5 MHz and 10 MHz channels.
-+ * @WIPHY_FLAG_SUPPORTS_BEACON_MEAS: Device supports beacon measurements. Should
-+ *	be set when the device can let all the beacon through up to cfg80211
-+ *	to proceed to measurements (i.e. RSSI measurements).
-  */
- enum wiphy_flags {
- 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
-@@ -2465,6 +2476,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_OFFCHAN_TX			= BIT(20),
- 	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
- 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
-+	WIPHY_FLAG_SUPPORTS_BEACON_MEAS		= BIT(23),
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index eb68735..1a5edad 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -676,6 +676,9 @@
-  * @NL80211_CMD_GET_COALESCE: Get currently supported coalesce rules.
-  * @NL80211_CMD_SET_COALESCE: Configure coalesce rules or clear existing rules.
-  *
-+ * @NL80211_CMD_BEACON_MEASUREMENT: Indicates the beacon measurement is
-+ *	started / stopped. Disassociation should stop the measurements.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -841,6 +844,8 @@ enum nl80211_commands {
- 	NL80211_CMD_GET_COALESCE,
- 	NL80211_CMD_SET_COALESCE,
- 
-+	NL80211_CMD_BEACON_MEASUREMENT,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1469,6 +1474,9 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_COALESCE_RULE: Coalesce rule information.
-  *
-+ * @NL80211_ATTR_BCON_MEAS_STATE: The state of the beacon measurements. This is
-+ *	a flag attribute.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1771,6 +1779,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_COALESCE_RULE,
- 
-+	NL80211_ATTR_BCON_MEAS_STATE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 03d4ef9..c2b43b6 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -349,6 +349,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_IE_RIC] = { .type = NLA_BINARY,
- 				  .len = IEEE80211_MAX_DATA_LEN },
- 	[NL80211_ATTR_PEER_AID] = { .type = NLA_U16 },
-+	[NL80211_ATTR_BCON_MEAS_STATE] = { .type = NLA_FLAG, },
- };
- 
- /* policy for the key attributes */
-@@ -8646,6 +8647,27 @@ static int nl80211_crit_protocol_stop(struct sk_buff *skb,
- 	return 0;
+  * RF registers
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 32ecd1a..0041b2c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4964,6 +4964,42 @@ static void rt2800_normal_mode_setup_3xxx(struct rt2x00_dev *rt2x00dev)
+ 	}
  }
  
-+static int nl80211_beacon_measurement(struct sk_buff *skb,
-+				      struct genl_info *info)
++static void rt2800_normal_mode_setup_3593(struct rt2x00_dev *rt2x00dev)
 +{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+	bool state;
++	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
++	u8 rfcsr;
++	u8 tx_gain;
 +
++	rt2800_rfcsr_read(rt2x00dev, 50, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR50_TX_LO2_EN, 0);
++	rt2800_rfcsr_write(rt2x00dev, 50, rfcsr);
 +
-+	if (!rdev->ops->beacon_measurement ||
-+	    !(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_BEACON_MEAS))
-+		return -EOPNOTSUPP;
++	rt2800_rfcsr_read(rt2x00dev, 51, &rfcsr);
++	tx_gain = rt2x00_get_field8(drv_data->txmixer_gain_24g,
++				    RFCSR17_TXMIXER_GAIN);
++	rt2x00_set_field8(&rfcsr, RFCSR51_BITS24, tx_gain);
++	rt2800_rfcsr_write(rt2x00dev, 51, rfcsr);
 +
-+	/* Relevant for associated mgd interfaces only */
-+	if (wdev->iftype != NL80211_IFTYPE_STATION || !wdev->current_bss)
-+		return -EOPNOTSUPP;
++	rt2800_rfcsr_read(rt2x00dev, 38, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR38_RX_LO1_EN, 0);
++	rt2800_rfcsr_write(rt2x00dev, 38, rfcsr);
 +
-+	state = info->attrs[NL80211_ATTR_BCON_MEAS_STATE];
++	rt2800_rfcsr_read(rt2x00dev, 39, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR39_RX_LO2_EN, 0);
++	rt2800_rfcsr_write(rt2x00dev, 39, rfcsr);
 +
-+	return rdev_beacon_measurement(rdev, wdev, state);
++	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR1_RF_BLOCK_EN, 1);
++	rt2x00_set_field8(&rfcsr, RFCSR1_PLL_PD, 1);
++	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
++
++	rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR30_RX_VCM, 2);
++	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
++
++	/* TODO: enable stream mode */
 +}
 +
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -9361,7 +9383,15 @@ static struct genl_ops nl80211_ops[] = {
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
--	}
-+	},
-+	{
-+		.cmd = NL80211_CMD_BEACON_MEASUREMENT,
-+		.doit = nl80211_beacon_measurement,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 9f15f0a..e5b0efb 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -923,4 +923,17 @@ static inline void rdev_crit_proto_stop(struct cfg80211_registered_device *rdev,
- 	trace_rdev_return_void(&rdev->wiphy);
+ static void rt2800_normal_mode_setup_5xxx(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u8 reg;
+@@ -5346,6 +5382,89 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_normal_mode_setup_3xxx(rt2x00dev);
  }
  
-+static inline int
-+rdev_beacon_measurement(struct cfg80211_registered_device *rdev,
-+			struct wireless_dev *wdev, bool state)
++static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
 +{
-+	int ret;
++	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
++	u32 reg;
++	u8 rfcsr;
 +
-+	trace_rdev_beacon_measurement(&rdev->wiphy, wdev, state);
-+	ret = rdev->ops->beacon_measurement(&rdev->wiphy, wdev, state);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
++	/* Disable GPIO #4 and #7 function for LAN PE control */
++	rt2800_register_read(rt2x00dev, GPIO_SWITCH, &reg);
++	rt2x00_set_field32(&reg, GPIO_SWITCH_4, 0);
++	rt2x00_set_field32(&reg, GPIO_SWITCH_7, 0);
++	rt2800_register_write(rt2x00dev, GPIO_SWITCH, reg);
 +
-+	return ret;
++	/* Initialize default register values */
++	rt2800_rfcsr_write(rt2x00dev, 1, 0x03);
++	rt2800_rfcsr_write(rt2x00dev, 3, 0x80);
++	rt2800_rfcsr_write(rt2x00dev, 5, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 6, 0x40);
++	rt2800_rfcsr_write(rt2x00dev, 8, 0xf1);
++	rt2800_rfcsr_write(rt2x00dev, 9, 0x02);
++	rt2800_rfcsr_write(rt2x00dev, 10, 0xd3);
++	rt2800_rfcsr_write(rt2x00dev, 11, 0x40);
++	rt2800_rfcsr_write(rt2x00dev, 12, 0x4e);
++	rt2800_rfcsr_write(rt2x00dev, 13, 0x12);
++	rt2800_rfcsr_write(rt2x00dev, 18, 0x40);
++	rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
++	rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
++	rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
++	rt2800_rfcsr_write(rt2x00dev, 32, 0x78);
++	rt2800_rfcsr_write(rt2x00dev, 33, 0x3b);
++	rt2800_rfcsr_write(rt2x00dev, 34, 0x3c);
++	rt2800_rfcsr_write(rt2x00dev, 35, 0xe0);
++	rt2800_rfcsr_write(rt2x00dev, 38, 0x86);
++	rt2800_rfcsr_write(rt2x00dev, 39, 0x23);
++	rt2800_rfcsr_write(rt2x00dev, 44, 0xd3);
++	rt2800_rfcsr_write(rt2x00dev, 45, 0xbb);
++	rt2800_rfcsr_write(rt2x00dev, 46, 0x60);
++	rt2800_rfcsr_write(rt2x00dev, 49, 0x8e);
++	rt2800_rfcsr_write(rt2x00dev, 50, 0x86);
++	rt2800_rfcsr_write(rt2x00dev, 51, 0x75);
++	rt2800_rfcsr_write(rt2x00dev, 52, 0x45);
++	rt2800_rfcsr_write(rt2x00dev, 53, 0x18);
++	rt2800_rfcsr_write(rt2x00dev, 54, 0x18);
++	rt2800_rfcsr_write(rt2x00dev, 55, 0x18);
++	rt2800_rfcsr_write(rt2x00dev, 56, 0xdb);
++	rt2800_rfcsr_write(rt2x00dev, 57, 0x6e);
++
++	/* Initiate calibration */
++	/* TODO: use rt2800_rf_init_calibration ? */
++	rt2800_rfcsr_read(rt2x00dev, 2, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
++	rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
++
++	rt2800_adjust_freq_offset(rt2x00dev);
++
++	rt2800_rfcsr_read(rt2x00dev, 18, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR18_XO_TUNE_BYPASS, 1);
++	rt2800_rfcsr_write(rt2x00dev, 18, rfcsr);
++
++	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
++	rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
++	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
++	usleep_range(1000, 1500);
++	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
++	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
++
++	/* Set initial values for RX filter calibration */
++	drv_data->calibration_bw20 = 0x1f;
++	drv_data->calibration_bw40 = 0x2f;
++
++	/* Save BBP 25 & 26 values for later use in channel switching */
++	rt2800_bbp_read(rt2x00dev, 25, &drv_data->bbp25);
++	rt2800_bbp_read(rt2x00dev, 26, &drv_data->bbp26);
++
++	rt2800_led_open_drain_enable(rt2x00dev);
++	rt2800_normal_mode_setup_3593(rt2x00dev);
++
++	/* TODO: post BBP initialization */
++
++	/* TODO: enable stream mode support */
 +}
 +
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 09af6eb..5f6e7f0 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1841,6 +1841,23 @@ TRACE_EVENT(rdev_crit_proto_stop,
- 		  WIPHY_PR_ARG, WDEV_PR_ARG)
- );
- 
-+TRACE_EVENT(rdev_beacon_measurement,
-+	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev, bool state),
-+	TP_ARGS(wiphy, wdev, state),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		WDEV_ENTRY
-+		__field(bool, state)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		WDEV_ASSIGN;
-+		__entry->state = state;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT " %s",
-+		  WIPHY_PR_ARG, WDEV_PR_ARG, BOOL_TO_STR(__entry->state))
-+);
-+
- /*************************************************************
-  *	     cfg80211 exported functions traces		     *
-  *************************************************************/
+ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2800_rf_init_calibration(rt2x00dev, 2);
+@@ -5571,6 +5690,9 @@ static void rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	case RT3390:
+ 		rt2800_init_rfcsr_3390(rt2x00dev);
+ 		break;
++	case RT3593:
++		rt2800_init_rfcsr_3593(rt2x00dev);
++		break;
+ 	case RT3572:
+ 		rt2800_init_rfcsr_3572(rt2x00dev);
+ 		break;
 -- 
-1.8.0
+1.7.10
 
