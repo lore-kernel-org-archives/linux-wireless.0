@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48706 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752158Ab3GHOKg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:10:36 -0400
-Message-ID: <51DAC85D.9050305@openwrt.org> (sfid-20130708_161042_975170_882CF127)
-Date: Mon, 08 Jul 2013 16:10:37 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 16/20] rt2x00: rt2800lib: enable VCO
- recalibration for RF3053
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org> <1372664879-18474-17-git-send-email-juhosg@openwrt.org> <20130707144017.GP2073@localhost.localdomain>
-In-Reply-To: <20130707144017.GP2073@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:44743 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202Ab3GAJeH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jul 2013 05:34:07 -0400
+From: Harvey Yang <harvey.huawei.yang@gmail.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Huawei Yang <harvey.huawei.yang@gmail.com>
+Subject: [PATCH 1/1] mwifiex: add tx info to skb when forming mgmt frame
+Date: Mon,  1 Jul 2013 17:33:50 +0800
+Message-Id: <1372671230-8733-1-git-send-email-harvey.huawei.yang@gmail.com> (sfid-20130701_113424_546447_D4E7949E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013.07.07. 16:40 keltezéssel, Stanislaw Gruszka írta:
-> On Mon, Jul 01, 2013 at 09:47:55AM +0200, Gabor Juhos wrote:
->> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> 
->>  	case RF3290:
->> +	case RF3053:
->>  	case RF5360:
-> Nit: sort order.
+From: Huawei Yang <harvey.huawei.yang@gmail.com>
 
-Also fixed in v3. Thanks!
+In function 'mwifiex_write_data_complete' it need tx info to find the mwifiex_private to updates statistics and wake up tx queues. Or we may trigger tx queues timeout when transmitting lots of mgmt frames burstly.
 
--Gabor
+Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index e42b266..e8655f9 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -166,6 +166,10 @@ mwifiex_form_mgmt_frame(struct sk_buff *skb, const u8 *buf, size_t len)
+ 	memcpy(skb_put(skb, len - sizeof(struct ieee80211_hdr_3addr)),
+ 	       buf + sizeof(struct ieee80211_hdr_3addr),
+ 	       len - sizeof(struct ieee80211_hdr_3addr));
++	
++	tx_info = MWIFIEX_SKB_TXCB(skb);
++	tx_info->bss_num = priv->bss_num;
++	tx_info->bss_type = priv->bss_type;
+ 
+ 	skb->priority = LOW_PRIO_TID;
+ 	do_gettimeofday(&tv);
+-- 
+1.7.10.4
+
