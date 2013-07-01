@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:47421 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753862Ab3GWCSv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:18:51 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>, Stone Piao <piaoyun@marvell.com>
-Subject: [PATCH 08/21] mwifiex: support to send deauth for P2P client
-Date: Mon, 22 Jul 2013 19:17:45 -0700
-Message-ID: <1374545878-15683-9-git-send-email-bzhao@marvell.com> (sfid-20130723_041904_713433_2566F1EA)
-In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+Received: from mx1.redhat.com ([209.132.183.28]:9813 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753868Ab3GAMQ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jul 2013 08:16:56 -0400
+Date: Mon, 1 Jul 2013 14:19:30 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Eric Dumazet <edumazet@google.com>
+Subject: [PATCH] iwl4965: better skb management in rx path
+Message-ID: <20130701121929.GB1747@redhat.com> (sfid-20130701_141708_812016_8AA3D4DA)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+4965 version of Eric patch "iwl3945: better skb management in rx path".
+It fixes several problems :
 
-During P2P handshake, P2P client needs to send deauth after EAPOL
-FAILURE to GO. We need add bss mode for P2P client when handle deauth
-request.
+1) skb->truesize is underestimated.
+   We really consume PAGE_SIZE bytes for a fragment,
+   not the frame length.
+2) 128 bytes of initial headroom is a bit low and forces reallocations.
+3) We can avoid consuming a full page for small enough frames.
 
-Without this change, deauth can not be sent out from P2P client side.
-
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mwifiex/join.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/iwlegacy/4965-mac.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 1c8a771..ba043ca 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -1425,6 +1425,7 @@ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index d287fd2..4e5d408 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -574,9 +574,11 @@ il4965_translate_rx_status(struct il_priv *il, u32 decrypt_in)
+ 	return decrypt_out;
+ }
  
- 	switch (priv->bss_mode) {
- 	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_P2P_CLIENT:
- 		return mwifiex_deauthenticate_infra(priv, mac);
- 	case NL80211_IFTYPE_ADHOC:
- 		return mwifiex_send_cmd_sync(priv,
++#define SMALL_PACKET_SIZE 256
++
+ static void
+ il4965_pass_packet_to_mac80211(struct il_priv *il, struct ieee80211_hdr *hdr,
+-			       u16 len, u32 ampdu_status, struct il_rx_buf *rxb,
++			       u32 len, u32 ampdu_status, struct il_rx_buf *rxb,
+ 			       struct ieee80211_rx_status *stats)
+ {
+ 	struct sk_buff *skb;
+@@ -598,21 +600,25 @@ il4965_pass_packet_to_mac80211(struct il_priv *il, struct ieee80211_hdr *hdr,
+ 	    il_set_decrypted_flag(il, hdr, ampdu_status, stats))
+ 		return;
+ 
+-	skb = dev_alloc_skb(128);
++	skb = dev_alloc_skb(SMALL_PACKET_SIZE);
+ 	if (!skb) {
+ 		IL_ERR("dev_alloc_skb failed\n");
+ 		return;
+ 	}
+ 
+-	skb_add_rx_frag(skb, 0, rxb->page, (void *)hdr - rxb_addr(rxb), len,
+-			len);
++	if (len <= SMALL_PACKET_SIZE) {
++		memcpy(skb_put(skb, len), hdr, len);
++	} else {
++		skb_add_rx_frag(skb, 0, rxb->page, (void *)hdr - rxb_addr(rxb),
++				len, PAGE_SIZE << il->hw_params.rx_page_order);
++		il->alloc_rxb_page--;
++		rxb->page = NULL;
++	}
+ 
+ 	il_update_stats(il, false, fc, len);
+ 	memcpy(IEEE80211_SKB_RXCB(skb), stats, sizeof(*stats));
+ 
+ 	ieee80211_rx(il->hw, skb);
+-	il->alloc_rxb_page--;
+-	rxb->page = NULL;
+ }
+ 
+ /* Called for N_RX (legacy ABG frames), or
 -- 
-1.8.2.3
+1.7.11.7
 
