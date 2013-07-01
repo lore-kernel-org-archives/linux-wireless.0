@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:35047 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3GDBGf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:06:35 -0400
-Received: by mail-pa0-f52.google.com with SMTP id kq13so766455pab.11
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:35 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 23/53] wireless-regdb: BE, Belgium - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:19 -0700
-Message-Id: <1372899889-19183-24-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032041_359252_81F952C3)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:48353 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755057Ab3GAU4F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jul 2013 16:56:05 -0400
+Message-ID: <1372712128.21065.71.camel@cumari.coelho.fi> (sfid-20130701_225629_286752_E88BFE85)
+Subject: Re: [RFC] wlcore: sdio: add wilink clock providers
+From: Luciano Coelho <coelho@ti.com>
+To: <balbi@ti.com>
+CC: <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>,
+	<--linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Date: Mon, 1 Jul 2013 23:55:28 +0300
+In-Reply-To: <20130701204633.GB805@arwen.pp.htv.fi>
+References: <1372707250-11998-1-git-send-email-coelho@ti.com>
+	 <20130701204633.GB805@arwen.pp.htv.fi>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Mon, 2013-07-01 at 23:46 +0300, Felipe Balbi wrote:
+> Hi,
+> 
+> On Mon, Jul 01, 2013 at 10:34:10PM +0300, Luciano Coelho wrote:
+> > diff --git a/arch/arm/boot/dts/omap4-panda-common.dtsi b/arch/arm/boot/dts/omap4-panda-common.dtsi
+> > index 670c3ce..7f061b8 100644
+> > --- a/arch/arm/boot/dts/omap4-panda-common.dtsi
+> > +++ b/arch/arm/boot/dts/omap4-panda-common.dtsi
+> > @@ -65,11 +65,19 @@
+> >  		enable-active-high;
+> >  	};
+> >  
+> > +
+> >  	wlan {
+> > -	     compatible = "ti,wilink6";
+> > -	     interrupt-parent = <&gpio2>;
+> > -	     interrupts = <21 0x4>;	/* gpio line 53, high level triggered */
+> > -	     refclock = <2>;		/* 38.4 MHz */
+> > +		compatible = "ti,wilink6";
+> > +		interrupt-parent = <&gpio2>;
+> > +		interrupts = <21 0x4>;	/* gpio line 53, high level triggered */
+> > +		clocks = <&refclock>;
+> > +		clock-names = "refclock";
+> 
+> hmmm, shouldn't you provide both clocks (refclock and tcx0clock)
+> explicitly here ?
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+No, not needed for Panda.  Panda uses WiLink6 and only the refclock
+needs to be provided.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
 
-Quoting:
+> Also, you should probably make it clear that the WiLink module is fed by
+> the 32K sync clock just to make sure clock usecounts are correctly
+> incremented ?
 
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
+Hmmm, yes, that is probably a good idea.  At least to make sure
+everything is initialized properly before the WiLink module is up and
+running.  I'll look into it and eventually add in a separate patch.
 
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+Thanks for your comments!
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index fd0ef09..5e17129 100644
---- a/db.txt
-+++ b/db.txt
-@@ -89,9 +89,9 @@ country BD:
- 
- country BE: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
+--
+Luca.
 
