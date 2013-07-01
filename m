@@ -1,46 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44343 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753633Ab3GIOTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 10:19:18 -0400
-Date: Tue, 9 Jul 2013 16:22:03 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Eric Valette <Eric.Valette@Free.fr>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ralink 3290: still lots of misc errors reported by Iwconfig with
- 3.10 + HD streaming on WiFi fails
-Message-ID: <20130709142202.GB3681@redhat.com> (sfid-20130709_161921_970686_7D558E64)
-References: <51DBEB0C.6040704@Free.fr>
+Received: from smtp06.msg.oleane.net ([62.161.4.6]:53756 "EHLO
+	smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680Ab3GAHZY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jul 2013 03:25:24 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
+In-Reply-To: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
+Subject: RE: [PATCH V2] vlan priority handling in WMM
+Date: Mon, 1 Jul 2013 09:25:18 +0200
+Message-ID: <070e01ce762c$24fa5ff0$6eef1fd0$@acksys.fr> (sfid-20130701_092528_099438_6B9DDB19)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51DBEB0C.6040704@Free.fr>
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 09, 2013 at 12:50:52PM +0200, Eric Valette wrote:
-> I just bought a HP netbook for my son equipped with this chipset. I
-> first tried linux 3.9.7, got WiFi working badly but working. Saw fix
-> for TX power in 3.9.9. WiFi became more reliable but still had a lot
-> of  TX, and MISC errors reported by iwconfig.  While laptop is now
-> usable for internet browsing, trying to play HD tv via XBMC +
-> tvheadend fails miserably due to WiFi data rate and WiFi errors
-> while other PC at home do play without problems.
-> 
-> Saw the fix in 3.10 for TX errors and indeed the TX errors dropped
-> to 0. However, the MISC error count in turn rose (Downloading
-> linux-3.10.tar.xz on 3.10 reports 550 misc errors). So there is
-> still some problem with this chipset. I know support is experimental
-> but I would be glad to test any patchif possible on 3.9.x as on 3.10
-> I have no ATI driver available at the moment and thus HD decoding is
-> out of reach anyway.
+Any comments on this patch ? 
 
-Do you mean that 3.10 perform better than 3.9.9 ? I do not see any
-rt2x00 fixes between 3.9 and 3.10 that are not yet applied on 3.9.9.
-I can see only some cleanups and new hardware support patches.
+Cedric
 
-Try to subscribe to rt2x00 mailing list,
-http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
-we post new patches there, but currently we do not have any pending
-RT3290 fixes.
 
-Stanislaw
+-----Message d'origine-----
+De : linux-wireless-owner@vger.kernel.org
+[mailto:linux-wireless-owner@vger.kernel.org] De la part de
+cedric.voncken@acksys.fr
+Envoyé : jeudi 27 juin 2013 09:52
+À : johannes@sipsolutions.net
+Cc : linux-wireless@vger.kernel.org; cedric voncken
+Objet : [PATCH V2] vlan priority handling in WMM
+
+From: cedric voncken <cedric.voncken@acksys.fr>
+
+If the VLAN tci is set in skb->vlan_tci use the priority field to determine
+the WMM priority.
+
+V2 modifications :
+	Fix indentation
+	Use symbolic constant
+	include the header linux/if_vlan.h
+
+Signed-off-by: cedric Voncken <cedric.voncken@acksys.fr>
+---
+ net/wireless/util.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/util.c b/net/wireless/util.c index
+74458b7..13937db 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -10,6 +10,7 @@
+ #include <net/cfg80211.h>
+ #include <net/ip.h>
+ #include <net/dsfield.h>
++#include <linux/if_vlan.h>
+ #include "core.h"
+ #include "rdev-ops.h"
+ 
+@@ -685,6 +686,7 @@ EXPORT_SYMBOL(ieee80211_amsdu_to_8023s);
+ unsigned int cfg80211_classify8021d(struct sk_buff *skb)  {
+ 	unsigned int dscp;
++	unsigned char vlan_priority;
+ 
+ 	/* skb->priority values from 256->263 are magic values to
+ 	 * directly indicate a specific 802.1d priority.  This is used @@
+-694,6 +696,10 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
+ 	if (skb->priority >= 256 && skb->priority <= 263)
+ 		return skb->priority - 256;
+ 
++	vlan_priority = (skb->vlan_tci & VLAN_PRIO_MASK) >> VLAN_PRIO_SHIFT;
++	if (vlan_priority > 0)
++		return vlan_priority;
++
+ 	switch (skb->protocol) {
+ 	case htons(ETH_P_IP):
+ 		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
+--
+1.7.2.5
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
+
