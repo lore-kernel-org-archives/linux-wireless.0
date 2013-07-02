@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp26.msg.oleane.net ([62.161.4.26]:60850 "EHLO
-	smtp26.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998Ab3GHKjM convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:65257 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131Ab3GBCTA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 06:39:12 -0400
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>	 <1373018378.8548.6.camel@jlt4.sipsolutions.net>	 <002b01ce798d$865cee70$9316cb50$@acksys.fr> <1373273460.8312.3.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1373273460.8312.3.camel@jlt4.sipsolutions.net>
-Subject: RE: [PATCH V2] vlan priority handling in WMM
-Date: Mon, 8 Jul 2013 12:39:08 +0200
-Message-ID: <006c01ce7bc7$608c2a30$21a47e90$@acksys.fr> (sfid-20130708_123926_232557_1FD3A92C)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+	Mon, 1 Jul 2013 22:19:00 -0400
+From: Harvey Yang <harvey.huawei.yang@gmail.com>
+To: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Huawei Yang <harvey.huawei.yang@gmail.com>
+Subject: [PATCH V2 1/1] mwifiex: add tx info to skb when forming mgmt frame
+Date: Tue,  2 Jul 2013 10:18:46 +0800
+Message-Id: <1372731526-2979-1-git-send-email-harvey.huawei.yang@gmail.com> (sfid-20130702_041944_365811_1C91FFB6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Huawei Yang <harvey.huawei.yang@gmail.com>
 
-> > The vlan Tag contain three bit for priority. The value 0 indicate no 
-> > priority (on this case the VLAN tag contain only VID). The vlan_tci 
-> > field is set to zero if the frame do not contain the vlan tag. So if 
-> > we have not a vlan tag or no priority in VLAN tag the priority value 
-> > is always 0.
+In function 'mwifiex_write_data_complete' it need tx info to find
+the mwifiex_private to updates statistics and wake up tx queues.
+Or we may trigger tx queues timeout when transmitting lots of mgmt
+frames.
 
-> Yes but don't we know that the vlan_tci field is valid?
+Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-> I don't think you're correct in that 0 means "no priority present", it actually means "best effort" as far as I can tell. Ignoring the VLAN tag when the field is 0 would mean we could use a higher priority from the contents of the frame, which would not be desired?
-
-I can add a test with the macro vlan_tx_tag_present() to verify if the vlan_tci field is valid. 
-I test the value 0 to skip the VLAN priority and use the dscp priority in this case. The priority 0 in VLAN tag is often use to turn off the QOS, because not bit is allowed for it.
-For me is it correct. Nevertheless, if you prefer, I can test only the vlan_tci validity and in this case always use the VLAN priority.
-
-> > Sorry but I don't understand. The vlan_tci field it is a __u16 value 
-> > (defined in include/linux/skbuff.h), the VLAN_PRIO_MASK is set to
-> > 0xE000 and VLAN_PRIO_SHIFT is set to 13 (defined in 
-> > include/linux/if_vlan.h), the vlan_priority is an unsigned char. For 
-> > me the vlan_priority contain a 3-bit value (0xE000 >>13 = 0x0003), why
-> > 2 ?
-
-> Umm? No? Think again about what hweight(0x0003) is.
-
-Sorry I made a mistake  0xE000 >>13 = 0x0007 and not 0x0003, and 7 is a 3 bits value.
-
-Cedric
-
-
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index e42b266..b4e2538 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -186,6 +186,7 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	struct sk_buff *skb;
+ 	u16 pkt_len;
+ 	const struct ieee80211_mgmt *mgmt;
++	struct mwifiex_txinfo *tx_info;
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
+ 
+ 	if (!buf || !len) {
+@@ -212,6 +213,10 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		wiphy_err(wiphy, "allocate skb failed for management frame\n");
+ 		return -ENOMEM;
+ 	}
++	
++	tx_info = MWIFIEX_SKB_TXCB(skb);
++	tx_info->bss_num = priv->bss_num;
++	tx_info->bss_type = priv->bss_type;
+ 
+ 	mwifiex_form_mgmt_frame(skb, buf, len);
+ 	mwifiex_queue_tx_pkt(priv, skb);
+-- 
+1.7.10.4
 
