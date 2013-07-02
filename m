@@ -1,111 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alpha.kreiz-it.fr ([178.32.219.166]:49521 "EHLO
-	alpha.kreiz-it.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757408Ab3GMLPk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jul 2013 07:15:40 -0400
-From: "Cedric GROSS" <cg@cgross.info>
-To: <sedat.dilek@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>
-References: <001a01ce7fb1$75bfdc10$613f9430$@info> <CA+icZUVoZkg3nT6=SwTaLCWoa+v6aLkXSP5b71a0GmxMMWOyHA@mail.gmail.com>
-In-Reply-To: <CA+icZUVoZkg3nT6=SwTaLCWoa+v6aLkXSP5b71a0GmxMMWOyHA@mail.gmail.com>
-Subject: RE: Firmware error for Centrino N 2230
-Date: Sat, 13 Jul 2013 13:15:32 +0200
-Message-ID: <001b01ce7fba$4bd15e20$e3741a60$@info> (sfid-20130713_131543_344560_91BFAB8F)
+Received: from mms2.broadcom.com ([216.31.210.18]:3511 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932160Ab3GBVNM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 17:13:12 -0400
+Message-ID: <51D33DB9.6020508@broadcom.com> (sfid-20130702_231320_250975_C59B7C72)
+Date: Tue, 2 Jul 2013 22:53:13 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH V2] brcmsmac: Fix WARNING caused by lack of calls to
+ dma_mapping_error()
+References: <1372781198-15218-1-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1372781198-15218-1-git-send-email-Larry.Finger@lwfinger.net>
 Content-Type: text/plain;
-	charset="utf-8"
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Sedat,
+On 07/02/2013 06:06 PM, Larry Finger wrote:
+> The driver fails to check the results of DMA mapping in twp places, which results
+> in the following warning:
+>
+> [   28.078515] ------------[ cut here ]------------
+> [   28.078529] WARNING: at lib/dma-debug.c:937 check_unmap+0x47e/0x930()
+> [   28.078533] bcma-pci-bridge 0000:0e:00.0: DMA-API: device driver failed to check map error[device address=0x00000000b5d60d6c] [size=1876 bytes] [mapped as
+>   single]
+> [   28.078536] Modules linked in: bnep bluetooth vboxpci(O) vboxnetadp(O) vboxnetflt(O) vboxdrv(O) ipv6 b43 brcmsmac rtl8192cu rtl8192c_common rtlwifi mac802
+> 11 brcmutil cfg80211 snd_hda_codec_conexant rng_core snd_hda_intel kvm_amd snd_hda_codec ssb kvm mmc_core snd_pcm snd_seq snd_timer snd_seq_device snd k8temp
+>   cordic joydev serio_raw hwmon sr_mod sg pcmcia pcmcia_core soundcore cdrom i2c_nforce2 i2c_core forcedeth bcma snd_page_alloc autofs4 ext4 jbd2 mbcache crc1
+> 6 scsi_dh_alua scsi_dh_hp_sw scsi_dh_rdac scsi_dh_emc scsi_dh ata_generic pata_amd
+> [   28.078602] CPU: 1 PID: 2570 Comm: NetworkManager Tainted: G           O 3.10.0-rc7-wl+ #42
+> [   28.078605] Hardware name: Hewlett-Packard HP Pavilion dv2700 Notebook PC/30D6, BIOS F.27 11/27/2008
+> [   28.078607]  0000000000000009 ffff8800bbb03ad8 ffffffff8144f898 ffff8800bbb03b18
+> [   28.078612]  ffffffff8103e1eb 0000000000000002 ffff8800b719f480 ffff8800b7b9c010
+> [   28.078617]  ffffffff824204c0 ffffffff81754d57 0000000000000754 ffff8800bbb03b78
+> [   28.078622] Call Trace:
+> [   28.078624]  <IRQ>  [<ffffffff8144f898>] dump_stack+0x19/0x1b
+> [   28.078634]  [<ffffffff8103e1eb>] warn_slowpath_common+0x6b/0xa0
+> [   28.078638]  [<ffffffff8103e2c1>] warn_slowpath_fmt+0x41/0x50
+> [   28.078650]  [<ffffffff8122d7ae>] check_unmap+0x47e/0x930
+> [   28.078655]  [<ffffffff8122de4c>] debug_dma_unmap_page+0x5c/0x70
+> [   28.078679]  [<ffffffffa04a808c>] dma64_getnextrxp+0x10c/0x190 [brcmsmac]
+> [   28.078691]  [<ffffffffa04a9042>] dma_rx+0x62/0x240 [brcmsmac]
+> [   28.078707]  [<ffffffffa0479101>] brcms_c_dpc+0x211/0x9d0 [brcmsmac]
+> [   28.078717]  [<ffffffffa046d927>] ? brcms_dpc+0x27/0xf0 [brcmsmac]
+> [   28.078731]  [<ffffffffa046d947>] brcms_dpc+0x47/0xf0 [brcmsmac]
+> [   28.078736]  [<ffffffff81047dcc>] tasklet_action+0x6c/0xf0
+> --snip--
+> [   28.078974]  [<ffffffff813891bd>] SyS_sendmsg+0xd/0x20
+> [   28.078979]  [<ffffffff81455c24>] tracesys+0xdd/0xe2
+> [   28.078982] ---[ end trace 6164d1a08148e9c8 ]---
+> [   28.078984] Mapped at:
+> [   28.078985]  [<ffffffff8122c8fd>] debug_dma_map_page+0x9d/0x150
+> [   28.078989]  [<ffffffffa04a9322>] dma_rxfill+0x102/0x3d0 [brcmsmac]
+> [   28.079001]  [<ffffffffa047a13d>] brcms_c_init+0x87d/0x1100 [brcmsmac]
+> [   28.079010]  [<ffffffffa046d851>] brcms_init+0x21/0x30 [brcmsmac]
+> [   28.079018]  [<ffffffffa04786e0>] brcms_c_up+0x150/0x430 [brcmsmac]
+>
+> As the patch adds a new failure mechanism to dma_rxfill(). When I changed the
+> comment at the start of the routine to add that information, I also polished
+> the wording.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
+> Cc: Brett Rudley <brudley@broadcom.com>
+> Cc: Arend van Spriel <arend@broadcom.com>
+> Cc: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Cc: Hante Meuleman <meuleman@broadcom.com>
+> Cc: brcm80211-dev-list@broadcom.com
+> ---
+>
+> V2 - fixed two patch errors.
 
-> -----Message d'origine-----
-> De : Sedat Dilek [mailto:sedat.dilek@gmail.com]
-> Envoyé : samedi 13 juillet 2013 13:04
-> À : Cedric GROSS
-> Cc : linux-wireless@vger.kernel.org
-> Objet : Re: Firmware error for Centrino N 2230
-> 
-> On Sat, Jul 13, 2013 at 12:12 PM, Cedric GROSS <cg@cgross.info> wrote:
-> > Hello,
-> >
-> > I’m trying to adapt current freebsd driver for supporting my 2230
-> NIC.
-> >
-> > I try to follow ucode command order defined in kernel 3.2 but I reach
-> > some difficulties because firmware raise error.
-> >
-> > Runtime uCode is alive. So far I sent calib result (cmd xB0),
-> > configured advanced BT coexistence (cmd x9B,xCC and xCD) running
-> > runtime calib (cmd
-> > x65) but the command configuring valid chain (cmd x65) failed as the
-> > result below :
-> > CSR values: (2nd byte of IWN_INT_COALESCING is IWN_INT_PERIODIC)
-> >   IWN_HW_IF_CONFIG: 0x00800302   IWN_INT_COALESCING: 0x0000ff40
-> > IWN_INT: 0x04000000
-> >   IWN_INT_MASK: 0x00000000   IWN_FH_INT: 0x00000000   IWN_GPIO_IN:
-> > 0x00000000
-> >    IWN_RESET: 0x00000000   IWN_GP_CNTRL: 0x080403c5   IWN_HW_REV:
-> 0x000000c8
-> >   IWN_EEPROM: 0x08450ffd   IWN_EEPROM_GP: 0x90000801   IWN_OTP_GP:
-> > 0x00030001
-> >      IWN_GIO: 0x00080044   INW_GP_UCODE: 0x00000004   IWN_GP_DRIVER:
-> > 0x00000080
-> >   IWN_GP1_DRIVER: 0x00000000   IWN_UCODE_DRV_GP2: 0x00000000
-> IWN_LED:
-> > 0x00000018
-> >   IWN_DRAM_INT_TBL: 0x880b76e5   IWN_GIO_CHICKEN: 0x29800200
-> IWN_ANA_PLL:
-> > 0x00000000
-> >   IWN_HW_REV_WA: 0x0001001a   IWN_DBG_HPET_MEM: 0xffff0000
-> > firmware error log:
-> >   error type      = "UNKNOWN" (0x00001987)
-> >   program counter = 0x000179B4
-> >   source line     = 0x00000167
-> >   error data      = 0x0000000000000000
-> >   branch link     = 0x0001798200017982
-> >   interrupt link  = 0x0000EC7A00000000
-> >   time            = 46566
-> >
-> > What I’m missing ?
-> > What is meaning of firmware error ?
-> >
-> 
-> What distro?
-> If this is Debian or Ubuntu, this is not a vanilla but distro-patched
-> kernel-version.
+Hi Larry,
 
-I'm working on freeBSD. So it's not a linux distro ;)
+Are you planning to do a V3, ie. address my review comments sent earlier 
+today? I can resend them if needed.
 
-> 
-> Can you provide more infos?
-> Your kernel-config file, dmesg output, name of loaded firmware file,
-> etc.
+Regards,
+Arend
 
-For firmware : iwlwifi-2030-18.168.6.1.fw
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/dma.c | 12 ++++++++----
+>   1 file changed, 8 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+> index 1860c57..6260571 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+> @@ -1015,9 +1015,10 @@ static bool dma64_txidle(struct dma_info *di)
+>
+>   /*
+>    * post receive buffers
+> - *  return false is refill failed completely and ring is empty this will stall
+> - *  the rx dma and user might want to call rxfill again asap. This unlikely
+> - *  happens on memory-rich NIC, but often on memory-constrained dongle
+> + *  return false is refill failed completely or dma mapping failed. The ring
+> + *  is empty, which will stall the rx dma and user might want to call rxfill
+> + *  again asap. This is unlikely to happen on a memory-rich NIC, but often on
+> + *  memory-constrained dongle
+>    */
+>   bool dma_rxfill(struct dma_pub *pub)
+>   {
+> @@ -1078,6 +1079,8 @@ bool dma_rxfill(struct dma_pub *pub)
+>
+>   		pa = dma_map_single(di->dmadev, p->data, di->rxbufsize,
+>   				    DMA_FROM_DEVICE);
+> +		if (dma_mapping_error(di->dmadev, pa))
+> +			return false;
+>
+>   		/* save the free packet pointer */
+>   		di->rxp[rxout] = p;
+> @@ -1284,7 +1287,8 @@ static void dma_txenq(struct dma_info *di, struct sk_buff *p)
+>
+>   	/* get physical address of buffer start */
+>   	pa = dma_map_single(di->dmadev, data, len, DMA_TO_DEVICE);
+> -
+> +	if (dma_mapping_error(di->dmadev, pa))
+> +		return;
+>   	/* With a DMA segment list, Descriptor table is filled
+>   	 * using the segment list instead of looping over
+>   	 * buffers in multi-chain DMA. Therefore, EOF for SGLIST
+>
 
-For the rest, I can send you what you wish, but it's not a linux output.
-
-> 
-> Did you check for newer firmware files (see [1])?
-> 
-> Did you try a higher kernel-release?
-
-Doesn't apply ;)
-
-> 
-> - Sedat -
-> 
-> [1] http://wireless.kernel.org/en/users/Drivers/iwlwifi
-> 
-> > Many thanks for your help.
-> >
-> > Best regards
-> > Cedric
-> >
-> > --
-
-Thanks for help anyway.
-Cedric
 
