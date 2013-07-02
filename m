@@ -1,66 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:36908 "EHLO bues.ch"
+Received: from bear.ext.ti.com ([192.94.94.41]:33895 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753118Ab3G2R2I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 13:28:08 -0400
-Date: Mon, 29 Jul 2013 19:03:39 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [RFC/RFT] fwcutter: Add firmware 6.30.163.46
-Message-ID: <20130729190339.5a84a2ca@milhouse> (sfid-20130729_192811_729667_CAAEEEAE)
-In-Reply-To: <1375115025-26851-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1375115025-26851-1-git-send-email-Larry.Finger@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/eny5.fs28XTtBBjiwZVzjgN"; protocol="application/pgp-signature"
+	id S1753510Ab3GBVcm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 17:32:42 -0400
+Date: Wed, 3 Jul 2013 00:32:08 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: <balbi@ti.com>, <linux-wireless@vger.kernel.org>,
+	<tony@atomide.com>, <nsekhar@ti.com>, <mturquette@linaro.org>,
+	<mark.rutland@arm.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 8/9] wlcore: sdio: get clocks from device tree
+Message-ID: <20130702213208.GC10388@arwen.pp.htv.fi> (sfid-20130702_233303_365945_3F417E81)
+Reply-To: <balbi@ti.com>
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+ <1372776948-24840-9-git-send-email-coelho@ti.com>
+ <20130702153526.GI7013@arwen.pp.htv.fi>
+ <1372796394.21065.89.camel@cumari.coelho.fi>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="wxDdMuZNg1r63Hyj"
+In-Reply-To: <1372796394.21065.89.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/eny5.fs28XTtBBjiwZVzjgN
-Content-Type: text/plain; charset=US-ASCII
+--wxDdMuZNg1r63Hyj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 29 Jul 2013 11:23:45 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On Tue, Jul 02, 2013 at 11:19:54PM +0300, Luciano Coelho wrote:
+> On Tue, 2013-07-02 at 18:35 +0300, Felipe Balbi wrote:
+> > Hi,
+> >=20
+> > On Tue, Jul 02, 2013 at 05:55:47PM +0300, Luciano Coelho wrote:
+> > > @@ -294,6 +316,8 @@ static int wl1271_probe(struct sdio_func *func,
+> > >  	/* Use block mode for transferring over one block size of data */
+> > >  	func->card->quirks |=3D MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
+> > > =20
+> > > +	sdio_set_drvdata(func, glue);
+> >=20
+> > is this move really necessary ?
+>=20
+> It is, because I use the glue in wlcore_get_pdata_from_of(), so I need
+> to call sdio_set_drvdata() earlier.  I reckoned it wouldn't hurt to move
+> this, so I wouldn't have to pass the glue in the
+> wlcore_get_pdata_from_of() call.
 
-> Is this change worthwhile?
+that's alright, it does look like it deserves a mention in changelog
+though. Other than that:
 
-Why not? Doesn't hurt to have it.
-
-> @@ -874,4 +1047,12 @@ static const struct file files[] =3D
->  		.flags		=3D FW_FLAG_LE | FW_FLAG_V4,
->  		.extract	=3D _e1b05e268bcdbfef3560c28fc161f30e,
->  	},
-> +	{
-> +		/* http://www.lwfinger.com/b43-firmware/broadcom-wl-6.30.163.46.tar.bz=
-2 */
-
-Could you also add the original URL here?
+Reviewed-by: Felipe Balbi <balbi@ti.com>
 
 --=20
-Michael
+balbi
 
---Sig_/eny5.fs28XTtBBjiwZVzjgN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+--wxDdMuZNg1r63Hyj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIcBAEBAgAGBQJR9qBuAAoJEPUyvh2QjYsO4Y0QAJ76kq2HxjhITNpegayw5acC
-2j1U35UVYOBuLnR37cL0y+Dsbi5IfN6C8S7QdynuNDvvsU6l7BqqndWKW9sLzVpn
-Zu03OBcOuQbWlueOP3ES8swCUyjircp0t5HeTc64gK/WtqP8pxTEJcxDLi9a38yW
-B0PtBnFjB4IZYBeDPtZPh+2qylflm5X/MR7Y5X+LUK0ZTB0fXGABfWpHbjsd8RdN
-yoKsDmMs3eLaiQmltUGlDlrvlEuFePjw23jSEM6wIBbXn6qhxG2/QCCHUtuBdnt2
-8MqrANPhQ3b297y1qDIjKHxUbYUqfD/fDHbYU0MlNnksvpWmmN4gzPuEb4f6Z8Lt
-I/J7FcBZ6kCUdyj0+ojHKNGay9eTfhcJrtiw+lIpZFvn5sfgUKVqx5w56cJ+EPZd
-LSQGEr2vVWwaLLU9JZ7/Ufbd1EpnclGlS43WmfadWuWY1fgYgNbgGAshWfbeRI/C
-2FsHvmE0hrynzgO4WQ2oAuIqXLhsyymmoN/ohEKQXqeidjJKwjRtcFdR3/Vanycf
-G8yh5Ru+MfzO3Dxi/GN+Wl23F3kdapUnkQCcNjiZ3ufZYxgzmZvVWI2DoWmQJf35
-oM0eFP9GY0u83spQBuKamLzuysg+DZxF6gPSAJPnwwEI5qJ/9LFS0FMtXRN5Rutp
-41I5DQ1raqJi67VWheb3
-=8d7/
+iQIcBAEBAgAGBQJR00bYAAoJEIaOsuA1yqREdrcQAK39ZF0YWQ9FjfsQW94IUFlH
+PqzbZ2SVYnXzgdd1zQHIcptjJKJSjykDDnQ4j3lXwjdyf6LbO1xIOgD/pLtG39sK
+2oJqBKl9UrwaIdTtZFSDJbO4s80nFBqfb2yfubn2TQ35d7FTCpcg2J9gTLCGD2lk
+bOMh49zGhwNlj3PKpUmXfE/lv2WBvSLdWK8+gLpIKJpMpTiLvM0eLsIDDBEkc9iW
+a5s/QF2YgmvXdic+OF0cCOKPpoJ/A1N8Obnw/6+6vVpKrLuHOaIooX7ZfIy6aZhv
+B8Jep1jN8hb/DmtQShPtzs7nWnxc8cWxl6rA+2QDufbWlcYjz6aAhqQ6pHaWFJuc
+00UKMY6lyg7TCEm7Gvd/5zM2BrHWWxhOifIW++/wVY3nUQVA3CpLxfxnihowwuEZ
+wagtL7gXvMMS8cm9CzCbWg9e4ppCPJ90decCPdhE3jnrWqwKNHAvSKqTLt4L+bEg
+3ZF4jzEASzwBeAG6Mwb3AgghSVcv3rH/VV3BVlB9tuKcO5TjsA6hv6ykBfyrx2HT
+gRCj4C9+MR41w3JKcfXEjQzgOOhWOk8IPZ4D1Cw3QBlKuYmJiI1GRMU83qcXGLrA
+pEh/jXbpnuD2ESqQ7wUcvAnLqW9eBU1s69Ny1Ez6rDWtAiiCr+nKiZT78aJ+MXul
+r4LB/ROug5M1VuLwfvbH
+=2z4V
 -----END PGP SIGNATURE-----
 
---Sig_/eny5.fs28XTtBBjiwZVzjgN--
+--wxDdMuZNg1r63Hyj--
