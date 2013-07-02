@@ -1,38 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:43700 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754711Ab3GOTGe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 15:06:34 -0400
-Received: by mail-lb0-f175.google.com with SMTP id r10so9694465lbi.34
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jul 2013 12:06:32 -0700 (PDT)
+Received: from comal.ext.ti.com ([198.47.26.152]:38089 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754749Ab3GBVbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 17:31:04 -0400
+Date: Wed, 3 Jul 2013 00:30:30 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Luciano Coelho <coelho@ti.com>, <linux-wireless@vger.kernel.org>,
+	<tony@atomide.com>, <nsekhar@ti.com>, <mturquette@linaro.org>,
+	<mark.rutland@arm.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 7/9] wlcore: sdio: add wilink clock providers
+Message-ID: <20130702213030.GB10388@arwen.pp.htv.fi> (sfid-20130702_233127_621096_F7FF8F20)
+Reply-To: <balbi@ti.com>
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+ <1372776948-24840-8-git-send-email-coelho@ti.com>
+ <20130702153423.GH7013@arwen.pp.htv.fi>
 MIME-Version: 1.0
-In-Reply-To: <1373601613-31616-1-git-send-email-sujith@msujith.org>
-References: <1373601613-31616-1-git-send-email-sujith@msujith.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 15 Jul 2013 12:06:12 -0700
-Message-ID: <CAB=NE6V6n9ZA2606Bje4bACNoEEQDSy_Sdtq4chVOSz9tL3bEQ@mail.gmail.com> (sfid-20130715_210643_426808_94597E36)
-Subject: Re: [PATCH 0/6] initval patches
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4SFOXa2GPu3tIq4H"
+In-Reply-To: <20130702153423.GH7013@arwen.pp.htv.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 9:00 PM, Sujith Manoharan <sujith@msujith.org> wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> This is a resend of the pending initval patches, rebased over
-> master.
->
-> Sujith Manoharan (6):
->   initvals: Update inivals for AR9462 2.0
->   initvals: Add 5g-XLNA table for AR9462
->   initvals: Add ar9462_2p0_5g_xlna_only_rxgain table
->   initvals: Add rxgain tables for AR9462
->   initvals: Add support for AR9462 2.1
->   initvals: Add mix ob/db tx gain table for AR9462 2.0
+--4SFOXa2GPu3tIq4H
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks, applied and pushed!
+Hi,
 
-  Luis
+On Tue, Jul 02, 2013 at 06:34:23PM +0300, Felipe Balbi wrote:
+> On Tue, Jul 02, 2013 at 05:55:46PM +0300, Luciano Coelho wrote:
+> > Add refclock and tcxoclock as clock providers in WiLink.  These clocks
+> > are not accesible outside the WiLink module, but they are registered
+> > in the clock framework anyway.  Only the WiLink chip consumes these
+> > clocks.
+> >=20
+> > In theory, the WiLink chip could be connected to external clocks
+> > instead of using these internal clocks, so make the clock consumer
+> > code generic enough.  If external clocks are used, then the internal
+> > clock device tree nodes are not necessary, but the external ones must
+> > be specified.
+> >=20
+> > Signed-off-by: Luciano Coelho <coelho@ti.com>
+>=20
+> Acked-by: Felipe Balbi <balbi@ti.com>
+
+I guess this should've been
+
+Reviewed-by: Felipe Balbi <balbi@ti.com>
+
+instead
+
+--=20
+balbi
+
+--4SFOXa2GPu3tIq4H
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJR00Z2AAoJEIaOsuA1yqREEt8P/1njtIAvN5wlNlH6uuTde3Ul
+LVDwR8xpbaLKByJVAHcaGGA0ZWZ7SfTUVxBFoTM/ttRnYz9qXhimoRNuUKIgQDqI
+Kq45Va+AcKdOsDNpQl8lnfurXky8iwKCYCFCnfpe0lviYoTwK4Ri7I2B/R6nym1M
+w0Ehvc5XL3eBqNzdjtXTDPD9klCAVM7She/jWBQsvTCn1B/XxwO9I9WMwWFUeodA
++EdpCGyFO2UZJQH7XGQvYpeMgraFqC4iW7CNaF3A1cMgcx0qIo3q3X77+XM1Ar0O
+hLG+W2c4flz2Gt3ox/c2aRKEXnkhlmn2M9G/L7eeM+3g8Z6NZBHmNxue8OpXYrDn
+p2NmusEOEiha5EwkbiylhCOPEMdMPfQCF4gfUit76JXMnOOC7bDReKd2neKaqv//
+D96KeatpMYFcSVlrYjMwnLL8q4+R6m4b8wL7C1tzr/3ulChTntdWE888OcWqFoF7
+ITzjzGHJy7JNNVW/opLw3wv5JU6HLxe/+qfXGo02jlAwQc25lCR7Cz55Wqr11MDr
+AAR7D7p+wXxvZm06nWhNXNeoHYBKDfZlp5+O3B3Z3wtBFrDCijexAXKWQIfuI5nE
+2MIngJQz0VUz1Kc3j0WkZJRdT5haoWx4yWDKb6E1Mxzgqf430Lfezur+JdE1J/hD
+Pf/D9UwgGU+gKReHlJ5R
+=TM3w
+-----END PGP SIGNATURE-----
+
+--4SFOXa2GPu3tIq4H--
