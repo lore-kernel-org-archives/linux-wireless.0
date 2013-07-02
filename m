@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:45824 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3GDBGW (ORCPT
+Received: from mailhost.informatik.uni-hamburg.de ([134.100.9.70]:62296 "EHLO
+	mailhost.informatik.uni-hamburg.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754646Ab3GBTtL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:06:22 -0400
-Received: by mail-pd0-f169.google.com with SMTP id y10so591030pdj.28
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:22 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 20/53] wireless-regdb: FR, France - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:16 -0700
-Message-Id: <1372899889-19183-21-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032039_929062_3C43ED26)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 2 Jul 2013 15:49:11 -0400
+Message-ID: <51D32F7F.4090606@metafoo.de> (sfid-20130702_214932_878874_CF27E78A)
+Date: Tue, 02 Jul 2013 21:52:31 +0200
+From: Lars-Peter Clausen <lars@metafoo.de>
+MIME-Version: 1.0
+To: Shuah Khan <shuah.kh@samsung.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	"bzhao@marvell.com" <bzhao@marvell.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"shuahkhan@gmail.com" <shuahkhan@gmail.com>
+Subject: Re: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from legacy
+ pm ops
+References: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com> <51D32116.4010109@hauke-m.de> <B8EFE96D1287C24090BAD9D858E15E61734462@sisaex02sj>
+In-Reply-To: <B8EFE96D1287C24090BAD9D858E15E61734462@sisaex02sj>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 07/02/2013 09:24 PM, Shuah Khan wrote:
+[...]
+>>> +#ifdef CONFIG_PM
+>>> +/* Power Management Hooks */
+>>> +static const struct dev_pm_ops mwifiex_pcie_pm_ops = {
+>>> +	.suspend = mwifiex_pcie_suspend,
+>>> +	.resume = mwifiex_pcie_resume,
+>>> +};
+>>> +#endif
+>>> +
+>>
+>> Is it intended that you do not use SIMPLE_DEV_PM_OPS() like most of the
+>> other wifi drivers?
+> 
+> So the reason for this is SIMPLE_DEV_PM_OPS() is defined only when 
+> CONFIG_PM_SLEEP is enabled. This driver doesn't defines suspend and 
+> resume when CONFIG_PM is enabled and I didn't want to change that. Hope 
+> that helps understand why I didn't use SIMPLE_DEV_PM_OPS()
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+Change the ifdefs to CONFIG_PM_SLEEP and use SIMPLE_DEV_PM_OPS. The driver does
+not support runtime PM.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index fb83f7a..15e413e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -288,9 +288,9 @@ country FI: DFS-ETSI
- 
- country FR: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
+- Lars
 
