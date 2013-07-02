@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:59238 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757987Ab3G3Wfj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 18:35:39 -0400
-Received: by mail-pb0-f49.google.com with SMTP id xb4so2288260pbc.8
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2013 15:35:39 -0700 (PDT)
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:39389 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753142Ab3GBSFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 14:05:50 -0400
+Message-ID: <51D3167D.3070000@openwrt.org> (sfid-20130702_200553_552881_CD849E9C)
+Date: Tue, 02 Jul 2013 20:05:49 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>, <linux-wireless@vger.kernel.org>,
-	<tony@atomide.com>, <nsekhar@ti.com>
-From: Mike Turquette <mturquette@linaro.org>
-In-Reply-To: <1375189476-21557-7-git-send-email-coelho@ti.com>
-Cc: <coelho@ti.com>, <luca@coelho.fi>, <mark.rutland@arm.com>,
-	<balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>,
-	<martinez.javier@gmail.com>
-References: <1375189476-21557-1-git-send-email-coelho@ti.com>
- <1375189476-21557-7-git-send-email-coelho@ti.com>
-Message-ID: <20130730223535.5270.39864@quantum> (sfid-20130731_003555_570908_4168DCA6)
-Subject: Re: [PATCH v4 6/8] wlcore: sdio: add wilink clock providers
-Date: Tue, 30 Jul 2013 15:35:35 -0700
+To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] mac80211: Use libnl-configurable values for retry counts
+References: <1372351227-25575-1-git-send-email-jp.tosoni@acksys.fr> <51CF3EC9.3000707@openwrt.org> <000001ce7728$18b07de0$4a1179a0$@acksys.fr> <51D2DAB9.4050002@openwrt.org> <000101ce774b$3925e380$ab71aa80$@acksys.fr>
+In-Reply-To: <000101ce774b$3925e380$ab71aa80$@acksys.fr>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Luciano Coelho (2013-07-30 06:04:34)
-> +static const struct of_device_id wlcore_sdio_of_clk_match_table[] = {
-> +       { .compatible = "ti,wilink-clock" },
-> +};
-> +
->  static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
->  {
->         struct wl12xx_platform_data *pdata;
->         struct device_node *np = dev->of_node;
-> +       struct device_node *clock_node;
->  
->         if (!np) {
->                 np = of_find_matching_node(NULL, dev->driver->of_match_table);
-> @@ -241,6 +247,9 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
->                 goto out_free;
->         }
->  
-> +       for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
-> +               of_fixed_clk_setup(clock_node);
+On 2013-07-02 7:40 PM, Jean-Pierre Tosoni wrote:
+> Hi Felix,
+> 
+> Sorry to use your time again...
+> 
+>> But much more important than that is to not cause regressions for other
+>> people via aggressive packet dropping.
+> 
+> Agreed, but see below.
+> 
+>> If you put the code in minstrel (and minstrel_ht), it not only allows
+>> making a better tradeoff for retry handling, the code also doesn't have
+>> to be run for every single packet. You can run it during the rate
+>> control stats update.
+> 
+> OK, I'll have a look at that part now.
+> 
+>> 
+>> The reduction of retry attempts definitely needs to be balanced
+>> properly. Retries with max_prob_rate can be more important than retries
+>> with max_tp_rate, but there needs to be a minimum for each of those.
+> 
+> This leads to a question about regressions and backward compatibility:
+> 
+> Since minstrel can compute as much as 28 retries for a frame,
+> And since the (standard) default value for "short_frame_max_tx_count" is 7,
+> 
+> ... there is no way I can enforce the configured value while keeping
+> minstrel counts by default !
+> The standard itself gives a very aggressive limit! Or am I mistaken about
+> the significance of this configuration parameter ?
+I think you're right about this. Specifically because the standard limit
+is much lower than what is being used now, we need to really make sure
+that it's applied in a way that it does not harm the normal use case in
+any visible way.
 
-Hi Luciano,
-
-Any reason for establishing your own compatible string if you just plan
-to use the fixed rate clock? You could just use "fixed-clock" compatible
-in your DTS.
-
-I will be posting patches this week which makes the fixed-rate clock a
-proper driver and matches that compatible string to instantiate those
-clocks. That means that your driver could probably remove the clock
-setup code completely.
-
-Regards,
-Mike
-
-> +
->         goto out;
->  
->  out_free:
-> -- 
-> 1.8.3.2
+- Felix
