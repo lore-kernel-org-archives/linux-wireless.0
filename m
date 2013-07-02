@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47284 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754320Ab3GWICe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 04:02:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4] ath10k: create debugfs interface to trigger fw crash
-References: <878v1122id.fsf@kamboji.qca.qualcomm.com>
-	<1374494931-18913-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 23 Jul 2013 11:02:25 +0300
-In-Reply-To: <1374494931-18913-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 22 Jul 2013 14:08:51 +0200")
-Message-ID: <87vc41wvou.fsf@kamboji.qca.qualcomm.com> (sfid-20130723_100239_658682_DF6312AA)
+Received: from mms3.broadcom.com ([216.31.210.19]:3229 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751705Ab3GBONp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 10:13:45 -0400
+Message-ID: <51D2E004.8000502@broadcom.com> (sfid-20130702_161400_768509_A66A28FF)
+Date: Tue, 2 Jul 2013 16:13:24 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Ilan Peer" <ilan.peer@intel.com>, linux-wireless@vger.kernel.org,
+	mcgrof@do-not-panic.com
+Subject: Re: [PATCH 2/3] [RFC] cfg80211: Add Kconfig option for cellular
+ BS hints
+References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
+ <1372768095-26053-3-git-send-email-ilan.peer@intel.com>
+ <51D2DBB9.4010500@broadcom.com> (sfid-20130702_155518_357097_AF2DF864)
+ <1372773647.8615.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1372773647.8615.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> This can be useful for testing. To perform a
-> forced firmware crash write 'crash' to
-> 'simulate_fw_crash' debugfs file. E.g.
+On 07/02/2013 04:00 PM, Johannes Berg wrote:
+> On Tue, 2013-07-02 at 15:55 +0200, Arend van Spriel wrote:
+>> On 07/02/2013 02:28 PM, Ilan Peer wrote:
+>>> Move the regulatory cellular base station hints support under
+>>> a specific configuration option and make the option depend
+>>> on CFG80211_CERTIFICATION_ONUS.
+>>
+>> This one seems not really related to the other patches. On itself it is
+>> not clear to me what itch is being scratched here. Is the aim to get rid
+>> of the CERTIFICATION_ONUS dependency further along the road?
 >
->   echo crash > /sys/kernel/debug/ieee80211/phy1/ath10k/simulate_fw_crash
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-> v3: return an appropriate errno instead of using ath10k_warn()
+> No, it's really just so patch 3 can add a separate option under
+> CERTIFICATION_ONUS while allowing cell base station and the new option
+> to be separate.
 
-Thanks, applied.
+Thanks, Johannes
 
--- 
-Kalle Valo
+Missed that.
+
+Gr. AvS
+
+
+
+
