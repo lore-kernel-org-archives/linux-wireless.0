@@ -1,88 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:44671 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750797Ab3GLEDg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 00:03:36 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/6] initvals: Add rxgain tables for AR9462
-Date: Fri, 12 Jul 2013 09:30:11 +0530
-Message-Id: <1373601613-31616-5-git-send-email-sujith@msujith.org> (sfid-20130712_060354_979485_6EA5A02B)
-In-Reply-To: <1373601613-31616-1-git-send-email-sujith@msujith.org>
-References: <1373601613-31616-1-git-send-email-sujith@msujith.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:42680 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753227Ab3GBO4x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 10:56:53 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>
+CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>
+Subject: [PATCH v2 8/9] wlcore: sdio: get clocks from device tree
+Date: Tue, 2 Jul 2013 17:55:47 +0300
+Message-ID: <1372776948-24840-9-git-send-email-coelho@ti.com> (sfid-20130702_165715_879879_9CD26A2E)
+In-Reply-To: <1372776948-24840-1-git-send-email-coelho@ti.com>
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Read the clock nodes from the device tree and use them to set the
+frequency for the refclock and the tcxo clock.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- tools/initvals/ar9462_2p0_initvals.h | 15 +++++++++++++++
- tools/initvals/checksums.txt         |  2 ++
- tools/initvals/initvals.c            |  4 ++++
- 3 files changed, 21 insertions(+)
+ drivers/net/wireless/ti/wlcore/sdio.c |   36 +++++++++++++++++++++++++++++++--
+ 1 file changed, 34 insertions(+), 2 deletions(-)
 
-diff --git a/tools/initvals/ar9462_2p0_initvals.h b/tools/initvals/ar9462_2p0_initvals.h
-index bcd0cae..1d6b705 100644
---- a/tools/initvals/ar9462_2p0_initvals.h
-+++ b/tools/initvals/ar9462_2p0_initvals.h
-@@ -1714,4 +1714,19 @@ static const u32 ar9462_2p0_5g_xlna_only_rxgain[][2] = {
- 	{0x0000b1fc, 0x00000196},
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 980bf3d..60fce49 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -53,6 +53,7 @@ static bool dump = false;
+ struct wl12xx_sdio_glue {
+ 	struct device *dev;
+ 	struct platform_device *core;
++	struct clk *refclock, *tcxoclock;
  };
  
-+static const u32 ar9462_2p0_baseband_core_mix_rxgain[][2] = {
-+	/* Addr      allmodes  */
-+	{0x00009fd0, 0x0a2d6b93},
-+};
+ static const struct sdio_device_id wl1271_devices[] = {
+@@ -224,6 +225,7 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
+ 	struct wl12xx_platform_data *pdata;
+ 	struct device_node *np = dev->of_node;
+ 	struct device_node *clock_node;
++	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(dev_to_sdio_func(dev));
+ 
+ 	if (!np) {
+ 		np = of_find_matching_node(NULL, dev->driver->of_match_table);
+@@ -250,6 +252,26 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
+ 	for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
+ 		of_fixed_clk_setup(clock_node);
+ 
++	/* TODO: make sure we have this when needed (ie. for WL6 and WL7) */
++	glue->refclock = of_clk_get_by_name(np, "refclock");
++	if (IS_ERR(glue->refclock)) {
++		dev_err(dev, "couldn't find refclock on the device tree\n");
++		glue->refclock = NULL;
++	} else {
++		clk_prepare_enable(glue->refclock);
++		pdata->ref_clock_freq = clk_get_rate(glue->refclock);
++	}
 +
-+static const u32 ar9462_2p0_baseband_postamble_mix_rxgain[][5] = {
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
-+	{0x00009820, 0x206a022e, 0x206a022e, 0x206a01ae, 0x206a01ae},
-+	{0x00009824, 0x63c640de, 0x5ac640d0, 0x63c640da, 0x63c640da},
-+	{0x00009828, 0x0796be89, 0x0696b081, 0x0916be81, 0x0916be81},
-+	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000d8, 0x6c4000d8},
-+	{0x00009e10, 0x92c88d2e, 0x7ec88d2e, 0x7ec86d2e, 0x7ec86d2e},
-+	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3236605e, 0x32395c5e},
-+};
++	/* TODO: make sure we have this when needed (ie. for WL7) */
++	glue->tcxoclock = of_clk_get_by_name(np, "tcxoclock");
++	if (IS_ERR(glue->tcxoclock)) {
++		dev_err(dev, "couldn't find tcxoclock on the device tree\n");
++		glue->tcxoclock = NULL;
++	} else {
++		clk_prepare_enable(glue->tcxoclock);
++		pdata->ref_clock_freq = clk_get_rate(glue->tcxoclock);
++	}
 +
- #endif /* INITVALS_9462_2P0_H */
-diff --git a/tools/initvals/checksums.txt b/tools/initvals/checksums.txt
-index 758ff85..c224297 100644
---- a/tools/initvals/checksums.txt
-+++ b/tools/initvals/checksums.txt
-@@ -158,6 +158,8 @@ c8dc777b012068116cd5282aade8eb460f397d20        ar9462_2p0_mac_postamble
- 72675fd0f308e6f31502e283119e12469d262f40        ar9462_common_mixed_rx_gain_table_2p0
- 185f0537e40b74dcc4db33c7e111c1bfe79f3104        ar9462_2p0_baseband_postamble_5g_xlna
- 72675fd0f308e6f31502e283119e12469d262f40        ar9462_2p0_5g_xlna_only_rxgain
-+8f24703571c460bced3d0fea95b5cfeac34a724d        ar9462_2p0_baseband_core_mix_rxgain
-+cb83a8c304aae0b6fc937e61d145253a8f470d24        ar9462_2p0_baseband_postamble_mix_rxgain
- c8dc777b012068116cd5282aade8eb460f397d20        ar9485_1_1_mac_postamble
- 5d20e4848b97566ad55e0e95458463d622ee5480        ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1
- d9a90632a00a7b417154173b947dfffdeab23e51        ar9485Common_wo_xlna_rx_gain_1_1
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index 2d1edba..6b72f29 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -319,6 +319,8 @@ struct initval_family {
- #define ar9300Common_mixed_rx_gain_table_jupiter_2p0		ar9462_common_mixed_rx_gain_table_2p0
- #define ar9300_jupiter_2p0_baseband_postamble_5g_xlna		ar9462_2p0_baseband_postamble_5g_xlna
- #define ar9300Common_5g_xlna_only_rx_gain_table_jupiter_2p0	ar9462_2p0_5g_xlna_only_rxgain
-+#define ar9300_jupiter_2p0_baseband_core_mix_rxgain		ar9462_2p0_baseband_core_mix_rxgain
-+#define ar9300_jupiter_2p0_baseband_postamble_mix_rxgain	ar9462_2p0_baseband_postamble_mix_rxgain
+ 	goto out;
  
- #include "ar9300_jupiter20.ini"
+ out_free:
+@@ -294,6 +316,8 @@ static int wl1271_probe(struct sdio_func *func,
+ 	/* Use block mode for transferring over one block size of data */
+ 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
  
-@@ -906,6 +908,8 @@ static void ar9462_2p0_hw_print_initvals(bool check)
- 	INI_PRINT(ar9462_common_mixed_rx_gain_table_2p0);
- 	INI_PRINT(ar9462_2p0_baseband_postamble_5g_xlna);
- 	INI_PRINT(ar9462_2p0_5g_xlna_only_rxgain);
-+	INI_PRINT(ar9462_2p0_baseband_core_mix_rxgain);
-+	INI_PRINT(ar9462_2p0_baseband_postamble_mix_rxgain);
- }
++	sdio_set_drvdata(func, glue);
++
+ 	/* The pdata allocated here is freed when the device is freed,
+ 	 * so we don't need an additional out label to free it in case
+ 	 * of error further on.
+@@ -319,8 +343,6 @@ static int wl1271_probe(struct sdio_func *func,
+ 	if (mmcflags & MMC_PM_KEEP_POWER)
+ 		pdev_data->pwr_in_suspend = true;
  
- static void ar9565_1p0_hw_print_initvals(bool check)
+-	sdio_set_drvdata(func, glue);
+-
+ 	/* Tell PM core that we don't need the card to be powered now */
+ 	pm_runtime_put_noidle(&func->dev);
+ 
+@@ -387,6 +409,16 @@ static void wl1271_remove(struct sdio_func *func)
+ {
+ 	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
+ 
++	if (glue->refclock) {
++		clk_disable_unprepare(glue->refclock);
++		clk_put(glue->refclock);
++	}
++
++	if (glue->tcxoclock) {
++		clk_disable_unprepare(glue->tcxoclock);
++		clk_put(glue->tcxoclock);
++	}
++
+ 	/* Undo decrement done above in wl1271_probe */
+ 	pm_runtime_get_noresume(&func->dev);
+ 
 -- 
-1.8.3.2
+1.7.10.4
 
