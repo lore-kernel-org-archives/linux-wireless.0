@@ -1,134 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:55153 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753753Ab3GRGdZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jul 2013 02:33:25 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/3] ath10k: fix rts/fragmentation threshold setup
-Date: Thu, 18 Jul 2013 08:33:13 +0200
-Message-ID: <1374129193-3533-4-git-send-email-michal.kazior@tieto.com> (sfid-20130718_083329_822692_089DF284)
-In-Reply-To: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
-References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.candelatech.com ([208.74.158.172]:41558 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756039Ab3GBWm1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 18:42:27 -0400
+From: greearb@candelatech.com
+To: ath9k-devel@venema.h4ckr.net
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Fix crash when using v1 hardware.
+Date: Tue,  2 Jul 2013 15:42:05 -0700
+Message-Id: <1372804925-1701-1-git-send-email-greearb@candelatech.com> (sfid-20130703_004305_170746_A551C984)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If RTS and fragmentation threshold values are
-0xFFFFFFFF they should be considered disabled and
-no min/max limits must be applied.
+From: Ben Greear <greearb@candelatech.com>
 
-This fixes some issues with throughput issues,
-especially with VHT.
+I put a v1 NIC from an TP-LINK AC 1750 AP in
+a 64-bit PC, and the OS crashes on bootup.  I'm not
+sure how broken my hardware is (possibly completely non
+functional), but at least with this patch it will no longer
+crash the OS.  Not sure it ever got far enough to try,
+but I also do not have firmware for the NIC.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+With this patch I get this info on module load:
+
+ath10k_pci 0000:05:00.0: BAR 0: assigned [mem 0xf4400000-0xf45fffff 64bit]
+ath10k_pci 0000:05:00.0: BAR 0: error updating (0xf4400004 != 0xffffffff)
+ath10k_pci 0000:05:00.0: BAR 0: error updating (high 0x000000 != 0xffffffff)
+ath10k_pci 0000:05:00.0: Refused to change power state, currently in D3
+ath10k: MSI-X interrupt handling (8 intrs)
+ath10k: Unable to wakeup target
+ath10k: target takes too long to wake up (awake count 1)
+ath10k: src_ring ffff88020c0d0a00:  write_index is out of bounds: 4294967295  nentries_mask: 15.
+ath10k: dest_ring ffff88020db2c000:  write_index is out of bounds: 4294967295  nentries_mask: 511.
+ath10k: dest_ring ffff880210d56400:  write_index is out of bounds: 4294967295  nentries_mask: 31.
+ath10k: src_ring ffff880210d57600:  write_index is out of bounds: 4294967295  nentries_mask: 31.
+ath10k: src_ring ffff88020fe70000:  write_index is out of bounds: 4294967295  nentries_mask: 2047.
+ath10k: src_ring ffff880212989b40:  write_index is out of bounds: 4294967295  nentries_mask: 1.
+ath10k: dest_ring ffff880212989960:  write_index is out of bounds: 4294967295  nentries_mask: 1.
+ath10k: Failed to get pcie state addr: -5
+ath10k: early firmware event indicated
+------------[ cut here ]------------
+WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath10k/ce.c:771 ath10k_ce_per_engine_service+0x53/0x1b4 [ath10k_pci]()
+....
+(it hits the warning case about 5-6 times and then seems to quiesce OK).
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   54 +++++++++++++++++----------------
- 1 file changed, 28 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c |   32 +++++++++++++++++++++++++++++++-
+ 1 files changed, 31 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3d0f876..019c6b8 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -331,6 +331,29 @@ static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
- 	return 0;
- }
- 
-+static int  ath10k_mac_set_rts(struct ath10k_vif *arvif, u32 value)
-+{
-+	if (value != 0xFFFFFFFF)
-+		value = min_t(u32, arvif->ar->hw->wiphy->rts_threshold,
-+			      ATH10K_RTS_MAX);
-+
-+	return ath10k_wmi_vdev_set_param(arvif->ar, arvif->vdev_id,
-+					 WMI_VDEV_PARAM_RTS_THRESHOLD,
-+					 value);
-+}
-+
-+static int ath10k_mac_set_frag(struct ath10k_vif *arvif, u32 value)
-+{
-+	if (value != 0xFFFFFFFF)
-+		value = clamp_t(u32, arvif->ar->hw->wiphy->frag_threshold,
-+				ATH10K_FRAGMT_THRESHOLD_MIN,
-+				ATH10K_FRAGMT_THRESHOLD_MAX);
-+
-+	return ath10k_wmi_vdev_set_param(arvif->ar, arvif->vdev_id,
-+					 WMI_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
-+					 value);
-+}
-+
- static int ath10k_peer_delete(struct ath10k *ar, u32 vdev_id, const u8 *addr)
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 61a8ac7..56669f8 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -756,13 +756,23 @@ void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id)
  {
- 	int ret;
-@@ -1803,7 +1826,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
- 	enum wmi_sta_powersave_param param;
- 	int ret = 0;
--	u32 value, rts, frag;
-+	u32 value;
- 	int bit;
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct ce_state *ce_state = ar_pci->ce_id_to_state[ce_id];
+-	u32 ctrl_addr = ce_state->ctrl_addr;
++	u32 ctrl_addr;
+ 	void *transfer_context;
+ 	u32 buf;
+ 	unsigned int nbytes;
+ 	unsigned int id;
+ 	unsigned int flags;
  
- 	mutex_lock(&ar->conf_mutex);
-@@ -1906,20 +1929,12 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 			ath10k_warn("Failed to set PSPOLL count: %d\n", ret);
- 	}
++	/* On v1 hardware at least, setup can fail, causing ce_id_state to
++	 * be cleaned up, but this method is still called a few times.  Check
++	 * for NULL here so we don't crash.  Probably a better fix is to stop
++	 * the ath10k_pci_ce_tasklet sooner.
++	 */
++	if (WARN_ONCE(!ce_state, "ce_id_to_state[%i] is NULL\n", ce_id))
++		return;
++
++	ctrl_addr = ce_state->ctrl_addr;
++
+ 	ath10k_pci_wake(ar);
+ 	spin_lock_bh(&ar_pci->ce_lock);
  
--	rts = min_t(u32, ar->hw->wiphy->rts_threshold, ATH10K_RTS_MAX);
--	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
--					 WMI_VDEV_PARAM_RTS_THRESHOLD,
--					 rts);
-+	ret = ath10k_mac_set_rts(arvif, ar->hw->wiphy->rts_threshold);
- 	if (ret)
- 		ath10k_warn("failed to set rts threshold for vdev %d (%d)\n",
- 			    arvif->vdev_id, ret);
+@@ -954,6 +964,16 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
  
--	frag = clamp_t(u32, ar->hw->wiphy->frag_threshold,
--		       ATH10K_FRAGMT_THRESHOLD_MIN,
--		       ATH10K_FRAGMT_THRESHOLD_MAX);
--	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
--					WMI_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
--					frag);
-+	ret = ath10k_mac_set_frag(arvif, ar->hw->wiphy->frag_threshold);
- 	if (ret)
- 		ath10k_warn("failed to set frag threshold for vdev %d (%d)\n",
- 			    arvif->vdev_id, ret);
-@@ -2627,11 +2642,7 @@ static void ath10k_set_rts_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 	src_ring->write_index =
+ 		ath10k_ce_src_ring_write_index_get(ar, ctrl_addr);
++	/* Make sure the value above is sane.  Can get 0xFFFFFFFF
++	 * on a v1 board.
++	 */
++	if (src_ring->write_index > src_ring->nentries_mask) {
++		ath10k_err("src_ring %p:  write_index is out of bounds: %u  nentries_mask: %u.\n",
++			   src_ring, src_ring->write_index,
++			   src_ring->nentries_mask);
++		src_ring->write_index = 0;
++	}
++
+ 	ath10k_pci_sleep(ar);
  
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
+ 	src_ring->per_transfer_context = (void **)ptr;
+@@ -1037,6 +1057,16 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 	dest_ring->sw_index = ath10k_ce_dest_ring_read_index_get(ar, ctrl_addr);
+ 	dest_ring->write_index =
+ 		ath10k_ce_dest_ring_write_index_get(ar, ctrl_addr);
++	/* Make sure the value above is sane.  Can get 0xFFFFFFFF
++	 * on a v1 board.
++	 */
++	if (dest_ring->write_index > dest_ring->nentries_mask) {
++		ath10k_err("dest_ring %p:  write_index is out of bounds: %u  nentries_mask: %u.\n",
++			   dest_ring, dest_ring->write_index,
++			   dest_ring->nentries_mask);
++		dest_ring->write_index = 0;
++	}
++
+ 	ath10k_pci_sleep(ar);
  
--	rts = min_t(u32, rts, ATH10K_RTS_MAX);
--
--	ar_iter->ret = ath10k_wmi_vdev_set_param(ar_iter->ar, arvif->vdev_id,
--						 WMI_VDEV_PARAM_RTS_THRESHOLD,
--						 rts);
-+	ar_iter->ret = ath10k_mac_set_rts(arvif, rts);
- 	if (ar_iter->ret)
- 		ath10k_warn("Failed to set RTS threshold for VDEV: %d\n",
- 			    arvif->vdev_id);
-@@ -2663,19 +2674,10 @@ static void ath10k_set_frag_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	struct ath10k_generic_iter *ar_iter = data;
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
- 	u32 frag = ar_iter->ar->hw->wiphy->frag_threshold;
--	int ret;
- 
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
- 
--	frag = clamp_t(u32, frag,
--		       ATH10K_FRAGMT_THRESHOLD_MIN,
--		       ATH10K_FRAGMT_THRESHOLD_MAX);
--
--	ret = ath10k_wmi_vdev_set_param(ar_iter->ar, arvif->vdev_id,
--					WMI_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
--					frag);
--
--	ar_iter->ret = ret;
-+	ar_iter->ret = ath10k_mac_set_frag(arvif, frag);
- 	if (ar_iter->ret)
- 		ath10k_warn("Failed to set frag threshold for VDEV: %d\n",
- 			    arvif->vdev_id);
+ 	dest_ring->per_transfer_context = (void **)ptr;
 -- 
-1.7.9.5
+1.7.3.4
 
