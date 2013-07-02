@@ -1,88 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:56196 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110Ab3GIHRm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 03:17:42 -0400
-Received: by mail-bk0-f46.google.com with SMTP id na10so2179034bkb.5
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jul 2013 00:17:41 -0700 (PDT)
+Received: from arroyo.ext.ti.com ([192.94.94.40]:45849 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752775Ab3GBPbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 11:31:46 -0400
+Date: Tue, 2 Jul 2013 18:31:13 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 4/9] wl12xx: use frequency instead of enumerations for
+ pdata clocks
+Message-ID: <20130702153113.GF7013@arwen.pp.htv.fi> (sfid-20130702_173151_207644_8129A597)
+Reply-To: <balbi@ti.com>
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+ <1372776948-24840-5-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1373289250-12259-5-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373289250-12259-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	<1373289250-12259-5-git-send-email-siwu@hrz.tu-chemnitz.de>
-Date: Tue, 9 Jul 2013 09:17:41 +0200
-Message-ID: <CA+BoTQnsDGtAp4n9hYQTjhNZFzsEsaT4qnX_W7hBcutTAZvjYw@mail.gmail.com> (sfid-20130709_091746_317203_678B0DBC)
-Subject: Re: [PATCHv3 4/5] mac80211: add channel switch command and beacon callbacks
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="K/NRh952CO+2tg14"
+In-Reply-To: <1372776948-24840-5-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Simon,
+--K/NRh952CO+2tg14
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 8 July 2013 15:14, Simon Wunderlich
-<simon.wunderlich@s2003.tu-chemnitz.de> wrote:
-> +static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-> +                                   struct cfg80211_csa_settings *params)
-> +{
-> +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       struct ieee80211_local *local = sdata->local;
-> +       struct ieee80211_chanctx_conf *chanctx_conf;
-> +       struct ieee80211_chanctx *chanctx;
-> +       int err;
+Hi,
+
+On Tue, Jul 02, 2013 at 05:55:43PM +0300, Luciano Coelho wrote:
+> diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless=
+/ti/wl12xx/main.c
+> index 1c627da..903dcb3 100644
+> --- a/drivers/net/wireless/ti/wl12xx/main.c
+> +++ b/drivers/net/wireless/ti/wl12xx/main.c
+> @@ -1701,6 +1701,42 @@ static struct ieee80211_sta_ht_cap wl12xx_ht_cap =
+=3D {
+>  		},
+>  };
+> =20
+> +static struct wl12xx_clock wl12xx_refclock_table[] =3D {
+
+const
+
+> +	{ 19200000,	false,	WL12XX_REFCLOCK_19	},
+> +	{ 26000000,	false,	WL12XX_REFCLOCK_26	},
+> +	{ 26000000,	true,	WL12XX_REFCLOCK_26_XTAL	},
+> +	{ 38400000,	false,	WL12XX_REFCLOCK_38	},
+> +	{ 38400000,	true,	WL12XX_REFCLOCK_38_XTAL	},
+> +	{ 52000000,	false,	WL12XX_REFCLOCK_52	},
+> +	{ 0,		false,	0 }
+> +};
 > +
-> +       if (!list_empty(&local->roc_list) || local->scanning)
-> +               return -EBUSY;
-> +
-> +       if (sdata->wdev.cac_started)
-> +               return -EBUSY;
-> +
-> +       /* don't handle if chanctx is used */
-> +       if (local->use_chanctx)
-> +               return -EBUSY;
-> +
-> +       rcu_read_lock();
-> +       chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-> +       if (!chanctx_conf) {
-> +               rcu_read_unlock();
-> +               return -EBUSY;
-> +       }
-> +
-> +       /* don't handle for multi-VIF cases */
-> +       chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
-> +       if (chanctx->refcount > 1) {
-> +               rcu_read_unlock();
-> +               return -EBUSY;
-> +       }
-> +       rcu_read_unlock();
+> +static struct wl12xx_clock wl12xx_tcxoclock_table[] =3D {
 
-I'm wondering if it's a huge hassle to support drivers that depend on
-channel context API? Perhaps local->open_count could be used instead
-of local->use_chantx and chanctx->refcount?
+const
 
-I'm also worried this can possibly do silly things if someone starts
-an interface while CSA is under way. Consider the following:
+--=20
+balbi
 
- * start AP
- * initiate channel switch
-  [ while channel switch is in progress and driver is yet to call
-ieee80211_csa_finish() ]
- * start another STA interface and associate
-  [ CSA completes ]
+--K/NRh952CO+2tg14
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Upon CSA completion the STA will be moved to a different channel
-silently and most likely end up with a beacon loss quickly. I think
-mac80211 should forbid bringing up any new interfaces during CSA.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-It seems there's nothing preventing from multiple calls to channel
-switch callback. Is this expected? Can this work if CSA is invoked
-while other CSA is still in progress?
+iQIcBAEBAgAGBQJR0vJBAAoJEIaOsuA1yqREKRUQAJ73pu94CGu/7VONZrN80bat
+GH4zZVV6q3bbm63/NzlUdZklonA5LwYUU8RUcRuF7xHBfkrt/iogHVfEtbtIrrgj
+izP9hFLOWEM/iIkT8IIRMtIjsiIh10rH3JQ0s+WECz5/6G+B4hz1lRf9/bibNCxh
+kyYCHD9ngHAtld0soEd2r7Yps0kzu4p1Eo+nmlTJg8pn9lB1eCPSOsMKfvATt32u
+sawu3i+hwDlC6fG6x9GKidWEU9/6I31nNgyoKNXZgINp0P51h9cC2WoulboweWmy
+SODIrBFfFfzp3YyCYpTxmD1bmN8vh8HCFTh+AdCiAG1rnN8/8m3qM0XfCSxWRO9b
+zbYmrUlFQW4uIcrG62YTX3Cmv/z/4Wg2oNNR6FGJLdOK7xWDgdsWEedpUcOMJ7yw
+MRed1iC7ve2Nk+iYv/T7jclfCIJYOpICs5VbwDca0eU1cu/vcKFC5/f13eR4qtdF
+uMgkSTCoOTyQYeDSiVxy1Cwk5cDOTOWFpnxWbCaUlp3uVFM6QtDt8pZzQxupZJIv
+bnd8LWXCvpktROTqJAeVZKOSaWRis1iJttgXF2j+cXaYIVe4cUVmYnPvbVYJsLbZ
+w+ulUSiE3AIlEul5IGo4lA6Qrt8cmRDLJBz3hAUFADdKbb+WllUU6nw3O71uJoFo
+Do6SpsKoCkxMoveFwq8p
+=rKY4
+-----END PGP SIGNATURE-----
 
-
-Pozdrawiam / Best regards,
-Micha³ Kazior.
+--K/NRh952CO+2tg14--
