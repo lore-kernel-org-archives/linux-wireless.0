@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:38989
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751656Ab3GTLzp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Jul 2013 07:55:45 -0400
-Date: Sat, 20 Jul 2013 07:55:40 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cw1200:  Fix incorrect endianness annotation in a header
- field
-Message-ID: <20130720115540.GB22702@shaftnet.org> (sfid-20130720_135602_336792_B85E20A3)
-References: <1374292945-29753-1-git-send-email-pizza@shaftnet.org>
- <87fvv9yd33.fsf@purkki.adurom.net>
+Received: from bear.ext.ti.com ([192.94.94.41]:58738 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754231Ab3GBUU2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 16:20:28 -0400
+Message-ID: <1372796394.21065.89.camel@cumari.coelho.fi> (sfid-20130702_222045_891533_7DA227FA)
+Subject: Re: [PATCH v2 8/9] wlcore: sdio: get clocks from device tree
+From: Luciano Coelho <coelho@ti.com>
+To: <balbi@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Date: Tue, 2 Jul 2013 23:19:54 +0300
+In-Reply-To: <20130702153526.GI7013@arwen.pp.htv.fi>
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+	 <1372776948-24840-9-git-send-email-coelho@ti.com>
+	 <20130702153526.GI7013@arwen.pp.htv.fi>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tsOsTdHNUZQcU9Ye"
-In-Reply-To: <87fvv9yd33.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2013-07-02 at 18:35 +0300, Felipe Balbi wrote:
+> Hi,
+> 
+> On Tue, Jul 02, 2013 at 05:55:47PM +0300, Luciano Coelho wrote:
+> > @@ -294,6 +316,8 @@ static int wl1271_probe(struct sdio_func *func,
+> >  	/* Use block mode for transferring over one block size of data */
+> >  	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
+> >  
+> > +	sdio_set_drvdata(func, glue);
+> 
+> is this move really necessary ?
 
---tsOsTdHNUZQcU9Ye
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It is, because I use the glue in wlcore_get_pdata_from_of(), so I need
+to call sdio_set_drvdata() earlier.  I reckoned it wouldn't hurt to move
+this, so I wouldn't have to pass the glue in the
+wlcore_get_pdata_from_of() call.
 
-On Sat, Jul 20, 2013 at 09:12:16AM +0300, Kalle Valo wrote:
-> Comment referring to releases should be after "---" line so that they
-> don't end up in the commit log.
+--
+Luca.
 
-Duly noted.
-
-> And besides, I don't think this is important enough for -rc. I doubt
-> there are users who absolutely need this quickly and this patch can wait
-> for the next merge window.
-
-This is effectively a documentation fix, since the driver=20
-currently sets that field to '0' (ie "use firmware default"). =20
-
-That said, while it's trivial, it's a fix nonetheless.
-
-As long as the patch doesn't get dropped.  I have my preference, but=20
-I'll leave exactly when it gets merged to Linville's disretion.
-
-(I have some not-yet-finished new work that's clearly -next material,
- and two patches that need to go into -backports, as soon as I figure=20
- out how to integrate that)
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---tsOsTdHNUZQcU9Ye
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFR6nq8PuLgii2759ARAnydAKCYPfw2N5V6n6QnzxNSCTQG9ZBewQCg5SVY
-SyA9MNIqVsUsXUYBZOdCgsY=
-=t8Oh
------END PGP SIGNATURE-----
-
---tsOsTdHNUZQcU9Ye--
