@@ -1,32 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:49542 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118Ab3GFTpo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jul 2013 15:45:44 -0400
-Received: by mail-wi0-f179.google.com with SMTP id hj3so2940389wib.12
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Jul 2013 12:45:43 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33188 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754072Ab3GBSvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 14:51:16 -0400
+Message-ID: <51D32116.4010109@hauke-m.de> (sfid-20130702_205136_454876_FB8A0224)
+Date: Tue, 02 Jul 2013 20:51:02 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-From: "Ivan A. Ivanchikov" <ivanchikoff@gmail.com>
-Date: Sun, 7 Jul 2013 06:45:22 +1100
-Message-ID: <CABa=m6nQsjU6gyVDAPsm14z+rD21az3mCpYFa0pS7woVhF3gyw@mail.gmail.com> (sfid-20130706_214601_523181_F9442823)
-Subject: Realtek RTL8188CUS driver
-To: linux-wireless@vger.kernel.org
+To: Shuah Khan <shuah.kh@samsung.com>
+CC: bzhao@marvell.com, linville@tuxdriver.com, rjw@sisk.pl,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, shuahkhan@gmail.com
+Subject: Re: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from legacy
+ pm ops
+References: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com>
+In-Reply-To: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good day, gentlemen!
+On 07/02/2013 05:24 PM, Shuah Khan wrote:
+> Convert the mwifiex/pci driver to use dev_pm_ops for power management and
+> remove Legacy PM handling. This change re-uses existing suspend and resume
+> interfaces for dev_pm_ops.
+> 
+> Signed-off-by: Shuah Khan <shuah.kh@samsung.com>
+> ---
+>  drivers/net/wireless/mwifiex/pcie.c |   34 ++++++++++++++++++++++++++++------
+>  1 file changed, 28 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+> index 20c9c4c..b169318 100644
+> --- a/drivers/net/wireless/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/mwifiex/pcie.c
+> @@ -85,7 +85,7 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
+>   * If already not suspended, this function allocates and sends a host
+>   * sleep activate request to the firmware and turns off the traffic.
+>   */
+> -static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+> +static int __mwifiex_pcie_suspend(struct pci_dev *pdev)
+>  {
+>  	struct mwifiex_adapter *adapter;
+>  	struct pcie_service_card *card;
+> @@ -112,6 +112,13 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+>  	return 0;
+>  }
+>  
+> +static int mwifiex_pcie_suspend(struct device *dev)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	return __mwifiex_pcie_suspend(pdev);
+> +}
+> +
 
-I use arch linux, and have this device
-http://www.trendnet.com/downloads/list_subcategory.asp?SUBTYPE_ID=1426
-Driver from stock kernel cannot be used, rtl8192cu was loaded but does not work.
+For what do you need __mwifiex_pcie_suspend() ? Why not make one
+function out of these two?
 
-I downloaded https://github.com/downloads/dvdhrm/rt8192cu/rt8192cu-3.4.3.4369.20120622.tar.gz
-this sources and this patch
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1030858/comments/65
-and then my network works. My current kernel version is 3.9.9.
+>  /*
+>   * Kernel needs to suspend all functions separately. Therefore all
+>   * registered functions must have drivers with suspend and resume
+> @@ -120,7 +127,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+>   * If already not resumed, this function turns on the traffic and
+>   * sends a host sleep cancel request to the firmware.
+>   */
+> -static int mwifiex_pcie_resume(struct pci_dev *pdev)
+> +static int __mwifiex_pcie_resume(struct pci_dev *pdev)
+>  {
+>  	struct mwifiex_adapter *adapter;
+>  	struct pcie_service_card *card;
+> @@ -150,6 +157,13 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
+>  
+>  	return 0;
+>  }
+> +
+> +static int mwifiex_pcie_resume(struct device *dev)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	return __mwifiex_pcie_resume(pdev);
+> +}
+>  #endif
+>  
+>  /*
+> @@ -213,7 +227,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+>  	if (user_rmmod) {
+>  #ifdef CONFIG_PM
+>  		if (adapter->is_suspended)
+> -			mwifiex_pcie_resume(pdev);
+> +			__mwifiex_pcie_resume(pdev);
 
-If changes can be integrated for stock kernel?
+You could use mwifiex_pcie_resume(&pdev->dev) here and then the extra
+function __mwifiex_pcie_resume() is not needed any more.
 
-yours respectfully, Ivan
+>  #endif
+>  
+>  		for (i = 0; i < adapter->priv_num; i++)
+> @@ -249,6 +263,14 @@ static DEFINE_PCI_DEVICE_TABLE(mwifiex_ids) = {
+>  
+>  MODULE_DEVICE_TABLE(pci, mwifiex_ids);
+>  
+> +#ifdef CONFIG_PM
+> +/* Power Management Hooks */
+> +static const struct dev_pm_ops mwifiex_pcie_pm_ops = {
+> +	.suspend = mwifiex_pcie_suspend,
+> +	.resume = mwifiex_pcie_resume,
+> +};
+> +#endif
+> +
+
+Is it intended that you do not use SIMPLE_DEV_PM_OPS() like most of the
+other wifi drivers?
+
+>  /* PCI Device Driver */
+>  static struct pci_driver __refdata mwifiex_pcie = {
+>  	.name     = "mwifiex_pcie",
+> @@ -256,9 +278,9 @@ static struct pci_driver __refdata mwifiex_pcie = {
+>  	.probe    = mwifiex_pcie_probe,
+>  	.remove   = mwifiex_pcie_remove,
+>  #ifdef CONFIG_PM
+> -	/* Power Management Hooks */
+> -	.suspend  = mwifiex_pcie_suspend,
+> -	.resume   = mwifiex_pcie_resume,
+> +	.driver   = {
+> +		.pm = &mwifiex_pcie_pm_ops,
+> +	},
+>  #endif
+>  };
+>  
+> 
+
