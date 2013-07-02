@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:57518 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932451Ab3GKJL0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:11:26 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>
-Subject: [PATCH 36/50] media: usb: em28xx: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:59 +0800
-Message-Id: <1373533573-12272-37-git-send-email-ming.lei@canonical.com> (sfid-20130711_111140_212687_983F353B)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:51907 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753165Ab3GBSbA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 14:31:00 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Shuah Khan <shuah.kh@samsung.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"rjw@sisk.pl" <rjw@sisk.pl>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"shuahkhan@gmail.com" <shuahkhan@gmail.com>
+Date: Tue, 2 Jul 2013 11:30:50 -0700
+Subject: RE: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from
+ legacy pm ops
+Message-ID: <477F20668A386D41ADCC57781B1F70430EA2E06335@SC-VEXCH1.marvell.com> (sfid-20130702_203125_938663_AEDD0603)
+References: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com>
+In-Reply-To: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+Hi Shuah,
 
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: linux-media@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/media/usb/em28xx/em28xx-core.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Thanks for the patch.
 
-diff --git a/drivers/media/usb/em28xx/em28xx-core.c b/drivers/media/usb/em28xx/em28xx-core.c
-index fc157af..0d698f9 100644
---- a/drivers/media/usb/em28xx/em28xx-core.c
-+++ b/drivers/media/usb/em28xx/em28xx-core.c
-@@ -941,6 +941,7 @@ static void em28xx_irq_callback(struct urb *urb)
- {
- 	struct em28xx *dev = urb->context;
- 	int i;
-+	unsigned long flags;
- 
- 	switch (urb->status) {
- 	case 0:             /* success */
-@@ -956,9 +957,9 @@ static void em28xx_irq_callback(struct urb *urb)
- 	}
- 
- 	/* Copy data from URB */
--	spin_lock(&dev->slock);
-+	spin_lock_irqsave(&dev->slock, flags);
- 	dev->usb_ctl.urb_data_copy(dev, urb);
--	spin_unlock(&dev->slock);
-+	spin_unlock_irqrestore(&dev->slock, flags);
- 
- 	/* Reset urb buffers */
- 	for (i = 0; i < urb->number_of_packets; i++) {
--- 
-1.7.9.5
+> Convert the mwifiex/pci driver to use dev_pm_ops for power management and
+> remove Legacy PM handling. This change re-uses existing suspend and resume
+> interfaces for dev_pm_ops.
+> 
+> Signed-off-by: Shuah Khan <shuah.kh@samsung.com>
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
 
