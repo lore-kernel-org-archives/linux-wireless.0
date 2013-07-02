@@ -1,124 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46537 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752616Ab3GPHjI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:39:08 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 02/10] ath10k: decouple core start/stop logic
-Date: Tue, 16 Jul 2013 09:38:51 +0200
-Message-ID: <1373960339-8525-3-git-send-email-michal.kazior@tieto.com> (sfid-20130716_093915_142553_E5FB9A0E)
-In-Reply-To: <1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
-References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
- <1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:54159 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753232Ab3GBPgB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 11:36:01 -0400
+Date: Tue, 2 Jul 2013 18:35:26 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 8/9] wlcore: sdio: get clocks from device tree
+Message-ID: <20130702153526.GI7013@arwen.pp.htv.fi> (sfid-20130702_173624_321900_7F631CD9)
+Reply-To: <balbi@ti.com>
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+ <1372776948-24840-9-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="3eH4Qcq5fItR5cpy"
+In-Reply-To: <1372776948-24840-9-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enables code reuse for proper hw reconfiguration
-that is in turn required for proper
-suspend/hibernation/wowlan support.
+--3eH4Qcq5fItR5cpy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c |   44 +++++++++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/core.h |    2 ++
- 2 files changed, 34 insertions(+), 12 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index f1312fa..dcddae4 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -502,8 +502,7 @@ void ath10k_core_destroy(struct ath10k *ar)
- }
- EXPORT_SYMBOL(ath10k_core_destroy);
- 
--
--int ath10k_core_register(struct ath10k *ar)
-+int ath10k_core_start(struct ath10k *ar)
- {
- 	struct bmi_target_info target_info;
- 	int status;
-@@ -589,9 +588,36 @@ int ath10k_core_register(struct ath10k *ar)
- 	if (status)
- 		goto err_disconnect_htc;
- 
-+	return 0;
-+
-+err_disconnect_htc:
-+	ath10k_htc_stop(&ar->htc);
-+err_htt_detach:
-+	ath10k_htt_detach(&ar->htt);
-+err_wmi_detach:
-+	ath10k_wmi_detach(ar);
-+err:
-+	return status;
-+}
-+
-+void ath10k_core_stop(struct ath10k *ar)
-+{
-+	ath10k_htc_stop(&ar->htc);
-+	ath10k_htt_detach(&ar->htt);
-+	ath10k_wmi_detach(ar);
-+}
-+
-+int ath10k_core_register(struct ath10k *ar)
-+{
-+	int status;
-+
-+	status = ath10k_core_start(ar);
-+	if (status)
-+		goto err;
-+
- 	status = ath10k_mac_register(ar);
- 	if (status)
--		goto err_disconnect_htc;
-+		goto err_core_stop;
- 
- 	status = ath10k_debug_create(ar);
- 	if (status) {
-@@ -603,12 +629,8 @@ int ath10k_core_register(struct ath10k *ar)
- 
- err_unregister_mac:
- 	ath10k_mac_unregister(ar);
--err_disconnect_htc:
--	ath10k_htc_stop(&ar->htc);
--err_htt_detach:
--	ath10k_htt_detach(&ar->htt);
--err_wmi_detach:
--	ath10k_wmi_detach(ar);
-+err_core_stop:
-+	ath10k_core_stop(ar);
- err:
- 	return status;
- }
-@@ -620,9 +642,7 @@ void ath10k_core_unregister(struct ath10k *ar)
- 	 * Otherwise we will fail to submit commands to FW and mac80211 will be
- 	 * unhappy about callback failures. */
- 	ath10k_mac_unregister(ar);
--	ath10k_htc_stop(&ar->htc);
--	ath10k_htt_detach(&ar->htt);
--	ath10k_wmi_detach(ar);
-+	ath10k_core_stop(ar);
- }
- EXPORT_SYMBOL(ath10k_core_unregister);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 2f7065c..5a0b2ce 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -353,6 +353,8 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
- 				  const struct ath10k_hif_ops *hif_ops);
- void ath10k_core_destroy(struct ath10k *ar);
- 
-+int ath10k_core_start(struct ath10k *ar);
-+void ath10k_core_stop(struct ath10k *ar);
- int ath10k_core_register(struct ath10k *ar);
- void ath10k_core_unregister(struct ath10k *ar);
- 
--- 
-1.7.9.5
+On Tue, Jul 02, 2013 at 05:55:47PM +0300, Luciano Coelho wrote:
+> @@ -294,6 +316,8 @@ static int wl1271_probe(struct sdio_func *func,
+>  	/* Use block mode for transferring over one block size of data */
+>  	func->card->quirks |=3D MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
+> =20
+> +	sdio_set_drvdata(func, glue);
 
+is this move really necessary ?
+
+--=20
+balbi
+
+--3eH4Qcq5fItR5cpy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJR0vM+AAoJEIaOsuA1yqREC0QQAJ6PUt5wCGYot1Z9OVllgCWy
+4JvzQJKqDKB9TtP7/OpCJFjWiwxRmC/Vg6FxKwpetCOwFJW9sWPbgBjUWuyVKyZj
+R3pZM2h6oCiJdOxMdoAlmrNC8IswXksivnjN/PEmUJUYDMKcSVWqo+v/ssk+2gYg
+fyfSRgoPef2KbL9xDnRuft30CNRa8QaiaF+tpM0M9QLqlsmB2Mf/QjmXfcf5Gh+O
+eMFCGNsfjZKrkMhZZo4QzeZUkA3fM0jGhI6EmmocOdW9I51mFn2Zg9+mrZdREd/e
+Hf+3nZZ+KtusXrtzcQfP8mu5kTD+mzET/dvklKp4d2xQdc2zLiDl11lQDqgxs889
+e7Oly32DHFMMyKgyOEnnOHt9AExR2mZ7qJs8/2Xf6DHK0wSaK9864n1mlSC6XuDT
+izvKmNnk7kNY1ZPCwHa9yt85FPlcH8mq0l1TmH3Z10HS/NpTtOzyZ+PGyPs4c6FC
+SjbiB71LRie3gAY43wTETKCFXQ/RGvNE110v6sVHH350orMTg+hGd+mwrtx+ovj7
+5qvlWxAZ64QVpiAFDxl7F2L8pDnU80L+D8a6FcGoKU1PPtO2FNmkP+x6fe96Q2zg
+4SCewk9i6SblMV0Rk8vSlBh0cVUrsP9rYJBe/QsnizC6bIUi9oqunIlP9zcSheX5
+RDl7TCEZjO/o9oIvABby
+=h1mL
+-----END PGP SIGNATURE-----
+
+--3eH4Qcq5fItR5cpy--
