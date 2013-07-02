@@ -1,149 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:38533 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756783Ab3GQSrF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jul 2013 14:47:05 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Spinadel, David" <david.spinadel@intel.com>,
-	"Ginsburg, Noam" <noam.ginsburg@intel.com>,
-	"Perelmooter, Liraz" <liraz.perelmooter@intel.com>,
-	"Shalev, Oz" <oz.shalev@intel.com>,
-	Michael Green <green@qca.qualcomm.com>
-Subject: RE: [PATCH 1/3] [RFC] cfg80211: Add indoor only and GO concurrent
- channel attributes
-Date: Wed, 17 Jul 2013 18:47:00 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A01AD31E07@HASMSX106.ger.corp.intel.com> (sfid-20130717_204711_399037_DF3B55BD)
-References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
- <1372768095-26053-2-git-send-email-ilan.peer@intel.com>
- <CAB=NE6Wr_Y+uoGwOT_nE-VE49vd0eobv_F7=hF=mtVfGgCOehg@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A01AD2DF7B@HASMSX106.ger.corp.intel.com>
- <CAB=NE6WBz36HktdvOd_Ay=xrx0LJQd=9MxxTrTFKhALS+HMHzg@mail.gmail.com>
-In-Reply-To: <CAB=NE6WBz36HktdvOd_Ay=xrx0LJQd=9MxxTrTFKhALS+HMHzg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58345 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932167Ab3GBGmk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 02:42:40 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Chang Liu <liuchang.ee@gmail.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<erez.kirshenbaum@wilocity.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: Fwd: User-level question: on wil6210
+Date: Tue, 2 Jul 2013 09:42:34 +0300
+Message-ID: <5387010.IR5Cfn11iz@lx-vladimir> (sfid-20130702_084243_916208_2F6F9FED)
+In-Reply-To: <20130701160759.GA20999@tuxdriver.com>
+References: <CAGvsL42OLgD2hYKAd_uwLr+Np_SYu6yuasEK=BdU0YbZphB-jQ@mail.gmail.com> <CAGvsL40K1ON3eNttF4cAexw23PMYTx7wEs2RwKygtyVw-6cc2A@mail.gmail.com> <20130701160759.GA20999@tuxdriver.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVpcywNCg0KT25jZSBhZ2FpbiwgdGhhbmtzIGZvciB0aGUgY29tbWVudHMgOikNCg0KUmVn
-YXJkcywNCg0KSWxhbi4NCg0KPiA+PiBJcyBXRkQgV2lGaSBEaXNwbGF5PyBJcyB0aGVyZSBhbnkg
-c3RyaWN0IHJlbGF0aW9uc2hpcCBoZXJlIHRvIFdGRCBhbmQNCj4gPj4gR08gYW5kIHJlZ3VsYXRv
-cnkgb3IgaXMgV0ZEIGp1c3QgYSB1c2UgY2FzZSBleGFtcGxlPyBBcmUgeW91DQo+ID4+IGluZGlj
-YXRpbmcgdGhhdCB0aGUgRkNDIGlzIG1ha2luZyBzcGVjaWFsIHJ1bGVzIGZvciBjYXNlcyBpbiBz
-cGVjaWZpYw0KPiA+PiBiYW5kcyB3aGVyZSBHTyAqY2FuKiBjby1leGlzdCB3aXRoIG90aGVyIEdP
-IGRldmljZXMgPw0KPiA+DQo+ID4gV0ZEIGlzIFdpRmkgZGlyZWN0IGluIHRoaXMgY29udGV4dC4g
-SSBkbyBub3QgdGhpbmsgdGhhdCB0aGUgRkNDIGFyZSBtYWtpbmcNCj4gc3BlY2lhbCBydWxlcyBv
-bmx5IGZvciBHTyBzcGVjaWZpYyBzY2VuYXJpb3MgYnV0IGEgbW9yZSBnZW5lcmFsIGFwcHJvYWNo
-IHdoZXJlDQo+ICJjb21wbGlhbmNlIG1heSBiZSBhY2hpZXZlZCB1bmRlciB0aGUgZ3VpZGFuY2Ug
-b2YgYW4gYXV0aG9yaXplZCBtYXN0ZXIiLg0KPiBUaGUgV0ZEL1AyUCBHTyBjYXNlIGlzIG9ubHkg
-YW4gZXhhbXBsZS4NCj4gDQo+IE9LIHRoZW4gSSB0aGluayBjdWxsdWxhciBiYXNlIHN0YXRpb24g
-cmVndWxhdG9yeSBoaW50cyBtaWdodCBiZSBhbm90aGVyIGV4YW1wbGUuDQo+IEluIGZhY3QgSSBi
-ZWxpZXZlIEkgYW0gbG9va2luZyBhdCB0aGUgaW5mb3JtYXRpb24geW91IG1pZ2h0IGJlIHVzaW5n
-IGFzDQo+IHJlZmVyZW5jZS4gSSBhbSBsb29raW5nIGF0IHB1YmxpYyBkcmFmdCBlZGl0IGZvciBG
-Q0MgS0RCIDU5NDI4MDoNCj4gDQo+IGh0dHBzOi8vYXBwcy5mY2MuZ292L2Vhcy9jb21tZW50cy9H
-ZXRQdWJsaXNoZWREb2N1bWVudC5odG1sP2lkPTMyNyZ0bj01DQo+IDI4MTIyDQoNClRoaXMgaXMg
-aW5kZWVkIHRoZSByZWxldmFudCBkb2N1bWVudC4NCg0KPiANCj4gVGhlIG9yaWdpbmFsIEtEQjoN
-Cj4gDQo+IGh0dHA6Ly90cmFuc2l0aW9uLmZjYy5nb3Yvb2V0L2VhL3ByZXNlbnRhdGlvbnMvZmls
-ZXMvYXByMTEvM2IuU29mdHdhcmVDb25maWd1cg0KPiBhdGlvbkNvbnRyb2wtUkRKUy5wZGYNCj4g
-DQo+IFNwZWNpZmljYWxseSBpbiB0aGUgYWJvdmUgZG9jdW1lbnQsIHRoZSBkcmFmdCBlZGl0LCBJ
-IGFtIGxvb2tpbmcgYXQgcGFnZSAxMi4gVGhhdA0KPiBhY3R1YWxseSByZWZlcmVuY2VzIFdpRmkg
-RGlyZWN0IHByZWNpc2VseSBhbmQgY29uc2lkZXJzIHRoZSBjYXNlIHRoYXQgYSBHTyBtYXkNCj4g
-bmVlZCB0byBtb3ZlIG91dCBvZiBpdHMgY2hhbm5lbCBpZiBpdHMgbWFzdGVyIGRldmljZSBpdHMg
-dXNpbmcgdG8gY29uZmlndXJlIGl0c2VsZg0KPiBhbHNvIHN3aXRjaGVzIGNoYW5uZWxzLiBHaXZl
-biB0aGF0IGNlbGx1bGFyIGJhc2Ugc3RhdGlvbiBoaW50cyBjb3VsZCBhbHNvDQo+IHRlY2huaWNh
-bGx5IGJlIHVzZWQgdGhpcyBhbHNvIHdvdWxkIG5lZWQgdG8gYmUgY29uc2lkZXJlZCBmb3IgY2Vs
-bHVsYXIgYmFzZQ0KPiBzdGF0aW9ucy4gQnV0IGFsc28gbm90ZSBvbiBwYWdlIDE0IGl0IHN0YXRl
-cyBjbGVhcmx5Og0KPiANCj4gIk1vYmlsZSBDb3VudHJ5IENvZGVzIChNQ0MpIG9yIE1vYmlsZSBO
-ZXR3b3JrIENvZGVzDQo+IChNTkMpIGFyZSBub3QgYWNjZXB0YWJsZSBmb3IgcHJvZ3JhbW1pbmcg
-aG9zdCBjb21wbGlhbmNlIg0KPiANCj4gU28gaXQgc2VlbXMgY2VsbHVsYXIgYmFzZSBzdGF0aW9u
-IGhpbnRzIGFyZSBzaW1wbHkgbm90IGFsbG93ZWQgYnkgdGhlIEZDQyAodW5sZXNzDQo+IHNwZWNp
-ZmljIGFwcHJvdmFsIGlzIHJlcXVlc3RlZCAvIHJldmlzZWQpLiBFdmVuIGlmIHRoZSBGQ0MgYWxs
-b3dlZCBmb3IgaXQgSSBiZWxpZXZlDQo+IGFuIEFQSSB3b3VsZCBuZWVkIHRvIGJlIHByb3ZpZGVk
-IHNob3VsZCBjZWxsdWxhciBiYXNlIHN0YXRpb25zIGhhdmUgYSBjYXNlDQo+IHdoZXJlIHRoZXkg
-bWF5IHN0b3Agb3BlcmF0aW5nIGFzIHdlbGwgc2ltaWxhciB0byBERlMuDQo+IA0KPiBCVFcgaW4g
-ZnV0dXJlIGl0ZXJhdGlvbnMgb2YgcGF0Y2hlcyBJJ2QgYXBwcmVjaWF0ZSBpZiB5b3UgY2FuIGlu
-Y2x1ZGUgdGhlIGFib3ZlDQo+IHJlZmVyZW5jZXMgdG8gZG9jdW1lbnRhdGlvbiBnaXZlbiB0aGF0
-IHdlJ3ZlIHB1bGxlZCB0aGVtIHVwIG5vdy4NCj4gDQoNClN1cmUuDQoNCj4gPj4gWW91IGFubm90
-YXRlIHRoYXQgdGhpcyBpcyBzb21laG93IHJlbGF0ZWQgdG8gREZTLCBhcmUgdGhlIEdPDQo+ID4+
-IGNvbmN1cnJlbnQgcnVsZXMgdGhhdCB0aGUgRkNDIGlzIGRlZmluaW5nIG9ubHkgYXBwbGljYWJs
-ZSB0byBERlMNCj4gPj4gZnJlcXVlbmN5IHJhbmdlcz8gSWYgc28gd291bGQgaXQgc3VmZmljZSB0
-byBvbmx5IHVzZSBERlMgZmxhZyA/IE9yDQo+ID4+IGFyZSB0aGVyZSBvdGhlciBzcGVjaWFsIGNh
-c2VzIGJleW9uZCBERlMgZnJlcXVlbmN5IHJhbmdlcyB0aGF0IHRoZSBGQ0MgaXMNCj4gY3JlYXRp
-bmcgc3BlY2lhbCBoYW5kbGluZz8NCj4gPj4NCj4gPg0KPiA+IERGUyB3YXMgZ2l2ZW4gaGVyZSBh
-cyBhbiBleGFtcGxlLiBHZW5lcmFsbHksIEkgdGhpbmsgdGhhdCB0aGUgY2hhbmdlcyB0aGF0DQo+
-IHRoZSBGQ0MgYXJlIG1ha2luZyBhcmUgdGFyZ2V0aW5nIHZhcmlvdXMgc2NlbmFyaW9zIGFuZCB2
-YXJpb3VzIFJGIGRldmljZXMgKGZvcg0KPiBleGFtcGxlIHRob3NlIGRlZmluZWQgaW4gcGFydCAx
-NSBvZiBDRlIgdGl0bGUgNDcpLg0KPiANCj4gT0sgdGhhbmtzLiBUaGluZ3MgYXJlIGNsZWFyIG5v
-dyB0aGF0IEkgc2VlIHRoZSBkb2N1bWVudCB0aGF0IHlvdSBtaWdodCBiZQ0KPiByZWZlcnJpbmcg
-dG8uDQo+IA0KPiA+PiBBcGFydCBmcm9tIHRoZSBGQ0MgYXJlIHlvdSBhd2FyZSBvZiBzcGVjaWFs
-IGNhc2VzIGhhbmRsaW5nIGZvciBvdGhlcg0KPiA+PiByZWd1bGF0b3J5IGJvZGllcyBhdCB0aGlz
-IHBvaW50Pw0KPiA+DQo+ID4gTm90IHRoYXQgSSdtIGF3YXJlIG9mLiBBZGRpbmcgc29tZSBtb3Jl
-IHBlb3BsZSB0aGF0IG1pZ2h0IGtub3cgbW9yZS4NCj4gDQo+IEhleSBmb2xrcywgYW55b25lPyA6
-KQ0KPiANCg0KPiA+DQo+ID4gQWN0dWFsbHksIHRoaXMgc2hvdWxkIGJlIGEgR08gb25seSBmbGFn
-LCBtZWFuaW5nIHRoYXQgc3VjaCByZWxheGF0aW9uDQo+ID4gc2hvdWxkIG5vdCBiZSB2YWxpZCBm
-b3Igc29mdCBBUCwgSUJTUyBvciBtZXNoLiBUaGUgaW50ZW50aW9uIGhlcmUgaXMNCj4gPiBsaW1p
-dCB0aGUgZXh0ZW5kIG9mIHRoZSBjZWxsLCBhbmQgcHJldmVudCBkYWlzeSBjaGFpbiBzY2VuYXJp
-b3MNCj4gPiAoYXNzdW1lIHRoYXQgeW91IGFsbG93IGEgc29mdCBBUCBvbiBzdWNoIGEgY2hhbm5l
-bCBhbmQgdGhhdCBhIGNsaWVudA0KPiA+IGFzc29jaWF0ZWQgdG8gaXQsIGFuZCB0aGVuIHRoYXQg
-ZGV2aWNlIGNhbiBhbHNvIHN0YXJ0IGEgc29mdCBBUCBvbiB0aGUNCj4gPiBjaGFubmVsIC4uLi4p
-LiBBbnl3YXksIEknbGwgbmVlZCB0byBoYXZlIGFub3RoZXIgbG9vayBhdCB0aGlzIChtaWdodA0K
-PiA+IGJlIHBlcm1pc3NpYmxlIGZvciBJQlNTIC4uLikNCj4gDQo+IEJhc2VkIG9uIHRoZSBkb2N1
-bWVudGF0aW9uIEkgcmV2aWV3ZWQgYW5kIHlvdXIgcHJvcG9zYWwgaXQnZCBzZWVtIHRvIG1lIHRo
-YXQNCj4gd2UgY2FuIGRpc3Rpbmd1aXNoIEdPIG9uIHRoZSB1cHBlciBsYXllcnMgYW5kIGRldGVy
-bWluZSBpZiBhIGNoYW5uZWwgaXMgREZTIG9yDQo+IG5vdCBieSBqdXN0IHRoZSBERlMgZmxhZy4g
-VGhlIG5leHQgaGludCB5b3UnZCBuZWVkIGlzIGlmIHRoZSBHTyBnb3QgcmVndWxhdG9yeQ0KPiBp
-bmZvcm1hdGlvbiBmcm9tIGEgbWFzdGVyIHNvbWVob3csIG5vPw0KDQpUaGlzIHNob3VsZCBhbHNv
-IGJlIGhhbmRsZWQgYnkgdXNlciBzcGFjZSwgYmFzZWQgb24gdGhlIGRldmljZSB0eXBlL3N1YiB0
-eXBlIG9mIHRoZSBsb2NhbCBkZXZpY2UgZGlyZWN0bHksIG9yIGluZGlyZWN0bHkgdGhyb3VnaCBv
-dGhlciBtZWFucyBzdWNoIGEgbWFuYWdlZCBpbnRlcmZhY2UgYXNzb2NpYXRpbmcgd2l0aCBhbiBB
-UCB0aGF0IGl0J3MgZGV2aWNlIHR5cGUgdmFsdWUgaXMgNiBldGMuDQoNCj4gVGhhdCBpcyBJIGFt
-IG5vdCBzZWVpbmcgYSBuZWVkIGZvciBhIG5ldyBmbGFnIGF0IHRoaXMgcG9pbnQgaW4gd2lyZWxl
-c3MtcmVnZGIsDQo+IGdpdmVuIGFsc28gSSBtZW50aW9uZWQgYW5vdGhlciB0eXBlIG9mIGNhc2Ug
-Zm9yIHJlZ3VsYXRvcnkgaGludHMgdGVjaG5pY2FsbHkNCj4gcG9zc2libGUgKGNlbGx1bGFyIGJh
-c2Ugc3RhdGlvbiBoaW50cyBidXQgaXQgc2VlbXMgb25seSBhbGxvd2VkIHdpdGggZXhjZXB0aW9u
-YWwNCj4gcmV2aWV3IGJ5IHRoZSBGQ0MpLg0KPiANCj4gSSB0YWtlIGl0IHdoYXQgeW91IHdhbnQg
-dG8gZW5hYmxlIGhlcmUgaXMgR08gb3BlcmF0aW9uIG9uIERGUyBjaGFubmVscyBhbmQgdXNlDQo+
-IGNvdW50cnkgSUVzIHRvIGRldGVybWluZSBpZiB5b3UgY2FuIHVzZSBHTywgYnV0IGlmIHlvdSBk
-byBoYXZlIEdPIGVuYWJsZWQgdGhlbg0KPiB5b3UnZCB3YW50IGhvb2tzIHRvIG5vdCBkYWlzeSBj
-aGFpbiwgYWNrPw0KDQpDdXJyZW50bHksIHdlIGRvIG5vdCBpbnRlbmQgdG8gYmFzZSB0aGUgcmVs
-YXhhdGlvbiBvbiB0aGUgY291bnRyeSBJRSBkaXJlY3RseSwgYnV0IGJhc2UgaXQgb24gdGhlIGZh
-Y3QgdGhhdCBpZiB0aGVyZSBpcyBhIG1hbmFnZWQgY29ubmVjdGlvbiB0byBhbiBBUCB3aG8ncyBu
-b3QgYSBtb2JpbGUgZGV2aWNlIChhc3N1bWluZyB0aGF0IGl0IGlzIGFuIGF1dGhvcml6ZWQgbWFz
-dGVyKSwgdGhhbiB0aGUgY2hhbm5lbCB1c2VkIGJ5IHRoZSBtYW5hZ2VkIGNvbm5lY3Rpb24gaXMg
-dmFsaWQgZm9yIHVzZSAoYXMgbG9uZyBhcyB0aGUgbWFuYWdlZCBpbnRlcmZhY2UgaXMgY29ubmVj
-dGVkIHRvIHRoZSBBUCBvbiB0aGUgY2hhbm5lbCkuIA0KDQo+DQo+ID4+ID4gMi4gSW5kb29yIG9w
-ZXJhdGlvbiwgd2hlcmUgaW4gYmFuZHMgcmVxdWlyaW5nIGluZG9vciBvcGVyYXRpb24sIHRoZQ0K
-PiA+PiA+ICAgIGRldmljZSBtdXN0IGJlIHByb2dyYW1tZWQgdG8gZGV0ZWN0IGluZG9vciBvcGVy
-YXRpb24sIG9yDQo+ID4+ID4gICAgLSBEZXZpY2UgbXVzdCBiZSBjb25uZWN0ZWQgdG8gQUMgUG93
-ZXINCj4gPj4NCj4gPj4gRG9lcyBhbnlvbmUgIGtub3cgaWYgdGhlIEZDQyBjb25zaWRlcnMgImlu
-ZG9vciIgaWYgd2UgcG93ZXIgYSBkZXZpY2UNCj4gPj4gdGhyb3VnaCB0aGUgY2FyIG9uIEFDIHBv
-d2VyIHRocm91Z2ggYSBjb252ZXJ0ZXIgPyBBcmUgd2Ugd2lsbGluZyB0bw0KPiA+PiBpZ25vcmUg
-dGhhdCBjb3JuZXIgY2FzZT8NCj4gPg0KPiA+IE5vLiBBQyBwb3dlciBtZWFucyAibWFpbnMiIGFu
-ZCBub3QgdGhyb3VnaCBwb3J0YWJsZSBEQyBjb252ZXJ0ZXJzIChzZWUNCj4gc2xpZGUgMTIgaW4N
-Cj4gaHR0cHM6Ly9hcHBzLmZjYy5nb3YvZWFzL2NvbW1lbnRzL0dldFB1Ymxpc2hlZERvY3VtZW50
-Lmh0bWw/aWQ9MzI3JnRuPQ0KPiA1MjgxMjIpLiBJdCB3b3VsZCBiZSB1cCB0byB0aGUgdXNlciBz
-cGFjZSB0byBpZGVudGlmeSB0aGUgZGV2aWNlIHR5cGUgZXRjLiBhbmQNCj4gaWRlbnRpZnkgaWYg
-dGhpcyBhIHRydWx5IEFDIHBvd2VyZWQgQVAuDQo+IA0KPiBPSyB0aGFua3MgZm9yIHRoZSBjbGFy
-aWZpY2F0aW9uLiBJIHdvbmRlciBpZiB3ZSBjYW4gZGlzdGluZ3Vpc2ggYmV0d2VlbiB0aGUgdHdv
-DQo+IGluIHVzZXJzcGFjZSB0b2RheS4gSSdtIGhhcHB5IHRvIHN0YXJ0IHBlZ2dpbmcgZnJlcXVl
-bmN5IHJhbmdlcyBhcyBpbmRvb3Itb25seQ0KPiBvbiB3aXJlbGVzcy1yZWdkYiBldmVuIGlmIHdl
-IGRvbid0IGhhdmUgdGhlIHVzZXJzcGFjZSBBUElzIHRvIGFubm90YXRlIHdoZW4gYQ0KPiBkZXZp
-Y2UgaXMgaW5kb29yIG9yIG5vdCB5ZXQuIFBhdGNoZXMgd2VsY29tZWQgdGhlbi4NCj4gDQoNCkFn
-YWluLCB3ZSBhcmUgZ29pbmcgdG8gdXNlIHRoZSBkZXZpY2UgdHlwZS9zdWIgdHlwZSBhcyBhbiBp
-bmRpY2F0aW9uIHRvIGFuIEFQIGJlaW5nIEFDIHBvd2VyZWQuDQoNCj4gPj4gPiAgICAtIERldmlj
-ZSBtdXN0IGJlIHVuZGVyIHRoZSBjb250cm9sIG9mIGEgbG9jYWwgbWFzdGVyIHRoYXQgaXMNCj4g
-Pj4gPiBhY3RpbmcNCj4gPj4NCj4gPj4gSW50ZXJlc3RpbmcsIHNvIHNvbWUgQVBJcyB3b3VsZCBi
-ZSBkZWZpbmVkLCBJIHRha2UgaXQgb24gaG9zdGFwZCB0bw0KPiA+PiBkbyB0aGUgcHJvcGVyIGNh
-bGxiYWNrcyB0byAnc2xhdmUnIHR5cGUgb2YgZGV2aWNlcyB0aGF0IGRlcGVuZCBvbiB0aGUNCj4g
-Pj4gbG9jYWwgbWFzdGVyKHMpLiBJIGNvdWxkIGVudmlzaW9uIHRoaXMgYmVpbmcgaW1wbGVtZW50
-ZWQgb24gaG9zdGFwZA0KPiA+PiBieSBleHBhbmRpbmcgdGhlIEFQIGludGVyZmFjZSB0eXBlIGFu
-ZCBhc3NvY2lhdGluZyAnc2xhdmUnIGRldmljZXMNCj4gPj4gYW5kIGNhbGxiYWNrcyBmb3IgdXBk
-YXRlcyBvbiBBUCBkZXZpY2UgdXBkYXRlcyAoY2hhbm5lbCBjaGFuZ2VzLCBhbmQgc28NCj4gb24p
-LiBJcyB0aGlzIHdvcmsgYmVpbmcgcGxhbm5lZD8NCj4gPg0KDQpOb3RlIHN1cmUgdGhhdCBJIGZv
-bGxvdyAuLi4gSG93ZXZlciwgd2UgZG8gaW50ZW5kIHRvIGFkZCB0aGlzIHR5cGUgb2Ygc3VwcG9y
-dCB0byBob3N0YXAuDQoNCj4gPiBZZXMuIFdlIGhhdmUgcGxhbnMgdG8gaW5jb3Jwb3JhdGUgbW9y
-ZSBsb2dpYyB0byBob3N0YXAgKGN1cnJlbnRseSBpbnRvDQo+IHdwYV9zdXBwbGljYW50IGZvciBQ
-MlAgdXNlIGNhc2VzKS4NCj4gDQo+IFN3ZWV0Lg0KPiANCj4gICBMdWlzDQoNCg0KDQo=
+On Monday, July 01, 2013 12:07:59 PM John W. Linville wrote:
+> Chang,
+> 
+> It looks to me like you should be using the ath9k driver.  What makes
+> you think that you have a wil6210?
+> 
+> In any case, I've Cc'ed Vladimir and Sujith -- hopefully one of them
+> can be more helpful. :-)
+> 
+> John
+
+John,
+
+Thanks for forwarding. Indeed, it is for me.
+
+> 
+> On Sat, Jun 29, 2013 at 10:41:20AM +0200, Chang Liu wrote:
+> > Dear John,
+> > 
+> > My name is Chang, currently a student. I have a problem when I try to use
+> > wil6210 as driver. Sorry to bother you with this letter here. I read the
+> > notice on wireless.kernel.org and asked the same question on IRC but got no
+> > reply. I subscribed the mailing list and I know you are respected in this
+> > field. So I am here for help. I hope this doesn't bother you much.
+> > 
+> > The thing is: I have a laptop Dell 6430u, which has wil6210 inside. I
+> > downloaded the driver "compat driver-3.8.3-2-snp" and later run *make
+> > install* and *modprobe wil6210*. No error returned. When I check iw
+> > --version, it shows iw version 3.2.
+> > 
+> > Now I want to check whether or not I have installed the driver correctly
+> > and whether it works. I have no docking station (the access point) at hand
+> > right now. First I run* lspci -nn*, which returns:
+> > 
+<skip>
+> > 02:00.0 PCI bridge [0604]: Device [1ae9:0101] (rev 03)
+> > 03:00.0 PCI bridge [0604]: Device [1ae9:0200] (rev 03)
+> > 03:02.0 PCI bridge [0604]: Device [1ae9:0201] (rev 13)
+> > 03:03.0 PCI bridge [0604]: Device [1ae9:0201] (rev 13)
+> > 04:00.0 Network controller [0280]: Atheros Communications Inc. AR9462
+> > Wireless Network Adapter [168c:0034] (rev 01)
+
+Yes, these 5 devices above are from wil6210, so you definetely have wil6210
+card on your laptop.
+This card is composite device. For details, see wiki
+http://wireless.kernel.org/en/users/Drivers/wil6210
+On this card, there is firmware that is stored in the on-card flash memory, and
+is not loaded by the driver. Unfortunately, firmware on your laptop (and all
+laptops like this) flashed with device 1ae9:0301 disabled. This firmware support
+only so called WBE, that is essentially PCIE over 60g, for wireless docking.
+Wireless docking stations that are used with WBE are NOT access points; as far as I
+know there is no 60g access points available at this moment. You can run AP on another
+Linux laptop with wil6210.
+
+In order to support wifi, appropriate firmware need to be flashed on this card,
+and then you will see wi-fi device 1ae9:0301.
+To flash firmware, you need to contact Wilocity (adding Erez).
+
+> > 
+> > Now comes the question:
+> > 1. I saw on the website that the device 6210 should be "wil6210 device,
+> > 1ae9:0301" (from linux wireless wil6210 page
+> > http://wireless.kernel.org/en/users/Drivers/wil6210), which I cannot see
+> > now. How should I find where the device is?
+> > 
+> > 2. About the driver, I have no idea how to check whether it works.
+> > 
+> > I use Ubuntu 12.04.2 LTS, and uname -a give information as follows:
+> > Linux george-Latitude-6430U 3.5.0-23-generic #35~precise1-Ubuntu SMP Fri
+> > Jan 25 17:13:26 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
+You better use latest kernels since support for 60g band was integrated to versions
+3.7 (some initial bits) to 3.10; and even some more patches are in the pipe for
+inclusion in next versions.
+> > 
+<skip
+> > 
+> > 
+> > I am not familiar with linux, please help me with this. My id on the IRC
+> > channel #linux-wireless is george_.I have tried google but not much
+> > found.  I really hope you could help me with this. Thank you in advance!
+In general, 60g technology is in very early stages; wil6210 is 1-st commercially
+available device. For now, I'd say it is better to have good knowledge in Linux
+and wireless to experiment with this matter. You will also need to compile latest
+wpa_supplicant and iw from git, released with Ubuntu 12.10 versions are not
+good for 60g.
+> > 
+> > Best regards!
+> > Chang
+
+Thanks, Vladimir
