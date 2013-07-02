@@ -1,76 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:56977 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932073Ab3GKNCI (ORCPT
+Received: from mailout3.w2.samsung.com ([211.189.100.13]:56511 "EHLO
+	usmailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932776Ab3GBTe3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 09:02:08 -0400
-Received: by mail-lb0-f180.google.com with SMTP id o10so6699720lbi.39
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 06:02:06 -0700 (PDT)
-Message-ID: <51DEACCB.4000206@cogentembedded.com> (sfid-20130711_150226_647611_E5D21076)
-Date: Thu, 11 Jul 2013 17:02:03 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Ming Lei <ming.lei@canonical.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Johan Hovold <jhovold@gmail.com>
-Subject: Re: [PATCH 17/50] USB: serial: sierra: spin_lock in complete() cleanup
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-18-git-send-email-ming.lei@canonical.com>
-In-Reply-To: <1373533573-12272-18-git-send-email-ming.lei@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 2 Jul 2013 15:34:29 -0400
+From: Shuah Khan <shuah.kh@samsung.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "bzhao@marvell.com" <bzhao@marvell.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"rjw@sisk.pl" <rjw@sisk.pl>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"shuahkhan@gmail.com" <shuahkhan@gmail.com>,
+	Shuah Khan <shuah.kh@samsung.com>
+Subject: Re: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from legacy
+ pm ops
+Date: Tue, 02 Jul 2013 19:24:25 +0000
+Message-id: <B8EFE96D1287C24090BAD9D858E15E61734462@sisaex02sj> (sfid-20130702_213523_733881_EA436000)
+References: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com>
+ <51D32116.4010109@hauke-m.de>
+Content-type: text/plain; charset=us-ascii
+MIME-version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
-
-On 11-07-2013 13:05, Ming Lei wrote:
-
-> Complete() will be run with interrupt enabled, so change to
-> spin_lock_irqsave().
-
-> Cc: Johan Hovold <jhovold@gmail.com>
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-> ---
->   drivers/usb/serial/sierra.c |    9 +++++----
->   1 file changed, 5 insertions(+), 4 deletions(-)
-
-> diff --git a/drivers/usb/serial/sierra.c b/drivers/usb/serial/sierra.c
-> index de958c5..e79b6ad 100644
-> --- a/drivers/usb/serial/sierra.c
-> +++ b/drivers/usb/serial/sierra.c
-> @@ -433,6 +433,7 @@ static void sierra_outdat_callback(struct urb *urb)
->   	struct sierra_port_private *portdata = usb_get_serial_port_data(port);
->   	struct sierra_intf_private *intfdata;
->   	int status = urb->status;
-> +	unsigned long flags;
+On 07/02/2013 12:51 PM, Hauke Mehrtens wrote:
+> On 07/02/2013 05:24 PM, Shuah Khan wrote:
+>> Convert the mwifiex/pci driver to use dev_pm_ops for power management and
+>> remove Legacy PM handling. This change re-uses existing suspend and resume
+>> interfaces for dev_pm_ops.
+>>
+>> Signed-off-by: Shuah Khan <shuah.kh@samsung.com>
+>> ---
+>>   drivers/net/wireless/mwifiex/pcie.c |   34 ++++++++++++++++++++++++++++------
+>>   1 file changed, 28 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+>> index 20c9c4c..b169318 100644
+>> --- a/drivers/net/wireless/mwifiex/pcie.c
+>> +++ b/drivers/net/wireless/mwifiex/pcie.c
+>> @@ -85,7 +85,7 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
+>>    * If already not suspended, this function allocates and sends a host
+>>    * sleep activate request to the firmware and turns off the traffic.
+>>    */
+>> -static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+>> +static int __mwifiex_pcie_suspend(struct pci_dev *pdev)
+>>   {
+>>   	struct mwifiex_adapter *adapter;
+>>   	struct pcie_service_card *card;
+>> @@ -112,6 +112,13 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+>>   	return 0;
+>>   }
+>>
+>> +static int mwifiex_pcie_suspend(struct device *dev)
+>> +{
+>> +	struct pci_dev *pdev = to_pci_dev(dev);
+>> +
+>> +	return __mwifiex_pcie_suspend(pdev);
+>> +}
+>> +
 >
->   	intfdata = port->serial->private;
+> For what do you need __mwifiex_pcie_suspend() ? Why not make one
+> function out of these two?
+
+Originally, the reason is to keep __mwifiex_pcie_suspend() and 
+__mwifiex_pcie_resume() parameters the same so there will be no 
+confusion. However, I didn't think about using 
+mwifiex_pcie_resume(&pdev->dev) as you mentioned below. Yes, I can make 
+the change and not add two additional routines and send a v2 patch.
+
 >
-> @@ -443,12 +444,12 @@ static void sierra_outdat_callback(struct urb *urb)
->   		dev_dbg(&port->dev, "%s - nonzero write bulk status "
->   		    "received: %d\n", __func__, status);
+>>   /*
+>>    * Kernel needs to suspend all functions separately. Therefore all
+>>    * registered functions must have drivers with suspend and resume
+>> @@ -120,7 +127,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+>>    * If already not resumed, this function turns on the traffic and
+>>    * sends a host sleep cancel request to the firmware.
+>>    */
+>> -static int mwifiex_pcie_resume(struct pci_dev *pdev)
+>> +static int __mwifiex_pcie_resume(struct pci_dev *pdev)
+>>   {
+>>   	struct mwifiex_adapter *adapter;
+>>   	struct pcie_service_card *card;
+>> @@ -150,6 +157,13 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
+>>
+>>   	return 0;
+>>   }
+>> +
+>> +static int mwifiex_pcie_resume(struct device *dev)
+>> +{
+>> +	struct pci_dev *pdev = to_pci_dev(dev);
+>> +
+>> +	return __mwifiex_pcie_resume(pdev);
+>> +}
+>>   #endif
+>>
+>>   /*
+>> @@ -213,7 +227,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+>>   	if (user_rmmod) {
+>>   #ifdef CONFIG_PM
+>>   		if (adapter->is_suspended)
+>> -			mwifiex_pcie_resume(pdev);
+>> +			__mwifiex_pcie_resume(pdev);
 >
-> -	spin_lock(&portdata->lock);
-> +	spin_lock_irqsave(&portdata->lock, flags);
->   	--portdata->outstanding_urbs;
-> -	spin_unlock(&portdata->lock);
-> -	spin_lock(&intfdata->susp_lock);
-> +	spin_unlock_irqrestore(&portdata->lock, flags);
-> +	spin_lock_irqsave(&intfdata->susp_lock, flags);
+> You could use mwifiex_pcie_resume(&pdev->dev) here and then the extra
+> function __mwifiex_pcie_resume() is not needed any more.
 
-     You are allowing an interrupt enabled window where previously it 
-wasn't possible. Why notleave these 2 lines as is?
+Yes. That would eliminate the need for additional routine. I didn't 
+think about that option.
 
->   	--intfdata->in_flight;
-> -	spin_unlock(&intfdata->susp_lock);
-> +	spin_unlock_irqrestore(&intfdata->susp_lock, flags);
 >
->   	usb_serial_port_softint(port);
->   }
+>>   #endif
+>>
+>>   		for (i = 0; i < adapter->priv_num; i++)
+>> @@ -249,6 +263,14 @@ static DEFINE_PCI_DEVICE_TABLE(mwifiex_ids) = {
+>>
+>>   MODULE_DEVICE_TABLE(pci, mwifiex_ids);
+>>
+>> +#ifdef CONFIG_PM
+>> +/* Power Management Hooks */
+>> +static const struct dev_pm_ops mwifiex_pcie_pm_ops = {
+>> +	.suspend = mwifiex_pcie_suspend,
+>> +	.resume = mwifiex_pcie_resume,
+>> +};
+>> +#endif
+>> +
+>
+> Is it intended that you do not use SIMPLE_DEV_PM_OPS() like most of the
+> other wifi drivers?
 
-WBR, Sergei
+So the reason for this is SIMPLE_DEV_PM_OPS() is defined only when 
+CONFIG_PM_SLEEP is enabled. This driver doesn't defines suspend and 
+resume when CONFIG_PM is enabled and I didn't want to change that. Hope 
+that helps understand why I didn't use SIMPLE_DEV_PM_OPS()
 
+>
+>>   /* PCI Device Driver */
+>>   static struct pci_driver __refdata mwifiex_pcie = {
+>>   	.name     = "mwifiex_pcie",
+>> @@ -256,9 +278,9 @@ static struct pci_driver __refdata mwifiex_pcie = {
+>>   	.probe    = mwifiex_pcie_probe,
+>>   	.remove   = mwifiex_pcie_remove,
+>>   #ifdef CONFIG_PM
+>> -	/* Power Management Hooks */
+>> -	.suspend  = mwifiex_pcie_suspend,
+>> -	.resume   = mwifiex_pcie_resume,
+>> +	.driver   = {
+>> +		.pm = &mwifiex_pcie_pm_ops,
+>> +	},
+>>   #endif
+>>   };
+>>
+>>
+>
+>
+
+-- Shuah
+
+Shuah Khan, Linux Kernel Developer - Open Source Group Samsung Research 
+America (Silicon Valley) shuah.kh@samsung.com | (970) 672-0658
