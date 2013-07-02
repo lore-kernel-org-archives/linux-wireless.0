@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:47334 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932451Ab3GKJMN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:12:13 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>
-Subject: [PATCH 42/50] media: usb: tlg2300: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:06:05 +0800
-Message-Id: <1373533573-12272-43-git-send-email-ming.lei@canonical.com> (sfid-20130711_111434_734426_63A9A96C)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:58622 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752758Ab3GBURg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 16:17:36 -0400
+Message-ID: <1372796218.21065.87.camel@cumari.coelho.fi> (sfid-20130702_221753_512293_F5BBDCE3)
+Subject: Re: [PATCH v2 5/9] wlcore: always use one-shot IRQ
+From: Luciano Coelho <coelho@ti.com>
+To: <balbi@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Date: Tue, 2 Jul 2013 23:16:58 +0300
+In-Reply-To: <20130702153229.GG7013@arwen.pp.htv.fi>
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+	 <1372776948-24840-6-git-send-email-coelho@ti.com>
+	 <20130702153229.GG7013@arwen.pp.htv.fi>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so disable local
-interrupt before holding a global lock which is held without
-irqsave.
+On Tue, 2013-07-02 at 18:32 +0300, Felipe Balbi wrote:
+> On Tue, Jul 02, 2013 at 05:55:44PM +0300, Luciano Coelho wrote:
+> > Since we are now using threaded IRQs without the primary handler, we
+> > need to set IRQF_ONESHOT, otherwise our request will fail.
+> > 
+> > Signed-off-by: Luciano Coelho <coelho@ti.com>
+> 
+> good to see this happening, I remember we talked about this a while back
+> :-)
 
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: linux-media@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/media/usb/tlg2300/pd-alsa.c |    3 +++
- 1 file changed, 3 insertions(+)
+Yeah, we talked about it and I did the patch immediately.  This is
+needed because this is obviously not set automatically in the interrupts
+created via device tree.
 
-diff --git a/drivers/media/usb/tlg2300/pd-alsa.c b/drivers/media/usb/tlg2300/pd-alsa.c
-index 3f3e141..cbccc96 100644
---- a/drivers/media/usb/tlg2300/pd-alsa.c
-+++ b/drivers/media/usb/tlg2300/pd-alsa.c
-@@ -141,6 +141,7 @@ static inline void handle_audio_data(struct urb *urb, int *period_elapsed)
- 	int len		= urb->actual_length / stride;
- 	unsigned char *cp	= urb->transfer_buffer;
- 	unsigned int oldptr	= pa->rcv_position;
-+	unsigned long flags;
- 
- 	if (urb->actual_length == AUDIO_BUF_SIZE - 4)
- 		len -= (AUDIO_TRAILER_SIZE / stride);
-@@ -156,6 +157,7 @@ static inline void handle_audio_data(struct urb *urb, int *period_elapsed)
- 		memcpy(runtime->dma_area + oldptr * stride, cp, len * stride);
- 
- 	/* update the statas */
-+	local_irq_save(flags);
- 	snd_pcm_stream_lock(pa->capture_pcm_substream);
- 	pa->rcv_position	+= len;
- 	if (pa->rcv_position >= runtime->buffer_size)
-@@ -167,6 +169,7 @@ static inline void handle_audio_data(struct urb *urb, int *period_elapsed)
- 		*period_elapsed = 1;
- 	}
- 	snd_pcm_stream_unlock(pa->capture_pcm_substream);
-+	local_irq_restore(flags);
- }
- 
- static void complete_handler_audio(struct urb *urb)
--- 
-1.7.9.5
+
+> Acked-by: Felipe Balbi <balbi@ti.com>
+> 
+> Still, if you call irq_set_irq_type() on board-file (since DT will do
+> something similar for you anyway) then you can completely drop
+> irq_flags.
+
+Yep.
+
+--
+Luca.
 
