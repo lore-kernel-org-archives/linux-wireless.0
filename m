@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:45714 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904Ab3GKJaq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:30:46 -0400
-Received: by mail-pb0-f53.google.com with SMTP id xb12so7686524pbc.26
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 02:30:46 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:9802 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750769Ab3GBNbY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jul 2013 09:31:24 -0400
+From: Ilan Peer <ilan.peer@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] nl80211: fix the setting of RSSI threshold value for mesh
-Date: Thu, 11 Jul 2013 17:23:35 +0800
-Message-Id: <1373534615-17270-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130711_113054_293010_A6AB87C9)
+Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH 0/3] Enable additional channels for GO
+Date: Tue,  2 Jul 2013 15:28:12 +0300
+Message-Id: <1372768095-26053-1-git-send-email-ilan.peer@intel.com> (sfid-20130702_153127_155782_6DDB843A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RSSI threshold value used for mesh peering should be in
-negative value. After range checks to mesh parameters is
-introduced, this is not allowed. Fix this.
+The FCC are clarifying some soft configuration requirements,
+which among other includes the following:
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- net/wireless/nl80211.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+1. Concurrent GO operation, where devices may support WFD in
+   bands where an authorized master (for example with DFS and
+   DFS and radar detection capability in the UNII band) is operating.
+2. Indoor operation, where in bands requiring indoor operation, the
+   device must be programmed to detect indoor operation, or
+   - Device must be connected to AC Power
+   - Device must be under the control of a local master that is acting
+     as an AP and is connected to AC Power.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a9444cd..e6164ab 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4803,9 +4803,9 @@ do {									    \
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding, 0, 1,
- 				  mask, NL80211_MESHCONF_FORWARDING,
- 				  nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, 1, 255,
--				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
--				  nla_get_u32);
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold,
-+				  0x80000000, 0xFFFFFFFF, mask,
-+				  NL80211_MESHCONF_RSSI_THRESHOLD, nla_get_u32);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
- 				  mask, NL80211_MESHCONF_HT_OPMODE,
- 				  nla_get_u16);
+See https://apps.fcc.gov/eas/comments/GetPublishedDocument.html?id=327&tn=528122
+
+David Spinadel (2):
+  [RFC] cfg80211: Add indoor only and GO concurrent channel attributes
+  [RFC] cfg80211: Enable GO operation on additional channels
+
+Ilan Peer (1):
+  [RFC] cfg80211: Add Kconfig option for cellular BS hints
+
+ include/net/cfg80211.h       |   10 ++++-
+ include/uapi/linux/nl80211.h |    7 +++
+ net/mac80211/ibss.c          |    2 +-
+ net/wireless/Kconfig         |   17 ++++++++
+ net/wireless/chan.c          |   98 +++++++++++++++++++++++++++++++++++++++---
+ net/wireless/mesh.c          |    2 +-
+ net/wireless/nl80211.c       |   14 ++++--
+ net/wireless/reg.c           |    2 +-
+ net/wireless/trace.h         |   11 +++--
+ 9 files changed, 145 insertions(+), 18 deletions(-)
+
 -- 
-1.7.0.4
+1.7.10.4
 
