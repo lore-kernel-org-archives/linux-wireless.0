@@ -1,222 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55411 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753966Ab3GXWGJ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47265 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753221Ab3GBXIK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jul 2013 18:06:09 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 33/36] net: rfkill: convert class code to use dev_groups
-Date: Wed, 24 Jul 2013 15:05:36 -0700
-Message-Id: <1374703539-9705-34-git-send-email-gregkh@linuxfoundation.org> (sfid-20130725_001132_334268_E1D3F696)
-In-Reply-To: <1374703539-9705-1-git-send-email-gregkh@linuxfoundation.org>
-References: <1374703539-9705-1-git-send-email-gregkh@linuxfoundation.org>
+	Tue, 2 Jul 2013 19:08:10 -0400
+Message-ID: <51D35D58.5090507@candelatech.com> (sfid-20130703_010814_814995_57521142)
+Date: Tue, 02 Jul 2013 16:08:08 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: ath9k-devel@venema.h4ckr.net
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k:  Fix crash when using v1 hardware.
+References: <1372804925-1701-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1372804925-1701-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The dev_attrs field of struct class is going away soon, dev_groups
-should be used instead.  This converts the rfkill class code to use the
-correct field.
+Actually, I have no idea what type of hardware this is.  It was
+suggested earlier to me that this AP had a v1 hardware in it, but
+lspci shows this fairly unpromising thing, and the ath10k driver
+appears to call 003c the V2 hardware....
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
+05:00.0 Network controller: Atheros Communications Inc. Device 003c (rev ff) (prog-if ff)
+	!!! Unknown header type 7f
+	Kernel modules: ath10k_pci
 
-Johnannes, feel free to take this through your tree, or ACK it and I can
-take it through mine.
 
- net/rfkill/core.c | 90 +++++++++++++++++++++++++------------------------------
- 1 file changed, 41 insertions(+), 49 deletions(-)
+On 07/02/2013 03:42 PM, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> I put a v1 NIC from an TP-LINK AC 1750 AP in
+> a 64-bit PC, and the OS crashes on bootup.  I'm not
+> sure how broken my hardware is (possibly completely non
+> functional), but at least with this patch it will no longer
+> crash the OS.  Not sure it ever got far enough to try,
+> but I also do not have firmware for the NIC.
+>
+> With this patch I get this info on module load:
+>
+> ath10k_pci 0000:05:00.0: BAR 0: assigned [mem 0xf4400000-0xf45fffff 64bit]
+> ath10k_pci 0000:05:00.0: BAR 0: error updating (0xf4400004 != 0xffffffff)
+> ath10k_pci 0000:05:00.0: BAR 0: error updating (high 0x000000 != 0xffffffff)
+> ath10k_pci 0000:05:00.0: Refused to change power state, currently in D3
+> ath10k: MSI-X interrupt handling (8 intrs)
+> ath10k: Unable to wakeup target
+> ath10k: target takes too long to wake up (awake count 1)
+> ath10k: src_ring ffff88020c0d0a00:  write_index is out of bounds: 4294967295  nentries_mask: 15.
+> ath10k: dest_ring ffff88020db2c000:  write_index is out of bounds: 4294967295  nentries_mask: 511.
+> ath10k: dest_ring ffff880210d56400:  write_index is out of bounds: 4294967295  nentries_mask: 31.
+> ath10k: src_ring ffff880210d57600:  write_index is out of bounds: 4294967295  nentries_mask: 31.
+> ath10k: src_ring ffff88020fe70000:  write_index is out of bounds: 4294967295  nentries_mask: 2047.
+> ath10k: src_ring ffff880212989b40:  write_index is out of bounds: 4294967295  nentries_mask: 1.
+> ath10k: dest_ring ffff880212989960:  write_index is out of bounds: 4294967295  nentries_mask: 1.
+> ath10k: Failed to get pcie state addr: -5
+> ath10k: early firmware event indicated
+> ------------[ cut here ]------------
+> WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath10k/ce.c:771 ath10k_ce_per_engine_service+0x53/0x1b4 [ath10k_pci]()
+> ....
+> (it hits the warning case about 5-6 times and then seems to quiesce OK).
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/ce.c |   32 +++++++++++++++++++++++++++++++-
+>   1 files changed, 31 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+> index 61a8ac7..56669f8 100644
+> --- a/drivers/net/wireless/ath/ath10k/ce.c
+> +++ b/drivers/net/wireless/ath/ath10k/ce.c
+> @@ -756,13 +756,23 @@ void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id)
+>   {
+>   	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+>   	struct ce_state *ce_state = ar_pci->ce_id_to_state[ce_id];
+> -	u32 ctrl_addr = ce_state->ctrl_addr;
+> +	u32 ctrl_addr;
+>   	void *transfer_context;
+>   	u32 buf;
+>   	unsigned int nbytes;
+>   	unsigned int id;
+>   	unsigned int flags;
+>
+> +	/* On v1 hardware at least, setup can fail, causing ce_id_state to
+> +	 * be cleaned up, but this method is still called a few times.  Check
+> +	 * for NULL here so we don't crash.  Probably a better fix is to stop
+> +	 * the ath10k_pci_ce_tasklet sooner.
+> +	 */
+> +	if (WARN_ONCE(!ce_state, "ce_id_to_state[%i] is NULL\n", ce_id))
+> +		return;
+> +
+> +	ctrl_addr = ce_state->ctrl_addr;
+> +
+>   	ath10k_pci_wake(ar);
+>   	spin_lock_bh(&ar_pci->ce_lock);
+>
+> @@ -954,6 +964,16 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+>
+>   	src_ring->write_index =
+>   		ath10k_ce_src_ring_write_index_get(ar, ctrl_addr);
+> +	/* Make sure the value above is sane.  Can get 0xFFFFFFFF
+> +	 * on a v1 board.
+> +	 */
+> +	if (src_ring->write_index > src_ring->nentries_mask) {
+> +		ath10k_err("src_ring %p:  write_index is out of bounds: %u  nentries_mask: %u.\n",
+> +			   src_ring, src_ring->write_index,
+> +			   src_ring->nentries_mask);
+> +		src_ring->write_index = 0;
+> +	}
+> +
+>   	ath10k_pci_sleep(ar);
+>
+>   	src_ring->per_transfer_context = (void **)ptr;
+> @@ -1037,6 +1057,16 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+>   	dest_ring->sw_index = ath10k_ce_dest_ring_read_index_get(ar, ctrl_addr);
+>   	dest_ring->write_index =
+>   		ath10k_ce_dest_ring_write_index_get(ar, ctrl_addr);
+> +	/* Make sure the value above is sane.  Can get 0xFFFFFFFF
+> +	 * on a v1 board.
+> +	 */
+> +	if (dest_ring->write_index > dest_ring->nentries_mask) {
+> +		ath10k_err("dest_ring %p:  write_index is out of bounds: %u  nentries_mask: %u.\n",
+> +			   dest_ring, dest_ring->write_index,
+> +			   dest_ring->nentries_mask);
+> +		dest_ring->write_index = 0;
+> +	}
+> +
+>   	ath10k_pci_sleep(ar);
+>
+>   	dest_ring->per_transfer_context = (void **)ptr;
+>
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 1cec5e4f..1bacc107 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -576,14 +576,14 @@ void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw)
- }
- EXPORT_SYMBOL(rfkill_set_states);
- 
--static ssize_t rfkill_name_show(struct device *dev,
--				struct device_attribute *attr,
--				char *buf)
-+static ssize_t name_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
- 	return sprintf(buf, "%s\n", rfkill->name);
- }
-+static DEVICE_ATTR_RO(name);
- 
- static const char *rfkill_get_type_str(enum rfkill_type type)
- {
-@@ -611,54 +611,52 @@ static const char *rfkill_get_type_str(enum rfkill_type type)
- 	}
- }
- 
--static ssize_t rfkill_type_show(struct device *dev,
--				struct device_attribute *attr,
--				char *buf)
-+static ssize_t type_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
- 	return sprintf(buf, "%s\n", rfkill_get_type_str(rfkill->type));
- }
-+static DEVICE_ATTR_RO(type);
- 
--static ssize_t rfkill_idx_show(struct device *dev,
--			       struct device_attribute *attr,
--			       char *buf)
-+static ssize_t index_show(struct device *dev, struct device_attribute *attr,
-+			  char *buf)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
- 	return sprintf(buf, "%d\n", rfkill->idx);
- }
-+static DEVICE_ATTR_RO(index);
- 
--static ssize_t rfkill_persistent_show(struct device *dev,
--			       struct device_attribute *attr,
--			       char *buf)
-+static ssize_t persistent_show(struct device *dev,
-+			       struct device_attribute *attr, char *buf)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
- 	return sprintf(buf, "%d\n", rfkill->persistent);
- }
-+static DEVICE_ATTR_RO(persistent);
- 
--static ssize_t rfkill_hard_show(struct device *dev,
--				 struct device_attribute *attr,
--				 char *buf)
-+static ssize_t hard_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
- 	return sprintf(buf, "%d\n", (rfkill->state & RFKILL_BLOCK_HW) ? 1 : 0 );
- }
-+static DEVICE_ATTR_RO(hard);
- 
--static ssize_t rfkill_soft_show(struct device *dev,
--				 struct device_attribute *attr,
--				 char *buf)
-+static ssize_t soft_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
- 	return sprintf(buf, "%d\n", (rfkill->state & RFKILL_BLOCK_SW) ? 1 : 0 );
- }
- 
--static ssize_t rfkill_soft_store(struct device *dev,
--				  struct device_attribute *attr,
--				  const char *buf, size_t count)
-+static ssize_t soft_store(struct device *dev, struct device_attribute *attr,
-+			  const char *buf, size_t count)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 	unsigned long state;
-@@ -680,6 +678,7 @@ static ssize_t rfkill_soft_store(struct device *dev,
- 
- 	return count;
- }
-+static DEVICE_ATTR_RW(soft);
- 
- static u8 user_state_from_blocked(unsigned long state)
- {
-@@ -691,18 +690,16 @@ static u8 user_state_from_blocked(unsigned long state)
- 	return RFKILL_USER_STATE_UNBLOCKED;
- }
- 
--static ssize_t rfkill_state_show(struct device *dev,
--				 struct device_attribute *attr,
--				 char *buf)
-+static ssize_t state_show(struct device *dev, struct device_attribute *attr,
-+			  char *buf)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
- 	return sprintf(buf, "%d\n", user_state_from_blocked(rfkill->state));
- }
- 
--static ssize_t rfkill_state_store(struct device *dev,
--				  struct device_attribute *attr,
--				  const char *buf, size_t count)
-+static ssize_t state_store(struct device *dev, struct device_attribute *attr,
-+			   const char *buf, size_t count)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 	unsigned long state;
-@@ -725,32 +722,27 @@ static ssize_t rfkill_state_store(struct device *dev,
- 
- 	return count;
- }
-+static DEVICE_ATTR_RW(state);
- 
--static ssize_t rfkill_claim_show(struct device *dev,
--				 struct device_attribute *attr,
--				 char *buf)
-+static ssize_t claim_show(struct device *dev, struct device_attribute *attr,
-+			  char *buf)
- {
- 	return sprintf(buf, "%d\n", 0);
- }
--
--static ssize_t rfkill_claim_store(struct device *dev,
--				  struct device_attribute *attr,
--				  const char *buf, size_t count)
--{
--	return -EOPNOTSUPP;
--}
--
--static struct device_attribute rfkill_dev_attrs[] = {
--	__ATTR(name, S_IRUGO, rfkill_name_show, NULL),
--	__ATTR(type, S_IRUGO, rfkill_type_show, NULL),
--	__ATTR(index, S_IRUGO, rfkill_idx_show, NULL),
--	__ATTR(persistent, S_IRUGO, rfkill_persistent_show, NULL),
--	__ATTR(state, S_IRUGO|S_IWUSR, rfkill_state_show, rfkill_state_store),
--	__ATTR(claim, S_IRUGO|S_IWUSR, rfkill_claim_show, rfkill_claim_store),
--	__ATTR(soft, S_IRUGO|S_IWUSR, rfkill_soft_show, rfkill_soft_store),
--	__ATTR(hard, S_IRUGO, rfkill_hard_show, NULL),
--	__ATTR_NULL
-+static DEVICE_ATTR_RO(claim);
-+
-+static struct attribute *rfkill_dev_attrs[] = {
-+	&dev_attr_name.attr,
-+	&dev_attr_type.attr,
-+	&dev_attr_index.attr,
-+	&dev_attr_persistent.attr,
-+	&dev_attr_state.attr,
-+	&dev_attr_claim.attr,
-+	&dev_attr_soft.attr,
-+	&dev_attr_hard.attr,
-+	NULL,
- };
-+ATTRIBUTE_GROUPS(rfkill_dev);
- 
- static void rfkill_release(struct device *dev)
- {
-@@ -830,7 +822,7 @@ static int rfkill_resume(struct device *dev)
- static struct class rfkill_class = {
- 	.name		= "rfkill",
- 	.dev_release	= rfkill_release,
--	.dev_attrs	= rfkill_dev_attrs,
-+	.dev_groups	= rfkill_dev_groups,
- 	.dev_uevent	= rfkill_dev_uevent,
- 	.suspend	= rfkill_suspend,
- 	.resume		= rfkill_resume,
+
 -- 
-1.8.3.rc0.20.gb99dd2e
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
