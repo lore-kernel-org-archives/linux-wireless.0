@@ -1,27 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:63029 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933460Ab3GWWJg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 18:09:36 -0400
-Received: by mail-la0-f49.google.com with SMTP id ea20so6552513lab.8
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jul 2013 15:09:35 -0700 (PDT)
+Received: from mx4.wp.pl ([212.77.101.8]:9709 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964805Ab3GCTMb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 15:12:31 -0400
+Date: Wed, 3 Jul 2013 21:15:12 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 2/5] rt2x00: rt2800lib: introduce local
+ EEPROM access functions
+Message-ID: <20130703191512.GB2245@localhost.localdomain> (sfid-20130703_211242_395130_B4C28668)
+References: <1372269318-30233-1-git-send-email-juhosg@openwrt.org>
+ <1372269318-30233-3-git-send-email-juhosg@openwrt.org>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 23 Jul 2013 15:09:15 -0700
-Message-ID: <CAB=NE6W7udZBy0WR9pT6QBJxXoz6RkFEZccotihPCHNT6Q4jCg@mail.gmail.com> (sfid-20130724_000938_982287_115B1090)
-Subject: QCA vs community contributions to QCA drivers
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372269318-30233-3-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's a google drive spreadsheet anyone can view of QCA vs community
-contributions to QCA device drivers:
+On Wed, Jun 26, 2013 at 07:55:15PM +0200, Gabor Juhos wrote:
+> The patch adds rt2800 specific functions for
+> EEPROM data access and changes the code to use
+> these instead of the generic rt2x00_eeprom_*
+> variants.
+> 
+> To avoid functional changes, the new functions
+> are wrappers around the corresponding generic
+> rt2x00_eeprom_* routines for now. Functional
+> changes will be implemented in additional patches.
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-https://docs.google.com/spreadsheet/ccc?key=0AtNdeeyGJEJ7dG45U2xrZldlQm80Nlg5QzEwUmtNUGc
-
-If you'd like to contribute feel free to drop me a line or contact of
-the other QCA device driver maintainers.
-
-  Luis
