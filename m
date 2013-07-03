@@ -1,61 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37304 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728Ab3GHIvG (ORCPT
+Received: from qmta10.emeryville.ca.mail.comcast.net ([76.96.30.17]:37098 "EHLO
+	qmta10.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756185Ab3GCQyX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 04:51:06 -0400
-Message-ID: <1373273460.8312.3.camel@jlt4.sipsolutions.net> (sfid-20130708_105110_388598_089BC9F9)
-Subject: Re: [PATCH V2] vlan priority handling in WMM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: voncken <cedric.voncken@acksys.fr>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 08 Jul 2013 10:51:00 +0200
-In-Reply-To: <002b01ce798d$865cee70$9316cb50$@acksys.fr>
-References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
-	 <1373018378.8548.6.camel@jlt4.sipsolutions.net>
-	 <002b01ce798d$865cee70$9316cb50$@acksys.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 3 Jul 2013 12:54:23 -0400
+From: Shuah Khan <shuah.kh@samsung.com>
+To: bzhao@marvell.com, linville@tuxdriver.com, rjw@sisk.pl,
+	hauke@hauke-m.de, lars@metafoo.de
+Cc: Shuah Khan <shuah.kh@samsung.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	shuahkhan@gmail.com
+Subject: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from legacy pm_ops
+Date: Wed,  3 Jul 2013 10:47:10 -0600
+Message-Id: <1372870030-2596-1-git-send-email-shuah.kh@samsung.com> (sfid-20130703_185430_518945_8D39B347)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-07-05 at 16:39 +0200, voncken wrote:
-> > >+	vlan_priority = (skb->vlan_tci & VLAN_PRIO_MASK) >>
-> VLAN_PRIO_SHIFT;
-> > >+	if (vlan_priority > 0)
-> >> +		return vlan_priority;
-> 
-> > Is this really correct? For once, checking vlan_priority for
-> non-zero seems
-> > weird since that ought to be a valid value -- is there no other way
-> to
-> > determine that the value is valid?
+Convert the mwifiex/pci driver to use dev_pm_ops for power management and
+remove Legacy PM handling. This change re-uses existing suspend and resume
+interfaces for dev_pm_ops, and changes CONFIG_PM ifdefs to CONFIG_PM_SLEEP
+as the driver does not support run-time PM.
 
-> The vlan Tag contain three bit for priority. The value 0 indicate no
-> priority (on this case the VLAN tag contain only VID). The vlan_tci
-> field is set to zero if the frame do not contain the vlan tag. So if
-> we have not a vlan tag or no priority in VLAN tag the priority value
-> is always 0. 
+Signed-off-by: Shuah Khan <shuah.kh@samsung.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |   26 +++++++++++++++++---------
+ 1 file changed, 17 insertions(+), 9 deletions(-)
 
-Yes but don't we know that the vlan_tci field is valid?
-
-I don't think you're correct in that 0 means "no priority present", it
-actually means "best effort" as far as I can tell. Ignoring the VLAN tag
-when the field is 0 would mean we could use a higher priority from the
-contents of the frame, which would not be desired?
-
-> >Also, this gives you a 2-bit value, while the return value should be
-> a 3-bit value, maybe you need to shift this up by one to spread into
-> the correct buckets?
-> Sorry but I don't understand. The vlan_tci field it is a __u16 value
-> (defined in include/linux/skbuff.h), the VLAN_PRIO_MASK is set to
-> 0xE000 and VLAN_PRIO_SHIFT is set to 13 (defined in
-> include/linux/if_vlan.h), the vlan_priority is an unsigned char. For
-> me the vlan_priority contain a 3-bit value (0xE000 >>13 = 0x0003), why
-> 2 ?
-
-Umm? No? Think again about what hweight(0x0003) is.
-
-johannes
-
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 20c9c4c..4a57eb4 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -76,7 +76,7 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
+ 	return false;
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ /*
+  * Kernel needs to suspend all functions separately. Therefore all
+  * registered functions must have drivers with suspend and resume
+@@ -85,11 +85,12 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
+  * If already not suspended, this function allocates and sends a host
+  * sleep activate request to the firmware and turns off the traffic.
+  */
+-static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
++static int mwifiex_pcie_suspend(struct device *dev)
+ {
+ 	struct mwifiex_adapter *adapter;
+ 	struct pcie_service_card *card;
+ 	int hs_actived;
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	if (pdev) {
+ 		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
+@@ -120,10 +121,11 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+  * If already not resumed, this function turns on the traffic and
+  * sends a host sleep cancel request to the firmware.
+  */
+-static int mwifiex_pcie_resume(struct pci_dev *pdev)
++static int mwifiex_pcie_resume(struct device *dev)
+ {
+ 	struct mwifiex_adapter *adapter;
+ 	struct pcie_service_card *card;
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	if (pdev) {
+ 		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
+@@ -211,9 +213,9 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	wait_for_completion(&adapter->fw_load);
+ 
+ 	if (user_rmmod) {
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ 		if (adapter->is_suspended)
+-			mwifiex_pcie_resume(pdev);
++			mwifiex_pcie_resume(&pdev->dev);
+ #endif
+ 
+ 		for (i = 0; i < adapter->priv_num; i++)
+@@ -249,16 +251,22 @@ static DEFINE_PCI_DEVICE_TABLE(mwifiex_ids) = {
+ 
+ MODULE_DEVICE_TABLE(pci, mwifiex_ids);
+ 
++#ifdef CONFIG_PM_SLEEP
++/* Power Management Hooks */
++static SIMPLE_DEV_PM_OPS(mwifiex_pcie_pm_ops, mwifiex_pcie_suspend,
++				mwifiex_pcie_resume);
++#endif
++
+ /* PCI Device Driver */
+ static struct pci_driver __refdata mwifiex_pcie = {
+ 	.name     = "mwifiex_pcie",
+ 	.id_table = mwifiex_ids,
+ 	.probe    = mwifiex_pcie_probe,
+ 	.remove   = mwifiex_pcie_remove,
+-#ifdef CONFIG_PM
+-	/* Power Management Hooks */
+-	.suspend  = mwifiex_pcie_suspend,
+-	.resume   = mwifiex_pcie_resume,
++#ifdef CONFIG_PM_SLEEP
++	.driver   = {
++		.pm = &mwifiex_pcie_pm_ops,
++	},
+ #endif
+ };
+ 
+-- 
+1.7.10.4
 
