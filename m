@@ -1,92 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:63157 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753919Ab3G2Ijj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 04:39:39 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 2/3] mac80211: add support for scan chan_time parameter
-Date: Mon, 29 Jul 2013 10:39:17 +0200
-Message-ID: <1375087158-22077-3-git-send-email-michal.kazior@tieto.com> (sfid-20130729_103947_114540_33B8BAB5)
-In-Reply-To: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com>
-References: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:63446 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193Ab3GCPMr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 11:12:47 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1372860925.21065.115.camel@cumari.coelho.fi>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+ <1372860209-3504-3-git-send-email-coelho@ti.com> <1372860925.21065.115.camel@cumari.coelho.fi>
+From: Javier Martinez Canillas <martinez.javier@gmail.com>
+Date: Wed, 3 Jul 2013 17:12:25 +0200
+Message-ID: <CAAwP0s3xkqUGnGvojfpyQq97qUmKCqY3BD4RyK1_uuX=pNy91g@mail.gmail.com> (sfid-20130703_171304_996332_81E908C8)
+Subject: Re: [PATCH v3 2/8] wlcore: set irq_flags in the board files instead
+ of hiding behind a quirk
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, tony@atomide.com, nsekhar@ti.com,
+	mturquette@linaro.org, mark.rutland@arm.com, balbi@ti.com,
+	grant.likely@linaro.org, rob.herring@calxeda.com,
+	devicetree-discuss@lists.ozlabs.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, nm@ti.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows mac80211-based drivers that support
-hw_scan() to get chan_time paremter.
+On Wed, Jul 3, 2013 at 4:15 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Wed, 2013-07-03 at 17:03 +0300, Luciano Coelho wrote:
+>> The platform_quirk element in the platform data was used to change the
+>> way the IRQ is triggered.  When set, the EDGE_IRQ quirk would change
+>> the irqflags used and treat edge trigger differently from the rest.
+>>
+>> Instead of hiding this irq flag setting behind the quirk, have the
+>> board files set the flags during initialization.  This will be more
+>> meaningful than driver-specific quirks when we switch to DT.
+>>
+>> Additionally, fix missing gpio_request() calls in the boarding files
+>> (so that setting the flags actually works).
+>>
+>> Cc: Tony Lindgren <tony@atomide.com>
+>> Cc: Sekhar Nori <nsekhar@ti.com>
+>> Signed-off-by: Luciano Coelho <coelho@ti.com>
+>> ---
+>
+> [...]
+>
+>> @@ -5928,16 +5927,21 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+>>       wlcore_adjust_conf(wl);
+>>
+>>       wl->irq = platform_get_irq(pdev, 0);
+>> -     wl->platform_quirks = pdata->platform_quirks;
+>>       wl->if_ops = pdev_data->if_ops;
+>>
+>> -     if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
+>> -             irqflags = IRQF_TRIGGER_RISING;
+>> -     else
+>> -             irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+>> +     irq_data = irq_get_irq_data(wl->irq);
+>> +     if (!irq_data) {
+>> +             wl1271_error("couldn't get irq data for irq %d\n", wl->irq);
+>> +             ret = -EINVAL;
+>> +             goto out_free_nvs;
+>> +     }
+>> +
+>> +     wl->irq_flags = irqd_get_trigger_type(irq_data);
+>
+> BTW, there seems to be a patch on its way to make reading the flags
+> easier (ie. no need to get the irq_data first):
+>
+> http://mid.gmane.org/1367945288-5625-1-git-send-email-javier@dowhile0.org
+>
+> I'm not sure if this is going to be taken in, but if it does, it would
+> be nice to change the code here to use the new irq_get_trigger_type()
+> function.
+>
+> --
+> Luca.
+>
 
-This also makes mac80211-based drivers that don't
-support hw_scan() to respect the chan_time
-parameter.
+Hi Luca
 
-The effective minimum channel time for swscan
-drivers is the probe delay. hw_scan drivers may
-have their own limits.
+That patch has been already merged in Linus tree as commit 1f6236bf
+("genirq: Add irq_get_trigger_type() to get IRQ flags").
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/scan.c |   22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
+So yes, it would be better if you can use irq_get_trigger_type()
+instead calling irq_get_irq_data() + irqd_get_trigger_type().
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 08afe74..e8b1aca 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -443,7 +443,18 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
- 	 * After sending probe requests, wait for probe responses
- 	 * on the channel.
- 	 */
--	*next_delay = IEEE80211_CHANNEL_TIME;
-+	if (local->scan_req->chan_time) {
-+		/*
-+		 * Account probe delay to compute the delay needed to reach
-+		 * chan_time on a given channel.
-+		 */
-+		*next_delay = msecs_to_jiffies(local->scan_req->chan_time);
-+		if (*next_delay > IEEE80211_PROBE_DELAY)
-+			*next_delay -= IEEE80211_PROBE_DELAY;
-+		else
-+			*next_delay = 0;
-+	} else
-+		*next_delay = IEEE80211_CHANNEL_TIME;
- 	local->next_scan_state = SCAN_DECISION;
- }
- 
-@@ -485,6 +496,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 			req->n_channels * sizeof(req->channels[0]);
- 		local->hw_scan_req->ie = ies;
- 		local->hw_scan_req->flags = req->flags;
-+		local->hw_scan_req->chan_time = req->chan_time;
- 
- 		local->hw_scan_band = 0;
- 
-@@ -532,6 +544,9 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 			next_delay = IEEE80211_CHANNEL_TIME;
- 		}
- 
-+		if (req->chan_time)
-+			next_delay = msecs_to_jiffies(req->chan_time);
-+
- 		/* Now, just wait a bit and we are all done! */
- 		ieee80211_queue_delayed_work(&local->hw, &local->scan_work,
- 					     next_delay);
-@@ -696,7 +711,10 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	 */
- 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
- 	    !local->scan_req->n_ssids) {
--		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
-+		if (local->scan_req->chan_time)
-+			*next_delay = msecs_to_jiffies(local->scan_req->chan_time);
-+		else
-+			*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
- 		local->next_scan_state = SCAN_DECISION;
- 		return;
- 	}
--- 
-1.7.9.5
-
+Best regards,
+Javier
