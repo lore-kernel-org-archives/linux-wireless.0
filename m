@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:62080 "EHLO mga14.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3162 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752063Ab3GJFzU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 01:55:20 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Steve Freitas <steve@newportit.com>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Re: Slow throughput on Ultimate-N 6300
-Date: Wed, 10 Jul 2013 05:55:11 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3019FFE28@HASMSX103.ger.corp.intel.com> (sfid-20130710_075524_190756_AE0D4842)
-References: <51BBF4F1.1050301@newportit.com>
- <51DCDD54.9090100@newportit.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3019FFDDF@HASMSX103.ger.corp.intel.com>
- <51DCF4BF.5010900@newportit.com>
-In-Reply-To: <51DCF4BF.5010900@newportit.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S933183Ab3GCU5W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 16:57:22 -0400
+Received: from [10.0.2.15] (unknown [10.177.252.108]) by
+ mail-sj1-12.sj.broadcom.com (Postfix) with ESMTP id 90067207C0 for
+ <linux-wireless@vger.kernel.org>; Wed, 3 Jul 2013 13:57:12 -0700 (PDT)
+Message-ID: <51D49027.9010803@broadcom.com> (sfid-20130703_225725_898124_EAB997AB)
+Date: Wed, 3 Jul 2013 22:57:11 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: interested in py80211?
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> Emmanuel,
-> 
-> Thank you for your quick response!
-> 
-> It is a regression. I regularly had 300 Mbps speeds on this very access point,
-> but it was years ago, in the 2.6 kernel series. However, I believe, from
-> extensive online searches, that Intel has disabled the N functionality in the
-> firmware on Linux, ostensibly until they (you? :-)
-> ) can fix whatever problem they were seeing. With the demise of the Intel
-> Linux Wireless bug tracker, though, public tracking of the bug has been
-> impossible. There are now-dead links to the defunct bug tracker over this
-> very issue.
-> 
+A common say in Linux arena is "when you have an itch, just scratch it". 
+My itch is that tools like ifconfig and iw are great, but in an 
+automated test environment it kind of sucks to parse output, which is 
+confirmed by blurb from iw: "Do NOT screenscrape this tool, we don't 
+consider its output stable.".
 
-11n hasn't been disabled in firmware, but rather in driver.
-There is a bug we know about the "fail to flush tx fifo" thing that people reports (through mailing list or bugzilla of RedHat).
-Can you please send the output of the kerne log (dmesg)?
+Ever since my first contact with Python I tend to favor it over other 
+scripting alternatives so I decided to scratch my itch with that and 
+another old acquaintance called SWIG. With those I went to create 
+py80211. A first attempt was to have SWIG create a wrapper API directly 
+exposing the libnl-3 API, but that did not feel comfortable in a 
+scripting environment. So the level of abstraction is a bit higher. It 
+is just in a kick-off state (eg. can only send u32 attributes), but I 
+decided to push it to github anyway.
 
-> Sadly I only get 2 MByte/s on N, and under 1 MByte/s G.
-> 
-> I have not tried another access point in ages. Tired of replacing fried Netgears
-> and Dlinks and Belkins, I've converted all my friends and families to Apple's
-> access points. I'll try to locate something else and see how it goes.
+https://github.com/arend/py80211
 
-No need to. If you say that it worked, then it should still work. The issue I was thinking is the way they use some fancy feature of WiFi that no one implements (besides the wifi module of their devices of course).
-Also, can you please try different firmwares from http://wireless.kernel.org/en/users/Drivers/iwlwifi#Download ?
-I wonder if newer firmware has made things worse. You may want to try older firmware.
-To do so, open the tarball from that you'll download and copy iwlwifi-*.ucode to /lib/firmware.
+Regards,
+Arend
+
