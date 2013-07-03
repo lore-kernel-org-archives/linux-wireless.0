@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:38231 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757207Ab3GEKkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 06:40:10 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Uv3Qu-0001ku-49
-	for linux-wireless@vger.kernel.org; Fri, 05 Jul 2013 12:40:08 +0200
-Received: from 24.212.241.19 ([24.212.241.19])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jul 2013 12:40:08 +0200
-Received: from dennisn by 24.212.241.19 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jul 2013 12:40:08 +0200
+Received: from s3.sipsolutions.net ([144.76.43.152]:46583 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964932Ab3GCSzq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 14:55:46 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-From: Dennis New <dennisn@dennisn.dyndns.org>
-Subject: Re: configuring Generic Information Elements (genie)
-Date: Fri, 5 Jul 2013 06:39:51 -0400
-Message-ID: <20130705063951.27358a20d5508d63374fd0c4@dennisn.dyndns.org> (sfid-20130705_124014_555870_C23C6004)
-References: <20130704092329.a9f5ce506984b78a878fb4bf@dennisn.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] ath9k: make rfkill configurable
+Date: Wed,  3 Jul 2013 20:55:38 +0200
+Message-Id: <1372877738-10037-1-git-send-email-johannes@sipsolutions.net> (sfid-20130703_205552_017395_FF2A37E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 4 Jul 2013 09:23:29 -0400, Dennis New wrote:
-> Is there a way to configure (i.e. disable) the "generic information
-> elements" that are listed, for example, by "iwlist genie" ?
-> 
-> I have an open ad-hoc network, and whereas one of my wifi cards shows
-> "no generic IE (Operation not supported)", and works fine, my other
-> card shows:
-> 
->  IE: IEEE 802.11i/WPA2 Version 1
->  Group Cipher : CCMP
->  Pairwise Ciphers (1) : CCMP
->  Authentication Suites (1) : PSK
-> 
-> which seems to be causing problems on some (probably buggy) machines
-> that incorrectly think it's using WPA2.
+From: Johannes Berg <johannes.berg@intel.com>
 
-It seems like only a few wireless drivers implement this genie thing,
-(just ipw2x00, orinoco and prism54). For the moment, I just hacked
-disabled the SIOCSIWGENIE handler from
-drivers/net/wireless/ipw2x00/ipw2200.c. Things work now.
+When the platform doesn't have rfkill support, i.e. nothing
+is connected to the rfkill GPIO, there's little value in
+polling the GPIO. Add a Kconfig option to allow disabling
+the polling in ath9k.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig | 10 ++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c    |  2 +-
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 760ab3f..6372626 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -96,6 +96,16 @@ config ATH9K_LEGACY_RATE_CONTROL
+ 	  has to be passed to mac80211 using the module parameter,
+ 	  ieee80211_default_rc_algo.
+ 
++config ATH9K_RFKILL
++	bool "Atheros ath9k rfkill support" if EXPERT
++	depends on ATH9K
++	depends on RFKILL=y || RFKILL=ATH9K
++	default y
++	help
++	  Say Y to have ath9k poll the RF-Kill GPIO every couple of
++	  seconds. Turn off to save power, but enable it if you have
++	  a platform that can toggle the RF-Kill GPIO.
++
+ config ATH9K_HTC
+        tristate "Atheros HTC based wireless cards support"
+        depends on USB && MAC80211
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4ca0cb0..e420c6b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2504,7 +2504,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	else
+ 		pCap->rts_aggr_limit = (8 * 1024);
+ 
+-#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
++#ifdef CONFIG_ATH9K_RFKILL
+ 	ah->rfsilent = ah->eep_ops->get_eeprom(ah, EEP_RF_SILENT);
+ 	if (ah->rfsilent & EEP_RFSILENT_ENABLED) {
+ 		ah->rfkill_gpio =
+-- 
+1.8.0
 
