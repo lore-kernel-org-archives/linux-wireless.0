@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34522 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007Ab3GNKvr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jul 2013 06:51:47 -0400
-To: Cedric GROSS <cg@cgross.info>, Adrian Chadd <adrian@freebsd.org>
-Subject: RE: Firmware error for Centrino N 2230
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:49835 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964870Ab3GCSlt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 14:41:49 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Wed, 3 Jul 2013 11:41:24 -0700
+Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
+Message-ID: <477F20668A386D41ADCC57781B1F70430EA2E06694@SC-VEXCH1.marvell.com> (sfid-20130703_204240_774919_B5AA59F9)
+References: <20130703015653.82651FAAD5@dev.laptop.org>
+In-Reply-To: <20130703015653.82651FAAD5@dev.laptop.org>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Sun, 14 Jul 2013 13:51:40 +0300
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: 'Emmanuel Grumbach' <egrumbach@gmail.com>,
-	'linux-wireless' <linux-wireless@vger.kernel.org>,
-	linux-wireless-owner@vger.kernel.org
-In-Reply-To: <000301ce8077$252f1830$6f8d4890$@info>
- (sfid-20130714_114733_295326_9BBEA36B)
-References: "<001a01ce7fb1$75bfdc10$613f9430$@info>	<CA+icZUVoZkg3nT6=SwTaLCWoa+v6aLkXSP5b71a0GmxMMWOyHA@mail.gmail.com>	<001b01ce7fba$4bd15e20$e3741a60$@info>"
- <CA+icZUX9jvAcvEkKSsN-KU2GWxPVGg9Z=soecwJtPL0soHD4Zw@mail.gmail.com>
- <CANUX_P2K9_q_FnkzDrn4=Y3rzn3FvkPjCB4qGmts=7kni9oW4A@mail.gmail.com>
- <000301ce8077$252f1830$6f8d4890$@info>
- (sfid-20130714_114733_295326_9BBEA36B)
-Message-ID: <b04d657de9d7831febeff7b4ac8f371a@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Many many many thanks. I will check that tomorrow.
-> 
-> FreeBSD driver for intel wireless card is a bit old and need a lot of
-> improvement to manage new NIC.
-> Is there a way to get all assert code meaning ? It could be really a 
-> big big
-> help for me.
+Hi Daniel,
 
-Unfortunately not, but have you seen the "iwl" FreeBSD driver that we 
-posted a while ago? That should help you some. Are you in contact with 
-anyone else maybe?
+> When the card is being removed, mwifiex_remove_card() immediately sets
+> surprise_removed to 1. This flag then causes the SDIO interrupt handler
+> to ignore all interrupts without even acking them.
 
-johannes
+Since the card is removed, even if there is a pending interrupt received after card removal, it's not possible to ack it or disable interrupts. We cannot access hardware registers after card removal.
+
+Perhaps you are talking about unloading driver (rmmod mwifiex_sdio) instead?
+
+Thanks,
+Bing
+
+
