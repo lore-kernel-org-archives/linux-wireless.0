@@ -1,103 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40248 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213Ab3GHNO0 (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:32843 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932073Ab3GCOTM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 09:14:26 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 2/5] mac80211: add functions to duplicate a cfg80211_beacon
-Date: Mon,  8 Jul 2013 15:14:07 +0200
-Message-Id: <1373289250-12259-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_151441_197050_62436257)
-In-Reply-To: <1373289250-12259-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373289250-12259-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 3 Jul 2013 10:19:12 -0400
+Message-ID: <1372861094.21065.118.camel@cumari.coelho.fi> (sfid-20130703_161946_180181_7F25B775)
+Subject: Re: [PATCH v3 2/8] wlcore: set irq_flags in the board files instead
+ of hiding behind a quirk
+From: Luciano Coelho <coelho@ti.com>
+To: <balbi@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
+Date: Wed, 3 Jul 2013 17:18:14 +0300
+In-Reply-To: <20130703141332.GO15056@arwen.pp.htv.fi>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+	 <1372860209-3504-3-git-send-email-coelho@ti.com>
+	 <20130703141332.GO15056@arwen.pp.htv.fi>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the channel switch announcement, it is required to set a new beacon
-after the driver arrived on the new channel. The new beacon will be set
-by nl80211, but is required to duplicate the beacon as the original
-memory within the netlink message will be gone.
+On Wed, 2013-07-03 at 17:13 +0300, Felipe Balbi wrote:
+> Hi,
+> 
+> On Wed, Jul 03, 2013 at 05:03:23PM +0300, Luciano Coelho wrote:
+> > diff --git a/arch/arm/mach-omap2/board-4430sdp.c b/arch/arm/mach-omap2/board-4430sdp.c
+> > index 56a9a4f..953f620 100644
+> > --- a/arch/arm/mach-omap2/board-4430sdp.c
+> > +++ b/arch/arm/mach-omap2/board-4430sdp.c
+> > @@ -703,12 +703,30 @@ static void __init omap4_sdp4430_wifi_init(void)
+> >  
+> >  	omap4_sdp4430_wifi_mux_init();
+> >  	omap4_sdp4430_wlan_data.irq = gpio_to_irq(GPIO_WIFI_IRQ);
+> > +
+> > +	ret = gpio_request_one(GPIO_WIFI_IRQ, GPIOF_IN, "GPIO_WIFI_IRQ");
+> > +	if (ret) {
+> > +		pr_err("error requesting wl12xx gpio: %d\n", ret);
+> > +		goto out;
+> > +	}
+> > +
+> > +	ret = irq_set_irq_type(gpio_to_irq(GPIO_WIFI_IRQ), IRQ_TYPE_LEVEL_HIGH);
+> > +	if (ret) {
+> > +		pr_err("error setting wl12xx irq type: %d\n", ret);
+> > +		goto free;
+> > +	}
+> > +
+> >  	ret = wl12xx_set_platform_data(&omap4_sdp4430_wlan_data);
+> >  	if (ret)
+> >  		pr_err("Error setting wl12xx data: %d\n", ret);
+> > +
+> >  	ret = platform_device_register(&omap_vwlan_device);
+> >  	if (ret)
+> >  		pr_err("Error registering wl12xx device: %d\n", ret);
+> > +out:
+> > +	return;
+> > +free:
+> > +	gpio_free(GPIO_WIFI_IRQ);
+> 
+> actually, you should leave this GPIO requested in order to use it as
+> IRQ.
+> 
+> ditto for all others
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
-Changes to PATCHv2:
- * allocate only one memory chunk
----
- net/mac80211/cfg.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+Actually, I don't need to use the GPIO if something goes wrong (ie.
+setting the IRQ type or setting the platform data).  Notice that in the
+normal cases (ie. without errors), I return before the gpio_free() is
+called.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8184d12..a99c9a8 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2784,6 +2784,62 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static struct cfg80211_beacon_data *
-+cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
-+{
-+	struct cfg80211_beacon_data *new_beacon;
-+	u8 *pos;
-+	int len;
-+
-+	len = beacon->head_len + beacon->tail_len + beacon->beacon_ies_len +
-+	      beacon->proberesp_ies_len + beacon->assocresp_ies_len +
-+	      beacon->probe_resp_len;
-+
-+	new_beacon = kzalloc(sizeof(*new_beacon) + len, GFP_KERNEL);
-+	if (!new_beacon)
-+		return NULL;
-+
-+	pos = (u8 *)(new_beacon + 1);
-+	if (beacon->head_len) {
-+		new_beacon->head_len = beacon->head_len;
-+		new_beacon->head = pos;
-+		memcpy(pos, beacon->head, beacon->head_len);
-+		pos += beacon->head_len;
-+	}
-+	if (beacon->tail_len) {
-+		new_beacon->tail_len = beacon->tail_len;
-+		new_beacon->tail = pos;
-+		memcpy(pos, beacon->tail, beacon->tail_len);
-+		pos += beacon->tail_len;
-+	}
-+	if (beacon->beacon_ies_len) {
-+		new_beacon->beacon_ies_len = beacon->beacon_ies_len;
-+		new_beacon->beacon_ies = pos;
-+		memcpy(pos, beacon->beacon_ies, beacon->beacon_ies_len);
-+		pos += beacon->beacon_ies_len;
-+	}
-+	if (beacon->proberesp_ies_len) {
-+		new_beacon->proberesp_ies_len = beacon->proberesp_ies_len;
-+		new_beacon->proberesp_ies = pos;
-+		memcpy(pos, beacon->proberesp_ies, beacon->proberesp_ies_len);
-+		pos += beacon->proberesp_ies_len;
-+	}
-+	if (beacon->assocresp_ies_len) {
-+		new_beacon->assocresp_ies_len = beacon->assocresp_ies_len;
-+		new_beacon->assocresp_ies = pos;
-+		memcpy(pos, beacon->assocresp_ies, beacon->assocresp_ies_len);
-+		pos += beacon->assocresp_ies_len;
-+	}
-+	if (beacon->probe_resp_len) {
-+		new_beacon->probe_resp_len = beacon->probe_resp_len;
-+		beacon->probe_resp = pos;
-+		memcpy(pos, beacon->probe_resp, beacon->probe_resp_len);
-+		pos += beacon->probe_resp_len;
-+	}
-+
-+	return new_beacon;
-+}
-+
- static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			     struct ieee80211_channel *chan, bool offchan,
- 			     unsigned int wait, const u8 *buf, size_t len,
--- 
-1.7.10.4
+This is not really needed, but it's a bit cleaner and we can probably
+release some resources.
+
+--
+Luca.
 
