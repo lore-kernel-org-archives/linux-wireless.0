@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:52714 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab3GQCWX (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:32962 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753708Ab3GCOUm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:22:23 -0400
-Received: by mail-pa0-f53.google.com with SMTP id tj12so1407376pac.40
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:23 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 42/53] wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
-Date: Tue, 16 Jul 2013 19:18:31 -0700
-Message-Id: <1374027522-18488-43-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042227_155912_274A9E17)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 3 Jul 2013 10:20:42 -0400
+Date: Wed, 3 Jul 2013 17:19:48 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
+Subject: Re: [PATCH v3 8/8] wlcore/wl12xx: check if we got correct clock data
+ from DT
+Message-ID: <20130703141948.GS15056@arwen.pp.htv.fi> (sfid-20130703_162115_280439_D964DF33)
+Reply-To: <balbi@ti.com>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+ <1372860209-3504-9-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="u+FGODhbLwgAeSOU"
+In-Reply-To: <1372860209-3504-9-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+--u+FGODhbLwgAeSOU
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Pursuant to:
+On Wed, Jul 03, 2013 at 05:03:29PM +0300, Luciano Coelho wrote:
+> The fref and the tcxo clocks settings are optional in some platforms.
+> WiLink8 doesn't need either, so we don't check the values.  WiLink 6
+> only needs the fref clock, so we check that it is valid or return with
+> an error.  WiLink7 needs both clocks, if either is not available we
+> return with an error.
+>=20
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
 
-http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf,
+Reviewed-by: Felipe Balbi <balbi@ti.com>
 
-provide a 5GHz rule for Indonesian regulatory domain. QCA has
-also verified VHT80 can be enabled. Patch originally posted by
-Paul Stewart <pstew@chromium.org>, I just modified to enable 80 MHz
-bandwidth.
+--=20
+balbi
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    2 ++
- 1 file changed, 2 insertions(+)
+--u+FGODhbLwgAeSOU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-diff --git a/db.txt b/db.txt
-index bc8fe07..6aa57a7 100644
---- a/db.txt
-+++ b/db.txt
-@@ -380,7 +380,9 @@ country HU: DFS-ETSI
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country ID:
-+	# ref: http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf
- 	(2402 - 2482 @ 40), (N/A, 20)
-+	(5735 - 5815 @ 80), (N/A, 20)
- 
- country IE: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
+iQIcBAEBAgAGBQJR1DMEAAoJEIaOsuA1yqREugcP/3uTpWP5GRAs6LFNea2T0c5G
+SFiWgOQuvQXE/zidY0v1cNW8bH1ka9WYN2ib3hQaFFsuuegYp64JWRda/1jrjkE2
+F2h3+FqPNTenxUe9cRIY3rlQSfh4FzMUzNbNki5PlZcs2u6ruWvW2vbANoFtMvxr
+M14LadV7hVzj19+fTKWjjW+ef84+lxl53VTlK4aGBWOUeLeZV4HKI9Zr6Fj78Gdn
+WL2AJd5HYsZc0pg4BEMFku2Ds9qGckI0ZDmeU6vWVxHSL5jwdeiQZjW+TLPIEdd2
+PkjYJT41pLrQQ0J2FNHNs881LdXIP1EQ7Zdo+d8WNsujoWjS10xjs1EnrN/tXPoo
+swNM2j+1pIPKVROcyMlVBbc8bXoWFGixSYikY+X8rbhNBQpPbGWNlAvN8UY8RIMe
+hA7q7jIHwf2ZygmeZbKiHUOW93R7xzc9wOoWx12+PNNt8td5eRn3hR33odLDfXqv
+psVXQ6yHa5sX1Xp3zo2aHfbpgCYzh81RP8Ls+iYf268U2VKdl0FnYpwAbSTeSQRG
+OKt5XkeUBRBnnXRgq0TC6jIaj33Cdaf8+ZRDu95r7I/j0mxb5Vb0JxoSE9ItMwgI
+v9Z6ecFgj3CGNUYOMLFER6VkhL57ImupeDDfvRi3o9i5XX5hyuIzN0TjimJKkc8h
+AirDbR8RSKCVPcNR4K50
+=E2O1
+-----END PGP SIGNATURE-----
+
+--u+FGODhbLwgAeSOU--
