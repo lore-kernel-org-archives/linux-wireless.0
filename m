@@ -1,28 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f42.google.com ([209.85.160.42]:48411 "EHLO
-	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043Ab3G1IwJ (ORCPT
+Received: from mail-qa0-f43.google.com ([209.85.216.43]:49352 "EHLO
+	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932065Ab3GCJaJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Jul 2013 04:52:09 -0400
-Received: by mail-pb0-f42.google.com with SMTP id un1so3567503pbc.15
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Jul 2013 01:52:09 -0700 (PDT)
-Received: from [192.168.2.5] ([117.213.249.15])
-        by mx.google.com with ESMTPSA id x8sm70148740pbb.39.2013.07.28.01.52.06
-        for <linux-wireless@vger.kernel.org>
-        (version=SSLv3 cipher=RC4-SHA bits=128/128);
-        Sun, 28 Jul 2013 01:52:08 -0700 (PDT)
-Message-ID: <1375021308.7557.3.camel@piu-xps> (sfid-20130728_105213_551198_7B0E4ABF)
-Subject: 
-From: piuvatsa <piuvatsa@gmail.com>
-To: linux-wireless@vger.kernel.org
-Date: Sun, 28 Jul 2013 19:51:48 +0530
-Content-Type: text/plain; charset="us-ascii"
-Mime-Version: 1.0
+	Wed, 3 Jul 2013 05:30:09 -0400
+Received: by mail-qa0-f43.google.com with SMTP id d13so3441137qak.2
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 02:30:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51D3E2C7.7020605@kaiwen.me>
+References: <51D3E2C7.7020605@kaiwen.me>
+Date: Wed, 3 Jul 2013 15:00:08 +0530
+Message-ID: <CAChKcE=1efYtv7TgmQCRi=LEKrCSYtUcd6xFHX6X=aRQ6XYoAw@mail.gmail.com> (sfid-20130703_113014_449152_77C66EBE)
+Subject: Re: Use of 5GHz frequencies with Wi-Fi Direct
+From: Gagan Goyal <gagsbond@gmail.com>
+To: =?ISO-8859-1?Q?K=E9vin_THIERRY?= <kevin.thierry@kaiwen.me>
+Cc: linux-wireless@vger.kernel.org, ronan lanoe <ronan.lanoe@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-i am using debian 7.1 whezzy but there is a problem in the wi-fi blooth
-is working but wi-fi is not showing it may be due to driver problem. I
-am a Dell xps user plz help me to solve out this problem 
+Hi Kevin,
 
+Plz add the following entries in wpa_supplicant.conf to use freq 5180
+as operating ch.
 
+p2p_oper_reg_class=115
+p2p_oper_channel=36
+country=US
+
+Check, if this solve the requirement.
+
+Cheers
+
+Gagan
+
+On 7/3/13, Kévin THIERRY <kevin.thierry@kaiwen.me> wrote:
+> Hi,
+>
+> Is there a way to force the use of 5GHz frequencies with Wi-Fi Direct ?
+> (Or define the 5GHz frequencies as preferred ?)
+>
+> I tried to add the freq_list option in wpa_supplicant config file
+> without success. (I think this option should be set in a network block
+> but there is no network block for Wi-Fi Direct...)
+> "freq_list=5180 5200 5220 5240 5260 5280 5300 5320 5500 5520 5540 5560
+> 5580 5600 5620 5640 5660 5680 5700 5745 5765 5785 5805 5825"
+>
+> Thanks,
+>
+> Kevin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
