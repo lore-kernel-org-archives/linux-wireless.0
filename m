@@ -1,67 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.witbe.net ([81.88.96.48]:60992 "EHLO smtp.witbe.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756432Ab3GWMnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 08:43:33 -0400
-Date: Tue, 23 Jul 2013 14:29:07 +0200
-From: Paul Rolland (=?UTF-8?B?44Od44O844Or44O744Ot44Op44Oz?=)
-	<rol@witbe.net>
-To: Richard Genoud <richard.genoud@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rol@witbe.net
-Subject: Re: rtl8192cu: slow path warning
-Message-ID: <20130723142907.53103aab@tux.DEF.witbe.net> (sfid-20130723_144350_206049_67D00DE5)
-In-Reply-To: <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
-References: <20130611123814.GA9854@lnx-rg>
-	<20130626142241.GA13107@lnx-rg>
-	<51CB0E9C.50408@lwfinger.net>
-	<CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Vmhjf/KX18mZcfFQH++q5Q+"; protocol="application/pgp-signature"
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:60588 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932221Ab3GCVuR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 17:50:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Shuah Khan <shuah.kh@samsung.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"rjw@sisk.pl" <rjw@sisk.pl>, "hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"lars@metafoo.de" <lars@metafoo.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"shuahkhan@gmail.com" <shuahkhan@gmail.com>
+Date: Wed, 3 Jul 2013 14:46:39 -0700
+Subject: RE: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from
+ legacy pm_ops
+Message-ID: <477F20668A386D41ADCC57781B1F70430EA2E06715@SC-VEXCH1.marvell.com> (sfid-20130703_235053_483250_1CE727CF)
+References: <1372870030-2596-1-git-send-email-shuah.kh@samsung.com>
+In-Reply-To: <1372870030-2596-1-git-send-email-shuah.kh@samsung.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/Vmhjf/KX18mZcfFQH++q5Q+
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-Hello,
+> Convert the mwifiex/pci driver to use dev_pm_ops for power management and
+> remove Legacy PM handling. This change re-uses existing suspend and resume
+> interfaces for dev_pm_ops, and changes CONFIG_PM ifdefs to CONFIG_PM_SLEEP
+> as the driver does not support run-time PM.
+> 
+> Signed-off-by: Shuah Khan <shuah.kh@samsung.com>
 
-On Thu, 27 Jun 2013 09:33:20 +0200
-Richard Genoud <richard.genoud@gmail.com> wrote:
+Acked-by: Bing Zhao <bzhao@marvell.com>
 
-> Yes, of course, you can add my
-> Reported-by: Richard Genoud <richard.genoud@gmail.com>
->=20
-> But the patch doesn't compile on my platform ( since I'm on ARM, I
-> haven't got a PCI bus, so rtlwifi/pci.c is not compiled ) :
->=20
-> ERROR: "rtl_lps_change_work_callback"
-> [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+Thanks,
+Bing
 
-Is that the reason why this patch is not yet in 3.10.x or 3.11-rcY ?
-I'm running a 3.10.1 with USB dongle including 8192CU, and I can see this
-warning when the machine starts.
-I've check 3.10.1, 3.10.2 and 3.11-rc3 source code, but this fix is not
-there. Is there a different fix that went in in 3.10.2 or 3.11-rc?
-
-Best,
-Paul
-
---Sig_/Vmhjf/KX18mZcfFQH++q5Q+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iEYEARECAAYFAlHudxMACgkQZP464AVDf+DQQwCggiZm/Z9jhld9l6twYkzKDgrf
-P7IAn3BHVpFJNQoiGoK96Rvac8xZ9ezx
-=45Kc
------END PGP SIGNATURE-----
-
---Sig_/Vmhjf/KX18mZcfFQH++q5Q+--
