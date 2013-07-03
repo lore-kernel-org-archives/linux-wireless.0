@@ -1,136 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:60401 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090Ab3GKJIG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:08:06 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Peter Berger <pberger@brimson.com>,
-	Al Borchers <alborchers@steinerpoint.com>
-Subject: [PATCH 11/50] USB: serial: digi_acceleportldusb: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:34 +0800
-Message-Id: <1373533573-12272-12-git-send-email-ming.lei@canonical.com> (sfid-20130711_111838_423502_1D58594F)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:50755 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752784Ab3GCOQB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 10:16:01 -0400
+Message-ID: <1372860925.21065.115.camel@cumari.coelho.fi> (sfid-20130703_161649_503926_40F9E624)
+Subject: Re: [PATCH v3 2/8] wlcore: set irq_flags in the board files instead
+ of hiding behind a quirk
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <tony@atomide.com>, <nsekhar@ti.com>, <mturquette@linaro.org>,
+	<mark.rutland@arm.com>, <balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
+Date: Wed, 3 Jul 2013 17:15:25 +0300
+In-Reply-To: <1372860209-3504-3-git-send-email-coelho@ti.com>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+	 <1372860209-3504-3-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+On Wed, 2013-07-03 at 17:03 +0300, Luciano Coelho wrote:
+> The platform_quirk element in the platform data was used to change the
+> way the IRQ is triggered.  When set, the EDGE_IRQ quirk would change
+> the irqflags used and treat edge trigger differently from the rest.
+> 
+> Instead of hiding this irq flag setting behind the quirk, have the
+> board files set the flags during initialization.  This will be more
+> meaningful than driver-specific quirks when we switch to DT.
+> 
+> Additionally, fix missing gpio_request() calls in the boarding files
+> (so that setting the flags actually works).
+> 
+> Cc: Tony Lindgren <tony@atomide.com>
+> Cc: Sekhar Nori <nsekhar@ti.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-Cc: Peter Berger <pberger@brimson.com>
-Cc: Al Borchers <alborchers@steinerpoint.com>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/usb/serial/digi_acceleport.c |   23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+[...]
 
-diff --git a/drivers/usb/serial/digi_acceleport.c b/drivers/usb/serial/digi_acceleport.c
-index 19b467f..95b1959 100644
---- a/drivers/usb/serial/digi_acceleport.c
-+++ b/drivers/usb/serial/digi_acceleport.c
-@@ -988,6 +988,7 @@ static void digi_write_bulk_callback(struct urb *urb)
- 	struct digi_serial *serial_priv;
- 	int ret = 0;
- 	int status = urb->status;
-+	unsigned long flags;
- 
- 	/* port and serial sanity check */
- 	if (port == NULL || (priv = usb_get_serial_port_data(port)) == NULL) {
-@@ -1006,15 +1007,15 @@ static void digi_write_bulk_callback(struct urb *urb)
- 	/* handle oob callback */
- 	if (priv->dp_port_num == serial_priv->ds_oob_port_num) {
- 		dev_dbg(&port->dev, "digi_write_bulk_callback: oob callback\n");
--		spin_lock(&priv->dp_port_lock);
-+		spin_lock_irqsave(&priv->dp_port_lock, flags);
- 		priv->dp_write_urb_in_use = 0;
- 		wake_up_interruptible(&port->write_wait);
--		spin_unlock(&priv->dp_port_lock);
-+		spin_unlock_irqrestore(&priv->dp_port_lock, flags);
- 		return;
- 	}
- 
- 	/* try to send any buffered data on this port */
--	spin_lock(&priv->dp_port_lock);
-+	spin_lock_irqsave(&priv->dp_port_lock, flags);
- 	priv->dp_write_urb_in_use = 0;
- 	if (priv->dp_out_buf_len > 0) {
- 		*((unsigned char *)(port->write_urb->transfer_buffer))
-@@ -1037,7 +1038,7 @@ static void digi_write_bulk_callback(struct urb *urb)
- 	/* lost the race in write_chan(). */
- 	schedule_work(&priv->dp_wakeup_work);
- 
--	spin_unlock(&priv->dp_port_lock);
-+	spin_unlock_irqrestore(&priv->dp_port_lock, flags);
- 	if (ret && ret != -EPERM)
- 		dev_err_console(port,
- 			"%s: usb_submit_urb failed, ret=%d, port=%d\n",
-@@ -1388,6 +1389,7 @@ static int digi_read_inb_callback(struct urb *urb)
- 	unsigned char *data = ((unsigned char *)urb->transfer_buffer) + 3;
- 	int flag, throttled;
- 	int status = urb->status;
-+	unsigned long flags;
- 
- 	/* do not process callbacks on closed ports */
- 	/* but do continue the read chain */
-@@ -1404,7 +1406,7 @@ static int digi_read_inb_callback(struct urb *urb)
- 		return -1;
- 	}
- 
--	spin_lock(&priv->dp_port_lock);
-+	spin_lock_irqsave(&priv->dp_port_lock, flags);
- 
- 	/* check for throttle; if set, do not resubmit read urb */
- 	/* indicate the read chain needs to be restarted on unthrottle */
-@@ -1438,7 +1440,7 @@ static int digi_read_inb_callback(struct urb *urb)
- 			tty_flip_buffer_push(&port->port);
- 		}
- 	}
--	spin_unlock(&priv->dp_port_lock);
-+	spin_unlock_irqrestore(&priv->dp_port_lock, flags);
- 
- 	if (opcode == DIGI_CMD_RECEIVE_DISABLE)
- 		dev_dbg(&port->dev, "%s: got RECEIVE_DISABLE\n", __func__);
-@@ -1469,6 +1471,7 @@ static int digi_read_oob_callback(struct urb *urb)
- 	int opcode, line, status, val;
- 	int i;
- 	unsigned int rts;
-+	unsigned long flags;
- 
- 	/* handle each oob command */
- 	for (i = 0; i < urb->actual_length - 3;) {
-@@ -1496,7 +1499,7 @@ static int digi_read_oob_callback(struct urb *urb)
- 			rts = tty->termios.c_cflag & CRTSCTS;
- 		
- 		if (tty && opcode == DIGI_CMD_READ_INPUT_SIGNALS) {
--			spin_lock(&priv->dp_port_lock);
-+			spin_lock_irqsave(&priv->dp_port_lock, flags);
- 			/* convert from digi flags to termiox flags */
- 			if (val & DIGI_READ_INPUT_SIGNALS_CTS) {
- 				priv->dp_modem_signals |= TIOCM_CTS;
-@@ -1524,12 +1527,12 @@ static int digi_read_oob_callback(struct urb *urb)
- 			else
- 				priv->dp_modem_signals &= ~TIOCM_CD;
- 
--			spin_unlock(&priv->dp_port_lock);
-+			spin_unlock_irqrestore(&priv->dp_port_lock, flags);
- 		} else if (opcode == DIGI_CMD_TRANSMIT_IDLE) {
--			spin_lock(&priv->dp_port_lock);
-+			spin_lock_irqsave(&priv->dp_port_lock, flags);
- 			priv->dp_transmit_idle = 1;
- 			wake_up_interruptible(&priv->dp_transmit_idle_wait);
--			spin_unlock(&priv->dp_port_lock);
-+			spin_unlock_irqrestore(&priv->dp_port_lock, flags);
- 		} else if (opcode == DIGI_CMD_IFLUSH_FIFO) {
- 			wake_up_interruptible(&priv->dp_flush_wait);
- 		}
--- 
-1.7.9.5
+> @@ -5928,16 +5927,21 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+>  	wlcore_adjust_conf(wl);
+>  
+>  	wl->irq = platform_get_irq(pdev, 0);
+> -	wl->platform_quirks = pdata->platform_quirks;
+>  	wl->if_ops = pdev_data->if_ops;
+>  
+> -	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
+> -		irqflags = IRQF_TRIGGER_RISING;
+> -	else
+> -		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+> +	irq_data = irq_get_irq_data(wl->irq);
+> +	if (!irq_data) {
+> +		wl1271_error("couldn't get irq data for irq %d\n", wl->irq);
+> +		ret = -EINVAL;
+> +		goto out_free_nvs;
+> +	}
+> +
+> +	wl->irq_flags = irqd_get_trigger_type(irq_data);
+
+BTW, there seems to be a patch on its way to make reading the flags
+easier (ie. no need to get the irq_data first):
+
+http://mid.gmane.org/1367945288-5625-1-git-send-email-javier@dowhile0.org
+
+I'm not sure if this is going to be taken in, but if it does, it would
+be nice to change the code here to use the new irq_get_trigger_type()
+function.
+
+--
+Luca.
 
