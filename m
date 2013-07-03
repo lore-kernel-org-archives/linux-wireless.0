@@ -1,61 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58132 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757952Ab3GZI3l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:29:41 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>
-Subject: [PATCH 27/30] iwlwifi: remove duplicate rate scale init code
-Date: Fri, 26 Jul 2013 10:28:44 +0200
-Message-Id: <1374827327-3464-28-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103017_504453_A68CCB92)
-In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
-References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:49910 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932075Ab3GCOEP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 10:04:15 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>
+CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>,
+	<nm@ti.com>
+Subject: [PATCH v3 0/8] wilink: add device tree support
+Date: Wed, 3 Jul 2013 17:03:21 +0300
+Message-ID: <1372860209-3504-1-git-send-email-coelho@ti.com> (sfid-20130703_160718_115760_4B22AD3D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Hi,
 
-The rate scale windows are cleared twice as part of the init.
-Cleanup this duplication in both mvm and dvm.
+This patch series adds device tree support to the wlcore_sdio driver,
+which is used by WiLink6, WiLink7 and WiLink8.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/rs.c | 3 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c | 3 ---
- 2 files changed, 6 deletions(-)
+The first patches do some clean-up to make the data needed in the
+wilink device tree node smaller.  The remaining patches implement the
+actual device tree node parsing in wlcore_sdio.
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rs.c b/drivers/net/wireless/iwlwifi/dvm/rs.c
-index 1b69394..3395387 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rs.c
-@@ -2826,9 +2826,6 @@ void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta, u8 sta_i
- 
- 	lq_sta->flush_timer = 0;
- 	lq_sta->supp_rates = sta->supp_rates[sband->band];
--	for (j = 0; j < LQ_SIZE; j++)
--		for (i = 0; i < IWL_RATE_COUNT; i++)
--			rs_rate_scale_clear_window(&lq_sta->lq_info[j].win[i]);
- 
- 	IWL_DEBUG_RATE(priv, "LQ: *** rate scale station global init for station %d ***\n",
- 		       sta_id);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 3856c28..e4a7b387 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2688,9 +2688,6 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 
- 	lq_sta->flush_timer = 0;
- 	lq_sta->supp_rates = sta->supp_rates[sband->band];
--	for (j = 0; j < LQ_SIZE; j++)
--		for (i = 0; i < IWL_RATE_COUNT; i++)
--			rs_rate_scale_clear_window(&lq_sta->lq_info[j].win[i]);
- 
- 	IWL_DEBUG_RATE(mvm,
- 		       "LQ: *** rate scale station global init for station %d ***\n",
+I still need to figure out how to add the information about whether
+the clocks are XTAL or not.  I'll send it in a separate patche set.
+
+The DTS file changes will be sent separately, since they need to go
+via different trees.
+
+The bindings documentation patch will also be updated and sent
+separately, once the XTAL issue is solved.
+
+
+Changes in v3:
+
+* Remove irq_flags from pdata and handle them in the board files.
+  This caused the "wlcore: use irq_flags in pdata instead of hiding it
+  behind a quirk" (now 2/8) to be changed considerably, so I removed
+  the Acked-by from Tony.  I also added calls to gpio_request_one()
+  for the WiLink IRQ GPIO that were missing in the board files (thanks
+  Felipe);
+
+* Added "const" to the frequency tables in patch 4/8 (thanks Felipe);
+
+* Squashed patch 5/9 into the new 2/8;
+
+* Added comment about the sdio_set_drvdata() call move in 7/8 (thanks
+  Felipe);
+
+* I'm still modifying the panda and 4430sdp board files that are going
+  to be removed in 3.11.  Please ignore the changes I made there, I
+  just wanted to make sure they still work with my current tree.  Once
+  the 3.11 merge window close, I'll do the relevant merges before I
+  send pull requests (thanks Tony and Nishant).
+
+Please review.
+
+--
+Cheers,
+Luca.
+
+Luciano Coelho (8):
+  wl1251: split wl251 platform data to a separate structure
+  wlcore: set irq_flags in the board files instead of hiding behind a
+    quirk
+  wlcore: remove pwr_in_suspend from platform data
+  wl12xx: use frequency instead of enumerations for pdata clocks
+  wlcore: add initial device tree support to the sdio module
+  wlcore: sdio: add wilink clock providers
+  wlcore: sdio: get clocks from device tree
+  wlcore/wl12xx: check if we got correct clock data from DT
+
+ arch/arm/mach-davinci/board-da850-evm.c        |   11 ++-
+ arch/arm/mach-omap2/board-4430sdp.c            |   23 ++++-
+ arch/arm/mach-omap2/board-omap3evm.c           |   22 ++++-
+ arch/arm/mach-omap2/board-omap3pandora.c       |    4 +-
+ arch/arm/mach-omap2/board-omap4panda.c         |   39 +++++++--
+ arch/arm/mach-omap2/board-rx51-peripherals.c   |    2 +-
+ arch/arm/mach-omap2/board-zoom-peripherals.c   |   33 ++++++-
+ drivers/net/wireless/ti/wilink_platform_data.c |   37 ++++++--
+ drivers/net/wireless/ti/wl1251/sdio.c          |   12 +--
+ drivers/net/wireless/ti/wl1251/spi.c           |    2 +-
+ drivers/net/wireless/ti/wl12xx/main.c          |   77 ++++++++++++++--
+ drivers/net/wireless/ti/wl12xx/wl12xx.h        |   28 ++++++
+ drivers/net/wireless/ti/wlcore/debugfs.c       |    2 +-
+ drivers/net/wireless/ti/wlcore/main.c          |   26 +++---
+ drivers/net/wireless/ti/wlcore/sdio.c          |  112 ++++++++++++++++++++++--
+ drivers/net/wireless/ti/wlcore/wlcore.h        |    5 +-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h      |    1 +
+ include/linux/wl12xx.h                         |   52 +++++------
+ 18 files changed, 398 insertions(+), 90 deletions(-)
+
 -- 
-1.8.0
+1.7.10.4
 
