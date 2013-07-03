@@ -1,33 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42410 "EHLO mga09.intel.com"
+Received: from canardo.mork.no ([148.122.252.1]:52734 "EHLO canardo.mork.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755837Ab3G3Xs7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 19:48:59 -0400
-Date: Wed, 31 Jul 2013 01:48:54 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [GIT] [3.11] NFC fixes
-Message-ID: <20130730234854.GA4556@zurbaran> (sfid-20130731_014902_719464_970C967C)
-References: <20130730130843.GA28677@zurbaran>
+	id S932283Ab3GCI7B convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 04:59:01 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"wireless-regdb\@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Subject: Re: [wireless-regdb] Updates to wireless-regdb review - vendor namespaces and VHT80
+References: <CAB=NE6V_PKG2UBSLPRhziUDcFzFi8uOJNiNzoPNaK0oU7rmZuQ@mail.gmail.com>
+Date: Wed, 03 Jul 2013 10:58:12 +0200
+In-Reply-To: <CAB=NE6V_PKG2UBSLPRhziUDcFzFi8uOJNiNzoPNaK0oU7rmZuQ@mail.gmail.com>
+	(Luis R. Rodriguez's message of "Tue, 2 Jul 2013 17:38:32 -0700")
+Message-ID: <87wqp8uijf.fsf@nemi.mork.no> (sfid-20130703_105906_622772_2843C600)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130730130843.GA28677@zurbaran>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
 
-On Tue, Jul 30, 2013 at 03:08:43PM +0200, Samuel Ortiz wrote:
-> Hi John,
-> 
-> This is the first NFC fixes pull request for 3.11.
-Forget about this one, I'm going to send another pull request.
+> In the meantime, while that gets developed, I'd still like to supply
+> patches to enable VHT80 for a few countries without hopefully such
+> high bar for documentation as I cannot get this information.
 
-Cheers,
-Samuel.
+I believe VHT80 (and VHT160) is allowed by current regulations in a
+large number of countries, and that the current db entries are in fact
+wrong by stating any upper channel width limits at all in the 5 GHz
+bands.
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+For example, regulations in most CEPT countries are likely based on
+
+ "ECC/DEC/(04)08 on the harmonised use of the 5 GHz frequency bands for
+  the implementation of Wireless Access Systems including Radio Local
+  Area Networks (WAS/RLANs)"
+
+or a previous version of that decision.  Which is available here:
+http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Quoting:
+
+ "considering
+  ..
+
+  e. that the systems covered by this ECC Decision operate typically in a 20 MHz channel bandwidth, other
+    values for the channel bandwidth are also feasible provided they comply with the relevant maximum mean
+    e.i.r.p. and the corresponding maximum mean e.i.r.p. density limits;
+ "
+
+and the continues deciding the mentioned power and power density limits
+only, without any specific channelization.  This document clearly allows
+and anticipates both wider and narrower channels, and so does most
+likely the national regualations implementing the decision.
+
+The list of CEPT countries implementating this decision is here:
+http://www.erodocdb.dk/doks/implement_doc_adm.aspx?docid=2033
+
+
+
+Bjørn
