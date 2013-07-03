@@ -1,103 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:36083 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752396Ab3GaJqo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 05:46:44 -0400
-Received: by mail-we0-f182.google.com with SMTP id u55so402828wes.27
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 02:46:43 -0700 (PDT)
+Received: from comal.ext.ti.com ([198.47.26.152]:55403 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932804Ab3GCOEk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 10:04:40 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>
+CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>,
+	<nm@ti.com>
+Subject: [PATCH v3 6/8] wlcore: sdio: add wilink clock providers
+Date: Wed, 3 Jul 2013 17:03:27 +0300
+Message-ID: <1372860209-3504-7-git-send-email-coelho@ti.com> (sfid-20130703_160559_537424_D35A753E)
+In-Reply-To: <1372860209-3504-1-git-send-email-coelho@ti.com>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <51F8D438.7020304@openwrt.org>
-References: <bug-989269-351310-C5h8dsuOxB@bugzilla.redhat.com>
-	<51F8CD45.6060108@broadcom.com>
-	<51F8D438.7020304@openwrt.org>
-Date: Wed, 31 Jul 2013 11:46:43 +0200
-Message-ID: <CA+icZUU7RB9=Pr2b8ixZ7CES-4c6Acf+k=M_zD5Z_wEHLt+Niw@mail.gmail.com> (sfid-20130731_114647_405293_D3764E2D)
-Subject: Re: Fwd: [Bug 989269] Connecting to WLAN causes kernel panic
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@redhat.com>,
-	John Greene <jogreene@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 31, 2013 at 11:09 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2013-07-31 10:39 AM, Arend van Spriel wrote:
->> Hi Felix,
->>
->> How are things in OpenWRT. I wanted to ask you something regarding a
->> defect I am looking at. Since kernel 3.9 several reports have been made
->> about a kernel panic in brcmsmac, ie. a divide-by-zero error.
-> 3.9 was the first kernel to support CCK rates in minstrel_ht as
-> fallback (in case the link gets very bad). Not sure if that triggers
-> anything weird in brcmsmac.
->
->> Debugging the issue shows we end up with a rate with MCS index 110,
->> which is, well, impossible.
-> Did you verify that it comes directly from minstrel_ht, or does it show
-> up somewhere further down the chain in brcmsmac?
->
->> As brcmsmac gets the rate info from
->> minstrel_ht I was wondering if we have an intergration issue here. I saw
->> around April patches about new API which may have been in the 3.9 time
->> frame and something subtly changed things for brcmsmac.
-> The new rate API was added in 3.10, not 3.9. It did add bug that caused
-> bogus MCS rates. I've sent a patch for this a while back (shortly
-> before 3.10 was released), but it was too late to make it into the
-> release. I guess we have to wait for it to be applied through stable -
-> no idea why that hasn't happened yet.
->
-> Here is the fix:
->
-> commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5
-> Author: Felix Fietkau <nbd@openwrt.org>
-> Date:   Fri Jun 28 21:04:35 2013 +0200
->
->     mac80211/minstrel_ht: fix cck rate sampling
->
+Add refclock and tcxoclock as clock providers in WiLink.  These clocks
+are not accesible outside the WiLink module, but they are registered
+in the clock framework anyway.  Only the WiLink chip consumes these
+clocks.
 
-That patch is not in Linus tree yet, so it won't get into stable.
+In theory, the WiLink chip could be connected to external clocks
+instead of using these internal clocks, so make the clock consumer
+code generic enough.  If external clocks are used, then the internal
+clock device tree nodes are not necessary, but the external ones must
+be specified.
 
-- Sedat -
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Reviewed-by: Felipe Balbi <balbi@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/sdio.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
->     The CCK group needs special treatment to set the right flags and rate
->     index. Add this missing check to prevent setting broken rates for tx
->     packets.
->
->     Cc: stable@vger.kernel.org # 3.10
->     Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->     Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 5b2d301..f5aed96 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -804,10 +804,18 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
->
->         sample_group = &minstrel_mcs_groups[sample_idx / MCS_GROUP_RATES];
->         info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
-> +       rate->count = 1;
-> +
-> +       if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
-> +               int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
-> +               rate->idx = mp->cck_rates[idx];
-> +               rate->flags = 0;
-> +               return;
-> +       }
-> +
->         rate->idx = sample_idx % MCS_GROUP_RATES +
->                     (sample_group->streams - 1) * MCS_GROUP_RATES;
->         rate->flags = IEEE80211_TX_RC_MCS | sample_group->flags;
-> -       rate->count = 1;
->  }
->
->  static void
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 9370d7e..980bf3d 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -34,6 +34,7 @@
+ #include <linux/wl12xx.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/printk.h>
++#include <linux/clk-provider.h>
+ 
+ #include "wlcore.h"
+ #include "wl12xx_80211.h"
+@@ -214,10 +215,15 @@ static struct wl1271_if_operations sdio_ops = {
+ 	.set_block_size = wl1271_sdio_set_block_size,
+ };
+ 
++static const struct of_device_id wlcore_sdio_of_clk_match_table[] = {
++	{ .compatible = "ti,wilink-clock" },
++};
++
+ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
+ {
+ 	struct wl12xx_platform_data *pdata;
+ 	struct device_node *np = dev->of_node;
++	struct device_node *clock_node;
+ 
+ 	if (!np) {
+ 		np = of_find_matching_node(NULL, dev->driver->of_match_table);
+@@ -241,6 +247,9 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
+ 		goto out_free;
+ 	}
+ 
++	for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
++		of_fixed_clk_setup(clock_node);
++
+ 	goto out;
+ 
+ out_free:
+-- 
+1.7.10.4
+
