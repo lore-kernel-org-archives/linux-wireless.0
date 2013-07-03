@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:41678 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab3GKJGo (ORCPT
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:50140 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755484Ab3GCLdk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:06:44 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH 01/50] USB: devio: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:24 +0800
-Message-Id: <1373533573-12272-2-git-send-email-ming.lei@canonical.com> (sfid-20130711_110658_991188_1101E818)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Wed, 3 Jul 2013 07:33:40 -0400
+Date: Wed, 3 Jul 2013 04:33:34 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: Nishanth Menon <nm@ti.com>, linux-wireless@vger.kernel.org,
+	nsekhar@ti.com, mturquette@linaro.org, mark.rutland@arm.com,
+	balbi@ti.com, grant.likely@linaro.org, rob.herring@calxeda.com,
+	devicetree-discuss@lists.ozlabs.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 4/9] wl12xx: use frequency instead of enumerations
+ for pdata clocks
+Message-ID: <20130703113334.GY5523@atomide.com> (sfid-20130703_133357_136640_7F7511B6)
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+ <1372776948-24840-5-git-send-email-coelho@ti.com>
+ <20130702150208.GA4233@kahuna>
+ <1372796850.21065.93.camel@cumari.coelho.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372796850.21065.93.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+* Luciano Coelho <coelho@ti.com> [130702 13:33]:
+> On Tue, 2013-07-02 at 10:02 -0500, Nishanth Menon wrote:
+> > On 17:55-20130702, Luciano Coelho wrote:
+> > > Instead of defining an enumeration with the FW specific values for the
+> > > different clock rates, use the actual frequency instead.  Also add a
+> > > boolean to specify whether the clock is XTAL or not.
+> > > 
+> > > Change all board files to reflect this.
+> > > 
+> > > Cc: Tony Lindgren <tony@atomide.com>
+> > > Cc: Sekhar Nori <nsekhar@ti.com>
+> > > Signed-off-by: Luciano Coelho <coelho@ti.com>
+> > > ---
+> > >  arch/arm/mach-davinci/board-da850-evm.c      |    3 +-
+> > >  arch/arm/mach-omap2/board-4430sdp.c          |    5 ++-
+> > ^^
+> > >  arch/arm/mach-omap2/board-omap3evm.c         |    3 +-
+> > >  arch/arm/mach-omap2/board-omap4panda.c       |    3 +-
+> > ^^
+> > Please do not add more platform data to platforms that are DT only.
+> 
+> Ah, I hadn't realized that board_omap4panda.c and board-4430sdp.c had
+> been removed in linux-next.  I base my tree on wireless-next and it
+> doesn't contain these changes yet.  I would only have noticed this when
+> I rebased my tree once the merge window is closed. ;)
+> 
+> Thanks for pointing out, I'll make sure these changes will not be there
+> when I send the pull request.
 
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/usb/core/devio.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Please separate out the minimal pdata and arch/arm/mach-omap2 changes int
+a immutable branch on v3.11-rc1 that I can also pull in. For v3.12, we're
+going to be making more boards device tree only, so these changes may
+otherwise cause pointless merge conflicts.
 
-diff --git a/drivers/usb/core/devio.c b/drivers/usb/core/devio.c
-index 0598650..21e6ec6 100644
---- a/drivers/usb/core/devio.c
-+++ b/drivers/usb/core/devio.c
-@@ -495,8 +495,9 @@ static void async_completed(struct urb *urb)
- 	u32 secid = 0;
- 	const struct cred *cred = NULL;
- 	int signr;
-+	unsigned long flags;
- 
--	spin_lock(&ps->lock);
-+	spin_lock_irqsave(&ps->lock, flags);
- 	list_move_tail(&as->asynclist, &ps->async_completed);
- 	as->status = urb->status;
- 	signr = as->signr;
-@@ -518,7 +519,7 @@ static void async_completed(struct urb *urb)
- 	if (as->status < 0 && as->bulk_addr && as->status != -ECONNRESET &&
- 			as->status != -ENOENT)
- 		cancel_bulk_urbs(ps, as->bulk_addr);
--	spin_unlock(&ps->lock);
-+	spin_unlock_irqrestore(&ps->lock, flags);
- 
- 	if (signr) {
- 		kill_pid_info_as_cred(sinfo.si_signo, &sinfo, pid, cred, secid);
--- 
-1.7.9.5
+Regards,
 
+Tony
