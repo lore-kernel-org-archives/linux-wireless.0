@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:39175 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308Ab3GQCTY (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:46654 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932988Ab3GCXGU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:19:24 -0400
-Received: by mail-pa0-f44.google.com with SMTP id lj1so1412913pab.31
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:19:23 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 07/53] wireless-regdb: CO, Colombia - enable VHT80
-Date: Tue, 16 Jul 2013 19:17:56 -0700
-Message-Id: <1374027522-18488-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_041926_346850_D62C370E)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 3 Jul 2013 19:06:20 -0400
+Message-ID: <1372892769.12249.259.camel@fourier> (sfid-20130704_010623_940041_6B89C3FB)
+Subject: Re: [PATCH] brcmfmac: Turn off ARP offloading when configured for
+ AP.
+From: Kamal Mostafa <kamal@canonical.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, stable@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 03 Jul 2013 16:06:09 -0700
+In-Reply-To: <CACna6rzqjh0uC=qNThA=fsNmbLz+b0NUfkvFSLZ7GhRdGqOYug@mail.gmail.com>
+References: <1370508957-12709-1-git-send-email-arend@broadcom.com>
+	 <51C15D4D.6040009@broadcom.com> <20130619141920.GB7395@kroah.com>
+	 <51C1D392.8060705@broadcom.com> <20130619165217.GC5419@kroah.com>
+	 <51D33EC2.1090108@broadcom.com>
+	 <CACna6rzqjh0uC=qNThA=fsNmbLz+b0NUfkvFSLZ7GhRdGqOYug@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-zy9dSOkRsHE7QC3CBzsr"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and update the max EIRP. This also adds
-a new DFS 5 GHz band: 5490 - 5710 MHz.
+--=-zy9dSOkRsHE7QC3CBzsr
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+On Wed, 2013-07-03 at 06:54 +0200, Rafa=C5=82 Mi=C5=82ecki wrote:
+> 2013/7/2 Arend van Spriel <arend@broadcom.com>:
+> > Hi Greg,
+> >
+> > Forgot to ask, but it seems like Canonical is maintaining additional st=
+able
+> > kernel branches. I guess I should contact them for those kernel version=
+s (if
+> > I care), right?
+>=20
+> They track Greg's stables to pick up the patches. Know from my own
+> experience, I didn't have to ping anyone :)
+>=20
 
-diff --git a/db.txt b/db.txt
-index b82b255..6d7a762 100644
---- a/db.txt
-+++ b/db.txt
-@@ -172,9 +172,10 @@ country CN:
- 
- country CO:
- 	(2402 - 2472 @ 40), (3, 27)
--	(5170 - 5250 @ 40), (3, 17)
--	(5250 - 5330 @ 40), (3, 23), DFS
--	(5735 - 5835 @ 40), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
- 
- country CR:
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
+Yes, we're picking up cc: stable patches automatically when they apply
+to the 3.8.y.z and 3.5.y.z "extended stable" branches[0], but we
+certainly appreciate specific backports for those versions when they
+don't apply cleanly.
+
+ -Kamal
+
+[0] https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
+
+
+
+--=-zy9dSOkRsHE7QC3CBzsr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABCAAGBQJR1K5iAAoJEHqwmdxYrXhZ2C4P+QHGOBvRa6FwmjzyLy8v0660
+qMaHgPsLVSlsO+ZqD7/8BK/JgPtQIk1iZw71L/TW9//IJperW32Be9hqOFiQt0Xg
+IYFaH2mrLDt62zfEVJAReeFsNKdH1NwsYSikCtCrNp7SdDoZsL/3wtc67g6agvhL
+Mimo7NjMXpOZeIE5VL/Y2RfAOHJI5uQFuyt8Gbe7sAbiX7PV0tVnCj4OeizYxBRG
+xmyUutuhwgbAV8qjXp2jtNtHUoQ3gjB9NzOK15LiQ+WKYC/2ASLE7Yihp9l5p4Jd
+eoZCI19n7nbLYMm9RH9DG5tXPZAkQyHwcwSmg0fPVmApYdcudHA//+jBymtxRiLQ
+ixvDu3Mw0ikRDntA4lFlGEiODNyzUZ0lCjg4lKU9EL7wjUVY0HClfOMm7zCaw6C/
+9q76ITvoCuozqdTIikKmdtUU0vwVIe8ZJbx/GZfjtp5meEgTTf92OXz3nrh2puZu
+5QPQEXAKCv8XB9OSLALfDFkt1Q348vTp4kEEHKCZfVQ2zbSWZDBt6gtqbcYcp0tr
+ANAkdspobpC6ZF1W03hvsknJhVjm3l0OkVE3pe8g+B9qm/py4XQgqyR1i3ixTIQa
+4xJaTr3a7d8EdAkIWzFSf/JhgygDzVB6eOVm2ly2DG11R317VDF4ASCO6LiIgV/L
+Rt/jtUDRYLY0GRpkvdiZ
+=6P0p
+-----END PGP SIGNATURE-----
+
+--=-zy9dSOkRsHE7QC3CBzsr--
 
