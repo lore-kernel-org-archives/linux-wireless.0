@@ -1,27 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44756 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754721Ab3GPOs7 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:2248 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753642Ab3GCOhH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 10:48:59 -0400
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 3.11] mac80211/minstrel: fix NULL pointer dereference  issue
+	Wed, 3 Jul 2013 10:37:07 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v13 0/2] P2P find phase offload
+Date: Wed, 3 Jul 2013 17:37:03 +0300
+Message-ID: <2155509.WWNsyttceA@lx-vladimir> (sfid-20130703_163711_935862_26A7152C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Tue, 16 Jul 2013 17:48:56 +0300
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, krzysiek@podlesie.net
-In-Reply-To: <1373891706-1071-1-git-send-email-nbd@openwrt.org>
-References: <1373891706-1071-1-git-send-email-nbd@openwrt.org>
-Message-ID: <692afa2182af4dae43c3298775038b02@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-07-15 15:35, Felix Fietkau wrote:
-> When priv_sta == NULL, mi->prev_sample is dereferenced too early. Move
-> the assignment further down, after the rate_control_send_low call.
+Addressing next round of input
 
-Applied.
+- add more comments about NL80211_ATTR_RXMGMT_FLAGS
+- always supply non-empty channel list for start_p2p_find();
+  in case wpa_s don't provide one, build our own
+- track p2p find state, similar to nl80211_start_p2p_device()
+  and protect from multiple start/stop requests. For this,
+  out-of context of stop_p2p_find call of cfg80211_p2p_find_notify_end
+  now requires rtnl_lock()
 
-johannes
+Vladimir Kondratiev (2):
+  cfg80211: add 'flags' to cfg80211_rx_mgmt()
+  cfg80211: P2P find phase offload
+
+ drivers/net/wireless/ath/ath6kl/wmi.c         |   7 +-
+ drivers/net/wireless/ath/wil6210/wmi.c        |   2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c |   4 +-
+ drivers/net/wireless/mwifiex/util.c           |   4 +-
+ include/net/cfg80211.h                        |  79 +++++++++-
+ include/uapi/linux/nl80211.h                  |  31 ++++
+ net/mac80211/rx.c                             |   3 +-
+ net/wireless/mlme.c                           |   4 +-
+ net/wireless/nl80211.c                        | 211 
++++++++++++++++++++++++++-
+ net/wireless/nl80211.h                        |   2 +-
+ net/wireless/rdev-ops.h                       |  19 +++
+ net/wireless/trace.h                          |  44 ++++++
+ 12 files changed, 393 insertions(+), 17 deletions(-)
+
+-- 
+1.8.1.2
+
