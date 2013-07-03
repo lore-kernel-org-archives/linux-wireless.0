@@ -1,91 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:47512 "EHLO arrakis.dune.hu"
+Received: from comal.ext.ti.com ([198.47.26.152]:55396 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752947Ab3GAHs2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:48:28 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 10/20] rt2x00: rt2800lib: introduce rt2800_get_txmixer_gain_{24,5}g helpers
-Date: Mon,  1 Jul 2013 09:47:49 +0200
-Message-Id: <1372664879-18474-11-git-send-email-juhosg@openwrt.org> (sfid-20130701_094831_708923_08D24353)
-In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+	id S932804Ab3GCOEg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 10:04:36 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>
+CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>,
+	<nm@ti.com>
+Subject: [PATCH v3 3/8] wlcore: remove pwr_in_suspend from platform data
+Date: Wed, 3 Jul 2013 17:03:24 +0300
+Message-ID: <1372860209-3504-4-git-send-email-coelho@ti.com> (sfid-20130703_160620_995386_88961467)
+In-Reply-To: <1372860209-3504-1-git-send-email-coelho@ti.com>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the TX mixer gain reading code into separate
-helper functions in preparation for RT3593 support.
+The pwr_in_suspend flag depends on the MMC settings which can be
+retrieved from the SDIO subsystem, so it doesn't need to be part of
+the platform data structure.  Move it to the platform device data that
+is passed from SDIO to wlcore.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   38 +++++++++++++++++++------------
- 1 file changed, 24 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c     |    2 +-
+ drivers/net/wireless/ti/wlcore/sdio.c     |    2 +-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    1 +
+ include/linux/wl12xx.h                    |    1 -
+ 4 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index cbc3dc3..6f23eb0 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6362,6 +6362,28 @@ int rt2800_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
- }
- EXPORT_SYMBOL_GPL(rt2800_read_eeprom_efuse);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 7b5d0cc..aada037 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5952,7 +5952,7 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+ 	if (!ret) {
+ 		wl->irq_wake_enabled = true;
+ 		device_init_wakeup(wl->dev, 1);
+-		if (pdata->pwr_in_suspend)
++		if (pdev_data->pwr_in_suspend)
+ 			wl->hw->wiphy->wowlan = &wlcore_wowlan_support;
+ 	}
+ #endif
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 29ef249..4c7e8ac 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -260,7 +260,7 @@ static int wl1271_probe(struct sdio_func *func,
+ 	dev_dbg(glue->dev, "sdio PM caps = 0x%x\n", mmcflags);
  
-+static u8 rt2800_get_txmixer_gain_24g(struct rt2x00_dev *rt2x00dev)
-+{
-+	u16 word;
-+
-+	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
-+	if ((word & 0x00ff) != 0x00ff)
-+		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
-+
-+	return 0;
-+}
-+
-+static u8 rt2800_get_txmixer_gain_5g(struct rt2x00_dev *rt2x00dev)
-+{
-+	u16 word;
-+
-+	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
-+	if ((word & 0x00ff) != 0x00ff)
-+		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
-+
-+	return 0;
-+}
-+
- static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-@@ -6456,13 +6478,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 		rt2x00_set_field16(&word, EEPROM_RSSI_BG_OFFSET1, 0);
- 	rt2800_eeprom_write(rt2x00dev, EEPROM_RSSI_BG, word);
+ 	if (mmcflags & MMC_PM_KEEP_POWER)
+-		pdev_data->pdata->pwr_in_suspend = true;
++		pdev_data->pwr_in_suspend = true;
  
--	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
--	if ((word & 0x00ff) != 0x00ff) {
--		drv_data->txmixer_gain_24g =
--			rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
--	} else {
--		drv_data->txmixer_gain_24g = 0;
--	}
-+	drv_data->txmixer_gain_24g = rt2800_get_txmixer_gain_24g(rt2x00dev);
+ 	sdio_set_drvdata(func, glue);
  
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_BG2, &word);
- 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_BG2_OFFSET2)) > 10)
-@@ -6473,13 +6489,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 				   default_lna_gain);
- 	rt2800_eeprom_write(rt2x00dev, EEPROM_RSSI_BG2, word);
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index e5e1464..f2c4227 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -209,6 +209,7 @@ struct wl1271_if_operations {
+ struct wlcore_platdev_data {
+ 	struct wl12xx_platform_data *pdata;
+ 	struct wl1271_if_operations *if_ops;
++	bool pwr_in_suspend;
+ };
  
--	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
--	if ((word & 0x00ff) != 0x00ff) {
--		drv_data->txmixer_gain_5g =
--			rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
--	} else {
--		drv_data->txmixer_gain_5g = 0;
--	}
-+	drv_data->txmixer_gain_5g = rt2800_get_txmixer_gain_5g(rt2x00dev);
+ #define MAX_NUM_KEYS 14
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+index 1bfcd19..ab90b1c 100644
+--- a/include/linux/wl12xx.h
++++ b/include/linux/wl12xx.h
+@@ -59,7 +59,6 @@ struct wl12xx_platform_data {
+ 	int irq;
+ 	int board_ref_clock;
+ 	int board_tcxo_clock;
+-	bool pwr_in_suspend;
+ };
  
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_A, &word);
- 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_A_OFFSET0)) > 10)
+ #ifdef CONFIG_WILINK_PLATFORM_DATA
 -- 
-1.7.10
+1.7.10.4
 
