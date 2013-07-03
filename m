@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:53530 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752808Ab3GIU2d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 16:28:33 -0400
-Received: by mail-qa0-f49.google.com with SMTP id hu16so3172704qab.15
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jul 2013 13:28:32 -0700 (PDT)
+Received: from comal.ext.ti.com ([198.47.26.152]:50034 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754528Ab3GCMPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 08:15:13 -0400
+Message-ID: <1372853674.21065.106.camel@cumari.coelho.fi> (sfid-20130703_141544_662642_CFF7B977)
+Subject: Re: [PATCH v2 4/9] wl12xx: use frequency instead of enumerations
+ for pdata clocks
+From: Luciano Coelho <coelho@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: Nishanth Menon <nm@ti.com>, <linux-wireless@vger.kernel.org>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Date: Wed, 3 Jul 2013 15:14:34 +0300
+In-Reply-To: <20130703113334.GY5523@atomide.com>
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+	 <1372776948-24840-5-git-send-email-coelho@ti.com>
+	 <20130702150208.GA4233@kahuna> <1372796850.21065.93.camel@cumari.coelho.fi>
+	 <20130703113334.GY5523@atomide.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951035636356@SC-VEXCH1.marvell.com>
-References: <5FF020A1CFFEEC49BD1E09530C4FF5951035636354@SC-VEXCH1.marvell.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951035636356@SC-VEXCH1.marvell.com>
-Date: Tue, 9 Jul 2013 14:28:32 -0600
-Message-ID: <CAMLZHHR_8Zsp2xe=9x4oJ1Rj7XLGOEza3r0uPt_Ht8TDC781aQ@mail.gmail.com> (sfid-20130709_222839_656959_69093F51)
-Subject: Re: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-From: Daniel Drake <dsd@laptop.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 7, 2013 at 10:15 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
->
->>We didn't test the behavior of sdio_read/sdio_write API's when hardware is >not present. But they should just return an error.
->
-> I ran some tests which confirmed that there is no harm in calling these API's when hardware is removed. They returned ENOMEDIUM error.
->
-> Can you please review and verify attached patch?
+On Wed, 2013-07-03 at 04:33 -0700, Tony Lindgren wrote:
+> * Luciano Coelho <coelho@ti.com> [130702 13:33]:
+> > On Tue, 2013-07-02 at 10:02 -0500, Nishanth Menon wrote:
+> > > On 17:55-20130702, Luciano Coelho wrote:
+> > > > Instead of defining an enumeration with the FW specific values for the
+> > > > different clock rates, use the actual frequency instead.  Also add a
+> > > > boolean to specify whether the clock is XTAL or not.
+> > > > 
+> > > > Change all board files to reflect this.
+> > > > 
+> > > > Cc: Tony Lindgren <tony@atomide.com>
+> > > > Cc: Sekhar Nori <nsekhar@ti.com>
+> > > > Signed-off-by: Luciano Coelho <coelho@ti.com>
+> > > > ---
+> > > >  arch/arm/mach-davinci/board-da850-evm.c      |    3 +-
+> > > >  arch/arm/mach-omap2/board-4430sdp.c          |    5 ++-
+> > > ^^
+> > > >  arch/arm/mach-omap2/board-omap3evm.c         |    3 +-
+> > > >  arch/arm/mach-omap2/board-omap4panda.c       |    3 +-
+> > > ^^
+> > > Please do not add more platform data to platforms that are DT only.
+> > 
+> > Ah, I hadn't realized that board_omap4panda.c and board-4430sdp.c had
+> > been removed in linux-next.  I base my tree on wireless-next and it
+> > doesn't contain these changes yet.  I would only have noticed this when
+> > I rebased my tree once the merge window is closed. ;)
+> > 
+> > Thanks for pointing out, I'll make sure these changes will not be there
+> > when I send the pull request.
+> 
+> Please separate out the minimal pdata and arch/arm/mach-omap2 changes int
+> a immutable branch on v3.11-rc1 that I can also pull in. For v3.12, we're
+> going to be making more boards device tree only, so these changes may
+> otherwise cause pointless merge conflicts.
 
-I gave it a quick test, didn't see any crashes. Thanks.
+Okay.  I don't want to freeze my work, I'll continue using my
+wireless-based tree (which is based on 3.10) for now.  When the merge
+window closes, I'll reorganize all this before sending pull requests, so
+we can avoid conflicts.
 
-However, I'm concerned that this patch is worsening the confusion in
-this part of the driver.
+Please ignore my changes to board files that will disappear on 3.11 and
+keep reviewing the rest. ;)
 
-Unless there is a reason to do otherwise, the norm here would be to
-tightly couple the hardware bits that enable interrupts to the Linux
-IRQ handler registration. i.e. sdio_claim_irq should be called
-immediately before mwifiex_sdio_enable_host_int, and sdio_release_irq
-should be called immediately after mwifiex_sdio_disable_host_int.
-Right now these 2 steps are very separate (sdio_release_irq is being
-called far too late, long after the point when the driver could sanely
-handle an interrupt).
+--
+Cheers,
+Luca.
 
-Although you would never expect an interrupt to arrive after
-mwifiex_sdio_disable_host_int() has been called, the cleanliness and
-readability has value here, and maybe damaged hardware would misbehave
-and fire an interrupt anyway, which would cause the driver to go
-wrong.
-
-Secondly, it should be symmetrical. If the core mwifiex driver is the
-thing that enables interrupts, it should be the component responsible
-for disabling them as well. With your patch, the core mwifiex driver
-enables interrupts, but it is up to the sdio sub-driver to disable
-them.
-
-Daniel
