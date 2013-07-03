@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:39216 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751868Ab3GKKbD (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:60053 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965387Ab3GCTQl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 06:31:03 -0400
-Received: by mail-pd0-f169.google.com with SMTP id y10so7430165pdj.28
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 03:31:02 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] nl80211: fix the setting of RSSI threshold value for mesh
-Date: Thu, 11 Jul 2013 18:24:03 +0800
-Message-Id: <1373538243-17628-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130711_123108_093401_9DF7B752)
+	Wed, 3 Jul 2013 15:16:41 -0400
+Received: by mail-ie0-f174.google.com with SMTP id 9so1350534iec.33
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 12:16:41 -0700 (PDT)
+Message-ID: <51D47897.3080806@lwfinger.net> (sfid-20130703_211652_774076_0355D813)
+Date: Wed, 03 Jul 2013 14:16:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Xavier <xlinuxwireless@aim.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless is not avalaible ?
+References: <8D04620FE438D64-1114-7061B@webmail-va009.sysops.aol.com> <alpine.DEB.2.10.1307032001430.29512@aurora.sdinet.de> <8D046351240532F-1114-718F3@webmail-va009.sysops.aol.com>
+In-Reply-To: <8D046351240532F-1114-718F3@webmail-va009.sysops.aol.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RSSI threshold value used for mesh peering should be in
-negative value. After range checks to mesh parameters is
-introduced, this is not allowed. Fix this.
+On 07/03/2013 01:48 PM, Xavier wrote:
+>
+> Thanks for your answer.
+>
+> This is a good link, but I need compat-wireless stable for 3.2 version of Linux
+> kernel.
+>
+> In that link, there are all for >= 3.7 Linux kernel version.
+>
+> Exist any site for 3.2 Linux kernel version of compat-wireless ?
+>
+> Thanks, see you.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
-v2:
-	use nla_get_s32 instead (Johannes)
+You do not understand compat-wireless, now called backports.
 
- net/wireless/nl80211.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+The version listed, such as 3.7, is for the *source* of the code included. The 
+package includes *all* the necessary code for it to be built on kernel 2.6.24 
+*OR NEWER*. If you were to find a 3.2 version of compat-wireless, it would have 
+exactly the same drivers as were released with 3.2, and there would be no reason 
+for you to use it! The link you were given will work for 3.2.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a9444cd..0fc6e3a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4803,9 +4803,9 @@ do {									    \
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding, 0, 1,
- 				  mask, NL80211_MESHCONF_FORWARDING,
- 				  nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, 1, 255,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, -255, 0,
- 				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
--				  nla_get_u32);
-+				  nla_get_s32);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
- 				  mask, NL80211_MESHCONF_HT_OPMODE,
- 				  nla_get_u16);
--- 
-1.7.0.4
+Larry
+
 
