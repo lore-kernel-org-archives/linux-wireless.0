@@ -1,139 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:43240 "EHLO ebb06.tieto.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:49918 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752258Ab3GVMNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 08:13:49 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 4/4] ath10k: fix rts/fragmentation threshold setup
-Date: Mon, 22 Jul 2013 14:13:31 +0200
-Message-ID: <1374495211-20353-5-git-send-email-michal.kazior@tieto.com> (sfid-20130722_141354_872949_F939587A)
-In-Reply-To: <1374495211-20353-1-git-send-email-michal.kazior@tieto.com>
-References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
- <1374495211-20353-1-git-send-email-michal.kazior@tieto.com>
+	id S932851Ab3GCOET (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 10:04:19 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>
+CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>,
+	<nm@ti.com>
+Subject: [PATCH v3 5/8] wlcore: add initial device tree support to the sdio module
+Date: Wed, 3 Jul 2013 17:03:26 +0300
+Message-ID: <1372860209-3504-6-git-send-email-coelho@ti.com> (sfid-20130703_160645_265017_E6F0CB4D)
+In-Reply-To: <1372860209-3504-1-git-send-email-coelho@ti.com>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If RTS and fragmentation threshold values are
-0xFFFFFFFF they should be considered disabled and
-no min/max limits must be applied.
+If platform data is not available, try to get the required information
+from the device tree.  Register an OF match table and parse the
+appropriate device tree nodes.
 
-This fixes some issues with throughput issues,
-especially with VHT.
+Parse interrupt property only, for now.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   54 +++++++++++++++++----------------
- 1 file changed, 28 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ti/wlcore/sdio.c |   69 ++++++++++++++++++++++++++++++---
+ 1 file changed, 63 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6144b3b..d0a7761 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -332,6 +332,29 @@ static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 4c7e8ac..9370d7e 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -30,7 +30,7 @@
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/host.h>
+-#include <linux/gpio.h>
++#include <linux/of_irq.h>
+ #include <linux/wl12xx.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/printk.h>
+@@ -214,6 +214,43 @@ static struct wl1271_if_operations sdio_ops = {
+ 	.set_block_size = wl1271_sdio_set_block_size,
+ };
  
-+static int  ath10k_mac_set_rts(struct ath10k_vif *arvif, u32 value)
++static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
 +{
-+	if (value != 0xFFFFFFFF)
-+		value = min_t(u32, arvif->ar->hw->wiphy->rts_threshold,
-+			      ATH10K_RTS_MAX);
++	struct wl12xx_platform_data *pdata;
++	struct device_node *np = dev->of_node;
 +
-+	return ath10k_wmi_vdev_set_param(arvif->ar, arvif->vdev_id,
-+					 WMI_VDEV_PARAM_RTS_THRESHOLD,
-+					 value);
++	if (!np) {
++		np = of_find_matching_node(NULL, dev->driver->of_match_table);
++		if (!np) {
++			dev_notice(dev, "device tree node not available\n");
++			pdata = ERR_PTR(-ENODEV);
++			goto out;
++		}
++	}
++
++	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
++	if (!pdata) {
++		dev_err(dev, "can't allocate platform data\n");
++		pdata = ERR_PTR(-ENODEV);
++		goto out;
++	}
++
++	pdata->irq = irq_of_parse_and_map(np, 0);
++	if (pdata->irq < 0) {
++		dev_err(dev, "can't get interrupt gpio from the device tree\n");
++		goto out_free;
++	}
++
++	goto out;
++
++out_free:
++	kfree(pdata);
++	pdata = ERR_PTR(-ENODEV);
++
++out:
++	return pdata;
 +}
 +
-+static int ath10k_mac_set_frag(struct ath10k_vif *arvif, u32 value)
-+{
-+	if (value != 0xFFFFFFFF)
-+		value = clamp_t(u32, arvif->ar->hw->wiphy->frag_threshold,
-+				ATH10K_FRAGMT_THRESHOLD_MIN,
-+				ATH10K_FRAGMT_THRESHOLD_MAX);
-+
-+	return ath10k_wmi_vdev_set_param(arvif->ar, arvif->vdev_id,
-+					 WMI_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
-+					 value);
-+}
-+
- static int ath10k_peer_delete(struct ath10k *ar, u32 vdev_id, const u8 *addr)
+ static int wl1271_probe(struct sdio_func *func,
+ 				  const struct sdio_device_id *id)
  {
- 	int ret;
-@@ -1897,7 +1920,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
- 	enum wmi_sta_powersave_param param;
- 	int ret = 0;
--	u32 value, rts, frag;
-+	u32 value;
- 	int bit;
+@@ -248,11 +285,22 @@ static int wl1271_probe(struct sdio_func *func,
+ 	/* Use block mode for transferring over one block size of data */
+ 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
  
- 	mutex_lock(&ar->conf_mutex);
-@@ -2000,20 +2023,12 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 			ath10k_warn("Failed to set PSPOLL count: %d\n", ret);
++	/* The pdata allocated here is freed when the device is freed,
++	 * so we don't need an additional out label to free it in case
++	 * of error further on.
++	 */
++
++	/* Try to get legacy platform data from the board file */
+ 	pdev_data->pdata = wl12xx_get_platform_data();
+ 	if (IS_ERR(pdev_data->pdata)) {
+-		ret = PTR_ERR(pdev_data->pdata);
+-		dev_err(glue->dev, "missing wlan platform data: %d\n", ret);
+-		goto out_free_glue;
++		dev_info(&func->dev,
++			 "legacy platform data not found, trying device tree\n");
++
++		pdev_data->pdata = wlcore_get_pdata_from_of(&func->dev);
++		if (IS_ERR(pdev_data->pdata)) {
++			dev_err(&func->dev, "can't get platform data\n");
++			goto out_free_glue;
++		}
  	}
  
--	rts = min_t(u32, ar->hw->wiphy->rts_threshold, ATH10K_RTS_MAX);
--	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
--					 WMI_VDEV_PARAM_RTS_THRESHOLD,
--					 rts);
-+	ret = ath10k_mac_set_rts(arvif, ar->hw->wiphy->rts_threshold);
- 	if (ret)
- 		ath10k_warn("failed to set rts threshold for vdev %d (%d)\n",
- 			    arvif->vdev_id, ret);
+ 	/* if sdio can keep power while host is suspended, enable wow */
+@@ -386,16 +434,25 @@ static const struct dev_pm_ops wl1271_sdio_pm_ops = {
+ };
+ #endif
  
--	frag = clamp_t(u32, ar->hw->wiphy->frag_threshold,
--		       ATH10K_FRAGMT_THRESHOLD_MIN,
--		       ATH10K_FRAGMT_THRESHOLD_MAX);
--	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
--					WMI_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
--					frag);
-+	ret = ath10k_mac_set_frag(arvif, ar->hw->wiphy->frag_threshold);
- 	if (ret)
- 		ath10k_warn("failed to set frag threshold for vdev %d (%d)\n",
- 			    arvif->vdev_id, ret);
-@@ -2728,11 +2743,7 @@ static void ath10k_set_rts_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	if (ar_iter->ar->state == ATH10K_STATE_RESTARTED)
- 		return;
++static const struct of_device_id wlcore_sdio_of_match_table[] = {
++	{ .compatible = "ti,wilink6" },
++	{ .compatible = "ti,wilink7" },
++	{ .compatible = "ti,wilink8" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, wlcore_sdio_of_match_table);
++
+ static struct sdio_driver wl1271_sdio_driver = {
+ 	.name		= "wl1271_sdio",
+ 	.id_table	= wl1271_devices,
+ 	.probe		= wl1271_probe,
+ 	.remove		= wl1271_remove,
+-#ifdef CONFIG_PM
+ 	.drv = {
++#ifdef CONFIG_PM
+ 		.pm = &wl1271_sdio_pm_ops,
+-	},
+ #endif
++		.of_match_table = of_match_ptr(wlcore_sdio_of_match_table),
++	},
+ };
  
--	rts = min_t(u32, rts, ATH10K_RTS_MAX);
--
--	ar_iter->ret = ath10k_wmi_vdev_set_param(ar_iter->ar, arvif->vdev_id,
--						 WMI_VDEV_PARAM_RTS_THRESHOLD,
--						 rts);
-+	ar_iter->ret = ath10k_mac_set_rts(arvif, rts);
- 	if (ar_iter->ret)
- 		ath10k_warn("Failed to set RTS threshold for VDEV: %d\n",
- 			    arvif->vdev_id);
-@@ -2764,7 +2775,6 @@ static void ath10k_set_frag_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	struct ath10k_generic_iter *ar_iter = data;
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
- 	u32 frag = ar_iter->ar->hw->wiphy->frag_threshold;
--	int ret;
- 
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
- 
-@@ -2775,15 +2785,7 @@ static void ath10k_set_frag_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	if (ar_iter->ar->state == ATH10K_STATE_RESTARTED)
- 		return;
- 
--	frag = clamp_t(u32, frag,
--		       ATH10K_FRAGMT_THRESHOLD_MIN,
--		       ATH10K_FRAGMT_THRESHOLD_MAX);
--
--	ret = ath10k_wmi_vdev_set_param(ar_iter->ar, arvif->vdev_id,
--					WMI_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
--					frag);
--
--	ar_iter->ret = ret;
-+	ar_iter->ret = ath10k_mac_set_frag(arvif, frag);
- 	if (ar_iter->ret)
- 		ath10k_warn("Failed to set frag threshold for VDEV: %d\n",
- 			    arvif->vdev_id);
+ static int __init wl1271_init(void)
 -- 
-1.7.9.5
+1.7.10.4
 
