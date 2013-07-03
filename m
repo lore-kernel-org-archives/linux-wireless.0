@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f42.google.com ([209.85.160.42]:59320 "EHLO
-	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753738Ab3GDBGs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:06:48 -0400
-Received: by mail-pb0-f42.google.com with SMTP id un1so673069pbc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:47 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 26/53] wireless-regdb: FI, Finland - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:22 -0700
-Message-Id: <1372899889-19183-27-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032042_703939_3C579409)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:51761 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932425Ab3GCOSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 10:18:05 -0400
+Date: Wed, 3 Jul 2013 17:16:59 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
+Subject: Re: [PATCH v3 4/8] wl12xx: use frequency instead of enumerations for
+ pdata clocks
+Message-ID: <20130703141659.GQ15056@arwen.pp.htv.fi> (sfid-20130703_161829_230374_1B001C8E)
+Reply-To: <balbi@ti.com>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+ <1372860209-3504-5-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OrT4iOlIQZp3kw4S"
+In-Reply-To: <1372860209-3504-5-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+--OrT4iOlIQZp3kw4S
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+On Wed, Jul 03, 2013 at 05:03:25PM +0300, Luciano Coelho wrote:
+> Instead of defining an enumeration with the FW specific values for the
+> different clock rates, use the actual frequency instead.  Also add a
+> boolean to specify whether the clock is XTAL or not.
+>=20
+> Change all board files to reflect this.
+>=20
+> Cc: Tony Lindgren <tony@atomide.com>
+> Cc: Sekhar Nori <nsekhar@ti.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+Reviewed-by: Felipe Balbi <balbi@ti.com>
 
-Quoting:
+--=20
+balbi
 
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
+--OrT4iOlIQZp3kw4S
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+iQIcBAEBAgAGBQJR1DJbAAoJEIaOsuA1yqRER88P/i1Fbl2whPLiblQ/ycn8nTTs
+YZM0bfxn7SXd9KRpR85jCB95iLdArWQAJRlCulgjGoGtRXbup1rGxbOVP7XqmbUl
+Fr16lrVqAL+65JO8uh9p6Hkv59qFwytrHeOFNzHcR27W/JxKMgS6oZyu5lfOD1q2
+ED0T0B4A0ONCn6v4+xIv6P7XCeuZgVTMFsTreGuMfeQpc4HSvcgp+SGwNGzKkl78
+xn0It10iWyCna0gHYti700TfpX/Qv2qZoSpx8KqASgg+Y+6MvXDmv7KFaa+10xM8
+iwMgwE2cwBv6TXcAKr+N4RdnAx25vAI/feqnds16Avcy+8tIqaLq2vOy0sj2AWol
+XRJTCJob//oZrHG05GOiTQwfW44NxwMwAtmWQ28+hhVGt2UjkIT15VYI8PUDPrGT
+sni4/pL78hndm+370PNCJT2KMuC5P6M5vqmNq/RI2+stBuHTUXqWCviQuiDJfTC3
+wnLhxE4J04NNRjjFIRyulCj7iv84sQWUM2A4JsPxCYLTxNdy3A9bxJnujBZ6pYmH
+hoZKo94ozIZIgT5cGUM2N9Ukw6u0VV5o8kEg8plgJMkdVXKlBEtDE/WKzvdWHim3
+d3HXhVLHwGn1oDpWpTf/+/BMK/cmHdUWV4KzloO1niXhZk6SCiyfuOi5/D1JeYGp
+uVCyQ5aJeVjqHE4eUKJ/
+=z0st
+-----END PGP SIGNATURE-----
 
-diff --git a/db.txt b/db.txt
-index 26cc023..3790d4e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -280,9 +280,9 @@ country ES: DFS-ETSI
- 
- country FI: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
-
+--OrT4iOlIQZp3kw4S--
