@@ -1,78 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58063 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547Ab3GZITd (ORCPT
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:48414 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932454Ab3GCJ7a convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:19:33 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/7] iwlwifi: mvm: use only a single GTK in D3
-Date: Fri, 26 Jul 2013 10:19:23 +0200
-Message-Id: <1374826768-2440-2-git-send-email-johannes@sipsolutions.net> (sfid-20130726_101941_018952_6D5B1842)
-In-Reply-To: <1374826768-2440-1-git-send-email-johannes@sipsolutions.net>
-References: <1374826675.8248.11.camel@jlt4.sipsolutions.net>
- <1374826768-2440-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 3 Jul 2013 05:59:30 -0400
+Received: by mail-qa0-f45.google.com with SMTP id ci6so3456150qab.18
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 02:59:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51D3E2C7.7020605@kaiwen.me>
+References: <51D3E2C7.7020605@kaiwen.me>
+Date: Wed, 3 Jul 2013 15:29:29 +0530
+Message-ID: <CAChKcEmU9MMrC4gP4Vi3WWENTAC4+rtDK6mxA=5phdsEDxipxQ@mail.gmail.com> (sfid-20130703_115932_952221_612BFFB9)
+Subject: Re: Use of 5GHz frequencies with Wi-Fi Direct
+From: Gagan Goyal <gagsbond@gmail.com>
+To: =?ISO-8859-1?Q?K=E9vin_THIERRY?= <kevin.thierry@kaiwen.me>
+Cc: linux-wireless@vger.kernel.org, ronan lanoe <ronan.lanoe@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Kevin,
 
-Unfortunately, the firmware only supports replay counters for
-a single GTK in D3, so that we should only upload the last
-key and use its replay counters. Since mac80211 key iteration
-will walk through the keys in order of their addition, simply
-use the same HW key index (1) for all GTKs, thus overwriting
-previous ones with newer ones. The replay counters for it are
-already used.
+plz make sure that driver advertise the support for both the bands and
+provide all the supported frequencies.
 
-Reviewed-by: Yaron Vaknin <Yaron.Vaknin@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+During Supplicant init, supplicant read the driver capabilities and
+along with other things the supported band and frequencies are stored.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 7e5e5c2..83da884 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -134,7 +134,7 @@ struct wowlan_key_data {
- 	struct iwl_wowlan_rsc_tsc_params_cmd *rsc_tsc;
- 	struct iwl_wowlan_tkip_params_cmd *tkip;
- 	bool error, use_rsc_tsc, use_tkip;
--	int gtk_key_idx;
-+	int wep_key_idx;
- };
- 
- static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
-@@ -188,8 +188,8 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
- 			wkc.wep_key.key_offset = 0;
- 		} else {
- 			/* others start at 1 */
--			data->gtk_key_idx++;
--			wkc.wep_key.key_offset = data->gtk_key_idx;
-+			data->wep_key_idx++;
-+			wkc.wep_key.key_offset = data->wep_key_idx;
- 		}
- 
- 		ret = iwl_mvm_send_cmd_pdu(mvm, WEP_KEY, CMD_SYNC,
-@@ -316,8 +316,13 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
- 		mvm->ptk_ivlen = key->iv_len;
- 		mvm->ptk_icvlen = key->icv_len;
- 	} else {
--		data->gtk_key_idx++;
--		key->hw_key_idx = data->gtk_key_idx;
-+		/*
-+		 * firmware only supports TSC/RSC for a single key,
-+		 * so if there are multiple keep overwriting them
-+		 * with new ones -- this relies on mac80211 doing
-+		 * list_add_tail().
-+		 */
-+		key->hw_key_idx = 1;
- 		mvm->gtk_ivlen = key->iv_len;
- 		mvm->gtk_icvlen = key->icv_len;
- 	}
--- 
-1.8.0
+P2p global data is then initialized with same data.
 
+Cheers
+
+Gagan
+
+On 7/3/13, Kévin THIERRY <kevin.thierry@kaiwen.me> wrote:
+> Hi,
+>
+> Is there a way to force the use of 5GHz frequencies with Wi-Fi Direct ?
+> (Or define the 5GHz frequencies as preferred ?)
+>
+> I tried to add the freq_list option in wpa_supplicant config file
+> without success. (I think this option should be set in a network block
+> but there is no network block for Wi-Fi Direct...)
+> "freq_list=5180 5200 5220 5240 5260 5280 5300 5320 5500 5520 5540 5560
+> 5580 5600 5620 5640 5660 5680 5700 5745 5765 5785 5805 5825"
+>
+> Thanks,
+>
+> Kevin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
