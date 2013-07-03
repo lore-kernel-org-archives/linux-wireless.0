@@ -1,53 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:12136 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932179Ab3GZOFn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 10:05:43 -0400
-Message-ID: <1374847540.6580.26.camel@gandalf.local.home> (sfid-20130726_160547_926731_EA782230)
-Subject: Re: Help adding trace events to xHCI
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Xenia Ragiadakou <burzalodowa@gmail.com>,
-	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Fri, 26 Jul 2013 10:05:40 -0400
-In-Reply-To: <1374846358.8248.53.camel@jlt4.sipsolutions.net>
-References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos>
-	 (sfid-20130711_182013_255578_2722BE3F) <1373562533.8201.33.camel@jlt4.sipsolutions.net>
-	 <1373570955.17876.58.camel@gandalf.local.home>
-	 <1374830340.8248.43.camel@jlt4.sipsolutions.net>
-	 <1374841699.6580.21.camel@gandalf.local.home>
-	 <1374844013.8248.47.camel@jlt4.sipsolutions.net>
-	 <1374844649.6580.24.camel@gandalf.local.home>
-	 <1374846358.8248.53.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from bear.ext.ti.com ([192.94.94.41]:51837 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932073Ab3GCOTT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 10:19:19 -0400
+Date: Wed, 3 Jul 2013 17:18:46 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
+Subject: Re: [PATCH v3 5/8] wlcore: add initial device tree support to the
+ sdio module
+Message-ID: <20130703141846.GR15056@arwen.pp.htv.fi> (sfid-20130703_161940_320364_9470F009)
+Reply-To: <balbi@ti.com>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+ <1372860209-3504-6-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2/Dpz40iF3jpiHxF"
+In-Reply-To: <1372860209-3504-6-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-07-26 at 15:45 +0200, Johannes Berg wrote:
+--2/Dpz40iF3jpiHxF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Well, right now I can live with allocation 110 bytes for each
-> tracepoint, this would just optimise it down. If I was in the middle of
-> writing one such event while an interrupt came in, I'd not be able to
-> reduce the ring-buffer allocation again. I doubt that an interrupt would
-> come in much of the time between allocating the new event and
-> deallocating it partially. The more difficult question would seem to be
-> whether or not we can reliably detect an interrupt having written
-> another event.
-> 
+On Wed, Jul 03, 2013 at 05:03:26PM +0300, Luciano Coelho wrote:
+> If platform data is not available, try to get the required information
+> from the device tree.  Register an OF match table and parse the
+> appropriate device tree nodes.
+>=20
+> Parse interrupt property only, for now.
+>=20
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
 
-Hmm, you may be convincing me ;-)
+Reviewed-by: Felipe Balbi <balbi@ti.com>
 
-As it just allocates the "max" anyway, this feature will actually help.
+--=20
+balbi
 
-Don't worry about the detection of interrupt, it already does that with
-the discard event. It wouldn't be that hard to extend that into a
-reduction too.
+--2/Dpz40iF3jpiHxF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
--- Steve
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
+iQIcBAEBAgAGBQJR1DLGAAoJEIaOsuA1yqREDPQP/2DcHPHnJZj0dS/cD/PZKrWV
+jkk01tJW39FMkPrKT51VhTEG4fS0twhCi9Hp4cxRilI1/A3X7HWtcUK1XgwDrtQO
+DgnWmwaFlQEo5MtX9vFN0PjMg6Jdk57z9Ou+2z/SNFreaMAZOR0Oec/pf+WkjqlV
+nr5KIGuPvZ+xNSxRKDN7y1JwaQuc1EXR1ljKlHXUUU0Run6dQ2rSvk//NJluY1hK
+Kn5upbJjny3zv+jGO3XGVQ2yru9Sexs5MV1LtiD8hewaI6+ZpSgLdvdOVVZCepKA
+Eoj3ewN7/YxHBZvdE8VP1LwBwFuvBpQxGU6A52IMQWEBtR6TXDduGq4FMxroHvmn
+geLJ9IC76jAZ+BvLB5KaZFIlZRScVW9bunYOlTXk8SVkOmHHNPL0QNOy7//fuDs3
+S/b59jLEUPGl5IPj0LthTKHAUAAoceNddic6FmfuiAtnQWY0nyumUF8lu+dZgr7K
+SdcEFLbNaNY9lX5BnKn0Gn/Lv77NwFPTpyv9lU9ni39edKG/uKkvGVxfOuT44VMf
+TD8LJsvUzEDhFATsrsMe229ONHsPZy4zuJLh70LaEbDVmzclsiwPi4g2nVTnHB1M
+exJ1ar8LQySnEDMM+EE30avz3FCe+349OGffH30WI2e+I+VI2RUGesN7jqpmvDcl
++OKeDn8wWW9uCcK4Rs1N
+=mklH
+-----END PGP SIGNATURE-----
 
+--2/Dpz40iF3jpiHxF--
