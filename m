@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33514 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCUz (ORCPT
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:41391 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBIO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:20:55 -0400
-Received: by mail-pa0-f45.google.com with SMTP id bi5so1414982pad.18
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:54 -0700 (PDT)
+	Wed, 3 Jul 2013 21:08:14 -0400
+Received: by mail-pb0-f54.google.com with SMTP id ro2so668025pbb.13
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:08:13 -0700 (PDT)
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: linville@tuxdriver.com
 Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
 	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 24/53] wireless-regdb: CZ, Czech Republic - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:13 -0700
-Message-Id: <1374027522-18488-25-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043609_213098_8F0CDA02)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Subject: [RFC 45/53] wireless-regdb: MY, Malaysia - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:41 -0700
+Message-Id: <1372899889-19183-46-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032044_050374_ECE4B0C7)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+This enables 80 MHz bandwidth usage on 5 GHz, updates the
+max EIRP and adds a new 5 GHz range:
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+  * 5170 - 5250 MHz
 
 Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ db.txt |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/db.txt b/db.txt
-index 5e17129..94be114 100644
+index 16d9f8c..fa8502c 100644
 --- a/db.txt
 +++ b/db.txt
-@@ -204,9 +204,9 @@ country CY: DFS-ETSI
- # implemented.
- country CZ: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
--	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
--	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
--	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
-+	(5150 - 5250 @ 80), (N/A, 200 mW), NO-OUTDOOR
-+	(5250 - 5350 @ 80), (N/A, 100 mW), NO-OUTDOOR, DFS
-+	(5470 - 5725 @ 80), (N/A, 500 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+@@ -548,8 +548,9 @@ country MT: DFS-ETSI
  
+ country MY:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 30), DFS
+-	(5735 - 5835 @ 40), (N/A, 30)
++	(5170 - 5250 @ 80), (N/A, 17)
++	(5250 - 5330 @ 80), (N/A, 23), DFS
++	(5735 - 5835 @ 80), (N/A, 30)
+ 
+ country MX:
+ 	(2402 - 2472 @ 40), (3, 27)
 -- 
 1.7.10.4
 
