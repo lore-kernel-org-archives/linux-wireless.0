@@ -1,31 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54929 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932878Ab3GLL65 (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:56503 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBH2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 07:58:57 -0400
-Message-ID: <1373630329.8205.4.camel@jlt4.sipsolutions.net> (sfid-20130712_135900_231179_C3F4AB9D)
-Subject: Re: [PATCH] mac80211: set the forwading in mesh capability info
- accordingly
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com
-Date: Fri, 12 Jul 2013 13:58:49 +0200
-In-Reply-To: <1373626522-19486-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130712_130245_676401_F4BDE3E8)
-References: <1373626522-19486-1-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20130712_130245_676401_F4BDE3E8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 3 Jul 2013 21:07:28 -0400
+Received: by mail-pd0-f177.google.com with SMTP id p10so581889pdj.36
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:27 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 35/53] wireless-regdb: ES, Spain - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:31 -0700
+Message-Id: <1372899889-19183-36-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032040_393204_729171FB)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-07-12 at 18:55 +0800, Chun-Yeow Yeoh wrote:
-> Set the Forwarding bit in Mesh Capability Info according
-> to dot11MeshForwarding as defined in IEEE 802.11-2012
-> section 8.4.2.100.8.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Applied (with typo in subject fixed)
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-johannes
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index ce61f97..bf4eea1 100644
+--- a/db.txt
++++ b/db.txt
+@@ -272,9 +272,9 @@ country EG:
+ 
+ country ES: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+-	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
+-	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+-	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
++	(5150 - 5250 @ 80), (N/A, 100 mW), NO-OUTDOOR
++	(5250 - 5350 @ 80), (N/A, 100 mW), NO-OUTDOOR, DFS
++	(5470 - 5725 @ 80), (N/A, 500 mW), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
 
