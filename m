@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:49920 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994Ab3GBFDv (ORCPT
+Received: from mail-qe0-f48.google.com ([209.85.128.48]:40325 "EHLO
+	mail-qe0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755247Ab3GDOhQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 01:03:51 -0400
-Received: by mail-la0-f46.google.com with SMTP id eg20so5208987lab.33
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jul 2013 22:03:50 -0700 (PDT)
+	Thu, 4 Jul 2013 10:37:16 -0400
+Received: by mail-qe0-f48.google.com with SMTP id 2so765239qea.21
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Jul 2013 07:37:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1372075552-3253-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1372075552-3253-1-git-send-email-emmanuel.grumbach@intel.com>
-Date: Tue, 2 Jul 2013 08:03:50 +0300
-Message-ID: <CANUX_P0QFVzdM_Vk4aUHrHSrdxRdTL7tkrD1GiSb9BtmLx5n5g@mail.gmail.com> (sfid-20130702_070355_340769_594F8573)
-Subject: Re: [PATCH] iwlwifi: add firmware for 7260 / 3160 devices
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bjorn Mork <bjorn@mork.no>,
-	Johannes Berg <johannes.berg@intel.com>
+In-Reply-To: <CAMLZHHSSfPnWK957Yd+vrLrsPHtUDW3b4ZxSjMe2SdpaQPk5hQ@mail.gmail.com>
+References: <20130703015653.82651FAAD5@dev.laptop.org>
+	<477F20668A386D41ADCC57781B1F70430EA2E0674B@SC-VEXCH1.marvell.com>
+	<CAMLZHHSSfPnWK957Yd+vrLrsPHtUDW3b4ZxSjMe2SdpaQPk5hQ@mail.gmail.com>
+Date: Thu, 4 Jul 2013 08:37:15 -0600
+Message-ID: <CAMLZHHRCJTx2EPZq0U_+kCVBh3vVRa3EivhnZstEPxadSE0uVw@mail.gmail.com> (sfid-20130704_163720_773374_68FE632E)
+Subject: Re: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
+From: Daniel Drake <dsd@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 24, 2013 at 3:05 PM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> Add new firmware for new devices: 7260 and 3160
-> version:
-> 22.0.7.0
+On Thu, Jul 4, 2013 at 8:32 AM, Daniel Drake <dsd@laptop.org> wrote:
+> I cannot see how the driver behaviour matches the above description
+> for when the card is removed as the system is suspended. For example I
+> cannot see where the SHUTDOWN command gets sent in such cases.
 >
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
->  LICENCE.iwlwifi_firmware |    2 +-
->  WHENCE                   |    6 ++++++
->  iwlwifi-3160-7.ucode     |  Bin 0 -> 670172 bytes
->  iwlwifi-7260-7.ucode     |  Bin 0 -> 682892 bytes
->  4 files changed, 7 insertions(+), 1 deletion(-)
->  create mode 100644 iwlwifi-3160-7.ucode
->  create mode 100644 iwlwifi-7260-7.ucode
->
+> Also, at which point do we wait upon all async commands to complete
+> before shutting down? I walked through all the driver code in the
+> codepaths hit when the card is removed as the system is going into
+> suspend, and I found no such point. (This is why interrupts then
+> arrive later, because those commands are completing.)
 
-ping? :)
+Also, from a more general standpoint, I would say it is bad
+practice/design to leave an interrupt handler running but in a state
+where it does not ACK interrupts. You're just asking for trouble. If
+you really don't expect interrupts beyond a certain point, and bad
+things would happen if interrupts *were* to arrive for any valid or
+invalid reason, disable the interrupt and remove the handler at that
+point.
+
+Daniel
