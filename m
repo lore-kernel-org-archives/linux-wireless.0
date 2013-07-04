@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9472 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754592Ab3GJL3N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 07:29:13 -0400
-Date: Wed, 10 Jul 2013 13:31:59 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Eric Valette <Eric.Valette@Free.fr>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ralink 3290: still lots of misc errors reported by Iwconfig with
- 3.10 + HD streaming on WiFi fails
-Message-ID: <20130710113158.GA3887@redhat.com> (sfid-20130710_132916_147472_57AAA4E2)
-References: <51DBEB0C.6040704@Free.fr>
- <20130709142202.GB3681@redhat.com>
- <51DC1F9D.7000705@Free.fr>
- <51DC259D.9010505@Free.fr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51DC259D.9010505@Free.fr>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:64984 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBGO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 21:06:14 -0400
+Received: by mail-pa0-f41.google.com with SMTP id bj3so777162pad.14
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:13 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 18/53] wireless-regdb: VN, Vietnam - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:14 -0700
+Message-Id: <1372899889-19183-19-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_625177_CF78D60F)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 09, 2013 at 05:00:45PM +0200, Eric Valette wrote:
-> On 07/09/2013 04:35 PM, Eric Valette wrote:
-> 
-> >>Do you mean that 3.10 perform better than 3.9.9 ? I do not see any
-> >>rt2x00 fixes between 3.9 and 3.10 that are not yet applied on 3.9.9.
-> >>I can see only some cleanups and new hardware support patches.
-> >
-> > From memory I think I had a lot of reported TX error with 3.9.9 and
-> >they are now gone with 3.10 but the number of misc error reported by
-> >iwconfig is still high with 3.10. But you are right the fix for TX is
-> >still in wireless git and does not seem to be in 3.10. As I checked
-> >several git trees I mist have been confused...
-> 
-> Unless I'm really tired, this patch is in 3.10 and not in 3.9.9 :
-> 
-> http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-testing.git/patch/drivers/net/wireless/rt2x00?id=8857d6dc77e4e3afeee2f33c49597010130ed858
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-You have right, I missed that one. It's on 3.10 but not on 3.9. We could
-post it to 3.9 -stable, but since 3.10 is now realised, 3.9 will become
-end of life probably.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and update the max EIRP. This also adds
+two new 5 GHz bands:
 
-Stanislaw
+  * 5490 - 5710 MHz
+  * 5735 - 5835 MHz
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index f714982..47bfc95 100644
+--- a/db.txt
++++ b/db.txt
+@@ -796,8 +796,10 @@ country VE:
+ 
+ country VN:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country YE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
+
