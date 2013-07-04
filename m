@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:56997 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753144Ab3G2UH2 convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36434 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBIf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 16:07:28 -0400
-Received: by mail-ob0-f178.google.com with SMTP id ef5so2451526obb.23
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jul 2013 13:07:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rzu4U+v1v1vj-+XyJHpReXMB3nscKP_C5jjbAAbKLQcKA@mail.gmail.com>
-References: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net>
-	<CACna6rzu4U+v1v1vj-+XyJHpReXMB3nscKP_C5jjbAAbKLQcKA@mail.gmail.com>
-Date: Mon, 29 Jul 2013 22:07:27 +0200
-Message-ID: <CACna6rxvnU_cwphP+Vvn_-CLuEcqMufEo4Zk7-Xqd63OA4Zmqg@mail.gmail.com> (sfid-20130729_220731_801203_DD6D0D4D)
-Subject: Re: [PATCH V2] fwcutter: Add firmware 6.30.163.46
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: m@bues.ch, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 3 Jul 2013 21:08:35 -0400
+Received: by mail-pa0-f44.google.com with SMTP id lj1so775281pab.3
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:08:35 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 50/53] wireless-regdb: enable VHT80 when world roaming
+Date: Wed,  3 Jul 2013 18:04:46 -0700
+Message-Id: <1372899889-19183-51-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032040_603631_9EDE81AA)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/7/29 Rafał Miłecki <zajec5@gmail.com>:
-> 2013/7/29 Larry Finger <Larry.Finger@lwfinger.net>:
->> This firmware version can be extracted from the GPL tarball for the ASUS
->> GPL code for the RT-AC66U 802.11ac Dual-Band Wireless-AC1750 Gigabit Router.
->>
->> I believe this to be the first instance of 802.11ac firmware for Broadcom
->> hardware. The firmware is version 784.2.
->>
->> Note: The http://www.lwfinger.com/broadcom-wl-6.30.163.46.tar.bz2 is the URL
->> of the extracted apsta binary. The full GPL package is at
->> http://dlcdnet.asus.com/pub/ASUS/wireless/RT-AC66U/GPL_RT_AC66U_3004372.zip.
->
-> There is some (probably outdated) list of Broadcom 802.11ac routers:
-> ASUS RT-AC66U
-> Linksys EA6500
-> Netgear R6300
->
-> Did you compare wl.ko drivers from the 2 other firmwares? Is this the
-> newest one?
->
-> Did you start AC-PHY RE process?
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-In case you wonder, I have a MIPS router with BCM4331 + BCM4360,
-unfrotunately there isn't mmiotrace available for MIPS, so I can't
-start RE that way :(
+For VHT, the wider bandwidths (up to 160 MHz) need
+to be allowed. Since world roaming only covers the
+case of connecting to an AP, it can be opened up
+there, we will rely on the AP to know the local
+regulations.
 
-I may think about buying PCE-AC66 at some point.
+Based on a patch by Johannes Berg for upstream Linux.
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 7b1e6e8..767aee3 100644
+--- a/db.txt
++++ b/db.txt
+@@ -6,10 +6,10 @@ country 00:
+ 	# Channel 14. Only JP enables this and for 802.11b only
+ 	(2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
+ 	# Channel 36 - 48
+-	(5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
++	(5170 - 5250 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
+ 	# NB: 5260 MHz - 5700 MHz requies DFS
+ 	# Channel 149 - 165
+-	(5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
++	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
+ 
+ 
+ country AD:
 -- 
-Rafał
+1.7.10.4
+
