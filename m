@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp29.msg.oleane.net ([62.161.4.29]:35536 "EHLO
-	smtp29.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708Ab3GBN25 convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:56914 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBFs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 09:28:57 -0400
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: "'Felix Fietkau'" <nbd@openwrt.org>
-Cc: <linux-wireless@vger.kernel.org>
-References: <1372351227-25575-1-git-send-email-jp.tosoni@acksys.fr> <51CF3EC9.3000707@openwrt.org>
-In-Reply-To: <51CF3EC9.3000707@openwrt.org>
-Subject: RE: [RFC v2] mac80211: Use libnl-configurable values for retry counts
-Date: Tue, 2 Jul 2013 15:28:53 +0200
-Message-ID: <000001ce7728$18b07de0$4a1179a0$@acksys.fr> (sfid-20130702_152900_780794_52FBC8F9)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+	Wed, 3 Jul 2013 21:05:48 -0400
+Received: by mail-pa0-f50.google.com with SMTP id fb1so776403pad.9
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:48 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 12/53] wireless-regdb: PR, Puerto Rico - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:08 -0700
+Message-Id: <1372899889-19183-13-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032041_461347_D177A5F6)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-> -----Message d'origine-----
-> De : Felix Fietkau [mailto:nbd@openwrt.org]
-> > ---
-> > What I am seeking with this patch:
-> > I believe the configuration of the retries will help making recovery
-> > much faster when an AP (in infrastructure mode) or a peer (in mesh
-> > mode) suddenly disappears.
-> I'm all for reducing retries, but I think the way you're applying the
-> limit is problematic.
-> If minstrel decides to use many retries for a high rate and you're
-> simply cutting off all retries that exceed the configured limit, you're
-> potentially inviting quite a bit of unnecessary packet loss.
-> I'm planning to remove the use of retry rate slot 4 (fallback to lowest
-> rate) from minstrel, since max_prob_rate should already provide quite
-> decent reliability.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and update the max EIRP. This also adds
+a new DFS 5 GHz band: 5490 - 5710 MHz.
 
-Well, on one hand, people who want to reduce retries are more concerned with
-low latency and jitter than with reliable delivery of data.
-On another hand the code should work for any rate control plugin, not just
-minstrel.
-Finally this code is executed for each frame, and I don’t want to bloat it
-more than necessary...
+PR is a proper ISO 3166 alpha2 code for Puerto Rico,
+an unincorporated territory of the United States.
 
-I am thinking of trimming only the largest retry count in the table, but not
-below 2 (one try and one retry). I'll test this today.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Do you feel this is a good path ?
-Or should I just wait for the slot 4 removal ?
-
-I could also split the trimming between 2 rates, the largest count and the
-next-to-largest. Or I could use a minimum of 1 instead of 2.
-> 
-> - Felix
-
-Jean-Pierre
+diff --git a/db.txt b/db.txt
+index c37c3d6..867b070 100644
+--- a/db.txt
++++ b/db.txt
+@@ -637,9 +637,10 @@ country PT: DFS-ETSI
+ 
+ country PR:
+ 	(2402 - 2472 @ 40), (3, 27)
+-	(5170 - 5250 @ 40), (3, 17)
+-	(5250 - 5330 @ 40), (3, 23), DFS
+-	(5735 - 5835 @ 40), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country QA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
 
