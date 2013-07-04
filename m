@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48368 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752106Ab3GHOJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:09:03 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 17/20] rt2x00: rt2800lib: enable RF3053 support
-Date: Mon,  8 Jul 2013 16:08:32 +0200
-Message-Id: <1373292515-21332-18-git-send-email-juhosg@openwrt.org> (sfid-20130708_162039_545053_CD6CCB65)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:40302 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBIk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 21:08:40 -0400
+Received: by mail-pa0-f49.google.com with SMTP id ld11so766503pab.36
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:08:39 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 51/53] wireless-regdb: add 802.11ad 60 GHz channels 1..3 to world regdom
+Date: Wed,  3 Jul 2013 18:04:47 -0700
+Message-Id: <1372899889-19183-52-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_121716_7A9433C8)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support for the RF3053 has been implemented in
-the previous changes, so it is safe to mark it
-supported in the driver.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-Changes since v2: ---
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
- 1 file changed, 1 insertion(+)
+This is a port of what Vladimir Kondratiev sent to the
+Linux kernel for the static world regulatory domain.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 46d5f42..9ab587e 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6948,6 +6948,7 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RF3021:
- 	case RF3022:
- 	case RF3052:
-+	case RF3053:
- 	case RF3290:
- 	case RF3320:
- 	case RF3322:
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/db.txt b/db.txt
+index 767aee3..b4f9ffa 100644
+--- a/db.txt
++++ b/db.txt
+@@ -10,6 +10,8 @@ country 00:
+ 	# NB: 5260 MHz - 5700 MHz requies DFS
+ 	# Channel 149 - 165
+ 	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
++	# IEEE 802.11ad (60GHz), channels 1..3
++	(57240 - 63720 @ 2160), (N/A, 0)
+ 
+ 
+ country AD:
 -- 
-1.7.10
+1.7.10.4
 
