@@ -1,27 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.bemta8.messagelabs.com ([216.82.243.196]:34720 "EHLO
-	mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757363Ab3GEPaD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:48872 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932202Ab3GDHqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 11:30:03 -0400
-Message-ID: <51D6E484.9060000@digi.com> (sfid-20130705_173007_698109_9AB64DDE)
-Date: Fri, 5 Jul 2013 17:21:40 +0200
-From: Hector Palacios <hector.palacios@digi.com>
-MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-CC: <kvalo@qca.qualcomm.com>, <ath6kl-devel@qualcomm.com>
-Subject: Passing a custom MAC to ath6kl
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Thu, 4 Jul 2013 03:46:42 -0400
+Message-ID: <1372923998.8235.1.camel@jlt4.sipsolutions.net> (sfid-20130704_094645_821516_67FE9CB9)
+Subject: Re: [PATCH V2] vlan priority handling in WMM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: voncken <cedric.voncken@acksys.fr>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 04 Jul 2013 09:46:38 +0200
+In-Reply-To: <00e901ce7886$ae44d360$0ace7a20$@acksys.fr>
+References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
+	 <070e01ce762c$24fa5ff0$6eef1fd0$@acksys.fr>
+	 <00e901ce7886$ae44d360$0ace7a20$@acksys.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings,
+On Thu, 2013-07-04 at 09:18 +0200, voncken wrote:
+> If the VLAN tci is set in skb->vlan_tci use the priority field to determine
+> the WMM priority.
 
-Is there a way to pass a custom MAC address to the ath6kl upstream driver?
-In the ISC version of the driver, a softmac.c file is provided that reads a MAC from a 
-file if a module parameter softmac_enable=1 is passed.
-Is there any reason why this has not made it upstream?
+Pinging me and resending your patch isn't going to make it more likely
+that I apply it. We're in the merge window, so naturally patch
+application is stalled.
 
-Best regards,
---
-Hector Palacios
+johannes
+
