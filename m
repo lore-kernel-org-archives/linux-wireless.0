@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48196 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755833Ab3GWJrI (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:60125 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBIE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 05:47:08 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>,
-	<ath10k@lists.infradead.org>
-Subject: Pull request: ath-current 20130723
-Date: Tue, 23 Jul 2013 12:46:57 +0300
-Message-ID: <87ehapwqum.fsf@kamboji.qca.qualcomm.com> (sfid-20130723_114712_562016_95F05BBB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 3 Jul 2013 21:08:04 -0400
+Received: by mail-pa0-f43.google.com with SMTP id hz11so772755pad.2
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:08:04 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 43/53] wireless-regdb: IL, Isreal - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:39 -0700
+Message-Id: <1372899889-19183-44-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032042_108436_8231633F)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-here's an ath6kl and ath10k pull request for 3.11-rc series.
+This enables 80 MHz bandwidth usage on 5 GHz.
 
-Geert Uytterhoeven fixed an ath10k build problem when NO_DMA=y. I added
-a missing MAINTAINERS entry for ath10k and updated ath6kl git tree
-location.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Please let me know if there are any problems, or if you prefer me to
-send them through wireless-next instead.
-
-Kalle
-
-The following changes since commit 64b6f46f1141ad938e354f37af62e28da972e8eb:
-
-  ath9k_hw: Fix multicast search for AR9002 family (2013-07-18 16:22:00 -0400)
-
-are available in the git repository at:
-
-  git://github.com/kvalo/ath.git for-linville-current
-
-for you to fetch changes up to 58cfb681bffb43654776a218a087028ff425ba9e:
-
-  MAINTAINERS: update ath6kl git location (2013-07-22 12:26:12 +0300)
-
-----------------------------------------------------------------
-Geert Uytterhoeven (1):
-      ath10k: ATH10K should depend on HAS_DMA
-
-Kalle Valo (2):
-      MAINTAINERS: add ath10k
-      MAINTAINERS: update ath6kl git location
-
- MAINTAINERS                             |   10 +++++++++-
- drivers/net/wireless/ath/ath10k/Kconfig |    2 +-
- 2 files changed, 10 insertions(+), 2 deletions(-)
-
+diff --git a/db.txt b/db.txt
+index a101b1e..a4d0587 100644
+--- a/db.txt
++++ b/db.txt
+@@ -394,8 +394,8 @@ country IE: DFS-ETSI
+ 
+ country IL:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
+-	(5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
++	(5150 - 5250 @ 80), (N/A, 200 mW), NO-OUTDOOR
++	(5250 - 5350 @ 80), (N/A, 200 mW), NO-OUTDOOR, DFS
+ 
+ country IN:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-Kalle Valo
+1.7.10.4
+
