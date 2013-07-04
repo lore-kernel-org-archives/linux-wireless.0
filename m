@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2272 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756203Ab3GKPD7 (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:36729 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754206Ab3GDFfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 11:03:59 -0400
-Cc: Kirshenbaum Erez <erezk@wilocity.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/5] wil6210: Optimize Tx completion
-Date: Thu, 11 Jul 2013 18:03:39 +0300
-Message-ID: <1373555021-11763-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_170410_944652_F90F6CD0)
-In-Reply-To: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Thu, 4 Jul 2013 01:35:13 -0400
+Received: by mail-ob0-f173.google.com with SMTP id wc20so1161603obb.32
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 22:35:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 4 Jul 2013 01:35:13 -0400
+Message-ID: <CAKb7UvjVyZuOjuD3oFT_jxx5T=DNamHA_YiV_yGWcmePHHd-UQ@mail.gmail.com> (sfid-20130704_073518_906356_C8E04496)
+Subject: Constant network assoc/disassoc loop with rtl8192cu usb adapter
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to modify HW descriptor, as it will be re-initialized on Tx.
+Hello,
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+I recently got a RTL8188CUS usb adapter (which uses the rtl8192cu
+driver). I'm having trouble getting it to stay associated:
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 8fde73a..dd5f35e 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -855,10 +855,12 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
- 		} else {
- 			dma_unmap_page(dev, pa, dmalen, DMA_TO_DEVICE);
- 		}
--		d->dma.addr.addr_low = 0;
--		d->dma.addr.addr_high = 0;
--		d->dma.length = 0;
--		d->dma.status = TX_DMA_STATUS_DU;
-+		/*
-+		 * There is no need to touch HW descriptor:
-+		 * - ststus bit TX_DMA_STATUS_DU is set by design,
-+		 *   so hardware will not try to process this desc.,
-+		 * - rest of descriptor will be initialized on Tx.
-+		 */
- 		vring->swtail = wil_vring_next_tail(vring);
- 		done++;
- 	}
--- 
-1.8.1.2
+[601369.845916] wlan0: associated
+[601377.106440] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try
+to reconnect now
+[601383.867706] wlan0: associated
+[601391.120270] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try
+to reconnect now
+[601397.910678] wlan0: associated
+[601405.141764] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try
+to reconnect now
 
+and so on. A different usb adapter (Ralink RT2573) has no trouble
+associating to that AP (but it keeps hanging and the kernel isn't
+always able to reset it properly). The network in question is using
+WPA2-PSK.
+
+Is there some setting I could adjust so that it would wait longer
+before deciding that the AP is off? Or something else I can do?
+
+This is on a 3.10-rc6 kernel + the __queue_work warning fix patch at
+https://git.kernel.org/cgit/linux/kernel/git/linville/wireless-testing.git/patch/?id=1621c9466099faf21ad19738d54a7d1845a29b32.
+
+Thanks,
+
+  -ilia
