@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13544 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754372Ab3GSLnz (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:35047 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBGf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 07:43:55 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/3] ath10k: fixes
-References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
-	<871u6u4xkk.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQna=a66_g+_WG8mnENEDEiUcAysa-joeP-xmTM+mYfY=Q@mail.gmail.com>
-Date: Fri, 19 Jul 2013 14:43:28 +0300
-In-Reply-To: <CA+BoTQna=a66_g+_WG8mnENEDEiUcAysa-joeP-xmTM+mYfY=Q@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 19 Jul 2013 13:10:52 +0200")
-Message-ID: <87wqom3hcv.fsf@kamboji.qca.qualcomm.com> (sfid-20130719_134358_450599_B8797B8B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 3 Jul 2013 21:06:35 -0400
+Received: by mail-pa0-f52.google.com with SMTP id kq13so766455pab.11
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:35 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 23/53] wireless-regdb: BE, Belgium - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:19 -0700
+Message-Id: <1372899889-19183-24-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032041_359252_81F952C3)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-> On 19 July 2013 13:07, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> Hi,
->>>
->>> Here are some fixes for ath10k. The rts threshold
->>> patch addresses my mistake in commit
->>> 9aeb6fe53d1f0d6e58658484ce9ad7b59f0ef16b which
->>> caused rts to be always enabled causing throughput
->>> issues in some cases.
->>>
->>>
->>> Michal Kazior (3):
->>>   ath10k: prevent HTC from being used after stopping
->>>   ath10k: fix memleak in mac setup
->>>   ath10k: fix rts/fragmentation threshold setup
->>
->> Doesn't apply:
->>
->> Applying: ath10k: prevent HTC from being used after stopping
->> Applying: ath10k: fix memleak in mac setup
->> Applying: ath10k: fix rts/fragmentation threshold setup
->> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/mac.c).
->> Repository lacks necessary blobs to fall back on 3-way merge.
->> Cannot fall back to three-way merge.
->> Patch failed at 0003 ath10k: fix rts/fragmentation threshold setup
->
-> Eww. Sorry about that (I did warn you though). Perhaps that's because
-> you skipped one of the recovery patches that git is confused now.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-No worries. Most likely I could have fixed the conflict myself, but if
-3-way merge doesn't work it's too much work.
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-> I'll resend the whole patchset rebased and with the HTC patch fixed.
+Quoting:
 
-Thanks.
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
 
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index fd0ef09..5e17129 100644
+--- a/db.txt
++++ b/db.txt
+@@ -89,9 +89,9 @@ country BD:
+ 
+ country BE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
 -- 
-Kalle Valo
+1.7.10.4
+
