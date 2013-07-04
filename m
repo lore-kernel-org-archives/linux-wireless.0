@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48530 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751379Ab3GHOKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:10:03 -0400
-Message-ID: <51DAC83D.4020306@openwrt.org> (sfid-20130708_162043_994031_F71E01B0)
-Date: Mon, 08 Jul 2013 16:10:05 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 03/20] rt2x00: rt2800lib: add RFCSR
- register initialization for RT3593
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org> <1372664879-18474-4-git-send-email-juhosg@openwrt.org> <20130707141009.GC2073@localhost.localdomain>
-In-Reply-To: <20130707141009.GC2073@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:64859 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBHg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 21:07:36 -0400
+Received: by mail-pa0-f54.google.com with SMTP id kx10so771209pab.41
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:35 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 37/53] wireless-regdb: CH, Switzerland - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:33 -0700
+Message-Id: <1372899889-19183-38-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_932149_E41C8925)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013.07.07. 16:10 keltezéssel, Stanislaw Gruszka írta:
-> On Mon, Jul 01, 2013 at 09:47:42AM +0200, Gabor Juhos wrote:
->> Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
->> driver.
->>
->> References:
->>   NICInitRT3593RFRegisters in chips/rt3593.c
->>   RT3593LoadRFNormalModeSetup in chips/rt3593.c
->>
->> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> 
->>  	case RT3390:
->>  		rt2800_init_rfcsr_3390(rt2x00dev);
->>  		break;
->> +	case RT3593:
->> +		rt2800_init_rfcsr_3593(rt2x00dev);
->> +		break;
->>  	case RT3572:
->>  		rt2800_init_rfcsr_3572(rt2x00dev);
->>  		break;
-> 
-> Nit: RT3572 should be before RT3593.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Fixed in v3. Thanks!
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
--Gabor
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index ab718f3..f19f637 100644
+--- a/db.txt
++++ b/db.txt
+@@ -150,9 +150,9 @@ country CA:
+ 
+ country CH: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
+
