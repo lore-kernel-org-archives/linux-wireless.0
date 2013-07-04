@@ -1,90 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:43014 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757519Ab3GZPF7 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33975 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932143Ab3GDAB1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 11:05:59 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so2919228wgg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Jul 2013 08:05:58 -0700 (PDT)
+	Wed, 3 Jul 2013 20:01:27 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r6401QnU000309
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 3 Jul 2013 17:01:26 -0700
+Message-ID: <51D4BB56.9070401@candelatech.com> (sfid-20130704_020129_998241_BE6D0EF6)
+Date: Wed, 03 Jul 2013 17:01:26 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CA+icZUVbHkKz7VLs-NoVf47S_fUF855aho0CSGG3p5skpRDNmg@mail.gmail.com>
-References: <op.w0sd9ujye4gg2u@xp>
-	<51F16993.20207@rempel-privat.de>
-	<op.w0t16tbme4gg2u@xp>
-	<CA+icZUVbHkKz7VLs-NoVf47S_fUF855aho0CSGG3p5skpRDNmg@mail.gmail.com>
-Date: Fri, 26 Jul 2013 17:05:55 +0200
-Message-ID: <CA+icZUXQu3PGy=JT5cN2D8DuZ7tGvWA=FPFyYigVsAMbyKv8uQ@mail.gmail.com> (sfid-20130726_170602_261436_A05E4089)
-Subject: Re: TP-LINK wireless USB adapter don't work.
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: atar <atar.yosef@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Replacement for local->hw.conf.channel
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 5:00 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
-> On Fri, Jul 26, 2013 at 4:22 PM, atar <atar.yosef@gmail.com> wrote:
->> Thank you about your answer, but how can I install the firmware? which
->> processes are need to be taken in order to accomplish the firmware
->> installation and configuration?
->>
->
-> Please, do not top-post.
->
-> You should get a bit familiar with your operating system.
-> This mailing-list is no $distro support-channel.
->
-> We now have Debian/wheezy (v7.x)!
-> You should upgrade (check release-notes and upgrade-process).
-> Can't say off-hand which of the firmware-package you need, just check
-> by yourself [1] (wild speculation: install firmware-linux-nonfree) or
-> consult one of Debian's WiFi wiki-pages.
-> Or ask on Debian's IRC channel for users - it's sometimes faster.
->
+I'm trying to port some patches forward to 3.10....
 
-If you insist on Debian/squeeze you can activate squeeze-backports
-software-archive (or download it directly and install manually).
-As these are only firmware-blobs you might take a higher version of the package.
+I am trying to find the current channel for a radio.  Since
+hw.conf.channel no longer exists, what is the best way to
+go about this?
 
-- Sedat -
+Thanks,
+Ben
 
-[1] http://packages.debian.org/search?keywords=firmware-atheros
-[2] http://packages.debian.org/squeeze-backports/firmware-atheros
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-> - Sedat -
->
-> [1] http://packages.debian.org/search?keywords=firmware
->
->> Thanks in advance!!
->>
->> atar.
->>
->>> Am 25.07.2013 18:47, schrieb atar:
->>>>
->>>> Hi there!!
->>>>
->>>>
->>>> I've a TP-LINK USB wireless adapter with model number TL-WN722N. When I
->>>> plug it in to one of the USB slots in my PC, its LED diode isn't
->>>> flashing (although under WIN XP it is flashing) and I cannot use it.
->>>> from the messages of the 'dmesg' command it seems that the kernel detect
->>>> it, but I unable to use it because it doesn't appear on the wicd window
->>>> of available interfaces.
->>>>
->>>> My Linux distro is Debian squeeze with kernel 2.6.32-5-686.
->>>>
->>>> What should I do in order to solve this problem?
->>>
->>>
->>> It is ath9k-htc based adapter. Please update your kernel and use latest
->>> firmware. I think Debian squeeze do not provided this firmware, so you
->>> should install it manually.
->>>
->>>
->> --
->>
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
