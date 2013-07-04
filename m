@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36654 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108Ab3GNU5a (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:42536 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBFo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jul 2013 16:57:30 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/4] mac80211_hwsim: use ieee80211_free_txskb
-Date: Sun, 14 Jul 2013 23:57:19 +0300
-Message-Id: <1373835442-3322-1-git-send-email-johannes@sipsolutions.net> (sfid-20130714_225738_869058_5E949364)
+	Wed, 3 Jul 2013 21:05:44 -0400
+Received: by mail-pa0-f54.google.com with SMTP id kx10so769968pab.41
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:43 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 11/53] wireless-regdb: PH, Philippines - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:07 -0700
+Message-Id: <1372899889-19183-12-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032041_881451_2B0FB84E)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-These are only strange error cases, so it's not really
-all that important, but the driver really should use
-ieee80211_free_tx_skb instead of just dev_kfree_skb.
+This enables 80 MHz bandwidth usage the existing only
+5 GHz band but also adds 3 other new 5 GHz bands with
+80 MHz bandwidth support.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ db.txt |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index cb34c78..11adae8 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -867,7 +867,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+diff --git a/db.txt b/db.txt
+index 00e5993..c37c3d6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -610,7 +610,10 @@ country PG:
  
- 	if (WARN_ON(skb->len < 10)) {
- 		/* Should not happen; just a sanity check for addr1 use */
--		dev_kfree_skb(skb);
-+		ieee80211_free_txskb(hw, skb);
- 		return;
- 	}
+ country PH:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5735 - 5835 @ 40), (N/A, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
  
-@@ -884,13 +884,13 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 	}
- 
- 	if (WARN(!channel, "TX w/o channel - queue = %d\n", txi->hw_queue)) {
--		dev_kfree_skb(skb);
-+		ieee80211_free_txskb(hw, skb);
- 		return;
- 	}
- 
- 	if (data->idle && !data->tmp_chan) {
- 		wiphy_debug(hw->wiphy, "Trying to TX when idle - reject\n");
--		dev_kfree_skb(skb);
-+		ieee80211_free_txskb(hw, skb);
- 		return;
- 	}
- 
+ country PK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.8.0
+1.7.10.4
 
