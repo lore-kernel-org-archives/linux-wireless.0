@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62115 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973Ab3GKJiD (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:58794 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933309Ab3GDWnR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:38:03 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH] ath10k: Fix crash when using v1 hardware.
-References: <1372804925-1701-1-git-send-email-greearb@candelatech.com>
-	<51D35D58.5090507@candelatech.com>
-Date: Thu, 11 Jul 2013 12:37:55 +0300
-In-Reply-To: <51D35D58.5090507@candelatech.com> (Ben Greear's message of "Tue,
-	02 Jul 2013 16:08:08 -0700")
-Message-ID: <87txk15te4.fsf@kamboji.qca.qualcomm.com> (sfid-20130711_113806_642638_EFE44867)
+	Thu, 4 Jul 2013 18:43:17 -0400
+Message-ID: <1372977790.21065.141.camel@cumari.coelho.fi> (sfid-20130705_004340_095135_B75C5398)
+Subject: Re: [PATCH] include: net: Add parameter desc to fix waring when
+ generating docs
+From: Luciano Coelho <coelho@ti.com>
+To: Sam Bristow <sam.bristow@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Date: Fri, 5 Jul 2013 01:43:10 +0300
+In-Reply-To: <1372975190-21117-1-git-send-email-sam.bristow@gmail.com>
+References: <1372975190-21117-1-git-send-email-sam.bristow@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+On Fri, 2013-07-05 at 09:59 +1200, Sam Bristow wrote:
+> 'make htmldocs' was generating a warning about a missing parameter description
+> for gfp.
+> 
+> Earlier patch was missing my signed-off-by line...
+> Signed-off-by: Sam Bristow <sam.bristow@gmail.com>
+> ---
 
-> Actually, I have no idea what type of hardware this is.  It was
-> suggested earlier to me that this AP had a v1 hardware in it, but
-> lspci shows this fairly unpromising thing, and the ath10k driver
-> appears to call 003c the V2 hardware....
->
-> 05:00.0 Network controller: Atheros Communications Inc. Device 003c (rev ff) (prog-if ff)
-> 	!!! Unknown header type 7f
-> 	Kernel modules: ath10k_pci
+You have a typo in the patch subject (it was not there in your previous
+version ;).
 
-That unknown header type looks scary. I'm starting to suspect even more
-that you have a hw problem of some sort.
+Also, you shouldn't add explanations about the different versions of the
+patch in the commit message (in you case the "Earlier patch was missing
+my signed-off-by line..." text).  If you want to add this kind of
+comments, add it after the "---" under the Signed-of tags.
 
--- 
-Kalle Valo
+One more thing, it's a good idea to use [PATCH v2] when you're sending a
+second version of the same patch.  That can be easily done with git
+format-patch (and also with git send-email) by using an argument like
+this: --subject-prefix="PATCH v2"
+
+--
+Luca.
+
