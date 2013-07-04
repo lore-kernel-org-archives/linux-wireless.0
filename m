@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:65273 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBHc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:32 -0400
-Received: by mail-pd0-f176.google.com with SMTP id t12so584162pdi.35
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:31 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 36/53] wireless-regdb: SE, Sweden - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:32 -0700
-Message-Id: <1372899889-19183-37-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032039_434165_2994D2F8)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:32787 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752467Ab3GDErD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jul 2013 00:47:03 -0400
+Message-ID: <51D4FE20.6000805@ti.com> (sfid-20130704_064719_534667_E0D4C866)
+Date: Thu, 4 Jul 2013 10:16:24 +0530
+From: Sekhar Nori <nsekhar@ti.com>
+MIME-Version: 1.0
+To: Luciano Coelho <coelho@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
+Subject: Re: [PATCH v3 2/8] wlcore: set irq_flags in the board files instead
+ of hiding behind a quirk
+References: <1372860209-3504-1-git-send-email-coelho@ti.com> <1372860209-3504-3-git-send-email-coelho@ti.com>
+In-Reply-To: <1372860209-3504-3-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 7/3/2013 7:33 PM, Luciano Coelho wrote:
+> The platform_quirk element in the platform data was used to change the
+> way the IRQ is triggered.  When set, the EDGE_IRQ quirk would change
+> the irqflags used and treat edge trigger differently from the rest.
+> 
+> Instead of hiding this irq flag setting behind the quirk, have the
+> board files set the flags during initialization.  This will be more
+> meaningful than driver-specific quirks when we switch to DT.
+> 
+> Additionally, fix missing gpio_request() calls in the boarding files
+> (so that setting the flags actually works).
+> 
+> Cc: Tony Lindgren <tony@atomide.com>
+> Cc: Sekhar Nori <nsekhar@ti.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+>  arch/arm/mach-davinci/board-da850-evm.c      |    8 +++++-
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+For the board-da850-evm.c change,
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+Acked-by: Sekhar Nori <nsekhar@ti.com>
 
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index bf4eea1..ab718f3 100644
---- a/db.txt
-+++ b/db.txt
-@@ -682,9 +682,9 @@ country SA:
- 
- country SE: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
-
+Thanks,
+Sekhar
