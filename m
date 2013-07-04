@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58114 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756818Ab3GZI3W (ORCPT
+Received: from mail-la0-f43.google.com ([209.85.215.43]:43982 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933737Ab3GDAWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:29:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH 19/30] iwlwifi: mvm: Return on inconsistency in add interface
-Date: Fri, 26 Jul 2013 10:28:36 +0200
-Message-Id: <1374827327-3464-20-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103019_532120_AFEDA717)
-In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
-References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 3 Jul 2013 20:22:47 -0400
+Received: by mail-la0-f43.google.com with SMTP id gw10so698731lab.16
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 17:22:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130702172537.DC8F62006D3@clearcreek.mtv.corp.google.com>
+References: <20130702172537.DC8F62006D3@clearcreek.mtv.corp.google.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 3 Jul 2013 17:22:25 -0700
+Message-ID: <CAB=NE6UdCnNzd-_VjdePSgwKUhrJ4XWycT_4Wg0JoUkDncDpAg@mail.gmail.com> (sfid-20130704_022253_996121_BBAF10B9)
+Subject: Re: wireless-regdb: 5GHz rule for Indonesia regdomain
+To: Paul Stewart <pstew@chromium.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+On Tue, Jul 2, 2013 at 10:20 AM, Paul Stewart <pstew@chromium.org> wrote:
+> Pursuant to
+> http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf, provide a 5GHz rule for Indonesian regulatory domain.
 
-Return in case that HW restart is in progress but the added
-interface is not found during the iteration over all the interfaces.
+This looks good to me and matches QCA's work on this, but we also can
+enable VHT80. Given that I am working on sending a huge series of
+VHT80 patches I'll roll this into my series and modify your patch to
+add VHT80 as well. Will send out shortly.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 94aae9c..5fe23a5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -264,7 +264,8 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
- 		return 0;
- 
- 	/* Therefore, in recovery, we can't get here */
--	WARN_ON_ONCE(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status));
-+	if (WARN_ON_ONCE(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
-+		return -EBUSY;
- 
- 	mvmvif->id = find_first_bit(data.available_mac_ids,
- 				    NUM_MAC_INDEX_DRIVER);
--- 
-1.8.0
-
+  Luis
