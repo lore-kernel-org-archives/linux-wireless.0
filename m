@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:41584 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926Ab3GMQ2D (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:58603 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBHS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jul 2013 12:28:03 -0400
-Received: by mail-qc0-f170.google.com with SMTP id s1so5550235qcw.29
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Jul 2013 09:28:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1373575017-25645-1-git-send-email-johannes@sipsolutions.net>
-References: <1373575017-25645-1-git-send-email-johannes@sipsolutions.net>
-Date: Sat, 13 Jul 2013 12:28:02 -0400
-Message-ID: <CAKf6xpu7iUSKWsFwsUnV2Nv2XjWepzaXv6s=3WvcgB6dY20oGQ@mail.gmail.com> (sfid-20130713_182810_245599_FB79BAD2)
-Subject: Re: [PATCH] mac80211: fix duplicate retransmission detection
-From: Jason Andryuk <jandryuk@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 3 Jul 2013 21:07:18 -0400
+Received: by mail-pa0-f42.google.com with SMTP id rl6so778207pac.15
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:18 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 33/53] wireless-regdb: PT, Portugal - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:29 -0700
+Message-Id: <1372899889-19183-34-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032041_250883_2C53F22E)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 4:36 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 23dbcfc..2c5a79b 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -936,8 +936,14 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
->         struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
->         struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
->
-> -       /* Drop duplicate 802.11 retransmissions (IEEE 802.11 Chap. 9.2.9) */
-> -       if (rx->sta && !is_multicast_ether_addr(hdr->addr1)) {
-> +       /*
-> +        * Drop duplicate 802.11 retransmissions
-> +        * (IEEE 802.11-2012: 9.3.2.10 "Duplicate detection and recovery")
-> +        */
-> +       if (rx->skb->len >= 24 && rx->sta &&
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Shouldn't this check rx->skb first?
-if (rx->sta && rx->sta->len >= 24 &&
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
--Jason
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-> +           !ieee80211_is_ctl(hdr->frame_control) &&
-> +           !ieee80211_is_qos_nullfunc(hdr->frame_control) &&
-> +           !is_multicast_ether_addr(hdr->addr1)) {
->                 if (unlikely(ieee80211_has_retry(hdr->frame_control) &&
->                              rx->sta->last_seq_ctrl[rx->seqno_idx] ==
->                              hdr->seq_ctrl)) {
-> --
-> 1.8.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 2f71dba..f411ae3 100644
+--- a/db.txt
++++ b/db.txt
+@@ -630,9 +630,9 @@ country PL: DFS-ETSI
+ 
+ country PT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
+
