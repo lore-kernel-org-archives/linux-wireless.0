@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:61000 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752249Ab3GERGH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 13:06:07 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: 'Daniel Drake' <dsd@laptop.org>
-CC: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Fri, 5 Jul 2013 10:05:42 -0700
-Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951035636354@SC-VEXCH1.marvell.com> (sfid-20130705_190622_349655_A98ED411)
-In-Reply-To: <CAMLZHHSZvKWnaBXycNsh64oExhpa0amcUi-6eC-FOaeNZ-TP1A@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:40460 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBG0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 21:06:26 -0400
+Received: by mail-pd0-f182.google.com with SMTP id r10so584953pdi.41
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:26 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 21/53] wireless-regdb: DE, Germany - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:17 -0700
+Message-Id: <1372899889-19183-22-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_443979_6EBA56B3)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Hi Daniel,
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
->There is no point in the one case that you mention. But there is a
->very good reason to do so in the case that I am talking about. So why
->not do it? There is no harm to do it if the hardware is not present,
->right?
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-I got your point. We didn't test the behavior of sdio_read/sdio_write API's when hardware is not present. But they should just return an error.
+Quoting:
 
->This doesn't make much sense to me either. Why don't we just disable
->the interrupt handler at the point when interrupts can no longer be
->correctly handled by the driver?
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
 
-Agreed. Following change will fix the issue. Right? Instead of going for your earlier changes to ack interrupts until we disable them.
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-@@ -152,6 +152,9 @@ mwifiex_sdio_remove(struct sdio_func *func)
- 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
- 	}
+diff --git a/db.txt b/db.txt
+index 15e413e..b58d4e2 100644
+--- a/db.txt
++++ b/db.txt
+@@ -226,11 +226,11 @@ country DE: DFS-ETSI
+ 	# entries 279004 and 280006
+ 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+ 	# entry 303005
+-	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
++	(5150 - 5250 @ 80), (N/A, 100 mW), NO-OUTDOOR
+ 	# entries 304002 and 305002
+-	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
++	(5250 - 5350 @ 80), (N/A, 100 mW), NO-OUTDOOR, DFS
+ 	# entries 308002, 309001 and 310003
+-	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
++	(5470 - 5725 @ 80), (N/A, 500 mW), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
  
-+	/* Disable host interrupt mask register for SDIO */
-+	mwifiex_sdio_disable_host_int(adapter);
-+
- 	mwifiex_remove_card(card->adapter, &add_remove_card_sem);
- 	kfree(card);
- }
+-- 
+1.7.10.4
 
-
-Thanks,
-Amitkumar Karwar
