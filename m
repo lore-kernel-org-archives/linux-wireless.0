@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14508 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758368Ab3GRKxG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jul 2013 06:53:06 -0400
-Date: Thu, 18 Jul 2013 12:55:51 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Ortwin =?iso-8859-1?Q?Gl=FCck?= <odi@odi.ch>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [BUG] 3.10 regression: hang on suspend
-Message-ID: <20130718105550.GA4628@redhat.com> (sfid-20130718_125327_226068_3B3B6A7E)
-References: <51E4501D.3010001@odi.ch>
- <20130716065626.GA1587@redhat.com>
- <51E4F790.6090308@odi.ch>
- <51E51712.4020609@broadcom.com>
- <51E58FA5.4000804@odi.ch>
- <20130717122944.GA25894@redhat.com>
- <51E6E1AB.5010300@odi.ch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <51E6E1AB.5010300@odi.ch>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:52608 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755448Ab3GDBFN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 21:05:13 -0400
+Received: by mail-pa0-f46.google.com with SMTP id fa11so771952pad.5
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:12 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 04/53] wireless-regdb: HK, Hong Kong - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:00 -0700
+Message-Id: <1372899889-19183-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_030539_331402_FF15FC6A)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 17, 2013 at 08:25:47PM +0200, Ortwin Glück wrote:
-> On 07/17/2013 02:29 PM, Stanislaw Gruszka wrote:
-> >This looks like livelock
-> 
-> OK got it. Just a GPF in the suspend path, not a livelock
-> fortunately. With no_console_suspend the trace appears. Attached is
-> a screenshot, transcription for your convenience is here:
-> 
-> NULL pointer deref at iwlagn_mac_remove_interface+0x43/0x120
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Unfortunately I still don't know why this happen. Please do
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and increases the max EIRP on two
+5 GHz bands.
 
-objdump -r -d --prefix-addresses net/mac80211/mac80211.ko > mac80211.txt
-objdump -r -d --prefix-addresses drivers/net/wireless/iwlwifi/dvm/iwldvm.ko > iwldvm.txt
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-and send me mac80211.txt & iwldvm.txt files.
-
-Thanks
-Stanislaw
+diff --git a/db.txt b/db.txt
+index 37a13c6..bb846af 100644
+--- a/db.txt
++++ b/db.txt
+@@ -349,10 +349,10 @@ country HN:
+ 
+ country HK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (3, 17)
+-	(5250 - 5330 @ 40), (3, 20), DFS
+-	(5490 - 5710 @ 40), (3, 20), DFS
+-	(5735 - 5835 @ 40), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country HR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
 
