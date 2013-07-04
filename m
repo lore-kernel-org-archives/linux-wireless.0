@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32872 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757366Ab3GENZv (ORCPT
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:59346 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBFf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:25:51 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH v2] ath10k: leave MMIC generation to the HW
-References: <1372060350-31460-4-git-send-email-michal.kazior@tieto.com>
-	<1372229844-7987-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 5 Jul 2013 16:25:41 +0300
-In-Reply-To: <1372229844-7987-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 26 Jun 2013 08:57:24 +0200")
-Message-ID: <87y59lf8a2.fsf@kamboji.qca.qualcomm.com> (sfid-20130705_152555_745934_9CB77E42)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 3 Jul 2013 21:05:35 -0400
+Received: by mail-pb0-f48.google.com with SMTP id ma3so663910pbc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:34 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 09/53] wireless-regdb: MX, Mexico - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:05 -0700
+Message-Id: <1372899889-19183-10-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_030540_512169_8961F9FE)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-> Apparently HW doesn't require us to generate MMIC
-> for TKIP suite.
->
-> Each frame was 8 bytes longer than it should be
-> and some APs would drop frames that exceed 1520
-> bytes of 802.11 payload. This could be observed
-> during throughput tests or fragmented IP traffic.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and update the max EIRP. This also adds
+a new DFS 5 GHz band: 5490 - 5710 MHz.
 
-This is also applied.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
+diff --git a/db.txt b/db.txt
+index 4b1cf8e..570a951 100644
+--- a/db.txt
++++ b/db.txt
+@@ -550,9 +550,10 @@ country MY:
+ 
+ country MX:
+ 	(2402 - 2472 @ 40), (3, 27)
+-	(5170 - 5250 @ 40), (3, 17)
+-	(5250 - 5330 @ 40), (3, 23), DFS
+-	(5735 - 5835 @ 40), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country NL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-Kalle Valo
+1.7.10.4
+
