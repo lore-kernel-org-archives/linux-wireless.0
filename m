@@ -1,99 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:38726 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932451Ab3GKJL5 (ORCPT
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:37923 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBHK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:11:57 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>
-Subject: [PATCH 40/50] media: dvb-core: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:06:03 +0800
-Message-Id: <1373533573-12272-41-git-send-email-ming.lei@canonical.com> (sfid-20130711_111444_948891_52EAB312)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Wed, 3 Jul 2013 21:07:10 -0400
+Received: by mail-pb0-f43.google.com with SMTP id md12so666809pbc.16
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:09 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 31/53] wireless-regdb: NL, Netherlands - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:27 -0700
+Message-Id: <1372899889-19183-32-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032040_169701_3DE23BEB)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-These functions may be called inside URB->complete(), so use
-spin_lock_irqsave().
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: linux-media@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/media/dvb-core/dvb_demux.c |   17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/media/dvb-core/dvb_demux.c b/drivers/media/dvb-core/dvb_demux.c
-index 3485655..58de441 100644
---- a/drivers/media/dvb-core/dvb_demux.c
-+++ b/drivers/media/dvb-core/dvb_demux.c
-@@ -476,7 +476,9 @@ static void dvb_dmx_swfilter_packet(struct dvb_demux *demux, const u8 *buf)
- void dvb_dmx_swfilter_packets(struct dvb_demux *demux, const u8 *buf,
- 			      size_t count)
- {
--	spin_lock(&demux->lock);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&demux->lock, flags);
+diff --git a/db.txt b/db.txt
+index 04a176e..8f8e8fc 100644
+--- a/db.txt
++++ b/db.txt
+@@ -558,9 +558,9 @@ country MX:
  
- 	while (count--) {
- 		if (buf[0] == 0x47)
-@@ -484,7 +486,7 @@ void dvb_dmx_swfilter_packets(struct dvb_demux *demux, const u8 *buf,
- 		buf += 188;
- 	}
- 
--	spin_unlock(&demux->lock);
-+	spin_unlock_irqrestore(&demux->lock, flags);
- }
- 
- EXPORT_SYMBOL(dvb_dmx_swfilter_packets);
-@@ -519,8 +521,9 @@ static inline void _dvb_dmx_swfilter(struct dvb_demux *demux, const u8 *buf,
- {
- 	int p = 0, i, j;
- 	const u8 *q;
-+	unsigned long flags;
- 
--	spin_lock(&demux->lock);
-+	spin_lock_irqsave(&demux->lock, flags);
- 
- 	if (demux->tsbufp) { /* tsbuf[0] is now 0x47. */
- 		i = demux->tsbufp;
-@@ -564,7 +567,7 @@ static inline void _dvb_dmx_swfilter(struct dvb_demux *demux, const u8 *buf,
- 	}
- 
- bailout:
--	spin_unlock(&demux->lock);
-+	spin_unlock_irqrestore(&demux->lock, flags);
- }
- 
- void dvb_dmx_swfilter(struct dvb_demux *demux, const u8 *buf, size_t count)
-@@ -581,11 +584,13 @@ EXPORT_SYMBOL(dvb_dmx_swfilter_204);
- 
- void dvb_dmx_swfilter_raw(struct dvb_demux *demux, const u8 *buf, size_t count)
- {
--	spin_lock(&demux->lock);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&demux->lock, flags);
- 
- 	demux->feed->cb.ts(buf, count, NULL, 0, &demux->feed->feed.ts, DMX_OK);
- 
--	spin_unlock(&demux->lock);
-+	spin_unlock_irqrestore(&demux->lock, flags);
- }
- EXPORT_SYMBOL(dvb_dmx_swfilter_raw);
+ country NL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20), NO-OUTDOOR
+-	(5250 - 5330 @ 40), (N/A, 20), NO-OUTDOOR, DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20), NO-OUTDOOR
++	(5250 - 5330 @ 80), (N/A, 20), NO-OUTDOOR, DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
  
 -- 
-1.7.9.5
+1.7.10.4
 
