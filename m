@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:40725 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754007Ab3G2UFV convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:59320 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753738Ab3GDBGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 16:05:21 -0400
-Received: by mail-ob0-f178.google.com with SMTP id ef5so2478611obb.37
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jul 2013 13:05:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Mon, 29 Jul 2013 22:05:20 +0200
-Message-ID: <CACna6rzu4U+v1v1vj-+XyJHpReXMB3nscKP_C5jjbAAbKLQcKA@mail.gmail.com> (sfid-20130729_220526_124881_F935CC15)
-Subject: Re: [PATCH V2] fwcutter: Add firmware 6.30.163.46
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: m@bues.ch, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 3 Jul 2013 21:06:48 -0400
+Received: by mail-pb0-f42.google.com with SMTP id un1so673069pbc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:47 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 26/53] wireless-regdb: FI, Finland - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:22 -0700
+Message-Id: <1372899889-19183-27-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032042_703939_3C579409)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/7/29 Larry Finger <Larry.Finger@lwfinger.net>:
-> This firmware version can be extracted from the GPL tarball for the ASUS
-> GPL code for the RT-AC66U 802.11ac Dual-Band Wireless-AC1750 Gigabit Router.
->
-> I believe this to be the first instance of 802.11ac firmware for Broadcom
-> hardware. The firmware is version 784.2.
->
-> Note: The http://www.lwfinger.com/broadcom-wl-6.30.163.46.tar.bz2 is the URL
-> of the extracted apsta binary. The full GPL package is at
-> http://dlcdnet.asus.com/pub/ASUS/wireless/RT-AC66U/GPL_RT_AC66U_3004372.zip.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-There is some (probably outdated) list of Broadcom 802.11ac routers:
-ASUS RT-AC66U
-Linksys EA6500
-Netgear R6300
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-Did you compare wl.ko drivers from the 2 other firmwares? Is this the
-newest one?
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-Did you start AC-PHY RE process?
+Quoting:
 
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 26cc023..3790d4e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -280,9 +280,9 @@ country ES: DFS-ETSI
+ 
+ country FI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
 -- 
-Rafał
+1.7.10.4
+
