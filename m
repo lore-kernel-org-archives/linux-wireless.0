@@ -1,52 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53982 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933272Ab3GVUPN (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:42439 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBGb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 16:15:13 -0400
-Date: Mon, 22 Jul 2013 16:02:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-fixes 2013-07-22
-Message-ID: <20130722200231.GB29803@tuxdriver.com> (sfid-20130722_221520_902329_4B1A4CF5)
-References: <1374494473.14517.8.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1374494473.14517.8.camel@jlt4.sipsolutions.net>
+	Wed, 3 Jul 2013 21:06:31 -0400
+Received: by mail-pa0-f41.google.com with SMTP id bj3so780223pad.28
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:30 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 22/53] wireless-regdb: GB, United Kingdom - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:18 -0700
+Message-Id: <1372899889-19183-23-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032039_806091_37830D79)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 22, 2013 at 02:01:13PM +0200, Johannes Berg wrote:
-> John,
-> 
-> And another one for iwlwifi.
-> 
-> Here I have a fix for debugfs directory creation (causing a spurious
-> error message), two scanning fixes from David Spinadel, an LED fix and
-> two patches related to a BA session problem that eventually caused
-> firmware crashes from Emmanuel and a small BT fix for older devices as
-> well as a workaround for a firmware problem with APs with very small
-> beacon intervals from myself.
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> The following changes since commit ad81f0545ef01ea651886dddac4bef6cec930092:
-> 
->   Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
-> 
-> for you to fetch changes up to a590ad411891de551e6de1b51ea635c0484148d6:
-> 
->   iwlwifi: mvm: remove extra SSID from probe request (2013-07-16 13:55:15 +0300)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Pulling now...
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index b58d4e2..fd0ef09 100644
+--- a/db.txt
++++ b/db.txt
+@@ -303,9 +303,9 @@ country GE:
+ 
+ country GB: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10.4
+
