@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:35019 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752811Ab3GIIrk (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:50905 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBFj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 04:47:40 -0400
-Received: by mail-la0-f43.google.com with SMTP id gw10so4592732lab.16
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jul 2013 01:47:37 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 9 Jul 2013 10:47:37 +0200
-Message-ID: <CAAU0D9dyrsHKw6cvbfNnhodQOC9_Bhxm0xiDqmKXTuN8Lby3DQ@mail.gmail.com> (sfid-20130709_104743_814569_5F097024)
-Subject: intel 4965 fails to set channel 12 or 13
-From: Hendrik-Jan Heins <hjheins@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 3 Jul 2013 21:05:39 -0400
+Received: by mail-pb0-f44.google.com with SMTP id uo1so666219pbc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:39 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 10/53] wireless-regdb: PE, Peru - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:06 -0700
+Message-Id: <1372899889-19183-11-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032041_146990_21381EA4)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear list,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-On Debian Wheezy, kernel 3.2, I am trying to get my iwl4965 to
-scan/find/connect on channels 13 and 13. As I am in Europe, this
-should be no issue.
-However: I can not get these channels activated on my card at all!
-I tried the following:
-- Using the regdom option, setting to EU, DE, or PL (I see the correct
-setting in /sys/modules/cfg80211/parameters/ieee_regdom...
-- Completely disabling CRDA, and manually loading regdom through iw
-reg set EU/DE/PL/US
+This enables 80 MHz bandwidth usage the existing only
+5 GHz band but also adds 3 other new 5 GHz bands with
+80 MHz bandwidth support.
 
-In all cases, I see some changes in the channels listed, but I never
-get 12 and 13 enabled.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Does anyone has an idea on this?
+diff --git a/db.txt b/db.txt
+index 570a951..00e5993 100644
+--- a/db.txt
++++ b/db.txt
+@@ -597,7 +597,10 @@ country PA:
+ 
+ country PE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5735 - 5835 @ 40), (N/A, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country PG:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
 
-thanks,
-
-Hendrik-Jan
