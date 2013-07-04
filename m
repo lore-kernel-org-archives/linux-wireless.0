@@ -1,72 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:41143 "EHLO
-	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754134Ab3GWCTR (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:40051 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBHG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:19:17 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 13/21] mwifiex: move if_ops.cleanup_if() call
-Date: Mon, 22 Jul 2013 19:17:50 -0700
-Message-ID: <1374545878-15683-14-git-send-email-bzhao@marvell.com> (sfid-20130723_041929_163674_EAFDBB8C)
-In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 3 Jul 2013 21:07:06 -0400
+Received: by mail-pa0-f47.google.com with SMTP id kl14so764006pab.20
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:05 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 30/53] wireless-regdb: LU, Luxembourg - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:26 -0700
+Message-Id: <1372899889-19183-31-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_823255_D7993F5B)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-As if_ops.init_if() is called in mwifiex_register(),
-corresponding cleanup routine should be called in
-mwifiex_unregister().
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-Currently it's there in mwifiex_adapter_cleanup(), hence
-interface specific cleanup is not performed if driver
-initialization is failed.
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/mwifiex/init.c | 3 ---
- drivers/net/wireless/mwifiex/main.c | 3 +++
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 8ff5d7b..2cda7ee 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -394,9 +394,6 @@ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+diff --git a/db.txt b/db.txt
+index b8ddd9e..04a176e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -500,9 +500,9 @@ country LT: DFS-ETSI
  
- 	dev_dbg(adapter->dev, "info: free scan table\n");
+ country LU: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
  
--	if (adapter->if_ops.cleanup_if)
--		adapter->if_ops.cleanup_if(adapter);
--
- 	if (adapter->sleep_cfm)
- 		dev_kfree_skb_any(adapter->sleep_cfm);
- }
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 8217368..e64c369 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -191,6 +191,9 @@ static int mwifiex_unregister(struct mwifiex_adapter *adapter)
- {
- 	s32 i;
- 
-+	if (adapter->if_ops.cleanup_if)
-+		adapter->if_ops.cleanup_if(adapter);
-+
- 	del_timer(&adapter->cmd_timer);
- 
- 	/* Free private structures */
 -- 
-1.8.2.3
+1.7.10.4
 
