@@ -1,91 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58071 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756903Ab3GZITf (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:45784 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:19:35 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 6/7] iwlwifi: mvm: fix flushing not started aggregation sessions
-Date: Fri, 26 Jul 2013 10:19:27 +0200
-Message-Id: <1374826768-2440-6-git-send-email-johannes@sipsolutions.net> (sfid-20130726_101950_818160_A4676F91)
-In-Reply-To: <1374826768-2440-1-git-send-email-johannes@sipsolutions.net>
-References: <1374826675.8248.11.camel@jlt4.sipsolutions.net>
- <1374826768-2440-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 3 Jul 2013 21:08:44 -0400
+Received: by mail-pa0-f50.google.com with SMTP id fb1so778380pad.9
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:08:44 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 52/53] wireless-regdb: CR, Costa Rica - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:48 -0700
+Message-Id: <1372899889-19183-53-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032041_015827_0B414121)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-When a not fully started aggregation session is destroyed
-and flushed, we get a warning, e.g.
+This enables 80 MHz bandwidth usage for Costa Rica,
+updates the max EIRP and adds a new 5 GHz band:
 
-  WARNING: at drivers/net/wireless/iwlwifi/pcie/tx.c:1142 iwl_trans_pcie_txq_disable+0x11c/0x160
-  queue 16 not used
-  Modules linked in: [...]
-  Pid: 5135, comm: hostapd Tainted: G        W  O 3.5.0 #10
-  Call Trace:
-  wlan0: driver sets block=0 for sta 00:03:7f:10:44:d3
-   [<ffffffff81036492>] warn_slowpath_common+0x72/0xa0
-   [<ffffffff81036577>] warn_slowpath_fmt+0x47/0x50
-   [<ffffffffa0368d6c>] iwl_trans_pcie_txq_disable+0x11c/0x160 [iwlwifi]
-   [<ffffffffa03a2099>] iwl_mvm_sta_tx_agg_flush+0xe9/0x150 [iwlmvm]
-   [<ffffffffa0396c43>] iwl_mvm_mac_ampdu_action+0xf3/0x1e0 [iwlmvm]
-   [<ffffffffa0293ad3>] ___ieee80211_stop_tx_ba_session+0x193/0x920 [mac80211]
-   [<ffffffffa0294ed8>] __ieee80211_stop_tx_ba_session+0x48/0x70 [mac80211]
-   [<ffffffffa029159f>] ieee80211_sta_tear_down_BA_sessions+0x4f/0x80 [mac80211]
-   [<ffffffffa028a686>] __sta_info_destroy+0x66/0x370 [mac80211]
-   [<ffffffffa028abb4>] sta_info_destroy_addr_bss+0x44/0x70 [mac80211]
-   [<ffffffffa02a3e26>] ieee80211_del_station+0x26/0x50 [mac80211]
-   [<ffffffffa01e6395>] nl80211_del_station+0x85/0x200 [cfg80211]
+  * 5490 - 5710
 
-when a station deauthenticated from us without fully setting
-up the aggregation session.
-
-Fix this by checking the aggregation state before removing
-the hardware queue.
-
-Cc: stable@vger.kernel.org
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/sta.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ db.txt |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 85d4bbe..563f559 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -915,6 +915,7 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	struct iwl_mvm_sta *mvmsta = (void *)sta->drv_priv;
- 	struct iwl_mvm_tid_data *tid_data = &mvmsta->tid_data[tid];
- 	u16 txq_id;
-+	enum iwl_mvm_agg_state old_state;
+diff --git a/db.txt b/db.txt
+index b4f9ffa..43a062f 100644
+--- a/db.txt
++++ b/db.txt
+@@ -182,9 +182,10 @@ country CO:
  
- 	/*
- 	 * First set the agg state to OFF to avoid calling
-@@ -924,13 +925,17 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	txq_id = tid_data->txq_id;
- 	IWL_DEBUG_TX_QUEUES(mvm, "Flush AGG: sta %d tid %d q %d state %d\n",
- 			    mvmsta->sta_id, tid, txq_id, tid_data->state);
-+	old_state = tid_data->state;
- 	tid_data->state = IWL_AGG_OFF;
- 	spin_unlock_bh(&mvmsta->lock);
+ country CR:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (3, 17)
+-	(5250 - 5330 @ 20), (3, 23), DFS
+-	(5735 - 5835 @ 20), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
  
--	if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), true))
--		IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
-+	if (old_state >= IWL_AGG_ON) {
-+		if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), true))
-+			IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
-+
-+		iwl_trans_txq_disable(mvm->trans, tid_data->txq_id);
-+	}
- 
--	iwl_trans_txq_disable(mvm->trans, tid_data->txq_id);
- 	mvm->queue_to_mac80211[tid_data->txq_id] =
- 				IWL_INVALID_MAC80211_QUEUE;
- 
+ country CS:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.8.0
+1.7.10.4
 
