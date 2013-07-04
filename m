@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:48085 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756175Ab3GZOXV (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36891 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBF0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 10:23:21 -0400
-Received: by mail-ee0-f50.google.com with SMTP id d51so152099eek.23
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Jul 2013 07:23:20 -0700 (PDT)
-Content-Type: text/plain; charset=iso-8859-8-i; format=flowed; delsp=yes
-To: "Oleksij Rempel" <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: TP-LINK wireless USB adapter don't work.
-References: <op.w0sd9ujye4gg2u@xp> <51F16993.20207@rempel-privat.de>
-Date: Fri, 26 Jul 2013 17:22:53 +0300
-MIME-Version: 1.0
-From: atar <atar.yosef@gmail.com>
-Message-ID: <op.w0t16tbme4gg2u@xp> (sfid-20130726_162334_208123_63E652EF)
-In-Reply-To: <51F16993.20207@rempel-privat.de>
+	Wed, 3 Jul 2013 21:05:26 -0400
+Received: by mail-pa0-f46.google.com with SMTP id fa11so772094pad.5
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:26 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 07/53] wireless-regdb: CO, Colombia - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:03 -0700
+Message-Id: <1372899889-19183-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_030535_299664_48D1857D)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you about your answer, but how can I install the firmware? which  
-processes are need to be taken in order to accomplish the firmware  
-installation and configuration?
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Thanks in advance!!
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and update the max EIRP. This also adds
+a new DFS 5 GHz band: 5490 - 5710 MHz.
 
-atar.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-> Am 25.07.2013 18:47, schrieb atar:
->> Hi there!!
->>
->> I've a TP-LINK USB wireless adapter with model number TL-WN722N. When I
->> plug it in to one of the USB slots in my PC, its LED diode isn't
->> flashing (although under WIN XP it is flashing) and I cannot use it.
->> from the messages of the 'dmesg' command it seems that the kernel detect
->> it, but I unable to use it because it doesn't appear on the wicd window
->> of available interfaces.
->>
->> My Linux distro is Debian squeeze with kernel 2.6.32-5-686.
->>
->> What should I do in order to solve this problem?
->
-> It is ath9k-htc based adapter. Please update your kernel and use latest  
-> firmware. I think Debian squeeze do not provided this firmware, so you  
-> should install it manually.
->
->
+diff --git a/db.txt b/db.txt
+index b82b255..6d7a762 100644
+--- a/db.txt
++++ b/db.txt
+@@ -172,9 +172,10 @@ country CN:
+ 
+ country CO:
+ 	(2402 - 2472 @ 40), (3, 27)
+-	(5170 - 5250 @ 40), (3, 17)
+-	(5250 - 5330 @ 40), (3, 23), DFS
+-	(5735 - 5835 @ 40), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country CR:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
+
