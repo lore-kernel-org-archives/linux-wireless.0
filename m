@@ -1,80 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:35939 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932260Ab3GKMmu (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:40958 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754099Ab3GDBEz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 08:42:50 -0400
-Received: by mail-wg0-f42.google.com with SMTP id z11so11935694wgg.3
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 05:42:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1373533573-12272-37-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-	<1373533573-12272-37-git-send-email-ming.lei@canonical.com>
-Date: Thu, 11 Jul 2013 08:42:49 -0400
-Message-ID: <CAGoCfizP6ZKeK1Kw+pjZ+mqxE6J2fM_JBhME=3Q6qRP0NfPX5A@mail.gmail.com> (sfid-20130711_144300_140277_F502B7AC)
-Subject: Re: [PATCH 36/50] media: usb: em28xx: spin_lock in complete() cleanup
-From: Devin Heitmueller <dheitmueller@kernellabs.com>
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 3 Jul 2013 21:04:55 -0400
+Received: by mail-pd0-f182.google.com with SMTP id r10so583992pdi.41
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:04:55 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 00/53] wireless-regdb: mostly VHT80 updates
+Date: Wed,  3 Jul 2013 18:03:56 -0700
+Message-Id: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_030522_962966_1D7DB250)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 5:05 AM, Ming Lei <ming.lei@canonical.com> wrote:
-> Complete() will be run with interrupt enabled, so change to
-> spin_lock_irqsave().
->
-> Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-> Cc: linux-media@vger.kernel.org
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-> ---
->  drivers/media/usb/em28xx/em28xx-core.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/media/usb/em28xx/em28xx-core.c b/drivers/media/usb/em28xx/em28xx-core.c
-> index fc157af..0d698f9 100644
-> --- a/drivers/media/usb/em28xx/em28xx-core.c
-> +++ b/drivers/media/usb/em28xx/em28xx-core.c
-> @@ -941,6 +941,7 @@ static void em28xx_irq_callback(struct urb *urb)
->  {
->         struct em28xx *dev = urb->context;
->         int i;
-> +       unsigned long flags;
->
->         switch (urb->status) {
->         case 0:             /* success */
-> @@ -956,9 +957,9 @@ static void em28xx_irq_callback(struct urb *urb)
->         }
->
->         /* Copy data from URB */
-> -       spin_lock(&dev->slock);
-> +       spin_lock_irqsave(&dev->slock, flags);
->         dev->usb_ctl.urb_data_copy(dev, urb);
-> -       spin_unlock(&dev->slock);
-> +       spin_unlock_irqrestore(&dev->slock, flags);
->
->         /* Reset urb buffers */
->         for (i = 0; i < urb->number_of_packets; i++) {
-> --
-> 1.7.9.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-media" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-I actually stumbled across this a couple of weeks ago, and have had an
-identical patch running in a local dev tree.
+Here's a series of updates for wireless-regdb. Most of this is
+to just enable VHT80 support to enable support for 802.11ac
+where this has been verified to be usable. I cannot meet the
+criteria of providing full documentation for sources for all
+patches, only a few ones so what I recommend for the rest is
+to let this sit on the list for a bit and I'd hope after
+review if no one spots any issues I'd hope we can merge this.
 
-Reviewed-by: Devin Heitmueller <dheitmueller@kernellabs.com>
-Tested-by: Devin Heitmueller <dheitmueller@kernellabs.com>
+I reviewed the idea of vendor namespaces on wireless-regdb
+and at least through review with pkgadd on IRC we concluded
+its best to try to take this approach instead of encouraging
+divergence due to any lack of full source documentation or
+inability to provide such documentation for whatever reason.
+This seems to be better than not getting any updates at all
+and keeps vendors hopefully encouraged to push changes upstream.
+
+Luis R. Rodriguez (53):
+  wireless-regdb: AU, Australia - enable VHT80
+  wireless-regdb: BR, Brazil - enable VHT80
+  wireless-regdb: CA, Canada - enable VHT80
+  wireless-regdb: HK, Hong Kong - enable VHT80
+  wireless-regdb: NZ, New Zealand - enable VHT80
+  wireless-regdb: AR, Argentina - enable VHT80
+  wireless-regdb: CO, Colombia - enable VHT80
+  wireless-regdb: GU, Guam - enable VHT80
+  wireless-regdb: MX, Mexico - enable VHT80
+  wireless-regdb: PE, Peru - enable VHT80
+  wireless-regdb: PH, Philippines - enable VHT80
+  wireless-regdb: PR, Puerto Rico - enable VHT80
+  wireless-regdb: SA, Saudi Arabia - enable VHT80
+  wireless-regdb: SG, Singapore - enable VHT80
+  wireless-regdb: ZA, South Africa - enable VHT80
+  wireless-regdb: TH, Thailand - enable VHT80
+  wireless-regdb: AE, United Arab Emirates - enable VHT80
+  wireless-regdb: VN, Vietnam - enable VHT80
+  wireless-regdb: AT, Austria - enable VHT80
+  wireless-regdb: FR, France - enable VHT80
+  wireless-regdb: DE, Germany - enable VHT80
+  wireless-regdb: GB, United Kingdom - enable VHT80
+  wireless-regdb: BE, Belgium - enable VHT80
+  wireless-regdb: CZ, Czech Republic - enable VHT80
+  wireless-regdb: DK, Denmark - enable VHT80
+  wireless-regdb: FI, Finland - enable VHT80
+  wireless-regdb: GR, Greece- enable VHT80
+  wireless-regdb: IE, Ireland - enable VHT80
+  wireless-regdb: IT, Italy - enable VHT80
+  wireless-regdb: LU, Luxembourg - enable VHT80
+  wireless-regdb: NL, Netherlands - enable VHT80
+  wireless-regdb: PL, Poland - enable VHT80
+  wireless-regdb: PT, Portugal - enable VHT80
+  wireless-regdb: SK, Slovakia - enable VHT80
+  wireless-regdb: ES, Spain - enable VHT80
+  wireless-regdb: SE, Sweden - enable VHT80
+  wireless-regdb: CH, Switzerland - enable VHT80
+  wireless-regdb: TR, Turkey - enable VHT80
+  wireless-regdb: CN, China - enable VHT80
+  wireless-regdb: enable VHT80 and VHT160 for JP
+  wireless-regdb: US, United States - enable VHT80
+  wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
+  wireless-regdb: IL, Isreal - enable VHT80
+  wireless-regdb: KW, Kuwait - enable VHT80
+  wireless-regdb: MY, Malaysia - enable VHT80
+  wireless-regdb: MA, Morocco - enable 5 GHz and VHT80
+  wireless-regdb: enable HT40 in RU - Russian Federation
+  wireless-regdb: KR, Republic of Korea - enable VHT80
+  wireless-regdb: TW, Taiwan - enable VHT80
+  wireless-regdb: enable VHT80 when world roaming
+  wireless-regdb: add 802.11ad 60 GHz channels 1..3 to world regdom
+  wireless-regdb: CR, Costa Rica - enable VHT80
+  wireless-regdb: EC, Ecauador - enable VHT80
+
+ db.txt |  318 +++++++++++++++++++++++++++++++++++-----------------------------
+ 1 file changed, 174 insertions(+), 144 deletions(-)
 
 -- 
-Devin J. Heitmueller - Kernel Labs
-http://www.kernellabs.com
+1.7.10.4
+
