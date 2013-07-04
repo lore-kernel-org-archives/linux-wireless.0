@@ -1,86 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:2156 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755618Ab3GKIQq convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:60854 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBHm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 04:16:46 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-Subject: Re: ath10k: mac80211 driver for Qualcomm Atheros 802.11ac CQA98xx devices
-References: <20130710022602.1F6F16609DE@gitolite.kernel.org>
-	<alpine.DEB.2.02.1307101859360.29717@ayla.of.borg>
-Date: Thu, 11 Jul 2013 11:16:34 +0300
-In-Reply-To: <alpine.DEB.2.02.1307101859360.29717@ayla.of.borg> (Geert
-	Uytterhoeven's message of "Wed, 10 Jul 2013 19:12:28 +0200")
-Message-ID: <87sizl7bq5.fsf@kamboji.qca.qualcomm.com> (sfid-20130711_101717_718697_10F68958)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 3 Jul 2013 21:07:42 -0400
+Received: by mail-pd0-f179.google.com with SMTP id q10so581478pdj.38
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:40 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 38/53] wireless-regdb: TR, Turkey - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:34 -0700
+Message-Id: <1372899889-19183-39-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032040_494075_52511C90)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-> On Wed, 10 Jul 2013, Linux Kernel Mailing List wrote:
->> --- /dev/null
->> +++ b/drivers/net/wireless/ath/ath10k/hw.h
->
->> +#define SUPPORTED_FW_MAJOR	1
->> +#define SUPPORTED_FW_MINOR	0
->> +#define SUPPORTED_FW_RELEASE	0
->> +#define SUPPORTED_FW_BUILD	629
->
->> +static int ath10k_check_fw_version(struct ath10k *ar)
->> +{
->> +	char version[32];
->> +
->> +	if (ar->fw_version_major >= SUPPORTED_FW_MAJOR &&
->> +	    ar->fw_version_minor >= SUPPORTED_FW_MINOR &&
->> +	    ar->fw_version_release >= SUPPORTED_FW_RELEASE &&
->> +	    ar->fw_version_build >= SUPPORTED_FW_BUILD)
->> +		return 0;
->
-> My attention got triggered by:
->
-> drivers/net/wireless/ath/ath10k/core.c: In function ‘ath10k_check_fw_version’:
-> drivers/net/wireless/ath/ath10k/core.c:79: warning: comparison is always true due to limited range of data type
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and also adds a new frequency 5 GHz range:
 
-I haven't seen this warning, I guess my compiler is too old.
+  * 5490 - 5710 MHz
 
-> as an u16 is always larger or equal than zero. Not much you can do to
-> silence that warning, though.
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-Too bad, I really would like to keep ath10k warning free. Easier to
-maintain that way.
+Quoting:
 
-Does anyone have any nice trick in their sleeves to make this warning go
-away? I guess one ugly option is to change u16 to int.
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
 
->
-> However, I don't think the version check is correct.
-> Shouldn't it stop checking later fields if an exact match is found in an
-> earlier field?
->
-> I.e.
->
-> 	if (ar->fw_version_major > SUPPORTED_FW_MAJOR ||
-> 	    (ar->fw_version_major == SUPPORTED_FW_MAJOR &&
-> 	     ar->fw_version_minor > SUPPORTED_FW_MINOR) ||
-> 	     ...) { ... }
->
-> Currently e.g. (major, minor) = (3, 0) is considered older than (2, 1).
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
 
-Doh, that is indeed wrong. I'll fix that, thanks for spotting this.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> Or perhaps minor is never reset to zero when major is increased? In that
-> case, the check is correct, but IMHO it's a bit silly to split the version
-> number in seperate fields.
-
-No, the firmware engineers are supposed to reset minor version whenever
-major changes.
-
+diff --git a/db.txt b/db.txt
+index f19f637..4f2d4e7 100644
+--- a/db.txt
++++ b/db.txt
+@@ -746,8 +746,9 @@ country TN:
+ 
+ country TR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (N/A, 20)
+-	(5250 - 5330 @ 20), (N/A, 20), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+  
 -- 
-Kalle Valo
+1.7.10.4
+
