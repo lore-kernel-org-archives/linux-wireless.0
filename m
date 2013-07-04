@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:32945 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751288Ab3G2XUK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 19:20:10 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Mon, 29 Jul 2013 16:20:03 -0700
-Subject: RE: [PATCH] Bluetooth: btmrvl: add calibration data download support
-Message-ID: <477F20668A386D41ADCC57781B1F70430EA3215F9B@SC-VEXCH1.marvell.com> (sfid-20130730_012015_954781_1A25CB03)
-References: <1375126147-28642-1-git-send-email-bzhao@marvell.com>
- <39BF90E7-8341-412E-A372-6039B703980D@holtmann.org>
- <477F20668A386D41ADCC57781B1F70430EA3215F2E@SC-VEXCH1.marvell.com>
- <791D5341-CA33-425C-BFB8-CB65F5451E39@holtmann.org>
-In-Reply-To: <791D5341-CA33-425C-BFB8-CB65F5451E39@holtmann.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:48626 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393Ab3GDBH7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 21:07:59 -0400
+Received: by mail-pd0-f170.google.com with SMTP id x11so593561pdj.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:59 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 42/53] wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
+Date: Wed,  3 Jul 2013 18:04:38 -0700
+Message-Id: <1372899889-19183-43-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032042_813021_4B6569A2)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-> it is also way harder to use and things need to be manually configured. Don't know know when the
-> device needs calibration information or not. And you can just request_firmware() that file. If it is
-> there, then load it, if not then skip the step.
+Pursuant to:
 
-Thanks for your suggestion. This approach should work for me.
+http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf,
 
-> 
-> > The firmware_request() requires a relative file path under /lib/firmware/.
-> > What is the standard location you are referring to?
-> 
-> You have to create proper filenames for your hardware. Like mrvl/cal_data_v1.conf or similar.
+provide a 5GHz rule for Indonesian regulatory domain. QCA has
+also verified VHT80 can be enabled. Patch originally posted by
+Paul Stewart <pstew@chromium.org>, I just modified to enable 80 MHz
+bandwidth.
 
-Sure.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> As I said above, the device should know if it needs calibration or not. And just installing a file on
-> disk is simpler than having to modify the module parameters somewhere.
-
-This makes sense. I'll take your approach and re-spin the patch.
-
-Thanks,
-Bing
+diff --git a/db.txt b/db.txt
+index 0ebb934..a101b1e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -380,7 +380,9 @@ country HU: DFS-ETSI
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+ country ID:
++	# ref: http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf
+ 	(2402 - 2482 @ 40), (N/A, 20)
++	(5735 - 5815 @ 20), (N/A, 20)
+ 
+ country IE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
 
