@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lmv.inov.pt ([146.193.64.2]:37828 "EHLO lmv.inov.pt"
+Received: from comal.ext.ti.com ([198.47.26.152]:39611 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753739Ab3GINWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 09:22:30 -0400
-Message-ID: <51DC0E7C.9080306@inov.pt> (sfid-20130709_152234_090271_D11354B0)
-Date: Tue, 09 Jul 2013 14:22:04 +0100
-From: =?ISO-8859-1?Q?Jos=E9_Miguel_Gon=E7alves?= <jose.goncalves@inov.pt>
+	id S1752156Ab3GDOWV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jul 2013 10:22:21 -0400
+Message-ID: <1372947703.21065.126.camel@cumari.coelho.fi> (sfid-20130704_162238_021248_542E7FB7)
+Subject: Re: [PATCH v3 2/8] wlcore: set irq_flags in the board files instead
+ of hiding behind a quirk
+From: Luciano Coelho <coelho@ti.com>
+To: Javier Martinez Canillas <martinez.javier@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
+	<balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
+Date: Thu, 4 Jul 2013 17:21:43 +0300
+In-Reply-To: <CAAwP0s3xkqUGnGvojfpyQq97qUmKCqY3BD4RyK1_uuX=pNy91g@mail.gmail.com>
+References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+	 <1372860209-3504-3-git-send-email-coelho@ti.com>
+	 <1372860925.21065.115.camel@cumari.coelho.fi>
+	 <CAAwP0s3xkqUGnGvojfpyQq97qUmKCqY3BD4RyK1_uuX=pNy91g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: Arik Nemtsov <arik@wizery.com>
-CC: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
-References: <51DB0ACC.7050800@inov.pt> <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com> <51DB4195.8090103@inov.pt> <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com> <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt> <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt> <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>
-In-Reply-To: <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09-07-2013 13:42, Arik Nemtsov wrote:
-> On Tue, Jul 9, 2013 at 2:27 PM, José Miguel Gonçalves
-> <jose.goncalves@inov.pt> wrote:
->
->> Any more ideas on how to debug this? Is there any specific debug_level mask
->> that can apply to the driver to help it?
-> You can try the mask 0x63c20 (it's pretty verbose, so I would put it
-> in pastebin).
->
-> Perhaps this is a genuine problem with the antenna of the card?
+On Wed, 2013-07-03 at 17:12 +0200, Javier Martinez Canillas wrote:
+> On Wed, Jul 3, 2013 at 4:15 PM, Luciano Coelho <coelho@ti.com> wrote:
+> > On Wed, 2013-07-03 at 17:03 +0300, Luciano Coelho wrote:
+> >> The platform_quirk element in the platform data was used to change the
+> >> way the IRQ is triggered.  When set, the EDGE_IRQ quirk would change
+> >> the irqflags used and treat edge trigger differently from the rest.
+> >>
+> >> Instead of hiding this irq flag setting behind the quirk, have the
+> >> board files set the flags during initialization.  This will be more
+> >> meaningful than driver-specific quirks when we switch to DT.
+> >>
+> >> Additionally, fix missing gpio_request() calls in the boarding files
+> >> (so that setting the flags actually works).
+> >>
+> >> Cc: Tony Lindgren <tony@atomide.com>
+> >> Cc: Sekhar Nori <nsekhar@ti.com>
+> >> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> >> ---
+> >
+> > [...]
+> >
+> >> @@ -5928,16 +5927,21 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+> >>       wlcore_adjust_conf(wl);
+> >>
+> >>       wl->irq = platform_get_irq(pdev, 0);
+> >> -     wl->platform_quirks = pdata->platform_quirks;
+> >>       wl->if_ops = pdev_data->if_ops;
+> >>
+> >> -     if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
+> >> -             irqflags = IRQF_TRIGGER_RISING;
+> >> -     else
+> >> -             irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+> >> +     irq_data = irq_get_irq_data(wl->irq);
+> >> +     if (!irq_data) {
+> >> +             wl1271_error("couldn't get irq data for irq %d\n", wl->irq);
+> >> +             ret = -EINVAL;
+> >> +             goto out_free_nvs;
+> >> +     }
+> >> +
+> >> +     wl->irq_flags = irqd_get_trigger_type(irq_data);
+> >
+> > BTW, there seems to be a patch on its way to make reading the flags
+> > easier (ie. no need to get the irq_data first):
+> >
+> > http://mid.gmane.org/1367945288-5625-1-git-send-email-javier@dowhile0.org
+> >
+> > I'm not sure if this is going to be taken in, but if it does, it would
+> > be nice to change the code here to use the new irq_get_trigger_type()
+> > function.
 
-Nope. The AP is 1 meter away form my board (even without antenna in the 
-card it should associate).
+> That patch has been already merged in Linus tree as commit 1f6236bf
+> ("genirq: Add irq_get_trigger_type() to get IRQ flags").
+> 
+> So yes, it would be better if you can use irq_get_trigger_type()
+> instead calling irq_get_irq_data() + irqd_get_trigger_type().
 
-> Can
-> you verify the RSSI of the AP is ok using iw?
+That's great, thanks! I'll make this change as soon as I get your patch
+into my tree (ie. after the merge window closes).
 
-The iw output:
+--
+Luca.
 
-http://pastebin.com/XmEzqjHs
-
-The dmesg output with debug mask set to 0x63c20:
-
-http://pastebin.com/zGE0Gfp8
-
-Note that with debug activated I did not see the driver's "Beacon loss 
-detected" messages.
-
-José Gonçalves
