@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43613 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755464Ab3G2VPx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 17:15:53 -0400
-Message-ID: <51F6DB65.4000302@hauke-m.de> (sfid-20130729_231558_754187_A15552F0)
-Date: Mon, 29 Jul 2013 23:15:17 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	m@bues.ch
-Subject: Re: [PATCH V2] fwcutter: Add firmware 6.30.163.46
-References: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net> <CACna6rzu4U+v1v1vj-+XyJHpReXMB3nscKP_C5jjbAAbKLQcKA@mail.gmail.com> <CACna6rxvnU_cwphP+Vvn_-CLuEcqMufEo4Zk7-Xqd63OA4Zmqg@mail.gmail.com>
-In-Reply-To: <CACna6rxvnU_cwphP+Vvn_-CLuEcqMufEo4Zk7-Xqd63OA4Zmqg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:57930 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753935Ab3GDBGx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jul 2013 21:06:53 -0400
+Received: by mail-pb0-f42.google.com with SMTP id un1so666122pbc.29
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:52 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 27/53] wireless-regdb: GR, Greece- enable VHT80
+Date: Wed,  3 Jul 2013 18:04:23 -0700
+Message-Id: <1372899889-19183-28-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032040_803557_6AAE63EB)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/29/2013 10:07 PM, Rafał Miłecki wrote:
-> 2013/7/29 Rafał Miłecki <zajec5@gmail.com>:
->> 2013/7/29 Larry Finger <Larry.Finger@lwfinger.net>:
->>> This firmware version can be extracted from the GPL tarball for the ASUS
->>> GPL code for the RT-AC66U 802.11ac Dual-Band Wireless-AC1750 Gigabit Router.
->>>
->>> I believe this to be the first instance of 802.11ac firmware for Broadcom
->>> hardware. The firmware is version 784.2.
->>>
->>> Note: The http://www.lwfinger.com/broadcom-wl-6.30.163.46.tar.bz2 is the URL
->>> of the extracted apsta binary. The full GPL package is at
->>> http://dlcdnet.asus.com/pub/ASUS/wireless/RT-AC66U/GPL_RT_AC66U_3004372.zip.
->>
->> There is some (probably outdated) list of Broadcom 802.11ac routers:
->> ASUS RT-AC66U
->> Linksys EA6500
->> Netgear R6300
->>
->> Did you compare wl.ko drivers from the 2 other firmwares? Is this the
->> newest one?
->>
->> Did you start AC-PHY RE process?
-> 
-> In case you wonder, I have a MIPS router with BCM4331 + BCM4360,
-> unfrotunately there isn't mmiotrace available for MIPS, so I can't
-> start RE that way :(
-> 
-> I may think about buying PCE-AC66 at some point.
-> 
-Hi Rafał,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-I have a Netgear R6250 (BCM4708 ARM Contex-A9) router with BCM4331 +
-BCM4360 and I am currently adding support for it to OpenWrt and mainline
-Linux kernel, could mmiotrace work on this CPU?
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-Hauke
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 3790d4e..7077b53 100644
+--- a/db.txt
++++ b/db.txt
+@@ -318,9 +318,9 @@ country GD:
+ 
+ country GR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
+
