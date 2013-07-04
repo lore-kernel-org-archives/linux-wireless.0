@@ -1,73 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:57740 "EHLO arroyo.ext.ti.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2912 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756758Ab3G3SzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 14:55:10 -0400
-Message-ID: <1375210496.20048.80.camel@cumari.coelho.fi> (sfid-20130730_205531_965549_2FD013F9)
-Subject: Re: [PATCH v2] Documentation: dt: bindings: TI WiLink modules
-From: Luciano Coelho <coelho@ti.com>
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-CC: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <linux-arm@vger.kernel.org>,
-	<tony@atomide.com>, <nm@ti.com>
-Date: Tue, 30 Jul 2013 21:54:56 +0300
-In-Reply-To: <1551085.3MDKgN8U89@avalon>
-References: <1375109728-5931-1-git-send-email-coelho@ti.com>
-	 <1551085.3MDKgN8U89@avalon>
-Content-Type: text/plain; charset="UTF-8"
+	id S1752912Ab3GDSXh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jul 2013 14:23:37 -0400
+Message-ID: <51D5BD9D.5020604@broadcom.com> (sfid-20130704_202340_514148_F96CDFB0)
+Date: Thu, 4 Jul 2013 20:23:25 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+cc: linville@tuxdriver.com, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 42/53] wireless-regdb: ID, Indonesia - enable 5 GHz
+ and VHT80
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+ <1372899889-19183-43-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1372899889-19183-43-git-send-email-mcgrof@do-not-panic.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(using the new devicetree mailing list address)
+On 07/04/2013 03:04 AM, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+>
+> Pursuant to:
+>
+> http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf,
+>
+> provide a 5GHz rule for Indonesian regulatory domain. QCA has
+> also verified VHT80 can be enabled. Patch originally posted by
+> Paul Stewart <pstew@chromium.org>, I just modified to enable 80 MHz
+> bandwidth.
 
-On Tue, 2013-07-30 at 20:24 +0200, Laurent Pinchart wrote:
-> Hi Luciano,
-> 
-> Thank you for the patch.
-> 
-> On Monday 29 July 2013 17:55:28 Luciano Coelho wrote:
-> > Add device tree bindings documentation for the TI WiLink modules.
-> > Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
-> > modules is supported.
-> > 
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
-> > 
-> > Changes in v2:
-> > 
-> > Use generic clock definitions to get the clock data instead of passing
-> > the frequencies directly.  Also added definition for "internal"
-> > ti,wilink-clock.
-> > 
-> > Please review.
-> 
-> The proposal looks good to me, I just have one small comment.
+Hi Luis,
 
-Cool! Thanks for the review.
+Is it just me or did you make a typo. Should '@ 20' be '@ 80' ?
 
-[...]
-> > +Example:
-> > +--------
-> > +
-> > +Example definition that can be used in OMAP4 Panda:
-> > +
-> > +wlan {
-> > +	compatible = "ti,wilink6";
-> > +	interrupt-parent = <&gpio2>;
-> > +	interrupts = <21 0x4>;	/* gpio line 53, high level triggered */
-> 
-> Could you please use the IRQ_TYPE_LEVEL_HIGH macro (defined in <dt-
-> bindings/interrupt-controller/irq.h>) instead of the hardcode 0x4 constant ?
+Gr. AvS
 
-Ah, right, I saw this new header file recently but forgot to update my
-example.  I'll update the OMAP4 Panda and OMAP4 SDP dts files I just
-sent out as well.
+> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+> ---
+>   db.txt |    2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/db.txt b/db.txt
+> index 0ebb934..a101b1e 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -380,7 +380,9 @@ country HU: DFS-ETSI
+>   	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+>
+>   country ID:
+> +	# ref: http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf
+>   	(2402 - 2482 @ 40), (N/A, 20)
+> +	(5735 - 5815 @ 20), (N/A, 20)
+>
+>   country IE: DFS-ETSI
+>   	(2402 - 2482 @ 40), (N/A, 20)
+>
 
---
-Cheers,
-Luca.
 
