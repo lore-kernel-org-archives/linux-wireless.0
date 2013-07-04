@@ -1,37 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:63017 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756125Ab3GYQrs (ORCPT
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:50812 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241Ab3GDBGo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jul 2013 12:47:48 -0400
-Received: by mail-ea0-f170.google.com with SMTP id h10so1087369eaj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jul 2013 09:47:47 -0700 (PDT)
-Received: from xp ([212.76.117.205])
-        by mx.google.com with ESMTPSA id p49sm74893816eeu.2.2013.07.25.09.47.45
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Thu, 25 Jul 2013 09:47:46 -0700 (PDT)
-Content-Type: text/plain; charset=iso-8859-8-i; format=flowed; delsp=yes
-To: linux-wireless@vger.kernel.org
-Date: Thu, 25 Jul 2013 19:47:44 +0300
-Subject: TP-LINK wireless USB adapter don't work. 
-MIME-Version: 1.0
-From: atar <atar.yosef@gmail.com>
-Message-ID: <op.w0sd9ujye4gg2u@xp> (sfid-20130725_184751_423704_7B2AC049)
+	Wed, 3 Jul 2013 21:06:44 -0400
+Received: by mail-pd0-f180.google.com with SMTP id 10so583052pdi.11
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:43 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 25/53] wireless-regdb: DK, Denmark - enable VHT80
+Date: Wed,  3 Jul 2013 18:04:21 -0700
+Message-Id: <1372899889-19183-26-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_722619_4CCCABCD)
+In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-aHi there!!
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-I've a TP-LINK USB wireless adapter with model number TL-WN722N. When I  
-plug it in to one of the USB slots in my PC, its LED diode isn't flashing  
-(although under WIN XP it is flashing) and I cannot use it. from the  
-messages of the 'dmesg' command it seems that the kernel detect it, but I  
-unable to use it because it doesn't appear on the wicd window of available  
-interfaces.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-My Linux distro is Debian squeeze with kernel 2.6.32-5-686.
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-What should I do in order to solve this problem?
+Quoting:
 
-Thanks in advance!!
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 94be114..26cc023 100644
+--- a/db.txt
++++ b/db.txt
+@@ -236,9 +236,9 @@ country DE: DFS-ETSI
+ 
+ country DK: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
+
