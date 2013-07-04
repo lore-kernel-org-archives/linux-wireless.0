@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:59865 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563Ab3GPGgo (ORCPT
+Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:34903 "EHLO
+	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932990Ab3GDITh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 02:36:44 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/6] ath9k: Add a HW flag for FCC
-Date: Tue, 16 Jul 2013 12:03:18 +0530
-Message-Id: <1373956402-22169-2-git-send-email-sujith@msujith.org> (sfid-20130716_083648_714900_11D26458)
-In-Reply-To: <1373956402-22169-1-git-send-email-sujith@msujith.org>
-References: <1373956402-22169-1-git-send-email-sujith@msujith.org>
+	Thu, 4 Jul 2013 04:19:37 -0400
+Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
+	by smtp-out03.msg.oleane.net with ESMTP id r648JZKU027927
+	for <linux-wireless@vger.kernel.org>; Thu, 4 Jul 2013 10:19:35 +0200
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>	 <070e01ce762c$24fa5ff0$6eef1fd0$@acksys.fr>	 <00e901ce7886$ae44d360$0ace7a20$@acksys.fr> <1372923998.8235.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1372923998.8235.1.camel@jlt4.sipsolutions.net>
+Subject: RE: [PATCH V2] vlan priority handling in WMM
+Date: Thu, 4 Jul 2013 09:59:04 +0200
+Message-ID: <00ea01ce788c$5a2d35f0$0e87a1d0$@acksys.fr> (sfid-20130704_101942_172001_4D31F54B)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Sorry but I have some problems with my mail server, and actually, I have a lot of mail not sent. So I was not sure you received my message.
 
-Fast Channel Change across 2G/5G bands is supported
-only by AR9462 and AR9565. Add a HW capability field
-to indicate this.
+I waiting the end of merge windows
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c | 7 +++++++
- drivers/net/wireless/ath/ath9k/hw.h | 1 +
- 2 files changed, 8 insertions(+)
+Cedric
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4ca0cb0..2d385c2 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2610,6 +2610,13 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	    ah->eep_ops->get_eeprom(ah, EEP_PAPRD))
- 			pCap->hw_caps |= ATH9K_HW_CAP_PAPRD;
- 
-+	/*
-+	 * Fast channel change across bands is available
-+	 * only for AR9462 and AR9565.
-+	 */
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
-+		pCap->hw_caps |= ATH9K_HW_CAP_FCC_BAND_SWITCH;
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index cd74b3a..fd009e5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -247,6 +247,7 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_DFS			= BIT(16),
- 	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
- 	ATH9K_HW_CAP_PAPRD			= BIT(18),
-+	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(19),
- };
- 
- /*
--- 
-1.8.3.2
+-----Message d'origine-----
+De : Johannes Berg [mailto:johannes@sipsolutions.net] 
+Envoyé : jeudi 4 juillet 2013 09:47
+À : voncken
+Cc : linux-wireless@vger.kernel.org
+Objet : Re: [PATCH V2] vlan priority handling in WMM
+
+On Thu, 2013-07-04 at 09:18 +0200, voncken wrote:
+> If the VLAN tci is set in skb->vlan_tci use the priority field to 
+> determine the WMM priority.
+
+Pinging me and resending your patch isn't going to make it more likely that I apply it. We're in the merge window, so naturally patch application is stalled.
+
+johannes
+
 
