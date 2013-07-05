@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:33640 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBHX (ORCPT
+Received: from mail1.bemta8.messagelabs.com ([216.82.243.206]:15274 "EHLO
+	mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757369Ab3GEP5J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:23 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rq2so667069pbb.5
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:22 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 34/53] wireless-regdb: SK, Slovakia - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:30 -0700
-Message-Id: <1372899889-19183-35-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_023943_78F3768F)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 5 Jul 2013 11:57:09 -0400
+Message-ID: <51D6EC90.40009@digi.com> (sfid-20130705_175713_469623_3DA2AEDC)
+Date: Fri, 5 Jul 2013 17:56:00 +0200
+From: Hector Palacios <hector.palacios@digi.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>
+Subject: Re: Passing a custom MAC to ath6kl
+References: <51D6E484.9060000@digi.com> <87vc4pf1ln.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87vc4pf1ln.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Dear Kalle,
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+On 07/05/2013 05:49 PM, Kalle Valo wrote:
+> Hector Palacios <hector.palacios@digi.com> writes:
+>
+>> Is there a way to pass a custom MAC address to the ath6kl upstream driver?
+>
+> Not right now. It has been a common feature request so I'm hoping
+> someone will implement it soon.
+>
+>> In the ISC version of the driver, a softmac.c file is provided that
+>> reads a MAC from a file if a module parameter softmac_enable=1 is
+>> passed. Is there any reason why this has not made it upstream?
+>
+> Providing mac address through a file is too ugly for upstream. We need
+> to implement it properly using the proper interface.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+I totally agree. What would be the proper interface for that?
 
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index f411ae3..ce61f97 100644
---- a/db.txt
-+++ b/db.txt
-@@ -705,9 +705,9 @@ country SI: DFS-ETSI
- 
- country SK: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
-
+Best regards,
+--
+Hector Palacios
