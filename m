@@ -1,31 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay3-d.mail.gandi.net ([217.70.183.195]:44455 "EHLO
-	relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932142Ab3GCIhe (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:43831 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757365Ab3GENPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 04:37:34 -0400
-Message-ID: <51D3E2C7.7020605@kaiwen.me> (sfid-20130703_103739_192803_A1A342FD)
-Date: Wed, 03 Jul 2013 10:37:27 +0200
-From: =?ISO-8859-1?Q?K=E9vin_THIERRY?= <kevin.thierry@kaiwen.me>
-MIME-Version: 1.0
+	Fri, 5 Jul 2013 09:15:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 To: linux-wireless@vger.kernel.org
-CC: ronan lanoe <ronan.lanoe@gmail.com>
-Subject: Use of 5GHz frequencies with Wi-Fi Direct
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: ath9k-devel@lists.ath9k.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 10/16] ath10k: change function to take struct ath10k as arg
+Date: Fri,  5 Jul 2013 16:15:11 +0300
+Message-Id: <1373030117-18077-11-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_151527_156231_26139080)
+In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Michal Kazior <michal.kazior@tieto.com>
 
-Is there a way to force the use of 5GHz frequencies with Wi-Fi Direct ? 
-(Or define the 5GHz frequencies as preferred ?)
+This aligns it to the argument list of other
+similar functions.
 
-I tried to add the freq_list option in wpa_supplicant config file 
-without success. (I think this option should be set in a network block 
-but there is no network block for Wi-Fi Direct...)
-"freq_list=5180 5200 5220 5240 5260 5280 5300 5320 5500 5520 5540 5560 
-5580 5600 5620 5640 5660 5680 5700 5745 5765 5785 5805 5825"
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks,
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 21ef88a..0076a63 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2057,9 +2057,9 @@ static int ath10k_pci_reset_target(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static void ath10k_pci_device_reset(struct ath10k_pci *ar_pci)
++static void ath10k_pci_device_reset(struct ath10k *ar)
+ {
+-	struct ath10k *ar = ar_pci->ar;
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	void __iomem *mem = ar_pci->mem;
+ 	int i;
+ 	u32 val;
+@@ -2254,7 +2254,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	 * is in an unexpected state. We try to catch that here in order to
+ 	 * reset the Target and retry the probe.
+ 	 */
+-	ath10k_pci_device_reset(ar_pci);
++	ath10k_pci_device_reset(ar);
+ 
+ 	ret = ath10k_pci_reset_target(ar);
+ 	if (ret)
+-- 
+1.7.9.5
 
-Kevin
