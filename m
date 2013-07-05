@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1799 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752212Ab3GESCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 14:02:20 -0400
-Message-ID: <51D70A22.20607@broadcom.com> (sfid-20130705_200223_761051_6521DC39)
-Date: Fri, 5 Jul 2013 20:02:10 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15298 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964883Ab3GENY6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jul 2013 09:24:58 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH v2] ath10k: fix 5ghz channel definitions
+References: <1372060350-31460-3-git-send-email-michal.kazior@tieto.com>
+	<1372229694-6769-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 5 Jul 2013 16:24:48 +0300
+In-Reply-To: <1372229694-6769-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 26 Jun 2013 08:54:54 +0200")
+Message-ID: <8738rtgmvz.fsf@kamboji.qca.qualcomm.com> (sfid-20130705_152505_578305_21B95A31)
 MIME-Version: 1.0
-To: "Hector Palacios" <hector.palacios@digi.com>
-cc: "Kalle Valo" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>
-Subject: Re: Passing a custom MAC to ath6kl
-References: <51D6E484.9060000@digi.com>
- <87vc4pf1ln.fsf@kamboji.qca.qualcomm.com> <51D6EC90.40009@digi.com>
-In-Reply-To: <51D6EC90.40009@digi.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/05/2013 05:56 PM, Hector Palacios wrote:
-> Dear Kalle,
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> Nonsense channel flags were being set.
 >
-> On 07/05/2013 05:49 PM, Kalle Valo wrote:
->> Hector Palacios <hector.palacios@digi.com> writes:
->>
->>> Is there a way to pass a custom MAC address to the ath6kl upstream
->>> driver?
->>
->> Not right now. It has been a common feature request so I'm hoping
->> someone will implement it soon.
->>
->>> In the ISC version of the driver, a softmac.c file is provided that
->>> reads a MAC from a file if a module parameter softmac_enable=1 is
->>> passed. Is there any reason why this has not made it upstream?
->>
->> Providing mac address through a file is too ugly for upstream. We need
->> to implement it properly using the proper interface.
+> Although it doesn't seem this was visible to the
+> user the patch makes sure that channel
+> availability won't be crippled in the future if
+> ath_common behaviour changes.
 >
-> I totally agree. What would be the proper interface for that?
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Add .ndo_set_mac_address() callback in main.c and go from there.
+John also applied this already.
 
-int (*ndo_set_mac_address)(struct net_device *dev, void *addr);
-
-Regards,
-Arend
-
-> Best regards,
-> --
-> Hector Palacios
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+-- 
+Kalle Valo
