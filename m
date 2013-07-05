@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:60937
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753544Ab3GTDbe (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32872 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757366Ab3GENZv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 23:31:34 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH] cw1200:  Fix OOPS in monitor mode
-Date: Fri, 19 Jul 2013 23:31:27 -0400
-Message-Id: <1374291087-27706-1-git-send-email-pizza@shaftnet.org> (sfid-20130720_053138_028089_663AC196)
+	Fri, 5 Jul 2013 09:25:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH v2] ath10k: leave MMIC generation to the HW
+References: <1372060350-31460-4-git-send-email-michal.kazior@tieto.com>
+	<1372229844-7987-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 5 Jul 2013 16:25:41 +0300
+In-Reply-To: <1372229844-7987-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 26 Jun 2013 08:57:24 +0200")
+Message-ID: <87y59lf8a2.fsf@kamboji.qca.qualcomm.com> (sfid-20130705_152555_745934_9CB77E42)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In monitor mode, priv->vif is NULL, but at one point in the receive path we
-blindly attempt to dereference it.  Add a test to prevent this.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-This patch really needs to go into 3.11-rc
+> Apparently HW doesn't require us to generate MMIC
+> for TKIP suite.
+>
+> Each frame was 8 bytes longer than it should be
+> and some APs would drop frames that exceed 1520
+> bytes of 802.11 payload. This could be observed
+> during throughput tests or fragmented IP traffic.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/cw1200/txrx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is also applied.
 
-diff --git a/drivers/net/wireless/cw1200/txrx.c b/drivers/net/wireless/cw1200/txrx.c
-index 5862c37..e824d4d 100644
---- a/drivers/net/wireless/cw1200/txrx.c
-+++ b/drivers/net/wireless/cw1200/txrx.c
-@@ -1165,7 +1165,7 @@ void cw1200_rx_cb(struct cw1200_common *priv,
- 		if (cw1200_handle_action_rx(priv, skb))
- 			return;
- 	} else if (ieee80211_is_beacon(frame->frame_control) &&
--		   !arg->status &&
-+		   !arg->status && priv->vif &&
- 		   !memcmp(ieee80211_get_SA(frame), priv->vif->bss_conf.bssid,
- 			   ETH_ALEN)) {
- 		const u8 *tim_ie;
 -- 
-1.8.3.1
-
+Kalle Valo
