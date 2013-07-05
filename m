@@ -1,30 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33228 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755496Ab3GUOOT (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:55639 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756717Ab3GENPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jul 2013 10:14:19 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20971.60401.394690.279877@gargle.gargle.HOWL> (sfid-20130721_161422_256874_DC4A0A76)
-Date: Sun, 21 Jul 2013 19:40:57 +0530
-To: Arik Nemtsov <arik@wizery.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [PATCH 2/2] regulatory: take RTNL when restoring settings on CRDA timeout
-In-Reply-To: <1374413809-26005-2-git-send-email-arik@wizery.com>
-References: <1374413809-26005-1-git-send-email-arik@wizery.com>
-	<1374413809-26005-2-git-send-email-arik@wizery.com>
+	Fri, 5 Jul 2013 09:15:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 02/16] ath10k: fix possible deadlock
+Date: Fri,  5 Jul 2013 16:15:03 +0300
+Message-Id: <1373030117-18077-3-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_152039_550165_7B65653C)
+In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arik Nemtsov wrote:
-> The RTNL has to be held since this potentially changes the regdomain.
-> Locking was forgotten here due to recent locking simplification changes.
+From: Michal Kazior <michal.kazior@tieto.com>
 
-This is already present in the mac80211 tree:
-https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211.git/commit/?id=f77b86d7d3acf9dfcb5ee834628d12207584b2cb
+It was possible to have a deadlock due to inverted
+locking of local->iflist_mtx and
+ath10k->conf_mutex.
 
-Sujith
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1285554..9943ee9 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2578,8 +2578,9 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 	ar_iter.ar = ar;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+-	ieee80211_iterate_active_interfaces(hw, IEEE80211_IFACE_ITER_RESUME_ALL,
+-					    ath10k_set_rts_iter, &ar_iter);
++	ieee80211_iterate_active_interfaces_atomic(
++		hw, IEEE80211_IFACE_ITER_RESUME_ALL,
++		ath10k_set_rts_iter, &ar_iter);
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+ 	return ar_iter.ret;
+@@ -2619,8 +2620,9 @@ static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
+ 	ar_iter.ar = ar;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+-	ieee80211_iterate_active_interfaces(hw, IEEE80211_IFACE_ITER_RESUME_ALL,
+-					    ath10k_set_frag_iter, &ar_iter);
++	ieee80211_iterate_active_interfaces_atomic(
++		hw, IEEE80211_IFACE_ITER_RESUME_ALL,
++		ath10k_set_frag_iter, &ar_iter);
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+ 	return ar_iter.ret;
+-- 
+1.7.9.5
+
