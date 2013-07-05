@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:63916 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753935Ab3GDBHB (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:47180 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757047Ab3GEJFl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:01 -0400
-Received: by mail-pd0-f170.google.com with SMTP id x11so592996pdj.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:01 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 29/53] wireless-regdb: IT, Italy - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:25 -0700
-Message-Id: <1372899889-19183-30-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_340116_5A2F1329)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 5 Jul 2013 05:05:41 -0400
+Received: by mail-ie0-f175.google.com with SMTP id a13so4679995iee.6
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jul 2013 02:05:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130703191417.GA2245@localhost.localdomain>
+References: <1372269318-30233-1-git-send-email-juhosg@openwrt.org>
+	<1372269318-30233-2-git-send-email-juhosg@openwrt.org>
+	<20130703191417.GA2245@localhost.localdomain>
+Date: Fri, 5 Jul 2013 11:05:40 +0200
+Message-ID: <CAGXE3d_gzUhgXvjDg9HacNwO_TKmixhmz1RB7vpfm28eBuK13A@mail.gmail.com> (sfid-20130705_110544_770597_34D55692)
+Subject: Re: [rt2x00-users] [PATCH 1/5] rt2x00: rt2800lib: introduce
+ rt2800_eeprom_word enum
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Gabor Juhos <juhosg@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Wed, Jul 3, 2013 at 9:14 PM, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+> On Wed, Jun 26, 2013 at 07:55:14PM +0200, Gabor Juhos wrote:
+>> The patch converts the EEPROM_* word address defines
+>> into new enum values. The new enum type will be used
+>> by new functions which will be introduced in subsequent
+>> changes.
+>>
+>> The patch contains no functional changes.
+>>
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+Nice! Just had a quick glance at the series. Looks good to me.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 88ba709..b8ddd9e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -415,9 +415,9 @@ country IR:
- 
- country IT: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
-
+Thanks,
+Helmut
