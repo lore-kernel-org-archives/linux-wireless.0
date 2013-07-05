@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:32787 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752467Ab3GDErD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jul 2013 00:47:03 -0400
-Message-ID: <51D4FE20.6000805@ti.com> (sfid-20130704_064719_534667_E0D4C866)
-Date: Thu, 4 Jul 2013 10:16:24 +0530
-From: Sekhar Nori <nsekhar@ti.com>
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:40595 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756153Ab3GEQoX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jul 2013 12:44:23 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: 'Daniel Drake' <dsd@laptop.org>
+CC: Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Fri, 5 Jul 2013 09:43:24 -0700
+Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951035636353@SC-VEXCH1.marvell.com> (sfid-20130705_184426_947361_53338228)
+In-Reply-To: <CAMLZHHQuHAZGW0M0qhQi5PoCW78jgF8rw2ZsmbApT2REBRXZtA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
-Subject: Re: [PATCH v3 2/8] wlcore: set irq_flags in the board files instead
- of hiding behind a quirk
-References: <1372860209-3504-1-git-send-email-coelho@ti.com> <1372860209-3504-3-git-send-email-coelho@ti.com>
-In-Reply-To: <1372860209-3504-3-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/3/2013 7:33 PM, Luciano Coelho wrote:
-> The platform_quirk element in the platform data was used to change the
-> way the IRQ is triggered.  When set, the EDGE_IRQ quirk would change
-> the irqflags used and treat edge trigger differently from the rest.
-> 
-> Instead of hiding this irq flag setting behind the quirk, have the
-> board files set the flags during initialization.  This will be more
-> meaningful than driver-specific quirks when we switch to DT.
-> 
-> Additionally, fix missing gpio_request() calls in the boarding files
-> (so that setting the flags actually works).
-> 
-> Cc: Tony Lindgren <tony@atomide.com>
-> Cc: Sekhar Nori <nsekhar@ti.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->  arch/arm/mach-davinci/board-da850-evm.c      |    8 +++++-
 
-For the board-da850-evm.c change,
+Hi Daniel,
 
-Acked-by: Sekhar Nori <nsekhar@ti.com>
+>I don't see any external reason why we are not allowed to communicate to
+>the hardware here. The other suspend paths do run some communication.
 
-Thanks,
-Sekhar
+The reason is mwifiex_sdio_remove() gets called even if user removes an externally connected wifi card. In that case the hardware is not present so there is no point in reading/writing hardware registers.
+
+If mwifiex_sdio_remove() is called when card is not powered off or unplugged, we do take care of hardware de-initialization using user_rmmod flag. Interrupt storm issue doesn't exist there.
+
+>However, disabling interrupts at this point does seem like a bad
+>solution to me, and something that would come back and bite us in the
+>future. mwifiex_sdio_suspend() is not directly related to the cause of
+>the problem.
+
+This approach looks correct to me. While returning failure in suspend handler, 'pm_flag & MMC_PM_KEEP_POWER' is false. Card is going to be powered off soon. There won't be any further communication with card, so disabling interrupts at this point of time is logical.
+When system is resumed, bus rescan etc. will happen and card will be redetected.
+
+Can you please try this change?
+
+Thanks and regards,
+Amitkumar Karwar
