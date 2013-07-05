@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:43381 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab3GQCWn (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54434 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932890Ab3GENQB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:22:43 -0400
-Received: by mail-pa0-f52.google.com with SMTP id kq14so317183pab.25
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:42 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 46/53] wireless-regdb: MA, Morocco - enable 5 GHz and VHT80
-Date: Tue, 16 Jul 2013 19:18:35 -0700
-Message-Id: <1374027522-18488-47-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042245_485473_FB70916C)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 5 Jul 2013 09:16:01 -0400
+Message-ID: <1373030156.8548.22.camel@jlt4.sipsolutions.net> (sfid-20130705_151613_888447_2251576C)
+Subject: Re: [PATCHv5 03/18] mac80211: fix timing for 5 MHz and 10 MHz
+ channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 05 Jul 2013 15:15:56 +0200
+In-Reply-To: <1372352340-20663-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1372352340-20663-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Thu, 2013-06-27 at 18:58 +0200, Simon Wunderlich wrote:
 
-This adds 5 GHz support for Morocco with VHT80 support.
+>  * change divisor to shift to avoid unnecesary integer divisions
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    2 ++
- 1 file changed, 2 insertions(+)
+That didn't really do much ;-)
 
-diff --git a/db.txt b/db.txt
-index c626a48..c76131b 100644
---- a/db.txt
-+++ b/db.txt
-@@ -523,6 +523,8 @@ country MC: DFS-ETSI
- 
- country MA:
- 	(2402 - 2482 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 80), (N/A, 23)
-+	(5735 - 5835 @ 80), (N/A, 23)
- 
- country MO:
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
+>  	d->perfect_tx_time = ieee80211_frame_duration(band, 1200,
+> -			rate->bitrate, erp, 1);
+> +			DIV_ROUND_UP(rate->bitrate, 1 << shift), erp, 1,
+
+That's still the integer division, unless the compiler can do something
+about it?
+
+> +			DIV_ROUND_UP(rate->bitrate, 1 << shift), erp, 1,
+
+ditto
+
+> +		mr->bitrate = DIV_ROUND_UP(sband->bitrates[i].bitrate,
+> +					   (1 << shift) * 5);
+
+That looks even weirder?
+
+> +		/* IEEE 802.11-2012 18.3.2.4: all values above are:
+> +		 *  * times 4 for 5 MHz
+> +		 *  * times 2 for 10 MHz
+> +		 */
+> +		dur *= 1 << shift;
+
+Isn't that just "dur <<= shift"?
+
+I think "DIV_ROUND_UP(x, 1 << shift)" can probably be written more
+efficiently? Unless the compiler will do something by itself?
+
+Something like
+
+DIV_ROUND_UP(x, 1<<shift) == (x + (1<<shift) -1) >> shift
+
+I think?
+
+OK, it looks like if "x" is *unsigned* then the compiler will do this,
+but with *signed* values it can't actually know because for negative
+values it's obviously not actually equivalent.
+
+johannes
 
