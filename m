@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:41262 "EHLO
-	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753966Ab3GWCTE (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:52922 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756658Ab3GENPU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:19:04 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>, Stone Piao <piaoyun@marvell.com>
-Subject: [PATCH 07/21] mwifiex: skip registering mgmt frame that has already registered
-Date: Mon, 22 Jul 2013 19:17:44 -0700
-Message-ID: <1374545878-15683-8-git-send-email-bzhao@marvell.com> (sfid-20130723_041910_848952_4385A695)
-In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 5 Jul 2013 09:15:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 04/16] ath10k: do not setup rts/frag thresholds for suspended interfaces
+Date: Fri,  5 Jul 2013 16:15:05 +0300
+Message-Id: <1373030117-18077-5-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_152039_897140_82CA1574)
+In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+From: Michal Kazior <michal.kazior@tieto.com>
 
-Before sending command to firmware, we need to check the frame type.
-We skip registering the mgmt frame that has already been registered.
+mac80211 calls for rts/frag threshold hooks before
+any interface is brought back up again when
+resuming.
 
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+We would set vdev parameters before given vdev is
+created lading to a FW crash.
+
+rts/frag thresholds will be re-set accordingly in
+add_interface() hook anyway.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index d824fee..dbdd3b2 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -240,16 +240,20 @@ mwifiex_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
- 				     u16 frame_type, bool reg)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
-+	u32 mask;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ff0bb38..cdee800 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2597,7 +2597,7 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
  
- 	if (reg)
--		priv->mgmt_frame_mask |= BIT(frame_type >> 4);
-+		mask = priv->mgmt_frame_mask | BIT(frame_type >> 4);
- 	else
--		priv->mgmt_frame_mask &= ~BIT(frame_type >> 4);
-+		mask = priv->mgmt_frame_mask & ~BIT(frame_type >> 4);
+ 	mutex_lock(&ar->conf_mutex);
+ 	ieee80211_iterate_active_interfaces_atomic(
+-		hw, IEEE80211_IFACE_ITER_RESUME_ALL,
++		hw, IEEE80211_IFACE_ITER_NORMAL,
+ 		ath10k_set_rts_iter, &ar_iter);
+ 	mutex_unlock(&ar->conf_mutex);
  
--	mwifiex_send_cmd_async(priv, HostCmd_CMD_MGMT_FRAME_REG,
--			       HostCmd_ACT_GEN_SET, 0, &priv->mgmt_frame_mask);
--
--	wiphy_dbg(wiphy, "info: mgmt frame registered\n");
-+	if (mask != priv->mgmt_frame_mask) {
-+		priv->mgmt_frame_mask = mask;
-+		mwifiex_send_cmd_async(priv, HostCmd_CMD_MGMT_FRAME_REG,
-+				       HostCmd_ACT_GEN_SET, 0,
-+				       &priv->mgmt_frame_mask);
-+		wiphy_dbg(wiphy, "info: mgmt frame registered\n");
-+	}
- }
+@@ -2639,7 +2639,7 @@ static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
  
- /*
+ 	mutex_lock(&ar->conf_mutex);
+ 	ieee80211_iterate_active_interfaces_atomic(
+-		hw, IEEE80211_IFACE_ITER_RESUME_ALL,
++		hw, IEEE80211_IFACE_ITER_NORMAL,
+ 		ath10k_set_frag_iter, &ar_iter);
+ 	mutex_unlock(&ar->conf_mutex);
+ 
 -- 
-1.8.2.3
+1.7.9.5
 
