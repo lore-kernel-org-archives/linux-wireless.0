@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2272 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197Ab3GKPD5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32494 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757216Ab3GENYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 11:03:57 -0400
-Cc: Kirshenbaum Erez <erezk@wilocity.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/5] wil6210: fix wrong index in wil_vring_free
-Date: Thu, 11 Jul 2013 18:03:38 +0300
-Message-ID: <1373555021-11763-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_170410_316834_ABBA5822)
-In-Reply-To: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Fri, 5 Jul 2013 09:24:08 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH v2] ath10k: fix MSI-X setup failpath
+References: <1372150661-6862-1-git-send-email-michal.kazior@tieto.com>
+	<1372229450-4575-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 5 Jul 2013 16:23:59 +0300
+In-Reply-To: <1372229450-4575-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 26 Jun 2013 08:50:50 +0200")
+Message-ID: <877gh5gmxc.fsf@kamboji.qca.qualcomm.com> (sfid-20130705_152412_737139_CE57DE74)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When destroying Rx vring, branch for Rx used wrong Tx descriptor:
-while SW context was taken for "head", HW descriptor was, by mistake,
-taken from "tail"
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Irqs were not freed up correctly upon msi-x setup
+> failure.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index d240b24..8fde73a 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -133,7 +133,7 @@ static void wil_vring_free(struct wil6210_priv *wil, struct vring *vring,
- 		} else { /* rx */
- 			struct vring_rx_desc dd, *d = &dd;
- 			volatile struct vring_rx_desc *_d =
--					&vring->va[vring->swtail].rx;
-+					&vring->va[vring->swhead].rx;
- 
- 			*d = *_d;
- 			pa = wil_desc_addr(&d->dma.addr);
+John has already applied this.
+
 -- 
-1.8.1.2
-
+Kalle Valo
