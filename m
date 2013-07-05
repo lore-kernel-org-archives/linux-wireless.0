@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:50808 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758267Ab3GMUVS (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:52917 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756495Ab3GENPU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jul 2013 16:21:18 -0400
-Received: by mail-wg0-f49.google.com with SMTP id a12so8958563wgh.4
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Jul 2013 13:21:17 -0700 (PDT)
-Message-ID: <51E1B6BB.7060903@gmail.com> (sfid-20130713_222245_615817_9BF01B4A)
-Date: Sat, 13 Jul 2013 22:21:15 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Using CC BY-SA for wireless wiki content
-Content-Type: text/plain; charset=UTF-8
+	Fri, 5 Jul 2013 09:15:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 01/16] ath10k: fix teardown ordering
+Date: Fri,  5 Jul 2013 16:15:02 +0300
+Message-Id: <1373030117-18077-2-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_151525_860640_F109B4B0)
+In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
+From: Michal Kazior <michal.kazior@tieto.com>
 
-> Anyone have any issues if we license the wiki content on
-> wireless.kernel.org under CC BY-SA license? That would make it
-> compatible with  Wikipedia. Please shout out if you disagree with this
-> move as at this point we have random collaborations but at least as
-> per initial review it seems this would be a good idea. Want to see if
-> anyone disagrees before we do the move.
+This should fix memory corruption if HIF is tried
+to be restarted.
 
-No problem from my side.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 8e4e832..1bd381f 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1263,7 +1263,6 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 	ath10k_pci_process_ce(ar);
+ 	ath10k_pci_cleanup_ce(ar);
+ 	ath10k_pci_buffer_cleanup(ar);
+-	ath10k_pci_ce_deinit(ar);
+ }
+ 
+ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
+@@ -2332,6 +2331,7 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 	tasklet_kill(&ar_pci->msi_fw_err);
+ 
+ 	ath10k_core_unregister(ar);
++	ath10k_pci_ce_deinit(ar);
+ 	ath10k_pci_stop_intr(ar);
+ 
+ 	pci_set_drvdata(pdev, NULL);
+-- 
+1.7.9.5
 
-waiting for the rest of http://wireless.kernel.org/TrustedEditorsGroup
-
-JohannesBerg
-Zajec
-AlbertPool
-blubber
-SeanSantos
-Nick Lee
-HaukeMehrtens
-gabs
-aspriel
-ChandrakantSharpa
-WimLewis
-PaterStein
-LarryFinger
-KalleValo
-Yuryu
-John Linville
-David Wang
-Christian Lamparter
-LucianoCoelho
-ZefirKurtisi
-nbd
-kevin
-BuZZ-dEE
