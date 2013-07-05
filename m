@@ -1,158 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5780 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754589Ab3GKPHe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 11:07:34 -0400
-Cc: Kirshenbaum Erez <erezk@wilocity.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/5] wil6210: Align WMI header with latest FW
-Date: Thu, 11 Jul 2013 18:03:37 +0300
-Message-ID: <1373555021-11763-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_170738_105958_CEDA7172)
-In-Reply-To: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:33621 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754701Ab3GEO3Y convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jul 2013 10:29:24 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: 'Daniel Drake' <dsd@laptop.org>, Bing Zhao <bzhao@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Fri, 5 Jul 2013 07:26:51 -0700
+Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951035636350@SC-VEXCH1.marvell.com> (sfid-20130705_162930_705448_6C180E1B)
+In-Reply-To: <CAMLZHHSSfPnWK957Yd+vrLrsPHtUDW3b4ZxSjMe2SdpaQPk5hQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FW guys changed header structure; align driver code
+Hi Daniel,
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/trace.h   | 22 +++++++++++++---------
- drivers/net/wireless/ath/wil6210/wil6210.h | 17 ++++++++++++++---
- drivers/net/wireless/ath/wil6210/wmi.c     | 14 +++++++++-----
- 3 files changed, 36 insertions(+), 17 deletions(-)
+>> Followings are the actions taken for driver unload.
+>>
+>>    a) If device is connected, sync deauth command is sent.
+>>    b) Auto deep sleep is cancelled by sending sync command
+>>    c) Sync shutdown command is queued and HW_STATUS is changed to reset.
+>>    d) Now no other command gets queued based on HW_STATUS.
+>>    e) Wait for shutdown command response and handle it.
+>>    f) Set surprise_removed flag which blocks SDIO interrupts
+>>
+>> As per our design, we don't send any command to firmware after SHUTDOWN command. Also, firmware doesn't send any interrupt after SHUTDOWN command response.
 
-diff --git a/drivers/net/wireless/ath/wil6210/trace.h b/drivers/net/wireless/ath/wil6210/trace.h
-index eff1239..e59239d 100644
---- a/drivers/net/wireless/ath/wil6210/trace.h
-+++ b/drivers/net/wireless/ath/wil6210/trace.h
-@@ -37,36 +37,40 @@ static inline void trace_ ## name(proto) {}
- #endif /* !CONFIG_WIL6210_TRACING || defined(__CHECKER__) */
- 
- DECLARE_EVENT_CLASS(wil6210_wmi,
--	TP_PROTO(u16 id, void *buf, u16 buf_len),
-+	TP_PROTO(struct wil6210_mbox_hdr_wmi *wmi, void *buf, u16 buf_len),
- 
--	TP_ARGS(id, buf, buf_len),
-+	TP_ARGS(wmi, buf, buf_len),
- 
- 	TP_STRUCT__entry(
-+		__field(u8, mid)
- 		__field(u16, id)
-+		__field(u32, timestamp)
- 		__field(u16, buf_len)
- 		__dynamic_array(u8, buf, buf_len)
- 	),
- 
- 	TP_fast_assign(
--		__entry->id = id;
-+		__entry->mid = wmi->mid;
-+		__entry->id = le16_to_cpu(wmi->id);
-+		__entry->timestamp = le32_to_cpu(wmi->timestamp);
- 		__entry->buf_len = buf_len;
- 		memcpy(__get_dynamic_array(buf), buf, buf_len);
- 	),
- 
- 	TP_printk(
--		"id 0x%04x len %d",
--		__entry->id, __entry->buf_len
-+		"MID %d id 0x%04x len %d timestamp %d",
-+		__entry->mid, __entry->id, __entry->buf_len, __entry->timestamp
- 	)
- );
- 
- DEFINE_EVENT(wil6210_wmi, wil6210_wmi_cmd,
--	TP_PROTO(u16 id, void *buf, u16 buf_len),
--	TP_ARGS(id, buf, buf_len)
-+	TP_PROTO(struct wil6210_mbox_hdr_wmi *wmi, void *buf, u16 buf_len),
-+	TP_ARGS(wmi, buf, buf_len)
- );
- 
- DEFINE_EVENT(wil6210_wmi, wil6210_wmi_event,
--	TP_PROTO(u16 id, void *buf, u16 buf_len),
--	TP_ARGS(id, buf, buf_len)
-+	TP_PROTO(struct wil6210_mbox_hdr_wmi *wmi, void *buf, u16 buf_len),
-+	TP_ARGS(wmi, buf, buf_len)
- );
- 
- #define WIL6210_MSG_MAX (200)
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 44fdab5..129c480 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -156,11 +156,22 @@ struct wil6210_mbox_hdr {
- /* max. value for wil6210_mbox_hdr.len */
- #define MAX_MBOXITEM_SIZE   (240)
- 
-+/**
-+ * struct wil6210_mbox_hdr_wmi - WMI header
-+ *
-+ * @mid: MAC ID
-+ *	00 - default, created by FW
-+ *	01..0f - WiFi ports, driver to create
-+ *	10..fe - debug
-+ *	ff - broadcast
-+ * @id: command/event ID
-+ * @timestamp: FW fills for events, free-running msec timer
-+ */
- struct wil6210_mbox_hdr_wmi {
--	u8 reserved0[2];
-+	u8 mid;
-+	u8 reserved;
- 	__le16 id;
--	__le16 info1; /* bits [0..3] - device_id, rest - unused */
--	u8 reserved1[2];
-+	__le32 timestamp;
- } __packed;
- 
- struct pending_wmi_event {
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index dc8059a..a62511a 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -172,8 +172,8 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
- 			.len = cpu_to_le16(sizeof(cmd.wmi) + len),
- 		},
- 		.wmi = {
-+			.mid = 0,
- 			.id = cpu_to_le16(cmdid),
--			.info1 = 0,
- 		},
- 	};
- 	struct wil6210_mbox_ring *r = &wil->mbox_ctl.tx;
-@@ -248,7 +248,7 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
- 	iowrite32(r->head = next_head, wil->csr + HOST_MBOX +
- 		  offsetof(struct wil6210_mbox_ctl, tx.head));
- 
--	trace_wil6210_wmi_cmd(cmdid, buf, len);
-+	trace_wil6210_wmi_cmd(&cmd.wmi, buf, len);
- 
- 	/* interrupt to FW */
- 	iowrite32(SW_INT_MBOX, wil->csr + HOST_SW_INT);
-@@ -640,9 +640,13 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
- 			    hdr.flags);
- 		if ((hdr.type == WIL_MBOX_HDR_TYPE_WMI) &&
- 		    (len >= sizeof(struct wil6210_mbox_hdr_wmi))) {
--			u16 id = le16_to_cpu(evt->event.wmi.id);
--			wil_dbg_wmi(wil, "WMI event 0x%04x\n", id);
--			trace_wil6210_wmi_event(id, &evt->event.wmi, len);
-+			struct wil6210_mbox_hdr_wmi *wmi = &evt->event.wmi;
-+			u16 id = le16_to_cpu(wmi->id);
-+			u32 tstamp = le32_to_cpu(wmi->timestamp);
-+			wil_dbg_wmi(wil, "WMI event 0x%04x MID %d @%d msec\n",
-+				    id, wmi->mid, tstamp);
-+			trace_wil6210_wmi_event(wmi, &wmi[1],
-+						len - sizeof(*wmi));
- 		}
- 		wil_hex_dump_wmi("evt ", DUMP_PREFIX_OFFSET, 16, 1,
- 				 &evt->event.hdr, sizeof(hdr) + len, true);
--- 
-1.8.1.2
+>I cannot see how the driver behaviour matches the above description
+>for when the card is removed as the system is suspended. For example I
+>cannot see where the SHUTDOWN command gets sent in such cases.
 
+This behavior (i.e. mwifiex_sdio_remove() handler) is for driver unload(rmmod mwifiex_sdio) or when the system is powering down.
+
+Our mwifiex_sdio_suspend() handler gets called when system is supended. It just informs firmware/hardware that host is going into sleep state by sending a command. The sleep is cancelled in mwifiex_sdio_resume() handler when sytem resumes.
+We support wake-on-lan feature. User can configure wol conditions(using 'ethtool wol' or 'iw wowlan') before system suspend. Firmware wakes up the host if Rx packet matching configured condition is received.
+
+I think, we should probably look into mwifiex_sdio_suspend() routine instead of mwifiex_sdio_remove() to debug interrupt storm issue. Please correct me if I am missing something.
+
+We have wait_event_interruptible() call in suspend handler to make sure that we don't return from the handler until we get host sleep activated event from firmware. Firmware is not supposed to send any event after this.
+We can't disable interrupts at this point, because we expect wakeup event from firmware upon packet arrival
+
+Can you please share system suspend logs with dynamic debug enabled for mwifiex?
+
+Thanks,
+Amitkumar Karwar
