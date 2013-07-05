@@ -1,74 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:44775 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753194Ab3GBPez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 11:34:55 -0400
-Date: Tue, 2 Jul 2013 18:34:23 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
-	<balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 7/9] wlcore: sdio: add wilink clock providers
-Message-ID: <20130702153423.GH7013@arwen.pp.htv.fi> (sfid-20130702_173523_470994_5490BC25)
-Reply-To: <balbi@ti.com>
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
- <1372776948-24840-8-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="MGu/vTNewDGZ7tmp"
-In-Reply-To: <1372776948-24840-8-git-send-email-coelho@ti.com>
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:41596 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754701Ab3GENPU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jul 2013 09:15:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [PATCH 00/16] ath10k: pending patches
+Date: Fri,  5 Jul 2013 16:15:01 +0300
+Message-Id: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_151525_293493_DD9C5BE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---MGu/vTNewDGZ7tmp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Tue, Jul 02, 2013 at 05:55:46PM +0300, Luciano Coelho wrote:
-> Add refclock and tcxoclock as clock providers in WiLink.  These clocks
-> are not accesible outside the WiLink module, but they are registered
-> in the clock framework anyway.  Only the WiLink chip consumes these
-> clocks.
->=20
-> In theory, the WiLink chip could be connected to external clocks
-> instead of using these internal clocks, so make the clock consumer
-> code generic enough.  If external clocks are used, then the internal
-> clock device tree nodes are not necessary, but the external ones must
-> be specified.
->=20
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
+here are pending patches which were commited to ath10k.git while
+ath10k was under review. They were only sent to ath9k-devel, I'm
+resending them now before I reapply them to my new ath.git tree.
 
-Acked-by: Felipe Balbi <balbi@ti.com>
+Michal Kazior (16):
+  ath10k: fix teardown ordering
+  ath10k: fix possible deadlock
+  ath10k: setup rts/frag thresholds upon vdev creation
+  ath10k: do not setup rts/frag thresholds for suspended interfaces
+  ath10k: remove ath10k_bus
+  ath10k: fix typo in define name
+  ath10k: silent warning in IBSS mode
+  ath10k: lower print level for a message
+  ath10k: provide errno if bmi read/write fails
+  ath10k: change function to take struct ath10k as arg
+  ath10k: rename hif callback
+  ath10k: embed HTC struct inside ath10k
+  ath10k: embed HTT struct inside ath10k
+  ath10k: improve locking
+  ath10k: abort scan properly if wmi_scan_stop fails
+  ath10k: add missing debug prints
 
---=20
-balbi
+ drivers/net/wireless/ath/ath10k/bmi.c    |    6 +-
+ drivers/net/wireless/ath/ath10k/ce.c     |    2 +-
+ drivers/net/wireless/ath/ath10k/core.c   |   42 +++++-------
+ drivers/net/wireless/ath/ath10k/core.h   |   15 ++---
+ drivers/net/wireless/ath/ath10k/hif.h    |   10 +--
+ drivers/net/wireless/ath/ath10k/htc.c    |   30 +++------
+ drivers/net/wireless/ath/ath10k/htc.h    |    4 +-
+ drivers/net/wireless/ath/ath10k/htt.c    |   27 ++++----
+ drivers/net/wireless/ath/ath10k/htt.h    |    3 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    3 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |   12 ++--
+ drivers/net/wireless/ath/ath10k/mac.c    |  107 +++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/pci.c    |   23 +++----
+ drivers/net/wireless/ath/ath10k/pci.h    |    4 +-
+ drivers/net/wireless/ath/ath10k/wmi.c    |   14 ++--
+ 15 files changed, 180 insertions(+), 122 deletions(-)
 
---MGu/vTNewDGZ7tmp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+-- 
+1.7.9.5
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJR0vL/AAoJEIaOsuA1yqREkvwQAJfiXafEIH4mCuZvpu31R3/s
-vPkTdZ3gDPGJwSgy/hXs1kQQnHhF68FRlJC9+U984T6dChzMnctIUZlPRfvoJqN1
-OGuCbrfYT9pOB3K8PtzDQ8jbQvv4Yqb1hAQzS03lsgBTYXQqplWMANygdNaNgiuh
-r/hS0b6piVwAddL6c5WzlNFj9VDfRZ6XJNAd3NEp+UEVCYFnsizpRCPoDe1jEeMm
-eqifKk77AvKxguYHgIEgNDtq/eektsHGeQ/5RGCO+O25H8jS9l7y0zmPtn8Aps3T
-OG7d57ZBEpdLgEpETTQz2u1sN13PQDIwoVqVhGAuIL17WOAmgqZ9fwqgcgS9LBv5
-oxf3mpV/14cJWzWayn9v3meOIafGJilgMNwNG7dEeBIqEckkQIB+ezVUSpvlptvI
-/SvJ3+bKOsBGrhGpZ6agUFfRqsp066jDasksTUb289DcYNdpWBfgVMk5ib0pEv2G
-VMYz1ll6z2KwRGe+J7F2Hxw8KTwPrT+8ncue2nXwtQR3up0shgp2WHVdZzzCNUyq
-duQAK5k8367Uzpv2FlAYBJ0n1IBTILzIzAlTwb182TcQ1moB+mMzJmOIayCthxi1
-1L5dmqtOLwRFmxNop9A8gXJWQa9NqlG75QykMChnmOMaigou8ldeL5aR8P9IetGY
-GWOSPzJk8P8HFOAPIXZc
-=1iXh
------END PGP SIGNATURE-----
-
---MGu/vTNewDGZ7tmp--
