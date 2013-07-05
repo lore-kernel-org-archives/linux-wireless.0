@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:38080 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753704Ab3GIJJd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 05:09:33 -0400
-Message-ID: <1373360959.21065.183.camel@cumari.coelho.fi> (sfid-20130709_110936_250810_F093C397)
-Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>,
-	"=?ISO-8859-1?Q?Jos=E9?= Miguel =?ISO-8859-1?Q?Gon=E7alves?="
-	<jose.goncalves@inov.pt>
-CC: <linux-wireless@vger.kernel.org>
-Date: Tue, 9 Jul 2013 12:09:19 +0300
-In-Reply-To: <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
-References: <51DB0ACC.7050800@inov.pt>
-	 <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
-	 <51DB4195.8090103@inov.pt>
-	 <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:34487 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757364Ab3GENPV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jul 2013 09:15:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 07/16] ath10k: silent warning in IBSS mode
+Date: Fri,  5 Jul 2013 16:15:08 +0300
+Message-Id: <1373030117-18077-8-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_151532_818618_4FAE9931)
+In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Arik, for helping with this.
+From: Michal Kazior <michal.kazior@tieto.com>
 
-On Tue, 2013-07-09 at 10:21 +0300, Arik Nemtsov wrote:
-> On Tue, Jul 9, 2013 at 1:47 AM, José Miguel Gonçalves
-> <jose.goncalves@inov.pt> wrote:
-> > Hi Arik,
-> >
-> > Yep, that patch solved the kernel warning, but the association with  the AP
-> > is still lost after 3 warnings;
+There is no TIM IE generated in IBSS beacons by
+mac80211.
 
-Cool, I have just sent this patch to the stable mailing list, for
-inclusion on  v.3.9.y.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-> > wlcore: Beacon loss detected. roles:0xff
-> 
-> This one is possibly a FW version issue. I'd give it a go with the
-> latest FW in TI's git:
-> https://github.com/TI-OpenLink/ti-utils/tree/master/hw/firmware
-
-More specifically, try the hw/firmware/wl127x-fw-4-sr.bin and the
-hw/firmware/wl127x-fw-4-mr.bin (if you're using multirole).  Note that
-you need to rename them to wl127x-fw-5-sr.bin and wl127x-fw-5-mr.bin,
-respectively.
-
-What we have in the linux-firmware git at the moment are versions
-6.3.10.0.133 (singlerole) and 6.5.7.0.42 (multirole).  The new ones in
-TI's github repo are 6.3.10.0.136 and 6.5.7.0.46.
-
-If the new firmwares solve your problem, please let me know and I'll
-push them to the linux-firmware git repo.
-
-
-> > To use the driver in the Luca's tree I need to do some work to adapt my
-> > platform to the latest kernel version, what I would like to avoid  for now.
-> > Is there any set of patches to put  the driver in vanilla kernel 3.9 in a
-> > more stable condition?
-> 
-> Well 3.9 is pretty new, so the difference is not that big. A simple
-> cherry pick of all patches done on <root>/drivers/wireless/ti/ would
-> do the trick.
-> 
-> Or you could always used compat-wireless, or in it's new name "driver
-> backports":
-> https://backports.wiki.kernel.org/index.php/Main_Page
-
-I'd really recommend cherry-picking just what is needed.  It should be
-very few patches.  And every time you find a new patch that fixes some
-real issue you're seeing, let me know and I'll send to stable.
-
-You're so close to the mainline that it would be silly to use compat
-just for a few patches. ;)
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 7d4b798..1b5312d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -501,8 +501,8 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
+ 	ie = (u8 *)cfg80211_find_ie(WLAN_EID_TIM, ies,
+ 				    (u8 *)skb_tail_pointer(bcn) - ies);
+ 	if (!ie) {
+-		/* highly unlikely for mac80211 */
+-		ath10k_warn("no tim ie found;\n");
++		if (arvif->vdev_type != WMI_VDEV_TYPE_IBSS)
++			ath10k_warn("no tim ie found;\n");
+ 		return;
+ 	}
+ 
+-- 
+1.7.9.5
 
