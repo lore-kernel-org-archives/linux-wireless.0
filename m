@@ -1,68 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:32271 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758148Ab3GZM2W (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:43828 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757107Ab3GENPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 08:28:22 -0400
-Message-ID: <1374841699.6580.21.camel@gandalf.local.home> (sfid-20130726_142827_536017_84BE83C7)
-Subject: Re: Help adding trace events to xHCI
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Xenia Ragiadakou <burzalodowa@gmail.com>,
-	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Fri, 26 Jul 2013 08:28:19 -0400
-In-Reply-To: <1374830340.8248.43.camel@jlt4.sipsolutions.net>
-References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos>
-	 (sfid-20130711_182013_255578_2722BE3F) <1373562533.8201.33.camel@jlt4.sipsolutions.net>
-	 <1373570955.17876.58.camel@gandalf.local.home>
-	 <1374830340.8248.43.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 5 Jul 2013 09:15:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 06/16] ath10k: fix typo in define name
+Date: Fri,  5 Jul 2013 16:15:07 +0300
+Message-Id: <1373030117-18077-7-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_152040_011328_0F17AA66)
+In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-07-26 at 11:19 +0200, Johannes Berg wrote:
+From: Michal Kazior <michal.kazior@tieto.com>
 
-> My original though here was that we should be able to reserve (maximum)
-> space on the per-CPU buffer, and then relinquish some of it after the
-> tracepoint was written to the data, but I never had the time to check if
-> that was possible to implement. It would make it a little inefficient at
-> page boundaries, but that seems OK given that our maximum size is only
-> ~100 bytes or so now.
-> 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c  |    2 +-
+ drivers/net/wireless/ath/ath10k/pci.c |    6 +++---
+ drivers/net/wireless/ath/ath10k/pci.h |    4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-Yes that would be trivial to implement. If the max buffer is ~100 bytes,
-allocate 256 byte buffers per cpu. Also have a per cpu index, and then
-have something like this:
-
-
-	index = local_add_return(this_cpu_ptr(trace_index), len);
-
-	if (index >= MAX_BUF) {
-		/* write tracepoint with failed buffer */
-		local_sub(this_cpu_ptr(trace_index));
-		return;
-	}
-
-	index -= len;
-
-	memcpy(this_cpu_ptr(trace_buf) + index, string, len);
-
-	/* write tracepoint with trace_buf */
-
-	local_sub(this_cpu_ptr(trace_index), len);
-
-
-This way the trace_buf will work like a stack allocator. The
-local_add_return() will reserve the space in the buffer such that if an
-interrupt were to come in, it would allocate after that space. The check
-for MAX_BUF tests for the case that the buffer was too big and had to
-bail. Still trace that event to let the user (yourself) know you need a
-bigger buffer.
-
--- Steve
-
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 61a8ac7..b407929 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -79,7 +79,7 @@ static inline void ath10k_ce_src_ring_write_index_set(struct ath10k *ar,
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	void __iomem *indicator_addr;
+ 
+-	if (!test_bit(ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND, ar_pci->features)) {
++	if (!test_bit(ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND, ar_pci->features)) {
+ 		ath10k_pci_write32(ar, ce_ctrl_addr + SR_WR_INDEX_ADDRESS, n);
+ 		return;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index ab7e4a2..21ef88a 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2116,7 +2116,7 @@ static void ath10k_pci_dump_features(struct ath10k_pci *ar_pci)
+ 		case ATH10K_PCI_FEATURE_MSI_X:
+ 			ath10k_dbg(ATH10K_DBG_PCI, "device supports MSI-X\n");
+ 			break;
+-		case ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND:
++		case ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND:
+ 			ath10k_dbg(ATH10K_DBG_PCI, "QCA988X_1.0 workaround enabled\n");
+ 			break;
+ 		}
+@@ -2143,7 +2143,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 
+ 	switch (pci_dev->device) {
+ 	case QCA988X_1_0_DEVICE_ID:
+-		set_bit(ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND, ar_pci->features);
++		set_bit(ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND, ar_pci->features);
+ 		break;
+ 	case QCA988X_2_0_DEVICE_ID:
+ 		set_bit(ATH10K_PCI_FEATURE_MSI_X, ar_pci->features);
+@@ -2164,7 +2164,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/* Enable QCA988X_1.0 HW workarounds */
+-	if (test_bit(ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND, ar_pci->features))
++	if (test_bit(ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND, ar_pci->features))
+ 		spin_lock_init(&ar_pci->hw_v1_workaround_lock);
+ 
+ 	ar_pci->ar = ar;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index d2a055a..d3a2e6c 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -152,7 +152,7 @@ struct service_to_pipe {
+ 
+ enum ath10k_pci_features {
+ 	ATH10K_PCI_FEATURE_MSI_X		= 0,
+-	ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND	= 1,
++	ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND	= 1,
+ 
+ 	/* keep last */
+ 	ATH10K_PCI_FEATURE_COUNT
+@@ -311,7 +311,7 @@ static inline void ath10k_pci_write32(struct ath10k *ar, u32 offset,
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	void __iomem *addr = ar_pci->mem;
+ 
+-	if (test_bit(ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND, ar_pci->features)) {
++	if (test_bit(ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND, ar_pci->features)) {
+ 		unsigned long irq_flags;
+ 
+ 		spin_lock_irqsave(&ar_pci->hw_v1_workaround_lock, irq_flags);
+-- 
+1.7.9.5
 
