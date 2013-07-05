@@ -1,119 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:47357 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757024Ab3G2Ozv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 10:55:51 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <linux-arm@vger.kernel.org>,
-	<tony@atomide.com>, <nm@ti.com>,
-	<laurent.pinchart@ideasonboard.com>
-Subject: [PATCH v2] Documentation: dt: bindings: TI WiLink modules
-Date: Mon, 29 Jul 2013 17:55:28 +0300
-Message-ID: <1375109728-5931-1-git-send-email-coelho@ti.com> (sfid-20130729_165616_144287_79BEA039)
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:60498 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933776Ab3GEQs1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jul 2013 12:48:27 -0400
+Received: by mail-qc0-f175.google.com with SMTP id k14so1326362qcv.20
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jul 2013 09:48:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951035636353@SC-VEXCH1.marvell.com>
+References: <CAMLZHHQuHAZGW0M0qhQi5PoCW78jgF8rw2ZsmbApT2REBRXZtA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951035636353@SC-VEXCH1.marvell.com>
+Date: Fri, 5 Jul 2013 10:48:25 -0600
+Message-ID: <CAMLZHHSZvKWnaBXycNsh64oExhpa0amcUi-6eC-FOaeNZ-TP1A@mail.gmail.com> (sfid-20130705_184830_038146_C6CBAB29)
+Subject: Re: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
+From: Daniel Drake <dsd@laptop.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree bindings documentation for the TI WiLink modules.
-Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
-modules is supported.
+On Fri, Jul 5, 2013 at 10:43 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+>
+> Hi Daniel,
+>
+>>I don't see any external reason why we are not allowed to communicate to
+>>the hardware here. The other suspend paths do run some communication.
+>
+> The reason is mwifiex_sdio_remove() gets called even if user removes an externally connected wifi card. In that case the hardware is not present so there is no point in reading/writing hardware registers.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
+There is no point in the one case that you mention. But there is a
+very good reason to do so in the case that I am talking about. So why
+not do it? There is no harm to do it if the hardware is not present,
+right?
 
-Changes in v2:
+> This approach looks correct to me. While returning failure in suspend handler, 'pm_flag & MMC_PM_KEEP_POWER' is false. Card is going to be powered off soon. There won't be any further communication with card, so disabling interrupts at this point of time is logical.
+> When system is resumed, bus rescan etc. will happen and card will be redetected.
 
-Use generic clock definitions to get the clock data instead of passing
-the frequencies directly.  Also added definition for "internal"
-ti,wilink-clock.
+This doesn't make much sense to me either. Why don't we just disable
+the interrupt handler at the point when interrupts can no longer be
+correctly handled by the driver?
 
-Please review.
-
-Luca.
-
- .../devicetree/bindings/net/wireless/ti-wilink.txt | 68 ++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-new file mode 100644
-index 0000000..5fd27dc
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-@@ -0,0 +1,68 @@
-+TI WiLink Wireless Modules Device Tree Bindings
-+===============================================
-+
-+The WiLink modules provide wireless connectivity, such as WLAN,
-+Bluetooth, FM and NFC.
-+
-+There are several different modules available, which can be grouped by
-+their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
-+currently supported with device tree.
-+
-+Currently, only the WLAN portion of the modules is supported with
-+device tree.
-+
-+Required properties:
-+--------------------
-+
-+- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
-+- interrupt-parent: the interrupt controller
-+- interrupts: out-of-band WLAN interrupt
-+	See the interrupt controller's bindings documentation for
-+	detailed definition.
-+
-+Optional properties:
-+--------------------
-+
-+- clocks: list of clocks needed by the chip as follows:
-+
-+  refclock: the internal WLAN reference clock frequency (required for
-+	WiLink6 and WiLink7; not used for WiLink8).
-+
-+  tcxoclock: the internal WLAN TCXO clock frequency (required for
-+	WiLink7 not used for WiLink6 and WiLink8).
-+
-+  The clocks must be defined and named accordingly.  For example:
-+
-+  clocks = <&refclock>
-+  clock-names = "refclock";
-+
-+  refclock: refclock {
-+		     compatible = "ti,wilink-clock";
-+		     #clock-cells = <0>;
-+		     clock-frequency = <38400000>;
-+	};
-+
-+  Some modules that contain the WiLink chip provide clocks in the
-+  module itself.  In this case, we define a "ti,wilink-clock" as shown
-+  above.  But any other clock could in theory be used, so the proper
-+  clock definition should be used.
-+
-+
-+Example:
-+--------
-+
-+Example definition that can be used in OMAP4 Panda:
-+
-+wlan {
-+	compatible = "ti,wilink6";
-+	interrupt-parent = <&gpio2>;
-+	interrupts = <21 0x4>;	/* gpio line 53, high level triggered */
-+	clocks = <&refclock>;
-+	clock-names = "refclock";
-+
-+	refclock: refclock {
-+		compatible = "ti,wilink-clock";
-+		#clock-cells = <0>;
-+		clock-frequency = <38400000>;
-+	};
-+};
--- 
-1.8.3.2
-
+Daniel
