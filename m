@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60326 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755750Ab3GOMyF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 08:54:05 -0400
-Message-ID: <51E3F0EA.3060603@openwrt.org> (sfid-20130715_145407_868273_999C152B)
-Date: Mon, 15 Jul 2013 14:54:02 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:49542 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118Ab3GFTpo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Jul 2013 15:45:44 -0400
+Received: by mail-wi0-f179.google.com with SMTP id hj3so2940389wib.12
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Jul 2013 12:45:43 -0700 (PDT)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	krzysiek@podlesie.net
-Subject: Re: [PATCH 3.11] mac80211/minstrel: fix NULL pointer dereference
- issue
-References: <1373891706-1071-1-git-send-email-nbd@openwrt.org> <1373892651.2062.11.camel@joe-AO722>
-In-Reply-To: <1373892651.2062.11.camel@joe-AO722>
+From: "Ivan A. Ivanchikov" <ivanchikoff@gmail.com>
+Date: Sun, 7 Jul 2013 06:45:22 +1100
+Message-ID: <CABa=m6nQsjU6gyVDAPsm14z+rD21az3mCpYFa0pS7woVhF3gyw@mail.gmail.com> (sfid-20130706_214601_523181_F9442823)
+Subject: Realtek RTL8188CUS driver
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-07-15 2:50 PM, Joe Perches wrote:
-> On Mon, 2013-07-15 at 14:35 +0200, Felix Fietkau wrote:
->> When priv_sta == NULL, mi->prev_sample is dereferenced too early. Move
->> the assignment further down, after the rate_control_send_low call.
->> 
->> Reported-by: Krzysztof Mazur <krzysiek@podlesie.net>
->> Cc: stable@vger.kernel.org # 3.10
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> 
-> Why should this be marked for stable?
-> 
-> It's a local reference only, it's not used.
-> 
-> It's like suggesting that all the initialized
-> automatics should not be set until after
-> rate_control_set_low is called.
-mi is set to priv_sta. It can be NULL. The case of priv_sta==NULL is
-caught by rate_control_send_low and causes it to bail out.
+Good day, gentlemen!
 
-- Felix
+I use arch linux, and have this device
+http://www.trendnet.com/downloads/list_subcategory.asp?SUBTYPE_ID=1426
+Driver from stock kernel cannot be used, rtl8192cu was loaded but does not work.
 
+I downloaded https://github.com/downloads/dvdhrm/rt8192cu/rt8192cu-3.4.3.4369.20120622.tar.gz
+this sources and this patch
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1030858/comments/65
+and then my network works. My current kernel version is 3.9.9.
+
+If changes can be integrated for stock kernel?
+
+yours respectfully, Ivan
