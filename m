@@ -1,68 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54434 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932890Ab3GENQB (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:27692 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751769Ab3GGJmj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:16:01 -0400
-Message-ID: <1373030156.8548.22.camel@jlt4.sipsolutions.net> (sfid-20130705_151613_888447_2251576C)
-Subject: Re: [PATCHv5 03/18] mac80211: fix timing for 5 MHz and 10 MHz
- channels
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 05 Jul 2013 15:15:56 +0200
-In-Reply-To: <1372352340-20663-4-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1372352340-20663-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Sun, 7 Jul 2013 05:42:39 -0400
+Message-ID: <1373190151.3428.13.camel@deadeye.wl.decadent.org.uk> (sfid-20130707_114300_799343_032829B3)
+Subject: Re: [PATCH] rtlwifi: Fix Kconfig for some corner cases
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
+Date: Sun, 7 Jul 2013 10:42:31 +0100
+In-Reply-To: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-06-27 at 18:58 +0200, Simon Wunderlich wrote:
+On Sat, 2013-07-06 at 21:47 -0500, Larry Finger wrote:
+> Fengguang Wu reported the following errors in the build of rtlwifi with
+> a random configuration:
+> 
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux master
+> head:   bcd7351e83728859833e3c5b8aae9a2816914e4b
+> commit: 06e7cda3ce30dadc3454539127b4cfc3888c349e rtlwifi: Rework Kconfig
+> date:   5 months ago
+> config: i386-randconfig-s05-0703
+> 
+>    drivers/built-in.o: In function `rtl_usb_cleanup':
+>    usb.c:(.text+0x114895): undefined reference to `usb_kill_anchored_urbs'
+>    usb.c:(.text+0x114964): undefined reference to `usb_kill_anchored_urbs'
+>    usb.c:(.text+0x11497c): undefined reference to `usb_kill_anchored_urbs'
+>    drivers/built-in.o: In function `_usb_writeN_sync':
+>    usb.c:(.text+0x114c9e): undefined reference to `usb_control_msg'
+>    drivers/built-in.o: In function `rtl_usb_disconnect':
+>    (.text+0x114d9c): undefined reference to `usb_put_dev'
+>    drivers/built-in.o: In function `rtl_usb_start':
+>    usb.c:(.text+0x114fb0): undefined reference to `usb_alloc_urb'
+>    usb.c:(.text+0x115049): undefined reference to `usb_free_urb'
+> --snip--
+> 
+> Although I could not duplicate this result on my machine, it seemed likely
+> that it was due to the unusual configuration where rtlwifi was being built,
+> but none of its dependent drivers were selected.
 
->  * change divisor to shift to avoid unnecesary integer divisions
+I think it just requires:
 
-That didn't really do much ;-)
+CONFIG_USB=m
+CONFIG_RTLWIFI=y
 
->  	d->perfect_tx_time = ieee80211_frame_duration(band, 1200,
-> -			rate->bitrate, erp, 1);
-> +			DIV_ROUND_UP(rate->bitrate, 1 << shift), erp, 1,
+> The fix is to select rtlwifi only when it is needed.
 
-That's still the integer division, unless the compiler can do something
-about it?
+I don't think so.  Consider this configuration:
 
-> +			DIV_ROUND_UP(rate->bitrate, 1 << shift), erp, 1,
+CONFIG_PCI=y
+CONFIG_USB=m
+CONFIG_RTL_CARDS=y
+CONFIG_RTL8192CE=y
+CONFIG_RTL8192CU=m
+CONFIG_RTLWIFI=y     # maximum of RTL8192CE=y and RTL8192CU=m
 
-ditto
+The same breakage occurs.
 
-> +		mr->bitrate = DIV_ROUND_UP(sband->bitrates[i].bitrate,
-> +					   (1 << shift) * 5);
+> While making this
+> change, I simplified the configuration so that variable RTLWIFI is never seen
+> by the user.
+[...]
 
-That looks even weirder?
+This will break existing configurations as RTL_CARDS defaults to n.
 
-> +		/* IEEE 802.11-2012 18.3.2.4: all values above are:
-> +		 *  * times 4 for 5 MHz
-> +		 *  * times 2 for 10 MHz
-> +		 */
-> +		dur *= 1 << shift;
+Perhaps you should introduce separate modules for the common PCI and USB
+support code, similarly to how the rt2x00 modules are organised.
 
-Isn't that just "dur <<= shift"?
+Ben.
 
-I think "DIV_ROUND_UP(x, 1 << shift)" can probably be written more
-efficiently? Unless the compiler will do something by itself?
-
-Something like
-
-DIV_ROUND_UP(x, 1<<shift) == (x + (1<<shift) -1) >> shift
-
-I think?
-
-OK, it looks like if "x" is *unsigned* then the compiler will do this,
-but with *signed* values it can't actually know because for negative
-values it's obviously not actually equivalent.
-
-johannes
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
