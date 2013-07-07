@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:42439 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3GDBGb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:06:31 -0400
-Received: by mail-pa0-f41.google.com with SMTP id bj3so780223pad.28
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:30 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 22/53] wireless-regdb: GB, United Kingdom - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:18 -0700
-Message-Id: <1372899889-19183-23-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032039_806091_37830D79)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mx3.wp.pl ([212.77.101.7]:13013 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752335Ab3GGOUs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jul 2013 10:20:48 -0400
+Date: Sun, 7 Jul 2013 16:23:34 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH v2 12/20] rt2x00: rt2x00lib: fix LNA_A[12]
+ gain values for RT3593
+Message-ID: <20130707142334.GL2073@localhost.localdomain> (sfid-20130707_162051_403723_2CB7DC7B)
+References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+ <1372664879-18474-13-git-send-email-juhosg@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372664879-18474-13-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
-
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index b58d4e2..fd0ef09 100644
---- a/db.txt
-+++ b/db.txt
-@@ -303,9 +303,9 @@ country GE:
- 
- country GB: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
-
+On Mon, Jul 01, 2013 at 09:47:51AM +0200, Gabor Juhos wrote:
+> The LNA_A[12] gain values are stored at a different
+> offset in the EEPROM on RT3593 based devices. However
+> the current code unconditionally reads those values
+> from the location used by other chipsets.
+> 
+> Fix the code to use the correct EEPROM offset.
+> 
+> Based on the DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+> driver.
+> 
+> References:
+>   RT3593_EEPROM_RSSI2_OFFSET_ALNAGAIN1_24G_READ in include/chip/rt3593.h
+>   RT3593_EEPROM_RSSI2_OFFSET_ALNAGAIN2_5G_READ in include/chip/rt3593.h
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
