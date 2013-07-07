@@ -1,58 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:42148 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab3GKJHP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:07:15 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH 05/50] USB: misc: uss720: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:28 +0800
-Message-Id: <1373533573-12272-6-git-send-email-ming.lei@canonical.com> (sfid-20130711_111908_855522_6382C136)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+Received: from mx3.wp.pl ([212.77.101.7]:51080 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752318Ab3GGOhc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jul 2013 10:37:32 -0400
+Date: Sun, 7 Jul 2013 16:40:17 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH v2 16/20] rt2x00: rt2800lib: enable VCO
+ recalibration for RF3053
+Message-ID: <20130707144017.GP2073@localhost.localdomain> (sfid-20130707_163734_674468_8B155B3E)
+References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+ <1372664879-18474-17-git-send-email-juhosg@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372664879-18474-17-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+On Mon, Jul 01, 2013 at 09:47:55AM +0200, Gabor Juhos wrote:
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/usb/misc/uss720.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/usb/misc/uss720.c b/drivers/usb/misc/uss720.c
-index e129cf6..f7d15e8 100644
---- a/drivers/usb/misc/uss720.c
-+++ b/drivers/usb/misc/uss720.c
-@@ -121,6 +121,7 @@ static void async_complete(struct urb *urb)
- 		dev_err(&urb->dev->dev, "async_complete: urb error %d\n",
- 			status);
- 	} else if (rq->dr.bRequest == 3) {
-+		unsigned long flags;
- 		memcpy(priv->reg, rq->reg, sizeof(priv->reg));
- #if 0
- 		dev_dbg(&priv->usbdev->dev,
-@@ -131,8 +132,11 @@ static void async_complete(struct urb *urb)
- 			(unsigned int)priv->reg[6]);
- #endif
- 		/* if nAck interrupts are enabled and we have an interrupt, call the interrupt procedure */
--		if (rq->reg[2] & rq->reg[1] & 0x10 && pp)
-+		if (rq->reg[2] & rq->reg[1] & 0x10 && pp) {
-+			local_irq_save(flags);
- 			parport_generic_irq(pp);
-+			local_irq_restore(flags);
-+		}
- 	}
- 	complete(&rq->compl);
- 	kref_put(&rq->ref_count, destroy_async);
--- 
-1.7.9.5
-
+>  	case RF3290:
+> +	case RF3053:
+>  	case RF5360:
+Nit: sort order.
