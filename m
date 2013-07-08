@@ -1,57 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:49352 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932065Ab3GCJaJ convert rfc822-to-8bit (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58648 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524Ab3GHO4R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 05:30:09 -0400
-Received: by mail-qa0-f43.google.com with SMTP id d13so3441137qak.2
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 02:30:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51D3E2C7.7020605@kaiwen.me>
-References: <51D3E2C7.7020605@kaiwen.me>
-Date: Wed, 3 Jul 2013 15:00:08 +0530
-Message-ID: <CAChKcE=1efYtv7TgmQCRi=LEKrCSYtUcd6xFHX6X=aRQ6XYoAw@mail.gmail.com> (sfid-20130703_113014_449152_77C66EBE)
-Subject: Re: Use of 5GHz frequencies with Wi-Fi Direct
-From: Gagan Goyal <gagsbond@gmail.com>
-To: =?ISO-8859-1?Q?K=E9vin_THIERRY?= <kevin.thierry@kaiwen.me>
-Cc: linux-wireless@vger.kernel.org, ronan lanoe <ronan.lanoe@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 8 Jul 2013 10:56:17 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv6 04/18] mac80211: add radiotap flag and handling for 5/10 MHz
+Date: Mon,  8 Jul 2013 16:55:52 +0200
+Message-Id: <1373295366-12823-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_172040_317493_D1366930)
+In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kevin,
+Wireshark already defines radiotap channel flags for 5 and 10 MHz, so
+just use them in Linux radiotap too. Furthermore, add rx status flags to
+allow drivers to report when they received data on 5 or 10 MHz channels.
 
-Plz add the following entries in wpa_supplicant.conf to use freq 5180
-as operating ch.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ include/net/ieee80211_radiotap.h |    4 ++++
+ include/net/mac80211.h           |    4 ++++
+ net/mac80211/rx.c                |   21 ++++++++++++---------
+ 3 files changed, 20 insertions(+), 9 deletions(-)
 
-p2p_oper_reg_class=115
-p2p_oper_channel=36
-country=US
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index c6d07cb..8b5b714 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -230,6 +230,10 @@ enum ieee80211_radiotap_type {
+ #define	IEEE80211_CHAN_PASSIVE	0x0200	/* Only passive scan allowed */
+ #define	IEEE80211_CHAN_DYN	0x0400	/* Dynamic CCK-OFDM channel */
+ #define	IEEE80211_CHAN_GFSK	0x0800	/* GFSK channel (FHSS PHY) */
++#define	IEEE80211_CHAN_GSM	0x1000	/* GSM (900 MHz) */
++#define	IEEE80211_CHAN_STURBO	0x2000	/* Static Turbo */
++#define	IEEE80211_CHAN_HALF	0x4000	/* Half channel (10 MHz wide) */
++#define	IEEE80211_CHAN_QUARTER	0x8000	/* Quarter channel (5 MHz wide) */
+ 
+ /* For IEEE80211_RADIOTAP_FLAGS */
+ #define	IEEE80211_RADIOTAP_F_CFP	0x01	/* sent/received
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b0e6872..bae1a78 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -811,6 +811,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+  *	is stored in the @ampdu_delimiter_crc field)
+  * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3
++ * @RX_FLAG_10MHZ: 10 MHz (half channel) was used
++ * @RX_FLAG_5MHZ: 5 MHz (quarter channel) was used
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -839,6 +841,8 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_80P80MHZ		= BIT(24),
+ 	RX_FLAG_160MHZ			= BIT(25),
+ 	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
++	RX_FLAG_10MHZ			= BIT(28),
++	RX_FLAG_5MHZ			= BIT(29),
+ };
+ 
+ #define RX_FLAG_STBC_SHIFT		26
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 23dbcfc..5f02aba 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -146,6 +146,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	struct ieee80211_radiotap_header *rthdr;
+ 	unsigned char *pos;
+ 	u16 rx_flags = 0;
++	u16 channel_flags = 0;
+ 	int mpdulen;
+ 
+ 	mpdulen = skb->len;
+@@ -215,20 +216,22 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	/* IEEE80211_RADIOTAP_CHANNEL */
+ 	put_unaligned_le16(status->freq, pos);
+ 	pos += 2;
++	if (status->flag & RX_FLAG_10MHZ)
++		channel_flags |= IEEE80211_CHAN_HALF;
++	else if (status->flag & RX_FLAG_5MHZ)
++		channel_flags |= IEEE80211_CHAN_QUARTER;
++
+ 	if (status->band == IEEE80211_BAND_5GHZ)
+-		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ;
+ 	else if (status->flag & (RX_FLAG_HT | RX_FLAG_VHT))
+-		put_unaligned_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
+ 	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
+-		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
+ 	else if (rate)
+-		put_unaligned_le16(IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ,
+-				   pos);
++		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
+ 	else
+-		put_unaligned_le16(IEEE80211_CHAN_2GHZ, pos);
++		channel_flags |= IEEE80211_CHAN_2GHZ;
++	put_unaligned_le16(channel_flags, pos);
+ 	pos += 2;
+ 
+ 	/* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
+-- 
+1.7.10.4
 
-Check, if this solve the requirement.
-
-Cheers
-
-Gagan
-
-On 7/3/13, Kévin THIERRY <kevin.thierry@kaiwen.me> wrote:
-> Hi,
->
-> Is there a way to force the use of 5GHz frequencies with Wi-Fi Direct ?
-> (Or define the 5GHz frequencies as preferred ?)
->
-> I tried to add the freq_list option in wpa_supplicant config file
-> without success. (I think this option should be set in a network block
-> but there is no network block for Wi-Fi Direct...)
-> "freq_list=5180 5200 5220 5240 5260 5280 5300 5320 5500 5520 5540 5560
-> 5580 5600 5620 5640 5660 5680 5700 5745 5765 5785 5805 5825"
->
-> Thanks,
->
-> Kevin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
