@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from straum.hexapodia.org ([66.109.99.53]:44419 "EHLO
-	straum.hexapodia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756442Ab3GaO5i (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39132 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975Ab3GHSbk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 10:57:38 -0400
-Date: Wed, 31 Jul 2013 07:57:37 -0700
-From: Andy Isaacson <adi@hexapodia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: Re: 3.10, iwlwifi 6200AGN: AP changed bandwidth in a way we can't
- support - disconnect
-Message-ID: <20130731145737.GC31017@hexapodia.org> (sfid-20130731_165746_082110_A8A42A60)
-References: <20130729163452.GA454@hexapodia.org>
- <20130731085956.GC1681@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130731085956.GC1681@redhat.com>
+	Mon, 8 Jul 2013 14:31:40 -0400
+Message-ID: <1373308289.8312.17.camel@jlt4.sipsolutions.net> (sfid-20130708_203143_166710_D5854B48)
+Subject: Re: Replacement for local->hw.conf.channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 08 Jul 2013 20:31:29 +0200
+In-Reply-To: <51DB0302.5050201@candelatech.com>
+References: <51D4BB56.9070401@candelatech.com>
+	  (sfid-20130704_020129_998241_BE6D0EF6) <1372922870.8235.0.camel@jlt4.sipsolutions.net>
+	 <51DB0302.5050201@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 31, 2013 at 10:59:56AM +0200, Stanislaw Gruszka wrote:
-> We have few reports about this. Johannes, proposed this patch
-> http://p.sipsolutions.net/9d1dd0734d2c3a7a.txt
+On Mon, 2013-07-08 at 11:20 -0700, Ben Greear wrote:
+> On 07/04/2013 12:27 AM, Johannes Berg wrote:
+> > On Wed, 2013-07-03 at 17:01 -0700, Ben Greear wrote:
+> >> I'm trying to port some patches forward to 3.10....
+> >>
+> >> I am trying to find the current channel for a radio.  Since
+> >> hw.conf.channel no longer exists, what is the best way to
+> >> go about this?
+> >
+> > Well there's hw.conf.chandef.chan now I think, but that can be NULL and
+> > generic mac80211 code must not use it. There's no single current channel
+> > any more, you want vif->chanctx or so.
 > 
-> Could you check if it fixes the problem for you?
+>  From looking at the scanning code (line 542 or so), it appears
+> 
+> local->_oper_chandef.chan
+> 
+> might work?
 
-I unfortunately didn't get a chance to confirm before leaving Berlin,
-but the patch Johannes posted in the other thread seems to agree with my
-analysis of the problem, and Johannes confirmed from my pcap that it
-is the same problem.
+No, don't use that in any new code. It's purely for compatibility with
+drivers that aren't converted to channel contexts (yet).
 
--andy
+> In 3.9, ath9k_htc was giving me a null channel in the code below:
+> 
+> 	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> 	if (chanctx_conf)
+> 		channel = chanctx_conf->def.chan;
+> 	else
+> 		channel = NULL;
+
+Well that of course happens if the vif isn't bound to a channel context.
+
+johannes
+
