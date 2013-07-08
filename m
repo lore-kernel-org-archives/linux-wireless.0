@@ -1,196 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:59878 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754052Ab3GRGji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jul 2013 02:39:38 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: move irq setup
-Date: Thu, 18 Jul 2013 08:39:32 +0200
-Message-ID: <1374129572-6079-1-git-send-email-michal.kazior@tieto.com> (sfid-20130718_083942_057972_B9B2AD4A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38315 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752110Ab3GHO4T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:56:19 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv6 08/18] mac80211: allow scanning for 5/10 MHz channels in IBSS
+Date: Mon,  8 Jul 2013 16:55:56 +0200
+Message-Id: <1373295366-12823-9-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_172040_106028_1664FF91)
+In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There was a slight race during PCI shutdown. Since
-interrupts weren't really stopped (only Copy
-Engine interrupts were disabled through device hw
-registers) it was possible for a firmware
-indication (crash) interrupt to come in after
-tasklets were synced/killed. This would cause
-memory corruption and a panic in most cases. It
-was also possible for interrupt to come before CE
-was initialized during device probing.
+Use a chandef instead of just the channel for scanning, and enable
+5/10 Mhz scanning for IBSS mode. Also reporting is changed to the new
+inform_bss functions.
 
-Interrupts are required for BMI phase so they are
-enabled as soon as power_up() is called but are
-freed upon both power_down() and stop() so there's
-asymmetry here. As by design stop() cannot be
-followed by start() it is okay. Both power_down()
-and stop() should be merged later on to avoid
-confusion.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 
-Before this can be really properly fixed var/hw
-init code split is necessary.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
+Changes to PATCHv4:
+ * fix comments
+---
+ net/mac80211/ibss.c        |   16 ++++++++++++----
+ net/mac80211/ieee80211_i.h |    5 +++--
+ net/mac80211/main.c        |   13 ++-----------
+ net/mac80211/scan.c        |   45 ++++++++++++++++++++++++++++++++++++++------
+ 4 files changed, 56 insertions(+), 23 deletions(-)
 
-Please note: this is based on my (still under
-review at the time of posting) previous patchests:
-device setup refactor and recovery.
-
-I'm posting this before those patchsets are merged
-so anyone interested in testing this fix (I can't
-reproduce the problem on my setup) can give it a
-try.
-
- drivers/net/wireless/ath/ath10k/pci.c |   36 +++++++++++++++++++++++----------
- drivers/net/wireless/ath/ath10k/pci.h |    1 +
- 2 files changed, 26 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index c71b488..e814151 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -56,6 +56,8 @@ static void ath10k_pci_rx_pipe_cleanup(struct hif_ce_pipe_info *pipe_info);
- static void ath10k_pci_stop_ce(struct ath10k *ar);
- static void ath10k_pci_device_reset(struct ath10k *ar);
- static int ath10k_pci_reset_target(struct ath10k *ar);
-+static int ath10k_pci_start_intr(struct ath10k *ar);
-+static void ath10k_pci_stop_intr(struct ath10k *ar);
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 7fb0f2a..b99d948 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -51,6 +51,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	u32 bss_change, rate_flags, rates = 0, rates_added = 0;
+ 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
+ 	struct cfg80211_chan_def chandef;
++	enum nl80211_bss_scan_width scan_width;
+ 	struct beacon_data *presp;
+ 	int frame_len;
+ 	int shift;
+@@ -267,8 +268,10 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	mod_timer(&ifibss->timer,
+ 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
  
- static const struct ce_attr host_ce_config_wlan[] = {
- 	/* host->target HTC control and raw streams */
-@@ -827,6 +829,7 @@ static void ath10k_pci_stop_ce(struct ath10k *ar)
- 	int i;
- 
- 	ath10k_ce_disable_interrupts(ar);
-+	ath10k_pci_stop_intr(ar);
- 
- 	/* Cancel the pending tasklet */
- 	tasklet_kill(&ar_pci->intr_tq);
-@@ -1742,6 +1745,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+-	bss = cfg80211_inform_bss_frame(local->hw.wiphy, chan,
+-					mgmt, presp->head_len, 0, GFP_KERNEL);
++	scan_width = cfg80211_chandef_to_scan_width(&chandef);
++	bss = cfg80211_inform_bss_width_frame(local->hw.wiphy, chan,
++					      scan_width, mgmt,
++					      presp->head_len, 0, GFP_KERNEL);
+ 	cfg80211_put_bss(local->hw.wiphy, bss);
+ 	netif_carrier_on(sdata->dev);
+ 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
+@@ -722,6 +725,7 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
+ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
  {
- 	int ret;
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	enum nl80211_bss_scan_width scan_width;
  
-+	ret = ath10k_pci_start_intr(ar);
-+	if (ret) {
-+		ath10k_err("could not start interrupt handling (%d)\n", ret);
-+		goto err;
+ 	sdata_assert_lock(sdata);
+ 
+@@ -743,8 +747,9 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 	sdata_info(sdata,
+ 		   "No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)\n");
+ 
++	scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
+ 	ieee80211_request_ibss_scan(sdata, ifibss->ssid, ifibss->ssid_len,
+-				    NULL);
++				    NULL, scan_width);
+ }
+ 
+ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+@@ -794,6 +799,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 	struct cfg80211_bss *cbss;
+ 	struct ieee80211_channel *chan = NULL;
+ 	const u8 *bssid = NULL;
++	enum nl80211_bss_scan_width scan_width;
+ 	int active_ibss;
+ 	u16 capability;
+ 
+@@ -842,8 +848,10 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 					IEEE80211_SCAN_INTERVAL)) {
+ 		sdata_info(sdata, "Trigger new scan to find an IBSS to join\n");
+ 
++		scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
+ 		ieee80211_request_ibss_scan(sdata, ifibss->ssid,
+-					    ifibss->ssid_len, chan);
++					    ifibss->ssid_len, chan,
++					    scan_width);
+ 	} else {
+ 		int interval = IEEE80211_SCAN_INTERVAL;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 55d57f9..0aea73f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1054,7 +1054,7 @@ struct ieee80211_local {
+ 	struct cfg80211_ssid scan_ssid;
+ 	struct cfg80211_scan_request *int_scan_req;
+ 	struct cfg80211_scan_request *scan_req, *hw_scan_req;
+-	struct ieee80211_channel *scan_channel;
++	struct cfg80211_chan_def scan_chandef;
+ 	enum ieee80211_band hw_scan_band;
+ 	int scan_channel_idx;
+ 	int scan_ies_len;
+@@ -1334,7 +1334,8 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_scan_work(struct work_struct *work);
+ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				const u8 *ssid, u8 ssid_len,
+-				struct ieee80211_channel *chan);
++				struct ieee80211_channel *chan,
++				enum nl80211_bss_scan_width scan_width);
+ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+ 			   struct cfg80211_scan_request *req);
+ void ieee80211_scan_cancel(struct ieee80211_local *local);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index a1d51af..3e00871 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -102,17 +102,8 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
+ 
+ 	offchannel_flag = local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL;
+ 
+-	if (local->scan_channel) {
+-		chandef.chan = local->scan_channel;
+-		/* If scanning on oper channel, use whatever channel-type
+-		 * is currently in use.
+-		 */
+-		if (chandef.chan == local->_oper_chandef.chan) {
+-			chandef = local->_oper_chandef;
+-		} else {
+-			chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
+-			chandef.center_freq1 = chandef.chan->center_freq;
+-		}
++	if (local->scan_chandef.chan) {
++		chandef = local->scan_chandef;
+ 	} else if (local->tmp_channel) {
+ 		chandef.chan = local->tmp_channel;
+ 		chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 819d095..08afe74 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -66,6 +66,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 	struct cfg80211_bss *cbss;
+ 	struct ieee80211_bss *bss;
+ 	int clen, srlen;
++	enum nl80211_bss_scan_width scan_width;
+ 	s32 signal = 0;
+ 
+ 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+@@ -73,8 +74,15 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 	else if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
+ 		signal = (rx_status->signal * 100) / local->hw.max_signal;
+ 
+-	cbss = cfg80211_inform_bss_frame(local->hw.wiphy, channel,
+-					 mgmt, len, signal, GFP_ATOMIC);
++	scan_width = NL80211_BSS_CHAN_WIDTH_20;
++	if (rx_status->flag & RX_FLAG_5MHZ)
++		scan_width = NL80211_BSS_CHAN_WIDTH_5;
++	if (rx_status->flag & RX_FLAG_10MHZ)
++		scan_width = NL80211_BSS_CHAN_WIDTH_10;
++
++	cbss = cfg80211_inform_bss_width_frame(local->hw.wiphy, channel,
++					       scan_width, mgmt, len, signal,
++					       GFP_ATOMIC);
+ 	if (!cbss)
+ 		return NULL;
+ 
+@@ -300,7 +308,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
+ 	rcu_assign_pointer(local->scan_sdata, NULL);
+ 
+ 	local->scanning = 0;
+-	local->scan_channel = NULL;
++	local->scan_chandef.chan = NULL;
+ 
+ 	/* Set power back to normal operating levels. */
+ 	ieee80211_hw_config(local, 0);
+@@ -635,11 +643,34 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ {
+ 	int skip;
+ 	struct ieee80211_channel *chan;
++	enum nl80211_bss_scan_width oper_scan_width;
+ 
+ 	skip = 0;
+ 	chan = local->scan_req->channels[local->scan_channel_idx];
+ 
+-	local->scan_channel = chan;
++	local->scan_chandef.chan = chan;
++	local->scan_chandef.center_freq1 = chan->center_freq;
++	local->scan_chandef.center_freq2 = 0;
++	switch (local->scan_req->scan_width) {
++	case NL80211_BSS_CHAN_WIDTH_5:
++		local->scan_chandef.width = NL80211_CHAN_WIDTH_5;
++		break;
++	case NL80211_BSS_CHAN_WIDTH_10:
++		local->scan_chandef.width = NL80211_CHAN_WIDTH_10;
++		break;
++	case NL80211_BSS_CHAN_WIDTH_20:
++		/* If scanning on oper channel, use whatever channel-type
++		 * is currently in use.
++		 */
++		oper_scan_width = cfg80211_chandef_to_scan_width(
++					&local->_oper_chandef);
++		if (chan == local->_oper_chandef.chan &&
++		    oper_scan_width == local->scan_req->scan_width)
++			local->scan_chandef = local->_oper_chandef;
++		else
++			local->scan_chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
++		break;
 +	}
-+
- 	/*
- 	 * Bring the target up cleanly.
- 	 *
-@@ -1756,7 +1765,7 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
  
- 	ret = ath10k_pci_reset_target(ar);
- 	if (ret)
--		goto err;
-+		goto err_intr;
- 
- 	if (ath10k_target_ps) {
- 		ath10k_dbg(ATH10K_DBG_PCI, "on-chip power save enabled\n");
-@@ -1783,16 +1792,24 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 	return 0;
- 
- err_ce:
-+	/* XXX: Until var/hw init is split it's impossible to fix the ordering
-+	 * here so we must call stop_intr() here too to prevent interrupts after
-+	 * CE is teared down. It's okay to double call the stop_intr() */
-+	ath10k_pci_stop_intr(ar);
- 	ath10k_pci_ce_deinit(ar);
- err_ps:
- 	if (!ath10k_target_ps)
- 		ath10k_do_pci_sleep(ar);
-+err_intr:
-+	ath10k_pci_stop_intr(ar);
- err:
- 	return ret;
- }
- 
- static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ 	if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
+ 		skip = 1;
+@@ -679,7 +710,7 @@ static void ieee80211_scan_state_suspend(struct ieee80211_local *local,
+ 					 unsigned long *next_delay)
  {
-+	ath10k_pci_stop_intr(ar);
-+
- 	ath10k_pci_ce_deinit(ar);
- 	if (!ath10k_target_ps)
- 		ath10k_do_pci_sleep(ar);
-@@ -2119,6 +2136,7 @@ static int ath10k_pci_start_intr(struct ath10k *ar)
- 	ret = ath10k_pci_start_intr_legacy(ar);
+ 	/* switch back to the operating channel */
+-	local->scan_channel = NULL;
++	local->scan_chandef.chan = NULL;
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
  
- exit:
-+	ar_pci->intr_started = ret == 0;
- 	ar_pci->num_msi_intrs = num;
- 	ar_pci->ce_count = CE_COUNT;
- 	return ret;
-@@ -2129,6 +2147,9 @@ static void ath10k_pci_stop_intr(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int i;
+ 	/* disable PS */
+@@ -821,7 +852,8 @@ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
  
-+	if (ar_pci->intr_started == false)
-+		return;
-+
- 	/* There's at least one interrupt irregardless whether its legacy INTR
- 	 * or MSI or MSI-X */
- 	for (i = 0; i < max(1, ar_pci->num_msi_intrs); i++)
-@@ -2136,6 +2157,8 @@ static void ath10k_pci_stop_intr(struct ath10k *ar)
+ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				const u8 *ssid, u8 ssid_len,
+-				struct ieee80211_channel *chan)
++				struct ieee80211_channel *chan,
++				enum nl80211_bss_scan_width scan_width)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	int ret = -EBUSY;
+@@ -871,6 +903,7 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
  
- 	if (ar_pci->num_msi_intrs > 0)
- 		pci_disable_msi(ar_pci->pdev);
-+
-+	ar_pci->intr_started = false;
- }
+ 	local->int_scan_req->ssids = &local->scan_ssid;
+ 	local->int_scan_req->n_ssids = 1;
++	local->int_scan_req->scan_width = scan_width;
+ 	memcpy(local->int_scan_req->ssids[0].ssid, ssid, IEEE80211_MAX_SSID_LEN);
+ 	local->int_scan_req->ssids[0].ssid_len = ssid_len;
  
- static int ath10k_pci_reset_target(struct ath10k *ar)
-@@ -2358,22 +2381,14 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 
- 	ar_pci->cacheline_sz = dma_get_cache_alignment();
- 
--	ret = ath10k_pci_start_intr(ar);
--	if (ret) {
--		ath10k_err("could not start interrupt handling (%d)\n", ret);
--		goto err_iomap;
--	}
--
- 	ret = ath10k_core_register(ar);
- 	if (ret) {
- 		ath10k_err("could not register driver core (%d)\n", ret);
--		goto err_intr;
-+		goto err_iomap;
- 	}
- 
- 	return 0;
- 
--err_intr:
--	ath10k_pci_stop_intr(ar);
- err_iomap:
- 	pci_iounmap(pdev, mem);
- err_master:
-@@ -2410,7 +2425,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
- 	tasklet_kill(&ar_pci->msi_fw_err);
- 
- 	ath10k_core_unregister(ar);
--	ath10k_pci_stop_intr(ar);
- 
- 	pci_set_drvdata(pdev, NULL);
- 	pci_iounmap(pdev, ar_pci->mem);
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index d3a2e6c..5eb628f 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -198,6 +198,7 @@ struct ath10k_pci {
- 	 * interrupts.
- 	 */
- 	int num_msi_intrs;
-+	bool intr_started;
- 
- 	struct tasklet_struct intr_tq;
- 	struct tasklet_struct msi_fw_err;
 -- 
-1.7.9.5
+1.7.10.4
 
