@@ -1,50 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52818 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752613Ab3G2TAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 15:00:11 -0400
-Date: Mon, 29 Jul 2013 14:48:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2013-07-26
-Message-ID: <20130729184845.GG31172@tuxdriver.com> (sfid-20130729_210019_298199_54577691)
-References: <1374828153.8248.19.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1374828153.8248.19.camel@jlt4.sipsolutions.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:48224 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751921Ab3GHOIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:45 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 13/20] rt2x00: rt2800lib: add default_power3 field for three-chain devices
+Date: Mon,  8 Jul 2013 16:08:28 +0200
+Message-Id: <1373292515-21332-14-git-send-email-juhosg@openwrt.org> (sfid-20130708_162043_530597_F1BC763D)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 10:42:33AM +0200, Johannes Berg wrote:
-> John,
-> 
-> And another one for mac80211 - that's all for now then :-)
-> 
-> I only have three fixes this time, a fix for a suspend regression, a
-> patch correcting the initiator in regulatory code and one fix for mesh
-> station powersave.
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> 
-> The following changes since commit 5c9fc93bc9bc417418fc1b6366833ae6a07b804d:
-> 
->   mac80211/minstrel: fix NULL pointer dereference issue (2013-07-16 17:48:14 +0300)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to 23df0b731954502a9391e739b92927cee4360343:
-> 
->   regulatory: use correct regulatory initiator on wiphy register (2013-07-25 09:52:46 +0200)
+The actual code uses two default TX power values.
+This is enough for 1T and for 2T devices however
+on 3T devices another value is needed for the third
+chain.
 
-Pulling now...
+Add a new field to struct channel_info and initialize
+it from the 'rt2800_probe_hw_mode' function. Also modify
+the 'rt2800_config_channel' to handle the new field as
+well.
 
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+Changes since v2: ---
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   22 ++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
+ 2 files changed, 23 insertions(+)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 419ea05..e3e652d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2768,6 +2768,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 						     info->default_power1);
+ 	info->default_power2 = rt2800_txpower_to_dev(rt2x00dev, rf->channel,
+ 						     info->default_power2);
++	if (rt2x00dev->default_ant.tx_chain_num > 2)
++		info->default_power3 =
++			rt2800_txpower_to_dev(rt2x00dev, rf->channel,
++					      info->default_power3);
+ 
+ 	switch (rt2x00dev->chip.rf) {
+ 	case RF2020:
+@@ -6963,6 +6967,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	struct channel_info *info;
+ 	char *default_power1;
+ 	char *default_power2;
++	char *default_power3;
+ 	unsigned int i;
+ 	u16 eeprom;
+ 	u32 reg;
+@@ -7115,9 +7120,17 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	default_power1 = rt2800_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_BG1);
+ 	default_power2 = rt2800_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_BG2);
+ 
++	if (rt2x00dev->default_ant.tx_chain_num > 2)
++		default_power3 = rt2800_eeprom_addr(rt2x00dev,
++						    EEPROM_EXT_TXPOWER_BG3);
++	else
++		default_power3 = NULL;
++
+ 	for (i = 0; i < 14; i++) {
+ 		info[i].default_power1 = default_power1[i];
+ 		info[i].default_power2 = default_power2[i];
++		if (default_power3)
++			info[i].default_power3 = default_power3[i];
+ 	}
+ 
+ 	if (spec->num_channels > 14) {
+@@ -7126,9 +7139,18 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		default_power2 = rt2800_eeprom_addr(rt2x00dev,
+ 						    EEPROM_TXPOWER_A2);
+ 
++		if (rt2x00dev->default_ant.tx_chain_num > 2)
++			default_power3 =
++				rt2800_eeprom_addr(rt2x00dev,
++						   EEPROM_EXT_TXPOWER_A3);
++		else
++			default_power3 = NULL;
++
+ 		for (i = 14; i < spec->num_channels; i++) {
+ 			info[i].default_power1 = default_power1[i - 14];
+ 			info[i].default_power2 = default_power2[i - 14];
++			if (default_power3)
++				info[i].default_power3 = default_power3[i - 14];
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index ee3fc57..fe4c572 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -211,6 +211,7 @@ struct channel_info {
+ 	short max_power;
+ 	short default_power1;
+ 	short default_power2;
++	short default_power3;
+ };
+ 
+ /*
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10
+
