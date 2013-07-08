@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:35258 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755358Ab3GJVDr (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58679 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752473Ab3GHO4V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 17:03:47 -0400
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] rt2x00: RT2X00 should depend on HAS_DMA
-Date: Wed, 10 Jul 2013 23:03:35 +0200
-Message-Id: <1373490216-12437-2-git-send-email-geert@linux-m68k.org> (sfid-20130710_230434_521723_B3DF4800)
-In-Reply-To: <1373490216-12437-1-git-send-email-geert@linux-m68k.org>
-References: <1373490216-12437-1-git-send-email-geert@linux-m68k.org>
+	Mon, 8 Jul 2013 10:56:21 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv6 10/18] nl80211: allow 5 and 10 MHz channels for IBSS
+Date: Mon,  8 Jul 2013 16:55:58 +0200
+Message-Id: <1373295366-12823-11-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_165631_693208_F804F42A)
+In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If NO_DMA=y:
+Whether the wiphy supports it or not is already checked, so what is left
+is to enable these channel types.
 
-drivers/built-in.o: In function `rt2x00queue_unmap_skb':
-drivers/net/wireless/rt2x00/rt2x00queue.c:129: undefined reference to `dma_unmap_single'
-drivers/net/wireless/rt2x00/rt2x00queue.c:133: undefined reference to `dma_unmap_single'
-drivers/built-in.o: In function `rt2x00queue_map_txskb':
-drivers/net/wireless/rt2x00/rt2x00queue.c:112: undefined reference to `dma_map_single'
-drivers/net/wireless/rt2x00/rt2x00queue.c:115: undefined reference to `dma_mapping_error'
-drivers/built-in.o: In function `rt2x00queue_alloc_rxskb':
-drivers/net/wireless/rt2x00/rt2x00queue.c:93: undefined reference to `dma_map_single'
-drivers/net/wireless/rt2x00/rt2x00queue.c:95: undefined reference to `dma_mapping_error'
-
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/rt2x00/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/nl80211.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index 9b915d3..3e60a31 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -1,6 +1,6 @@
- menuconfig RT2X00
- 	tristate "Ralink driver support"
--	depends on MAC80211
-+	depends on MAC80211 && HAS_DMA
- 	---help---
- 	  This will enable the support for the Ralink drivers,
- 	  developed in the rt2x00 project <http://rt2x00.serialmonkey.com>.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 3019748..1318b5a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6318,6 +6318,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	switch (ibss.chandef.width) {
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 		break;
+ 	case NL80211_CHAN_WIDTH_20:
 -- 
-1.7.9.5
+1.7.10.4
 
