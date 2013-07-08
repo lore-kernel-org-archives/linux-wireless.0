@@ -1,68 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:53235 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755025Ab3GKN32 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 09:29:28 -0400
-Message-ID: <1373549359.8385.36.camel@cumari.coelho.fi> (sfid-20130711_152932_138685_A328DF2F)
-Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
-From: Luciano Coelho <coelho@ti.com>
-To: =?ISO-8859-1?Q?Jos=E9?= Miguel =?ISO-8859-1?Q?Gon=E7alves?=
-	<jose.goncalves@inov.pt>
-CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
-Date: Thu, 11 Jul 2013 16:29:19 +0300
-In-Reply-To: <51DEA05A.5020401@inov.pt>
-References: <51DB0ACC.7050800@inov.pt>
-	    <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
-	    <51DB4195.8090103@inov.pt>
-	    <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
-	    <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>
-	    <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>
-	    <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>
-	    <51DC0E7C.9080306@inov.pt>
-	    <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>
-	    <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>
-	   <51DD54D4.6090502@inov.pt> <51DD8C20.7010900@inov.pt>
-	  <1373476663.8385.28.camel@cumari.coelho.fi> <51DD9E6C.5060008@inov.pt>
-	 <1373488063.8385.31.camel@cumari.coelho.fi> <51DEA05A.5020401@inov.pt>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58687 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752494Ab3GHO4V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:56:21 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv6 17/18] ath5k: set 5/10 MHz supported channels and fix duration
+Date: Mon,  8 Jul 2013 16:56:05 +0200
+Message-Id: <1373295366-12823-18-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_165630_272042_2F9D3E21)
+In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-07-11 at 13:08 +0100, José Miguel Gonçalves wrote:
-> Hi Luca,
-> 
-> On 10-07-2013 21:27, Luciano Coelho wrote:
-> > I have a text console only system. I could put tcpdump on my system, but I think I
-> > can not monitor wireless traffic with it, or can I?
-> > tcpdump will probably not be enough.  But since this stuff is *wireless*
-> > you can sniff from a different PC.  If you have Linux PC, just plug in
-> > your TP-Link dongle in it, launch wireshark and you should be able to
-> > sniff (unencrypted) connections between other devices easily.
-> >
-> 
-> I've setup my Linuc PC as a sniffer and yes I see a lot of of authentication 
-> frames on the air when I try to associate with my open AP (Android phone).
-> 
-> I've repeated the process with a TP-Link dongle and I see a clean 802.11 
-> association sequence.
-> 
-> What I found strange is that I don't see "probe request" frames on the wl12xx 
-> captured frames, it starts directly with an "authentication" frame, when with the 
-> TP-Link dongle (ath9k_htc driver) the first frame sent by is a "probe request"!
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   24 ++++++++++++++++--------
+ drivers/net/wireless/ath/ath5k/pcu.c  |    2 ++
+ drivers/net/wireless/ath/ath5k/qcu.c  |   25 ++++++++++++++++++++++++-
+ 3 files changed, 42 insertions(+), 9 deletions(-)
 
-Usually the connection will start with a probe request, but if there is
-a response in the cache, we may skip it.  In any case, this is probably
-happening because your sniffer is missing those frames (which again
-points to problems with RF).
-
-
-> I can provide the Wirehsark capture files. What is the best way to send them 
-> through the mailing list?
-
-Cut only the portion that matters, so the file is small and gzip it.
-Small files can be sent as attachments to the list.
-
---
-Luca.
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 260a6fc..7c298af 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -165,28 +165,36 @@ static const struct ieee80211_rate ath5k_rates[] = {
+ 	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
+ 	{ .bitrate = 60,
+ 	  .hw_value = ATH5K_RATE_CODE_6M,
+-	  .flags = 0 },
++	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
++		   IEEE80211_RATE_SUPPORTS_10MHZ },
+ 	{ .bitrate = 90,
+ 	  .hw_value = ATH5K_RATE_CODE_9M,
+-	  .flags = 0 },
++	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
++		   IEEE80211_RATE_SUPPORTS_10MHZ },
+ 	{ .bitrate = 120,
+ 	  .hw_value = ATH5K_RATE_CODE_12M,
+-	  .flags = 0 },
++	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
++		   IEEE80211_RATE_SUPPORTS_10MHZ },
+ 	{ .bitrate = 180,
+ 	  .hw_value = ATH5K_RATE_CODE_18M,
+-	  .flags = 0 },
++	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
++		   IEEE80211_RATE_SUPPORTS_10MHZ },
+ 	{ .bitrate = 240,
+ 	  .hw_value = ATH5K_RATE_CODE_24M,
+-	  .flags = 0 },
++	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
++		   IEEE80211_RATE_SUPPORTS_10MHZ },
+ 	{ .bitrate = 360,
+ 	  .hw_value = ATH5K_RATE_CODE_36M,
+-	  .flags = 0 },
++	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
++		   IEEE80211_RATE_SUPPORTS_10MHZ },
+ 	{ .bitrate = 480,
+ 	  .hw_value = ATH5K_RATE_CODE_48M,
+-	  .flags = 0 },
++	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
++		   IEEE80211_RATE_SUPPORTS_10MHZ },
+ 	{ .bitrate = 540,
+ 	  .hw_value = ATH5K_RATE_CODE_54M,
+-	  .flags = 0 },
++	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
++		   IEEE80211_RATE_SUPPORTS_10MHZ },
+ };
+ 
+ static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+index 1f16b42..c60d36a 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -144,11 +144,13 @@ ath5k_hw_get_frame_duration(struct ath5k_hw *ah, enum ieee80211_band band,
+ 		sifs = AR5K_INIT_SIFS_HALF_RATE;
+ 		preamble *= 2;
+ 		sym_time *= 2;
++		bitrate = DIV_ROUND_UP(bitrate, 2);
+ 		break;
+ 	case AR5K_BWMODE_5MHZ:
+ 		sifs = AR5K_INIT_SIFS_QUARTER_RATE;
+ 		preamble *= 4;
+ 		sym_time *= 4;
++		bitrate = DIV_ROUND_UP(bitrate, 4);
+ 		break;
+ 	default:
+ 		sifs = AR5K_INIT_SIFS_DEFAULT_BG;
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index 65fe929..0583c69 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -566,9 +566,11 @@ int ath5k_hw_set_ifs_intervals(struct ath5k_hw *ah, unsigned int slot_time)
+ {
+ 	struct ieee80211_channel *channel = ah->ah_current_channel;
+ 	enum ieee80211_band band;
++	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_rate *rate;
+ 	u32 ack_tx_time, eifs, eifs_clock, sifs, sifs_clock;
+ 	u32 slot_time_clock = ath5k_hw_htoclock(ah, slot_time);
++	u32 rate_flags, i;
+ 
+ 	if (slot_time < 6 || slot_time_clock > AR5K_SLOT_TIME_MAX)
+ 		return -EINVAL;
+@@ -605,7 +607,28 @@ int ath5k_hw_set_ifs_intervals(struct ath5k_hw *ah, unsigned int slot_time)
+ 	else
+ 		band = IEEE80211_BAND_2GHZ;
+ 
+-	rate = &ah->sbands[band].bitrates[0];
++	switch (ah->ah_bwmode) {
++	case AR5K_BWMODE_5MHZ:
++		rate_flags = IEEE80211_RATE_SUPPORTS_5MHZ;
++		break;
++	case AR5K_BWMODE_10MHZ:
++		rate_flags = IEEE80211_RATE_SUPPORTS_10MHZ;
++		break;
++	default:
++		rate_flags = 0;
++		break;
++	}
++	sband = &ah->sbands[band];
++	rate = NULL;
++	for (i = 0; i < sband->n_bitrates; i++) {
++		if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
++			continue;
++		rate = &sband->bitrates[i];
++		break;
++	}
++	if (WARN_ON(!rate))
++		return -EINVAL;
++
+ 	ack_tx_time = ath5k_hw_get_frame_duration(ah, band, 10, rate, false);
+ 
+ 	/* ack_tx_time includes an SIFS already */
+-- 
+1.7.10.4
 
