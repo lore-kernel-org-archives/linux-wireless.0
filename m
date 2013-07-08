@@ -1,118 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:22890 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753407Ab3GIAkU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 20:40:20 -0400
-Message-ID: <1373330415.1860.14.camel@bwh-desktop.uk.level5networks.com> (sfid-20130709_024027_754911_8B80C785)
-Subject: Re: [PATCH] rtlwifi: Fix Kconfig for some corner cases
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
-Date: Tue, 9 Jul 2013 01:40:15 +0100
-In-Reply-To: <51D9AFB2.2030707@lwfinger.net>
-References: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
-	 <1373190151.3428.13.camel@deadeye.wl.decadent.org.uk>
-	 <51D9AFB2.2030707@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:48267 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751642Ab3GHOIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:49 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 04/20] rt2x00: rt2800lib: add BBP post initialization for RT3593
+Date: Mon,  8 Jul 2013 16:08:19 +0200
+Message-Id: <1373292515-21332-5-git-send-email-juhosg@openwrt.org> (sfid-20130708_160852_961738_7E1BFEF4)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-07-07 at 13:13 -0500, Larry Finger wrote:
-> On 07/07/2013 04:42 AM, Ben Hutchings wrote:
-> > On Sat, 2013-07-06 at 21:47 -0500, Larry Finger wrote:
-> >>
-> >> Although I could not duplicate this result on my machine, it seemed likely
-> >> that it was due to the unusual configuration where rtlwifi was being built,
-> >> but none of its dependent drivers were selected.
-> >
-> > I think it just requires:
-> >
-> > CONFIG_USB=m
-> > CONFIG_RTLWIFI=y
-> >
-> >> The fix is to select rtlwifi only when it is needed.
-> >
-> > I don't think so.  Consider this configuration:
-> >
-> > CONFIG_PCI=y
-> > CONFIG_USB=m
-> > CONFIG_RTL_CARDS=y
-> > CONFIG_RTL8192CE=y
-> > CONFIG_RTL8192CU=m
-> > CONFIG_RTLWIFI=y     # maximum of RTL8192CE=y and RTL8192CU=m
-> >
-> > The same breakage occurs.
-> 
-> Ben,
-> 
-> Thanks for your comments. I certainly do not claim to understand very much about 
-> the whole Kbuild process.
-> 
-> After setting up the above configuration manually, I ran 'make oldconfig' and 
-> got back
-> 
-> CONFIG_RTL_CARDS=m
-> CONFIG_RTL8192CE=m
-> CONFIG_RTL8192SE=m
-> CONFIG_RTL8192DE=m
-> CONFIG_RTL8723AE=m
-> CONFIG_RTL8188EE=m
-> CONFIG_RTL8192CU=m
-> CONFIG_RTLWIFI=m
-> CONFIG_RTLWIFI_DEBUG=y
-> CONFIG_RTL8192C_COMMON=m
-> 
-> That set of configuration parameters built normally.
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-But you can still manually set:
+Reference:
+  RT3593_PostBBPInitialization in chips/rt3553.c
 
-CONFIG_PCI=y
-CONFIG_USB=m
-CONFIG_MAC80211=y   # maybe you had =m here?
-CONFIG_RTL_CARDS=y
-CONFIG_RTL8192CE=y
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+Changes since v2: ---
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   48 ++++++++++++++++++++++++++++++-
+ 1 file changed, 47 insertions(+), 1 deletion(-)
 
-and that will select:
-
-CONFIG_RTLWIFI=y
-
-> >> While making this
-> >> change, I simplified the configuration so that variable RTLWIFI is never seen
-> >> by the user.
-> > [...]
-> >
-> > This will break existing configurations as RTL_CARDS defaults to n.
-> 
-> I added a 'default y' to the RTL_CARDS stanza. I now get the following:
-> 
-> finger@larrylap:~/staging> make
-> scripts/kconfig/conf --silentoldconfig Kconfig
-> *
-> * Restart config...
-> *
-> *
-> * Realtek rtlwifi family of devices
-> *
-> Realtek rtlwifi family of devices (RTL_CARDS) [M/n/?] (NEW)
-> 
-> That should prevent breakage of existing configurations. It defaults to "m" 
-> because mac80211 is built as a module in my configuration.
-> 
-> > Perhaps you should introduce separate modules for the common PCI and USB
-> > support code, similarly to how the rt2x00 modules are organised.
-> 
-> That would not be very difficult, but it would involve converting the single 
-> module rtlwifi into 3 separate entities. Does that make sense to you? I'm not sure.
-
-Yes it does make sense.
-
-Ben.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index b650569..7b5c593 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -5381,6 +5381,52 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_normal_mode_setup_3xxx(rt2x00dev);
+ }
+ 
++static void rt3593_post_bbp_init(struct rt2x00_dev *rt2x00dev)
++{
++	u8 bbp;
++	bool txbf_enabled = false; /* FIXME */
++
++	rt2800_bbp_read(rt2x00dev, 105, &bbp);
++	if (rt2x00dev->default_ant.rx_chain_num == 1)
++		rt2x00_set_field8(&bbp, BBP105_MLD, 0);
++	else
++		rt2x00_set_field8(&bbp, BBP105_MLD, 1);
++	rt2800_bbp_write(rt2x00dev, 105, bbp);
++
++	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
++
++	rt2800_bbp_write(rt2x00dev, 92, 0x02);
++	rt2800_bbp_write(rt2x00dev, 82, 0x82);
++	rt2800_bbp_write(rt2x00dev, 106, 0x05);
++	rt2800_bbp_write(rt2x00dev, 104, 0x92);
++	rt2800_bbp_write(rt2x00dev, 88, 0x90);
++	rt2800_bbp_write(rt2x00dev, 148, 0xc8);
++	rt2800_bbp_write(rt2x00dev, 47, 0x48);
++	rt2800_bbp_write(rt2x00dev, 120, 0x50);
++
++	if (txbf_enabled)
++		rt2800_bbp_write(rt2x00dev, 163, 0xbd);
++	else
++		rt2800_bbp_write(rt2x00dev, 163, 0x9d);
++
++	/* SNR mapping */
++	rt2800_bbp_write(rt2x00dev, 142, 6);
++	rt2800_bbp_write(rt2x00dev, 143, 160);
++	rt2800_bbp_write(rt2x00dev, 142, 7);
++	rt2800_bbp_write(rt2x00dev, 143, 161);
++	rt2800_bbp_write(rt2x00dev, 142, 8);
++	rt2800_bbp_write(rt2x00dev, 143, 162);
++
++	/* ADC/DAC control */
++	rt2800_bbp_write(rt2x00dev, 31, 0x08);
++
++	/* RX AGC energy lower bound in log2 */
++	rt2800_bbp_write(rt2x00dev, 68, 0x0b);
++
++	/* FIXME: BBP 105 owerwrite? */
++	rt2800_bbp_write(rt2x00dev, 105, 0x04);
++}
++
+ static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
+@@ -5459,7 +5505,7 @@ static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_led_open_drain_enable(rt2x00dev);
+ 	rt2800_normal_mode_setup_3593(rt2x00dev);
+ 
+-	/* TODO: post BBP initialization */
++	rt3593_post_bbp_init(rt2x00dev);
+ 
+ 	/* TODO: enable stream mode support */
+ }
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+1.7.10
 
