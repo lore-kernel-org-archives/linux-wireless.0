@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:47387 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759229Ab3GaIz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 04:55:27 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 5/5] ath10k: fix failpath in MSI-X setup
-Date: Wed, 31 Jul 2013 10:55:15 +0200
-Message-ID: <1375260915-22500-6-git-send-email-michal.kazior@tieto.com> (sfid-20130731_105544_804529_6C4C830D)
-In-Reply-To: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
-References: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
+Received: from smtp26.msg.oleane.net ([62.161.4.26]:60850 "EHLO
+	smtp26.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998Ab3GHKjM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 06:39:12 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>	 <1373018378.8548.6.camel@jlt4.sipsolutions.net>	 <002b01ce798d$865cee70$9316cb50$@acksys.fr> <1373273460.8312.3.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1373273460.8312.3.camel@jlt4.sipsolutions.net>
+Subject: RE: [PATCH V2] vlan priority handling in WMM
+Date: Mon, 8 Jul 2013 12:39:08 +0200
+Message-ID: <006c01ce7bc7$608c2a30$21a47e90$@acksys.fr> (sfid-20130708_123926_232557_1FD3A92C)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pci_disable_msi() must be called if the initial
-request_irq() fails.
 
-Also add a warning message so it's possible to
-distinguish request_irq() failure and
-pci_enable_msi() failure.
+> > The vlan Tag contain three bit for priority. The value 0 indicate no 
+> > priority (on this case the VLAN tag contain only VID). The vlan_tci 
+> > field is set to zero if the frame do not contain the vlan tag. So if 
+> > we have not a vlan tag or no priority in VLAN tag the priority value 
+> > is always 0.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+> Yes but don't we know that the vlan_tci field is valid?
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index c71b488..d95439b 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1990,8 +1990,13 @@ static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
- 	ret = request_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW,
- 			  ath10k_pci_msi_fw_handler,
- 			  IRQF_SHARED, "ath10k_pci", ar);
--	if (ret)
-+	if (ret) {
-+		ath10k_warn("request_irq(%d) failed %d\n",
-+			    ar_pci->pdev->irq + MSI_ASSIGN_FW, ret);
-+
-+		pci_disable_msi(ar_pci->pdev);
- 		return ret;
-+	}
- 
- 	for (i = MSI_ASSIGN_CE_INITIAL; i <= MSI_ASSIGN_CE_MAX; i++) {
- 		ret = request_irq(ar_pci->pdev->irq + i,
--- 
-1.7.9.5
+> I don't think you're correct in that 0 means "no priority present", it actually means "best effort" as far as I can tell. Ignoring the VLAN tag when the field is 0 would mean we could use a higher priority from the contents of the frame, which would not be desired?
+
+I can add a test with the macro vlan_tx_tag_present() to verify if the vlan_tci field is valid. 
+I test the value 0 to skip the VLAN priority and use the dscp priority in this case. The priority 0 in VLAN tag is often use to turn off the QOS, because not bit is allowed for it.
+For me is it correct. Nevertheless, if you prefer, I can test only the vlan_tci validity and in this case always use the VLAN priority.
+
+> > Sorry but I don't understand. The vlan_tci field it is a __u16 value 
+> > (defined in include/linux/skbuff.h), the VLAN_PRIO_MASK is set to
+> > 0xE000 and VLAN_PRIO_SHIFT is set to 13 (defined in 
+> > include/linux/if_vlan.h), the vlan_priority is an unsigned char. For 
+> > me the vlan_priority contain a 3-bit value (0xE000 >>13 = 0x0003), why
+> > 2 ?
+
+> Umm? No? Think again about what hweight(0x0003) is.
+
+Sorry I made a mistake  0xE000 >>13 = 0x0007 and not 0x0003, and 7 is a 3 bits value.
+
+Cedric
+
+
 
