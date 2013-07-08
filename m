@@ -1,76 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:36589 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756080Ab3GKNKz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 09:10:55 -0400
-Received: by mail-la0-f51.google.com with SMTP id fq12so6711673lab.38
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 06:10:53 -0700 (PDT)
-Message-ID: <51DEAEDB.2060600@cogentembedded.com> (sfid-20130711_151110_556525_99B6E5BE)
-Date: Thu, 11 Jul 2013 17:10:51 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Ming Lei <ming.lei@canonical.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Clemens Ladisch <clemens@ladisch.de>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>
-Subject: Re: [PATCH 46/50] Sound: usb: ua101: spin_lock in complete() cleanup
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-47-git-send-email-ming.lei@canonical.com>
-In-Reply-To: <1373533573-12272-47-git-send-email-ming.lei@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from perches-mx.perches.com ([206.117.179.246]:56622 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751809Ab3GHWEz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 18:04:55 -0400
+Message-ID: <1373321094.9458.9.camel@joe-AO722> (sfid-20130709_000459_206255_AEE09697)
+Subject: Re:
+From: Joe Perches <joe@perches.com>
+To: "Jeffrey (Sheng-Hui) Chu" <jeffchu@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 08 Jul 2013 15:04:54 -0700
+In-Reply-To: <90AC93A0CCA054488FFC508D6F62B6F40FED489B@IRVEXCHMB07.corp.ad.broadcom.com>
+References: <90AC93A0CCA054488FFC508D6F62B6F40FED489B@IRVEXCHMB07.corp.ad.broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-07-2013 13:06, Ming Lei wrote:
+On Mon, 2013-07-08 at 21:52 +0000, Jeffrey (Sheng-Hui) Chu wrote:
+[]
+> diff --git a/drivers/nfc/bcm2079x/bcm2079x-i2c.c b/drivers/nfc/bcm2079x/bcm2079x-i2c.c
+[]
+> +/* do not change below */
+> +#define MAX_BUFFER_SIZE		780
+[]
+> +static ssize_t bcm2079x_dev_read(struct file *filp, char __user *buf,
+> +					size_t count, loff_t *offset)
+> +{
+> +	struct bcm2079x_dev *bcm2079x_dev = filp->private_data;
+> +	unsigned char tmp[MAX_BUFFER_SIZE];
 
-    Here the subject doesn't match the patch.
+780 bytes on stack isn't a great idea.
 
-> Complete() will be run with interrupt enabled, so disable local
-> interrupt before holding a global lock which is held without irqsave.
+> +static ssize_t bcm2079x_dev_write(struct file *filp, const char __user *buf,
+> +					size_t count, loff_t *offset)
+> +{
+> +	struct bcm2079x_dev *bcm2079x_dev = filp->private_data;
+> +	char tmp[MAX_BUFFER_SIZE];
 
-> Cc: Clemens Ladisch <clemens@ladisch.de>
-> Cc: Jaroslav Kysela <perex@perex.cz>
-> Cc: Takashi Iwai <tiwai@suse.de>
-> Cc: alsa-devel@alsa-project.org
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-> ---
->   sound/usb/misc/ua101.c |   14 ++++++++++++--
->   1 file changed, 12 insertions(+), 2 deletions(-)
+etc.
 
-> diff --git a/sound/usb/misc/ua101.c b/sound/usb/misc/ua101.c
-> index 8b5d2c5..52a60c6 100644
-> --- a/sound/usb/misc/ua101.c
-> +++ b/sound/usb/misc/ua101.c
-> @@ -613,14 +613,24 @@ static int start_usb_playback(struct ua101 *ua)
->
->   static void abort_alsa_capture(struct ua101 *ua)
->   {
-> -	if (test_bit(ALSA_CAPTURE_RUNNING, &ua->states))
-> +	if (test_bit(ALSA_CAPTURE_RUNNING, &ua->states)) {
-> +		unsigned long flags;
+> +	int ret;
 > +
-> +		local_irq_save(flags);
->   		snd_pcm_stop(ua->capture.substream, SNDRV_PCM_STATE_XRUN);
-> +		local_irq_restore(flags);
-> +	}
->   }
->
->   static void abort_alsa_playback(struct ua101 *ua)
->   {
-> -	if (test_bit(ALSA_PLAYBACK_RUNNING, &ua->states))
-> +	if (test_bit(ALSA_PLAYBACK_RUNNING, &ua->states)) {
-> +		unsigned long flags;
-> +
-> +		local_irq_save(flags);
->   		snd_pcm_stop(ua->playback.substream, SNDRV_PCM_STATE_XRUN);
-> +		local_irq_restore(flags);
-> +	}
->   }
+> +	if (count > MAX_BUFFER_SIZE) {
+> +		dev_err(&bcm2079x_dev->client->dev, "out of memory\n");
 
-WBR, Sergei
+Out of memory isn't really true.
+The packet size is just too big for your
+little buffer.
+
+> +static int bcm2079x_dev_open(struct inode *inode, struct file *filp)
+> +{
+> +	int ret = 0;
+> +
+> +	struct bcm2079x_dev *bcm2079x_dev = container_of(filp->private_data,
+> +							struct bcm2079x_dev,
+> +							bcm2079x_device);
+> +	filp->private_data = bcm2079x_dev;
+> +	bcm2079x_init_stat(bcm2079x_dev);
+> +	bcm2079x_enable_irq(bcm2079x_dev);
+> +	dev_info(&bcm2079x_dev->client->dev,
+> +		 "%d,%d\n", imajor(inode), iminor(inode));
+
+Looks to me like this should be dev_dbg not dev_info
+
 
