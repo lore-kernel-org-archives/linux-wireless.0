@@ -1,70 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49659 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750783Ab3GLEju (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38325 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752306Ab3GHO4U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 00:39:50 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-CC: "David S. Miller" <davem@davemloft.net>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-Subject: Re: [PATCH 3/3] ath10k: ATH10K should depend on HAS_DMA
-References: <1373490216-12437-1-git-send-email-geert@linux-m68k.org>
-	<1373490216-12437-3-git-send-email-geert@linux-m68k.org>
-Date: Fri, 12 Jul 2013 07:39:39 +0300
-In-Reply-To: <1373490216-12437-3-git-send-email-geert@linux-m68k.org> (Geert
-	Uytterhoeven's message of "Wed, 10 Jul 2013 23:03:36 +0200")
-Message-ID: <87txk04cj8.fsf@kamboji.qca.qualcomm.com> (sfid-20130712_064039_019740_AA53C623)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 8 Jul 2013 10:56:20 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv6 06/18] cfg80211/mac80211: get mandatory rates based on scan width
+Date: Mon,  8 Jul 2013 16:55:54 +0200
+Message-Id: <1373295366-12823-7-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_172039_972928_076BA996)
+In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
+Mandatory rates for 5 and 10 MHz are different from the rates used for
+20 MHz in 2.4 GHz mode, as they use OFDM only.
 
-> If NO_DMA=y:
->
-> drivers/built-in.o: In function `ath10k_skb_unmap':
-> drivers/net/wireless/ath/ath10k/core.h:98: undefined reference to `dma_unmap_single'
-> drivers/built-in.o: In function `ath10k_skb_map':
-> drivers/net/wireless/ath/ath10k/core.h:83: undefined reference to `dma_map_single'
-> drivers/net/wireless/ath/ath10k/core.h:86: undefined reference to `dma_mapping_error'
-> drivers/built-in.o: In function `ath10k_htt_rx_ring_free':
-> drivers/net/wireless/ath/ath10k/htt_rx.c:113: undefined reference to `dma_unmap_single'
-> drivers/built-in.o: In function `ath10k_htt_rx_amsdu_pop':
-> drivers/net/wireless/ath/ath10k/htt_rx.c:296: undefined reference to `dma_unmap_single'
-> drivers/net/wireless/ath/ath10k/htt_rx.c:389: undefined reference to `dma_unmap_single'
-> drivers/built-in.o: In function `__ath10k_htt_rx_ring_fill_n':
-> drivers/net/wireless/ath/ath10k/htt_rx.c:146: undefined reference to `dma_map_single'
-> drivers/net/wireless/ath/ath10k/htt_rx.c:150: undefined reference to `dma_mapping_error'
-> drivers/built-in.o: In function `ath10k_htt_rx_attach':
-> drivers/net/wireless/ath/ath10k/htt_rx.c:474: undefined reference to `dma_alloc_coherent'
-> drivers/net/wireless/ath/ath10k/htt_rx.c:509: undefined reference to `dma_free_coherent'
-> drivers/net/wireless/ath/ath10k/htt_rx.c:514: undefined reference to `dma_free_coherent'
-> drivers/built-in.o: In function `ath10k_htt_rx_detach':
-> drivers/net/wireless/ath/ath10k/htt_rx.c:220: undefined reference to `dma_unmap_single'
-> drivers/net/wireless/ath/ath10k/htt_rx.c:228: undefined reference to `dma_free_coherent'
-> drivers/built-in.o: In function `ath10k_skb_map':
-> drivers/net/wireless/ath/ath10k/core.h:83: undefined reference to `dma_map_single'
-> drivers/net/wireless/ath/ath10k/core.h:86: undefined reference to `dma_mapping_error'
-> drivers/built-in.o: In function `ath10k_skb_unmap':
-> drivers/net/wireless/ath/ath10k/core.h:98: undefined reference to `dma_unmap_single'
-> drivers/built-in.o: In function `ath10k_skb_map':
-> drivers/net/wireless/ath/ath10k/core.h:83: undefined reference to `dma_map_single'
-> drivers/net/wireless/ath/ath10k/core.h:86: undefined reference to `dma_mapping_error'
-> drivers/net/wireless/ath/ath10k/core.h:83: undefined reference to `dma_map_single'
-> drivers/net/wireless/ath/ath10k/core.h:86: undefined reference to `dma_mapping_error'
-> drivers/built-in.o: In function `ath10k_skb_unmap':
-> drivers/net/wireless/ath/ath10k/core.h:98: undefined reference to `dma_unmap_single'
-> drivers/net/wireless/ath/ath10k/core.h:98: undefined reference to `dma_unmap_single'
-> drivers/net/wireless/ath/ath10k/core.h:98: undefined reference to `dma_unmap_single'
-> drivers/net/wireless/ath/ath10k/core.h:98: undefined reference to `dma_unmap_single'
->
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 
-Thanks, I'll take this and send forward.
+---
+Changes to PATCHv4:
+ * it is now based on scan_width instead of rate flags
+---
+ include/net/cfg80211.h |    4 +++-
+ net/mac80211/ibss.c    |   19 +++++++++++++++----
+ net/wireless/mesh.c    |    5 ++++-
+ net/wireless/util.c    |   14 ++++++++++----
+ 4 files changed, 32 insertions(+), 10 deletions(-)
 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1df4060..4ca16ab 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3069,11 +3069,13 @@ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
+ /**
+  * ieee80211_mandatory_rates - get mandatory rates for a given band
+  * @sband: the band to look for rates in
++ * @scan_width: width of the control channel
+  *
+  * This function returns a bitmap of the mandatory rates for the given
+  * band, bits are set according to the rate position in the bitrates array.
+  */
+-u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband);
++u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
++			      enum nl80211_bss_scan_width scan_width);
+ 
+ /*
+  * Radiotap parsing functions -- for controlled injection support
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index e9ec3e6..7fb0f2a 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -367,6 +367,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata, const u8 *bssid,
+ 	struct sta_info *sta;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_supported_band *sband;
++	enum nl80211_bss_scan_width scan_width;
+ 	int band;
+ 
+ 	/*
+@@ -395,6 +396,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata, const u8 *bssid,
+ 	if (WARN_ON_ONCE(!chanctx_conf))
+ 		return NULL;
+ 	band = chanctx_conf->def.chan->band;
++	scan_width = cfg80211_chandef_to_scan_width(&chanctx_conf->def);
+ 	rcu_read_unlock();
+ 
+ 	sta = sta_info_alloc(sdata, addr, GFP_KERNEL);
+@@ -408,7 +410,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata, const u8 *bssid,
+ 	/* make sure mandatory rates are always added */
+ 	sband = local->hw.wiphy->bands[band];
+ 	sta->sta.supp_rates[band] = supp_rates |
+-			ieee80211_mandatory_rates(sband);
++			ieee80211_mandatory_rates(sband, scan_width);
+ 
+ 	return ieee80211_ibss_finish_sta(sta);
+ }
+@@ -472,6 +474,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 	u64 beacon_timestamp, rx_timestamp;
+ 	u32 supp_rates = 0;
+ 	enum ieee80211_band band = rx_status->band;
++	enum nl80211_bss_scan_width scan_width;
+ 	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
+ 	bool rates_updated = false;
+ 
+@@ -500,9 +503,15 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 
+ 				prev_rates = sta->sta.supp_rates[band];
+ 				/* make sure mandatory rates are always added */
++				scan_width = NL80211_BSS_CHAN_WIDTH_20;
++				if (rx_status->flag & RX_FLAG_5MHZ)
++					scan_width = NL80211_BSS_CHAN_WIDTH_5;
++				if (rx_status->flag & RX_FLAG_10MHZ)
++					scan_width = NL80211_BSS_CHAN_WIDTH_10;
++
+ 				sta->sta.supp_rates[band] = supp_rates |
+-					ieee80211_mandatory_rates(sband);
+-
++					ieee80211_mandatory_rates(sband,
++								  scan_width);
+ 				if (sta->sta.supp_rates[band] != prev_rates) {
+ 					ibss_dbg(sdata,
+ 						 "updated supp_rates set for %pM based on beacon/probe_resp (0x%x -> 0x%x)\n",
+@@ -636,6 +645,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ 	struct sta_info *sta;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_supported_band *sband;
++	enum nl80211_bss_scan_width scan_width;
+ 	int band;
+ 
+ 	/*
+@@ -661,6 +671,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 	}
+ 	band = chanctx_conf->def.chan->band;
++	scan_width = cfg80211_chandef_to_scan_width(&chanctx_conf->def);
+ 	rcu_read_unlock();
+ 
+ 	sta = sta_info_alloc(sdata, addr, GFP_ATOMIC);
+@@ -672,7 +683,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ 	/* make sure mandatory rates are always added */
+ 	sband = local->hw.wiphy->bands[band];
+ 	sta->sta.supp_rates[band] = supp_rates |
+-			ieee80211_mandatory_rates(sband);
++			ieee80211_mandatory_rates(sband, scan_width);
+ 
+ 	spin_lock(&ifibss->incomplete_lock);
+ 	list_add(&sta->list, &ifibss->incomplete_stations);
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 30c4920..0553fd4 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -167,9 +167,12 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	 * basic rates
+ 	 */
+ 	if (!setup->basic_rates) {
++		enum nl80211_bss_scan_width scan_width;
+ 		struct ieee80211_supported_band *sband =
+ 				rdev->wiphy.bands[setup->chandef.chan->band];
+-		setup->basic_rates = ieee80211_mandatory_rates(sband);
++		scan_width = cfg80211_chandef_to_scan_width(&setup->chandef);
++		setup->basic_rates = ieee80211_mandatory_rates(sband,
++							       scan_width);
+ 	}
+ 
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef))
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 74458b7..ce090c1 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -33,7 +33,8 @@ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
+ }
+ EXPORT_SYMBOL(ieee80211_get_response_rate);
+ 
+-u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband)
++u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
++			      enum nl80211_bss_scan_width scan_width)
+ {
+ 	struct ieee80211_rate *bitrates;
+ 	u32 mandatory_rates = 0;
+@@ -43,10 +44,15 @@ u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband)
+ 	if (WARN_ON(!sband))
+ 		return 1;
+ 
+-	if (sband->band == IEEE80211_BAND_2GHZ)
+-		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
+-	else
++	if (sband->band == IEEE80211_BAND_2GHZ) {
++		if (scan_width == NL80211_BSS_CHAN_WIDTH_5 ||
++		    scan_width == NL80211_BSS_CHAN_WIDTH_10)
++			mandatory_flag = IEEE80211_RATE_MANDATORY_G;
++		else
++			mandatory_flag = IEEE80211_RATE_MANDATORY_B;
++	} else {
+ 		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
++	}
+ 
+ 	bitrates = sband->bitrates;
+ 	for (i = 0; i < sband->n_bitrates; i++)
 -- 
-Kalle Valo
+1.7.10.4
+
