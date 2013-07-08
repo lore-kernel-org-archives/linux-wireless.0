@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:50418 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090Ab3GKJHn (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38356 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752502Ab3GHO4V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:07:43 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Juergen Stuber <starblue@users.sourceforge.net>
-Subject: [PATCH 08/50] USB: legousbtower: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:31 +0800
-Message-Id: <1373533573-12272-9-git-send-email-ming.lei@canonical.com> (sfid-20130711_111856_270034_1972EC2C)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Mon, 8 Jul 2013 10:56:21 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv6 13/18] ath9k: report 5/10 MHz channels
+Date: Mon,  8 Jul 2013 16:56:01 +0200
+Message-Id: <1373295366-12823-14-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_165629_652944_006E879B)
+In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
-
-Cc: Juergen Stuber <starblue@users.sourceforge.net>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/usb/misc/legousbtower.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/usb/misc/legousbtower.c b/drivers/usb/misc/legousbtower.c
-index 8089479..4044989 100644
---- a/drivers/usb/misc/legousbtower.c
-+++ b/drivers/usb/misc/legousbtower.c
-@@ -771,6 +771,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
- 	struct lego_usb_tower *dev = urb->context;
- 	int status = urb->status;
- 	int retval;
-+	unsigned long flags;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 865e043..0b0bc9d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -865,6 +865,17 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	band = hw->conf.chandef.chan->band;
+ 	sband = hw->wiphy->bands[band];
  
- 	dbg(4, "%s: enter, status %d", __func__, status);
- 
-@@ -788,7 +789,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
- 	}
- 
- 	if (urb->actual_length > 0) {
--		spin_lock (&dev->read_buffer_lock);
-+		spin_lock_irqsave (&dev->read_buffer_lock, flags);
- 		if (dev->read_buffer_length + urb->actual_length < read_buffer_size) {
- 			memcpy (dev->read_buffer + dev->read_buffer_length,
- 				dev->interrupt_in_buffer,
-@@ -799,7 +800,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
- 		} else {
- 			printk(KERN_WARNING "%s: read_buffer overflow, %d bytes dropped", __func__, urb->actual_length);
- 		}
--		spin_unlock (&dev->read_buffer_lock);
-+		spin_unlock_irqrestore (&dev->read_buffer_lock, flags);
- 	}
- 
- resubmit:
++	switch (hw->conf.chandef.width) {
++	case NL80211_CHAN_WIDTH_5:
++		rxs->flag |= RX_FLAG_5MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_10:
++		rxs->flag |= RX_FLAG_10MHZ;
++		break;
++	default:
++		break;
++	}
++
+ 	if (rx_stats->rs_rate & 0x80) {
+ 		/* HT rate */
+ 		rxs->flag |= RX_FLAG_HT;
 -- 
-1.7.9.5
+1.7.10.4
 
