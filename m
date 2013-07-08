@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:36891 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3GDBF0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:05:26 -0400
-Received: by mail-pa0-f46.google.com with SMTP id fa11so772094pad.5
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:26 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 07/53] wireless-regdb: CO, Colombia - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:03 -0700
-Message-Id: <1372899889-19183-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_030535_299664_48D1857D)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:48224 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751283Ab3GHOIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:46 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 19/20] rt2x00: rt2800usb: use correct [RT]XWI size for RT3593
+Date: Mon,  8 Jul 2013 16:08:34 +0200
+Message-Id: <1373292515-21332-20-git-send-email-juhosg@openwrt.org> (sfid-20130708_162043_224923_74615D98)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+The RT3593 chipset requires different [RT]XWI size
+values. Modify the driver to use the correct values.
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and update the max EIRP. This also adds
-a new DFS 5 GHz band: 5490 - 5710 MHz.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 ---
- db.txt |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Changes since v2: ---
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |    1 +
+ drivers/net/wireless/rt2x00/rt2800usb.c |    5 ++++-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index b82b255..6d7a762 100644
---- a/db.txt
-+++ b/db.txt
-@@ -172,9 +172,10 @@ country CN:
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 1ba797b..a313241 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2814,6 +2814,7 @@ enum rt2800_eeprom_word {
+ #define TXWI_DESC_SIZE_5WORDS		(5 * sizeof(__le32))
  
- country CO:
- 	(2402 - 2472 @ 40), (3, 27)
--	(5170 - 5250 @ 40), (3, 17)
--	(5250 - 5330 @ 40), (3, 23), DFS
--	(5735 - 5835 @ 40), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
+ #define RXWI_DESC_SIZE_4WORDS		(4 * sizeof(__le32))
++#define RXWI_DESC_SIZE_5WORDS		(5 * sizeof(__le32))
+ #define RXWI_DESC_SIZE_6WORDS		(6 * sizeof(__le32))
  
- country CR:
- 	(2402 - 2482 @ 40), (N/A, 20)
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 840833b..c24c1fd 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -854,7 +854,10 @@ static void rt2800usb_queue_init(struct data_queue *queue)
+ 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
+ 	unsigned short txwi_size, rxwi_size;
+ 
+-	if (rt2x00_rt(rt2x00dev, RT5592)) {
++	if (rt2x00_rt(rt2x00dev, RT3593)) {
++		txwi_size = TXWI_DESC_SIZE_4WORDS;
++		rxwi_size = RXWI_DESC_SIZE_5WORDS;
++	} else if (rt2x00_rt(rt2x00dev, RT5592)) {
+ 		txwi_size = TXWI_DESC_SIZE_5WORDS;
+ 		rxwi_size = RXWI_DESC_SIZE_6WORDS;
+ 	} else {
 -- 
-1.7.10.4
+1.7.10
 
