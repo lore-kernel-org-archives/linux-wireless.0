@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:65424 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755174Ab3GKUYF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37987 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998Ab3GHMPn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 16:24:05 -0400
-Received: by mail-la0-f52.google.com with SMTP id fo12so7167217lab.39
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 13:24:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51DF13DA.3040803@broadcom.com>
-References: <CAB=NE6V-MOLqe0Ty0R+MX-S3oZFSfkXq+X7rqRi9RTAQ8DtuTQ@mail.gmail.com>
- <51DF13DA.3040803@broadcom.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 11 Jul 2013 13:23:42 -0700
-Message-ID: <CAB=NE6XE-DbDjCZ8ORCPYCSqzeXAs+SQvKY-0b0s9Eq8iFbxSQ@mail.gmail.com> (sfid-20130711_222409_248386_555593F0)
-Subject: Re: Using CC BY-SA for wireless wiki content
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 8 Jul 2013 08:15:43 -0400
+Message-ID: <1373285738.8312.13.camel@jlt4.sipsolutions.net> (sfid-20130708_141546_583597_3188DD95)
+Subject: Re: [PATCH V2] vlan priority handling in WMM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: voncken <cedric.voncken@acksys.fr>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 08 Jul 2013 14:15:38 +0200
+In-Reply-To: <006c01ce7bc7$608c2a30$21a47e90$@acksys.fr>
+References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
+		 <1373018378.8548.6.camel@jlt4.sipsolutions.net>
+		 <002b01ce798d$865cee70$9316cb50$@acksys.fr>
+	 <1373273460.8312.3.camel@jlt4.sipsolutions.net>
+	 <006c01ce7bc7$608c2a30$21a47e90$@acksys.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 1:21 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 07/11/13 22:18, Luis R. Rodriguez wrote:
->>
->> Folks,
->>
->> Anyone have any issues if we license the wiki content on
->> wireless.kernel.org under CC BY-SA license? That would make it
->> compatible with  Wikipedia. Please shout out if you disagree with this
->> move as at this point we have random collaborations but at least as
->> per initial review it seems this would be a good idea. Want to see if
->> anyone disagrees before we do the move.
->
->
-> Which version?
+On Mon, 2013-07-08 at 12:39 +0200, voncken wrote:
+> > > The vlan Tag contain three bit for priority. The value 0 indicate
+> no 
+> > > priority (on this case the VLAN tag contain only VID). The
+> vlan_tci 
+> > > field is set to zero if the frame do not contain the vlan tag. So
+> if 
+> > > we have not a vlan tag or no priority in VLAN tag the priority
+> value 
+> > > is always 0.
+> 
+> > Yes but don't we know that the vlan_tci field is valid?
+> 
+> > I don't think you're correct in that 0 means "no priority present",
+> it actually means "best effort" as far as I can tell. Ignoring the
+> VLAN tag when the field is 0 would mean we could use a higher priority
+> from the contents of the frame, which would not be desired?
+> 
+> I can add a test with the macro vlan_tx_tag_present() to verify if the
+> vlan_tci field is valid. 
+> I test the value 0 to skip the VLAN priority and use the dscp priority
+> in this case. The priority 0 in VLAN tag is often use to turn off the
+> QOS, because not bit is allowed for it.
 
-CC BY-SA 3.0 Unported, following the same version used by Wikipedia:
+What do you mean by "is often used"? I don't see how that would be the
+case? Are you saying routers commonly ignore the VLAN priority value if
+it's 0? That would seem odd?
 
-https://en.wikipedia.org/wiki/Wikipedia:Text_of_Creative_Commons_Attribution-ShareAlike_3.0_Unported_License
+> For me is it correct. Nevertheless, if you prefer, I can test only the
+> vlan_tci validity and in this case always use the VLAN priority.
 
-  Luis
+I don't know! Since you don't seem to really know either, we should ask
+somebody who knows, I think. Maybe you should Cc netdev with this
+question on the patch or so?
+
+> Sorry I made a mistake  0xE000 >>13 = 0x0007 and not 0x0003, and 7 is
+> a 3 bits value.
+
+Ah yes, I made the same mistake, sorry.
+
+johannes
+
