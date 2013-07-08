@@ -1,78 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:55768 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752153Ab3G1UlS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Jul 2013 16:41:18 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: FUSB200 xhci issue
-Date: Sun, 28 Jul 2013 22:41:12 +0200
-Message-ID: <6066029.JHY9cn8Gkh@blech> (sfid-20130728_224140_990585_8FE6D823)
-In-Reply-To: <51F52A89.4050506@rempel-privat.de>
-References: <51ED4E12.8030006@rempel-privat.de> <51F50AB7.3030204@rempel-privat.de> <51F52A89.4050506@rempel-privat.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from arrakis.dune.hu ([78.24.191.176]:48349 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752106Ab3GHOJA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:09:00 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 09/20] rt2x00: rt2800lib: fix default TX power values for RT3593
+Date: Mon,  8 Jul 2013 16:08:24 +0200
+Message-Id: <1373292515-21332-10-git-send-email-juhosg@openwrt.org> (sfid-20130708_162043_321159_0B495185)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, July 28, 2013 04:28:25 PM Oleksij Rempel wrote:
-> Am 28.07.2013 14:12, schrieb Oleksij Rempel:
-> > Am 28.07.2013 13:38, schrieb Christian Lamparter:
-> >
-> >>>>
-> >>>> Anyway, I tried the -next branch.
-> >>>>
-> >>>> commit dbbb809d592dde0b3c9ecb97b3b387ff8e40e799
-> >>>> Author: Oleksij Rempel <linux@rempel-privat.de>
-> >>>> Date:   Wed Jul 24 10:26:18 2013 +0200
-> >>>>
-> >>>>       k2_fw_usb_api: workaround for EP4 bug.
-> >>>>
-> >>>> but still, the device won't show up after autosuspend.
-> >>>
-> >>> Hm... firmware probably didn't rebooted before suspend. Did interface
-> >>> was up, before autosuspend? If no, you need latest wireles-testing -
-> >>> there are patches to handle this issue. Or just make "ifconfig wlan1 up"
-> >>>    before  rmmod.
-> >> Oh, I it was on the latest wireless-testing. (And the "ath9k_htc" module
-> >> had the patch "ath9k_htc: reboot firmwware if it was loaded").
-> >>
-> >> Furthermore, I did the same test with one of the ehci-only ports
-> >> and it worked. Both, devices (one had a AR7015, the other a AR9271)
-> >> came back after autosuspend there.
-> >
-> > Grrr... so it brings us back to xhci issue. Even EP4 workaround wont
-> > work here :( Suddenly i have no more ideas.
-> >
-> > Sarah, it's your turn now.
-> 
-> Christian,
-> can you please provide some more info about your xhci controller. I'll 
-> try to get me same.
+The TX power values in the EEPROM are using
+a different format for the RT3593 chip. The
+default TX power value uses bits 0..4 only.
+Bits 5..8 contains value for fine grained
+power control. Additionally, the lower and
+upper limits of the TX power values are the
+same for both bands.
 
-Well, it's a laptop (HP DV6-6003EG). I recon that getting 100% the
-same setup will be difficult. However, since the uPD720200 was/is
-very popular, it should be very easy to find one. [It's probably
-on all of these "10 euro usb-3.0 pcie-adapters". So as long as you
-got a free 1x-pcie port you should be good.]
+Improve the rt2800_txpower_to_dev function,
+in order to compute the correct default power
+values for the RT3593 chip as well.
 
-Here's the lspci summary:
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+Changes since v2: ---
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |    7 +++++++
+ drivers/net/wireless/rt2x00/rt2800lib.c |    7 +++++++
+ 2 files changed, 14 insertions(+)
 
-19:00.0 USB controller [0c03]: NEC Corporation uPD720200 USB 3.0 Host Controller [1033:0194] (rev 04) (prog-if 30 [XHCI])
-        Subsystem: Hewlett-Packard Company Device [103c:1657]
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 19
-        Region 0: Memory at d3400000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: <access denied>
-        Kernel driver in use: xhci_hcd
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index d3e8f6d..69749ba5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2603,6 +2603,10 @@ enum rt2800_eeprom_word {
+ #define EEPROM_TXPOWER_A_1		FIELD16(0x00ff)
+ #define EEPROM_TXPOWER_A_2		FIELD16(0xff00)
+ 
++/* EEPROM_TXPOWER_{A,G} fields for RT3593 */
++#define EEPROM_TXPOWER_ALC		FIELD8(0x1f)
++#define EEPROM_TXPOWER_FINE_CTRL	FIELD8(0xe0)
++
+ /*
+  * EEPROM temperature compensation boundaries 802.11A
+  * MINUS4: If the actual TSSI is below this boundary, tx power needs to be
+@@ -2884,6 +2888,9 @@ enum rt2800_eeprom_word {
+ #define MAX_A_TXPOWER	15
+ #define DEFAULT_TXPOWER	5
+ 
++#define MIN_A_TXPOWER_3593	0
++#define MAX_A_TXPOWER_3593	31
++
+ #define TXPOWER_G_FROM_DEV(__txpower) \
+ 	((__txpower) > MAX_G_TXPOWER) ? DEFAULT_TXPOWER : (__txpower)
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 1738a9d..b11f0b0 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2728,8 +2728,15 @@ static char rt2800_txpower_to_dev(struct rt2x00_dev *rt2x00dev,
+ 				  unsigned int channel,
+ 				  char txpower)
+ {
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		txpower = rt2x00_get_field8(txpower, EEPROM_TXPOWER_ALC);
++
+ 	if (channel <= 14)
+ 		return clamp_t(char, txpower, MIN_G_TXPOWER, MAX_G_TXPOWER);
++
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		return clamp_t(char, txpower, MIN_A_TXPOWER_3593,
++			       MAX_A_TXPOWER_3593);
+ 	else
+ 		return clamp_t(char, txpower, MIN_A_TXPOWER, MAX_A_TXPOWER);
+ }
+-- 
+1.7.10
 
-Regards,
-	Chr
