@@ -1,79 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:43356 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752473Ab3GWCSq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:18:46 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 00/21] mwifiex updates for 3.12
-Date: Mon, 22 Jul 2013 19:17:37 -0700
-Message-ID: <1374545878-15683-1-git-send-email-bzhao@marvell.com> (sfid-20130723_041900_525564_11AE0EF7)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from arrakis.dune.hu ([78.24.191.176]:48224 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751872Ab3GHOIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:44 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 07/20] rt2x00: rt2800lib: fix antenna configuration for RT3593
+Date: Mon,  8 Jul 2013 16:08:22 +0200
+Message-Id: <1373292515-21332-8-git-send-email-juhosg@openwrt.org> (sfid-20130708_160848_152849_84C4ED65)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series includes error case handling, bridged packet handling
-in AP mode, p2p updates, random cleanups, etc.
+On the RT3593 chipset, BBP register 86 must be
+configured by different values based on the RX
+antenna numbers.
 
-Amitkumar Karwar (11):
-  mwifiex: add PCIe shutdown handler to avoid system hang on reboot
-  mwifiex: move del_timer_sync(scan_delay_timer) call to fix memleak
-  mwifiex: remove unnecessary del_timer(cmd_timer)
-  mwifiex: move if_ops.cleanup_if() call
-  mwifiex: add unregister_dev handler for usb interface
-  mwifiex: reduce firmware poll retries
-  mwifiex: replace mdelay with msleep
-  mwifiex: correction in mwifiex_check_fw_status() return status
-  mwifiex: handle driver initialization error paths
-  mwifiex: code rearrangement in sdio.c
-  mwifiex: remove duplicate structure host_cmd_tlv
+Configure this register from the 'rt2800_config_ant'
+function.
 
-Avinash Patil (5):
-  mwifiex: rename pkt_count to ba_pkt_count in mwifiex_ra_list_tbl
-    struct
-  mwifiex: maintain outstanding packet count for RA list instead of
-    packet size
-  mwifiex: delete AP TX queues when bridged packets reach threshold
-  mwifiex: correct max IE length check for WPS IE
-  mwifiex: modify mwifiex_ap_sta_limits to advertise support for P2P
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-Huawei Yang (2):
-  mwifiex: remove stop_net_dev_queue operation in AP forwarding
-  mwifiex: add tx info to skb when forming mgmt frame
+Reference:
+  RT3593_CONFIG_SET_BY_ANTENNA in include/chip/rt3593.h
 
-Stone Piao (3):
-  mwifiex: discard deauth and disassoc event during WPS session
-  mwifiex: skip registering mgmt frame that has already registered
-  mwifiex: support to send deauth for P2P client
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+Changes since v2: ---
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
- drivers/net/wireless/mwifiex/11n_aggr.c  |   4 +-
- drivers/net/wireless/mwifiex/cfg80211.c  |  25 +++-
- drivers/net/wireless/mwifiex/decl.h      |   3 +-
- drivers/net/wireless/mwifiex/fw.h        |  44 +++----
- drivers/net/wireless/mwifiex/ie.c        |   2 +-
- drivers/net/wireless/mwifiex/init.c      |  14 +-
- drivers/net/wireless/mwifiex/join.c      |   1 +
- drivers/net/wireless/mwifiex/main.c      |  87 +++++++++----
- drivers/net/wireless/mwifiex/main.h      |   6 +-
- drivers/net/wireless/mwifiex/pcie.c      |  13 +-
- drivers/net/wireless/mwifiex/sdio.c      | 213 +++++++++++++++----------------
- drivers/net/wireless/mwifiex/sta_cmd.c   |   5 +-
- drivers/net/wireless/mwifiex/sta_event.c |  10 ++
- drivers/net/wireless/mwifiex/sta_ioctl.c |  11 +-
- drivers/net/wireless/mwifiex/uap_cmd.c   | 130 ++++++++++---------
- drivers/net/wireless/mwifiex/uap_txrx.c  |  70 +++++++++-
- drivers/net/wireless/mwifiex/usb.c       |   8 ++
- drivers/net/wireless/mwifiex/wmm.c       |  16 +--
- 18 files changed, 390 insertions(+), 272 deletions(-)
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 1a6a4eb..958215c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1803,6 +1803,13 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
+ 
+ 	rt2800_bbp_write(rt2x00dev, 3, r3);
+ 	rt2800_bbp_write(rt2x00dev, 1, r1);
++
++	if (rt2x00_rt(rt2x00dev, RT3593)) {
++		if (ant->rx_chain_num == 1)
++			rt2800_bbp_write(rt2x00dev, 86, 0x00);
++		else
++			rt2800_bbp_write(rt2x00dev, 86, 0x46);
++	}
+ }
+ EXPORT_SYMBOL_GPL(rt2800_config_ant);
+ 
 -- 
-1.8.2.3
+1.7.10
 
