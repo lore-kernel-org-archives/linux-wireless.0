@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:36729 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754206Ab3GDFfN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jul 2013 01:35:13 -0400
-Received: by mail-ob0-f173.google.com with SMTP id wc20so1161603obb.32
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 22:35:13 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 4 Jul 2013 01:35:13 -0400
-Message-ID: <CAKb7UvjVyZuOjuD3oFT_jxx5T=DNamHA_YiV_yGWcmePHHd-UQ@mail.gmail.com> (sfid-20130704_073518_906356_C8E04496)
-Subject: Constant network assoc/disassoc loop with rtl8192cu usb adapter
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from arrakis.dune.hu ([78.24.191.176]:48229 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751981Ab3GHOIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:46 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 20/20] rt2x00: rt2800usb: add USB device ID for Linksys AE3000
+Date: Mon,  8 Jul 2013 16:08:35 +0200
+Message-Id: <1373292515-21332-21-git-send-email-juhosg@openwrt.org> (sfid-20130708_160859_923816_8A9B87E8)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+The Linksys AE3000 device is based on the RT3573
+chipset. The support for this chipset is available
+already, and the AE3000 device works with the driver.
 
-I recently got a RTL8188CUS usb adapter (which uses the rtl8192cu
-driver). I'm having trouble getting it to stay associated:
+Only managed mode works correctly at the moment,
+for AP mode additional changes are needed in the
+driver.
 
-[601369.845916] wlan0: associated
-[601377.106440] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try
-to reconnect now
-[601383.867706] wlan0: associated
-[601391.120270] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try
-to reconnect now
-[601397.910678] wlan0: associated
-[601405.141764] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try
-to reconnect now
+Also add a new RT2800USB_RT3573 Kconfig option and
+only enable support for RT3573 based devices if
+that is enabled.
 
-and so on. A different usb adapter (Ralink RT2573) has no trouble
-associating to that AP (but it keeps hanging and the kernel isn't
-always able to reset it properly). The network in question is using
-WPA2-PSK.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+Changes since v2: ---
+Changes since v1:
+  - Make the support selectable by a Kconfig option.
+---
+ drivers/net/wireless/rt2x00/Kconfig     |    6 ++++++
+ drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++++
+ 2 files changed, 10 insertions(+)
 
-Is there some setting I could adjust so that it would wait longer
-before deciding that the AP is off? Or something else I can do?
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 9b915d3..c60d6e8 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -166,6 +166,12 @@ config RT2800USB_RT35XX
+ 	  rt2800usb driver.
+ 	  Supported chips: RT3572
+ 
++config RT2800USB_RT3573
++	bool "rt2800usb - Include support for rt3573 devices (EXPERIMENTAL)"
++	---help---
++	  This enables support for RT3573 chipset based wireless USB devices
++	  in the rt2800usb driver.
++
+ config RT2800USB_RT53XX
+        bool "rt2800usb - Include support for rt53xx devices (EXPERIMENTAL)"
+        ---help---
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index c24c1fd..ab609ae 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1197,6 +1197,10 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Zinwell */
+ 	{ USB_DEVICE(0x5a57, 0x0284) },
+ #endif
++#ifdef CONFIG_RT2800USB_RT3573
++	/* Linksys */
++	{ USB_DEVICE(0x13b1, 0x003b) },
++#endif
+ #ifdef CONFIG_RT2800USB_RT53XX
+ 	/* Arcadyan */
+ 	{ USB_DEVICE(0x043e, 0x7a12) },
+-- 
+1.7.10
 
-This is on a 3.10-rc6 kernel + the __queue_work warning fix patch at
-https://git.kernel.org/cgit/linux/kernel/git/linville/wireless-testing.git/patch/?id=1621c9466099faf21ad19738d54a7d1845a29b32.
-
-Thanks,
-
-  -ilia
