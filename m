@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3664 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755845Ab3GSNPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 09:15:51 -0400
-Message-ID: <51E93BFA.4090808@broadcom.com> (sfid-20130719_151610_462727_759EC916)
-Date: Fri, 19 Jul 2013 15:15:38 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Jiri Slaby" <jslaby@suse.cz>
-cc: brcm80211-dev-list@broadcom.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Linux kernel mailing list" <linux-kernel@vger.kernel.org>
-Subject: Re: brcm80211: machine freezing hard with rfkill on
-References: <51E8E482.30505@suse.cz>
-In-Reply-To: <51E8E482.30505@suse.cz>
-Content-Type: text/plain;
- charset=iso-8859-2;
- format=flowed
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38334 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751510Ab3GHO4U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:56:20 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv6 16/18] ath5k: report 5/10 MHz channels
+Date: Mon,  8 Jul 2013 16:56:04 +0200
+Message-Id: <1373295366-12823-17-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_172039_870499_4F659D5C)
+In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/13 09:02, Jiri Slaby wrote:
-> Hi,
->
-> our users report [1] that their machines freeze hard when they have
-> rfkill turned on and try to run wpa_supplicant or enable network
-> otherwise. This is with BCM43225 over PCI chip.
->
-> Any ideas what that could be or how to fix this?
->
-> [1] https://bugzilla.novell.com/show_bug.cgi?id=787649
->
-> thanks,
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Hi Jiri,
-
-Looking in the bug report it seems to be on 3.4 kernel. The commit below 
-is done later.
-
-Regards,
-Arend
----------------
-commit 82d8eba358badb466a4e988ecabf0668a8d92e9c
-Author: Piotr Haber <phaber@broadcom.com>
-Date:   Wed Sep 19 22:21:15 2012 +0200
-
-     brcmsmac: don't start device when RfKill is engaged
-
-     This patch fixes a bug when device is being started
-     while RfKill switch is engaged, leading to hang
-     due to partial initialization of hardware.
-
-     Tested-by: <dragonn@op.pl>
-     Reviewed-by: Arend van Spriel <arend@broadcom.com>
-     Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-     Signed-off-by: Piotr Haber <phaber@broadcom.com>
-     Signed-off-by: Arend van Spriel <arend@broadcom.com>
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index ce67ab7..260a6fc 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1400,6 +1400,16 @@ ath5k_receive_frame(struct ath5k_hw *ah, struct sk_buff *skb,
+ 
+ 	rxs->rate_idx = ath5k_hw_to_driver_rix(ah, rs->rs_rate);
+ 	rxs->flag |= ath5k_rx_decrypted(ah, skb, rs);
++	switch (ah->ah_bwmode) {
++	case AR5K_BWMODE_5MHZ:
++		rxs->flag |= RX_FLAG_5MHZ;
++		break;
++	case AR5K_BWMODE_10MHZ:
++		rxs->flag |= RX_FLAG_10MHZ;
++		break;
++	default:
++		break;
++	}
+ 
+ 	if (rxs->rate_idx >= 0 && rs->rs_rate ==
+ 	    ah->sbands[ah->curchan->band].bitrates[rxs->rate_idx].hw_value_short)
+-- 
+1.7.10.4
 
