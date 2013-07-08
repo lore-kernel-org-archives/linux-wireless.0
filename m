@@ -1,68 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:51541 "EHLO bear.ext.ti.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:48287 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754123Ab3GCOOl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 10:14:41 -0400
-Date: Wed, 3 Jul 2013 17:14:03 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
-	<balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
-Subject: Re: [PATCH v3 3/8] wlcore: remove pwr_in_suspend from platform data
-Message-ID: <20130703141403.GP15056@arwen.pp.htv.fi> (sfid-20130703_161500_089970_847FF1D2)
-Reply-To: <balbi@ti.com>
-References: <1372860209-3504-1-git-send-email-coelho@ti.com>
- <1372860209-3504-4-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="v+Mbu5iuT/5Blw/K"
-In-Reply-To: <1372860209-3504-4-git-send-email-coelho@ti.com>
+	id S1751642Ab3GHOIw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:52 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 08/20] rt2x00: rt2800lib: add rt2800_txpower_to_dev helper
+Date: Mon,  8 Jul 2013 16:08:23 +0200
+Message-Id: <1373292515-21332-9-git-send-email-juhosg@openwrt.org> (sfid-20130708_160856_309524_7D9D73C8)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---v+Mbu5iuT/5Blw/K
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Introduce a new helper function for converting
+the default TX power values from EEPROM into
+mac80211 values.
 
-On Wed, Jul 03, 2013 at 05:03:24PM +0300, Luciano Coelho wrote:
-> The pwr_in_suspend flag depends on the MMC settings which can be
-> retrieved from the SDIO subsystem, so it doesn't need to be part of
-> the platform data structure.  Move it to the platform device data that
-> is passed from SDIO to wlcore.
->=20
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
+The change improves the readability and it makes
+it easier to add support for other chipsets.
 
-Reviewed-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+Changes since v2: ---
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |    6 ------
+ drivers/net/wireless/rt2x00/rt2800lib.c |   21 ++++++++++++++-------
+ 2 files changed, 14 insertions(+), 13 deletions(-)
 
---=20
-balbi
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 7b7caeb..d3e8f6d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2887,15 +2887,9 @@ enum rt2800_eeprom_word {
+ #define TXPOWER_G_FROM_DEV(__txpower) \
+ 	((__txpower) > MAX_G_TXPOWER) ? DEFAULT_TXPOWER : (__txpower)
+ 
+-#define TXPOWER_G_TO_DEV(__txpower) \
+-	clamp_t(char, __txpower, MIN_G_TXPOWER, MAX_G_TXPOWER)
+-
+ #define TXPOWER_A_FROM_DEV(__txpower) \
+ 	((__txpower) > MAX_A_TXPOWER) ? DEFAULT_TXPOWER : (__txpower)
+ 
+-#define TXPOWER_A_TO_DEV(__txpower) \
+-	clamp_t(char, __txpower, MIN_A_TXPOWER, MAX_A_TXPOWER)
+-
+ /*
+  *  Board's maximun TX power limitation
+  */
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 958215c..1738a9d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2724,6 +2724,16 @@ static void rt2800_iq_calibrate(struct rt2x00_dev *rt2x00dev, int channel)
+ 	rt2800_bbp_write(rt2x00dev, 159, cal != 0xff ? cal : 0);
+ }
+ 
++static char rt2800_txpower_to_dev(struct rt2x00_dev *rt2x00dev,
++				  unsigned int channel,
++				  char txpower)
++{
++	if (channel <= 14)
++		return clamp_t(char, txpower, MIN_G_TXPOWER, MAX_G_TXPOWER);
++	else
++		return clamp_t(char, txpower, MIN_A_TXPOWER, MAX_A_TXPOWER);
++}
++
+ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 				  struct ieee80211_conf *conf,
+ 				  struct rf_channel *rf,
+@@ -2733,13 +2743,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	unsigned int tx_pin;
+ 	u8 bbp, rfcsr;
+ 
+-	if (rf->channel <= 14) {
+-		info->default_power1 = TXPOWER_G_TO_DEV(info->default_power1);
+-		info->default_power2 = TXPOWER_G_TO_DEV(info->default_power2);
+-	} else {
+-		info->default_power1 = TXPOWER_A_TO_DEV(info->default_power1);
+-		info->default_power2 = TXPOWER_A_TO_DEV(info->default_power2);
+-	}
++	info->default_power1 = rt2800_txpower_to_dev(rt2x00dev, rf->channel,
++						     info->default_power1);
++	info->default_power2 = rt2800_txpower_to_dev(rt2x00dev, rf->channel,
++						     info->default_power2);
+ 
+ 	switch (rt2x00dev->chip.rf) {
+ 	case RF2020:
+-- 
+1.7.10
 
---v+Mbu5iuT/5Blw/K
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJR1DGrAAoJEIaOsuA1yqREfS8P/2rrlZTd5MOYa7sI2VX2QjSD
-RQa262u7GknQOq6bNZ37RrhrdfkX/PB3Omcs/3FvY529dTzlOBI+o752H4lmFPTr
-EIMbk4RbGZ6s2cnDBq8YXio2YTBTrK+IM+RkU9WhlXFHSqvTi31I+N5nSyfZ7RGa
-EjHS4qbVz7ydsw07a2u17Qw7lHW8bjbyJnlfJAVNOK4Rj1/8H9iRi0d6EhNqULNn
-OA4RlG5YUVrW1q0Ipz34i2VYhXuv6mvA6P6jTU9eSVCjnC2J0s8Bn2pMZZDzD9XY
-lSlu1ozwxW+uL7Ex8+RnnxzWqT9xgOrV/gwXq5drdJAkJSMyx75avHvbxFO5yAOr
-e7BMmkY8+0r3inuZrI0Aagy6B4wTlmWnvd0SnVU98nrU5r0AXN5KYOjQwE75B3KW
-r8WQVisqvqenW0+EuthoBsZt3nAZ62NdfuaVoIQ2ricDDV9/jVHefKiY+TT39wTX
-YVLf/XHp9+VXWtWoVyriEEi6jzSgQhX6FPPCvhEfERoeiC64gVq6H0cYe9byiUS4
-slCl9wF4hsiGk1s9PDHbz/F8J9MAgzvu0vVe7n2aql7MlEK9h+rvGrtwZyfAOCBo
-UdCWvkiuS5Ag+XfhW1Ie7fstWWkz3LylNs2uLEonvkLOCqMWXzvZDKBWS2K5UCw1
-wLrsPp1sLgL7B5Xj///T
-=8X61
------END PGP SIGNATURE-----
-
---v+Mbu5iuT/5Blw/K--
