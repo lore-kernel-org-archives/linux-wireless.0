@@ -1,64 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:37895 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909Ab3GQCWO (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40248 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213Ab3GHNO0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:22:14 -0400
-Received: by mail-pa0-f44.google.com with SMTP id lj1so1419288pab.3
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:13 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 40/53] wireless-regdb: enable VHT80 and VHT160 for JP
-Date: Tue, 16 Jul 2013 19:18:29 -0700
-Message-Id: <1374027522-18488-41-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042218_421294_14BCB013)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 8 Jul 2013 09:14:26 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv3 2/5] mac80211: add functions to duplicate a cfg80211_beacon
+Date: Mon,  8 Jul 2013 15:14:07 +0200
+Message-Id: <1373289250-12259-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_151441_197050_62436257)
+In-Reply-To: <1373289250-12259-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373289250-12259-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+For the channel switch announcement, it is required to set a new beacon
+after the driver arrived on the new channel. The new beacon will be set
+by nl80211, but is required to duplicate the beacon as the original
+memory within the netlink message will be gone.
 
-As per Michael Green we can enable VHT80 and VHT160 on
-the enabled JP channels now. I've enabled them only for
-the channels where either 80 MHz or 160 MHz actually fits
-on the channel spacing for the band defined.
-
-When passed to the kernel I have verified we get:
-
-cfg80211: Regulatory domain changed to country: JP
-cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-cfg80211:   (4910000 KHz - 4990000 KHz @ 40000 KHz), (N/A, 2300 mBm)
-cfg80211:   (5030000 KHz - 5090000 KHz @ 40000 KHz), (N/A, 2300 mBm)
-cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz), (N/A, 2000 mBm)
-cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz), (N/A, 2000 mBm)
-cfg80211:   (5490000 KHz - 5710000 KHz @ 160000 KHz), (N/A, 2300 mBm)
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Changes to PATCHv2:
+ * allocate only one memory chunk
+---
+ net/mac80211/cfg.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index ead6646..63ee9b4 100644
---- a/db.txt
-+++ b/db.txt
-@@ -433,9 +433,9 @@ country JP:
- 	(2474 - 2494 @ 20), (N/A, 20), NO-OFDM
- 	(4910 - 4990 @ 40), (N/A, 23)
- 	(5030 - 5090 @ 40), (N/A, 23)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 23), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 160), (N/A, 23), DFS
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 8184d12..a99c9a8 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2784,6 +2784,62 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 	return 0;
+ }
  
- country JO:
- 	(2402 - 2482 @ 40), (N/A, 20)
++static struct cfg80211_beacon_data *
++cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
++{
++	struct cfg80211_beacon_data *new_beacon;
++	u8 *pos;
++	int len;
++
++	len = beacon->head_len + beacon->tail_len + beacon->beacon_ies_len +
++	      beacon->proberesp_ies_len + beacon->assocresp_ies_len +
++	      beacon->probe_resp_len;
++
++	new_beacon = kzalloc(sizeof(*new_beacon) + len, GFP_KERNEL);
++	if (!new_beacon)
++		return NULL;
++
++	pos = (u8 *)(new_beacon + 1);
++	if (beacon->head_len) {
++		new_beacon->head_len = beacon->head_len;
++		new_beacon->head = pos;
++		memcpy(pos, beacon->head, beacon->head_len);
++		pos += beacon->head_len;
++	}
++	if (beacon->tail_len) {
++		new_beacon->tail_len = beacon->tail_len;
++		new_beacon->tail = pos;
++		memcpy(pos, beacon->tail, beacon->tail_len);
++		pos += beacon->tail_len;
++	}
++	if (beacon->beacon_ies_len) {
++		new_beacon->beacon_ies_len = beacon->beacon_ies_len;
++		new_beacon->beacon_ies = pos;
++		memcpy(pos, beacon->beacon_ies, beacon->beacon_ies_len);
++		pos += beacon->beacon_ies_len;
++	}
++	if (beacon->proberesp_ies_len) {
++		new_beacon->proberesp_ies_len = beacon->proberesp_ies_len;
++		new_beacon->proberesp_ies = pos;
++		memcpy(pos, beacon->proberesp_ies, beacon->proberesp_ies_len);
++		pos += beacon->proberesp_ies_len;
++	}
++	if (beacon->assocresp_ies_len) {
++		new_beacon->assocresp_ies_len = beacon->assocresp_ies_len;
++		new_beacon->assocresp_ies = pos;
++		memcpy(pos, beacon->assocresp_ies, beacon->assocresp_ies_len);
++		pos += beacon->assocresp_ies_len;
++	}
++	if (beacon->probe_resp_len) {
++		new_beacon->probe_resp_len = beacon->probe_resp_len;
++		beacon->probe_resp = pos;
++		memcpy(pos, beacon->probe_resp, beacon->probe_resp_len);
++		pos += beacon->probe_resp_len;
++	}
++
++	return new_beacon;
++}
++
+ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			     struct ieee80211_channel *chan, bool offchan,
+ 			     unsigned int wait, const u8 *buf, size_t len,
 -- 
 1.7.10.4
 
