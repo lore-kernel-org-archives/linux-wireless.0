@@ -1,40 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3162 "EHLO mms3.broadcom.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:48208 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933183Ab3GCU5W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 16:57:22 -0400
-Received: from [10.0.2.15] (unknown [10.177.252.108]) by
- mail-sj1-12.sj.broadcom.com (Postfix) with ESMTP id 90067207C0 for
- <linux-wireless@vger.kernel.org>; Wed, 3 Jul 2013 13:57:12 -0700 (PDT)
-Message-ID: <51D49027.9010803@broadcom.com> (sfid-20130703_225725_898124_EAB997AB)
-Date: Wed, 3 Jul 2013 22:57:11 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: interested in py80211?
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1751663Ab3GHOIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:43 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 02/20] rt2x00: rt2800lib: add BBP register initialization for RT3593
+Date: Mon,  8 Jul 2013 16:08:17 +0200
+Message-Id: <1373292515-21332-3-git-send-email-juhosg@openwrt.org> (sfid-20130708_160851_668584_B41DAE39)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A common say in Linux arena is "when you have an itch, just scratch it". 
-My itch is that tools like ifconfig and iw are great, but in an 
-automated test environment it kind of sucks to parse output, which is 
-confirmed by blurb from iw: "Do NOT screenscrape this tool, we don't 
-consider its output stable.".
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-Ever since my first contact with Python I tend to favor it over other 
-scripting alternatives so I decided to scratch my itch with that and 
-another old acquaintance called SWIG. With those I went to create 
-py80211. A first attempt was to have SWIG create a wrapper API directly 
-exposing the libnl-3 API, but that did not feel comfortable in a 
-scripting environment. So the level of abstraction is a bit higher. It 
-is just in a kick-off state (eg. can only send u32 attributes), but I 
-decided to push it to github anyway.
+References:
+  NICInitRT3593BbpRegisters in chips/rt3593.c
+  NICInitBBP in common/rtmp_init.c
+  NICInitAsicFromEEPROM in common/rtmp_init.c
 
-https://github.com/arend/py80211
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+Changes since v2: ---
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index bfeca29..53ebdb9 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4504,6 +4504,22 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_disable_unused_dac_adc(rt2x00dev);
+ }
+ 
++static void rt2800_init_bbp_3593(struct rt2x00_dev *rt2x00dev)
++{
++	rt2800_init_bbp_early(rt2x00dev);
++
++	rt2800_bbp_write(rt2x00dev, 79, 0x13);
++	rt2800_bbp_write(rt2x00dev, 80, 0x05);
++	rt2800_bbp_write(rt2x00dev, 81, 0x33);
++	rt2800_bbp_write(rt2x00dev, 137, 0x0f);
++
++	rt2800_bbp_write(rt2x00dev, 84, 0x19);
++
++	/* Enable DC filter */
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT3593, REV_RT3593E))
++		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
++}
++
+ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int ant, div_mode;
+@@ -4719,6 +4735,9 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	case RT3572:
+ 		rt2800_init_bbp_3572(rt2x00dev);
+ 		break;
++	case RT3593:
++		rt2800_init_bbp_3593(rt2x00dev);
++		return;
+ 	case RT5390:
+ 	case RT5392:
+ 		rt2800_init_bbp_53xx(rt2x00dev);
+-- 
+1.7.10
 
