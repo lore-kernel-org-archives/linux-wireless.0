@@ -1,44 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:57796 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753542Ab3GINgz (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37730 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998Ab3GHLDs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 09:36:55 -0400
-Received: by mail-ob0-f173.google.com with SMTP id wc20so6871384obb.4
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jul 2013 06:36:55 -0700 (PDT)
-Message-ID: <51DC11F5.9080604@lwfinger.net> (sfid-20130709_153658_602520_7719E6B1)
-Date: Tue, 09 Jul 2013 08:36:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Dmitry Zganyaiko <dmitry.zganyaiko@gmail.com>
-CC: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: New device for ar5523
-References: <CC807E45-D614-4540-AD3F-160B56795851@gmail.com>
-In-Reply-To: <CC807E45-D614-4540-AD3F-160B56795851@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 8 Jul 2013 07:03:48 -0400
+Message-ID: <1373281421.8312.8.camel@jlt4.sipsolutions.net> (sfid-20130708_130351_383951_84608418)
+Subject: Re: [PATCHv5 00/18] Add support for 5 and 10 MHz channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Mon, 08 Jul 2013 13:03:41 +0200
+In-Reply-To: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1372352340-20663-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/09/2013 03:59 AM, Dmitry Zganyaiko wrote:
-> Hi! I'm using usb wireless adaptor named
-> 07d1:3a0d D-Link System DWA-120 802.11g Wireless 108G (taken from lsusb)
->
-> System is Debian wheezy with 3.8 kernel taken from ubuntu reps. But after launch this adaptor doesn't work: no any new network interfaces is shown in ifconfig.
->
-> As far as I understood, such vendor:product (07d1:3a0d) isn't specified in drivers/net/wireless/ath/ar5523/ar5523.c, and therefore the driver doesn't recognise my device. Firmware 'ar5523.bin' is located in /usr/local/lib/firmware.
->
-> What can I do to make this adaptor work? Only add that v:p pair to ar5523.c and recompile it? Just if that can be done without compiling - it will be great.
+On Thu, 2013-06-27 at 18:58 +0200, Simon Wunderlich wrote:
 
-You can test to see if it works with that kernel with the following commands (as 
-root):
+> As always, any comments are appreciated!
 
-modprobe -v ar5523
-echo 07d1 3a0d > /sys/bus/usb/drivers/ar5523/new_id
+Compilation is broken in the middle of this series so I'm dropping this.
 
-If the device would work by adding that USB ID to the device table, then the 
-above commands should accomplish the same result. Note - these commands will 
-need to be re-entered after every reload of ar5523.
-
-Larry
+joahnnes
 
