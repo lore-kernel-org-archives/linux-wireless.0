@@ -1,98 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22243 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752292Ab3GUHGm (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41759 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751582Ab3GHSU6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jul 2013 03:06:42 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	Stable <stable@vger.kernel.org>,
-	Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: [PATCH] ath: wil6210: Fix build error
-Date: Sun, 21 Jul 2013 10:06:31 +0300
-Message-ID: <1958736.oRuXAUfNGd@lx-vladimir> (sfid-20130721_090705_842512_EB1E148D)
-In-Reply-To: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 8 Jul 2013 14:20:58 -0400
+Message-ID: <51DB0302.5050201@candelatech.com> (sfid-20130708_202115_968241_2169528B)
+Date: Mon, 08 Jul 2013 11:20:50 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Replacement for local->hw.conf.channel
+References: <51D4BB56.9070401@candelatech.com>  (sfid-20130704_020129_998241_BE6D0EF6) <1372922870.8235.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1372922870.8235.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, July 20, 2013 09:46:48 PM Larry Finger wrote:
-> Building driver wil6210 in 3.10 and 3.11 kernels yields the following errors:
-> 
->   CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
-> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_print_ring':
-> drivers/net/wireless/ath/wil6210/debugfs.c:163:11: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
->            false);
->            ^
-> In file included from include/linux/kernel.h:13:0,
->                  from include/linux/cache.h:4,
->                  from include/linux/time.h:4,
->                  from include/linux/stat.h:18,
->                  from include/linux/module.h:10,
->                  from drivers/net/wireless/ath/wil6210/debugfs.c:17:
-> include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
->  extern void hex_dump_to_buffer(const void *buf, size_t len,
->              ^
-> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_txdesc_debugfs_show':
-> drivers/net/wireless/ath/wil6210/debugfs.c:429:10: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
->           sizeof(printbuf), false);
->           ^
-> In file included from include/linux/kernel.h:13:0,
->                  from include/linux/cache.h:4,
->                  from include/linux/time.h:4,
->                  from include/linux/stat.h:18,
->                  from include/linux/module.h:10,
->                  from drivers/net/wireless/ath/wil6210/debugfs.c:17:
-> include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
->  extern void hex_dump_to_buffer(const void *buf, size_t len,
->              ^
-> cc1: all warnings being treated as errors
-> make[5]: *** [drivers/net/wireless/ath/wil6210/debugfs.o] Error 1
-> make[4]: *** [drivers/net/wireless/ath/wil6210] Error 2
-> make[3]: *** [drivers/net/wireless/ath] Error 2
-> make[2]: *** [drivers/net/wireless] Error 2
-> make[1]: *** [drivers/net] Error 2
-> make: *** [drivers] Error 2
-> 
-> These errors are fixed by changing the type of the buffer from "unsigned char *" to "char *".
-> 
-> Reported-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
-> Tested-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>  [3.10]
-> Cc: Thomas Fjellstrom <thomas@fjellstrom.ca>
-> ---
->  drivers/net/wireless/ath/wil6210/debugfs.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-> index e8308ec..ab63676 100644
-> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
-> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-> @@ -145,7 +145,7 @@ static void wil_print_ring(struct seq_file *s, const char *prefix,
->  				   le16_to_cpu(hdr.type), hdr.flags);
->  			if (len <= MAX_MBOXITEM_SIZE) {
->  				int n = 0;
-> -				unsigned char printbuf[16 * 3 + 2];
-> +				char printbuf[16 * 3 + 2];
->  				unsigned char databuf[MAX_MBOXITEM_SIZE];
->  				void __iomem *src = wmi_buffer(wil, d.addr) +
->  					sizeof(struct wil6210_mbox_hdr);
-> @@ -416,7 +416,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
->  		seq_printf(s, "  SKB = %p\n", skb);
->  
->  		if (skb) {
-> -			unsigned char printbuf[16 * 3 + 2];
-> +			char printbuf[16 * 3 + 2];
->  			int i = 0;
->  			int len = le16_to_cpu(d->dma.length);
->  			void *p = skb->data;
-> 
-Hmm, I have no warning for this with neither 3.10 nor 3.11 kernel version; but
-patch is correct, and here is my
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+On 07/04/2013 12:27 AM, Johannes Berg wrote:
+> On Wed, 2013-07-03 at 17:01 -0700, Ben Greear wrote:
+>> I'm trying to port some patches forward to 3.10....
+>>
+>> I am trying to find the current channel for a radio.  Since
+>> hw.conf.channel no longer exists, what is the best way to
+>> go about this?
+>
+> Well there's hw.conf.chandef.chan now I think, but that can be NULL and
+> generic mac80211 code must not use it. There's no single current channel
+> any more, you want vif->chanctx or so.
+
+ From looking at the scanning code (line 542 or so), it appears
+
+local->_oper_chandef.chan
+
+might work?
+
+In 3.9, ath9k_htc was giving me a null channel in the code below:
+
+	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+	if (chanctx_conf)
+		channel = chanctx_conf->def.chan;
+	else
+		channel = NULL;
+
+
+I haven't tried that yet in 3.10 or later, so maybe I don't need the
+hw.conf.channel in new code anyway.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
