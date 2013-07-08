@@ -1,131 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:30792 "EHLO mga11.intel.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:48818 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754177Ab3GJKnv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 06:43:51 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Spinadel, David" <david.spinadel@intel.com>,
-	"Ginsburg, Noam" <noam.ginsburg@intel.com>,
-	"Perelmooter, Liraz" <liraz.perelmooter@intel.com>,
-	"Shalev, Oz" <oz.shalev@intel.com>
-Subject: RE: [PATCH 1/3] [RFC] cfg80211: Add indoor only and GO concurrent
- channel attributes
-Date: Wed, 10 Jul 2013 10:43:38 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A01AD2DF7B@HASMSX106.ger.corp.intel.com> (sfid-20130710_124355_696258_5E809CC8)
-References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
- <1372768095-26053-2-git-send-email-ilan.peer@intel.com>
- <CAB=NE6Wr_Y+uoGwOT_nE-VE49vd0eobv_F7=hF=mtVfGgCOehg@mail.gmail.com>
-In-Reply-To: <CAB=NE6Wr_Y+uoGwOT_nE-VE49vd0eobv_F7=hF=mtVfGgCOehg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	id S1752160Ab3GHJ0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 05:26:25 -0400
+Message-ID: <51DA85C2.1060509@openwrt.org> (sfid-20130708_112627_749558_8CED6102)
+Date: Mon, 08 Jul 2013 11:26:26 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 4/5] rt2x00: rt2800lib: introduce rt2800_eeprom_word_index
+ helper
+References: <1372269318-30233-1-git-send-email-juhosg@openwrt.org> <1372269318-30233-5-git-send-email-juhosg@openwrt.org> <20130703192813.GD2245@localhost.localdomain> <51D4883E.2050607@openwrt.org> <20130704182746.GA2061@localhost.localdomain>
+In-Reply-To: <20130704182746.GA2061@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVpcywNCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3LiBXaWxsIG5lZWQgc29tZSBtb3JlIHRp
-bWUgdG8gbG9vayBhdCB5b3VyIHN1Z2dlc3Rpb25zIGJlbG93IDopDQoNClJlZ2FyZHMsDQoNCkls
-YW4uDQoNCj4gDQo+IE9uIFR1ZSwgSnVsIDIsIDIwMTMgYXQgNToyOCBBTSwgSWxhbiBQZWVyIDxp
-bGFuLnBlZXJAaW50ZWwuY29tPiB3cm90ZToNCj4gPiBGcm9tOiBEYXZpZCBTcGluYWRlbCA8ZGF2
-aWQuc3BpbmFkZWxAaW50ZWwuY29tPg0KPiA+DQo+ID4gVGhlIEZDQyBhcmUgY2xhcmlmeWluZyBz
-b21lIHNvZnQgY29uZmlndXJhdGlvbiByZXF1aXJlbWVudHMsIHdoaWNoDQo+ID4gYW1vbmcgb3Ro
-ZXIgaW5jbHVkZXMgdGhlIGZvbGxvd2luZzoNCj4gPg0KPiA+IDEuIENvbmN1cnJlbnQgR08gb3Bl
-cmF0aW9uLCB3aGVyZSBkZXZpY2VzIG1heSBzdXBwb3J0IFdGRCBpbg0KPiA+ICAgIGJhbmRzIHdo
-ZXJlIGFuIGF1dGhvcml6ZWQgbWFzdGVyIChmb3IgZXhhbXBsZSB3aXRoIERGUyBhbmQNCj4gPiAg
-ICBERlMgYW5kIHJhZGFyIGRldGVjdGlvbiBjYXBhYmlsaXR5IGluIHRoZSBVTklJIGJhbmQpIGlz
-IG9wZXJhdGluZy4NCj4gDQo+IElzIFdGRCBXaUZpIERpc3BsYXk/IElzIHRoZXJlIGFueSBzdHJp
-Y3QgcmVsYXRpb25zaGlwIGhlcmUgdG8gV0ZEIGFuZCBHTyBhbmQNCj4gcmVndWxhdG9yeSBvciBp
-cyBXRkQganVzdCBhIHVzZSBjYXNlIGV4YW1wbGU/IEFyZSB5b3UgaW5kaWNhdGluZyB0aGF0IHRo
-ZSBGQ0MNCj4gaXMgbWFraW5nIHNwZWNpYWwgcnVsZXMgZm9yIGNhc2VzIGluIHNwZWNpZmljIGJh
-bmRzIHdoZXJlIEdPICpjYW4qIGNvLWV4aXN0IHdpdGgNCj4gb3RoZXIgR08gZGV2aWNlcyA/DQoN
-CldGRCBpcyBXaUZpIGRpcmVjdCBpbiB0aGlzIGNvbnRleHQuIEkgZG8gbm90IHRoaW5rIHRoYXQg
-dGhlIEZDQyBhcmUgbWFraW5nIHNwZWNpYWwgcnVsZXMgb25seSBmb3IgR08gc3BlY2lmaWMgc2Nl
-bmFyaW9zIGJ1dCBhIG1vcmUgZ2VuZXJhbCBhcHByb2FjaCB3aGVyZSAiY29tcGxpYW5jZSBtYXkg
-YmUgYWNoaWV2ZWQgdW5kZXIgdGhlIGd1aWRhbmNlIG9mIGFuIGF1dGhvcml6ZWQgbWFzdGVyIi4g
-VGhlIFdGRC9QMlAgR08gY2FzZSBpcyBvbmx5IGFuIGV4YW1wbGUuDQoNCj4gWW91IGFubm90YXRl
-IHRoYXQgdGhpcyBpcyBzb21laG93IHJlbGF0ZWQgdG8gREZTLCBhcmUgdGhlIEdPIGNvbmN1cnJl
-bnQgcnVsZXMNCj4gdGhhdCB0aGUgRkNDIGlzIGRlZmluaW5nIG9ubHkgYXBwbGljYWJsZSB0byBE
-RlMgZnJlcXVlbmN5IHJhbmdlcz8gSWYgc28gd291bGQgaXQNCj4gc3VmZmljZSB0byBvbmx5IHVz
-ZSBERlMgZmxhZyA/IE9yIGFyZSB0aGVyZSBvdGhlciBzcGVjaWFsIGNhc2VzIGJleW9uZCBERlMN
-Cj4gZnJlcXVlbmN5IHJhbmdlcyB0aGF0IHRoZSBGQ0MgaXMgY3JlYXRpbmcgc3BlY2lhbCBoYW5k
-bGluZz8NCj4NCg0KREZTIHdhcyBnaXZlbiBoZXJlIGFzIGFuIGV4YW1wbGUuIEdlbmVyYWxseSwg
-SSB0aGluayB0aGF0IHRoZSBjaGFuZ2VzIHRoYXQgdGhlIEZDQyBhcmUgbWFraW5nIGFyZSB0YXJn
-ZXRpbmcgdmFyaW91cyBzY2VuYXJpb3MgYW5kIHZhcmlvdXMgUkYgZGV2aWNlcyAoZm9yIGV4YW1w
-bGUgdGhvc2UgZGVmaW5lZCBpbiBwYXJ0IDE1IG9mIENGUiB0aXRsZSA0NykuDQogDQo+IEFwYXJ0
-IGZyb20gdGhlIEZDQyBhcmUgeW91IGF3YXJlIG9mIHNwZWNpYWwgY2FzZXMgaGFuZGxpbmcgZm9y
-IG90aGVyDQo+IHJlZ3VsYXRvcnkgYm9kaWVzIGF0IHRoaXMgcG9pbnQ/DQoNCk5vdCB0aGF0IEkn
-bSBhd2FyZSBvZi4gQWRkaW5nIHNvbWUgbW9yZSBwZW9wbGUgdGhhdCBtaWdodCBrbm93IG1vcmUu
-DQoNCj4gDQo+IE5vdGUgdGhhdCB3ZSBoYXZlIGFscmVhZHkgdGhlc2Ugb24gcmVnZGIuaCBmcm9t
-IENSREE6DQo+IA0KPiANCj4gLyoNCj4gICogVGhlIExpbnV4IG1hcCBkZWZpbmVkIGluIDxsaW51
-eC91YXBpL25sODAyMTEuaD4gZW51bQ0KPiBubDgwMjExX3JlZ19ydWxlX2ZsYWdzICAqLyBlbnVt
-IHJlZ19ydWxlX2ZsYWdzIHsNCj4gICAgICAgICBSUkZfTk9fT0ZETSAgICAgICAgICAgICA9IDE8
-PDAsIC8qIE9GRE0gbW9kdWxhdGlvbiBub3QgYWxsb3dlZCAqLw0KPiAgICAgICAgIFJSRl9OT19D
-Q0sgICAgICAgICAgICAgID0gMTw8MSwgLyogQ0NLIG1vZHVsYXRpb24gbm90IGFsbG93ZWQgKi8N
-Cj4gICAgICAgICBSUkZfTk9fSU5ET09SICAgICAgICAgICA9IDE8PDIsIC8qIGluZG9vciBvcGVy
-YXRpb24gbm90IGFsbG93ZWQgKi8NCj4gICAgICAgICBSUkZfTk9fT1VURE9PUiAgICAgICAgICA9
-IDE8PDMsIC8qIG91dGRvb3Igb3BlcmF0aW9uIG5vdCBhbGxvd2VkICovDQo+ICAgICAgICAgUlJG
-X0RGUyAgICAgICAgICAgICAgICAgPSAxPDw0LCAvKiBERlMgc3VwcG9ydCBpcyByZXF1aXJlZCB0
-byBiZQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICogdXNlZCAq
-Lw0KPiAgICAgICAgIFJSRl9QVFBfT05MWSAgICAgICAgICAgID0gMTw8NSwgLyogdGhpcyBpcyBv
-bmx5IGZvciBQb2ludCBUbyBQb2ludA0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICogbGlua3MgKi8NCj4gICAgICAgICBSUkZfUFRNUF9PTkxZICAgICAgICAgICA9
-IDE8PDYsIC8qIHRoaXMgaXMgb25seSBmb3IgUG9pbnQgVG8gTXVsdGkNCj4gICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAqIFBvaW50IGxpbmtzICovDQo+ICAgICAgICAg
-UlJGX1BBU1NJVkVfU0NBTiAgICAgICAgPSAxPDw3LCAvKiBwYXNzaXZlIHNjYW4gaXMgcmVxdWly
-ZWQgKi8NCj4gICAgICAgICBSUkZfTk9fSUJTUyAgICAgICAgICAgICA9IDE8PDgsIC8qIElCU1Mg
-aXMgbm90IGFsbG93ZWQgKi8NCj4gfTsNCj4gDQo+IEhpc3RvcmljYWxseSB3ZSBkb24ndCBkaXN0
-aW5ndWlzaCB0aGVuIGEgdHlwZSBvZiA4MDIuMTEgZGV2aWNlIHRoYXQgaW5pdGlhdGVzDQo+IHJh
-ZGlhdGlvbiBleGNlcHQgZm9yIHRoZSBOT19JQlNTIHJ1bGUsIGJ1dCB0aGF0IHJ1bGUgY2FuIGJl
-IHRyZWF0ZWQgbW9yZSBhcw0KPiBsZWdhY3kgZ2l2ZW4gdGhhdCB0aGUgaW50ZW50IGFuZCBtb3Rp
-dmF0aW9uIGJlaGluZCB0aGF0IHdhcyB0aGF0IHNvbWUgT0RNcw0KPiBzaW1wbHkgcHJlZmVycmVk
-IGFuIGludGVycHJldGF0aW9uIG9mIHJlZ3VsYXRvcnkgcnVsZXMgYW5kIHdlICpjdXJyZW50bHkq
-IGRvbid0DQo+IHVzZSB0aGF0IGluIG11Y2ggcGxhY2VzIG90aGVyIHRoYW4gY3VzdG9tIHJlZ3Vs
-YXRvcnkgZG9tYWlucyBkZWZpbmVkIGluIHRoZQ0KPiBrZXJuZWwuIFRoZSBQVFBfT05MWSBhbmQg
-UFRNUF9PTkxZIGFyZSBleGFtcGxlIG90aGVyIHJ1bGVzIHRoYXQgY291bGQNCj4gcG90ZW50aWFs
-bHkgaGF2ZSBiZWVuIHVzZWQgYnV0IHRvIHRoaXMgZGF5IHdlIGhhdmVuJ3QgZm91bmQgYSB1c2Ug
-Y2FzZSBmb3IgaXQNCj4gZ2l2ZW4gdGhhdCB0eXBpY2FsIDgwMi4xMSBkZXZpY2VzIGFyZSBQVE1Q
-Lg0KPiANCj4gSSBtZW50aW9uIHRoZSBOT19JQlNTIGNhc2UgYXMgSSdkIGxpa2UgdG8gdHJ5IHRv
-IGF2b2lkIGFkZGluZyBHTyBzcGVjaWZpYyBmbGFnIGlmDQo+IHdlIGNhbiBmaWd1cmUgb3V0IGEg
-d2F5IHRvIG1ha2UgdGhpcyBtb3JlIGdlbmVyaWMuIEF0IHRoaXMgcG9pbnQgZm9yIGV4YW1wbGUg
-SQ0KPiB0aGluayBhIG1vcmUgYXBwcm9wcmlhdGUgZmxhZyBpcyBpbiBwbGFjZToNCj4gDQoNCkFj
-dHVhbGx5LCB0aGlzIHNob3VsZCBiZSBhIEdPIG9ubHkgZmxhZywgbWVhbmluZyB0aGF0IHN1Y2gg
-cmVsYXhhdGlvbiBzaG91bGQgbm90IGJlIHZhbGlkIGZvciBzb2Z0IEFQLCBJQlNTIG9yIG1lc2gu
-IFRoZSBpbnRlbnRpb24gaGVyZSBpcyBsaW1pdCB0aGUgZXh0ZW5kIG9mIHRoZSBjZWxsLCBhbmQg
-cHJldmVudCBkYWlzeSBjaGFpbiBzY2VuYXJpb3MgKGFzc3VtZSB0aGF0IHlvdSBhbGxvdyBhIHNv
-ZnQgQVAgb24gc3VjaCBhIGNoYW5uZWwgYW5kIHRoYXQgYSBjbGllbnQgYXNzb2NpYXRlZCB0byBp
-dCwgYW5kIHRoZW4gdGhhdCBkZXZpY2UgY2FuIGFsc28gc3RhcnQgYSBzb2Z0IEFQIG9uIHRoZSBj
-aGFubmVsIC4uLi4pLiBBbnl3YXksIEknbGwgbmVlZCB0byBoYXZlIGFub3RoZXIgbG9vayBhdCB0
-aGlzIChtaWdodCBiZSBwZXJtaXNzaWJsZSBmb3IgSUJTUyAuLi4pDQoNCj4gICAqIE5PX0lSIC0g
-Y2Fubm90IGluaXRpYXRlIHJhZGlhdGlvbg0KPiANCj4gQW5kIHRoaXMgY291bGQgaW4gdHVybiBl
-bmQgdXAgcmVwbGFjaW5nIG1vc3QgdXNlIGNhc2VzIG9mIE5PX0lCU1MgYW5kDQo+IFBBU1NJVkVf
-U0NBTiBnaXZuZSB0aGF0IGJvdGggb2YgdGhlc2UgaW1wbHkgd2UgY2Fubm90IGluaXRpYXRlIHJh
-ZGlhdGlvbg0KPiB1bmxlc3Mgc3BlY2lmaWMgdGhpbmdzIGFyZSBkb25lLiBJIHdvbmRlciBpZiB3
-ZSBjYW4gZm9sZCB0aGUgR08gZmxhZyBpbnRvIHRoaXMgYW5kDQo+IHBlcmhhcHMgcmVuYW1lIHRo
-ZSBOT19JQlNTIGZsYWcgdG8gdGhlIEdPIG9uZS4NCj4gDQo+IEFsc28gbm90ZSB0aGF0IHdlIHNo
-b3VsZCBrZWVwIHRoZSBmbGFncyBpbiBzeW5jIHdpdGggdGhlIHVhcGkgbmw4MDIxMSBjaGFuZ2Uu
-DQo+IFBsZWFzZSByZXZpZXcgdGhlc2Ugc3VnZ2VzdGlvbnMgYW5kIGxldCBtZSBrbm93IHdoYXQg
-eW91IHRoaW5rLg0KPiANCg0KU3VyZS4gV2lsbCBuZWVkIHRvIHRha2UgYSBkZWVwZXIgbG9vayBh
-dCB0aGlzLg0KDQo+ID4gMi4gSW5kb29yIG9wZXJhdGlvbiwgd2hlcmUgaW4gYmFuZHMgcmVxdWly
-aW5nIGluZG9vciBvcGVyYXRpb24sIHRoZQ0KPiA+ICAgIGRldmljZSBtdXN0IGJlIHByb2dyYW1t
-ZWQgdG8gZGV0ZWN0IGluZG9vciBvcGVyYXRpb24sIG9yDQo+ID4gICAgLSBEZXZpY2UgbXVzdCBi
-ZSBjb25uZWN0ZWQgdG8gQUMgUG93ZXINCj4gDQo+IERvZXMgYW55b25lICBrbm93IGlmIHRoZSBG
-Q0MgY29uc2lkZXJzICJpbmRvb3IiIGlmIHdlIHBvd2VyIGEgZGV2aWNlIHRocm91Z2gNCj4gdGhl
-IGNhciBvbiBBQyBwb3dlciB0aHJvdWdoIGEgY29udmVydGVyID8gQXJlIHdlIHdpbGxpbmcgdG8g
-aWdub3JlIHRoYXQgY29ybmVyDQo+IGNhc2U/DQoNCk5vLiBBQyBwb3dlciBtZWFucyAibWFpbnMi
-IGFuZCBub3QgdGhyb3VnaCBwb3J0YWJsZSBEQyBjb252ZXJ0ZXJzIChzZWUgc2xpZGUgMTIgaW4g
-aHR0cHM6Ly9hcHBzLmZjYy5nb3YvZWFzL2NvbW1lbnRzL0dldFB1Ymxpc2hlZERvY3VtZW50Lmh0
-bWw/aWQ9MzI3JnRuPSA1MjgxMjIpLiBJdCB3b3VsZCBiZSB1cCB0byB0aGUgdXNlciBzcGFjZSB0
-byBpZGVudGlmeSB0aGUgZGV2aWNlIHR5cGUgZXRjLiBhbmQgaWRlbnRpZnkgaWYgdGhpcyBhIHRy
-dWx5IEFDIHBvd2VyZWQgQVAuDQoNCj4gDQo+ID4gICAgLSBEZXZpY2UgbXVzdCBiZSB1bmRlciB0
-aGUgY29udHJvbCBvZiBhIGxvY2FsIG1hc3RlciB0aGF0IGlzIGFjdGluZw0KPiANCj4gSW50ZXJl
-c3RpbmcsIHNvIHNvbWUgQVBJcyB3b3VsZCBiZSBkZWZpbmVkLCBJIHRha2UgaXQgb24gaG9zdGFw
-ZCB0byBkbyB0aGUNCj4gcHJvcGVyIGNhbGxiYWNrcyB0byAnc2xhdmUnIHR5cGUgb2YgZGV2aWNl
-cyB0aGF0IGRlcGVuZCBvbiB0aGUgbG9jYWwgbWFzdGVyKHMpLiBJDQo+IGNvdWxkIGVudmlzaW9u
-IHRoaXMgYmVpbmcgaW1wbGVtZW50ZWQgb24gaG9zdGFwZCBieSBleHBhbmRpbmcgdGhlIEFQDQo+
-IGludGVyZmFjZSB0eXBlIGFuZCBhc3NvY2lhdGluZyAnc2xhdmUnIGRldmljZXMgYW5kIGNhbGxi
-YWNrcyBmb3IgdXBkYXRlcyBvbiBBUA0KPiBkZXZpY2UgdXBkYXRlcyAoY2hhbm5lbCBjaGFuZ2Vz
-LCBhbmQgc28gb24pLiBJcyB0aGlzIHdvcmsgYmVpbmcgcGxhbm5lZD8NCg0KWWVzLiBXZSBoYXZl
-IHBsYW5zIHRvIGluY29ycG9yYXRlIG1vcmUgbG9naWMgdG8gaG9zdGFwIChjdXJyZW50bHkgaW50
-byB3cGFfc3VwcGxpY2FudCBmb3IgUDJQIHVzZSBjYXNlcykuDQoNCg0K
+Hi Stanislaw,
+
+> On Wed, Jul 03, 2013 at 10:23:26PM +0200, Gabor Juhos wrote:
+>>> I have two nit-picks, but they can be fixed later on top of your current
+>>> patches.
+>>>
+>>>> +	if (WARN_ON(word >= EEPROM_WORD_COUNT)) {
+>>>> +		rt2x00_warn(rt2x00dev, "invalid EEPROM word %d\n", word);
+>>>> +		return 0;
+>>>> +	}
+>>>
+>>> Since we take "enum rt2800_eeprom_word" as word argument, it can not
+>>> have different values than already listed, so this warning is not needed.
+>>
+>> EEPROM_WORD_COUNT is listed in the enums and the word argument can be equal to
+>> that, however it is not a valid index for the EEPROM map. Additionally, if
+>> someone puts a new enum value after EEPROM_WORD_COUNT by mistake that will be an
+>> invalid index as well.
+> 
+> I do not feel that there is big chance that someone will do such
+> mistakes, but yes, they are at least theoretically possible, so warning
+> can stay.
+> 
+>> My reason behind the rt2x00_warn call was that it shows the wiphy name. If you
+>> are testing different devices in parallel it is good to know which one causes
+>> the warning. However I can use 'wiphy_name(rt2x00dev->hw->wiphy)' to get that
+>> information.
+>>
+>> I will send a follow-up patch which removes the rt2x00_warn calls. Do you also
+>> prefer WARN_ONCE instead of WARN?
+> 
+> I prefer WARN_ONCE variant to avoid possible spamming dmesg with lot of
+> warnings.
+
+Ok. Because the patch-set has not been integrated yet, I have sent an updated
+version instead of a follow-up patch.
+
+-Gabor
+
