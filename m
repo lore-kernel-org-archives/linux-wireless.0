@@ -1,100 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f179.google.com ([209.85.215.179]:61800 "EHLO
-	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659Ab3GaGzb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 02:55:31 -0400
-Received: by mail-ea0-f179.google.com with SMTP id b10so140285eae.38
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2013 23:55:30 -0700 (PDT)
-From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: AP changed bandwidth, new config is  ... changed bandwidth in a way we can't support - disconnect - why? (intel advanced-n 6250)
-Date: Wed, 31 Jul 2013 08:55:27 +0200
-Cc: ilw@linux.intel.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201307310855.28080.a.miskiewicz@gmail.com> (sfid-20130731_085534_667847_F735B965)
+Received: from arrakis.dune.hu ([78.24.191.176]:48196 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751470Ab3GHOIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:42 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 00/20] rt2x00: add experimental support for RT3593
+Date: Mon,  8 Jul 2013 16:08:15 +0200
+Message-Id: <1373292515-21332-1-git-send-email-juhosg@openwrt.org> (sfid-20130708_160845_529319_19CD6283)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch-set implements experiemental support for the
+RT3593 chipset. The patches are tested on the Linksys
+AE3000 USB device only, however other USB devices which
+are using the RT3573 chips might work as well.
 
-Hi.
+The patch-set depends on the following series:
+'rt2x00: rt2800lib: add support for extended EEPROM of three-chain devices'
 
-What could be going on with WRT160NL access point, stock firmware that
-my linux (3.10.4) with Intel Corporation Centrino Advanced-N + WiMAX 6250 [Kilmer Peak] (rev 2c)
-cannot even connect? The same happened with my earlier Intel 5350 wifi card.
+Changes since v2:
+ - keep case values in aplhabetical order
 
-It basically reports:
-[79477.496067] eth1: AP 68:7f:74:06:b3:1b changed bandwidth, new config is 2422 MHz, width 1 (2422/0 MHz)
-[79477.496072] eth1: AP 68:7f:74:06:b3:1b changed bandwidth in a way we can't support - disconnect
+Changes since v1:
+ - add missing patch
+ - make Linksys AE3000 support optional
 
-(note I have two wrt160nl here and problem happens with both)
+Gabor Juhos (20):
+  rt2x00: rt2800lib: add MAC register initialization for RT3593
+  rt2x00: rt2800lib: add BBP register initialization for RT3593
+  rt2x00: rt2800lib: add RFCSR register initialization for RT3593
+  rt2x00: rt2800lib: add BBP post initialization for RT3593
+  rt2x00: rt2800lib: add TX power configuration for RT3593
+  rt2x00: rt2800lib: fix BBP1_TX_ANTENNA field configuration for 3T devices
+  rt2x00: rt2800lib: fix antenna configuration for RT3593
+  rt2x00: rt2800lib: add rt2800_txpower_to_dev helper
+  rt2x00: rt2800lib: fix default TX power values for RT3593
+  rt2x00: rt2800lib: introduce rt2800_get_txmixer_gain_{24,5}g helpers
+  rt2x00: rt2800lib: hardcode TX mixer gain values for RT3593
+  rt2x00: rt2800lib: fix LNA_A[12] gain values for RT3593
+  rt2x00: rt2800lib: add default_power3 field for three-chain devices
+  rt2x00: rt2800lib: add rf_vals for RF3053
+  rt2x00: rt2800lib: add channel configuration for RF3053
+  rt2x00: rt2800lib: enable VCO recalibration for RF3053
+  rt2x00: rt2800lib: enable RF3053 support
+  rt2x00: rt2800lib: enable RT3593 support
+  rt2x00: rt2800usb: use correct [RT]XWI size for RT3593
+  rt2x00: rt2800usb: add USB device ID for Linksys AE3000
 
-Any hints on why "we can't support" configuration issued by this (common) AP?
+ drivers/net/wireless/rt2x00/Kconfig     |    6 +
+ drivers/net/wireless/rt2x00/rt2800.h    |  187 ++++-
+ drivers/net/wireless/rt2x00/rt2800lib.c | 1227 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/rt2x00/rt2800usb.c |    9 +-
+ drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
+ 5 files changed, 1385 insertions(+), 45 deletions(-)
 
+--
+1.7.10
 
-[79474.704167] eth1: authenticate with 68:7f:74:06:b3:1b
-[79474.708354] eth1: send auth to 68:7f:74:06:b3:1b (try 1/3)
-[79474.710051] eth1: authenticated
-[79474.712304] eth1: associate with 68:7f:74:06:b3:1b (try 1/3)
-[79474.735808] eth1: RX AssocResp from 68:7f:74:06:b3:1b (capab=0x431 status=0 aid=1)
-[79474.739952] eth1: associated
-[79474.834786] eth1: AP 68:7f:74:06:b3:1b changed bandwidth, new config is 2422 MHz, width 1 (2422/0 MHz)
-[79474.834791] eth1: AP 68:7f:74:06:b3:1b changed bandwidth in a way we can't support - disconnect
-[79474.877910] cfg80211: Calling CRDA to update world regulatory domain
-[79474.880204] cfg80211: World regulatory domain updated:
-[79474.880208] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-[79474.880210] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[79474.880213] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[79474.880215] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-[79474.880217] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[79474.880219] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[79474.880581] cfg80211: Calling CRDA for country: PL
-[79474.884514] cfg80211: Regulatory domain changed to country: PL
-[79474.884517] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-[79474.884520] cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[79474.884522] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[79474.884524] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[79474.884526] cfg80211:   (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2700 mBm)
-[79474.884528] cfg80211:   (57240000 KHz - 65880000 KHz @ 2160000 KHz), (N/A, 4000 mBm)
-[79477.468073] eth1: authenticate with 68:7f:74:06:b3:1b
-[79477.472240] eth1: send auth to 68:7f:74:06:b3:1b (try 1/3)
-[79477.473923] eth1: authenticated
-[79477.476176] eth1: associate with 68:7f:74:06:b3:1b (try 1/3)
-[79477.480118] eth1: RX AssocResp from 68:7f:74:06:b3:1b (capab=0x431 status=0 aid=1)
-[79477.484355] eth1: associated
-[79477.496067] eth1: AP 68:7f:74:06:b3:1b changed bandwidth, new config is 2422 MHz, width 1 (2422/0 MHz)
-[79477.496072] eth1: AP 68:7f:74:06:b3:1b changed bandwidth in a way we can't support - disconnect
-[79477.506470] eth1: deauthenticating from 68:7f:74:06:b3:1b by local choice (reason=1)
-[79477.506598] cfg80211: Calling CRDA to update world regulatory domain
-[79477.512546] cfg80211: World regulatory domain updated:
-[79477.512550] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-[79477.512553] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[79477.512556] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[79477.512558] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-[79477.512560] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[79477.512562] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[79477.512884] cfg80211: Calling CRDA for country: PL
-[79477.516800] cfg80211: Regulatory domain changed to country: PL
-[79477.516803] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-[79477.516806] cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[79477.516808] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[79477.516810] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[79477.516812] cfg80211:   (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2700 mBm)
-[79477.516814] cfg80211:   (57240000 KHz - 65880000 KHz @ 2160000 KHz), (N/A, 4000 mBm)
-[79480.234322] eth1: authenticate with 68:7f:74:06:b6:75
-[79480.234333] eth1: capabilities/regulatory prevented using AP HT/VHT configuration, downgraded
-[79480.238466] eth1: send auth to 68:7f:74:06:b6:75 (try 1/3)
-[79480.304305] eth1: send auth to 68:7f:74:06:b6:75 (try 2/3)
-[79480.325316] eth1: send auth to 68:7f:74:06:b6:75 (try 3/3)
-[79480.352770] eth1: authentication with 68:7f:74:06:b6:75 timed out
-[79483.409516] eth1: authenticate with 68:7f:74:06:b6:75
-[79483.409527] eth1: capabilities/regulatory prevented using AP HT/VHT configuration, downgraded
-[79483.411562] eth1: direct probe to 68:7f:74:06:b6:75 (try 1/3)
-[79483.612029] eth1: direct probe to 68:7f:74:06:b6:75 (try 2/3)
-[79483.816045] eth1: direct probe to 68:7f:74:06:b6:75 (try 3/3)
-[79484.020039] eth1: authentication with 68:7f:74:06:b6:75 timed out
-
--- 
-Arkadiusz Miśkiewicz, arekm / maven.pl
