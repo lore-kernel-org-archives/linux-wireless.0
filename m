@@ -1,55 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:47718 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933133Ab3GPUHv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 16:07:51 -0400
-Received: by mail-pd0-f182.google.com with SMTP id r10so1041396pdi.27
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 13:07:50 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	pstew@chromium.org, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC v2] wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
-Date: Tue, 16 Jul 2013 13:07:44 -0700
-Message-Id: <1374005264-7650-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130716_220755_941063_2472FA89)
+Received: from arrakis.dune.hu ([78.24.191.176]:48655 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752179Ab3GHJ0A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 05:26:00 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 0/5] rt2800lib: add support for extended EEPROM of three-cain devices
+Date: Mon,  8 Jul 2013 11:25:51 +0200
+Message-Id: <1373275556-6482-1-git-send-email-juhosg@openwrt.org> (sfid-20130708_112604_519522_238B3597)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Gabor Juhos (5):
+  rt2x00: rt2800lib: introduce rt2800_eeprom_word enum
+  rt2x00: rt2800lib: introduce local EEPROM access functions
+  rt2x00: rt2800lib: introduce rt2800_eeprom_read_from_array helper
+  rt2x00: rt2800lib: introduce rt2800_eeprom_word_index helper
+  rt2x00: rt2800lib: add EEPROM map for the RT3593 chipset
 
-Pursuant to:
+ drivers/net/wireless/rt2x00/rt2800.h    |   87 +++++----
+ drivers/net/wireless/rt2x00/rt2800lib.c |  305 +++++++++++++++++++++++--------
+ 2 files changed, 279 insertions(+), 113 deletions(-)
 
-http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf,
-
-provide a 5GHz rule for Indonesian regulatory domain. QCA has
-also verified VHT80 can be enabled. Patch originally posted by
-Paul Stewart <pstew@chromium.org>, I just modified to enable 80 MHz
-bandwidth.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
-
-This v2 changes the bandwidth to 80 as was intended with the first
-patch.
-
- db.txt |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/db.txt b/db.txt
-index 0ebb934..8356d5d 100644
---- a/db.txt
-+++ b/db.txt
-@@ -380,7 +380,9 @@ country HU: DFS-ETSI
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country ID:
-+	# ref: http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf
- 	(2402 - 2482 @ 40), (N/A, 20)
-+	(5735 - 5815 @ 80), (N/A, 20)
- 
- country IE: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
+--
+1.7.10
 
