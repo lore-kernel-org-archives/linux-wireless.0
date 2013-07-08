@@ -1,82 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from straum.hexapodia.org ([66.109.99.53]:42671 "EHLO
-	straum.hexapodia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756118Ab3G2QlY (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37304 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728Ab3GHIvG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 12:41:24 -0400
-Date: Mon, 29 Jul 2013 09:34:52 -0700
-From: Andy Isaacson <adi@hexapodia.org>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: 3.10, iwlwifi 6200AGN: AP changed bandwidth in a way we can't
- support - disconnect
-Message-ID: <20130729163452.GA454@hexapodia.org> (sfid-20130729_184438_853415_84D51BE9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 8 Jul 2013 04:51:06 -0400
+Message-ID: <1373273460.8312.3.camel@jlt4.sipsolutions.net> (sfid-20130708_105110_388598_089BC9F9)
+Subject: Re: [PATCH V2] vlan priority handling in WMM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: voncken <cedric.voncken@acksys.fr>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 08 Jul 2013 10:51:00 +0200
+In-Reply-To: <002b01ce798d$865cee70$9316cb50$@acksys.fr>
+References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
+	 <1373018378.8548.6.camel@jlt4.sipsolutions.net>
+	 <002b01ce798d$865cee70$9316cb50$@acksys.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After upgrading to 3.10.4 and traveling to Europe I'm often suffering
-from failures to associate with the following in dmesg:
+On Fri, 2013-07-05 at 16:39 +0200, voncken wrote:
+> > >+	vlan_priority = (skb->vlan_tci & VLAN_PRIO_MASK) >>
+> VLAN_PRIO_SHIFT;
+> > >+	if (vlan_priority > 0)
+> >> +		return vlan_priority;
+> 
+> > Is this really correct? For once, checking vlan_priority for
+> non-zero seems
+> > weird since that ought to be a valid value -- is there no other way
+> to
+> > determine that the value is valid?
 
-[   37.351621] wlan0: authenticate with 64:70:02:e6:a6:ba
-[   37.364701] wlan0: send auth to 64:70:02:e6:a6:ba (try 1/3)
-[   37.366358] wlan0: authenticated
-[   37.368543] wlan0: associate with 64:70:02:e6:a6:ba (try 1/3)
-[   37.372765] wlan0: RX AssocResp from 64:70:02:e6:a6:ba (capab=0x431 status=0 aid=8)
-[   37.380190] wlan0: associated
-[   37.438935] wlan0: AP 64:70:02:e6:a6:ba changed bandwidth, new config is 2447 MHz, width 1 (2447/0 MHz)
-[   37.438941] wlan0: AP 64:70:02:e6:a6:ba changed bandwidth in a way we can't support - disconnect
+> The vlan Tag contain three bit for priority. The value 0 indicate no
+> priority (on this case the VLAN tag contain only VID). The vlan_tci
+> field is set to zero if the frame do not contain the vlan tag. So if
+> we have not a vlan tag or no priority in VLAN tag the priority value
+> is always 0. 
 
-I hacked the driver to do
+Yes but don't we know that the vlan_tci field is valid?
 
--                  "AP %pM changed bandwidth, new config is %d MHz, width %d (%d/%d MHz)\n",
-+                  "AP %pM changed bandwidth, new config is %d MHz, width %d (%d/%d MHz) flags %x/%x\n",
-                   ifmgd->bssid, chandef.chan->center_freq, chandef.width,
--                  chandef.center_freq1, chandef.center_freq2);
-+                  chandef.center_freq1, chandef.center_freq2, flags, ifmgd->flags);
+I don't think you're correct in that 0 means "no priority present", it
+actually means "best effort" as far as I can tell. Ignoring the VLAN tag
+when the field is 0 would mean we could use a higher priority from the
+contents of the frame, which would not be desired?
 
-and
+> >Also, this gives you a 2-bit value, while the return value should be
+> a 3-bit value, maybe you need to shift this up by one to spread into
+> the correct buckets?
+> Sorry but I don't understand. The vlan_tci field it is a __u16 value
+> (defined in include/linux/skbuff.h), the VLAN_PRIO_MASK is set to
+> 0xE000 and VLAN_PRIO_SHIFT is set to 13 (defined in
+> include/linux/if_vlan.h), the vlan_priority is an unsigned char. For
+> me the vlan_priority contain a 3-bit value (0xE000 >>13 = 0x0003), why
+> 2 ?
 
--       if (flags != (ifmgd->flags & (IEEE80211_STA_DISABLE_HT |
-+       if ((flags != 0x810 && ifmgd->flags != 0x804) && (
-+            flags != (ifmgd->flags & (IEEE80211_STA_DISABLE_HT |
+Umm? No? Think again about what hweight(0x0003) is.
 
-and the result is a working link with
+johannes
 
-[ 1277.069287] wlan0: authenticate with 64:70:02:e6:a6:ba
-[ 1277.118344] wlan0: send auth to 64:70:02:e6:a6:ba (try 1/3)
-[ 1277.222126] wlan0: send auth to 64:70:02:e6:a6:ba (try 2/3)
-[ 1277.226656] wlan0: authenticated
-[ 1277.226806] wlan0: waiting for beacon from 64:70:02:e6:a6:ba
-[ 1277.258119] wlan0: associate with 64:70:02:e6:a6:ba (try 1/3)
-[ 1277.262717] wlan0: RX AssocResp from 64:70:02:e6:a6:ba (capab=0x431 status=0 aid=9)
-[ 1277.269678] wlan0: associated
-[ 1277.269727] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[ 1277.366049] wlan0: AP 64:70:02:e6:a6:ba changed bandwidth, new config is 2447 MHz, width 1 (2447/0 MHz) flags 810/804
-[ 2219.627077] wlan0: AP 64:70:02:e6:a6:ba changed bandwidth, new config is 2447 MHz, width 2 (2437/0 MHz) flags 800/804
-[ 2220.668210] wlan0: AP 64:70:02:e6:a6:ba changed bandwidth, new config is 2447 MHz, width 1 (2447/0 MHz) flags 810/804
 
-My userland is Debian unstable with 
-
-ii  wpasupplicant    1.0-3+b2      amd64 client support for WPA and WPA2 (IEEE 802.11i)
-ii  firmware-iwlwifi 0.36+wheezy.1 all   Binary firmware for Intel PRO/Wireless 3945 and 802.11
-
-using ifup with the WPA configuration in /etc/network/interfaces.
-Hardware is a Thinkpad x201s.  Bootup iwlwifi messages are
-
-[    7.985050] iwlwifi 0000:02:00.0: irq 42 for MSI/MSI-X
-[    8.061896] iwlwifi 0000:02:00.0: loaded firmware version 9.221.4.1 build 25532 op_mode iwldvm
-[    8.087255] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEBUG enabled
-[    8.087257] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
-[    8.087258] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEVICE_TRACING enabled
-[    8.087260] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
-[    8.087261] iwlwifi 0000:02:00.0: CONFIG_IWLWIFI_P2P enabled
-[    8.087264] iwlwifi 0000:02:00.0: Detected Intel(R) Centrino(R) Advanced-N 6200 AGN, REV=0x74
-[    8.087379] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
-[   26.676655] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
-[   26.683499] iwlwifi 0000:02:00.0: Radio type=0x1-0x3-0x1
-[   27.023090] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
-[   27.029927] iwlwifi 0000:02:00.0: Radio type=0x1-0x3-0x1
-
--andy
