@@ -1,143 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58142 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389Ab3GZI3u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:29:50 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>
-Subject: [PATCH 16/30] iwlwifi: mvm: Enable user set TX power
-Date: Fri, 26 Jul 2013 10:28:33 +0200
-Message-Id: <1374827327-3464-17-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103019_962469_4501F80B)
-In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
-References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:48219 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751470Ab3GHOIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:44 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 03/20] rt2x00: rt2800lib: add RFCSR register initialization for RT3593
+Date: Mon,  8 Jul 2013 16:08:18 +0200
+Message-Id: <1373292515-21332-4-git-send-email-juhosg@openwrt.org> (sfid-20130708_160900_580627_B3C1D046)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-Support Tx power limitations. These limitations can come from
-mac80211 for various reasons.
+References:
+  NICInitRT3593RFRegisters in chips/rt3593.c
+  RT3593LoadRFNormalModeSetup in chips/rt3593.c
 
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |  8 ++++++--
- drivers/net/wireless/iwlwifi/mvm/fw-api.h    | 14 ++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mac80211.c  | 20 ++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/ops.c       |  1 +
- 4 files changed, 41 insertions(+), 2 deletions(-)
+Changes since v2:
+ - keep case statements in alphabetical order
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |   10 +++
+ drivers/net/wireless/rt2x00/rt2800lib.c |  122 +++++++++++++++++++++++++++++++
+ 2 files changed, 132 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index acd2665..b76a9a8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -118,6 +118,7 @@ static const u8 iwl_nvm_channels[] = {
- #define LAST_2GHZ_HT_PLUS	9
- #define LAST_5GHZ_HT		161
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 02bc80d..47aceae 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2093,6 +2093,10 @@ struct mac_iveiv_entry {
+ #define RFCSR17_R			FIELD8(0x20)
+ #define RFCSR17_CODE                   FIELD8(0x7f)
  
-+#define DEFAULT_MAX_TX_POWER 16
- 
- /* rate data (static) */
- static struct ieee80211_rate iwl_cfg80211_rates[] = {
-@@ -232,8 +233,11 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 
- 		/* Initialize regulatory-based run-time data */
- 
--		/* TODO: read the real value from the NVM */
--		channel->max_power = 0;
-+		/*
-+		 * Default value - highest tx power value.  max_power
-+		 * is not used in mvm, and is used for backwards compatibility
-+		 */
-+		channel->max_power = DEFAULT_MAX_TX_POWER;
- 		is_5ghz = channel->band == IEEE80211_BAND_5GHZ;
- 		IWL_DEBUG_EEPROM(dev,
- 				 "Ch. %d [%sGHz] %s%s%s%s%s%s(0x%02x %ddBm): Ad-Hoc %ssupported\n",
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index 28cab82..5003500 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -159,6 +159,7 @@ enum {
- 	TX_ANT_CONFIGURATION_CMD = 0x98,
- 	BT_CONFIG = 0x9b,
- 	STATISTICS_NOTIFICATION = 0x9d,
-+	REDUCE_TX_POWER_CMD = 0x9f,
- 
- 	/* RF-KILL commands and notifications */
- 	CARD_STATE_CMD = 0xa0,
-@@ -226,6 +227,19 @@ struct iwl_tx_ant_cfg_cmd {
- 	__le32 valid;
- } __packed;
- 
-+/**
-+ * struct iwl_reduce_tx_power_cmd - TX power reduction command
-+ * REDUCE_TX_POWER_CMD = 0x9f
-+ * @flags: (reserved for future implementation)
-+ * @mac_context_id: id of the mac ctx for which we are reducing TX power.
-+ * @pwr_restriction: TX power restriction in half dBms.
-+ */
-+struct iwl_reduce_tx_power_cmd {
-+	u8 flags;
-+	u8 mac_context_id;
-+	__le16 pwr_restriction;
-+} __packed; /* TX_REDUCED_POWER_API_S_VER_1 */
++/* RFCSR 18 */
++#define RFCSR18_XO_TUNE_BYPASS		FIELD8(0x40)
++
 +
  /*
-  * Calibration control struct.
-  * Sent as part of the phy configuration command.
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 30319e0..f8b6300 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -714,6 +714,21 @@ out_release:
- 	mutex_unlock(&mvm->mutex);
+  * RFCSR 20:
+  */
+@@ -2174,6 +2178,12 @@ struct mac_iveiv_entry {
+  */
+ #define RFCSR50_TX			FIELD8(0x3f)
+ #define RFCSR50_EP			FIELD8(0xc0)
++/* bits for RT3593*/
++#define RFCSR50_TX_LO2_EN		FIELD8(0x10)
++
++/* RFCSR 51 */
++/* bits for RT3593*/
++#define RFCSR51_BITS24			FIELD8(0x1c)
+ 
+ /*
+  * RF registers
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 53ebdb9..b650569 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4963,6 +4963,42 @@ static void rt2800_normal_mode_setup_3xxx(struct rt2x00_dev *rt2x00dev)
+ 	}
  }
  
-+static int iwl_mvm_set_tx_power(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+				s8 tx_power)
++static void rt2800_normal_mode_setup_3593(struct rt2x00_dev *rt2x00dev)
 +{
-+	/* FW is in charge of regulatory enforcement */
-+	struct iwl_reduce_tx_power_cmd reduce_txpwr_cmd = {
-+		.mac_context_id = iwl_mvm_vif_from_mac80211(vif)->id,
-+		/* half dBm need to multiply */
-+		.pwr_restriction = cpu_to_le16(2 * tx_power),
-+	};
++	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
++	u8 rfcsr;
++	u8 tx_gain;
 +
-+	return iwl_mvm_send_cmd_pdu(mvm, REDUCE_TX_POWER_CMD, CMD_SYNC,
-+				    sizeof(reduce_txpwr_cmd),
-+				    &reduce_txpwr_cmd);
++	rt2800_rfcsr_read(rt2x00dev, 50, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR50_TX_LO2_EN, 0);
++	rt2800_rfcsr_write(rt2x00dev, 50, rfcsr);
++
++	rt2800_rfcsr_read(rt2x00dev, 51, &rfcsr);
++	tx_gain = rt2x00_get_field8(drv_data->txmixer_gain_24g,
++				    RFCSR17_TXMIXER_GAIN);
++	rt2x00_set_field8(&rfcsr, RFCSR51_BITS24, tx_gain);
++	rt2800_rfcsr_write(rt2x00dev, 51, rfcsr);
++
++	rt2800_rfcsr_read(rt2x00dev, 38, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR38_RX_LO1_EN, 0);
++	rt2800_rfcsr_write(rt2x00dev, 38, rfcsr);
++
++	rt2800_rfcsr_read(rt2x00dev, 39, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR39_RX_LO2_EN, 0);
++	rt2800_rfcsr_write(rt2x00dev, 39, rfcsr);
++
++	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR1_RF_BLOCK_EN, 1);
++	rt2x00_set_field8(&rfcsr, RFCSR1_PLL_PD, 1);
++	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
++
++	rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR30_RX_VCM, 2);
++	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
++
++	/* TODO: enable stream mode */
 +}
 +
- static int iwl_mvm_mac_config(struct ieee80211_hw *hw, u32 changed)
+ static void rt2800_normal_mode_setup_5xxx(struct rt2x00_dev *rt2x00dev)
  {
- 	return 0;
-@@ -794,6 +809,11 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 		if (ret)
- 			IWL_ERR(mvm, "failed to update power mode\n");
- 	}
-+	if (changes & BSS_CHANGED_TXPOWER) {
-+		IWL_DEBUG_CALIB(mvm, "Changing TX Power to %d\n",
-+				bss_conf->txpower);
-+		iwl_mvm_set_tx_power(mvm, vif, bss_conf->txpower);
-+	}
+ 	u8 reg;
+@@ -5345,6 +5381,89 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_normal_mode_setup_3xxx(rt2x00dev);
  }
  
- static int iwl_mvm_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 2ffa593..ef1ad5b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -275,6 +275,7 @@ static const char *iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(BEACON_NOTIFICATION),
- 	CMD(BEACON_TEMPLATE_CMD),
- 	CMD(STATISTICS_NOTIFICATION),
-+	CMD(REDUCE_TX_POWER_CMD),
- 	CMD(TX_ANT_CONFIGURATION_CMD),
- 	CMD(D3_CONFIG_CMD),
- 	CMD(PROT_OFFLOAD_CONFIG_CMD),
++static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
++{
++	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
++	u32 reg;
++	u8 rfcsr;
++
++	/* Disable GPIO #4 and #7 function for LAN PE control */
++	rt2800_register_read(rt2x00dev, GPIO_SWITCH, &reg);
++	rt2x00_set_field32(&reg, GPIO_SWITCH_4, 0);
++	rt2x00_set_field32(&reg, GPIO_SWITCH_7, 0);
++	rt2800_register_write(rt2x00dev, GPIO_SWITCH, reg);
++
++	/* Initialize default register values */
++	rt2800_rfcsr_write(rt2x00dev, 1, 0x03);
++	rt2800_rfcsr_write(rt2x00dev, 3, 0x80);
++	rt2800_rfcsr_write(rt2x00dev, 5, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 6, 0x40);
++	rt2800_rfcsr_write(rt2x00dev, 8, 0xf1);
++	rt2800_rfcsr_write(rt2x00dev, 9, 0x02);
++	rt2800_rfcsr_write(rt2x00dev, 10, 0xd3);
++	rt2800_rfcsr_write(rt2x00dev, 11, 0x40);
++	rt2800_rfcsr_write(rt2x00dev, 12, 0x4e);
++	rt2800_rfcsr_write(rt2x00dev, 13, 0x12);
++	rt2800_rfcsr_write(rt2x00dev, 18, 0x40);
++	rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
++	rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
++	rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
++	rt2800_rfcsr_write(rt2x00dev, 32, 0x78);
++	rt2800_rfcsr_write(rt2x00dev, 33, 0x3b);
++	rt2800_rfcsr_write(rt2x00dev, 34, 0x3c);
++	rt2800_rfcsr_write(rt2x00dev, 35, 0xe0);
++	rt2800_rfcsr_write(rt2x00dev, 38, 0x86);
++	rt2800_rfcsr_write(rt2x00dev, 39, 0x23);
++	rt2800_rfcsr_write(rt2x00dev, 44, 0xd3);
++	rt2800_rfcsr_write(rt2x00dev, 45, 0xbb);
++	rt2800_rfcsr_write(rt2x00dev, 46, 0x60);
++	rt2800_rfcsr_write(rt2x00dev, 49, 0x8e);
++	rt2800_rfcsr_write(rt2x00dev, 50, 0x86);
++	rt2800_rfcsr_write(rt2x00dev, 51, 0x75);
++	rt2800_rfcsr_write(rt2x00dev, 52, 0x45);
++	rt2800_rfcsr_write(rt2x00dev, 53, 0x18);
++	rt2800_rfcsr_write(rt2x00dev, 54, 0x18);
++	rt2800_rfcsr_write(rt2x00dev, 55, 0x18);
++	rt2800_rfcsr_write(rt2x00dev, 56, 0xdb);
++	rt2800_rfcsr_write(rt2x00dev, 57, 0x6e);
++
++	/* Initiate calibration */
++	/* TODO: use rt2800_rf_init_calibration ? */
++	rt2800_rfcsr_read(rt2x00dev, 2, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
++	rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
++
++	rt2800_adjust_freq_offset(rt2x00dev);
++
++	rt2800_rfcsr_read(rt2x00dev, 18, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR18_XO_TUNE_BYPASS, 1);
++	rt2800_rfcsr_write(rt2x00dev, 18, rfcsr);
++
++	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
++	rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
++	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
++	usleep_range(1000, 1500);
++	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
++	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
++
++	/* Set initial values for RX filter calibration */
++	drv_data->calibration_bw20 = 0x1f;
++	drv_data->calibration_bw40 = 0x2f;
++
++	/* Save BBP 25 & 26 values for later use in channel switching */
++	rt2800_bbp_read(rt2x00dev, 25, &drv_data->bbp25);
++	rt2800_bbp_read(rt2x00dev, 26, &drv_data->bbp26);
++
++	rt2800_led_open_drain_enable(rt2x00dev);
++	rt2800_normal_mode_setup_3593(rt2x00dev);
++
++	/* TODO: post BBP initialization */
++
++	/* TODO: enable stream mode support */
++}
++
+ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2800_rf_init_calibration(rt2x00dev, 2);
+@@ -5573,6 +5692,9 @@ static void rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	case RT3572:
+ 		rt2800_init_rfcsr_3572(rt2x00dev);
+ 		break;
++	case RT3593:
++		rt2800_init_rfcsr_3593(rt2x00dev);
++		break;
+ 	case RT5390:
+ 		rt2800_init_rfcsr_5390(rt2x00dev);
+ 		break;
 -- 
-1.8.0
+1.7.10
 
