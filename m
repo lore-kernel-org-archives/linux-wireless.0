@@ -1,24 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f180.google.com ([209.85.128.180]:35848 "EHLO
-	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756722Ab3GYW4q (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:59605 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083Ab3GHO6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jul 2013 18:56:46 -0400
-Received: by mail-ve0-f180.google.com with SMTP id pa12so864559veb.11
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jul 2013 15:56:45 -0700 (PDT)
+	Mon, 8 Jul 2013 10:58:48 -0400
 MIME-Version: 1.0
-Date: Fri, 26 Jul 2013 06:56:45 +0800
-Message-ID: <CAEFj98425059MUkWpvyaq3USheh91F2HbHN7vACQSwAG-rU+NQ@mail.gmail.com> (sfid-20130726_005705_601389_EBCEB781)
-Subject: Re: authsae, 'ath9k nohwcrypt=1' & AR9100
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <87r4f9cf0w.fsf@kamboji.qca.qualcomm.com>
+References: <87r4f9cf0w.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 8 Jul 2013 16:58:46 +0200
+Message-ID: <CA+icZUU32347g48dpk-gVZZ1H9pvnjaSWpQ12B-5vOkLzs8Nbg@mail.gmail.com> (sfid-20130708_165905_925904_51D4EAEA)
+Subject: Re: ath10k mailing list and new git tree
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is to solve the problem for the open mesh to avoid older
-chipset filters out certain frame required for mesh. Without this
-patch, I am not too sure whether the secure mesh will work.
+On Mon, Jul 8, 2013 at 4:17 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Hi,
+>
+> we have a new mailing list for ath10k, please use that in the future
+> instead of ath9k-devel:
+>
+> http://lists.infradead.org/mailman/listinfo/ath10k
+>
+> As ath10k is now in wireless-next please use the new git tree which is
+> for both ath6kl and ath10k:
+>
+> https://github.com/kvalo/ath
+>
+> I have also updated the wiki accordingly:
+>
+> http://wireless.kernel.org/en/users/Drivers/ath10k
+>
 
----
-Chun-Yeow
+You have sent these new informations for MAINTAINERS file to upstream?
+
+- Sedat -
+
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
