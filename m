@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40150 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932805Ab3GLLsw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 07:48:52 -0400
-Date: Fri, 12 Jul 2013 07:49:11 -0400
-From: Jeff Layton <jlayton@redhat.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: hung task while plugging in cfg80211
-Message-ID: <20130712074911.01b5945a@corrin.poochiereds.net> (sfid-20130712_134856_422658_53B11A6C)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.candelatech.com ([208.74.158.172]:46950 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613Ab3GHURq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 16:17:46 -0400
+Message-ID: <51DB1E69.2080208@candelatech.com> (sfid-20130708_221752_976864_7C86E704)
+Date: Mon, 08 Jul 2013 13:17:45 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: netdev <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.9.5+:  Crash in tcp_input.c:4810.
+References: <51BF50B3.1080403@candelatech.com>       <1371493059.3252.200.camel@edumazet-glaptop>       <51D1C620.8030007@candelatech.com>      <1372813467.4979.46.camel@edumazet-glaptop>      <51D398C0.5060802@candelatech.com>     <1372826512.4979.49.camel@edumazet-glaptop>     <51D3AD66.8030506@candelatech.com>    <1372827749.4979.52.camel@edumazet-glaptop>    <51DAF5A7.60505@candelatech.com>   <1373307702.4979.116.camel@edumazet-glaptop>   <51DB054D.6060507@candelatech.com>  <1373310119.4979.119.camel@edumazet-glaptop>  <51DB1A0C.3080807@candelatech.com> <1373314235.4979.121.camel@edumazet-glaptop>
+In-Reply-To: <1373314235.4979.121.camel@edumazet-glaptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I updated the kernel on my rawhide KVM guest, and noticed that the
-ethernet interface wasn't coming up at all. While poking around, I saw
-this stack trace pop up:
+On 07/08/2013 01:10 PM, Eric Dumazet wrote:
+> On Mon, 2013-07-08 at 12:59 -0700, Ben Greear wrote:
+>
+>>> There is this thing in ath9k about aggregating two frags
+>>>
+>>> drivers/net/wireless/ath/ath9k/recv.c line 1298 contains :
+>>>
+>>> RX_STAT_INC(rx_frags);
+>>>
+>>> Could you check these stats (I do not know if they are reported by
+>>> ethtool -S or another debugging facility) and check if rx_frags is ever
+>>> increasing ?
+>>
+>> They are in debugfs, and they appear to increase fairly often, for
+>> instance:
+>>
+>> [root@lec2010-ath9k-1 lanforge]# cat /debug/ieee80211/wiphy0/ath9k/recv|tail -5
+>>              RX-Pkts-All :  288009442
+>>             RX-Bytes-All : 4067932166
+>>               RX-Beacons :   14826735
+>>                 RX-Frags :       3944
+>>              RX-Spectral :          0
+>>
+>> I don't have the stats from the system that reproduced the bug
+>> (it has been rebooted), but if I do see the bug again, I'll
+>> grab the rx-frags and other stats just in case it shows
+>> some anomaly.
+>>
+>
+> Reading this code again, I believe following patch is needed.
+>
+> Could you test it ?
 
-Jul 12 07:29:25 rawhide kernel: [  241.156196] INFO: task modprobe:501 blocked for more than 120 seconds.
-Jul 12 07:29:25 rawhide kernel: [  241.157222] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Jul 12 07:29:25 rawhide kernel: [  241.158379] modprobe        D ffff880118c526e0  4584   501    500 0x00000080
-Jul 12 07:29:25 rawhide kernel: [  241.159458]  ffff8800d10c3ba8 0000000000000046 00000000001d5300 ffff8800d10c3fd8
-Jul 12 07:29:25 rawhide kernel: [  241.160644]  ffff8800d10c3fd8 00000000001d5300 ffff8800d2ae4dc0 ffff8800d2ae4dc0
-Jul 12 07:29:25 rawhide kernel: [  241.161875]  ffffffff81d0bfa0 ffffffff81d0bfa8 ffffffff00000000 ffffffff81d0bff0
-Jul 12 07:29:25 rawhide kernel: [  241.163096] Call Trace:
-Jul 12 07:29:25 rawhide kernel: [  241.163460]  [<ffffffff817377e9>] schedule+0x29/0x70
-Jul 12 07:29:25 rawhide kernel: [  241.164235]  [<ffffffff817392ad>] rwsem_down_write_failed+0xed/0x1a0
-Jul 12 07:29:25 rawhide kernel: [  241.165489]  [<ffffffff810bb600>] ? update_cpu_load_active+0xb0/0xb0
-Jul 12 07:29:25 rawhide kernel: [  241.166267]  [<ffffffff8137d503>] call_rwsem_down_write_failed+0x13/0x20
-Jul 12 07:29:25 rawhide kernel: [  241.166760]  [<ffffffff81736aad>] ? down_write+0x9d/0xb2
-Jul 12 07:29:25 rawhide kernel: [  241.167189]  [<ffffffff8162d975>] ? genl_lock_all+0x15/0x30
-Jul 12 07:29:25 rawhide kernel: [  241.167603]  [<ffffffff8162d975>] genl_lock_all+0x15/0x30
-Jul 12 07:29:25 rawhide kernel: [  241.168036]  [<ffffffff8162ea83>] genl_register_family+0x53/0x1f0
-Jul 12 07:29:25 rawhide kernel: [  241.168490]  [<ffffffffa015e000>] ? 0xffffffffa015dfff
-Jul 12 07:29:25 rawhide kernel: [  241.168877]  [<ffffffff8162f520>] genl_register_family_with_ops+0x20/0x80
-Jul 12 07:29:25 rawhide kernel: [  241.169406]  [<ffffffffa015e000>] ? 0xffffffffa015dfff
-Jul 12 07:29:25 rawhide kernel: [  241.169802]  [<ffffffffa0101ec4>] nl80211_init+0x24/0xf0 [cfg80211]
-Jul 12 07:29:25 rawhide kernel: [  241.170297]  [<ffffffffa015e000>] ? 0xffffffffa015dfff
-Jul 12 07:29:25 rawhide kernel: [  241.170686]  [<ffffffffa015e043>] cfg80211_init+0x43/0xdb [cfg80211]
-Jul 12 07:29:25 rawhide kernel: [  241.171230]  [<ffffffff810020fa>] do_one_initcall+0xfa/0x1b0
-Jul 12 07:29:25 rawhide kernel: [  241.171651]  [<ffffffff8105cb93>] ? set_memory_nx+0x43/0x50
-Jul 12 07:29:25 rawhide kernel: [  241.172099]  [<ffffffff810fa2bf>] load_module+0x1c6f/0x27f0
-Jul 12 07:29:25 rawhide kernel: [  241.172515]  [<ffffffff810f59a0>] ? store_uevent+0x40/0x40
-Jul 12 07:29:25 rawhide kernel: [  241.172933]  [<ffffffff810fafd6>] SyS_finit_module+0x86/0xb0
-Jul 12 07:29:25 rawhide kernel: [  241.173379]  [<ffffffff81744019>] system_call_fastpath+0x16/0x1b
+Sure, will do.  Adding the linux-wireless mailing list as well.
 
-...on a hunch, I blacklisted the cfg80211 module, and that seems to
-have worked around the problem for now. I suspect that NM was trying to
-plug in this module and it hung, and it couldn't proceed any further to
-configure the virtual ethernet interface.
+Thanks,
+Ben
 
-In the fedora rawhide kernels, last known good one is
-kernel-3.11.0-0.rc0.git3.1.fc20, and bad one is
-kernel-3.11.0-0.rc0.git6.1.fc20. I haven't bisected it further.
+>
+> Thanks
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index 8be2b5d..f642f04 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -1317,7 +1317,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+>   		if (sc->rx.frag) {
+>   			int space = skb->len - skb_tailroom(hdr_skb);
+>
+> -			if (pskb_expand_head(hdr_skb, 0, space, GFP_ATOMIC) < 0) {
+> +			if (space > 0 &&
+> +			    pskb_expand_head(hdr_skb, 0, space, GFP_ATOMIC) < 0) {
+>   				dev_kfree_skb(skb);
+>   				RX_STAT_INC(rx_oom_err);
+>   				goto requeue_drop_frag;
+>
+
 
 -- 
-Jeff Layton <jlayton@redhat.com>
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
