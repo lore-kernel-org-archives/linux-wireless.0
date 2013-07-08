@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34197 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932219Ab3GZP1c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 11:27:32 -0400
-Message-ID: <51F29560.3080605@candelatech.com> (sfid-20130726_172738_931197_BE581283)
-Date: Fri, 26 Jul 2013 08:27:28 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [WT PATCH 4/6] mac80211: Add per-sdata station hash, and sdata
- hash.
-References: <1372546738-25827-1-git-send-email-greearb@candelatech.com>   <1372546738-25827-4-git-send-email-greearb@candelatech.com>   (sfid-20130630_005944_514926_D21D8724) <1373532936.8201.5.camel@jlt4.sipsolutions.net>  <51DECF5B.7040002@candelatech.com> <1374828780.8248.24.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1374828780.8248.24.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from arrakis.dune.hu ([78.24.191.176]:48338 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751642Ab3GHOI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 10:08:57 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 11/20] rt2x00: rt2800lib: hardcode TX mixer gain values for RT3593
+Date: Mon,  8 Jul 2013 16:08:26 +0200
+Message-Id: <1373292515-21332-12-git-send-email-juhosg@openwrt.org> (sfid-20130708_162039_918185_681CDA99)
+In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2013 01:53 AM, Johannes Berg wrote:
-> On Thu, 2013-07-11 at 08:29 -0700, Ben Greear wrote:
->
->>> I also don't like maintaining two separate hash tables and all that.
->>>
->>> I'd reconsider if you actually remove the hash entirely, but that'll be
->>> tricky to walk the station list and will quite possibly make the RX path
->>> there more expensive?
->>
->> Remove local->sta_hash ?
->
-> To be honest, I'm undecided. Yes, I was thinking that, but I also think
-> having a huge hashtable like that for each virtual interface is way
-> overkill, in particular for station interfaces that usually have one
-> peer (the AP) and maybe a few TDLS peers. Or P2P-Device interfaces that
-> have no peers at all ...
->
-> I don't see a good way to improve the hash either, since we don't always
-> (e.g. in RX path) have the interface address.
->
-> The basic problem really is that the hash now is designed to work well
-> for more regular use cases than yours, where you talk to any number of
-> different stations but degrades really badly when you talk only to a
-> single one many times. That use case is really special, and I don't want
-> to 'fix' that in a way that would make the other use case significantly
-> worse in memory consumption or CPU utilisation.
+The reference code uses hardcoded zero TX mixer gain value
+for RT3593. Do the same in the rt2x00 driver.
 
-I could make the hash size configurable I suppose, or just make it always
-be small for stations and larger for AP interfaces.  That should
-mitigate the memory usage issues.  The sdata hash in the wiphy can
-remain big, but there are rarely more than a few wiphy in a system, so
-I think the cost is low for that.
+Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-Thanks,
-Ben
+Reference:
+  NICReadEEPROMParameters in common/rtmp_init.c
 
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+Changes since v2: ---
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 1f32732..65045e0 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6365,6 +6365,9 @@ static u8 rt2800_get_txmixer_gain_24g(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u16 word;
+ 
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		return 0;
++
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
+ 	if ((word & 0x00ff) != 0x00ff)
+ 		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
+@@ -6376,6 +6379,9 @@ static u8 rt2800_get_txmixer_gain_5g(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u16 word;
+ 
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		return 0;
++
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
+ 	if ((word & 0x00ff) != 0x00ff)
+ 		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10
 
