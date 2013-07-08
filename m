@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:44793 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab3GQCWi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453Ab3GHI47 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:22:38 -0400
-Received: by mail-pa0-f54.google.com with SMTP id kx10so1423018pab.13
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:37 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 45/53] wireless-regdb: MY, Malaysia - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:34 -0700
-Message-Id: <1374027522-18488-46-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042240_722610_3D330F74)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 8 Jul 2013 04:56:59 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Uw7Ff-0006Tj-5Y
+	for linux-wireless@vger.kernel.org; Mon, 08 Jul 2013 10:56:55 +0200
+Message-ID: <1373273813.8312.4.camel@jlt4.sipsolutions.net> (sfid-20130708_105703_907792_4F1F3537)
+Subject: Re: [PATCH] mac80211: add per-chain signal information to radiotap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 08 Jul 2013 10:56:53 +0200
+In-Reply-To: <1372851242-25474-1-git-send-email-johannes@sipsolutions.net> (sfid-20130703_133411_815348_70B87534)
+References: <1372851242-25474-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130703_133411_815348_70B87534)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Wed, 2013-07-03 at 13:34 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> When per-chain signal information is available, don't add
+> the antenna field once but instead add a radiotap namespace
+> for each chain containing the chain/antenna number and the
+> signal strength on that chain.
 
-This enables 80 MHz bandwidth usage on 5 GHz, updates the
-max EIRP and adds a new 5 GHz range:
+Applied.
 
-  * 5170 - 5250 MHz
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index acb9358..c626a48 100644
---- a/db.txt
-+++ b/db.txt
-@@ -548,8 +548,9 @@ country MT: DFS-ETSI
- 
- country MY:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 30), DFS
--	(5735 - 5835 @ 40), (N/A, 30)
-+	(5170 - 5250 @ 80), (N/A, 17)
-+	(5250 - 5330 @ 80), (N/A, 23), DFS
-+	(5735 - 5835 @ 80), (N/A, 30)
- 
- country MX:
- 	(2402 - 2472 @ 40), (3, 27)
--- 
-1.7.10.4
+johannes
 
