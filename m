@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:58017 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755976Ab3GOLqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 07:46:51 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH RESEND 3.9 3/4] iwlwifi: mvm: adjust firmware D3 configuration API
-Date: Mon, 15 Jul 2013 14:46:43 +0300
-Message-Id: <1373888804-3077-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134657_803135_31AEA59B)
-In-Reply-To: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:59647 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792Ab3GICei (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jul 2013 22:34:38 -0400
+Message-ID: <51DB76BB.5040802@lwfinger.net> (sfid-20130709_043446_095560_7DDB1D06)
+Date: Mon, 08 Jul 2013 21:34:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: [PATCH] rtlwifi: Fix Kconfig for some corner cases
+References: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 07/06/2013 09:47 PM, Larry Finger wrote:
+> Fengguang Wu reported the following errors in the build of rtlwifi with
+> a random configuration:
 
-commit dfcb4c3aacedee6838e436fb575b31e138505203 upstream.
+John,
 
-The D3 firmware API changed to include a new field, adjust
-the driver to it to avoid getting an NMI when configuring.
+Please drop this patch. A better one will be submitted later.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Larry
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-index cf6f9a0..937665f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-@@ -75,13 +75,15 @@ enum iwl_d3_wakeup_flags {
-  * struct iwl_d3_manager_config - D3 manager configuration command
-  * @min_sleep_time: minimum sleep time (in usec)
-  * @wakeup_flags: wakeup flags, see &enum iwl_d3_wakeup_flags
-+ * @wakeup_host_timer: force wakeup after this many seconds
-  *
-  * The structure is used for the D3_CONFIG_CMD command.
-  */
- struct iwl_d3_manager_config {
- 	__le32 min_sleep_time;
- 	__le32 wakeup_flags;
--} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_3 */
-+	__le32 wakeup_host_timer;
-+} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_4 */
- 
- 
- /* TODO: OFFLOADS_QUERY_API_S_VER_1 */
--- 
-1.7.10.4
 
