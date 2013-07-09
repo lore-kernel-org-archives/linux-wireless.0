@@ -1,139 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50284 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759066Ab3GaJuj (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49846 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650Ab3GIS1O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 05:50:39 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>,
-	Andy Isaacson <adi@hexapodia.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.11] mac80211: ignore HT primary channel while connected
-Date: Wed, 31 Jul 2013 11:50:34 +0200
-Message-Id: <1375264234-31077-1-git-send-email-johannes@sipsolutions.net> (sfid-20130731_115057_319103_0639D869)
+	Tue, 9 Jul 2013 14:27:14 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv4 3/5] mac80211: allow chanctx to change channels
+Date: Tue,  9 Jul 2013 20:27:02 +0200
+Message-Id: <1373394424-23298-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130709_202720_889987_D467082E)
+In-Reply-To: <1373394424-23298-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373394424-23298-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This adds mac80211/chanctx code to allow to change a channel definition
+of an active channel context. This will be used for the channel switch
+command added later.
 
-While we're connected, the AP shouldn't change the primary channel
-in the HT information. We checked this, and dropped the connection
-if it did change it.
-
-Unfortunately, this is causing problems on some APs, e.g. on the
-Netgear WRT610NL: the beacons seem to always contain a bad channel
-and if we made a connection using a probe response (correct data)
-we drop the connection immediately and can basically not connect
-properly at all.
-
-Work around this by ignoring the HT primary channel information in
-beacons if we're already connected.
-
-Also print out more verbose messages in the other situations to
-help diagnose similar bugs quicker in the future.
-
-Cc: stable@vger.kernel.org [3.10]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- net/mac80211/mlme.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+ include/net/mac80211.h     |    4 ++++
+ net/mac80211/chan.c        |   55 ++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    4 ++++
+ 3 files changed, 63 insertions(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 383a961..77e7796 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -211,8 +211,9 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 			     struct ieee80211_channel *channel,
- 			     const struct ieee80211_ht_operation *ht_oper,
- 			     const struct ieee80211_vht_operation *vht_oper,
--			     struct cfg80211_chan_def *chandef, bool verbose)
-+			     struct cfg80211_chan_def *chandef, bool tracking)
- {
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct cfg80211_chan_def vht_chandef;
- 	u32 ht_cfreq, ret;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3124036..2cc306c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -152,11 +152,13 @@ struct ieee80211_low_level_stats {
+  * @IEEE80211_CHANCTX_CHANGE_WIDTH: The channel width changed
+  * @IEEE80211_CHANCTX_CHANGE_RX_CHAINS: The number of RX chains changed
+  * @IEEE80211_CHANCTX_CHANGE_RADAR: radar detection flag changed
++ * @IEEE80211_CHANCTX_CHANGE_CHANNEL: switched to another operating channel
+  */
+ enum ieee80211_chanctx_change {
+ 	IEEE80211_CHANCTX_CHANGE_WIDTH		= BIT(0),
+ 	IEEE80211_CHANCTX_CHANGE_RX_CHAINS	= BIT(1),
+ 	IEEE80211_CHANCTX_CHANGE_RADAR		= BIT(2),
++	IEEE80211_CHANCTX_CHANGE_CHANNEL	= BIT(3)
+ };
  
-@@ -231,7 +232,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 	ht_cfreq = ieee80211_channel_to_frequency(ht_oper->primary_chan,
- 						  channel->band);
- 	/* check that channel matches the right operating channel */
--	if (channel->center_freq != ht_cfreq) {
-+	if (!tracking && channel->center_freq != ht_cfreq) {
- 		/*
- 		 * It's possible that some APs are confused here;
- 		 * Netgear WNDR3700 sometimes reports 4 higher than
-@@ -239,11 +240,10 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 		 * since we look at probe response/beacon data here
- 		 * it should be OK.
- 		 */
--		if (verbose)
--			sdata_info(sdata,
--				   "Wrong control channel: center-freq: %d ht-cfreq: %d ht->primary_chan: %d band: %d - Disabling HT\n",
--				   channel->center_freq, ht_cfreq,
--				   ht_oper->primary_chan, channel->band);
-+		sdata_info(sdata,
-+			   "Wrong control channel: center-freq: %d ht-cfreq: %d ht->primary_chan: %d band: %d - Disabling HT\n",
-+			   channel->center_freq, ht_cfreq,
-+			   ht_oper->primary_chan, channel->band);
- 		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
- 		goto out;
- 	}
-@@ -297,7 +297,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 				channel->band);
- 		break;
- 	default:
--		if (verbose)
-+		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
- 			sdata_info(sdata,
- 				   "AP VHT operation IE has invalid channel width (%d), disable VHT\n",
- 				   vht_oper->chan_width);
-@@ -306,7 +306,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 	}
+ /**
+@@ -222,6 +224,7 @@ struct ieee80211_chanctx_conf {
+  * @BSS_CHANGED_BANDWIDTH: The bandwidth used by this interface changed,
+  *	note that this is only called when it changes after the channel
+  *	context had been assigned.
++ * @BSS_CHANGED_CHANNEL: The operating channel of this interface changed.
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -246,6 +249,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_P2P_PS		= 1<<19,
+ 	BSS_CHANGED_BEACON_INFO		= 1<<20,
+ 	BSS_CHANGED_BANDWIDTH		= 1<<21,
++	BSS_CHANGED_CHANNEL		= 1<<22,
  
- 	if (!cfg80211_chandef_valid(&vht_chandef)) {
--		if (verbose)
-+		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
- 			sdata_info(sdata,
- 				   "AP VHT information is invalid, disable VHT\n");
- 		ret = IEEE80211_STA_DISABLE_VHT;
-@@ -319,7 +319,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 	}
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 03e8d2e..7816703 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -410,6 +410,61 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
  
- 	if (!cfg80211_chandef_compatible(chandef, &vht_chandef)) {
--		if (verbose)
-+		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
- 			sdata_info(sdata,
- 				   "AP VHT information doesn't match HT, disable VHT\n");
- 		ret = IEEE80211_STA_DISABLE_VHT;
-@@ -346,7 +346,7 @@ out:
- 		ret |= chandef_downgrade(chandef);
- 	}
- 
--	if (chandef->width != vht_chandef.width && verbose)
-+	if (chandef->width != vht_chandef.width && !tracking)
- 		sdata_info(sdata,
- 			   "capabilities/regulatory prevented using AP HT/VHT configuration, downgraded\n");
- 
-@@ -386,7 +386,7 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
- 
- 	/* calculate new channel (type) based on HT/VHT operation IEs */
- 	flags = ieee80211_determine_chantype(sdata, sband, chan, ht_oper,
--					     vht_oper, &chandef, false);
-+					     vht_oper, &chandef, true);
- 
- 	/*
- 	 * Downgrade the new channel if we associated with restricted
-@@ -3838,7 +3838,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 	ifmgd->flags |= ieee80211_determine_chantype(sdata, sband,
- 						     cbss->channel,
- 						     ht_oper, vht_oper,
--						     &chandef, true);
-+						     &chandef, false);
- 
- 	sdata->needed_rx_chains = min(ieee80211_ht_vht_rx_chains(sdata, cbss),
- 				      local->rx_chains);
++int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++				 const struct cfg80211_chan_def *chandef,
++				 u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++	int ret;
++	u32 chanctx_changed = 0;
++
++	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
++				     IEEE80211_CHAN_DISABLED))
++		return -EINVAL;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ctx = container_of(conf, struct ieee80211_chanctx, conf);
++	if (ctx->refcount != 1) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
++		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
++		*changed |= BSS_CHANGED_BANDWIDTH;
++	}
++
++	sdata->vif.bss_conf.chandef = *chandef;
++	ctx->conf.def = *chandef;
++
++	chanctx_changed |= IEEE80211_CHANCTX_CHANGE_CHANNEL;
++	*changed |= BSS_CHANGED_CHANNEL;
++	drv_change_chanctx(local, ctx, chanctx_changed);
++
++	if (!local->use_chanctx) {
++		local->_oper_chandef = *chandef;
++		ieee80211_hw_config(local, 0);
++	}
++
++	ieee80211_recalc_chanctx_chantype(local, ctx);
++	ieee80211_recalc_smps_chanctx(local, ctx);
++	ieee80211_recalc_radar_chanctx(local, ctx);
++
++	ret = 0;
++ out:
++	mutex_unlock(&local->chanctx_mtx);
++	return ret;
++}
++
+ int ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
+ 				   const struct cfg80211_chan_def *chandef,
+ 				   u32 *changed)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 23a191b..20dbc2d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1658,6 +1658,10 @@ int __must_check
+ ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
+ 			       const struct cfg80211_chan_def *chandef,
+ 			       u32 *changed);
++int __must_check
++ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++			     const struct cfg80211_chan_def *chandef,
++			     u32 *changed);
+ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
 -- 
-1.8.0
+1.7.10.4
 
