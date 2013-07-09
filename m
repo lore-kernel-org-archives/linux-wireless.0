@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:33889 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932278Ab3GKJJR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42664 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752131Ab3GIPPe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:09:17 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Johan Hovold <jhovold@gmail.com>
-Subject: [PATCH 20/50] USB: serial: usb_wwan: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:43 +0800
-Message-Id: <1373533573-12272-21-git-send-email-ming.lei@canonical.com> (sfid-20130711_111731_571991_77B227FA)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Tue, 9 Jul 2013 11:15:34 -0400
+Message-ID: <1373382929.8241.3.camel@jlt4.sipsolutions.net> (sfid-20130709_171539_029194_1E476BD2)
+Subject: Re: [PATCH v13 1/2] cfg80211: add 'flags' to cfg80211_rx_mgmt()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Date: Tue, 09 Jul 2013 17:15:29 +0200
+In-Reply-To: <2816930.mUJMdCmsNg@lx-vladimir>
+References: <1372331863-14083-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <2816930.mUJMdCmsNg@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+On Wed, 2013-07-03 at 17:37 +0300, Vladimir Kondratiev wrote:
+> Flags intended to report various auxiliary information.
+> Introduced flag NL80211_RXMGMT_FLAG_REPLIED to report
+> whether frame was replied by the device/driver.
 
-Cc: Johan Hovold <jhovold@gmail.com>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/usb/serial/usb_wwan.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+This looks fine to me, but the patch is line-wrapped and won't apply:
 
-diff --git a/drivers/usb/serial/usb_wwan.c b/drivers/usb/serial/usb_wwan.c
-index 8257d30..c807d65 100644
---- a/drivers/usb/serial/usb_wwan.c
-+++ b/drivers/usb/serial/usb_wwan.c
-@@ -312,6 +312,7 @@ static void usb_wwan_outdat_callback(struct urb *urb)
- 	struct usb_wwan_port_private *portdata;
- 	struct usb_wwan_intf_private *intfdata;
- 	int i;
-+	unsigned long flags;
- 
- 	port = urb->context;
- 	intfdata = port->serial->private;
-@@ -319,9 +320,9 @@ static void usb_wwan_outdat_callback(struct urb *urb)
- 	usb_serial_port_softint(port);
- 	usb_autopm_put_interface_async(port->serial->interface);
- 	portdata = usb_get_serial_port_data(port);
--	spin_lock(&intfdata->susp_lock);
-+	spin_lock_irqsave(&intfdata->susp_lock, flags);
- 	intfdata->in_flight--;
--	spin_unlock(&intfdata->susp_lock);
-+	spin_unlock_irqrestore(&intfdata->susp_lock, flags);
- 
- 	for (i = 0; i < N_OUT_URB; ++i) {
- 		if (portdata->out_urbs[i] == urb) {
--- 
-1.7.9.5
+> @@ -608,8 +608,7 @@ static int ath6kl_wmi_rx_action_event_rx(struct wmi *wmi, 
+> u8 *datap, int len,
+
+
+
+You also sent me at least three versions of it and I don't really want
+to figure out what that meant.
+
+johannes
 
