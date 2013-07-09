@@ -1,252 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38315 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110Ab3GHO4T (ORCPT
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:54208 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929Ab3GIHWG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:19 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 08/18] mac80211: allow scanning for 5/10 MHz channels in IBSS
-Date: Mon,  8 Jul 2013 16:55:56 +0200
-Message-Id: <1373295366-12823-9-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_172040_106028_1664FF91)
-In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Tue, 9 Jul 2013 03:22:06 -0400
+Received: by mail-pb0-f54.google.com with SMTP id ro2so5233460pbb.27
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jul 2013 00:22:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51DB4195.8090103@inov.pt>
+References: <51DB0ACC.7050800@inov.pt> <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
+ <51DB4195.8090103@inov.pt>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 9 Jul 2013 10:21:50 +0300
+Message-ID: <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com> (sfid-20130709_092211_184585_288AC704)
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+To: =?ISO-8859-1?Q?Jos=E9_Miguel_Gon=E7alves?= <jose.goncalves@inov.pt>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a chandef instead of just the channel for scanning, and enable
-5/10 Mhz scanning for IBSS mode. Also reporting is changed to the new
-inform_bss functions.
+On Tue, Jul 9, 2013 at 1:47 AM, José Miguel Gonçalves
+<jose.goncalves@inov.pt> wrote:
+> Hi Arik,
+>
+> Yep, that patch solved the kernel warning, but the association with  the AP
+> is still lost after 3 warnings;
+>
+>
+> wlcore: Beacon loss detected. roles:0xff
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+This one is possibly a FW version issue. I'd give it a go with the
+latest FW in TI's git:
+https://github.com/TI-OpenLink/ti-utils/tree/master/hw/firmware
 
----
-Changes to PATCHv4:
- * fix comments
----
- net/mac80211/ibss.c        |   16 ++++++++++++----
- net/mac80211/ieee80211_i.h |    5 +++--
- net/mac80211/main.c        |   13 ++-----------
- net/mac80211/scan.c        |   45 ++++++++++++++++++++++++++++++++++++++------
- 4 files changed, 56 insertions(+), 23 deletions(-)
+>
+> To use the driver in the Luca's tree I need to do some work to adapt my
+> platform to the latest kernel version, what I would like to avoid  for now.
+> Is there any set of patches to put  the driver in vanilla kernel 3.9 in a
+> more stable condition?
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 7fb0f2a..b99d948 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -51,6 +51,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	u32 bss_change, rate_flags, rates = 0, rates_added = 0;
- 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
- 	struct cfg80211_chan_def chandef;
-+	enum nl80211_bss_scan_width scan_width;
- 	struct beacon_data *presp;
- 	int frame_len;
- 	int shift;
-@@ -267,8 +268,10 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	mod_timer(&ifibss->timer,
- 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
- 
--	bss = cfg80211_inform_bss_frame(local->hw.wiphy, chan,
--					mgmt, presp->head_len, 0, GFP_KERNEL);
-+	scan_width = cfg80211_chandef_to_scan_width(&chandef);
-+	bss = cfg80211_inform_bss_width_frame(local->hw.wiphy, chan,
-+					      scan_width, mgmt,
-+					      presp->head_len, 0, GFP_KERNEL);
- 	cfg80211_put_bss(local->hw.wiphy, bss);
- 	netif_carrier_on(sdata->dev);
- 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
-@@ -722,6 +725,7 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
- static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	enum nl80211_bss_scan_width scan_width;
- 
- 	sdata_assert_lock(sdata);
- 
-@@ -743,8 +747,9 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- 	sdata_info(sdata,
- 		   "No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)\n");
- 
-+	scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
- 	ieee80211_request_ibss_scan(sdata, ifibss->ssid, ifibss->ssid_len,
--				    NULL);
-+				    NULL, scan_width);
- }
- 
- static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
-@@ -794,6 +799,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 	struct cfg80211_bss *cbss;
- 	struct ieee80211_channel *chan = NULL;
- 	const u8 *bssid = NULL;
-+	enum nl80211_bss_scan_width scan_width;
- 	int active_ibss;
- 	u16 capability;
- 
-@@ -842,8 +848,10 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 					IEEE80211_SCAN_INTERVAL)) {
- 		sdata_info(sdata, "Trigger new scan to find an IBSS to join\n");
- 
-+		scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
- 		ieee80211_request_ibss_scan(sdata, ifibss->ssid,
--					    ifibss->ssid_len, chan);
-+					    ifibss->ssid_len, chan,
-+					    scan_width);
- 	} else {
- 		int interval = IEEE80211_SCAN_INTERVAL;
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 55d57f9..0aea73f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1054,7 +1054,7 @@ struct ieee80211_local {
- 	struct cfg80211_ssid scan_ssid;
- 	struct cfg80211_scan_request *int_scan_req;
- 	struct cfg80211_scan_request *scan_req, *hw_scan_req;
--	struct ieee80211_channel *scan_channel;
-+	struct cfg80211_chan_def scan_chandef;
- 	enum ieee80211_band hw_scan_band;
- 	int scan_channel_idx;
- 	int scan_ies_len;
-@@ -1334,7 +1334,8 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- void ieee80211_scan_work(struct work_struct *work);
- int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 				const u8 *ssid, u8 ssid_len,
--				struct ieee80211_channel *chan);
-+				struct ieee80211_channel *chan,
-+				enum nl80211_bss_scan_width scan_width);
- int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
- 			   struct cfg80211_scan_request *req);
- void ieee80211_scan_cancel(struct ieee80211_local *local);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index a1d51af..3e00871 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -102,17 +102,8 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
- 
- 	offchannel_flag = local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL;
- 
--	if (local->scan_channel) {
--		chandef.chan = local->scan_channel;
--		/* If scanning on oper channel, use whatever channel-type
--		 * is currently in use.
--		 */
--		if (chandef.chan == local->_oper_chandef.chan) {
--			chandef = local->_oper_chandef;
--		} else {
--			chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
--			chandef.center_freq1 = chandef.chan->center_freq;
--		}
-+	if (local->scan_chandef.chan) {
-+		chandef = local->scan_chandef;
- 	} else if (local->tmp_channel) {
- 		chandef.chan = local->tmp_channel;
- 		chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 819d095..08afe74 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -66,6 +66,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 	struct cfg80211_bss *cbss;
- 	struct ieee80211_bss *bss;
- 	int clen, srlen;
-+	enum nl80211_bss_scan_width scan_width;
- 	s32 signal = 0;
- 
- 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
-@@ -73,8 +74,15 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 	else if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
- 		signal = (rx_status->signal * 100) / local->hw.max_signal;
- 
--	cbss = cfg80211_inform_bss_frame(local->hw.wiphy, channel,
--					 mgmt, len, signal, GFP_ATOMIC);
-+	scan_width = NL80211_BSS_CHAN_WIDTH_20;
-+	if (rx_status->flag & RX_FLAG_5MHZ)
-+		scan_width = NL80211_BSS_CHAN_WIDTH_5;
-+	if (rx_status->flag & RX_FLAG_10MHZ)
-+		scan_width = NL80211_BSS_CHAN_WIDTH_10;
-+
-+	cbss = cfg80211_inform_bss_width_frame(local->hw.wiphy, channel,
-+					       scan_width, mgmt, len, signal,
-+					       GFP_ATOMIC);
- 	if (!cbss)
- 		return NULL;
- 
-@@ -300,7 +308,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
- 	rcu_assign_pointer(local->scan_sdata, NULL);
- 
- 	local->scanning = 0;
--	local->scan_channel = NULL;
-+	local->scan_chandef.chan = NULL;
- 
- 	/* Set power back to normal operating levels. */
- 	ieee80211_hw_config(local, 0);
-@@ -635,11 +643,34 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- {
- 	int skip;
- 	struct ieee80211_channel *chan;
-+	enum nl80211_bss_scan_width oper_scan_width;
- 
- 	skip = 0;
- 	chan = local->scan_req->channels[local->scan_channel_idx];
- 
--	local->scan_channel = chan;
-+	local->scan_chandef.chan = chan;
-+	local->scan_chandef.center_freq1 = chan->center_freq;
-+	local->scan_chandef.center_freq2 = 0;
-+	switch (local->scan_req->scan_width) {
-+	case NL80211_BSS_CHAN_WIDTH_5:
-+		local->scan_chandef.width = NL80211_CHAN_WIDTH_5;
-+		break;
-+	case NL80211_BSS_CHAN_WIDTH_10:
-+		local->scan_chandef.width = NL80211_CHAN_WIDTH_10;
-+		break;
-+	case NL80211_BSS_CHAN_WIDTH_20:
-+		/* If scanning on oper channel, use whatever channel-type
-+		 * is currently in use.
-+		 */
-+		oper_scan_width = cfg80211_chandef_to_scan_width(
-+					&local->_oper_chandef);
-+		if (chan == local->_oper_chandef.chan &&
-+		    oper_scan_width == local->scan_req->scan_width)
-+			local->scan_chandef = local->_oper_chandef;
-+		else
-+			local->scan_chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
-+		break;
-+	}
- 
- 	if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
- 		skip = 1;
-@@ -679,7 +710,7 @@ static void ieee80211_scan_state_suspend(struct ieee80211_local *local,
- 					 unsigned long *next_delay)
- {
- 	/* switch back to the operating channel */
--	local->scan_channel = NULL;
-+	local->scan_chandef.chan = NULL;
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
- 
- 	/* disable PS */
-@@ -821,7 +852,8 @@ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
- 
- int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 				const u8 *ssid, u8 ssid_len,
--				struct ieee80211_channel *chan)
-+				struct ieee80211_channel *chan,
-+				enum nl80211_bss_scan_width scan_width)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	int ret = -EBUSY;
-@@ -871,6 +903,7 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 
- 	local->int_scan_req->ssids = &local->scan_ssid;
- 	local->int_scan_req->n_ssids = 1;
-+	local->int_scan_req->scan_width = scan_width;
- 	memcpy(local->int_scan_req->ssids[0].ssid, ssid, IEEE80211_MAX_SSID_LEN);
- 	local->int_scan_req->ssids[0].ssid_len = ssid_len;
- 
--- 
-1.7.10.4
+Well 3.9 is pretty new, so the difference is not that big. A simple
+cherry pick of all patches done on <root>/drivers/wireless/ti/ would
+do the trick.
 
+Or you could always used compat-wireless, or in it's new name "driver
+backports":
+https://backports.wiki.kernel.org/index.php/Main_Page
+
+Arik
