@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:9257 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734Ab3GKT3R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 15:29:17 -0400
-Message-ID: <1373570955.17876.58.camel@gandalf.local.home> (sfid-20130711_212921_903049_8D56EC4C)
-Subject: Re: Help adding trace events to xHCI
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Xenia Ragiadakou <burzalodowa@gmail.com>,
-	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Thu, 11 Jul 2013 15:29:15 -0400
-In-Reply-To: <1373562533.8201.33.camel@jlt4.sipsolutions.net>
-References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos>
-	 (sfid-20130711_182013_255578_2722BE3F) <1373562533.8201.33.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from lmv.inov.pt ([146.193.64.2]:47638 "EHLO lmv.inov.pt"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752843Ab3GJAAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jul 2013 20:00:08 -0400
+Message-ID: <51DCA3EF.8090900@inov.pt> (sfid-20130710_020013_424287_F1868D16)
+Date: Wed, 10 Jul 2013 00:59:43 +0100
+From: =?ISO-8859-1?Q?Jos=E9_Miguel_Gon=E7alves?= <jose.goncalves@inov.pt>
+MIME-Version: 1.0
+To: Arik Nemtsov <arik@wizery.com>
+CC: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+References: <51DB0ACC.7050800@inov.pt> <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com> <51DB4195.8090103@inov.pt> <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com> <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt> <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt> <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com> <51DC0E7C.9080306@inov.pt> <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>
+In-Reply-To: <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-07-11 at 19:08 +0200, Johannes Berg wrote:
+Hi Arik,
 
-> > > lets say that we want the tracepoint function to have the prototype:
-> > > 
-> > > void trace_cmd_address_device(const char *fmt, ...).
-> 
-> I'm not sure this is possible. I think we (wireless) do this with
-> 
-> void trace_cmd_address_device(struct va_format *vaf)
-> 
-> instead only.
-> 
-> Note that there's no easy way to dynamically allocate the right amount
-> of space in the ringbuffer, or at least I haven't found one. We
-> therefore have a static size, which is somewhat inefficient.
+On 09-07-2013 20:10, Arik Nemtsov wrote:
+> On Tue, Jul 9, 2013 at 4:22 PM, José Miguel Gonçalves
+> <jose.goncalves@inov.pt> wrote:
+>> http://pastebin.com/XmEzqjHs
+>>
+>> The dmesg output with debug mask set to 0x63c20:
+>>
+>> http://pastebin.com/zGE0Gfp8
+>>
+>> Note that with debug activated I did not see the driver's "Beacon loss
+>> detected" messages.
+> You have this line in the log:
+> [   72.435000] wlan0: deauthenticated from 88:43:e1:57:79:c0 (Reason: 23)
+>
+> This means:
+> Association request rejected because the information in the Power
+> Capability element is
+> unacceptable
+>
+> In other words the AP is disconnecting you since your Tx power is
+> inadequate (probably too high?). I'd try to limit it using iw, or just
+> set a different regdomain where its limited.
+> Also I'd try with a different AP.
 
-Can you add a helper function? If these trace events can't nest (one in
-interrupt context and another in normal context with interrupts
-enabled), then you can just allocate a per-cpu buffer and store the
-string in that, and then move the string into the buffer.
+I think that return code is a bogus caused by the driver debug code, 
+because when I remove all the debug I see a different behaviour, i.e., 
+after brief associating with the AP, I see 3 driver messages;
 
-	vsnprintf(this_cpu_ptr(trace_buf), MAX_BUF_LEN, fmt, va);
-	__assign_str(str, trace_buf);
+wlcore: Beacon loss detected. roles:0xff
 
-You could even use the reg, unreg, methods for TRACE_EVENT_FN() that
-will allocate the buffers when the tracepoint is created. This will mean
-that you don't waste memory when not tracing.
+and then receive from wpa_supplicant;
 
--- Steve
+wlan0: CTRL-EVENT-DISCONNECTED bssid=88:43:e1:57:79:c0 reason=4 
+locally_generated=1
+wlan0: WPA: 4-Way Handshake failed - pre-shared key may be incorrect
+wlan0: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="A. Guidance" 
+auth_failures=1 duration=10
 
+and I've not make any mistake on the pre-shared key.
+
+Also I've used this AP for tests of different wireless adapters with 
+success. Inclusive have use it with the same hardware platform and same 
+kernel and sysapps (ifconfig, iw, wpa_supplicant, etc...) and a TP-Link 
+TL-WN722N Wi-Fi adapter (ath9k_htc driver) and had no problems in 
+associating that adapter.
+
+Can my problems be related with an inadequate NVS file? I've generated 
+it with the calibrate tool from ti-utils and the INI file TQS_D_1.7.ini 
+with the command "calibrator plt calibrate". Is this the correct INI for 
+my module (Jorjin's WG7350 - wl1273 based)?
+
+Any ideas also why I can not get a complete APs list with the command 
+"iw wlan0 scan"? No one as seen this behaviour before?
+
+José Gonçalves
 
