@@ -1,46 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:59137 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755451Ab3GUNg7 (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:22890 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407Ab3GIAkU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jul 2013 09:36:59 -0400
-Received: by mail-ee0-f47.google.com with SMTP id e49so3233980eek.6
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jul 2013 06:36:58 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 2/2] regulatory: take RTNL when restoring settings on CRDA timeout
-Date: Sun, 21 Jul 2013 16:36:49 +0300
-Message-Id: <1374413809-26005-2-git-send-email-arik@wizery.com> (sfid-20130721_154508_123281_3A56647A)
-In-Reply-To: <1374413809-26005-1-git-send-email-arik@wizery.com>
-References: <1374413809-26005-1-git-send-email-arik@wizery.com>
+	Mon, 8 Jul 2013 20:40:20 -0400
+Message-ID: <1373330415.1860.14.camel@bwh-desktop.uk.level5networks.com> (sfid-20130709_024027_754911_8B80C785)
+Subject: Re: [PATCH] rtlwifi: Fix Kconfig for some corner cases
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
+Date: Tue, 9 Jul 2013 01:40:15 +0100
+In-Reply-To: <51D9AFB2.2030707@lwfinger.net>
+References: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <1373190151.3428.13.camel@deadeye.wl.decadent.org.uk>
+	 <51D9AFB2.2030707@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RTNL has to be held since this potentially changes the regdomain.
-Locking was forgotten here due to recent locking simplification changes.
+On Sun, 2013-07-07 at 13:13 -0500, Larry Finger wrote:
+> On 07/07/2013 04:42 AM, Ben Hutchings wrote:
+> > On Sat, 2013-07-06 at 21:47 -0500, Larry Finger wrote:
+> >>
+> >> Although I could not duplicate this result on my machine, it seemed likely
+> >> that it was due to the unusual configuration where rtlwifi was being built,
+> >> but none of its dependent drivers were selected.
+> >
+> > I think it just requires:
+> >
+> > CONFIG_USB=m
+> > CONFIG_RTLWIFI=y
+> >
+> >> The fix is to select rtlwifi only when it is needed.
+> >
+> > I don't think so.  Consider this configuration:
+> >
+> > CONFIG_PCI=y
+> > CONFIG_USB=m
+> > CONFIG_RTL_CARDS=y
+> > CONFIG_RTL8192CE=y
+> > CONFIG_RTL8192CU=m
+> > CONFIG_RTLWIFI=y     # maximum of RTL8192CE=y and RTL8192CU=m
+> >
+> > The same breakage occurs.
+> 
+> Ben,
+> 
+> Thanks for your comments. I certainly do not claim to understand very much about 
+> the whole Kbuild process.
+> 
+> After setting up the above configuration manually, I ran 'make oldconfig' and 
+> got back
+> 
+> CONFIG_RTL_CARDS=m
+> CONFIG_RTL8192CE=m
+> CONFIG_RTL8192SE=m
+> CONFIG_RTL8192DE=m
+> CONFIG_RTL8723AE=m
+> CONFIG_RTL8188EE=m
+> CONFIG_RTL8192CU=m
+> CONFIG_RTLWIFI=m
+> CONFIG_RTLWIFI_DEBUG=y
+> CONFIG_RTL8192C_COMMON=m
+> 
+> That set of configuration parameters built normally.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/wireless/reg.c | 2 ++
- 1 file changed, 2 insertions(+)
+But you can still manually set:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1ec3933..b25390a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2285,7 +2285,9 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
- static void reg_timeout_work(struct work_struct *work)
- {
- 	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, restoring regulatory settings\n");
-+	rtnl_lock();
- 	restore_regulatory_settings(true);
-+	rtnl_unlock();
- }
- 
- int __init regulatory_init(void)
+CONFIG_PCI=y
+CONFIG_USB=m
+CONFIG_MAC80211=y   # maybe you had =m here?
+CONFIG_RTL_CARDS=y
+CONFIG_RTL8192CE=y
+
+and that will select:
+
+CONFIG_RTLWIFI=y
+
+> >> While making this
+> >> change, I simplified the configuration so that variable RTLWIFI is never seen
+> >> by the user.
+> > [...]
+> >
+> > This will break existing configurations as RTL_CARDS defaults to n.
+> 
+> I added a 'default y' to the RTL_CARDS stanza. I now get the following:
+> 
+> finger@larrylap:~/staging> make
+> scripts/kconfig/conf --silentoldconfig Kconfig
+> *
+> * Restart config...
+> *
+> *
+> * Realtek rtlwifi family of devices
+> *
+> Realtek rtlwifi family of devices (RTL_CARDS) [M/n/?] (NEW)
+> 
+> That should prevent breakage of existing configurations. It defaults to "m" 
+> because mac80211 is built as a module in my configuration.
+> 
+> > Perhaps you should introduce separate modules for the common PCI and USB
+> > support code, similarly to how the rt2x00 modules are organised.
+> 
+> That would not be very difficult, but it would involve converting the single 
+> module rtlwifi into 3 separate entities. Does that make sense to you? I'm not sure.
+
+Yes it does make sense.
+
+Ben.
+
 -- 
-1.8.1.2
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
