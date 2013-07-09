@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:56851 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBIb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:08:31 -0400
-Received: by mail-pd0-f172.google.com with SMTP id z10so587997pdj.3
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:08:30 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 49/53] wireless-regdb: TW, Taiwan - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:45 -0700
-Message-Id: <1372899889-19183-50-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_222271_7A69EDC9)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:38080 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753704Ab3GIJJd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jul 2013 05:09:33 -0400
+Message-ID: <1373360959.21065.183.camel@cumari.coelho.fi> (sfid-20130709_110936_250810_F093C397)
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>,
+	"=?ISO-8859-1?Q?Jos=E9?= Miguel =?ISO-8859-1?Q?Gon=E7alves?="
+	<jose.goncalves@inov.pt>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 9 Jul 2013 12:09:19 +0300
+In-Reply-To: <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
+References: <51DB0ACC.7050800@inov.pt>
+	 <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
+	 <51DB4195.8090103@inov.pt>
+	 <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Thanks Arik, for helping with this.
 
-This enables 80 MHz bandwidth usage and enables a new
-5 GHz band:
+On Tue, 2013-07-09 at 10:21 +0300, Arik Nemtsov wrote:
+> On Tue, Jul 9, 2013 at 1:47 AM, José Miguel Gonçalves
+> <jose.goncalves@inov.pt> wrote:
+> > Hi Arik,
+> >
+> > Yep, that patch solved the kernel warning, but the association with  the AP
+> > is still lost after 3 warnings;
 
-  * 5490 - 5710 MHz
+Cool, I have just sent this patch to the stable mailing list, for
+inclusion on  v.3.9.y.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 9765ad8..7b1e6e8 100644
---- a/db.txt
-+++ b/db.txt
-@@ -729,8 +729,9 @@ country SY:
- 
- country TW:
- 	(2402 - 2472 @ 40), (3, 27)
--	(5270 - 5330 @ 40), (3, 17), DFS
--	(5735 - 5815 @ 40), (3, 30)
-+	(5270 - 5330 @ 80), (3, 17), DFS
-+	(5490 - 5710 @ 80), (3, 30), DFS
-+	(5735 - 5815 @ 80), (3, 30)
- 
- country TH:
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
+> > wlcore: Beacon loss detected. roles:0xff
+> 
+> This one is possibly a FW version issue. I'd give it a go with the
+> latest FW in TI's git:
+> https://github.com/TI-OpenLink/ti-utils/tree/master/hw/firmware
+
+More specifically, try the hw/firmware/wl127x-fw-4-sr.bin and the
+hw/firmware/wl127x-fw-4-mr.bin (if you're using multirole).  Note that
+you need to rename them to wl127x-fw-5-sr.bin and wl127x-fw-5-mr.bin,
+respectively.
+
+What we have in the linux-firmware git at the moment are versions
+6.3.10.0.133 (singlerole) and 6.5.7.0.42 (multirole).  The new ones in
+TI's github repo are 6.3.10.0.136 and 6.5.7.0.46.
+
+If the new firmwares solve your problem, please let me know and I'll
+push them to the linux-firmware git repo.
+
+
+> > To use the driver in the Luca's tree I need to do some work to adapt my
+> > platform to the latest kernel version, what I would like to avoid  for now.
+> > Is there any set of patches to put  the driver in vanilla kernel 3.9 in a
+> > more stable condition?
+> 
+> Well 3.9 is pretty new, so the difference is not that big. A simple
+> cherry pick of all patches done on <root>/drivers/wireless/ti/ would
+> do the trick.
+> 
+> Or you could always used compat-wireless, or in it's new name "driver
+> backports":
+> https://backports.wiki.kernel.org/index.php/Main_Page
+
+I'd really recommend cherry-picking just what is needed.  It should be
+very few patches.  And every time you find a new patch that fixes some
+real issue you're seeing, let me know and I'll send to stable.
+
+You're so close to the mainline that it would be silly to use compat
+just for a few patches. ;)
+
+--
+Cheers,
+Luca.
 
