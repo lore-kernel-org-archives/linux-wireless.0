@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59282 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759100Ab3GZOuR (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:57581 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979Ab3GIPlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 10:50:17 -0400
-Message-ID: <1374850210.8248.59.camel@jlt4.sipsolutions.net> (sfid-20130726_165022_093524_79580FBA)
-Subject: changing dev->needed_headroom/needed_tailroom?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 26 Jul 2013 16:50:10 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 9 Jul 2013 11:41:47 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Subject: Re: [PATCH v13 1/2] cfg80211: add 'flags' to cfg80211_rx_mgmt()
+Date: Tue, 9 Jul 2013 18:41:42 +0300
+Message-ID: <2129661.ryxWndVai2@lx-vladimir> (sfid-20130709_174150_408988_00F71F42)
+In-Reply-To: <1373382929.8241.3.camel@jlt4.sipsolutions.net>
+References: <1372331863-14083-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <2816930.mUJMdCmsNg@lx-vladimir> <1373382929.8241.3.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Does it seem reasonable to change dev->needed_headroom and
-dev->needed_tailroom on the fly?
+On Tuesday, July 09, 2013 05:15:29 PM Johannes Berg wrote:
+> On Wed, 2013-07-03 at 17:37 +0300, Vladimir Kondratiev wrote:
+> > Flags intended to report various auxiliary information.
+> > Introduced flag NL80211_RXMGMT_FLAG_REPLIED to report
+> > whether frame was replied by the device/driver.
+> 
+> This looks fine to me, but the patch is line-wrapped and won't apply:
+> 
+> > @@ -608,8 +608,7 @@ static int ath6kl_wmi_rx_action_event_rx(struct wmi *wmi, 
+> > u8 *datap, int len,
+> 
+> 
+> 
+> You also sent me at least three versions of it and I don't really want
+> to figure out what that meant.
+> 
+> johannes
+> 
+My mailing system went crazy for couple of days. Sorry for this.
+All versions should be the same. I'll resend anyway,
+as patch 2 require some edition.
 
-We currently set needed_headroom to the max of what we need, but we
-could do better like making it depend on the interface type (e.g. only
-asking for mesh space on mesh interfaces). This would be done only when
-the interface isn't connected, I can't promise it would be down but the
-carrier would be off.
-
-Another thing we might want to do is change it according to the
-currently configured crypto (this would also affect
-dev->needed_tailroom) since we actually only need tailroom when TKIP is
-used. This could might be done on the fly, but could also be done when
-the carrier is still down during connection establishment (which would
-not be a complete optimisation but still be better than what we have
-now)
-
-Thoughts?
-
-johannes
-
+Thanks, Vladimir
