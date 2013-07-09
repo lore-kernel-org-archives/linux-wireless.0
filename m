@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:49564 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090Ab3GKJIq (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:49738 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751185Ab3GIFkr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:08:46 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Johan Hovold <jhovold@gmail.com>
-Subject: [PATCH 16/50] USB: serial: quatech2: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:39 +0800
-Message-Id: <1373533573-12272-17-git-send-email-ming.lei@canonical.com> (sfid-20130711_110857_949484_A1E49BD5)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Tue, 9 Jul 2013 01:40:47 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Jouni Malinen <j@w1.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"mcgrof@do-not-panic.com" <mcgrof@do-not-panic.com>,
+	"Spinadel, David" <david.spinadel@intel.com>
+Subject: RE: [PATCH 3/3] [RFC] cfg80211: Enable GO operation on additional
+ channels
+Date: Tue, 9 Jul 2013 05:40:30 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A01AD2D097@HASMSX106.ger.corp.intel.com> (sfid-20130709_074054_595799_55B07B59)
+References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
+ <1372768095-26053-4-git-send-email-ilan.peer@intel.com>
+ <20130708100418.GA10670@w1.fi>
+In-Reply-To: <20130708100418.GA10670@w1.fi>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+> -----Original Message-----
+> From: Jouni Malinen [mailto:j@w1.fi]
+> Sent: Monday, July 08, 2013 13:04
+> To: Peer, Ilan
+> Cc: linux-wireless@vger.kernel.org; mcgrof@do-not-panic.com; Spinadel, David
+> Subject: Re: [PATCH 3/3] [RFC] cfg80211: Enable GO operation on additional
+> channels
+> 
+> On Tue, Jul 02, 2013 at 03:28:15PM +0300, Ilan Peer wrote:
+> > Allow GO operation on a channel marked with
+> IEEE80211_CHAN_INDOOR_ONLY
+> > or IEEE80211_CHAN_GO_CONCURRENT iff there is an active station
+> > interface that is associated to an AP operating on this channel.
+> >
+> > Note that this is a permissive approach to the FCC definitions, that
+> > require a clear assessment that either the platform device is an
+> > indoor device, or the device operating the AP is an indoor device,
+> > i.e., AC powered.
+> > It is assumed that these restrictions are enforced by user space.
+> 
+> The introduction in 0/3 mentioned DFS, but I did not see it being addressed in
+> any of the actual changes. Is this only for indoors vs.
+> outdoors?
+>
 
-Cc: Johan Hovold <jhovold@gmail.com>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/usb/serial/quatech2.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+The DFS was mentioned in 0/3 in the context of an example for a case where a device can support WFD on bands where an authorized master is operating. The example assumes that the master has radar detection capabilities and is able to evacuate its operating channel if needed (which must be followed by the device also evicting the WFD operation from this channel). 
 
-diff --git a/drivers/usb/serial/quatech2.c b/drivers/usb/serial/quatech2.c
-index d997432..95e5dbf 100644
---- a/drivers/usb/serial/quatech2.c
-+++ b/drivers/usb/serial/quatech2.c
-@@ -630,16 +630,17 @@ static void qt2_write_bulk_callback(struct urb *urb)
- {
- 	struct usb_serial_port *port;
- 	struct qt2_port_private *port_priv;
-+	unsigned long flags;
- 
- 	port = urb->context;
- 	port_priv = usb_get_serial_port_data(port);
- 
--	spin_lock(&port_priv->urb_lock);
-+	spin_lock_irqsave(&port_priv->urb_lock, flags);
- 
- 	port_priv->urb_in_use = false;
- 	usb_serial_port_softint(port);
- 
--	spin_unlock(&port_priv->urb_lock);
-+	spin_unlock_irqrestore(&port_priv->urb_lock, flags);
- 
- }
- 
--- 
-1.7.9.5
+The purpose of this patch was to allow the instantiation of a GO on channels marked as indoor/Concurrent GO assuming some conditions are met, ignoring the NO_IBSS and PASSIVE channels. I intend to implement to full restriction logic in the wpa_supplicant (based on the device type etc.), and also handle the actual indication that this channel can no longer be used, eviction and new channel selection in the wpa_supplicant.
 
+> > Furthermore, it is assumed, that if the conditions that allowed for
+> > the operation of the GO on such a channel change, it is the
+> > responsibility of user space to evacuate the GO from the channel.
+> 
+> Do you have plans or changes to address this? I'd assume wpa_supplicant could
+> stop the group on channel list changes, but I don't think it does that currently.
+
+Yes. This is currently WIP :)
