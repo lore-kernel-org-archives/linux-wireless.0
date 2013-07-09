@@ -1,65 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:56140 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754566Ab3GWPF2 (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:61054 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792Ab3GICdS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 11:05:28 -0400
-Message-ID: <51EE9BB6.8000501@lwfinger.net> (sfid-20130723_170545_924035_F6963EDB)
-Date: Tue, 23 Jul 2013 10:05:26 -0500
+	Mon, 8 Jul 2013 22:33:18 -0400
+Message-ID: <51DB766B.5010304@lwfinger.net> (sfid-20130709_043326_748692_FEAD8B88)
+Date: Mon, 08 Jul 2013 21:33:15 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: =?UTF-8?B?IlBhdWwgUm9sbGFuZCAo44Od44O844Or44O744Ot44Op44OzKSI=?=
-	<rol@witbe.net>
-CC: Richard Genoud <richard.genoud@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: rtl8192cu: slow path warning
-References: <20130611123814.GA9854@lnx-rg> <20130626142241.GA13107@lnx-rg> <51CB0E9C.50408@lwfinger.net> <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com> <20130723142907.53103aab@tux.DEF.witbe.net>
-In-Reply-To: <20130723142907.53103aab@tux.DEF.witbe.net>
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: [PATCH] rtlwifi: Fix Kconfig for some corner cases
+References: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>  <1373190151.3428.13.camel@deadeye.wl.decadent.org.uk>  <51D9AFB2.2030707@lwfinger.net> <1373330415.1860.14.camel@bwh-desktop.uk.level5networks.com>
+In-Reply-To: <1373330415.1860.14.camel@bwh-desktop.uk.level5networks.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/23/2013 07:29 AM, Paul Rolland (ポール・ロラン) wrote:
-> Hello,
->
-> On Thu, 27 Jun 2013 09:33:20 +0200
-> Richard Genoud <richard.genoud@gmail.com> wrote:
->
->> Yes, of course, you can add my
->> Reported-by: Richard Genoud <richard.genoud@gmail.com>
+On 07/08/2013 07:40 PM, Ben Hutchings wrote:
+> On Sun, 2013-07-07 at 13:13 -0500, Larry Finger wrote:
+>> On 07/07/2013 04:42 AM, Ben Hutchings wrote:
+>>> On Sat, 2013-07-06 at 21:47 -0500, Larry Finger wrote:
+>>>>
+>>>> Although I could not duplicate this result on my machine, it seemed likely
+>>>> that it was due to the unusual configuration where rtlwifi was being built,
+>>>> but none of its dependent drivers were selected.
+>>>
+>>> I think it just requires:
+>>>
+>>> CONFIG_USB=m
+>>> CONFIG_RTLWIFI=y
+>>>
+>>>> The fix is to select rtlwifi only when it is needed.
+>>>
+>>> I don't think so.  Consider this configuration:
+>>>
+>>> CONFIG_PCI=y
+>>> CONFIG_USB=m
+>>> CONFIG_RTL_CARDS=y
+>>> CONFIG_RTL8192CE=y
+>>> CONFIG_RTL8192CU=m
+>>> CONFIG_RTLWIFI=y     # maximum of RTL8192CE=y and RTL8192CU=m
+>>>
+>>> The same breakage occurs.
 >>
->> But the patch doesn't compile on my platform ( since I'm on ARM, I
->> haven't got a PCI bus, so rtlwifi/pci.c is not compiled ) :
+>> Ben,
 >>
->> ERROR: "rtl_lps_change_work_callback"
->> [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+>> Thanks for your comments. I certainly do not claim to understand very much about
+>> the whole Kbuild process.
+>>
+>> After setting up the above configuration manually, I ran 'make oldconfig' and
+>> got back
+>>
+>> CONFIG_RTL_CARDS=m
+>> CONFIG_RTL8192CE=m
+>> CONFIG_RTL8192SE=m
+>> CONFIG_RTL8192DE=m
+>> CONFIG_RTL8723AE=m
+>> CONFIG_RTL8188EE=m
+>> CONFIG_RTL8192CU=m
+>> CONFIG_RTLWIFI=m
+>> CONFIG_RTLWIFI_DEBUG=y
+>> CONFIG_RTL8192C_COMMON=m
+>>
+>> That set of configuration parameters built normally.
 >
-> Is that the reason why this patch is not yet in 3.10.x or 3.11-rcY ?
-> I'm running a 3.10.1 with USB dongle including 8192CU, and I can see this
-> warning when the machine starts.
-> I've check 3.10.1, 3.10.2 and 3.11-rc3 source code, but this fix is not
-> there. Is there a different fix that went in in 3.10.2 or 3.11-rc?
+> But you can still manually set:
+>
+> CONFIG_PCI=y
+> CONFIG_USB=m
+> CONFIG_MAC80211=y   # maybe you had =m here?
+> CONFIG_RTL_CARDS=y
+> CONFIG_RTL8192CE=y
+>
+> and that will select:
+>
+> CONFIG_RTLWIFI=y
+>
+>>>> While making this
+>>>> change, I simplified the configuration so that variable RTLWIFI is never seen
+>>>> by the user.
+>>> [...]
+>>>
+>>> This will break existing configurations as RTL_CARDS defaults to n.
+>>
+>> I added a 'default y' to the RTL_CARDS stanza. I now get the following:
+>>
+>> finger@larrylap:~/staging> make
+>> scripts/kconfig/conf --silentoldconfig Kconfig
+>> *
+>> * Restart config...
+>> *
+>> *
+>> * Realtek rtlwifi family of devices
+>> *
+>> Realtek rtlwifi family of devices (RTL_CARDS) [M/n/?] (NEW)
+>>
+>> That should prevent breakage of existing configurations. It defaults to "m"
+>> because mac80211 is built as a module in my configuration.
+>>
+>>> Perhaps you should introduce separate modules for the common PCI and USB
+>>> support code, similarly to how the rt2x00 modules are organised.
+>>
+>> That would not be very difficult, but it would involve converting the single
+>> module rtlwifi into 3 separate entities. Does that make sense to you? I'm not sure.
+>
+> Yes it does make sense.
 
-The reason that patch is not in mainline is that it takes time. If you want to 
-have it, you can get the official patch from 
-http://marc.info/?l=linux-wireless&m=137242880222442&w=2, or you need to 
-implement kernels from the wireless-testing git tree, where it was added on June 
-28 as commit bcfb879. My original patch included the following note for John 
-Linville:
-
-"Ideally, this patch should be pushed to the 3.10 stream; however, at this late 
-time that is not possible. Please push it for 3.11 and the Cc to stable will get 
-it into 3.10.X."
-
-As you see, it was marked with a Cc for Stable, and it will be propagated to 
-3.10 when it gets incorporated by Linus. I think I have done all that I can do 
-for now.
-
-If you want to lobby Linus to get stuff accepted faster, that is your 
-prerogative; however, I could not recommend that action, and I certainly will 
-never do anything like that.
+I will be submitting a new patch as an RFC.
 
 Larry
+
 
