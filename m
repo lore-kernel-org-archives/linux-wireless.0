@@ -1,66 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:51034 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753773Ab3GWCSx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:18:53 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 09/21] mwifiex: correct max IE length check for WPS IE
-Date: Mon, 22 Jul 2013 19:17:46 -0700
-Message-ID: <1374545878-15683-10-git-send-email-bzhao@marvell.com> (sfid-20130723_041902_395996_CB0950EB)
-In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+Received: from lmv.inov.pt ([146.193.64.2]:46759 "EHLO lmv.inov.pt"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752840Ab3GIJeX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jul 2013 05:34:23 -0400
+Message-ID: <51DBD904.6020007@inov.pt> (sfid-20130709_113425_788377_398B8DC9)
+Date: Tue, 09 Jul 2013 10:33:56 +0100
+From: =?UTF-8?B?Sm9zw6kgTWlndWVsIEdvbsOnYWx2ZXM=?=
+	<jose.goncalves@inov.pt>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Luciano Coelho <coelho@ti.com>
+CC: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+References: <51DB0ACC.7050800@inov.pt>  <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>  <51DB4195.8090103@inov.pt>  <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com> <1373360959.21065.183.camel@cumari.coelho.fi>
+In-Reply-To: <1373360959.21065.183.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Hi,
 
-This patch is bug fix for an invalid boundry check for WPS IE.
-We should check max IE length against defined macro; instead we were
-checking it against size of pointer. Fix it.
-Also move IE length check before allocation of memory.
+First of all, thanks Arik and Luca for your help.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sta_ioctl.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+On 09-07-2013 10:09, Luciano Coelho wrote:
+>>> wlcore: Beacon loss detected. roles:0xff
+>> This one is possibly a FW version issue. I'd give it a go with the
+>> latest FW in TI's git:
+>> https://github.com/TI-OpenLink/ti-utils/tree/master/hw/firmware
+> More specifically, try the hw/firmware/wl127x-fw-4-sr.bin and the
+> hw/firmware/wl127x-fw-4-mr.bin (if you're using multirole).  Note that
+> you need to rename them to wl127x-fw-5-sr.bin and wl127x-fw-5-mr.bin,
+> respectively.
+>
+> What we have in the linux-firmware git at the moment are versions
+> 6.3.10.0.133 (singlerole) and 6.5.7.0.42 (multirole).  The new ones in
+> TI's github repo are 6.3.10.0.136 and 6.5.7.0.46.
+>
+> If the new firmwares solve your problem, please let me know and I'll
+> push them to the linux-firmware git repo.
 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 206c3e0..c071ce9 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -797,15 +797,16 @@ static int mwifiex_set_wps_ie(struct mwifiex_private *priv,
- 			       u8 *ie_data_ptr, u16 ie_len)
- {
- 	if (ie_len) {
--		priv->wps_ie = kzalloc(MWIFIEX_MAX_VSIE_LEN, GFP_KERNEL);
--		if (!priv->wps_ie)
--			return -ENOMEM;
--		if (ie_len > sizeof(priv->wps_ie)) {
-+		if (ie_len > MWIFIEX_MAX_VSIE_LEN) {
- 			dev_dbg(priv->adapter->dev,
- 				"info: failed to copy WPS IE, too big\n");
--			kfree(priv->wps_ie);
- 			return -1;
- 		}
-+
-+		priv->wps_ie = kzalloc(MWIFIEX_MAX_VSIE_LEN, GFP_KERNEL);
-+		if (!priv->wps_ie)
-+			return -ENOMEM;
-+
- 		memcpy(priv->wps_ie, ie_data_ptr, ie_len);
- 		priv->wps_ie_len = ie_len;
- 		dev_dbg(priv->adapter->dev, "cmd: Set wps_ie_len=%d IE=%#x\n",
--- 
-1.8.2.3
+Just to clarify. I was using the latest firmware files from 
+linux-firmware and the driver picks the file wl127x-fw-5-sr.bin which is 
+Rev 6.3.10.0.133. So are you saying that I should install the 
+wl127x-fw-4-sr.bin from TI's github repo named as wl127x-fw-5-sr.bin and 
+give it a try?
 
+>
+>>> To use the driver in the Luca's tree I need to do some work to adapt my
+>>> platform to the latest kernel version, what I would like to avoid  for now.
+>>> Is there any set of patches to put  the driver in vanilla kernel 3.9 in a
+>>> more stable condition?
+>> Well 3.9 is pretty new, so the difference is not that big. A simple
+>> cherry pick of all patches done on <root>/drivers/wireless/ti/ would
+>> do the trick.
+>>
+>> Or you could always used compat-wireless, or in it's new name "driver
+>> backports":
+>> https://backports.wiki.kernel.org/index.php/Main_Page
+> I'd really recommend cherry-picking just what is needed.  It should be
+> very few patches.
+
+I was doing that in this precise moment...
+
+> And every time you find a new patch that fixes some
+> real issue you're seeing, let me know and I'll send to stable.
+
+OK.
+
+José Gonçalves
