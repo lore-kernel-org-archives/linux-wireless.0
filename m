@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:42409 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCVJ (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:56740 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840Ab3GIJkW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:21:09 -0400
-Received: by mail-pd0-f174.google.com with SMTP id 10so1312150pdc.33
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:09 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 27/53] wireless-regdb: GR, Greece- enable VHT80
-Date: Tue, 16 Jul 2013 19:18:16 -0700
-Message-Id: <1374027522-18488-28-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_723262_D78149E2)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 9 Jul 2013 05:40:22 -0400
+Message-ID: <1373362817.21065.191.camel@cumari.coelho.fi> (sfid-20130709_114025_519183_4A697FE0)
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+From: Luciano Coelho <coelho@ti.com>
+To: =?ISO-8859-1?Q?Jos=E9?= Miguel =?ISO-8859-1?Q?Gon=E7alves?=
+	<jose.goncalves@inov.pt>
+CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
+Date: Tue, 9 Jul 2013 12:40:17 +0300
+In-Reply-To: <51DBD904.6020007@inov.pt>
+References: <51DB0ACC.7050800@inov.pt>
+	  <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
+	  <51DB4195.8090103@inov.pt>
+	  <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
+	 <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Tue, 2013-07-09 at 10:33 +0100, José Miguel Gonçalves wrote:
+> On 09-07-2013 10:09, Luciano Coelho wrote:
+> >>> wlcore: Beacon loss detected. roles:0xff
+> >> This one is possibly a FW version issue. I'd give it a go with the
+> >> latest FW in TI's git:
+> >> https://github.com/TI-OpenLink/ti-utils/tree/master/hw/firmware
+> > More specifically, try the hw/firmware/wl127x-fw-4-sr.bin and the
+> > hw/firmware/wl127x-fw-4-mr.bin (if you're using multirole).  Note that
+> > you need to rename them to wl127x-fw-5-sr.bin and wl127x-fw-5-mr.bin,
+> > respectively.
+> >
+> > What we have in the linux-firmware git at the moment are versions
+> > 6.3.10.0.133 (singlerole) and 6.5.7.0.42 (multirole).  The new ones in
+> > TI's github repo are 6.3.10.0.136 and 6.5.7.0.46.
+> >
+> > If the new firmwares solve your problem, please let me know and I'll
+> > push them to the linux-firmware git repo.
+> 
+> Just to clarify. I was using the latest firmware files from 
+> linux-firmware and the driver picks the file wl127x-fw-5-sr.bin which is 
+> Rev 6.3.10.0.133. So are you saying that I should install the 
+> wl127x-fw-4-sr.bin from TI's github repo named as wl127x-fw-5-sr.bin and 
+> give it a try?
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+Exactly.  The name used with TI's forked kernel hasn't update the
+version number to 5, so you need to rename it manually.  When the
+firmware boots, you should see Rev. 6.3.10.0.136 printed out.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+You may also want to update the mr version, if you'll use P2P, or other
+multirole scenarios.
 
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 3790d4e..7077b53 100644
---- a/db.txt
-+++ b/db.txt
-@@ -318,9 +318,9 @@ country GD:
- 
- country GR: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
+--
+Cheers,
+Luca.
 
