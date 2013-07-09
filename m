@@ -1,174 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:37632 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751259Ab3GGCrk (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:57286 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753173Ab3GIT4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jul 2013 22:47:40 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
-Subject: [PATCH] rtlwifi: Fix Kconfig for some corner cases
-Date: Sat,  6 Jul 2013 21:47:24 -0500
-Message-Id: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130707_044748_340953_6CD862A8)
+	Tue, 9 Jul 2013 15:56:31 -0400
+Date: Tue, 9 Jul 2013 21:56:26 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] mac80211: fix 5/10 MHz tx_status regression
+Message-ID: <20130709195626.GA23899@pandem0nium> (sfid-20130709_215642_746550_B23A6858)
+References: <1373397200-23686-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1373397346.8241.9.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="huq684BweRXVnRxX"
+In-Reply-To: <1373397346.8241.9.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fengguang Wu reported the following errors in the build of rtlwifi with
-a random configuration:
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux master
-head:   bcd7351e83728859833e3c5b8aae9a2816914e4b
-commit: 06e7cda3ce30dadc3454539127b4cfc3888c349e rtlwifi: Rework Kconfig
-date:   5 months ago
-config: i386-randconfig-s05-0703
+--huq684BweRXVnRxX
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-   drivers/built-in.o: In function `rtl_usb_cleanup':
-   usb.c:(.text+0x114895): undefined reference to `usb_kill_anchored_urbs'
-   usb.c:(.text+0x114964): undefined reference to `usb_kill_anchored_urbs'
-   usb.c:(.text+0x11497c): undefined reference to `usb_kill_anchored_urbs'
-   drivers/built-in.o: In function `_usb_writeN_sync':
-   usb.c:(.text+0x114c9e): undefined reference to `usb_control_msg'
-   drivers/built-in.o: In function `rtl_usb_disconnect':
-   (.text+0x114d9c): undefined reference to `usb_put_dev'
-   drivers/built-in.o: In function `rtl_usb_start':
-   usb.c:(.text+0x114fb0): undefined reference to `usb_alloc_urb'
-   usb.c:(.text+0x115049): undefined reference to `usb_free_urb'
---snip--
+On Tue, Jul 09, 2013 at 09:15:46PM +0200, Johannes Berg wrote:
+> On Tue, 2013-07-09 at 21:13 +0200, Simon Wunderlich wrote:
+> > sdata may be used uninitialized in ieee80211_tx_status() when adding the
+> > radiotap header. It was added as parameter in "mac80211: select and
+> > adjust bitrates according to channel mode" to find the current control
+> > channel width (5/10/20+ MHz) and is used to report the bitrate
+> > correctly. Fix this by identifing the required shift when cycling
+> > through the interfaces.
+> >=20
+> > Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> > Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+> > Cc: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+> > ---
+> > You might want to squash this into the offending patch before sending it
+> > further upstream.
+>=20
+> I was about to drop most of your patches again, but OK :)
 
-Although I could not duplicate this result on my machine, it seemed likely
-that it was due to the unusual configuration where rtlwifi was being built,
-but none of its dependent drivers were selected.
+Yeah I can imagine, and I would like to avoid that. :P
 
-The fix is to select rtlwifi only when it is needed. While making this
-change, I simplified the configuration so that variable RTLWIFI is never seen
-by the user. In addition, now that the rtlwifi family has six members, I
-added a menu so that these drivers no longer appear in the long list of
-wireless drivers, but in a separate panel.
+Thanks,
+	Simon
 
-Cc: Fengguang Wu <fengguang.wu@intel.com>
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Tested-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/Kconfig | 57 +++++++++++++++++++++---------------
- 1 file changed, 34 insertions(+), 23 deletions(-)
+--huq684BweRXVnRxX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-index 7253de3..7552841 100644
---- a/drivers/net/wireless/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/rtlwifi/Kconfig
-@@ -1,27 +1,18 @@
--config RTLWIFI
--	tristate "Realtek wireless card support"
--	depends on MAC80211
--	select FW_LOADER
-+menuconfig RTL_CARDS
-+	tristate "Realtek rtlwifi family of devices"
-+	depends on MAC80211 && (PCI || USB)
- 	---help---
--	  This is common code for RTL8192CE/RTL8192CU/RTL8192SE/RTL8723AE
--	  drivers.  This module does nothing by itself - the various front-end
--	  drivers need to be enabled to support any desired devices.
-+	  This option will enable support for the Realtek mac80211-based
-+	  wireless drivers. Drivers rtl8192ce, rtl8192cu, rtl8192se, rtl8192de,
-+	  rtl8723eu, and rtl8188eu share some common code.
- 
--	  If you choose to build as a module, it'll be called rtlwifi.
--
--config RTLWIFI_DEBUG
--	bool "Debugging output for rtlwifi driver family"
--	depends on RTLWIFI
--	default y
--	---help---
--	To use the module option that sets the dynamic-debugging level for,
--	the front-end driver, this parameter must be "Y". For memory-limited
--	systems, choose "N". If in doubt, choose "Y".
-+if RTL_CARDS
- 
- config RTL8192CE
- 	tristate "Realtek RTL8192CE/RTL8188CE Wireless Network Adapter"
--	depends on RTLWIFI && PCI
-+	depends on PCI
- 	select RTL8192C_COMMON
-+	select RTLWIFI
- 	---help---
- 	This is the driver for Realtek RTL8192CE/RTL8188CE 802.11n PCIe
- 	wireless network adapters.
-@@ -30,7 +21,8 @@ config RTL8192CE
- 
- config RTL8192SE
- 	tristate "Realtek RTL8192SE/RTL8191SE PCIe Wireless Network Adapter"
--	depends on RTLWIFI && PCI
-+	depends on PCI
-+	select RTLWIFI
- 	---help---
- 	This is the driver for Realtek RTL8192SE/RTL8191SE 802.11n PCIe
- 	wireless network adapters.
-@@ -39,7 +31,8 @@ config RTL8192SE
- 
- config RTL8192DE
- 	tristate "Realtek RTL8192DE/RTL8188DE PCIe Wireless Network Adapter"
--	depends on RTLWIFI && PCI
-+	depends on PCI
-+	select RTLWIFI
- 	---help---
- 	This is the driver for Realtek RTL8192DE/RTL8188DE 802.11n PCIe
- 	wireless network adapters.
-@@ -48,7 +40,8 @@ config RTL8192DE
- 
- config RTL8723AE
- 	tristate "Realtek RTL8723AE PCIe Wireless Network Adapter"
--	depends on RTLWIFI && PCI
-+	depends on PCI
-+	select RTLWIFI
- 	---help---
- 	This is the driver for Realtek RTL8723AE 802.11n PCIe
- 	wireless network adapters.
-@@ -57,7 +50,8 @@ config RTL8723AE
- 
- config RTL8188EE
- 	tristate "Realtek RTL8188EE Wireless Network Adapter"
--	depends on RTLWIFI && PCI
-+	depends on PCI
-+	select RTLWIFI
- 	---help---
- 	This is the driver for Realtek RTL8188EE 802.11n PCIe
- 	wireless network adapters.
-@@ -66,7 +60,8 @@ config RTL8188EE
- 
- config RTL8192CU
- 	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
--	depends on RTLWIFI && USB
-+	depends on USB
-+	select RTLWIFI
- 	select RTL8192C_COMMON
- 	---help---
- 	This is the driver for Realtek RTL8192CU/RTL8188CU 802.11n USB
-@@ -74,7 +69,22 @@ config RTL8192CU
- 
- 	If you choose to build it as a module, it will be called rtl8192cu
- 
-+config RTLWIFI
-+	tristate
-+	select FW_LOADER
-+
-+config RTLWIFI_DEBUG
-+	bool "Debugging output for rtlwifi driver family"
-+	depends on RTLWIFI
-+	default y
-+	---help---
-+	To use the module option that sets the dynamic-debugging level for,
-+	the front-end driver, this parameter must be "Y". For memory-limited
-+	systems, choose "N". If in doubt, choose "Y".
-+
- config RTL8192C_COMMON
- 	tristate
- 	depends on RTL8192CE || RTL8192CU
- 	default m
-+
-+endif
--- 
-1.8.1.4
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
+iEYEARECAAYFAlHcauoACgkQrzg/fFk7axa21ACgs1r1hwUE8MDpP8yUI095lBU0
+610An26GBvDjJuKhNVVs3PNdxs2U3x2k
+=7oEm
+-----END PGP SIGNATURE-----
+
+--huq684BweRXVnRxX--
