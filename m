@@ -1,156 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3935 "EHLO mms1.broadcom.com"
+Received: from lmv.inov.pt ([146.193.64.2]:56195 "EHLO lmv.inov.pt"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759537Ab3GaMze (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 08:55:34 -0400
-Message-ID: <51F90937.9080009@broadcom.com> (sfid-20130731_145541_931882_AE8DB75D)
-Date: Wed, 31 Jul 2013 14:55:19 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1751554Ab3GIL1a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jul 2013 07:27:30 -0400
+Message-ID: <51DBF389.5060209@inov.pt> (sfid-20130709_132734_115645_90E496F9)
+Date: Tue, 09 Jul 2013 12:27:05 +0100
+From: =?UTF-8?B?Sm9zw6kgTWlndWVsIEdvbsOnYWx2ZXM=?=
+	<jose.goncalves@inov.pt>
 MIME-Version: 1.0
-To: "Mathieu Devos" <mathieu.devos@ugent.be>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: Skb and ieee80211 headers
-References: <CAE_+Soy5=MfUUahaP3Ka2onp+jP9aupbhGu_QHco=CP7Y9sqhQ@mail.gmail.com>
- <51F8E228.9080600@broadcom.com>
- <CAE_+Soyxz-RfyVeg-Z4Fv5tmUtH=9wutxgM0CGjHEne9zJq+Kg@mail.gmail.com>
- <51F8EF8F.90109@broadcom.com>
- <CAE_+SozB3cE36SKaHsyO9B1Eypm7KZFExV_uWBSsoiQ-Rn66Dw@mail.gmail.com>
-In-Reply-To: <CAE_+SozB3cE36SKaHsyO9B1Eypm7KZFExV_uWBSsoiQ-Rn66Dw@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: Luciano Coelho <coelho@ti.com>
+CC: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+References: <51DB0ACC.7050800@inov.pt>   <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>   <51DB4195.8090103@inov.pt>   <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>  <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt> <1373362817.21065.191.camel@cumari.coelho.fi>
+In-Reply-To: <1373362817.21065.191.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/31/2013 02:39 PM, Mathieu Devos wrote:
-> Hi,
->
-> The wireless chip is a Broadcast BCM4330 chip. After looking around a
-> bit I found that this is a fullMAC and links to the driver on
-> wireless.kernel: http://wireless.kernel.org/en/users/Drivers/brcm80211
-> and also links directly to android itself:
-> https://android.googlesource.com/platform/hardware/broadcom/wlan
+Hi,
 
-I suspected. The bcm4330 is indeed a fullmac device, which means the 
-802.11 stack is running on the device. The driver on Android is located 
-under:
+I've upgraded the firmware and also backported all patches in Luca's 
+tree which do not break API compatibility in kernel 3.9 and still have 
+no success. Here goes the log:
 
-https://android.googlesource.com/kernel/samsung/+/android-samsung-3.0-ics-mr1/drivers/net/wireless/bcmdhd/
+[root ~]$ wpa_supplicant -i wlan0 -c /etc/wpa_supplicant.conf
+Successfully initialized wpa_supplicant
+[   38.295000] wlcore: firmware booted (Rev 6.3.10.0.136)
+[   38.655000] cfg80211: Calling CRDA for country: PT
+[   38.655000] cfg80211: Regulatory domain changed to country: PT
+[   38.665000] cfg80211:   (start_freq - end_freq @ bandwidth), 
+(max_antenna_gain, max_eirp)
+[   38.665000] cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), 
+(N/A, 2000 mBm)
+[   38.675000] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), 
+(N/A, 2000 mBm)
+[   38.675000] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), 
+(N/A, 2000 mBm)
+[   38.685000] cfg80211:   (5490000 KHz - 5710000 KHz @ 40000 KHz), 
+(N/A, 2700 mBm)
+[   38.685000] cfg80211:   (57240000 KHz - 65880000 KHz @ 2160000 KHz), 
+(N/A, 4000 mBm)
+wlan0: SME: Trying to authenticate with 88:43:e1:57:79:c0 (SSID='[ 
+38.945000] wlan0: authenticate with 88:43:e1:57:79:c0
+A. Guidance' freq=2452 MHz)
+[   38.985000] wlan0: send auth to 88:43:e1:57:79:c0 (try 1/3)
+[   38.990000] wlan0: authenticated
+wlan0: Trying to associate with 88:43:e1:57:79:c0 (SSID='A. Guidance' 
+freq=2452 MHz)
+[   39.065000] wlan0: associate with 88:43:e1:57:79:c0 (try 1/3)
+[   39.070000] wlan0: RX AssocResp from 88:43:e1:57:79:c0 (capab=0x431 
+status=0 aid=1)
+[   39.095000] wlan0: associated
+[   39.095000] cfg80211: Calling CRDA for country: PT
+[   39.105000] cfg80211: Regulatory domain changed to country: PT
+[   39.105000] cfg80211:   (start_freq - end_freq @ bandwidth), 
+(max_antenna_gain, max_eirp)
+[   39.110000] cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), 
+(N/A, 2000 mBm)
+[   39.125000] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), 
+(N/A, 2000 mBm)
+[   39.125000] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), 
+(N/A, 2000 mBm)
+[   39.140000] cfg80211:   (5490000 KHz - 5710000 KHz @ 40000 KHz), 
+(N/A, 2700 mBm)
+[   39.140000] cfg80211:   (57240000 KHz - 65880000 KHz @ 2160000 KHz), 
+(N/A, 4000 mBm)
+wlan0: Associated with 88:43:e1:57:79:c0
+[   40.925000] wlcore: Beacon loss detected. roles:0xff
+[   42.610000] wlcore: Beacon loss detected. roles:0xff
+[   44.275000] wlcore: Beacon loss detected. roles:0xff
+[   45.740000] wlcore: Connection loss work (role_id: 0).
+[   45.740000] wlan0: Connection to AP 88:43:e1:57:79:c0 lost
 
-Not sure which android version you have.
+And I still have the issue of not being able to scan all APs in the 
+vicinity. I can only (briefly) associate with my AP because I restrict 
+the scanning frequencies in wpa_supplicant.conf file;
 
-The brcm80211 on wireless.kernel.org is the upstream linux driver.
+country=PT
+ap_scan=1
+ctrl_interface=/var/run/wpa_supplicant
+network={
+     ssid="A. Guidance"
+     scan_freq=2452
+     key_mgmt=WPA-PSK
+     proto=WPA2
+     pairwise=CCMP TKIP
+     group=TKIP
+     psk="<some_password_in_ascii>"
+}
 
-Gr. AvS
+Any more ideas on how to debug this? Is there any specific debug_level 
+mask that can apply to the driver to help it?
 
-> Still trying to learn a lot in this tightly packed world of protocol
-> stacks, wireless and all the other poisons. Seems like I still have a
-> long way to go. Thank you already for helping me out with these issues
-> and taking the time to explain these things to me.
->
-> Kind regards,
-> Mathieu Devos
->
-> On Wed, Jul 31, 2013 at 1:05 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 07/31/2013 12:28 PM, Mathieu Devos wrote:
->>>
->>> Hi,
->>>
->>> It's an android smartphone (I 9100 - Samsung galaxy S2) so it does not
->>> have a normal ethernet 802.3 input even. I check before selecting the
->>> device that it's wireless (through ieee80211_ptr) and this properly
->>> returns the wlan0 device which should be on the 80211 standard.
->>
->>
->> *sigh* Welcome in the world of protocol stacks, wireless, networking (choose
->> your poison). Let me draw the picture.
->>
->>          o user-space
->>          |
->> ----------------------
->>          | kernel
->>    +-----------+
->>    |    NET    | networking subsystem, ie. TCP/IP stack
->>    +-----------+
->>          | 802.3
->> +----------------+
->> |       | driver |
->> | +------------+ |
->> | |802.11 stack| |
->> | +------------+ |
->> |       | 802.11 |
->> +----------------+
->>          |
->>          o RF
->>
->> The device hooks up to the networking subsystem as an ethernet device and as
->> such it receives 802.3 packets. These are converted to 802.11 packets by the
->> 802.11 stack. Now depending on your device that happens in the device driver
->> or on the device itself. Another option is that this is done by mac80211
->> (kernel provided 802.11 stack), but that is probably not the case, but to be
->> sure I ask again: what wireless device do you have in your galaxy S2?
->>
->> Gr. AvS
->>
->>
->>> My goal is to get the ieee80211_header properly on the skb with this
->>> device, but some of the pointers and original data in the skb seem
->>> totally off. This leaves me clueless as to where to put this
->>> ieee80211_header.
->>> I've tried putting it right on skb->head (wrong I know, but I was
->>> getting desperate), on skb->mac_header (also wrong, no idea why
->>> though), I went back from skb->tail with len and even added ETH_HLEN
->>> to that as well because you can see that before my hook gets
->>> activated: skb_pull_inline(skb, ETH_HLEN);
->>> In the end I'm left with a header that is forced onto data but with a
->>> wrong origin pointer thus basically leaving me with all wrong data in
->>> the header.
->>>
->>> Kind regards,
->>> Mathieu Devos
->>>
->>> On Wed, Jul 31, 2013 at 12:08 PM, Arend van Spriel <arend@broadcom.com>
->>> wrote:
->>>>
->>>> On 07/31/2013 11:39 AM, Mathieu Devos wrote:
->>>>>
->>>>>
->>>>> Hi,
->>>>>
->>>>> I hope this is the right place to ask for a little bit of help as I'm
->>>>> currently beyond stuck on a challenge I'm trying to accomplish. I'm
->>>>> trying to write a "simple" LKM that properly uses a ieee80211 header
->>>>> to print information about the mac addresses (addr1->addr4) and later
->>>>> down the road try to send my own data.
->>>>>
->>>>> I only need to get L2 working, no need for TCP/IP, just a proper
->>>>> ieee80211 based on input from skb would be huge for me.
->>>>>
->>>>> So my issue: when placing the ieee80211 on my mac_header after I hook
->>>>> my skb from my wireless device (wlan0 on android - I9100)
->>>>
->>>>
->>>>
->>>> Not sure what you goal is, but what wireless device is that? You may just
->>>> get 802.3 packets from the device.
->>>>
->>>> Gr. AvS
->>>>
->>>>
->>>>> I get a huge
->>>>> amount of zero's and random(?) numbers when trying to print the
->>>>> addresses. This leads me to the first conclusion that mac_header is
->>>>> placed wrong when using 80211. After that I saw a lot of people just
->>>>> using the skb->data pointer. Now this gives even weirder issues for me
->>>>> and actually totally crashes my kernel.
->>>>
->>>>
->>>>
->>>>
->>>>
->>>
->>
->>
->
-
-
+José Gonçalves
