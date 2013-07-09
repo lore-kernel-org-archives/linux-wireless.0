@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:38400 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755748Ab3GUQzh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jul 2013 12:55:37 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: <thomas@fjellstrom.ca>, Larry Finger <Larry.Finger@lwfinger.net>,
-	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH] ath: wil6210: Fix build error
-References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net>
-	<51EBFABB.8080701@lwfinger.net> <1559869.yu0fjJXVeX@balsa>
-	<5330916.8NnOO4SNAp@lx-vladimir>
-Date: Sun, 21 Jul 2013 19:55:34 +0300
-In-Reply-To: <5330916.8NnOO4SNAp@lx-vladimir> (Vladimir Kondratiev's message
-	of "Sun, 21 Jul 2013 18:52:38 +0300")
-Message-ID: <87bo5vyhrt.fsf@purkki.adurom.net> (sfid-20130721_185541_112359_5CFBC720)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([144.76.43.152]:42610 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753864Ab3GIPIk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jul 2013 11:08:40 -0400
+Message-ID: <1373382510.8241.2.camel@jlt4.sipsolutions.net> (sfid-20130709_170843_315266_A28EA370)
+Subject: Re: [PATCHv6 00/18] Add support for 5 and 10 MHz channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Tue, 09 Jul 2013 17:08:30 +0200
+In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Dropping stable)
+On Mon, 2013-07-08 at 16:55 +0200, Simon Wunderlich wrote:
+> This patchset adds support for 5 and 10 MHz in nl80211/cfg80211/mac80211
+> and enables support in ath5k and ath9k, which already support this feature
+> on the driver side. 5 and 10 MHz wide channels might be useful for:
+> 
+>  * long shot links, as the transmissions are more robust
+>  * future support for 802.11y which allows some 5 and 10 MHz channels in
+>    3.6 GHz range
+>  * future support for 802.11p which uses 10 MHz in 5.9 GHz range
+>  * ... and more "special" applications.
+> 
+> This patchset enables 5 and 10 MHz channels only for OFDM, and without
+> HT/MIMO/aggregation (for now). Support may be added later.
 
-Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
+I've applied patches 1-10, not going to take the ath patches.
 
->> It also looked like that that driver or section of the kernel was compiling 
->> with -Werror. I haven't verrified that but I remember seeing "treating all 
->> warnings as errors" at one point.
->> 
-> You are right, I have this in Makefile:
-> (if one turn on extra warnings with -W, there will be lots of false alarms,
-> that's why this ifeq())
->
-> ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
-> 	subdir-ccflags-y += -Werror
-> endif
+johannes
 
-This is exactly why it's recommended not to use -Werror on releases.
-It's ok when developers use it, but for end users -Werror should not be
-enabled by default.
-
--- 
-Kalle Valo
