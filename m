@@ -1,94 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:63439 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308Ab3GQCSt (ORCPT
+Received: from r-mail1.rd.orange.com ([217.108.152.41]:44798 "EHLO
+	r-mail1.rd.orange.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753019Ab3GIOfO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:18:49 -0400
-Received: by mail-pa0-f41.google.com with SMTP id bj3so1428894pad.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:18:49 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 00/53] wireless-regdb: latest updates
-Date: Tue, 16 Jul 2013 19:17:49 -0700
-Message-Id: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_041855_268827_D4F449A7)
+	Tue, 9 Jul 2013 10:35:14 -0400
+Message-ID: <51DC1F9D.7000705@Free.fr> (sfid-20130709_163518_057895_C11F60B3)
+Date: Tue, 09 Jul 2013 16:35:09 +0200
+From: Eric Valette <Eric.Valette@Free.fr>
+Reply-To: Eric.Valette@Free.fr
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ralink 3290: still lots of misc errors reported by Iwconfig with
+ 3.10 + HD streaming on WiFi fails
+References: <51DBEB0C.6040704@Free.fr> <20130709142202.GB3681@redhat.com>
+In-Reply-To: <20130709142202.GB3681@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 07/09/2013 04:22 PM, Stanislaw Gruszka wrote:
+> On Tue, Jul 09, 2013 at 12:50:52PM +0200, Eric Valette wrote:
+>> I just bought a HP netbook for my son equipped with this chipset. I
+>> first tried linux 3.9.7, got WiFi working badly but working. Saw fix
+>> for TX power in 3.9.9. WiFi became more reliable but still had a lot
+>> of  TX, and MISC errors reported by iwconfig.  While laptop is now
+>> usable for internet browsing, trying to play HD tv via XBMC +
+>> tvheadend fails miserably due to WiFi data rate and WiFi errors
+>> while other PC at home do play without problems.
+>>
+>> Saw the fix in 3.10 for TX errors and indeed the TX errors dropped
+>> to 0. However, the MISC error count in turn rose (Downloading
+>> linux-3.10.tar.xz on 3.10 reports 550 misc errors). So there is
+>> still some problem with this chipset. I know support is experimental
+>> but I would be glad to test any patchif possible on 3.9.x as on 3.10
+>> I have no ATI driver available at the moment and thus HD decoding is
+>> out of reach anyway.
+>
+> Do you mean that 3.10 perform better than 3.9.9 ? I do not see any
+> rt2x00 fixes between 3.9 and 3.10 that are not yet applied on 3.9.9.
+> I can see only some cleanups and new hardware support patches.
 
-I saw one comment posted about the Indonesia patch, I fixed that.
-I also then ran some sanity tests with a new reglib addition
-wich I recently posted. This helped find two cases which
-required disabling VHT80 for two countries on a specific band.
-One was for US for 5690 and another for TW for 5290. In both cases
-the reason is due to the fact that the only way to use VHT80 is
-to combine two frequency ranges together that are contiguous and
-apply the most restrictive band rules for that range. We don't support
-this yet so just disable VHT80 in both cases. In the US case this
-also seems to be the preferred ruling.
+ From memory I think I had a lot of reported TX error with 3.9.9 and 
+they are now gone with 3.10 but the number of misc error reported by 
+iwconfig is still high with 3.10. But you are right the fix for TX is 
+still in wireless git and does not seem to be in 3.10. As I checked 
+several git trees I mist have been confused...
 
-This now goes out in patch form.
 
-Luis R. Rodriguez (53):
-  wireless-regdb: AU, Australia - enable VHT80
-  wireless-regdb: BR, Brazil - enable VHT80
-  wireless-regdb: CA, Canada - enable VHT80
-  wireless-regdb: HK, Hong Kong - enable VHT80
-  wireless-regdb: NZ, New Zealand - enable VHT80
-  wireless-regdb: AR, Argentina - enable VHT80
-  wireless-regdb: CO, Colombia - enable VHT80
-  wireless-regdb: GU, Guam - enable VHT80
-  wireless-regdb: MX, Mexico - enable VHT80
-  wireless-regdb: PE, Peru - enable VHT80
-  wireless-regdb: PH, Philippines - enable VHT80
-  wireless-regdb: PR, Puerto Rico - enable VHT80
-  wireless-regdb: SA, Saudi Arabia - enable VHT80
-  wireless-regdb: SG, Singapore - enable VHT80
-  wireless-regdb: ZA, South Africa - enable VHT80
-  wireless-regdb: TH, Thailand - enable VHT80
-  wireless-regdb: AE, United Arab Emirates - enable VHT80
-  wireless-regdb: VN, Vietnam - enable VHT80
-  wireless-regdb: AT, Austria - enable VHT80
-  wireless-regdb: FR, France - enable VHT80
-  wireless-regdb: DE, Germany - enable VHT80
-  wireless-regdb: GB, United Kingdom - enable VHT80
-  wireless-regdb: BE, Belgium - enable VHT80
-  wireless-regdb: CZ, Czech Republic - enable VHT80
-  wireless-regdb: DK, Denmark - enable VHT80
-  wireless-regdb: FI, Finland - enable VHT80
-  wireless-regdb: GR, Greece- enable VHT80
-  wireless-regdb: IE, Ireland - enable VHT80
-  wireless-regdb: IT, Italy - enable VHT80
-  wireless-regdb: LU, Luxembourg - enable VHT80
-  wireless-regdb: NL, Netherlands - enable VHT80
-  wireless-regdb: PL, Poland - enable VHT80
-  wireless-regdb: PT, Portugal - enable VHT80
-  wireless-regdb: SK, Slovakia - enable VHT80
-  wireless-regdb: ES, Spain - enable VHT80
-  wireless-regdb: SE, Sweden - enable VHT80
-  wireless-regdb: CH, Switzerland - enable VHT80
-  wireless-regdb: TR, Turkey - enable VHT80
-  wireless-regdb: CN, China - enable VHT80
-  wireless-regdb: enable VHT80 and VHT160 for JP
-  wireless-regdb: US, United States - enable VHT80
-  wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
-  wireless-regdb: IL, Isreal - enable VHT80
-  wireless-regdb: KW, Kuwait - enable VHT80
-  wireless-regdb: MY, Malaysia - enable VHT80
-  wireless-regdb: MA, Morocco - enable 5 GHz and VHT80
-  wireless-regdb: enable HT40 in RU - Russian Federation
-  wireless-regdb: KR, Republic of Korea - enable VHT80
-  wireless-regdb: TW, Taiwan - enable VHT80
-  wireless-regdb: enable VHT80 when world roaming
-  wireless-regdb: add 802.11ad 60 GHz channels 1..3 to world regdom
-  wireless-regdb: CR, Costa Rica - enable VHT80
-  wireless-regdb: EC, Ecauador - enable VHT80
+> Try to subscribe to rt2x00 mailing list,
+> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
+> we post new patches there, but currently we do not have any pending
+> RT3290 fixes.
 
- db.txt |  316 +++++++++++++++++++++++++++++++++++-----------------------------
- 1 file changed, 173 insertions(+), 143 deletions(-)
+OK. Next radical solution is to open the laptop and change for another 
+half mini pcie card... Quite difficult to find one reliably even if 
+there are some available on ebay.
 
--- 
-1.7.10.4
+Thanks for taking the time to respond...
+
+--eric
 
