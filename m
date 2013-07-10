@@ -1,162 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.w2.samsung.com ([211.189.100.13]:56511 "EHLO
-	usmailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932776Ab3GBTe3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 15:34:29 -0400
-From: Shuah Khan <shuah.kh@samsung.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: "bzhao@marvell.com" <bzhao@marvell.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"rjw@sisk.pl" <rjw@sisk.pl>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"shuahkhan@gmail.com" <shuahkhan@gmail.com>,
-	Shuah Khan <shuah.kh@samsung.com>
-Subject: Re: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from legacy
- pm ops
-Date: Tue, 02 Jul 2013 19:24:25 +0000
-Message-id: <B8EFE96D1287C24090BAD9D858E15E61734462@sisaex02sj> (sfid-20130702_213523_733881_EA436000)
-References: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com>
- <51D32116.4010109@hauke-m.de>
-Content-type: text/plain; charset=us-ascii
-MIME-version: 1.0
+Received: from lmv.inov.pt ([146.193.64.2]:51066 "EHLO lmv.inov.pt"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753981Ab3GJMes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jul 2013 08:34:48 -0400
+Message-ID: <51DD54D4.6090502@inov.pt> (sfid-20130710_143452_018740_F5831907)
+Date: Wed, 10 Jul 2013 13:34:28 +0100
+From: =?UTF-8?B?Sm9zw6kgTWlndWVsIEdvbsOnYWx2ZXM=?=
+	<jose.goncalves@inov.pt>
+MIME-Version: 1.0
+To: Luciano Coelho <coelho@ti.com>
+CC: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+References: <51DB0ACC.7050800@inov.pt>  <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>  <51DB4195.8090103@inov.pt>  <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>  <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>  <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>  <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>  <51DC0E7C.9080306@inov.pt>  <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>  <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>
+In-Reply-To: <1373448177.8385.22.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/02/2013 12:51 PM, Hauke Mehrtens wrote:
-> On 07/02/2013 05:24 PM, Shuah Khan wrote:
->> Convert the mwifiex/pci driver to use dev_pm_ops for power management and
->> remove Legacy PM handling. This change re-uses existing suspend and resume
->> interfaces for dev_pm_ops.
->>
->> Signed-off-by: Shuah Khan <shuah.kh@samsung.com>
->> ---
->>   drivers/net/wireless/mwifiex/pcie.c |   34 ++++++++++++++++++++++++++++------
->>   1 file changed, 28 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
->> index 20c9c4c..b169318 100644
->> --- a/drivers/net/wireless/mwifiex/pcie.c
->> +++ b/drivers/net/wireless/mwifiex/pcie.c
->> @@ -85,7 +85,7 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
->>    * If already not suspended, this function allocates and sends a host
->>    * sleep activate request to the firmware and turns off the traffic.
->>    */
->> -static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
->> +static int __mwifiex_pcie_suspend(struct pci_dev *pdev)
->>   {
->>   	struct mwifiex_adapter *adapter;
->>   	struct pcie_service_card *card;
->> @@ -112,6 +112,13 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
->>   	return 0;
->>   }
->>
->> +static int mwifiex_pcie_suspend(struct device *dev)
->> +{
->> +	struct pci_dev *pdev = to_pci_dev(dev);
->> +
->> +	return __mwifiex_pcie_suspend(pdev);
->> +}
->> +
->
-> For what do you need __mwifiex_pcie_suspend() ? Why not make one
-> function out of these two?
+On 10-07-2013 10:22, Luciano Coelho wrote:
+>> Can my problems be related with an inadequate NVS file? I've generated
+>> it with the calibrate tool from ti-utils and the INI file TQS_D_1.7.ini
+>> with the command "calibrator plt calibrate". Is this the correct INI for
+>> my module (Jorjin's WG7350 - wl1273 based)?
+> Yes, the problem can be because of a bad NVS file.  Try with the
+> "default" NVS file that is provided in linux-firmware.git.  That one
+> won't be optimal, but should work okay.
 
-Originally, the reason is to keep __mwifiex_pcie_suspend() and 
-__mwifiex_pcie_resume() parameters the same so there will be no 
-confusion. However, I didn't think about using 
-mwifiex_pcie_resume(&pdev->dev) as you mentioned below. Yes, I can make 
-the change and not add two additional routines and send a v2 patch.
+I have the same problems with the default NVS file.
 
 >
->>   /*
->>    * Kernel needs to suspend all functions separately. Therefore all
->>    * registered functions must have drivers with suspend and resume
->> @@ -120,7 +127,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
->>    * If already not resumed, this function turns on the traffic and
->>    * sends a host sleep cancel request to the firmware.
->>    */
->> -static int mwifiex_pcie_resume(struct pci_dev *pdev)
->> +static int __mwifiex_pcie_resume(struct pci_dev *pdev)
->>   {
->>   	struct mwifiex_adapter *adapter;
->>   	struct pcie_service_card *card;
->> @@ -150,6 +157,13 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
->>
->>   	return 0;
->>   }
->> +
->> +static int mwifiex_pcie_resume(struct device *dev)
->> +{
->> +	struct pci_dev *pdev = to_pci_dev(dev);
->> +
->> +	return __mwifiex_pcie_resume(pdev);
->> +}
->>   #endif
->>
->>   /*
->> @@ -213,7 +227,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
->>   	if (user_rmmod) {
->>   #ifdef CONFIG_PM
->>   		if (adapter->is_suspended)
->> -			mwifiex_pcie_resume(pdev);
->> +			__mwifiex_pcie_resume(pdev);
->
-> You could use mwifiex_pcie_resume(&pdev->dev) here and then the extra
-> function __mwifiex_pcie_resume() is not needed any more.
+> I'm not sure which FEM Jorjin's module use.  Can you ask them?
 
-Yes. That would eliminate the need for additional routine. I didn't 
-think about that option.
+I will ask my contact.
 
 >
->>   #endif
->>
->>   		for (i = 0; i < adapter->priv_num; i++)
->> @@ -249,6 +263,14 @@ static DEFINE_PCI_DEVICE_TABLE(mwifiex_ids) = {
->>
->>   MODULE_DEVICE_TABLE(pci, mwifiex_ids);
->>
->> +#ifdef CONFIG_PM
->> +/* Power Management Hooks */
->> +static const struct dev_pm_ops mwifiex_pcie_pm_ops = {
->> +	.suspend = mwifiex_pcie_suspend,
->> +	.resume = mwifiex_pcie_resume,
->> +};
->> +#endif
->> +
+> I found this on github (Dick Chiang appears to work for Jorjin):
+> https://github.com/dickychiang/compat-wireless-r5/blob/master/jorjin/ini_files/TQS_D_1.7_WG7350_NLCP.ini
 >
-> Is it intended that you do not use SIMPLE_DEV_PM_OPS() like most of the
-> other wifi drivers?
-
-So the reason for this is SIMPLE_DEV_PM_OPS() is defined only when 
-CONFIG_PM_SLEEP is enabled. This driver doesn't defines suspend and 
-resume when CONFIG_PM is enabled and I didn't want to change that. Hope 
-that helps understand why I didn't use SIMPLE_DEV_PM_OPS()
-
->
->>   /* PCI Device Driver */
->>   static struct pci_driver __refdata mwifiex_pcie = {
->>   	.name     = "mwifiex_pcie",
->> @@ -256,9 +278,9 @@ static struct pci_driver __refdata mwifiex_pcie = {
->>   	.probe    = mwifiex_pcie_probe,
->>   	.remove   = mwifiex_pcie_remove,
->>   #ifdef CONFIG_PM
->> -	/* Power Management Hooks */
->> -	.suspend  = mwifiex_pcie_suspend,
->> -	.resume   = mwifiex_pcie_resume,
->> +	.driver   = {
->> +		.pm = &mwifiex_pcie_pm_ops,
->> +	},
->>   #endif
->>   };
->>
->>
->
+> DISCLAIMER: I have no clue whether this is the correct INI file or not
+> and I'm not claiming it's associated with TI in any way, so use it at
+> your own risk.
 >
 
--- Shuah
+Same problem after generating a new NVS file from this INI.
 
-Shuah Khan, Linux Kernel Developer - Open Source Group Samsung Research 
-America (Silicon Valley) shuah.kh@samsung.com | (970) 672-0658
+I will try a new AP to see how it behaves...
+
+José Gonçalves
