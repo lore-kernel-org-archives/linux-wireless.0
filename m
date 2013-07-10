@@ -1,101 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55273 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755502Ab3GOLPb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 07:15:31 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 5/5] bcma: fix handling of big addrl
-Date: Mon, 15 Jul 2013 13:15:08 +0200
-Message-Id: <1373886908-4460-6-git-send-email-hauke@hauke-m.de> (sfid-20130715_131534_833602_0A011A13)
-In-Reply-To: <1373886908-4460-1-git-send-email-hauke@hauke-m.de>
-References: <1373886908-4460-1-git-send-email-hauke@hauke-m.de>
+Received: from mout.gmx.net ([212.227.15.15]:53660 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751247Ab3GJGkR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jul 2013 02:40:17 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 1/2] ath9k_htc: do some initial hardware configuration
+Date: Wed, 10 Jul 2013 08:40:03 +0200
+Message-Id: <1373438404-5871-1-git-send-email-linux@rempel-privat.de> (sfid-20130710_084021_990963_BCDC59D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return value of bcma_erom_get_addr_desc() is a unsigned value and it
-could wrap around in the two complement writing. This happens for one
-core in the BCM4708 SoC.
+Currently we configure harwdare and clock, only after
+interface start. In this case, if we reload module or
+reboot PC without configuring adapter, firmware will freeze.
+There is no software way to reset adpter.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+This patch add initial configuration and set it in
+disabled state, to avoid this freeze. Behaviour of this patch
+should be similar to: ifconfig wlan0 up; ifconfig wlan0 down.
+
+Bug: https://github.com/qca/open-ath9k-htc-firmware/issues/1
+Tested-by: Bo Shi <cnshibo@gmail.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/bcma/scan.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index f2f1415..cd6b20f 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -213,7 +213,7 @@ static s32 bcma_erom_get_mst_port(struct bcma_bus *bus, u32 __iomem **eromptr)
- 	return ent;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 71a183f..c3676bf 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -861,6 +861,7 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
+ 	if (error != 0)
+ 		goto err_rx;
  
--static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
-+static u32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
- 				  u32 type, u8 port)
- {
- 	u32 addrl, addrh, sizel, sizeh = 0;
-@@ -225,7 +225,7 @@ static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
- 	    ((ent & SCAN_ADDR_TYPE) != type) ||
- 	    (((ent & SCAN_ADDR_PORT) >> SCAN_ADDR_PORT_SHIFT) != port)) {
- 		bcma_erom_push_ent(eromptr);
--		return -EINVAL;
-+		return (u32)-EINVAL;
- 	}
- 
- 	addrl = ent & SCAN_ADDR_ADDR;
-@@ -273,7 +273,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 			      struct bcma_device_id *match, int core_num,
- 			      struct bcma_device *core)
- {
--	s32 tmp;
-+	u32 tmp;
- 	u8 i, j;
- 	s32 cia, cib;
- 	u8 ports[2], wrappers[2];
-@@ -351,11 +351,11 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 	 * the main register space for the core
- 	 */
- 	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
--	if (tmp <= 0) {
-+	if (tmp == 0 || IS_ERR_VALUE(tmp)) {
- 		/* Try again to see if it is a bridge */
- 		tmp = bcma_erom_get_addr_desc(bus, eromptr,
- 					      SCAN_ADDR_TYPE_BRIDGE, 0);
--		if (tmp <= 0) {
-+		if (tmp == 0 || IS_ERR_VALUE(tmp)) {
- 			return -EILSEQ;
- 		} else {
- 			bcma_info(bus, "Bridge found\n");
-@@ -369,7 +369,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 		for (j = 0; ; j++) {
- 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
- 				SCAN_ADDR_TYPE_SLAVE, i);
--			if (tmp < 0) {
-+			if (IS_ERR_VALUE(tmp)) {
- 				/* no more entries for port _i_ */
- 				/* pr_debug("erom: slave port %d "
- 				 * "has %d descriptors\n", i, j); */
-@@ -386,7 +386,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 		for (j = 0; ; j++) {
- 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
- 				SCAN_ADDR_TYPE_MWRAP, i);
--			if (tmp < 0) {
-+			if (IS_ERR_VALUE(tmp)) {
- 				/* no more entries for port _i_ */
- 				/* pr_debug("erom: master wrapper %d "
- 				 * "has %d descriptors\n", i, j); */
-@@ -404,7 +404,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 		for (j = 0; ; j++) {
- 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
- 				SCAN_ADDR_TYPE_SWRAP, i + hack);
--			if (tmp < 0) {
-+			if (IS_ERR_VALUE(tmp)) {
- 				/* no more entries for port _i_ */
- 				/* pr_debug("erom: master wrapper %d "
- 				 * has %d descriptors\n", i, j); */
++	ath9k_hw_disable(priv->ah);
+ #ifdef CONFIG_MAC80211_LEDS
+ 	/* must be initialized before ieee80211_register_hw */
+ 	priv->led_cdev.default_trigger = ieee80211_create_tpt_led_trigger(priv->hw,
 -- 
-1.7.10.4
+1.8.1.2
 
