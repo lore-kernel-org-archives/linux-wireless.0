@@ -1,103 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41408 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750876Ab3GVMBQ (ORCPT
+Received: from mga14.intel.com ([143.182.124.37]:62080 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752063Ab3GJFzU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 08:01:16 -0400
-Message-ID: <1374494473.14517.8.camel@jlt4.sipsolutions.net> (sfid-20130722_140119_234957_9D1B97F3)
-Subject: pull-request: iwlwifi-fixes 2013-07-22
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 22 Jul 2013 14:01:13 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-BZbtl5oS9w4NzBloDOmS"
-Mime-Version: 1.0
+	Wed, 10 Jul 2013 01:55:20 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Steve Freitas <steve@newportit.com>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Re: Slow throughput on Ultimate-N 6300
+Date: Wed, 10 Jul 2013 05:55:11 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3019FFE28@HASMSX103.ger.corp.intel.com> (sfid-20130710_075524_190756_AE0D4842)
+References: <51BBF4F1.1050301@newportit.com>
+ <51DCDD54.9090100@newportit.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3019FFDDF@HASMSX103.ger.corp.intel.com>
+ <51DCF4BF.5010900@newportit.com>
+In-Reply-To: <51DCF4BF.5010900@newportit.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> 
+> Emmanuel,
+> 
+> Thank you for your quick response!
+> 
+> It is a regression. I regularly had 300 Mbps speeds on this very access point,
+> but it was years ago, in the 2.6 kernel series. However, I believe, from
+> extensive online searches, that Intel has disabled the N functionality in the
+> firmware on Linux, ostensibly until they (you? :-)
+> ) can fix whatever problem they were seeing. With the demise of the Intel
+> Linux Wireless bug tracker, though, public tracking of the bug has been
+> impossible. There are now-dead links to the defunct bug tracker over this
+> very issue.
+> 
 
---=-BZbtl5oS9w4NzBloDOmS
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+11n hasn't been disabled in firmware, but rather in driver.
+There is a bug we know about the "fail to flush tx fifo" thing that people reports (through mailing list or bugzilla of RedHat).
+Can you please send the output of the kerne log (dmesg)?
 
-John,
+> Sadly I only get 2 MByte/s on N, and under 1 MByte/s G.
+> 
+> I have not tried another access point in ages. Tired of replacing fried Netgears
+> and Dlinks and Belkins, I've converted all my friends and families to Apple's
+> access points. I'll try to locate something else and see how it goes.
 
-And another one for iwlwifi.
-
-Here I have a fix for debugfs directory creation (causing a spurious
-error message), two scanning fixes from David Spinadel, an LED fix and
-two patches related to a BA session problem that eventually caused
-firmware crashes from Emmanuel and a small BT fix for older devices as
-well as a workaround for a firmware problem with APs with very small
-beacon intervals from myself.
-
-Let me know if there's any problem.
-
-johannes
-
-The following changes since commit ad81f0545ef01ea651886dddac4bef6cec930092=
-:
-
-  Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
-or-john
-
-for you to fetch changes up to a590ad411891de551e6de1b51ea635c0484148d6:
-
-  iwlwifi: mvm: remove extra SSID from probe request (2013-07-16 13:55:15 +=
-0300)
-
-----------------------------------------------------------------
-Alexander Bondar (1):
-      iwlwifi: mvm: Fix VIF specific debugfs directory creation
-
-David Spinadel (2):
-      iwlwifi: mvm: fix bug in scan ssid
-      iwlwifi: mvm: remove extra SSID from probe request
-
-Emmanuel Grumbach (3):
-      iwlwifi: mvm: unregister leds when registration failed
-      iwlwifi: mvm: fix L2P BA ressources leak
-      iwlwifi: mvm: track the number of Rx BA sessions
-
-Johannes Berg (2):
-      iwlwifi: dvm: don't send BT_CONFIG on devices w/o Bluetooth
-      iwlwifi: mvm: refuse connection to APs with BI < 16
-
- drivers/net/wireless/iwlwifi/dvm/main.c     |  2 +-
- drivers/net/wireless/iwlwifi/mvm/debugfs.c  |  6 +++++-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 23 ++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  1 +
- drivers/net/wireless/iwlwifi/mvm/scan.c     | 10 ++++++----
- drivers/net/wireless/iwlwifi/mvm/sta.c      | 23 +++++++++++++++++++++--
- 6 files changed, 56 insertions(+), 9 deletions(-)
-
-
---=-BZbtl5oS9w4NzBloDOmS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJR7R8JAAoJEDBSmw7B7bqrPJ0P/35dN0zrxFQ48qKo/OhCMSPQ
-PES9TizJdCk76pHF3Grzb3b+8KWgNOFEJcvkFuJYNUEVsFbQ+ftksKTW9pT9Jq4o
-lad84ee42iewtFsTJa3f+8720E5EeYDnwmOm5Zs2oPpeLsZSmGZtLoeka+IirvGt
-Eg2BMHgBgIpL1vMMNKJsVN9V1NW3dVzTNqu+2Siq4FiQRLTENW9KFJkpWQKE6hn8
-BFTXIdV80iou8UYVcIN3nyO1qESwMo3m9yT+63Pdu+WjB88Jlm0/pfeNQ4ihTJ0b
-Qp04coWN+GcrxAj7kASbSbxh4HABBG2ceA7XJvoQeLv8JKNvis4+LeYHFCDjOWyS
-a1dirO/i1YXnH0aSZ/TCSuazsNyF4betOl/hFDZhvj3UwXGcOmEKWd+oZGVEVjdn
-b8XO07gIVjwnRLjnBNM4LmO4EJ6CSKauVx19q4AMLggQFSukjmxfz0bMLUEzV/Y+
-eZWHP1qGBDGUmofbny6Jlm0QUz4vsAyFyCSHBdZjAR/gFi0trLrU7oVh6EaStoNJ
-N3X1Ft1Gn2iarOcWaZgDCDNz8rYWgcoh+vZ5/5YZVYrOHG8tgsWX6LuofweZ7YSL
-8c4Zfj/SNwDPLWM0bvSBQ6Zg+upZHNSP+ImjX0QKXH2IdjVaBHOo1KSj+F0pnZkM
-7ZOuJ51pOcmM/N2n4X5X
-=MmTq
------END PGP SIGNATURE-----
-
---=-BZbtl5oS9w4NzBloDOmS--
-
+No need to. If you say that it worked, then it should still work. The issue I was thinking is the way they use some fancy feature of WiFi that no one implements (besides the wifi module of their devices of course).
+Also, can you please try different firmwares from http://wireless.kernel.org/en/users/Drivers/iwlwifi#Download ?
+I wonder if newer firmware has made things worse. You may want to try older firmware.
+To do so, open the tarball from that you'll download and copy iwlwifi-*.ucode to /lib/firmware.
