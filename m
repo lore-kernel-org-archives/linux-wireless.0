@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:44099 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755318Ab3GKOSh convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 10:18:37 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: 'Daniel Drake' <dsd@laptop.org>
-CC: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Thu, 11 Jul 2013 07:17:37 -0700
-Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951035636367@SC-VEXCH1.marvell.com> (sfid-20130711_161845_119526_1299D3E7)
-In-Reply-To: <CAMLZHHR_8Zsp2xe=9x4oJ1Rj7XLGOEza3r0uPt_Ht8TDC781aQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from bear.ext.ti.com ([192.94.94.41]:35713 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754497Ab3GJRRv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jul 2013 13:17:51 -0400
+Message-ID: <1373476663.8385.28.camel@cumari.coelho.fi> (sfid-20130710_191755_298455_F93579D1)
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+From: Luciano Coelho <coelho@ti.com>
+To: =?ISO-8859-1?Q?Jos=E9?= Miguel =?ISO-8859-1?Q?Gon=E7alves?=
+	<jose.goncalves@inov.pt>
+CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
+Date: Wed, 10 Jul 2013 20:17:43 +0300
+In-Reply-To: <51DD8C20.7010900@inov.pt>
+References: <51DB0ACC.7050800@inov.pt>
+	  <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
+	  <51DB4195.8090103@inov.pt>
+	  <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
+	  <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>
+	  <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>
+	  <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>
+	  <51DC0E7C.9080306@inov.pt>
+	  <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>
+	  <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>
+	 <51DD54D4.6090502@inov.pt> <51DD8C20.7010900@inov.pt>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+On Wed, 2013-07-10 at 17:30 +0100, José Miguel Gonçalves wrote:
+> On 10-07-2013 13:34, José Miguel Gonçalves wrote:
+> >
+> > I will try a new AP to see how it behaves...
+> >
+> 
+> I've tested with my Android smartphone acting as an AP, without authentication, 
+> and I'm also unable to associate!
+> 
+> I get from iw the following error message:
+> 
+> wlan0 (phy #0): failed to connect to b4:07:f9:49:cc:65, status: 1: Unspecified failure
+> 
+> Complete log is here:
+> 
+> http://pastebin.com/DzPmMw8i
+> 
+> So, something is definitely wrong with my setup... but what?
+> Hope that log has some useful info for you...
 
-Thanks for your elaborative comments. We can go with your patch which fixes the issue in a cleaner way. I ran some tests and verified remove path with it.
+This definitely looks like RF problems.  Especially this:
 
->Unless there is a reason to do otherwise, the norm here would be to
->tightly couple the hardware bits that enable interrupts to the Linux
->IRQ handler registration. i.e. sdio_claim_irq should be called
->immediately before mwifiex_sdio_enable_host_int, and sdio_release_irq
->should be called immediately after mwifiex_sdio_disable_host_int.
->Right now these 2 steps are very separate (sdio_release_irq is being
->called far too late, long after the point when the driver could sanely
->handle an interrupt).
+[  177.575000] wlan0: send auth to b4:07:f9:49:cc:65 (try 1/3)
+[  177.595000] wlan0: send auth to b4:07:f9:49:cc:65 (try 2/3)
+[  177.605000] wlcore: EVENT on mbox 1
+[  177.605000] wlcore: MBOX vector: 0x100000
+[  177.610000] wlcore: MAX_TX_FAILURE_EVENT_ID
+[  177.615000] wlan0: send auth to b4:07:f9:49:cc:65 (try 3/3)
+[  177.640000] wlan0: authentication with b4:07:f9:49:cc:65 timed out
 
-Now if_ops.disable_int call is a bit closer to sdio_release_irq (in if_ops.unregister).
+You are send auth requests out, but not getting anything back.
+Apparently you're not even getting ACKs (as pointed out by the
+MAX_TX_FAILURE_EVENT_ID).
 
->Although you would never expect an interrupt to arrive after
->mwifiex_sdio_disable_host_int() has been called, the cleanliness and
->readability has value here, and maybe damaged hardware would misbehave
->and fire an interrupt anyway, which would cause the driver to go
->wrong.
-mwifiex_main_process() which may go into an infinite loop is not called in this case now.
+Do you have a sniffer? You could try to use your TP-Link dongle with
+wireshark to see if it works fine as a sniffer.
 
->Secondly, it should be symmetrical. If the core mwifiex driver is the
->thing that enables interrupts, it should be the component responsible
->for disabling them as well. With your patch, the core mwifiex driver
->enables interrupts, but it is up to the sdio sub-driver to disable
->them.
-if_ops.disable_int call takes care of it.
+My bet is that you'll see lots of retransmissions there. :\
 
-Regards,
-Amitkumar Karwar
+--
+Luca.
+
