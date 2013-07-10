@@ -1,24 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41413 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750876Ab3GVMCU (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:35773 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751095Ab3GJFfT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 08:02:20 -0400
-Message-ID: <1374494537.14517.9.camel@jlt4.sipsolutions.net> (sfid-20130722_140223_200986_04ACCCB1)
-Subject: Re: pull-request: *mac80211* 2013-07-22
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 22 Jul 2013 14:02:17 +0200
-In-Reply-To: <1374494325.14517.4.camel@jlt4.sipsolutions.net> (sfid-20130722_135858_034624_52BA3388)
-References: <1374494325.14517.4.camel@jlt4.sipsolutions.net>
-	 (sfid-20130722_135858_034624_52BA3388)
-Content-Type: text/plain
-Mime-Version: 1.0
+	Wed, 10 Jul 2013 01:35:19 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Steve Freitas <steve@newportit.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Re: Slow throughput on Ultimate-N 6300
+Date: Wed, 10 Jul 2013 05:35:15 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3019FFDDF@HASMSX103.ger.corp.intel.com> (sfid-20130710_073522_239399_25FDA4C3)
+References: <51BBF4F1.1050301@newportit.com> <51DCDD54.9090100@newportit.com>
+In-Reply-To: <51DCDD54.9090100@newportit.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixing subject, sorry ...
+> > I understand that it's well-known that N is broken for Linux on this
+> > wireless chipset. You can add me to the list of those suffering under
+> > it. Can you provide me with a status update on work performed towards
+> > resolution of this issue?
+> >
+> > I'm on Debian unstable, kernel 3.9 amd64, using iwlwifi wireless
+> > firmware version 9.221.4.1 build 25532 on a Thinkpad T410, and I'm
+> > connected to an Apple Airport Extreme base station (3rd generation).
+> >
 
-johannes
+Is this a regression?
+Has it worked better before?
 
+Also - did you try another access point? I seem to remember that we have had issues against Apple's access points.
