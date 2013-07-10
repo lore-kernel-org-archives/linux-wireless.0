@@ -1,110 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:49373 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751369Ab3GVMJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 08:09:03 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4] ath10k: create debugfs interface to trigger fw crash
-Date: Mon, 22 Jul 2013 14:08:51 +0200
-Message-ID: <1374494931-18913-1-git-send-email-michal.kazior@tieto.com> (sfid-20130722_140912_765838_DFB6F82D)
-In-Reply-To: <878v1122id.fsf@kamboji.qca.qualcomm.com>
-References: <878v1122id.fsf@kamboji.qca.qualcomm.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:36223 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731Ab3GJJXH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jul 2013 05:23:07 -0400
+Message-ID: <1373448177.8385.22.camel@cumari.coelho.fi> (sfid-20130710_112311_330813_A9CB1CA3)
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+From: Luciano Coelho <coelho@ti.com>
+To: =?ISO-8859-1?Q?Jos=E9?= Miguel =?ISO-8859-1?Q?Gon=E7alves?=
+	<jose.goncalves@inov.pt>
+CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
+Date: Wed, 10 Jul 2013 12:22:57 +0300
+In-Reply-To: <51DCA3EF.8090900@inov.pt>
+References: <51DB0ACC.7050800@inov.pt>
+	 <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
+	 <51DB4195.8090103@inov.pt>
+	 <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
+	 <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>
+	 <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>
+	 <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>
+	 <51DC0E7C.9080306@inov.pt>
+	 <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>
+	 <51DCA3EF.8090900@inov.pt>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be useful for testing. To perform a
-forced firmware crash write 'crash' to
-'simulate_fw_crash' debugfs file. E.g.
+On Wed, 2013-07-10 at 00:59 +0100, José Miguel Gonçalves wrote:
+> Hi Arik,
+> 
+> On 09-07-2013 20:10, Arik Nemtsov wrote:
+> > On Tue, Jul 9, 2013 at 4:22 PM, José Miguel Gonçalves
+> > <jose.goncalves@inov.pt> wrote:
+> >> http://pastebin.com/XmEzqjHs
+> >>
+> >> The dmesg output with debug mask set to 0x63c20:
+> >>
+> >> http://pastebin.com/zGE0Gfp8
+> >>
+> >> Note that with debug activated I did not see the driver's "Beacon loss
+> >> detected" messages.
+> > You have this line in the log:
+> > [   72.435000] wlan0: deauthenticated from 88:43:e1:57:79:c0 (Reason: 23)
+> >
+> > This means:
+> > Association request rejected because the information in the Power
+> > Capability element is
+> > unacceptable
 
-  echo crash > /sys/kernel/debug/ieee80211/phy1/ath10k/simulate_fw_crash
+Actually, I think this is "IEEE 802.1X authentication failed".  This is
+the reason_code in the deauth frame.  If it were the status_code in the
+association response, mac80211 would print "denied association instead".
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v3: return an appropriate errno instead of using ath10k_warn()
 
- drivers/net/wireless/ath/ath10k/debug.c |   57 +++++++++++++++++++++++++++++++
- 1 file changed, 57 insertions(+)
+> > In other words the AP is disconnecting you since your Tx power is
+> > inadequate (probably too high?). I'd try to limit it using iw, or just
+> > set a different regdomain where its limited.
+> > Also I'd try with a different AP.
+> 
+> I think that return code is a bogus caused by the driver debug code, 
+> because when I remove all the debug I see a different behaviour, i.e., 
+> after brief associating with the AP, I see 3 driver messages;
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 65279f5..3d65594 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -445,6 +445,60 @@ static const struct file_operations fops_fw_stats = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
-+					     char __user *user_buf,
-+					     size_t count, loff_t *ppos)
-+{
-+	const char buf[] = "To simulate firmware crash write the keyword"
-+			   " `crash` to this file.\nThis will force firmware"
-+			   " to report a crash to the host system.\n";
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
-+}
-+
-+static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
-+					      const char __user *user_buf,
-+					      size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	char buf[32] = {};
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+	if (strcmp(buf, "crash") && strcmp(buf, "crash\n")) {
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_RESTARTED) {
-+		ret = -ENETDOWN;
-+		goto exit;
-+	}
-+
-+	ath10k_info("simulating firmware crash\n");
-+
-+	ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
-+	if (ret)
-+		ath10k_warn("failed to force fw hang (%d)\n", ret);
-+
-+	if (ret == 0)
-+		ret = count;
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static const struct file_operations fops_simulate_fw_crash = {
-+	.read = ath10k_read_simulate_fw_crash,
-+	.write = ath10k_write_simulate_fw_crash,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath10k_debug_create(struct ath10k *ar)
- {
- 	ar->debug.debugfs_phy = debugfs_create_dir("ath10k",
-@@ -461,6 +515,9 @@ int ath10k_debug_create(struct ath10k *ar)
- 	debugfs_create_file("wmi_services", S_IRUSR, ar->debug.debugfs_phy, ar,
- 			    &fops_wmi_services);
- 
-+	debugfs_create_file("simulate_fw_crash", S_IRUSR, ar->debug.debugfs_phy,
-+			    ar, &fops_simulate_fw_crash);
-+
- 	return 0;
- }
- #endif /* CONFIG_ATH10K_DEBUGFS */
--- 
-1.7.9.5
+I think this is happening here because of timing.  I suspect that the
+signal is bad so there are probably lots of retransmissions and with
+debugging, things can become so slow that the authentication times out.
+IIRC EAP has very strict timing requirements.
+
+
+> wlcore: Beacon loss detected. roles:0xff
+> 
+> and then receive from wpa_supplicant;
+> 
+> wlan0: CTRL-EVENT-DISCONNECTED bssid=88:43:e1:57:79:c0 reason=4 
+> locally_generated=1
+> wlan0: WPA: 4-Way Handshake failed - pre-shared key may be incorrect
+> wlan0: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="A. Guidance" 
+> auth_failures=1 duration=10
+> 
+> and I've not make any mistake on the pre-shared key.
+> 
+> Also I've used this AP for tests of different wireless adapters with 
+> success. Inclusive have use it with the same hardware platform and same 
+> kernel and sysapps (ifconfig, iw, wpa_supplicant, etc...) and a TP-Link 
+> TL-WN722N Wi-Fi adapter (ath9k_htc driver) and had no problems in 
+> associating that adapter.
+
+Still, there may be some interoperability issue with this AP and the
+wl127x chip. ;)
+
+I would try with another AP, just to see how things go.  Also, I'd try
+with an open connection to rule out problems with authentication.
+
+
+> Can my problems be related with an inadequate NVS file? I've generated 
+> it with the calibrate tool from ti-utils and the INI file TQS_D_1.7.ini 
+> with the command "calibrator plt calibrate". Is this the correct INI for 
+> my module (Jorjin's WG7350 - wl1273 based)?
+
+Yes, the problem can be because of a bad NVS file.  Try with the
+"default" NVS file that is provided in linux-firmware.git.  That one
+won't be optimal, but should work okay.
+
+I'm not sure which FEM Jorjin's module use.  Can you ask them?
+
+I found this on github (Dick Chiang appears to work for Jorjin):
+https://github.com/dickychiang/compat-wireless-r5/blob/master/jorjin/ini_files/TQS_D_1.7_WG7350_NLCP.ini
+
+DISCLAIMER: I have no clue whether this is the correct INI file or not
+and I'm not claiming it's associated with TI in any way, so use it at
+your own risk.
+
+> Any ideas also why I can not get a complete APs list with the command 
+> "iw wlan0 scan"? No one as seen this behaviour before?
+
+Many people have seen this kind of behavior and it usually indicates bad
+RF performance. ;)
+
+--
+Cheers,
+Luca.
 
