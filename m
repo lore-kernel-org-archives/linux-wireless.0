@@ -1,115 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58648 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751524Ab3GHO4R (ORCPT
+Received: from smtp27.msg.oleane.net ([62.161.4.27]:36427 "EHLO
+	smtp27.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607Ab3GJJ3h convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:17 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 04/18] mac80211: add radiotap flag and handling for 5/10 MHz
-Date: Mon,  8 Jul 2013 16:55:52 +0200
-Message-Id: <1373295366-12823-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_172040_317493_D1366930)
-In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 10 Jul 2013 05:29:37 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>, <netdev-owner@vger.kernel.org>
+Subject: [RFC]: vlan priority handling in WMM
+Date: Wed, 10 Jul 2013 11:29:33 +0200
+Message-ID: <00ef01ce7d4f$fce9eb40$f6bdc1c0$@acksys.fr> (sfid-20130710_112941_240013_F512D9D7)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireshark already defines radiotap channel flags for 5 and 10 MHz, so
-just use them in Linux radiotap too. Furthermore, add rx status flags to
-allow drivers to report when they received data on 5 or 10 MHz channels.
+	I would like to manage the VLAN priority in Wireless QOS (WMM).
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- include/net/ieee80211_radiotap.h |    4 ++++
- include/net/mac80211.h           |    4 ++++
- net/mac80211/rx.c                |   21 ++++++++++++---------
- 3 files changed, 20 insertions(+), 9 deletions(-)
+	I get the VLAN tag from skb->vlan_tci and I extract the VLAN priority. 
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index c6d07cb..8b5b714 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -230,6 +230,10 @@ enum ieee80211_radiotap_type {
- #define	IEEE80211_CHAN_PASSIVE	0x0200	/* Only passive scan allowed */
- #define	IEEE80211_CHAN_DYN	0x0400	/* Dynamic CCK-OFDM channel */
- #define	IEEE80211_CHAN_GFSK	0x0800	/* GFSK channel (FHSS PHY) */
-+#define	IEEE80211_CHAN_GSM	0x1000	/* GSM (900 MHz) */
-+#define	IEEE80211_CHAN_STURBO	0x2000	/* Static Turbo */
-+#define	IEEE80211_CHAN_HALF	0x4000	/* Half channel (10 MHz wide) */
-+#define	IEEE80211_CHAN_QUARTER	0x8000	/* Quarter channel (5 MHz wide) */
- 
- /* For IEEE80211_RADIOTAP_FLAGS */
- #define	IEEE80211_RADIOTAP_F_CFP	0x01	/* sent/received
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index b0e6872..bae1a78 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -811,6 +811,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
-  *	is stored in the @ampdu_delimiter_crc field)
-  * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3
-+ * @RX_FLAG_10MHZ: 10 MHz (half channel) was used
-+ * @RX_FLAG_5MHZ: 5 MHz (quarter channel) was used
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -839,6 +841,8 @@ enum mac80211_rx_flags {
- 	RX_FLAG_80P80MHZ		= BIT(24),
- 	RX_FLAG_160MHZ			= BIT(25),
- 	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
-+	RX_FLAG_10MHZ			= BIT(28),
-+	RX_FLAG_5MHZ			= BIT(29),
- };
- 
- #define RX_FLAG_STBC_SHIFT		26
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 23dbcfc..5f02aba 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -146,6 +146,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	struct ieee80211_radiotap_header *rthdr;
- 	unsigned char *pos;
- 	u16 rx_flags = 0;
-+	u16 channel_flags = 0;
- 	int mpdulen;
- 
- 	mpdulen = skb->len;
-@@ -215,20 +216,22 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	/* IEEE80211_RADIOTAP_CHANNEL */
- 	put_unaligned_le16(status->freq, pos);
- 	pos += 2;
-+	if (status->flag & RX_FLAG_10MHZ)
-+		channel_flags |= IEEE80211_CHAN_HALF;
-+	else if (status->flag & RX_FLAG_5MHZ)
-+		channel_flags |= IEEE80211_CHAN_QUARTER;
-+
- 	if (status->band == IEEE80211_BAND_5GHZ)
--		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ;
- 	else if (status->flag & (RX_FLAG_HT | RX_FLAG_VHT))
--		put_unaligned_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
- 	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
--		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
- 	else if (rate)
--		put_unaligned_le16(IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ,
--				   pos);
-+		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
- 	else
--		put_unaligned_le16(IEEE80211_CHAN_2GHZ, pos);
-+		channel_flags |= IEEE80211_CHAN_2GHZ;
-+	put_unaligned_le16(channel_flags, pos);
- 	pos += 2;
- 
- 	/* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
--- 
-1.7.10.4
+	How I should handle the priority value 0. 
+		- Handle this value as no priority request, In this case the frame will sent with the DSCP priority or default (Best effort)
+		- Handle this value as a lowest priority, in this case I Map it to the WMM.
+
+	For your information, you can found below a discussion on this point with Johannes Berg.
+
+	Regards.
+
+	Cedric Voncken.
+
+-----Message d'origine-----
+De : Johannes Berg [mailto:johannes@sipsolutions.net] 
+Envoyé : lundi 8 juillet 2013 14:16
+À : voncken
+Cc : linux-wireless@vger.kernel.org
+Objet : Re: [PATCH V2] vlan priority handling in WMM
+
+On Mon, 2013-07-08 at 12:39 +0200, voncken wrote:
+> > > The vlan Tag contain three bit for priority. The value 0 indicate
+> no
+> > > priority (on this case the VLAN tag contain only VID). The
+> vlan_tci
+> > > field is set to zero if the frame do not contain the vlan tag. So
+> if
+> > > we have not a vlan tag or no priority in VLAN tag the priority
+> value
+> > > is always 0.
+> 
+> > Yes but don't we know that the vlan_tci field is valid?
+> 
+> > I don't think you're correct in that 0 means "no priority present",
+> it actually means "best effort" as far as I can tell. Ignoring the 
+> VLAN tag when the field is 0 would mean we could use a higher priority 
+> from the contents of the frame, which would not be desired?
+> 
+> I can add a test with the macro vlan_tx_tag_present() to verify if the 
+> vlan_tci field is valid.
+> I test the value 0 to skip the VLAN priority and use the dscp priority 
+> in this case. The priority 0 in VLAN tag is often use to turn off the 
+> QOS, because not bit is allowed for it.
+
+What do you mean by "is often used"? I don't see how that would be the case? Are you saying routers commonly ignore the VLAN priority value if it's 0? That would seem odd?
+
+> For me is it correct. Nevertheless, if you prefer, I can test only the 
+> vlan_tci validity and in this case always use the VLAN priority.
+
+I don't know! Since you don't seem to really know either, we should ask somebody who knows, I think. Maybe you should Cc netdev with this question on the patch or so?
+
+> Sorry I made a mistake  0xE000 >>13 = 0x0007 and not 0x0003, and 7 is 
+> a 3 bits value.
+
+Ah yes, I made the same mistake, sorry.
+
+johannes
+
 
