@@ -1,67 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:58162 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754970Ab3GJT1e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 15:27:34 -0400
-Received: by mail-qc0-f180.google.com with SMTP id a1so3910337qcx.11
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jul 2013 12:27:33 -0700 (PDT)
+Received: from comal.ext.ti.com ([198.47.26.152]:39721 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754520Ab3GJU37 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jul 2013 16:29:59 -0400
+Message-ID: <1373488180.8385.32.camel@cumari.coelho.fi> (sfid-20130710_223004_738572_FFEFFDC0)
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+From: Luciano Coelho <coelho@ti.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: =?ISO-8859-1?Q?Jos=E9?= Miguel =?ISO-8859-1?Q?Gon=E7alves?=
+	<jose.goncalves@inov.pt>, Arik Nemtsov <arik@wizery.com>,
+	<linux-wireless@vger.kernel.org>
+Date: Wed, 10 Jul 2013 23:29:40 +0300
+In-Reply-To: <51DDA50F.9050909@lwfinger.net>
+References: <51DB0ACC.7050800@inov.pt>
+	   <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
+	   <51DB4195.8090103@inov.pt>
+	   <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
+	   <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>
+	   <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>
+	   <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>
+	   <51DC0E7C.9080306@inov.pt>
+	   <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>
+	   <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>
+	  <51DD54D4.6090502@inov.pt> <51DD8C20.7010900@inov.pt>
+	 <1373476663.8385.28.camel@cumari.coelho.fi> <51DD9E6C.5060008@inov.pt>
+	 <51DDA50F.9050909@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <1373438404-5871-2-git-send-email-linux@rempel-privat.de>
-References: <1373438404-5871-1-git-send-email-linux@rempel-privat.de>
-	<1373438404-5871-2-git-send-email-linux@rempel-privat.de>
-Date: Wed, 10 Jul 2013 12:27:33 -0700
-Message-ID: <CAJ-Vmo=XPbOxmp=Kz-2Bp289YYFSrPuOb7u0FE1cxUmN-TpSrQ@mail.gmail.com> (sfid-20130710_212740_899941_CA779886)
-Subject: Re: [PATCH 2/2] ath9k_htc: reboot firmware if it was loaded
-From: Adrian Chadd <adrian@freebsd.org>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Great catch!
+On Wed, 2013-07-10 at 13:16 -0500, Larry Finger wrote:
+> On 07/10/2013 12:48 PM, José Miguel Gonçalves wrote:
+> > On 10-07-2013 18:17, Luciano Coelho wrote:
+> >> On Wed, 2013-07-10 at 17:30 +0100, José Miguel Gonçalves wrote:
+> >>> On 10-07-2013 13:34, José Miguel Gonçalves wrote:
+> >>>> I will try a new AP to see how it behaves...
+> >>>>
+> >>> I've tested with my Android smartphone acting as an AP, without authentication,
+> >>> and I'm also unable to associate!
+> >>>
+> >>> I get from iw the following error message:
+> >>>
+> >>> wlan0 (phy #0): failed to connect to b4:07:f9:49:cc:65, status: 1:
+> >>> Unspecified failure
+> >>>
+> >>> Complete log is here:
+> >>>
+> >>> http://pastebin.com/DzPmMw8i
+> >>>
+> >>> So, something is definitely wrong with my setup... but what?
+> >>> Hope that log has some useful info for you...
+> >> This definitely looks like RF problems.  Especially this:
+> >>
+> >> [  177.575000] wlan0: send auth to b4:07:f9:49:cc:65 (try 1/3)
+> >> [  177.595000] wlan0: send auth to b4:07:f9:49:cc:65 (try 2/3)
+> >> [  177.605000] wlcore: EVENT on mbox 1
+> >> [  177.605000] wlcore: MBOX vector: 0x100000
+> >> [  177.610000] wlcore: MAX_TX_FAILURE_EVENT_ID
+> >> [  177.615000] wlan0: send auth to b4:07:f9:49:cc:65 (try 3/3)
+> >> [  177.640000] wlan0: authentication with b4:07:f9:49:cc:65 timed out
+> >>
+> >> You are send auth requests out, but not getting anything back.
+> >> Apparently you're not even getting ACKs (as pointed out by the
+> >> MAX_TX_FAILURE_EVENT_ID).
+> >
+> > Hum. I never considered RF problems because I'm testing this module with a
+> > Jorjin's development kit, so I was considering that Jorjin knows how to make
+> > PCBs for RF. Also seeing that when I remove the antenna the AP signal strength
+> > changes from -51 dBm to -73 dBm was a signal to me that the RF was OK.
+> >
+> >>
+> >> Do you have a sniffer? You could try to use your TP-Link dongle with
+> >> wireshark to see if it works fine as a sniffer.
+> >
+> > I have a text console only system. I could put tcpdump on my system, but I think
+> > I can not monitor wireless traffic with it, or can I?
+> 
+> I use Kismet to monitor the air on a text-only system.
 
+This looks pretty cool, I hadn't seen it before.  Thanks for sharing! :)
 
--adrian
+--
+Cheers,
+Luca.
 
-On 9 July 2013 23:40, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> Currently ath9k_htc will reboot firmware only if interface was
-> ever started. Which lead to the problem in case where interface
-> was never started but module need to be reloaded.
->
-> This patch will partially fix bug "ath9k_htc: Target is unresponsive"
-> https://github.com/qca/open-ath9k-htc-firmware/issues/1
->
-> Reproduction case:
-> - plug adapter
-> - make sure nothing will touch it. Stop Networkmanager or blacklist mac address of this adapter.
-> - rmmod ath9k_htc; sleep 1; modprobe ath9k_htc
->
-> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-> ---
->  drivers/net/wireless/ath/ath9k/hif_usb.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-> index 2469db5..5205a36 100644
-> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-> @@ -1295,7 +1295,9 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
->
->         usb_set_intfdata(interface, NULL);
->
-> -       if (!unplugged && (hif_dev->flags & HIF_USB_START))
-> +       /* If firmware was loaded we should drop it
-> +        * go back to first stage bootloader. */
-> +       if (!unplugged && (hif_dev->flags & HIF_USB_READY))
->                 ath9k_hif_usb_reboot(udev);
->
->         kfree(hif_dev);
-> --
-> 1.8.1.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
