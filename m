@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:50623 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083Ab3GWFne (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:31514 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750736Ab3GJHyZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 01:43:34 -0400
-Received: by mail-lb0-f179.google.com with SMTP id w20so5954862lbh.10
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jul 2013 22:43:31 -0700 (PDT)
-From: =?UTF-8?q?Tomasz=20Mo=C5=84?= <desowin@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, bzhao@marvell.com,
-	=?UTF-8?q?Tomasz=20Mo=C5=84?= <desowin@gmail.com>
-Subject: [PATCH] mwifiex: Add missing endian conversion.
-Date: Tue, 23 Jul 2013 07:42:49 +0200
-Message-Id: <1374558169-6888-1-git-send-email-desowin@gmail.com> (sfid-20130723_074337_382695_579FE01F)
+	Wed, 10 Jul 2013 03:54:25 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Henrik Ahlgren <pablo@seestieto.com>
+CC: Ben Hutchings <ben@decadent.org.uk>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"debian-backports@lists.debian.org"
+	<debian-backports@lists.debian.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sergey Frolov <dunkan.aidaho@gmail.com>
+Subject: RE: [Ilw] Re: Performance regression in firmware-iwlwifi
+ 0.38~bpo70+1
+Date: Wed, 10 Jul 2013 07:53:57 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301A000F7@HASMSX103.ger.corp.intel.com> (sfid-20130710_095428_801703_C9F75CC9)
+References: <20130709153104.20718ebb@thinkpad>
+ <1373425655.24446.7.camel@deadeye.wl.decadent.org.uk>
+ <0BA3FCBA62E2DC44AF3030971E174FB3019FFDBF@HASMSX103.ger.corp.intel.com>
+ <20130710074930.GE11186@seestieto.com>
+In-Reply-To: <20130710074930.GE11186@seestieto.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both type and pkt_len variables are in host endian and these should be in
-Little Endian in the payload.
+> > Just to make sure I properly understand what you are saying here: only the
+> firmware is changed? Not the driver?
+> 
+> BTW, in my Thinkpad x21e (Intel Wireless-N 1000) I've noticed a very
+> high (~80%+) CPU utilization by the "irq/42-iwlwifi" kernel process
+> with the 3.9.x series kernel (self-built from upstream GIT sources)
+> and 3.10. Not sure in what exact 3.9 version this behaviour
+> started. I'm using the standard 0.36+wheezy.1 (non-free) version of
+> firmware-iwlwifi.
 
-Signed-off-by: Tomasz Moń <desowin@gmail.com>
-Acked-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+For CPU utilization:
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi.git/commit/?id=01911dab97cb3e21e640aaca82689acec00ed848
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi.git/commit/?id=68972c46f2975d3d61f9dc9f311f77bfc8a8b12b
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 5ee5ed0..c9f3ecf 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1625,8 +1625,8 @@ static int mwifiex_sdio_host_to_card(struct mwifiex_adapter *adapter,
- 	/* Allocate buffer and copy payload */
- 	blk_size = MWIFIEX_SDIO_BLOCK_SIZE;
- 	buf_block_len = (pkt_len + blk_size - 1) / blk_size;
--	*(u16 *) &payload[0] = (u16) pkt_len;
--	*(u16 *) &payload[2] = type;
-+	*(__le16 *)&payload[0] = cpu_to_le16((u16)pkt_len);
-+	*(__le16 *)&payload[2] = cpu_to_le16(type);
- 
- 	/*
- 	 * This is SDIO specific header
--- 
-1.8.3.msysgit.0
 
