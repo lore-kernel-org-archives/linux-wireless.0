@@ -1,43 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36659 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753236Ab3GNU5c (ORCPT
+Received: from juliette.telenet-ops.be ([195.130.137.74]:57924 "EHLO
+	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754497Ab3GJRMb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jul 2013 16:57:32 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/4] mac80211_hwsim: claim active monitor support
-Date: Sun, 14 Jul 2013 23:57:21 +0300
-Message-Id: <1373835442-3322-3-git-send-email-johannes@sipsolutions.net> (sfid-20130714_225742_273638_D463AED9)
-In-Reply-To: <1373835442-3322-1-git-send-email-johannes@sipsolutions.net>
-References: <1373835442-3322-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 10 Jul 2013 13:12:31 -0400
+Date: Wed, 10 Jul 2013 19:12:28 +0200 (CEST)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Linux Kernel Development <linux-kernel@vger.kernel.org>
+Subject: Re: ath10k: mac80211 driver for Qualcomm Atheros 802.11ac CQA98xx
+ devices
+In-Reply-To: <20130710022602.1F6F16609DE@gitolite.kernel.org>
+Message-ID: <alpine.DEB.2.02.1307101859360.29717@ayla.of.borg> (sfid-20130710_191310_028158_D8D9E897)
+References: <20130710022602.1F6F16609DE@gitolite.kernel.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 10 Jul 2013, Linux Kernel Mailing List wrote:
+> --- /dev/null
+> +++ b/drivers/net/wireless/ath/ath10k/hw.h
 
-It seems to actually work this way already, so we
-may need to do some work to make monitor interfaces
-be _not_ active in hwsim instead.
+> +#define SUPPORTED_FW_MAJOR	1
+> +#define SUPPORTED_FW_MINOR	0
+> +#define SUPPORTED_FW_RELEASE	0
+> +#define SUPPORTED_FW_BUILD	629
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 1 +
- 1 file changed, 1 insertion(+)
+> +static int ath10k_check_fw_version(struct ath10k *ar)
+> +{
+> +	char version[32];
+> +
+> +	if (ar->fw_version_major >= SUPPORTED_FW_MAJOR &&
+> +	    ar->fw_version_minor >= SUPPORTED_FW_MINOR &&
+> +	    ar->fw_version_release >= SUPPORTED_FW_RELEASE &&
+> +	    ar->fw_version_build >= SUPPORTED_FW_BUILD)
+> +		return 0;
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 0a439f8..7b2a622 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2311,6 +2311,7 @@ static int __init init_mac80211_hwsim(void)
- 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
- 				    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
- 				    WIPHY_FLAG_AP_UAPSD;
-+		hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
- 
- 		/* ask mac80211 to reserve space for magic */
- 		hw->vif_data_size = sizeof(struct hwsim_vif_priv);
--- 
-1.8.0
+My attention got triggered by:
 
+drivers/net/wireless/ath/ath10k/core.c: In function ‘ath10k_check_fw_version’:
+drivers/net/wireless/ath/ath10k/core.c:79: warning: comparison is always true due to limited range of data type
+
+as an u16 is always larger or equal than zero. Not much you can do to
+silence that warning, though.
+
+However, I don't think the version check is correct.
+Shouldn't it stop checking later fields if an exact match is found in an
+earlier field?
+
+I.e.
+
+	if (ar->fw_version_major > SUPPORTED_FW_MAJOR ||
+	    (ar->fw_version_major == SUPPORTED_FW_MAJOR &&
+	     ar->fw_version_minor > SUPPORTED_FW_MINOR) ||
+	     ...) { ... }
+
+Currently e.g. (major, minor) = (3, 0) is considered older than (2, 1).
+
+Or perhaps minor is never reset to zero when major is increased? In that
+case, the check is correct, but IMHO it's a bit silly to split the version
+number in seperate fields.
+
+> +	snprintf(version, sizeof(version), "%u.%u.%u.%u",
+> +		 SUPPORTED_FW_MAJOR, SUPPORTED_FW_MINOR,
+> +		 SUPPORTED_FW_RELEASE, SUPPORTED_FW_BUILD);
+> +
+> +	ath10k_warn("WARNING: Firmware version %s is not officially supported.\n",
+> +		    ar->hw->wiphy->fw_version);
+> +	ath10k_warn("Please upgrade to version %s (or newer)\n", version);
+> +
+> +	return 0;
+> +}
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
