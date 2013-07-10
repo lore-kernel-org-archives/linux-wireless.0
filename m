@@ -1,67 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:57001 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932278Ab3GKJLL (ORCPT
+Received: from jacques.telenet-ops.be ([195.130.132.50]:35258 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755358Ab3GJVDr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:11:11 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-Subject: [PATCH 34/50] wireless: libertas_tf: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:57 +0800
-Message-Id: <1373533573-12272-35-git-send-email-ming.lei@canonical.com> (sfid-20130711_111120_931576_BB145D62)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Wed, 10 Jul 2013 17:03:47 -0400
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] rt2x00: RT2X00 should depend on HAS_DMA
+Date: Wed, 10 Jul 2013 23:03:35 +0200
+Message-Id: <1373490216-12437-2-git-send-email-geert@linux-m68k.org> (sfid-20130710_230434_521723_B3DF4800)
+In-Reply-To: <1373490216-12437-1-git-send-email-geert@linux-m68k.org>
+References: <1373490216-12437-1-git-send-email-geert@linux-m68k.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+If NO_DMA=y:
 
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: libertas-dev@lists.infradead.org
+drivers/built-in.o: In function `rt2x00queue_unmap_skb':
+drivers/net/wireless/rt2x00/rt2x00queue.c:129: undefined reference to `dma_unmap_single'
+drivers/net/wireless/rt2x00/rt2x00queue.c:133: undefined reference to `dma_unmap_single'
+drivers/built-in.o: In function `rt2x00queue_map_txskb':
+drivers/net/wireless/rt2x00/rt2x00queue.c:112: undefined reference to `dma_map_single'
+drivers/net/wireless/rt2x00/rt2x00queue.c:115: undefined reference to `dma_mapping_error'
+drivers/built-in.o: In function `rt2x00queue_alloc_rxskb':
+drivers/net/wireless/rt2x00/rt2x00queue.c:93: undefined reference to `dma_map_single'
+drivers/net/wireless/rt2x00/rt2x00queue.c:95: undefined reference to `dma_mapping_error'
+
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/wireless/libertas_tf/if_usb.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/libertas_tf/if_usb.c b/drivers/net/wireless/libertas_tf/if_usb.c
-index d576dd6..0e9e972 100644
---- a/drivers/net/wireless/libertas_tf/if_usb.c
-+++ b/drivers/net/wireless/libertas_tf/if_usb.c
-@@ -610,6 +610,8 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
- 				      struct if_usb_card *cardp,
- 				      struct lbtf_private *priv)
- {
-+	unsigned long flags;
-+
- 	if (recvlength > LBS_CMD_BUFFER_SIZE) {
- 		lbtf_deb_usbd(&cardp->udev->dev,
- 			     "The receive buffer is too large\n");
-@@ -619,12 +621,12 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
- 
- 	BUG_ON(!in_interrupt());
- 
--	spin_lock(&priv->driver_lock);
-+	spin_lock_irqsave(&priv->driver_lock, flags);
- 	memcpy(priv->cmd_resp_buff, recvbuff + MESSAGE_HEADER_LEN,
- 	       recvlength - MESSAGE_HEADER_LEN);
- 	kfree_skb(skb);
- 	lbtf_cmd_response_rx(priv);
--	spin_unlock(&priv->driver_lock);
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
- }
- 
- /**
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 9b915d3..3e60a31 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -1,6 +1,6 @@
+ menuconfig RT2X00
+ 	tristate "Ralink driver support"
+-	depends on MAC80211
++	depends on MAC80211 && HAS_DMA
+ 	---help---
+ 	  This will enable the support for the Ralink drivers,
+ 	  developed in the rt2x00 project <http://rt2x00.serialmonkey.com>.
 -- 
 1.7.9.5
 
