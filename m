@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:48626 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBH7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:59 -0400
-Received: by mail-pd0-f170.google.com with SMTP id x11so593561pdj.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:59 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 42/53] wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
-Date: Wed,  3 Jul 2013 18:04:38 -0700
-Message-Id: <1372899889-19183-43-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032042_813021_4B6569A2)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mout.gmx.net ([212.227.17.20]:58235 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751247Ab3GJGkZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jul 2013 02:40:25 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 2/2] ath9k_htc: reboot firmware if it was loaded
+Date: Wed, 10 Jul 2013 08:40:04 +0200
+Message-Id: <1373438404-5871-2-git-send-email-linux@rempel-privat.de> (sfid-20130710_084027_461366_46CA230E)
+In-Reply-To: <1373438404-5871-1-git-send-email-linux@rempel-privat.de>
+References: <1373438404-5871-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Currently ath9k_htc will reboot firmware only if interface was
+ever started. Which lead to the problem in case where interface
+was never started but module need to be reloaded.
 
-Pursuant to:
+This patch will partially fix bug "ath9k_htc: Target is unresponsive"
+https://github.com/qca/open-ath9k-htc-firmware/issues/1
 
-http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf,
+Reproduction case:
+- plug adapter
+- make sure nothing will touch it. Stop Networkmanager or blacklist mac address of this adapter.
+- rmmod ath9k_htc; sleep 1; modprobe ath9k_htc
 
-provide a 5GHz rule for Indonesian regulatory domain. QCA has
-also verified VHT80 can be enabled. Patch originally posted by
-Paul Stewart <pstew@chromium.org>, I just modified to enable 80 MHz
-bandwidth.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- db.txt |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index 0ebb934..a101b1e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -380,7 +380,9 @@ country HU: DFS-ETSI
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 2469db5..5205a36 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -1295,7 +1295,9 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
  
- country ID:
-+	# ref: http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf
- 	(2402 - 2482 @ 40), (N/A, 20)
-+	(5735 - 5815 @ 20), (N/A, 20)
+ 	usb_set_intfdata(interface, NULL);
  
- country IE: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
+-	if (!unplugged && (hif_dev->flags & HIF_USB_START))
++	/* If firmware was loaded we should drop it
++	 * go back to first stage bootloader. */
++	if (!unplugged && (hif_dev->flags & HIF_USB_READY))
+ 		ath9k_hif_usb_reboot(udev);
+ 
+ 	kfree(hif_dev);
 -- 
-1.7.10.4
+1.8.1.2
 
