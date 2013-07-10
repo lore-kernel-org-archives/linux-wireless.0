@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58101 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756215Ab3GZI2x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:28:53 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 05/30] iwlwifi: pcie: make unused queue warning more readable
-Date: Fri, 26 Jul 2013 10:28:22 +0200
-Message-Id: <1374827327-3464-6-git-send-email-johannes@sipsolutions.net> (sfid-20130726_102909_747571_E405042E)
-In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
-References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail.newportit.com ([74.50.55.245]:52726 "EHLO wapdot.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751341Ab3GJFoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jul 2013 01:44:34 -0400
+Message-ID: <51DCF4BF.5010900@newportit.com> (sfid-20130710_074437_678260_73623F17)
+Date: Tue, 09 Jul 2013 22:44:31 -0700
+From: Steve Freitas <steve@newportit.com>
+MIME-Version: 1.0
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [Ilw] Re: Slow throughput on Ultimate-N 6300
+References: <51BBF4F1.1050301@newportit.com> <51DCDD54.9090100@newportit.com> <0BA3FCBA62E2DC44AF3030971E174FB3019FFDDF@HASMSX103.ger.corp.intel.com>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3019FFDDF@HASMSX103.ger.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Emmanuel,
 
-Use the return value of WARN_ONCE() and add a message with
-the queue ID that's getting used.
+Thank you for your quick response!
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/tx.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+It is a regression. I regularly had 300 Mbps speeds on this very access 
+point, but it was years ago, in the 2.6 kernel series. However, I 
+believe, from extensive online searches, that Intel has disabled the N 
+functionality in the firmware on Linux, ostensibly until they (you? :-) 
+) can fix whatever problem they were seeing. With the demise of the 
+Intel Linux Wireless bug tracker, though, public tracking of the bug has 
+been impossible. There are now-dead links to the defunct bug tracker 
+over this very issue.
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index c47c921..134f7a1 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -1619,10 +1619,9 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	txq = &trans_pcie->txq[txq_id];
- 	q = &txq->q;
- 
--	if (unlikely(!test_bit(txq_id, trans_pcie->queue_used))) {
--		WARN_ON_ONCE(1);
-+	if (WARN_ONCE(!test_bit(txq_id, trans_pcie->queue_used),
-+		      "TX on unused queue %d\n", txq_id))
- 		return -EINVAL;
--	}
- 
- 	spin_lock(&txq->lock);
- 
--- 
-1.8.0
+Sadly I only get 2 MByte/s on N, and under 1 MByte/s G.
+
+I have not tried another access point in ages. Tired of replacing fried 
+Netgears and Dlinks and Belkins, I've converted all my friends and 
+families to Apple's access points. I'll try to locate something else and 
+see how it goes.
+
+Thanks again,
+
+Steve
+
+On 07/09/13 22:35, Grumbach, Emmanuel wrote:
+>>> I understand that it's well-known that N is broken for Linux on this
+>>> wireless chipset. You can add me to the list of those suffering under
+>>> it. Can you provide me with a status update on work performed towards
+>>> resolution of this issue?
+>>>
+>>> I'm on Debian unstable, kernel 3.9 amd64, using iwlwifi wireless
+>>> firmware version 9.221.4.1 build 25532 on a Thinkpad T410, and I'm
+>>> connected to an Apple Airport Extreme base station (3rd generation).
+>>>
+> Is this a regression?
+> Has it worked better before?
+>
+> Also - did you try another access point? I seem to remember that we have had issues against Apple's access points.
 
