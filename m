@@ -1,28 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:5976 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752318Ab3GGOiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 10:38:08 -0400
-Date: Sun, 7 Jul 2013 16:40:54 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 18/20] rt2x00: rt2800lib: enable RT3593
- support
-Message-ID: <20130707144054.GR2073@localhost.localdomain> (sfid-20130707_163812_049737_DE8F0458)
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
- <1372664879-18474-19-git-send-email-juhosg@openwrt.org>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:36589 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756080Ab3GKNKz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 09:10:55 -0400
+Received: by mail-la0-f51.google.com with SMTP id fq12so6711673lab.38
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 06:10:53 -0700 (PDT)
+Message-ID: <51DEAEDB.2060600@cogentembedded.com> (sfid-20130711_151110_556525_99B6E5BE)
+Date: Thu, 11 Jul 2013 17:10:51 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372664879-18474-19-git-send-email-juhosg@openwrt.org>
+To: Ming Lei <ming.lei@canonical.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Clemens Ladisch <clemens@ladisch.de>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>
+Subject: Re: [PATCH 46/50] Sound: usb: ua101: spin_lock in complete() cleanup
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-47-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1373533573-12272-47-git-send-email-ming.lei@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 01, 2013 at 09:47:57AM +0200, Gabor Juhos wrote:
-> Support for the RT3593 has been implemented in
-> the previous changes, so it is safe to mark it
-> supported in the driver.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+On 11-07-2013 13:06, Ming Lei wrote:
+
+    Here the subject doesn't match the patch.
+
+> Complete() will be run with interrupt enabled, so disable local
+> interrupt before holding a global lock which is held without irqsave.
+
+> Cc: Clemens Ladisch <clemens@ladisch.de>
+> Cc: Jaroslav Kysela <perex@perex.cz>
+> Cc: Takashi Iwai <tiwai@suse.de>
+> Cc: alsa-devel@alsa-project.org
+> Signed-off-by: Ming Lei <ming.lei@canonical.com>
+> ---
+>   sound/usb/misc/ua101.c |   14 ++++++++++++--
+>   1 file changed, 12 insertions(+), 2 deletions(-)
+
+> diff --git a/sound/usb/misc/ua101.c b/sound/usb/misc/ua101.c
+> index 8b5d2c5..52a60c6 100644
+> --- a/sound/usb/misc/ua101.c
+> +++ b/sound/usb/misc/ua101.c
+> @@ -613,14 +613,24 @@ static int start_usb_playback(struct ua101 *ua)
+>
+>   static void abort_alsa_capture(struct ua101 *ua)
+>   {
+> -	if (test_bit(ALSA_CAPTURE_RUNNING, &ua->states))
+> +	if (test_bit(ALSA_CAPTURE_RUNNING, &ua->states)) {
+> +		unsigned long flags;
+> +
+> +		local_irq_save(flags);
+>   		snd_pcm_stop(ua->capture.substream, SNDRV_PCM_STATE_XRUN);
+> +		local_irq_restore(flags);
+> +	}
+>   }
+>
+>   static void abort_alsa_playback(struct ua101 *ua)
+>   {
+> -	if (test_bit(ALSA_PLAYBACK_RUNNING, &ua->states))
+> +	if (test_bit(ALSA_PLAYBACK_RUNNING, &ua->states)) {
+> +		unsigned long flags;
+> +
+> +		local_irq_save(flags);
+>   		snd_pcm_stop(ua->playback.substream, SNDRV_PCM_STATE_XRUN);
+> +		local_irq_restore(flags);
+> +	}
+>   }
+
+WBR, Sergei
+
