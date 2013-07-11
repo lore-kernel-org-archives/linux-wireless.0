@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2479 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755174Ab3GKUV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 16:21:59 -0400
-Message-ID: <51DF13DA.3040803@broadcom.com> (sfid-20130711_222203_782204_4DDDAF46)
-Date: Thu, 11 Jul 2013 22:21:46 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Using CC BY-SA for wireless wiki content
-References: <CAB=NE6V-MOLqe0Ty0R+MX-S3oZFSfkXq+X7rqRi9RTAQ8DtuTQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6V-MOLqe0Ty0R+MX-S3oZFSfkXq+X7rqRi9RTAQ8DtuTQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:42314 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932451Ab3GKJMV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 05:12:21 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>,
+	Clemens Ladisch <clemens@ladisch.de>
+Subject: [PATCH 43/50] sound: usb: midi: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:06:06 +0800
+Message-Id: <1373533573-12272-44-git-send-email-ming.lei@canonical.com> (sfid-20130711_111234_706986_AEC81B89)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/11/13 22:18, Luis R. Rodriguez wrote:
-> Folks,
->
-> Anyone have any issues if we license the wiki content on
-> wireless.kernel.org under CC BY-SA license? That would make it
-> compatible with  Wikipedia. Please shout out if you disagree with this
-> move as at this point we have random collaborations but at least as
-> per initial review it seems this would be a good idea. Want to see if
-> anyone disagrees before we do the move.
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-Which version?
+Cc: Jaroslav Kysela <perex@perex.cz>
+Cc: Takashi Iwai <tiwai@suse.de>
+Cc: Clemens Ladisch <clemens@ladisch.de>
+Cc: alsa-devel@alsa-project.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ sound/usb/midi.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Arend
-
->    Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+diff --git a/sound/usb/midi.c b/sound/usb/midi.c
+index b901f46..86af276 100644
+--- a/sound/usb/midi.c
++++ b/sound/usb/midi.c
+@@ -279,15 +279,16 @@ static void snd_usbmidi_out_urb_complete(struct urb* urb)
+ 	struct out_urb_context *context = urb->context;
+ 	struct snd_usb_midi_out_endpoint* ep = context->ep;
+ 	unsigned int urb_index;
++	unsigned long flags;
+ 
+-	spin_lock(&ep->buffer_lock);
++	spin_lock_irqsave(&ep->buffer_lock, flags);
+ 	urb_index = context - ep->urbs;
+ 	ep->active_urbs &= ~(1 << urb_index);
+ 	if (unlikely(ep->drain_urbs)) {
+ 		ep->drain_urbs &= ~(1 << urb_index);
+ 		wake_up(&ep->drain_wait);
+ 	}
+-	spin_unlock(&ep->buffer_lock);
++	spin_unlock_irqrestore(&ep->buffer_lock, flags);
+ 	if (urb->status < 0) {
+ 		int err = snd_usbmidi_urb_error(urb->status);
+ 		if (err < 0) {
+-- 
+1.7.9.5
 
