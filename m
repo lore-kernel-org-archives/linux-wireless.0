@@ -1,127 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:42644 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752320Ab3GPHjI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:39:08 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 03/10] ath10k: allow deferred regd update
-Date: Tue, 16 Jul 2013 09:38:52 +0200
-Message-ID: <1373960339-8525-4-git-send-email-michal.kazior@tieto.com> (sfid-20130716_093917_384006_1632A0EA)
-In-Reply-To: <1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
-References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
- <1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:42834 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932278Ab3GKJKy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 05:10:54 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 32/50] wireless: ath: carl9170: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:55 +0800
+Message-Id: <1373533573-12272-33-git-send-email-ming.lei@canonical.com> (sfid-20130711_111526_876326_4228BBEE)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Regulatory domain notification hook can be called
-regardless of the hw state (i.e. before start
-mac80211 callback).
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h |    7 +++++++
- drivers/net/wireless/ath/ath10k/mac.c  |   26 +++++++++++++++++++-------
- 2 files changed, 26 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/carl9170/rx.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 5a0b2ce..d5b2533 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -247,6 +247,11 @@ struct ath10k_debug {
- 	struct completion event_stats_compl;
- };
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+index 4684dd9..61f62a6 100644
+--- a/drivers/net/wireless/ath/carl9170/rx.c
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -129,6 +129,7 @@ static int carl9170_check_sequence(struct ar9170 *ar, unsigned int seq)
  
-+enum ath10k_state {
-+	ATH10K_STATE_OFF = 0,
-+	ATH10K_STATE_ON,
-+};
-+
- struct ath10k {
- 	struct ath_common ath_common;
- 	struct ieee80211_hw *hw;
-@@ -344,6 +349,8 @@ struct ath10k {
- 	struct completion offchan_tx_completed;
- 	struct sk_buff *offchan_tx_skb;
- 
-+	enum ath10k_state state;
-+
- #ifdef CONFIG_ATH10K_DEBUGFS
- 	struct ath10k_debug debug;
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5082503..4627c16 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1310,23 +1310,19 @@ static int ath10k_update_channel_list(struct ath10k *ar)
- 	return ret;
- }
- 
--static void ath10k_reg_notifier(struct wiphy *wiphy,
--				struct regulatory_request *request)
-+static void ath10k_regd_update(struct ath10k *ar)
+ static void carl9170_cmd_callback(struct ar9170 *ar, u32 len, void *buffer)
  {
--	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct reg_dmn_pair_mapping *regpair;
--	struct ath10k *ar = hw->priv;
- 	int ret;
++	unsigned long flags;
+ 	/*
+ 	 * Some commands may have a variable response length
+ 	 * and we cannot predict the correct length in advance.
+@@ -148,7 +149,7 @@ static void carl9170_cmd_callback(struct ar9170 *ar, u32 len, void *buffer)
+ 		carl9170_restart(ar, CARL9170_RR_INVALID_RSP);
+ 	}
  
--	mutex_lock(&ar->conf_mutex);
--
--	ath_reg_notifier_apply(wiphy, request, &ar->ath_common.regulatory);
-+	lockdep_assert_held(&ar->conf_mutex);
- 
- 	ret = ath10k_update_channel_list(ar);
- 	if (ret)
- 		ath10k_warn("could not update channel list (%d)\n", ret);
- 
- 	regpair = ar->ath_common.regulatory.regpair;
-+
- 	/* Target allows setting up per-band regdomain but ath_common provides
- 	 * a combined one only */
- 	ret = ath10k_wmi_pdev_set_regdomain(ar,
-@@ -1337,7 +1333,19 @@ static void ath10k_reg_notifier(struct wiphy *wiphy,
- 					    regpair->reg_5ghz_ctl);
- 	if (ret)
- 		ath10k_warn("could not set pdev regdomain (%d)\n", ret);
-+}
- 
-+static void ath10k_reg_notifier(struct wiphy *wiphy,
-+				struct regulatory_request *request)
-+{
-+	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
-+	struct ath10k *ar = hw->priv;
-+
-+	ath_reg_notifier_apply(wiphy, request, &ar->ath_common.regulatory);
-+
-+	mutex_lock(&ar->conf_mutex);
-+	if (ar->state == ATH10K_STATE_ON)
-+		ath10k_regd_update(ar);
- 	mutex_unlock(&ar->conf_mutex);
+-	spin_lock(&ar->cmd_lock);
++	spin_lock_irqsave(&ar->cmd_lock, flags);
+ 	if (ar->readbuf) {
+ 		if (len >= 4)
+ 			memcpy(ar->readbuf, buffer + 4, len - 4);
+@@ -156,7 +157,7 @@ static void carl9170_cmd_callback(struct ar9170 *ar, u32 len, void *buffer)
+ 		ar->readbuf = NULL;
+ 	}
+ 	complete(&ar->cmd_wait);
+-	spin_unlock(&ar->cmd_lock);
++	spin_unlock_irqrestore(&ar->cmd_lock, flags);
  }
  
-@@ -1732,6 +1740,9 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		ath10k_warn("could not init WMI_PDEV_PARAM_DYNAMIC_BW (%d)\n",
- 			    ret);
- 
-+	ar->state = ATH10K_STATE_ON;
-+	ath10k_regd_update(ar);
-+
- 	mutex_unlock(&ar->conf_mutex);
- 	return 0;
- }
-@@ -1742,6 +1753,7 @@ static void ath10k_stop(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&ar->conf_mutex);
- 	ath10k_offchan_tx_purge(ar);
-+	ar->state = ATH10K_STATE_OFF;
- 	mutex_unlock(&ar->conf_mutex);
- 
- 	cancel_work_sync(&ar->offchan_tx_work);
+ void carl9170_handle_command_response(struct ar9170 *ar, void *buf, u32 len)
 -- 
 1.7.9.5
 
