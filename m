@@ -1,55 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f42.google.com ([209.85.160.42]:61692 "EHLO
-	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615Ab3GQCTu (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:44382 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932278Ab3GKJKW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:19:50 -0400
-Received: by mail-pb0-f42.google.com with SMTP id un1so1350253pbc.29
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:19:50 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 12/53] wireless-regdb: PR, Puerto Rico - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:01 -0700
-Message-Id: <1374027522-18488-13-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_322913_BD02077E)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 11 Jul 2013 05:10:22 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH 28/50] USBNET: kaweth: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:51 +0800
+Message-Id: <1373533573-12272-29-git-send-email-ming.lei@canonical.com> (sfid-20130711_111612_737998_F7D3D38E)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and update the max EIRP. This also adds
-a new DFS 5 GHz band: 5490 - 5710 MHz.
-
-PR is a proper ISO 3166 alpha2 code for Puerto Rico,
-an unincorporated territory of the United States.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Cc: netdev@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- db.txt |    7 ++++---
+ drivers/net/usb/kaweth.c |    7 ++++---
  1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index c37c3d6..867b070 100644
---- a/db.txt
-+++ b/db.txt
-@@ -637,9 +637,10 @@ country PT: DFS-ETSI
+diff --git a/drivers/net/usb/kaweth.c b/drivers/net/usb/kaweth.c
+index afb117c..4addbbf 100644
+--- a/drivers/net/usb/kaweth.c
++++ b/drivers/net/usb/kaweth.c
+@@ -598,6 +598,7 @@ static void kaweth_usb_receive(struct urb *urb)
+ 	struct kaweth_device *kaweth = urb->context;
+ 	struct net_device *net = kaweth->net;
+ 	int status = urb->status;
++	unsigned long flags;
  
- country PR:
- 	(2402 - 2472 @ 40), (3, 27)
--	(5170 - 5250 @ 40), (3, 17)
--	(5250 - 5330 @ 40), (3, 23), DFS
--	(5735 - 5835 @ 40), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
+ 	int count = urb->actual_length;
+ 	int count2 = urb->transfer_buffer_length;
+@@ -630,12 +631,12 @@ static void kaweth_usb_receive(struct urb *urb)
+ 		kaweth->stats.rx_errors++;
+ 		dev_dbg(dev, "Status was -EOVERFLOW.\n");
+ 	}
+-	spin_lock(&kaweth->device_lock);
++	spin_lock_irqsave(&kaweth->device_lock, flags);
+ 	if (IS_BLOCKED(kaweth->status)) {
+-		spin_unlock(&kaweth->device_lock);
++		spin_unlock_irqrestore(&kaweth->device_lock, flags);
+ 		return;
+ 	}
+-	spin_unlock(&kaweth->device_lock);
++	spin_unlock_irqrestore(&kaweth->device_lock, flags);
  
- country QA:
- 	(2402 - 2482 @ 40), (N/A, 20)
+ 	if(status && status != -EREMOTEIO && count != 1) {
+ 		dev_err(&kaweth->intf->dev,
 -- 
-1.7.10.4
+1.7.9.5
 
