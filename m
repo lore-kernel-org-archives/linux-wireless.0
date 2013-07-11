@@ -1,95 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:46311 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752601Ab3G3NF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 09:05:27 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <coelho@ti.com>, <luca@coelho.fi>, <mturquette@linaro.org>,
-	<mark.rutland@arm.com>, <balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>,
-	<martinez.javier@gmail.com>
-Subject: [PATCH v4 0/8] wilink: add device tree support
-Date: Tue, 30 Jul 2013 16:04:28 +0300
-Message-ID: <1375189476-21557-1-git-send-email-coelho@ti.com> (sfid-20130730_151158_743447_5898AABB)
+Received: from mail-la0-f49.google.com ([209.85.215.49]:36950 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751357Ab3GKMSV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 08:18:21 -0400
+Received: by mail-la0-f49.google.com with SMTP id ea20so6595886lab.22
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 05:18:20 -0700 (PDT)
+Message-ID: <51DEA289.5050509@cogentembedded.com> (sfid-20130711_141830_687977_AE52E3F1)
+Date: Thu, 11 Jul 2013 16:18:17 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ming Lei <ming.lei@canonical.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Juergen Stuber <starblue@users.sourceforge.net>
+Subject: Re: [PATCH 08/50] USB: legousbtower: spin_lock in complete() cleanup
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-9-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1373533573-12272-9-git-send-email-ming.lei@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello.
 
-This patch series adds device tree support to the wlcore_sdio driver,
-which is used by WiLink6, WiLink7 and WiLink8.
+On 11-07-2013 13:05, Ming Lei wrote:
 
-The first patches do some clean-up to make the data needed in the
-wilink device tree node smaller.  The remaining patches implement the
-actual device tree node parsing in wlcore_sdio.
+> Complete() will be run with interrupt enabled, so change to
+> spin_lock_irqsave().
 
-Regarding the XTAL clock issues, for now we don't support XTAL mode
-with DT, but I have sent a proposal for a small change in the clock
-framework to support this, but it's still under discussions [1].
+> Cc: Juergen Stuber <starblue@users.sourceforge.net>
+> Signed-off-by: Ming Lei <ming.lei@canonical.com>
+> ---
+>   drivers/usb/misc/legousbtower.c |    5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
 
-The DTS file changes will be sent separately, since they need to go
-via different trees.
+> diff --git a/drivers/usb/misc/legousbtower.c b/drivers/usb/misc/legousbtower.c
+> index 8089479..4044989 100644
+> --- a/drivers/usb/misc/legousbtower.c
+> +++ b/drivers/usb/misc/legousbtower.c
+> @@ -771,6 +771,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
+>   	struct lego_usb_tower *dev = urb->context;
+>   	int status = urb->status;
+>   	int retval;
+> +	unsigned long flags;
+>
+>   	dbg(4, "%s: enter, status %d", __func__, status);
+>
+> @@ -788,7 +789,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
+>   	}
+>
+>   	if (urb->actual_length > 0) {
+> -		spin_lock (&dev->read_buffer_lock);
+> +		spin_lock_irqsave (&dev->read_buffer_lock, flags);
+>   		if (dev->read_buffer_length + urb->actual_length < read_buffer_size) {
+>   			memcpy (dev->read_buffer + dev->read_buffer_length,
+>   				dev->interrupt_in_buffer,
+> @@ -799,7 +800,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
+>   		} else {
+>   			printk(KERN_WARNING "%s: read_buffer overflow, %d bytes dropped", __func__, urb->actual_length);
+>   		}
+> -		spin_unlock (&dev->read_buffer_lock);
+> +		spin_unlock_irqrestore (&dev->read_buffer_lock, flags);
+>   	}
 
-A new version of the bindings documentation has been sent [2] and, if
-no more comments are given to it, I'll apply it via my tree.
+    I don't think this patch passes checkpatch.pl.
 
-[1] http://news.gmane.org/find-root.php?message_id=1372971912-10877-1-git-send-email-coelho@ti.com
-[2] http://news.gmane.org/find-root.php?message_id=1375109728-5931-1-git-send-email-coelho@ti.com
+WBR, Sergei
 
-Changes in v4:
-
-* Rebased on top of 3.11-rc3 (eg. no more changes on the board files
-  that were removed);
-
-* Use the new irq_get_trigger_type() instead of
-  irqd_get_trigger_type() (thanks Javier);
-
-* Added some missing const's (thanks Felipe);
-
-* Reverted Tony's workaround to get WiLink to work on Panda while DT
-  was not supported yet.
-
-
-Please review.
-
-
-Luciano Coelho (8):
-  wl1251: split wl251 platform data to a separate structure
-  wlcore: set irq_flags in the board files instead of hiding behind a
-    quirk
-  wlcore: remove pwr_in_suspend from platform data
-  wl12xx: use frequency instead of enumerations for pdata clocks
-  wlcore: add initial device tree support to the sdio module
-  wlcore: sdio: add wilink clock providers
-  wlcore: sdio: get clocks from device tree
-  wlcore/wl12xx: check if we got correct clock data from DT
-
- arch/arm/mach-davinci/board-da850-evm.c        |  11 ++-
- arch/arm/mach-omap2/board-omap3evm.c           |  22 ++++-
- arch/arm/mach-omap2/board-omap3pandora.c       |   4 +-
- arch/arm/mach-omap2/board-rx51-peripherals.c   |   2 +-
- arch/arm/mach-omap2/board-zoom-peripherals.c   |  33 +++++++-
- arch/arm/mach-omap2/devices.c                  |  39 ---------
- drivers/net/wireless/ti/wilink_platform_data.c |  37 ++++++--
- drivers/net/wireless/ti/wl1251/sdio.c          |  12 +--
- drivers/net/wireless/ti/wl1251/spi.c           |   2 +-
- drivers/net/wireless/ti/wl12xx/main.c          |  78 +++++++++++++++--
- drivers/net/wireless/ti/wl12xx/wl12xx.h        |  28 +++++++
- drivers/net/wireless/ti/wlcore/debugfs.c       |   2 +-
- drivers/net/wireless/ti/wlcore/main.c          |  20 ++---
- drivers/net/wireless/ti/wlcore/sdio.c          | 112 +++++++++++++++++++++++--
- drivers/net/wireless/ti/wlcore/wlcore.h        |   5 +-
- drivers/net/wireless/ti/wlcore/wlcore_i.h      |   1 +
- include/linux/wl12xx.h                         |  52 +++++-------
- 17 files changed, 340 insertions(+), 120 deletions(-)
-
--- 
-1.8.3.2
 
