@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:15046 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755605Ab3GKHMV (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:59543 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932183Ab3GKNMI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 03:12:21 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 0/3] wil6210 updates
-Date: Thu, 11 Jul 2013 10:12:06 +0300
-Message-ID: <1373526729-10908-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_091229_356004_207AEC1C)
+	Thu, 11 Jul 2013 09:12:08 -0400
+Received: by mail-la0-f51.google.com with SMTP id fq12so6791063lab.10
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 06:12:07 -0700 (PDT)
+Message-ID: <51DEAF24.4040301@cogentembedded.com> (sfid-20130711_151226_563117_E7916DF3)
+Date: Thu, 11 Jul 2013 17:12:04 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ming Lei <ming.lei@canonical.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Daniel Mack <zonque@gmail.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>
+Subject: Re: [PATCH 44/50] sound: usb: caiaq: spin_lock in complete() cleanup
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-45-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1373533573-12272-45-git-send-email-ming.lei@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sync with latest firmware updates;
-couple of simple bug fixes
+On 11-07-2013 13:06, Ming Lei wrote:
 
-Vladimir Kondratiev (3):
-  wil6210: Align WMI header with latest FW
-  wil6210: fix wrong index in wil_vring_free
-  wil6210: write modified HW descriptor back
+> Complete() will be run with interrupt enabled, so change to
+> spin_lock_irqsave().
 
- drivers/net/wireless/ath/wil6210/trace.h   | 22 +++++++++++++---------
- drivers/net/wireless/ath/wil6210/txrx.c    |  3 ++-
- drivers/net/wireless/ath/wil6210/wil6210.h | 17 ++++++++++++++---
- drivers/net/wireless/ath/wil6210/wmi.c     | 14 +++++++++-----
- 4 files changed, 38 insertions(+), 18 deletions(-)
+> Cc: Daniel Mack <zonque@gmail.com>
+> Cc: Jaroslav Kysela <perex@perex.cz>
+> Cc: Takashi Iwai <tiwai@suse.de>
+> Cc: alsa-devel@alsa-project.org
+> Signed-off-by: Ming Lei <ming.lei@canonical.com>
+> ---
+>   sound/usb/caiaq/audio.c |    5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
 
--- 
-1.8.1.2
+> diff --git a/sound/usb/caiaq/audio.c b/sound/usb/caiaq/audio.c
+> index 7103b09..e5675ab 100644
+> --- a/sound/usb/caiaq/audio.c
+> +++ b/sound/usb/caiaq/audio.c
+> @@ -672,10 +672,11 @@ static void read_completed(struct urb *urb)
+>   		offset += len;
+>
+>   		if (len > 0) {
+> -			spin_lock(&cdev->spinlock);
+> +			unsigned long flags;
+
+    Emoty line wouldn't hurt here, after declaration.
+
+> +			spin_lock_irqsave(&cdev->spinlock, flags);
+>   			fill_out_urb(cdev, out, &out->iso_frame_desc[outframe]);
+>   			read_in_urb(cdev, urb, &urb->iso_frame_desc[frame]);
+> -			spin_unlock(&cdev->spinlock);
+> +			spin_unlock_irqrestore(&cdev->spinlock, flags);
+
+WBR, Sergei
 
