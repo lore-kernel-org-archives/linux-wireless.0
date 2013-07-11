@@ -1,172 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:57423 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752842Ab3GWK6p (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100Ab3GKRJH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 06:58:45 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Fix diversity combining for AR9285
-Date: Tue, 23 Jul 2013 16:25:17 +0530
-Message-Id: <1374576917-26636-1-git-send-email-sujith@msujith.org> (sfid-20130723_125849_133923_03A7C279)
+	Thu, 11 Jul 2013 13:09:07 -0400
+Message-ID: <1373562533.8201.33.camel@jlt4.sipsolutions.net> (sfid-20130711_190912_645256_788C2D87)
+Subject: Re: Help adding trace events to xHCI
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Xenia Ragiadakou <burzalodowa@gmail.com>,
+	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Steven Rostedt <rostedt@goodmis.org>
+Date: Thu, 11 Jul 2013 19:08:53 +0200
+In-Reply-To: <20130711162002.GA5240@xanatos> (sfid-20130711_182013_255578_2722BE3F)
+References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos>
+	 (sfid-20130711_182013_255578_2722BE3F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+[also adding Steven, he's the tracing expert after all :-)]
 
-When antenna diversity combining is enabled in the EEPROM,
-the initial values for the MAIN/ALT config have to be
-programmed correctly. This patch adds it for AR9285.
+Hi Xenia, Sarah, all,
 
-Since the diversity combining macros are common to all chip
-families, remove the redundant AR9285 macros and move the
-definitions to phy.h.
+> (Mentors and wireless folks, we're struggling a bit with adding trace
+> events to the xHCI USB host controller driver.  I'm trying to look at
+> the ath6kl driver trace events as an example.  We could use some help
+> and/or advice.)
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_phy.h    |  4 ----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  4 ++--
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    |  4 ++--
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |  5 -----
- drivers/net/wireless/ath/ath9k/ath9k.h         |  7 -------
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     | 19 +++++++++++++++++++
- drivers/net/wireless/ath/ath9k/phy.h           |  7 +++++++
- 7 files changed, 30 insertions(+), 20 deletions(-)
+Those were in turn modelled on mac80211, cfg80211 and/or iwlwifi, I
+think; might be worth also looking there. In general though, it's all
+pretty similar.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-index f9eb2c3..d3f0928 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-@@ -317,10 +317,6 @@
- #define AR_PHY_9285_ANT_DIV_ALT_GAINTB_S    29
- #define AR_PHY_9285_ANT_DIV_MAIN_GAINTB     0x40000000
- #define AR_PHY_9285_ANT_DIV_MAIN_GAINTB_S   30
--#define AR_PHY_9285_ANT_DIV_LNA1            2
--#define AR_PHY_9285_ANT_DIV_LNA2            1
--#define AR_PHY_9285_ANT_DIV_LNA1_PLUS_LNA2  3
--#define AR_PHY_9285_ANT_DIV_LNA1_MINUS_LNA2 0
- #define AR_PHY_9285_ANT_DIV_GAINTB_0        0
- #define AR_PHY_9285_ANT_DIV_GAINTB_1        1
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index d105e43..a98e6a3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3673,9 +3673,9 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 				     AR_PHY_ANT_DIV_ALT_GAINTB |
- 				     AR_PHY_ANT_DIV_MAIN_GAINTB));
- 			/* by default use LNA1 for the main antenna */
--			regval |= (AR_PHY_ANT_DIV_LNA1 <<
-+			regval |= (ATH_ANT_DIV_COMB_LNA1 <<
- 				   AR_PHY_ANT_DIV_MAIN_LNACONF_S);
--			regval |= (AR_PHY_ANT_DIV_LNA2 <<
-+			regval |= (ATH_ANT_DIV_COMB_LNA2 <<
- 				   AR_PHY_ANT_DIV_ALT_LNACONF_S);
- 			REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
- 		}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 2db4ddf..3ec33ce 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1465,8 +1465,8 @@ static void ar9003_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
- 			AR_PHY_ANT_DIV_ALT_LNACONF |
- 			AR_PHY_ANT_DIV_MAIN_GAINTB |
- 			AR_PHY_ANT_DIV_ALT_GAINTB);
--		regval |= (AR_PHY_ANT_DIV_LNA1 << AR_PHY_ANT_DIV_MAIN_LNACONF_S);
--		regval |= (AR_PHY_ANT_DIV_LNA2 << AR_PHY_ANT_DIV_ALT_LNACONF_S);
-+		regval |= (ATH_ANT_DIV_COMB_LNA1 << AR_PHY_ANT_DIV_MAIN_LNACONF_S);
-+		regval |= (ATH_ANT_DIV_COMB_LNA2 << AR_PHY_ANT_DIV_ALT_LNACONF_S);
- 		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
- 	}
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index d4d39f3..23c019d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -296,11 +296,6 @@
- #define AR_PHY_ANT_DIV_MAIN_GAINTB              0x40000000
- #define AR_PHY_ANT_DIV_MAIN_GAINTB_S            30
- 
--#define AR_PHY_ANT_DIV_LNA1_MINUS_LNA2          0x0
--#define AR_PHY_ANT_DIV_LNA2                     0x1
--#define AR_PHY_ANT_DIV_LNA1                     0x2
--#define AR_PHY_ANT_DIV_LNA1_PLUS_LNA2           0x3
--
- #define AR_PHY_EXTCHN_PWRTHR1   (AR_AGC_BASE + 0x2c)
- #define AR_PHY_EXT_CHN_WIN      (AR_AGC_BASE + 0x30)
- #define AR_PHY_20_40_DET_THR    (AR_AGC_BASE + 0x34)
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index c1224b5..76e38d3 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -591,13 +591,6 @@ static inline void ath_fill_led_pin(struct ath_softc *sc)
- #define ATH_ANT_DIV_COMB_LNA1_DELTA_MID -2
- #define ATH_ANT_DIV_COMB_LNA1_DELTA_LOW 2
- 
--enum ath9k_ant_div_comb_lna_conf {
--	ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2,
--	ATH_ANT_DIV_COMB_LNA2,
--	ATH_ANT_DIV_COMB_LNA1,
--	ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2,
--};
--
- struct ath_ant_comb {
- 	u16 count;
- 	u16 total_pkt_count;
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index c2bfd748..9ea8e4b 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -812,6 +812,7 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
- static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 					 struct ath9k_channel *chan)
- {
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct modal_eep_4k_header *pModal;
- 	struct ar5416_eeprom_4k *eep = &ah->eeprom.map4k;
- 	struct base_eep_header_4k *pBase = &eep->baseEepHeader;
-@@ -858,6 +859,24 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 
- 		REG_WRITE(ah, AR_PHY_CCK_DETECT, regVal);
- 		regVal = REG_READ(ah, AR_PHY_CCK_DETECT);
-+
-+		if (pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
-+			/*
-+			 * If diversity combining is enabled,
-+			 * set MAIN to LNA1 and ALT to LNA2 initially.
-+			 */
-+			regVal = REG_READ(ah, AR_PHY_MULTICHAIN_GAIN_CTL);
-+			regVal &= (~(AR_PHY_9285_ANT_DIV_MAIN_LNACONF |
-+				     AR_PHY_9285_ANT_DIV_ALT_LNACONF));
-+
-+			regVal |= (ATH_ANT_DIV_COMB_LNA1 <<
-+				   AR_PHY_9285_ANT_DIV_MAIN_LNACONF_S);
-+			regVal |= (ATH_ANT_DIV_COMB_LNA2 <<
-+				   AR_PHY_9285_ANT_DIV_ALT_LNACONF_S);
-+			regVal &= (~(AR_PHY_9285_FAST_DIV_BIAS));
-+			regVal |= (0 << AR_PHY_9285_FAST_DIV_BIAS_S);
-+			REG_WRITE(ah, AR_PHY_MULTICHAIN_GAIN_CTL, regVal);
-+		}
- 	}
- 
- 	if (pModal->version >= 2) {
-diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
-index 8b38030..4a1b992 100644
---- a/drivers/net/wireless/ath/ath9k/phy.h
-+++ b/drivers/net/wireless/ath/ath9k/phy.h
-@@ -48,4 +48,11 @@
- #define AR_PHY_PLL_CONTROL 0x16180
- #define AR_PHY_PLL_MODE 0x16184
- 
-+enum ath9k_ant_div_comb_lna_conf {
-+	ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2,
-+	ATH_ANT_DIV_COMB_LNA2,
-+	ATH_ANT_DIV_COMB_LNA1,
-+	ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2,
-+};
-+
- #endif
--- 
-1.8.3.3
+> > lets say that we want the tracepoint function to have the prototype:
+> > 
+> > void trace_cmd_address_device(const char *fmt, ...).
+
+I'm not sure this is possible. I think we (wireless) do this with
+
+void trace_cmd_address_device(struct va_format *vaf)
+
+instead only.
+
+Note that there's no easy way to dynamically allocate the right amount
+of space in the ringbuffer, or at least I haven't found one. We
+therefore have a static size, which is somewhat inefficient.
+
+
+> The ath driver defines a new trace event class, ath6kl_log_event.
+> Various types of tracepoints, like trace_ath6kl_log_warn, use that event
+> class.  Wrappers like ath6kl_warn() call those trace points, passing it
+> a struct va_format on the stack:
+> 
+> int ath6kl_warn(const char *fmt, ...)
+> {
+>         struct va_format vaf = {
+>                 .fmt = fmt,
+>         };
+>         va_list args;
+>         int ret;
+> 
+>         va_start(args, fmt);
+>         vaf.va = &args;
+>         ret = ath6kl_printk(KERN_WARNING, "%pV", &vaf);
+
+Note also on older kernels you used to have to do va_copy() here because
+"%pV" didn't do it by itself. Guess you don't care though, but I
+sometimes have to worry about backporting :-)
+
+> int xhci_debug_address(const char *fmt, ...)
+
+This confuses me somewhat -- why is it called "xhci_debug_address()"
+when it takes arbitrary parameters? Where's the "address" part?
+
+> DEFINE_EVENT(xhci_log_event, xhci_dbg_address,
+>              TP_PROTO(struct va_format *vaf),
+>              TP_ARGS(vaf)
+> );
+> 
+> DECLARE_EVENT_CLASS(xhci_log_event,
+>         TP_PROTO(struct va_format *vaf),
+>         TP_ARGS(vaf),
+>         TP_STRUCT__entry(
+>                 __dynamic_array(char, msg, ATH6KL_MSG_MAX)
+
+Should probably not be ATH6KL_MSG_MAX :-)
+
+And this is what I talked about before -- it always allocates the max in
+the ringbuffer even for really short messages.
+
+
+> And then code in xhci_address_device() in drivers/usb/host/xhci.c can do
+> things like:
+> 
+> xhci_debug_address(xhci, "Bad Slot ID %d\n", udev->slot_id);
+
+Otherwise this looks about right (you have an xhci argument you didn't
+declare above, but this is obviously pseudo-code only)
+
+> And we can define similar trace event classes for the various xHCI
+> commands or ring debugging, so that we can enable or disable trace
+> points individually for different parts of the xHCI driver.
+
+I think it'd be worth (also) doing more specific tracepoints instead
+though.
+
+I don't really know what xhci does, but I suppose it has register
+read/write, maybe packet (urb?) submissions etc. so something like the
+iwlwifi_io system in drivers/net/wireless/iwlwifi/iwl-devtrace.h might
+(also) be (more) useful. In iwlwifi I have tracing for
+ * IO accesses & interrupt notifications/reasons
+ * commands and TX packets submitted to the device
+ * notifications/RX packets received from the device
+ * previously existing debug messages
+
+The message tracing was really more of an after-thought in iwlwifi (and
+ath6kl as well I guess) because we already had a lot of debug messages
+and capturing it all together can be useful.
+
+However, tracing all the debug messages is actually fairly expensive, I
+think in part because of the string formatting and in part because of
+the always-max allocations in the ringbuffer.
+
+
+> > That would have worked if the tracepoint was just :
+> > 
+> > void trace_cmd_address_device(const char *fmt, ...)
+> > {
+> >           if (trace event cmd_address_device is enabled) do {
+> >                     (void(*)(const char *fmt, ...)) callback ((const
+> > char *)&fmt);
+> >           }
+> > }
+
+I'm not really sure what the whole "callback()" part is about?
+
+Are you trying to use the "tracepoint is enabled" to do something
+unrelated to the tracing? I'm guessing that's _possible_, but I wouldn't
+recommend it.
+
+
+> I'm actually wondering if the call to ath6kl_printk is somehow necessary
+> in order to be able to pass arguments on the stack.
+
+I don't think it is, but formatting the messages *only* for tracing
+seems a bit odd?
+
+Hth,
+johannes
 
