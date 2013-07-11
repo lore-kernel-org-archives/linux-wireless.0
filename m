@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:44319 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932287Ab3GKNIe (ORCPT
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:62826 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932187Ab3GKJIa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 09:08:34 -0400
-Received: by mail-lb0-f178.google.com with SMTP id y6so6552726lbh.23
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 06:08:32 -0700 (PDT)
-Message-ID: <51DEAE4E.90204@cogentembedded.com> (sfid-20130711_150907_490874_D5EEFC0D)
-Date: Thu, 11 Jul 2013 17:08:30 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Ming Lei <ming.lei@canonical.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Thu, 11 Jul 2013 05:08:30 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
 	Alan Stern <stern@rowland.harvard.edu>,
 	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
 	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
 	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>
-Subject: Re: [PATCH 45/50] sound: usb: usx2y: spin_lock in complete() cleanup
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-46-git-send-email-ming.lei@canonical.com>
-In-Reply-To: <1373533573-12272-46-git-send-email-ming.lei@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Ming Lei <ming.lei@canonical.com>,
+	Johan Hovold <jhovold@gmail.com>
+Subject: [PATCH 14/50] USB: serial: mos7720: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:37 +0800
+Message-Id: <1373533573-12272-15-git-send-email-ming.lei@canonical.com> (sfid-20130711_111758_325199_973A44ED)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-07-2013 13:06, Ming Lei wrote:
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-> Complete() will be run with interrupt enabled, so change to
-> spin_lock_irqsave().
+Cc: Johan Hovold <jhovold@gmail.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/usb/serial/mos7720.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-    Changelog doesn't match the patch.
-
-> Cc: Jaroslav Kysela <perex@perex.cz>
-> Cc: Takashi Iwai <tiwai@suse.de>
-> Cc: alsa-devel@alsa-project.org
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-> ---
->   sound/usb/usx2y/usbusx2yaudio.c |    4 ++++
->   1 file changed, 4 insertions(+)
-
-> diff --git a/sound/usb/usx2y/usbusx2yaudio.c b/sound/usb/usx2y/usbusx2yaudio.c
-> index 4967fe9..e2ee893 100644
-> --- a/sound/usb/usx2y/usbusx2yaudio.c
-> +++ b/sound/usb/usx2y/usbusx2yaudio.c
-> @@ -273,7 +273,11 @@ static void usX2Y_clients_stop(struct usX2Ydev *usX2Y)
->   		struct snd_usX2Y_substream *subs = usX2Y->subs[s];
->   		if (subs) {
->   			if (atomic_read(&subs->state) >= state_PRERUNNING) {
-> +				unsigned long flags;
-> +
-> +				local_irq_save(flags);
->   				snd_pcm_stop(subs->pcm_substream, SNDRV_PCM_STATE_XRUN);
-> +				local_irq_restore(flags);
->   			}
-
-WBR, Sergei
-
+diff --git a/drivers/usb/serial/mos7720.c b/drivers/usb/serial/mos7720.c
+index 51da424..9b8c866 100644
+--- a/drivers/usb/serial/mos7720.c
++++ b/drivers/usb/serial/mos7720.c
+@@ -338,14 +338,15 @@ static void async_complete(struct urb *urb)
+ {
+ 	struct urbtracker *urbtrack = urb->context;
+ 	int status = urb->status;
++	unsigned long flags;
+ 
+ 	if (unlikely(status))
+ 		dev_dbg(&urb->dev->dev, "%s - nonzero urb status received: %d\n", __func__, status);
+ 
+ 	/* remove the urbtracker from the active_urbs list */
+-	spin_lock(&urbtrack->mos_parport->listlock);
++	spin_lock_irqsave(&urbtrack->mos_parport->listlock, flags);
+ 	list_del(&urbtrack->urblist_entry);
+-	spin_unlock(&urbtrack->mos_parport->listlock);
++	spin_unlock_irqrestore(&urbtrack->mos_parport->listlock, flags);
+ 	kref_put(&urbtrack->ref_count, destroy_urbtracker);
+ }
+ 
+-- 
+1.7.9.5
 
