@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:34889
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750790Ab3GTECa (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47627 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755633Ab3GKHMZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Jul 2013 00:02:30 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH] cw1200:  Fix incorrect endianness annotation in a header field
-Date: Sat, 20 Jul 2013 00:02:25 -0400
-Message-Id: <1374292945-29753-1-git-send-email-pizza@shaftnet.org> (sfid-20130720_060247_234311_6A38435F)
+	Thu, 11 Jul 2013 03:12:25 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/3] wil6210: fix wrong index in wil_vring_free
+Date: Thu, 11 Jul 2013 10:12:08 +0300
+Message-ID: <1373526729-10908-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_091231_707156_A94D5EE5)
+In-Reply-To: <1373526729-10908-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1373526729-10908-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Note that the driver doesn't directly use this field, but it should be
-correctly defined in any case.
+When destroying Rx vring, branch for Rx used wrong Tx descriptor:
+while SW context was taken for "head", HW descriptor was, by mistake,
+taken from "tail"
 
-I'd like to see this in 3.11-rc
-
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/cw1200/wsm.h | 2 +-
+ drivers/net/wireless/ath/wil6210/txrx.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/cw1200/wsm.h b/drivers/net/wireless/cw1200/wsm.h
-index 7afc613..48086e8 100644
---- a/drivers/net/wireless/cw1200/wsm.h
-+++ b/drivers/net/wireless/cw1200/wsm.h
-@@ -832,7 +832,7 @@ struct wsm_tx {
- 	/* the MSDU shall be terminated. Overrides the global */
- 	/* dot11MaxTransmitMsduLifeTime setting [optional] */
- 	/* Device will set the default value if this is 0. */
--	u32 expire_time;
-+	__le32 expire_time;
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index d240b24..8fde73a 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -133,7 +133,7 @@ static void wil_vring_free(struct wil6210_priv *wil, struct vring *vring,
+ 		} else { /* rx */
+ 			struct vring_rx_desc dd, *d = &dd;
+ 			volatile struct vring_rx_desc *_d =
+-					&vring->va[vring->swtail].rx;
++					&vring->va[vring->swhead].rx;
  
- 	/* WSM_HT_TX_... */
- 	__le32 ht_tx_parameters;
+ 			*d = *_d;
+ 			pa = wil_desc_addr(&d->dma.addr);
 -- 
-1.8.3.1
+1.8.1.2
 
