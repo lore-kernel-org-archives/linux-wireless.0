@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:38094 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932657Ab3GWWLH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2272 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197Ab3GKPD5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 18:11:07 -0400
-Received: by mail-we0-f175.google.com with SMTP id q58so514471wes.34
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jul 2013 15:11:05 -0700 (PDT)
-Message-ID: <1374617459.2750.9.camel@canaries64> (sfid-20130724_001111_147898_BB9DAEFF)
-Subject: [PATCH 2/2] staging: vt6656: remove dead code
- DBG_PORT80/VIAWET_DEBUG
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 23 Jul 2013 23:10:59 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 11 Jul 2013 11:03:57 -0400
+Cc: Kirshenbaum Erez <erezk@wilocity.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/5] wil6210: fix wrong index in wil_vring_free
+Date: Thu, 11 Jul 2013 18:03:38 +0300
+Message-ID: <1373555021-11763-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_170410_316834_ABBA5822)
+In-Reply-To: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When destroying Rx vring, branch for Rx used wrong Tx descriptor:
+while SW context was taken for "head", HW descriptor was, by mistake,
+taken from "tail"
 
-DBG_PORT80 is always defined as empty macro
-because VIAWET_DEBUG is never defined. Remove
-it and VIAWET_DEBUG.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/vt6656/device_cfg.h | 6 ------
- drivers/staging/vt6656/wmgr.c       | 2 --
- 2 files changed, 8 deletions(-)
+ drivers/net/wireless/ath/wil6210/txrx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6656/device_cfg.h b/drivers/staging/vt6656/device_cfg.h
-index ad1fbf6..a97f7bb 100644
---- a/drivers/staging/vt6656/device_cfg.h
-+++ b/drivers/staging/vt6656/device_cfg.h
-@@ -82,10 +82,4 @@ typedef enum  _chip_type {
-     VT3184 = 1
- } CHIP_TYPE, *PCHIP_TYPE;
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index d240b24..8fde73a 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -133,7 +133,7 @@ static void wil_vring_free(struct wil6210_priv *wil, struct vring *vring,
+ 		} else { /* rx */
+ 			struct vring_rx_desc dd, *d = &dd;
+ 			volatile struct vring_rx_desc *_d =
+-					&vring->va[vring->swtail].rx;
++					&vring->va[vring->swhead].rx;
  
--#ifdef VIAWET_DEBUG
--#define DBG_PORT80(value)                   outb(value, 0x80)
--#else
--#define DBG_PORT80(value)
--#endif
--
- #endif
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index 6d1ff5e..b6cbd13 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -751,7 +751,6 @@ static void s_vMgrRxAssocResponse(struct vnt_private *pDevice,
- 	    || (sFrame.pwStatus == NULL)
- 	    || (sFrame.pwAid == NULL)
- 	    || (sFrame.pSuppRates == NULL)) {
--		DBG_PORT80(0xCC);
- 		return;
-         }
- 
-@@ -3750,7 +3749,6 @@ static void s_vMgrRxProbeResponse(struct vnt_private *pDevice,
- 
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Probe resp:Fail addr:[%p]\n",
- 		pRxPacket->p80211Header);
--	DBG_PORT80(0xCC);
- 	return;
-     }
- 
+ 			*d = *_d;
+ 			pa = wil_desc_addr(&d->dma.addr);
 -- 
 1.8.1.2
-
-
 
