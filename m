@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49724 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559Ab3GaGqe (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:50089 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab3GKJJC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 02:46:34 -0400
-Message-ID: <1375253182.8289.3.camel@jlt4.sipsolutions.net> (sfid-20130731_084657_071264_80824539)
-Subject: Re: ROM Patching (was: [PATCH] bluetooth: remove wrong dependency
- for BT_ATH3K)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Hector Palacios <hector.palacios@digi.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	"gustavo@padovan.org" <gustavo@padovan.org>,
-	"johan.hedberg@gmail.com" <johan.hedberg@gmail.com>,
-	mcgrof@do-not-panic.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"surajs@qca.qualcomm.com" <surajs@qca.qualcomm.com>,
-	jjohnson@qca.qualcomm.com, Adrian Chadd <adrian@freebsd.org>,
-	ddahlby@qca.qualcomm.com, Ben Hutchings <ben@decadent.org.uk>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Date: Wed, 31 Jul 2013 08:46:22 +0200
-In-Reply-To: <20130730224809.GN17130@pogo> (sfid-20130731_004858_121899_020F19AB)
-References: <1375114325-25498-1-git-send-email-hector.palacios@digi.com>
-	 <5438CD3C-E28C-485C-94B8-F743E8B13D4A@holtmann.org>
-	 <51F7722E.9050708@digi.com> <20130730205601.GI17130@pogo>
-	 <2C94C740-76BA-4058-B0D7-C37D44875CA1@holtmann.org>
-	 <20130730224809.GN17130@pogo> (sfid-20130731_004858_121899_020F19AB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 11 Jul 2013 05:09:02 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Johan Hovold <jhovold@gmail.com>
+Subject: [PATCH 18/50] USB: serial: symbolserial: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:41 +0800
+Message-Id: <1373533573-12272-19-git-send-email-ming.lei@canonical.com> (sfid-20130711_111745_697564_AB12E26A)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-07-30 at 15:48 -0700, Luis R. Rodriguez wrote:
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-> Neat. Perhaps we need something that we can share with 802.11 or other
-> hardare I highly doubt we're the only ones patching ROM. Don't we even
-> patch up core CPUs? I'm wondering if firmware_class could be expanded to
-> support serialized ROM patching. The biggest hurdle I see with splititng
-> ROM patching from a single firmware is serializing that, addressing
-> revision dependencies and of course kernel dependencies.
+Cc: Johan Hovold <jhovold@gmail.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/usb/serial/symbolserial.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-I don't really see what you're trying to get it so I arbitrarily picked
-this ...
-
-I think "ROM patching" like in BT and 802.11 are two completely
-different things. In BT at least you have a common transport to the
-device, a more-or-less common command set (HCI) etc. None of that exists
-for wireless (today) so trying to find common ground between firmware
-(patches) for different 802.11 hardware seems completely futile?
-
-johannes
+diff --git a/drivers/usb/serial/symbolserial.c b/drivers/usb/serial/symbolserial.c
+index 9b16489..b4f5cbe 100644
+--- a/drivers/usb/serial/symbolserial.c
++++ b/drivers/usb/serial/symbolserial.c
+@@ -41,6 +41,7 @@ static void symbol_int_callback(struct urb *urb)
+ 	int status = urb->status;
+ 	int result;
+ 	int data_length;
++	unsigned long flags;
+ 
+ 	switch (status) {
+ 	case 0:
+@@ -81,7 +82,7 @@ static void symbol_int_callback(struct urb *urb)
+ 	}
+ 
+ exit:
+-	spin_lock(&priv->lock);
++	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	/* Continue trying to always read if we should */
+ 	if (!priv->throttled) {
+@@ -92,7 +93,7 @@ exit:
+ 							__func__, result);
+ 	} else
+ 		priv->actually_throttled = true;
+-	spin_unlock(&priv->lock);
++	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+ static int symbol_open(struct tty_struct *tty, struct usb_serial_port *port)
+-- 
+1.7.9.5
 
