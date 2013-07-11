@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:44382 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932278Ab3GKJKW (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:57001 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932278Ab3GKJLL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:10:22 -0400
+	Thu, 11 Jul 2013 05:11:11 -0400
 From: Ming Lei <ming.lei@canonical.com>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
@@ -11,10 +11,12 @@ Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
 	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
 	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
 	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH 28/50] USBNET: kaweth: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:51 +0800
-Message-Id: <1373533573-12272-29-git-send-email-ming.lei@canonical.com> (sfid-20130711_111612_737998_F7D3D38E)
+	Ming Lei <ming.lei@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org
+Subject: [PATCH 34/50] wireless: libertas_tf: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:57 +0800
+Message-Id: <1373533573-12272-35-git-send-email-ming.lei@canonical.com> (sfid-20130711_111120_931576_BB145D62)
 In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -23,40 +25,43 @@ List-ID: <linux-wireless.vger.kernel.org>
 Complete() will be run with interrupt enabled, so change to
 spin_lock_irqsave().
 
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/usb/kaweth.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/libertas_tf/if_usb.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/usb/kaweth.c b/drivers/net/usb/kaweth.c
-index afb117c..4addbbf 100644
---- a/drivers/net/usb/kaweth.c
-+++ b/drivers/net/usb/kaweth.c
-@@ -598,6 +598,7 @@ static void kaweth_usb_receive(struct urb *urb)
- 	struct kaweth_device *kaweth = urb->context;
- 	struct net_device *net = kaweth->net;
- 	int status = urb->status;
+diff --git a/drivers/net/wireless/libertas_tf/if_usb.c b/drivers/net/wireless/libertas_tf/if_usb.c
+index d576dd6..0e9e972 100644
+--- a/drivers/net/wireless/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/libertas_tf/if_usb.c
+@@ -610,6 +610,8 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
+ 				      struct if_usb_card *cardp,
+ 				      struct lbtf_private *priv)
+ {
 +	unsigned long flags;
++
+ 	if (recvlength > LBS_CMD_BUFFER_SIZE) {
+ 		lbtf_deb_usbd(&cardp->udev->dev,
+ 			     "The receive buffer is too large\n");
+@@ -619,12 +621,12 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
  
- 	int count = urb->actual_length;
- 	int count2 = urb->transfer_buffer_length;
-@@ -630,12 +631,12 @@ static void kaweth_usb_receive(struct urb *urb)
- 		kaweth->stats.rx_errors++;
- 		dev_dbg(dev, "Status was -EOVERFLOW.\n");
- 	}
--	spin_lock(&kaweth->device_lock);
-+	spin_lock_irqsave(&kaweth->device_lock, flags);
- 	if (IS_BLOCKED(kaweth->status)) {
--		spin_unlock(&kaweth->device_lock);
-+		spin_unlock_irqrestore(&kaweth->device_lock, flags);
- 		return;
- 	}
--	spin_unlock(&kaweth->device_lock);
-+	spin_unlock_irqrestore(&kaweth->device_lock, flags);
+ 	BUG_ON(!in_interrupt());
  
- 	if(status && status != -EREMOTEIO && count != 1) {
- 		dev_err(&kaweth->intf->dev,
+-	spin_lock(&priv->driver_lock);
++	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	memcpy(priv->cmd_resp_buff, recvbuff + MESSAGE_HEADER_LEN,
+ 	       recvlength - MESSAGE_HEADER_LEN);
+ 	kfree_skb(skb);
+ 	lbtf_cmd_response_rx(priv);
+-	spin_unlock(&priv->driver_lock);
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ }
+ 
+ /**
 -- 
 1.7.9.5
 
