@@ -1,66 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:55997 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab3GQCWs (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:49564 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab3GKJIq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:22:48 -0400
-Received: by mail-pa0-f47.google.com with SMTP id kl14so1421498pab.6
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:48 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 47/53] wireless-regdb: enable HT40 in RU - Russian Federation
-Date: Tue, 16 Jul 2013 19:18:36 -0700
-Message-Id: <1374027522-18488-48-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042251_306338_23C06E2F)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 11 Jul 2013 05:08:46 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Johan Hovold <jhovold@gmail.com>
+Subject: [PATCH 16/50] USB: serial: quatech2: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:39 +0800
+Message-Id: <1373533573-12272-17-git-send-email-ming.lei@canonical.com> (sfid-20130711_110857_949484_A1E49BD5)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-As per QCA the Russian Federation (RU) enables
-HT40 on the 5 GHz band as follows. This has been
-verified by actual product submission and product
-certification.
-
-Band [MHz]              Max BW [MHz]    Max gain        Max EIRP [dBm (mW)]
-5170-5330               40              N/A             20.00 (100.00)
-5650-5710               40              N/A             30.00 (1000.00)
-5735.000 - 5835.000     40              N/A             30.00 (1000.00)
-
-Prior to this we didn't have HT40 allowed on RU at all.
-This patch changes this and splits the 5 GHz band into
-two segments which allow two different max EIRP values.
-
-Exact details on the 5 GHz QCA work for Russia you can
-refer to this PDF:
-
-http://lists.infradead.org/pipermail/wireless-regdb/attachments/20130125/29d3fa1f/attachment-0001.pdf
-
-Originally submitted to the list by Michael Green.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Cc: Johan Hovold <jhovold@gmail.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- db.txt |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/usb/serial/quatech2.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index c76131b..0815e6e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -672,7 +672,9 @@ country RS:
+diff --git a/drivers/usb/serial/quatech2.c b/drivers/usb/serial/quatech2.c
+index d997432..95e5dbf 100644
+--- a/drivers/usb/serial/quatech2.c
++++ b/drivers/usb/serial/quatech2.c
+@@ -630,16 +630,17 @@ static void qt2_write_bulk_callback(struct urb *urb)
+ {
+ 	struct usb_serial_port *port;
+ 	struct qt2_port_private *port_priv;
++	unsigned long flags;
  
- country RU:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5735 - 5835 @ 20), (N/A, 30)
-+	(5170 - 5330 @ 40), (N/A, 20)
-+	(5650 - 5710 @ 40), (N/A, 30)
-+	(5735 - 5835 @ 40), (N/A, 30)
+ 	port = urb->context;
+ 	port_priv = usb_get_serial_port_data(port);
  
- country RW:
- 	(2402 - 2482 @ 40), (N/A, 20)
+-	spin_lock(&port_priv->urb_lock);
++	spin_lock_irqsave(&port_priv->urb_lock, flags);
+ 
+ 	port_priv->urb_in_use = false;
+ 	usb_serial_port_softint(port);
+ 
+-	spin_unlock(&port_priv->urb_lock);
++	spin_unlock_irqrestore(&port_priv->urb_lock, flags);
+ 
+ }
+ 
 -- 
-1.7.10.4
+1.7.9.5
 
