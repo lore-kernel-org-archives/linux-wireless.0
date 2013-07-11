@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38348 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752500Ab3GHO4V (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:54503 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932170Ab3GKJIi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:21 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 11/18] ath9k: always use SIFS times from OFDM for 5/10 MHz
-Date: Mon,  8 Jul 2013 16:55:59 +0200
-Message-Id: <1373295366-12823-12-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_165627_885579_3581BFAE)
-In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Thu, 11 Jul 2013 05:08:38 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Johan Hovold <jhovold@gmail.com>
+Subject: [PATCH 15/50] USB: serial: mos77840: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:38 +0800
+Message-Id: <1373533573-12272-16-git-send-email-ming.lei@canonical.com> (sfid-20130711_110849_011294_0D80DDE2)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-5/10 MHz channels should always use SIFS times as defined in IEEE
-802.11-2012 18.4.4 (OFDM PHY characteristics). This makes it compatible
-to ath5k, which does the same.
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Cc: Johan Hovold <jhovold@gmail.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/usb/serial/mos7840.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4ca0cb0..748f0b6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1069,7 +1069,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 11;
+diff --git a/drivers/usb/serial/mos7840.c b/drivers/usb/serial/mos7840.c
+index 0a818b2..f21dcd0 100644
+--- a/drivers/usb/serial/mos7840.c
++++ b/drivers/usb/serial/mos7840.c
+@@ -788,17 +788,18 @@ static void mos7840_bulk_out_data_callback(struct urb *urb)
+ 	struct usb_serial_port *port;
+ 	int status = urb->status;
+ 	int i;
++	unsigned long flags;
  
--		sifstime *= 2;
-+		sifstime = 32;
- 		ack_offset = 16;
- 		slottime = 13;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
-@@ -1079,7 +1079,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 22;
- 
--		sifstime *= 4;
-+		sifstime = 64;
- 		ack_offset = 32;
- 		slottime = 21;
- 	} else {
-@@ -1116,7 +1116,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		ctstimeout += 48 - sifstime - ah->slottime;
+ 	mos7840_port = urb->context;
+ 	port = mos7840_port->port;
+-	spin_lock(&mos7840_port->pool_lock);
++	spin_lock_irqsave(&mos7840_port->pool_lock, flags);
+ 	for (i = 0; i < NUM_URBS; i++) {
+ 		if (urb == mos7840_port->write_urb_pool[i]) {
+ 			mos7840_port->busy[i] = 0;
+ 			break;
+ 		}
  	}
+-	spin_unlock(&mos7840_port->pool_lock);
++	spin_unlock_irqrestore(&mos7840_port->pool_lock, flags);
  
--
- 	ath9k_hw_set_sifs_time(ah, sifstime);
- 	ath9k_hw_setslottime(ah, slottime);
- 	ath9k_hw_set_ack_timeout(ah, acktimeout);
+ 	if (status) {
+ 		dev_dbg(&port->dev, "nonzero write bulk status received:%d\n", status);
 -- 
-1.7.10.4
+1.7.9.5
 
