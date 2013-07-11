@@ -1,122 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48347 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751642Ab3GHOJA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:09:00 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 14/20] rt2x00: rt2800lib: add rf_vals for RF3053
-Date: Mon,  8 Jul 2013 16:08:29 +0200
-Message-Id: <1373292515-21332-15-git-send-email-juhosg@openwrt.org> (sfid-20130708_162039_674238_0F133553)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5780 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754589Ab3GKPHe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 11:07:34 -0400
+Cc: Kirshenbaum Erez <erezk@wilocity.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/5] wil6210: Align WMI header with latest FW
+Date: Thu, 11 Jul 2013 18:03:37 +0300
+Message-ID: <1373555021-11763-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_170738_105958_CEDA7172)
+In-Reply-To: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
+FW guys changed header structure; align driver code
 
-References:
-  FreqItems3053 in chips/rt3593.c
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
-Changes since v2: ---
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   70 +++++++++++++++++++++++++++++++
- 1 file changed, 70 insertions(+)
+ drivers/net/wireless/ath/wil6210/trace.h   | 22 +++++++++++++---------
+ drivers/net/wireless/ath/wil6210/wil6210.h | 17 ++++++++++++++---
+ drivers/net/wireless/ath/wil6210/wmi.c     | 14 +++++++++-----
+ 3 files changed, 36 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index e3e652d..5119bf0 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6961,6 +6961,72 @@ static const struct rf_channel rf_vals_5592_xtal40[] = {
- 	{196, 83, 0, 12, 1},
- };
+diff --git a/drivers/net/wireless/ath/wil6210/trace.h b/drivers/net/wireless/ath/wil6210/trace.h
+index eff1239..e59239d 100644
+--- a/drivers/net/wireless/ath/wil6210/trace.h
++++ b/drivers/net/wireless/ath/wil6210/trace.h
+@@ -37,36 +37,40 @@ static inline void trace_ ## name(proto) {}
+ #endif /* !CONFIG_WIL6210_TRACING || defined(__CHECKER__) */
  
-+static const struct rf_channel rf_vals_3053[] = {
-+	/* Channel, N, R, K */
-+	{1, 241, 2, 2},
-+	{2, 241, 2, 7},
-+	{3, 242, 2, 2},
-+	{4, 242, 2, 7},
-+	{5, 243, 2, 2},
-+	{6, 243, 2, 7},
-+	{7, 244, 2, 2},
-+	{8, 244, 2, 7},
-+	{9, 245, 2, 2},
-+	{10, 245, 2, 7},
-+	{11, 246, 2, 2},
-+	{12, 246, 2, 7},
-+	{13, 247, 2, 2},
-+	{14, 248, 2, 4},
-+
-+	{36, 0x56, 0, 4},
-+	{38, 0x56, 0, 6},
-+	{40, 0x56, 0, 8},
-+	{44, 0x57, 0, 0},
-+	{46, 0x57, 0, 2},
-+	{48, 0x57, 0, 4},
-+	{52, 0x57, 0, 8},
-+	{54, 0x57, 0, 10},
-+	{56, 0x58, 0, 0},
-+	{60, 0x58, 0, 4},
-+	{62, 0x58, 0, 6},
-+	{64, 0x58, 0, 8},
-+
-+	{100, 0x5B, 0, 8},
-+	{102, 0x5B, 0, 10},
-+	{104, 0x5C, 0, 0},
-+	{108, 0x5C, 0, 4},
-+	{110, 0x5C, 0, 6},
-+	{112, 0x5C, 0, 8},
-+
-+	/* NOTE: Channel 114 has been removed intentionally.
-+	 * The EEPROM contains no TX power values for that,
-+	 * and it is disabled in the vendor driver as well.
-+	 */
-+
-+	{116, 0x5D, 0, 0},
-+	{118, 0x5D, 0, 2},
-+	{120, 0x5D, 0, 4},
-+	{124, 0x5D, 0, 8},
-+	{126, 0x5D, 0, 10},
-+	{128, 0x5E, 0, 0},
-+	{132, 0x5E, 0, 4},
-+	{134, 0x5E, 0, 6},
-+	{136, 0x5E, 0, 8},
-+	{140, 0x5F, 0, 0},
-+
-+	{149, 0x5F, 0, 9},
-+	{151, 0x5F, 0, 11},
-+	{153, 0x60, 0, 1},
-+	{157, 0x60, 0, 5},
-+	{159, 0x60, 0, 7},
-+	{161, 0x60, 0, 9},
-+	{165, 0x61, 0, 1},
-+	{167, 0x61, 0, 3},
-+	{169, 0x61, 0, 5},
-+	{171, 0x61, 0, 7},
-+	{173, 0x61, 0, 9},
-+};
-+
- static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- {
- 	struct hw_mode_spec *spec = &rt2x00dev->spec;
-@@ -7052,6 +7118,10 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 		spec->supported_bands |= SUPPORT_BAND_5GHZ;
- 		spec->num_channels = ARRAY_SIZE(rf_vals_3x);
- 		spec->channels = rf_vals_3x;
-+	} else if (rt2x00_rf(rt2x00dev, RF3053)) {
-+		spec->supported_bands |= SUPPORT_BAND_5GHZ;
-+		spec->num_channels = ARRAY_SIZE(rf_vals_3053);
-+		spec->channels = rf_vals_3053;
- 	} else if (rt2x00_rf(rt2x00dev, RF5592)) {
- 		spec->supported_bands |= SUPPORT_BAND_5GHZ;
+ DECLARE_EVENT_CLASS(wil6210_wmi,
+-	TP_PROTO(u16 id, void *buf, u16 buf_len),
++	TP_PROTO(struct wil6210_mbox_hdr_wmi *wmi, void *buf, u16 buf_len),
  
+-	TP_ARGS(id, buf, buf_len),
++	TP_ARGS(wmi, buf, buf_len),
+ 
+ 	TP_STRUCT__entry(
++		__field(u8, mid)
+ 		__field(u16, id)
++		__field(u32, timestamp)
+ 		__field(u16, buf_len)
+ 		__dynamic_array(u8, buf, buf_len)
+ 	),
+ 
+ 	TP_fast_assign(
+-		__entry->id = id;
++		__entry->mid = wmi->mid;
++		__entry->id = le16_to_cpu(wmi->id);
++		__entry->timestamp = le32_to_cpu(wmi->timestamp);
+ 		__entry->buf_len = buf_len;
+ 		memcpy(__get_dynamic_array(buf), buf, buf_len);
+ 	),
+ 
+ 	TP_printk(
+-		"id 0x%04x len %d",
+-		__entry->id, __entry->buf_len
++		"MID %d id 0x%04x len %d timestamp %d",
++		__entry->mid, __entry->id, __entry->buf_len, __entry->timestamp
+ 	)
+ );
+ 
+ DEFINE_EVENT(wil6210_wmi, wil6210_wmi_cmd,
+-	TP_PROTO(u16 id, void *buf, u16 buf_len),
+-	TP_ARGS(id, buf, buf_len)
++	TP_PROTO(struct wil6210_mbox_hdr_wmi *wmi, void *buf, u16 buf_len),
++	TP_ARGS(wmi, buf, buf_len)
+ );
+ 
+ DEFINE_EVENT(wil6210_wmi, wil6210_wmi_event,
+-	TP_PROTO(u16 id, void *buf, u16 buf_len),
+-	TP_ARGS(id, buf, buf_len)
++	TP_PROTO(struct wil6210_mbox_hdr_wmi *wmi, void *buf, u16 buf_len),
++	TP_ARGS(wmi, buf, buf_len)
+ );
+ 
+ #define WIL6210_MSG_MAX (200)
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 44fdab5..129c480 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -156,11 +156,22 @@ struct wil6210_mbox_hdr {
+ /* max. value for wil6210_mbox_hdr.len */
+ #define MAX_MBOXITEM_SIZE   (240)
+ 
++/**
++ * struct wil6210_mbox_hdr_wmi - WMI header
++ *
++ * @mid: MAC ID
++ *	00 - default, created by FW
++ *	01..0f - WiFi ports, driver to create
++ *	10..fe - debug
++ *	ff - broadcast
++ * @id: command/event ID
++ * @timestamp: FW fills for events, free-running msec timer
++ */
+ struct wil6210_mbox_hdr_wmi {
+-	u8 reserved0[2];
++	u8 mid;
++	u8 reserved;
+ 	__le16 id;
+-	__le16 info1; /* bits [0..3] - device_id, rest - unused */
+-	u8 reserved1[2];
++	__le32 timestamp;
+ } __packed;
+ 
+ struct pending_wmi_event {
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index dc8059a..a62511a 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -172,8 +172,8 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ 			.len = cpu_to_le16(sizeof(cmd.wmi) + len),
+ 		},
+ 		.wmi = {
++			.mid = 0,
+ 			.id = cpu_to_le16(cmdid),
+-			.info1 = 0,
+ 		},
+ 	};
+ 	struct wil6210_mbox_ring *r = &wil->mbox_ctl.tx;
+@@ -248,7 +248,7 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ 	iowrite32(r->head = next_head, wil->csr + HOST_MBOX +
+ 		  offsetof(struct wil6210_mbox_ctl, tx.head));
+ 
+-	trace_wil6210_wmi_cmd(cmdid, buf, len);
++	trace_wil6210_wmi_cmd(&cmd.wmi, buf, len);
+ 
+ 	/* interrupt to FW */
+ 	iowrite32(SW_INT_MBOX, wil->csr + HOST_SW_INT);
+@@ -640,9 +640,13 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 			    hdr.flags);
+ 		if ((hdr.type == WIL_MBOX_HDR_TYPE_WMI) &&
+ 		    (len >= sizeof(struct wil6210_mbox_hdr_wmi))) {
+-			u16 id = le16_to_cpu(evt->event.wmi.id);
+-			wil_dbg_wmi(wil, "WMI event 0x%04x\n", id);
+-			trace_wil6210_wmi_event(id, &evt->event.wmi, len);
++			struct wil6210_mbox_hdr_wmi *wmi = &evt->event.wmi;
++			u16 id = le16_to_cpu(wmi->id);
++			u32 tstamp = le32_to_cpu(wmi->timestamp);
++			wil_dbg_wmi(wil, "WMI event 0x%04x MID %d @%d msec\n",
++				    id, wmi->mid, tstamp);
++			trace_wil6210_wmi_event(wmi, &wmi[1],
++						len - sizeof(*wmi));
+ 		}
+ 		wil_hex_dump_wmi("evt ", DUMP_PREFIX_OFFSET, 16, 1,
+ 				 &evt->event.hdr, sizeof(hdr) + len, true);
 -- 
-1.7.10
+1.8.1.2
 
