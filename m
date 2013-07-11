@@ -1,80 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:51414 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090Ab3GKJHv (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:34506 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755629Ab3GKHMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:07:51 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH 09/50] USB: usbtest: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:32 +0800
-Message-Id: <1373533573-12272-10-git-send-email-ming.lei@canonical.com> (sfid-20130711_111848_825611_CF61C1C2)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Thu, 11 Jul 2013 03:12:23 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/3] wil6210: Align WMI header with latest FW
+Date: Thu, 11 Jul 2013 10:12:07 +0300
+Message-ID: <1373526729-10908-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_091230_415225_166354ED)
+In-Reply-To: <1373526729-10908-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1373526729-10908-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+FW guys changed header structure; align driver code
 
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/usb/misc/usbtest.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/trace.h   | 22 +++++++++++++---------
+ drivers/net/wireless/ath/wil6210/wil6210.h | 17 ++++++++++++++---
+ drivers/net/wireless/ath/wil6210/wmi.c     | 14 +++++++++-----
+ 3 files changed, 36 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/usb/misc/usbtest.c b/drivers/usb/misc/usbtest.c
-index 8b4ca1c..5c73df5 100644
---- a/drivers/usb/misc/usbtest.c
-+++ b/drivers/usb/misc/usbtest.c
-@@ -804,11 +804,12 @@ static void ctrl_complete(struct urb *urb)
- 	struct usb_ctrlrequest	*reqp;
- 	struct subcase		*subcase;
- 	int			status = urb->status;
-+	unsigned long		flags;
+diff --git a/drivers/net/wireless/ath/wil6210/trace.h b/drivers/net/wireless/ath/wil6210/trace.h
+index eff1239..e59239d 100644
+--- a/drivers/net/wireless/ath/wil6210/trace.h
++++ b/drivers/net/wireless/ath/wil6210/trace.h
+@@ -37,36 +37,40 @@ static inline void trace_ ## name(proto) {}
+ #endif /* !CONFIG_WIL6210_TRACING || defined(__CHECKER__) */
  
- 	reqp = (struct usb_ctrlrequest *)urb->setup_packet;
- 	subcase = container_of(reqp, struct subcase, setup);
+ DECLARE_EVENT_CLASS(wil6210_wmi,
+-	TP_PROTO(u16 id, void *buf, u16 buf_len),
++	TP_PROTO(struct wil6210_mbox_hdr_wmi *wmi, void *buf, u16 buf_len),
  
--	spin_lock(&ctx->lock);
-+	spin_lock_irqsave(&ctx->lock, flags);
- 	ctx->count--;
- 	ctx->pending--;
+-	TP_ARGS(id, buf, buf_len),
++	TP_ARGS(wmi, buf, buf_len),
  
-@@ -907,7 +908,7 @@ error:
- 	/* signal completion when nothing's queued */
- 	if (ctx->pending == 0)
- 		complete(&ctx->complete);
--	spin_unlock(&ctx->lock);
-+	spin_unlock_irqrestore(&ctx->lock, flags);
- }
+ 	TP_STRUCT__entry(
++		__field(u8, mid)
+ 		__field(u16, id)
++		__field(u32, timestamp)
+ 		__field(u16, buf_len)
+ 		__dynamic_array(u8, buf, buf_len)
+ 	),
  
- static int
-@@ -1552,8 +1553,9 @@ struct iso_context {
- static void iso_callback(struct urb *urb)
- {
- 	struct iso_context	*ctx = urb->context;
-+	unsigned long		flags;
+ 	TP_fast_assign(
+-		__entry->id = id;
++		__entry->mid = wmi->mid;
++		__entry->id = le16_to_cpu(wmi->id);
++		__entry->timestamp = le32_to_cpu(wmi->timestamp);
+ 		__entry->buf_len = buf_len;
+ 		memcpy(__get_dynamic_array(buf), buf, buf_len);
+ 	),
  
--	spin_lock(&ctx->lock);
-+	spin_lock_irqsave(&ctx->lock, flags);
- 	ctx->count--;
+ 	TP_printk(
+-		"id 0x%04x len %d",
+-		__entry->id, __entry->buf_len
++		"MID %d id 0x%04x len %d timestamp %d",
++		__entry->mid, __entry->id, __entry->buf_len, __entry->timestamp
+ 	)
+ );
  
- 	ctx->packet_count += urb->number_of_packets;
-@@ -1593,7 +1595,7 @@ static void iso_callback(struct urb *urb)
- 		complete(&ctx->done);
- 	}
- done:
--	spin_unlock(&ctx->lock);
-+	spin_unlock_irqrestore(&ctx->lock, flags);
- }
+ DEFINE_EVENT(wil6210_wmi, wil6210_wmi_cmd,
+-	TP_PROTO(u16 id, void *buf, u16 buf_len),
+-	TP_ARGS(id, buf, buf_len)
++	TP_PROTO(struct wil6210_mbox_hdr_wmi *wmi, void *buf, u16 buf_len),
++	TP_ARGS(wmi, buf, buf_len)
+ );
  
- static struct urb *iso_alloc_urb(
+ DEFINE_EVENT(wil6210_wmi, wil6210_wmi_event,
+-	TP_PROTO(u16 id, void *buf, u16 buf_len),
+-	TP_ARGS(id, buf, buf_len)
++	TP_PROTO(struct wil6210_mbox_hdr_wmi *wmi, void *buf, u16 buf_len),
++	TP_ARGS(wmi, buf, buf_len)
+ );
+ 
+ #define WIL6210_MSG_MAX (200)
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 44fdab5..129c480 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -156,11 +156,22 @@ struct wil6210_mbox_hdr {
+ /* max. value for wil6210_mbox_hdr.len */
+ #define MAX_MBOXITEM_SIZE   (240)
+ 
++/**
++ * struct wil6210_mbox_hdr_wmi - WMI header
++ *
++ * @mid: MAC ID
++ *	00 - default, created by FW
++ *	01..0f - WiFi ports, driver to create
++ *	10..fe - debug
++ *	ff - broadcast
++ * @id: command/event ID
++ * @timestamp: FW fills for events, free-running msec timer
++ */
+ struct wil6210_mbox_hdr_wmi {
+-	u8 reserved0[2];
++	u8 mid;
++	u8 reserved;
+ 	__le16 id;
+-	__le16 info1; /* bits [0..3] - device_id, rest - unused */
+-	u8 reserved1[2];
++	__le32 timestamp;
+ } __packed;
+ 
+ struct pending_wmi_event {
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index dc8059a..a62511a 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -172,8 +172,8 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ 			.len = cpu_to_le16(sizeof(cmd.wmi) + len),
+ 		},
+ 		.wmi = {
++			.mid = 0,
+ 			.id = cpu_to_le16(cmdid),
+-			.info1 = 0,
+ 		},
+ 	};
+ 	struct wil6210_mbox_ring *r = &wil->mbox_ctl.tx;
+@@ -248,7 +248,7 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ 	iowrite32(r->head = next_head, wil->csr + HOST_MBOX +
+ 		  offsetof(struct wil6210_mbox_ctl, tx.head));
+ 
+-	trace_wil6210_wmi_cmd(cmdid, buf, len);
++	trace_wil6210_wmi_cmd(&cmd.wmi, buf, len);
+ 
+ 	/* interrupt to FW */
+ 	iowrite32(SW_INT_MBOX, wil->csr + HOST_SW_INT);
+@@ -640,9 +640,13 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 			    hdr.flags);
+ 		if ((hdr.type == WIL_MBOX_HDR_TYPE_WMI) &&
+ 		    (len >= sizeof(struct wil6210_mbox_hdr_wmi))) {
+-			u16 id = le16_to_cpu(evt->event.wmi.id);
+-			wil_dbg_wmi(wil, "WMI event 0x%04x\n", id);
+-			trace_wil6210_wmi_event(id, &evt->event.wmi, len);
++			struct wil6210_mbox_hdr_wmi *wmi = &evt->event.wmi;
++			u16 id = le16_to_cpu(wmi->id);
++			u32 tstamp = le32_to_cpu(wmi->timestamp);
++			wil_dbg_wmi(wil, "WMI event 0x%04x MID %d @%d msec\n",
++				    id, wmi->mid, tstamp);
++			trace_wil6210_wmi_event(wmi, &wmi[1],
++						len - sizeof(*wmi));
+ 		}
+ 		wil_hex_dump_wmi("evt ", DUMP_PREFIX_OFFSET, 16, 1,
+ 				 &evt->event.hdr, sizeof(hdr) + len, true);
 -- 
-1.7.9.5
+1.8.1.2
 
