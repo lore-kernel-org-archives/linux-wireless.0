@@ -1,28 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:33709 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752318Ab3GGOhu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 10:37:50 -0400
-Date: Sun, 7 Jul 2013 16:40:35 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 17/20] rt2x00: rt2800lib: enable RF3053
- support
-Message-ID: <20130707144035.GQ2073@localhost.localdomain> (sfid-20130707_163752_615034_1A6138FE)
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
- <1372664879-18474-18-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372664879-18474-18-git-send-email-juhosg@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:49919 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755882Ab3GKIx1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 04:53:27 -0400
+Message-ID: <1373532803.8201.3.camel@jlt4.sipsolutions.net> (sfid-20130711_105330_121025_5084456D)
+Subject: Re: [WT PATCH 3/6] wireless: Add memory usage debugging.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 11 Jul 2013 10:53:23 +0200
+In-Reply-To: <1372546738-25827-3-git-send-email-greearb@candelatech.com> (sfid-20130630_005936_101807_5C11E16E)
+References: <1372546738-25827-1-git-send-email-greearb@candelatech.com>
+	 <1372546738-25827-3-git-send-email-greearb@candelatech.com>
+	 (sfid-20130630_005936_101807_5C11E16E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 01, 2013 at 09:47:56AM +0200, Gabor Juhos wrote:
-> Support for the RF3053 has been implemented in
-> the previous changes, so it is safe to mark it
-> supported in the driver.
+On Sat, 2013-06-29 at 15:58 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> The bss objects are reference counted, and the ies
+> are also tricky to keep track of.  Add module option to
+> track allocation and freeing of the ies and bss objects,
+> and add debugfs files to show the current objects.
+
+I still think this is too intrusive, not in terms of runtime but code
+maintenance penalty, so I'm not taking this.
+
+johannes
+
