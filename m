@@ -1,36 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31744 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62115 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932962Ab3GVQRE (ORCPT
+	with ESMTP id S1751973Ab3GKJiD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 12:17:04 -0400
-Date: Mon, 22 Jul 2013 09:17:01 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>, <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<wil6210@qca.qualcomm.com>, Stable <stable@vger.kernel.org>,
-	Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: [PATCH] ath: wil6210: Fix build error
-Message-ID: <20130722161554.GR17130@pogo> (sfid-20130722_181718_357649_F4B2FE7D)
-References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net>
- <1958736.oRuXAUfNGd@lx-vladimir>
+	Thu, 11 Jul 2013 05:38:03 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH] ath10k: Fix crash when using v1 hardware.
+References: <1372804925-1701-1-git-send-email-greearb@candelatech.com>
+	<51D35D58.5090507@candelatech.com>
+Date: Thu, 11 Jul 2013 12:37:55 +0300
+In-Reply-To: <51D35D58.5090507@candelatech.com> (Ben Greear's message of "Tue,
+	02 Jul 2013 16:08:08 -0700")
+Message-ID: <87txk15te4.fsf@kamboji.qca.qualcomm.com> (sfid-20130711_113806_642638_EFE44867)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1958736.oRuXAUfNGd@lx-vladimir>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 21, 2013 at 10:06:31AM +0300, Vladimir Kondratiev wrote:
-> Hmm, I have no warning for this with neither 3.10 nor 3.11 kernel version; but
-> patch is correct, and here is my
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Ben Greear <greearb@candelatech.com> writes:
 
-If you agree with a patch you don't say you Sign-off-by it as well,
-you say Acked-by. The Signed-off-by tag has a very specific meaning
-from development to a maintainer's hands, and its definition is on
-the Developer Certificate or Origin.
+> Actually, I have no idea what type of hardware this is.  It was
+> suggested earlier to me that this AP had a v1 hardware in it, but
+> lspci shows this fairly unpromising thing, and the ath10k driver
+> appears to call 003c the V2 hardware....
+>
+> 05:00.0 Network controller: Atheros Communications Inc. Device 003c (rev ff) (prog-if ff)
+> 	!!! Unknown header type 7f
+> 	Kernel modules: ath10k_pci
 
-So in this case Acked-by is better.
+That unknown header type looks scary. I'm starting to suspect even more
+that you have a hw problem of some sort.
 
-  Luis
+-- 
+Kalle Valo
