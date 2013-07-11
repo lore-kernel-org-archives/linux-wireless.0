@@ -1,119 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lmv.inov.pt ([146.193.64.2]:43598 "EHLO lmv.inov.pt"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932153Ab3GKNeH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 09:34:07 -0400
-Message-ID: <51DEB436.9000300@inov.pt> (sfid-20130711_153436_446230_F55EB86B)
-Date: Thu, 11 Jul 2013 14:33:42 +0100
-From: =?UTF-8?B?Sm9zw6kgTWlndWVsIEdvbsOnYWx2ZXM=?=
-	<jose.goncalves@inov.pt>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17335 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610Ab3GKJg0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 05:36:26 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH] ath10k:  Fix crash when using v1 hardware.
+References: <1372804925-1701-1-git-send-email-greearb@candelatech.com>
+Date: Thu, 11 Jul 2013 12:36:17 +0300
+In-Reply-To: <1372804925-1701-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Tue, 2 Jul 2013 15:42:05
+	-0700")
+Message-ID: <87y59d5tgu.fsf@kamboji.qca.qualcomm.com> (sfid-20130711_113630_869237_1C61FCEF)
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
-Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
-References: <51DB0ACC.7050800@inov.pt>     <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>     <51DB4195.8090103@inov.pt>     <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>     <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>     <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>     <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>     <51DC0E7C.9080306@inov.pt>     <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>     <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>    <51DD54D4.6090502@inov.pt> <51DD8C20.7010900@inov.pt>   <1373476663.8385.28.camel@cumari.coelho.fi> <51DD9E6C.5060008@inov.pt>  <1373488063.8385.31.camel@cumari.coelho.fi> <51DEA05A.5020401@inov.pt> <1373549359.8385.36.camel@cumari.coelho.fi>
-In-Reply-To: <1373549359.8385.36.camel@cumari.coelho.fi>
-Content-Type: multipart/mixed;
- boundary="------------040305090504060605050905"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040305090504060605050905
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+greearb@candelatech.com writes:
 
-On 11-07-2013 14:29, Luciano Coelho wrote:
-> On Thu, 2013-07-11 at 13:08 +0100, José Miguel Gonçalves wrote:
->>
->> I've setup my Linuc PC as a sniffer and yes I see a lot of of authentication
->> frames on the air when I try to associate with my open AP (Android phone).
->>
->> I've repeated the process with a TP-Link dongle and I see a clean 802.11
->> association sequence.
->>
->> What I found strange is that I don't see "probe request" frames on the wl12xx
->> captured frames, it starts directly with an "authentication" frame, when with the
->> TP-Link dongle (ath9k_htc driver) the first frame sent by is a "probe request"!
-> Usually the connection will start with a probe request, but if there is
-> a response in the cache, we may skip it.  In any case, this is probably
-> happening because your sniffer is missing those frames (which again
-> points to problems with RF).
+> From: Ben Greear <greearb@candelatech.com>
 >
+> I put a v1 NIC from an TP-LINK AC 1750 AP in
+> a 64-bit PC, and the OS crashes on bootup.  I'm not
+> sure how broken my hardware is (possibly completely non
+> functional), but at least with this patch it will no longer
+> crash the OS.  Not sure it ever got far enough to try,
+> but I also do not have firmware for the NIC.
 >
->> I can provide the Wirehsark capture files. What is the best way to send them
->> through the mailing list?
-> Cut only the portion that matters, so the file is small and gzip it.
-> Small files can be sent as attachments to the list.
+> With this patch I get this info on module load:
 >
+> ath10k_pci 0000:05:00.0: BAR 0: assigned [mem 0xf4400000-0xf45fffff 64bit]
+> ath10k_pci 0000:05:00.0: BAR 0: error updating (0xf4400004 != 0xffffffff)
+> ath10k_pci 0000:05:00.0: BAR 0: error updating (high 0x000000 != 0xffffffff)
+> ath10k_pci 0000:05:00.0: Refused to change power state, currently in D3
+> ath10k: MSI-X interrupt handling (8 intrs)
+> ath10k: Unable to wakeup target
+> ath10k: target takes too long to wake up (awake count 1)
+> ath10k: src_ring ffff88020c0d0a00:  write_index is out of bounds: 4294967295  nentries_mask: 15.
+> ath10k: dest_ring ffff88020db2c000:  write_index is out of bounds: 4294967295  nentries_mask: 511.
+> ath10k: dest_ring ffff880210d56400:  write_index is out of bounds: 4294967295  nentries_mask: 31.
+> ath10k: src_ring ffff880210d57600:  write_index is out of bounds: 4294967295  nentries_mask: 31.
+> ath10k: src_ring ffff88020fe70000:  write_index is out of bounds: 4294967295  nentries_mask: 2047.
+> ath10k: src_ring ffff880212989b40:  write_index is out of bounds: 4294967295  nentries_mask: 1.
+> ath10k: dest_ring ffff880212989960:  write_index is out of bounds: 4294967295  nentries_mask: 1.
+> ath10k: Failed to get pcie state addr: -5
+> ath10k: early firmware event indicated
+> ------------[ cut here ]------------
+> WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath10k/ce.c:771 ath10k_ce_per_engine_service+0x53/0x1b4 [ath10k_pci]()
+> ....
+> (it hits the warning case about 5-6 times and then seems to quiesce OK).
 
-Here they go...
+I haven't seen this myself so it might be a hw problem, but difficult to
+say.
 
-José Gonçalves
+> +	/* On v1 hardware at least, setup can fail, causing ce_id_state to
+> +	 * be cleaned up, but this method is still called a few times.  Check
+> +	 * for NULL here so we don't crash.  Probably a better fix is to stop
+> +	 * the ath10k_pci_ce_tasklet sooner.
+> +	 */
+> +	if (WARN_ONCE(!ce_state, "ce_id_to_state[%i] is NULL\n", ce_id))
+> +		return;
+> +
+> +	ctrl_addr = ce_state->ctrl_addr;
+> +
 
---------------040305090504060605050905
-Content-Type: application/x-gzip;
- name="ath9k_htc.pcap.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="ath9k_htc.pcap.gz"
+The tests you add look like workarounds. I would prefer to try fix these
+by going to the source of the problem. Maybe we should add
+ath10k_pci_wake() and ath10k_do_pci_wake()?
 
-H4sICL6z3lEAA2F0aDlrX2h0Yy5wY2FwALtyeNNCJgYWBhj4/5+BoR5Ia026F+j3kYMhCchO
-AstIMeh7MDAsnHZZHcQTYMrhXMCwEchyAOsCgQ0eVRP+l0DYBiwMnI55KUX5mSmOAYwMzIxs
-ulJ5gtL/GRCAEcHMVWZ9BLKxzJaToRDIL0Sy8f8jZBvXAlkBDFaMELu2sP/0PJMKIT9wPLk4
-B6wvhYERxXaOppbuaSoGHjlAV2gxMugzMhix8AhJJNzlZBCQYAJrUf2daaANdMAvVVYGDSBf
-A8kBV3rvITlgPZB1BYghDnj+/ckvkD4PPVYGd6CoO5K+M1OR9a0D6cHq8AOcDAwgVyA5Z/3i
-rPMgY7n6WBlCgfxQJGMLviIbuwkaghCjkA0PYFFkAQYxcjgwsXCLAT2uYsRi4JGQU5Z7zwJk
-Sc4kVoZwoBHhyG7/eQ8tmgWwuv0CJzCoGRgPIMIYI2j7op1tTYHW2HewMlgA+RZI1vi2lWsg
-rNkAZB3A6hcGBmaGp8//CYDM2dSJGUW97ejmoEYRAPDHiirmAgAA
---------------040305090504060605050905
-Content-Type: application/x-gzip;
- name="wl12xx.pcap.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="wl12xx.pcap.gz"
+Can you enable few debug logs, like ATH10K_DBG_PCI, and post them? That
+would give more hint there things are going wrong.
 
-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
---------------040305090504060605050905--
+-- 
+Kalle Valo
