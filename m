@@ -1,69 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:53795 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754943Ab3GWHuO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 03:50:14 -0400
-Received: by mail-oa0-f52.google.com with SMTP id g12so10336610oah.25
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jul 2013 00:50:13 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:2748 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750915Ab3GKRIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 13:08:46 -0400
+Message-ID: <51DEE68F.4060705@broadcom.com> (sfid-20130711_190851_212968_2ED7B3F6)
+Date: Thu, 11 Jul 2013 19:08:31 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <51EE3018.4000507@hauke-m.de>
-References: <1374546675-384-1-git-send-email-linville@tuxdriver.com>
-	<51EE3018.4000507@hauke-m.de>
-Date: Tue, 23 Jul 2013 09:50:13 +0200
-Message-ID: <CACna6rwU6-jC_cnU=vGv2u2D11aUCKNZN-YOuM9GYt_R9E79oA@mail.gmail.com> (sfid-20130723_095021_018954_D777D06E)
-Subject: Re: [PATCH] Make BCMA_HOST_SOC depend on BCM47XX
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "Sarah Sharp" <sarah.a.sharp@linux.intel.com>
+cc: "Xenia Ragiadakou" <burzalodowa@gmail.com>,
+	"OPW Kernel Interns List" <opw-kernel-interns@googlegroups.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"Kalle Valo" <kvalo@qca.qualcomm.com>
+Subject: Re: Help adding trace events to xHCI
+References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos>
+In-Reply-To: <20130711162002.GA5240@xanatos>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/7/23 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 07/23/2013 04:31 AM, John W. Linville wrote:
->> From: "John W. Linville" <linville@tuxdriver.com>
->>
->> Otherwise, 'make allyesconfig' generates this:
->>
->>   CC [M]  drivers/net/ethernet/broadcom/bgmac.o
->> drivers/net/ethernet/broadcom/bgmac.c:19:27: fatal error:
->> bcm47xx_nvram.h: No such file or directory
->> compilation terminated.
->> make[4]: *** [drivers/net/ethernet/broadcom/bgmac.o] Error 1
->> make[3]: *** [drivers/net/ethernet/broadcom] Error 2
->> make[2]: *** [drivers/net/ethernet] Error 2
->> make[1]: *** [drivers/net] Error 2
->> make: *** [drivers] Error 2
->>
->> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> ---
->>  drivers/bcma/Kconfig | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
->> index 7c081b3..a2bdab1 100644
->> --- a/drivers/bcma/Kconfig
->> +++ b/drivers/bcma/Kconfig
->> @@ -36,7 +36,7 @@ config BCMA_DRIVER_PCI_HOSTMODE
->>
->>  config BCMA_HOST_SOC
->>       bool "Support for BCMA in a SoC"
->> -     depends on BCMA
->> +     depends on BCMA && BCM47XX
->>       help
->>         Host interface for a Broadcom AIX bus directly mapped into
->>         the memory. This only works with the Broadcom SoCs from the
->>
-> I think bgmac should depend on BCM47XX.
+On 07/11/2013 06:20 PM, Sarah Sharp wrote:
+> On Mon, Jul 08, 2013 at 09:17:59PM +0300, Xenia Ragiadakou wrote:
 
-Yeah, I'm wondering about that.
+>> But when there are other function calls before the callback call, I don't
+>> no why but i cannot track anymore the position of the args following the
+>> fmt argumenent in the stack with the pointer to fmt.
+>
+> I'm actually wondering if the call to ath6kl_printk is somehow necessary
+> in order to be able to pass arguments on the stack.  Perhaps you should
+> try defining a similar function for xHCI and see if that helps?
 
-It's bgmac that calls BCM47XX specific functions (nvram).
+The ath6klk_printk() is not related to the trace function. It is a 
+separate code path to get the message in the kernel log. I have seen 
+these constructs before (and implemented it in brcmfmac) but it seems 
+not very efficient when tracing as the printk can affect run-time behaviour.
 
-On the other hand it doesn't make much sense to use BCMA_HOST_SOC on
-anything else than BCM47XX, does it?
+> int ath6kl_printk(const char *level, const char *fmt, ...)
+> {
+> 	struct va_format vaf;
+> 	va_list args;
+> 	int rtn;
+>
+> 	va_start(args, fmt);
+>
+> 	vaf.fmt = fmt;
+> 	vaf.va = &args;
+>
+> 	rtn = printk("%sath6kl: %pV", level, &vaf);
+>
+> 	va_end(args);
+>
+> 	return rtn;
+> }
+> EXPORT_SYMBOL(ath6kl_printk);
+>
+>> Anyway, something dirty like that will not enter the kernel but i will try
+>> to do stack debugging on an example program to see why that happens.
+>
+> I would suggest just copy-pasting parts of the ath6kl trace code into
+> the xHCI driver, and changing one of the xhci_dbg() calls to use that
+> code, and see if it works.  If it doesn't work, send out an RFC patch
+> (using the Cc list I've used), and we'll try to figure out what's going
+> wrong.
 
--- 
-Rafał
+The biggest challenge in adding tracepoints is identifying what you want 
+to trace. While tracing debug messages can be convenient the real 
+strength is in tracing code artifacts like for USB the thing that comes 
+to my mind first is defining tracepoint for the urb and there are 
+probably other internals that are informational.
+
+Regards,
+Arend
+
