@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:35298 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCWF (ORCPT
+Received: from smtp04.smtpout.orange.fr ([80.12.242.126]:19981 "EHLO
+	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904Ab3GKGbr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:22:05 -0400
-Received: by mail-pa0-f53.google.com with SMTP id tj12so1407126pac.40
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:03 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 38/53] wireless-regdb: TR, Turkey - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:27 -0700
-Message-Id: <1374027522-18488-39-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042209_392857_0D77391B)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 11 Jul 2013 02:31:47 -0400
+Message-ID: <51DE514E.7080309@free.fr> (sfid-20130711_083150_873295_055AEA3D)
+Date: Thu, 11 Jul 2013 08:31:42 +0200
+From: Eric Valette <eric.valette@free.fr>
+Reply-To: eric.valette@free.fr
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ralink 3290: still lots of misc errors reported by Iwconfig with
+ 3.10 + HD streaming on WiFi fails
+References: <51DBEB0C.6040704@Free.fr> <20130709142202.GB3681@redhat.com> <51DC1F9D.7000705@Free.fr> <51DC259D.9010505@Free.fr> <20130710113158.GA3887@redhat.com>
+In-Reply-To: <20130710113158.GA3887@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 10/07/2013 13:31, Stanislaw Gruszka wrote:
+> On Tue, Jul 09, 2013 at 05:00:45PM +0200, Eric Valette wrote:
+>> On 07/09/2013 04:35 PM, Eric Valette wrote:
+>>
+>>>> Do you mean that 3.10 perform better than 3.9.9 ? I do not see any
+>>>> rt2x00 fixes between 3.9 and 3.10 that are not yet applied on 3.9.9.
+>>>> I can see only some cleanups and new hardware support patches.
+>>>
+>>>  From memory I think I had a lot of reported TX error with 3.9.9 and
+>>> they are now gone with 3.10 but the number of misc error reported by
+>>> iwconfig is still high with 3.10. But you are right the fix for TX is
+>>> still in wireless git and does not seem to be in 3.10. As I checked
+>>> several git trees I mist have been confused...
+>>
+>> Unless I'm really tired, this patch is in 3.10 and not in 3.9.9 :
+>>
+>> http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-testing.git/patch/drivers/net/wireless/rt2x00?id=8857d6dc77e4e3afeee2f33c49597010130ed858
+>
+> You have right, I missed that one. It's on 3.10 but not on 3.9. We could
+> post it to 3.9 -stable, but since 3.10 is now realised, 3.9 will become
+> end of life probably.
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and also adds a new frequency 5 GHz range:
 
-  * 5490 - 5710 MHz
+Usually there is a small overlap at least until .1 or .2. For me it 
+fixes reported TX errors but cannot test if it also fixes link 
+quality/throughput due to lack of AMD/ati drivers.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+Thanks again for your time.
 
-Quoting:
+--eric
 
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index f19f637..4f2d4e7 100644
---- a/db.txt
-+++ b/db.txt
-@@ -746,8 +746,9 @@ country TN:
- 
- country TR: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (N/A, 20)
--	(5250 - 5330 @ 20), (N/A, 20), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-  
--- 
-1.7.10.4
 
