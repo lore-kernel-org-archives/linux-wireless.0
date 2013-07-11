@@ -1,161 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15044 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:55501 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751539Ab3GXJ4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jul 2013 05:56:43 -0400
-Date: Wed, 24 Jul 2013 11:59:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	netdev@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-	Stephen Hemminger <shemminger@vyatta.com>, rjones@redhat.com,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: hung task while plugging in cfg80211
-Message-ID: <20130724095911.GA1637@redhat.com> (sfid-20130724_115654_820212_88D5994C)
-References: <20130712074911.01b5945a@corrin.poochiereds.net>
+	id S1756463Ab3GKTAf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 15:00:35 -0400
+Date: Thu, 11 Jul 2013 12:00:35 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Xenia Ragiadakou <burzalodowa@gmail.com>,
+	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: Help adding trace events to xHCI
+Message-ID: <20130711190035.GD5240@xanatos> (sfid-20130711_210041_687664_007C6272)
+References: <51DB0257.1010709@gmail.com>
+ <20130711162002.GA5240@xanatos>
+ <1373562533.8201.33.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130712074911.01b5945a@corrin.poochiereds.net>
+In-Reply-To: <1373562533.8201.33.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 12, 2013 at 07:49:11AM -0400, Jeff Layton wrote:
-> I updated the kernel on my rawhide KVM guest, and noticed that the
-> ethernet interface wasn't coming up at all. While poking around, I saw
-> this stack trace pop up:
+On Thu, Jul 11, 2013 at 07:08:53PM +0200, Johannes Berg wrote:
+> [also adding Steven, he's the tracing expert after all :-)]
 > 
-> Jul 12 07:29:25 rawhide kernel: [  241.156196] INFO: task modprobe:501 blocked for more than 120 seconds.
-> Jul 12 07:29:25 rawhide kernel: [  241.157222] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> Jul 12 07:29:25 rawhide kernel: [  241.158379] modprobe        D ffff880118c526e0  4584   501    500 0x00000080
-> Jul 12 07:29:25 rawhide kernel: [  241.159458]  ffff8800d10c3ba8 0000000000000046 00000000001d5300 ffff8800d10c3fd8
-> Jul 12 07:29:25 rawhide kernel: [  241.160644]  ffff8800d10c3fd8 00000000001d5300 ffff8800d2ae4dc0 ffff8800d2ae4dc0
-> Jul 12 07:29:25 rawhide kernel: [  241.161875]  ffffffff81d0bfa0 ffffffff81d0bfa8 ffffffff00000000 ffffffff81d0bff0
-> Jul 12 07:29:25 rawhide kernel: [  241.163096] Call Trace:
-> Jul 12 07:29:25 rawhide kernel: [  241.163460]  [<ffffffff817377e9>] schedule+0x29/0x70
-> Jul 12 07:29:25 rawhide kernel: [  241.164235]  [<ffffffff817392ad>] rwsem_down_write_failed+0xed/0x1a0
-> Jul 12 07:29:25 rawhide kernel: [  241.165489]  [<ffffffff810bb600>] ? update_cpu_load_active+0xb0/0xb0
-> Jul 12 07:29:25 rawhide kernel: [  241.166267]  [<ffffffff8137d503>] call_rwsem_down_write_failed+0x13/0x20
-> Jul 12 07:29:25 rawhide kernel: [  241.166760]  [<ffffffff81736aad>] ? down_write+0x9d/0xb2
-> Jul 12 07:29:25 rawhide kernel: [  241.167189]  [<ffffffff8162d975>] ? genl_lock_all+0x15/0x30
-> Jul 12 07:29:25 rawhide kernel: [  241.167603]  [<ffffffff8162d975>] genl_lock_all+0x15/0x30
+> Hi Xenia, Sarah, all,
+> 
+> > (Mentors and wireless folks, we're struggling a bit with adding trace
+> > events to the xHCI USB host controller driver.  I'm trying to look at
+> > the ath6kl driver trace events as an example.  We could use some help
+> > and/or advice.)
+> 
+> Those were in turn modelled on mac80211, cfg80211 and/or iwlwifi, I
+> think; might be worth also looking there. In general though, it's all
+> pretty similar.
+> 
+> > > lets say that we want the tracepoint function to have the prototype:
+> > > 
+> > > void trace_cmd_address_device(const char *fmt, ...).
+> 
+> I'm not sure this is possible. I think we (wireless) do this with
+> 
+> void trace_cmd_address_device(struct va_format *vaf)
+> 
+> instead only.
+> 
+> Note that there's no easy way to dynamically allocate the right amount
+> of space in the ringbuffer, or at least I haven't found one. We
+> therefore have a static size, which is somewhat inefficient.
 
-I reproduced that on qemu-kvm with rawhide LiveCD. Below more
-information gathered using sysrq:
+Yes, that does look inefficient.  Would it make sense to add a couple
+different trace event classes for different sized buffers, and call
+those trace classes conditionally, based on the size of the formatted
+string?  Or would that be too much of a mess.
 
-(qemu) [ 2458.110724] SysRq : Show Locks Held
-[ 2458.111347] 
-[ 2458.111347] Showing all locks held in the system:
-[ 2458.111347] 1 lock held by NetworkManager/582:
-[ 2458.111347]  #0:  (cb_lock){++++++}, at: [<ffffffff8162bc79>] genl_rcv+0x19/0x40
-[ 2458.111347] 1 lock held by modprobe/603:
-[ 2458.111347]  #0:  (cb_lock){++++++}, at: [<ffffffff8162baa5>] genl_lock_all+0x15/0x30
-[ 2458.111347] 
-[ 2458.111347] =============================================
-[ 2458.111347] 
+Either way, it's only inefficient when trace events are turned on.  We
+don't expect xHCI debugging to be enabled by users very often.  I do
+expect that there will be a lot of debugging when it gets turned on.
+Can userspace increase the size of the ring buffer?  How much space do
+we have by default?
 
-(qemu) sendkey alt-sysrq-w
-(qemu) [ 2461.579457] SysRq : Show Blocked State
-[ 2461.580103]   task                        PC stack   pid father
-[ 2461.580103] NetworkManager  D ffff880034b84500  4040   582      1 0x00000080
-[ 2461.580103]  ffff8800197ff720 0000000000000046 00000000001d5340 ffff8800197fffd8
-[ 2461.580103]  ffff8800197fffd8 00000000001d5340 ffff880019631700 7fffffffffffffff
-[ 2461.580103]  ffff8800197ff880 ffff8800197ff878 ffff880019631700 ffff880019631700
-[ 2461.580103] Call Trace:
-[ 2461.580103]  [<ffffffff817355f9>] schedule+0x29/0x70
-[ 2461.580103]  [<ffffffff81731ad1>] schedule_timeout+0x1c1/0x360
-[ 2461.580103]  [<ffffffff810e69eb>] ? mark_held_locks+0xbb/0x140
-[ 2461.580103]  [<ffffffff817377ac>] ? _raw_spin_unlock_irq+0x2c/0x50
-[ 2461.580103]  [<ffffffff810e6b6d>] ? trace_hardirqs_on_caller+0xfd/0x1c0
-[ 2461.580103]  [<ffffffff81736398>] wait_for_completion_killable+0xe8/0x170
-[ 2461.580103]  [<ffffffff810b7fa0>] ? wake_up_state+0x20/0x20
-[ 2461.580103]  [<ffffffff81095825>] call_usermodehelper_exec+0x1a5/0x210
-[ 2461.580103]  [<ffffffff817362ed>] ? wait_for_completion_killable+0x3d/0x170
-[ 2461.580103]  [<ffffffff81095cc3>] __request_module+0x1b3/0x370
-[ 2461.580103]  [<ffffffff810e6b6d>] ? trace_hardirqs_on_caller+0xfd/0x1c0
-[ 2461.580103]  [<ffffffff8162c5c9>] ctrl_getfamily+0x159/0x190
-[ 2461.580103]  [<ffffffff8162d8a4>] genl_family_rcv_msg+0x1f4/0x2e0
-[ 2461.580103]  [<ffffffff8162d990>] ? genl_family_rcv_msg+0x2e0/0x2e0
-[ 2461.580103]  [<ffffffff8162da1e>] genl_rcv_msg+0x8e/0xd0
-[ 2461.580103]  [<ffffffff8162b729>] netlink_rcv_skb+0xa9/0xc0
-[ 2461.580103]  [<ffffffff8162bc88>] genl_rcv+0x28/0x40
-[ 2461.580103]  [<ffffffff8162ad6d>] netlink_unicast+0xdd/0x190
-[ 2461.580103]  [<ffffffff8162b149>] netlink_sendmsg+0x329/0x750
-[ 2461.580103]  [<ffffffff815db849>] sock_sendmsg+0x99/0xd0
-[ 2461.580103]  [<ffffffff810bb58f>] ? local_clock+0x5f/0x70
-[ 2461.580103]  [<ffffffff810e96e8>] ? lock_release_non_nested+0x308/0x350
-[ 2461.580103]  [<ffffffff815dbc6e>] ___sys_sendmsg+0x39e/0x3b0
-[ 2461.580103]  [<ffffffff810565af>] ? kvm_clock_read+0x2f/0x50
-[ 2461.580103]  [<ffffffff810218b9>] ? sched_clock+0x9/0x10
-[ 2461.580103]  [<ffffffff810bb2bd>] ? sched_clock_local+0x1d/0x80
-[ 2461.580103]  [<ffffffff810bb448>] ? sched_clock_cpu+0xa8/0x100
-[ 2461.580103]  [<ffffffff810e33ad>] ? trace_hardirqs_off+0xd/0x10
-[ 2461.580103]  [<ffffffff810bb58f>] ? local_clock+0x5f/0x70
-[ 2461.580103]  [<ffffffff810e3f7f>] ? lock_release_holdtime.part.28+0xf/0x1a0
-[ 2461.580103]  [<ffffffff8120fec9>] ? fget_light+0xf9/0x510
-[ 2461.580103]  [<ffffffff8120fe0c>] ? fget_light+0x3c/0x510
-[ 2461.580103]  [<ffffffff815dd1d2>] __sys_sendmsg+0x42/0x80
-[ 2461.580103]  [<ffffffff815dd222>] SyS_sendmsg+0x12/0x20
-[ 2461.580103]  [<ffffffff81741ad9>] system_call_fastpath+0x16/0x1b
-[ 2461.580103] modprobe        D ffff88000f2c8000  4632   603    602 0x00000080
-[ 2461.580103]  ffff88000f04fba8 0000000000000046 00000000001d5340 ffff88000f04ffd8
-[ 2461.580103]  ffff88000f04ffd8 00000000001d5340 ffff8800377d4500 ffff8800377d4500
-[ 2461.580103]  ffffffff81d0b260 ffffffff81d0b268 ffffffff00000000 ffffffff81d0b2b0
-[ 2461.580103] Call Trace:
-[ 2461.580103]  [<ffffffff817355f9>] schedule+0x29/0x70
-[ 2461.580103]  [<ffffffff81736d4d>] rwsem_down_write_failed+0xed/0x1a0
-[ 2461.580103]  [<ffffffff810bb200>] ? update_cpu_load_active+0x10/0xb0
-[ 2461.580103]  [<ffffffff8137b473>] call_rwsem_down_write_failed+0x13/0x20
-[ 2461.580103]  [<ffffffff8173492d>] ? down_write+0x9d/0xb2
-[ 2461.580103]  [<ffffffff8162baa5>] ? genl_lock_all+0x15/0x30
-[ 2461.580103]  [<ffffffff8162baa5>] genl_lock_all+0x15/0x30
-[ 2461.580103]  [<ffffffff8162cbb3>] genl_register_family+0x53/0x1f0
-[ 2461.580103]  [<ffffffffa01dc000>] ? 0xffffffffa01dbfff
-[ 2461.580103]  [<ffffffff8162d650>] genl_register_family_with_ops+0x20/0x80
-[ 2461.580103]  [<ffffffffa01dc000>] ? 0xffffffffa01dbfff
-[ 2461.580103]  [<ffffffffa017fe84>] nl80211_init+0x24/0xf0 [cfg80211]
-[ 2461.580103]  [<ffffffffa01dc000>] ? 0xffffffffa01dbfff
-[ 2461.580103]  [<ffffffffa01dc043>] cfg80211_init+0x43/0xdb [cfg80211]
-[ 2461.580103]  [<ffffffff810020fa>] do_one_initcall+0xfa/0x1b0
-[ 2461.580103]  [<ffffffff8105cb93>] ? set_memory_nx+0x43/0x50
-[ 2461.580103]  [<ffffffff810f75af>] load_module+0x1c6f/0x27f0
-[ 2461.580103]  [<ffffffff810f2c90>] ? store_uevent+0x40/0x40
-[ 2461.580103]  [<ffffffff810f82c6>] SyS_finit_module+0x86/0xb0
-[ 2461.580103]  [<ffffffff81741ad9>] system_call_fastpath+0x16/0x1b
-[ 2461.580103] Sched Debug Version: v0.10, 3.11.0-0.rc1.git4.1.fc20.x86_64 #1
+> > The ath driver defines a new trace event class, ath6kl_log_event.
+> > Various types of tracepoints, like trace_ath6kl_log_warn, use that event
+> > class.  Wrappers like ath6kl_warn() call those trace points, passing it
+> > a struct va_format on the stack:
+> > 
+> > int ath6kl_warn(const char *fmt, ...)
+> > {
+> >         struct va_format vaf = {
+> >                 .fmt = fmt,
+> >         };
+> >         va_list args;
+> >         int ret;
+> > 
+> >         va_start(args, fmt);
+> >         vaf.va = &args;
+> >         ret = ath6kl_printk(KERN_WARNING, "%pV", &vaf);
+> 
+> Note also on older kernels you used to have to do va_copy() here because
+> "%pV" didn't do it by itself. Guess you don't care though, but I
+> sometimes have to worry about backporting :-)
 
-So call user space to load cfg80211 module (alias
-net-pf-16-proto-16-family-nl80211) from ctrl_getfamily() with read taken
-cb_lock semaphore. That deadlock in modprobe process in
-genl_register_family() when try to down_write cb_lock.
+The trace events are unlikely to get backported, so I'm not concerned
+about that.
 
-This is consequence of commit:
+> > int xhci_debug_address(const char *fmt, ...)
+> 
+> This confuses me somewhat -- why is it called "xhci_debug_address()"
+> when it takes arbitrary parameters? Where's the "address" part?
 
-commit fb4e156886ce6e8309e912d8b370d192330d19d3
-Author: Marcel Holtmann <marcel@holtmann.org>
-Date:   Sun Apr 28 16:22:06 2013 -0700
+It's debugging the xHCI Address command output.  Depending on the status
+of the command, we print different statement in the xHCI code.  E.g. we
+print when the command times out, or finishes with an error status
+because there was a USB transfer error on the bus.
 
-    nl80211: Add generic netlink module alias for cfg80211/nl80211
+We can work on better names later. :)
 
-I prepared a possible fix for that (patch below), but I'm not sure if it
-do right thing, it can cause other oddity, please test (with
-CONFIG_LOCKDEP compiled). I think I would prefer rather remove
-autoloading genetlink modules from kernel or use just one lock
-in instead of two cb_lock & genl_mutex .
+> > DEFINE_EVENT(xhci_log_event, xhci_dbg_address,
+> >              TP_PROTO(struct va_format *vaf),
+> >              TP_ARGS(vaf)
+> > );
+> > 
+> > DECLARE_EVENT_CLASS(xhci_log_event,
+> >         TP_PROTO(struct va_format *vaf),
+> >         TP_ARGS(vaf),
+> >         TP_STRUCT__entry(
+> >                 __dynamic_array(char, msg, ATH6KL_MSG_MAX)
+> 
+> Should probably not be ATH6KL_MSG_MAX :-)
 
-Stanislaw
+Yes.
 
-diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
-index 2fd6dbe..1076fe1 100644
---- a/net/netlink/genetlink.c
-+++ b/net/netlink/genetlink.c
-@@ -877,8 +877,10 @@ static int ctrl_getfamily(struct sk_buff *skb, struct genl_info *info)
- #ifdef CONFIG_MODULES
- 		if (res == NULL) {
- 			genl_unlock();
-+			up_read(&cb_lock);
- 			request_module("net-pf-%d-proto-%d-family-%s",
- 				       PF_NETLINK, NETLINK_GENERIC, name);
-+			down_read(&cb_lock);
- 			genl_lock();
- 			res = genl_family_find_byname(name);
- 		}
+> And this is what I talked about before -- it always allocates the max in
+> the ringbuffer even for really short messages.
+
+Noted.
+
+> > And then code in xhci_address_device() in drivers/usb/host/xhci.c can do
+> > things like:
+> > 
+> > xhci_debug_address(xhci, "Bad Slot ID %d\n", udev->slot_id);
+> 
+> Otherwise this looks about right (you have an xhci argument you didn't
+> declare above, but this is obviously pseudo-code only)
+> 
+> > And we can define similar trace event classes for the various xHCI
+> > commands or ring debugging, so that we can enable or disable trace
+> > points individually for different parts of the xHCI driver.
+> 
+> I think it'd be worth (also) doing more specific tracepoints instead
+> though.
+> 
+> I don't really know what xhci does, but I suppose it has register
+> read/write, maybe packet (urb?) submissions etc. so something like the
+> iwlwifi_io system in drivers/net/wireless/iwlwifi/iwl-devtrace.h might
+> (also) be (more) useful. In iwlwifi I have tracing for
+>  * IO accesses & interrupt notifications/reasons
+>  * commands and TX packets submitted to the device
+>  * notifications/RX packets received from the device
+>  * previously existing debug messages
+
+My initial list of specific trace points was something like:
+
+1. xHCI host initialization and shutdown
+
+2. xHCI memory allocation (dynamic ring resizing, structure alloc, etc)
+
+3. A few individual xHCI host controller command tracepoints:
+   * status only for all completed commands
+   * Address Device command status and output
+   * Configure Endpoint and Evaluate Context output
+   * individual trace points for other xHCI commands
+
+4. Tracepoints for all USB transfer types:
+   * Control TX output (only for non-successful transfers)
+   * Bulk TX
+   * Interrupt TX
+   * Isoc TX
+
+5. URB cancellation
+
+And probably more.  Basically, I want to be able to control what gets
+printed, based on where I think the xHCI bug might be.  Does that sound
+reasonable?
+
+> The message tracing was really more of an after-thought in iwlwifi (and
+> ath6kl as well I guess) because we already had a lot of debug messages
+> and capturing it all together can be useful.
+> 
+> However, tracing all the debug messages is actually fairly expensive, I
+> think in part because of the string formatting and in part because of
+> the always-max allocations in the ringbuffer.
+
+So are there parts of the driver that don't have the debug messages go
+through the trace events code, in order to not fill up the ring buffer?
+
+> > I'm actually wondering if the call to ath6kl_printk is somehow necessary
+> > in order to be able to pass arguments on the stack.
+> 
+> I don't think it is, but formatting the messages *only* for tracing
+> seems a bit odd?
+
+Why is it odd?
+
+Sarah Sharp
