@@ -1,48 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:39011 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752560Ab3GTGMS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Jul 2013 02:12:18 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Solomon Peachy <pizza@shaftnet.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cw1200:  Fix incorrect endianness annotation in a header field
-References: <1374292945-29753-1-git-send-email-pizza@shaftnet.org>
-Date: Sat, 20 Jul 2013 09:12:16 +0300
-In-Reply-To: <1374292945-29753-1-git-send-email-pizza@shaftnet.org> (Solomon
-	Peachy's message of "Sat, 20 Jul 2013 00:02:25 -0400")
-Message-ID: <87fvv9yd33.fsf@purkki.adurom.net> (sfid-20130720_081236_147082_962707C7)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:2156 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755618Ab3GKIQq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 04:16:46 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	Linux Kernel Development <linux-kernel@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: ath10k: mac80211 driver for Qualcomm Atheros 802.11ac CQA98xx devices
+References: <20130710022602.1F6F16609DE@gitolite.kernel.org>
+	<alpine.DEB.2.02.1307101859360.29717@ayla.of.borg>
+Date: Thu, 11 Jul 2013 11:16:34 +0300
+In-Reply-To: <alpine.DEB.2.02.1307101859360.29717@ayla.of.borg> (Geert
+	Uytterhoeven's message of "Wed, 10 Jul 2013 19:12:28 +0200")
+Message-ID: <87sizl7bq5.fsf@kamboji.qca.qualcomm.com> (sfid-20130711_101717_718697_10F68958)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Solomon Peachy <pizza@shaftnet.org> writes:
+Geert Uytterhoeven <geert@linux-m68k.org> writes:
 
-> Note that the driver doesn't directly use this field, but it should be
-> correctly defined in any case.
+> On Wed, 10 Jul 2013, Linux Kernel Mailing List wrote:
+>> --- /dev/null
+>> +++ b/drivers/net/wireless/ath/ath10k/hw.h
 >
-> I'd like to see this in 3.11-rc
-
-Comment referring to releases should be after "---" line so that they
-don't end up in the commit log.
-
-And besides, I don't think this is important enough for -rc. I doubt
-there are users who absolutely need this quickly and this patch can wait
-for the next merge window.
-
-> Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
-> ---
-
-<--- Add the comment here.
-
->  drivers/net/wireless/cw1200/wsm.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>> +#define SUPPORTED_FW_MAJOR	1
+>> +#define SUPPORTED_FW_MINOR	0
+>> +#define SUPPORTED_FW_RELEASE	0
+>> +#define SUPPORTED_FW_BUILD	629
 >
-> diff --git a/drivers/net/wireless/cw1200/wsm.h b/drivers/net/wireless/cw1200/wsm.h
-> index 7afc613..48086e8 100644
-> --- a/drivers/net/wireless/cw1200/wsm.h
-> +++ b/drivers/net/wireless/cw1200/wsm.h
+>> +static int ath10k_check_fw_version(struct ath10k *ar)
+>> +{
+>> +	char version[32];
+>> +
+>> +	if (ar->fw_version_major >= SUPPORTED_FW_MAJOR &&
+>> +	    ar->fw_version_minor >= SUPPORTED_FW_MINOR &&
+>> +	    ar->fw_version_release >= SUPPORTED_FW_RELEASE &&
+>> +	    ar->fw_version_build >= SUPPORTED_FW_BUILD)
+>> +		return 0;
+>
+> My attention got triggered by:
+>
+> drivers/net/wireless/ath/ath10k/core.c: In function ‘ath10k_check_fw_version’:
+> drivers/net/wireless/ath/ath10k/core.c:79: warning: comparison is always true due to limited range of data type
+
+I haven't seen this warning, I guess my compiler is too old.
+
+> as an u16 is always larger or equal than zero. Not much you can do to
+> silence that warning, though.
+
+Too bad, I really would like to keep ath10k warning free. Easier to
+maintain that way.
+
+Does anyone have any nice trick in their sleeves to make this warning go
+away? I guess one ugly option is to change u16 to int.
+
+>
+> However, I don't think the version check is correct.
+> Shouldn't it stop checking later fields if an exact match is found in an
+> earlier field?
+>
+> I.e.
+>
+> 	if (ar->fw_version_major > SUPPORTED_FW_MAJOR ||
+> 	    (ar->fw_version_major == SUPPORTED_FW_MAJOR &&
+> 	     ar->fw_version_minor > SUPPORTED_FW_MINOR) ||
+> 	     ...) { ... }
+>
+> Currently e.g. (major, minor) = (3, 0) is considered older than (2, 1).
+
+Doh, that is indeed wrong. I'll fix that, thanks for spotting this.
+
+> Or perhaps minor is never reset to zero when major is increased? In that
+> case, the check is correct, but IMHO it's a bit silly to split the version
+> number in seperate fields.
+
+No, the firmware engineers are supposed to reset minor version whenever
+major changes.
 
 -- 
 Kalle Valo
