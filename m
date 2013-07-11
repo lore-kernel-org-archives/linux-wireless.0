@@ -1,41 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:47619 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753004Ab3GAHsk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:48:40 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 17/20] rt2x00: rt2800lib: enable RF3053 support
-Date: Mon,  1 Jul 2013 09:47:56 +0200
-Message-Id: <1372664879-18474-18-git-send-email-juhosg@openwrt.org> (sfid-20130701_094851_750727_743E33C2)
-In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:34957 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932245Ab3GKJJn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 05:09:43 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>
+Subject: [PATCH 23/50] BT: bfusb: read_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:46 +0800
+Message-Id: <1373533573-12272-24-git-send-email-ming.lei@canonical.com> (sfid-20130711_111701_729982_E2B4E07C)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support for the RF3053 has been implemented in
-the previous changes, so it is safe to mark it
-supported in the driver.
+Complete() will be run with interrupt enabled, so change to
+read_lock_irqsave().
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>
+Cc: Gustavo Padovan <gustavo@padovan.org>
+Cc: Johan Hedberg <johan.hedberg@gmail.com>
+Cc: linux-bluetooth@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/bluetooth/bfusb.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 0a0f96f..b7fa8f9 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6949,6 +6949,7 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RF3021:
- 	case RF3022:
- 	case RF3052:
-+	case RF3053:
- 	case RF3290:
- 	case RF3320:
- 	case RF3322:
+diff --git a/drivers/bluetooth/bfusb.c b/drivers/bluetooth/bfusb.c
+index 995aee9..2e93501 100644
+--- a/drivers/bluetooth/bfusb.c
++++ b/drivers/bluetooth/bfusb.c
+@@ -186,6 +186,7 @@ static void bfusb_tx_complete(struct urb *urb)
+ {
+ 	struct sk_buff *skb = (struct sk_buff *) urb->context;
+ 	struct bfusb_data *data = (struct bfusb_data *) skb->dev;
++	unsigned long flags;
+ 
+ 	BT_DBG("bfusb %p urb %p skb %p len %d", data, urb, skb, skb->len);
+ 
+@@ -199,14 +200,14 @@ static void bfusb_tx_complete(struct urb *urb)
+ 	else
+ 		data->hdev->stat.err_tx++;
+ 
+-	read_lock(&data->lock);
++	read_lock_irqsave(&data->lock, flags);
+ 
+ 	skb_unlink(skb, &data->pending_q);
+ 	skb_queue_tail(&data->completed_q, skb);
+ 
+ 	bfusb_tx_wakeup(data);
+ 
+-	read_unlock(&data->lock);
++	read_unlock_irqrestore(&data->lock, flags);
+ }
+ 
+ 
+@@ -347,10 +348,11 @@ static void bfusb_rx_complete(struct urb *urb)
+ 	unsigned char *buf = urb->transfer_buffer;
+ 	int count = urb->actual_length;
+ 	int err, hdr, len;
++	unsigned long flags;
+ 
+ 	BT_DBG("bfusb %p urb %p skb %p len %d", data, urb, skb, skb->len);
+ 
+-	read_lock(&data->lock);
++	read_lock_irqsave(&data->lock, flags);
+ 
+ 	if (!test_bit(HCI_RUNNING, &data->hdev->flags))
+ 		goto unlock;
+@@ -392,7 +394,7 @@ static void bfusb_rx_complete(struct urb *urb)
+ 
+ 	bfusb_rx_submit(data, urb);
+ 
+-	read_unlock(&data->lock);
++	read_unlock_irqrestore(&data->lock, flags);
+ 
+ 	return;
+ 
+@@ -406,7 +408,7 @@ resubmit:
+ 	}
+ 
+ unlock:
+-	read_unlock(&data->lock);
++	read_unlock_irqrestore(&data->lock, flags);
+ }
+ 
+ static int bfusb_open(struct hci_dev *hdev)
 -- 
-1.7.10
+1.7.9.5
 
