@@ -1,86 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58449 "EHLO nbd.name"
+Received: from comal.ext.ti.com ([198.47.26.152]:53235 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754930Ab3GaJJO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 05:09:14 -0400
-Message-ID: <51F8D438.7020304@openwrt.org> (sfid-20130731_110922_167247_F29BCE70)
-Date: Wed, 31 Jul 2013 11:09:12 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1755025Ab3GKN32 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 09:29:28 -0400
+Message-ID: <1373549359.8385.36.camel@cumari.coelho.fi> (sfid-20130711_152932_138685_A328DF2F)
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+From: Luciano Coelho <coelho@ti.com>
+To: =?ISO-8859-1?Q?Jos=E9?= Miguel =?ISO-8859-1?Q?Gon=E7alves?=
+	<jose.goncalves@inov.pt>
+CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
+Date: Thu, 11 Jul 2013 16:29:19 +0300
+In-Reply-To: <51DEA05A.5020401@inov.pt>
+References: <51DB0ACC.7050800@inov.pt>
+	    <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
+	    <51DB4195.8090103@inov.pt>
+	    <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
+	    <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>
+	    <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>
+	    <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>
+	    <51DC0E7C.9080306@inov.pt>
+	    <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>
+	    <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>
+	   <51DD54D4.6090502@inov.pt> <51DD8C20.7010900@inov.pt>
+	  <1373476663.8385.28.camel@cumari.coelho.fi> <51DD9E6C.5060008@inov.pt>
+	 <1373488063.8385.31.camel@cumari.coelho.fi> <51DEA05A.5020401@inov.pt>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@redhat.com>,
-	John Greene <jogreene@redhat.com>
-Subject: Re: Fwd: [Bug 989269] Connecting to WLAN causes kernel panic
-References: <bug-989269-351310-C5h8dsuOxB@bugzilla.redhat.com> <51F8CD45.6060108@broadcom.com>
-In-Reply-To: <51F8CD45.6060108@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-07-31 10:39 AM, Arend van Spriel wrote:
-> Hi Felix,
+On Thu, 2013-07-11 at 13:08 +0100, José Miguel Gonçalves wrote:
+> Hi Luca,
 > 
-> How are things in OpenWRT. I wanted to ask you something regarding a 
-> defect I am looking at. Since kernel 3.9 several reports have been made 
-> about a kernel panic in brcmsmac, ie. a divide-by-zero error.
-3.9 was the first kernel to support CCK rates in minstrel_ht as
-fallback (in case the link gets very bad). Not sure if that triggers
-anything weird in brcmsmac.
+> On 10-07-2013 21:27, Luciano Coelho wrote:
+> > I have a text console only system. I could put tcpdump on my system, but I think I
+> > can not monitor wireless traffic with it, or can I?
+> > tcpdump will probably not be enough.  But since this stuff is *wireless*
+> > you can sniff from a different PC.  If you have Linux PC, just plug in
+> > your TP-Link dongle in it, launch wireshark and you should be able to
+> > sniff (unencrypted) connections between other devices easily.
+> >
+> 
+> I've setup my Linuc PC as a sniffer and yes I see a lot of of authentication 
+> frames on the air when I try to associate with my open AP (Android phone).
+> 
+> I've repeated the process with a TP-Link dongle and I see a clean 802.11 
+> association sequence.
+> 
+> What I found strange is that I don't see "probe request" frames on the wl12xx 
+> captured frames, it starts directly with an "authentication" frame, when with the 
+> TP-Link dongle (ath9k_htc driver) the first frame sent by is a "probe request"!
 
-> Debugging the issue shows we end up with a rate with MCS index 110, 
-> which is, well, impossible.
-Did you verify that it comes directly from minstrel_ht, or does it show
-up somewhere further down the chain in brcmsmac?
+Usually the connection will start with a probe request, but if there is
+a response in the cache, we may skip it.  In any case, this is probably
+happening because your sniffer is missing those frames (which again
+points to problems with RF).
 
-> As brcmsmac gets the rate info from 
-> minstrel_ht I was wondering if we have an intergration issue here. I saw 
-> around April patches about new API which may have been in the 3.9 time 
-> frame and something subtly changed things for brcmsmac.
-The new rate API was added in 3.10, not 3.9. It did add bug that caused
-bogus MCS rates. I've sent a patch for this a while back (shortly
-before 3.10 was released), but it was too late to make it into the
-release. I guess we have to wait for it to be applied through stable -
-no idea why that hasn't happened yet. 
 
-Here is the fix:
+> I can provide the Wirehsark capture files. What is the best way to send them 
+> through the mailing list?
 
-commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Fri Jun 28 21:04:35 2013 +0200
+Cut only the portion that matters, so the file is small and gzip it.
+Small files can be sent as attachments to the list.
 
-    mac80211/minstrel_ht: fix cck rate sampling
-    
-    The CCK group needs special treatment to set the right flags and rate
-    index. Add this missing check to prevent setting broken rates for tx
-    packets.
-    
-    Cc: stable@vger.kernel.org # 3.10
-    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 5b2d301..f5aed96 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -804,10 +804,18 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 
- 	sample_group = &minstrel_mcs_groups[sample_idx / MCS_GROUP_RATES];
- 	info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
-+	rate->count = 1;
-+
-+	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
-+		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
-+		rate->idx = mp->cck_rates[idx];
-+		rate->flags = 0;
-+		return;
-+	}
-+
- 	rate->idx = sample_idx % MCS_GROUP_RATES +
- 		    (sample_group->streams - 1) * MCS_GROUP_RATES;
- 	rate->flags = IEEE80211_TX_RC_MCS | sample_group->flags;
--	rate->count = 1;
- }
- 
- static void
+--
+Luca.
 
