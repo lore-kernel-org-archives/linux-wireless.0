@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:41121 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505Ab3GQCU3 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38584 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756259Ab3GKP3j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:20:29 -0400
-Received: by mail-pa0-f42.google.com with SMTP id rl6so1422614pac.29
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:29 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 19/53] wireless-regdb: AT, Austria - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:08 -0700
-Message-Id: <1374027522-18488-20-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043609_476666_4E34DA55)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 11 Jul 2013 11:29:39 -0400
+Message-ID: <51DECF5B.7040002@candelatech.com> (sfid-20130711_172955_239018_73C749A6)
+Date: Thu, 11 Jul 2013 08:29:31 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [WT PATCH 4/6] mac80211: Add per-sdata station hash, and sdata
+ hash.
+References: <1372546738-25827-1-git-send-email-greearb@candelatech.com>  <1372546738-25827-4-git-send-email-greearb@candelatech.com>  (sfid-20130630_005944_514926_D21D8724) <1373532936.8201.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1373532936.8201.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 07/11/2013 01:55 AM, Johannes Berg wrote:
+> On Sat, 2013-06-29 at 15:58 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> Add sdata hash (based on sdata->vif.addr) to local
+>> structure.
+>>
+>> Add sta_vhash (based on sta->sta.addr) to sdata struct.
+>>
+>> Make STA_HASH give a better hash spread more often.
+>>
+>> Use new hashes where we can.  Might be able to completely
+>> get rid of the local->sta_hash, but didn't want to try that
+>> quite yet.
+>>
+>> This significantly improves performance when using lots
+>> of station VIFs connected to the same AP.  It will likely
+>> help other cases where the old hash logic failed to create
+>> a decent spread.
+>
+> I think this is too much code for a corner case unlikely to happen
+> outside of your specific scenario, so I'm not taking this either.
+>
+> I also don't like maintaining two separate hash tables and all that.
+>
+> I'd reconsider if you actually remove the hash entirely, but that'll be
+> tricky to walk the station list and will quite possibly make the RX path
+> there more expensive?
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+Remove local->sta_hash ?
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+Thanks,
+Ben
 
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 47bfc95..fb83f7a 100644
---- a/db.txt
-+++ b/db.txt
-@@ -46,9 +46,9 @@ country AR:
- 
- country AT: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
 -- 
-1.7.10.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
