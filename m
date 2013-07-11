@@ -1,38 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:47387 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752830Ab3GaIzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 04:55:22 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/5] ath10k: fixes
-Date: Wed, 31 Jul 2013 10:55:10 +0200
-Message-ID: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com> (sfid-20130731_105526_612654_4E233B96)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58581 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754774Ab3GKOJS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 10:09:18 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv5 2/4] mac80211: add functions to duplicate a cfg80211_beacon
+Date: Thu, 11 Jul 2013 16:09:06 +0200
+Message-Id: <1373551749-5107-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130711_160924_183421_4F863C05)
+In-Reply-To: <1373551749-5107-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373551749-5107-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+For the channel switch announcement, it is required to set a new beacon
+after the driver arrived on the new channel. The new beacon will be set
+by nl80211, but is required to duplicate the beacon as the original
+memory within the netlink message will be gone.
 
-This is a batch up of a few fixes for ath10k
-driver I had in my queue for some time now.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+Changes to PATCHv2:
+ * allocate only one memory chunk
+---
+ net/mac80211/cfg.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
-
-Michal Kazior (5):
-  ath10k: prevent using invalid ringbuffer indexes
-  ath10k: make sure to use passive scan when n_ssids is 0
-  ath10k: advertise more conservative intf combinations
-  ath10k: zero arvif memory on add_interface()
-  ath10k: fix failpath in MSI-X setup
-
- drivers/net/wireless/ath/ath10k/ce.c  |    5 +++++
- drivers/net/wireless/ath/ath10k/mac.c |   16 +++++++++++++---
- drivers/net/wireless/ath/ath10k/pci.c |    7 ++++++-
- 3 files changed, 24 insertions(+), 4 deletions(-)
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b82fff6..8e6c935 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2775,6 +2775,62 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static struct cfg80211_beacon_data *
++cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
++{
++	struct cfg80211_beacon_data *new_beacon;
++	u8 *pos;
++	int len;
++
++	len = beacon->head_len + beacon->tail_len + beacon->beacon_ies_len +
++	      beacon->proberesp_ies_len + beacon->assocresp_ies_len +
++	      beacon->probe_resp_len;
++
++	new_beacon = kzalloc(sizeof(*new_beacon) + len, GFP_KERNEL);
++	if (!new_beacon)
++		return NULL;
++
++	pos = (u8 *)(new_beacon + 1);
++	if (beacon->head_len) {
++		new_beacon->head_len = beacon->head_len;
++		new_beacon->head = pos;
++		memcpy(pos, beacon->head, beacon->head_len);
++		pos += beacon->head_len;
++	}
++	if (beacon->tail_len) {
++		new_beacon->tail_len = beacon->tail_len;
++		new_beacon->tail = pos;
++		memcpy(pos, beacon->tail, beacon->tail_len);
++		pos += beacon->tail_len;
++	}
++	if (beacon->beacon_ies_len) {
++		new_beacon->beacon_ies_len = beacon->beacon_ies_len;
++		new_beacon->beacon_ies = pos;
++		memcpy(pos, beacon->beacon_ies, beacon->beacon_ies_len);
++		pos += beacon->beacon_ies_len;
++	}
++	if (beacon->proberesp_ies_len) {
++		new_beacon->proberesp_ies_len = beacon->proberesp_ies_len;
++		new_beacon->proberesp_ies = pos;
++		memcpy(pos, beacon->proberesp_ies, beacon->proberesp_ies_len);
++		pos += beacon->proberesp_ies_len;
++	}
++	if (beacon->assocresp_ies_len) {
++		new_beacon->assocresp_ies_len = beacon->assocresp_ies_len;
++		new_beacon->assocresp_ies = pos;
++		memcpy(pos, beacon->assocresp_ies, beacon->assocresp_ies_len);
++		pos += beacon->assocresp_ies_len;
++	}
++	if (beacon->probe_resp_len) {
++		new_beacon->probe_resp_len = beacon->probe_resp_len;
++		beacon->probe_resp = pos;
++		memcpy(pos, beacon->probe_resp, beacon->probe_resp_len);
++		pos += beacon->probe_resp_len;
++	}
++
++	return new_beacon;
++}
++
+ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			     struct ieee80211_channel *chan, bool offchan,
+ 			     unsigned int wait, const u8 *buf, size_t len,
 -- 
-1.7.9.5
+1.7.10.4
 
