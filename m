@@ -1,71 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57575 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757620Ab3GZN0E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 09:26:04 -0400
-Date: Fri, 26 Jul 2013 15:29:09 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: ilw@linux.intel.com
-Subject: [PATCH 3.11] iwlwifi: dvm: fix calling ieee80211_chswitch_done()
- with NULL
-Message-ID: <20130726132909.GA21925@redhat.com> (sfid-20130726_152609_851490_821A0124)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:55666 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932278Ab3GKJJ7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 05:09:59 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Karsten Keil <isdn@linux-pingi.de>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [PATCH 25/50] ISDN: hfcsusb: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:48 +0800
+Message-Id: <1373533573-12272-26-git-send-email-ming.lei@canonical.com> (sfid-20130711_111636_650286_6C11F6B0)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If channel switch is pending and we remove interface we can
-crash like showed below due to passing NULL vif to mac80211:
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-BUG: unable to handle kernel paging request at fffffffffffff8cc
-IP: [<ffffffff8130924d>] strnlen+0xd/0x40
-Call Trace:
- [<ffffffff8130ad2e>] string.isra.3+0x3e/0xd0
- [<ffffffff8130bf99>] vsnprintf+0x219/0x640
- [<ffffffff8130c481>] vscnprintf+0x11/0x30
- [<ffffffff81061585>] vprintk_emit+0x115/0x4f0
- [<ffffffff81657bd5>] printk+0x61/0x63
- [<ffffffffa048987f>] ieee80211_chswitch_done+0xaf/0xd0 [mac80211]
- [<ffffffffa04e7b34>] iwl_chswitch_done+0x34/0x40 [iwldvm]
- [<ffffffffa04f83c3>] iwlagn_commit_rxon+0x2a3/0xdc0 [iwldvm]
- [<ffffffffa04ebc50>] ? iwlagn_set_rxon_chain+0x180/0x2c0 [iwldvm]
- [<ffffffffa04e5e76>] iwl_set_mode+0x36/0x40 [iwldvm]
- [<ffffffffa04e5f0d>] iwlagn_mac_remove_interface+0x8d/0x1b0 [iwldvm]
- [<ffffffffa0459b3d>] ieee80211_do_stop+0x29d/0x7f0 [mac80211]
-
-This is because we nulify ctx->vif in iwlagn_mac_remove_interface()
-before calling some other functions that teardown interface. To fix
-just check ctx->vif on iwl_chswitch_done(). We should not call
-ieee80211_chswitch_done() as channel switch works were already canceled
-by mac80211 in ieee80211_do_stop() -> ieee80211_mgd_stop().
-
-Resolve:
-https://bugzilla.redhat.com/show_bug.cgi?id=979581
-
-Cc: stable@vger.kernel.org
-Reported-by: Lukasz Jagiello <jagiello.lukasz@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Karsten Keil <isdn@linux-pingi.de>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: netdev@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/mac80211.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/isdn/hardware/mISDN/hfcsusb.c |   36 ++++++++++++++++++---------------
+ 1 file changed, 20 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index 323e4a3..9a817df 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -1046,7 +1046,10 @@ void iwl_chswitch_done(struct iwl_priv *priv, bool is_success)
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return;
+diff --git a/drivers/isdn/hardware/mISDN/hfcsusb.c b/drivers/isdn/hardware/mISDN/hfcsusb.c
+index 114f3bc..082f9e0 100644
+--- a/drivers/isdn/hardware/mISDN/hfcsusb.c
++++ b/drivers/isdn/hardware/mISDN/hfcsusb.c
+@@ -819,6 +819,7 @@ hfcsusb_rx_frame(struct usb_fifo *fifo, __u8 *data, unsigned int len,
+ 	int		fifon = fifo->fifonum;
+ 	int		i;
+ 	int		hdlc = 0;
++	unsigned long	flags;
  
--	if (test_and_clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status))
-+	if (!test_and_clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status))
-+		return;
-+
-+	if (ctx->vif)
- 		ieee80211_chswitch_done(ctx->vif, is_success);
+ 	if (debug & DBG_HFC_CALL_TRACE)
+ 		printk(KERN_DEBUG "%s: %s: fifo(%i) len(%i) "
+@@ -835,7 +836,7 @@ hfcsusb_rx_frame(struct usb_fifo *fifo, __u8 *data, unsigned int len,
+ 		return;
+ 	}
+ 
+-	spin_lock(&hw->lock);
++	spin_lock_irqsave(&hw->lock, flags);
+ 	if (fifo->dch) {
+ 		rx_skb = fifo->dch->rx_skb;
+ 		maxlen = fifo->dch->maxlen;
+@@ -844,7 +845,7 @@ hfcsusb_rx_frame(struct usb_fifo *fifo, __u8 *data, unsigned int len,
+ 	if (fifo->bch) {
+ 		if (test_bit(FLG_RX_OFF, &fifo->bch->Flags)) {
+ 			fifo->bch->dropcnt += len;
+-			spin_unlock(&hw->lock);
++			spin_unlock_irqrestore(&hw->lock, flags);
+ 			return;
+ 		}
+ 		maxlen = bchannel_get_rxbuf(fifo->bch, len);
+@@ -854,7 +855,7 @@ hfcsusb_rx_frame(struct usb_fifo *fifo, __u8 *data, unsigned int len,
+ 				skb_trim(rx_skb, 0);
+ 			pr_warning("%s.B%d: No bufferspace for %d bytes\n",
+ 				   hw->name, fifo->bch->nr, len);
+-			spin_unlock(&hw->lock);
++			spin_unlock_irqrestore(&hw->lock, flags);
+ 			return;
+ 		}
+ 		maxlen = fifo->bch->maxlen;
+@@ -878,7 +879,7 @@ hfcsusb_rx_frame(struct usb_fifo *fifo, __u8 *data, unsigned int len,
+ 			} else {
+ 				printk(KERN_DEBUG "%s: %s: No mem for rx_skb\n",
+ 				       hw->name, __func__);
+-				spin_unlock(&hw->lock);
++				spin_unlock_irqrestore(&hw->lock, flags);
+ 				return;
+ 			}
+ 		}
+@@ -888,7 +889,7 @@ hfcsusb_rx_frame(struct usb_fifo *fifo, __u8 *data, unsigned int len,
+ 			       "for fifo(%d) HFCUSB_D_RX\n",
+ 			       hw->name, __func__, fifon);
+ 			skb_trim(rx_skb, 0);
+-			spin_unlock(&hw->lock);
++			spin_unlock_irqrestore(&hw->lock, flags);
+ 			return;
+ 		}
+ 	}
+@@ -942,7 +943,7 @@ hfcsusb_rx_frame(struct usb_fifo *fifo, __u8 *data, unsigned int len,
+ 		/* deliver transparent data to layer2 */
+ 		recv_Bchannel(fifo->bch, MISDN_ID_ANY, false);
+ 	}
+-	spin_unlock(&hw->lock);
++	spin_unlock_irqrestore(&hw->lock, flags);
  }
  
+ static void
+@@ -979,18 +980,19 @@ rx_iso_complete(struct urb *urb)
+ 	__u8 *buf;
+ 	static __u8 eof[8];
+ 	__u8 s0_state;
++	unsigned long flags;
+ 
+ 	fifon = fifo->fifonum;
+ 	status = urb->status;
+ 
+-	spin_lock(&hw->lock);
++	spin_lock_irqsave(&hw->lock, flags);
+ 	if (fifo->stop_gracefull) {
+ 		fifo->stop_gracefull = 0;
+ 		fifo->active = 0;
+-		spin_unlock(&hw->lock);
++		spin_unlock_irqrestore(&hw->lock, flags);
+ 		return;
+ 	}
+-	spin_unlock(&hw->lock);
++	spin_unlock_irqrestore(&hw->lock, flags);
+ 
+ 	/*
+ 	 * ISO transfer only partially completed,
+@@ -1096,15 +1098,16 @@ rx_int_complete(struct urb *urb)
+ 	struct usb_fifo *fifo = (struct usb_fifo *) urb->context;
+ 	struct hfcsusb *hw = fifo->hw;
+ 	static __u8 eof[8];
++	unsigned long flags;
+ 
+-	spin_lock(&hw->lock);
++	spin_lock_irqsave(&hw->lock, flags);
+ 	if (fifo->stop_gracefull) {
+ 		fifo->stop_gracefull = 0;
+ 		fifo->active = 0;
+-		spin_unlock(&hw->lock);
++		spin_unlock_irqrestore(&hw->lock, flags);
+ 		return;
+ 	}
+-	spin_unlock(&hw->lock);
++	spin_unlock_irqrestore(&hw->lock, flags);
+ 
+ 	fifon = fifo->fifonum;
+ 	if ((!fifo->active) || (urb->status)) {
+@@ -1172,12 +1175,13 @@ tx_iso_complete(struct urb *urb)
+ 	int *tx_idx;
+ 	int frame_complete, fifon, status, fillempty = 0;
+ 	__u8 threshbit, *p;
++	unsigned long flags;
+ 
+-	spin_lock(&hw->lock);
++	spin_lock_irqsave(&hw->lock, flags);
+ 	if (fifo->stop_gracefull) {
+ 		fifo->stop_gracefull = 0;
+ 		fifo->active = 0;
+-		spin_unlock(&hw->lock);
++		spin_unlock_irqrestore(&hw->lock, flags);
+ 		return;
+ 	}
+ 
+@@ -1195,7 +1199,7 @@ tx_iso_complete(struct urb *urb)
+ 	} else {
+ 		printk(KERN_DEBUG "%s: %s: neither BCH nor DCH\n",
+ 		       hw->name, __func__);
+-		spin_unlock(&hw->lock);
++		spin_unlock_irqrestore(&hw->lock, flags);
+ 		return;
+ 	}
+ 
+@@ -1375,7 +1379,7 @@ tx_iso_complete(struct urb *urb)
+ 			       hw->name, __func__,
+ 			       symbolic(urb_errlist, status), status, fifon);
+ 	}
+-	spin_unlock(&hw->lock);
++	spin_unlock_irqrestore(&hw->lock, flags);
+ }
+ 
+ /*
 -- 
-1.7.11.7
+1.7.9.5
 
