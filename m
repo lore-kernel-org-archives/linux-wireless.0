@@ -1,271 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18009 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753642Ab3GCOhZ (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:43476 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932536Ab3GKOxC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 10:37:25 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v13 1/2] cfg80211: add 'flags' to cfg80211_rx_mgmt()
-Date: Wed, 3 Jul 2013 17:37:21 +0300
-Message-ID: <2816930.mUJMdCmsNg@lx-vladimir> (sfid-20130703_163728_389870_9863C533)
-In-Reply-To: <1372331863-14083-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1372331863-14083-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Thu, 11 Jul 2013 10:53:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <s5h7ggx413u.wl%tiwai@suse.de>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	<1373533573-12272-46-git-send-email-ming.lei@canonical.com>
+	<51DEAE4E.90204@cogentembedded.com>
+	<s5hip0hb3y6.wl%tiwai@suse.de>
+	<CACVXFVPuv4VD_xCocP2QVOqUqAXm9gjwgwcRn6y=3qXPntOxCQ@mail.gmail.com>
+	<s5h7ggx413u.wl%tiwai@suse.de>
+Date: Thu, 11 Jul 2013 22:52:59 +0800
+Message-ID: <CACVXFVNsOAeLZ1zCHmBNsdAWRnqBrDYziK6XDh7G0QEFiw4G5Q@mail.gmail.com> (sfid-20130711_165320_767826_76214658)
+Subject: Re: [PATCH 45/50] sound: usb: usx2y: spin_lock in complete() cleanup
+From: Ming Lei <ming.lei@canonical.com>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Jaroslav Kysela <perex@perex.cz>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flags intended to report various auxiliary information.
-Introduced flag NL80211_RXMGMT_FLAG_REPLIED to report
-whether frame was replied by the device/driver.
+On Thu, Jul 11, 2013 at 10:34 PM, Takashi Iwai <tiwai@suse.de> wrote:
+> At Thu, 11 Jul 2013 22:13:35 +0800,
+> Ming Lei wrote:
+>>
+>> On Thu, Jul 11, 2013 at 9:50 PM, Takashi Iwai <tiwai@suse.de> wrote:
+>> > At Thu, 11 Jul 2013 17:08:30 +0400,
+>> > Sergei Shtylyov wrote:
+>> >>
+>> >> On 11-07-2013 13:06, Ming Lei wrote:
+>> >>
+>> >> > Complete() will be run with interrupt enabled, so change to
+>> >> > spin_lock_irqsave().
+>> >>
+>> >>     Changelog doesn't match the patch.
+>> >
+>> > Yep, but moreover...
+>> >
+>> >> > Cc: Jaroslav Kysela <perex@perex.cz>
+>> >> > Cc: Takashi Iwai <tiwai@suse.de>
+>> >> > Cc: alsa-devel@alsa-project.org
+>> >> > Signed-off-by: Ming Lei <ming.lei@canonical.com>
+>> >> > ---
+>> >> >   sound/usb/usx2y/usbusx2yaudio.c |    4 ++++
+>> >> >   1 file changed, 4 insertions(+)
+>> >>
+>> >> > diff --git a/sound/usb/usx2y/usbusx2yaudio.c b/sound/usb/usx2y/usbusx2yaudio.c
+>> >> > index 4967fe9..e2ee893 100644
+>> >> > --- a/sound/usb/usx2y/usbusx2yaudio.c
+>> >> > +++ b/sound/usb/usx2y/usbusx2yaudio.c
+>> >> > @@ -273,7 +273,11 @@ static void usX2Y_clients_stop(struct usX2Ydev *usX2Y)
+>> >> >             struct snd_usX2Y_substream *subs = usX2Y->subs[s];
+>> >> >             if (subs) {
+>> >> >                     if (atomic_read(&subs->state) >= state_PRERUNNING) {
+>> >> > +                           unsigned long flags;
+>> >> > +
+>> >> > +                           local_irq_save(flags);
+>> >> >                             snd_pcm_stop(subs->pcm_substream, SNDRV_PCM_STATE_XRUN);
+>> >> > +                           local_irq_restore(flags);
+>> >> >                     }
+>> >
+>> > ... actually this snd_pcm_stop() call should have been covered by
+>> > snd_pcm_stream_lock().  Maybe it'd be enough to have a single patch
+>> > together with the change, i.e. wrapping with
+>> > snd_pcm_stream_lock_irqsave().
+>>
+>> Please use snd_pcm_stream_lock_irqsave() so that I can avoid sending
+>> out similar patch later, :-)
+>>
+>> >
+>> > I'll prepare the patch for 3.11 independently from your patch series,
+>> > so please drop this one.
+>>
+>> OK, thanks for dealing with that.
+>>
+>> >
+>> >
+>> > BTW, the word "cleanup" in the subject is inappropriate.  This is
+>> > rather a fix together with the core change.
+>>
+>> It is a cleanup since the patchset only addresses lock problem which
+>> is caused by the tasklet conversion.
+>
+> Well, the conversion to irqsave() is needed for the future drop of
+> irq_save() in the caller, right?  Then this isn't a cleanup but a
+> preparation for movement ahead.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c         |  7 +++----
- drivers/net/wireless/ath/wil6210/wmi.c        |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c |  4 ++--
- drivers/net/wireless/mwifiex/util.c           |  4 ++--
- include/net/cfg80211.h                        |  3 ++-
- include/uapi/linux/nl80211.h                  | 17 +++++++++++++++++
- net/mac80211/rx.c                             |  3 +--
- net/wireless/mlme.c                           |  4 ++--
- net/wireless/nl80211.c                        |  6 ++++--
- net/wireless/nl80211.h                        |  2 +-
- 10 files changed, 35 insertions(+), 17 deletions(-)
+Sounds more accurate, and I will change the title in next round, :-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c 
-b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 87aefb4..546d5da 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -568,8 +568,8 @@ static int ath6kl_wmi_rx_probe_req_event_rx(struct wmi 
-*wmi, u8 *datap, int len,
- 		   dlen, freq, vif->probe_req_report);
- 
- 	if (vif->probe_req_report || vif->nw_type == AP_NETWORK)
--		cfg80211_rx_mgmt(&vif->wdev, freq, 0,
--				 ev->data, dlen, GFP_ATOMIC);
-+		cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0,
-+				 GFP_ATOMIC);
- 
- 	return 0;
- }
-@@ -608,8 +608,7 @@ static int ath6kl_wmi_rx_action_event_rx(struct wmi *wmi, 
-u8 *datap, int len,
- 		return -EINVAL;
- 	}
- 	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u freq=%u\n", dlen, freq);
--	cfg80211_rx_mgmt(&vif->wdev, freq, 0,
--			 ev->data, dlen, GFP_ATOMIC);
-+	cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0, GFP_ATOMIC);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c 
-b/drivers/net/wireless/ath/wil6210/wmi.c
-index dc8059a..21c791e 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -339,7 +339,7 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int 
-id, void *d, int len)
- 		}
- 	} else {
- 		cfg80211_rx_mgmt(wil->wdev, freq, signal,
--				 (void *)rx_mgmt_frame, d_len, GFP_KERNEL);
-+				 (void *)rx_mgmt_frame, d_len, 0, GFP_KERNEL);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c 
-b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 79555f0..d7a9745 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -1430,7 +1430,7 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if 
-*ifp,
- 					      IEEE80211_BAND_5GHZ);
- 
- 	wdev = &ifp->vif->wdev;
--	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len,
-+	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len, 0,
- 			 GFP_ATOMIC);
- 
- 	kfree(mgmt_frame);
-@@ -1895,7 +1895,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct 
-brcmf_if *ifp,
- 					      IEEE80211_BAND_2GHZ :
- 					      IEEE80211_BAND_5GHZ);
- 
--	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len,
-+	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0,
- 			 GFP_ATOMIC);
- 
- 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), 
-freq (%d)\n",
-diff --git a/drivers/net/wireless/mwifiex/util.c 
-b/drivers/net/wireless/mwifiex/util.c
-index e57ac0d..5d9e150 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -171,8 +171,8 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 	rx_pd->rx_pkt_length = cpu_to_le16(pkt_len);
- 
- 	cfg80211_rx_mgmt(priv->wdev, priv->roc_cfg.chan.center_freq,
--			 CAL_RSSI(rx_pd->snr, rx_pd->nf),
--			 skb->data, pkt_len, GFP_ATOMIC);
-+			 CAL_RSSI(rx_pd->snr, rx_pd->nf), skb->data, pkt_len,
-+			 0, GFP_ATOMIC);
- 
- 	return 0;
- }
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7b0730a..c6acc70 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3886,6 +3886,7 @@ void cfg80211_conn_failed(struct net_device *dev, const 
-u8 *mac_addr,
-  * @sig_dbm: signal strength in mBm, or 0 if unknown
-  * @buf: Management frame (header + body)
-  * @len: length of the frame data
-+ * @flags: flags, as defined in enum nl80211_rxmgmt_flags
-  * @gfp: context flags
-  *
-  * This function is called whenever an Action frame is received for a station
-@@ -3897,7 +3898,7 @@ void cfg80211_conn_failed(struct net_device *dev, const 
-u8 *mac_addr,
-  * driver is responsible for rejecting the frame.
-  */
- bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_dbm,
--		      const u8 *buf, size_t len, gfp_t gfp);
-+		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
- 
- /**
-  * cfg80211_mgmt_tx_status - notification of TX status for management frame
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 861e5eb..a042507 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1436,6 +1436,10 @@ enum nl80211_commands {
-  *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
-  *	update a TDLS peer STA entry.
-  *
-+ * @NL80211_ATTR_RXMGMT_FLAGS: flags for nl80211_send_mgmt(), u32.
-+ *	As specified in the enum nl80211_rxmgmt_flags.
-+ *	Passed from cfg80211_rx_mgmt()
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1736,6 +1740,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_PEER_AID,
- 
-+	NL80211_ATTR_RXMGMT_FLAGS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3758,4 +3764,15 @@ enum nl80211_crit_proto_id {
- /* maximum duration for critical protocol measures */
- #define NL80211_CRIT_PROTO_MAX_DURATION		5000 /* msec */
- 
-+/**
-+ * enum nl80211_rxmgmt_flags - flags for received management frame.
-+ *
-+ * Used by cfg80211_rx_mgmt()
-+ *
-+ * @NL80211_RXMGMT_FLAG_REPLIED: frame was replied by device/driver.
-+ */
-+enum nl80211_rxmgmt_flags {
-+	NL80211_RXMGMT_FLAG_REPLIED = 1 << 0,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 23dbcfc..3f7fa49 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2635,8 +2635,7 @@ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data 
-*rx)
- 		sig = status->signal;
- 
- 	if (cfg80211_rx_mgmt(&rx->sdata->wdev, status->freq, sig,
--			     rx->skb->data, rx->skb->len,
--			     GFP_ATOMIC)) {
-+			     rx->skb->data, rx->skb->len, 0, GFP_ATOMIC)) {
- 		if (rx->sta)
- 			rx->sta->rx_packets++;
- 		dev_kfree_skb(rx->skb);
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index bfac5e1..8d49c1c 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -621,7 +621,7 @@ int cfg80211_mlme_mgmt_tx(struct 
-cfg80211_registered_device *rdev,
- }
- 
- bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
--		      const u8 *buf, size_t len, gfp_t gfp)
-+		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
- {
- 	struct wiphy *wiphy = wdev->wiphy;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-@@ -664,7 +664,7 @@ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, 
-int sig_mbm,
- 		/* Indicate the received Action frame to user space */
- 		if (nl80211_send_mgmt(rdev, wdev, reg->nlportid,
- 				      freq, sig_mbm,
--				      buf, len, gfp))
-+				      buf, len, flags, gfp))
- 			continue;
- 
- 		result = true;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7dc3343..8c98083 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9994,7 +9994,7 @@ EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, u32 nlportid,
- 		      int freq, int sig_dbm,
--		      const u8 *buf, size_t len, gfp_t gfp)
-+		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
- {
- 	struct net_device *netdev = wdev->netdev;
- 	struct sk_buff *msg;
-@@ -10017,7 +10017,9 @@ int nl80211_send_mgmt(struct 
-cfg80211_registered_device *rdev,
- 	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, freq) ||
- 	    (sig_dbm &&
- 	     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm)) ||
--	    nla_put(msg, NL80211_ATTR_FRAME, len, buf))
-+	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
-+	    (flags &&
-+	     nla_put_u32(msg, NL80211_ATTR_RXMGMT_FLAGS, flags)))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index a4073e8..3b51a76 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -66,7 +66,7 @@ void nl80211_send_ibss_bssid(struct 
-cfg80211_registered_device *rdev,
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, u32 nlpid,
- 		      int freq, int sig_dbm,
--		      const u8 *buf, size_t len, gfp_t gfp);
-+		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
- 
- void
- nl80211_radar_notify(struct cfg80211_registered_device *rdev,
--- 
-1.8.1.2
-
+Thanks,
+--
+Ming Lei
