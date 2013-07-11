@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58109 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757029Ab3GZI24 (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34777 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756038Ab3GKJHX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:28:56 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/30] iwlwifi: mvm: fix the ACK / CTS kill mask upon RSSI event
-Date: Fri, 26 Jul 2013 10:28:26 +0200
-Message-Id: <1374827327-3464-10-git-send-email-johannes@sipsolutions.net> (sfid-20130726_102918_380186_1840E041)
-In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
-References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 11 Jul 2013 05:07:23 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH 06/50] USB: iowarrior: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:29 +0800
+Message-Id: <1373533573-12272-7-git-send-email-ming.lei@canonical.com> (sfid-20130711_111859_952604_210D787B)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-If a vif's RSSI gets good enough, we can enable reduced
-Tx power. If so, we need to update the ACK / CTS kill mask
-accordingly. Since the auditing for the interfaces was bad,
-we enabled reduced Tx power, but didn't update the ACK / CTS
-kill mask.
-This is harmless since the firmware is most likely to
-discard this setting anyway, but it is a good practice
-to update it.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/bt-coex.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/usb/misc/iowarrior.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-index 9195779..3a48cd9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-@@ -527,6 +527,8 @@ static void iwl_mvm_bt_rssi_iterator(void *_data, u8 *mac,
- 					lockdep_is_held(&mvm->mutex));
- 	mvmsta = (void *)sta->drv_priv;
+diff --git a/drivers/usb/misc/iowarrior.c b/drivers/usb/misc/iowarrior.c
+index d36f34e..010ed6d 100644
+--- a/drivers/usb/misc/iowarrior.c
++++ b/drivers/usb/misc/iowarrior.c
+@@ -162,6 +162,7 @@ static void iowarrior_callback(struct urb *urb)
+ 	int offset;
+ 	int status = urb->status;
+ 	int retval;
++	unsigned long flags;
  
-+	data->num_bss_ifaces++;
-+
- 	/*
- 	 * This interface doesn't support reduced Tx power (because of low
- 	 * RSSI probably), then set bt_kill_msk to default values.
+ 	switch (status) {
+ 	case 0:
+@@ -175,7 +176,7 @@ static void iowarrior_callback(struct urb *urb)
+ 		goto exit;
+ 	}
+ 
+-	spin_lock(&dev->intr_idx_lock);
++	spin_lock_irqsave(&dev->intr_idx_lock, flags);
+ 	intr_idx = atomic_read(&dev->intr_idx);
+ 	/* aux_idx become previous intr_idx */
+ 	aux_idx = (intr_idx == 0) ? (MAX_INTERRUPT_BUFFER - 1) : (intr_idx - 1);
+@@ -211,7 +212,7 @@ static void iowarrior_callback(struct urb *urb)
+ 	*(dev->read_queue + offset + (dev->report_size)) = dev->serial_number++;
+ 
+ 	atomic_set(&dev->intr_idx, aux_idx);
+-	spin_unlock(&dev->intr_idx_lock);
++	spin_unlock_irqrestore(&dev->intr_idx_lock, flags);
+ 	/* tell the blocking read about the new data */
+ 	wake_up_interruptible(&dev->read_wait);
+ 
 -- 
-1.8.0
+1.7.9.5
 
