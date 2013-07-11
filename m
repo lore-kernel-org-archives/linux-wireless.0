@@ -1,24 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:48038 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755059Ab3GAV0S (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:45714 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904Ab3GKJaq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 17:26:18 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 1 Jul 2013 14:25:56 -0700
-Message-ID: <CAB=NE6W6oa1Oa9O_s7B_4qKHdEz6S3DhVyvtpzP78XqRM_xk8A@mail.gmail.com> (sfid-20130701_232622_565175_1D072F85)
-Subject: backports based on next-20130618
-To: "backports@vger.kernel.org" <backports@vger.kernel.org>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 11 Jul 2013 05:30:46 -0400
+Received: by mail-pb0-f53.google.com with SMTP id xb12so7686524pbc.26
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 02:30:46 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] nl80211: fix the setting of RSSI threshold value for mesh
+Date: Thu, 11 Jul 2013 17:23:35 +0800
+Message-Id: <1373534615-17270-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130711_113054_293010_A6AB87C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new backports release has been made based on next-20130618, this has
-the new upstream alx driver, and the ath10k driver.
+RSSI threshold value used for mesh peering should be in
+negative value. After range checks to mesh parameters is
+introduced, this is not allowed. Fix this.
 
-https://www.kernel.org/pub/linux/kernel/projects/backports/2013/06/18/backports-20130618.tar.bz2
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/wireless/nl80211.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-  Luis
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a9444cd..e6164ab 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4803,9 +4803,9 @@ do {									    \
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding, 0, 1,
+ 				  mask, NL80211_MESHCONF_FORWARDING,
+ 				  nla_get_u8);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, 1, 255,
+-				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
+-				  nla_get_u32);
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold,
++				  0x80000000, 0xFFFFFFFF, mask,
++				  NL80211_MESHCONF_RSSI_THRESHOLD, nla_get_u32);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
+ 				  mask, NL80211_MESHCONF_HT_OPMODE,
+ 				  nla_get_u16);
+-- 
+1.7.0.4
+
