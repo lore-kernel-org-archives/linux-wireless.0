@@ -1,58 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:14682 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751950Ab3GEUXu (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:42727 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755025Ab3GKONi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 16:23:50 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Arend van Spriel <arend@broadcom.com>
-CC: Hector Palacios <hector.palacios@digi.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>
-Subject: Re: Passing a custom MAC to ath6kl
-References: <51D6E484.9060000@digi.com>
-	<87vc4pf1ln.fsf@kamboji.qca.qualcomm.com> <51D6EC90.40009@digi.com>
-	<51D70A22.20607@broadcom.com>
-Date: Fri, 5 Jul 2013 23:23:40 +0300
-In-Reply-To: <51D70A22.20607@broadcom.com> (Arend van Spriel's message of
-	"Fri, 5 Jul 2013 20:02:10 +0200")
-Message-ID: <87r4fcg3hv.fsf@kamboji.qca.qualcomm.com> (sfid-20130705_222354_660592_6D26C7D7)
+	Thu, 11 Jul 2013 10:13:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <s5hip0hb3y6.wl%tiwai@suse.de>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	<1373533573-12272-46-git-send-email-ming.lei@canonical.com>
+	<51DEAE4E.90204@cogentembedded.com>
+	<s5hip0hb3y6.wl%tiwai@suse.de>
+Date: Thu, 11 Jul 2013 22:13:35 +0800
+Message-ID: <CACVXFVPuv4VD_xCocP2QVOqUqAXm9gjwgwcRn6y=3qXPntOxCQ@mail.gmail.com> (sfid-20130711_161354_985508_68094981)
+Subject: Re: [PATCH 45/50] sound: usb: usx2y: spin_lock in complete() cleanup
+From: Ming Lei <ming.lei@canonical.com>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Jaroslav Kysela <perex@perex.cz>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
-
-> On 07/05/2013 05:56 PM, Hector Palacios wrote:
->> Dear Kalle,
+On Thu, Jul 11, 2013 at 9:50 PM, Takashi Iwai <tiwai@suse.de> wrote:
+> At Thu, 11 Jul 2013 17:08:30 +0400,
+> Sergei Shtylyov wrote:
 >>
->> On 07/05/2013 05:49 PM, Kalle Valo wrote:
->>> Hector Palacios <hector.palacios@digi.com> writes:
->>>
->>>> Is there a way to pass a custom MAC address to the ath6kl upstream
->>>> driver?
->>>
->>> Not right now. It has been a common feature request so I'm hoping
->>> someone will implement it soon.
->>>
->>>> In the ISC version of the driver, a softmac.c file is provided that
->>>> reads a MAC from a file if a module parameter softmac_enable=1 is
->>>> passed. Is there any reason why this has not made it upstream?
->>>
->>> Providing mac address through a file is too ugly for upstream. We need
->>> to implement it properly using the proper interface.
+>> On 11-07-2013 13:06, Ming Lei wrote:
 >>
->> I totally agree. What would be the proper interface for that?
+>> > Complete() will be run with interrupt enabled, so change to
+>> > spin_lock_irqsave().
+>>
+>>     Changelog doesn't match the patch.
 >
-> Add .ndo_set_mac_address() callback in main.c and go from there.
+> Yep, but moreover...
 >
-> int (*ndo_set_mac_address)(struct net_device *dev, void *addr);
+>> > Cc: Jaroslav Kysela <perex@perex.cz>
+>> > Cc: Takashi Iwai <tiwai@suse.de>
+>> > Cc: alsa-devel@alsa-project.org
+>> > Signed-off-by: Ming Lei <ming.lei@canonical.com>
+>> > ---
+>> >   sound/usb/usx2y/usbusx2yaudio.c |    4 ++++
+>> >   1 file changed, 4 insertions(+)
+>>
+>> > diff --git a/sound/usb/usx2y/usbusx2yaudio.c b/sound/usb/usx2y/usbusx2yaudio.c
+>> > index 4967fe9..e2ee893 100644
+>> > --- a/sound/usb/usx2y/usbusx2yaudio.c
+>> > +++ b/sound/usb/usx2y/usbusx2yaudio.c
+>> > @@ -273,7 +273,11 @@ static void usX2Y_clients_stop(struct usX2Ydev *usX2Y)
+>> >             struct snd_usX2Y_substream *subs = usX2Y->subs[s];
+>> >             if (subs) {
+>> >                     if (atomic_read(&subs->state) >= state_PRERUNNING) {
+>> > +                           unsigned long flags;
+>> > +
+>> > +                           local_irq_save(flags);
+>> >                             snd_pcm_stop(subs->pcm_substream, SNDRV_PCM_STATE_XRUN);
+>> > +                           local_irq_restore(flags);
+>> >                     }
+>
+> ... actually this snd_pcm_stop() call should have been covered by
+> snd_pcm_stream_lock().  Maybe it'd be enough to have a single patch
+> together with the change, i.e. wrapping with
+> snd_pcm_stream_lock_irqsave().
 
-And the challenge with ath6kl is that we need to stop the firmware,
-change mac address in the firmware and restart the firmware. So it's not
-trivial to add that but it shouldn't be too difficult either. Patches
-more than welcome :)
+Please use snd_pcm_stream_lock_irqsave() so that I can avoid sending
+out similar patch later, :-)
 
--- 
-Kalle Valo
+>
+> I'll prepare the patch for 3.11 independently from your patch series,
+> so please drop this one.
+
+OK, thanks for dealing with that.
+
+>
+>
+> BTW, the word "cleanup" in the subject is inappropriate.  This is
+> rather a fix together with the core change.
+
+It is a cleanup since the patchset only addresses lock problem which
+is caused by the tasklet conversion.
+
+>
+> And, I wonder whether we can take a safer approach.  When the caller
+> condition changed, we often introduced either a different ops
+> (e.g. ioctl case) or a flag for the new condition, at least during the
+> transition period.
+
+Interrupt is't enabled until all current drivers are cleaned up, so it is really
+safe, please see patch [2].
+
+>
+> Last but not least, is a conversion to tasklet really preferred?
+> tasklet is rather an obsoleted infrastructure nowadays, and people
+> don't recommend to use it any longer, AFAIK.
+
+We discussed the problem in the below link previously[1], Steven
+and Thomas suggested to use threaded irq handler, but which
+may degrade USB mass storage performance, so we have to
+take tasklet now until we rewrite transport part of USB mass storage
+driver.
+
+Also the conversion[2] has avoided the tasklet spin lock problem
+already.
+
+
+[1], http://marc.info/?t=137079119200001&r=1&w=2
+[2], http://marc.info/?l=linux-usb&m=137286326726326&w=2
+
+Thanks,
+--
+Ming Lei
