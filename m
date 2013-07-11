@@ -1,72 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:47472 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752811Ab3GAHsS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:48:18 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 01/20] rt2x00: rt2800lib: add MAC register initialization for RT3593
-Date: Mon,  1 Jul 2013 09:47:40 +0200
-Message-Id: <1372664879-18474-2-git-send-email-juhosg@openwrt.org> (sfid-20130701_094826_239612_62A7756B)
-In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:15046 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755605Ab3GKHMV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 03:12:21 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 0/3] wil6210 updates
+Date: Thu, 11 Jul 2013 10:12:06 +0300
+Message-ID: <1373526729-10908-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_091229_356004_207AEC1C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
+Sync with latest firmware updates;
+couple of simple bug fixes
 
-Reference:
-  NICInitRT3593MacRegisters in chips/rt3593.c
+Vladimir Kondratiev (3):
+  wil6210: Align WMI header with latest FW
+  wil6210: fix wrong index in wil_vring_free
+  wil6210: write modified HW descriptor back
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800.h    |    1 +
- drivers/net/wireless/rt2x00/rt2800lib.c |   17 +++++++++++++++++
- 2 files changed, 18 insertions(+)
+ drivers/net/wireless/ath/wil6210/trace.h   | 22 +++++++++++++---------
+ drivers/net/wireless/ath/wil6210/txrx.c    |  3 ++-
+ drivers/net/wireless/ath/wil6210/wil6210.h | 17 ++++++++++++++---
+ drivers/net/wireless/ath/wil6210/wmi.c     | 14 +++++++++-----
+ 4 files changed, 38 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 9216834..02bc80d 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -88,6 +88,7 @@
- #define REV_RT3071E			0x0211
- #define REV_RT3090E			0x0211
- #define REV_RT3390E			0x0211
-+#define REV_RT3593E			0x0211
- #define REV_RT5390F			0x0502
- #define REV_RT5390R			0x1502
- #define REV_RT5592C			0x0221
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 7b216f9..6f58ceb 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3715,6 +3715,23 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	} else if (rt2x00_rt(rt2x00dev, RT3572)) {
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
-+	} else if (rt2x00_rt(rt2x00dev, RT3593)) {
-+		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000402);
-+		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
-+		if (rt2x00_rt_rev_lt(rt2x00dev, RT3593, REV_RT3593E)) {
-+			rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1,
-+					   &eeprom);
-+			if (rt2x00_get_field16(eeprom,
-+					       EEPROM_NIC_CONF1_DAC_TEST))
-+				rt2800_register_write(rt2x00dev, TX_SW_CFG2,
-+						      0x0000001f);
-+			else
-+				rt2800_register_write(rt2x00dev, TX_SW_CFG2,
-+						      0x0000000f);
-+		} else {
-+			rt2800_register_write(rt2x00dev, TX_SW_CFG2,
-+					      0x00000000);
-+		}
- 	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
- 		   rt2x00_rt(rt2x00dev, RT5392) ||
- 		   rt2x00_rt(rt2x00dev, RT5592)) {
 -- 
-1.7.10
+1.8.1.2
 
