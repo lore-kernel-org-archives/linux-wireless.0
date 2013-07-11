@@ -1,49 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:48227 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932380Ab3GVPsX (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:51414 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab3GKJHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 11:48:23 -0400
-Received: by mail-ie0-f169.google.com with SMTP id at20so4764493iec.28
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jul 2013 08:48:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-Date: Mon, 22 Jul 2013 17:48:22 +0200
-Message-ID: <CAL1gcdMDqkM=qS63Sdh9Z3f08TtQLvSuJ8EpC_pJVzMjBnUXZQ@mail.gmail.com> (sfid-20130722_174837_945025_9BDCC01B)
-Subject: Re: [PATCH v3 00/20] rt2x00: add experimental support for RT3593
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 11 Jul 2013 05:07:51 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH 09/50] USB: usbtest: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:32 +0800
+Message-Id: <1373533573-12272-10-git-send-email-ming.lei@canonical.com> (sfid-20130711_111848_825611_CF61C1C2)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 8, 2013 at 4:08 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
-> This patch-set implements experiemental support for the
-> RT3593 chipset. The patches are tested on the Linksys
-> AE3000 USB device only, however other USB devices which
-> are using the RT3573 chips might work as well.
->
-> The patch-set depends on the following series:
-> 'rt2x00: rt2800lib: add support for extended EEPROM of three-chain devices'
->
-> Changes since v2:
->  - keep case values in aplhabetical order
->
-> Changes since v1:
->  - add missing patch
->  - make Linksys AE3000 support optional
->
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-I finally found the time to look at this over the weekend. To me it
-looks good enough for inclusion.
-
-For the whole series:
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
-Gertjan
+ drivers/usb/misc/usbtest.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/usb/misc/usbtest.c b/drivers/usb/misc/usbtest.c
+index 8b4ca1c..5c73df5 100644
+--- a/drivers/usb/misc/usbtest.c
++++ b/drivers/usb/misc/usbtest.c
+@@ -804,11 +804,12 @@ static void ctrl_complete(struct urb *urb)
+ 	struct usb_ctrlrequest	*reqp;
+ 	struct subcase		*subcase;
+ 	int			status = urb->status;
++	unsigned long		flags;
+ 
+ 	reqp = (struct usb_ctrlrequest *)urb->setup_packet;
+ 	subcase = container_of(reqp, struct subcase, setup);
+ 
+-	spin_lock(&ctx->lock);
++	spin_lock_irqsave(&ctx->lock, flags);
+ 	ctx->count--;
+ 	ctx->pending--;
+ 
+@@ -907,7 +908,7 @@ error:
+ 	/* signal completion when nothing's queued */
+ 	if (ctx->pending == 0)
+ 		complete(&ctx->complete);
+-	spin_unlock(&ctx->lock);
++	spin_unlock_irqrestore(&ctx->lock, flags);
+ }
+ 
+ static int
+@@ -1552,8 +1553,9 @@ struct iso_context {
+ static void iso_callback(struct urb *urb)
+ {
+ 	struct iso_context	*ctx = urb->context;
++	unsigned long		flags;
+ 
+-	spin_lock(&ctx->lock);
++	spin_lock_irqsave(&ctx->lock, flags);
+ 	ctx->count--;
+ 
+ 	ctx->packet_count += urb->number_of_packets;
+@@ -1593,7 +1595,7 @@ static void iso_callback(struct urb *urb)
+ 		complete(&ctx->done);
+ 	}
+ done:
+-	spin_unlock(&ctx->lock);
++	spin_unlock_irqrestore(&ctx->lock, flags);
+ }
+ 
+ static struct urb *iso_alloc_urb(
+-- 
+1.7.9.5
+
