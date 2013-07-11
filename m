@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53980 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932230Ab3GVUPN (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21534 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756203Ab3GKPED (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 16:15:13 -0400
-Date: Mon, 22 Jul 2013 16:01:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: 2013-07-22
-Message-ID: <20130722200124.GA29803@tuxdriver.com> (sfid-20130722_221518_178538_0B3DD7C7)
-References: <1374494325.14517.4.camel@jlt4.sipsolutions.net>
+	Thu, 11 Jul 2013 11:04:03 -0400
+Cc: Kirshenbaum Erez <erezk@wilocity.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 5/5] wil6210: fix subtle race in wil_tx_vring
+Date: Thu, 11 Jul 2013 18:03:41 +0300
+Message-ID: <1373555021-11763-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_170411_775146_FDADEE4B)
+In-Reply-To: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1374494325.14517.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 22, 2013 at 01:58:45PM +0200, Johannes Berg wrote:
-> John,
-> 
-> Here's a pull request for 3.11 (and some fixes with cc stable), sorry
-> for the delay - I was travelling.
-> 
-> Here I have a fix for RSSI thresholds in mesh, two minstrel fixes from
-> Felix, an nl80211 fix from Michal and four various fixes I did myself.
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> 
-> 
-> The following changes since commit ad81f0545ef01ea651886dddac4bef6cec930092:
-> 
->   Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to 5c9fc93bc9bc417418fc1b6366833ae6a07b804d:
-> 
->   mac80211/minstrel: fix NULL pointer dereference issue (2013-07-16 17:48:14 +0300)
+Finish all SW context modifications prior to notifying hardware
 
-Pulling now...
+It used to be race condition: if HW finish Tx and issue Tx completion IRQ very fast,
+prior to SW context update in wil_tx_vring, Tx completion will mis-handle descriptor, as
+SW part will have no skb pointer stored.
 
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 44cdd2a..2a9d56a 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -712,6 +712,12 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_CMD_DMA_IT_POS);
+ 	*_d = *d;
+ 
++	/* hold reference to skb
++	 * to prevent skb release before accounting
++	 * in case of immediate "tx done"
++	 */
++	vring->ctx[i].skb = skb_get(skb);
++
+ 	wil_hex_dump_txrx("Tx ", DUMP_PREFIX_NONE, 32, 4,
+ 			  (const void *)d, sizeof(*d), false);
+ 
+@@ -720,11 +726,6 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	wil_dbg_txrx(wil, "Tx swhead %d -> %d\n", swhead, vring->swhead);
+ 	trace_wil6210_tx(vring_index, swhead, skb->len, nr_frags);
+ 	iowrite32(vring->swhead, wil->csr + HOSTADDR(vring->hwtail));
+-	/* hold reference to skb
+-	 * to prevent skb release before accounting
+-	 * in case of immediate "tx done"
+-	 */
+-	vring->ctx[i].skb = skb_get(skb);
+ 
+ 	return 0;
+  dma_error:
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.1.2
+
