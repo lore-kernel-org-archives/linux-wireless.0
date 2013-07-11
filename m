@@ -1,97 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:55666 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754052Ab3GRGdY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jul 2013 02:33:24 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/3] ath10k: fix memleak in mac setup
-Date: Thu, 18 Jul 2013 08:33:12 +0200
-Message-ID: <1374129193-3533-3-git-send-email-michal.kazior@tieto.com> (sfid-20130718_083328_618916_B934B06B)
-In-Reply-To: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
-References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:41015 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab3GKJIP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 05:08:15 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Johan Hovold <jhovold@gmail.com>
+Subject: [PATCH 12/50] USB: serial: io_edgeport: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:35 +0800
+Message-Id: <1373533573-12272-13-git-send-email-ming.lei@canonical.com> (sfid-20130711_111807_229910_2533A795)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some cases channel arrays were never freed.
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-The patch also unifies error handling in the mac
-setup function.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johan Hovold <jhovold@gmail.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+ drivers/usb/serial/io_edgeport.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5082503..3d0f876 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3025,8 +3025,10 @@ int ath10k_mac_register(struct ath10k *ar)
- 		channels = kmemdup(ath10k_2ghz_channels,
- 				   sizeof(ath10k_2ghz_channels),
- 				   GFP_KERNEL);
--		if (!channels)
--			return -ENOMEM;
-+		if (!channels) {
-+			ret = -ENOMEM;
-+			goto err_free;
-+		}
+diff --git a/drivers/usb/serial/io_edgeport.c b/drivers/usb/serial/io_edgeport.c
+index dc2803b..af2f7d8 100644
+--- a/drivers/usb/serial/io_edgeport.c
++++ b/drivers/usb/serial/io_edgeport.c
+@@ -569,6 +569,7 @@ static void edge_interrupt_callback(struct urb *urb)
+ 	int portNumber;
+ 	int result;
+ 	int status = urb->status;
++	unsigned long flags;
  
- 		band = &ar->mac.sbands[IEEE80211_BAND_2GHZ];
- 		band->n_channels = ARRAY_SIZE(ath10k_2ghz_channels);
-@@ -3045,11 +3047,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 				   sizeof(ath10k_5ghz_channels),
- 				   GFP_KERNEL);
- 		if (!channels) {
--			if (ar->phy_capability & WHAL_WLAN_11G_CAPABILITY) {
--				band = &ar->mac.sbands[IEEE80211_BAND_2GHZ];
--				kfree(band->channels);
--			}
--			return -ENOMEM;
-+			ret = -ENOMEM;
-+			goto err_free;
+ 	switch (status) {
+ 	case 0:
+@@ -594,7 +595,7 @@ static void edge_interrupt_callback(struct urb *urb)
+ 		if (length > 1) {
+ 			bytes_avail = data[0] | (data[1] << 8);
+ 			if (bytes_avail) {
+-				spin_lock(&edge_serial->es_lock);
++				spin_lock_irqsave(&edge_serial->es_lock, flags);
+ 				edge_serial->rxBytesAvail += bytes_avail;
+ 				dev_dbg(dev,
+ 					"%s - bytes_avail=%d, rxBytesAvail=%d, read_in_progress=%d\n",
+@@ -617,7 +618,7 @@ static void edge_interrupt_callback(struct urb *urb)
+ 						edge_serial->read_in_progress = false;
+ 					}
+ 				}
+-				spin_unlock(&edge_serial->es_lock);
++				spin_unlock_irqrestore(&edge_serial->es_lock, flags);
+ 			}
  		}
+ 		/* grab the txcredits for the ports if available */
+@@ -630,9 +631,9 @@ static void edge_interrupt_callback(struct urb *urb)
+ 				port = edge_serial->serial->port[portNumber];
+ 				edge_port = usb_get_serial_port_data(port);
+ 				if (edge_port->open) {
+-					spin_lock(&edge_port->ep_lock);
++					spin_lock_irqsave(&edge_port->ep_lock, flags);
+ 					edge_port->txCredits += txCredits;
+-					spin_unlock(&edge_port->ep_lock);
++					spin_unlock_irqrestore(&edge_port->ep_lock, flags);
+ 					dev_dbg(dev, "%s - txcredits for port%d = %d\n",
+ 						__func__, portNumber,
+ 						edge_port->txCredits);
+@@ -673,6 +674,7 @@ static void edge_bulk_in_callback(struct urb *urb)
+ 	int			retval;
+ 	__u16			raw_data_length;
+ 	int status = urb->status;
++	unsigned long flags;
  
- 		band = &ar->mac.sbands[IEEE80211_BAND_5GHZ];
-@@ -3113,25 +3112,30 @@ int ath10k_mac_register(struct ath10k *ar)
- 			    ath10k_reg_notifier);
- 	if (ret) {
- 		ath10k_err("Regulatory initialization failed\n");
--		return ret;
-+		goto err_free;
+ 	if (status) {
+ 		dev_dbg(&urb->dev->dev, "%s - nonzero read bulk status received: %d\n",
+@@ -692,7 +694,7 @@ static void edge_bulk_in_callback(struct urb *urb)
+ 
+ 	usb_serial_debug_data(dev, __func__, raw_data_length, data);
+ 
+-	spin_lock(&edge_serial->es_lock);
++	spin_lock_irqsave(&edge_serial->es_lock, flags);
+ 
+ 	/* decrement our rxBytes available by the number that we just got */
+ 	edge_serial->rxBytesAvail -= raw_data_length;
+@@ -716,7 +718,7 @@ static void edge_bulk_in_callback(struct urb *urb)
+ 		edge_serial->read_in_progress = false;
  	}
  
- 	ret = ieee80211_register_hw(ar->hw);
- 	if (ret) {
- 		ath10k_err("ieee80211 registration failed: %d\n", ret);
--		return ret;
-+		goto err_free;
- 	}
- 
- 	if (!ath_is_world_regd(&ar->ath_common.regulatory)) {
- 		ret = regulatory_hint(ar->hw->wiphy,
- 				      ar->ath_common.regulatory.alpha2);
- 		if (ret)
--			goto exit;
-+			goto err_unregister;
- 	}
- 
- 	return 0;
--exit:
-+
-+err_unregister:
- 	ieee80211_unregister_hw(ar->hw);
-+err_free:
-+	kfree(ar->mac.sbands[IEEE80211_BAND_2GHZ].channels);
-+	kfree(ar->mac.sbands[IEEE80211_BAND_5GHZ].channels);
-+
- 	return ret;
+-	spin_unlock(&edge_serial->es_lock);
++	spin_unlock_irqrestore(&edge_serial->es_lock, flags);
  }
+ 
  
 -- 
 1.7.9.5
