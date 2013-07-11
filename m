@@ -1,50 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52611 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150Ab3G2SpJ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50671 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755827Ab3GKM2A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 14:45:09 -0400
-Date: Mon, 29 Jul 2013 14:43:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-07-25
-Message-ID: <20130729184312.GE31172@tuxdriver.com> (sfid-20130729_204541_699670_903A7917)
-References: <20130725130552.GE9913@joana>
- <20130725150156.GA21959@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130725150156.GA21959@joana>
+	Thu, 11 Jul 2013 08:28:00 -0400
+Message-ID: <1373545676.8201.11.camel@jlt4.sipsolutions.net> (sfid-20130711_142804_887290_19517BAC)
+Subject: Re: [PATCH 1/3] iw: dump station rx bit rate information
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 11 Jul 2013 14:27:56 +0200
+In-Reply-To: <1373545239-78697-1-git-send-email-nbd@openwrt.org>
+References: <1373545239-78697-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 25, 2013 at 04:01:58PM +0100, Gustavo Padovan wrote:
-> Hi John,
-> 
-> * Gustavo Padovan <gustavo@padovan.org> [2013-07-25 14:05:54 +0100]:
-> 
-> > Hi John,
-> > 
-> > A few fixes and devices ID additions for 3.11: 
-> > 
-> >  * There are 3 new ath3k device ids 
-> >  * Fixed stack memory usage in ath3k.
-> >  * Fixed the init process of BlueFRITZ! devices, they were failing to init
-> >    due to an unsupported command we sent. 
-> >  * Fixed wrong use of PTR_ERR in btusb code that was preventing intel devices
-> >    to work properly 
-> >  * Fixed race codition between hci_register_dev() and hci_dev_open() that
-> >    could cause a NULL pointer dereference.
-> 
-> Marcel just raised the comment that we need to add more information to
-> the BlueFRITZ! fixes so I'm steping back with it. So just ignore it for
-> now.
-> 
-> 	Gustavo
+Applied all, thanks.
 
-Is a new version of this request still coming?
+johannes
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
