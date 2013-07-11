@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:41990 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967Ab3GNFDI convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49917 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755850Ab3GKIwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jul 2013 01:03:08 -0400
-Received: by mail-la0-f44.google.com with SMTP id er20so8797014lab.17
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Jul 2013 22:03:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+icZUX9jvAcvEkKSsN-KU2GWxPVGg9Z=soecwJtPL0soHD4Zw@mail.gmail.com>
-References: <001a01ce7fb1$75bfdc10$613f9430$@info>
-	<CA+icZUVoZkg3nT6=SwTaLCWoa+v6aLkXSP5b71a0GmxMMWOyHA@mail.gmail.com>
-	<001b01ce7fba$4bd15e20$e3741a60$@info>
-	<CA+icZUX9jvAcvEkKSsN-KU2GWxPVGg9Z=soecwJtPL0soHD4Zw@mail.gmail.com>
-Date: Sun, 14 Jul 2013 08:03:05 +0300
-Message-ID: <CANUX_P2K9_q_FnkzDrn4=Y3rzn3FvkPjCB4qGmts=7kni9oW4A@mail.gmail.com> (sfid-20130714_070327_633164_CB03DC5B)
-Subject: Re: Firmware error for Centrino N 2230
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: Cedric GROSS <cg@cgross.info>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+	Thu, 11 Jul 2013 04:52:51 -0400
+Message-ID: <1373532768.8201.2.camel@jlt4.sipsolutions.net> (sfid-20130711_105254_462816_20E02892)
+Subject: Re: [WT PATCH 2/6] mac80211: Make un-found-rate splat a warn-once.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 11 Jul 2013 10:52:48 +0200
+In-Reply-To: <1372546738-25827-2-git-send-email-greearb@candelatech.com> (sfid-20130630_005926_867232_CB3CEEA7)
+References: <1372546738-25827-1-git-send-email-greearb@candelatech.com>
+	 <1372546738-25827-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20130630_005926_867232_CB3CEEA7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>> > I’m trying to adapt current freebsd driver for supporting my 2230
->>> NIC.
->>> >
->>> > I try to follow ucode command order defined in kernel 3.2 but I reach
->>> > some difficulties because firmware raise error.
->>> >
->>> > Runtime uCode is alive. So far I sent calib result (cmd xB0),
->>> > configured advanced BT coexistence (cmd x9B,xCC and xCD) running
->>> > runtime calib (cmd
->>> > x65) but the command configuring valid chain (cmd x65) failed as the
->>> > result below :
+On Sat, 2013-06-29 at 15:58 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> After that, print it out with net_ratelimit.  We saw a system
+> continually hit this warning, for reasons unknown, and it
+> seems it bogged the system down enough to make it go OOM.
 
-cmd 0x65? it is not valid chain command.
+I've hardly seen this in practice, let's just make it ratelimited
+always.
 
-1987 means that you haven't sent the Xtal calibration.
+I think maybe sdata_info_ratelimited() or so would be worthwhile.
+
+Might also stick in an unlikely().
+
+johannes
+
+
