@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:34957 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932245Ab3GKJJn (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:39578 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab3GKJH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:09:43 -0400
+	Thu, 11 Jul 2013 05:07:58 -0400
 From: Ming Lei <ming.lei@canonical.com>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
@@ -12,89 +12,103 @@ Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
 	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
 	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
 	Ming Lei <ming.lei@canonical.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>
-Subject: [PATCH 23/50] BT: bfusb: read_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:46 +0800
-Message-Id: <1373533573-12272-24-git-send-email-ming.lei@canonical.com> (sfid-20130711_111701_729982_E2B4E07C)
+	Matthias Bruestle and Harald Welte <support@reiner-sct.com>
+Subject: [PATCH 10/50] USB: serial: cyberjack: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:33 +0800
+Message-Id: <1373533573-12272-11-git-send-email-ming.lei@canonical.com> (sfid-20130711_110813_878580_066532B5)
 In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Complete() will be run with interrupt enabled, so change to
-read_lock_irqsave().
+spin_lock_irqsave().
 
-Cc: Marcel Holtmann <marcel@holtmann.org>
-Cc: Gustavo Padovan <gustavo@padovan.org>
-Cc: Johan Hedberg <johan.hedberg@gmail.com>
-Cc: linux-bluetooth@vger.kernel.org
+Cc: Matthias Bruestle and Harald Welte <support@reiner-sct.com>
 Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/bluetooth/bfusb.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/usb/serial/cyberjack.c |   15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/bluetooth/bfusb.c b/drivers/bluetooth/bfusb.c
-index 995aee9..2e93501 100644
---- a/drivers/bluetooth/bfusb.c
-+++ b/drivers/bluetooth/bfusb.c
-@@ -186,6 +186,7 @@ static void bfusb_tx_complete(struct urb *urb)
- {
- 	struct sk_buff *skb = (struct sk_buff *) urb->context;
- 	struct bfusb_data *data = (struct bfusb_data *) skb->dev;
+diff --git a/drivers/usb/serial/cyberjack.c b/drivers/usb/serial/cyberjack.c
+index 7814262..0ab0957 100644
+--- a/drivers/usb/serial/cyberjack.c
++++ b/drivers/usb/serial/cyberjack.c
+@@ -271,11 +271,12 @@ static void cyberjack_read_int_callback(struct urb *urb)
+ 	/* React only to interrupts signaling a bulk_in transfer */
+ 	if (urb->actual_length == 4 && data[0] == 0x01) {
+ 		short old_rdtodo;
++		unsigned long flags;
+ 
+ 		/* This is a announcement of coming bulk_ins. */
+ 		unsigned short size = ((unsigned short)data[3]<<8)+data[2]+3;
+ 
+-		spin_lock(&priv->lock);
++		spin_lock_irqsave(&priv->lock, flags);
+ 
+ 		old_rdtodo = priv->rdtodo;
+ 
+@@ -290,7 +291,7 @@ static void cyberjack_read_int_callback(struct urb *urb)
+ 
+ 		dev_dbg(dev, "%s - rdtodo: %d\n", __func__, priv->rdtodo);
+ 
+-		spin_unlock(&priv->lock);
++		spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 		if (!old_rdtodo) {
+ 			result = usb_submit_urb(port->read_urb, GFP_ATOMIC);
+@@ -317,6 +318,7 @@ static void cyberjack_read_bulk_callback(struct urb *urb)
+ 	short todo;
+ 	int result;
+ 	int status = urb->status;
 +	unsigned long flags;
  
- 	BT_DBG("bfusb %p urb %p skb %p len %d", data, urb, skb, skb->len);
- 
-@@ -199,14 +200,14 @@ static void bfusb_tx_complete(struct urb *urb)
- 	else
- 		data->hdev->stat.err_tx++;
- 
--	read_lock(&data->lock);
-+	read_lock_irqsave(&data->lock, flags);
- 
- 	skb_unlink(skb, &data->pending_q);
- 	skb_queue_tail(&data->completed_q, skb);
- 
- 	bfusb_tx_wakeup(data);
- 
--	read_unlock(&data->lock);
-+	read_unlock_irqrestore(&data->lock, flags);
- }
- 
- 
-@@ -347,10 +348,11 @@ static void bfusb_rx_complete(struct urb *urb)
- 	unsigned char *buf = urb->transfer_buffer;
- 	int count = urb->actual_length;
- 	int err, hdr, len;
-+	unsigned long flags;
- 
- 	BT_DBG("bfusb %p urb %p skb %p len %d", data, urb, skb, skb->len);
- 
--	read_lock(&data->lock);
-+	read_lock_irqsave(&data->lock, flags);
- 
- 	if (!test_bit(HCI_RUNNING, &data->hdev->flags))
- 		goto unlock;
-@@ -392,7 +394,7 @@ static void bfusb_rx_complete(struct urb *urb)
- 
- 	bfusb_rx_submit(data, urb);
- 
--	read_unlock(&data->lock);
-+	read_unlock_irqrestore(&data->lock, flags);
- 
- 	return;
- 
-@@ -406,7 +408,7 @@ resubmit:
+ 	usb_serial_debug_data(dev, __func__, urb->actual_length, data);
+ 	if (status) {
+@@ -330,7 +332,7 @@ static void cyberjack_read_bulk_callback(struct urb *urb)
+ 		tty_flip_buffer_push(&port->port);
  	}
  
- unlock:
--	read_unlock(&data->lock);
-+	read_unlock_irqrestore(&data->lock, flags);
+-	spin_lock(&priv->lock);
++	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	/* Reduce urbs to do by one. */
+ 	priv->rdtodo -= urb->actual_length;
+@@ -339,7 +341,7 @@ static void cyberjack_read_bulk_callback(struct urb *urb)
+ 		priv->rdtodo = 0;
+ 	todo = priv->rdtodo;
+ 
+-	spin_unlock(&priv->lock);
++	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	dev_dbg(dev, "%s - rdtodo: %d\n", __func__, todo);
+ 
+@@ -359,6 +361,7 @@ static void cyberjack_write_bulk_callback(struct urb *urb)
+ 	struct cyberjack_private *priv = usb_get_serial_port_data(port);
+ 	struct device *dev = &port->dev;
+ 	int status = urb->status;
++	unsigned long flags;
+ 
+ 	set_bit(0, &port->write_urbs_free);
+ 	if (status) {
+@@ -367,7 +370,7 @@ static void cyberjack_write_bulk_callback(struct urb *urb)
+ 		return;
+ 	}
+ 
+-	spin_lock(&priv->lock);
++	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	/* only do something if we have more data to send */
+ 	if (priv->wrfilled) {
+@@ -411,7 +414,7 @@ static void cyberjack_write_bulk_callback(struct urb *urb)
+ 	}
+ 
+ exit:
+-	spin_unlock(&priv->lock);
++	spin_unlock_irqrestore(&priv->lock, flags);
+ 	usb_serial_port_softint(port);
  }
  
- static int bfusb_open(struct hci_dev *hdev)
 -- 
 1.7.9.5
 
