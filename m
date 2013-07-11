@@ -1,82 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46950 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752613Ab3GHURq (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:46240 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755838Ab3GKJHI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 16:17:46 -0400
-Message-ID: <51DB1E69.2080208@candelatech.com> (sfid-20130708_221752_976864_7C86E704)
-Date: Mon, 08 Jul 2013 13:17:45 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: netdev <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 3.9.5+:  Crash in tcp_input.c:4810.
-References: <51BF50B3.1080403@candelatech.com>       <1371493059.3252.200.camel@edumazet-glaptop>       <51D1C620.8030007@candelatech.com>      <1372813467.4979.46.camel@edumazet-glaptop>      <51D398C0.5060802@candelatech.com>     <1372826512.4979.49.camel@edumazet-glaptop>     <51D3AD66.8030506@candelatech.com>    <1372827749.4979.52.camel@edumazet-glaptop>    <51DAF5A7.60505@candelatech.com>   <1373307702.4979.116.camel@edumazet-glaptop>   <51DB054D.6060507@candelatech.com>  <1373310119.4979.119.camel@edumazet-glaptop>  <51DB1A0C.3080807@candelatech.com> <1373314235.4979.121.camel@edumazet-glaptop>
-In-Reply-To: <1373314235.4979.121.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 11 Jul 2013 05:07:08 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Lisa Nguyen <lisa@xenapiadmin.com>
+Subject: [PATCH 04/50] USB: adutux: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:27 +0800
+Message-Id: <1373533573-12272-5-git-send-email-ming.lei@canonical.com> (sfid-20130711_110723_495694_3FB3ED6D)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/2013 01:10 PM, Eric Dumazet wrote:
-> On Mon, 2013-07-08 at 12:59 -0700, Ben Greear wrote:
->
->>> There is this thing in ath9k about aggregating two frags
->>>
->>> drivers/net/wireless/ath/ath9k/recv.c line 1298 contains :
->>>
->>> RX_STAT_INC(rx_frags);
->>>
->>> Could you check these stats (I do not know if they are reported by
->>> ethtool -S or another debugging facility) and check if rx_frags is ever
->>> increasing ?
->>
->> They are in debugfs, and they appear to increase fairly often, for
->> instance:
->>
->> [root@lec2010-ath9k-1 lanforge]# cat /debug/ieee80211/wiphy0/ath9k/recv|tail -5
->>              RX-Pkts-All :  288009442
->>             RX-Bytes-All : 4067932166
->>               RX-Beacons :   14826735
->>                 RX-Frags :       3944
->>              RX-Spectral :          0
->>
->> I don't have the stats from the system that reproduced the bug
->> (it has been rebooted), but if I do see the bug again, I'll
->> grab the rx-frags and other stats just in case it shows
->> some anomaly.
->>
->
-> Reading this code again, I believe following patch is needed.
->
-> Could you test it ?
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-Sure, will do.  Adding the linux-wireless mailing list as well.
+Cc: Lisa Nguyen <lisa@xenapiadmin.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/usb/misc/adutux.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Thanks,
-Ben
-
->
-> Thanks
->
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index 8be2b5d..f642f04 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -1317,7 +1317,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->   		if (sc->rx.frag) {
->   			int space = skb->len - skb_tailroom(hdr_skb);
->
-> -			if (pskb_expand_head(hdr_skb, 0, space, GFP_ATOMIC) < 0) {
-> +			if (space > 0 &&
-> +			    pskb_expand_head(hdr_skb, 0, space, GFP_ATOMIC) < 0) {
->   				dev_kfree_skb(skb);
->   				RX_STAT_INC(rx_oom_err);
->   				goto requeue_drop_frag;
->
-
-
+diff --git a/drivers/usb/misc/adutux.c b/drivers/usb/misc/adutux.c
+index eb3c8c1..387c75e 100644
+--- a/drivers/usb/misc/adutux.c
++++ b/drivers/usb/misc/adutux.c
+@@ -195,12 +195,13 @@ static void adu_interrupt_in_callback(struct urb *urb)
+ {
+ 	struct adu_device *dev = urb->context;
+ 	int status = urb->status;
++	unsigned long flags;
+ 
+ 	dbg(4, " %s : enter, status %d", __func__, status);
+ 	adu_debug_data(5, __func__, urb->actual_length,
+ 		       urb->transfer_buffer);
+ 
+-	spin_lock(&dev->buflock);
++	spin_lock_irqsave(&dev->buflock, flags);
+ 
+ 	if (status != 0) {
+ 		if ((status != -ENOENT) && (status != -ECONNRESET) &&
+@@ -229,7 +230,7 @@ static void adu_interrupt_in_callback(struct urb *urb)
+ 
+ exit:
+ 	dev->read_urb_finished = 1;
+-	spin_unlock(&dev->buflock);
++	spin_unlock_irqrestore(&dev->buflock, flags);
+ 	/* always wake up so we recover from errors */
+ 	wake_up_interruptible(&dev->read_wait);
+ 	adu_debug_data(5, __func__, urb->actual_length,
+@@ -241,6 +242,7 @@ static void adu_interrupt_out_callback(struct urb *urb)
+ {
+ 	struct adu_device *dev = urb->context;
+ 	int status = urb->status;
++	unsigned long flags;
+ 
+ 	dbg(4, " %s : enter, status %d", __func__, status);
+ 	adu_debug_data(5, __func__, urb->actual_length, urb->transfer_buffer);
+@@ -254,10 +256,10 @@ static void adu_interrupt_out_callback(struct urb *urb)
+ 		goto exit;
+ 	}
+ 
+-	spin_lock(&dev->buflock);
++	spin_lock_irqsave(&dev->buflock, flags);
+ 	dev->out_urb_finished = 1;
+ 	wake_up(&dev->write_wait);
+-	spin_unlock(&dev->buflock);
++	spin_unlock_irqrestore(&dev->buflock, flags);
+ exit:
+ 
+ 	adu_debug_data(5, __func__, urb->actual_length,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.9.5
 
