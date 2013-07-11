@@ -1,113 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38297 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752001Ab3GHO4S (ORCPT
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:44915 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755025Ab3GKOGS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:18 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 00/18] Add support for 5 and 10 MHz channels
-Date: Mon,  8 Jul 2013 16:55:48 +0200
-Message-Id: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_172040_418874_4BFD82B1)
+	Thu, 11 Jul 2013 10:06:18 -0400
+Message-ID: <51DEBBF5.7090909@gmail.com> (sfid-20130711_160623_615690_9913B68E)
+Date: Thu, 11 Jul 2013 16:06:45 +0200
+From: Daniel Mack <zonque@gmail.com>
+MIME-Version: 1.0
+To: Ming Lei <ming.lei@canonical.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>
+Subject: Re: [PATCH 44/50] sound: usb: caiaq: spin_lock in complete() cleanup
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-45-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1373533573-12272-45-git-send-email-ming.lei@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds support for 5 and 10 MHz in nl80211/cfg80211/mac80211
-and enables support in ath5k and ath9k, which already support this feature
-on the driver side. 5 and 10 MHz wide channels might be useful for:
+On 11.07.2013 11:06, Ming Lei wrote:
+> Complete() will be run with interrupt enabled, so change to
+> spin_lock_irqsave().
+> 
+> Cc: Daniel Mack <zonque@gmail.com>
+> Cc: Jaroslav Kysela <perex@perex.cz>
+> Cc: Takashi Iwai <tiwai@suse.de>
+> Cc: alsa-devel@alsa-project.org
+> Signed-off-by: Ming Lei <ming.lei@canonical.com>
 
- * long shot links, as the transmissions are more robust
- * future support for 802.11y which allows some 5 and 10 MHz channels in
-   3.6 GHz range
- * future support for 802.11p which uses 10 MHz in 5.9 GHz range
- * ... and more "special" applications.
+Sound right to me, thanks.
 
-This patchset enables 5 and 10 MHz channels only for OFDM, and without
-HT/MIMO/aggregation (for now). Support may be added later.
-
-Changes to PATCHv5:
-
- * fix compile error/warnings when applying only parts of the patchset,
-   move patch "mac80211: add radiotap flag and handling for 5/10 MHz" in front
-   for the same reason
- * remove useless whitespace
-
-As always, any comments are appreciated!
-Cheers,
-        Simon
+Acked-by: Daniel Mack <zonque@gmail.com>
 
 
-Simon Wunderlich (18):
-  nl80211: add scan width to bss and scan request structs
-  mac80211/rc80211: add chandef to rate initialization
-  mac80211: fix timing for 5 MHz and 10 MHz channels
-  mac80211: add radiotap flag and handling for 5/10 MHz
-  mac80211: select and adjust bitrates according to channel mode
-  cfg80211/mac80211: get mandatory rates based on scan width
-  cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
-  mac80211: allow scanning for 5/10 MHz channels in IBSS
-  mac80211: return if IBSS chandef can not be used
-  nl80211: allow 5 and 10 MHz channels for IBSS
-  ath9k: always use SIFS times from OFDM for 5/10 MHz
-  ath9k: use chandef instead of channel_type
-  ath9k: report 5/10 MHz channels
-  ath9k: set 5/10 MHz supported channels and fix bitrate
-  ath9k: announce that ath9k supports 5/10 MHz
-  ath5k: report 5/10 MHz channels
-  ath5k: set 5/10 MHz supported channels and fix duration
-  ath5k: enable support for 5 MHz and 10 MHz channels
 
- drivers/net/wireless/ath/ath5k/ath5k.h        |    1 +
- drivers/net/wireless/ath/ath5k/base.c         |   59 ++++++--
- drivers/net/wireless/ath/ath5k/base.h         |    2 +-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
- drivers/net/wireless/ath/ath5k/pcu.c          |    2 +
- drivers/net/wireless/ath/ath5k/qcu.c          |   25 +++-
- drivers/net/wireless/ath/ath9k/common.c       |   67 +++++----
- drivers/net/wireless/ath/ath9k/common.h       |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    5 +-
- drivers/net/wireless/ath/ath9k/hw.c           |    5 +-
- drivers/net/wireless/ath/ath9k/init.c         |   29 ++--
- drivers/net/wireless/ath/ath9k/main.c         |    8 +-
- drivers/net/wireless/ath/ath9k/rc.c           |   11 +-
- drivers/net/wireless/ath/ath9k/recv.c         |   11 ++
- drivers/net/wireless/iwlegacy/3945-rs.c       |    1 +
- drivers/net/wireless/iwlegacy/4965-rs.c       |    1 +
- drivers/net/wireless/iwlwifi/dvm/rs.c         |    3 +-
- drivers/net/wireless/iwlwifi/mvm/rs.c         |    5 +-
- drivers/net/wireless/rtlwifi/rc.c             |    1 +
- include/net/cfg80211.h                        |   85 ++++++++++-
- include/net/ieee80211_radiotap.h              |    4 +
- include/net/mac80211.h                        |    6 +
- include/uapi/linux/nl80211.h                  |   18 +++
- net/mac80211/cfg.c                            |   45 +++---
- net/mac80211/ibss.c                           |  124 ++++++++++++----
- net/mac80211/ieee80211_i.h                    |   43 +++++-
- net/mac80211/iface.c                          |    2 +-
- net/mac80211/main.c                           |   15 +-
- net/mac80211/mesh.c                           |    3 +-
- net/mac80211/mesh_plink.c                     |    2 +-
- net/mac80211/mlme.c                           |   98 +++++++------
- net/mac80211/rate.c                           |   50 ++++---
- net/mac80211/rate.h                           |   22 ++-
- net/mac80211/rc80211_minstrel.c               |   33 ++++-
- net/mac80211/rc80211_minstrel_ht.c            |   15 +-
- net/mac80211/rc80211_pid_algo.c               |    1 +
- net/mac80211/rx.c                             |   28 ++--
- net/mac80211/scan.c                           |   72 ++++++++--
- net/mac80211/status.c                         |   17 ++-
- net/mac80211/tx.c                             |   25 +++-
- net/mac80211/util.c                           |  190 ++++++++++++++++++++-----
- net/wireless/mesh.c                           |    5 +-
- net/wireless/nl80211.c                        |    3 +
- net/wireless/scan.c                           |   31 ++--
- net/wireless/trace.h                          |   12 +-
- net/wireless/util.c                           |   14 +-
- 46 files changed, 884 insertions(+), 320 deletions(-)
-
--- 
-1.7.10.4
+> ---
+>  sound/usb/caiaq/audio.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/sound/usb/caiaq/audio.c b/sound/usb/caiaq/audio.c
+> index 7103b09..e5675ab 100644
+> --- a/sound/usb/caiaq/audio.c
+> +++ b/sound/usb/caiaq/audio.c
+> @@ -672,10 +672,11 @@ static void read_completed(struct urb *urb)
+>  		offset += len;
+>  
+>  		if (len > 0) {
+> -			spin_lock(&cdev->spinlock);
+> +			unsigned long flags;
+> +			spin_lock_irqsave(&cdev->spinlock, flags);
+>  			fill_out_urb(cdev, out, &out->iso_frame_desc[outframe]);
+>  			read_in_urb(cdev, urb, &urb->iso_frame_desc[frame]);
+> -			spin_unlock(&cdev->spinlock);
+> +			spin_unlock_irqrestore(&cdev->spinlock, flags);
+>  			check_for_elapsed_periods(cdev, cdev->sub_playback);
+>  			check_for_elapsed_periods(cdev, cdev->sub_capture);
+>  			send_it = 1;
+> 
 
