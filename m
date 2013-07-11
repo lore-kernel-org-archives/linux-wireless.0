@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:33496 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753627Ab3GJNdp (ORCPT
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:50418 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab3GKJHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 09:33:45 -0400
-Date: Wed, 10 Jul 2013 15:33:37 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv4 4/5] mac80211: add channel switch command and beacon
- callbacks
-Message-ID: <20130710133337.GA29831@pandem0nium> (sfid-20130710_153349_246651_0FE563EA)
-References: <1373394424-23298-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1373394424-23298-5-git-send-email-siwu@hrz.tu-chemnitz.de>
- <CA+BoTQniF+b0JAjiKyRApttz8Or+urYB+XCxsNFA4y87Cbry-w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="OgqxwSJOaUobr8KG"
-In-Reply-To: <CA+BoTQniF+b0JAjiKyRApttz8Or+urYB+XCxsNFA4y87Cbry-w@mail.gmail.com>
+	Thu, 11 Jul 2013 05:07:43 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Juergen Stuber <starblue@users.sourceforge.net>
+Subject: [PATCH 08/50] USB: legousbtower: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:31 +0800
+Message-Id: <1373533573-12272-9-git-send-email-ming.lei@canonical.com> (sfid-20130711_111856_270034_1972EC2C)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cc: Juergen Stuber <starblue@users.sourceforge.net>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/usb/misc/legousbtower.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-On Wed, Jul 10, 2013 at 12:52:00PM +0200, Michal Kazior wrote:
-> On 9 July 2013 20:27, Simon Wunderlich
-> <simon.wunderlich@s2003.tu-chemnitz.de> wrote:
-> > (...)
-> > +       /* don't handle if chanctx is used */
-> > +       if (local->use_chanctx)
-> > +               return -EINVAL;
-> > (...)
->=20
-> This check doesn't seem to be necessary anymore (since you verify if
-> the number of channel contexts is 1), or is it?
+diff --git a/drivers/usb/misc/legousbtower.c b/drivers/usb/misc/legousbtower.c
+index 8089479..4044989 100644
+--- a/drivers/usb/misc/legousbtower.c
++++ b/drivers/usb/misc/legousbtower.c
+@@ -771,6 +771,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
+ 	struct lego_usb_tower *dev = urb->context;
+ 	int status = urb->status;
+ 	int retval;
++	unsigned long flags;
+ 
+ 	dbg(4, "%s: enter, status %d", __func__, status);
+ 
+@@ -788,7 +789,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
+ 	}
+ 
+ 	if (urb->actual_length > 0) {
+-		spin_lock (&dev->read_buffer_lock);
++		spin_lock_irqsave (&dev->read_buffer_lock, flags);
+ 		if (dev->read_buffer_length + urb->actual_length < read_buffer_size) {
+ 			memcpy (dev->read_buffer + dev->read_buffer_length,
+ 				dev->interrupt_in_buffer,
+@@ -799,7 +800,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
+ 		} else {
+ 			printk(KERN_WARNING "%s: read_buffer overflow, %d bytes dropped", __func__, urb->actual_length);
+ 		}
+-		spin_unlock (&dev->read_buffer_lock);
++		spin_unlock_irqrestore (&dev->read_buffer_lock, flags);
+ 	}
+ 
+ resubmit:
+-- 
+1.7.9.5
 
-Yeah, I forgot to remove this check (same for the patch 3).
-
-I'll wait a few days for any further comments, and resend it without this
-check.
-
-Thanks,
-	Simon
-
---OgqxwSJOaUobr8KG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlHdYrEACgkQrzg/fFk7axbwIACbBJp+4lw4nUfBsaHA9xJ6s0Bt
-xIoAoLDi0MzTug+/8w21MLh+7Z3usyY+
-=zQTk
------END PGP SIGNATURE-----
-
---OgqxwSJOaUobr8KG--
