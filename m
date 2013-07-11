@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:58622 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752758Ab3GBURg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 16:17:36 -0400
-Message-ID: <1372796218.21065.87.camel@cumari.coelho.fi> (sfid-20130702_221753_512293_F5BBDCE3)
-Subject: Re: [PATCH v2 5/9] wlcore: always use one-shot IRQ
-From: Luciano Coelho <coelho@ti.com>
-To: <balbi@ti.com>
-CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Date: Tue, 2 Jul 2013 23:16:58 +0300
-In-Reply-To: <20130702153229.GG7013@arwen.pp.htv.fi>
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
-	 <1372776948-24840-6-git-send-email-coelho@ti.com>
-	 <20130702153229.GG7013@arwen.pp.htv.fi>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-la0-f52.google.com ([209.85.215.52]:65424 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755174Ab3GKUYF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 16:24:05 -0400
+Received: by mail-la0-f52.google.com with SMTP id fo12so7167217lab.39
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 13:24:03 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <51DF13DA.3040803@broadcom.com>
+References: <CAB=NE6V-MOLqe0Ty0R+MX-S3oZFSfkXq+X7rqRi9RTAQ8DtuTQ@mail.gmail.com>
+ <51DF13DA.3040803@broadcom.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 11 Jul 2013 13:23:42 -0700
+Message-ID: <CAB=NE6XE-DbDjCZ8ORCPYCSqzeXAs+SQvKY-0b0s9Eq8iFbxSQ@mail.gmail.com> (sfid-20130711_222409_248386_555593F0)
+Subject: Re: Using CC BY-SA for wireless wiki content
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-07-02 at 18:32 +0300, Felipe Balbi wrote:
-> On Tue, Jul 02, 2013 at 05:55:44PM +0300, Luciano Coelho wrote:
-> > Since we are now using threaded IRQs without the primary handler, we
-> > need to set IRQF_ONESHOT, otherwise our request will fail.
-> > 
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> 
-> good to see this happening, I remember we talked about this a while back
-> :-)
+On Thu, Jul 11, 2013 at 1:21 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 07/11/13 22:18, Luis R. Rodriguez wrote:
+>>
+>> Folks,
+>>
+>> Anyone have any issues if we license the wiki content on
+>> wireless.kernel.org under CC BY-SA license? That would make it
+>> compatible with  Wikipedia. Please shout out if you disagree with this
+>> move as at this point we have random collaborations but at least as
+>> per initial review it seems this would be a good idea. Want to see if
+>> anyone disagrees before we do the move.
+>
+>
+> Which version?
 
-Yeah, we talked about it and I did the patch immediately.  This is
-needed because this is obviously not set automatically in the interrupts
-created via device tree.
+CC BY-SA 3.0 Unported, following the same version used by Wikipedia:
 
+https://en.wikipedia.org/wiki/Wikipedia:Text_of_Creative_Commons_Attribution-ShareAlike_3.0_Unported_License
 
-> Acked-by: Felipe Balbi <balbi@ti.com>
-> 
-> Still, if you call irq_set_irq_type() on board-file (since DT will do
-> something similar for you anyway) then you can completely drop
-> irq_flags.
-
-Yep.
-
---
-Luca.
-
+  Luis
