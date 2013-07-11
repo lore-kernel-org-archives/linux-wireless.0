@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:46869 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752797Ab3GHUYI (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:42051 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932278Ab3GKJKG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 16:24:08 -0400
-Received: by mail-la0-f53.google.com with SMTP id fs12so4137181lab.40
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jul 2013 13:24:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMcMvsiQb=byYEV4z2aZUYCLjRmqJUm_SQrUrOPUXrrfkcjeLA@mail.gmail.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
- <1372899889-19183-43-git-send-email-mcgrof@do-not-panic.com> <CAMcMvsiQb=byYEV4z2aZUYCLjRmqJUm_SQrUrOPUXrrfkcjeLA@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 8 Jul 2013 13:23:45 -0700
-Message-ID: <CAB=NE6XFY1po10NZOCqTAbBWT6kvpmS67pRnj9CDtBUQTt_Pqw@mail.gmail.com> (sfid-20130708_222411_786710_E58F422A)
-Subject: Re: [RFC 42/53] wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
-To: Paul Stewart <pstew@chromium.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 11 Jul 2013 05:10:06 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH 26/50] USBNET: cdc-phonet: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:49 +0800
+Message-Id: <1373533573-12272-27-git-send-email-ming.lei@canonical.com> (sfid-20130711_111025_808722_A1C99336)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 4, 2013 at 10:51 AM, Paul Stewart <pstew@chromium.org> wrote:
-> On Wed, Jul 3, 2013 at 6:04 PM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
->>
->> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
->>
->> Pursuant to:
->>
->> http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf,
->>
->> provide a 5GHz rule for Indonesian regulatory domain. QCA has
->> also verified VHT80 can be enabled. Patch originally posted by
->> Paul Stewart <pstew@chromium.org>, I just modified to enable 80 MHz
->> bandwidth.
->>
->> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-> Signed-off-by: Paul Stewart <pstew@chromium.org>
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-Given I've been promoting the idea of taking the Linux kernel DCO and
-making it a standalone project [0] it is critical for me to promote
-proper usage of the Signed-off-by tag. In this case it is not
-required, and a more appropriate tag is either Acked-by or
-Reviewed-by. I'll add Acked-by for you and respin, thanks!
+Cc: netdev@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/net/usb/cdc-phonet.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-[0] https://docs.google.com/presentation/d/1J4VTSTuiJ88xcvOrYg7HRvwUoxOW9qvnBqOfoPPuc64/edit
+diff --git a/drivers/net/usb/cdc-phonet.c b/drivers/net/usb/cdc-phonet.c
+index 7d78669..413ec32 100644
+--- a/drivers/net/usb/cdc-phonet.c
++++ b/drivers/net/usb/cdc-phonet.c
+@@ -99,6 +99,7 @@ static void tx_complete(struct urb *req)
+ 	struct net_device *dev = skb->dev;
+ 	struct usbpn_dev *pnd = netdev_priv(dev);
+ 	int status = req->status;
++	unsigned long flags;
+ 
+ 	switch (status) {
+ 	case 0:
+@@ -115,10 +116,10 @@ static void tx_complete(struct urb *req)
+ 	}
+ 	dev->stats.tx_packets++;
+ 
+-	spin_lock(&pnd->tx_lock);
++	spin_lock_irqsave(&pnd->tx_lock, flags);
+ 	pnd->tx_queue--;
+ 	netif_wake_queue(dev);
+-	spin_unlock(&pnd->tx_lock);
++	spin_unlock_irqrestore(&pnd->tx_lock, flags);
+ 
+ 	dev_kfree_skb_any(skb);
+ 	usb_free_urb(req);
+-- 
+1.7.9.5
 
-  Luis
