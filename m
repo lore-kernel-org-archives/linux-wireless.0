@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:34491 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757391Ab3GENPX (ORCPT
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:52199 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab3GKJIy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:15:23 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 16/16] ath10k: add missing debug prints
-Date: Fri,  5 Jul 2013 16:15:17 +0300
-Message-Id: <1373030117-18077-17-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_151537_074760_4130AC76)
-In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+	Thu, 11 Jul 2013 05:08:54 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Johan Hovold <jhovold@gmail.com>
+Subject: [PATCH 17/50] USB: serial: sierra: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:40 +0800
+Message-Id: <1373533573-12272-18-git-send-email-ming.lei@canonical.com> (sfid-20130711_110910_052962_834E2ACB)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Johan Hovold <jhovold@gmail.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/usb/serial/sierra.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 681e941..b7e7e45 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1748,6 +1748,9 @@ int ath10k_wmi_vdev_install_key(struct ath10k *ar,
- 	if (arg->key_data)
- 		memcpy(cmd->key_data, arg->key_data, arg->key_len);
+diff --git a/drivers/usb/serial/sierra.c b/drivers/usb/serial/sierra.c
+index de958c5..e79b6ad 100644
+--- a/drivers/usb/serial/sierra.c
++++ b/drivers/usb/serial/sierra.c
+@@ -433,6 +433,7 @@ static void sierra_outdat_callback(struct urb *urb)
+ 	struct sierra_port_private *portdata = usb_get_serial_port_data(port);
+ 	struct sierra_intf_private *intfdata;
+ 	int status = urb->status;
++	unsigned long flags;
  
-+	ath10k_dbg(ATH10K_DBG_WMI,
-+		   "wmi vdev install key idx %d cipher %d len %d\n",
-+		   arg->key_idx, arg->key_cipher, arg->key_len);
- 	return ath10k_wmi_cmd_send(ar, skb, WMI_VDEV_INSTALL_KEY_CMDID);
+ 	intfdata = port->serial->private;
+ 
+@@ -443,12 +444,12 @@ static void sierra_outdat_callback(struct urb *urb)
+ 		dev_dbg(&port->dev, "%s - nonzero write bulk status "
+ 		    "received: %d\n", __func__, status);
+ 
+-	spin_lock(&portdata->lock);
++	spin_lock_irqsave(&portdata->lock, flags);
+ 	--portdata->outstanding_urbs;
+-	spin_unlock(&portdata->lock);
+-	spin_lock(&intfdata->susp_lock);
++	spin_unlock_irqrestore(&portdata->lock, flags);
++	spin_lock_irqsave(&intfdata->susp_lock, flags);
+ 	--intfdata->in_flight;
+-	spin_unlock(&intfdata->susp_lock);
++	spin_unlock_irqrestore(&intfdata->susp_lock, flags);
+ 
+ 	usb_serial_port_softint(port);
  }
- 
-@@ -2011,6 +2014,9 @@ int ath10k_wmi_peer_assoc(struct ath10k *ar,
- 	cmd->peer_vht_rates.tx_mcs_set =
- 		__cpu_to_le32(arg->peer_vht_rates.tx_mcs_set);
- 
-+	ath10k_dbg(ATH10K_DBG_WMI,
-+		   "wmi peer assoc vdev %d addr %pM\n",
-+		   arg->vdev_id, arg->addr);
- 	return ath10k_wmi_cmd_send(ar, skb, WMI_PEER_ASSOC_CMDID);
- }
- 
 -- 
 1.7.9.5
 
