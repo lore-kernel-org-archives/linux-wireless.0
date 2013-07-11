@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:48207 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757125Ab3GVJcZ (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:33889 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932278Ab3GKJJR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 05:32:25 -0400
-Subject: [PATCH 1/2] MAINTAINERS: add ath10k
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org
-Date: Mon, 22 Jul 2013 12:32:20 +0300
-Message-ID: <20130722093220.26562.14270.stgit@localhost6.localdomain6> (sfid-20130722_113228_117949_93CFD8BF)
-In-Reply-To: <20130722093113.26562.11543.stgit@localhost6.localdomain6>
-References: <20130722093113.26562.11543.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 11 Jul 2013 05:09:17 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Johan Hovold <jhovold@gmail.com>
+Subject: [PATCH 20/50] USB: serial: usb_wwan: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:43 +0800
+Message-Id: <1373533573-12272-21-git-send-email-ming.lei@canonical.com> (sfid-20130711_111731_571991_77B227FA)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I forgot to add an entry to MAINTAINERS when submitting the driver.
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Johan Hovold <jhovold@gmail.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- MAINTAINERS |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/usb/serial/usb_wwan.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index bf61e04..44626b8 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6719,6 +6719,14 @@ T:	git git://linuxtv.org/anttip/media_tree.git
- S:	Maintained
- F:	drivers/media/tuners/qt1010*
+diff --git a/drivers/usb/serial/usb_wwan.c b/drivers/usb/serial/usb_wwan.c
+index 8257d30..c807d65 100644
+--- a/drivers/usb/serial/usb_wwan.c
++++ b/drivers/usb/serial/usb_wwan.c
+@@ -312,6 +312,7 @@ static void usb_wwan_outdat_callback(struct urb *urb)
+ 	struct usb_wwan_port_private *portdata;
+ 	struct usb_wwan_intf_private *intfdata;
+ 	int i;
++	unsigned long flags;
  
-+QUALCOMM ATHEROS ATH10K WIRELESS DRIVER
-+M:	Kalle Valo <kvalo@qca.qualcomm.com>
-+L:	ath10k@lists.infradead.org
-+W:	http://wireless.kernel.org/en/users/Drivers/ath10k
-+T:	git git://github.com/kvalo/ath.git
-+S:	Supported
-+F:	drivers/net/wireless/ath/ath10k/
-+
- QUALCOMM HEXAGON ARCHITECTURE
- M:	Richard Kuo <rkuo@codeaurora.org>
- L:	linux-hexagon@vger.kernel.org
+ 	port = urb->context;
+ 	intfdata = port->serial->private;
+@@ -319,9 +320,9 @@ static void usb_wwan_outdat_callback(struct urb *urb)
+ 	usb_serial_port_softint(port);
+ 	usb_autopm_put_interface_async(port->serial->interface);
+ 	portdata = usb_get_serial_port_data(port);
+-	spin_lock(&intfdata->susp_lock);
++	spin_lock_irqsave(&intfdata->susp_lock, flags);
+ 	intfdata->in_flight--;
+-	spin_unlock(&intfdata->susp_lock);
++	spin_unlock_irqrestore(&intfdata->susp_lock, flags);
+ 
+ 	for (i = 0; i < N_OUT_URB; ++i) {
+ 		if (portdata->out_urbs[i] == urb) {
+-- 
+1.7.9.5
 
