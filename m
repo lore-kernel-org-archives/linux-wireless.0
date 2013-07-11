@@ -1,86 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:45377 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751274Ab3GMLD5 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21465 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756064Ab3GKPDx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jul 2013 07:03:57 -0400
-Received: by mail-we0-f176.google.com with SMTP id t56so8781802wes.35
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Jul 2013 04:03:56 -0700 (PDT)
+	Thu, 11 Jul 2013 11:03:53 -0400
+Cc: Kirshenbaum Erez <erezk@wilocity.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 0/5] wil6210 updates - modified
+Date: Thu, 11 Jul 2013 18:03:36 +0300
+Message-ID: <1373555021-11763-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_170429_375981_EE97EFDD)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <001a01ce7fb1$75bfdc10$613f9430$@info>
-References: <001a01ce7fb1$75bfdc10$613f9430$@info>
-Date: Sat, 13 Jul 2013 13:03:55 +0200
-Message-ID: <CA+icZUVoZkg3nT6=SwTaLCWoa+v6aLkXSP5b71a0GmxMMWOyHA@mail.gmail.com> (sfid-20130713_130400_724433_D01BD6B5)
-Subject: Re: Firmware error for Centrino N 2230
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Cedric GROSS <cg@cgross.info>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 13, 2013 at 12:12 PM, Cedric GROSS <cg@cgross.info> wrote:
-> Hello,
->
-> I’m trying to adapt current freebsd driver for supporting my 2230 NIC.
->
-> I try to follow ucode command order defined in kernel 3.2 but I reach some
-> difficulties because firmware raise error.
->
-> Runtime uCode is alive. So far I sent calib result (cmd xB0), configured
-> advanced BT coexistence (cmd x9B,xCC and xCD) running runtime calib (cmd
-> x65) but the command configuring valid chain (cmd x65) failed as the result
-> below :
-> CSR values: (2nd byte of IWN_INT_COALESCING is IWN_INT_PERIODIC)
->   IWN_HW_IF_CONFIG: 0x00800302   IWN_INT_COALESCING: 0x0000ff40
-> IWN_INT: 0x04000000
->   IWN_INT_MASK: 0x00000000   IWN_FH_INT: 0x00000000   IWN_GPIO_IN:
-> 0x00000000
->    IWN_RESET: 0x00000000   IWN_GP_CNTRL: 0x080403c5   IWN_HW_REV: 0x000000c8
->   IWN_EEPROM: 0x08450ffd   IWN_EEPROM_GP: 0x90000801   IWN_OTP_GP:
-> 0x00030001
->      IWN_GIO: 0x00080044   INW_GP_UCODE: 0x00000004   IWN_GP_DRIVER:
-> 0x00000080
->   IWN_GP1_DRIVER: 0x00000000   IWN_UCODE_DRV_GP2: 0x00000000      IWN_LED:
-> 0x00000018
->   IWN_DRAM_INT_TBL: 0x880b76e5   IWN_GIO_CHICKEN: 0x29800200   IWN_ANA_PLL:
-> 0x00000000
->   IWN_HW_REV_WA: 0x0001001a   IWN_DBG_HPET_MEM: 0xffff0000
-> firmware error log:
->   error type      = "UNKNOWN" (0x00001987)
->   program counter = 0x000179B4
->   source line     = 0x00000167
->   error data      = 0x0000000000000000
->   branch link     = 0x0001798200017982
->   interrupt link  = 0x0000EC7A00000000
->   time            = 46566
->
-> What I’m missing ?
-> What is meaning of firmware error ?
->
+Hi John,
 
-What distro?
-If this is Debian or Ubuntu, this is not a vanilla but distro-patched
-kernel-version.
+Please ignore previous submission titled "[PATCH 0/3] wil6210 updates"
+I found better solution for one of patches there. To avoid mis-interpretation,
+resending all relevant patches. It is:
 
-Can you provide more infos?
-Your kernel-config file, dmesg output, name of loaded firmware file, etc.
+- Sync with latest firmware updates
+- simple bug fixes and some optimization, all for data path
+- prepare for various offloads - WIP by Erez
 
-Did you check for newer firmware files (see [1])?
+Vladimir Kondratiev (5):
+  wil6210: Align WMI header with latest FW
+  wil6210: fix wrong index in wil_vring_free
+  wil6210: Optimize Tx completion
+  wil6210: Introduce struct for sw context
+  wil6210: fix subtle race in wil_tx_vring
 
-Did you try a higher kernel-release?
+ drivers/net/wireless/ath/wil6210/debugfs.c |  4 +-
+ drivers/net/wireless/ath/wil6210/trace.h   | 22 +++++----
+ drivers/net/wireless/ath/wil6210/txrx.c    | 79 +++++++++++++++++-------------
+ drivers/net/wireless/ath/wil6210/wil6210.h | 27 ++++++++--
+ drivers/net/wireless/ath/wil6210/wmi.c     | 14 ++++--
+ 5 files changed, 92 insertions(+), 54 deletions(-)
 
-- Sedat -
+-- 
+1.8.1.2
 
-[1] http://wireless.kernel.org/en/users/Drivers/iwlwifi
-
-> Many thanks for your help.
->
-> Best regards
-> Cedric
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
