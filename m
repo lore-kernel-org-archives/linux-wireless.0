@@ -1,84 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:52946 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751272Ab3GaNJT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 09:09:19 -0400
-Message-ID: <51F90C5A.2000807@ti.com> (sfid-20130731_150924_707403_09AE340E)
-Date: Wed, 31 Jul 2013 18:38:42 +0530
-From: Balaji T K <balajitk@ti.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13853 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755653Ab3GKHM1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 03:12:27 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] wil6210: write modified HW descriptor back
+Date: Thu, 11 Jul 2013 10:12:09 +0300
+Message-ID: <1373526729-10908-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130711_091233_055479_7E61C4DC)
+In-Reply-To: <1373526729-10908-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1373526729-10908-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: <tony@atomide.com>, <linux-omap@vger.kernel.org>,
-	<devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>, <luca@coelho.fi>, <balbi@ti.com>,
-	<laurent.pinchart@ideasonboard.com>
-Subject: Re: [PATCH v2 1/4] ARM: dts: omap4-panda: add MMC5 (WiLink WLAN)
- configuration
-References: <1375218923-29876-1-git-send-email-coelho@ti.com> <1375218923-29876-2-git-send-email-coelho@ti.com>
-In-Reply-To: <1375218923-29876-2-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 31 July 2013 02:45 AM, Luciano Coelho wrote:
-> Add regulator, pin muxing and MMC5 configuration to be used by the
-> on-board WiLink6 module.
->
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->   arch/arm/boot/dts/omap4-panda-common.dtsi | 31 ++++++++++++++++++++++++++++++-
->   1 file changed, 30 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/arm/boot/dts/omap4-panda-common.dtsi b/arch/arm/boot/dts/omap4-panda-common.dtsi
-> index faa95b5..b3f6e1f 100644
-> --- a/arch/arm/boot/dts/omap4-panda-common.dtsi
-> +++ b/arch/arm/boot/dts/omap4-panda-common.dtsi
-> @@ -107,6 +107,16 @@
->   	 */
->   		clock-frequency = <19200000>;
->   	};
-> +
-> +	wilink_wl_en: fixedregulator@1 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "wilink_wl_en";
-> +		regulator-min-microvolt = <1800000>;
-> +		regulator-max-microvolt = <1800000>;
-> +		gpio = <&gpio2 11 0>; /* gpio line 43 */
-> +		startup-delay-us = <70000>;
-> +		enable-active-high;
-> +	};
->   };
->
->   &omap4_pmx_wkup {
-> @@ -132,6 +142,7 @@
->   			&dss_hdmi_pins
->   			&tpd12s015_pins
->   			&hsusbb1_pins
-> +			&wilink_pins
->   	>;
->
->   	twl6030_pins: pinmux_twl6030_pins {
-> @@ -235,6 +246,19 @@
->   			0x1c (PIN_OUTPUT | MUX_MODE3)	/* gpio_wk8 */
->   		>;
->   	};
-> +
-> +	wilink_pins: pinmux_wilink_pins {
-> +		pinctrl-single,pins = <
-> +			0x7a 0x103      /* gpio_53  INPUT | MODE3 */
-> +			0x66 0x3	/* gpio_43  OUTPUT | MODE3 */
-> +			0x148 0x118     /* clk	    INPUT PULLUP | MODE0 */
-> +			0x14a 0x118     /* cmd	    INPUT PULLUP | MODE0 */
-> +			0x14c 0x118     /* dat0	    INPUT PULLUP | MODE0 */
-> +			0x14e 0x118     /* dat1	    INPUT PULLUP | MODE0 */
-> +			0x150 0x118     /* dat2	    INPUT PULLUP | MODE0 */
-> +			0x152 0x118     /* dat3	    INPUT PULLUP | MODE0 */
-Hi,
+HW descriptor copied from vring in un-cached memory to normal memory;
+in tx completion it was not written back after modification. Fix it.
 
-Since the base for omap4_pmx_core is 0x4a100040, you need to offset 0x40 from
-pad address :-)
-and can you please use INPUT_EN / PIN_INPUT_PULLUP / MUX_MODEx macros
-(from dt-bindings/pinctrl/omap.h)
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 8fde73a..7cf5c94 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -859,6 +859,7 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ 		d->dma.addr.addr_high = 0;
+ 		d->dma.length = 0;
+ 		d->dma.status = TX_DMA_STATUS_DU;
++		*_d = *d;
+ 		vring->swtail = wil_vring_next_tail(vring);
+ 		done++;
+ 	}
+-- 
+1.8.1.2
 
