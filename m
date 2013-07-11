@@ -1,154 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51746 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753100Ab3GKRJH (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:65392 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755838Ab3GKJGh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 13:09:07 -0400
-Message-ID: <1373562533.8201.33.camel@jlt4.sipsolutions.net> (sfid-20130711_190912_645256_788C2D87)
-Subject: Re: Help adding trace events to xHCI
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Xenia Ragiadakou <burzalodowa@gmail.com>,
-	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Steven Rostedt <rostedt@goodmis.org>
-Date: Thu, 11 Jul 2013 19:08:53 +0200
-In-Reply-To: <20130711162002.GA5240@xanatos> (sfid-20130711_182013_255578_2722BE3F)
-References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos>
-	 (sfid-20130711_182013_255578_2722BE3F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 11 Jul 2013 05:06:37 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: [PATCH 00/50] USB: cleanup spin_lock in URB->complete()
+Date: Thu, 11 Jul 2013 17:05:23 +0800
+Message-Id: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> (sfid-20130711_110658_363692_647EE930)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[also adding Steven, he's the tracing expert after all :-)]
+Hi,
 
-Hi Xenia, Sarah, all,
+As we are going to run URB->complete() in tasklet context[1][2], and
+hard interrupt may be enabled when running URB completion handler[3],
+so we might need to disable interrupt when acquiring one lock in
+the completion handler for the below reasons:
 
-> (Mentors and wireless folks, we're struggling a bit with adding trace
-> events to the xHCI USB host controller driver.  I'm trying to look at
-> the ath6kl driver trace events as an example.  We could use some help
-> and/or advice.)
+- URB->complete() holds a subsystem wide lock which may be acquired
+in another hard irq context, and the subsystem wide lock is acquired
+by spin_lock()/read_lock()/write_lock() in complete()
 
-Those were in turn modelled on mac80211, cfg80211 and/or iwlwifi, I
-think; might be worth also looking there. In general though, it's all
-pretty similar.
+- URB->complete() holds a private lock with spin_lock()/read_lock()/write_lock()
+but driver may export APIs to make other drivers acquire the same private
+lock in its interrupt handler.
 
-> > lets say that we want the tracepoint function to have the prototype:
-> > 
-> > void trace_cmd_address_device(const char *fmt, ...).
+For the sake of safety and making the change simple, this patch set
+converts all spin_lock()/read_lock()/write_lock() in completion handler
+path into their irqsave version mechanically.
 
-I'm not sure this is possible. I think we (wireless) do this with
+But if you are sure the above two cases do not happen in your driver,
+please let me know and I can drop the unnecessary change.
 
-void trace_cmd_address_device(struct va_format *vaf)
-
-instead only.
-
-Note that there's no easy way to dynamically allocate the right amount
-of space in the ringbuffer, or at least I haven't found one. We
-therefore have a static size, which is somewhat inefficient.
+Also if you find some conversions are missed, also please let me know so
+that I can add it in the next round.
 
 
-> The ath driver defines a new trace event class, ath6kl_log_event.
-> Various types of tracepoints, like trace_ath6kl_log_warn, use that event
-> class.  Wrappers like ath6kl_warn() call those trace points, passing it
-> a struct va_format on the stack:
-> 
-> int ath6kl_warn(const char *fmt, ...)
-> {
->         struct va_format vaf = {
->                 .fmt = fmt,
->         };
->         va_list args;
->         int ret;
-> 
->         va_start(args, fmt);
->         vaf.va = &args;
->         ret = ath6kl_printk(KERN_WARNING, "%pV", &vaf);
+[1], http://marc.info/?l=linux-usb&m=137286322526312&w=2
+[2], http://marc.info/?l=linux-usb&m=137286326726326&w=2
+[3], http://marc.info/?l=linux-usb&m=137286330626363&w=2
 
-Note also on older kernels you used to have to do va_copy() here because
-"%pV" didn't do it by itself. Guess you don't care though, but I
-sometimes have to worry about backporting :-)
-
-> int xhci_debug_address(const char *fmt, ...)
-
-This confuses me somewhat -- why is it called "xhci_debug_address()"
-when it takes arbitrary parameters? Where's the "address" part?
-
-> DEFINE_EVENT(xhci_log_event, xhci_dbg_address,
->              TP_PROTO(struct va_format *vaf),
->              TP_ARGS(vaf)
-> );
-> 
-> DECLARE_EVENT_CLASS(xhci_log_event,
->         TP_PROTO(struct va_format *vaf),
->         TP_ARGS(vaf),
->         TP_STRUCT__entry(
->                 __dynamic_array(char, msg, ATH6KL_MSG_MAX)
-
-Should probably not be ATH6KL_MSG_MAX :-)
-
-And this is what I talked about before -- it always allocates the max in
-the ringbuffer even for really short messages.
-
-
-> And then code in xhci_address_device() in drivers/usb/host/xhci.c can do
-> things like:
-> 
-> xhci_debug_address(xhci, "Bad Slot ID %d\n", udev->slot_id);
-
-Otherwise this looks about right (you have an xhci argument you didn't
-declare above, but this is obviously pseudo-code only)
-
-> And we can define similar trace event classes for the various xHCI
-> commands or ring debugging, so that we can enable or disable trace
-> points individually for different parts of the xHCI driver.
-
-I think it'd be worth (also) doing more specific tracepoints instead
-though.
-
-I don't really know what xhci does, but I suppose it has register
-read/write, maybe packet (urb?) submissions etc. so something like the
-iwlwifi_io system in drivers/net/wireless/iwlwifi/iwl-devtrace.h might
-(also) be (more) useful. In iwlwifi I have tracing for
- * IO accesses & interrupt notifications/reasons
- * commands and TX packets submitted to the device
- * notifications/RX packets received from the device
- * previously existing debug messages
-
-The message tracing was really more of an after-thought in iwlwifi (and
-ath6kl as well I guess) because we already had a lot of debug messages
-and capturing it all together can be useful.
-
-However, tracing all the debug messages is actually fairly expensive, I
-think in part because of the string formatting and in part because of
-the always-max allocations in the ringbuffer.
+ drivers/bluetooth/bfusb.c                     |   12 ++++----
+ drivers/bluetooth/btusb.c                     |    5 ++--
+ drivers/hid/usbhid/hid-core.c                 |    5 ++--
+ drivers/input/misc/cm109.c                    |   10 ++++---
+ drivers/isdn/hardware/mISDN/hfcsusb.c         |   36 ++++++++++++-----------
+ drivers/media/dvb-core/dvb_demux.c            |   17 +++++++----
+ drivers/media/usb/cx231xx/cx231xx-audio.c     |    6 ++++
+ drivers/media/usb/cx231xx/cx231xx-core.c      |   10 ++++---
+ drivers/media/usb/cx231xx/cx231xx-vbi.c       |    5 ++--
+ drivers/media/usb/em28xx/em28xx-audio.c       |    3 ++
+ drivers/media/usb/em28xx/em28xx-core.c        |    5 ++--
+ drivers/media/usb/sn9c102/sn9c102_core.c      |    7 +++--
+ drivers/media/usb/tlg2300/pd-alsa.c           |    3 ++
+ drivers/media/usb/tlg2300/pd-video.c          |    5 ++--
+ drivers/media/usb/tm6000/tm6000-video.c       |    5 ++--
+ drivers/net/usb/cdc-phonet.c                  |    5 ++--
+ drivers/net/usb/hso.c                         |   38 ++++++++++++++-----------
+ drivers/net/usb/kaweth.c                      |    7 +++--
+ drivers/net/usb/rtl8150.c                     |    5 ++--
+ drivers/net/wireless/ath/ath9k/hif_usb.c      |   29 ++++++++++---------
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    9 +++---
+ drivers/net/wireless/ath/ath9k/wmi.c          |   11 +++----
+ drivers/net/wireless/ath/carl9170/rx.c        |    5 ++--
+ drivers/net/wireless/libertas/if_usb.c        |    5 ++--
+ drivers/net/wireless/libertas_tf/if_usb.c     |    6 ++--
+ drivers/net/wireless/zd1211rw/zd_usb.c        |   21 ++++++++------
+ drivers/staging/bcm/InterfaceRx.c             |    5 ++--
+ drivers/staging/btmtk_usb/btmtk_usb.c         |    5 ++--
+ drivers/staging/ced1401/usb1401.c             |   35 ++++++++++++-----------
+ drivers/staging/vt6656/usbpipe.c              |    9 +++---
+ drivers/usb/class/cdc-wdm.c                   |   16 +++++++----
+ drivers/usb/class/usblp.c                     |   10 ++++---
+ drivers/usb/core/devio.c                      |    5 ++--
+ drivers/usb/misc/adutux.c                     |   10 ++++---
+ drivers/usb/misc/iowarrior.c                  |    5 ++--
+ drivers/usb/misc/ldusb.c                      |    7 +++--
+ drivers/usb/misc/legousbtower.c               |    5 ++--
+ drivers/usb/misc/usbtest.c                    |   10 ++++---
+ drivers/usb/misc/uss720.c                     |    6 +++-
+ drivers/usb/serial/cyberjack.c                |   15 ++++++----
+ drivers/usb/serial/digi_acceleport.c          |   23 ++++++++-------
+ drivers/usb/serial/io_edgeport.c              |   14 +++++----
+ drivers/usb/serial/io_ti.c                    |    5 ++--
+ drivers/usb/serial/mos7720.c                  |    5 ++--
+ drivers/usb/serial/mos7840.c                  |    5 ++--
+ drivers/usb/serial/quatech2.c                 |    5 ++--
+ drivers/usb/serial/sierra.c                   |    9 +++---
+ drivers/usb/serial/symbolserial.c             |    5 ++--
+ drivers/usb/serial/ti_usb_3410_5052.c         |    9 +++---
+ drivers/usb/serial/usb_wwan.c                 |    5 ++--
+ sound/usb/caiaq/audio.c                       |    5 ++--
+ sound/usb/midi.c                              |    5 ++--
+ sound/usb/misc/ua101.c                        |   14 +++++++--
+ sound/usb/usx2y/usbusx2yaudio.c               |    4 +++
+ 54 files changed, 322 insertions(+), 209 deletions(-)
 
 
-> > That would have worked if the tracepoint was just :
-> > 
-> > void trace_cmd_address_device(const char *fmt, ...)
-> > {
-> >           if (trace event cmd_address_device is enabled) do {
-> >                     (void(*)(const char *fmt, ...)) callback ((const
-> > char *)&fmt);
-> >           }
-> > }
-
-I'm not really sure what the whole "callback()" part is about?
-
-Are you trying to use the "tracepoint is enabled" to do something
-unrelated to the tracing? I'm guessing that's _possible_, but I wouldn't
-recommend it.
-
-
-> I'm actually wondering if the call to ath6kl_printk is somehow necessary
-> in order to be able to pass arguments on the stack.
-
-I don't think it is, but formatting the messages *only* for tracing
-seems a bit odd?
-
-Hth,
-johannes
+Thanks,
+--
+Ming Lei
 
