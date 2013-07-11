@@ -1,247 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:46341 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753966Ab3GWCS5 (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:52842 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932451Ab3GKJMF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:18:57 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 18/21] mwifiex: handle driver initialization error paths
-Date: Mon, 22 Jul 2013 19:17:55 -0700
-Message-ID: <1374545878-15683-19-git-send-email-bzhao@marvell.com> (sfid-20130723_041907_177027_9676E676)
-In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 11 Jul 2013 05:12:05 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>
+Subject: [PATCH 41/50] media: usb: em28xx: make sure irq disabled before acquiring lock
+Date: Thu, 11 Jul 2013 17:06:04 +0800
+Message-Id: <1373533573-12272-42-git-send-email-ming.lei@canonical.com> (sfid-20130711_111439_811911_B81C816E)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Complete() will be run with interrupt enabled, so add local_irq_save()
+before acquiring the lock without irqsave().
 
-mwifiex_fw_dpc() asynchronously takes care of firmware download
-and initialization. Currently the error paths in mwifiex_fw_dpc()
-are not handled. So if wrong firmware is downloaded, required
-cleanup work is not performed. memory is leaked and workqueue
-remains unterminated in this case.
-
-mwifiex_terminate_workqueue() is moved to avoid forward
-declaration.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: linux-media@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- drivers/net/wireless/mwifiex/main.c | 83 ++++++++++++++++++++++++-------------
- drivers/net/wireless/mwifiex/main.h |  1 +
- 2 files changed, 56 insertions(+), 28 deletions(-)
+ drivers/media/usb/em28xx/em28xx-audio.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index e64c369..5644c7f 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -390,6 +390,17 @@ static void mwifiex_free_adapter(struct mwifiex_adapter *adapter)
- }
+diff --git a/drivers/media/usb/em28xx/em28xx-audio.c b/drivers/media/usb/em28xx/em28xx-audio.c
+index 2fdb66e..dca53ec 100644
+--- a/drivers/media/usb/em28xx/em28xx-audio.c
++++ b/drivers/media/usb/em28xx/em28xx-audio.c
+@@ -113,6 +113,7 @@ static void em28xx_audio_isocirq(struct urb *urb)
+ 		stride = runtime->frame_bits >> 3;
  
- /*
-+ * This function cancels all works in the queue and destroys
-+ * the main workqueue.
-+ */
-+static void mwifiex_terminate_workqueue(struct mwifiex_adapter *adapter)
-+{
-+	flush_workqueue(adapter->workqueue);
-+	destroy_workqueue(adapter->workqueue);
-+	adapter->workqueue = NULL;
-+}
-+
-+/*
-  * This function gets firmware and initializes it.
-  *
-  * The main initialization steps followed are -
-@@ -398,7 +409,7 @@ static void mwifiex_free_adapter(struct mwifiex_adapter *adapter)
-  */
- static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- {
--	int ret;
-+	int ret, i;
- 	char fmt[64];
- 	struct mwifiex_private *priv;
- 	struct mwifiex_adapter *adapter = context;
-@@ -407,7 +418,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	if (!firmware) {
- 		dev_err(adapter->dev,
- 			"Failed to get firmware %s\n", adapter->fw_name);
--		goto done;
-+		goto err_dnld_fw;
- 	}
+ 		for (i = 0; i < urb->number_of_packets; i++) {
++			unsigned long flags;
+ 			int length =
+ 			    urb->iso_frame_desc[i].actual_length / stride;
+ 			cp = (unsigned char *)urb->transfer_buffer +
+@@ -134,6 +135,7 @@ static void em28xx_audio_isocirq(struct urb *urb)
+ 				       length * stride);
+ 			}
  
- 	memset(&fw, 0, sizeof(struct mwifiex_fw_image));
-@@ -420,7 +431,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	else
- 		ret = mwifiex_dnld_fw(adapter, &fw);
- 	if (ret == -1)
--		goto done;
-+		goto err_dnld_fw;
++			local_irq_save(flags);
+ 			snd_pcm_stream_lock(substream);
  
- 	dev_notice(adapter->dev, "WLAN FW is active\n");
+ 			dev->adev.hwptr_done_capture += length;
+@@ -151,6 +153,7 @@ static void em28xx_audio_isocirq(struct urb *urb)
+ 			}
  
-@@ -432,13 +443,15 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	}
- 
- 	/* enable host interrupt after fw dnld is successful */
--	if (adapter->if_ops.enable_int)
--		adapter->if_ops.enable_int(adapter);
-+	if (adapter->if_ops.enable_int) {
-+		if (adapter->if_ops.enable_int(adapter))
-+			goto err_dnld_fw;
-+	}
- 
- 	adapter->init_wait_q_woken = false;
- 	ret = mwifiex_init_fw(adapter);
- 	if (ret == -1) {
--		goto done;
-+		goto err_init_fw;
- 	} else if (!ret) {
- 		adapter->hw_status = MWIFIEX_HW_STATUS_READY;
- 		goto done;
-@@ -447,12 +460,12 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	wait_event_interruptible(adapter->init_wait_q,
- 				 adapter->init_wait_q_woken);
- 	if (adapter->hw_status != MWIFIEX_HW_STATUS_READY)
--		goto done;
-+		goto err_init_fw;
- 
- 	priv = adapter->priv[MWIFIEX_BSS_ROLE_STA];
- 	if (mwifiex_register_cfg80211(adapter)) {
- 		dev_err(adapter->dev, "cannot register with cfg80211\n");
--		goto err_init_fw;
-+		goto err_register_cfg80211;
- 	}
- 
- 	rtnl_lock();
-@@ -483,13 +496,39 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	goto done;
- 
- err_add_intf:
--	mwifiex_del_virtual_intf(adapter->wiphy, priv->wdev);
-+	for (i = 0; i < adapter->priv_num; i++) {
-+		priv = adapter->priv[i];
-+
-+		if (!priv)
-+			continue;
-+
-+		if (priv->wdev && priv->netdev)
-+			mwifiex_del_virtual_intf(adapter->wiphy, priv->wdev);
-+	}
- 	rtnl_unlock();
-+err_register_cfg80211:
-+	wiphy_unregister(adapter->wiphy);
-+	wiphy_free(adapter->wiphy);
- err_init_fw:
- 	if (adapter->if_ops.disable_int)
- 		adapter->if_ops.disable_int(adapter);
-+err_dnld_fw:
- 	pr_debug("info: %s: unregister device\n", __func__);
--	adapter->if_ops.unregister_dev(adapter);
-+	if (adapter->if_ops.unregister_dev)
-+		adapter->if_ops.unregister_dev(adapter);
-+
-+	if ((adapter->hw_status == MWIFIEX_HW_STATUS_FW_READY) ||
-+	    (adapter->hw_status == MWIFIEX_HW_STATUS_READY)) {
-+		pr_debug("info: %s: shutdown mwifiex\n", __func__);
-+		adapter->init_wait_q_woken = false;
-+
-+		if (mwifiex_shutdown_drv(adapter) == -EINPROGRESS)
-+			wait_event_interruptible(adapter->init_wait_q,
-+						 adapter->init_wait_q_woken);
-+	}
-+	adapter->surprise_removed = true;
-+	mwifiex_terminate_workqueue(adapter);
-+	mwifiex_free_adapter(adapter);
- done:
- 	if (adapter->cal_data) {
- 		release_firmware(adapter->cal_data);
-@@ -497,6 +536,7 @@ done:
- 	}
- 	release_firmware(adapter->firmware);
- 	complete(&adapter->fw_load);
-+	up(adapter->card_sem);
- 	return;
- }
- 
-@@ -807,18 +847,6 @@ static void mwifiex_main_work_queue(struct work_struct *work)
- }
- 
- /*
-- * This function cancels all works in the queue and destroys
-- * the main workqueue.
-- */
--static void
--mwifiex_terminate_workqueue(struct mwifiex_adapter *adapter)
--{
--	flush_workqueue(adapter->workqueue);
--	destroy_workqueue(adapter->workqueue);
--	adapter->workqueue = NULL;
--}
--
--/*
-  * This function adds the card.
-  *
-  * This function follows the following major steps to set up the device -
-@@ -846,6 +874,7 @@ mwifiex_add_card(void *card, struct semaphore *sem,
- 	}
- 
- 	adapter->iface_type = iface_type;
-+	adapter->card_sem = sem;
- 
- 	adapter->hw_status = MWIFIEX_HW_STATUS_INITIALIZING;
- 	adapter->surprise_removed = false;
-@@ -876,17 +905,12 @@ mwifiex_add_card(void *card, struct semaphore *sem,
- 		goto err_init_fw;
- 	}
- 
--	up(sem);
- 	return 0;
- 
- err_init_fw:
- 	pr_debug("info: %s: unregister device\n", __func__);
- 	if (adapter->if_ops.unregister_dev)
- 		adapter->if_ops.unregister_dev(adapter);
--err_registerdev:
--	adapter->surprise_removed = true;
--	mwifiex_terminate_workqueue(adapter);
--err_kmalloc:
- 	if ((adapter->hw_status == MWIFIEX_HW_STATUS_FW_READY) ||
- 	    (adapter->hw_status == MWIFIEX_HW_STATUS_READY)) {
- 		pr_debug("info: %s: shutdown mwifiex\n", __func__);
-@@ -896,7 +920,10 @@ err_kmalloc:
- 			wait_event_interruptible(adapter->init_wait_q,
- 						 adapter->init_wait_q_woken);
- 	}
--
-+err_registerdev:
-+	adapter->surprise_removed = true;
-+	mwifiex_terminate_workqueue(adapter);
-+err_kmalloc:
- 	mwifiex_free_adapter(adapter);
- 
- err_init_sw:
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index bb28d3d..9ee3b1b 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -749,6 +749,7 @@ struct mwifiex_adapter {
- 
- 	atomic_t is_tx_received;
- 	atomic_t pending_bridged_pkts;
-+	struct semaphore *card_sem;
- };
- 
- int mwifiex_init_lock_list(struct mwifiex_adapter *adapter);
+ 			snd_pcm_stream_unlock(substream);
++			local_irq_restore(flags);
+ 		}
+ 		if (period_elapsed)
+ 			snd_pcm_period_elapsed(substream);
 -- 
-1.8.2.3
+1.7.9.5
 
