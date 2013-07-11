@@ -1,39 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f174.google.com ([209.85.128.174]:38756 "EHLO
-	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754712Ab3GJRaY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 13:30:24 -0400
-Received: by mail-ve0-f174.google.com with SMTP id oz10so6251336veb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jul 2013 10:30:23 -0700 (PDT)
+Received: from lmv.inov.pt ([146.193.64.2]:38444 "EHLO lmv.inov.pt"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756435Ab3GKS0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 14:26:44 -0400
+Message-ID: <51DEF8D0.10000@inov.pt> (sfid-20130711_202647_113445_A6C92602)
+Date: Thu, 11 Jul 2013 19:26:24 +0100
+From: =?UTF-8?B?Sm9zw6kgTWlndWVsIEdvbsOnYWx2ZXM=?=
+	<jose.goncalves@inov.pt>
 MIME-Version: 1.0
-In-Reply-To: <CAJ8GFOg9c78f3ivnSiX1o2TCTPa2B3D_01Tiki-cK1=tgghuhQ@mail.gmail.com>
-References: <CAJ8GFOg9c78f3ivnSiX1o2TCTPa2B3D_01Tiki-cK1=tgghuhQ@mail.gmail.com>
-Date: Wed, 10 Jul 2013 12:30:23 -0500
-Message-ID: <CAJ8GFOiHgBU-SYsrgSRr3Tx66eL3r9Lyjr5Zz2A+E2XqPshyFQ@mail.gmail.com> (sfid-20130710_193030_185934_8F47A101)
-Subject: Re: Baseband watchdog timer tripping on AR9342
-From: Harshal Chhaya <harshal@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Luciano Coelho <coelho@ti.com>
+CC: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
+Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
+References: <51DB0ACC.7050800@inov.pt>  <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>  <51DB4195.8090103@inov.pt>  <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>  <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>  <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>  <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>  <51DC0E7C.9080306@inov.pt>  <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>  <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>
+In-Reply-To: <1373448177.8385.22.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 10, 2013 at 11:43 AM, Harshal Chhaya <harshal@gmail.com> wrote:
-> On an AR9342-based AP, we see non-zero counts for
-> RESET_TYPE_BB_WATCHDOG and RESET_TYPE_BEACON_STUCK when trying to do
-> large uplink transfers from ~60 clients with some of them 30-40 ft
-> away.
+On 10-07-2013 10:22, Luciano Coelho wrote:
+> I'm not sure which FEM Jorjin's module use.  Can you ask them?
 >
-> All the other reset types have a count of zero.
+> I found this on github (Dick Chiang appears to work for Jorjin):
+> https://github.com/dickychiang/compat-wireless-r5/blob/master/jorjin/ini_files/TQS_D_1.7_WG7350_NLCP.ini
 >
-> These resets cause all the clients to disconnect.
+> DISCLAIMER: I have no clue whether this is the correct INI file or not
+> and I'm not claiming it's associated with TI in any way, so use it at
+> your own risk.
 >
-> Any ideas on how to avoid these resets and the subsequent disconnections?
 
+Just for the record, I got the information from my contact that the indicated INI 
+file is the proper one for Jorjin's WG7350 module.
 
-I forgot to mention that there were three "Failed to stop TX DMA"
-messages on the debug port which seem to map to the
-RESET_TYPE_BB_WATCHDOG events.
-
-Regards,
-- Harshal
+José Gonçalves
