@@ -1,53 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp02.msg.oleane.net ([62.161.4.2]:46580 "EHLO
-	smtp02.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753879Ab3GBRkX (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:48258 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932278Ab3GKJJv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 13:40:23 -0400
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: "'Felix Fietkau'" <nbd@openwrt.org>
-Cc: <linux-wireless@vger.kernel.org>
-References: <1372351227-25575-1-git-send-email-jp.tosoni@acksys.fr> <51CF3EC9.3000707@openwrt.org> <000001ce7728$18b07de0$4a1179a0$@acksys.fr> <51D2DAB9.4050002@openwrt.org>
-In-Reply-To: <51D2DAB9.4050002@openwrt.org>
-Subject: RE: [RFC v2] mac80211: Use libnl-configurable values for retry counts
-Date: Tue, 2 Jul 2013 19:40:20 +0200
-Message-ID: <000101ce774b$3925e380$ab71aa80$@acksys.fr> (sfid-20130702_194052_723898_5EE8F19A)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+	Thu, 11 Jul 2013 05:09:51 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: [PATCH 24/50] input: cm109: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:47 +0800
+Message-Id: <1373533573-12272-25-git-send-email-ming.lei@canonical.com> (sfid-20130711_111012_177771_D9A89E3D)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-Sorry to use your time again...
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: linux-input@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/input/misc/cm109.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-> But much more important than that is to not cause regressions for other
-> people via aggressive packet dropping.
-
-Agreed, but see below.
-
-> If you put the code in minstrel (and minstrel_ht), it not only allows
-> making a better tradeoff for retry handling, the code also doesn't have
-> to be run for every single packet. You can run it during the rate
-> control stats update.
-
-OK, I'll have a look at that part now.
-
-> 
-> The reduction of retry attempts definitely needs to be balanced
-> properly. Retries with max_prob_rate can be more important than retries
-> with max_tp_rate, but there needs to be a minimum for each of those.
-
-This leads to a question about regressions and backward compatibility:
-
-Since minstrel can compute as much as 28 retries for a frame,
-And since the (standard) default value for "short_frame_max_tx_count" is 7,
-
-... there is no way I can enforce the configured value while keeping
-minstrel counts by default !
-The standard itself gives a very aggressive limit! Or am I mistaken about
-the significance of this configuration parameter ?
-
-Jean-Pierre
+diff --git a/drivers/input/misc/cm109.c b/drivers/input/misc/cm109.c
+index 082684e..cac4e37 100644
+--- a/drivers/input/misc/cm109.c
++++ b/drivers/input/misc/cm109.c
+@@ -340,6 +340,7 @@ static void cm109_urb_irq_callback(struct urb *urb)
+ 	struct cm109_dev *dev = urb->context;
+ 	const int status = urb->status;
+ 	int error;
++	unsigned long flags;
+ 
+ 	dev_dbg(&dev->intf->dev, "### URB IRQ: [0x%02x 0x%02x 0x%02x 0x%02x] keybit=0x%02x\n",
+ 	     dev->irq_data->byte[0],
+@@ -379,7 +380,7 @@ static void cm109_urb_irq_callback(struct urb *urb)
+ 
+  out:
+ 
+-	spin_lock(&dev->ctl_submit_lock);
++	spin_lock_irqsave(&dev->ctl_submit_lock, flags);
+ 
+ 	dev->irq_urb_pending = 0;
+ 
+@@ -403,7 +404,7 @@ static void cm109_urb_irq_callback(struct urb *urb)
+ 				__func__, error);
+ 	}
+ 
+-	spin_unlock(&dev->ctl_submit_lock);
++	spin_unlock_irqrestore(&dev->ctl_submit_lock, flags);
+ }
+ 
+ static void cm109_urb_ctl_callback(struct urb *urb)
+@@ -411,6 +412,7 @@ static void cm109_urb_ctl_callback(struct urb *urb)
+ 	struct cm109_dev *dev = urb->context;
+ 	const int status = urb->status;
+ 	int error;
++	unsigned long flags;
+ 
+ 	dev_dbg(&dev->intf->dev, "### URB CTL: [0x%02x 0x%02x 0x%02x 0x%02x]\n",
+ 	     dev->ctl_data->byte[0],
+@@ -421,7 +423,7 @@ static void cm109_urb_ctl_callback(struct urb *urb)
+ 	if (status)
+ 		dev_err(&dev->intf->dev, "%s: urb status %d\n", __func__, status);
+ 
+-	spin_lock(&dev->ctl_submit_lock);
++	spin_lock_irqsave(&dev->ctl_submit_lock, flags);
+ 
+ 	dev->ctl_urb_pending = 0;
+ 
+@@ -442,7 +444,7 @@ static void cm109_urb_ctl_callback(struct urb *urb)
+ 		}
+ 	}
+ 
+-	spin_unlock(&dev->ctl_submit_lock);
++	spin_unlock_irqrestore(&dev->ctl_submit_lock, flags);
+ }
+ 
+ static void cm109_toggle_buzzer_async(struct cm109_dev *dev)
+-- 
+1.7.9.5
 
