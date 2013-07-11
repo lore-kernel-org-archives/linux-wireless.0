@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:43702 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755551Ab3G2VXo convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:47334 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932451Ab3GKJMN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 17:23:44 -0400
-Received: by mail-oa0-f51.google.com with SMTP id h2so2072817oag.38
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jul 2013 14:23:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51F6DB65.4000302@hauke-m.de>
-References: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net>
-	<CACna6rzu4U+v1v1vj-+XyJHpReXMB3nscKP_C5jjbAAbKLQcKA@mail.gmail.com>
-	<CACna6rxvnU_cwphP+Vvn_-CLuEcqMufEo4Zk7-Xqd63OA4Zmqg@mail.gmail.com>
-	<51F6DB65.4000302@hauke-m.de>
-Date: Mon, 29 Jul 2013 23:23:43 +0200
-Message-ID: <CACna6ryQTWhyFtrWaKc_E-Zx_O16qb78uYRCwHT6x6n3pQzkVw@mail.gmail.com> (sfid-20130729_232348_045515_AD202EA9)
-Subject: Re: [PATCH V2] fwcutter: Add firmware 6.30.163.46
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	m@bues.ch
-Content-Type: text/plain; charset=UTF-8
+	Thu, 11 Jul 2013 05:12:13 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>
+Subject: [PATCH 42/50] media: usb: tlg2300: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:06:05 +0800
+Message-Id: <1373533573-12272-43-git-send-email-ming.lei@canonical.com> (sfid-20130711_111434_734426_63A9A96C)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/7/29 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 07/29/2013 10:07 PM, Rafał Miłecki wrote:
->> 2013/7/29 Rafał Miłecki <zajec5@gmail.com>:
->>> 2013/7/29 Larry Finger <Larry.Finger@lwfinger.net>:
->>>> This firmware version can be extracted from the GPL tarball for the ASUS
->>>> GPL code for the RT-AC66U 802.11ac Dual-Band Wireless-AC1750 Gigabit Router.
->>>>
->>>> I believe this to be the first instance of 802.11ac firmware for Broadcom
->>>> hardware. The firmware is version 784.2.
->>>>
->>>> Note: The http://www.lwfinger.com/broadcom-wl-6.30.163.46.tar.bz2 is the URL
->>>> of the extracted apsta binary. The full GPL package is at
->>>> http://dlcdnet.asus.com/pub/ASUS/wireless/RT-AC66U/GPL_RT_AC66U_3004372.zip.
->>>
->>> There is some (probably outdated) list of Broadcom 802.11ac routers:
->>> ASUS RT-AC66U
->>> Linksys EA6500
->>> Netgear R6300
->>>
->>> Did you compare wl.ko drivers from the 2 other firmwares? Is this the
->>> newest one?
->>>
->>> Did you start AC-PHY RE process?
->>
->> In case you wonder, I have a MIPS router with BCM4331 + BCM4360,
->> unfrotunately there isn't mmiotrace available for MIPS, so I can't
->> start RE that way :(
->>
->> I may think about buying PCE-AC66 at some point.
->>
-> Hi Rafał,
->
-> I have a Netgear R6250 (BCM4708 ARM Contex-A9) router with BCM4331 +
-> BCM4360 and I am currently adding support for it to OpenWrt and mainline
-> Linux kernel, could mmiotrace work on this CPU?
+Complete() will be run with interrupt enabled, so disable local
+interrupt before holding a global lock which is held without
+irqsave.
 
-mmiotrace is x86/x86_64 only at this point :(
+Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: linux-media@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/media/usb/tlg2300/pd-alsa.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/drivers/media/usb/tlg2300/pd-alsa.c b/drivers/media/usb/tlg2300/pd-alsa.c
+index 3f3e141..cbccc96 100644
+--- a/drivers/media/usb/tlg2300/pd-alsa.c
++++ b/drivers/media/usb/tlg2300/pd-alsa.c
+@@ -141,6 +141,7 @@ static inline void handle_audio_data(struct urb *urb, int *period_elapsed)
+ 	int len		= urb->actual_length / stride;
+ 	unsigned char *cp	= urb->transfer_buffer;
+ 	unsigned int oldptr	= pa->rcv_position;
++	unsigned long flags;
+ 
+ 	if (urb->actual_length == AUDIO_BUF_SIZE - 4)
+ 		len -= (AUDIO_TRAILER_SIZE / stride);
+@@ -156,6 +157,7 @@ static inline void handle_audio_data(struct urb *urb, int *period_elapsed)
+ 		memcpy(runtime->dma_area + oldptr * stride, cp, len * stride);
+ 
+ 	/* update the statas */
++	local_irq_save(flags);
+ 	snd_pcm_stream_lock(pa->capture_pcm_substream);
+ 	pa->rcv_position	+= len;
+ 	if (pa->rcv_position >= runtime->buffer_size)
+@@ -167,6 +169,7 @@ static inline void handle_audio_data(struct urb *urb, int *period_elapsed)
+ 		*period_elapsed = 1;
+ 	}
+ 	snd_pcm_stream_unlock(pa->capture_pcm_substream);
++	local_irq_restore(flags);
+ }
+ 
+ static void complete_handler_audio(struct urb *urb)
 -- 
-Rafał
+1.7.9.5
+
