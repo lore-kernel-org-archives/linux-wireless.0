@@ -1,32 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32494 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757216Ab3GENYI (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36255 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab3GKJHb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:24:08 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH v2] ath10k: fix MSI-X setup failpath
-References: <1372150661-6862-1-git-send-email-michal.kazior@tieto.com>
-	<1372229450-4575-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 5 Jul 2013 16:23:59 +0300
-In-Reply-To: <1372229450-4575-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 26 Jun 2013 08:50:50 +0200")
-Message-ID: <877gh5gmxc.fsf@kamboji.qca.qualcomm.com> (sfid-20130705_152412_737139_CE57DE74)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 11 Jul 2013 05:07:31 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH 07/50] USB: ldusb: spin_lock in complete() cleanup
+Date: Thu, 11 Jul 2013 17:05:30 +0800
+Message-Id: <1373533573-12272-8-git-send-email-ming.lei@canonical.com> (sfid-20130711_110750_375792_3B489C42)
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-> Irqs were not freed up correctly upon msi-x setup
-> failure.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/usb/misc/ldusb.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-John has already applied this.
-
+diff --git a/drivers/usb/misc/ldusb.c b/drivers/usb/misc/ldusb.c
+index ac76229..8bae18e 100644
+--- a/drivers/usb/misc/ldusb.c
++++ b/drivers/usb/misc/ldusb.c
+@@ -249,6 +249,7 @@ static void ld_usb_interrupt_in_callback(struct urb *urb)
+ 	unsigned int next_ring_head;
+ 	int status = urb->status;
+ 	int retval;
++	unsigned long flags;
+ 
+ 	if (status) {
+ 		if (status == -ENOENT ||
+@@ -258,12 +259,12 @@ static void ld_usb_interrupt_in_callback(struct urb *urb)
+ 		} else {
+ 			dbg_info(&dev->intf->dev, "%s: nonzero status received: %d\n",
+ 				 __func__, status);
+-			spin_lock(&dev->rbsl);
++			spin_lock_irqsave(&dev->rbsl, flags);
+ 			goto resubmit; /* maybe we can recover */
+ 		}
+ 	}
+ 
+-	spin_lock(&dev->rbsl);
++	spin_lock_irqsave(&dev->rbsl, flags);
+ 	if (urb->actual_length > 0) {
+ 		next_ring_head = (dev->ring_head+1) % ring_buffer_size;
+ 		if (next_ring_head != dev->ring_tail) {
+@@ -292,7 +293,7 @@ resubmit:
+ 			dev->buffer_overflow = 1;
+ 		}
+ 	}
+-	spin_unlock(&dev->rbsl);
++	spin_unlock_irqrestore(&dev->rbsl, flags);
+ exit:
+ 	dev->interrupt_in_done = 1;
+ 	wake_up_interruptible(&dev->read_wait);
 -- 
-Kalle Valo
+1.7.9.5
+
