@@ -1,110 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:53674 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755954Ab3GYNF6 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:42187 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932255Ab3GKMmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jul 2013 09:05:58 -0400
-Date: Thu, 25 Jul 2013 14:05:54 +0100
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2013-07-25
-Message-ID: <20130725130552.GE9913@joana> (sfid-20130725_150620_625675_4B0E708A)
+	Thu, 11 Jul 2013 08:42:52 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="AhhlLboLdkugWU4S"
+In-Reply-To: <51DEA289.5050509@cogentembedded.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	<1373533573-12272-9-git-send-email-ming.lei@canonical.com>
+	<51DEA289.5050509@cogentembedded.com>
+Date: Thu, 11 Jul 2013 20:42:49 +0800
+Message-ID: <CACVXFVOF4e=+GjXHTJ-suitQO3TsvCnUBCsfoXj+QahxRqVz7Q@mail.gmail.com> (sfid-20130711_144300_697720_B4639287)
+Subject: Re: [PATCH 08/50] USB: legousbtower: spin_lock in complete() cleanup
+From: Ming Lei <ming.lei@canonical.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Juergen Stuber <starblue@users.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jul 11, 2013 at 8:18 PM, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> Hello.
+>
+>
+> On 11-07-2013 13:05, Ming Lei wrote:
+>
+>> Complete() will be run with interrupt enabled, so change to
+>> spin_lock_irqsave().
+>
+>
+>> Cc: Juergen Stuber <starblue@users.sourceforge.net>
+>> Signed-off-by: Ming Lei <ming.lei@canonical.com>
+>> ---
+>>   drivers/usb/misc/legousbtower.c |    5 +++--
+>>   1 file changed, 3 insertions(+), 2 deletions(-)
+>
+>
+>> diff --git a/drivers/usb/misc/legousbtower.c
+>> b/drivers/usb/misc/legousbtower.c
+>> index 8089479..4044989 100644
+>> --- a/drivers/usb/misc/legousbtower.c
+>> +++ b/drivers/usb/misc/legousbtower.c
+>> @@ -771,6 +771,7 @@ static void tower_interrupt_in_callback (struct urb
+>> *urb)
+>>         struct lego_usb_tower *dev = urb->context;
+>>         int status = urb->status;
+>>         int retval;
+>> +       unsigned long flags;
+>>
+>>         dbg(4, "%s: enter, status %d", __func__, status);
+>>
+>> @@ -788,7 +789,7 @@ static void tower_interrupt_in_callback (struct urb
+>> *urb)
+>>         }
+>>
+>>         if (urb->actual_length > 0) {
+>> -               spin_lock (&dev->read_buffer_lock);
+>> +               spin_lock_irqsave (&dev->read_buffer_lock, flags);
+>>                 if (dev->read_buffer_length + urb->actual_length <
+>> read_buffer_size) {
+>>                         memcpy (dev->read_buffer +
+>> dev->read_buffer_length,
+>>                                 dev->interrupt_in_buffer,
+>> @@ -799,7 +800,7 @@ static void tower_interrupt_in_callback (struct urb
+>> *urb)
+>>                 } else {
+>>                         printk(KERN_WARNING "%s: read_buffer overflow, %d
+>> bytes dropped", __func__, urb->actual_length);
+>>                 }
+>> -               spin_unlock (&dev->read_buffer_lock);
+>> +               spin_unlock_irqrestore (&dev->read_buffer_lock, flags);
+>>         }
+>
+>
+>    I don't think this patch passes checkpatch.pl.
 
---AhhlLboLdkugWU4S
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+No errors reported from checkpatch.pl, only warnings which isn't introduced
+by this patch.
 
-Hi John,
-
-A few fixes and devices ID additions for 3.11:=20
-
- * There are 3 new ath3k device ids=20
- * Fixed stack memory usage in ath3k.
- * Fixed the init process of BlueFRITZ! devices, they were failing to init
-   due to an unsupported command we sent.=20
- * Fixed wrong use of PTR_ERR in btusb code that was preventing intel devic=
-es
-   to work properly=20
- * Fixed race codition between hci_register_dev() and hci_dev_open() that
-   could cause a NULL pointer dereference.
-
-Please pull or let me know of any issues. Thanks.
-
-	Gustavo
-
+Thanks,
 --
-The following changes since commit 57bf74407bd501b0599568a3112fc16395b575d9:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/bl=
-uetooth/bluetooth (2013-06-24 13:53:15 -0400)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-ups=
-tream
-
-for you to fetch changes up to 352c3b276ca7e2df479cd0b9b87d227f14efb20a:
-
-  Bluetooth: Fix race between hci_register_dev() and hci_dev_open() (2013-0=
-7-25 13:55:59 +0100)
-
-----------------------------------------------------------------
-AceLan Kao (1):
-      Bluetooth: Add support for Atheros [0cf3:3121]
-
-Adam Lee (1):
-      Bluetooth: fix wrong use of PTR_ERR() in btusb
-
-Gustavo Padovan (1):
-      Bluetooth: Fix race between hci_register_dev() and hci_dev_open()
-
-Johan Hedberg (1):
-      Bluetooth: Fix HCI init for BlueFRITZ! devices
-
-Stanislaw Gruszka (1):
-      Bluetooth: ath3k: don't use stack memory for DMA
-
-Sujith Manoharan (1):
-      Bluetooth: ath3k: Add support for ID 0x13d3/0x3402
-
-Thomas Loo (1):
-      Bluetooth: ath3k: Add support for Fujitsu Lifebook UH5x2 [04c5:1330]
-
- drivers/bluetooth/ath3k.c | 44 +++++++++++++++++++++++++++++++++++---------
- drivers/bluetooth/btusb.c | 17 ++++++++++-------
- net/bluetooth/hci_core.c  | 16 ++++++++--------
- 3 files changed, 53 insertions(+), 24 deletions(-)
-
-
---AhhlLboLdkugWU4S
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iQIcBAEBAgAGBQJR8SKwAAoJEPs3PUX4s20oloMP/3xtV+rqwF8B7KDxMaRv4CgN
-Nh51XXfGotIph40PNDhj8Q/86FElTVpQYc48J0PqIx2RzMdjPOCDecVUqI5rgc+O
-Bf7U/z09mwYJnazQOn+nqAcxLFBn/0OrhRIZdQE8ex48Z1o6M2N/VapVa4gyXN4Y
-8xZTjQ8vdKOgaCMOWSkzhYYlOqdIw8qlFA7biL5KgSLeABZWn5KxDvGUf7ktgm3g
-YcaoU/7twRwwije3fO9523ak4IQNDREljfo0hw6CCslWKSeu2iVXqsPDViO16e+u
-0vFBA1yB+7094SNEI081+fBEE1us21nlUJNME6RGe3z5VGeJWTxy6L2ZWFpr00Px
-ZsLbv5zI4KycGuOu1L92RLWc3MXxFe84ccdil47CxLK/L6SEJGp/HanjmxLVlWFo
-m4DpOF4RHQ0DmqqnuP687C76TH2cUgmT4MXLhYFLj3LzUVQ1S+2IRp841Mqg+Gej
-QxHLw+tLqbIhxRgzCTnToZ18mQvTQGg2n8U+FbG7WfH/OY8Ts0ZkAuu4q2DH+P/Z
-FStw9u26kVvBXZAymxMB6JuQf1Ma/a7GjgjtrsFE6khwBu6uT1955M1IYtzt48fe
-C4nG6eAQAOmYuow2aNa+zI82si35SON9hWNOf6u2fmMqJzUmujVfJ1El3e5n8phx
-i5bCLARqvrOClrAExfIJ
-=GOMw
------END PGP SIGNATURE-----
-
---AhhlLboLdkugWU4S--
+Ming Lei
