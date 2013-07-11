@@ -1,72 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:35616 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932101Ab3GBFeT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 01:34:19 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Harvey Yang <harvey.huawei.yang@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Mon, 1 Jul 2013 22:33:13 -0700
-Subject: RE: [PATCH V2 1/1] mwifiex: add tx info to skb when forming mgmt
- frame
-Message-ID: <477F20668A386D41ADCC57781B1F70430EA2E061D9@SC-VEXCH1.marvell.com> (sfid-20130702_073422_496641_D5CAF119)
-References: <1372731526-2979-1-git-send-email-harvey.huawei.yang@gmail.com>
-In-Reply-To: <1372731526-2979-1-git-send-email-harvey.huawei.yang@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:56977 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932073Ab3GKNCI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 09:02:08 -0400
+Received: by mail-lb0-f180.google.com with SMTP id o10so6699720lbi.39
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 06:02:06 -0700 (PDT)
+Message-ID: <51DEACCB.4000206@cogentembedded.com> (sfid-20130711_150226_647611_E5D21076)
+Date: Thu, 11 Jul 2013 17:02:03 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
+To: Ming Lei <ming.lei@canonical.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Johan Hovold <jhovold@gmail.com>
+Subject: Re: [PATCH 17/50] USB: serial: sierra: spin_lock in complete() cleanup
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-18-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1373533573-12272-18-git-send-email-ming.lei@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Harvey,
+Hello.
 
-> From: Huawei Yang <harvey.huawei.yang@gmail.com>
-> 
-> In function 'mwifiex_write_data_complete' it need tx info to find the
-> mwifiex_private to updates statistics and wake up tx queues.
-> Or we may trigger tx queues timeout when transmitting lots of mgmt frames.
-> 
-> Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
+On 11-07-2013 13:05, Ming Lei wrote:
+
+> Complete() will be run with interrupt enabled, so change to
+> spin_lock_irqsave().
+
+> Cc: Johan Hovold <jhovold@gmail.com>
+> Signed-off-by: Ming Lei <ming.lei@canonical.com>
 > ---
->  drivers/net/wireless/mwifiex/cfg80211.c |    5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c
-> b/drivers/net/wireless/mwifiex/cfg80211.c
-> index e42b266..b4e2538 100644
-> --- a/drivers/net/wireless/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-> @@ -186,6 +186,7 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy,
-> struct wireless_dev *wdev,
->  	struct sk_buff *skb;
->  	u16 pkt_len;
->  	const struct ieee80211_mgmt *mgmt;
-> +	struct mwifiex_txinfo *tx_info;
->  	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev-
-> >netdev);
-> 
->  	if (!buf || !len) {
-> @@ -212,6 +213,10 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy,
-> struct wireless_dev *wdev,
->  		wiphy_err(wiphy, "allocate skb failed for management
-> frame\n");
->  		return -ENOMEM;
->  	}
-> +
+>   drivers/usb/serial/sierra.c |    9 +++++----
+>   1 file changed, 5 insertions(+), 4 deletions(-)
 
-Here checkpatch.pl script reports whitespace damaged error.
-I can fix it in my local tree and resend v3 to John after the 3.11 merge window.
+> diff --git a/drivers/usb/serial/sierra.c b/drivers/usb/serial/sierra.c
+> index de958c5..e79b6ad 100644
+> --- a/drivers/usb/serial/sierra.c
+> +++ b/drivers/usb/serial/sierra.c
+> @@ -433,6 +433,7 @@ static void sierra_outdat_callback(struct urb *urb)
+>   	struct sierra_port_private *portdata = usb_get_serial_port_data(port);
+>   	struct sierra_intf_private *intfdata;
+>   	int status = urb->status;
+> +	unsigned long flags;
+>
+>   	intfdata = port->serial->private;
+>
+> @@ -443,12 +444,12 @@ static void sierra_outdat_callback(struct urb *urb)
+>   		dev_dbg(&port->dev, "%s - nonzero write bulk status "
+>   		    "received: %d\n", __func__, status);
+>
+> -	spin_lock(&portdata->lock);
+> +	spin_lock_irqsave(&portdata->lock, flags);
+>   	--portdata->outstanding_urbs;
+> -	spin_unlock(&portdata->lock);
+> -	spin_lock(&intfdata->susp_lock);
+> +	spin_unlock_irqrestore(&portdata->lock, flags);
+> +	spin_lock_irqsave(&intfdata->susp_lock, flags);
 
-Thanks,
-Bing
+     You are allowing an interrupt enabled window where previously it 
+wasn't possible. Why notleave these 2 lines as is?
 
-> +	tx_info = MWIFIEX_SKB_TXCB(skb);
-> +	tx_info->bss_num = priv->bss_num;
-> +	tx_info->bss_type = priv->bss_type;
-> 
->  	mwifiex_form_mgmt_frame(skb, buf, len);
->  	mwifiex_queue_tx_pkt(priv, skb);
-> --
-> 1.7.10.4
+>   	--intfdata->in_flight;
+> -	spin_unlock(&intfdata->susp_lock);
+> +	spin_unlock_irqrestore(&intfdata->susp_lock, flags);
+>
+>   	usb_serial_port_softint(port);
+>   }
+
+WBR, Sergei
 
