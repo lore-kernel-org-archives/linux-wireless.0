@@ -1,83 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.witbe.net ([81.88.96.48]:44784 "EHLO smtp.witbe.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932138Ab3GWPvj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 11:51:39 -0400
-Date: Tue, 23 Jul 2013 17:49:04 +0200
-From: Paul Rolland (=?UTF-8?B?44Od44O844Or44O744Ot44Op44Oz?=)
-	<rol@witbe.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Richard Genoud <richard.genoud@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rol@witbe.net
-Subject: Re: rtl8192cu: slow path warning
-Message-ID: <20130723174904.00d6fab4@tux.DEF.witbe.net> (sfid-20130723_175154_221713_49C3039E)
-In-Reply-To: <51EE9BB6.8000501@lwfinger.net>
-References: <20130611123814.GA9854@lnx-rg>
-	<20130626142241.GA13107@lnx-rg>
-	<51CB0E9C.50408@lwfinger.net>
-	<CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
-	<20130723142907.53103aab@tux.DEF.witbe.net>
-	<51EE9BB6.8000501@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/AagHTG=sZ422WoRYeybo2nQ"; protocol="application/pgp-signature"
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:44319 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932287Ab3GKNIe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jul 2013 09:08:34 -0400
+Received: by mail-lb0-f178.google.com with SMTP id y6so6552726lbh.23
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 06:08:32 -0700 (PDT)
+Message-ID: <51DEAE4E.90204@cogentembedded.com> (sfid-20130711_150907_490874_D5EEFC0D)
+Date: Thu, 11 Jul 2013 17:08:30 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Ming Lei <ming.lei@canonical.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>
+Subject: Re: [PATCH 45/50] sound: usb: usx2y: spin_lock in complete() cleanup
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-46-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1373533573-12272-46-git-send-email-ming.lei@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/AagHTG=sZ422WoRYeybo2nQ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 11-07-2013 13:06, Ming Lei wrote:
 
-Hello Larry,
+> Complete() will be run with interrupt enabled, so change to
+> spin_lock_irqsave().
 
-On Tue, 23 Jul 2013 10:05:26 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+    Changelog doesn't match the patch.
 
-> The reason that patch is not in mainline is that it takes time. If you
-> want to have it, you can get the official patch from=20
-> http://marc.info/?l=3Dlinux-wireless&m=3D137242880222442&w=3D2, or you ne=
-ed to=20
-> implement kernels from the wireless-testing git tree, where it was added
-> on June 28 as commit bcfb879. My original patch included the following
-> note for John Linville:
->=20
-> "Ideally, this patch should be pushed to the 3.10 stream; however, at
-> this late time that is not possible. Please push it for 3.11 and the Cc
-> to stable will get it into 3.10.X."
->=20
-> As you see, it was marked with a Cc for Stable, and it will be propagated
-> to 3.10 when it gets incorporated by Linus. I think I have done all that
-> I can do for now.
->=20
-> If you want to lobby Linus to get stuff accepted faster, that is your=20
-> prerogative; however, I could not recommend that action, and I certainly
-> will never do anything like that.
+> Cc: Jaroslav Kysela <perex@perex.cz>
+> Cc: Takashi Iwai <tiwai@suse.de>
+> Cc: alsa-devel@alsa-project.org
+> Signed-off-by: Ming Lei <ming.lei@canonical.com>
+> ---
+>   sound/usb/usx2y/usbusx2yaudio.c |    4 ++++
+>   1 file changed, 4 insertions(+)
 
-Neither will I... I was just wondering and asking, nothing else, as I'm
-also facing this warning.=20
+> diff --git a/sound/usb/usx2y/usbusx2yaudio.c b/sound/usb/usx2y/usbusx2yaudio.c
+> index 4967fe9..e2ee893 100644
+> --- a/sound/usb/usx2y/usbusx2yaudio.c
+> +++ b/sound/usb/usx2y/usbusx2yaudio.c
+> @@ -273,7 +273,11 @@ static void usX2Y_clients_stop(struct usX2Ydev *usX2Y)
+>   		struct snd_usX2Y_substream *subs = usX2Y->subs[s];
+>   		if (subs) {
+>   			if (atomic_read(&subs->state) >= state_PRERUNNING) {
+> +				unsigned long flags;
+> +
+> +				local_irq_save(flags);
+>   				snd_pcm_stop(subs->pcm_substream, SNDRV_PCM_STATE_XRUN);
+> +				local_irq_restore(flags);
+>   			}
 
-I'm glad to see the link you sent is presenting a patch that is the same as
-the one I prepared. I'm going to use that while waiting for the patch to
-hit mainline !
-
-Thanks for replying,=20
-Best,
-Paul
+WBR, Sergei
 
 
---Sig_/AagHTG=sZ422WoRYeybo2nQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iEUEARECAAYFAlHupfEACgkQZP464AVDf+CdpACWIJ2aZ7LfcAW9oFqtoH9Tv3y0
-GACgmrpBsLaQR+9fyV+gnu6ujzjtHDY=
-=4B0j
------END PGP SIGNATURE-----
-
---Sig_/AagHTG=sZ422WoRYeybo2nQ--
