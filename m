@@ -1,104 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1863 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752713Ab3GYVBv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jul 2013 17:01:51 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Ben Greear" <greearb@candelatech.com>
-Subject: [PATCH] brcmfmac: inform cfg80211 about disconnect when device
- is unplugged
-Date: Thu, 25 Jul 2013 23:01:34 +0200
-Message-ID: <1374786094-3882-1-git-send-email-arend@broadcom.com> (sfid-20130725_230155_688864_53BE6896)
+Received: from mail-qe0-f42.google.com ([209.85.128.42]:56448 "EHLO
+	mail-qe0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965004Ab3GLSCf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jul 2013 14:02:35 -0400
+Received: by mail-qe0-f42.google.com with SMTP id s14so5292600qeb.29
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Jul 2013 11:02:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3019FFE28@HASMSX103.ger.corp.intel.com>
+References: <51BBF4F1.1050301@newportit.com> <51DCDD54.9090100@newportit.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3019FFDDF@HASMSX103.ger.corp.intel.com>
+ <51DCF4BF.5010900@newportit.com> <0BA3FCBA62E2DC44AF3030971E174FB3019FFE28@HASMSX103.ger.corp.intel.com>
+From: Mariano Aliaga <marianoaliaga@gmail.com>
+Date: Fri, 12 Jul 2013 15:02:04 -0300
+Message-ID: <CAGLHXEnKS-Yz4uia=-KW7HLYUZ9nt_Pba_ZDyfEoehWGaHsUmg@mail.gmail.com> (sfid-20130712_200238_338205_9AE6518A)
+Subject: Re: [Ilw] Re: Slow throughput on Ultimate-N 6300
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Steve Freitas <steve@newportit.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the brcmfmac device is physically removed cfg80211 gives a
-warning upon unregistering the net device (see below).
+Hi Emmanuel,
 
-[23052.390197] WARNING: CPU: 0 PID: 30 at net/wireless/core.c:937 cfg80211_netdev_notifier_call+0x164/0x600 [cfg80211]()
-[23052.400843] Modules linked in: brcmfmac(O) brcmutil(O) cfg80211(O) pl2303 usbserial binfmt_misc snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_intel snd_hda_codec snd_hwdep snd_pcm snd_seq_midi snd_rawmidi snd_seq_midi_event lpc_ich snd_seq snd_timer snd_seq_device snd psmouse mfd_core serio_raw soundcore snd_page_alloc intel_ips dell_laptop dell_wmi sparse_keymap dcdbas nouveau ttm drm_kms_helper drm i2c_algo_bit mxm_wmi ahci libahci sdhci_pci firewire_ohci firewire_core sdhci crc_itu_t mmc_core intel_agp intel_gtt e1000e ptp pps_core agpgart video [last unloaded: brcmfmac]
-[23052.452987] CPU: 0 PID: 30 Comm: khubd Tainted: G           O 3.11.0-rc1-wl-testing-lockdep-00002-g41cc093-dirty #1
-[23052.463480] Hardware name: Dell Inc. Latitude E6410/07XJP9, BIOS A07 02/15/2011
-[23052.470852]  00000000 00000000 f4efdc18 c1522e3d f845bed2 f4efdc48 c103fbe4 c16a9254
-[23052.478762]  00000000 0000001e f845bed2 000003a9 f841da44 f841da44 f3790004 f25539c0
-[23052.486741]  e2700200 f4efdc58 c103fc22 00000009 00000000 f4efdcc0 f841da44 00000002
-[23052.494712] Call Trace:
-[23052.497165]  [<c1522e3d>] dump_stack+0x4b/0x66
-[23052.501685]  [<c103fbe4>] warn_slowpath_common+0x84/0xa0
-[23052.507085]  [<f841da44>] ? cfg80211_netdev_notifier_call+0x164/0x600 [cfg80211]
-[23052.514542]  [<f841da44>] ? cfg80211_netdev_notifier_call+0x164/0x600 [cfg80211]
-[23052.521981]  [<c103fc22>] warn_slowpath_null+0x22/0x30
-[23052.527191]  [<f841da44>] cfg80211_netdev_notifier_call+0x164/0x600 [cfg80211]
-[23052.534494]  [<c150abe8>] ? packet_notifier+0xc8/0x1d0
-[23052.539703]  [<c150abfc>] ? packet_notifier+0xdc/0x1d0
-[23052.544880]  [<c150ab20>] ? packet_seq_stop+0x30/0x30
-[23052.550002]  [<c152d655>] notifier_call_chain+0x45/0x60
-[23052.555298]  [<c106839f>] raw_notifier_call_chain+0x1f/0x30
-[23052.560963]  [<c143c693>] call_netdevice_notifiers_info+0x33/0x70
-[23052.567153]  [<c1459869>] ? qdisc_destroy+0x99/0xb0
-[23052.572116]  [<c143c6e3>] call_netdevice_notifiers+0x13/0x20
-[23052.577861]  [<c143df93>] rollback_registered_many+0xf3/0x1d0
-[23052.583687]  [<c1524cfc>] ? mutex_lock_nested+0x25c/0x350
-[23052.589150]  [<c143e0f4>] rollback_registered+0x24/0x40
-[23052.594445]  [<c143e15f>] unregister_netdevice_queue+0x4f/0xb0
-[23052.600344]  [<c143e299>] unregister_netdev+0x19/0x30
-[23052.605484]  [<f865b38f>] brcmf_del_if+0xbf/0x160 [brcmfmac]
-[23052.611223]  [<f865b7ae>] brcmf_detach+0x5e/0xd0 [brcmfmac]
-[23052.616881]  [<f8667413>] brcmf_usb_disconnect+0x63/0xa0 [brcmfmac]
-[23052.623217]  [<c13e09aa>] usb_unbind_interface+0x4a/0x180
+On Wed, Jul 10, 2013 at 2:55 AM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>>
+>> Emmanuel,
+>>
+>> Thank you for your quick response!
+>>
+>> It is a regression. I regularly had 300 Mbps speeds on this very access point,
+>> but it was years ago, in the 2.6 kernel series. However, I believe, from
+>> extensive online searches, that Intel has disabled the N functionality in the
+>> firmware on Linux, ostensibly until they (you? :-)
+>> ) can fix whatever problem they were seeing. With the demise of the Intel
+>> Linux Wireless bug tracker, though, public tracking of the bug has been
+>> impossible. There are now-dead links to the defunct bug tracker over this
+>> very issue.
+>>
+>
+> 11n hasn't been disabled in firmware, but rather in driver.
+> There is a bug we know about the "fail to flush tx fifo" thing that people reports (through mailing list or bugzilla of RedHat).
+> Can you please send the output of the kerne log (dmesg)?
+>
 
-When the device is physically connected the driver sends a disassoc
-command to the device and response triggers the driver to inform cfg80211
-about it. However, with the device removed the disassoc command fails.
-This patch adds a call to cfg80211_disconnected() when that command fails.
+   I've been also experiencing the "fail to flush tx fifo" bug for a
+long time, so I'll provide my environment and logs in case it's
+helpful:
 
-The warning was added by commit below and also cleans up, but better
-doing it in the driver if only to get rid of the warning.
+   - System: Thinkpad T410
+   - Chipset: Intel Corporation Centrino Advanced-N 6200 [8086:4239] (rev 35)
+   - Kernel: 3.10.0 x86_64 (tried 3.2, 3.5, 3.8 and 3.9 also. It got a
+lot better on 3.10 btw)
+   - Firmware: 9.221.4.1 build 25532
+   - AP: Linksys E1200 fw ver 1.0.00 build 11 (but happens also with
+other N AP's)
+   - Log on dmesg: this repeated 12 times when I booted and connected
+to my wifi network
 
-commit f9bef3df52fe61067e4c1c6cfb2037cb6b259a6a
-Author: Ben Greear <greearb@candelatech.com>
-Date:   Wed Jun 19 14:06:26 2013 -0700
+[   19.576029] iwlwifi 0000:03:00.0: fail to flush all tx fifo queues Q 0
+[   19.576039] iwlwifi 0000:03:00.0: Current SW read_ptr 3 write_ptr 4
+[   19.576089] iwl data: 00000000: 08 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00  ................
+[   19.576125] iwlwifi 0000:03:00.0: FH TRBs(0) = 0x00000000
+[   19.576183] iwlwifi 0000:03:00.0: FH TRBs(1) = 0x80102004
+[   19.576196] iwlwifi 0000:03:00.0: FH TRBs(2) = 0x00000000
+[   19.576209] iwlwifi 0000:03:00.0: FH TRBs(3) = 0x80300003
+[   19.576222] iwlwifi 0000:03:00.0: FH TRBs(4) = 0x00000000
+[   19.576235] iwlwifi 0000:03:00.0: FH TRBs(5) = 0x00000000
+[   19.576248] iwlwifi 0000:03:00.0: FH TRBs(6) = 0x00000000
+[   19.576261] iwlwifi 0000:03:00.0: FH TRBs(7) = 0x00704040
+[   19.576317] iwlwifi 0000:03:00.0: Q 0 is active and mapped to fifo
+3 ra_tid 0x0000 [3,4]
+[   19.576373] iwlwifi 0000:03:00.0: Q 1 is active and mapped to fifo
+2 ra_tid 0x0000 [0,0]
+[   19.576429] iwlwifi 0000:03:00.0: Q 2 is active and mapped to fifo
+1 ra_tid 0x0000 [4,5]
+[   19.576484] iwlwifi 0000:03:00.0: Q 3 is active and mapped to fifo
+0 ra_tid 0x0000 [0,0]
+[   19.576540] iwlwifi 0000:03:00.0: Q 4 is active and mapped to fifo
+7 ra_tid 0x0000 [65,65]
+[   19.576595] iwlwifi 0000:03:00.0: Q 5 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.576651] iwlwifi 0000:03:00.0: Q 6 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.576705] iwlwifi 0000:03:00.0: Q 7 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.576761] iwlwifi 0000:03:00.0: Q 8 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.576815] iwlwifi 0000:03:00.0: Q 9 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.576871] iwlwifi 0000:03:00.0: Q 10 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.576928] iwlwifi 0000:03:00.0: Q 11 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.576983] iwlwifi 0000:03:00.0: Q 12 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.577038] iwlwifi 0000:03:00.0: Q 13 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.577094] iwlwifi 0000:03:00.0: Q 14 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.577149] iwlwifi 0000:03:00.0: Q 15 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.577204] iwlwifi 0000:03:00.0: Q 16 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.577261] iwlwifi 0000:03:00.0: Q 17 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.577317] iwlwifi 0000:03:00.0: Q 18 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.577372] iwlwifi 0000:03:00.0: Q 19 is inactive and mapped to
+fifo 0 ra_tid 0x0000 [0,0]
+[   19.628329] cfg80211: Calling CRDA to update world regulatory domain
+[   19.632242] cfg80211: World regulatory domain updated:
+[   19.632245] cfg80211:   (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp)
+[   19.632247] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[   19.632249] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz),
+(300 mBi, 2000 mBm)
+[   19.632250] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
+(300 mBi, 2000 mBm)
+[   19.632252] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[   19.632253] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[   23.041735] wlan0: authenticate with 58:6d:8f:c3:47:2e
+[   23.068235] wlan0: send auth to 58:6d:8f:c3:47:2e (try 1/3)
+[   23.081353] wlan0: authenticated
+[   23.082190] wlan0: associate with 58:6d:8f:c3:47:2e (try 1/3)
+[   23.085720] wlan0: RX AssocResp from 58:6d:8f:c3:47:2e (capab=0x411
+status=0 aid=6)
+[   23.091628] wlan0: associated
 
-    wireless: check for dangling wdev->current_bss pointer
+   This does not always happen, it's kind of random. I think it
+happens more frequently in places with a lot of wifi networks
+available.
+   I'll try with older firmwares as suggested and let you know. I can
+provide more info if you need.
 
-Cc: Ben Greear <greearb@candelatech.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi John,
+TIA
 
-One more fix for the wireless repository, which happens when unloading
-the brcmfmac driver or unplug the device while being connected.
-
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 277b37a..7fa71f7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1093,8 +1093,11 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif)
- 		brcmf_dbg(INFO, "Call WLC_DISASSOC to stop excess roaming\n ");
- 		err = brcmf_fil_cmd_data_set(vif->ifp,
- 					     BRCMF_C_DISASSOC, NULL, 0);
--		if (err)
-+		if (err) {
- 			brcmf_err("WLC_DISASSOC failed (%d)\n", err);
-+			cfg80211_disconnected(vif->wdev.netdev, 0,
-+					      NULL, 0, GFP_KERNEL);
-+		}
- 		clear_bit(BRCMF_VIF_STATUS_CONNECTED, &vif->sme_state);
- 	}
- 	clear_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state);
--- 
-1.7.10.4
-
-
+Mariano
