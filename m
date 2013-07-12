@@ -1,66 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:45652 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932451Ab3GKJLe (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54935 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932878Ab3GLL7t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:11:34 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>
-Subject: [PATCH 37/50] media: usb: sn9x102: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:06:00 +0800
-Message-Id: <1373533573-12272-38-git-send-email-ming.lei@canonical.com> (sfid-20130711_111146_953362_D1717165)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Fri, 12 Jul 2013 07:59:49 -0400
+Message-ID: <1373630386.8205.5.camel@jlt4.sipsolutions.net> (sfid-20130712_135952_224505_2C486BA8)
+Subject: Re: [PATCH] mac80211: fix off-by-one regression in ibss beacon
+ generation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 12 Jul 2013 13:59:46 +0200
+In-Reply-To: <1373567389-6287-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373567389-6287-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+On Thu, 2013-07-11 at 20:29 +0200, Simon Wunderlich wrote:
+> There is an off-by-one error in the beacon generation for the ibss mode,
+> falsely a rate the extended supported rates which was already added to
+> supported rates, messing up the beacon. This was introduced by commit
+> "mac80211: select and adjust bitrates according to channel mode".
 
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: linux-media@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/media/usb/sn9c102/sn9c102_core.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Applied.
 
-diff --git a/drivers/media/usb/sn9c102/sn9c102_core.c b/drivers/media/usb/sn9c102/sn9c102_core.c
-index 2cb44de..33dc595 100644
---- a/drivers/media/usb/sn9c102/sn9c102_core.c
-+++ b/drivers/media/usb/sn9c102/sn9c102_core.c
-@@ -784,12 +784,14 @@ end_of_frame:
- 				      cam->sensor.pix_format.pixelformat ==
- 				      V4L2_PIX_FMT_JPEG) && eof)) {
- 					u32 b;
-+					unsigned long flags;
- 
- 					b = (*f)->buf.bytesused;
- 					(*f)->state = F_DONE;
- 					(*f)->buf.sequence= ++cam->frame_count;
- 
--					spin_lock(&cam->queue_lock);
-+					spin_lock_irqsave(&cam->queue_lock,
-+							  flags);
- 					list_move_tail(&(*f)->frame,
- 						       &cam->outqueue);
- 					if (!list_empty(&cam->inqueue))
-@@ -799,7 +801,8 @@ end_of_frame:
- 							frame );
- 					else
- 						(*f) = NULL;
--					spin_unlock(&cam->queue_lock);
-+					spin_unlock_irqrestore(&cam->queue_lock,
-+							       flags);
- 
- 					memcpy(cam->sysfs.frame_header,
- 					       cam->sof.header, soflen);
--- 
-1.7.9.5
+johannes
 
