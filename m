@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:53111 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCVf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:21:35 -0400
-Received: by mail-pb0-f52.google.com with SMTP id xa12so1339971pbc.25
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:35 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 32/53] wireless-regdb: PL, Poland - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:21 -0700
-Message-Id: <1374027522-18488-33-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042144_067925_4DBF3A33)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4033 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964842Ab3GLNcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jul 2013 09:32:48 -0400
+Message-ID: <51E00577.60305@broadcom.com> (sfid-20130712_153306_442042_03F02569)
+Date: Fri, 12 Jul 2013 15:32:39 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Thomas Graf" <libnl-owner@lists.infradead.org>
+Subject: Re: interested in py80211?
+References: <51D49027.9010803@broadcom.com> (
+ sfid-20130703_225725_898124_EAB997AB)
+ <1373616129.8205.2.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1373616129.8205.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 07/12/13 10:02, Johannes Berg wrote:
+> Yep, I'd totally be interested. Not that I don't have enough things on
+> my plate already ;-)
+>
+> On Wed, 2013-07-03 at 22:57 +0200, Arend van Spriel wrote:
+>> A common say in Linux arena is "when you have an itch, just scratch it".
+>
+> :-)
+>
+>> My itch is that tools like ifconfig and iw are great, but in an
+>> automated test environment it kind of sucks to parse output, which is
+>> confirmed by blurb from iw: "Do NOT screenscrape this tool, we don't
+>> consider its output stable.".
+>
+> Heh, yeah ...
+>
+>> Ever since my first contact with Python I tend to favor it over other
+>> scripting alternatives so I decided to scratch my itch with that and
+>> another old acquaintance called SWIG. With those I went to create
+>> py80211. A first attempt was to have SWIG create a wrapper API directly
+>> exposing the libnl-3 API, but that did not feel comfortable in a
+>> scripting environment. So the level of abstraction is a bit higher. It
+>> is just in a kick-off state (eg. can only send u32 attributes), but I
+>> decided to push it to github anyway.
+>
+> Another approach might be exposing the libnl APIs and then build a
+> higher-level library in python. Have you considered that? That might
+> make it useful to other users of netlink as well, while keeping a 'nice'
+> nl80211 API?
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+I am still at that fork in the road and not sure about it. The libnl 
+project itself already has libnl stuff exposed in a python lib being the 
+core api and route. So I could go and add genl support to that and build 
+the high-level python library from there.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 8f8e8fc..2f71dba 100644
---- a/db.txt
-+++ b/db.txt
-@@ -622,9 +622,9 @@ country PK:
- 
- country PL: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
+Regards,
+Arend
 
