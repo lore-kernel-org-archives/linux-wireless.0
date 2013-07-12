@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:51915 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab3GQCW2 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:30756 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932884Ab3GLQzp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:22:28 -0400
-Received: by mail-pb0-f51.google.com with SMTP id um15so1357167pbc.10
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:27 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 43/53] wireless-regdb: IL, Isreal - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:32 -0700
-Message-Id: <1374027522-18488-44-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042230_971387_2174C626)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 12 Jul 2013 12:55:45 -0400
+Message-ID: <1373648143.17876.98.camel@gandalf.local.home> (sfid-20130712_185553_561187_B4FDAF50)
+Subject: Re: Help adding trace events to xHCI
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Xenia Ragiadakou <burzalodowa@gmail.com>,
+	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-trace-users@vger.kernel.org, Jiri Olsa <jolsa@redhat.com>
+Date: Fri, 12 Jul 2013 12:55:43 -0400
+In-Reply-To: <20130712164104.GA15531@xanatos>
+References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos>
+	 <1373562533.8201.33.camel@jlt4.sipsolutions.net>
+	 <20130711190035.GD5240@xanatos> <87y59c4d60.fsf@kamboji.qca.qualcomm.com>
+	 <20130712164104.GA15531@xanatos>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Fri, 2013-07-12 at 09:41 -0700, Sarah Sharp wrote:
+> On Fri, Jul 12, 2013 at 07:25:59AM +0300, Kalle Valo wrote:
 
-This enables 80 MHz bandwidth usage on 5 GHz.
+> Thanks for the suggestion.  I'm not familiar with all the userspace
+> tools for trace events, so I didn't know about the command parser.  Is
+> there documentation or a list of resources for all the userspace trace
+> event plugins?  If so, can you give us a pointer to it?
+> 
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Currently the plugins only exist in trace-cmd. But there's going to be
+work done to get them into the kernel tools directory. I was just
+talking with Jiri about this today. Perf will require it.
 
-diff --git a/db.txt b/db.txt
-index 6aa57a7..0dc6767 100644
---- a/db.txt
-+++ b/db.txt
-@@ -394,8 +394,8 @@ country IE: DFS-ETSI
- 
- country IL:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
--	(5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
-+	(5150 - 5250 @ 80), (N/A, 200 mW), NO-OUTDOOR
-+	(5250 - 5350 @ 80), (N/A, 200 mW), NO-OUTDOOR, DFS
- 
- country IN:
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
+trace-cmd repo is here:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/rostedt/trace-cmd.git
+
+-- Steve
+
 
