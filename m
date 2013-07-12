@@ -1,142 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4166 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964861Ab3GLNrx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 09:47:53 -0400
-Message-ID: <51E008FC.4010104@broadcom.com> (sfid-20130712_154757_136045_E4ACA074)
-Date: Fri, 12 Jul 2013 15:47:40 +0200
-From: "Piotr Haber" <phaber@broadcom.com>
-MIME-Version: 1.0
-To: "Maximilian Engelhardt" <maxi@daemonizer.de>
-cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: Poor wireless reception on BCM4313
-References: <1624172.s6pnfBcJL7@fuchs> <30534146.LWDmOHhHCG@eisbaer>
-In-Reply-To: <30534146.LWDmOHhHCG@eisbaer>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from s72.web-hosting.com ([198.187.29.21]:44671 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750797Ab3GLEDg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jul 2013 00:03:36 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/6] initvals: Add rxgain tables for AR9462
+Date: Fri, 12 Jul 2013 09:30:11 +0530
+Message-Id: <1373601613-31616-5-git-send-email-sujith@msujith.org> (sfid-20130712_060354_979485_6EA5A02B)
+In-Reply-To: <1373601613-31616-1-git-send-email-sujith@msujith.org>
+References: <1373601613-31616-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/12/13 14:55, Maximilian Engelhardt wrote:
-> On Friday 21 June 2013 20:26:25 Maximilian Engelhardt wrote:
->> Hello developers,
->>
->> I'm having problems with the reception performance of my BCM4313 wireless
->> card. The card is basically working fine, but the reception is quite bad
->> compared to other wifi equipment. I first suspected a hardware problem, but
->> after I tried Windows 7 with the same hardware and having no problem there
->> I'm quite sure this is a software issue.
->>
->>
->> Here is a more detailed explanation of a test setup I performed to show the
->> problem:
->>
->> I have an AP in about 2m distance and I connected to it by my BCM4313 card
->> and by a USB dongle (TP-Link TL-WN821N, using ath9k_htc). Both connections
->> work and I can ping the AP using both cards.
->>
->> iw dev $DEV link shows a signal of about -68 dBm for the broadcom card and
->> about -51 dBm for the atheros dongle. I have no idea in how far one can
->> trust these values, but the difference between these two cards mostly seems
->> to be 20-30 dB, also in my further experiments (greater distance from the
->> AP).
->>
->> Now with both dongles being connected I move my laptop away from the AP and
->> of course the signal is getting weaker. However at some point the broadcom
->> card looses the connection to the AP while the USB dongle still has good
->> connection (at this point the signal strength of the broadcom card is about
->> -90dBm and -60dBm for the USB dongle). In my test with the Windows driver
->> at that point the connection was still good and maximum distance till I
->> lost the connection was much larger. So I don't think is a hardware
->> problem.
->>
->> In general I can say my BCM4313 card is only usable when I'm in vicinity of
->> the AP. If I move further away the connection becomes unusable slow or is
->> lost, while it is still working well using other cards/drivers.
->>
->>
->> I'm currently using a 3.10-rc5 kernel with Debian jessie (kernel is from
->> experimental, but the same behavior has been there with kernel 3.9, 3.8 (and
->> older)). The driver used for the broadcom card is brcmsmac.
->>
->>
->> I did a search non the Internet regarding this issue and found some other
->> people having the same problem but no real solution to this. There is a
->> workaround some Ubuntu related sites, which consists of blacklisting the
->> brcmsmac driver and installing the wl driver. With the wl driver this
->> problem seems to be fixed according to the web (I didn't try it myself).
->>
->> As I have no idea where this problem could be and how I can debug it, so I'm
->> writing this mail now. If you need any addition information I'm happy to
->> provide it.
->> From the numbers shown above it seems like there is an attenuator of 20-30dB
->> active on the receiver of the broadcom card.
->>
-> [...]
-> 
-> 
-> Hello,
-> 
-> Is there any progress on this issue?
-> Here are the results of some additional test I performed.
-> 
-> 
-> I set up a AP (11g) and connected two client to it. The clients were my 
-> bcm4313 wireless card and the TP-Link TL-WN821N USB dongle which was connected 
-> to the laptop with the broadcom card. I connected both cards to the AP. The 
-> distance between the cards and the AP was about 3m.
-> Then I set up another wireless card (TP-WN722N) in monitor mode about 3m away 
-> from the AP and about 3m away from the laptop with the two wireless cards. 
-> This card was connected to a different PC and I captured the data of the 
-> clients and the AP. I then had a look at the reported SSI. You can see my 
-> measured results below:
-> 
-> SSI for packets from the AP:              -27 to -23dBm
-> SSI for packets from client1 (broadcom):  -20 to -14dBm
-> SSI for packets from client2 (atheros):   -40 to -38dBm
-> 
-> The received signal from the broadcom card were quite strong. The signal from 
-> the AP was a bit weaker. Interestingly the signal from the second card was 
-> noticeably weaker. I didn't investigate any further as I wanted to know how 
-> the broadcom cards performs in transmitting. So for me transmitting power 
-> seems to be fine with the broadcom card. My guess for the weaker signal from 
-> the 2nd client is ether some active power saving or different propagation 
-> conditions.
-> 
-> Here are the reported signal strength from the clients (while being connected 
-> to the AP):
-> client1 (broadcom): -74 to -75dBm
-> client2 (atheros):  -44 to -42dBm
-> 
-> 
-> So for me this test shows that the card only seems to have problems on 
-> receiving packets, transmitting seems to work fine.
-> 
-> 
-> 
-> Additionally I performed a test with the wl driver. I booted an ubuntu live CD 
-> and installed the wl driver there. Then I connected to my AP using this driver 
-> and tested reception. Everything looked like it was supposed to work. After 
-> connecting to the AP I got a reported signal strength of about -38dBm. I then 
-> moved away from the AP and was still able to get good connection where before 
-> I wasn't able to get any connection at all using the brcmsmac driver.
-> 
-> 
-> 
-> Please let me know if I should perform any additional tests or if you need any 
-> additional information.
-> 
-> 
-> Greetings,
-> Maxi
-Hi Maximilian,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-poor rx performance is observed on Wifi/Bluetooth combo modules (which according to hardware info
-sent before you have), I'm working on this problem.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ tools/initvals/ar9462_2p0_initvals.h | 15 +++++++++++++++
+ tools/initvals/checksums.txt         |  2 ++
+ tools/initvals/initvals.c            |  4 ++++
+ 3 files changed, 21 insertions(+)
 
-Is Bluetooth function of the card usable under linux? What about windows?
-Could you send me output of 'lspci -nn'?
-
-Kind regards
-Piotr
+diff --git a/tools/initvals/ar9462_2p0_initvals.h b/tools/initvals/ar9462_2p0_initvals.h
+index bcd0cae..1d6b705 100644
+--- a/tools/initvals/ar9462_2p0_initvals.h
++++ b/tools/initvals/ar9462_2p0_initvals.h
+@@ -1714,4 +1714,19 @@ static const u32 ar9462_2p0_5g_xlna_only_rxgain[][2] = {
+ 	{0x0000b1fc, 0x00000196},
+ };
+ 
++static const u32 ar9462_2p0_baseband_core_mix_rxgain[][2] = {
++	/* Addr      allmodes  */
++	{0x00009fd0, 0x0a2d6b93},
++};
++
++static const u32 ar9462_2p0_baseband_postamble_mix_rxgain[][5] = {
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
++	{0x00009820, 0x206a022e, 0x206a022e, 0x206a01ae, 0x206a01ae},
++	{0x00009824, 0x63c640de, 0x5ac640d0, 0x63c640da, 0x63c640da},
++	{0x00009828, 0x0796be89, 0x0696b081, 0x0916be81, 0x0916be81},
++	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000d8, 0x6c4000d8},
++	{0x00009e10, 0x92c88d2e, 0x7ec88d2e, 0x7ec86d2e, 0x7ec86d2e},
++	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3236605e, 0x32395c5e},
++};
++
+ #endif /* INITVALS_9462_2P0_H */
+diff --git a/tools/initvals/checksums.txt b/tools/initvals/checksums.txt
+index 758ff85..c224297 100644
+--- a/tools/initvals/checksums.txt
++++ b/tools/initvals/checksums.txt
+@@ -158,6 +158,8 @@ c8dc777b012068116cd5282aade8eb460f397d20        ar9462_2p0_mac_postamble
+ 72675fd0f308e6f31502e283119e12469d262f40        ar9462_common_mixed_rx_gain_table_2p0
+ 185f0537e40b74dcc4db33c7e111c1bfe79f3104        ar9462_2p0_baseband_postamble_5g_xlna
+ 72675fd0f308e6f31502e283119e12469d262f40        ar9462_2p0_5g_xlna_only_rxgain
++8f24703571c460bced3d0fea95b5cfeac34a724d        ar9462_2p0_baseband_core_mix_rxgain
++cb83a8c304aae0b6fc937e61d145253a8f470d24        ar9462_2p0_baseband_postamble_mix_rxgain
+ c8dc777b012068116cd5282aade8eb460f397d20        ar9485_1_1_mac_postamble
+ 5d20e4848b97566ad55e0e95458463d622ee5480        ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1
+ d9a90632a00a7b417154173b947dfffdeab23e51        ar9485Common_wo_xlna_rx_gain_1_1
+diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
+index 2d1edba..6b72f29 100644
+--- a/tools/initvals/initvals.c
++++ b/tools/initvals/initvals.c
+@@ -319,6 +319,8 @@ struct initval_family {
+ #define ar9300Common_mixed_rx_gain_table_jupiter_2p0		ar9462_common_mixed_rx_gain_table_2p0
+ #define ar9300_jupiter_2p0_baseband_postamble_5g_xlna		ar9462_2p0_baseband_postamble_5g_xlna
+ #define ar9300Common_5g_xlna_only_rx_gain_table_jupiter_2p0	ar9462_2p0_5g_xlna_only_rxgain
++#define ar9300_jupiter_2p0_baseband_core_mix_rxgain		ar9462_2p0_baseband_core_mix_rxgain
++#define ar9300_jupiter_2p0_baseband_postamble_mix_rxgain	ar9462_2p0_baseband_postamble_mix_rxgain
+ 
+ #include "ar9300_jupiter20.ini"
+ 
+@@ -906,6 +908,8 @@ static void ar9462_2p0_hw_print_initvals(bool check)
+ 	INI_PRINT(ar9462_common_mixed_rx_gain_table_2p0);
+ 	INI_PRINT(ar9462_2p0_baseband_postamble_5g_xlna);
+ 	INI_PRINT(ar9462_2p0_5g_xlna_only_rxgain);
++	INI_PRINT(ar9462_2p0_baseband_core_mix_rxgain);
++	INI_PRINT(ar9462_2p0_baseband_postamble_mix_rxgain);
+ }
+ 
+ static void ar9565_1p0_hw_print_initvals(bool check)
+-- 
+1.8.3.2
 
