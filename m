@@ -1,80 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42548 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755531Ab3GWVgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 17:36:39 -0400
-Message-ID: <51EEF75F.9060203@hauke-m.de> (sfid-20130723_233642_807042_ECEB3596)
-Date: Tue, 23 Jul 2013 23:36:31 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:60973 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757610Ab3GLTf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jul 2013 15:35:59 -0400
+Date: Fri, 12 Jul 2013 21:35:31 +0200
+From: Mark Wielaard <mjw@redhat.com>
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Xenia Ragiadakou <burzalodowa@gmail.com>,
+	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Steven Rostedt <rostedt@goodmis.org>,
+	linux-trace-users@vger.kernel.org, lttng-dev@lists.lttng.org
+Subject: Re: Help adding trace events to xHCI
+Message-ID: <20130712193531.GA6954@toonder.wildebeest.org> (sfid-20130712_213628_655120_BF1ACAA8)
+References: <51DB0257.1010709@gmail.com>
+ <20130711162002.GA5240@xanatos>
+ <1373562533.8201.33.camel@jlt4.sipsolutions.net>
+ <20130711190035.GD5240@xanatos>
+ <87y59c4d60.fsf@kamboji.qca.qualcomm.com>
+ <20130712164104.GA15531@xanatos>
+ <20130712170827.GA18819@Krystal>
 MIME-Version: 1.0
-To: Florian Fainelli <f.fainelli@gmail.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Make BCMA_HOST_SOC depend on BCM47XX
-References: <1374546675-384-1-git-send-email-linville@tuxdriver.com> <51EE3018.4000507@hauke-m.de> <CACna6rwU6-jC_cnU=vGv2u2D11aUCKNZN-YOuM9GYt_R9E79oA@mail.gmail.com> <CAGVrzcZfxei-p12+TDcJNg3TGSuJKfL3NvxvtWSfKEkxkZmYXw@mail.gmail.com>
-In-Reply-To: <CAGVrzcZfxei-p12+TDcJNg3TGSuJKfL3NvxvtWSfKEkxkZmYXw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130712170827.GA18819@Krystal>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/23/2013 01:06 PM, Florian Fainelli wrote:
-> 2013/7/23 Rafał Miłecki <zajec5@gmail.com>:
->> 2013/7/23 Hauke Mehrtens <hauke@hauke-m.de>:
->>> On 07/23/2013 04:31 AM, John W. Linville wrote:
->>>> From: "John W. Linville" <linville@tuxdriver.com>
->>>>
->>>> Otherwise, 'make allyesconfig' generates this:
->>>>
->>>>   CC [M]  drivers/net/ethernet/broadcom/bgmac.o
->>>> drivers/net/ethernet/broadcom/bgmac.c:19:27: fatal error:
->>>> bcm47xx_nvram.h: No such file or directory
->>>> compilation terminated.
->>>> make[4]: *** [drivers/net/ethernet/broadcom/bgmac.o] Error 1
->>>> make[3]: *** [drivers/net/ethernet/broadcom] Error 2
->>>> make[2]: *** [drivers/net/ethernet] Error 2
->>>> make[1]: *** [drivers/net] Error 2
->>>> make: *** [drivers] Error 2
->>>>
->>>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->>>> ---
->>>>  drivers/bcma/Kconfig | 2 +-
->>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
->>>> index 7c081b3..a2bdab1 100644
->>>> --- a/drivers/bcma/Kconfig
->>>> +++ b/drivers/bcma/Kconfig
->>>> @@ -36,7 +36,7 @@ config BCMA_DRIVER_PCI_HOSTMODE
->>>>
->>>>  config BCMA_HOST_SOC
->>>>       bool "Support for BCMA in a SoC"
->>>> -     depends on BCMA
->>>> +     depends on BCMA && BCM47XX
->>>>       help
->>>>         Host interface for a Broadcom AIX bus directly mapped into
->>>>         the memory. This only works with the Broadcom SoCs from the
->>>>
->>> I think bgmac should depend on BCM47XX.
->>
->> Yeah, I'm wondering about that.
->>
->> It's bgmac that calls BCM47XX specific functions (nvram).
+Hi Mathieu,
+
+On Fri, Jul 12, 2013 at 01:08:28PM -0400, Mathieu Desnoyers wrote:
+> * Sarah Sharp (sarah.a.sharp@linux.intel.com) wrote:
+> > Thanks for the suggestion.  I'm not familiar with all the userspace
+> > tools for trace events, so I didn't know about the command parser.  Is
+> > there documentation or a list of resources for all the userspace trace
+> > event plugins?  If so, can you give us a pointer to it?
 > 
-> And this is bad, make that a platform_data callback or something like
-> that such that there is no build-time dependency on nvram functions.
-
-Ok, I will try that. I still have no idea how to handle the nvram stuff
-properly with DT on arm. My current plan is to do this stuff properly
-for arm and try to use most of the improvements also for mips.
-
->> On the other hand it doesn't make much sense to use BCMA_HOST_SOC on
->> anything else than BCM47XX, does it?
+> You might want to try out LTTng-UST. It provides TRACEPOINT_EVENT() and
+> tracepoint() for user-space instrumentation. See:
 > 
-> Hauke has been working on BCM53XX which is an ARM-based BCM47XX-like
-> SoC, but that just means depends on (BCM47XX || ARCH_BCM53XX) then.
+> - https://lttng.org/files/doc/man-pages/man3/lttng-ust.3.html
 
-Yes preparing for adding arm support was the intention of this patch
-series, it was some code which should not harm the mips part or any other.
+Is that build on the <sys/sdt.h> ust probe points as embedded in glibc
+for example that gdb and systemtap use to access user space trace
+points? Can tools use lttng-ust and <sys/sdt.h> tracepoints
+interchangeably by parsing the ELF notes described in
+http://sourceware.org/systemtap/wiki/UserSpaceProbeImplementation
 
-Hauke
+Thanks,
+
+Mark
