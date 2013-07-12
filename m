@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15298 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964883Ab3GENY6 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:35480 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746Ab3GLEDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:24:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH v2] ath10k: fix 5ghz channel definitions
-References: <1372060350-31460-3-git-send-email-michal.kazior@tieto.com>
-	<1372229694-6769-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 5 Jul 2013 16:24:48 +0300
-In-Reply-To: <1372229694-6769-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 26 Jun 2013 08:54:54 +0200")
-Message-ID: <8738rtgmvz.fsf@kamboji.qca.qualcomm.com> (sfid-20130705_152505_578305_21B95A31)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 12 Jul 2013 00:03:32 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/6] initval patches
+Date: Fri, 12 Jul 2013 09:30:07 +0530
+Message-Id: <1373601613-31616-1-git-send-email-sujith@msujith.org> (sfid-20130712_060348_878230_B2C2D488)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> Nonsense channel flags were being set.
->
-> Although it doesn't seem this was visible to the
-> user the patch makes sure that channel
-> availability won't be crippled in the future if
-> ath_common behaviour changes.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+This is a resend of the pending initval patches, rebased over
+master.
 
-John also applied this already.
+Sujith Manoharan (6):
+  initvals: Update inivals for AR9462 2.0
+  initvals: Add 5g-XLNA table for AR9462
+  initvals: Add ar9462_2p0_5g_xlna_only_rxgain table
+  initvals: Add rxgain tables for AR9462
+  initvals: Add support for AR9462 2.1
+  initvals: Add mix ob/db tx gain table for AR9462 2.0
+
+ tools/initvals/Makefile              |    2 +
+ tools/initvals/ar9462_2p0_initvals.h |  345 ++++++-
+ tools/initvals/ar9462_2p1_initvals.h | 1774 ++++++++++++++++++++++++++++++++++
+ tools/initvals/checksums.txt         |   28 +-
+ tools/initvals/initvals.c            |   61 ++
+ 5 files changed, 2208 insertions(+), 2 deletions(-)
+ create mode 100644 tools/initvals/ar9462_2p1_initvals.h
 
 -- 
-Kalle Valo
+1.8.3.2
+
