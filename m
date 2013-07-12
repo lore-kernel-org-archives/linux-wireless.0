@@ -1,94 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58156 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756248Ab3GZIaE (ORCPT
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:36896 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757312Ab3GLOnh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:30:04 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 15/30] iwlwifi: mvm: reprobe device on firmware error during restart
-Date: Fri, 26 Jul 2013 10:28:32 +0200
-Message-Id: <1374827327-3464-16-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103019_812200_A7B09F56)
-In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
-References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 12 Jul 2013 10:43:37 -0400
+Received: by mail-qc0-f173.google.com with SMTP id l10so5035816qcy.18
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Jul 2013 07:43:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951035636368@SC-VEXCH1.marvell.com>
+References: <CAMLZHHSFEoOJ3W+nyJUqzGTKy=8TEB6mSibrXN6ze1xzGHv35Q@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951035636368@SC-VEXCH1.marvell.com>
+Date: Fri, 12 Jul 2013 08:43:35 -0600
+Message-ID: <CAMLZHHTE-AQ3ou+rNtqKGQdQ5UuvnABye22kjPGFeEkezP4dTw@mail.gmail.com> (sfid-20130712_164340_407799_71C63BFE)
+Subject: Re: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
+From: Daniel Drake <dsd@laptop.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jul 12, 2013 at 7:14 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+> Hi Daniel,
+>
+>> Hmm. Now that I heard back from you and Bing, that interrupts at this
+>> point are totally unexpected, I would prefer to see the interrupt
+>> handler being disabled at the appropriate time, I think we can do
+>> better than my original patch. Let me see if I can find some time
+>> today/tomorrow to explore a better approach.
+>
+>>What about this one?
+>
+> The patch looks fine to me.
+> Some comments
+> 1) Unused HOST_INT_DISABLE macro can be removed now.
+> 2) if_ops.disable_int() should be called before if_ops.unregister_dev() even in driver load failure code path. Otherwise we will miss to release sdio irq in this case.
+> (You can consider applying attached changes on top of your patch for (1) and (2))
+>
+> 3) Previously we used to have error handling for sdio_claim_irq(). Now we should check return status of if_ops.enable_int(). As I have couple of other patches to handle driver load failure paths correctly, I will take care of this separately.
+>
+> 4) I will create separate patch to avoid forward declaration of mwifiex_sdio_interrupt() by moving some code.
 
-If we get a firmware error during restart, we currently abandon any
-hope and simply fail, getting stuck until the driver is reloaded.
-Unfortunately, there isn't really much else we can do since restart
-will likely continue to fail, and asking mac80211 for disconnection
-just causes more error.
+Thanks for looking at it, all your comments make sense. In your diff
+that you provided, I don't understand why you had to modify the
+mwifiex_add_card error path to disable the interrupt though. If there
+were any failures the interrupt handler will already have been
+disabled by your fixes to the mwifiex_fw_dpc() error handling path,
+right?
 
-To allow the user to at least set up the device again completely
-from scratch, reprobe the device and in doing so completely destroy
-any mac80211/driver state.
-
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c | 38 +++++++++++++++++++++++++++++++++-
- 1 file changed, 37 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index fa1e1ce..2ffa593 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -644,6 +644,22 @@ static void iwl_mvm_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
- 	ieee80211_free_txskb(mvm->hw, skb);
- }
- 
-+struct iwl_mvm_reprobe {
-+	struct device *dev;
-+	struct work_struct work;
-+};
-+
-+static void iwl_mvm_reprobe_wk(struct work_struct *wk)
-+{
-+	struct iwl_mvm_reprobe *reprobe;
-+
-+	reprobe = container_of(wk, struct iwl_mvm_reprobe, work);
-+	if (device_reprobe(reprobe->dev))
-+		dev_err(reprobe->dev, "reprobe failed!\n");
-+	kfree(reprobe);
-+	module_put(THIS_MODULE);
-+}
-+
- static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
- {
- 	iwl_abort_notification_waits(&mvm->notif_wait);
-@@ -655,7 +671,27 @@ static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
- 	 * can't recover this since we're already half suspended.
- 	 */
- 	if (test_and_set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
--		IWL_ERR(mvm, "Firmware error during reconfiguration! Abort.\n");
-+		struct iwl_mvm_reprobe *reprobe;
-+
-+		IWL_ERR(mvm,
-+			"Firmware error during reconfiguration - reprobe!\n");
-+
-+		/*
-+		 * get a module reference to avoid doing this while unloading
-+		 * anyway and to avoid scheduling a work with code that's
-+		 * being removed.
-+		 */
-+		if (!try_module_get(THIS_MODULE)) {
-+			IWL_ERR(mvm, "Module is being unloaded - abort\n");
-+			return;
-+		}
-+
-+		reprobe = kzalloc(sizeof(*reprobe), GFP_ATOMIC);
-+		if (!reprobe)
-+			return;
-+		reprobe->dev = mvm->trans->dev;
-+		INIT_WORK(&reprobe->work, iwl_mvm_reprobe_wk);
-+		schedule_work(&reprobe->work);
- 	} else if (mvm->cur_ucode == IWL_UCODE_REGULAR &&
- 		   iwlwifi_mod_params.restart_fw) {
- 		/*
--- 
-1.8.0
-
+Daniel
