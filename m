@@ -1,88 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:31683 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753406Ab3G1LOS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Jul 2013 07:14:18 -0400
-Received: from ip-78-102-117-165.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[78.102.117.165])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 28 Jul 2013 13:14:15 +0200
-From: stf_xl@wp.pl
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 3.11] rt2x00: fix stop queue
-Date: Sun, 28 Jul 2013 13:17:22 +0200
-Message-Id: <1375010242-15555-1-git-send-email-stf_xl@wp.pl> (sfid-20130728_131421_407598_C392A561)
+Received: from cpe-075-189-159-031.nc.res.rr.com ([75.189.159.31]:33282 "EHLO
+	jgpicker.rdu.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932863Ab3GLP3D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jul 2013 11:29:03 -0400
+From: John Greene <jogreene@redhat.com>
+To: linville@tuxdriver.com
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] brcmsmac: Further reduce log spam from tx phy messages
+Date: Fri, 12 Jul 2013 10:55:19 -0400
+Message-Id: <1373640919-2685-1-git-send-email-jogreene@redhat.com> (sfid-20130712_172907_266472_30C56BE8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+Relegate 2 phy messages to debug status as they create excessive
+log spam, noted in multiple bugzillas for brcmsmac v3.8 and up.
+This is a follow on to net-next 99e94940697adec4f84758adb2db71f4a82c7ba5:
+brcmsmac: Reduce log spam in heavy tx, make err print in debug
 
-Since we clear QUEUE_STARTED in rt2x00queue_stop_queue(), following
-call to rt2x00queue_pause_queue() reduce to noop, i.e we do not
-stop queue in mac80211.
+ brcmsmac bcma0:0: phyerr 0x10, rate 0x14
+ brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete:
+ampdu tx phy error (0x10)
 
-To fix that introduce rt2x00queue_pause_queue_nocheck() function,
-which will stop queue in mac80211 directly.
-
-Note that rt2x00_start_queue() explicitly set QUEUE_PAUSED bit.
-
-Note also that reordering operations i.e. first call to
-rt2x00queue_pause_queue() and then clear QUEUE_STARTED bit, will race
-with rt2x00queue_unpause_queue(), so calling ieee80211_stop_queue()
-directly is the only available solution to fix the problem without
-major rework.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: John Greene <jogreene@redhat.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00queue.c |   18 +++++++++++-------
- 1 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c | 2 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index e571298..8c1de0f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -936,13 +936,8 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
- 	spin_unlock_irqrestore(&queue->index_lock, irqflags);
- }
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index bd98285..42efac7 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -928,7 +928,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 			}
+ 		} else if (txs->phyerr) {
+ 			update_rate = false;
+-			brcms_err(wlc->hw->d11core,
++			brcms_dbg_ht(wlc->hw->d11core,
+ 				  "%s: ampdu tx phy error (0x%x)\n",
+ 				  __func__, txs->phyerr);
+ 		}
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 9fd6f2f..fdb4c3f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -882,7 +882,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 	mcl = le16_to_cpu(txh->MacTxControlLow);
  
--void rt2x00queue_pause_queue(struct data_queue *queue)
-+void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
- {
--	if (!test_bit(DEVICE_STATE_PRESENT, &queue->rt2x00dev->flags) ||
--	    !test_bit(QUEUE_STARTED, &queue->flags) ||
--	    test_and_set_bit(QUEUE_PAUSED, &queue->flags))
--		return;
--
- 	switch (queue->qid) {
- 	case QID_AC_VO:
- 	case QID_AC_VI:
-@@ -958,6 +953,15 @@ void rt2x00queue_pause_queue(struct data_queue *queue)
- 		break;
- 	}
- }
-+void rt2x00queue_pause_queue(struct data_queue *queue)
-+{
-+	if (!test_bit(DEVICE_STATE_PRESENT, &queue->rt2x00dev->flags) ||
-+	    !test_bit(QUEUE_STARTED, &queue->flags) ||
-+	    test_and_set_bit(QUEUE_PAUSED, &queue->flags))
-+		return;
-+
-+	rt2x00queue_pause_queue_nocheck(queue);
-+}
- EXPORT_SYMBOL_GPL(rt2x00queue_pause_queue);
+ 	if (txs->phyerr)
+-		brcms_err(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
++		brcms_dbg_tx(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
+ 			  txs->phyerr, txh->MainRates);
  
- void rt2x00queue_unpause_queue(struct data_queue *queue)
-@@ -1019,7 +1023,7 @@ void rt2x00queue_stop_queue(struct data_queue *queue)
- 		return;
- 	}
- 
--	rt2x00queue_pause_queue(queue);
-+	rt2x00queue_pause_queue_nocheck(queue);
- 
- 	queue->rt2x00dev->ops->lib->stop_queue(queue);
- 
+ 	if (txs->frameid != le16_to_cpu(txh->TxFrameID)) {
 -- 
-1.7.4.4
+1.7.11.7
 
