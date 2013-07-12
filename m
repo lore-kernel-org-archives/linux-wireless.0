@@ -1,65 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52346 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756620Ab3GKUhF (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:47028 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932950Ab3GLNSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 16:37:05 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UxNbr-0000JJ-U4
-	for linux-wireless@vger.kernel.org; Thu, 11 Jul 2013 22:37:04 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: fix duplicate retransmission detection
-Date: Thu, 11 Jul 2013 22:36:57 +0200
-Message-Id: <1373575017-25645-1-git-send-email-johannes@sipsolutions.net> (sfid-20130711_223709_971822_FDFBE3E7)
+	Fri, 12 Jul 2013 09:18:35 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: 'Daniel Drake' <dsd@laptop.org>
+CC: Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 12 Jul 2013 06:14:31 -0700
+Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951035636368@SC-VEXCH1.marvell.com> (sfid-20130712_151839_969964_B1F85F37)
+In-Reply-To: <CAMLZHHSFEoOJ3W+nyJUqzGTKy=8TEB6mSibrXN6ze1xzGHv35Q@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_002_5FF020A1CFFEEC49BD1E09530C4FF5951035636368SCVEXCH1marve_"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The duplicate retransmission detection code in mac80211
-erroneously attempts to do the check for every frame,
-even frames that don't have a sequence control field or
-that don't use it (QoS-Null frames.)
+--_002_5FF020A1CFFEEC49BD1E09530C4FF5951035636368SCVEXCH1marve_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-This is problematic because it causes the code to access
-data beyond the end of the SKB and depending on the data
-there will drop packets erroneously.
+Hi Daniel,
 
-Correct the code to not do duplicate detection for such
-frames.
+> Hmm. Now that I heard back from you and Bing, that interrupts at this
+> point are totally unexpected, I would prefer to see the interrupt
+> handler being disabled at the appropriate time, I think we can do
+> better than my original patch. Let me see if I can find some time
+> today/tomorrow to explore a better approach.
 
-I found this error while testing AP powersave, it lead
-to retransmitted PS-Poll frames being dropped entirely
-as the data beyond the end of the SKB was always zero.
+>What about this one?
 
-Cc: stable@vger.kernel.org [all versions]
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/rx.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+The patch looks fine to me.
+Some comments
+1) Unused HOST_INT_DISABLE macro can be removed now.
+2) if_ops.disable_int() should be called before if_ops.unregister_dev() eve=
+n in driver load failure code path. Otherwise we will miss to release sdio =
+irq in this case.
+(You can consider applying attached changes on top of your patch for (1) an=
+d (2))
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 23dbcfc..2c5a79b 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -936,8 +936,14 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
- 
--	/* Drop duplicate 802.11 retransmissions (IEEE 802.11 Chap. 9.2.9) */
--	if (rx->sta && !is_multicast_ether_addr(hdr->addr1)) {
-+	/*
-+	 * Drop duplicate 802.11 retransmissions
-+	 * (IEEE 802.11-2012: 9.3.2.10 "Duplicate detection and recovery")
-+	 */
-+	if (rx->skb->len >= 24 && rx->sta &&
-+	    !ieee80211_is_ctl(hdr->frame_control) &&
-+	    !ieee80211_is_qos_nullfunc(hdr->frame_control) &&
-+	    !is_multicast_ether_addr(hdr->addr1)) {
- 		if (unlikely(ieee80211_has_retry(hdr->frame_control) &&
- 			     rx->sta->last_seq_ctrl[rx->seqno_idx] ==
- 			     hdr->seq_ctrl)) {
--- 
-1.8.0
+3) Previously we used to have error handling for sdio_claim_irq(). Now we s=
+hould check return status of if_ops.enable_int(). As I have couple of other=
+ patches to handle driver load failure paths correctly, I will take care of=
+ this separately.
 
+4) I will create separate patch to avoid forward declaration of mwifiex_sdi=
+o_interrupt() by moving some code.
+
+Regards,
+Amitkumar Karwar=20
+
+--_002_5FF020A1CFFEEC49BD1E09530C4FF5951035636368SCVEXCH1marve_
+Content-Type: application/octet-stream; name="minor_corrections.diff"
+Content-Description: minor_corrections.diff
+Content-Disposition: attachment; filename="minor_corrections.diff"; size=1353;
+	creation-date="Fri, 12 Jul 2013 12:43:49 GMT";
+	modification-date="Fri, 12 Jul 2013 12:43:49 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5jIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmMKaW5kZXggMjA4M2NmOC4uMjg2MTdkNiAxMDA2
+NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmMKKysrIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmMKQEAgLTQ4Miw2ICs0ODIsOCBAQCBlcnJfYWRk
+X2ludGY6CiAJbXdpZmlleF9kZWxfdmlydHVhbF9pbnRmKGFkYXB0ZXItPndpcGh5LCBwcml2LT53
+ZGV2KTsKIAlydG5sX3VubG9jaygpOwogZXJyX2luaXRfZnc6CisJaWYgKGFkYXB0ZXItPmlmX29w
+cy5kaXNhYmxlX2ludCkKKwkJYWRhcHRlci0+aWZfb3BzLmRpc2FibGVfaW50KGFkYXB0ZXIpOwog
+CXByX2RlYnVnKCJpbmZvOiAlczogdW5yZWdpc3RlciBkZXZpY2VcbiIsIF9fZnVuY19fKTsKIAlh
+ZGFwdGVyLT5pZl9vcHMudW5yZWdpc3Rlcl9kZXYoYWRhcHRlcik7CiBkb25lOgpAQCAtODc0LDYg
+Kzg3Niw4IEBAIG13aWZpZXhfYWRkX2NhcmQodm9pZCAqY2FyZCwgc3RydWN0IHNlbWFwaG9yZSAq
+c2VtLAogCXJldHVybiAwOwogCiBlcnJfaW5pdF9mdzoKKwlpZiAoYWRhcHRlci0+aWZfb3BzLmRp
+c2FibGVfaW50KQorCQlhZGFwdGVyLT5pZl9vcHMuZGlzYWJsZV9pbnQoYWRhcHRlcik7CiAJcHJf
+ZGVidWcoImluZm86ICVzOiB1bnJlZ2lzdGVyIGRldmljZVxuIiwgX19mdW5jX18pOwogCWlmIChh
+ZGFwdGVyLT5pZl9vcHMudW5yZWdpc3Rlcl9kZXYpCiAJCWFkYXB0ZXItPmlmX29wcy51bnJlZ2lz
+dGVyX2RldihhZGFwdGVyKTsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZp
+ZXgvc2Rpby5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zZGlvLmgKaW5kZXggNmQ1
+MWRmZC4uNTMyYWUwYSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9z
+ZGlvLmgKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zZGlvLmgKQEAgLTkyLDkg
+KzkyLDYgQEAKIC8qIEhvc3QgQ29udHJvbCBSZWdpc3RlcnMgOiBEb3dubG9hZCBob3N0IGludGVy
+cnVwdCBtYXNrICovCiAjZGVmaW5lIEROX0xEX0hPU1RfSU5UX01BU0sJCSgweDJVKQogCi0vKiBE
+aXNhYmxlIEhvc3QgaW50ZXJydXB0IG1hc2sgKi8KLSNkZWZpbmUJSE9TVF9JTlRfRElTQUJMRQkJ
+MHhmZgotCiAvKiBIb3N0IENvbnRyb2wgUmVnaXN0ZXJzIDogSG9zdCBpbnRlcnJ1cHQgc3RhdHVz
+ICovCiAjZGVmaW5lIEhPU1RfSU5UU1RBVFVTX1JFRwkJMHgwMwogLyogSG9zdCBDb250cm9sIFJl
+Z2lzdGVycyA6IFVwbG9hZCBob3N0IGludGVycnVwdCBzdGF0dXMgKi8K
+
+--_002_5FF020A1CFFEEC49BD1E09530C4FF5951035636368SCVEXCH1marve_--
