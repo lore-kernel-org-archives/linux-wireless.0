@@ -1,364 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58642 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510Ab3GHO4R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:17 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 01/18] nl80211: add scan width to bss and scan request structs
-Date: Mon,  8 Jul 2013 16:55:49 +0200
-Message-Id: <1373295366-12823-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_165623_709665_3C503BCF)
-In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:4166 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964861Ab3GLNrx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jul 2013 09:47:53 -0400
+Message-ID: <51E008FC.4010104@broadcom.com> (sfid-20130712_154757_136045_E4ACA074)
+Date: Fri, 12 Jul 2013 15:47:40 +0200
+From: "Piotr Haber" <phaber@broadcom.com>
+MIME-Version: 1.0
+To: "Maximilian Engelhardt" <maxi@daemonizer.de>
+cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: Poor wireless reception on BCM4313
+References: <1624172.s6pnfBcJL7@fuchs> <30534146.LWDmOHhHCG@eisbaer>
+In-Reply-To: <30534146.LWDmOHhHCG@eisbaer>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To allow scanning and working with 5 MHz and 10 MHz BSS, extend the
-inform bss commands and add wrappers to take 5 and 10 MHz bss into
-account.
+On 07/12/13 14:55, Maximilian Engelhardt wrote:
+> On Friday 21 June 2013 20:26:25 Maximilian Engelhardt wrote:
+>> Hello developers,
+>>
+>> I'm having problems with the reception performance of my BCM4313 wireless
+>> card. The card is basically working fine, but the reception is quite bad
+>> compared to other wifi equipment. I first suspected a hardware problem, but
+>> after I tried Windows 7 with the same hardware and having no problem there
+>> I'm quite sure this is a software issue.
+>>
+>>
+>> Here is a more detailed explanation of a test setup I performed to show the
+>> problem:
+>>
+>> I have an AP in about 2m distance and I connected to it by my BCM4313 card
+>> and by a USB dongle (TP-Link TL-WN821N, using ath9k_htc). Both connections
+>> work and I can ping the AP using both cards.
+>>
+>> iw dev $DEV link shows a signal of about -68 dBm for the broadcom card and
+>> about -51 dBm for the atheros dongle. I have no idea in how far one can
+>> trust these values, but the difference between these two cards mostly seems
+>> to be 20-30 dB, also in my further experiments (greater distance from the
+>> AP).
+>>
+>> Now with both dongles being connected I move my laptop away from the AP and
+>> of course the signal is getting weaker. However at some point the broadcom
+>> card looses the connection to the AP while the USB dongle still has good
+>> connection (at this point the signal strength of the broadcom card is about
+>> -90dBm and -60dBm for the USB dongle). In my test with the Windows driver
+>> at that point the connection was still good and maximum distance till I
+>> lost the connection was much larger. So I don't think is a hardware
+>> problem.
+>>
+>> In general I can say my BCM4313 card is only usable when I'm in vicinity of
+>> the AP. If I move further away the connection becomes unusable slow or is
+>> lost, while it is still working well using other cards/drivers.
+>>
+>>
+>> I'm currently using a 3.10-rc5 kernel with Debian jessie (kernel is from
+>> experimental, but the same behavior has been there with kernel 3.9, 3.8 (and
+>> older)). The driver used for the broadcom card is brcmsmac.
+>>
+>>
+>> I did a search non the Internet regarding this issue and found some other
+>> people having the same problem but no real solution to this. There is a
+>> workaround some Ubuntu related sites, which consists of blacklisting the
+>> brcmsmac driver and installing the wl driver. With the wl driver this
+>> problem seems to be fixed according to the web (I didn't try it myself).
+>>
+>> As I have no idea where this problem could be and how I can debug it, so I'm
+>> writing this mail now. If you need any addition information I'm happy to
+>> provide it.
+>> From the numbers shown above it seems like there is an attenuator of 20-30dB
+>> active on the receiver of the broadcom card.
+>>
+> [...]
+> 
+> 
+> Hello,
+> 
+> Is there any progress on this issue?
+> Here are the results of some additional test I performed.
+> 
+> 
+> I set up a AP (11g) and connected two client to it. The clients were my 
+> bcm4313 wireless card and the TP-Link TL-WN821N USB dongle which was connected 
+> to the laptop with the broadcom card. I connected both cards to the AP. The 
+> distance between the cards and the AP was about 3m.
+> Then I set up another wireless card (TP-WN722N) in monitor mode about 3m away 
+> from the AP and about 3m away from the laptop with the two wireless cards. 
+> This card was connected to a different PC and I captured the data of the 
+> clients and the AP. I then had a look at the reported SSI. You can see my 
+> measured results below:
+> 
+> SSI for packets from the AP:              -27 to -23dBm
+> SSI for packets from client1 (broadcom):  -20 to -14dBm
+> SSI for packets from client2 (atheros):   -40 to -38dBm
+> 
+> The received signal from the broadcom card were quite strong. The signal from 
+> the AP was a bit weaker. Interestingly the signal from the second card was 
+> noticeably weaker. I didn't investigate any further as I wanted to know how 
+> the broadcom cards performs in transmitting. So for me transmitting power 
+> seems to be fine with the broadcom card. My guess for the weaker signal from 
+> the 2nd client is ether some active power saving or different propagation 
+> conditions.
+> 
+> Here are the reported signal strength from the clients (while being connected 
+> to the AP):
+> client1 (broadcom): -74 to -75dBm
+> client2 (atheros):  -44 to -42dBm
+> 
+> 
+> So for me this test shows that the card only seems to have problems on 
+> receiving packets, transmitting seems to work fine.
+> 
+> 
+> 
+> Additionally I performed a test with the wl driver. I booted an ubuntu live CD 
+> and installed the wl driver there. Then I connected to my AP using this driver 
+> and tested reception. Everything looked like it was supposed to work. After 
+> connecting to the AP I got a reported signal strength of about -38dBm. I then 
+> moved away from the AP and was still able to get good connection where before 
+> I wasn't able to get any connection at all using the brcmsmac driver.
+> 
+> 
+> 
+> Please let me know if I should perform any additional tests or if you need any 
+> additional information.
+> 
+> 
+> Greetings,
+> Maxi
+Hi Maximilian,
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
-Changes to PATCHv4:
- * fix copy/paste error
----
- include/net/cfg80211.h       |   54 +++++++++++++++++++++++++++++++++++++++---
- include/uapi/linux/nl80211.h |   18 ++++++++++++++
- net/wireless/nl80211.c       |    1 +
- net/wireless/scan.c          |   31 ++++++++++++++----------
- net/wireless/trace.h         |   12 ++++++----
- 5 files changed, 97 insertions(+), 19 deletions(-)
+poor rx performance is observed on Wifi/Bluetooth combo modules (which according to hardware info
+sent before you have), I'm working on this problem.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7b0730a..1df4060 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1285,6 +1285,7 @@ struct cfg80211_ssid {
-  * @n_ssids: number of SSIDs
-  * @channels: channels to scan on.
-  * @n_channels: total number of channels to scan
-+ * @scan_width: channel width for scanning
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-  * @flags: bit field of flags controlling operation
-@@ -1300,6 +1301,7 @@ struct cfg80211_scan_request {
- 	struct cfg80211_ssid *ssids;
- 	int n_ssids;
- 	u32 n_channels;
-+	enum nl80211_bss_scan_width scan_width;
- 	const u8 *ie;
- 	size_t ie_len;
- 	u32 flags;
-@@ -1333,6 +1335,7 @@ struct cfg80211_match_set {
-  * @ssids: SSIDs to scan for (passed in the probe_reqs in active scans)
-  * @n_ssids: number of SSIDs
-  * @n_channels: total number of channels to scan
-+ * @scan_width: channel width for scanning
-  * @interval: interval between each scheduled scan cycle
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-@@ -1352,6 +1355,7 @@ struct cfg80211_sched_scan_request {
- 	struct cfg80211_ssid *ssids;
- 	int n_ssids;
- 	u32 n_channels;
-+	enum nl80211_bss_scan_width scan_width;
- 	u32 interval;
- 	const u8 *ie;
- 	size_t ie_len;
-@@ -1403,6 +1407,7 @@ struct cfg80211_bss_ies {
-  * for use in scan results and similar.
-  *
-  * @channel: channel this BSS is on
-+ * @scan_width: width of the control channel
-  * @bssid: BSSID of the BSS
-  * @beacon_interval: the beacon interval as from the frame
-  * @capability: the capability field in host byte order
-@@ -1424,6 +1429,7 @@ struct cfg80211_bss_ies {
-  */
- struct cfg80211_bss {
- 	struct ieee80211_channel *channel;
-+	enum nl80211_bss_scan_width scan_width;
- 
- 	const struct cfg80211_bss_ies __rcu *ies;
- 	const struct cfg80211_bss_ies __rcu *beacon_ies;
-@@ -3379,10 +3385,11 @@ void cfg80211_sched_scan_results(struct wiphy *wiphy);
- void cfg80211_sched_scan_stopped(struct wiphy *wiphy);
- 
- /**
-- * cfg80211_inform_bss_frame - inform cfg80211 of a received BSS frame
-+ * cfg80211_inform_bss_width_frame - inform cfg80211 of a received BSS frame
-  *
-  * @wiphy: the wiphy reporting the BSS
-  * @channel: The channel the frame was received on
-+ * @scan_width: width of the control channel
-  * @mgmt: the management frame (probe response or beacon)
-  * @len: length of the management frame
-  * @signal: the signal strength, type depends on the wiphy's signal_type
-@@ -3395,16 +3402,29 @@ void cfg80211_sched_scan_stopped(struct wiphy *wiphy);
-  * Or %NULL on error.
-  */
- struct cfg80211_bss * __must_check
-+cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
-+				struct ieee80211_channel *channel,
-+				enum nl80211_bss_scan_width scan_width,
-+				struct ieee80211_mgmt *mgmt, size_t len,
-+				s32 signal, gfp_t gfp);
-+
-+static inline struct cfg80211_bss * __must_check
- cfg80211_inform_bss_frame(struct wiphy *wiphy,
- 			  struct ieee80211_channel *channel,
- 			  struct ieee80211_mgmt *mgmt, size_t len,
--			  s32 signal, gfp_t gfp);
-+			  s32 signal, gfp_t gfp)
-+{
-+	return cfg80211_inform_bss_width_frame(wiphy, channel,
-+					       NL80211_BSS_CHAN_WIDTH_20,
-+					       mgmt, len, signal, gfp);
-+}
- 
- /**
-  * cfg80211_inform_bss - inform cfg80211 of a new BSS
-  *
-  * @wiphy: the wiphy reporting the BSS
-  * @channel: The channel the frame was received on
-+ * @scan_width: width of the control channel
-  * @bssid: the BSSID of the BSS
-  * @tsf: the TSF sent by the peer in the beacon/probe response (or 0)
-  * @capability: the capability field sent by the peer
-@@ -3421,11 +3441,26 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
-  * Or %NULL on error.
-  */
- struct cfg80211_bss * __must_check
-+cfg80211_inform_bss_width(struct wiphy *wiphy,
-+			  struct ieee80211_channel *channel,
-+			  enum nl80211_bss_scan_width scan_width,
-+			  const u8 *bssid, u64 tsf, u16 capability,
-+			  u16 beacon_interval, const u8 *ie, size_t ielen,
-+			  s32 signal, gfp_t gfp);
-+
-+static inline struct cfg80211_bss * __must_check
- cfg80211_inform_bss(struct wiphy *wiphy,
- 		    struct ieee80211_channel *channel,
- 		    const u8 *bssid, u64 tsf, u16 capability,
- 		    u16 beacon_interval, const u8 *ie, size_t ielen,
--		    s32 signal, gfp_t gfp);
-+		    s32 signal, gfp_t gfp)
-+{
-+	return cfg80211_inform_bss_width(wiphy, channel,
-+					 NL80211_BSS_CHAN_WIDTH_20,
-+					 bssid, tsf, capability,
-+					 beacon_interval, ie, ielen, signal,
-+					 gfp);
-+}
- 
- struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 				      struct ieee80211_channel *channel,
-@@ -3471,6 +3506,19 @@ void cfg80211_put_bss(struct wiphy *wiphy, struct cfg80211_bss *bss);
-  */
- void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *bss);
- 
-+static inline enum nl80211_bss_scan_width
-+cfg80211_chandef_to_scan_width(const struct cfg80211_chan_def *chandef)
-+{
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		return NL80211_BSS_CHAN_WIDTH_5;
-+	case NL80211_CHAN_WIDTH_10:
-+		return NL80211_BSS_CHAN_WIDTH_10;
-+	default:
-+		return NL80211_BSS_CHAN_WIDTH_20;
-+	}
-+}
-+
- /**
-  * cfg80211_rx_mlme_mgmt - notification of processed MLME management frame
-  * @dev: network device
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 861e5eb..39609d5 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2773,6 +2773,21 @@ enum nl80211_chan_width {
- };
- 
- /**
-+ * enum nl80211_bss_scan_width - control channel width for a BSS
-+ *
-+ * These values are used with the %NL80211_BSS_CHAN_WIDTH attribute.
-+ *
-+ * @NL80211_BSS_CHAN_WIDTH_20: control channel is 20 MHz wide or compatible
-+ * @NL80211_BSS_CHAN_WIDTH_10: control channel is 10 MHz wide
-+ * @NL80211_BSS_CHAN_WIDTH_5: control channel is 5 MHz wide
-+ */
-+enum nl80211_bss_scan_width {
-+	NL80211_BSS_CHAN_WIDTH_20,
-+	NL80211_BSS_CHAN_WIDTH_10,
-+	NL80211_BSS_CHAN_WIDTH_5,
-+};
-+
-+/**
-  * enum nl80211_bss - netlink attributes for a BSS
-  *
-  * @__NL80211_BSS_INVALID: invalid
-@@ -2796,6 +2811,8 @@ enum nl80211_chan_width {
-  * @NL80211_BSS_BEACON_IES: binary attribute containing the raw information
-  *	elements from a Beacon frame (bin); not present if no Beacon frame has
-  *	yet been received
-+ * @NL80211_BSS_CHAN_WIDTH: channel width of the control channel
-+ *	(u32, enum nl80211_bss_scan_width)
-  * @__NL80211_BSS_AFTER_LAST: internal
-  * @NL80211_BSS_MAX: highest BSS attribute
-  */
-@@ -2812,6 +2829,7 @@ enum nl80211_bss {
- 	NL80211_BSS_STATUS,
- 	NL80211_BSS_SEEN_MS_AGO,
- 	NL80211_BSS_BEACON_IES,
-+	NL80211_BSS_CHAN_WIDTH,
- 
- 	/* keep last */
- 	__NL80211_BSS_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7dc3343..3019748 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5637,6 +5637,7 @@ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 		goto nla_put_failure;
- 	if (nla_put_u16(msg, NL80211_BSS_CAPABILITY, res->capability) ||
- 	    nla_put_u32(msg, NL80211_BSS_FREQUENCY, res->channel->center_freq) ||
-+	    nla_put_u32(msg, NL80211_BSS_CHAN_WIDTH, res->scan_width) ||
- 	    nla_put_u32(msg, NL80211_BSS_SEEN_MS_AGO,
- 			jiffies_to_msecs(jiffies - intbss->ts)))
- 		goto nla_put_failure;
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index ae8c186..ad1e406 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -651,6 +651,8 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *dev,
- 			continue;
- 		if (bss->pub.channel != new->pub.channel)
- 			continue;
-+		if (bss->pub.scan_width != new->pub.scan_width)
-+			continue;
- 		if (rcu_access_pointer(bss->pub.beacon_ies))
- 			continue;
- 		ies = rcu_access_pointer(bss->pub.ies);
-@@ -870,11 +872,12 @@ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
- 
- /* Returned bss is reference counted and must be cleaned up appropriately. */
- struct cfg80211_bss*
--cfg80211_inform_bss(struct wiphy *wiphy,
--		    struct ieee80211_channel *channel,
--		    const u8 *bssid, u64 tsf, u16 capability,
--		    u16 beacon_interval, const u8 *ie, size_t ielen,
--		    s32 signal, gfp_t gfp)
-+cfg80211_inform_bss_width(struct wiphy *wiphy,
-+			  struct ieee80211_channel *channel,
-+			  enum nl80211_bss_scan_width scan_width,
-+			  const u8 *bssid, u64 tsf, u16 capability,
-+			  u16 beacon_interval, const u8 *ie, size_t ielen,
-+			  s32 signal, gfp_t gfp)
- {
- 	struct cfg80211_bss_ies *ies;
- 	struct cfg80211_internal_bss tmp = {}, *res;
-@@ -892,6 +895,7 @@ cfg80211_inform_bss(struct wiphy *wiphy,
- 
- 	memcpy(tmp.pub.bssid, bssid, ETH_ALEN);
- 	tmp.pub.channel = channel;
-+	tmp.pub.scan_width = scan_width;
- 	tmp.pub.signal = signal;
- 	tmp.pub.beacon_interval = beacon_interval;
- 	tmp.pub.capability = capability;
-@@ -924,14 +928,15 @@ cfg80211_inform_bss(struct wiphy *wiphy,
- 	/* cfg80211_bss_update gives us a referenced result */
- 	return &res->pub;
- }
--EXPORT_SYMBOL(cfg80211_inform_bss);
-+EXPORT_SYMBOL(cfg80211_inform_bss_width);
- 
- /* Returned bss is reference counted and must be cleaned up appropriately. */
- struct cfg80211_bss *
--cfg80211_inform_bss_frame(struct wiphy *wiphy,
--			  struct ieee80211_channel *channel,
--			  struct ieee80211_mgmt *mgmt, size_t len,
--			  s32 signal, gfp_t gfp)
-+cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
-+				struct ieee80211_channel *channel,
-+				enum nl80211_bss_scan_width scan_width,
-+				struct ieee80211_mgmt *mgmt, size_t len,
-+				s32 signal, gfp_t gfp)
- {
- 	struct cfg80211_internal_bss tmp = {}, *res;
- 	struct cfg80211_bss_ies *ies;
-@@ -941,7 +946,8 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
- 	BUILD_BUG_ON(offsetof(struct ieee80211_mgmt, u.probe_resp.variable) !=
- 			offsetof(struct ieee80211_mgmt, u.beacon.variable));
- 
--	trace_cfg80211_inform_bss_frame(wiphy, channel, mgmt, len, signal);
-+	trace_cfg80211_inform_bss_width_frame(wiphy, channel, scan_width, mgmt,
-+					      len, signal);
- 
- 	if (WARN_ON(!mgmt))
- 		return NULL;
-@@ -976,6 +982,7 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
- 	
- 	memcpy(tmp.pub.bssid, mgmt->bssid, ETH_ALEN);
- 	tmp.pub.channel = channel;
-+	tmp.pub.scan_width = scan_width;
- 	tmp.pub.signal = signal;
- 	tmp.pub.beacon_interval = le16_to_cpu(mgmt->u.probe_resp.beacon_int);
- 	tmp.pub.capability = le16_to_cpu(mgmt->u.probe_resp.capab_info);
-@@ -991,7 +998,7 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
- 	/* cfg80211_bss_update gives us a referenced result */
- 	return &res->pub;
- }
--EXPORT_SYMBOL(cfg80211_inform_bss_frame);
-+EXPORT_SYMBOL(cfg80211_inform_bss_width_frame);
- 
- void cfg80211_ref_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
- {
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index e1534baf..09af6eb 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2391,26 +2391,30 @@ TRACE_EVENT(cfg80211_get_bss,
- 		  __entry->capa_mask, __entry->capa_val)
- );
- 
--TRACE_EVENT(cfg80211_inform_bss_frame,
-+TRACE_EVENT(cfg80211_inform_bss_width_frame,
- 	TP_PROTO(struct wiphy *wiphy, struct ieee80211_channel *channel,
-+		 enum nl80211_bss_scan_width scan_width,
- 		 struct ieee80211_mgmt *mgmt, size_t len,
- 		 s32 signal),
--	TP_ARGS(wiphy, channel, mgmt, len, signal),
-+	TP_ARGS(wiphy, channel, scan_width, mgmt, len, signal),
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
- 		CHAN_ENTRY
-+		__field(enum nl80211_bss_scan_width, scan_width)
- 		__dynamic_array(u8, mgmt, len)
- 		__field(s32, signal)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		CHAN_ASSIGN(channel);
-+		__entry->scan_width = scan_width;
- 		if (mgmt)
- 			memcpy(__get_dynamic_array(mgmt), mgmt, len);
- 		__entry->signal = signal;
- 	),
--	TP_printk(WIPHY_PR_FMT ", " CHAN_PR_FMT "signal: %d",
--		  WIPHY_PR_ARG, CHAN_PR_ARG, __entry->signal)
-+	TP_printk(WIPHY_PR_FMT ", " CHAN_PR_FMT "(scan_width: %d) signal: %d",
-+		  WIPHY_PR_ARG, CHAN_PR_ARG, __entry->scan_width,
-+		  __entry->signal)
- );
- 
- DECLARE_EVENT_CLASS(cfg80211_bss_evt,
--- 
-1.7.10.4
+Is Bluetooth function of the card usable under linux? What about windows?
+Could you send me output of 'lspci -nn'?
+
+Kind regards
+Piotr
 
