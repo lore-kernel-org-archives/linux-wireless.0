@@ -1,102 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:43476 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932536Ab3GKOxC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60342 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758256Ab3GMUiK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 10:53:02 -0400
-MIME-Version: 1.0
-In-Reply-To: <s5h7ggx413u.wl%tiwai@suse.de>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-	<1373533573-12272-46-git-send-email-ming.lei@canonical.com>
-	<51DEAE4E.90204@cogentembedded.com>
-	<s5hip0hb3y6.wl%tiwai@suse.de>
-	<CACVXFVPuv4VD_xCocP2QVOqUqAXm9gjwgwcRn6y=3qXPntOxCQ@mail.gmail.com>
-	<s5h7ggx413u.wl%tiwai@suse.de>
-Date: Thu, 11 Jul 2013 22:52:59 +0800
-Message-ID: <CACVXFVNsOAeLZ1zCHmBNsdAWRnqBrDYziK6XDh7G0QEFiw4G5Q@mail.gmail.com> (sfid-20130711_165320_767826_76214658)
-Subject: Re: [PATCH 45/50] sound: usb: usx2y: spin_lock in complete() cleanup
-From: Ming Lei <ming.lei@canonical.com>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Jaroslav Kysela <perex@perex.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 13 Jul 2013 16:38:10 -0400
+Message-ID: <1373747861.5549.0.camel@jlt4.sipsolutions.net> (sfid-20130713_223827_323007_94DBCBC3)
+Subject: Re: [PATCH] mac80211: fix duplicate retransmission detection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sat, 13 Jul 2013 23:37:41 +0300
+In-Reply-To: <CAKf6xpu7iUSKWsFwsUnV2Nv2XjWepzaXv6s=3WvcgB6dY20oGQ@mail.gmail.com> (sfid-20130713_182804_436862_6B7253C5)
+References: <1373575017-25645-1-git-send-email-johannes@sipsolutions.net>
+	 <CAKf6xpu7iUSKWsFwsUnV2Nv2XjWepzaXv6s=3WvcgB6dY20oGQ@mail.gmail.com>
+	 (sfid-20130713_182804_436862_6B7253C5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 10:34 PM, Takashi Iwai <tiwai@suse.de> wrote:
-> At Thu, 11 Jul 2013 22:13:35 +0800,
-> Ming Lei wrote:
->>
->> On Thu, Jul 11, 2013 at 9:50 PM, Takashi Iwai <tiwai@suse.de> wrote:
->> > At Thu, 11 Jul 2013 17:08:30 +0400,
->> > Sergei Shtylyov wrote:
->> >>
->> >> On 11-07-2013 13:06, Ming Lei wrote:
->> >>
->> >> > Complete() will be run with interrupt enabled, so change to
->> >> > spin_lock_irqsave().
->> >>
->> >>     Changelog doesn't match the patch.
->> >
->> > Yep, but moreover...
->> >
->> >> > Cc: Jaroslav Kysela <perex@perex.cz>
->> >> > Cc: Takashi Iwai <tiwai@suse.de>
->> >> > Cc: alsa-devel@alsa-project.org
->> >> > Signed-off-by: Ming Lei <ming.lei@canonical.com>
->> >> > ---
->> >> >   sound/usb/usx2y/usbusx2yaudio.c |    4 ++++
->> >> >   1 file changed, 4 insertions(+)
->> >>
->> >> > diff --git a/sound/usb/usx2y/usbusx2yaudio.c b/sound/usb/usx2y/usbusx2yaudio.c
->> >> > index 4967fe9..e2ee893 100644
->> >> > --- a/sound/usb/usx2y/usbusx2yaudio.c
->> >> > +++ b/sound/usb/usx2y/usbusx2yaudio.c
->> >> > @@ -273,7 +273,11 @@ static void usX2Y_clients_stop(struct usX2Ydev *usX2Y)
->> >> >             struct snd_usX2Y_substream *subs = usX2Y->subs[s];
->> >> >             if (subs) {
->> >> >                     if (atomic_read(&subs->state) >= state_PRERUNNING) {
->> >> > +                           unsigned long flags;
->> >> > +
->> >> > +                           local_irq_save(flags);
->> >> >                             snd_pcm_stop(subs->pcm_substream, SNDRV_PCM_STATE_XRUN);
->> >> > +                           local_irq_restore(flags);
->> >> >                     }
->> >
->> > ... actually this snd_pcm_stop() call should have been covered by
->> > snd_pcm_stream_lock().  Maybe it'd be enough to have a single patch
->> > together with the change, i.e. wrapping with
->> > snd_pcm_stream_lock_irqsave().
->>
->> Please use snd_pcm_stream_lock_irqsave() so that I can avoid sending
->> out similar patch later, :-)
->>
->> >
->> > I'll prepare the patch for 3.11 independently from your patch series,
->> > so please drop this one.
->>
->> OK, thanks for dealing with that.
->>
->> >
->> >
->> > BTW, the word "cleanup" in the subject is inappropriate.  This is
->> > rather a fix together with the core change.
->>
->> It is a cleanup since the patchset only addresses lock problem which
->> is caused by the tasklet conversion.
->
-> Well, the conversion to irqsave() is needed for the future drop of
-> irq_save() in the caller, right?  Then this isn't a cleanup but a
-> preparation for movement ahead.
+On Sat, 2013-07-13 at 12:28 -0400, Jason Andryuk wrote:
 
-Sounds more accurate, and I will change the title in next round, :-)
+> > +       if (rx->skb->len >= 24 && rx->sta &&
+> 
+> Shouldn't this check rx->skb first?
+> if (rx->sta && rx->sta->len >= 24 &&
 
-Thanks,
---
-Ming Lei
+Hmm? did you mean rx->skb? But what makes you think it can be NULL???
+
+johannes
+
