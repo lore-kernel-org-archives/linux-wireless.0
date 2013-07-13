@@ -1,87 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:50406 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934571Ab3GRXbP (ORCPT
+Received: from alpha.kreiz-it.fr ([178.32.219.166]:30358 "EHLO
+	alpha.kreiz-it.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537Ab3GMKM0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jul 2013 19:31:15 -0400
-Received: by mail-lb0-f175.google.com with SMTP id r10so2942549lbi.6
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jul 2013 16:31:13 -0700 (PDT)
+	Sat, 13 Jul 2013 06:12:26 -0400
+Received: from DirTech (lnr56-1-82-246-51-185.fbx.proxad.net [82.246.51.185])
+	by alpha.kreiz-it.fr (Postfix) with ESMTPSA id 9BE73B30
+	for <linux-wireless@vger.kernel.org>; Sat, 13 Jul 2013 12:12:23 +0200 (CEST)
+From: "Cedric GROSS" <cg@cgross.info>
+To: <linux-wireless@vger.kernel.org>
+Subject: Firmware error for Centrino N 2230
+Date: Sat, 13 Jul 2013 12:12:17 +0200
+Message-ID: <001a01ce7fb1$75bfdc10$613f9430$@info> (sfid-20130713_121243_717191_47D161E2)
 MIME-Version: 1.0
-In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A01AD31E07@HASMSX106.ger.corp.intel.com>
-References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
- <1372768095-26053-2-git-send-email-ilan.peer@intel.com> <CAB=NE6Wr_Y+uoGwOT_nE-VE49vd0eobv_F7=hF=mtVfGgCOehg@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A01AD2DF7B@HASMSX106.ger.corp.intel.com>
- <CAB=NE6WBz36HktdvOd_Ay=xrx0LJQd=9MxxTrTFKhALS+HMHzg@mail.gmail.com> <CB3B3D4774441E42AA3EA0E1BA8230A01AD31E07@HASMSX106.ger.corp.intel.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 18 Jul 2013 16:30:53 -0700
-Message-ID: <CAB=NE6U3hBaEawcMJ27ZUFPaFo6RDUuzt9hh5AQN=eFWYMX-Hg@mail.gmail.com> (sfid-20130719_013127_805951_896811FB)
-Subject: Re: [PATCH 1/3] [RFC] cfg80211: Add indoor only and GO concurrent
- channel attributes
-To: "Peer, Ilan" <ilan.peer@intel.com>
-Cc: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Spinadel, David" <david.spinadel@intel.com>,
-	"Ginsburg, Noam" <noam.ginsburg@intel.com>,
-	"Perelmooter, Liraz" <liraz.perelmooter@intel.com>,
-	"Shalev, Oz" <oz.shalev@intel.com>,
-	Michael Green <green@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	boundary="----=_NextPart_000_000A_01CE7FBC.95D29C30";
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 17, 2013 at 11:47 AM, Peer, Ilan <ilan.peer@intel.com> wrote:
-> On some day Luis wrote:
->
->> Based on the documentation I reviewed and your proposal it'd seem to me that
->> we can distinguish GO on the upper layers and determine if a channel is DFS or
->> not by just the DFS flag. The next hint you'd need is if the GO got regulatory
->> information from a master somehow, no?
->
-> This should also be handled by user space, based on the device type/sub type of the local device directly, or
-> indirectly through other means such a managed interface associating with an AP that it's device type
-> value is 6 etc.
+Hello,
 
-This seems reasonable but we need to also consider state machine
-changes possible on the channel the GO is on as well and there are
-different reasons for the channel to change:
+I’m trying to adapt current freebsd driver for supporting my 2230 NIC.
 
-  * beacon hint - nl80211_send_beacon_hint_event()
-  * regulatory change - nl80211_send_reg_change_event()
+I try to follow ucode command order defined in kernel 3.2 but I reach some
+difficulties because firmware raise error.
 
-The beacon hint multicast group message sends the channel prior to the
-beacon hint and after. The regulatory change event currently isn't as
-atomic and only provides the the fact that regulatory domain state
-machine has incurred a change. In this case it may make sense to send
-all wiphy information and have hostapd verify if a change has occurred
-on the channel.
+Runtime uCode is alive. So far I sent calib result (cmd xB0), configured
+advanced BT coexistence (cmd x9B,xCC and xCD) running runtime calib (cmd
+x65) but the command configuring valid chain (cmd x65) failed as the result
+below : 
+CSR values: (2nd byte of IWN_INT_COALESCING is IWN_INT_PERIODIC)
+  IWN_HW_IF_CONFIG: 0x00800302   IWN_INT_COALESCING: 0x0000ff40     
+IWN_INT: 0x04000000
+  IWN_INT_MASK: 0x00000000   IWN_FH_INT: 0x00000000   IWN_GPIO_IN:
+0x00000000
+   IWN_RESET: 0x00000000   IWN_GP_CNTRL: 0x080403c5   IWN_HW_REV: 0x000000c8
+  IWN_EEPROM: 0x08450ffd   IWN_EEPROM_GP: 0x90000801   IWN_OTP_GP:
+0x00030001
+     IWN_GIO: 0x00080044   INW_GP_UCODE: 0x00000004   IWN_GP_DRIVER:
+0x00000080
+  IWN_GP1_DRIVER: 0x00000000   IWN_UCODE_DRV_GP2: 0x00000000      IWN_LED:
+0x00000018
+  IWN_DRAM_INT_TBL: 0x880b76e5   IWN_GIO_CHICKEN: 0x29800200   IWN_ANA_PLL:
+0x00000000
+  IWN_HW_REV_WA: 0x0001001a   IWN_DBG_HPET_MEM: 0xffff0000
+firmware error log:
+  error type      = "UNKNOWN" (0x00001987)
+  program counter = 0x000179B4
+  source line     = 0x00000167
+  error data      = 0x0000000000000000
+  branch link     = 0x0001798200017982
+  interrupt link  = 0x0000EC7A00000000
+  time            = 46566
 
->> That is I am not seeing a need for a new flag at this point in wireless-regdb,
->> given also I mentioned another type of case for regulatory hints technically
->> possible (cellular base station hints but it seems only allowed with exceptional
->> review by the FCC).
->>
->> I take it what you want to enable here is GO operation on DFS channels and use
->> country IEs to determine if you can use GO, but if you do have GO enabled then
->> you'd want hooks to not daisy chain, ack?
->
-> Currently, we do not intend to base the relaxation on the country IE directly,
+What I’m missing ?
+What is meaning of firmware error ?
 
-Its still a possibility so it should be handled and we should consider
-it on core regulatory. One possible solution might be to not enable GO
-unless the the NL80211_ATTR_REG_INITIATOR was something appropriate
-for the wiphy.
+Many thanks for your help.
 
-> but base it on the fact that if
-> there is a managed connection to an AP who's not a mobile device (assuming that it is an authorized master),
+Best regards 
+Cedric
 
-How do you intend on verifying a device that has associated to an AP,
-that that AP is not a mobile device, ie that it fits this "authorized
-master" category ?
-
-> than the channel used by the managed connection is valid for use (as long as the managed interface
-> is connected to the AP on the channel).
-
-Makes sense.
-
-  Luis
