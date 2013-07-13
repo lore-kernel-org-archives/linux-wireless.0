@@ -1,177 +1,342 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:54305 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752695Ab3GAMkH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 08:40:07 -0400
-Message-ID: <1372682370.21065.68.camel@cumari.coelho.fi> (sfid-20130701_144027_966900_AEDA9C37)
-Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
-From: Luciano Coelho <coelho@ti.com>
-To: <mturquette@linaro.org>, Mark Rutland <mark.rutland@arm.com>
-CC: <balbi@ti.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm@vger.kernel.org" <linux-arm-kernel@lists.infradead.org>
-Date: Mon, 1 Jul 2013 15:39:30 +0300
-In-Reply-To: <1372425670.21065.61.camel@cumari.coelho.fi>
-References: <1372149330-24335-1-git-send-email-coelho@ti.com>
-	 <20130628093848.GA2139@e106331-lin.cambridge.arm.com>
-	 <1372413215.21065.41.camel@cumari.coelho.fi>
-	 <20130628102145.GB2139@e106331-lin.cambridge.arm.com>
-	 <1372415514.21065.50.camel@cumari.coelho.fi>
-	 <1372418531.21065.53.camel@cumari.coelho.fi>
-	 <20130628114129.GO11297@arwen.pp.htv.fi>
-	 <1372421632.21065.60.camel@cumari.coelho.fi>
-	 <20130628121859.GP11297@arwen.pp.htv.fi>
-	 <1372425670.21065.61.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from lists.laptop.org ([18.85.2.166]:37945 "EHLO swan.laptop.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751985Ab3GMOzy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Jul 2013 10:55:54 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com, akarwar@marvell.com, bzhao@marvell.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mwifiex: fix IRQ enable/disable
+Message-Id: <20130713145710.BC47D12647A@dev.laptop.org> (sfid-20130713_165557_778468_C312BC85)
+Date: Sat, 13 Jul 2013 10:57:10 -0400 (EDT)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-06-28 at 16:21 +0300, Luciano Coelho wrote:
-> On Fri, 2013-06-28 at 15:18 +0300, Felipe Balbi wrote:
-> > On Fri, Jun 28, 2013 at 03:13:52PM +0300, Luciano Coelho wrote:
-> > > On Fri, 2013-06-28 at 14:41 +0300, Felipe Balbi wrote:
-> > > > On Fri, Jun 28, 2013 at 02:22:11PM +0300, Luciano Coelho wrote:
-> > > > > On Fri, 2013-06-28 at 13:31 +0300, Luciano Coelho wrote:
-> > > > > > (fixed Mike's address)
-> > > > > > 
-> > > > > > On Fri, 2013-06-28 at 11:21 +0100, Mark Rutland wrote:
-> > > > > > > On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho wrote:
-> > > > > > > > On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
-> > > > > > > > > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho wrote:
-> > > > > > > > > > +Optional properties:
-> > > > > > > > > > +--------------------
-> > > > > > > > > > +
-> > > > > > > > > > +- refclock: the internal WLAN reference clock frequency (required for
-> > > > > > > > > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be one of the
-> > > > > > > > > > +  following:
-> > > > > > > > > > +	0 = 19.2 MHz
-> > > > > > > > > > +	1 = 26.0 MHz
-> > > > > > > > > > +	2 = 38.4 MHz
-> > > > > > > > > > +	3 = 52.0 MHz
-> > > > > > > > > > +	4 = 38.4 MHz, XTAL
-> > > > > > > > > > +	5 = 26.0 MHz, XTAL
-> > > > > > > > > > +
-> > > > > > > > > > +- tcxoclock: the internal WLAN TCXO clock frequency (required for
-> > > > > > > > > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be one of the
-> > > > > > > > > > +  following:
-> > > > > > > > > > +	0 = 19.200 MHz
-> > > > > > > > > > +	1 = 26.000 MHz
-> > > > > > > > > > +	2 = 38.400 MHz
-> > > > > > > > > > +	3 = 52.000 MHz
-> > > > > > > > > > +	4 = 16.368 MHz
-> > > > > > > > > > +	5 = 32.736 MHz
-> > > > > > > > > > +	6 = 16.800 MHz
-> > > > > > > > > > +	7 = 33.600 MHz
-> > > > > > > > > 
-> > > > > > > > > This looks suspiciously like what we have the common clock bindings for:
-> > > > > > > > > 
-> > > > > > > > > refclk {
-> > > > > > > > > 	compatible = "fixed-clock";
-> > > > > > > > > 	#clock-cells = <0>;
-> > > > > > > > > 	clock-frequency = <19200000>;
-> > > > > > > > > }
-> > > > > > > > > 
-> > > > > > > > > wilink {
-> > > > > > > > > 	compatible = "ti,wilink7";
-> > > > > > > > > 	interrupt-parent = <&some_interrupt_controller>;
-> > > > > > > > > 	interrupts = <0 1 1>;
-> > > > > > > > > 	clocks = <&refclk>, <&refclk>;
-> > > > > > > > > 	clock-names = "refclk", "txoclk";
-> > > > > > > > > };
-> > > > > > > > > 
-> > > > > > > > > Could you not use them?
-> > > > > > > > 
-> > > > > > > > Hmmm... this actually does look good.  But these are internal clocks in
-> > > > > > > > the modules, they cannot be accessed from outside.  Does it make sense
-> > > > > > > > to register them with the clock framework?
-> > > > > > > 
-> > > > > > > Given we already have a common way of describing clocks, I think it
-> > > > > > > makes sense to use it -- people already understand the common bindings,
-> > > > > > > and it's less code to add add to the kernel. I don't think the fact
-> > > > > > > these clocks are internal should prevent us from describing them as we
-> > > > > > > would an external clock.
-> > > > > > 
-> > > > > > Yes, I agree with you.  Thanks for the suggestion! I think it will look
-> > > > > > much better.  And now that I dug a bit more into the code, I can see
-> > > > > > that there are only structs being populated, so there shouldn't be any
-> > > > > > other side-effects.
-> > > > > 
-> > > > > Hmmm, one thing that escaped me.  Besides the frequency, I also need a
-> > > > > boolean that tells if the clock is XTAL or not.  I can't figure out how
-> > > > > to pass this if I use the generic clock framework.  Any suggestions?
-> > > > 
-> > > > Could you use clock-output-names for that ?
-> > > > 
-> > > > XTAL clock:
-> > > > 
-> > > > refclk {
-> > > > 	compatible = "fixed-clock";
-> > > > 	#clock cells = <0>;
-> > > > 	clock-frequency = <19200000>;
-> > > > 	clock-output-names = "xtal";
-> > > > };
-> > > > 
-> > > > non-XTAL clock:
-> > > > 
-> > > > refclk {
-> > > > 	compatible = "fixed-clock";
-> > > > 	#clock cells = <0>;
-> > > > 	clock-frequency = <19200000>;
-> > > > 	clock-output-names = "osc"; /* any better name ? */
-> > > > };
-> > > 
-> > > This starts looking a bit hacky.  Using the output name as a flag is not
-> > > very pretty.
-> > > 
-> > > I think it would be better to have a separate flag for it in the wlan
-> > > node.  Like an optional "refclock-xtal" boolean or something.  The
-> > > downside of this is that we would be adding information about the clock
-> > > details in the wilink node. :(
-> > > 
-> > > OTOH, we could add a flag to the generic clock binding? A new optional
-> > > boolean that tells whether the clock is XTAL or not:
-> > > 
-> > > refclk {
-> > > 	compatible = "fixed-clock";
-> > > 	#clock cells = <0>;
-> > > 	clock-frequency = <19200000>;
-> > > 	clock-xtal;
-> > > };
-> > > 
-> > > Do you think that would make sense?
-> > 
-> > sure, that looks alright to me. Surely there are other devices out there
-> > who want to know if the clock comes from a crystal or not ?!?
-> 
-> Mike, what do you think about this idea? If it sounds okay to you, I can
-> cook up a patch adding this flag.
+During tear down (e.g. mwifiex_sdio_remove during system suspend),
+mwifiex left IRQs enabled for a significant period of time when it was
+unable to handle them correctly. This caused interrupt storms and
+interfered with the bluetooth interface on the same SDIO card.
 
-Hmmm... I started implementing this whole thing, but using these clocks
-as "fixed-clock"s is not so straightforward.  The problem is that I
-would need to register my driver as a clock provider and add the OF
-match for "fixed-clock".
+Solve this by disabling interrupts at the point when they can no longer
+be handled correctly, which is at the start of mwifiex_remove_card().
 
-If I do that, all the other "fixed-clock" nodes would be passed to my
-driver too, which is wrong.  Or, the platform should register the
-"fixed-clock" match, but this would be wrong too, since it would find
-*my* fixed-clocks.
+For cleanliness, we now enable interrupts in the mwifiex_add_card() path,
+to be symmetrical with the disabling of interrupts. We also couple the
+registration of the sdio IRQ handler with the actual enable/disable of
+interrupts at the hardware level.
 
-The only thing I can come up with is to make a small clock driver (maybe
-even inside the WiLink module itself) that registers a new type of
-clock, "ti,wilink-clock" or something.  But this would really be
-overkill, wouldn't it?
+I also removed a write to this register in mwifiex_init_sdio which seemed
+pointless and won't cause any ill effects now that we only register
+the SDIO IRQ handler when we are ready to accept interrupts.
 
-Any other ideas?
+Includes some corrections from Amitkumar Karwar.
 
---
-Luca.
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+---
+ drivers/net/wireless/mwifiex/init.c | 10 +---
+ drivers/net/wireless/mwifiex/main.c | 13 +++++-
+ drivers/net/wireless/mwifiex/main.h |  1 +
+ drivers/net/wireless/mwifiex/sdio.c | 91 +++++++++++++++++--------------------
+ drivers/net/wireless/mwifiex/sdio.h |  3 --
+ 5 files changed, 57 insertions(+), 61 deletions(-)
+
+Replaces the previous patch:
+	mwifiex: don't ignore SDIO interrupts during shutdown
+
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index caaf4bd..2cf8b96 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -693,7 +693,7 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
+ 		if (!ret) {
+ 			dev_notice(adapter->dev,
+ 				   "WLAN FW already running! Skip FW dnld\n");
+-			goto done;
++			return 0;
+ 		}
+ 
+ 		poll_num = MAX_FIRMWARE_POLL_TRIES;
+@@ -719,14 +719,8 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
+ poll_fw:
+ 	/* Check if the firmware is downloaded successfully or not */
+ 	ret = adapter->if_ops.check_fw_status(adapter, poll_num);
+-	if (ret) {
++	if (ret)
+ 		dev_err(adapter->dev, "FW failed to be active in time\n");
+-		return -1;
+-	}
+-done:
+-	/* re-enable host interrupt for mwifiex after fw dnld is successful */
+-	if (adapter->if_ops.enable_int)
+-		adapter->if_ops.enable_int(adapter);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index e15ab72..1753431 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -427,6 +427,10 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 				"Cal data request_firmware() failed\n");
+ 	}
+ 
++	/* enable host interrupt after fw dnld is successful */
++	if (adapter->if_ops.enable_int)
++		adapter->if_ops.enable_int(adapter);
++
+ 	adapter->init_wait_q_woken = false;
+ 	ret = mwifiex_init_fw(adapter);
+ 	if (ret == -1) {
+@@ -478,6 +482,8 @@ err_add_intf:
+ 	mwifiex_del_virtual_intf(adapter->wiphy, priv->wdev);
+ 	rtnl_unlock();
+ err_init_fw:
++	if (adapter->if_ops.disable_int)
++		adapter->if_ops.disable_int(adapter);
+ 	pr_debug("info: %s: unregister device\n", __func__);
+ 	adapter->if_ops.unregister_dev(adapter);
+ done:
+@@ -855,7 +861,7 @@ mwifiex_add_card(void *card, struct semaphore *sem,
+ 	INIT_WORK(&adapter->main_work, mwifiex_main_work_queue);
+ 
+ 	/* Register the device. Fill up the private data structure with relevant
+-	   information from the card and request for the required IRQ. */
++	   information from the card. */
+ 	if (adapter->if_ops.register_dev(adapter)) {
+ 		pr_err("%s: failed to register mwifiex device\n", __func__);
+ 		goto err_registerdev;
+@@ -919,6 +925,11 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 	if (!adapter)
+ 		goto exit_remove;
+ 
++	/* We can no longer handle interrupts once we start doing the teardown
++	 * below. */
++	if (adapter->if_ops.disable_int)
++		adapter->if_ops.disable_int(adapter);
++
+ 	adapter->surprise_removed = true;
+ 
+ 	/* Stop data */
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 3da73d3..253e0bd 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -601,6 +601,7 @@ struct mwifiex_if_ops {
+ 	int (*register_dev) (struct mwifiex_adapter *);
+ 	void (*unregister_dev) (struct mwifiex_adapter *);
+ 	int (*enable_int) (struct mwifiex_adapter *);
++	void (*disable_int) (struct mwifiex_adapter *);
+ 	int (*process_int_status) (struct mwifiex_adapter *);
+ 	int (*host_to_card) (struct mwifiex_adapter *, u8, struct sk_buff *,
+ 			     struct mwifiex_tx_param *);
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 5ee5ed0..5ef49f2 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -51,6 +51,7 @@ static struct mwifiex_if_ops sdio_ops;
+ static struct semaphore add_remove_card_sem;
+ 
+ static int mwifiex_sdio_resume(struct device *dev);
++static void mwifiex_sdio_interrupt(struct sdio_func *func);
+ 
+ /*
+  * SDIO probe.
+@@ -296,6 +297,15 @@ static struct sdio_driver mwifiex_sdio = {
+ 	}
+ };
+ 
++/* Write data into SDIO card register. Caller claims SDIO device. */
++static int
++mwifiex_write_reg_locked(struct sdio_func *func, u32 reg, u8 data)
++{
++	int ret = -1;
++	sdio_writeb(func, data, reg, &ret);
++	return ret;
++}
++
+ /*
+  * This function writes data into SDIO card register.
+  */
+@@ -303,10 +313,10 @@ static int
+ mwifiex_write_reg(struct mwifiex_adapter *adapter, u32 reg, u8 data)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+-	int ret = -1;
++	int ret;
+ 
+ 	sdio_claim_host(card->func);
+-	sdio_writeb(card->func, data, reg, &ret);
++	ret = mwifiex_write_reg_locked(card->func, reg, data);
+ 	sdio_release_host(card->func);
+ 
+ 	return ret;
+@@ -685,23 +695,15 @@ mwifiex_sdio_read_fw_status(struct mwifiex_adapter *adapter, u16 *dat)
+  * The host interrupt mask is read, the disable bit is reset and
+  * written back to the card host interrupt mask register.
+  */
+-static int mwifiex_sdio_disable_host_int(struct mwifiex_adapter *adapter)
++static void mwifiex_sdio_disable_host_int(struct mwifiex_adapter *adapter)
+ {
+-	u8 host_int_mask, host_int_disable = HOST_INT_DISABLE;
+-
+-	/* Read back the host_int_mask register */
+-	if (mwifiex_read_reg(adapter, HOST_INT_MASK_REG, &host_int_mask))
+-		return -1;
+-
+-	/* Update with the mask and write back to the register */
+-	host_int_mask &= ~host_int_disable;
+-
+-	if (mwifiex_write_reg(adapter, HOST_INT_MASK_REG, host_int_mask)) {
+-		dev_err(adapter->dev, "disable host interrupt failed\n");
+-		return -1;
+-	}
++	struct sdio_mmc_card *card = adapter->card;
++	struct sdio_func *func = card->func;
+ 
+-	return 0;
++	sdio_claim_host(func);
++	mwifiex_write_reg_locked(func, HOST_INT_MASK_REG, 0);
++	sdio_release_irq(func);
++	sdio_release_host(func);
+ }
+ 
+ /*
+@@ -713,14 +715,29 @@ static int mwifiex_sdio_disable_host_int(struct mwifiex_adapter *adapter)
+ static int mwifiex_sdio_enable_host_int(struct mwifiex_adapter *adapter)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
++	struct sdio_func *func = card->func;
++	int ret;
++
++	sdio_claim_host(func);
++
++	/* Request the SDIO IRQ */
++	ret = sdio_claim_irq(func, mwifiex_sdio_interrupt);
++	if (ret) {
++		dev_err(adapter->dev, "claim irq failed: ret=%d\n", ret);
++		goto out;
++	}
+ 
+ 	/* Simply write the mask to the register */
+-	if (mwifiex_write_reg(adapter, HOST_INT_MASK_REG,
+-			      card->reg->host_int_enable)) {
++	ret = mwifiex_write_reg_locked(func, HOST_INT_MASK_REG,
++				       card->reg->host_int_enable);
++	if (ret) {
+ 		dev_err(adapter->dev, "enable host interrupt failed\n");
+-		return -1;
++		sdio_release_irq(func);
+ 	}
+-	return 0;
++
++out:
++	sdio_release_host(func);
++	return ret;
+ }
+ 
+ /*
+@@ -997,9 +1014,6 @@ mwifiex_sdio_interrupt(struct sdio_func *func)
+ 	}
+ 	adapter = card->adapter;
+ 
+-	if (adapter->surprise_removed)
+-		return;
+-
+ 	if (!adapter->pps_uapsd_mode && adapter->ps_state == PS_STATE_SLEEP)
+ 		adapter->ps_state = PS_STATE_AWAKE;
+ 
+@@ -1728,9 +1742,7 @@ mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ 	struct sdio_mmc_card *card = adapter->card;
+ 
+ 	if (adapter->card) {
+-		/* Release the SDIO IRQ */
+ 		sdio_claim_host(card->func);
+-		sdio_release_irq(card->func);
+ 		sdio_disable_func(card->func);
+ 		sdio_release_host(card->func);
+ 		sdio_set_drvdata(card->func, NULL);
+@@ -1744,7 +1756,7 @@ mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+  */
+ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ {
+-	int ret = 0;
++	int ret;
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	struct sdio_func *func = card->func;
+ 
+@@ -1753,22 +1765,14 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 
+ 	sdio_claim_host(func);
+ 
+-	/* Request the SDIO IRQ */
+-	ret = sdio_claim_irq(func, mwifiex_sdio_interrupt);
+-	if (ret) {
+-		pr_err("claim irq failed: ret=%d\n", ret);
+-		goto disable_func;
+-	}
+-
+ 	/* Set block size */
+ 	ret = sdio_set_block_size(card->func, MWIFIEX_SDIO_BLOCK_SIZE);
++	sdio_release_host(func);
+ 	if (ret) {
+ 		pr_err("cannot set SDIO block size\n");
+-		ret = -1;
+-		goto release_irq;
++		return ret;
+ 	}
+ 
+-	sdio_release_host(func);
+ 	sdio_set_drvdata(func, card);
+ 
+ 	adapter->dev = &func->dev;
+@@ -1776,15 +1780,6 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 	strcpy(adapter->fw_name, card->firmware);
+ 
+ 	return 0;
+-
+-release_irq:
+-	sdio_release_irq(func);
+-disable_func:
+-	sdio_disable_func(func);
+-	sdio_release_host(func);
+-	adapter->card = NULL;
+-
+-	return -1;
+ }
+ 
+ /*
+@@ -1813,9 +1808,6 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 	 */
+ 	mwifiex_read_reg(adapter, HOST_INTSTATUS_REG, &sdio_ireg);
+ 
+-	/* Disable host interrupt mask register for SDIO */
+-	mwifiex_sdio_disable_host_int(adapter);
+-
+ 	/* Get SDIO ioport */
+ 	mwifiex_init_sdio_ioport(adapter);
+ 
+@@ -1957,6 +1949,7 @@ static struct mwifiex_if_ops sdio_ops = {
+ 	.register_dev = mwifiex_register_dev,
+ 	.unregister_dev = mwifiex_unregister_dev,
+ 	.enable_int = mwifiex_sdio_enable_host_int,
++	.disable_int = mwifiex_sdio_disable_host_int,
+ 	.process_int_status = mwifiex_process_int_status,
+ 	.host_to_card = mwifiex_sdio_host_to_card,
+ 	.wakeup = mwifiex_pm_wakeup_card,
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 6d51dfd..532ae0a 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -92,9 +92,6 @@
+ /* Host Control Registers : Download host interrupt mask */
+ #define DN_LD_HOST_INT_MASK		(0x2U)
+ 
+-/* Disable Host interrupt mask */
+-#define	HOST_INT_DISABLE		0xff
+-
+ /* Host Control Registers : Host interrupt status */
+ #define HOST_INTSTATUS_REG		0x03
+ /* Host Control Registers : Upload host interrupt status */
+-- 
+1.8.1.4
 
