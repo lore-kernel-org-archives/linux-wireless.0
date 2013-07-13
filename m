@@ -1,75 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.openrapids.net ([64.15.138.104]:43669 "EHLO
-	blackscsi.openrapids.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755996Ab3GOMzt (ORCPT
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:41584 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751926Ab3GMQ2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 08:55:49 -0400
-Date: Mon, 15 Jul 2013 08:55:46 -0400
-From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-To: Mark Wielaard <mjw@redhat.com>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Xenia Ragiadakou <burzalodowa@gmail.com>,
-	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Steven Rostedt <rostedt@goodmis.org>,
-	linux-trace-users@vger.kernel.org, lttng-dev@lists.lttng.org
-Subject: Re: Help adding trace events to xHCI
-Message-ID: <20130715125546.GA16263@Krystal> (sfid-20130715_145555_215008_835193D7)
-References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos> <1373562533.8201.33.camel@jlt4.sipsolutions.net> <20130711190035.GD5240@xanatos> <87y59c4d60.fsf@kamboji.qca.qualcomm.com> <20130712164104.GA15531@xanatos> <20130712170827.GA18819@Krystal> <20130712193531.GA6954@toonder.wildebeest.org>
+	Sat, 13 Jul 2013 12:28:03 -0400
+Received: by mail-qc0-f170.google.com with SMTP id s1so5550235qcw.29
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Jul 2013 09:28:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130712193531.GA6954@toonder.wildebeest.org>
+In-Reply-To: <1373575017-25645-1-git-send-email-johannes@sipsolutions.net>
+References: <1373575017-25645-1-git-send-email-johannes@sipsolutions.net>
+Date: Sat, 13 Jul 2013 12:28:02 -0400
+Message-ID: <CAKf6xpu7iUSKWsFwsUnV2Nv2XjWepzaXv6s=3WvcgB6dY20oGQ@mail.gmail.com> (sfid-20130713_182810_245599_FB79BAD2)
+Subject: Re: [PATCH] mac80211: fix duplicate retransmission detection
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Mark Wielaard (mjw@redhat.com) wrote:
-> Hi Mathieu,
-> 
-> On Fri, Jul 12, 2013 at 01:08:28PM -0400, Mathieu Desnoyers wrote:
-> > * Sarah Sharp (sarah.a.sharp@linux.intel.com) wrote:
-> > > Thanks for the suggestion.  I'm not familiar with all the userspace
-> > > tools for trace events, so I didn't know about the command parser.  Is
-> > > there documentation or a list of resources for all the userspace trace
-> > > event plugins?  If so, can you give us a pointer to it?
-> > 
-> > You might want to try out LTTng-UST. It provides TRACEPOINT_EVENT() and
-> > tracepoint() for user-space instrumentation. See:
-> > 
-> > - https://lttng.org/files/doc/man-pages/man3/lttng-ust.3.html
-> 
-> Is that build on the <sys/sdt.h> ust probe points as embedded in glibc
-> for example that gdb and systemtap use to access user space trace
-> points?
+On Thu, Jul 11, 2013 at 4:36 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 23dbcfc..2c5a79b 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -936,8 +936,14 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
+>         struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+>         struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+>
+> -       /* Drop duplicate 802.11 retransmissions (IEEE 802.11 Chap. 9.2.9) */
+> -       if (rx->sta && !is_multicast_ether_addr(hdr->addr1)) {
+> +       /*
+> +        * Drop duplicate 802.11 retransmissions
+> +        * (IEEE 802.11-2012: 9.3.2.10 "Duplicate detection and recovery")
+> +        */
+> +       if (rx->skb->len >= 24 && rx->sta &&
 
-LTTng-UST tracepoints are not built on sdt.h, but they can optionally
-emit sdt.h instrumentation. All you need to do is run:
+Shouldn't this check rx->skb first?
+if (rx->sta && rx->sta->len >= 24 &&
 
-./configure --with-sdt
+-Jason
 
-when configuring lttng-ust, and after a make install, sdt.h
-STAP_PROBEV() will be emitted whenever a lttng-ust tracepoint() macro is
-used in the system.
-
-> Can tools use lttng-ust and <sys/sdt.h> tracepoints
-> interchangeably by parsing the ELF notes described in
-> http://sourceware.org/systemtap/wiki/UserSpaceProbeImplementation
-
-Since lttng-ust tracepoints emit sdt.h instrumentation, yes. However,
-please note that the reverse is not possible: sdt.h instrumentation does
-not allow tracing with LTTng-UST.
-
-Thanks,
-
-Mathieu
-
-> 
-> Thanks,
-> 
-> Mark
-
--- 
-Mathieu Desnoyers
-EfficiOS Inc.
-http://www.efficios.com
+> +           !ieee80211_is_ctl(hdr->frame_control) &&
+> +           !ieee80211_is_qos_nullfunc(hdr->frame_control) &&
+> +           !is_multicast_ether_addr(hdr->addr1)) {
+>                 if (unlikely(ieee80211_has_retry(hdr->frame_control) &&
+>                              rx->sta->last_seq_ctrl[rx->seqno_idx] ==
+>                              hdr->seq_ctrl)) {
+> --
+> 1.8.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
