@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:52245 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3GDBF5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36656 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108Ab3GNU5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:05:57 -0400
-Received: by mail-pd0-f173.google.com with SMTP id v14so586306pde.4
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:56 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 14/53] wireless-regdb: SG, Singapore - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:10 -0700
-Message-Id: <1372899889-19183-15-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032041_772274_0FD946BB)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Sun, 14 Jul 2013 16:57:31 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/4] mac80211_hwsim: claim uAPSD support
+Date: Sun, 14 Jul 2013 23:57:20 +0300
+Message-Id: <1373835442-3322-2-git-send-email-johannes@sipsolutions.net> (sfid-20130714_225739_887322_90E7C0DF)
+In-Reply-To: <1373835442-3322-1-git-send-email-johannes@sipsolutions.net>
+References: <1373835442-3322-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and update the max EIRP. This also adds
-a new DFS 5 GHz band: 5490 - 5710 MHz.
+Since mac80211 does everything, we can just claim it.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- db.txt |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index 8e7fe8d..9043a3c 100644
---- a/db.txt
-+++ b/db.txt
-@@ -689,9 +689,10 @@ country SE: DFS-ETSI
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 11adae8..0a439f8 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2309,7 +2309,8 @@ static int __init init_mac80211_hwsim(void)
+ 			hw->flags |= IEEE80211_HW_SUPPORTS_RC_TABLE;
  
- country SG:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5735 - 5835 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
+ 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+-				    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
++				    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
++				    WIPHY_FLAG_AP_UAPSD;
  
- country SI: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
+ 		/* ask mac80211 to reserve space for magic */
+ 		hw->vif_data_size = sizeof(struct hwsim_vif_priv);
 -- 
-1.7.10.4
+1.8.0
 
