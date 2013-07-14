@@ -1,78 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:52268 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932809Ab3GLLY2 (ORCPT
+Received: from proofpoint-cluster.metrocast.net ([65.175.128.136]:57395 "EHLO
+	proofpoint-cluster.metrocast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752246Ab3GNN0o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 07:24:28 -0400
-Received: by mail-pd0-f172.google.com with SMTP id z10so8526025pdj.17
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jul 2013 04:24:27 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] iw: print out mesh configuration element on scan
-Date: Fri, 12 Jul 2013 19:17:06 +0800
-Message-Id: <1373627826-20095-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130712_132438_571196_5E2F7E64)
+	Sun, 14 Jul 2013 09:26:44 -0400
+Message-ID: <1373807844.4998.10.camel@palomino.walls.org> (sfid-20130714_152707_632069_3D836918)
+Subject: Re: [PATCH 00/50] USB: cleanup spin_lock in URB->complete()
+From: Andy Walls <awalls@md.metrocast.net>
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	linux-kernel@vger.kernel.org
+Date: Sun, 14 Jul 2013 09:17:24 -0400
+In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print out mesh configuration element which will be useful for
-decision making whether to join or not join the mesh network.
+On Thu, 2013-07-11 at 17:05 +0800, Ming Lei wrote:
+> Hi,
+> 
+> As we are going to run URB->complete() in tasklet context[1][2],
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- scan.c |   32 ++++++++++++++++++++++++++++++++
- 1 files changed, 32 insertions(+), 0 deletions(-)
+Hi,
 
-diff --git a/scan.c b/scan.c
-index 6d770d3..4fb0f23 100644
---- a/scan.c
-+++ b/scan.c
-@@ -787,6 +787,37 @@ static void print_bss_load(const uint8_t type, uint8_t len, const uint8_t *data)
- 	printf("\t\t * available admission capacity: %d [*32us]\n", (data[4] << 8) | data[3]);
- }
- 
-+static void print_mesh_conf(const uint8_t type, uint8_t len, const uint8_t *data)
-+{
-+	printf("\n");
-+	printf("\t\t * Active Path Selection Protocol ID: %d\n", data[0]);
-+	printf("\t\t * Active Path Selection Metric ID: %d\n", data[1]);
-+	printf("\t\t * Congestion Control Mode ID: %d\n", data[2]);
-+	printf("\t\t * Synchronization Method ID: %d\n", data[3]);
-+	printf("\t\t * Authentication Protocol ID: %d\n", data[4]);
-+	printf("\t\t * Mesh Formation Info:\n");
-+	printf("\t\t\t Number of Peerings: %d\n", (data[5] & 0x7E) >> 1);
-+	if (data[5] & 0x01)
-+		printf("\t\t\t Connected to Mesh Gate\n");
-+	if (data[5] & 0x80)
-+		printf("\t\t\t Connected to AS\n");
-+	printf("\t\t * Mesh Capability\n");
-+	if (data[6] & 0x01)
-+		printf("\t\t\t Accepting Additional Mesh Peerings\n");
-+	if (data[6] & 0x02)
-+		printf("\t\t\t MCCA Supported\n");
-+	if (data[6] & 0x04)
-+		printf("\t\t\t MCCA Enabled\n");
-+	if (data[6] & 0x08)
-+		printf("\t\t\t Forwarding\n");
-+	if (data[6] & 0x10)
-+		printf("\t\t\t MBCA Supported\n");
-+	if (data[6] & 0x20)
-+		printf("\t\t\t TBTT Adjusting\n");
-+	if (data[6] & 0x40)
-+		printf("\t\t\t Mesh Power Save Level\n");
-+}
-+
- struct ie_print {
- 	const char *name;
- 	void (*print)(const uint8_t type, uint8_t len, const uint8_t *data);
-@@ -846,6 +877,7 @@ static const struct ie_print ieprinters[] = {
- 	[192] = { "VHT operation", print_vht_oper, 5, 255, BIT(PRINT_SCAN), },
- 	[48] = { "RSN", print_rsn, 2, 255, BIT(PRINT_SCAN), },
- 	[50] = { "Extended supported rates", print_supprates, 0, 255, BIT(PRINT_SCAN), },
-+	[113] = { "MESH Configuration", print_mesh_conf, 7, 7, BIT(PRINT_SCAN), },
- 	[114] = { "MESH ID", print_ssid, 0, 32, BIT(PRINT_SCAN) | BIT(PRINT_LINK), },
- 	[127] = { "Extended capabilities", print_capabilities, 0, 255, BIT(PRINT_SCAN), },
- };
--- 
-1.7.0.4
+Please pardon my naivete, but why was it decided to use tasklets to
+defer work, as opposed to some other deferred work mechanism?
+
+It seems to me that getting rid of tasklets has been an objective for
+years:
+
+http://lwn.net/Articles/239633/
+http://lwn.net/Articles/520076/
+http://lwn.net/Articles/240054/
+
+
+Regards,
+Andy
+
+>  and
+> hard interrupt may be enabled when running URB completion handler[3],
+> so we might need to disable interrupt when acquiring one lock in
+> the completion handler for the below reasons:
+> 
+> - URB->complete() holds a subsystem wide lock which may be acquired
+> in another hard irq context, and the subsystem wide lock is acquired
+> by spin_lock()/read_lock()/write_lock() in complete()
+> 
+> - URB->complete() holds a private lock with spin_lock()/read_lock()/write_lock()
+> but driver may export APIs to make other drivers acquire the same private
+> lock in its interrupt handler.
+> 
+> For the sake of safety and making the change simple, this patch set
+> converts all spin_lock()/read_lock()/write_lock() in completion handler
+> path into their irqsave version mechanically.
+> 
+> But if you are sure the above two cases do not happen in your driver,
+> please let me know and I can drop the unnecessary change.
+> 
+> Also if you find some conversions are missed, also please let me know so
+> that I can add it in the next round.
+> 
+> 
+> [1], http://marc.info/?l=linux-usb&m=137286322526312&w=2
+> [2], http://marc.info/?l=linux-usb&m=137286326726326&w=2
+> [3], http://marc.info/?l=linux-usb&m=137286330626363&w=2
+> 
+[snip]
+> 
+> 
+> Thanks,
+> --
+> Ming Lei
+
 
