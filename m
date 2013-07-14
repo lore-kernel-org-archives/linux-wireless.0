@@ -1,90 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:55396 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932804Ab3GCOEg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 10:04:36 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>,
-	<nm@ti.com>
-Subject: [PATCH v3 3/8] wlcore: remove pwr_in_suspend from platform data
-Date: Wed, 3 Jul 2013 17:03:24 +0300
-Message-ID: <1372860209-3504-4-git-send-email-coelho@ti.com> (sfid-20130703_160620_995386_88961467)
-In-Reply-To: <1372860209-3504-1-git-send-email-coelho@ti.com>
-References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:34522 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007Ab3GNKvr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Jul 2013 06:51:47 -0400
+To: Cedric GROSS <cg@cgross.info>, Adrian Chadd <adrian@freebsd.org>
+Subject: RE: Firmware error for Centrino N 2230
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Sun, 14 Jul 2013 13:51:40 +0300
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: 'Emmanuel Grumbach' <egrumbach@gmail.com>,
+	'linux-wireless' <linux-wireless@vger.kernel.org>,
+	linux-wireless-owner@vger.kernel.org
+In-Reply-To: <000301ce8077$252f1830$6f8d4890$@info>
+ (sfid-20130714_114733_295326_9BBEA36B)
+References: "<001a01ce7fb1$75bfdc10$613f9430$@info>	<CA+icZUVoZkg3nT6=SwTaLCWoa+v6aLkXSP5b71a0GmxMMWOyHA@mail.gmail.com>	<001b01ce7fba$4bd15e20$e3741a60$@info>"
+ <CA+icZUX9jvAcvEkKSsN-KU2GWxPVGg9Z=soecwJtPL0soHD4Zw@mail.gmail.com>
+ <CANUX_P2K9_q_FnkzDrn4=Y3rzn3FvkPjCB4qGmts=7kni9oW4A@mail.gmail.com>
+ <000301ce8077$252f1830$6f8d4890$@info>
+ (sfid-20130714_114733_295326_9BBEA36B)
+Message-ID: <b04d657de9d7831febeff7b4ac8f371a@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The pwr_in_suspend flag depends on the MMC settings which can be
-retrieved from the SDIO subsystem, so it doesn't need to be part of
-the platform data structure.  Move it to the platform device data that
-is passed from SDIO to wlcore.
+> Many many many thanks. I will check that tomorrow.
+> 
+> FreeBSD driver for intel wireless card is a bit old and need a lot of
+> improvement to manage new NIC.
+> Is there a way to get all assert code meaning ? It could be really a 
+> big big
+> help for me.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c     |    2 +-
- drivers/net/wireless/ti/wlcore/sdio.c     |    2 +-
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    1 +
- include/linux/wl12xx.h                    |    1 -
- 4 files changed, 3 insertions(+), 3 deletions(-)
+Unfortunately not, but have you seen the "iwl" FreeBSD driver that we 
+posted a while ago? That should help you some. Are you in contact with 
+anyone else maybe?
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 7b5d0cc..aada037 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5952,7 +5952,7 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	if (!ret) {
- 		wl->irq_wake_enabled = true;
- 		device_init_wakeup(wl->dev, 1);
--		if (pdata->pwr_in_suspend)
-+		if (pdev_data->pwr_in_suspend)
- 			wl->hw->wiphy->wowlan = &wlcore_wowlan_support;
- 	}
- #endif
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 29ef249..4c7e8ac 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -260,7 +260,7 @@ static int wl1271_probe(struct sdio_func *func,
- 	dev_dbg(glue->dev, "sdio PM caps = 0x%x\n", mmcflags);
- 
- 	if (mmcflags & MMC_PM_KEEP_POWER)
--		pdev_data->pdata->pwr_in_suspend = true;
-+		pdev_data->pwr_in_suspend = true;
- 
- 	sdio_set_drvdata(func, glue);
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index e5e1464..f2c4227 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -209,6 +209,7 @@ struct wl1271_if_operations {
- struct wlcore_platdev_data {
- 	struct wl12xx_platform_data *pdata;
- 	struct wl1271_if_operations *if_ops;
-+	bool pwr_in_suspend;
- };
- 
- #define MAX_NUM_KEYS 14
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index 1bfcd19..ab90b1c 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -59,7 +59,6 @@ struct wl12xx_platform_data {
- 	int irq;
- 	int board_ref_clock;
- 	int board_tcxo_clock;
--	bool pwr_in_suspend;
- };
- 
- #ifdef CONFIG_WILINK_PLATFORM_DATA
--- 
-1.7.10.4
-
+johannes
