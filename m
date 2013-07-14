@@ -1,100 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:48584 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752358Ab3GGSNK (ORCPT
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:49325 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751923Ab3GNRpd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 14:13:10 -0400
-Message-ID: <51D9AFB2.2030707@lwfinger.net> (sfid-20130707_201332_745315_0B02D871)
-Date: Sun, 07 Jul 2013 13:13:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 14 Jul 2013 13:45:33 -0400
+Received: by mail-oa0-f53.google.com with SMTP id k14so14677947oag.40
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Jul 2013 10:45:32 -0700 (PDT)
 MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [PATCH] rtlwifi: Fix Kconfig for some corner cases
-References: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net> <1373190151.3428.13.camel@deadeye.wl.decadent.org.uk>
-In-Reply-To: <1373190151.3428.13.camel@deadeye.wl.decadent.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <51E1B6BB.7060903@gmail.com>
+References: <51E1B6BB.7060903@gmail.com>
+Date: Sun, 14 Jul 2013 19:45:31 +0200
+Message-ID: <CACna6rzERC7AZrJwLp0oP5xpjuJqvbi6SqyQPj4rQvhWSB3rTQ@mail.gmail.com> (sfid-20130714_194536_825364_803837A3)
+Subject: Re: Using CC BY-SA for wireless wiki content
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/07/2013 04:42 AM, Ben Hutchings wrote:
-> On Sat, 2013-07-06 at 21:47 -0500, Larry Finger wrote:
->>
->> Although I could not duplicate this result on my machine, it seemed likely
->> that it was due to the unusual configuration where rtlwifi was being built,
->> but none of its dependent drivers were selected.
+2013/7/13 Xose Vazquez Perez <xose.vazquez@gmail.com>:
+> Luis R. Rodriguez wrote:
 >
-> I think it just requires:
+>> Anyone have any issues if we license the wiki content on
+>> wireless.kernel.org under CC BY-SA license? That would make it
+>> compatible with  Wikipedia. Please shout out if you disagree with this
+>> move as at this point we have random collaborations but at least as
+>> per initial review it seems this would be a good idea. Want to see if
+>> anyone disagrees before we do the move.
 >
-> CONFIG_USB=m
-> CONFIG_RTLWIFI=y
+> No problem from my side.
 >
->> The fix is to select rtlwifi only when it is needed.
 >
-> I don't think so.  Consider this configuration:
+> waiting for the rest of http://wireless.kernel.org/TrustedEditorsGroup
 >
-> CONFIG_PCI=y
-> CONFIG_USB=m
-> CONFIG_RTL_CARDS=y
-> CONFIG_RTL8192CE=y
-> CONFIG_RTL8192CU=m
-> CONFIG_RTLWIFI=y     # maximum of RTL8192CE=y and RTL8192CU=m
->
-> The same breakage occurs.
+> JohannesBerg
+> Zajec
 
-Ben,
+According to the:
+> Please shout out if you disagree with this
+> move
 
-Thanks for your comments. I certainly do not claim to understand very much about 
-the whole Kbuild process.
+I believe some of us assumed:
+no shouting out == agreement
 
-After setting up the above configuration manually, I ran 'make oldconfig' and 
-got back
+I'm totally OK with that.
 
-CONFIG_RTL_CARDS=m
-CONFIG_RTL8192CE=m
-CONFIG_RTL8192SE=m
-CONFIG_RTL8192DE=m
-CONFIG_RTL8723AE=m
-CONFIG_RTL8188EE=m
-CONFIG_RTL8192CU=m
-CONFIG_RTLWIFI=m
-CONFIG_RTLWIFI_DEBUG=y
-CONFIG_RTL8192C_COMMON=m
-
-That set of configuration parameters built normally.
-
->> While making this
->> change, I simplified the configuration so that variable RTLWIFI is never seen
->> by the user.
-> [...]
->
-> This will break existing configurations as RTL_CARDS defaults to n.
-
-I added a 'default y' to the RTL_CARDS stanza. I now get the following:
-
-finger@larrylap:~/staging> make
-scripts/kconfig/conf --silentoldconfig Kconfig
-*
-* Restart config...
-*
-*
-* Realtek rtlwifi family of devices
-*
-Realtek rtlwifi family of devices (RTL_CARDS) [M/n/?] (NEW)
-
-That should prevent breakage of existing configurations. It defaults to "m" 
-because mac80211 is built as a module in my configuration.
-
-> Perhaps you should introduce separate modules for the common PCI and USB
-> support code, similarly to how the rt2x00 modules are organised.
-
-That would not be very difficult, but it would involve converting the single 
-module rtlwifi into 3 separate entities. Does that make sense to you? I'm not sure.
-
-Thanks again for your comments.
-
-Larry
-
-
-
+-- 
+Rafał
