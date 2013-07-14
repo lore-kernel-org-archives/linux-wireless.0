@@ -1,149 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:64740 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753123Ab3G1Fug (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Jul 2013 01:50:36 -0400
-Received: from [192.168.2.102] ([93.218.71.62]) by mail.gmx.com (mrgmx001)
- with ESMTPSA (Nemesis) id 0M936L-1Uvs980DnR-00CTWf for
- <linux-wireless@vger.kernel.org>; Sun, 28 Jul 2013 07:50:35 +0200
-Message-ID: <51F4B128.3010901@rempel-privat.de> (sfid-20130728_075040_839092_6FA46A5C)
-Date: Sun, 28 Jul 2013 07:50:32 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from youngberry.canonical.com ([91.189.89.112]:33655 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752521Ab3GNOdr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Jul 2013 10:33:47 -0400
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: FUSB200 xhci issue
-References: <51ED4E12.8030006@rempel-privat.de> <2119509.Av8Iiax5KF@blech> <51EFAE83.7010902@rempel-privat.de> <5176750.ryksn4nuMW@blech>
-In-Reply-To: <5176750.ryksn4nuMW@blech>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1373807844.4998.10.camel@palomino.walls.org>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	<1373807844.4998.10.camel@palomino.walls.org>
+Date: Sun, 14 Jul 2013 22:33:44 +0800
+Message-ID: <CACVXFVPjkUwpnDCeC+y_eczGuen=qu+g74V__SXFCidPp+QYMw@mail.gmail.com> (sfid-20130714_163409_468162_F0C8CF94)
+Subject: Re: [PATCH 00/50] USB: cleanup spin_lock in URB->complete()
+From: Ming Lei <ming.lei@canonical.com>
+To: Andy Walls <awalls@md.metrocast.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 27.07.2013 23:59, schrieb Christian Lamparter:
-> On Wednesday, July 24, 2013 12:37:55 PM Oleksij Rempel wrote:
->> Am 23.07.2013 20:26, schrieb Christian Lamparter:
->>> On Tuesday, July 23, 2013 06:59:46 AM Oleksij Rempel wrote:
->>>> Am 22.07.2013 23:23, schrieb Christian Lamparter:
->>>>> On Monday, July 22, 2013 10:47:41 PM Oleksij Rempel wrote:
->>>>>> Am 22.07.2013 21:54, schrieb Christian Lamparter:
->>>>>>> Hello!
->>>>>>>
->>>>>>> On Monday, July 22, 2013 05:21:54 PM Oleksij Rempel wrote:
->>>>>>>> i'm one of ath9k_htc devs. Currently i'm working on usb_suspend issue of
->>>>>>>> this adapters. Looks like ar9271 and ar7010 have FUSB200, and i
->>>>>>>> accidentally discovered that 9170 have it too. Are there any issue with
->>>>>>>> usb-suspend + xhci controllers by you? Did you some how specially
->>>>>>>> handled it?
->>>>>>>
->>>>>>> No, I haven't heard any complains about xhci + suspend. In fact,
->>>>>>> it's working fine with the NEC xhci I have. I also have a AR9271
->>>>>>> and AR7010, so if you want I could try if they survive a suspend
->>>>>>> +resume cycle when attached.
->>>>>>>
->>>>>>> But, I do have a bug-report from someone else who has/had? problems
->>>>>>> with carl9170 and xhci. If you want, you can get the details from:
->>>>>>> "carl9170 A-MPDU transmit problem":
->>>>>>> <http://comments.gmane.org/gmane.linux.kernel.wireless.general/104597>
->>>>>>>
->>>>>>> The likely cause is related to Intel's xhci silicon (Ivy Bridge is
->>>>>>> affected, but I don't know about Haswell):
->>>>>>> <http://permalink.gmane.org/gmane.linux.kernel.wireless.general/104602>
->>>>>>
->>>>>> Same situation is here - i have problem on Ivy Bridge.
->>>>> (Note: I don't have any Ivy Bridge system. Just Sandy Bridge
->>>>> and AMD's new A6-1450 Temash and both xhci work. So I can't
->>>>> do any proper comparisons like you.)
->>>>>
->>>>>> Steps to reproduce:
->>>>>> - plug adapter. Module and firmware will be loaded
->>>>>> - make sure usb autosupend is enabled. By default it is not! Use
->>>>>> powertop or directly sysfs to enable autosuspend for this device
->>>>>> - rmmod .... and wait some seconds until adapter is suspended and then
->>>>>> modprobe ath9k_htc
->>>>
->>>>>> first packet which is bigger as 64Byte will kill EP4 FIFO. Size register
->>>>>> will report wrong size.. bigger as FIFO can handle. And only first ~40
->>>>>> readet bytes will be actually OK.. all the rest of packet will be trashed.
->>>>>
->>>>> This is what happens with a WN721 (ar9271):
->>>>>
->>>>> [17619.597905] usbcore: deregistering interface driver ath9k_htc
->>>>> [17619.679549] usb 2-2: ath9k_htc: USB layer deinitialized
->>>>> [17619.679602] ath9k_htc: Driver unloaded
->>>>> <suspend>
->>>>>
->>>>> <resume>
->>>>> [17667.543024] usb 2-2: reset high-speed USB device number 3 using xhci_hcd <----
->>>>> [17667.572168] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77600
->>>>> [17667.572174] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77640
->>>>> [17667.572177] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77680
->>>>> [17667.572180] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa776c0
->>>>> [17667.572183] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77700
->>>>> [17667.572185] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77740
->>>>> [17667.573826] usb 2-2: ath9k_htc: Firmware htc_9271.fw requested
->>>>> [17667.573873] usbcore: registered new interface driver ath9k_htc
->>>>> [17668.038200] usb 2-2: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
->>>>> [17668.273249] ath9k_htc 2-2:1.0: ath9k_htc: HTC initialized with 33 credits
->>>>>
->>>>> The driver loads, but there's no "wlanX" interface, no phyX interface
->>>>> and the driver can't be unloaded due to "Error: Module ath9k_htc is in use".
->>>>
->>>> So, it is exactly this bug.
->>>> After firmware was loaded ath9k trying to set some registers. Since
->>>> command buffer is trashed it will write some nonsense to registers and
->>>> some times in wrong to wrong addresses. I have some patches to do crc
->>>> check of commands, to easy detect corrupted ones.
->>>>
->>>> You reproduced it on NEC xhci? Is it possible to reproduce it in
->>>> carl9170?
->>>
->>> Ok: That's dmesg of your scenario:
->>>
->>> [  809.995966] usbcore: deregistering interface driver carl9170
->>> <suspend>
->>>
->>> <resume>
->>> [  826.365596] usb 2-2: reset high-speed USB device number 2 using xhci_hcd
->>> [  826.431154] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88045af2b900
->>> [  826.431159] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88045af2b940
->>> [  826.431162] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88045af2b980
->>> [  826.431164] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88045af2b9c0
->>> [  826.432257] usbcore: registered new interface driver carl9170
->>> [  826.433717] usb 2-2: driver   API: 1.9.8 2013-03-23 [1-1]
->>> ...
->>> [  826.816110] usb 2-2: Atheros AR9170 is registered as 'phy3'
->>>
->>> carl9170 is able to recover and the stick is working after autosuspend cycle.
+On Sun, Jul 14, 2013 at 9:17 PM, Andy Walls <awalls@md.metrocast.net> wrote:
+> On Thu, 2013-07-11 at 17:05 +0800, Ming Lei wrote:
+>> Hi,
 >>
->> Thank you for your tests. USB configuration and handlers look similar on
->> this two firmwares. May be problem is not in FUSB200 and it is clock
->> related issue so carl9170 do not need reset. - I don't know :(
->>
->> Can you please test this branch:
->> https://github.com/olerem/open-ath9k-htc-firmware/commits/next
->> There is a workaround to reset adapter, right after this bug is
->> detected. It is really dirty hack, but currently i do not know how to
->> fix this bug on xhci or on ath9k-htc side.
->>
-> Is it still Saturday?
+>> As we are going to run URB->complete() in tasklet context[1][2],
 >
-> Anyway, I tried the -next branch.
+> Hi,
 >
-> commit dbbb809d592dde0b3c9ecb97b3b387ff8e40e799
-> Author: Oleksij Rempel <linux@rempel-privat.de>
-> Date:   Wed Jul 24 10:26:18 2013 +0200
+> Please pardon my naivete, but why was it decided to use tasklets to
+> defer work, as opposed to some other deferred work mechanism?
 >
->      k2_fw_usb_api: workaround for EP4 bug.
+> It seems to me that getting rid of tasklets has been an objective for
+> years:
 >
-> but still, the device won't show up after autosuspend.
+> http://lwn.net/Articles/239633/
+> http://lwn.net/Articles/520076/
+> http://lwn.net/Articles/240054/
 
-Hm... firmware probably didn't rebooted before suspend. Did interface 
-was up, before autosuspend? If no, you need latest wireles-testing - 
-there are patches to handle this issue. Or just make "ifconfig wlan1 up" 
-  before  rmmod.
-If it was up... then i would need last log messages from firmware.. If 
-there is some way to attach to uart pins on it.
+We discussed the problem in the below link previously[1], Steven
+and Thomas suggested to use threaded irq handler, but which
+may degrade USB mass storage performance, so we have to
+take tasklet now until we rewrite transport part of USB mass storage
+driver.
 
--- 
-Regards,
-Oleksij
+Also the conversion[2] has avoided the tasklet spin lock problem
+already.
+
+
+[1], http://marc.info/?t=137079119200001&r=1&w=2
+[2], http://marc.info/?l=linux-usb&m=137286326726326&w=2
+
+
+Thanks,
+--
+Ming Lei
