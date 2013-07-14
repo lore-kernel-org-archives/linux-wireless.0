@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31514 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750736Ab3GJHyZ convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:43266 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753374Ab3GNWy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 03:54:25 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Henrik Ahlgren <pablo@seestieto.com>
-CC: Ben Hutchings <ben@decadent.org.uk>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"debian-backports@lists.debian.org"
-	<debian-backports@lists.debian.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sergey Frolov <dunkan.aidaho@gmail.com>
-Subject: RE: [Ilw] Re: Performance regression in firmware-iwlwifi
- 0.38~bpo70+1
-Date: Wed, 10 Jul 2013 07:53:57 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301A000F7@HASMSX103.ger.corp.intel.com> (sfid-20130710_095428_801703_C9F75CC9)
-References: <20130709153104.20718ebb@thinkpad>
- <1373425655.24446.7.camel@deadeye.wl.decadent.org.uk>
- <0BA3FCBA62E2DC44AF3030971E174FB3019FFDBF@HASMSX103.ger.corp.intel.com>
- <20130710074930.GE11186@seestieto.com>
-In-Reply-To: <20130710074930.GE11186@seestieto.com>
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 14 Jul 2013 18:54:57 -0400
+Received: by mail-ob0-f172.google.com with SMTP id wo10so13331194obc.31
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Jul 2013 15:54:56 -0700 (PDT)
+Message-ID: <51E32C3D.4080103@lwfinger.net> (sfid-20130715_005527_129229_32D81979)
+Date: Sun, 14 Jul 2013 17:54:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Using CC BY-SA for wireless wiki content
+References: <51E1B6BB.7060903@gmail.com>
+In-Reply-To: <51E1B6BB.7060903@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Just to make sure I properly understand what you are saying here: only the
-> firmware is changed? Not the driver?
-> 
-> BTW, in my Thinkpad x21e (Intel Wireless-N 1000) I've noticed a very
-> high (~80%+) CPU utilization by the "irq/42-iwlwifi" kernel process
-> with the 3.9.x series kernel (self-built from upstream GIT sources)
-> and 3.10. Not sure in what exact 3.9 version this behaviour
-> started. I'm using the standard 0.36+wheezy.1 (non-free) version of
-> firmware-iwlwifi.
+On 07/13/2013 03:21 PM, Xose Vazquez Perez wrote:
+> Luis R. Rodriguez wrote:
+>
+>> Anyone have any issues if we license the wiki content on
+>> wireless.kernel.org under CC BY-SA license? That would make it
+>> compatible with  Wikipedia. Please shout out if you disagree with this
+>> move as at this point we have random collaborations but at least as
+>> per initial review it seems this would be a good idea. Want to see if
+>> anyone disagrees before we do the move.
+>
+> No problem from my side.
+>
+>
+> waiting for the rest of http://wireless.kernel.org/TrustedEditorsGroup
+>
+> JohannesBerg
+> Zajec
+> AlbertPool
+> blubber
+> SeanSantos
+> Nick Lee
+> HaukeMehrtens
+> gabs
+> aspriel
+> ChandrakantSharpa
+> WimLewis
+> PaterStein
+> LarryFinger
 
-For CPU utilization:
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi.git/commit/?id=01911dab97cb3e21e640aaca82689acec00ed848
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi.git/commit/?id=68972c46f2975d3d61f9dc9f311f77bfc8a8b12b
+No problem for me.
 
+Larry
+
+> KalleValo
+> Yuryu
+> John Linville
+> David Wang
+> Christian Lamparter
+> LucianoCoelho
+> ZefirKurtisi
+> nbd
+> kevin
+> BuZZ-dEE
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
