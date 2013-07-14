@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:64069 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753935Ab3GDBG5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36660 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753237Ab3GNU5c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:06:57 -0400
-Received: by mail-pd0-f170.google.com with SMTP id x11so592948pdj.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:57 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 28/53] wireless-regdb: IE, Ireland - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:24 -0700
-Message-Id: <1372899889-19183-29-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032039_688700_8474FAE4)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Sun, 14 Jul 2013 16:57:32 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] mac80211: make active monitor injection work w/ HW queue
+Date: Sun, 14 Jul 2013 23:57:22 +0300
+Message-Id: <1373835442-3322-4-git-send-email-johannes@sipsolutions.net> (sfid-20130714_225741_080795_4A2BE9F0)
+In-Reply-To: <1373835442-3322-1-git-send-email-johannes@sipsolutions.net>
+References: <1373835442-3322-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+When a driver (like hwsim) uses HW queue control an
+active monitor vif needs to be used for the queues,
+make the code do that. Otherwise we'd bail out and
+drop the frames.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/tx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index 7077b53..88ba709 100644
---- a/db.txt
-+++ b/db.txt
-@@ -384,9 +384,9 @@ country ID:
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f82301b..be4d3ca 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1272,6 +1272,10 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
  
- country IE: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MONITOR:
++		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
++			vif = &sdata->vif;
++			break;
++		}
+ 		sdata = rcu_dereference(local->monitor_sdata);
+ 		if (sdata) {
+ 			vif = &sdata->vif;
 -- 
-1.7.10.4
+1.8.0
 
