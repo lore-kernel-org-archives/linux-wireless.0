@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54232 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757215Ab3GLICQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 04:02:16 -0400
-Message-ID: <1373616129.8205.2.camel@jlt4.sipsolutions.net> (sfid-20130712_100233_296953_3C6AE61C)
-Subject: Re: interested in py80211?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 12 Jul 2013 10:02:09 +0200
-In-Reply-To: <51D49027.9010803@broadcom.com> (sfid-20130703_225725_898124_EAB997AB)
-References: <51D49027.9010803@broadcom.com>
-	 (sfid-20130703_225725_898124_EAB997AB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52811 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753129Ab3GNTaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Jul 2013 15:30:05 -0400
+Message-ID: <51E2FC31.7060106@hauke-m.de> (sfid-20130714_213019_584323_41112108)
+Date: Sun, 14 Jul 2013 21:29:53 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Using CC BY-SA for wireless wiki content
+References: <51E1B6BB.7060903@gmail.com>
+In-Reply-To: <51E1B6BB.7060903@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yep, I'd totally be interested. Not that I don't have enough things on
-my plate already ;-)
+On 07/13/2013 10:21 PM, Xose Vazquez Perez wrote:
+> Luis R. Rodriguez wrote:
+> 
+>> Anyone have any issues if we license the wiki content on
+>> wireless.kernel.org under CC BY-SA license? That would make it
+>> compatible with  Wikipedia. Please shout out if you disagree with this
+>> move as at this point we have random collaborations but at least as
+>> per initial review it seems this would be a good idea. Want to see if
+>> anyone disagrees before we do the move.
+> 
+> No problem from my side.
+> 
+> 
+> waiting for the rest of http://wireless.kernel.org/TrustedEditorsGroup
+> 
+> JohannesBerg
+> Zajec
+> AlbertPool
+> blubber
+> SeanSantos
+> Nick Lee
+> HaukeMehrtens
 
-On Wed, 2013-07-03 at 22:57 +0200, Arend van Spriel wrote:
-> A common say in Linux arena is "when you have an itch, just scratch it".
+I am fine with changing the License to CC BY-SA.
 
-:-)
-
-> My itch is that tools like ifconfig and iw are great, but in an 
-> automated test environment it kind of sucks to parse output, which is 
-> confirmed by blurb from iw: "Do NOT screenscrape this tool, we don't 
-> consider its output stable.".
-
-Heh, yeah ...
-
-> Ever since my first contact with Python I tend to favor it over other 
-> scripting alternatives so I decided to scratch my itch with that and 
-> another old acquaintance called SWIG. With those I went to create 
-> py80211. A first attempt was to have SWIG create a wrapper API directly 
-> exposing the libnl-3 API, but that did not feel comfortable in a 
-> scripting environment. So the level of abstraction is a bit higher. It 
-> is just in a kick-off state (eg. can only send u32 attributes), but I 
-> decided to push it to github anyway.
-
-Another approach might be exposing the libnl APIs and then build a
-higher-level library in python. Have you considered that? That might
-make it useful to other users of netlink as well, while keeping a 'nice'
-nl80211 API?
-
-johannes
+> gabs
+> aspriel
+> ChandrakantSharpa
+> WimLewis
+> PaterStein
+> LarryFinger
+> KalleValo
+> Yuryu
+> John Linville
+> David Wang
+> Christian Lamparter
+> LucianoCoelho
+> ZefirKurtisi
+> nbd
+> kevin
+> BuZZ-dEE
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
