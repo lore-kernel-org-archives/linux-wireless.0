@@ -1,86 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:56002 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754030Ab3GJDHq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 23:07:46 -0400
-Message-ID: <1373425655.24446.7.camel@deadeye.wl.decadent.org.uk> (sfid-20130710_050749_308268_6258F5FC)
-Subject: Re: Performance regression in firmware-iwlwifi 0.38~bpo70+1
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Intel Linux Wireless <ilw@linux.intel.com>
-Cc: debian-backports@lists.debian.org,
-	Sergey Frolov <dunkan.aidaho@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Jul 2013 04:07:35 +0100
-In-Reply-To: <20130709153104.20718ebb@thinkpad>
-References: <20130709153104.20718ebb@thinkpad>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-/KgZHHnaumr6ckjs4Ylw"
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:58017 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755976Ab3GOLqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 07:46:51 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH RESEND 3.9 3/4] iwlwifi: mvm: adjust firmware D3 configuration API
+Date: Mon, 15 Jul 2013 14:46:43 +0300
+Message-Id: <1373888804-3077-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134657_803135_31AEA59B)
+In-Reply-To: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---=-/KgZHHnaumr6ckjs4Ylw
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+commit dfcb4c3aacedee6838e436fb575b31e138505203 upstream.
 
-On Tue, 2013-07-09 at 15:31 +0300, Sergey Frolov wrote:
-> Hello.
->=20
-> I would like to report a performance regression in the
-> firmware-iwlwifi 0.38~bpo70+1 package.
-> After installing it and reloading iwlwifi with a new firmware
-> iwlwifi-6000g2a-6.ucode, my adapter "Intel Corporation Centrino
-> Advanced-N 6205 [Taylor Peak] (rev 34)" can manage only about 200 kb/s
-> DL speed tops regardless of power saving options.
+The D3 firmware API changed to include a new field, adjust
+the driver to it to avoid getting an NMI when configuring.
 
-This package has version 18.168.6.1 of this firmware.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> Reverting to 0.36+wheezy.1 and reloading module with
-> iwlwifi-6000g2a-5.ucode resolves the issue. The AP is located in the
-> same room, it's an old 2.4Ghz 11g ASUS WL-320gE access point,
-> configured with wpa-psk encryption.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
+index cf6f9a0..937665f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
+@@ -75,13 +75,15 @@ enum iwl_d3_wakeup_flags {
+  * struct iwl_d3_manager_config - D3 manager configuration command
+  * @min_sleep_time: minimum sleep time (in usec)
+  * @wakeup_flags: wakeup flags, see &enum iwl_d3_wakeup_flags
++ * @wakeup_host_timer: force wakeup after this many seconds
+  *
+  * The structure is used for the D3_CONFIG_CMD command.
+  */
+ struct iwl_d3_manager_config {
+ 	__le32 min_sleep_time;
+ 	__le32 wakeup_flags;
+-} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_3 */
++	__le32 wakeup_host_timer;
++} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_4 */
+ 
+ 
+ /* TODO: OFFLOADS_QUERY_API_S_VER_1 */
+-- 
+1.7.10.4
 
-This has version 17.168.5.3.
-
-> I am using linux-image-3.9-0.bpo.1-amd64 kernel from backports.
-
-This is based on Linux 3.9.6.
-
-> If you need any more info, please CC me, as I am not subscribed to this
-> list.
-
-Do you recognise this bug?  Can you suggest any diagnostic information
-Sergey can provide?
-
-Ben.
-
---=20
-Ben Hutchings
-It is easier to write an incorrect program than to understand a correct one=
-.
-
---=-/KgZHHnaumr6ckjs4Ylw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUdzP9+e/yOyVhhEJAQo7ehAA0pVVnbDDF8MJFR3hABarE7BHMb8qaKeX
-n3wyBeITNIX7rVj7nzCqFZa0fqrNeOiy0vL6e3qPunhnYXPHMCdt00XhjRQSorii
-YM+Lt4EJwrCfpz59PIqKUQGLrgHOjDL7jVdgCneeADjA4JfLDJ7GOrt3Pn15NHIt
-YkDyg1DrEBTctQIqno4LqjiBCkTHAdMz2DyVqsquaN7WZJXrOyiuXENVAumo5ZpX
-n6yVUiGBGyEIKz97SEufyvJ6iiv4jRaudENhv4mMiCB7fsDlOydiHuYiKOFjmKeS
-aG0bl5qeJOs6fu8YjncDZb5fhrHcfuCb5vTX98L3JTztGUxuxN0/udH2Moq5nqeA
-cIYdZItEJOmptr1ohAGEoLncf7cvXaiWvS6h+NR7ldWMoY8VhYEfaP8Tm0qTb5c+
-HDZ4rQENYVEQ5fTJVkdz0IiVDfYZnnRs9HFU/T0VsvWZiISdWt7jmSZwr8o+USgo
-jnWNuwAm8fK/dpjqUOIBGBY40+l9/PidOEfXJGZ6AYCpGd83ayzaLTPj61Dbgq8Z
-l4xh2nbvGHXLcF0qmEsyvxq0gsTrLT2JDF8LHfMcN5eriXHXFxzei0uNB/d+g/SR
-v/EGSKJeJpZegAkXVeQqpIKQvFkImfZF5J+rs30a8wh5UTlgGJGjhm6avuwjcPmP
-t39xtDysRs0=
-=QL/p
------END PGP SIGNATURE-----
-
---=-/KgZHHnaumr6ckjs4Ylw--
