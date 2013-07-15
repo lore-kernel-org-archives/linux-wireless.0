@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:59373 "EHLO mail.ispras.ru"
+Received: from nbd.name ([46.4.11.11]:59172 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754818Ab3GAUoQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 16:44:16 -0400
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] ath9k_htc: fix data race between request_firmware_nowait() callback and suspend()
-Date: Tue,  2 Jul 2013 00:43:42 +0400
-Message-Id: <1372711422-4604-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130701_224432_086877_B5C59064)
+	id S1756210Ab3GOMfK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 08:35:10 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, krzysiek@podlesie.net
+Subject: [PATCH 3.11] mac80211/minstrel: fix NULL pointer dereference issue
+Date: Mon, 15 Jul 2013 14:35:06 +0200
+Message-Id: <1373891706-1071-1-git-send-email-nbd@openwrt.org> (sfid-20130715_143514_916258_8E3B7A08)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_hif_usb_probe() requests firmware asynchronically and
-there is some initialization postponed till firmware is ready.
-In particular, ath9k_hif_usb_firmware_cb() callback initializes
-hif_dev->tx.tx_buf and hif_dev->tx.tx_pending lists.
+When priv_sta == NULL, mi->prev_sample is dereferenced too early. Move
+the assignment further down, after the rate_control_send_low call.
 
-At the same time, ath9k_hif_usb_suspend() iterates that lists through
-ath9k_hif_usb_dealloc_urbs(). If suspend happens before request_firmware_nowait()
-callback is called, it can lead to oops.
-
-Similar issue could be in ath9k_hif_usb_disconnect(), but it is prevented
-using hif_dev->fw_done completion and HIF_USB_READY flag. The patch extends
-this approach to suspend() as well.
-
-Found by Linux Driver Verification project (linuxtesting.org).
-
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Reported-by: Krzysztof Mazur <krzysiek@podlesie.net>
+Cc: stable@vger.kernel.org # 3.10
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ net/mac80211/rc80211_minstrel.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index f5dda84..fcd9aa5 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -1076,7 +1076,7 @@ static void ath9k_hif_usb_firmware_fail(struct hif_device_usb *hif_dev)
- 	struct device *dev = &hif_dev->udev->dev;
- 	struct device *parent = dev->parent;
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index ac7ef54..e6512e2 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -290,7 +290,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	struct minstrel_rate *msr, *mr;
+ 	unsigned int ndx;
+ 	bool mrr_capable;
+-	bool prev_sample = mi->prev_sample;
++	bool prev_sample;
+ 	int delta;
+ 	int sampling_ratio;
  
--	complete(&hif_dev->fw_done);
-+	complete_all(&hif_dev->fw_done);
+@@ -314,6 +314,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 			(mi->sample_count + mi->sample_deferred / 2);
  
- 	if (parent)
- 		device_lock(parent);
-@@ -1125,7 +1125,7 @@ static void ath9k_hif_usb_firmware_cb(const struct firmware *fw, void *context)
- 
- 	release_firmware(fw);
- 	hif_dev->flags |= HIF_USB_READY;
--	complete(&hif_dev->fw_done);
-+	complete_all(&hif_dev->fw_done);
- 
- 	return;
- 
-@@ -1310,7 +1310,10 @@ static int ath9k_hif_usb_suspend(struct usb_interface *interface,
- 	if (!(hif_dev->flags & HIF_USB_START))
- 		ath9k_htc_suspend(hif_dev->htc_handle);
- 
--	ath9k_hif_usb_dealloc_urbs(hif_dev);
-+	wait_for_completion(&hif_dev->fw_done);
-+
-+	if (hif_dev->flags & HIF_USB_READY)
-+		ath9k_hif_usb_dealloc_urbs(hif_dev);
- 
- 	return 0;
- }
+ 	/* delta < 0: no sampling required */
++	prev_sample = mi->prev_sample;
+ 	mi->prev_sample = false;
+ 	if (delta < 0 || (!mrr_capable && prev_sample))
+ 		return;
 -- 
-1.8.1.2
+1.8.0.2
 
