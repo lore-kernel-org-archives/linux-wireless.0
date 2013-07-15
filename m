@@ -1,42 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:40595 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756153Ab3GEQoX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 12:44:23 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: 'Daniel Drake' <dsd@laptop.org>
-CC: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Fri, 5 Jul 2013 09:43:24 -0700
-Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951035636353@SC-VEXCH1.marvell.com> (sfid-20130705_184426_947361_53338228)
-In-Reply-To: <CAMLZHHQuHAZGW0M0qhQi5PoCW78jgF8rw2ZsmbApT2REBRXZtA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from cpe-075-189-159-031.nc.res.rr.com ([75.189.159.31]:58121 "EHLO
+	jgpicker.rdu.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751853Ab3GORau (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 13:30:50 -0400
+From: John Greene <jogreene@redhat.com>
+To: linville@tuxdriver.com
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org
+Subject: [PATCH v3] brcmsmac: Further reduce log spam from tx phy messages
+Date: Mon, 15 Jul 2013 13:30:35 -0400
+Message-Id: <1373909435-29811-1-git-send-email-jogreene@redhat.com> (sfid-20130715_193053_424106_5DCA54EC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Relegate 2 phy messages to debug status as they create excessive
+log spam, noted in multiple bugzillas for brcmsmac v3.8 and up.
+This is a follow on to net-next 99e94940697adec4f84758adb2db71f4a82c7ba5:
+brcmsmac: Reduce log spam in heavy tx, make err print in debug
 
-Hi Daniel,
+ brcmsmac bcma0:0: phyerr 0x10, rate 0x14
+ brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete:
+ampdu tx phy error (0x10)
 
->I don't see any external reason why we are not allowed to communicate to
->the hardware here. The other suspend paths do run some communication.
+Signed-off-by: John Greene <jogreene@redhat.com>
 
-The reason is mwifiex_sdio_remove() gets called even if user removes an externally connected wifi card. In that case the hardware is not present so there is no point in reading/writing hardware registers.
+ver 2: Two trivial whitespace fixes.
+ver 3: My ver 2 comment in wrong place.
+---
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c | 6 +++---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c  | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-If mwifiex_sdio_remove() is called when card is not powered off or unplugged, we do take care of hardware de-initialization using user_rmmod flag. Interrupt storm issue doesn't exist there.
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index bd98285..fa391e4 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -928,9 +928,9 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 			}
+ 		} else if (txs->phyerr) {
+ 			update_rate = false;
+-			brcms_err(wlc->hw->d11core,
+-				  "%s: ampdu tx phy error (0x%x)\n",
+-				  __func__, txs->phyerr);
++			brcms_dbg_ht(wlc->hw->d11core,
++				     "%s: ampdu tx phy error (0x%x)\n",
++				     __func__, txs->phyerr);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 9fd6f2f..7ca10bf 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -882,8 +882,8 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 	mcl = le16_to_cpu(txh->MacTxControlLow);
+ 
+ 	if (txs->phyerr)
+-		brcms_err(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
+-			  txs->phyerr, txh->MainRates);
++		brcms_dbg_tx(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
++			     txs->phyerr, txh->MainRates);
+ 
+ 	if (txs->frameid != le16_to_cpu(txh->TxFrameID)) {
+ 		brcms_err(wlc->hw->d11core, "frameid != txh->TxFrameID\n");
+-- 
+1.7.11.7
 
->However, disabling interrupts at this point does seem like a bad
->solution to me, and something that would come back and bite us in the
->future. mwifiex_sdio_suspend() is not directly related to the cause of
->the problem.
-
-This approach looks correct to me. While returning failure in suspend handler, 'pm_flag & MMC_PM_KEEP_POWER' is false. Card is going to be powered off soon. There won't be any further communication with card, so disabling interrupts at this point of time is logical.
-When system is resumed, bus rescan etc. will happen and card will be redetected.
-
-Can you please try this change?
-
-Thanks and regards,
-Amitkumar Karwar
