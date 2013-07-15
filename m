@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:51238 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCVy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:21:54 -0400
-Received: by mail-pa0-f47.google.com with SMTP id kl14so1420822pab.6
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:53 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 36/53] wireless-regdb: SE, Sweden - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:25 -0700
-Message-Id: <1374027522-18488-37-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042158_567923_A34DA353)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga03.intel.com ([143.182.124.21]:58017 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755976Ab3GOLqs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 07:46:48 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH RESEND 3.9 1/4] iwlwifi: mvm: don't use cts to self
+Date: Mon, 15 Jul 2013 14:46:41 +0300
+Message-Id: <1373888804-3077-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134654_038592_A0DE3BB5)
+In-Reply-To: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Dor Shaish <dor.shaish@intel.com>
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+commit cc7ee2bab3d90b0a09651dcfa2d0c9ec1a115bc8  upstream.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+The current fw doesn't currently support cts to self. There
+is a bug in the fw that prevents us from using cts to self.
+Use full protection (including RTS) for now.
 
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Dor Shaish <dor.shaish@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index bf4eea1..ab718f3 100644
---- a/db.txt
-+++ b/db.txt
-@@ -682,9 +682,9 @@ country SA:
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index bf76b17..864cd6d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -553,9 +553,9 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ 	if (vif->bss_conf.qos)
+ 		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
  
- country SE: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++	/* Don't use cts to self as the fw doesn't support it currently. */
+ 	if (vif->bss_conf.use_cts_prot)
+-		cmd->protection_flags |= cpu_to_le32(MAC_PROT_FLG_TGG_PROTECT |
+-						     MAC_PROT_FLG_SELF_CTS_EN);
++		cmd->protection_flags |= cpu_to_le32(MAC_PROT_FLG_TGG_PROTECT);
  
+ 	/*
+ 	 * I think that we should enable these 2 flags regardless the HT PROT
 -- 
 1.7.10.4
 
