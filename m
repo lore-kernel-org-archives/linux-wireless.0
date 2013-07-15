@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:65257 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131Ab3GBCTA (ORCPT
+Received: from fep19.mx.upcmail.net ([62.179.121.39]:42574 "EHLO
+	fep19.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755476Ab3GOTzh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 22:19:00 -0400
-From: Harvey Yang <harvey.huawei.yang@gmail.com>
-To: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Huawei Yang <harvey.huawei.yang@gmail.com>
-Subject: [PATCH V2 1/1] mwifiex: add tx info to skb when forming mgmt frame
-Date: Tue,  2 Jul 2013 10:18:46 +0800
-Message-Id: <1372731526-2979-1-git-send-email-harvey.huawei.yang@gmail.com> (sfid-20130702_041944_365811_1C91FFB6)
+	Mon, 15 Jul 2013 15:55:37 -0400
+Message-ID: <51E4501D.3010001@odi.ch> (sfid-20130715_215554_162803_18C9D239)
+Date: Mon, 15 Jul 2013 21:40:13 +0200
+From: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
+MIME-Version: 1.0
+To: linux-kernel@vger.kernel.org, sgruszka@redhat.com,
+	linux-wireless@vger.kernel.org
+Subject: [BUG] 3.10 regression: hang on suspend
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Huawei Yang <harvey.huawei.yang@gmail.com>
+Hi,
 
-In function 'mwifiex_write_data_complete' it need tx info to find
-the mwifiex_private to updates statistics and wake up tx queues.
-Or we may trigger tx queues timeout when transmitting lots of mgmt
-frames.
+My Samsung ultrabook hangs when suspending to RAM since this commit (bisected). 
+Disabling wifi before suspend works around the issue. All works fine with 3.9.y.
 
-Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    5 +++++
- 1 file changed, 5 insertions(+)
+12e7f517029dad819c45eca9ca01fdb9ba57616b 
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index e42b266..b4e2538 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -186,6 +186,7 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	struct sk_buff *skb;
- 	u16 pkt_len;
- 	const struct ieee80211_mgmt *mgmt;
-+	struct mwifiex_txinfo *tx_info;
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
- 
- 	if (!buf || !len) {
-@@ -212,6 +213,10 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		wiphy_err(wiphy, "allocate skb failed for management frame\n");
- 		return -ENOMEM;
- 	}
-+	
-+	tx_info = MWIFIEX_SKB_TXCB(skb);
-+	tx_info->bss_num = priv->bss_num;
-+	tx_info->bss_type = priv->bss_type;
- 
- 	mwifiex_form_mgmt_frame(skb, buf, len);
- 	mwifiex_queue_tx_pkt(priv, skb);
--- 
-1.7.10.4
+Author: Stanislaw Gruszka <sgruszka@redhat.com> 
 
+Date:   Thu Feb 28 10:55:26 2013 +0100
+
+     mac80211: cleanup generic suspend/resume procedures
+
+     Since now we disconnect before suspend, various code which save
+     connection state can now be removed from suspend and resume
+     procedure. Cleanup on resume side is smaller as ieee80211_reconfig()
+     is also used for H/W restart.
+
+     Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+
+
+Hardware:
+01:00.0 Network controller: Intel Corporation Centrino Advanced-N 6235 (rev 24)
+
+Sorry for not noticing this earlier.
+
+Ortwin
