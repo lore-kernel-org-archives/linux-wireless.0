@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:48451 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3GDBGF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:06:05 -0400
-Received: by mail-pa0-f42.google.com with SMTP id rl6so772635pac.29
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:05 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 16/53] wireless-regdb: TH, Thailand - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:12 -0700
-Message-Id: <1372899889-19183-17-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032042_457258_2333083A)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga03.intel.com ([143.182.124.21]:58017 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755900Ab3GOLqu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 07:46:50 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH RESEND 3.9 2/4] iwlwifi: mvm: support BSS only
+Date: Mon, 15 Jul 2013 14:46:42 +0300
+Message-Id: <1373888804-3077-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134655_659612_25E20E96)
+In-Reply-To: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Only BSS is support in 3.9. In later kernels, other modes
+have been fixed and tested to work.
+This will at least allow user to use the regular wifi
+functionality.
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and update the max EIRP.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- db.txt |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |   24 +-----------------------
+ 1 file changed, 1 insertion(+), 23 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 4475019..84214b0 100644
---- a/db.txt
-+++ b/db.txt
-@@ -726,10 +726,10 @@ country TW:
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 8572358..c9569a0 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -76,23 +76,6 @@
+ #include "fw-api-scan.h"
+ #include "iwl-phy-db.h"
  
- country TH:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (3, 17)
--	(5250 - 5330 @ 40), (3, 20), DFS
--	(5490 - 5710 @ 40), (3, 20), DFS
--	(5735 - 5835 @ 40), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
+-static const struct ieee80211_iface_limit iwl_mvm_limits[] = {
+-	{
+-		.max = 1,
+-		.types = BIT(NL80211_IFTYPE_STATION) |
+-			BIT(NL80211_IFTYPE_AP),
+-	},
+-};
+-
+-static const struct ieee80211_iface_combination iwl_mvm_iface_combinations[] = {
+-	{
+-		.num_different_channels = 1,
+-		.max_interfaces = 3,
+-		.limits = iwl_mvm_limits,
+-		.n_limits = ARRAY_SIZE(iwl_mvm_limits),
+-	},
+-};
+-
+ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ {
+ 	struct ieee80211_hw *hw = mvm->hw;
+@@ -126,17 +109,12 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	hw->vif_data_size = sizeof(struct iwl_mvm_vif);
+ 	hw->chanctx_data_size = sizeof(struct iwl_mvm_phy_ctxt);
  
- country TT:
- 	(2402 - 2482 @ 40), (N/A, 20)
+-	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_AP);
++	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY |
+ 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
+ 			    WIPHY_FLAG_IBSS_RSN;
+ 
+-	hw->wiphy->iface_combinations = iwl_mvm_iface_combinations;
+-	hw->wiphy->n_iface_combinations =
+-		ARRAY_SIZE(iwl_mvm_iface_combinations);
+-
+ 	hw->wiphy->max_remain_on_channel_duration = 500;
+ 	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
+ 
 -- 
 1.7.10.4
 
