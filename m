@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:42834 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932278Ab3GKJKy (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:38856 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756001Ab3GOM2T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:10:54 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 32/50] wireless: ath: carl9170: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:55 +0800
-Message-Id: <1373533573-12272-33-git-send-email-ming.lei@canonical.com> (sfid-20130711_111526_876326_4228BBEE)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Mon, 15 Jul 2013 08:28:19 -0400
+Date: Mon, 15 Jul 2013 14:28:17 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: pull request: bluetooth 2013-06-23
+Message-ID: <20130715122816.GA8383@amd.pavel.ucw.cz> (sfid-20130715_142835_143069_54DF6756)
+References: <20130623021351.GA2327@joana>
+ <20130625201217.GA13879@amd.pavel.ucw.cz>
+ <E95EC814-F064-4AEB-AE13-79982D3BE5E8@holtmann.org>
+ <20130625210039.GA28448@joana>
+ <20130626115255.GA7940@amd.pavel.ucw.cz>
+ <20130626124736.GA3337@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130626124736.GA3337@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+>On Wed 2013-06-26 13:47:36, Gustavo Padovan wrote:
+> * Pavel Machek <pavel@ucw.cz> [2013-06-26 13:52:55 +0200]:
+> 
+> > On Tue 2013-06-25 22:00:39, Gustavo Padovan wrote:
+> > > Hi Marcel,
+> > > 
+> > > * Marcel Holtmann <marcel@holtmann.org> [2013-06-25 13:49:19 -0700]:
+> > > 
+> > > > Hi Pavel,
+> > > > 
+> > > > >> Jaganath Kanakkassery (1):
+> > > > >>      Bluetooth: Fix invalid length check in l2cap_information_rsp()
+> > > > > 
+> > > > > Could we add the "3.10 vs. thinkpad x60" patch that fixes regression?
+> > > > > It is from Johan Hedberg…
+> > > > 
+> > > > that one went into net-next tree. It is scheduled for 3.11 right now.
+> > > > 
+> > > > After 3.10 is out, maybe it can go into -stable, but otherwise I think it is bit late now. Unless someone wants to cherry-pick it.
+> > > 
+> > > That patch is actually in 3.10 already, it was included in the last pull
+> > > request and John took it to wireless.git.
+> > 
+> > Is it? I tried pulling yesterday (some updates) and today (no
+> > changes), am on:
+> 
+> Dave already pulled it so it should land in mainline anytime soon.
 
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/net/wireless/ath/carl9170/rx.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
-index 4684dd9..61f62a6 100644
---- a/drivers/net/wireless/ath/carl9170/rx.c
-+++ b/drivers/net/wireless/ath/carl9170/rx.c
-@@ -129,6 +129,7 @@ static int carl9170_check_sequence(struct ar9170 *ar, unsigned int seq)
- 
- static void carl9170_cmd_callback(struct ar9170 *ar, u32 len, void *buffer)
- {
-+	unsigned long flags;
- 	/*
- 	 * Some commands may have a variable response length
- 	 * and we cannot predict the correct length in advance.
-@@ -148,7 +149,7 @@ static void carl9170_cmd_callback(struct ar9170 *ar, u32 len, void *buffer)
- 		carl9170_restart(ar, CARL9170_RR_INVALID_RSP);
- 	}
- 
--	spin_lock(&ar->cmd_lock);
-+	spin_lock_irqsave(&ar->cmd_lock, flags);
- 	if (ar->readbuf) {
- 		if (len >= 4)
- 			memcpy(ar->readbuf, buffer + 4, len - 4);
-@@ -156,7 +157,7 @@ static void carl9170_cmd_callback(struct ar9170 *ar, u32 len, void *buffer)
- 		ar->readbuf = NULL;
- 	}
- 	complete(&ar->cmd_wait);
--	spin_unlock(&ar->cmd_lock);
-+	spin_unlock_irqrestore(&ar->cmd_lock, flags);
- }
- 
- void carl9170_handle_command_response(struct ar9170 *ar, void *buf, u32 len)
+It seems to work in 3.10 and 3.11-rc1. Thanks!
+									Pavel
 -- 
-1.7.9.5
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
