@@ -1,70 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:34255 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753773Ab3GWCS5 (ORCPT
+Received: from shrek-wifi.podlesie.net ([93.179.225.50]:43738 "EHLO
+	shrek.podlesie.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754539Ab3GOI6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:18:57 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 15/21] mwifiex: reduce firmware poll retries
-Date: Mon, 22 Jul 2013 19:17:52 -0700
-Message-ID: <1374545878-15683-16-git-send-email-bzhao@marvell.com> (sfid-20130723_041918_937360_47E8385C)
-In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+	Mon, 15 Jul 2013 04:58:55 -0400
+Date: Mon, 15 Jul 2013 10:52:39 +0200
+From: Krzysztof Mazur <krzysiek@podlesie.net>
+To: Sedat Dilek <sedat.dilek@gmail.com>
+Cc: peizhao.research@gmail.com, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org
+Subject: Re: kernel panic on 3.10.0-rc7
+Message-ID: <20130715085239.GA31630@shrek.podlesie.net> (sfid-20130715_105859_092411_15B7906D)
+References: <51D127E4.2080803@gmail.com>
+ <CA+icZUUQHySKu=qEW3xfheg3DSMuvgB7Dp5PzVGOaiziAPTa5g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+icZUUQHySKu=qEW3xfheg3DSMuvgB7Dp5PzVGOaiziAPTa5g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Mon, Jul 01, 2013 at 09:37:19AM +0200, Sedat Dilek wrote:
+> On Mon, Jul 1, 2013 at 8:55 AM, Peizhao Hu <peizhao.research@gmail.com> wrote:
+> > Hi,
+> >
+> > Is there anyone has the same problem with me? I have a cm9 radio card with
+> > the node.
+> >
+> > The kernel compiled and booted alright, but crashed short after I set it up
+> > in the ad hoc mode. From the debug message output, it looks like something
+> > wrong with the rate control mechanism when it is trying to the rate
+> > (minstreal_get_rate function in this case).
+> >
+> > Is this a bug?
+> >
+> > Kernel version
+> > 3.10.0-rc7
+> >
+> 
+> Please, always add your kernel-config and some outputs like dmesg and
+> lspci/lsusb for better understanding.
+> 2nd, try v3.10 (released a few hours ago)... There were wireless
+> patches pushed after v3.10-rc7.
+> Then report again.
+> 
 
-After downloading the firmware, firmware status is checked by
-reading a register. Polling interval is 100 msecs. Therefore 100
-retries means the status is checked for 10 secs which is more than
-sufficient for firmware to get ready.
+I have the same problem. I'm using:
 
-This patch removes 1000 retries macro usage, because 100secs
-time is not practical.
+02:04.0 Network controller: Broadcom Corporation BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller (rev 02)
+	Subsystem: Hewlett-Packard Company Broadcom 802.11b/g WLAN
+	Flags: bus master, fast devsel, latency 64, IRQ 21
+	Memory at d0000000 (32-bit, non-prefetchable) [size=8K]
+	Kernel driver in use: b43-pci-bridge
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h   | 3 ---
- drivers/net/wireless/mwifiex/init.c | 1 -
- 2 files changed, 4 deletions(-)
+with b43 driver and I can easily trigger similar Oops with:
+# ip link set wlan0 up
+# iwlist scan
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 1b45aa5..99c2729 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -85,9 +85,6 @@ enum KEY_TYPE_ID {
- #define WAPI_KEY_LEN			50
- 
- #define MAX_POLL_TRIES			100
--
--#define MAX_MULTI_INTERFACE_POLL_TRIES  1000
--
- #define MAX_FIRMWARE_POLL_TRIES			100
- 
- #define FIRMWARE_READY_SDIO				0xfedc
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 2cda7ee..e021a58 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -691,7 +691,6 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
- 		if (!adapter->winner) {
- 			dev_notice(adapter->dev,
- 				   "FW already running! Skip FW dnld\n");
--			poll_num = MAX_MULTI_INTERFACE_POLL_TRIES;
- 			goto poll_fw;
- 		}
- 	}
--- 
-1.8.2.3
+The bug is introduced by commit 06d961a8e210035bff7e82f466107f9ab4a8fd94
+("mac80211/minstrel: use the new rate control API").
+The v3.9 is ok and the v3.11-rc1 is still bad. I haven't checked
+wireless tree yet.
 
+Wireless related part of my .config:
+[...]
+CONFIG_WIRELESS=y
+CONFIG_WEXT_CORE=y
+CONFIG_WEXT_PROC=y
+CONFIG_CFG80211=y
+CONFIG_CFG80211_DEFAULT_PS=y
+CONFIG_CFG80211_WEXT=y
+CONFIG_MAC80211=y
+CONFIG_MAC80211_HAS_RC=y
+CONFIG_MAC80211_RC_MINSTREL=y
+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+CONFIG_MAC80211_RC_DEFAULT="minstrel"
+CONFIG_RFKILL=y
+CONFIG_RFKILL_INPUT=y
+[...]
+CONFIG_WLAN=y
+CONFIG_B43=y
+CONFIG_B43_SSB=y
+CONFIG_B43_PCI_AUTOSELECT=y
+CONFIG_B43_PCICORE_AUTOSELECT=y
+CONFIG_B43_PIO=y
+CONFIG_B43_PHY_LP=y
+
+Krzysiek
