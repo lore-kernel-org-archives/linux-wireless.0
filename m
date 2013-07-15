@@ -1,107 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38150 "EHLO mga02.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:34251 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755738Ab3GQTPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jul 2013 15:15:54 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "Spinadel, David" <david.spinadel@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>, Jouni Malinen <j@w1.fi>,
-	"Ginsburg, Noam" <noam.ginsburg@intel.com>,
-	"Perelmooter, Liraz" <liraz.perelmooter@intel.com>,
-	"Shalev, Oz" <oz.shalev@intel.com>,
-	"Michael Green" <green@qca.qualcomm.com>
-Subject: RE: [PATCH 3/3] [RFC] cfg80211: Enable GO operation on additional
- channels
-Date: Wed, 17 Jul 2013 19:15:29 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A01AD31E3C@HASMSX106.ger.corp.intel.com> (sfid-20130717_211558_504994_21957960)
-References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
- <1372768095-26053-4-git-send-email-ilan.peer@intel.com>
- <CAB=NE6VQXQPRK9_Q-Nh+ripRa+PdCd=4_EZvPxeghBjc32ejyQ@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A01AD2DFC5@HASMSX106.ger.corp.intel.com>
- <CAB=NE6WY43BYDehH5-MyF0GQORC1dTrNToUsRVC-Q5bDwcna3A@mail.gmail.com>
-In-Reply-To: <CAB=NE6WY43BYDehH5-MyF0GQORC1dTrNToUsRVC-Q5bDwcna3A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1755713Ab3GOLpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 07:45:15 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3.10 3/3] iwlwifi: bump required firmware API version for 3160/7260
+Date: Mon, 15 Jul 2013 14:45:00 +0300
+Message-Id: <1373888700-3040-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134521_703782_02E10871)
+In-Reply-To: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiBXZWQsIEp1bCAxMCwgMjAxMyBhdCAzOjQ3IEFNLCBQZWVyLCBJbGFuIDxpbGFuLnBlZXJA
-aW50ZWwuY29tPiB3cm90ZToNCj4gPj4gQXJlIHlvdSBhd2FyZSBvZiBVTklJLTEsIFVOSUktMiwg
-VU5JSS0yRSwgVU5JSS0zIGFyZSBzcGVjaWZpYyB3b3JsZA0KPiA+PiByZWd1bGF0b3J5IGxhbmd1
-YWdlIGJhbmRzPyBXaGVuIEkgbGFzdCB0cmllZCB0byBsb29rIGZvciBhIGNsZWFyDQo+ID4+IGRl
-ZmluaXRpb24gSSBjb3VsZCBub3QgZmluZCBhIGNsZWFyIGRlZmluaXRpb24gb2YgdGhlbSBhbmQg
-aXRzIHdoeSBvbg0KPiA+PiB0aGUgYXRoIG1vZHVsZSBvbiBmb3IgUUNBIG1vZHVsZXMgSSBzdGF0
-ZSAid2UgY2FsbCB0aGVzZSIgaW4NCj4gPj4gcmVmZXJlbmNlIHRvIHRoZSBVTklJIG5vbWVuY2xh
-dHVyZS4gSWYgd2UgY2FuIGdldCBhIGNsZWFyIHJlc291cmNlIGZvciBpdHMNCj4gZGVmaW5pdGlv
-biB0aGF0IHdvdWxkIGhlbHAgaGVyZS4NCj4gPj4NCj4gPg0KPiA+IE1heWJlIHRoZXNlIGxpbmsg
-d2lsbCBoZWxwLg0KPiA+IGh0dHA6Ly93d3cuZ3BvLmdvdi9mZHN5cy9wa2cvQ0ZSLTIwMTAtdGl0
-bGU0Ny12b2wxL3htbC9DRlItMjAxMC10aXRsZTQNCj4gPiA3LXZvbDEtcGFydDE1LnhtbCNzZXFu
-dW0xNS40MDMNCj4gPiBodHRwOi8vaHJhdW5mb3NzLmZjYy5nb3YvZWRvY3NfcHVibGljL2F0dGFj
-aG1hdGNoL0ZDQy0xMy0yMkExLnBkZg0KPiA+DQo+ID4gQW55d2F5LCBJIHdpbGwgdXNlIHlvdXIg
-Jyd3ZSBjYWxsIHRoZXNlIiBub3RhdGlvbiBhcyB3ZWxsIDopDQo+IA0KPiBObyBubywgdGhpcyBp
-cyBnb29kLCBpdHMganVzdCBVbml0ZWQgU3RhdGVzIC8gRkNDIGJpYXNlZCBhbmQgSSBoYWRuJ3Qg
-c2VlbiB0aGUNCj4gZG9jdW1lbnRhdGlvbiB5b3UgcHJvdmlkZWQgYmVmb3JlLiBUaGlzIGNvbmZp
-cm1zIHRoZXNlIGFyZSBvZmZpY2lhbCB0ZXJtcyBidXQNCj4gc3RpbGwganVzdCBVUyAvIEZDQyBi
-aWFzZWQuIE15IHBvaW50IHdhcyB0aGF0IHdlIHNob3VsZCBiZSBjYXJlZnVsIHRvIG5vdCBtYWtl
-DQo+IGdsb2JhbCBzdGF0ZW1lbnRzIG9uIHJlZ3VsYXRvcnkgY29kZSBhYm91dCB0aGluZ3MgdGhh
-dCBhcmUgbm90IGdsb2JhbC4gSWYgd2UNCj4ga25vdyBvbmx5IHRoZSBGQ0MgY2FsbHMgdGhpcyBV
-TklJIHdlbGwgbGV0cyBkb2N1bWVudCB0aGF0IGFuZCBwcm92aWRlIHRoZQ0KPiByZWZlcmVuY2Ug
-eW91IHN1cHBsaWVkLiBJIGFudGljaXBhdGVkIGhhdmluZyB0byBkZWFsIHdpdGggc3BlY2lhbCBj
-YXNlDQo+IHJlZ3VsYXRvcnkgY29kZSBvdXRzaWRlIG9mIG9mIHdoYXQgQ1JEQSAvIHdpcmVsZXNz
-LXJlZ2RiIHByb3ZpZGVzIC0tIGdpdmVuIHRoYXQNCj4gQ1JEQSAvIHdpcmVsZXNzLXJlZ2RiIHdl
-cmUgbWVhbnQgdG8gYmUgbW9yZSBSRiBhZ25vc3RpYyBhbnl3YXkuDQo+IA0KPiBHaXZlbiB0aGF0
-IG90aGVyIHZlbmRvcnMgbWF5IGFsc28gd2FudCB0byBnZXQgdGhlIFVOSUkgYmFuZCBjYW4geW91
-IHN0dWZmDQo+IGluc3RlYWQgY2ZnODAyMTFfZ2V0X3VuaWlfYmFuZCgpIGludG8gcmVnLmMgYW5k
-IGRvIHRoZSAjaWZkZWYgcHJvcGVybHkgd2l0aCB0aGUNCj4gS2NvbmZpZywgYW5kIGV4cG9ydCBp
-dCBhcyB3ZWxsLCBhcyB3ZWxsIGFzIGRvY3VtZW50IGl0IHByb3Blcmx5IHByb3ZpZGluZyB0aGUN
-Cj4gcmVmZXJlbmNlIHlvdSBtZW50aW9uZWQuDQoNClN1cmUuDQoNCj4gDQo+ID4+ID4gKyAqIDEu
-IEluZG9vciBvbmx5OiBhIEdPIGNhbiBiZSBvcGVyYXRpb25hbCBvbiBzdWNoIGEgY2hhbm5lbCwg
-aWZmIHRoZXJlIGlzDQo+ID4+ID4gKyAqICAgIGNsZWFyIGFzc2Vzc21lbnQgdGhhdCB0aGUgcGxh
-dGZvcm0gZGV2aWNlIGlzIGluZG9vci4NCj4gPj4gPiArICogMi4gQ29uY3VycmVudCBHTzogYSBH
-TyBjYW4gYmUgb3BlcmF0aW9uYWwgb24gc3VjaCBhIGNoYW5uZWwsDQo+ID4+ID4gKyBpZmYgdGhl
-cmUgaXMNCj4gPj4gYW4NCj4gPj4gPiArICogICAgYWRkaXRpb25hbCBzdGF0aW9uIGludGVyZmFj
-ZSBjb25uZWN0ZWQgdG8gYW4gQVAgb24gdGhpcyBjaGFubmVsLg0KPiA+PiA+ICsgKg0KPiA+PiA+
-ICsgKiBUT0RPOiBUaGUgZnVuY3Rpb24gaXMgdG9vIHBlcm1pc3NpdmUsIGFzIGl0IGRvZXMgbm90
-IHZlcmlmeSB0aGUNCj4gPj4gPiArIHBsYXRmb3JtDQo+ID4+ID4gKyAqIGRldmljZSB0eXBlIGlz
-IGluZGVlZCBpbmRvb3IsIG9yIHRoYXQgdGhlIEFQIGlzIGluZG9vci9BQyBwb3dlcmVkLg0KPiA+
-Pg0KPiA+PiBTbyB0byBkbyB0aGlzIHByb3Blcmx5IHdlIG5lZWQgYW4gZXZlbnR1YWwgdXNlcnNw
-YWNlIEFQSSB0byB0aHJvdyB0bw0KPiA+PiBrZXJuZWxzcGFjZSBpZiB3ZSBhcmUgQUMgcG93ZXJl
-ZD8gV2UnbGwgbmVlZCB0aGlzIHRvIGVuaGFuY2UgdGhpcw0KPiA+PiByb3V0aW5lIGhlcmU/DQo+
-ID4+DQo+ID4NCj4gPiBOb3Qgc3VyZSBhYm91dCB0aGlzIHBvaW50LiBJIHByZWZlciBsZWF2aW5n
-IHRoZSBleGFjdCBrbm93bGVkZ2Ugb2YgdGhlIGRldmljZQ0KPiB0eXBlLCBiZWluZyBBQyBQb3dl
-cmVkIG9yIG5vdCAoYW5kIHdoaWNoIHR5cGUgb2YgQUMgcG93ZXIpIGV0Yy4gb3V0IHNpZGUgb2Yg
-dGhlDQo+IGtlcm5lbC4gVGhlIGFwcHJvYWNoIEkgY2hvc2Ugd2l0aCB0aGlzIHBhdGNoIHdhcyB0
-byBvbmx5IGFsbG93IHRvIHN0YXJ0IGEgR08gb24NCj4gc3VjaCBhIGNoYW5uZWwsIG1ha2luZyB0
-aGUgYmFzaWMgdmVyaWZpY2F0aW9uIGRvbmUgYWJvdmUsIGFzc3VtaW5nIHRoYXQgdGhlDQo+IHVz
-ZXIgc3BhY2UgY29tcG9uZW50IGd1YXJhbnRlZXMgdGhhdCBhbGwgdGhlIGZ1bGwgcmVzdHJpY3Rp
-b25zIGFyZSBzYXRpc2ZpZWQuDQo+IA0KPiBGYWlyIGVub3VnaC4gU2VlbXMgd2UganVzdCBuZWVk
-IHRvIHplcm8gaW4gbm93IG9uIHRoZSByZXF1aXJlbWVudCBvciBub3Qgb24NCj4gdGhlIGV4dHJh
-IGZsYWcgeW91IHN1Z2dlc3RlZC4NCj4gDQo+ID4+IEluIHRoZSBtZWFudGltZSwgd2hpbGUgeW91
-IGdldCBhbGwgeW91ciBwYXRjaCBzZXRzIHByb3Blcmx5IGRldmVsb3BlZA0KPiA+PiBJJ2QgcmVj
-b21tZW5kIHRvIGRlZmluZSB0aGUgY29kZSByZXR1cm5pbmcgZmFsc2UgdGhlcmUgc3RyaWN0bHkg
-b3INCj4gPj4gcGVyaGFwcyBmb3IgYW55IGZsYWcgb24gdGhlIGNoYW5uZWwgcmVxdWlyaW5nIERG
-UyAvIG5vLWlic3MsIG9yDQo+ID4+IHBhc3NpdmUgc2Nhbi4gVGhlIHN0cmljdGVyIGNhc2UsIGRl
-ZmluaW5nIGZhbHNlIGFsd2F5cywgc2VlbXMgdG8gYmUgd2hhdCB5b3UNCj4gYXJlIHN1Z2dlc3Rp
-bmcgaGVyZS4NCj4gPg0KPiA+IEkgZG8gbm90IHRoaW5rIHRoYXQgdGhpcyBpcyBuZWVkZWQgaGVy
-ZS4gUmV0dXJuaW5nIGZhbHNlLCBtZWFucyB0aGF0IHRoZSBjb2RlDQo+IHNob3VsZCB0ZXN0IGlm
-IHRoZSBQQVNTSVZFX1NDQU4gYW5kIE5PX0lCU1MgYXJlIG5vdCBzZXQgb24gdGhlIGNoYW5uZWwg
-d2UNCj4gd2FudCB0byBzdGFydCBiZWFjb25pbmcgb24uDQo+ID4NCj4gPj4gRG8geW91IGhhdmUg
-YSB3aGl0ZSBsaXN0IHRoYXQgY2FuIGV4Y2x1ZGUgc29tZSBjaGFubmVscyBmb3Igbm93DQo+ID4+
-IGdsb2JhbGx5IG9yIHNvbWVob3cgYXMgYWxsIHRoaXMgbGluZXMgdXA/DQo+ID4+DQo+ID4NCg0K
-SSdsbCB0cnkgdG8gcHJvdmlkZSBzdWNoIGxpc3QgLi4uIA0KDQo+ID4gTm90ZSBzdXJlIEkgdW5k
-ZXJzdG9vZCB3aGF0IHlvdSBhcmUgbG9va2luZyBmb3IuIENhbiB5b3UgcGxlYXNlIGNsYXJpZnkg
-dGhpcw0KPiBwb2ludD8NCj4gDQo+IEl0IHdhcyB1bmNsZWFyIGZvciB3aGF0IGV4YWN0IGNoYW5u
-ZWxzIHlvdSBuZWVkZWQgdG8gZGVhbCB3aXRoIGhlcmUuDQo+IEdpdmVuIHJldmlldyBzbyBmYXIg
-d291bGRuJ3QgaXQganVzdCBiZSBERlMgZmxhZ2dlZCBjaGFubmVscyBvbiBzb21lIFVOSUkNCj4g
-YmFuZHMgPyBUaGVuIGFnYWluIGlmIHRoZSBpbmRvb3IgZmxhZyBuZWVkcyB0byBiZSBwZWdnZWQg
-dG8gdG8gYSBzcGVjaWZpYyBVTklJDQo+IGJhbmQgYW5kIHdlIGNhbiBkbyB0aGF0IG9uIHdpcmVs
-ZXNzLXJlZ2RiIGRvIHdlIGV2ZW4gbmVlZCB0aGUgVU5JSSBiYW5kDQo+IGNoZWNrIHJvdXRpbmUg
-aGVscGVyPw0KPiANCg0KR2VuZXJhbGx5IGl0IGlzIHBvc3NpYmxlIHRoYXQgdGhlIGluZG9vciBw
-cm9wZXJ0eSBpcyBub3QgcGVnZ2VkIHRvIHRoZSAnb3RoZXJfY2hhbm5lbCcsIG9yIGl0IGlzIHBv
-c3NpYmxlIHRoYXQgaXQgaXMgcGVnZ2VkIGJ1dCB0aGV5IGFyZSBub3QgaW4gdGhlIHNhbWUgVU5J
-SSBiYW5kLCBzbyB0aGUgdmVyaWZpY2F0aW9uIGlzIHN0aWxsIG5lZWRlZC4gSSBndWVzcyB0aGF0
-IG9uY2UgSSBnZXQgdGhlIGxpc3QgeW91IHJlcXVlc3RlZCB0aGluZ3Mgd2lsbCBiZSBjbGVhcmVy
-IDopIA0KDQpSZWdhcmRzLA0KDQpJbGFuLg0KDQo=
+From: Johannes Berg <johannes.berg@intel.com>
+
+commit a2d0909a687b4d250cc2b7481072e361678745ba upstream.
+
+As the firmware API has changed significantly and we don't
+have support code for the old APIs, bump the version to be
+able to release the version 7 API firmware.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 50263e8..dc94d44 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -67,16 +67,16 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL7260_UCODE_API_MAX	6
+-#define IWL3160_UCODE_API_MAX	6
++#define IWL7260_UCODE_API_MAX	7
++#define IWL3160_UCODE_API_MAX	7
+ 
+ /* Oldest version we won't warn about */
+-#define IWL7260_UCODE_API_OK	6
+-#define IWL3160_UCODE_API_OK	6
++#define IWL7260_UCODE_API_OK	7
++#define IWL3160_UCODE_API_OK	7
+ 
+ /* Lowest firmware API version supported */
+-#define IWL7260_UCODE_API_MIN	6
+-#define IWL3160_UCODE_API_MIN	6
++#define IWL7260_UCODE_API_MIN	7
++#define IWL3160_UCODE_API_MIN	7
+ 
+ /* NVM versions */
+ #define IWL7260_NVM_VERSION		0x0a1d
+-- 
+1.7.10.4
+
