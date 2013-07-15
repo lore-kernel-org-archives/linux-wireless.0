@@ -1,31 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:59647 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792Ab3GICei (ORCPT
+Received: from cpe-075-189-159-031.nc.res.rr.com ([75.189.159.31]:53851 "EHLO
+	jgpicker.rdu.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756815Ab3GONbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 22:34:38 -0400
-Message-ID: <51DB76BB.5040802@lwfinger.net> (sfid-20130709_043446_095560_7DDB1D06)
-Date: Mon, 08 Jul 2013 21:34:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
+	Mon, 15 Jul 2013 09:31:49 -0400
+From: John Greene <jogreene@redhat.com>
 To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [PATCH] rtlwifi: Fix Kconfig for some corner cases
-References: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org
+Subject: [PATCH v2] brcmsmac: Further reduce log spam from tx phy messages
+Date: Mon, 15 Jul 2013 09:31:32 -0400
+Message-Id: <1373895092-27057-1-git-send-email-jogreene@redhat.com> (sfid-20130715_153153_514368_A6FBB039)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/06/2013 09:47 PM, Larry Finger wrote:
-> Fengguang Wu reported the following errors in the build of rtlwifi with
-> a random configuration:
+Relegate 2 phy messages to debug status as they create excessive
+log spam, noted in multiple bugzillas for brcmsmac v3.8 and up.
+This is a follow on to net-next 99e94940697adec4f84758adb2db71f4a82c7ba5:
+brcmsmac: Reduce log spam in heavy tx, make err print in debug
 
-John,
+ brcmsmac bcma0:0: phyerr 0x10, rate 0x14
+ brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete:
+ampdu tx phy error (0x10)
 
-Please drop this patch. A better one will be submitted later.
+ver 2: Two trivial whitespace fixes.
 
-Larry
+Signed-off-by: John Greene <jogreene@redhat.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c | 6 +++---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c  | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index bd98285..fa391e4 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -928,9 +928,9 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 			}
+ 		} else if (txs->phyerr) {
+ 			update_rate = false;
+-			brcms_err(wlc->hw->d11core,
+-				  "%s: ampdu tx phy error (0x%x)\n",
+-				  __func__, txs->phyerr);
++			brcms_dbg_ht(wlc->hw->d11core,
++				     "%s: ampdu tx phy error (0x%x)\n",
++				     __func__, txs->phyerr);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 9fd6f2f..7ca10bf 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -882,8 +882,8 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 	mcl = le16_to_cpu(txh->MacTxControlLow);
+ 
+ 	if (txs->phyerr)
+-		brcms_err(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
+-			  txs->phyerr, txh->MainRates);
++		brcms_dbg_tx(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
++			     txs->phyerr, txh->MainRates);
+ 
+ 	if (txs->frameid != le16_to_cpu(txh->TxFrameID)) {
+ 		brcms_err(wlc->hw->d11core, "frameid != txh->TxFrameID\n");
+-- 
+1.7.11.7
 
