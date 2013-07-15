@@ -1,73 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48208 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751663Ab3GHOIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:08:43 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 02/20] rt2x00: rt2800lib: add BBP register initialization for RT3593
-Date: Mon,  8 Jul 2013 16:08:17 +0200
-Message-Id: <1373292515-21332-3-git-send-email-juhosg@openwrt.org> (sfid-20130708_160851_668584_B41DAE39)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55238 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754299Ab3GOLPX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 07:15:23 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/5] bcma: first patches to add support for BCM4708
+Date: Mon, 15 Jul 2013 13:15:03 +0200
+Message-Id: <1373886908-4460-1-git-send-email-hauke@hauke-m.de> (sfid-20130715_131526_364906_FF39DD64)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
+These patches are just fixing minor problems seen while adding support 
+for BCM4708 SoC and they add some constants for this SoC.
 
-References:
-  NICInitRT3593BbpRegisters in chips/rt3593.c
-  NICInitBBP in common/rtmp_init.c
-  NICInitAsicFromEEPROM in common/rtmp_init.c
+Hauke Mehrtens (5):
+  bcma: add some more core names
+  bcma: make it possible to select SoC support without mips
+  bcma: add constants for new ARM based SoCs
+  bcma: return correct error code when bus scan failed
+  bcma: fix handling of big addrl
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-Changes since v2: ---
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/bcma/Kconfig      |   10 ++++++++--
+ drivers/bcma/main.c       |    2 +-
+ drivers/bcma/scan.c       |   28 ++++++++++++++++++++--------
+ include/linux/bcma/bcma.h |   17 +++++++++++++++++
+ 4 files changed, 46 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index bfeca29..53ebdb9 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4504,6 +4504,22 @@ static void rt2800_init_bbp_3572(struct rt2x00_dev *rt2x00dev)
- 	rt2800_disable_unused_dac_adc(rt2x00dev);
- }
- 
-+static void rt2800_init_bbp_3593(struct rt2x00_dev *rt2x00dev)
-+{
-+	rt2800_init_bbp_early(rt2x00dev);
-+
-+	rt2800_bbp_write(rt2x00dev, 79, 0x13);
-+	rt2800_bbp_write(rt2x00dev, 80, 0x05);
-+	rt2800_bbp_write(rt2x00dev, 81, 0x33);
-+	rt2800_bbp_write(rt2x00dev, 137, 0x0f);
-+
-+	rt2800_bbp_write(rt2x00dev, 84, 0x19);
-+
-+	/* Enable DC filter */
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT3593, REV_RT3593E))
-+		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
-+}
-+
- static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- {
- 	int ant, div_mode;
-@@ -4719,6 +4735,9 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	case RT3572:
- 		rt2800_init_bbp_3572(rt2x00dev);
- 		break;
-+	case RT3593:
-+		rt2800_init_bbp_3593(rt2x00dev);
-+		return;
- 	case RT5390:
- 	case RT5392:
- 		rt2800_init_bbp_53xx(rt2x00dev);
 -- 
-1.7.10
+1.7.10.4
 
