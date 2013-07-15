@@ -1,40 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:48218 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757125Ab3GVJca (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 05:32:30 -0400
-Subject: [PATCH 2/2] MAINTAINERS: update ath6kl git location
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org
-Date: Mon, 22 Jul 2013 12:32:27 +0300
-Message-ID: <20130722093227.26562.41254.stgit@localhost6.localdomain6> (sfid-20130722_113233_402827_E68E181B)
-In-Reply-To: <20130722093113.26562.11543.stgit@localhost6.localdomain6>
-References: <20130722093113.26562.11543.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga14.intel.com ([143.182.124.37]:31440 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755670Ab3GOLpO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 07:45:14 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3.10 1/3] iwlwifi: mvm: support BSS only
+Date: Mon, 15 Jul 2013 14:44:58 +0300
+Message-Id: <1373888700-3040-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134526_980589_8651689A)
+In-Reply-To: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The git tree is in github.com nowadays.
+Only BSS is supported in 3.10. In later kernels, other modes
+have been fixed and tested to work.
+This will at least allow user to use the regular wifi
+functionality.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- MAINTAINERS |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |   36 +--------------------------
+ 1 file changed, 1 insertion(+), 35 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 44626b8..7a403ba 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1406,7 +1406,7 @@ ATHEROS ATH6KL WIRELESS DRIVER
- M:	Kalle Valo <kvalo@qca.qualcomm.com>
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org/en/users/Drivers/ath6kl
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath6kl.git
-+T:	git git://github.com/kvalo/ath.git
- S:	Supported
- F:	drivers/net/wireless/ath/ath6kl/
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index a5eb8c8..5b1b86f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -78,32 +78,6 @@
+ #include "fw-api-scan.h"
+ #include "iwl-phy-db.h"
  
+-static const struct ieee80211_iface_limit iwl_mvm_limits[] = {
+-	{
+-		.max = 1,
+-		.types = BIT(NL80211_IFTYPE_STATION) |
+-			BIT(NL80211_IFTYPE_AP),
+-	},
+-	{
+-		.max = 1,
+-		.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
+-			BIT(NL80211_IFTYPE_P2P_GO),
+-	},
+-	{
+-		.max = 1,
+-		.types = BIT(NL80211_IFTYPE_P2P_DEVICE),
+-	},
+-};
+-
+-static const struct ieee80211_iface_combination iwl_mvm_iface_combinations[] = {
+-	{
+-		.num_different_channels = 1,
+-		.max_interfaces = 3,
+-		.limits = iwl_mvm_limits,
+-		.n_limits = ARRAY_SIZE(iwl_mvm_limits),
+-	},
+-};
+-
+ #ifdef CONFIG_PM_SLEEP
+ static const struct nl80211_wowlan_tcp_data_token_feature
+ iwl_mvm_wowlan_tcp_token_feature = {
+@@ -160,20 +134,12 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	hw->vif_data_size = sizeof(struct iwl_mvm_vif);
+ 	hw->chanctx_data_size = sizeof(struct iwl_mvm_phy_ctxt);
+ 
+-	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_P2P_CLIENT) |
+-		BIT(NL80211_IFTYPE_AP) |
+-		BIT(NL80211_IFTYPE_P2P_GO) |
+-		BIT(NL80211_IFTYPE_P2P_DEVICE);
++	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY |
+ 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
+ 			    WIPHY_FLAG_IBSS_RSN;
+ 
+-	hw->wiphy->iface_combinations = iwl_mvm_iface_combinations;
+-	hw->wiphy->n_iface_combinations =
+-		ARRAY_SIZE(iwl_mvm_iface_combinations);
+-
+ 	hw->wiphy->max_remain_on_channel_duration = 10000;
+ 	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
+ 
+-- 
+1.7.10.4
 
