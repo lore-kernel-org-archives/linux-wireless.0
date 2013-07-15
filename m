@@ -1,33 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:30110 "EHLO mx4.wp.pl"
+Received: from mga14.intel.com ([143.182.124.37]:31440 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751788Ab3GGOMs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 10:12:48 -0400
-Date: Sun, 7 Jul 2013 16:15:33 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 11/20] rt2x00: rt2800lib: hardcode TX
- mixer gain values for RT3593
-Message-ID: <20130707141533.GG2073@localhost.localdomain> (sfid-20130707_161250_448073_E2606FF8)
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
- <1372664879-18474-12-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372664879-18474-12-git-send-email-juhosg@openwrt.org>
+	id S1755670Ab3GOLpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 07:45:12 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3.10 0/3] Enable 7000 device family on 3.10
+Date: Mon, 15 Jul 2013 14:44:57 +0300
+Message-Id: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134517_002943_318F5BA5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 01, 2013 at 09:47:50AM +0200, Gabor Juhos wrote:
-> The reference code uses hardcoded zero TX mixer gain value
-> for RT3593. Do the same in the rt2x00 driver.
-> 
-> Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-> driver.
-> 
-> Reference:
->   NICReadEEPROMParameters in common/rtmp_init.c
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+This small patch series enables 7260 and 3160 devices on 3.10
+kernel. Three patches are already in linux.git (3.11-rc1).
+One patch is 3.10 specific and disables configuration that is not
+supported in 3.10.
+
+Emmanuel Grumbach (1):
+  iwlwifi: mvm: support BSS only
+
+Johannes Berg (2):
+  iwlwifi: mvm: adjust firmware D3 configuration API
+  iwlwifi: bump required firmware API version for 3160/7260
+
+ drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h |    4 +++-
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c  |    4 ++--
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c  |   24 +-----------------------
+ drivers/net/wireless/iwlwifi/pcie/7000.c     |   12 ++++++------
+ 4 files changed, 12 insertions(+), 32 deletions(-)
+
+-- 
+1.7.10.4
+
