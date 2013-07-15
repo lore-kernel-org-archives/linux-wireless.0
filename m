@@ -1,65 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33082 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948Ab3GQCVp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:21:45 -0400
-Received: by mail-pa0-f45.google.com with SMTP id bi5so1418406pad.32
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:44 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 34/53] wireless-regdb: SK, Slovakia - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:23 -0700
-Message-Id: <1374027522-18488-35-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042148_408144_EF13707D)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga03.intel.com ([143.182.124.21]:20518 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752401Ab3GOEzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 00:55:17 -0400
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [3.10.1 MEI_ME] strange kernel crash
+Date: Mon, 15 Jul 2013 04:55:13 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B028E903A@HASMSX106.ger.corp.intel.com> (sfid-20130715_065535_879481_C3D39287)
+References: <51E2FE1C.207@openvz.org> <51E360C1.10204@openvz.org>
+In-Reply-To: <51E360C1.10204@openvz.org>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
-
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index f411ae3..ce61f97 100644
---- a/db.txt
-+++ b/db.txt
-@@ -705,9 +705,9 @@ country SI: DFS-ETSI
- 
- country SK: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS29uc3RhbnRpbiBLaGxl
+Ym5pa292IFttYWlsdG86a29jdDlpQGdtYWlsLmNvbV0gT24gQmVoYWxmIE9mDQo+IEtvbnN0YW50
+aW4gS2hsZWJuaWtvdg0KPiBTZW50OiBNb25kYXksIEp1bHkgMTUsIDIwMTMgMDU6MzkNCj4gVG86
+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IFdpbmtsZXIsIFRvbWFzOyBsaW51eC0NCj4g
+d2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbMy4xMC4xIE1FSV9NRV0g
+c3RyYW5nZSBrZXJuZWwgY3Jhc2gNCj4gDQo+IFRoaXMgaGFzIGhhcHBlbmVkIGFnYWluLiBUaGlz
+IHRpbWUgd2l0aG91dCB3YXJuaW5ncyBhbmQgd2l0aG91dCBzdXNwZW5kLQ0KPiByZXN1bWUuDQo+
+IFNlZW1zIGxpa2UgJ21laV9tZScgY29ycnVwdHMga2VybmVsIG1lbW9yeS4NCg0KSSB3aWxsIHBv
+c3QgdGhlIGZpeCB0b2RheSBJIGhvcGUuDQoNClRoYW5rcw0KVG9tYXMNCg0K
