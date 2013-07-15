@@ -1,65 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:42563 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCVk (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:64464 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754696Ab3GOJ43 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:21:40 -0400
-Received: by mail-pb0-f53.google.com with SMTP id xb12so1348215pbc.26
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:39 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 33/53] wireless-regdb: PT, Portugal - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:22 -0700
-Message-Id: <1374027522-18488-34-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042144_718731_7705DF4E)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 15 Jul 2013 05:56:29 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "stable@vger.kernel.org" <stable@vger.kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 3.9 0/4] Enable 7000 device family on 3.9
+Date: Mon, 15 Jul 2013 09:56:26 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301A02E2C@HASMSX103.ger.corp.intel.com> (sfid-20130715_115633_615287_294A8769)
+References: <1373881749-2923-1-git-send-email-emmanuel.grumbach@intel.com>
+In-Reply-To: <1373881749-2923-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> 
+> This small patch series enables 7260 and 3160 devices on 3.9 kernel. Three
+> patches are already in linux.git (3.11-rc1).
+> One patch is 3.9 specific and disables configuration that is not supported in
+> 3.9.
+> 
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
-
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 2f71dba..f411ae3 100644
---- a/db.txt
-+++ b/db.txt
-@@ -630,9 +630,9 @@ country PL: DFS-ETSI
- 
- country PT: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
+Will resend without the Change-ID
 
