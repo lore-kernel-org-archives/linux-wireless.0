@@ -1,89 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.ugent.be ([157.193.71.182]:58689 "EHLO smtp1.ugent.be"
+Received: from nbd.name ([46.4.11.11]:50167 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756022Ab3GaK2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 06:28:21 -0400
-Received: from localhost (mcheck2.ugent.be [157.193.49.249])
-	by smtp1.ugent.be (Postfix) with ESMTP id ABF788152
-	for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 12:28:20 +0200 (CEST)
-Received: from smtp1.ugent.be ([157.193.71.182])
-	by localhost (mcheck2.UGent.be [157.193.43.11]) (amavisd-new, port 10024)
-	with ESMTP id 9BxSZ-Rr1QbR for <linux-wireless@vger.kernel.org>;
-	Wed, 31 Jul 2013 12:28:20 +0200 (CEST)
-Received: from mail-la0-f47.google.com (mail-la0-f47.google.com [209.85.215.47])
-	(Authenticated sender: mathieu.devos@ugent.be)
-	by smtp1.ugent.be (Postfix) with ESMTPSA id F0702808C
-	for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 12:28:19 +0200 (CEST)
-Received: by mail-la0-f47.google.com with SMTP id eo20so366836lab.34
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 03:28:19 -0700 (PDT)
+	id S1754547Ab3GOJGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 05:06:31 -0400
+Message-ID: <51E3BB93.2090000@openwrt.org> (sfid-20130715_110648_962561_8E1A0BB5)
+Date: Mon, 15 Jul 2013 11:06:27 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <51F8E228.9080600@broadcom.com>
-References: <CAE_+Soy5=MfUUahaP3Ka2onp+jP9aupbhGu_QHco=CP7Y9sqhQ@mail.gmail.com>
-	<51F8E228.9080600@broadcom.com>
-Date: Wed, 31 Jul 2013 12:28:19 +0200
-Message-ID: <CAE_+Soyxz-RfyVeg-Z4Fv5tmUtH=9wutxgM0CGjHEne9zJq+Kg@mail.gmail.com> (sfid-20130731_122825_229057_09BB9378)
-Subject: Re: Skb and ieee80211 headers
-From: Mathieu Devos <mathieu.devos@ugent.be>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Krzysztof Mazur <krzysiek@podlesie.net>
+CC: Sedat Dilek <sedat.dilek@gmail.com>, peizhao.research@gmail.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: kernel panic on 3.10.0-rc7
+References: <51D127E4.2080803@gmail.com> <CA+icZUUQHySKu=qEW3xfheg3DSMuvgB7Dp5PzVGOaiziAPTa5g@mail.gmail.com> <20130715085239.GA31630@shrek.podlesie.net>
+In-Reply-To: <20130715085239.GA31630@shrek.podlesie.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 2013-07-15 10:52 AM, Krzysztof Mazur wrote:
+> On Mon, Jul 01, 2013 at 09:37:19AM +0200, Sedat Dilek wrote:
+>> On Mon, Jul 1, 2013 at 8:55 AM, Peizhao Hu <peizhao.research@gmail.com> wrote:
+>> > Hi,
+>> >
+>> > Is there anyone has the same problem with me? I have a cm9 radio card with
+>> > the node.
+>> >
+>> > The kernel compiled and booted alright, but crashed short after I set it up
+>> > in the ad hoc mode. From the debug message output, it looks like something
+>> > wrong with the rate control mechanism when it is trying to the rate
+>> > (minstreal_get_rate function in this case).
+>> >
+>> > Is this a bug?
+>> >
+>> > Kernel version
+>> > 3.10.0-rc7
+>> >
+>> 
+>> Please, always add your kernel-config and some outputs like dmesg and
+>> lspci/lsusb for better understanding.
+>> 2nd, try v3.10 (released a few hours ago)... There were wireless
+>> patches pushed after v3.10-rc7.
+>> Then report again.
+>> 
+> 
+> I have the same problem. I'm using:
+> 
+> 02:04.0 Network controller: Broadcom Corporation BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller (rev 02)
+> 	Subsystem: Hewlett-Packard Company Broadcom 802.11b/g WLAN
+> 	Flags: bus master, fast devsel, latency 64, IRQ 21
+> 	Memory at d0000000 (32-bit, non-prefetchable) [size=8K]
+> 	Kernel driver in use: b43-pci-bridge
+> 
+> with b43 driver and I can easily trigger similar Oops with:
+> # ip link set wlan0 up
+> # iwlist scan
+> 
+> The bug is introduced by commit 06d961a8e210035bff7e82f466107f9ab4a8fd94
+> ("mac80211/minstrel: use the new rate control API").
+> The v3.9 is ok and the v3.11-rc1 is still bad. I haven't checked
+> wireless tree yet.
+> 
+> Wireless related part of my .config:
+> [...]
+> CONFIG_WIRELESS=y
+> CONFIG_WEXT_CORE=y
+> CONFIG_WEXT_PROC=y
+> CONFIG_CFG80211=y
+> CONFIG_CFG80211_DEFAULT_PS=y
+> CONFIG_CFG80211_WEXT=y
+> CONFIG_MAC80211=y
+> CONFIG_MAC80211_HAS_RC=y
+> CONFIG_MAC80211_RC_MINSTREL=y
+> CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+> CONFIG_MAC80211_RC_DEFAULT="minstrel"
+> CONFIG_RFKILL=y
+> CONFIG_RFKILL_INPUT=y
+> [...]
+> CONFIG_WLAN=y
+> CONFIG_B43=y
+> CONFIG_B43_SSB=y
+> CONFIG_B43_PCI_AUTOSELECT=y
+> CONFIG_B43_PCICORE_AUTOSELECT=y
+> CONFIG_B43_PIO=y
+> CONFIG_B43_PHY_LP=y
+> 
+> Krzysiek
+Please post the actual message output. Saying "it looks like something
+wrong with the rate control mechanism" doesn't give me anything useful
+to work with.
 
-It's an android smartphone (I 9100 - Samsung galaxy S2) so it does not
-have a normal ethernet 802.3 input even. I check before selecting the
-device that it's wireless (through ieee80211_ptr) and this properly
-returns the wlan0 device which should be on the 80211 standard.
-
-My goal is to get the ieee80211_header properly on the skb with this
-device, but some of the pointers and original data in the skb seem
-totally off. This leaves me clueless as to where to put this
-ieee80211_header.
-I've tried putting it right on skb->head (wrong I know, but I was
-getting desperate), on skb->mac_header (also wrong, no idea why
-though), I went back from skb->tail with len and even added ETH_HLEN
-to that as well because you can see that before my hook gets
-activated: skb_pull_inline(skb, ETH_HLEN);
-In the end I'm left with a header that is forced onto data but with a
-wrong origin pointer thus basically leaving me with all wrong data in
-the header.
-
-Kind regards,
-Mathieu Devos
-
-On Wed, Jul 31, 2013 at 12:08 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 07/31/2013 11:39 AM, Mathieu Devos wrote:
->>
->> Hi,
->>
->> I hope this is the right place to ask for a little bit of help as I'm
->> currently beyond stuck on a challenge I'm trying to accomplish. I'm
->> trying to write a "simple" LKM that properly uses a ieee80211 header
->> to print information about the mac addresses (addr1->addr4) and later
->> down the road try to send my own data.
->>
->> I only need to get L2 working, no need for TCP/IP, just a proper
->> ieee80211 based on input from skb would be huge for me.
->>
->> So my issue: when placing the ieee80211 on my mac_header after I hook
->> my skb from my wireless device (wlan0 on android - I9100)
->
->
-> Not sure what you goal is, but what wireless device is that? You may just
-> get 802.3 packets from the device.
->
-> Gr. AvS
->
->
->> I get a huge
->> amount of zero's and random(?) numbers when trying to print the
->> addresses. This leads me to the first conclusion that mac_header is
->> placed wrong when using 80211. After that I saw a lot of people just
->> using the skb->data pointer. Now this gives even weirder issues for me
->> and actually totally crashes my kernel.
->
->
->
->
+- Felix
