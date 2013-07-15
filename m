@@ -1,76 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4511 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932580Ab3GVSbf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 14:31:35 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH V2 for-3.11 1/2] brcmfmac: decrement pending 8021x count
- upon tx failure
-Date: Mon, 22 Jul 2013 20:31:22 +0200
-Message-ID: <1374517882-2649-1-git-send-email-arend@broadcom.com> (sfid-20130722_203140_917808_606487FF)
-In-Reply-To: <1374489984-18250-2-git-send-email-arend@broadcom.com>
-References: <1374489984-18250-2-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55273 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755502Ab3GOLPb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 07:15:31 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 5/5] bcma: fix handling of big addrl
+Date: Mon, 15 Jul 2013 13:15:08 +0200
+Message-Id: <1373886908-4460-6-git-send-email-hauke@hauke-m.de> (sfid-20130715_131534_833602_0A011A13)
+In-Reply-To: <1373886908-4460-1-git-send-email-hauke@hauke-m.de>
+References: <1373886908-4460-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the transmit fails because there are no hanger slots or
-any other reason and the packet was an EAPOL packet the
-pending counter should be decreased although it was not
-transmitted so the driver does not end up in a dead-lock.
+The return value of bcma_erom_get_addr_desc() is a unsigned value and it
+could wrap around in the two complement writing. This happens for one
+core in the BCM4708 SoC.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-Fixed typo in commit message: coutner -> counter.
+ drivers/bcma/scan.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Replaces patch with:
-Message-ID: <1374489984-18250-2-git-send-email-arend@broadcom.com>
-
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index f0d9f7f..29b1f24 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1744,13 +1744,14 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 	ulong flags;
- 	int fifo = BRCMF_FWS_FIFO_BCMC;
- 	bool multicast = is_multicast_ether_addr(eh->h_dest);
-+	bool pae = eh->h_proto == htons(ETH_P_PAE);
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index f2f1415..cd6b20f 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -213,7 +213,7 @@ static s32 bcma_erom_get_mst_port(struct bcma_bus *bus, u32 __iomem **eromptr)
+ 	return ent;
+ }
  
- 	/* determine the priority */
- 	if (!skb->priority)
- 		skb->priority = cfg80211_classify8021d(skb);
- 
- 	drvr->tx_multicast += !!multicast;
--	if (ntohs(eh->h_proto) == ETH_P_PAE)
-+	if (pae)
- 		atomic_inc(&ifp->pend_8021x_cnt);
- 
- 	if (!brcmf_fws_fc_active(fws)) {
-@@ -1781,6 +1782,11 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 		brcmf_fws_schedule_deq(fws);
- 	} else {
- 		brcmf_err("drop skb: no hanger slot\n");
-+		if (pae) {
-+			atomic_dec(&ifp->pend_8021x_cnt);
-+			if (waitqueue_active(&ifp->pend_8021x_wait))
-+				wake_up(&ifp->pend_8021x_wait);
-+		}
- 		brcmu_pkt_buf_free_skb(skb);
+-static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
++static u32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 				  u32 type, u8 port)
+ {
+ 	u32 addrl, addrh, sizel, sizeh = 0;
+@@ -225,7 +225,7 @@ static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 	    ((ent & SCAN_ADDR_TYPE) != type) ||
+ 	    (((ent & SCAN_ADDR_PORT) >> SCAN_ADDR_PORT_SHIFT) != port)) {
+ 		bcma_erom_push_ent(eromptr);
+-		return -EINVAL;
++		return (u32)-EINVAL;
  	}
- 	brcmf_fws_unlock(drvr, flags);
+ 
+ 	addrl = ent & SCAN_ADDR_ADDR;
+@@ -273,7 +273,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 			      struct bcma_device_id *match, int core_num,
+ 			      struct bcma_device *core)
+ {
+-	s32 tmp;
++	u32 tmp;
+ 	u8 i, j;
+ 	s32 cia, cib;
+ 	u8 ports[2], wrappers[2];
+@@ -351,11 +351,11 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 	 * the main register space for the core
+ 	 */
+ 	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
+-	if (tmp <= 0) {
++	if (tmp == 0 || IS_ERR_VALUE(tmp)) {
+ 		/* Try again to see if it is a bridge */
+ 		tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 					      SCAN_ADDR_TYPE_BRIDGE, 0);
+-		if (tmp <= 0) {
++		if (tmp == 0 || IS_ERR_VALUE(tmp)) {
+ 			return -EILSEQ;
+ 		} else {
+ 			bcma_info(bus, "Bridge found\n");
+@@ -369,7 +369,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		for (j = 0; ; j++) {
+ 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 				SCAN_ADDR_TYPE_SLAVE, i);
+-			if (tmp < 0) {
++			if (IS_ERR_VALUE(tmp)) {
+ 				/* no more entries for port _i_ */
+ 				/* pr_debug("erom: slave port %d "
+ 				 * "has %d descriptors\n", i, j); */
+@@ -386,7 +386,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		for (j = 0; ; j++) {
+ 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 				SCAN_ADDR_TYPE_MWRAP, i);
+-			if (tmp < 0) {
++			if (IS_ERR_VALUE(tmp)) {
+ 				/* no more entries for port _i_ */
+ 				/* pr_debug("erom: master wrapper %d "
+ 				 * "has %d descriptors\n", i, j); */
+@@ -404,7 +404,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		for (j = 0; ; j++) {
+ 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 				SCAN_ADDR_TYPE_SWRAP, i + hack);
+-			if (tmp < 0) {
++			if (IS_ERR_VALUE(tmp)) {
+ 				/* no more entries for port _i_ */
+ 				/* pr_debug("erom: master wrapper %d "
+ 				 * has %d descriptors\n", i, j); */
 -- 
 1.7.10.4
-
 
