@@ -1,74 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:57174 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571Ab3GJSQt (ORCPT
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:64278 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757819Ab3GOQPv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 14:16:49 -0400
-Received: by mail-ob0-f170.google.com with SMTP id ef5so8935065obb.15
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jul 2013 11:16:49 -0700 (PDT)
-Message-ID: <51DDA50F.9050909@lwfinger.net> (sfid-20130710_201652_747318_3077E3D0)
-Date: Wed, 10 Jul 2013 13:16:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 15 Jul 2013 12:15:51 -0400
+Received: by mail-qa0-f49.google.com with SMTP id hu16so1706668qab.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jul 2013 09:15:50 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?Sm9zw6kgTWlndWVsIEdvbsOnYWx2ZXM=?=
-	<jose.goncalves@inov.pt>
-CC: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
-References: <51DB0ACC.7050800@inov.pt>   <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>   <51DB4195.8090103@inov.pt>   <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>   <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>   <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>   <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>   <51DC0E7C.9080306@inov.pt>   <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>   <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>  <51DD54D4.6090502@inov.pt> <51DD8C20.7010900@inov.pt> <1373476663.8385.28.camel@cumari.coelho.fi> <51DD9E6C.5060008@inov.pt>
-In-Reply-To: <51DD9E6C.5060008@inov.pt>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1373747861.5549.0.camel@jlt4.sipsolutions.net>
+References: <1373575017-25645-1-git-send-email-johannes@sipsolutions.net>
+	<CAKf6xpu7iUSKWsFwsUnV2Nv2XjWepzaXv6s=3WvcgB6dY20oGQ@mail.gmail.com>
+	<1373747861.5549.0.camel@jlt4.sipsolutions.net>
+Date: Mon, 15 Jul 2013 12:15:50 -0400
+Message-ID: <CAKf6xpsuw+sSq2LJzL2rQ44r7bzHAk4vYZ7+_K9=UAeBfEqBcQ@mail.gmail.com> (sfid-20130715_181554_844071_EA661B0B)
+Subject: Re: [PATCH] mac80211: fix duplicate retransmission detection
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/10/2013 12:48 PM, José Miguel Gonçalves wrote:
-> On 10-07-2013 18:17, Luciano Coelho wrote:
->> On Wed, 2013-07-10 at 17:30 +0100, José Miguel Gonçalves wrote:
->>> On 10-07-2013 13:34, José Miguel Gonçalves wrote:
->>>> I will try a new AP to see how it behaves...
->>>>
->>> I've tested with my Android smartphone acting as an AP, without authentication,
->>> and I'm also unable to associate!
->>>
->>> I get from iw the following error message:
->>>
->>> wlan0 (phy #0): failed to connect to b4:07:f9:49:cc:65, status: 1:
->>> Unspecified failure
->>>
->>> Complete log is here:
->>>
->>> http://pastebin.com/DzPmMw8i
->>>
->>> So, something is definitely wrong with my setup... but what?
->>> Hope that log has some useful info for you...
->> This definitely looks like RF problems.  Especially this:
->>
->> [  177.575000] wlan0: send auth to b4:07:f9:49:cc:65 (try 1/3)
->> [  177.595000] wlan0: send auth to b4:07:f9:49:cc:65 (try 2/3)
->> [  177.605000] wlcore: EVENT on mbox 1
->> [  177.605000] wlcore: MBOX vector: 0x100000
->> [  177.610000] wlcore: MAX_TX_FAILURE_EVENT_ID
->> [  177.615000] wlan0: send auth to b4:07:f9:49:cc:65 (try 3/3)
->> [  177.640000] wlan0: authentication with b4:07:f9:49:cc:65 timed out
->>
->> You are send auth requests out, but not getting anything back.
->> Apparently you're not even getting ACKs (as pointed out by the
->> MAX_TX_FAILURE_EVENT_ID).
+On Sat, Jul 13, 2013 at 4:37 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2013-07-13 at 12:28 -0400, Jason Andryuk wrote:
 >
-> Hum. I never considered RF problems because I'm testing this module with a
-> Jorjin's development kit, so I was considering that Jorjin knows how to make
-> PCBs for RF. Also seeing that when I remove the antenna the AP signal strength
-> changes from -51 dBm to -73 dBm was a signal to me that the RF was OK.
->
+>> > +       if (rx->skb->len >= 24 && rx->sta &&
 >>
->> Do you have a sniffer? You could try to use your TP-Link dongle with
->> wireshark to see if it works fine as a sniffer.
+>> Shouldn't this check rx->skb first?
+>> if (rx->sta && rx->sta->len >= 24 &&
 >
-> I have a text console only system. I could put tcpdump on my system, but I think
-> I can not monitor wireless traffic with it, or can I?
+> Hmm? did you mean rx->skb? But what makes you think it can be NULL???
 
-I use Kismet to monitor the air on a text-only system.
+Whoops, I totally misread sta v skb.  Sorry for the noise.
 
-Larry
-
-
+Jason
