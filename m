@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:58017 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755900Ab3GOLqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 07:46:47 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH RESEND 3.9 0/4] Enable 7000 device family on 3.9
-Date: Mon, 15 Jul 2013 14:46:40 +0300
-Message-Id: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134651_294761_73BFED28)
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:42798 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754547Ab3GOJGe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 05:06:34 -0400
+Received: by mail-lb0-f177.google.com with SMTP id 10so9112559lbf.36
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jul 2013 02:06:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87mwpop93v.fsf@kamboji.qca.qualcomm.com>
+References: <1373624746-3244-1-git-send-email-janusz.dziedzic@tieto.com>
+	<87mwpop93v.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 15 Jul 2013 11:06:31 +0200
+Message-ID: <CALhHN=pGFRS8CW31vq0gRAmos-yPRVUffVi_QibbNVLq7x-ObA@mail.gmail.com> (sfid-20130715_110649_703072_E6D6427E)
+Subject: Re: [PATCH] ath10k: pass also QOS Null frames through mgmt tx path
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This small patch series enables 7260 and 3160 devices on 3.9
-kernel. Three patches are already in linux.git (3.11-rc1).
-One patch is 3.9 specific and disables configuration that is not
-supported in 3.9.
+  On 15 July 2013 09:37, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+>
+>> Fw will report wrong tx status for QOS Null frames
+>> sent through data tx path.
+>>
+>> This patch fixes station(s) keep alive detection
+>> triggered from wpa_supplicant/hostapd when work
+>> as AP/GO and WMM enabled.
+>>
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>
+> I think you mentioned privately that this patch should be dropped. Is
+> that still the case?
+>
 
-Dor Shaish (1):
-  iwlwifi: mvm: don't use cts to self
+Yes, please drop this patch
 
-Emmanuel Grumbach (1):
-  iwlwifi: mvm: support BSS only
-
-Johannes Berg (2):
-  iwlwifi: mvm: adjust firmware D3 configuration API
-  iwlwifi: bump required firmware API version for 3160/7260
-
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h |    4 +++-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c  |    4 ++--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c  |   24 +-----------------------
- drivers/net/wireless/iwlwifi/pcie/7000.c     |   12 ++++++------
- 4 files changed, 12 insertions(+), 32 deletions(-)
-
--- 
-1.7.10.4
-
+BR
+Janusz
