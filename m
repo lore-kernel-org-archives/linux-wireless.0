@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:59662 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965004Ab3GLSAX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 14:00:23 -0400
-Message-ID: <1373652022.2614.13.camel@joe-AO722> (sfid-20130712_200026_675750_43EF9307)
-Subject: Re: [PATCH] brcmsmac: Further reduce log spam from tx phy messages
-From: Joe Perches <joe@perches.com>
-To: John Greene <jogreene@redhat.com>
-Cc: linville@tuxdriver.com, arend@broadcom.com,
-	linux-wireless@vger.kernel.org
-Date: Fri, 12 Jul 2013 11:00:22 -0700
-In-Reply-To: <1373640919-2685-1-git-send-email-jogreene@redhat.com>
-References: <1373640919-2685-1-git-send-email-jogreene@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from alpha.kreiz-it.fr ([178.32.219.166]:16454 "EHLO
+	alpha.kreiz-it.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754038Ab3GOIVr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 04:21:47 -0400
+From: "Cedric GROSS" <cg@cgross.info>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>
+Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>,
+	"'Adrian Chadd'" <adrian@freebsd.org>
+References: "<001a01ce7fb1$75bfdc10$613f9430$@info>	<CA+icZUVoZkg3nT6=SwTaLCWoa+v6aLkXSP5b71a0GmxMMWOyHA@mail.gmail.com>	<001b01ce7fba$4bd15e20$e3741a60$@info>" <CA+icZUX9jvAcvEkKSsN-KU2GWxPVGg9Z=soecwJtPL0soHD4Zw@mail.gmail.com> <CANUX_P2K9_q_FnkzDrn4=Y3rzn3FvkPjCB4qGmts=7kni9oW4A@mail.gmail.com> <000301ce8077$252f1830$6f8d4890$@info> (sfid-20130714_114733_295326_9BBEA36B) <b04d657de9d7831febeff7b4ac8f371a@sipsolutions.net>
+In-Reply-To: <b04d657de9d7831febeff7b4ac8f371a@sipsolutions.net>
+Subject: RE: Firmware error for Centrino N 2230
+Date: Mon, 15 Jul 2013 10:21:41 +0200
+Message-ID: <001b01ce8134$5776a980$0663fc80$@info> (sfid-20130715_102150_853527_50BD8438)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-07-12 at 10:55 -0400, John Greene wrote:
-> Relegate 2 phy messages to debug status as they create excessive
-> log spam, noted in multiple bugzillas for brcmsmac v3.8 and up.
+Hello Johannes,
 
-Hi John,
+> De : Johannes Berg [mailto:johannes@sipsolutions.net]
+> Envoyé : dimanche 14 juillet 2013 12:52
+> À : Cedric GROSS; Adrian Chadd
+> 
+> > Many many many thanks. I will check that tomorrow.
+> >
+> > FreeBSD driver for intel wireless card is a bit old and need a lot of
+> > improvement to manage new NIC.
+> > Is there a way to get all assert code meaning ? It could be really a
+> > big big help for me.
+> 
+> Unfortunately not, but have you seen the "iwl" FreeBSD driver that we
+> posted a while ago? That should help you some. Are you in contact with
+> anyone else maybe?
 
-Just trivia:
+I get this version of iwl : https://github.com/seanbruno/freebsd-iwl
+But this one also doesn't work with my card. I also trying to modify for my NIC. For the moment I had a failure at the first RXON command.
 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-[]
-> @@ -928,7 +928,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
-[]
-> -			brcms_err(wlc->hw->d11core,
-> +			brcms_dbg_ht(wlc->hw->d11core,
->  				  "%s: ampdu tx phy error (0x%x)\n",
->  				  __func__, txs->phyerr);
+I'm in contact only with Hiren Panchasara (hiren@freebsd.org).
+I wrote to ilw at linux.intel.com also but no answer for the moment.
 
-Please keep the indentation of the arguments of
-the same statement aligned to the open parenthesis.
-
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-[]
-> @@ -882,7 +882,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
-[]
-> -		brcms_err(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
-> +		brcms_dbg_tx(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
->  			  txs->phyerr, txh->MainRates);
-
-Here too.
-
+> 
+> johannes
 
