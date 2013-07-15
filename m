@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55544 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752737Ab3GXTPL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jul 2013 15:15:11 -0400
-Date: Wed, 24 Jul 2013 15:02:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Subject: Re: [PATCH 18/21] mwifiex: handle driver initialization error paths
-Message-ID: <20130724190250.GG2385@tuxdriver.com> (sfid-20130724_211516_475803_977AFA22)
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
- <1374545878-15683-19-git-send-email-bzhao@marvell.com>
- <20130724151651.GD2385@tuxdriver.com>
- <477F20668A386D41ADCC57781B1F70430EA311794C@SC-VEXCH1.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430EA311794C@SC-VEXCH1.marvell.com>
+Received: from mga14.intel.com ([143.182.124.37]:31440 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755789Ab3GOLpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 07:45:13 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3.10 2/3] iwlwifi: mvm: adjust firmware D3 configuration API
+Date: Mon, 15 Jul 2013 14:44:59 +0300
+Message-Id: <1373888700-3040-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134524_887366_38D2894F)
+In-Reply-To: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 24, 2013 at 11:48:25AM -0700, Bing Zhao wrote:
-> Hi John,
-> 
-> > This one didn't apply on the current wireless-next tree.  Can you
-> > fix it up?
-> 
-> 18/21 and 19/21 depend on this patch:
-> 
-> commit 232fde062e0a2cc52e8e18a50cda361b4ba88f34
-> Author: Daniel Drake <dsd@laptop.org>
-> Date:   Sat Jul 13 10:57:10 2013 -0400
-> 
->     mwifiex: fix IRQ enable/disable
-> 
-> which is in wireless.git and wireless-testing.git currently.
-> 
-> 
-> We can apply 18 and 19 later after commit 232fde0 is merged back to wireless-next.git.
-> (I will send you a reminder to merge these two patches once commit 232fde0 is in -next tree.)
-> 
-> Thanks,
-> Bing
+From: Johannes Berg <johannes.berg@intel.com>
 
-OK, thanks for checking!
+commit dfcb4c3aacedee6838e436fb575b31e138505203 upstream.
 
+The D3 firmware API changed to include a new field, adjust
+the driver to it to avoid getting an NMI when configuring.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
+index 51e015d..6f8b2c1 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
+@@ -75,13 +75,15 @@ enum iwl_d3_wakeup_flags {
+  * struct iwl_d3_manager_config - D3 manager configuration command
+  * @min_sleep_time: minimum sleep time (in usec)
+  * @wakeup_flags: wakeup flags, see &enum iwl_d3_wakeup_flags
++ * @wakeup_host_timer: force wakeup after this many seconds
+  *
+  * The structure is used for the D3_CONFIG_CMD command.
+  */
+ struct iwl_d3_manager_config {
+ 	__le32 min_sleep_time;
+ 	__le32 wakeup_flags;
+-} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_3 */
++	__le32 wakeup_host_timer;
++} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_4 */
+ 
+ 
+ /* TODO: OFFLOADS_QUERY_API_S_VER_1 */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10.4
+
