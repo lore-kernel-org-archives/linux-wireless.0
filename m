@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50742 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198Ab3GXOPQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jul 2013 10:15:16 -0400
-Date: Wed, 24 Jul 2013 10:11:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: QCA vs community contributions to QCA drivers
-Message-ID: <20130724141129.GB2385@tuxdriver.com> (sfid-20130724_161529_454162_A9F0C797)
-References: <CAB=NE6W7udZBy0WR9pT6QBJxXoz6RkFEZccotihPCHNT6Q4jCg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6W7udZBy0WR9pT6QBJxXoz6RkFEZccotihPCHNT6Q4jCg@mail.gmail.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:55296 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755971Ab3GOMX7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 08:23:59 -0400
+Message-ID: <1373891038.2062.7.camel@joe-AO722> (sfid-20130715_142402_481730_4C4326B6)
+Subject: Re: [PATCH] brcmsmac: Further reduce log spam from tx phy messages
+From: Joe Perches <joe@perches.com>
+To: John Greene <jogreene@redhat.com>
+Cc: linville@tuxdriver.com, arend@broadcom.com,
+	linux-wireless@vger.kernel.org
+Date: Mon, 15 Jul 2013 05:23:58 -0700
+In-Reply-To: <51E3E7F0.7050308@redhat.com>
+References: <1373640919-2685-1-git-send-email-jogreene@redhat.com>
+	 <1373652022.2614.13.camel@joe-AO722> <51E3E7F0.7050308@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 23, 2013 at 03:09:15PM -0700, Luis R. Rodriguez wrote:
-> Here's a google drive spreadsheet anyone can view of QCA vs community
-> contributions to QCA device drivers:
-> 
-> https://docs.google.com/spreadsheet/ccc?key=0AtNdeeyGJEJ7dG45U2xrZldlQm80Nlg5QzEwUmtNUGc
-> 
-> If you'd like to contribute feel free to drop me a line or contact of
-> the other QCA device driver maintainers.
+On Mon, 2013-07-15 at 08:15 -0400, John Greene wrote:
+> On 07/12/2013 02:00 PM, Joe Perches wrote:
+> > On Fri, 2013-07-12 at 10:55 -0400, John Greene wrote:
+[]
+> > Just trivia:
+> >> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+> > []
+> >> @@ -928,7 +928,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+> > []
+> >> -			brcms_err(wlc->hw->d11core,
+> >> +			brcms_dbg_ht(wlc->hw->d11core,
+> >>   				  "%s: ampdu tx phy error (0x%x)\n",
+> >>   				  __func__, txs->phyerr);
+> >
+> > Please keep the indentation of the arguments of
+> > the same statement aligned to the open parenthesis.
+[]
+> Thanks Joe. My oversight.  I wish the checkpatch flagged this stuff. 
 
-I'm not sure what the expectation is, but those numbers look pretty
-good to me...?
+It does if you use the --strict option.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
