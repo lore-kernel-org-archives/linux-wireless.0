@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:63233 "EHLO mout.gmx.net"
+Received: from nbd.name ([46.4.11.11]:60326 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753693Ab3G1O22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Jul 2013 10:28:28 -0400
-Received: from [192.168.2.102] ([93.218.71.62]) by mail.gmx.com (mrgmx001)
- with ESMTPSA (Nemesis) id 0MVeCF-1Ua4cH2MTn-00YvwO for
- <linux-wireless@vger.kernel.org>; Sun, 28 Jul 2013 16:28:26 +0200
-Message-ID: <51F52A89.4050506@rempel-privat.de> (sfid-20130728_162833_874074_4DD41814)
-Date: Sun, 28 Jul 2013 16:28:25 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+	id S1755750Ab3GOMyF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jul 2013 08:54:05 -0400
+Message-ID: <51E3F0EA.3060603@openwrt.org> (sfid-20130715_145407_868273_999C152B)
+Date: Mon, 15 Jul 2013 14:54:02 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: FUSB200 xhci issue
-References: <51ED4E12.8030006@rempel-privat.de> <5176750.ryksn4nuMW@blech> <51F4B128.3010901@rempel-privat.de> <201307281338.39157.chunkeey@googlemail.com> <51F50AB7.3030204@rempel-privat.de>
-In-Reply-To: <51F50AB7.3030204@rempel-privat.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Joe Perches <joe@perches.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	krzysiek@podlesie.net
+Subject: Re: [PATCH 3.11] mac80211/minstrel: fix NULL pointer dereference
+ issue
+References: <1373891706-1071-1-git-send-email-nbd@openwrt.org> <1373892651.2062.11.camel@joe-AO722>
+In-Reply-To: <1373892651.2062.11.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 28.07.2013 14:12, schrieb Oleksij Rempel:
-> Am 28.07.2013 13:38, schrieb Christian Lamparter:
->
->>>>
->>>> Anyway, I tried the -next branch.
->>>>
->>>> commit dbbb809d592dde0b3c9ecb97b3b387ff8e40e799
->>>> Author: Oleksij Rempel <linux@rempel-privat.de>
->>>> Date:   Wed Jul 24 10:26:18 2013 +0200
->>>>
->>>>       k2_fw_usb_api: workaround for EP4 bug.
->>>>
->>>> but still, the device won't show up after autosuspend.
->>>
->>> Hm... firmware probably didn't rebooted before suspend. Did interface
->>> was up, before autosuspend? If no, you need latest wireles-testing -
->>> there are patches to handle this issue. Or just make "ifconfig wlan1 up"
->>>    before  rmmod.
->> Oh, I it was on the latest wireless-testing. (And the "ath9k_htc" module
->> had the patch "ath9k_htc: reboot firmwware if it was loaded").
->>
->> Furthermore, I did the same test with one of the ehci-only ports
->> and it worked. Both, devices (one had a AR7015, the other a AR9271)
->> came back after autosuspend there.
->
-> Grrr... so it brings us back to xhci issue. Even EP4 workaround wont
-> work here :( Suddenly i have no more ideas.
->
-> Sarah, it's your turn now.
+On 2013-07-15 2:50 PM, Joe Perches wrote:
+> On Mon, 2013-07-15 at 14:35 +0200, Felix Fietkau wrote:
+>> When priv_sta == NULL, mi->prev_sample is dereferenced too early. Move
+>> the assignment further down, after the rate_control_send_low call.
+>> 
+>> Reported-by: Krzysztof Mazur <krzysiek@podlesie.net>
+>> Cc: stable@vger.kernel.org # 3.10
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> 
+> Why should this be marked for stable?
+> 
+> It's a local reference only, it's not used.
+> 
+> It's like suggesting that all the initialized
+> automatics should not be set until after
+> rate_control_set_low is called.
+mi is set to priv_sta. It can be NULL. The case of priv_sta==NULL is
+caught by rate_control_send_low and causes it to bail out.
 
+- Felix
 
-Christian,
-can you please provide some more info about your xhci controller. I'll 
-try to get me same.
-
--- 
-Regards,
-Oleksij
