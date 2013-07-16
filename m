@@ -1,103 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49847 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197Ab3GIS1O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 14:27:14 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv4 2/5] mac80211: add functions to duplicate a cfg80211_beacon
-Date: Tue,  9 Jul 2013 20:27:01 +0200
-Message-Id: <1373394424-23298-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130709_202718_619700_2A6C4F6F)
-In-Reply-To: <1373394424-23298-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373394424-23298-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from ebb06.tieto.com ([131.207.168.38]:62223 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752198Ab3GPHUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 03:20:09 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infraread.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 01/10] ath10k: decouple pci start/stop logic
+Date: Tue, 16 Jul 2013 09:19:44 +0200
+Message-ID: <1373959193-5164-2-git-send-email-michal.kazior@tieto.com> (sfid-20130716_092016_815661_C89BF94B)
+In-Reply-To: <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
+References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
+ <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the channel switch announcement, it is required to set a new beacon
-after the driver arrived on the new channel. The new beacon will be set
-by nl80211, but is required to duplicate the beacon as the original
-memory within the netlink message will be gone.
+Split logic that prepares the device for BMI
+phase/cleans up related resources.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
-Changes to PATCHv2:
- * allocate only one memory chunk
----
- net/mac80211/cfg.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+This is necessary for ath10k to be able to restart
+hw on the fly without reloading the module.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b82fff6..8e6c935 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2775,6 +2775,62 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	return 0;
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/hif.h |   20 ++++++
+ drivers/net/wireless/ath/ath10k/pci.c |  110 +++++++++++++++++++++------------
+ 2 files changed, 91 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
+index 010e265..00d2940 100644
+--- a/drivers/net/wireless/ath/ath10k/hif.h
++++ b/drivers/net/wireless/ath/ath10k/hif.h
+@@ -46,8 +46,11 @@ struct ath10k_hif_ops {
+ 				void *request, u32 request_len,
+ 				void *response, u32 *response_len);
+ 
++	/* Post BMI phase, after FW is loaded. Starts regular operation */
+ 	int (*start)(struct ath10k *ar);
+ 
++	/* Clean up what start() did. This does not revert to BMI phase. If
++	 * desired so, call power_down() and power_up() */
+ 	void (*stop)(struct ath10k *ar);
+ 
+ 	int (*map_service_to_pipe)(struct ath10k *ar, u16 service_id,
+@@ -70,6 +73,13 @@ struct ath10k_hif_ops {
+ 			      struct ath10k_hif_cb *callbacks);
+ 
+ 	u16 (*get_free_queue_number)(struct ath10k *ar, u8 pipe_id);
++
++	/* Power up the device and enter BMI transfer mode for FW download */
++	int (*power_up)(struct ath10k *ar);
++
++	/* Power down the device and free up resources. stop() must be called
++	 * before this if start() was called earlier */
++	void (*power_down)(struct ath10k *ar);
+ };
+ 
+ 
+@@ -134,4 +144,14 @@ static inline u16 ath10k_hif_get_free_queue_number(struct ath10k *ar,
+ 	return ar->hif.ops->get_free_queue_number(ar, pipe_id);
  }
  
-+static struct cfg80211_beacon_data *
-+cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
++static inline int ath10k_hif_power_up(struct ath10k *ar)
 +{
-+	struct cfg80211_beacon_data *new_beacon;
-+	u8 *pos;
-+	int len;
-+
-+	len = beacon->head_len + beacon->tail_len + beacon->beacon_ies_len +
-+	      beacon->proberesp_ies_len + beacon->assocresp_ies_len +
-+	      beacon->probe_resp_len;
-+
-+	new_beacon = kzalloc(sizeof(*new_beacon) + len, GFP_KERNEL);
-+	if (!new_beacon)
-+		return NULL;
-+
-+	pos = (u8 *)(new_beacon + 1);
-+	if (beacon->head_len) {
-+		new_beacon->head_len = beacon->head_len;
-+		new_beacon->head = pos;
-+		memcpy(pos, beacon->head, beacon->head_len);
-+		pos += beacon->head_len;
-+	}
-+	if (beacon->tail_len) {
-+		new_beacon->tail_len = beacon->tail_len;
-+		new_beacon->tail = pos;
-+		memcpy(pos, beacon->tail, beacon->tail_len);
-+		pos += beacon->tail_len;
-+	}
-+	if (beacon->beacon_ies_len) {
-+		new_beacon->beacon_ies_len = beacon->beacon_ies_len;
-+		new_beacon->beacon_ies = pos;
-+		memcpy(pos, beacon->beacon_ies, beacon->beacon_ies_len);
-+		pos += beacon->beacon_ies_len;
-+	}
-+	if (beacon->proberesp_ies_len) {
-+		new_beacon->proberesp_ies_len = beacon->proberesp_ies_len;
-+		new_beacon->proberesp_ies = pos;
-+		memcpy(pos, beacon->proberesp_ies, beacon->proberesp_ies_len);
-+		pos += beacon->proberesp_ies_len;
-+	}
-+	if (beacon->assocresp_ies_len) {
-+		new_beacon->assocresp_ies_len = beacon->assocresp_ies_len;
-+		new_beacon->assocresp_ies = pos;
-+		memcpy(pos, beacon->assocresp_ies, beacon->assocresp_ies_len);
-+		pos += beacon->assocresp_ies_len;
-+	}
-+	if (beacon->probe_resp_len) {
-+		new_beacon->probe_resp_len = beacon->probe_resp_len;
-+		beacon->probe_resp = pos;
-+		memcpy(pos, beacon->probe_resp, beacon->probe_resp_len);
-+		pos += beacon->probe_resp_len;
-+	}
-+
-+	return new_beacon;
++	return ar->hif.ops->power_up(ar);
 +}
 +
- static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			     struct ieee80211_channel *chan, bool offchan,
- 			     unsigned int wait, const u8 *buf, size_t len,
++static inline void ath10k_hif_power_down(struct ath10k *ar)
++{
++	ar->hif.ops->power_down(ar);
++}
++
+ #endif /* _HIF_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 7da0983..c15b0c5 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -54,6 +54,8 @@ static int ath10k_pci_post_rx_pipe(struct hif_ce_pipe_info *pipe_info,
+ 					     int num);
+ static void ath10k_pci_rx_pipe_cleanup(struct hif_ce_pipe_info *pipe_info);
+ static void ath10k_pci_stop_ce(struct ath10k *ar);
++static void ath10k_pci_device_reset(struct ath10k *ar);
++static int ath10k_pci_reset_target(struct ath10k *ar);
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* host->target HTC control and raw streams */
+@@ -1734,6 +1736,66 @@ static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
+ 	ath10k_pci_sleep(ar);
+ }
+ 
++static int ath10k_pci_hif_power_up(struct ath10k *ar)
++{
++	int ret;
++
++	/*
++	 * Bring the target up cleanly.
++	 *
++	 * The target may be in an undefined state with an AUX-powered Target
++	 * and a Host in WoW mode. If the Host crashes, loses power, or is
++	 * restarted (without unloading the driver) then the Target is left
++	 * (aux) powered and running. On a subsequent driver load, the Target
++	 * is in an unexpected state. We try to catch that here in order to
++	 * reset the Target and retry the probe.
++	 */
++	ath10k_pci_device_reset(ar);
++
++	ret = ath10k_pci_reset_target(ar);
++	if (ret)
++		goto err;
++
++	if (ath10k_target_ps) {
++		ath10k_dbg(ATH10K_DBG_PCI, "on-chip power save enabled\n");
++	} else {
++		/* Force AWAKE forever */
++		ath10k_dbg(ATH10K_DBG_PCI, "on-chip power save disabled\n");
++		ath10k_do_pci_wake(ar);
++	}
++
++	ret = ath10k_pci_ce_init(ar);
++	if (ret)
++		goto err_ps;
++
++	ret = ath10k_pci_init_config(ar);
++	if (ret)
++		goto err_ce;
++
++	ret = ath10k_pci_wake_target_cpu(ar);
++	if (ret) {
++		ath10k_err("could not wake up target CPU (%d)\n", ret);
++		goto err_ce;
++	}
++
++	return 0;
++
++err_ce:
++	ath10k_pci_ce_deinit(ar);
++err_ps:
++	if (!ath10k_target_ps)
++		ath10k_do_pci_sleep(ar);
++err:
++	return ret;
++}
++
++static void ath10k_pci_hif_power_down(struct ath10k *ar)
++{
++	ath10k_pci_ce_deinit(ar);
++	if (!ath10k_target_ps)
++		ath10k_do_pci_sleep(ar);
++}
++
+ static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
+ 	.send_head		= ath10k_pci_hif_send_head,
+ 	.exchange_bmi_msg	= ath10k_pci_hif_exchange_bmi_msg,
+@@ -1744,6 +1806,8 @@ static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
+ 	.send_complete_check	= ath10k_pci_hif_send_complete_check,
+ 	.set_callbacks		= ath10k_pci_hif_set_callbacks,
+ 	.get_free_queue_number	= ath10k_pci_hif_get_free_queue_number,
++	.power_up		= ath10k_pci_hif_power_up,
++	.power_down		= ath10k_pci_hif_power_down,
+ };
+ 
+ static void ath10k_pci_ce_tasklet(unsigned long ptr)
+@@ -2245,54 +2309,22 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_iomap;
+ 	}
+ 
+-	/*
+-	 * Bring the target up cleanly.
+-	 *
+-	 * The target may be in an undefined state with an AUX-powered Target
+-	 * and a Host in WoW mode. If the Host crashes, loses power, or is
+-	 * restarted (without unloading the driver) then the Target is left
+-	 * (aux) powered and running. On a subsequent driver load, the Target
+-	 * is in an unexpected state. We try to catch that here in order to
+-	 * reset the Target and retry the probe.
+-	 */
+-	ath10k_pci_device_reset(ar);
+-
+-	ret = ath10k_pci_reset_target(ar);
+-	if (ret)
+-		goto err_intr;
+-
+-	if (ath10k_target_ps) {
+-		ath10k_dbg(ATH10K_DBG_PCI, "on-chip power save enabled\n");
+-	} else {
+-		/* Force AWAKE forever */
+-		ath10k_dbg(ATH10K_DBG_PCI, "on-chip power save disabled\n");
+-		ath10k_do_pci_wake(ar);
+-	}
+-
+-	ret = ath10k_pci_ce_init(ar);
+-	if (ret)
+-		goto err_intr;
+-
+-	ret = ath10k_pci_init_config(ar);
+-	if (ret)
+-		goto err_ce;
+-
+-	ret = ath10k_pci_wake_target_cpu(ar);
++	ret = ath10k_pci_hif_power_up(ar);
+ 	if (ret) {
+-		ath10k_err("could not wake up target CPU (%d)\n", ret);
+-		goto err_ce;
++		ath10k_err("could not start pci hif (%d)\n", ret);
++		goto err_intr;
+ 	}
+ 
+ 	ret = ath10k_core_register(ar);
+ 	if (ret) {
+ 		ath10k_err("could not register driver core (%d)\n", ret);
+-		goto err_ce;
++		goto err_hif;
+ 	}
+ 
+ 	return 0;
+ 
+-err_ce:
+-	ath10k_pci_ce_deinit(ar);
++err_hif:
++	ath10k_pci_hif_power_down(ar);
+ err_intr:
+ 	ath10k_pci_stop_intr(ar);
+ err_iomap:
+@@ -2331,7 +2363,7 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 	tasklet_kill(&ar_pci->msi_fw_err);
+ 
+ 	ath10k_core_unregister(ar);
+-	ath10k_pci_ce_deinit(ar);
++	ath10k_pci_hif_power_down(ar);
+ 	ath10k_pci_stop_intr(ar);
+ 
+ 	pci_set_drvdata(pdev, NULL);
 -- 
-1.7.10.4
+1.7.9.5
 
