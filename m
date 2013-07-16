@@ -1,41 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpfb1-g21.free.fr ([212.27.42.9]:45461 "EHLO
-	smtpfb1-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933055Ab3GQQsf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jul 2013 12:48:35 -0400
-Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2])
-	by smtpfb1-g21.free.fr (Postfix) with ESMTP id AB45D77D902
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Jul 2013 18:48:31 +0200 (CEST)
-Received: from zimbra65-e11.priv.proxad.net (unknown [172.20.243.215])
-	by smtp2-g21.free.fr (Postfix) with ESMTP id 1D1AF4B01B8
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Jul 2013 18:47:37 +0200 (CEST)
-Date: Wed, 17 Jul 2013 18:47:36 +0200 (CEST)
-From: etienne.champetier@free.fr
-To: linux-wireless@vger.kernel.org
-Message-ID: <800088722.345614075.1374079656592.JavaMail.root@zimbra65-e11.priv.proxad.net> (sfid-20130717_184842_603449_43DBAA9B)
-In-Reply-To: <242956217.344802091.1374060921158.JavaMail.root@zimbra65-e11.priv.proxad.net>
-Subject: authsae & ath9k nohwcrypt=1
+Received: from ebb06.tieto.com ([131.207.168.38]:56207 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752705Ab3GPH4C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 03:56:02 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 3/3] ath10k: create debugfs interface to trigger fw crash
+Date: Tue, 16 Jul 2013 09:54:37 +0200
+Message-ID: <1373961277-14784-4-git-send-email-michal.kazior@tieto.com> (sfid-20130716_095659_752795_3A7688BB)
+In-Reply-To: <1373961277-14784-1-git-send-email-michal.kazior@tieto.com>
+References: <1372148011-28234-1-git-send-email-michal.kazior@tieto.com>
+ <1373961277-14784-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+This can be useful for testing. To perform a
+forced firmware crash write 'crash' to
+'simulate_fw_crash' debugfs file. E.g.
 
-I'm making some test with authsae on openrwt and for wr1043nd router (AR9100 wireless) i still need 'ath9k nohwcrypt=1'
-for the secure mesh to work when on another router (AR9280 wireless) i don't need it.
-Is it a drivers bug? or is it hardware?
+  echo crash > /sys/kernel/debug/ieee80211/phy1/ath10k/simulate_fw_crash
 
--Router A: wr1043nd (need nohwcrypt=1 option)
-  -AR9100 wireless
-  -authsae - 2013-06-25-e2f67612101dc83f2c459d8ddc75c34bc83e1e83 (https://github.com/cozybit/authsae/tree/e2f67612101dc83f2c459d8ddc75c34bc83e1e83)
-  -kmod-ath9k - 3.10.1+2013-06-27-1 (backports-20130617-4-ge3220f5)
-  -openwrt BB r37364
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |   54 +++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
 
--Router B: ubnt rspro
-  -AR9280 wireless
-  -openwrt BB r37369 (same authsae/ath9k)
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 65279f5..4021bea 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -445,6 +445,57 @@ static const struct file_operations fops_fw_stats = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
++					     char __user *user_buf,
++					     size_t count, loff_t *ppos)
++{
++	const char buf[] = "To simulate firmware crash write the keyword"
++			   " `crash` to this file.\nThis will force firmware"
++			   " to report a crash to the host system.\n";
++	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
++}
++
++static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
++					      const char __user *user_buf,
++					      size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	char buf[32] = {};
++	int ret;
++
++	mutex_lock(&ar->conf_mutex);
++
++	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
++	if (strcmp(buf, "crash") && strcmp(buf, "crash\n")) {
++		ath10k_warn("write keyword `crash` to simulate firmware crash\n");
++		goto exit;
++	}
++
++	if (ar->state != ATH10K_STATE_ON &&
++	    ar->state != ATH10K_STATE_RESTARTED) {
++		ath10k_warn("firmware isn't loaded yet, nothing to crash\n");
++		goto exit;
++	}
++
++	ath10k_info("simulating firmware crash\n");
++
++	ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
++	if (ret)
++		ath10k_warn("failed to force fw hang (%d)\n", ret);
++
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return count;
++}
++
++static const struct file_operations fops_simulate_fw_crash = {
++	.read = ath10k_read_simulate_fw_crash,
++	.write = ath10k_write_simulate_fw_crash,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath10k_debug_create(struct ath10k *ar)
+ {
+ 	ar->debug.debugfs_phy = debugfs_create_dir("ath10k",
+@@ -461,6 +512,9 @@ int ath10k_debug_create(struct ath10k *ar)
+ 	debugfs_create_file("wmi_services", S_IRUSR, ar->debug.debugfs_phy, ar,
+ 			    &fops_wmi_services);
+ 
++	debugfs_create_file("simulate_fw_crash", S_IRUSR, ar->debug.debugfs_phy,
++			    ar, &fops_simulate_fw_crash);
++
+ 	return 0;
+ }
+ #endif /* CONFIG_ATH10K_DEBUGFS */
+-- 
+1.7.9.5
 
-Thanks in advance
-Etienne
