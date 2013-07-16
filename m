@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:42314 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932451Ab3GKJMV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:12:21 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>,
-	Clemens Ladisch <clemens@ladisch.de>
-Subject: [PATCH 43/50] sound: usb: midi: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:06:06 +0800
-Message-Id: <1373533573-12272-44-git-send-email-ming.lei@canonical.com> (sfid-20130711_111234_706986_AEC81B89)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:42644 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752691Ab3GPHjJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 03:39:09 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 06/10] ath10k: move free_vdev_map initialization
+Date: Tue, 16 Jul 2013 09:38:55 +0200
+Message-ID: <1373960339-8525-7-git-send-email-michal.kazior@tieto.com> (sfid-20130716_100606_850536_FD48AFFB)
+In-Reply-To: <1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
+References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
+ <1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+This is necessary for hw reconfiguration to work.
+Since mac80211 is not calling remove_interface()
+is such case we must reset free_vdev_map.
 
-Cc: Jaroslav Kysela <perex@perex.cz>
-Cc: Takashi Iwai <tiwai@suse.de>
-Cc: Clemens Ladisch <clemens@ladisch.de>
-Cc: alsa-devel@alsa-project.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+Also use a define instead of a hardcoded value for
+vdev map initialization.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- sound/usb/midi.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/sound/usb/midi.c b/sound/usb/midi.c
-index b901f46..86af276 100644
---- a/sound/usb/midi.c
-+++ b/sound/usb/midi.c
-@@ -279,15 +279,16 @@ static void snd_usbmidi_out_urb_complete(struct urb* urb)
- 	struct out_urb_context *context = urb->context;
- 	struct snd_usb_midi_out_endpoint* ep = context->ep;
- 	unsigned int urb_index;
-+	unsigned long flags;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 01c1d82..0e4a704 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -458,8 +458,6 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+ 	ar->hif.priv = hif_priv;
+ 	ar->hif.ops = hif_ops;
  
--	spin_lock(&ep->buffer_lock);
-+	spin_lock_irqsave(&ep->buffer_lock, flags);
- 	urb_index = context - ep->urbs;
- 	ep->active_urbs &= ~(1 << urb_index);
- 	if (unlikely(ep->drain_urbs)) {
- 		ep->drain_urbs &= ~(1 << urb_index);
- 		wake_up(&ep->drain_wait);
- 	}
--	spin_unlock(&ep->buffer_lock);
-+	spin_unlock_irqrestore(&ep->buffer_lock, flags);
- 	if (urb->status < 0) {
- 		int err = snd_usbmidi_urb_error(urb->status);
- 		if (err < 0) {
+-	ar->free_vdev_map = 0xFF; /* 8 vdevs */
+-
+ 	init_completion(&ar->scan.started);
+ 	init_completion(&ar->scan.completed);
+ 	init_completion(&ar->scan.on_channel);
+@@ -590,6 +588,8 @@ int ath10k_core_start(struct ath10k *ar)
+ 	if (status)
+ 		goto err_disconnect_htc;
+ 
++	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
++
+ 	return 0;
+ 
+ err_disconnect_htc:
 -- 
 1.7.9.5
 
