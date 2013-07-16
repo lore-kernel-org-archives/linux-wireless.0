@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:34438 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCVV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:21:21 -0400
-Received: by mail-pd0-f170.google.com with SMTP id x11so1310398pdj.15
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:20 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 29/53] wireless-regdb: IT, Italy - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:18 -0700
-Message-Id: <1374027522-18488-30-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_076328_3936975B)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:56207 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752860Ab3GPHz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 03:55:57 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 0/3] ath10k: hardware recovery
+Date: Tue, 16 Jul 2013 09:54:34 +0200
+Message-ID: <1373961277-14784-1-git-send-email-michal.kazior@tieto.com> (sfid-20130716_095600_463156_E8FF4C6E)
+In-Reply-To: <1372148011-28234-1-git-send-email-michal.kazior@tieto.com>
+References: <1372148011-28234-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Respin of hw recovery. This implements recovery
+from a firmware crash.
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+Note: this is based on my
+      "ath10k: device setup refactor" patchset.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+v3:
+ * rename RESTARTING_ON/OFF to RESTARTING/RESTARTED
+ * update commit message for 'create debufs..'
 
-Quoting:
+Michal Kazior (3):
+  ath10k: implement device recovery
+  ath10k: implement fw crash simulation command
+  ath10k: create debugfs interface to trigger fw crash
 
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
+ drivers/net/wireless/ath/ath10k/core.c  |   30 +++++++++
+ drivers/net/wireless/ath/ath10k/core.h  |   19 ++++++
+ drivers/net/wireless/ath/ath10k/debug.c |   54 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htc.c   |    3 +
+ drivers/net/wireless/ath/ath10k/mac.c   |  101 +++++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath10k/mac.h   |    1 +
+ drivers/net/wireless/ath/ath10k/pci.c   |    2 +
+ drivers/net/wireless/ath/ath10k/wmi.c   |   26 ++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h   |   19 ++++++
+ 9 files changed, 236 insertions(+), 19 deletions(-)
 
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 88ba709..b8ddd9e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -415,9 +415,9 @@ country IR:
- 
- country IT: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
 -- 
-1.7.10.4
+1.7.9.5
 
