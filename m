@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:54294 "EHLO mout.gmx.net"
+Received: from mx1.redhat.com ([209.132.183.28]:31907 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753158Ab3GSSQd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 14:16:33 -0400
-Received: from zwerg.Speedport_W_723V_1_28_000 ([93.218.114.45]) by
- mail.gmx.com (mrgmx103) with ESMTPSA (Nemesis) id 0MAy40-1UsaFM2YFA-009zTb
- for <linux-wireless@vger.kernel.org>; Fri, 19 Jul 2013 20:16:32 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 2/2] ath9k_htc: reboot firmware if it was loaded
-Date: Fri, 19 Jul 2013 20:16:18 +0200
-Message-Id: <1374257778-9758-3-git-send-email-linux@rempel-privat.de> (sfid-20130719_201635_434936_A15DBCE0)
-In-Reply-To: <1374257778-9758-1-git-send-email-linux@rempel-privat.de>
-References: <1374257778-9758-1-git-send-email-linux@rempel-privat.de>
+	id S1753693Ab3GPKYx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 06:24:53 -0400
+Date: Tue, 16 Jul 2013 12:27:44 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Pedro Francisco <pedrogfrancisco@gmail.com>
+Cc: Tino Keitel <tino.keitel@tikei.de>,
+	ML linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Power saving features for iwl4965
+Message-ID: <20130716102743.GA8321@redhat.com> (sfid-20130716_122515_517723_19238429)
+References: <20130107110759.GC6931@redhat.com>
+ <20130603085239.GA26920@mac.home>
+ <20130603141804.GA2146@redhat.com>
+ <CAJZjf_xoCOTFsLAB29uLKeW7+O+k255Amspn6GKFMysc7CTsBg@mail.gmail.com>
+ <CAJZjf_xGdvStOG0=FR2+2WsVcjyizQukH+RxysZf8f9-Tk9L9w@mail.gmail.com>
+ <20130611161924.GB1696@redhat.com>
+ <CAJZjf_zOF=qGEE=pWDRe0YDpAYophm93cVM8pfuL0sTRGq56EA@mail.gmail.com>
+ <20130614131829.GA5125@redhat.com>
+ <20130625142514.GA1938@redhat.com>
+ <CAJZjf_z=+QW_Y3yuz6nJ+muVA_6bGRut8EQ7fCopDqqj2Fn9Yw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZjf_z=+QW_Y3yuz6nJ+muVA_6bGRut8EQ7fCopDqqj2Fn9Yw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ath9k_htc will reboot firmware only if interface was
-ever started. Which lead to the problem in case where interface
-was never started but module need to be reloaded.
+On Thu, Jul 11, 2013 at 10:02:22PM +0100, Pedro Francisco wrote:
+> > Pedro, please do the fallowing:
+> >
+> > Add this line in /etc/rsyslog.conf:
+> > kern.*                                                  /var/log/kernel
+> >
+> > Restart rsyslog services:
+> > # systemctl restart rsyslog.service
+> >
+> > Restart iwl3945 module with verbose debug enabled:
+> > modprobe -r iwl3945
+> > modprobe iwl3945 debug=0x47ffffff
+> >
+> > Reproduce the problem.
+> >
+> > Unload module:
+> > modprobe -r iwl3945
+> >
+> > Then provide me generated /var/log/kernel file (compressed if needed).
+> 
+> I seem only to be able to trigger it with disable_hw_scan=0, I need
+> further testing with disable_hw_scan=1 (I use disable_hw_scan=0
+> because it prevents me from getting disconnected from eduroam Cisco
+> APs -- haven't tested disable_hw_scan=0 since the VOIP-friendly SW
+> scanning patch, however).
+> 
+> Do you want the log anyway? (modprobe iwl3945 debug=0x47ffffff
+> disable_hw_scan=0 and runtime PCI powersave also enabled -- I don't
+> know if it matters).
 
-This patch will partially fix bug "ath9k_htc: Target is unresponsive"
-https://github.com/qca/open-ath9k-htc-firmware/issues/1
+To test that patch powersave has to be explicitly enabled, since
+it is disabled by default.
 
-Reproduction case:
-- plug adapter
-- make sure nothing will touch it. Stop Networkmanager or blacklist mac address of this adapter.
-- rmmod ath9k_htc; sleep 1; modprobe ath9k_htc
+As this is not causing troubles with default disable_hw_scan option,
+I'll post that patch.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+You can provide me logs with disable_hw_scan=0, if you manage to
+trigger a Microcode error.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 2469db5..5205a36 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -1295,7 +1295,9 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- 
- 	usb_set_intfdata(interface, NULL);
- 
--	if (!unplugged && (hif_dev->flags & HIF_USB_START))
-+	/* If firmware was loaded we should drop it
-+	 * go back to first stage bootloader. */
-+	if (!unplugged && (hif_dev->flags & HIF_USB_READY))
- 		ath9k_hif_usb_reboot(udev);
- 
- 	kfree(hif_dev);
--- 
-1.8.1.2
+Thanks
+Stanislaw
 
+  
+
+> --
+> Pedro
