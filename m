@@ -1,46 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:64500 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754039Ab3GQLsu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jul 2013 07:48:50 -0400
-Received: by mail-qa0-f52.google.com with SMTP id bv4so1047817qab.11
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jul 2013 04:48:50 -0700 (PDT)
+Received: from ebb06.tieto.com ([131.207.168.38]:62223 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752451Ab3GPHUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 03:20:10 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infraread.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 03/10] ath10k: allow deferred regd update
+Date: Tue, 16 Jul 2013 09:19:46 +0200
+Message-ID: <1373959193-5164-4-git-send-email-michal.kazior@tieto.com> (sfid-20130716_092040_454811_A826E386)
+In-Reply-To: <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
+References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
+ <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <20130716102743.GA8321@redhat.com>
-References: <20130107110759.GC6931@redhat.com> <20130603085239.GA26920@mac.home>
- <20130603141804.GA2146@redhat.com> <CAJZjf_xoCOTFsLAB29uLKeW7+O+k255Amspn6GKFMysc7CTsBg@mail.gmail.com>
- <CAJZjf_xGdvStOG0=FR2+2WsVcjyizQukH+RxysZf8f9-Tk9L9w@mail.gmail.com>
- <20130611161924.GB1696@redhat.com> <CAJZjf_zOF=qGEE=pWDRe0YDpAYophm93cVM8pfuL0sTRGq56EA@mail.gmail.com>
- <20130614131829.GA5125@redhat.com> <20130625142514.GA1938@redhat.com>
- <CAJZjf_z=+QW_Y3yuz6nJ+muVA_6bGRut8EQ7fCopDqqj2Fn9Yw@mail.gmail.com> <20130716102743.GA8321@redhat.com>
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-Date: Wed, 17 Jul 2013 12:48:30 +0100
-Message-ID: <CAJZjf_y9fnkHLp4YPdYY2sVo4r4+hKJcZAebJmjVKCBh-0EUtA@mail.gmail.com> (sfid-20130717_134854_197986_CBC6DC63)
-Subject: Re: Power saving features for iwl4965
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Tino Keitel <tino.keitel@tikei.de>,
-	ML linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 16, 2013 at 11:27 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> I seem only to be able to trigger it with disable_hw_scan=0, I need
->> further testing with disable_hw_scan=1 (I use disable_hw_scan=0
->> because it prevents me from getting disconnected from eduroam Cisco
->> APs -- haven't tested disable_hw_scan=0 since the VOIP-friendly SW
->> scanning patch, however).
->>
->> Do you want the log anyway? (modprobe iwl3945 debug=0x47ffffff
->> disable_hw_scan=0 and runtime PCI powersave also enabled -- I don't
->> know if it matters).
->
-> As this is not causing troubles with default disable_hw_scan option,
-> I'll post that patch.
+Regulatory domain notification hook can be called
+regardless of the hw state (i.e. before start
+mac80211 callback).
 
-My mistake, I can trigger error conditions _independently_ of
-disable_hw_scan option being enabled or disabled, as long as powersave
-is enabled.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h |    7 +++++++
+ drivers/net/wireless/ath/ath10k/mac.c  |   26 +++++++++++++++++++-------
+ 2 files changed, 26 insertions(+), 7 deletions(-)
 
-I'll send you a private email with the logs.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 5a0b2ce..d5b2533 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -247,6 +247,11 @@ struct ath10k_debug {
+ 	struct completion event_stats_compl;
+ };
+ 
++enum ath10k_state {
++	ATH10K_STATE_OFF = 0,
++	ATH10K_STATE_ON,
++};
++
+ struct ath10k {
+ 	struct ath_common ath_common;
+ 	struct ieee80211_hw *hw;
+@@ -344,6 +349,8 @@ struct ath10k {
+ 	struct completion offchan_tx_completed;
+ 	struct sk_buff *offchan_tx_skb;
+ 
++	enum ath10k_state state;
++
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ 	struct ath10k_debug debug;
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5082503..4627c16 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1310,23 +1310,19 @@ static int ath10k_update_channel_list(struct ath10k *ar)
+ 	return ret;
+ }
+ 
+-static void ath10k_reg_notifier(struct wiphy *wiphy,
+-				struct regulatory_request *request)
++static void ath10k_regd_update(struct ath10k *ar)
+ {
+-	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct reg_dmn_pair_mapping *regpair;
+-	struct ath10k *ar = hw->priv;
+ 	int ret;
+ 
+-	mutex_lock(&ar->conf_mutex);
+-
+-	ath_reg_notifier_apply(wiphy, request, &ar->ath_common.regulatory);
++	lockdep_assert_held(&ar->conf_mutex);
+ 
+ 	ret = ath10k_update_channel_list(ar);
+ 	if (ret)
+ 		ath10k_warn("could not update channel list (%d)\n", ret);
+ 
+ 	regpair = ar->ath_common.regulatory.regpair;
++
+ 	/* Target allows setting up per-band regdomain but ath_common provides
+ 	 * a combined one only */
+ 	ret = ath10k_wmi_pdev_set_regdomain(ar,
+@@ -1337,7 +1333,19 @@ static void ath10k_reg_notifier(struct wiphy *wiphy,
+ 					    regpair->reg_5ghz_ctl);
+ 	if (ret)
+ 		ath10k_warn("could not set pdev regdomain (%d)\n", ret);
++}
+ 
++static void ath10k_reg_notifier(struct wiphy *wiphy,
++				struct regulatory_request *request)
++{
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct ath10k *ar = hw->priv;
++
++	ath_reg_notifier_apply(wiphy, request, &ar->ath_common.regulatory);
++
++	mutex_lock(&ar->conf_mutex);
++	if (ar->state == ATH10K_STATE_ON)
++		ath10k_regd_update(ar);
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
+@@ -1732,6 +1740,9 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 		ath10k_warn("could not init WMI_PDEV_PARAM_DYNAMIC_BW (%d)\n",
+ 			    ret);
+ 
++	ar->state = ATH10K_STATE_ON;
++	ath10k_regd_update(ar);
++
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return 0;
+ }
+@@ -1742,6 +1753,7 @@ static void ath10k_stop(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 	ath10k_offchan_tx_purge(ar);
++	ar->state = ATH10K_STATE_OFF;
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+ 	cancel_work_sync(&ar->offchan_tx_work);
+-- 
+1.7.9.5
+
