@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:36278 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3GDBGB (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:47718 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933133Ab3GPUHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:06:01 -0400
-Received: by mail-pa0-f54.google.com with SMTP id kx10so775685pab.27
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:00 -0700 (PDT)
+	Tue, 16 Jul 2013 16:07:51 -0400
+Received: by mail-pd0-f182.google.com with SMTP id r10so1041396pdi.27
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 13:07:50 -0700 (PDT)
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: linville@tuxdriver.com
 Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 15/53] wireless-regdb: ZA, South Africa - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:11 -0700
-Message-Id: <1372899889-19183-16-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032040_063413_DAA3036A)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	pstew@chromium.org, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC v2] wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
+Date: Tue, 16 Jul 2013 13:07:44 -0700
+Message-Id: <1374005264-7650-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130716_220755_941063_2472FA89)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and update the max EIRP.
+Pursuant to:
+
+http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf,
+
+provide a 5GHz rule for Indonesian regulatory domain. QCA has
+also verified VHT80 can be enabled. Patch originally posted by
+Paul Stewart <pstew@chromium.org>, I just modified to enable 80 MHz
+bandwidth.
 
 Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- db.txt |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+
+This v2 changes the bandwidth to 80 as was intended with the first
+patch.
+
+ db.txt |    2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/db.txt b/db.txt
-index 9043a3c..4475019 100644
+index 0ebb934..8356d5d 100644
 --- a/db.txt
 +++ b/db.txt
-@@ -803,10 +803,10 @@ country YE:
+@@ -380,7 +380,9 @@ country HU: DFS-ETSI
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
  
- country ZA:
+ country ID:
++	# ref: http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf
  	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (3, 17)
--	(5250 - 5330 @ 40), (3, 20), DFS
--	(5490 - 5710 @ 40), (3, 20), DFS
--	(5735 - 5835 @ 40), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
++	(5735 - 5815 @ 80), (N/A, 20)
  
- country ZW:
+ country IE: DFS-ETSI
  	(2402 - 2482 @ 40), (N/A, 20)
 -- 
 1.7.10.4
