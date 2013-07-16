@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:58017 "EHLO mga03.intel.com"
+Received: from ebb05.tieto.com ([131.207.168.36]:46537 "EHLO ebb05.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755900Ab3GOLqx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 07:46:53 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH RESEND 3.9 4/4] iwlwifi: bump required firmware API version for 3160/7260
-Date: Mon, 15 Jul 2013 14:46:44 +0300
-Message-Id: <1373888804-3077-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134659_846441_E36D00AF)
-In-Reply-To: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1752436Ab3GPHjK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 03:39:10 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 07/10] ath10k: make sure all resources are freed upon ath10k_stop()
+Date: Tue, 16 Jul 2013 09:38:56 +0200
+Message-ID: <1373960339-8525-8-git-send-email-michal.kazior@tieto.com> (sfid-20130716_093919_652835_90A7887D)
+In-Reply-To: <1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
+References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
+ <1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is necessary for proper hw reconfiguration
+and to avoid memory leaks.
 
-commit a2d0909a687b4d250cc2b7481072e361678745ba upstream.
-
-As the firmware API has changed significantly and we don't
-have support code for the old APIs, bump the version to be
-able to release the version 7 API firmware.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/7000.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/7000.c b/drivers/net/wireless/iwlwifi/pcie/7000.c
-index 6e35b2b..25c33b0 100644
---- a/drivers/net/wireless/iwlwifi/pcie/7000.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/7000.c
-@@ -31,16 +31,16 @@
- #include "cfg.h"
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index febba7d..b9663e9 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -369,6 +369,20 @@ static void ath10k_peer_cleanup(struct ath10k *ar, u32 vdev_id)
+ 	spin_unlock_bh(&ar->data_lock);
+ }
  
- /* Highest firmware API version supported */
--#define IWL7260_UCODE_API_MAX	6
--#define IWL3160_UCODE_API_MAX	6
-+#define IWL7260_UCODE_API_MAX	7
-+#define IWL3160_UCODE_API_MAX	7
++static void ath10k_peer_cleanup_all(struct ath10k *ar)
++{
++	struct ath10k_peer *peer, *tmp;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	spin_lock_bh(&ar->data_lock);
++	list_for_each_entry_safe(peer, tmp, &ar->peers, list) {
++		list_del(&peer->list);
++		kfree(peer);
++	}
++	spin_unlock_bh(&ar->data_lock);
++}
++
+ /************************/
+ /* Interface management */
+ /************************/
+@@ -1753,7 +1767,18 @@ static void ath10k_stop(struct ieee80211_hw *hw)
+ 	struct ath10k *ar = hw->priv;
  
- /* Oldest version we won't warn about */
--#define IWL7260_UCODE_API_OK	6
--#define IWL3160_UCODE_API_OK	6
-+#define IWL7260_UCODE_API_OK	7
-+#define IWL3160_UCODE_API_OK	7
+ 	mutex_lock(&ar->conf_mutex);
++	del_timer_sync(&ar->scan.timeout);
+ 	ath10k_offchan_tx_purge(ar);
++	ath10k_peer_cleanup_all(ar);
++
++	spin_lock_bh(&ar->data_lock);
++	if (ar->scan.in_progress) {
++		del_timer(&ar->scan.timeout);
++		ar->scan.in_progress = false;
++		ieee80211_scan_completed(ar->hw, true);
++	}
++	spin_unlock_bh(&ar->data_lock);
++
+ 	ar->state = ATH10K_STATE_OFF;
+ 	mutex_unlock(&ar->conf_mutex);
  
- /* Lowest firmware API version supported */
--#define IWL7260_UCODE_API_MIN	6
--#define IWL3160_UCODE_API_MIN	6
-+#define IWL7260_UCODE_API_MIN	7
-+#define IWL3160_UCODE_API_MIN	7
- 
- /* NVM versions */
- #define IWL7260_NVM_VERSION		0x0a1d
 -- 
-1.7.10.4
+1.7.9.5
 
