@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:60315 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933477Ab3GDBHq (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:3860 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754545Ab3GPJtU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:46 -0400
-Received: by mail-pa0-f47.google.com with SMTP id kl14so764487pab.20
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:46 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 39/53] wireless-regdb: CN, China - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:35 -0700
-Message-Id: <1372899889-19183-40-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032039_280813_533875C2)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 16 Jul 2013 05:49:20 -0400
+Message-ID: <51E51712.4020609@broadcom.com> (sfid-20130716_114937_389603_8ABEFEF4)
+Date: Tue, 16 Jul 2013 11:49:06 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
+cc: "Stanislaw Gruszka" <sgruszka@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [BUG] 3.10 regression: hang on suspend
+References: <51E4501D.3010001@odi.ch> <20130716065626.GA1587@redhat.com>
+ <51E4F790.6090308@odi.ch>
+In-Reply-To: <51E4F790.6090308@odi.ch>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 07/16/2013 09:34 AM, Ortwin Glück wrote:
+>
+>
+> On 16.07.2013 08:56, Stanislaw Gruszka wrote:
+>> Apparently this commit changed suspend procedure on mac80211, but it's
+>> not obvious for me why it hangs :-(
+>
+> Hangs are hard :-) It just sits there with a black screen and a white
+> cursor in the top left corner...
+>
+>> What is your user space configuration (are you using NM or other
+>> software or maybe just wpa_supplicant)? Are you using wowlan?
+>> If you do add no_console_suspend boot parameter does it print some
+>> diagnostic messages during suspend before the hang ?
+>
+> Yes, I am using NM under KDE, with KDE triggered suspend. No wowlan
+> AFAIK. The last thing I see in the log is something from NetworkManager
+> that sees the device switching off. I can try again tonight and give you
+> the exact message.
+>
+> I will also try without NM and bare wpa_supplicant and a plain suspend
+> through sysfs.
+>
+> Any debug options you want me to enable? Netconsole won't work however...
 
-This enable 80 MHz on the 5 GHz band.
+Can you get more debug info if you try (as root/sudo -i):
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+echo devices > /sys/power/pm_test
+echo mem > /sys/power state
 
-diff --git a/db.txt b/db.txt
-index 4f2d4e7..ead6646 100644
---- a/db.txt
-+++ b/db.txt
-@@ -164,7 +164,7 @@ country CL:
- 
- country CN:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5735 - 5835 @ 40), (N/A, 30)
-+	(5735 - 5835 @ 80), (N/A, 30)
- 	# 60 gHz band channels 1,4: 28dBm, channels 2,3: 44dBm
- 	# ref: http://www.miit.gov.cn/n11293472/n11505629/n11506593/n11960250/n11960606/n11960700/n12330791.files/n12330790.pdf
- 	(57240 - 59400 @ 2160), (N/A, 28)
--- 
-1.7.10.4
+Regards,
+Arend
+
+> Ortwin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+
 
