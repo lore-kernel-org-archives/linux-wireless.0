@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:43874 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755675Ab3GOMuw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 08:50:52 -0400
-Message-ID: <1373892651.2062.11.camel@joe-AO722> (sfid-20130715_145056_402763_9A13C883)
-Subject: Re: [PATCH 3.11] mac80211/minstrel: fix NULL pointer dereference
- issue
-From: Joe Perches <joe@perches.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	krzysiek@podlesie.net
-Date: Mon, 15 Jul 2013 05:50:51 -0700
-In-Reply-To: <1373891706-1071-1-git-send-email-nbd@openwrt.org>
-References: <1373891706-1071-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:41749 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755755Ab3GQRm1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jul 2013 13:42:27 -0400
+Received: by mail-wi0-f178.google.com with SMTP id k10so2284459wiv.5
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Jul 2013 10:42:25 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 17 Jul 2013 10:42:25 -0700
+Message-ID: <CAJ-Vmo=yvHUgv6pwK42n+NhPrAu9shxc5pigRkhZE+x91W_FoA@mail.gmail.com> (sfid-20130717_194238_629152_551DCEC6)
+Subject: So, which IEEE<->Frequency mappings should we be all using?
+From: Adrian Chadd <adrian@freebsd.org>
+To: freebsd-wireless@freebsd.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-07-15 at 14:35 +0200, Felix Fietkau wrote:
-> When priv_sta == NULL, mi->prev_sample is dereferenced too early. Move
-> the assignment further down, after the rate_control_send_low call.
-> 
-> Reported-by: Krzysztof Mazur <krzysiek@podlesie.net>
-> Cc: stable@vger.kernel.org # 3.10
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Hi all,
 
-Why should this be marked for stable?
+I've been increasingly asked to bring up FreeBSD on "other" bands.
 
-It's a local reference only, it's not used.
+* 420MHz
+* 700MHz
+* 900MHz (which we already have, due to history);
+* 3.6GHz
+* 4.9GHz
 
-It's like suggesting that all the initialized
-automatics should not be set until after
-rate_control_set_low is called.
+I'd also like to support half and quarter width channels on these
+frequencies. If I use the 2GHz channel mapping method, I end up with a
+very restricted channel set and it definitely has no "gaps" for
+5/10MHz increments.
 
-> ---
->  net/mac80211/rc80211_minstrel.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-> index ac7ef54..e6512e2 100644
-> --- a/net/mac80211/rc80211_minstrel.c
-> +++ b/net/mac80211/rc80211_minstrel.c
-> @@ -290,7 +290,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
->  	struct minstrel_rate *msr, *mr;
->  	unsigned int ndx;
->  	bool mrr_capable;
-> -	bool prev_sample = mi->prev_sample;
-> +	bool prev_sample;
->  	int delta;
->  	int sampling_ratio;
->  
-> @@ -314,6 +314,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
->  			(mi->sample_count + mi->sample_deferred / 2);
->  
->  	/* delta < 0: no sampling required */
-> +	prev_sample = mi->prev_sample;
->  	mi->prev_sample = false;
->  	if (delta < 0 || (!mrr_capable && prev_sample))
->  		return;
+Now, what I'd like to do is figure out some sane, shared method of
+translating channel frequencies to IEEE numbers and back. That way the
+BSDs and Linux (and maybe commercial stacks; I dunno what they do) can
+have some sane chance of interoperating.
+
+So: Is there some standardised or semi-standardised channel mapping
+method? Or should we invent one?
 
 
-
+-adrian
