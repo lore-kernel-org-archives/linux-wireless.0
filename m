@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:15166 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752354Ab3G0Qm5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Jul 2013 12:42:57 -0400
-Date: Sat, 27 Jul 2013 18:46:00 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: treeve@scarlet.be, linux-wireless <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Jacob Oursland <jacob.oursland@gmail.com>
-Subject: Re: [rt2x00-users] [NETWORKING DRIVERS RT2X00] please add support
- for Asus PCE-N53 (0x1814, 0x5592)
-Message-ID: <20130727164600.GA2493@localhost.localdomain> (sfid-20130727_184321_295233_906CCAE8)
-References: <51EE8B74.8080206@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51EE8B74.8080206@gmail.com>
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:53111 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCVf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:21:35 -0400
+Received: by mail-pb0-f52.google.com with SMTP id xa12so1339971pbc.25
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:35 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 32/53] wireless-regdb: PL, Poland - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:21 -0700
+Message-Id: <1374027522-18488-33-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042144_067925_4DBF3A33)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 23, 2013 at 03:56:04PM +0200, Xose Vazquez Perez wrote:
-> Treeve Jelbert wrote:
-> 
-> > linux-3.10.0 does not support device  (0x1814, 0x5592) Asus PCE-N53 which I 
-> > would like to use on with 5GHz network.
-> > 
-> > #lspci
-> > 02:00.0 Network controller: Ralink corp. Device 5592
-> >         Subsystem: ASUSTeK Computer Inc. Device 851a
-> > 
-> > # lspci -d :5592 -nn
-> > 02:00.0 Network controller [0280]: Ralink corp. Device [1814:5592]
-> 
-> RT5592 devices are still unsupported by rt2x00 drivers.
-> Stanislaw Gruszka <stf_xl@wp.pl> was working on it.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-I did not make any progress :-(  I did some tracing using mmiotrace
-to compare with vendor driver, but still did not find difference,
-which couse rt2x00 do not work on that adapter.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-Stanislaw
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 8f8e8fc..2f71dba 100644
+--- a/db.txt
++++ b/db.txt
+@@ -622,9 +622,9 @@ country PK:
+ 
+ country PL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
 
