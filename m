@@ -1,121 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:35944 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753745Ab3GWCSr (ORCPT
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:54681 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308Ab3GQCS7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:18:47 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 03/21] mwifiex: maintain outstanding packet count for RA list instead of packet size
-Date: Mon, 22 Jul 2013 19:17:40 -0700
-Message-ID: <1374545878-15683-4-git-send-email-bzhao@marvell.com> (sfid-20130723_041903_256067_EA82AFE3)
-In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 16 Jul 2013 22:18:59 -0400
+Received: by mail-pb0-f45.google.com with SMTP id mc8so1346429pbc.32
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:18:58 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 02/53] wireless-regdb: BR, Brazil - enable VHT80
+Date: Tue, 16 Jul 2013 19:17:51 -0700
+Message-Id: <1374027522-18488-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_041901_863552_F74AF75C)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Maintain total outstanding packet count for RA list instead of total
-outstanding size as packet count metric seems more reasonable for
-checking threshold etc.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and increases the max EIRP on two
+5 GHz bands.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/mwifiex/11n_aggr.c | 4 ++--
- drivers/net/wireless/mwifiex/main.h     | 2 +-
- drivers/net/wireless/mwifiex/wmm.c      | 8 ++++----
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ db.txt |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index a78e065..8f9f542 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -189,7 +189,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+diff --git a/db.txt b/db.txt
+index 0e7794e..a6c23bd 100644
+--- a/db.txt
++++ b/db.txt
+@@ -125,10 +125,10 @@ country BO:
  
- 		skb_src = skb_dequeue(&pra_list->skb_head);
+ country BR:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (3, 17)
+-	(5250 - 5330 @ 40), (3, 20), DFS
+-	(5490 - 5710 @ 40), (3, 20), DFS
+-	(5735 - 5835 @ 40), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
  
--		pra_list->total_pkts_size -= skb_src->len;
-+		pra_list->total_pkt_count--;
- 
- 		atomic_dec(&priv->wmm.tx_pkts_queued);
- 
-@@ -268,7 +268,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 
- 		skb_queue_tail(&pra_list->skb_head, skb_aggr);
- 
--		pra_list->total_pkts_size += skb_aggr->len;
-+		pra_list->total_pkt_count++;
- 
- 		atomic_inc(&priv->wmm.tx_pkts_queued);
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 884b42b..a3036d1 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -204,11 +204,11 @@ struct mwifiex_ra_list_tbl {
- 	struct list_head list;
- 	struct sk_buff_head skb_head;
- 	u8 ra[ETH_ALEN];
--	u32 total_pkts_size;
- 	u32 is_11n_enabled;
- 	u16 max_amsdu;
- 	u16 ba_pkt_count;
- 	u8 ba_packet_thr;
-+	u16 total_pkt_count;
- };
- 
- struct mwifiex_tid_tbl {
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 9c1eeee..2e8f9cd 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -120,7 +120,7 @@ mwifiex_wmm_allocate_ralist_node(struct mwifiex_adapter *adapter, u8 *ra)
- 
- 	memcpy(ra_list->ra, ra, ETH_ALEN);
- 
--	ra_list->total_pkts_size = 0;
-+	ra_list->total_pkt_count = 0;
- 
- 	dev_dbg(adapter->dev, "info: allocated ra_list %p\n", ra_list);
- 
-@@ -679,8 +679,8 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
- 
- 	skb_queue_tail(&ra_list->skb_head, skb);
- 
--	ra_list->total_pkts_size += skb->len;
- 	ra_list->ba_pkt_count++;
-+	ra_list->total_pkt_count++;
- 
- 	if (atomic_read(&priv->wmm.highest_queued_prio) <
- 						tos_to_tid_inv[tid_down])
-@@ -1037,7 +1037,7 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
- 	tx_info = MWIFIEX_SKB_TXCB(skb);
- 	dev_dbg(adapter->dev, "data: dequeuing the packet %p %p\n", ptr, skb);
- 
--	ptr->total_pkts_size -= skb->len;
-+	ptr->total_pkt_count--;
- 
- 	if (!skb_queue_empty(&ptr->skb_head))
- 		skb_next = skb_peek(&ptr->skb_head);
-@@ -1062,7 +1062,7 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
- 
- 		skb_queue_tail(&ptr->skb_head, skb);
- 
--		ptr->total_pkts_size += skb->len;
-+		ptr->total_pkt_count++;
- 		ptr->ba_pkt_count++;
- 		tx_info->flags |= MWIFIEX_BUF_FLAG_REQUEUED_PKT;
- 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
+ country BY:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.8.2.3
+1.7.10.4
 
