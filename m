@@ -1,314 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62223 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752802Ab3GPHUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:20:16 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infraread.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 09/10] ath10k: store firmware files in memory
-Date: Tue, 16 Jul 2013 09:19:52 +0200
-Message-ID: <1373959193-5164-10-git-send-email-michal.kazior@tieto.com> (sfid-20130716_092036_302898_1179EFCC)
-In-Reply-To: <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
-References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
- <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
+Received: from perceval.ideasonboard.com ([95.142.166.194]:36377 "EHLO
+	perceval.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606Ab3GQX5c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jul 2013 19:57:32 -0400
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: mturquette@linaro.org, Mark Rutland <mark.rutland@arm.com>,
+	balbi@ti.com, "grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm@vger.kernel.org" <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] Documentation: dt: bindings: TI WiLink modules
+Date: Thu, 18 Jul 2013 01:58:17 +0200
+Message-ID: <1698879.DLaB5pbe5M@avalon> (sfid-20130718_015750_547135_7D17C261)
+In-Reply-To: <1372682370.21065.68.camel@cumari.coelho.fi>
+References: <1372149330-24335-1-git-send-email-coelho@ti.com> <1372425670.21065.61.camel@cumari.coelho.fi> <1372682370.21065.68.camel@cumari.coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Different FW versions may provide different
-functions thus mean different hw capabilities
-advertised to mac80211.
+Hi Luciano,
 
-It is safe to swap firmware files on disk during
-driver/device runtime without worries.
+On Monday 01 July 2013 15:39:30 Luciano Coelho wrote:
+> On Fri, 2013-06-28 at 16:21 +0300, Luciano Coelho wrote:
+> > On Fri, 2013-06-28 at 15:18 +0300, Felipe Balbi wrote:
+> > > On Fri, Jun 28, 2013 at 03:13:52PM +0300, Luciano Coelho wrote:
+> > > > On Fri, 2013-06-28 at 14:41 +0300, Felipe Balbi wrote:
+> > > > > On Fri, Jun 28, 2013 at 02:22:11PM +0300, Luciano Coelho wrote:
+> > > > > > On Fri, 2013-06-28 at 13:31 +0300, Luciano Coelho wrote:
+> > > > > > > (fixed Mike's address)
+> > > > > > > 
+> > > > > > > On Fri, 2013-06-28 at 11:21 +0100, Mark Rutland wrote:
+> > > > > > > > On Fri, Jun 28, 2013 at 10:53:35AM +0100, Luciano Coelho 
+wrote:
+> > > > > > > > > On Fri, 2013-06-28 at 10:38 +0100, Mark Rutland wrote:
+> > > > > > > > > > On Tue, Jun 25, 2013 at 09:35:30AM +0100, Luciano Coelho 
+wrote:
+> > > > > > > > > > > +Optional properties:
+> > > > > > > > > > > +--------------------
+> > > > > > > > > > > +
+> > > > > > > > > > > +- refclock: the internal WLAN reference clock frequency
+> > > > > > > > > > > (required for
+> > > > > > > > > > > +  WiLink6 and WiLink7; not used for WiLink8).  Must be
+> > > > > > > > > > > one of the
+> > > > > > > > > > > +  following:
+> > > > > > > > > > > +	0 = 19.2 MHz
+> > > > > > > > > > > +	1 = 26.0 MHz
+> > > > > > > > > > > +	2 = 38.4 MHz
+> > > > > > > > > > > +	3 = 52.0 MHz
+> > > > > > > > > > > +	4 = 38.4 MHz, XTAL
+> > > > > > > > > > > +	5 = 26.0 MHz, XTAL
+> > > > > > > > > > > +
+> > > > > > > > > > > +- tcxoclock: the internal WLAN TCXO clock frequency
+> > > > > > > > > > > (required for
+> > > > > > > > > > > +  WiLink7 not used for WiLink6 and WiLink8).  Must be
+> > > > > > > > > > > one of the
+> > > > > > > > > > > +  following:
+> > > > > > > > > > > +	0 = 19.200 MHz
+> > > > > > > > > > > +	1 = 26.000 MHz
+> > > > > > > > > > > +	2 = 38.400 MHz
+> > > > > > > > > > > +	3 = 52.000 MHz
+> > > > > > > > > > > +	4 = 16.368 MHz
+> > > > > > > > > > > +	5 = 32.736 MHz
+> > > > > > > > > > > +	6 = 16.800 MHz
+> > > > > > > > > > > +	7 = 33.600 MHz
+> > > > > > > > > > 
+> > > > > > > > > > This looks suspiciously like what we have the common clock
+> > > > > > > > > > bindings for:
+> > > > > > > > > > 
+> > > > > > > > > > refclk {
+> > > > > > > > > > 
+> > > > > > > > > > 	compatible = "fixed-clock";
+> > > > > > > > > > 	#clock-cells = <0>;
+> > > > > > > > > > 	clock-frequency = <19200000>;
+> > > > > > > > > > 
+> > > > > > > > > > }
+> > > > > > > > > > 
+> > > > > > > > > > wilink {
+> > > > > > > > > > 
+> > > > > > > > > > 	compatible = "ti,wilink7";
+> > > > > > > > > > 	interrupt-parent = <&some_interrupt_controller>;
+> > > > > > > > > > 	interrupts = <0 1 1>;
+> > > > > > > > > > 	clocks = <&refclk>, <&refclk>;
+> > > > > > > > > > 	clock-names = "refclk", "txoclk";
+> > > > > > > > > > 
+> > > > > > > > > > };
+> > > > > > > > > > 
+> > > > > > > > > > Could you not use them?
+> > > > > > > > > 
+> > > > > > > > > Hmmm... this actually does look good.  But these are
+> > > > > > > > > internal clocks in the modules, they cannot be accessed from
+> > > > > > > > > outside.  Does it make sense to register them with the clock
+> > > > > > > > > framework?
+> > > > > > > > 
+> > > > > > > > Given we already have a common way of describing clocks, I
+> > > > > > > > think it makes sense to use it -- people already understand
+> > > > > > > > the common bindings, and it's less code to add add to the
+> > > > > > > > kernel. I don't think the fact these clocks are internal
+> > > > > > > > should prevent us from describing them as we would an external
+> > > > > > > > clock.
+> > > > > > > 
+> > > > > > > Yes, I agree with you.  Thanks for the suggestion! I think it
+> > > > > > > will look much better.  And now that I dug a bit more into the
+> > > > > > > code, I can see that there are only structs being populated, so
+> > > > > > > there shouldn't be any other side-effects.
+> > > > > > 
+> > > > > > Hmmm, one thing that escaped me.  Besides the frequency, I also
+> > > > > > need a boolean that tells if the clock is XTAL or not.  I can't
+> > > > > > figure out how to pass this if I use the generic clock framework. 
+> > > > > > Any suggestions?
+> > > > > 
+> > > > > Could you use clock-output-names for that ?
+> > > > > 
+> > > > > XTAL clock:
+> > > > > 
+> > > > > refclk {
+> > > > > 
+> > > > > 	compatible = "fixed-clock";
+> > > > > 	#clock cells = <0>;
+> > > > > 	clock-frequency = <19200000>;
+> > > > > 	clock-output-names = "xtal";
+> > > > > 
+> > > > > };
+> > > > > 
+> > > > > non-XTAL clock:
+> > > > > 
+> > > > > refclk {
+> > > > > 
+> > > > > 	compatible = "fixed-clock";
+> > > > > 	#clock cells = <0>;
+> > > > > 	clock-frequency = <19200000>;
+> > > > > 	clock-output-names = "osc"; /* any better name ? */
+> > > > > 
+> > > > > };
+> > > > 
+> > > > This starts looking a bit hacky.  Using the output name as a flag is
+> > > > not very pretty.
+> > > > 
+> > > > I think it would be better to have a separate flag for it in the wlan
+> > > > node.  Like an optional "refclock-xtal" boolean or something.  The
+> > > > downside of this is that we would be adding information about the
+> > > > clock details in the wilink node. :(
+> > > > 
+> > > > OTOH, we could add a flag to the generic clock binding? A new optional
+> > > > boolean that tells whether the clock is XTAL or not:
+> > > > 
+> > > > refclk {
+> > > > 
+> > > > 	compatible = "fixed-clock";
+> > > > 	#clock cells = <0>;
+> > > > 	clock-frequency = <19200000>;
+> > > > 	clock-xtal;
+> > > > 
+> > > > };
+> > > > 
+> > > > Do you think that would make sense?
+> > > 
+> > > sure, that looks alright to me. Surely there are other devices out there
+> > > who want to know if the clock comes from a crystal or not ?!?
+> > 
+> > Mike, what do you think about this idea? If it sounds okay to you, I can
+> > cook up a patch adding this flag.
+> 
+> Hmmm... I started implementing this whole thing, but using these clocks
+> as "fixed-clock"s is not so straightforward.  The problem is that I
+> would need to register my driver as a clock provider and add the OF
+> match for "fixed-clock".
+> 
+> If I do that, all the other "fixed-clock" nodes would be passed to my
+> driver too, which is wrong.  Or, the platform should register the
+> "fixed-clock" match, but this would be wrong too, since it would find
+> *my* fixed-clocks.
+> 
+> The only thing I can come up with is to make a small clock driver (maybe
+> even inside the WiLink module itself) that registers a new type of
+> clock, "ti,wilink-clock" or something.  But this would really be
+> overkill, wouldn't it?
+> 
+> Any other ideas?
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c |  157 +++++++++++++++++++++-----------
- drivers/net/wireless/ath/ath10k/core.h |    4 +
- 2 files changed, 109 insertions(+), 52 deletions(-)
+One possibility would be to just call clk_get_rate() on the clock from the 
+WiLink driver, which would return the fixed frequency specified in DT, and 
+configure the WiLink hardware accordingly. This might be a bit hackish though.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 1d4c245..c37f79f 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -247,19 +247,11 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
- 
- static int ath10k_download_board_data(struct ath10k *ar)
- {
-+	const struct firmware *fw = ar->board_data;
- 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
- 	u32 address;
--	const struct firmware *fw;
- 	int ret;
- 
--	fw = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir,
--				  ar->hw_params.fw.board);
--	if (IS_ERR(fw)) {
--		ath10k_err("could not fetch board data fw file (%ld)\n",
--			   PTR_ERR(fw));
--		return PTR_ERR(fw);
--	}
--
- 	ret = ath10k_push_board_ext_data(ar, fw);
- 	if (ret) {
- 		ath10k_err("could not push board ext data (%d)\n", ret);
-@@ -286,32 +278,20 @@ static int ath10k_download_board_data(struct ath10k *ar)
- 	}
- 
- exit:
--	release_firmware(fw);
- 	return ret;
- }
- 
- static int ath10k_download_and_run_otp(struct ath10k *ar)
- {
--	const struct firmware *fw;
--	u32 address;
-+	const struct firmware *fw = ar->otp;
-+	u32 address = ar->hw_params.patch_load_addr;
- 	u32 exec_param;
- 	int ret;
- 
- 	/* OTP is optional */
- 
--	if (ar->hw_params.fw.otp == NULL) {
--		ath10k_info("otp file not defined\n");
--		return 0;
--	}
--
--	address = ar->hw_params.patch_load_addr;
--
--	fw = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir,
--				  ar->hw_params.fw.otp);
--	if (IS_ERR(fw)) {
--		ath10k_warn("could not fetch otp (%ld)\n", PTR_ERR(fw));
-+	if (!ar->otp)
- 		return 0;
--	}
- 
- 	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
- 	if (ret) {
-@@ -327,28 +307,17 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
- 	}
- 
- exit:
--	release_firmware(fw);
- 	return ret;
- }
- 
- static int ath10k_download_fw(struct ath10k *ar)
- {
--	const struct firmware *fw;
-+	const struct firmware *fw = ar->firmware;
- 	u32 address;
- 	int ret;
- 
--	if (ar->hw_params.fw.fw == NULL)
--		return -EINVAL;
--
- 	address = ar->hw_params.patch_load_addr;
- 
--	fw = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir,
--				  ar->hw_params.fw.fw);
--	if (IS_ERR(fw)) {
--		ath10k_err("could not fetch fw (%ld)\n", PTR_ERR(fw));
--		return PTR_ERR(fw);
--	}
--
- 	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
- 	if (ret) {
- 		ath10k_err("could not write fw (%d)\n", ret);
-@@ -356,7 +325,74 @@ static int ath10k_download_fw(struct ath10k *ar)
- 	}
- 
- exit:
--	release_firmware(fw);
-+	return ret;
-+}
-+
-+static void ath10k_core_free_firmware_files(struct ath10k *ar)
-+{
-+	if (ar->board_data && !IS_ERR(ar->board_data))
-+		release_firmware(ar->board_data);
-+
-+	if (ar->otp && !IS_ERR(ar->otp))
-+		release_firmware(ar->otp);
-+
-+	if (ar->firmware && !IS_ERR(ar->firmware))
-+		release_firmware(ar->firmware);
-+
-+	ar->board_data = NULL;
-+	ar->otp = NULL;
-+	ar->firmware = NULL;
-+}
-+
-+static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
-+{
-+	int ret = 0;
-+
-+	if (ar->hw_params.fw.fw == NULL) {
-+		ath10k_err("firmware file not defined\n");
-+		return -EINVAL;
-+	}
-+
-+	if (ar->hw_params.fw.board == NULL) {
-+		ath10k_err("board data file not defined");
-+		return -EINVAL;
-+	}
-+
-+	ar->board_data = ath10k_fetch_fw_file(ar,
-+					      ar->hw_params.fw.dir,
-+					      ar->hw_params.fw.board);
-+	if (IS_ERR(ar->board_data)) {
-+		ret = PTR_ERR(ar->board_data);
-+		ath10k_err("could not fetch board data (%d)\n", ret);
-+		goto err;
-+	}
-+
-+	ar->firmware = ath10k_fetch_fw_file(ar,
-+					    ar->hw_params.fw.dir,
-+					    ar->hw_params.fw.fw);
-+	if (IS_ERR(ar->firmware)) {
-+		ret = PTR_ERR(ar->firmware);
-+		ath10k_err("could not fetch firmware (%d)\n", ret);
-+		goto err;
-+	}
-+
-+	/* OTP may be undefined. If so, don't fetch it at all */
-+	if (ar->hw_params.fw.otp == NULL)
-+		return 0;
-+
-+	ar->otp = ath10k_fetch_fw_file(ar,
-+				       ar->hw_params.fw.dir,
-+				       ar->hw_params.fw.otp);
-+	if (IS_ERR(ar->otp)) {
-+		ret = PTR_ERR(ar->otp);
-+		ath10k_err("could not fetch otp (%d)\n", ret);
-+		goto err;
-+	}
-+
-+	return 0;
-+
-+err:
-+	ath10k_core_free_firmware_files(ar);
- 	return ret;
- }
- 
-@@ -502,23 +538,10 @@ EXPORT_SYMBOL(ath10k_core_destroy);
- 
- int ath10k_core_start(struct ath10k *ar)
- {
--	struct bmi_target_info target_info;
- 	int status;
- 
- 	ath10k_bmi_start(ar);
- 
--	memset(&target_info, 0, sizeof(target_info));
--	status = ath10k_bmi_get_target_info(ar, &target_info);
--	if (status)
--		goto err;
--
--	ar->target_version = target_info.version;
--	ar->hw->wiphy->hw_version = target_info.version;
--
--	status = ath10k_init_hw_params(ar);
--	if (status)
--		goto err;
--
- 	if (ath10k_init_configure_target(ar)) {
- 		status = -EINVAL;
- 		goto err;
-@@ -617,7 +640,8 @@ EXPORT_SYMBOL(ath10k_core_stop);
-  * hook will try to init it again) before registering */
- static int ath10k_core_probe_fw(struct ath10k *ar)
- {
--	int ret;
-+	struct bmi_target_info target_info;
-+	int ret = 0;
- 
- 	ret = ath10k_hif_power_up(ar);
- 	if (ret) {
-@@ -625,9 +649,35 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		return ret;
- 	}
- 
-+	memset(&target_info, 0, sizeof(target_info));
-+	ret = ath10k_bmi_get_target_info(ar, &target_info);
-+	if (ret) {
-+		ath10k_err("could not get target info (%d)\n", ret);
-+		ath10k_hif_power_down(ar);
-+		return ret;
-+	}
-+
-+	ar->target_version = target_info.version;
-+	ar->hw->wiphy->hw_version = target_info.version;
-+
-+	ret = ath10k_init_hw_params(ar);
-+	if (ret) {
-+		ath10k_err("could not get hw params (%d)\n", ret);
-+		ath10k_hif_power_down(ar);
-+		return ret;
-+	}
-+
-+	ret = ath10k_core_fetch_firmware_files(ar);
-+	if (ret) {
-+		ath10k_err("could not fetch firmware files (%d)\n", ret);
-+		ath10k_hif_power_down(ar);
-+		return ret;
-+	}
-+
- 	ret = ath10k_core_start(ar);
- 	if (ret) {
- 		ath10k_err("could not init core (%d)\n", ret);
-+		ath10k_core_free_firmware_files(ar);
- 		ath10k_hif_power_down(ar);
- 		return ret;
- 	}
-@@ -650,7 +700,7 @@ int ath10k_core_register(struct ath10k *ar)
- 	status = ath10k_mac_register(ar);
- 	if (status) {
- 		ath10k_err("could not register to mac80211 (%d)\n", status);
--		return status;
-+		goto err_release_fw;
- 	}
- 
- 	status = ath10k_debug_create(ar);
-@@ -663,6 +713,8 @@ int ath10k_core_register(struct ath10k *ar)
- 
- err_unregister_mac:
- 	ath10k_mac_unregister(ar);
-+err_release_fw:
-+	ath10k_core_free_firmware_files(ar);
- 	return status;
- }
- EXPORT_SYMBOL(ath10k_core_register);
-@@ -673,6 +725,7 @@ void ath10k_core_unregister(struct ath10k *ar)
- 	 * Otherwise we will fail to submit commands to FW and mac80211 will be
- 	 * unhappy about callback failures. */
- 	ath10k_mac_unregister(ar);
-+	ath10k_core_free_firmware_files(ar);
- }
- EXPORT_SYMBOL(ath10k_core_unregister);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 5c94ea0..413f1c5 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -300,6 +300,10 @@ struct ath10k {
- 		} fw;
- 	} hw_params;
- 
-+	const struct firmware *board_data;
-+	const struct firmware *otp;
-+	const struct firmware *firmware;
-+
- 	struct {
- 		struct completion started;
- 		struct completion completed;
 -- 
-1.7.9.5
+Regards,
+
+Laurent Pinchart
 
