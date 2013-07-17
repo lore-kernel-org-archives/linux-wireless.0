@@ -1,93 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:39986 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755288Ab3GUCrF (ORCPT
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:63447 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751590Ab3GQCTp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Jul 2013 22:47:05 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 16 Jul 2013 22:19:45 -0400
+Received: by mail-pd0-f181.google.com with SMTP id 14so1290225pdj.40
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:19:45 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	wil6210@qca.qualcomm.com, Stable <stable@vger.kernel.org>,
-	Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: [PATCH] ath: wil6210: Fix build error
-Date: Sat, 20 Jul 2013 21:46:48 -0500
-Message-Id: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130721_044710_850428_669F3E04)
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 11/53] wireless-regdb: PH, Philippines - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:00 -0700
+Message-Id: <1374027522-18488-12-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_973430_823D8D56)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Building driver wil6210 in 3.10 and 3.11 kernels yields the following errors:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-  CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
-drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_print_ring':
-drivers/net/wireless/ath/wil6210/debugfs.c:163:11: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
-           false);
-           ^
-In file included from include/linux/kernel.h:13:0,
-                 from include/linux/cache.h:4,
-                 from include/linux/time.h:4,
-                 from include/linux/stat.h:18,
-                 from include/linux/module.h:10,
-                 from drivers/net/wireless/ath/wil6210/debugfs.c:17:
-include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
- extern void hex_dump_to_buffer(const void *buf, size_t len,
-             ^
-drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_txdesc_debugfs_show':
-drivers/net/wireless/ath/wil6210/debugfs.c:429:10: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
-          sizeof(printbuf), false);
-          ^
-In file included from include/linux/kernel.h:13:0,
-                 from include/linux/cache.h:4,
-                 from include/linux/time.h:4,
-                 from include/linux/stat.h:18,
-                 from include/linux/module.h:10,
-                 from drivers/net/wireless/ath/wil6210/debugfs.c:17:
-include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
- extern void hex_dump_to_buffer(const void *buf, size_t len,
-             ^
-cc1: all warnings being treated as errors
-make[5]: *** [drivers/net/wireless/ath/wil6210/debugfs.o] Error 1
-make[4]: *** [drivers/net/wireless/ath/wil6210] Error 2
-make[3]: *** [drivers/net/wireless/ath] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make: *** [drivers] Error 2
+This enables 80 MHz bandwidth usage the existing only
+5 GHz band but also adds 3 other new 5 GHz bands with
+80 MHz bandwidth support.
 
-These errors are fixed by changing the type of the buffer from "unsigned char *" to "char *".
-
-Reported-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Tested-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>  [3.10]
-Cc: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ db.txt |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index e8308ec..ab63676 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -145,7 +145,7 @@ static void wil_print_ring(struct seq_file *s, const char *prefix,
- 				   le16_to_cpu(hdr.type), hdr.flags);
- 			if (len <= MAX_MBOXITEM_SIZE) {
- 				int n = 0;
--				unsigned char printbuf[16 * 3 + 2];
-+				char printbuf[16 * 3 + 2];
- 				unsigned char databuf[MAX_MBOXITEM_SIZE];
- 				void __iomem *src = wmi_buffer(wil, d.addr) +
- 					sizeof(struct wil6210_mbox_hdr);
-@@ -416,7 +416,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
- 		seq_printf(s, "  SKB = %p\n", skb);
+diff --git a/db.txt b/db.txt
+index 00e5993..c37c3d6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -610,7 +610,10 @@ country PG:
  
- 		if (skb) {
--			unsigned char printbuf[16 * 3 + 2];
-+			char printbuf[16 * 3 + 2];
- 			int i = 0;
- 			int len = le16_to_cpu(d->dma.length);
- 			void *p = skb->data;
+ country PH:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5735 - 5835 @ 40), (N/A, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country PK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.8.1.4
+1.7.10.4
 
