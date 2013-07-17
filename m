@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f44.google.com ([209.85.128.44]:62746 "EHLO
-	mail-qe0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174Ab3GEPhy (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:42563 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCVk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 11:37:54 -0400
-Received: by mail-qe0-f44.google.com with SMTP id 5so1305308qeb.17
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jul 2013 08:37:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951035636352@SC-VEXCH1.marvell.com>
-References: <CAMLZHHSduu3guHuw__XKZfhrFWc8r7W6DwLp3SMdtLQ56CRh6Q@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951035636352@SC-VEXCH1.marvell.com>
-Date: Fri, 5 Jul 2013 09:37:53 -0600
-Message-ID: <CAMLZHHQuHAZGW0M0qhQi5PoCW78jgF8rw2ZsmbApT2REBRXZtA@mail.gmail.com> (sfid-20130705_173800_996688_82E4F891)
-Subject: Re: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-From: Daniel Drake <dsd@laptop.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Jul 2013 22:21:40 -0400
+Received: by mail-pb0-f53.google.com with SMTP id xb12so1348215pbc.26
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:39 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 33/53] wireless-regdb: PT, Portugal - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:22 -0700
+Message-Id: <1374027522-18488-34-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042144_718731_7705DF4E)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 5, 2013 at 9:24 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
-> In your case, as card is powering off, is it ok to access hardware registers to ACK interrupts? If yes, we can disable interrupts before returning "-ENOSYS" in suspend handler.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-You tell me - you know the hardware and the driver better than I do. I
-don't see any external reason why we are not allowed to communicate to
-the hardware here. The other suspend paths do run some communication.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-However, disabling interrupts at this point does seem like a bad
-solution to me, and something that would come back and bite us in the
-future. mwifiex_sdio_suspend() is not directly related to the cause of
-the problem.
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-The problem that we should focus on is that mwifiex_remove_card()
-makes the driver enter a state where if an interrupt arrives, it will
-be handled badly. Therefore it should be mwifiex_remove_card() or
-something directly related to it (maybe the callsite,
-mwifiex_sdio_remove) that takes the necessary steps to make sure that
-interrupts will not arrive in future.
+Quoting:
 
-> Modifying mwifiex_sdio_remove() to fix interrupt storm issue would break card unplugged scenario.
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
 
-Why would it break that scenario?
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
 
-Daniel
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 2f71dba..f411ae3 100644
+--- a/db.txt
++++ b/db.txt
+@@ -630,9 +630,9 @@ country PL: DFS-ETSI
+ 
+ country PT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
+
