@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48234 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872Ab3GHOIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:08:46 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 16/20] rt2x00: rt2800lib: enable VCO recalibration for RF3053
-Date: Mon,  8 Jul 2013 16:08:31 +0200
-Message-Id: <1373292515-21332-17-git-send-email-juhosg@openwrt.org> (sfid-20130708_162043_432995_EB79CE9B)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:61015 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505Ab3GQCUe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:20:34 -0400
+Received: by mail-pb0-f51.google.com with SMTP id um15so1339190pbc.38
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:34 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 20/53] wireless-regdb: FR, France - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:09 -0700
+Message-Id: <1374027522-18488-21-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043607_614538_9B2E9497)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-Changes since v2:
- - keep case statements in alphabetical order
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 ++
- 1 file changed, 2 insertions(+)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index e6d6c75..46d5f42 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4194,6 +4194,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
- 		rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
- 		rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
- 		break;
-+	case RF3053:
- 	case RF3290:
- 	case RF5360:
- 	case RF5370:
-@@ -7595,6 +7596,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	case RF3022:
- 	case RF3320:
- 	case RF3052:
-+	case RF3053:
- 	case RF3290:
- 	case RF5360:
- 	case RF5370:
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
+
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index fb83f7a..15e413e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -288,9 +288,9 @@ country FI: DFS-ETSI
+ 
+ country FR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
 -- 
-1.7.10
+1.7.10.4
 
