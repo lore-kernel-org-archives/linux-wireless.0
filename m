@@ -1,88 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:34475 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753Ab3GOGz6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 02:55:58 -0400
-Received: by mail-bk0-f53.google.com with SMTP id e11so4390773bkh.40
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Jul 2013 23:55:57 -0700 (PDT)
+Received: from mga14.intel.com ([143.182.124.37]:38533 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756783Ab3GQSrF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jul 2013 14:47:05 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Spinadel, David" <david.spinadel@intel.com>,
+	"Ginsburg, Noam" <noam.ginsburg@intel.com>,
+	"Perelmooter, Liraz" <liraz.perelmooter@intel.com>,
+	"Shalev, Oz" <oz.shalev@intel.com>,
+	Michael Green <green@qca.qualcomm.com>
+Subject: RE: [PATCH 1/3] [RFC] cfg80211: Add indoor only and GO concurrent
+ channel attributes
+Date: Wed, 17 Jul 2013 18:47:00 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A01AD31E07@HASMSX106.ger.corp.intel.com> (sfid-20130717_204711_399037_DF3B55BD)
+References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
+ <1372768095-26053-2-git-send-email-ilan.peer@intel.com>
+ <CAB=NE6Wr_Y+uoGwOT_nE-VE49vd0eobv_F7=hF=mtVfGgCOehg@mail.gmail.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A01AD2DF7B@HASMSX106.ger.corp.intel.com>
+ <CAB=NE6WBz36HktdvOd_Ay=xrx0LJQd=9MxxTrTFKhALS+HMHzg@mail.gmail.com>
+In-Reply-To: <CAB=NE6WBz36HktdvOd_Ay=xrx0LJQd=9MxxTrTFKhALS+HMHzg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87y59d5tgu.fsf@kamboji.qca.qualcomm.com>
-References: <1372804925-1701-1-git-send-email-greearb@candelatech.com>
-	<87y59d5tgu.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 15 Jul 2013 08:55:56 +0200
-Message-ID: <CA+BoTQkNmzOjHXyk4q+=W60Dx2B=i9htzNsE0moUzhMopQX=fw@mail.gmail.com> (sfid-20130715_085601_945630_89BCC9A0)
-Subject: Re: [ath9k-devel] [PATCH] ath10k: Fix crash when using v1 hardware.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Ben Greear <greearb@candelatech.com>, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 11 July 2013 11:36, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> greearb@candelatech.com writes:
->
->> From: Ben Greear <greearb@candelatech.com>
->>
->> I put a v1 NIC from an TP-LINK AC 1750 AP in
->> a 64-bit PC, and the OS crashes on bootup.  I'm not
->> sure how broken my hardware is (possibly completely non
->> functional), but at least with this patch it will no longer
->> crash the OS.  Not sure it ever got far enough to try,
->> but I also do not have firmware for the NIC.
->>
->> With this patch I get this info on module load:
->>
->> ath10k_pci 0000:05:00.0: BAR 0: assigned [mem 0xf4400000-0xf45fffff 64bit]
->> ath10k_pci 0000:05:00.0: BAR 0: error updating (0xf4400004 != 0xffffffff)
->> ath10k_pci 0000:05:00.0: BAR 0: error updating (high 0x000000 != 0xffffffff)
->> ath10k_pci 0000:05:00.0: Refused to change power state, currently in D3
->> ath10k: MSI-X interrupt handling (8 intrs)
->> ath10k: Unable to wakeup target
->> ath10k: target takes too long to wake up (awake count 1)
->> ath10k: src_ring ffff88020c0d0a00:  write_index is out of bounds: 4294967295  nentries_mask: 15.
->> ath10k: dest_ring ffff88020db2c000:  write_index is out of bounds: 4294967295  nentries_mask: 511.
->> ath10k: dest_ring ffff880210d56400:  write_index is out of bounds: 4294967295  nentries_mask: 31.
->> ath10k: src_ring ffff880210d57600:  write_index is out of bounds: 4294967295  nentries_mask: 31.
->> ath10k: src_ring ffff88020fe70000:  write_index is out of bounds: 4294967295  nentries_mask: 2047.
->> ath10k: src_ring ffff880212989b40:  write_index is out of bounds: 4294967295  nentries_mask: 1.
->> ath10k: dest_ring ffff880212989960:  write_index is out of bounds: 4294967295  nentries_mask: 1.
->> ath10k: Failed to get pcie state addr: -5
->> ath10k: early firmware event indicated
->> ------------[ cut here ]------------
->> WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath10k/ce.c:771 ath10k_ce_per_engine_service+0x53/0x1b4 [ath10k_pci]()
->> ....
->> (it hits the warning case about 5-6 times and then seems to quiesce OK).
->
-> I haven't seen this myself so it might be a hw problem, but difficult to
-> say.
->
->> +     /* On v1 hardware at least, setup can fail, causing ce_id_state to
->> +      * be cleaned up, but this method is still called a few times.  Check
->> +      * for NULL here so we don't crash.  Probably a better fix is to stop
->> +      * the ath10k_pci_ce_tasklet sooner.
->> +      */
->> +     if (WARN_ONCE(!ce_state, "ce_id_to_state[%i] is NULL\n", ce_id))
->> +             return;
->> +
->> +     ctrl_addr = ce_state->ctrl_addr;
->> +
->
-> The tests you add look like workarounds. I would prefer to try fix these
-> by going to the source of the problem. Maybe we should add
-> ath10k_pci_wake() and ath10k_do_pci_wake()?
-
-The teardown sequence is broken. Interrupts aren't
-disabled/unregistered soon enough. I have a pending patch that should
-fix this (although it's still more of a workaround than a real fix
-since we need proper variable init code/ hw init code separation to be
-done). However the patch depends on my recovery patchset so I haven't
-posted it yet.
-
-
-Pozdrawiam / Best regards,
-Michał Kazior.
+SGkgTHVpcywNCg0KT25jZSBhZ2FpbiwgdGhhbmtzIGZvciB0aGUgY29tbWVudHMgOikNCg0KUmVn
+YXJkcywNCg0KSWxhbi4NCg0KPiA+PiBJcyBXRkQgV2lGaSBEaXNwbGF5PyBJcyB0aGVyZSBhbnkg
+c3RyaWN0IHJlbGF0aW9uc2hpcCBoZXJlIHRvIFdGRCBhbmQNCj4gPj4gR08gYW5kIHJlZ3VsYXRv
+cnkgb3IgaXMgV0ZEIGp1c3QgYSB1c2UgY2FzZSBleGFtcGxlPyBBcmUgeW91DQo+ID4+IGluZGlj
+YXRpbmcgdGhhdCB0aGUgRkNDIGlzIG1ha2luZyBzcGVjaWFsIHJ1bGVzIGZvciBjYXNlcyBpbiBz
+cGVjaWZpYw0KPiA+PiBiYW5kcyB3aGVyZSBHTyAqY2FuKiBjby1leGlzdCB3aXRoIG90aGVyIEdP
+IGRldmljZXMgPw0KPiA+DQo+ID4gV0ZEIGlzIFdpRmkgZGlyZWN0IGluIHRoaXMgY29udGV4dC4g
+SSBkbyBub3QgdGhpbmsgdGhhdCB0aGUgRkNDIGFyZSBtYWtpbmcNCj4gc3BlY2lhbCBydWxlcyBv
+bmx5IGZvciBHTyBzcGVjaWZpYyBzY2VuYXJpb3MgYnV0IGEgbW9yZSBnZW5lcmFsIGFwcHJvYWNo
+IHdoZXJlDQo+ICJjb21wbGlhbmNlIG1heSBiZSBhY2hpZXZlZCB1bmRlciB0aGUgZ3VpZGFuY2Ug
+b2YgYW4gYXV0aG9yaXplZCBtYXN0ZXIiLg0KPiBUaGUgV0ZEL1AyUCBHTyBjYXNlIGlzIG9ubHkg
+YW4gZXhhbXBsZS4NCj4gDQo+IE9LIHRoZW4gSSB0aGluayBjdWxsdWxhciBiYXNlIHN0YXRpb24g
+cmVndWxhdG9yeSBoaW50cyBtaWdodCBiZSBhbm90aGVyIGV4YW1wbGUuDQo+IEluIGZhY3QgSSBi
+ZWxpZXZlIEkgYW0gbG9va2luZyBhdCB0aGUgaW5mb3JtYXRpb24geW91IG1pZ2h0IGJlIHVzaW5n
+IGFzDQo+IHJlZmVyZW5jZS4gSSBhbSBsb29raW5nIGF0IHB1YmxpYyBkcmFmdCBlZGl0IGZvciBG
+Q0MgS0RCIDU5NDI4MDoNCj4gDQo+IGh0dHBzOi8vYXBwcy5mY2MuZ292L2Vhcy9jb21tZW50cy9H
+ZXRQdWJsaXNoZWREb2N1bWVudC5odG1sP2lkPTMyNyZ0bj01DQo+IDI4MTIyDQoNClRoaXMgaXMg
+aW5kZWVkIHRoZSByZWxldmFudCBkb2N1bWVudC4NCg0KPiANCj4gVGhlIG9yaWdpbmFsIEtEQjoN
+Cj4gDQo+IGh0dHA6Ly90cmFuc2l0aW9uLmZjYy5nb3Yvb2V0L2VhL3ByZXNlbnRhdGlvbnMvZmls
+ZXMvYXByMTEvM2IuU29mdHdhcmVDb25maWd1cg0KPiBhdGlvbkNvbnRyb2wtUkRKUy5wZGYNCj4g
+DQo+IFNwZWNpZmljYWxseSBpbiB0aGUgYWJvdmUgZG9jdW1lbnQsIHRoZSBkcmFmdCBlZGl0LCBJ
+IGFtIGxvb2tpbmcgYXQgcGFnZSAxMi4gVGhhdA0KPiBhY3R1YWxseSByZWZlcmVuY2VzIFdpRmkg
+RGlyZWN0IHByZWNpc2VseSBhbmQgY29uc2lkZXJzIHRoZSBjYXNlIHRoYXQgYSBHTyBtYXkNCj4g
+bmVlZCB0byBtb3ZlIG91dCBvZiBpdHMgY2hhbm5lbCBpZiBpdHMgbWFzdGVyIGRldmljZSBpdHMg
+dXNpbmcgdG8gY29uZmlndXJlIGl0c2VsZg0KPiBhbHNvIHN3aXRjaGVzIGNoYW5uZWxzLiBHaXZl
+biB0aGF0IGNlbGx1bGFyIGJhc2Ugc3RhdGlvbiBoaW50cyBjb3VsZCBhbHNvDQo+IHRlY2huaWNh
+bGx5IGJlIHVzZWQgdGhpcyBhbHNvIHdvdWxkIG5lZWQgdG8gYmUgY29uc2lkZXJlZCBmb3IgY2Vs
+bHVsYXIgYmFzZQ0KPiBzdGF0aW9ucy4gQnV0IGFsc28gbm90ZSBvbiBwYWdlIDE0IGl0IHN0YXRl
+cyBjbGVhcmx5Og0KPiANCj4gIk1vYmlsZSBDb3VudHJ5IENvZGVzIChNQ0MpIG9yIE1vYmlsZSBO
+ZXR3b3JrIENvZGVzDQo+IChNTkMpIGFyZSBub3QgYWNjZXB0YWJsZSBmb3IgcHJvZ3JhbW1pbmcg
+aG9zdCBjb21wbGlhbmNlIg0KPiANCj4gU28gaXQgc2VlbXMgY2VsbHVsYXIgYmFzZSBzdGF0aW9u
+IGhpbnRzIGFyZSBzaW1wbHkgbm90IGFsbG93ZWQgYnkgdGhlIEZDQyAodW5sZXNzDQo+IHNwZWNp
+ZmljIGFwcHJvdmFsIGlzIHJlcXVlc3RlZCAvIHJldmlzZWQpLiBFdmVuIGlmIHRoZSBGQ0MgYWxs
+b3dlZCBmb3IgaXQgSSBiZWxpZXZlDQo+IGFuIEFQSSB3b3VsZCBuZWVkIHRvIGJlIHByb3ZpZGVk
+IHNob3VsZCBjZWxsdWxhciBiYXNlIHN0YXRpb25zIGhhdmUgYSBjYXNlDQo+IHdoZXJlIHRoZXkg
+bWF5IHN0b3Agb3BlcmF0aW5nIGFzIHdlbGwgc2ltaWxhciB0byBERlMuDQo+IA0KPiBCVFcgaW4g
+ZnV0dXJlIGl0ZXJhdGlvbnMgb2YgcGF0Y2hlcyBJJ2QgYXBwcmVjaWF0ZSBpZiB5b3UgY2FuIGlu
+Y2x1ZGUgdGhlIGFib3ZlDQo+IHJlZmVyZW5jZXMgdG8gZG9jdW1lbnRhdGlvbiBnaXZlbiB0aGF0
+IHdlJ3ZlIHB1bGxlZCB0aGVtIHVwIG5vdy4NCj4gDQoNClN1cmUuDQoNCj4gPj4gWW91IGFubm90
+YXRlIHRoYXQgdGhpcyBpcyBzb21laG93IHJlbGF0ZWQgdG8gREZTLCBhcmUgdGhlIEdPDQo+ID4+
+IGNvbmN1cnJlbnQgcnVsZXMgdGhhdCB0aGUgRkNDIGlzIGRlZmluaW5nIG9ubHkgYXBwbGljYWJs
+ZSB0byBERlMNCj4gPj4gZnJlcXVlbmN5IHJhbmdlcz8gSWYgc28gd291bGQgaXQgc3VmZmljZSB0
+byBvbmx5IHVzZSBERlMgZmxhZyA/IE9yDQo+ID4+IGFyZSB0aGVyZSBvdGhlciBzcGVjaWFsIGNh
+c2VzIGJleW9uZCBERlMgZnJlcXVlbmN5IHJhbmdlcyB0aGF0IHRoZSBGQ0MgaXMNCj4gY3JlYXRp
+bmcgc3BlY2lhbCBoYW5kbGluZz8NCj4gPj4NCj4gPg0KPiA+IERGUyB3YXMgZ2l2ZW4gaGVyZSBh
+cyBhbiBleGFtcGxlLiBHZW5lcmFsbHksIEkgdGhpbmsgdGhhdCB0aGUgY2hhbmdlcyB0aGF0DQo+
+IHRoZSBGQ0MgYXJlIG1ha2luZyBhcmUgdGFyZ2V0aW5nIHZhcmlvdXMgc2NlbmFyaW9zIGFuZCB2
+YXJpb3VzIFJGIGRldmljZXMgKGZvcg0KPiBleGFtcGxlIHRob3NlIGRlZmluZWQgaW4gcGFydCAx
+NSBvZiBDRlIgdGl0bGUgNDcpLg0KPiANCj4gT0sgdGhhbmtzLiBUaGluZ3MgYXJlIGNsZWFyIG5v
+dyB0aGF0IEkgc2VlIHRoZSBkb2N1bWVudCB0aGF0IHlvdSBtaWdodCBiZQ0KPiByZWZlcnJpbmcg
+dG8uDQo+IA0KPiA+PiBBcGFydCBmcm9tIHRoZSBGQ0MgYXJlIHlvdSBhd2FyZSBvZiBzcGVjaWFs
+IGNhc2VzIGhhbmRsaW5nIGZvciBvdGhlcg0KPiA+PiByZWd1bGF0b3J5IGJvZGllcyBhdCB0aGlz
+IHBvaW50Pw0KPiA+DQo+ID4gTm90IHRoYXQgSSdtIGF3YXJlIG9mLiBBZGRpbmcgc29tZSBtb3Jl
+IHBlb3BsZSB0aGF0IG1pZ2h0IGtub3cgbW9yZS4NCj4gDQo+IEhleSBmb2xrcywgYW55b25lPyA6
+KQ0KPiANCg0KPiA+DQo+ID4gQWN0dWFsbHksIHRoaXMgc2hvdWxkIGJlIGEgR08gb25seSBmbGFn
+LCBtZWFuaW5nIHRoYXQgc3VjaCByZWxheGF0aW9uDQo+ID4gc2hvdWxkIG5vdCBiZSB2YWxpZCBm
+b3Igc29mdCBBUCwgSUJTUyBvciBtZXNoLiBUaGUgaW50ZW50aW9uIGhlcmUgaXMNCj4gPiBsaW1p
+dCB0aGUgZXh0ZW5kIG9mIHRoZSBjZWxsLCBhbmQgcHJldmVudCBkYWlzeSBjaGFpbiBzY2VuYXJp
+b3MNCj4gPiAoYXNzdW1lIHRoYXQgeW91IGFsbG93IGEgc29mdCBBUCBvbiBzdWNoIGEgY2hhbm5l
+bCBhbmQgdGhhdCBhIGNsaWVudA0KPiA+IGFzc29jaWF0ZWQgdG8gaXQsIGFuZCB0aGVuIHRoYXQg
+ZGV2aWNlIGNhbiBhbHNvIHN0YXJ0IGEgc29mdCBBUCBvbiB0aGUNCj4gPiBjaGFubmVsIC4uLi4p
+LiBBbnl3YXksIEknbGwgbmVlZCB0byBoYXZlIGFub3RoZXIgbG9vayBhdCB0aGlzIChtaWdodA0K
+PiA+IGJlIHBlcm1pc3NpYmxlIGZvciBJQlNTIC4uLikNCj4gDQo+IEJhc2VkIG9uIHRoZSBkb2N1
+bWVudGF0aW9uIEkgcmV2aWV3ZWQgYW5kIHlvdXIgcHJvcG9zYWwgaXQnZCBzZWVtIHRvIG1lIHRo
+YXQNCj4gd2UgY2FuIGRpc3Rpbmd1aXNoIEdPIG9uIHRoZSB1cHBlciBsYXllcnMgYW5kIGRldGVy
+bWluZSBpZiBhIGNoYW5uZWwgaXMgREZTIG9yDQo+IG5vdCBieSBqdXN0IHRoZSBERlMgZmxhZy4g
+VGhlIG5leHQgaGludCB5b3UnZCBuZWVkIGlzIGlmIHRoZSBHTyBnb3QgcmVndWxhdG9yeQ0KPiBp
+bmZvcm1hdGlvbiBmcm9tIGEgbWFzdGVyIHNvbWVob3csIG5vPw0KDQpUaGlzIHNob3VsZCBhbHNv
+IGJlIGhhbmRsZWQgYnkgdXNlciBzcGFjZSwgYmFzZWQgb24gdGhlIGRldmljZSB0eXBlL3N1YiB0
+eXBlIG9mIHRoZSBsb2NhbCBkZXZpY2UgZGlyZWN0bHksIG9yIGluZGlyZWN0bHkgdGhyb3VnaCBv
+dGhlciBtZWFucyBzdWNoIGEgbWFuYWdlZCBpbnRlcmZhY2UgYXNzb2NpYXRpbmcgd2l0aCBhbiBB
+UCB0aGF0IGl0J3MgZGV2aWNlIHR5cGUgdmFsdWUgaXMgNiBldGMuDQoNCj4gVGhhdCBpcyBJIGFt
+IG5vdCBzZWVpbmcgYSBuZWVkIGZvciBhIG5ldyBmbGFnIGF0IHRoaXMgcG9pbnQgaW4gd2lyZWxl
+c3MtcmVnZGIsDQo+IGdpdmVuIGFsc28gSSBtZW50aW9uZWQgYW5vdGhlciB0eXBlIG9mIGNhc2Ug
+Zm9yIHJlZ3VsYXRvcnkgaGludHMgdGVjaG5pY2FsbHkNCj4gcG9zc2libGUgKGNlbGx1bGFyIGJh
+c2Ugc3RhdGlvbiBoaW50cyBidXQgaXQgc2VlbXMgb25seSBhbGxvd2VkIHdpdGggZXhjZXB0aW9u
+YWwNCj4gcmV2aWV3IGJ5IHRoZSBGQ0MpLg0KPiANCj4gSSB0YWtlIGl0IHdoYXQgeW91IHdhbnQg
+dG8gZW5hYmxlIGhlcmUgaXMgR08gb3BlcmF0aW9uIG9uIERGUyBjaGFubmVscyBhbmQgdXNlDQo+
+IGNvdW50cnkgSUVzIHRvIGRldGVybWluZSBpZiB5b3UgY2FuIHVzZSBHTywgYnV0IGlmIHlvdSBk
+byBoYXZlIEdPIGVuYWJsZWQgdGhlbg0KPiB5b3UnZCB3YW50IGhvb2tzIHRvIG5vdCBkYWlzeSBj
+aGFpbiwgYWNrPw0KDQpDdXJyZW50bHksIHdlIGRvIG5vdCBpbnRlbmQgdG8gYmFzZSB0aGUgcmVs
+YXhhdGlvbiBvbiB0aGUgY291bnRyeSBJRSBkaXJlY3RseSwgYnV0IGJhc2UgaXQgb24gdGhlIGZh
+Y3QgdGhhdCBpZiB0aGVyZSBpcyBhIG1hbmFnZWQgY29ubmVjdGlvbiB0byBhbiBBUCB3aG8ncyBu
+b3QgYSBtb2JpbGUgZGV2aWNlIChhc3N1bWluZyB0aGF0IGl0IGlzIGFuIGF1dGhvcml6ZWQgbWFz
+dGVyKSwgdGhhbiB0aGUgY2hhbm5lbCB1c2VkIGJ5IHRoZSBtYW5hZ2VkIGNvbm5lY3Rpb24gaXMg
+dmFsaWQgZm9yIHVzZSAoYXMgbG9uZyBhcyB0aGUgbWFuYWdlZCBpbnRlcmZhY2UgaXMgY29ubmVj
+dGVkIHRvIHRoZSBBUCBvbiB0aGUgY2hhbm5lbCkuIA0KDQo+DQo+ID4+ID4gMi4gSW5kb29yIG9w
+ZXJhdGlvbiwgd2hlcmUgaW4gYmFuZHMgcmVxdWlyaW5nIGluZG9vciBvcGVyYXRpb24sIHRoZQ0K
+PiA+PiA+ICAgIGRldmljZSBtdXN0IGJlIHByb2dyYW1tZWQgdG8gZGV0ZWN0IGluZG9vciBvcGVy
+YXRpb24sIG9yDQo+ID4+ID4gICAgLSBEZXZpY2UgbXVzdCBiZSBjb25uZWN0ZWQgdG8gQUMgUG93
+ZXINCj4gPj4NCj4gPj4gRG9lcyBhbnlvbmUgIGtub3cgaWYgdGhlIEZDQyBjb25zaWRlcnMgImlu
+ZG9vciIgaWYgd2UgcG93ZXIgYSBkZXZpY2UNCj4gPj4gdGhyb3VnaCB0aGUgY2FyIG9uIEFDIHBv
+d2VyIHRocm91Z2ggYSBjb252ZXJ0ZXIgPyBBcmUgd2Ugd2lsbGluZyB0bw0KPiA+PiBpZ25vcmUg
+dGhhdCBjb3JuZXIgY2FzZT8NCj4gPg0KPiA+IE5vLiBBQyBwb3dlciBtZWFucyAibWFpbnMiIGFu
+ZCBub3QgdGhyb3VnaCBwb3J0YWJsZSBEQyBjb252ZXJ0ZXJzIChzZWUNCj4gc2xpZGUgMTIgaW4N
+Cj4gaHR0cHM6Ly9hcHBzLmZjYy5nb3YvZWFzL2NvbW1lbnRzL0dldFB1Ymxpc2hlZERvY3VtZW50
+Lmh0bWw/aWQ9MzI3JnRuPQ0KPiA1MjgxMjIpLiBJdCB3b3VsZCBiZSB1cCB0byB0aGUgdXNlciBz
+cGFjZSB0byBpZGVudGlmeSB0aGUgZGV2aWNlIHR5cGUgZXRjLiBhbmQNCj4gaWRlbnRpZnkgaWYg
+dGhpcyBhIHRydWx5IEFDIHBvd2VyZWQgQVAuDQo+IA0KPiBPSyB0aGFua3MgZm9yIHRoZSBjbGFy
+aWZpY2F0aW9uLiBJIHdvbmRlciBpZiB3ZSBjYW4gZGlzdGluZ3Vpc2ggYmV0d2VlbiB0aGUgdHdv
+DQo+IGluIHVzZXJzcGFjZSB0b2RheS4gSSdtIGhhcHB5IHRvIHN0YXJ0IHBlZ2dpbmcgZnJlcXVl
+bmN5IHJhbmdlcyBhcyBpbmRvb3Itb25seQ0KPiBvbiB3aXJlbGVzcy1yZWdkYiBldmVuIGlmIHdl
+IGRvbid0IGhhdmUgdGhlIHVzZXJzcGFjZSBBUElzIHRvIGFubm90YXRlIHdoZW4gYQ0KPiBkZXZp
+Y2UgaXMgaW5kb29yIG9yIG5vdCB5ZXQuIFBhdGNoZXMgd2VsY29tZWQgdGhlbi4NCj4gDQoNCkFn
+YWluLCB3ZSBhcmUgZ29pbmcgdG8gdXNlIHRoZSBkZXZpY2UgdHlwZS9zdWIgdHlwZSBhcyBhbiBp
+bmRpY2F0aW9uIHRvIGFuIEFQIGJlaW5nIEFDIHBvd2VyZWQuDQoNCj4gPj4gPiAgICAtIERldmlj
+ZSBtdXN0IGJlIHVuZGVyIHRoZSBjb250cm9sIG9mIGEgbG9jYWwgbWFzdGVyIHRoYXQgaXMNCj4g
+Pj4gPiBhY3RpbmcNCj4gPj4NCj4gPj4gSW50ZXJlc3RpbmcsIHNvIHNvbWUgQVBJcyB3b3VsZCBi
+ZSBkZWZpbmVkLCBJIHRha2UgaXQgb24gaG9zdGFwZCB0bw0KPiA+PiBkbyB0aGUgcHJvcGVyIGNh
+bGxiYWNrcyB0byAnc2xhdmUnIHR5cGUgb2YgZGV2aWNlcyB0aGF0IGRlcGVuZCBvbiB0aGUNCj4g
+Pj4gbG9jYWwgbWFzdGVyKHMpLiBJIGNvdWxkIGVudmlzaW9uIHRoaXMgYmVpbmcgaW1wbGVtZW50
+ZWQgb24gaG9zdGFwZA0KPiA+PiBieSBleHBhbmRpbmcgdGhlIEFQIGludGVyZmFjZSB0eXBlIGFu
+ZCBhc3NvY2lhdGluZyAnc2xhdmUnIGRldmljZXMNCj4gPj4gYW5kIGNhbGxiYWNrcyBmb3IgdXBk
+YXRlcyBvbiBBUCBkZXZpY2UgdXBkYXRlcyAoY2hhbm5lbCBjaGFuZ2VzLCBhbmQgc28NCj4gb24p
+LiBJcyB0aGlzIHdvcmsgYmVpbmcgcGxhbm5lZD8NCj4gPg0KDQpOb3RlIHN1cmUgdGhhdCBJIGZv
+bGxvdyAuLi4gSG93ZXZlciwgd2UgZG8gaW50ZW5kIHRvIGFkZCB0aGlzIHR5cGUgb2Ygc3VwcG9y
+dCB0byBob3N0YXAuDQoNCj4gPiBZZXMuIFdlIGhhdmUgcGxhbnMgdG8gaW5jb3Jwb3JhdGUgbW9y
+ZSBsb2dpYyB0byBob3N0YXAgKGN1cnJlbnRseSBpbnRvDQo+IHdwYV9zdXBwbGljYW50IGZvciBQ
+MlAgdXNlIGNhc2VzKS4NCj4gDQo+IFN3ZWV0Lg0KPiANCj4gICBMdWlzDQoNCg0KDQo=
