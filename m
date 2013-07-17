@@ -1,118 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58664 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752166Ab3GHO4T (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:36778 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751565Ab3GQCTk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:19 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 07/18] cfg80211/mac80211: use reduced txpower for 5 and 10 MHz
-Date: Mon,  8 Jul 2013 16:55:55 +0200
-Message-Id: <1373295366-12823-8-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_165624_838953_2A7F364A)
-In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Tue, 16 Jul 2013 22:19:40 -0400
+Received: by mail-pa0-f51.google.com with SMTP id lf11so1428995pab.10
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:19:40 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 10/53] wireless-regdb: PE, Peru - enable VHT80
+Date: Tue, 16 Jul 2013 19:17:59 -0700
+Message-Id: <1374027522-18488-11-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_205999_9B95A622)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some regulations (like germany, but also FCC) express their transmission
-power limit in dBm/MHz or mW/MHz. To cope with that and be on the safe
-side, reduce the maximum power to half (10 MHz) or quarter (5 MHz)
-when operating on these reduced bandwidth channels.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+This enables 80 MHz bandwidth usage the existing only
+5 GHz band but also adds 3 other new 5 GHz bands with
+80 MHz bandwidth support.
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
-Changes to PATCHv3:
- * consider max_reg_power, max_power might contain the hardware limit
----
- include/net/cfg80211.h |   27 +++++++++++++++++++++++++++
- net/mac80211/iface.c   |    2 +-
- net/mac80211/main.c    |    2 +-
- net/mac80211/mlme.c    |    3 ++-
- 4 files changed, 31 insertions(+), 3 deletions(-)
+ db.txt |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 4ca16ab..75471ee 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -461,6 +461,33 @@ ieee80211_chandef_rate_flags(struct cfg80211_chan_def *chandef)
- }
+diff --git a/db.txt b/db.txt
+index 570a951..00e5993 100644
+--- a/db.txt
++++ b/db.txt
+@@ -597,7 +597,10 @@ country PA:
  
- /**
-+ * ieee80211_chandef_max_power - maximum transmission power for the chandef
-+ *
-+ * In some regulations, the transmit power may depend on the configured channel
-+ * bandwidth which may be defined as dBm/MHz. This function returns the actual
-+ * max_power for non-standard (20 MHz) channels.
-+ *
-+ * @chandef: channel definition for the channel
-+ *
-+ * Returns: maximum allowed transmission power in dBm for the chandef
-+ */
-+static inline int
-+ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
-+{
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		return min(chandef->chan->max_reg_power - 6,
-+			   chandef->chan->max_power);
-+	case NL80211_CHAN_WIDTH_10:
-+		return min(chandef->chan->max_reg_power - 3,
-+			   chandef->chan->max_power);
-+	default:
-+		break;
-+	}
-+	return chandef->chan->max_power;
-+}
-+
-+/**
-  * enum survey_info_flags - survey information flags
-  *
-  * @SURVEY_INFO_NOISE_DBM: noise (in dBm) was filled in
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index a2a8250..093c34a 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -54,7 +54,7 @@ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
- 		return false;
- 	}
+ country PE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5735 - 5835 @ 40), (N/A, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
  
--	power = chanctx_conf->def.chan->max_power;
-+	power = ieee80211_chandef_max_power(&chanctx_conf->def);
- 	rcu_read_unlock();
- 
- 	if (sdata->user_power_level != IEEE80211_UNSET_POWER_LEVEL)
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 626c83c..a1d51af 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -151,7 +151,7 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
- 		changed |= IEEE80211_CONF_CHANGE_SMPS;
- 	}
- 
--	power = chandef.chan->max_power;
-+	power = ieee80211_chandef_max_power(&chandef);
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f7552c2..211246b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -747,7 +747,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		*pos++ = WLAN_EID_PWR_CAPABILITY;
- 		*pos++ = 2;
- 		*pos++ = 0; /* min tx power */
--		*pos++ = chan->max_power; /* max tx power */
-+		 /* max tx power */
-+		*pos++ = ieee80211_chandef_max_power(&chanctx_conf->def);
- 
- 		/* 2. supported channels */
- 		/* TODO: get this in reg domain format */
+ country PG:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
 1.7.10.4
 
