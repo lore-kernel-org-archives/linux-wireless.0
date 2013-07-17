@@ -1,96 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51963 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759747Ab3GaTZo (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:37895 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751909Ab3GQCWO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 15:25:44 -0400
-Message-ID: <1375298735.8289.25.camel@jlt4.sipsolutions.net> (sfid-20130731_212557_264097_5CACBE65)
-Subject: pull-request: mac80211 2013-07-31
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 31 Jul 2013 21:25:35 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-cNK/biyHxVSOYaOfRUTV"
-Mime-Version: 1.0
+	Tue, 16 Jul 2013 22:22:14 -0400
+Received: by mail-pa0-f44.google.com with SMTP id lj1so1419288pab.3
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:13 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 40/53] wireless-regdb: enable VHT80 and VHT160 for JP
+Date: Tue, 16 Jul 2013 19:18:29 -0700
+Message-Id: <1374027522-18488-41-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042218_421294_14BCB013)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
---=-cNK/biyHxVSOYaOfRUTV
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+As per Michael Green we can enable VHT80 and VHT160 on
+the enabled JP channels now. I've enabled them only for
+the channels where either 80 MHz or 160 MHz actually fits
+on the channel spacing for the band defined.
 
-John,
+When passed to the kernel I have verified we get:
 
-Another pull request for mac80211 - this time with a bunch of important
-fixes.
+cfg80211: Regulatory domain changed to country: JP
+cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+cfg80211:   (4910000 KHz - 4990000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+cfg80211:   (5030000 KHz - 5090000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz), (N/A, 2000 mBm)
+cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz), (N/A, 2000 mBm)
+cfg80211:   (5490000 KHz - 5710000 KHz @ 160000 KHz), (N/A, 2300 mBm)
 
-I have a fix from Chris for an infinite loop along with fixes from
-myself to prevent it entering the loop to start with (continue using
-disabled channels, many thanks to Chris for his debug/test help) and a
-workaround for broken APs that advertise a bad HT primary channel in
-their beacons. Additionally, a fix for another attrbuf race in mac80211
-and a fix to clean up properly while P2P GO interfaces go down.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Let me know if there's any problem.
-
-johannes
-
-The following changes since commit 23df0b731954502a9391e739b92927cee4360343=
-:
-
-  regulatory: use correct regulatory initiator on wiphy register (2013-07-2=
-5 09:52:46 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to ddfe49b42d8ad4bfdf92d63d4a74f162660d878d:
-
-  mac80211: continue using disabled channels while connected (2013-07-31 21=
-:18:17 +0200)
-
-----------------------------------------------------------------
-Chris Wright (1):
-      mac80211: fix infinite loop in ieee80211_determine_chantype
-
-Johannes Berg (5):
-      nl80211: fix another nl80211_fam.attrbuf race
-      mac80211: don't wait for TX status forever
-      mac80211: ignore HT primary channel while connected
-      cfg80211: fix P2P GO interface teardown
-      mac80211: continue using disabled channels while connected
-
- net/mac80211/mlme.c    | 54 +++++++++++++++++++++++++++++++++-------------=
-----
- net/wireless/core.c    |  1 +
- net/wireless/nl80211.c |  6 ++++--
- 3 files changed, 41 insertions(+), 20 deletions(-)
-
-
---=-cNK/biyHxVSOYaOfRUTV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJR+WSvAAoJEDBSmw7B7bqrpgQP/A6XoGOvaVcW8h+De9DgJlLC
-ghjf906dubZp2bUQDh2zI/wu4VKdB5xX54LOQhqeghwWeZqyTHY043wUCgtgk2dK
-1yj6R1BzbPKyfU9+rPNgTS1fbTdWpJy8VvyGFbgP9zNmUBbVlWqNMiUNc6nEVRrk
-rSPG12L6cRp23TTv+FuLiIqrkypyAXbqNdJju2QmadpJSG38AH4sTzb+AOxMQlWz
-mihJPGUm51jE5wew/ykb5GGdKK48FZ591GeKH5c5MuCEh7gabC3G/E4f4SG8H3Oj
-Ry5dm/ERewddEiVds9wM26/qqTTvGQNL5Ig5xdJcDtYiy/LrROay0EM9XUk4r3w1
-nXNSFsCCzdoY/gIc4Evi/l5i+EW9dZ6GtlGy20SdZLWsFpJ2KZ295itEFqspnHtP
-DjUgjX31/rwauQvyYrBuQvbd1SyT9aYTFhUI6e4oUdI1xP0q+SK3CmIT+tlVuUs8
-POSfXXHsFOkbGJW4mDydHx1n4ZbLvMmO5PY9LbFmpezIegFv+gbCttLzHMLpPxzC
-UqRX8RElHy1UnnXiUw7ycP89ot70hnkZE4rzKwiYU8MW+USqbz5CRLBoK1eWlLMO
-olVDsqFmeQvRiPW6gIik9umgC4e+8FwMqtakBe6R5UFPhWn7Sg/CNvVSQ7SyjXWv
-MFUV+F54GWL3FH5cQU3w
-=3cgC
------END PGP SIGNATURE-----
-
---=-cNK/biyHxVSOYaOfRUTV--
+diff --git a/db.txt b/db.txt
+index ead6646..63ee9b4 100644
+--- a/db.txt
++++ b/db.txt
+@@ -433,9 +433,9 @@ country JP:
+ 	(2474 - 2494 @ 20), (N/A, 20), NO-OFDM
+ 	(4910 - 4990 @ 40), (N/A, 23)
+ 	(5030 - 5090 @ 40), (N/A, 23)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 23), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 160), (N/A, 23), DFS
+ 
+ country JO:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
 
