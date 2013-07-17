@@ -1,135 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perceval.ideasonboard.com ([95.142.166.194]:40169 "EHLO
-	perceval.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800Ab3G3SXe (ORCPT
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:42231 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCVb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 14:23:34 -0400
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: devicetree-discuss@lists.ozlabs.org, linux-doc@vger.kernel.org,
-	mturquette@linaro.org, mark.rutland@arm.com, balbi@ti.com,
-	grant.likely@linaro.org, rob.herring@calxeda.com,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-arm@vger.kernel.org,
-	tony@atomide.com, nm@ti.com
-Subject: Re: [PATCH v2] Documentation: dt: bindings: TI WiLink modules
-Date: Tue, 30 Jul 2013 20:24:34 +0200
-Message-ID: <1551085.3MDKgN8U89@avalon> (sfid-20130730_202409_638353_0CC3433D)
-In-Reply-To: <1375109728-5931-1-git-send-email-coelho@ti.com>
-References: <1375109728-5931-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 16 Jul 2013 22:21:31 -0400
+Received: by mail-pd0-f173.google.com with SMTP id v14so1303941pde.4
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:30 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 31/53] wireless-regdb: NL, Netherlands - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:20 -0700
+Message-Id: <1374027522-18488-32-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042143_447009_35617849)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luciano,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Thank you for the patch.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-On Monday 29 July 2013 17:55:28 Luciano Coelho wrote:
-> Add device tree bindings documentation for the TI WiLink modules.
-> Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
-> modules is supported.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
-> 
-> Changes in v2:
-> 
-> Use generic clock definitions to get the clock data instead of passing
-> the frequencies directly.  Also added definition for "internal"
-> ti,wilink-clock.
-> 
-> Please review.
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-The proposal looks good to me, I just have one small comment.
+Quoting:
 
->  .../devicetree/bindings/net/wireless/ti-wilink.txt | 68 +++++++++++++++++++
->  1 file changed, 68 insertions(+)
->  create mode 100644
-> Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt new file
-> mode 100644
-> index 0000000..5fd27dc
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> @@ -0,0 +1,68 @@
-> +TI WiLink Wireless Modules Device Tree Bindings
-> +===============================================
-> +
-> +The WiLink modules provide wireless connectivity, such as WLAN,
-> +Bluetooth, FM and NFC.
-> +
-> +There are several different modules available, which can be grouped by
-> +their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
-> +currently supported with device tree.
-> +
-> +Currently, only the WLAN portion of the modules is supported with
-> +device tree.
-> +
-> +Required properties:
-> +--------------------
-> +
-> +- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
-> +- interrupt-parent: the interrupt controller
-> +- interrupts: out-of-band WLAN interrupt
-> +	See the interrupt controller's bindings documentation for
-> +	detailed definition.
-> +
-> +Optional properties:
-> +--------------------
-> +
-> +- clocks: list of clocks needed by the chip as follows:
-> +
-> +  refclock: the internal WLAN reference clock frequency (required for
-> +	WiLink6 and WiLink7; not used for WiLink8).
-> +
-> +  tcxoclock: the internal WLAN TCXO clock frequency (required for
-> +	WiLink7 not used for WiLink6 and WiLink8).
-> +
-> +  The clocks must be defined and named accordingly.  For example:
-> +
-> +  clocks = <&refclock>
-> +  clock-names = "refclock";
-> +
-> +  refclock: refclock {
-> +		     compatible = "ti,wilink-clock";
-> +		     #clock-cells = <0>;
-> +		     clock-frequency = <38400000>;
-> +	};
-> +
-> +  Some modules that contain the WiLink chip provide clocks in the
-> +  module itself.  In this case, we define a "ti,wilink-clock" as shown
-> +  above.  But any other clock could in theory be used, so the proper
-> +  clock definition should be used.
-> +
-> +
-> +Example:
-> +--------
-> +
-> +Example definition that can be used in OMAP4 Panda:
-> +
-> +wlan {
-> +	compatible = "ti,wilink6";
-> +	interrupt-parent = <&gpio2>;
-> +	interrupts = <21 0x4>;	/* gpio line 53, high level triggered */
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
 
-Could you please use the IRQ_TYPE_LEVEL_HIGH macro (defined in <dt-
-bindings/interrupt-controller/irq.h>) instead of the hardcode 0x4 constant ?
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
 
-> +	clocks = <&refclock>;
-> +	clock-names = "refclock";
-> +
-> +	refclock: refclock {
-> +		compatible = "ti,wilink-clock";
-> +		#clock-cells = <0>;
-> +		clock-frequency = <38400000>;
-> +	};
-> +};
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 04a176e..8f8e8fc 100644
+--- a/db.txt
++++ b/db.txt
+@@ -558,9 +558,9 @@ country MX:
+ 
+ country NL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20), NO-OUTDOOR
+-	(5250 - 5330 @ 40), (N/A, 20), NO-OUTDOOR, DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20), NO-OUTDOOR
++	(5250 - 5330 @ 80), (N/A, 20), NO-OUTDOOR, DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
 -- 
-Regards,
-
-Laurent Pinchart
+1.7.10.4
 
