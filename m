@@ -1,65 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:45267 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCVu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:21:50 -0400
-Received: by mail-pd0-f169.google.com with SMTP id y10so1317363pdj.28
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:49 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 35/53] wireless-regdb: ES, Spain - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:24 -0700
-Message-Id: <1374027522-18488-36-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042155_805476_0BABF0CE)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga02.intel.com ([134.134.136.20]:38150 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755738Ab3GQTPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jul 2013 15:15:54 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "Spinadel, David" <david.spinadel@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>, Jouni Malinen <j@w1.fi>,
+	"Ginsburg, Noam" <noam.ginsburg@intel.com>,
+	"Perelmooter, Liraz" <liraz.perelmooter@intel.com>,
+	"Shalev, Oz" <oz.shalev@intel.com>,
+	"Michael Green" <green@qca.qualcomm.com>
+Subject: RE: [PATCH 3/3] [RFC] cfg80211: Enable GO operation on additional
+ channels
+Date: Wed, 17 Jul 2013 19:15:29 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A01AD31E3C@HASMSX106.ger.corp.intel.com> (sfid-20130717_211558_504994_21957960)
+References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
+ <1372768095-26053-4-git-send-email-ilan.peer@intel.com>
+ <CAB=NE6VQXQPRK9_Q-Nh+ripRa+PdCd=4_EZvPxeghBjc32ejyQ@mail.gmail.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A01AD2DFC5@HASMSX106.ger.corp.intel.com>
+ <CAB=NE6WY43BYDehH5-MyF0GQORC1dTrNToUsRVC-Q5bDwcna3A@mail.gmail.com>
+In-Reply-To: <CAB=NE6WY43BYDehH5-MyF0GQORC1dTrNToUsRVC-Q5bDwcna3A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
-
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index ce61f97..bf4eea1 100644
---- a/db.txt
-+++ b/db.txt
-@@ -272,9 +272,9 @@ country EG:
- 
- country ES: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
--	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
--	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
--	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
-+	(5150 - 5250 @ 80), (N/A, 100 mW), NO-OUTDOOR
-+	(5250 - 5350 @ 80), (N/A, 100 mW), NO-OUTDOOR, DFS
-+	(5470 - 5725 @ 80), (N/A, 500 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
-
+PiBPbiBXZWQsIEp1bCAxMCwgMjAxMyBhdCAzOjQ3IEFNLCBQZWVyLCBJbGFuIDxpbGFuLnBlZXJA
+aW50ZWwuY29tPiB3cm90ZToNCj4gPj4gQXJlIHlvdSBhd2FyZSBvZiBVTklJLTEsIFVOSUktMiwg
+VU5JSS0yRSwgVU5JSS0zIGFyZSBzcGVjaWZpYyB3b3JsZA0KPiA+PiByZWd1bGF0b3J5IGxhbmd1
+YWdlIGJhbmRzPyBXaGVuIEkgbGFzdCB0cmllZCB0byBsb29rIGZvciBhIGNsZWFyDQo+ID4+IGRl
+ZmluaXRpb24gSSBjb3VsZCBub3QgZmluZCBhIGNsZWFyIGRlZmluaXRpb24gb2YgdGhlbSBhbmQg
+aXRzIHdoeSBvbg0KPiA+PiB0aGUgYXRoIG1vZHVsZSBvbiBmb3IgUUNBIG1vZHVsZXMgSSBzdGF0
+ZSAid2UgY2FsbCB0aGVzZSIgaW4NCj4gPj4gcmVmZXJlbmNlIHRvIHRoZSBVTklJIG5vbWVuY2xh
+dHVyZS4gSWYgd2UgY2FuIGdldCBhIGNsZWFyIHJlc291cmNlIGZvciBpdHMNCj4gZGVmaW5pdGlv
+biB0aGF0IHdvdWxkIGhlbHAgaGVyZS4NCj4gPj4NCj4gPg0KPiA+IE1heWJlIHRoZXNlIGxpbmsg
+d2lsbCBoZWxwLg0KPiA+IGh0dHA6Ly93d3cuZ3BvLmdvdi9mZHN5cy9wa2cvQ0ZSLTIwMTAtdGl0
+bGU0Ny12b2wxL3htbC9DRlItMjAxMC10aXRsZTQNCj4gPiA3LXZvbDEtcGFydDE1LnhtbCNzZXFu
+dW0xNS40MDMNCj4gPiBodHRwOi8vaHJhdW5mb3NzLmZjYy5nb3YvZWRvY3NfcHVibGljL2F0dGFj
+aG1hdGNoL0ZDQy0xMy0yMkExLnBkZg0KPiA+DQo+ID4gQW55d2F5LCBJIHdpbGwgdXNlIHlvdXIg
+Jyd3ZSBjYWxsIHRoZXNlIiBub3RhdGlvbiBhcyB3ZWxsIDopDQo+IA0KPiBObyBubywgdGhpcyBp
+cyBnb29kLCBpdHMganVzdCBVbml0ZWQgU3RhdGVzIC8gRkNDIGJpYXNlZCBhbmQgSSBoYWRuJ3Qg
+c2VlbiB0aGUNCj4gZG9jdW1lbnRhdGlvbiB5b3UgcHJvdmlkZWQgYmVmb3JlLiBUaGlzIGNvbmZp
+cm1zIHRoZXNlIGFyZSBvZmZpY2lhbCB0ZXJtcyBidXQNCj4gc3RpbGwganVzdCBVUyAvIEZDQyBi
+aWFzZWQuIE15IHBvaW50IHdhcyB0aGF0IHdlIHNob3VsZCBiZSBjYXJlZnVsIHRvIG5vdCBtYWtl
+DQo+IGdsb2JhbCBzdGF0ZW1lbnRzIG9uIHJlZ3VsYXRvcnkgY29kZSBhYm91dCB0aGluZ3MgdGhh
+dCBhcmUgbm90IGdsb2JhbC4gSWYgd2UNCj4ga25vdyBvbmx5IHRoZSBGQ0MgY2FsbHMgdGhpcyBV
+TklJIHdlbGwgbGV0cyBkb2N1bWVudCB0aGF0IGFuZCBwcm92aWRlIHRoZQ0KPiByZWZlcmVuY2Ug
+eW91IHN1cHBsaWVkLiBJIGFudGljaXBhdGVkIGhhdmluZyB0byBkZWFsIHdpdGggc3BlY2lhbCBj
+YXNlDQo+IHJlZ3VsYXRvcnkgY29kZSBvdXRzaWRlIG9mIG9mIHdoYXQgQ1JEQSAvIHdpcmVsZXNz
+LXJlZ2RiIHByb3ZpZGVzIC0tIGdpdmVuIHRoYXQNCj4gQ1JEQSAvIHdpcmVsZXNzLXJlZ2RiIHdl
+cmUgbWVhbnQgdG8gYmUgbW9yZSBSRiBhZ25vc3RpYyBhbnl3YXkuDQo+IA0KPiBHaXZlbiB0aGF0
+IG90aGVyIHZlbmRvcnMgbWF5IGFsc28gd2FudCB0byBnZXQgdGhlIFVOSUkgYmFuZCBjYW4geW91
+IHN0dWZmDQo+IGluc3RlYWQgY2ZnODAyMTFfZ2V0X3VuaWlfYmFuZCgpIGludG8gcmVnLmMgYW5k
+IGRvIHRoZSAjaWZkZWYgcHJvcGVybHkgd2l0aCB0aGUNCj4gS2NvbmZpZywgYW5kIGV4cG9ydCBp
+dCBhcyB3ZWxsLCBhcyB3ZWxsIGFzIGRvY3VtZW50IGl0IHByb3Blcmx5IHByb3ZpZGluZyB0aGUN
+Cj4gcmVmZXJlbmNlIHlvdSBtZW50aW9uZWQuDQoNClN1cmUuDQoNCj4gDQo+ID4+ID4gKyAqIDEu
+IEluZG9vciBvbmx5OiBhIEdPIGNhbiBiZSBvcGVyYXRpb25hbCBvbiBzdWNoIGEgY2hhbm5lbCwg
+aWZmIHRoZXJlIGlzDQo+ID4+ID4gKyAqICAgIGNsZWFyIGFzc2Vzc21lbnQgdGhhdCB0aGUgcGxh
+dGZvcm0gZGV2aWNlIGlzIGluZG9vci4NCj4gPj4gPiArICogMi4gQ29uY3VycmVudCBHTzogYSBH
+TyBjYW4gYmUgb3BlcmF0aW9uYWwgb24gc3VjaCBhIGNoYW5uZWwsDQo+ID4+ID4gKyBpZmYgdGhl
+cmUgaXMNCj4gPj4gYW4NCj4gPj4gPiArICogICAgYWRkaXRpb25hbCBzdGF0aW9uIGludGVyZmFj
+ZSBjb25uZWN0ZWQgdG8gYW4gQVAgb24gdGhpcyBjaGFubmVsLg0KPiA+PiA+ICsgKg0KPiA+PiA+
+ICsgKiBUT0RPOiBUaGUgZnVuY3Rpb24gaXMgdG9vIHBlcm1pc3NpdmUsIGFzIGl0IGRvZXMgbm90
+IHZlcmlmeSB0aGUNCj4gPj4gPiArIHBsYXRmb3JtDQo+ID4+ID4gKyAqIGRldmljZSB0eXBlIGlz
+IGluZGVlZCBpbmRvb3IsIG9yIHRoYXQgdGhlIEFQIGlzIGluZG9vci9BQyBwb3dlcmVkLg0KPiA+
+Pg0KPiA+PiBTbyB0byBkbyB0aGlzIHByb3Blcmx5IHdlIG5lZWQgYW4gZXZlbnR1YWwgdXNlcnNw
+YWNlIEFQSSB0byB0aHJvdyB0bw0KPiA+PiBrZXJuZWxzcGFjZSBpZiB3ZSBhcmUgQUMgcG93ZXJl
+ZD8gV2UnbGwgbmVlZCB0aGlzIHRvIGVuaGFuY2UgdGhpcw0KPiA+PiByb3V0aW5lIGhlcmU/DQo+
+ID4+DQo+ID4NCj4gPiBOb3Qgc3VyZSBhYm91dCB0aGlzIHBvaW50LiBJIHByZWZlciBsZWF2aW5n
+IHRoZSBleGFjdCBrbm93bGVkZ2Ugb2YgdGhlIGRldmljZQ0KPiB0eXBlLCBiZWluZyBBQyBQb3dl
+cmVkIG9yIG5vdCAoYW5kIHdoaWNoIHR5cGUgb2YgQUMgcG93ZXIpIGV0Yy4gb3V0IHNpZGUgb2Yg
+dGhlDQo+IGtlcm5lbC4gVGhlIGFwcHJvYWNoIEkgY2hvc2Ugd2l0aCB0aGlzIHBhdGNoIHdhcyB0
+byBvbmx5IGFsbG93IHRvIHN0YXJ0IGEgR08gb24NCj4gc3VjaCBhIGNoYW5uZWwsIG1ha2luZyB0
+aGUgYmFzaWMgdmVyaWZpY2F0aW9uIGRvbmUgYWJvdmUsIGFzc3VtaW5nIHRoYXQgdGhlDQo+IHVz
+ZXIgc3BhY2UgY29tcG9uZW50IGd1YXJhbnRlZXMgdGhhdCBhbGwgdGhlIGZ1bGwgcmVzdHJpY3Rp
+b25zIGFyZSBzYXRpc2ZpZWQuDQo+IA0KPiBGYWlyIGVub3VnaC4gU2VlbXMgd2UganVzdCBuZWVk
+IHRvIHplcm8gaW4gbm93IG9uIHRoZSByZXF1aXJlbWVudCBvciBub3Qgb24NCj4gdGhlIGV4dHJh
+IGZsYWcgeW91IHN1Z2dlc3RlZC4NCj4gDQo+ID4+IEluIHRoZSBtZWFudGltZSwgd2hpbGUgeW91
+IGdldCBhbGwgeW91ciBwYXRjaCBzZXRzIHByb3Blcmx5IGRldmVsb3BlZA0KPiA+PiBJJ2QgcmVj
+b21tZW5kIHRvIGRlZmluZSB0aGUgY29kZSByZXR1cm5pbmcgZmFsc2UgdGhlcmUgc3RyaWN0bHkg
+b3INCj4gPj4gcGVyaGFwcyBmb3IgYW55IGZsYWcgb24gdGhlIGNoYW5uZWwgcmVxdWlyaW5nIERG
+UyAvIG5vLWlic3MsIG9yDQo+ID4+IHBhc3NpdmUgc2Nhbi4gVGhlIHN0cmljdGVyIGNhc2UsIGRl
+ZmluaW5nIGZhbHNlIGFsd2F5cywgc2VlbXMgdG8gYmUgd2hhdCB5b3UNCj4gYXJlIHN1Z2dlc3Rp
+bmcgaGVyZS4NCj4gPg0KPiA+IEkgZG8gbm90IHRoaW5rIHRoYXQgdGhpcyBpcyBuZWVkZWQgaGVy
+ZS4gUmV0dXJuaW5nIGZhbHNlLCBtZWFucyB0aGF0IHRoZSBjb2RlDQo+IHNob3VsZCB0ZXN0IGlm
+IHRoZSBQQVNTSVZFX1NDQU4gYW5kIE5PX0lCU1MgYXJlIG5vdCBzZXQgb24gdGhlIGNoYW5uZWwg
+d2UNCj4gd2FudCB0byBzdGFydCBiZWFjb25pbmcgb24uDQo+ID4NCj4gPj4gRG8geW91IGhhdmUg
+YSB3aGl0ZSBsaXN0IHRoYXQgY2FuIGV4Y2x1ZGUgc29tZSBjaGFubmVscyBmb3Igbm93DQo+ID4+
+IGdsb2JhbGx5IG9yIHNvbWVob3cgYXMgYWxsIHRoaXMgbGluZXMgdXA/DQo+ID4+DQo+ID4NCg0K
+SSdsbCB0cnkgdG8gcHJvdmlkZSBzdWNoIGxpc3QgLi4uIA0KDQo+ID4gTm90ZSBzdXJlIEkgdW5k
+ZXJzdG9vZCB3aGF0IHlvdSBhcmUgbG9va2luZyBmb3IuIENhbiB5b3UgcGxlYXNlIGNsYXJpZnkg
+dGhpcw0KPiBwb2ludD8NCj4gDQo+IEl0IHdhcyB1bmNsZWFyIGZvciB3aGF0IGV4YWN0IGNoYW5u
+ZWxzIHlvdSBuZWVkZWQgdG8gZGVhbCB3aXRoIGhlcmUuDQo+IEdpdmVuIHJldmlldyBzbyBmYXIg
+d291bGRuJ3QgaXQganVzdCBiZSBERlMgZmxhZ2dlZCBjaGFubmVscyBvbiBzb21lIFVOSUkNCj4g
+YmFuZHMgPyBUaGVuIGFnYWluIGlmIHRoZSBpbmRvb3IgZmxhZyBuZWVkcyB0byBiZSBwZWdnZWQg
+dG8gdG8gYSBzcGVjaWZpYyBVTklJDQo+IGJhbmQgYW5kIHdlIGNhbiBkbyB0aGF0IG9uIHdpcmVs
+ZXNzLXJlZ2RiIGRvIHdlIGV2ZW4gbmVlZCB0aGUgVU5JSSBiYW5kDQo+IGNoZWNrIHJvdXRpbmUg
+aGVscGVyPw0KPiANCg0KR2VuZXJhbGx5IGl0IGlzIHBvc3NpYmxlIHRoYXQgdGhlIGluZG9vciBw
+cm9wZXJ0eSBpcyBub3QgcGVnZ2VkIHRvIHRoZSAnb3RoZXJfY2hhbm5lbCcsIG9yIGl0IGlzIHBv
+c3NpYmxlIHRoYXQgaXQgaXMgcGVnZ2VkIGJ1dCB0aGV5IGFyZSBub3QgaW4gdGhlIHNhbWUgVU5J
+SSBiYW5kLCBzbyB0aGUgdmVyaWZpY2F0aW9uIGlzIHN0aWxsIG5lZWRlZC4gSSBndWVzcyB0aGF0
+IG9uY2UgSSBnZXQgdGhlIGxpc3QgeW91IHJlcXVlc3RlZCB0aGluZ3Mgd2lsbCBiZSBjbGVhcmVy
+IDopIA0KDQpSZWdhcmRzLA0KDQpJbGFuLg0KDQo=
