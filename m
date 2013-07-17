@@ -1,72 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:44396 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220Ab3G3BsT (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:42409 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCVJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 21:48:19 -0400
-Received: by mail-pa0-f49.google.com with SMTP id bi5so6562649pad.22
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jul 2013 18:48:19 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH] mac80211: allow lowest basic rate for unicast management frame in mesh
-Date: Mon, 29 Jul 2013 18:48:12 -0700
-Message-Id: <1375148892-18121-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130730_034823_046616_309CE6A3)
+	Tue, 16 Jul 2013 22:21:09 -0400
+Received: by mail-pd0-f174.google.com with SMTP id 10so1312150pdc.33
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:09 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 27/53] wireless-regdb: GR, Greece- enable VHT80
+Date: Tue, 16 Jul 2013 19:18:16 -0700
+Message-Id: <1374027522-18488-28-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_723262_D78149E2)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow lowest basic rate to be used for unicast management frame in
-mesh. Otherwise, the lowest supported rate is used for unicast
-management frame, such as 1Mbps for 2.4GHz and 6Mbps for 5GHz. Rename
-the rc_send_low_broadcast to re_send_low_basicrate since now it is
-also applied to unicast management frame in mesh.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
+
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- net/mac80211/rate.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index ba63ac8..8038d47 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -210,7 +210,7 @@ static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
- 		!ieee80211_is_data(fc);
- }
+diff --git a/db.txt b/db.txt
+index 3790d4e..7077b53 100644
+--- a/db.txt
++++ b/db.txt
+@@ -318,9 +318,9 @@ country GD:
  
--static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
-+static void rc_send_low_basicrate(s8 *idx, u32 basic_rates,
- 				  struct ieee80211_supported_band *sband)
- {
- 	u8 i;
-@@ -269,6 +269,7 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
- 	struct ieee80211_supported_band *sband = txrc->sband;
-+	struct sta_info *sta_mesh = container_of(sta, struct sta_info, sta);
- 	int mcast_rate;
+ country GR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
  
- 	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
-@@ -281,10 +282,16 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
- 				return true;
- 			}
- 
--			rc_send_low_broadcast(&info->control.rates[0].idx,
-+			rc_send_low_basicrate(&info->control.rates[0].idx,
- 					      txrc->bss_conf->basic_rates,
- 					      sband);
- 		}
-+
-+		if (sta && ieee80211_vif_is_mesh(&sta_mesh->sdata->vif))
-+			rc_send_low_basicrate(&info->control.rates[0].idx,
-+					      txrc->bss_conf->basic_rates,
-+					      sband);
-+
- 		return true;
- 	}
- 	return false;
 -- 
-1.7.9.5
+1.7.10.4
 
