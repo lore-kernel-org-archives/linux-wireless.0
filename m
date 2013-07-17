@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39132 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975Ab3GHSbk (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:62190 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCVA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 14:31:40 -0400
-Message-ID: <1373308289.8312.17.camel@jlt4.sipsolutions.net> (sfid-20130708_203143_166710_D5854B48)
-Subject: Re: Replacement for local->hw.conf.channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 08 Jul 2013 20:31:29 +0200
-In-Reply-To: <51DB0302.5050201@candelatech.com>
-References: <51D4BB56.9070401@candelatech.com>
-	  (sfid-20130704_020129_998241_BE6D0EF6) <1372922870.8235.0.camel@jlt4.sipsolutions.net>
-	 <51DB0302.5050201@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 16 Jul 2013 22:21:00 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rq2so1348766pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:59 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 25/53] wireless-regdb: DK, Denmark - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:14 -0700
+Message-Id: <1374027522-18488-26-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043607_027207_41C8621B)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-07-08 at 11:20 -0700, Ben Greear wrote:
-> On 07/04/2013 12:27 AM, Johannes Berg wrote:
-> > On Wed, 2013-07-03 at 17:01 -0700, Ben Greear wrote:
-> >> I'm trying to port some patches forward to 3.10....
-> >>
-> >> I am trying to find the current channel for a radio.  Since
-> >> hw.conf.channel no longer exists, what is the best way to
-> >> go about this?
-> >
-> > Well there's hw.conf.chandef.chan now I think, but that can be NULL and
-> > generic mac80211 code must not use it. There's no single current channel
-> > any more, you want vif->chanctx or so.
-> 
->  From looking at the scanning code (line 542 or so), it appears
-> 
-> local->_oper_chandef.chan
-> 
-> might work?
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-No, don't use that in any new code. It's purely for compatibility with
-drivers that aren't converted to channel contexts (yet).
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-> In 3.9, ath9k_htc was giving me a null channel in the code below:
-> 
-> 	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-> 	if (chanctx_conf)
-> 		channel = chanctx_conf->def.chan;
-> 	else
-> 		channel = NULL;
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-Well that of course happens if the vif isn't bound to a channel context.
+Quoting:
 
-johannes
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 94be114..26cc023 100644
+--- a/db.txt
++++ b/db.txt
+@@ -236,9 +236,9 @@ country DE: DFS-ETSI
+ 
+ country DK: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
 
