@@ -1,35 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fep23.mx.upcmail.net ([62.179.121.43]:53958 "EHLO
-	fep23.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933193Ab3GPSXh (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:52940 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCVF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 14:23:37 -0400
-Message-ID: <51E58FA5.4000804@odi.ch> (sfid-20130716_202354_753912_0A8E92B0)
-Date: Tue, 16 Jul 2013 20:23:33 +0200
-From: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [BUG] 3.10 regression: hang on suspend
-References: <51E4501D.3010001@odi.ch> <20130716065626.GA1587@redhat.com> <51E4F790.6090308@odi.ch> <51E51712.4020609@broadcom.com>
-In-Reply-To: <51E51712.4020609@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 16 Jul 2013 22:21:05 -0400
+Received: by mail-pd0-f177.google.com with SMTP id p10so1295414pdj.8
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:04 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 26/53] wireless-regdb: FI, Finland - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:15 -0700
+Message-Id: <1374027522-18488-27-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043606_874291_65F75C6F)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without NetworkManager, no X, on console and with plain jane wpa_supplicant I do
-echo mem > /sys/power state
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-After that, it still responds to keyboard events: I can switch VT and type on 
-the consoles, but I can not login on a different VT (pressing Enter after the 
-username doesn't return). So I guess tasks have been frozen, but it hangs in 
-stopping devices.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-settings for pm_test:
-devices: same behviour as above
-freezer: works as expected (stops tasks; sleeps; resumes tasks)
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-Nothing in the logs. How can I enable more log?
+Quoting:
 
-Ortwin
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 26cc023..3790d4e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -280,9 +280,9 @@ country ES: DFS-ETSI
+ 
+ country FI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
+
