@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:52929 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754701Ab3GENPV (ORCPT
+Received: from smtpfb1-g21.free.fr ([212.27.42.9]:45461 "EHLO
+	smtpfb1-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933055Ab3GQQsf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:15:21 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 17 Jul 2013 12:48:35 -0400
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2])
+	by smtpfb1-g21.free.fr (Postfix) with ESMTP id AB45D77D902
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Jul 2013 18:48:31 +0200 (CEST)
+Received: from zimbra65-e11.priv.proxad.net (unknown [172.20.243.215])
+	by smtp2-g21.free.fr (Postfix) with ESMTP id 1D1AF4B01B8
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Jul 2013 18:47:37 +0200 (CEST)
+Date: Wed, 17 Jul 2013 18:47:36 +0200 (CEST)
+From: etienne.champetier@free.fr
 To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 08/16] ath10k: lower print level for a message
-Date: Fri,  5 Jul 2013 16:15:09 +0300
-Message-Id: <1373030117-18077-9-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_152039_301102_245B8DB5)
-In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+Message-ID: <800088722.345614075.1374079656592.JavaMail.root@zimbra65-e11.priv.proxad.net> (sfid-20130717_184842_603449_43DBAA9B)
+In-Reply-To: <242956217.344802091.1374060921158.JavaMail.root@zimbra65-e11.priv.proxad.net>
+Subject: authsae & ath9k nohwcrypt=1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+Hi
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htc.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+I'm making some test with authsae on openrwt and for wr1043nd router (AR9100 wireless) i still need 'ath9k nohwcrypt=1'
+for the secure mesh to work when on another router (AR9280 wireless) i don't need it.
+Is it a drivers bug? or is it hardware?
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 74363c9..7b5c334 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -751,8 +751,9 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
- 	tx_alloc = ath10k_htc_get_credit_allocation(htc,
- 						    conn_req->service_id);
- 	if (!tx_alloc)
--		ath10k_warn("HTC Service %s does not allocate target credits\n",
--			    htc_service_name(conn_req->service_id));
-+		ath10k_dbg(ATH10K_DBG_HTC,
-+			   "HTC Service %s does not allocate target credits\n",
-+			   htc_service_name(conn_req->service_id));
- 
- 	skb = ath10k_htc_build_tx_ctrl_skb(htc->ar);
- 	if (!skb) {
--- 
-1.7.9.5
+-Router A: wr1043nd (need nohwcrypt=1 option)
+  -AR9100 wireless
+  -authsae - 2013-06-25-e2f67612101dc83f2c459d8ddc75c34bc83e1e83 (https://github.com/cozybit/authsae/tree/e2f67612101dc83f2c459d8ddc75c34bc83e1e83)
+  -kmod-ath9k - 3.10.1+2013-06-27-1 (backports-20130617-4-ge3220f5)
+  -openwrt BB r37364
 
+-Router B: ubnt rspro
+  -AR9280 wireless
+  -openwrt BB r37369 (same authsae/ath9k)
+
+Thanks in advance
+Etienne
