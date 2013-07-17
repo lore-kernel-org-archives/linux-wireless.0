@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55416 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755362Ab3GOMQE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 08:16:04 -0400
-Message-ID: <51E3E7F0.7050308@redhat.com> (sfid-20130715_141608_172902_EAE85E88)
-Date: Mon, 15 Jul 2013 08:15:44 -0400
-From: John Greene <jogreene@redhat.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: linville@tuxdriver.com, arend@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] brcmsmac: Further reduce log spam from tx phy messages
-References: <1373640919-2685-1-git-send-email-jogreene@redhat.com> <1373652022.2614.13.camel@joe-AO722>
-In-Reply-To: <1373652022.2614.13.camel@joe-AO722>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:35298 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCWF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:22:05 -0400
+Received: by mail-pa0-f53.google.com with SMTP id tj12so1407126pac.40
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:03 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 38/53] wireless-regdb: TR, Turkey - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:27 -0700
+Message-Id: <1374027522-18488-39-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042209_392857_0D77391B)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/12/2013 02:00 PM, Joe Perches wrote:
-> On Fri, 2013-07-12 at 10:55 -0400, John Greene wrote:
->> Relegate 2 phy messages to debug status as they create excessive
->> log spam, noted in multiple bugzillas for brcmsmac v3.8 and up.
->
-> Hi John,
->
-> Just trivia:
->
->> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-> []
->> @@ -928,7 +928,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
-> []
->> -			brcms_err(wlc->hw->d11core,
->> +			brcms_dbg_ht(wlc->hw->d11core,
->>   				  "%s: ampdu tx phy error (0x%x)\n",
->>   				  __func__, txs->phyerr);
->
-> Please keep the indentation of the arguments of
-> the same statement aligned to the open parenthesis.
->
->> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> []
->> @@ -882,7 +882,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
-> []
->> -		brcms_err(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
->> +		brcms_dbg_tx(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
->>   			  txs->phyerr, txh->MainRates);
->
-> Here too.
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Thanks Joe. My oversight.  I wish the checkpatch flagged this stuff. 
-I'll fix this and post v2.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and also adds a new frequency 5 GHz range:
+
+  * 5490 - 5710 MHz
+
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index f19f637..4f2d4e7 100644
+--- a/db.txt
++++ b/db.txt
+@@ -746,8 +746,9 @@ country TN:
+ 
+ country TR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (N/A, 20)
+-	(5250 - 5330 @ 20), (N/A, 20), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+  
 -- 
-John Greene
+1.7.10.4
 
