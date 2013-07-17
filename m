@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:38698 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932611Ab3GKJNR (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:61739 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3GQCXM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:13:17 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>, devel@driverdev.osuosl.org
-Subject: [PATCH 50/50] staging: vt6656: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:06:13 +0800
-Message-Id: <1373533573-12272-51-git-send-email-ming.lei@canonical.com> (sfid-20130711_111338_537525_47745D2B)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Tue, 16 Jul 2013 22:23:12 -0400
+Received: by mail-pb0-f49.google.com with SMTP id jt11so1354265pbb.22
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:23:12 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 52/53] wireless-regdb: CR, Costa Rica - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:41 -0700
+Message-Id: <1374027522-18488-53-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042315_947064_3C295EFB)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Cc: devel@driverdev.osuosl.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+This enables 80 MHz bandwidth usage for Costa Rica,
+updates the max EIRP and adds a new 5 GHz band:
+
+  * 5490 - 5710
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/staging/vt6656/usbpipe.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ db.txt |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 098be60..0282f2e 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -485,6 +485,7 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- 	int bIndicateReceive = false;
- 	int bReAllocSkb = false;
- 	int status;
-+	unsigned long flags;
+diff --git a/db.txt b/db.txt
+index 54f89d3..1470772 100644
+--- a/db.txt
++++ b/db.txt
+@@ -182,9 +182,10 @@ country CO:
  
-     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkInUsbIoCompleteRead\n");
-     status = urb->status;
-@@ -515,18 +516,18 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
-     STAvUpdateUSBCounter(&pDevice->scStatistic.USB_BulkInStat, status);
+ country CR:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (3, 17)
+-	(5250 - 5330 @ 20), (3, 23), DFS
+-	(5735 - 5835 @ 20), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
  
-     if (bIndicateReceive) {
--        spin_lock(&pDevice->lock);
-+        spin_lock_irqsave(&pDevice->lock, flags);
-         if (RXbBulkInProcessData(pDevice, pRCB, bytesRead) == true)
-             bReAllocSkb = true;
--        spin_unlock(&pDevice->lock);
-+        spin_unlock_irqrestore(&pDevice->lock, flags);
-     }
-     pRCB->Ref--;
-     if (pRCB->Ref == 0)
-     {
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"RxvFreeNormal %d \n",pDevice->NumRecvFreeList);
--        spin_lock(&pDevice->lock);
-+        spin_lock_irqsave(&pDevice->lock, flags);
-         RXvFreeRCB(pRCB, bReAllocSkb);
--        spin_unlock(&pDevice->lock);
-+        spin_unlock_irqrestore(&pDevice->lock, flags);
-     }
- 
-     return;
+ country CS:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.7.9.5
+1.7.10.4
 
