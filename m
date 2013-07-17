@@ -1,33 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48805 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755295Ab3GDH2E (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:51103 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308Ab3GQCTJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jul 2013 03:28:04 -0400
-Message-ID: <1372922870.8235.0.camel@jlt4.sipsolutions.net> (sfid-20130704_092808_201680_8B186401)
-Subject: Re: Replacement for local->hw.conf.channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 04 Jul 2013 09:27:50 +0200
-In-Reply-To: <51D4BB56.9070401@candelatech.com> (sfid-20130704_020129_998241_BE6D0EF6)
-References: <51D4BB56.9070401@candelatech.com>
-	 (sfid-20130704_020129_998241_BE6D0EF6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 16 Jul 2013 22:19:09 -0400
+Received: by mail-pa0-f54.google.com with SMTP id kx10so1427695pab.27
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:19:08 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 04/53] wireless-regdb: HK, Hong Kong - enable VHT80
+Date: Tue, 16 Jul 2013 19:17:53 -0700
+Message-Id: <1374027522-18488-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_041912_342630_097AED45)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-07-03 at 17:01 -0700, Ben Greear wrote:
-> I'm trying to port some patches forward to 3.10....
-> 
-> I am trying to find the current channel for a radio.  Since
-> hw.conf.channel no longer exists, what is the best way to
-> go about this?
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Well there's hw.conf.chandef.chan now I think, but that can be NULL and
-generic mac80211 code must not use it. There's no single current channel
-any more, you want vif->chanctx or so.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and increases the max EIRP on two
+5 GHz bands.
 
-johannes
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 37a13c6..bb846af 100644
+--- a/db.txt
++++ b/db.txt
+@@ -349,10 +349,10 @@ country HN:
+ 
+ country HK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (3, 17)
+-	(5250 - 5330 @ 40), (3, 20), DFS
+-	(5490 - 5710 @ 40), (3, 20), DFS
+-	(5735 - 5835 @ 40), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country HR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
 
