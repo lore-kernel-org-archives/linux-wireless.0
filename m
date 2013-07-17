@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48239 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751979Ab3GHOIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:08:46 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 18/20] rt2x00: rt2800lib: enable RT3593 support
-Date: Mon,  8 Jul 2013 16:08:33 +0200
-Message-Id: <1373292515-21332-19-git-send-email-juhosg@openwrt.org> (sfid-20130708_162043_868516_D3EFAC06)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:34438 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCVV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:21:21 -0400
+Received: by mail-pd0-f170.google.com with SMTP id x11so1310398pdj.15
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:20 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 29/53] wireless-regdb: IT, Italy - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:18 -0700
+Message-Id: <1374027522-18488-30-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_076328_3936975B)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support for the RT3593 has been implemented in
-the previous changes, so it is safe to mark it
-supported in the driver.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-Changes since v2: ---
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
- 1 file changed, 1 insertion(+)
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 9ab587e..dedc3d4 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -7636,6 +7636,7 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
- 	case RT3352:
- 	case RT3390:
- 	case RT3572:
-+	case RT3593:
- 	case RT5390:
- 	case RT5392:
- 	case RT5592:
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 88ba709..b8ddd9e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -415,9 +415,9 @@ country IR:
+ 
+ country IT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
 -- 
-1.7.10
+1.7.10.4
 
