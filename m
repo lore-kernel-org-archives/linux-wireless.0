@@ -1,97 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:43828 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757107Ab3GENPV (ORCPT
+Received: from mail-pb0-f50.google.com ([209.85.160.50]:52107 "EHLO
+	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674Ab3GQCUD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:15:21 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 06/16] ath10k: fix typo in define name
-Date: Fri,  5 Jul 2013 16:15:07 +0300
-Message-Id: <1373030117-18077-7-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_152040_011328_0F17AA66)
-In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+	Tue, 16 Jul 2013 22:20:03 -0400
+Received: by mail-pb0-f50.google.com with SMTP id wz7so1354398pbc.9
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:02 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 14/53] wireless-regdb: SG, Singapore - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:03 -0700
+Message-Id: <1374027522-18488-15-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043607_191446_58D03210)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and update the max EIRP. This also adds
+a new DFS 5 GHz band: 5490 - 5710 MHz.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c  |    2 +-
- drivers/net/wireless/ath/ath10k/pci.c |    6 +++---
- drivers/net/wireless/ath/ath10k/pci.h |    4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ db.txt |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 61a8ac7..b407929 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -79,7 +79,7 @@ static inline void ath10k_ce_src_ring_write_index_set(struct ath10k *ar,
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	void __iomem *indicator_addr;
+diff --git a/db.txt b/db.txt
+index 8e7fe8d..9043a3c 100644
+--- a/db.txt
++++ b/db.txt
+@@ -689,9 +689,10 @@ country SE: DFS-ETSI
  
--	if (!test_bit(ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND, ar_pci->features)) {
-+	if (!test_bit(ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND, ar_pci->features)) {
- 		ath10k_pci_write32(ar, ce_ctrl_addr + SR_WR_INDEX_ADDRESS, n);
- 		return;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index ab7e4a2..21ef88a 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2116,7 +2116,7 @@ static void ath10k_pci_dump_features(struct ath10k_pci *ar_pci)
- 		case ATH10K_PCI_FEATURE_MSI_X:
- 			ath10k_dbg(ATH10K_DBG_PCI, "device supports MSI-X\n");
- 			break;
--		case ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND:
-+		case ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND:
- 			ath10k_dbg(ATH10K_DBG_PCI, "QCA988X_1.0 workaround enabled\n");
- 			break;
- 		}
-@@ -2143,7 +2143,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ country SG:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5735 - 5835 @ 40), (N/A, 20)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
  
- 	switch (pci_dev->device) {
- 	case QCA988X_1_0_DEVICE_ID:
--		set_bit(ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND, ar_pci->features);
-+		set_bit(ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND, ar_pci->features);
- 		break;
- 	case QCA988X_2_0_DEVICE_ID:
- 		set_bit(ATH10K_PCI_FEATURE_MSI_X, ar_pci->features);
-@@ -2164,7 +2164,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 	}
- 
- 	/* Enable QCA988X_1.0 HW workarounds */
--	if (test_bit(ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND, ar_pci->features))
-+	if (test_bit(ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND, ar_pci->features))
- 		spin_lock_init(&ar_pci->hw_v1_workaround_lock);
- 
- 	ar_pci->ar = ar;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index d2a055a..d3a2e6c 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -152,7 +152,7 @@ struct service_to_pipe {
- 
- enum ath10k_pci_features {
- 	ATH10K_PCI_FEATURE_MSI_X		= 0,
--	ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND	= 1,
-+	ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND	= 1,
- 
- 	/* keep last */
- 	ATH10K_PCI_FEATURE_COUNT
-@@ -311,7 +311,7 @@ static inline void ath10k_pci_write32(struct ath10k *ar, u32 offset,
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	void __iomem *addr = ar_pci->mem;
- 
--	if (test_bit(ATH10K_PCI_FEATURE_HW_1_0_WARKAROUND, ar_pci->features)) {
-+	if (test_bit(ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND, ar_pci->features)) {
- 		unsigned long irq_flags;
- 
- 		spin_lock_irqsave(&ar_pci->hw_v1_workaround_lock, irq_flags);
+ country SI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.7.9.5
+1.7.10.4
 
