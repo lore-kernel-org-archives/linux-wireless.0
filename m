@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:42672 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753227Ab3GBO4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 10:56:44 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>
-Subject: [PATCH v2 5/9] wlcore: always use one-shot IRQ
-Date: Tue, 2 Jul 2013 17:55:44 +0300
-Message-ID: <1372776948-24840-6-git-send-email-coelho@ti.com> (sfid-20130702_165807_101499_F71978EB)
-In-Reply-To: <1372776948-24840-1-git-send-email-coelho@ti.com>
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:37943 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3GQCXS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:23:18 -0400
+Received: by mail-pd0-f178.google.com with SMTP id w11so1314589pde.9
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:23:17 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 53/53] wireless-regdb: EC, Ecauador - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:42 -0700
+Message-Id: <1374027522-18488-54-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042320_518596_8BA1A26D)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we are now using threaded IRQs without the primary handler, we
-need to set IRQF_ONESHOT, otherwise our request will fail.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+This enables 80 MHz bandwidth usage for Ecuador,
+updates the max EIRP and adds a new 5 GHz band:
+
+* 5490 - 5710
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ db.txt |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index d306cd5..bc1cff3 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5927,7 +5927,8 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+diff --git a/db.txt b/db.txt
+index 1470772..811eb5c 100644
+--- a/db.txt
++++ b/db.txt
+@@ -256,9 +256,10 @@ country DZ:
  
- 	wl->irq = platform_get_irq(pdev, 0);
- 	wl->if_ops = pdev_data->if_ops;
--	wl->irq_flags = pdata->irq_flags;
-+	/* Since we don't use the primary handler, we must set ONESHOT */
-+	wl->irq_flags = pdata->irq_flags | IRQF_ONESHOT;
+ country EC:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (3, 17)
+-	(5250 - 5330 @ 20), (3, 23), DFS
+-	(5735 - 5835 @ 20), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
  
- 	ret = request_threaded_irq(wl->irq, NULL, wlcore_irq,
- 				   wl->irq_flags, pdev->name, wl);
+ country EE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
 1.7.10.4
 
