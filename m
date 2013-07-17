@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35868 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758361Ab3GZJ4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 05:56:20 -0400
-Message-ID: <51F247C1.3090702@openwrt.org> (sfid-20130726_115638_698029_DD1385A2)
-Date: Fri, 26 Jul 2013 11:56:17 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [WT PATCH 4/6] mac80211: Add per-sdata station hash, and sdata
- hash.
-References: <1372546738-25827-1-git-send-email-greearb@candelatech.com>   <1372546738-25827-4-git-send-email-greearb@candelatech.com>   (sfid-20130630_005944_514926_D21D8724) <1373532936.8201.5.camel@jlt4.sipsolutions.net>  <51DECF5B.7040002@candelatech.com> <1374828780.8248.24.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1374828780.8248.24.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:33503 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCUu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:20:50 -0400
+Received: by mail-pd0-f181.google.com with SMTP id 14so1291016pdj.40
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:49 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 23/53] wireless-regdb: BE, Belgium - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:12 -0700
+Message-Id: <1374027522-18488-24-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043607_343092_316007FF)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-07-26 10:53 AM, Johannes Berg wrote:
-> On Thu, 2013-07-11 at 08:29 -0700, Ben Greear wrote:
-> 
->> > I also don't like maintaining two separate hash tables and all that.
->> >
->> > I'd reconsider if you actually remove the hash entirely, but that'll be
->> > tricky to walk the station list and will quite possibly make the RX path
->> > there more expensive?
->> 
->> Remove local->sta_hash ?
-> 
-> To be honest, I'm undecided. Yes, I was thinking that, but I also think
-> having a huge hashtable like that for each virtual interface is way
-> overkill, in particular for station interfaces that usually have one
-> peer (the AP) and maybe a few TDLS peers. Or P2P-Device interfaces that
-> have no peers at all ...
-> 
-> I don't see a good way to improve the hash either, since we don't always
-> (e.g. in RX path) have the interface address.
-How about mixing in the interface address into the hash. Theoretically
-you should always have that available, even in the rx path. Multicast
-data packets contain the BSSID, so you can get the address from there.
-You just need to be careful about checking the DS bits to figure out
-which address to use ;)
-I think this is a much better solution than duplicating the hash, or
-moving it into sdata entirely.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-- Felix
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
+
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index fd0ef09..5e17129 100644
+--- a/db.txt
++++ b/db.txt
+@@ -89,9 +89,9 @@ country BD:
+ 
+ country BE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
 
