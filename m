@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:52842 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932451Ab3GKJMF (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:37233 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3GQCWS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:12:05 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>
-Subject: [PATCH 41/50] media: usb: em28xx: make sure irq disabled before acquiring lock
-Date: Thu, 11 Jul 2013 17:06:04 +0800
-Message-Id: <1373533573-12272-42-git-send-email-ming.lei@canonical.com> (sfid-20130711_111439_811911_B81C816E)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Tue, 16 Jul 2013 22:22:18 -0400
+Received: by mail-pa0-f43.google.com with SMTP id hz11so1415627pad.2
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:18 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 41/53] wireless-regdb: US, United States - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:30 -0700
+Message-Id: <1374027522-18488-42-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042222_129592_96EF81BC)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so add local_irq_save()
-before acquiring the lock without irqsave().
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: linux-media@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+This enables 80 MHz bandwidth support on the US 5 GHz
+frequencies. This also updates the 5 GHz bands with higher
+max EIRP. Note VHT80 for 5690 is disabled.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/media/usb/em28xx/em28xx-audio.c |    3 +++
- 1 file changed, 3 insertions(+)
+ db.txt |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/media/usb/em28xx/em28xx-audio.c b/drivers/media/usb/em28xx/em28xx-audio.c
-index 2fdb66e..dca53ec 100644
---- a/drivers/media/usb/em28xx/em28xx-audio.c
-+++ b/drivers/media/usb/em28xx/em28xx-audio.c
-@@ -113,6 +113,7 @@ static void em28xx_audio_isocirq(struct urb *urb)
- 		stride = runtime->frame_bits >> 3;
+diff --git a/db.txt b/db.txt
+index 63ee9b4..bc8fe07 100644
+--- a/db.txt
++++ b/db.txt
+@@ -767,11 +767,11 @@ country UA:
  
- 		for (i = 0; i < urb->number_of_packets; i++) {
-+			unsigned long flags;
- 			int length =
- 			    urb->iso_frame_desc[i].actual_length / stride;
- 			cp = (unsigned char *)urb->transfer_buffer +
-@@ -134,6 +135,7 @@ static void em28xx_audio_isocirq(struct urb *urb)
- 				       length * stride);
- 			}
- 
-+			local_irq_save(flags);
- 			snd_pcm_stream_lock(substream);
- 
- 			dev->adev.hwptr_done_capture += length;
-@@ -151,6 +153,7 @@ static void em28xx_audio_isocirq(struct urb *urb)
- 			}
- 
- 			snd_pcm_stream_unlock(substream);
-+			local_irq_restore(flags);
- 		}
- 		if (period_elapsed)
- 			snd_pcm_period_elapsed(substream);
+ country US: DFS-FCC
+ 	(2402 - 2472 @ 40), (3, 27)
+-	(5170 - 5250 @ 40), (3, 17)
+-	(5250 - 5330 @ 40), (3, 20), DFS
+-	(5490 - 5600 @ 40), (3, 20), DFS
+-	(5650 - 5710 @ 40), (3, 20), DFS
+-	(5735 - 5835 @ 40), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5600 @ 80), (3, 24), DFS
++	(5650 - 5710 @ 40), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 	# 60g band
+ 	# reference: http://cfr.regstoday.com/47cfr15.aspx#47_CFR_15p255
+ 	# channels 1,2,3, EIRP=40dBm(43dBm peak)
 -- 
-1.7.9.5
+1.7.10.4
 
