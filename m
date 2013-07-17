@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:47180 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757047Ab3GEJFl (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:37461 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3GQCWx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 05:05:41 -0400
-Received: by mail-ie0-f175.google.com with SMTP id a13so4679995iee.6
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jul 2013 02:05:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130703191417.GA2245@localhost.localdomain>
-References: <1372269318-30233-1-git-send-email-juhosg@openwrt.org>
-	<1372269318-30233-2-git-send-email-juhosg@openwrt.org>
-	<20130703191417.GA2245@localhost.localdomain>
-Date: Fri, 5 Jul 2013 11:05:40 +0200
-Message-ID: <CAGXE3d_gzUhgXvjDg9HacNwO_TKmixhmz1RB7vpfm28eBuK13A@mail.gmail.com> (sfid-20130705_110544_770597_34D55692)
-Subject: Re: [rt2x00-users] [PATCH 1/5] rt2x00: rt2800lib: introduce
- rt2800_eeprom_word enum
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Gabor Juhos <juhosg@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Jul 2013 22:22:53 -0400
+Received: by mail-pb0-f41.google.com with SMTP id rp16so1358896pbb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:22:52 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 48/53] wireless-regdb: KR, Republic of Korea - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:37 -0700
+Message-Id: <1374027522-18488-49-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042255_858868_E3B25FBB)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 3, 2013 at 9:14 PM, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
-> On Wed, Jun 26, 2013 at 07:55:14PM +0200, Gabor Juhos wrote:
->> The patch converts the EEPROM_* word address defines
->> into new enum values. The new enum type will be used
->> by new functions which will be introduced in subsequent
->> changes.
->>
->> The patch contains no functional changes.
->>
->> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Nice! Just had a quick glance at the series. Looks good to me.
+This enables 80 MHz bandwidth usage for 5 GHz.
 
-Thanks,
-Helmut
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 0815e6e..530c687 100644
+--- a/db.txt
++++ b/db.txt
+@@ -462,10 +462,10 @@ country KP:
+ 
+ country KR:
+ 	(2402 - 2482 @ 20), (N/A, 20)
+-	(5170 - 5250 @ 20), (3, 20)
+-	(5250 - 5330 @ 20), (3, 20), DFS
+-	(5490 - 5630 @ 20), (3, 30), DFS
+-	(5735 - 5815 @ 20), (3, 30)
++	(5170 - 5250 @ 80), (3, 20)
++	(5250 - 5330 @ 80), (3, 20), DFS
++	(5490 - 5630 @ 80), (3, 30), DFS
++	(5735 - 5815 @ 80), (3, 30)
+ 
+ country KW:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
+
