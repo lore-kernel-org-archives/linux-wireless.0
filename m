@@ -1,18 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:37642 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733Ab3GQCUI (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:42424 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751752Ab3GQCUN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:20:08 -0400
-Received: by mail-pa0-f42.google.com with SMTP id rl6so1422318pac.29
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:07 -0700 (PDT)
+	Tue, 16 Jul 2013 22:20:13 -0400
+Received: by mail-pb0-f41.google.com with SMTP id rp16so1356848pbb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:12 -0700 (PDT)
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: linville@tuxdriver.com
 Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
 	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 15/53] wireless-regdb: ZA, South Africa - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:04 -0700
-Message-Id: <1374027522-18488-16-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_456538_83BF5B3A)
+Subject: [PATCH 16/53] wireless-regdb: TH, Thailand - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:05 -0700
+Message-Id: <1374027522-18488-17-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043609_093790_0B9B8A89)
 In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -29,12 +29,12 @@ Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/db.txt b/db.txt
-index 9043a3c..4475019 100644
+index 4475019..84214b0 100644
 --- a/db.txt
 +++ b/db.txt
-@@ -803,10 +803,10 @@ country YE:
+@@ -726,10 +726,10 @@ country TW:
  
- country ZA:
+ country TH:
  	(2402 - 2482 @ 40), (N/A, 20)
 -	(5170 - 5250 @ 40), (3, 17)
 -	(5250 - 5330 @ 40), (3, 20), DFS
@@ -45,7 +45,7 @@ index 9043a3c..4475019 100644
 +	(5490 - 5710 @ 80), (3, 24), DFS
 +	(5735 - 5835 @ 80), (3, 30)
  
- country ZW:
+ country TT:
  	(2402 - 2482 @ 40), (N/A, 20)
 -- 
 1.7.10.4
