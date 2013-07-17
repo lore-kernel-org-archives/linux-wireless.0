@@ -1,33 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:39267 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757365Ab3GEOo1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 10:44:27 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: 'Daniel Drake' <dsd@laptop.org>, Bing Zhao <bzhao@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Fri, 5 Jul 2013 07:44:08 -0700
-Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951035636351@SC-VEXCH1.marvell.com> (sfid-20130705_164429_931547_C202A1C9)
-In-Reply-To: <CAMLZHHSSfPnWK957Yd+vrLrsPHtUDW3b4ZxSjMe2SdpaQPk5hQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:63439 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308Ab3GQCSt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:18:49 -0400
+Received: by mail-pa0-f41.google.com with SMTP id bj3so1428894pad.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:18:49 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 00/53] wireless-regdb: latest updates
+Date: Tue, 16 Jul 2013 19:17:49 -0700
+Message-Id: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_041855_268827_D4F449A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
->Also, at which point do we wait upon all async commands to complete
->before shutting down? 
+I saw one comment posted about the Indonesia patch, I fixed that.
+I also then ran some sanity tests with a new reglib addition
+wich I recently posted. This helped find two cases which
+required disabling VHT80 for two countries on a specific band.
+One was for US for 5690 and another for TW for 5290. In both cases
+the reason is due to the fact that the only way to use VHT80 is
+to combine two frequency ranges together that are contiguous and
+apply the most restrictive band rules for that range. We don't support
+this yet so just disable VHT80 in both cases. In the US case this
+also seems to be the preferred ruling.
 
-All sync and async commands are queued into same queue. Sync and async type indicates if the thread just queues the command or it queues the command and waits until command response is received.
+This now goes out in patch form.
 
-Next command is sent to firmware only after receiving response of previous command. As we don't queue any command after SHUTDOWN command is queued, SHUTDOWN command is the last command sent to firmware. SHUTDOWN is a sync command. Hence remove handler thread waits until it's response.
+Luis R. Rodriguez (53):
+  wireless-regdb: AU, Australia - enable VHT80
+  wireless-regdb: BR, Brazil - enable VHT80
+  wireless-regdb: CA, Canada - enable VHT80
+  wireless-regdb: HK, Hong Kong - enable VHT80
+  wireless-regdb: NZ, New Zealand - enable VHT80
+  wireless-regdb: AR, Argentina - enable VHT80
+  wireless-regdb: CO, Colombia - enable VHT80
+  wireless-regdb: GU, Guam - enable VHT80
+  wireless-regdb: MX, Mexico - enable VHT80
+  wireless-regdb: PE, Peru - enable VHT80
+  wireless-regdb: PH, Philippines - enable VHT80
+  wireless-regdb: PR, Puerto Rico - enable VHT80
+  wireless-regdb: SA, Saudi Arabia - enable VHT80
+  wireless-regdb: SG, Singapore - enable VHT80
+  wireless-regdb: ZA, South Africa - enable VHT80
+  wireless-regdb: TH, Thailand - enable VHT80
+  wireless-regdb: AE, United Arab Emirates - enable VHT80
+  wireless-regdb: VN, Vietnam - enable VHT80
+  wireless-regdb: AT, Austria - enable VHT80
+  wireless-regdb: FR, France - enable VHT80
+  wireless-regdb: DE, Germany - enable VHT80
+  wireless-regdb: GB, United Kingdom - enable VHT80
+  wireless-regdb: BE, Belgium - enable VHT80
+  wireless-regdb: CZ, Czech Republic - enable VHT80
+  wireless-regdb: DK, Denmark - enable VHT80
+  wireless-regdb: FI, Finland - enable VHT80
+  wireless-regdb: GR, Greece- enable VHT80
+  wireless-regdb: IE, Ireland - enable VHT80
+  wireless-regdb: IT, Italy - enable VHT80
+  wireless-regdb: LU, Luxembourg - enable VHT80
+  wireless-regdb: NL, Netherlands - enable VHT80
+  wireless-regdb: PL, Poland - enable VHT80
+  wireless-regdb: PT, Portugal - enable VHT80
+  wireless-regdb: SK, Slovakia - enable VHT80
+  wireless-regdb: ES, Spain - enable VHT80
+  wireless-regdb: SE, Sweden - enable VHT80
+  wireless-regdb: CH, Switzerland - enable VHT80
+  wireless-regdb: TR, Turkey - enable VHT80
+  wireless-regdb: CN, China - enable VHT80
+  wireless-regdb: enable VHT80 and VHT160 for JP
+  wireless-regdb: US, United States - enable VHT80
+  wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
+  wireless-regdb: IL, Isreal - enable VHT80
+  wireless-regdb: KW, Kuwait - enable VHT80
+  wireless-regdb: MY, Malaysia - enable VHT80
+  wireless-regdb: MA, Morocco - enable 5 GHz and VHT80
+  wireless-regdb: enable HT40 in RU - Russian Federation
+  wireless-regdb: KR, Republic of Korea - enable VHT80
+  wireless-regdb: TW, Taiwan - enable VHT80
+  wireless-regdb: enable VHT80 when world roaming
+  wireless-regdb: add 802.11ad 60 GHz channels 1..3 to world regdom
+  wireless-regdb: CR, Costa Rica - enable VHT80
+  wireless-regdb: EC, Ecauador - enable VHT80
 
-Please let me know if there are any doubts.
+ db.txt |  316 +++++++++++++++++++++++++++++++++++-----------------------------
+ 1 file changed, 173 insertions(+), 143 deletions(-)
 
-Thanks,
-Amit
+-- 
+1.7.10.4
 
