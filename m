@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtava1.carestreamhealth.com ([205.173.211.14]:41841 "EHLO
-	ashop0009.corp.carestreamhealth.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751323Ab3GXN4h (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:37642 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733Ab3GQCUI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jul 2013 09:56:37 -0400
-Message-ID: <51EFDD13.5070506@carestream.com> (sfid-20130724_155641_720827_38128A42)
-Date: Wed, 24 Jul 2013 09:56:35 -0400
-From: "greg.huber" <greg.huber@carestream.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	daniel.wagner@oss.bmw-carit.de, Dan Williams <dcbw@redhat.com>
-Subject: Re: Wake-On-Wireless and Deauthentication
-References: <51E6DE4D.50902@carestream.com> <CAB=NE6UPz=6NuCMvy5FEM9QBg9rhwFTw0mG2YVTX3r3dLG=1cQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6UPz=6NuCMvy5FEM9QBg9rhwFTw0mG2YVTX3r3dLG=1cQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Jul 2013 22:20:08 -0400
+Received: by mail-pa0-f42.google.com with SMTP id rl6so1422318pac.29
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:07 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 15/53] wireless-regdb: ZA, South Africa - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:04 -0700
+Message-Id: <1374027522-18488-16-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_456538_83BF5B3A)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I moved over to an ARM embedded proto board and was able to get further.
-When suspended, the wireless card appears to stay awake and I can see the
-WoW magic-packets as well as other traffic to that NIC. First problem is that
-this is kernel 3.0.35 which I read does not yet support wake-on-wireless.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-The second question that perhaps one of you can answer is whether or not
-the external WAKE_EN# interrupt signal (pin 1 on a mPCIe card) is used to
-resume the system, or is the PCIe interrupt expected to resume the system.
-I scoped the WAKE_EN# signal but do not see any activity. I also looked at
-later drivers,  I don't see this signal activated as an interrupt source, but
-I'm still looking.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and update the max EIRP.
 
-Thank You.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Greg
-
-On 07/18/2013 09:38 PM, Luis R. Rodriguez wrote:
-> On Wed, Jul 17, 2013 at 11:11 AM, greg.huber <greg.huber@carestream.com> wrote:
->> I'm trying to get Wake-on-wireless working with an Atheros AR9462.
->> The problem I seem to be having is that there is a Deauth requested
->> when the system is suspended. Does anyone know how to keep the
->> association while suspended?? I'm using kernel 3.9.9.
->>
->> The log after waking (from keyboard)
->>
->> [  320.117062] wlp3s0: deauthenticating from 00:24:01:12:de:7a by local choice
->> (reason=3)
-> Typical managers for networking will disassociate you (and therefore
-> deauth first) prior to kicking the system to suspend. To test WoW you
-> need to run the supplicant manually because as far as I can tell the
-> GUI managers don't consider if WoW was enabled or not. In such a case
-> that WoW was enabled the GUI managers should not send the
-> deauth/disassoc.
->
->   Luis
->
+diff --git a/db.txt b/db.txt
+index 9043a3c..4475019 100644
+--- a/db.txt
++++ b/db.txt
+@@ -803,10 +803,10 @@ country YE:
+ 
+ country ZA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (3, 17)
+-	(5250 - 5330 @ 40), (3, 20), DFS
+-	(5490 - 5710 @ 40), (3, 20), DFS
+-	(5735 - 5835 @ 40), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country ZW:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
 
