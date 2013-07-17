@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1467 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754039Ab3GQM1F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jul 2013 08:27:05 -0400
-Date: Wed, 17 Jul 2013 14:29:45 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Ortwin =?iso-8859-1?Q?Gl=FCck?= <odi@odi.ch>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [BUG] 3.10 regression: hang on suspend
-Message-ID: <20130717122944.GA25894@redhat.com> (sfid-20130717_142725_763453_A66EF523)
-References: <51E4501D.3010001@odi.ch>
- <20130716065626.GA1587@redhat.com>
- <51E4F790.6090308@odi.ch>
- <51E51712.4020609@broadcom.com>
- <51E58FA5.4000804@odi.ch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <51E58FA5.4000804@odi.ch>
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:47953 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCVZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:21:25 -0400
+Received: by mail-pb0-f41.google.com with SMTP id rp16so1356864pbb.14
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:25 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 30/53] wireless-regdb: LU, Luxembourg - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:19 -0700
+Message-Id: <1374027522-18488-31-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043608_582438_5DE64C04)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 16, 2013 at 08:23:33PM +0200, Ortwin Glück wrote:
-> Without NetworkManager, no X, on console and with plain jane wpa_supplicant I do
-> echo mem > /sys/power state
-> 
-> After that, it still responds to keyboard events: I can switch VT
-> and type on the consoles, but I can not login on a different VT
-> (pressing Enter after the username doesn't return). So I guess tasks
-> have been frozen, but it hangs in stopping devices.
-> 
-> settings for pm_test:
-> devices: same behviour as above
-> freezer: works as expected (stops tasks; sleeps; resumes tasks)
-> 
-> Nothing in the logs. How can I enable more log?
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-This looks like livelock, i.e. kernel wait for mutex to be released
-but that never happen , for example because of deadlock. Enabling 
-CONFIG_LOCKDEP=y could help to diagnose this. Other than that
-sysreq key w (show blocked task) could help, see
-Documentation/sysrq.txt for instructions how to use this key.
-Also please remember set no_console_suspend boot option to
-allow print messages on tty during suspend.
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
-Stanislaw
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index b8ddd9e..04a176e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -500,9 +500,9 @@ country LT: DFS-ETSI
+ 
+ country LU: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
 
