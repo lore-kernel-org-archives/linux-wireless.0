@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:16393 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751788Ab3GGOHX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 10:07:23 -0400
-Date: Sun, 7 Jul 2013 16:10:09 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 03/20] rt2x00: rt2800lib: add RFCSR
- register initialization for RT3593
-Message-ID: <20130707141009.GC2073@localhost.localdomain> (sfid-20130707_160727_126227_E980FBCA)
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
- <1372664879-18474-4-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372664879-18474-4-git-send-email-juhosg@openwrt.org>
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:63173 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751540Ab3GQCTf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:19:35 -0400
+Received: by mail-pb0-f54.google.com with SMTP id ro2so1354393pbb.27
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:19:34 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 09/53] wireless-regdb: MX, Mexico - enable VHT80
+Date: Tue, 16 Jul 2013 19:17:58 -0700
+Message-Id: <1374027522-18488-10-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_041937_568686_E7827730)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 01, 2013 at 09:47:42AM +0200, Gabor Juhos wrote:
-> Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-> driver.
-> 
-> References:
->   NICInitRT3593RFRegisters in chips/rt3593.c
->   RT3593LoadRFNormalModeSetup in chips/rt3593.c
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
->  	case RT3390:
->  		rt2800_init_rfcsr_3390(rt2x00dev);
->  		break;
-> +	case RT3593:
-> +		rt2800_init_rfcsr_3593(rt2x00dev);
-> +		break;
->  	case RT3572:
->  		rt2800_init_rfcsr_3572(rt2x00dev);
->  		break;
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies and update the max EIRP. This also adds
+a new DFS 5 GHz band: 5490 - 5710 MHz.
 
-Nit: RT3572 should be before RT3593.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 4b1cf8e..570a951 100644
+--- a/db.txt
++++ b/db.txt
+@@ -550,9 +550,10 @@ country MY:
+ 
+ country MX:
+ 	(2402 - 2472 @ 40), (3, 27)
+-	(5170 - 5250 @ 40), (3, 17)
+-	(5250 - 5330 @ 40), (3, 23), DFS
+-	(5735 - 5835 @ 40), (3, 30)
++	(5170 - 5250 @ 80), (3, 17)
++	(5250 - 5330 @ 80), (3, 24), DFS
++	(5490 - 5710 @ 80), (3, 24), DFS
++	(5735 - 5835 @ 80), (3, 30)
+ 
+ country NL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
+
