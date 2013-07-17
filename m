@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56920 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753289Ab3GaTPO (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:44059 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3GQCXC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 15:15:14 -0400
-Date: Wed, 31 Jul 2013 15:08:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-07-30
-Message-ID: <20130731190801.GE2311@tuxdriver.com> (sfid-20130731_211536_806569_93F14705)
-References: <20130730123848.GE5975@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130730123848.GE5975@joana>
+	Tue, 16 Jul 2013 22:23:02 -0400
+Received: by mail-pa0-f45.google.com with SMTP id bi5so1420970pad.4
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:23:01 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 50/53] wireless-regdb: enable VHT80 when world roaming
+Date: Tue, 16 Jul 2013 19:18:39 -0700
+Message-Id: <1374027522-18488-51-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_042306_907854_05DDE315)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 30, 2013 at 01:38:48PM +0100, Gustavo Padovan wrote:
-> Hi John,
-> 
-> A few fixes and devices ID additions for 3.11: 
-> 
->  * There are 4 new ath3k device ids 
->  * Fixed stack memory usage in ath3k.
->  * Fixed the init process of BlueFRITZ! devices, they were failing to init
->    due to an unsupported command we sent. 
->  * Fixed wrong use of PTR_ERR in btusb code that was preventing intel devices
->    to work properly.
->  * Fixed race condition between hci_register_dev() and hci_dev_open() that
->    could cause a NULL pointer dereference.
->  * Fixed race condition that could call hci_req_cmd_complete() and make some
->    devices to fail as showed in the log added to the commit message.
-> 
-> Please pull or let me know of any issues. Thanks.
-> 
-> 	Gustavo
-> 
-> --
-> The following changes since commit 075163bbb0f51174359947e1bce84f5edb23f21e:
-> 
->   ath9k_htc: Handle IDLE state transition properly (2013-06-24 13:52:52 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-> 
-> for you to fetch changes up to 53e21fbc288218a423959f878c86471a0e323a9a:
-> 
->   Bluetooth: Fix calling request callback more than once (2013-07-29 12:28:04 +0100)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Pulling now...
+For VHT, the wider bandwidths (up to 160 MHz) need
+to be allowed. Since world roaming only covers the
+case of connecting to an AP, it can be opened up
+there, we will rely on the AP to know the local
+regulations.
 
+Based on a patch by Johannes Berg for upstream Linux.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 0a4b56f..c6def1c 100644
+--- a/db.txt
++++ b/db.txt
+@@ -6,10 +6,10 @@ country 00:
+ 	# Channel 14. Only JP enables this and for 802.11b only
+ 	(2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
+ 	# Channel 36 - 48
+-	(5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
++	(5170 - 5250 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
+ 	# NB: 5260 MHz - 5700 MHz requies DFS
+ 	# Channel 149 - 165
+-	(5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
++	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
+ 
+ 
+ country AD:
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10.4
+
