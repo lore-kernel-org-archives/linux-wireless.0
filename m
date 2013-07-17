@@ -1,92 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50167 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754547Ab3GOJGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 05:06:31 -0400
-Message-ID: <51E3BB93.2090000@openwrt.org> (sfid-20130715_110648_962561_8E1A0BB5)
-Date: Mon, 15 Jul 2013 11:06:27 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Krzysztof Mazur <krzysiek@podlesie.net>
-CC: Sedat Dilek <sedat.dilek@gmail.com>, peizhao.research@gmail.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: kernel panic on 3.10.0-rc7
-References: <51D127E4.2080803@gmail.com> <CA+icZUUQHySKu=qEW3xfheg3DSMuvgB7Dp5PzVGOaiziAPTa5g@mail.gmail.com> <20130715085239.GA31630@shrek.podlesie.net>
-In-Reply-To: <20130715085239.GA31630@shrek.podlesie.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:37016 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3GQCVP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jul 2013 22:21:15 -0400
+Received: by mail-pa0-f50.google.com with SMTP id fb1so1405489pad.23
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:15 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 28/53] wireless-regdb: IE, Ireland - enable VHT80
+Date: Tue, 16 Jul 2013 19:18:17 -0700
+Message-Id: <1374027522-18488-29-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043607_821428_8D3B369E)
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-07-15 10:52 AM, Krzysztof Mazur wrote:
-> On Mon, Jul 01, 2013 at 09:37:19AM +0200, Sedat Dilek wrote:
->> On Mon, Jul 1, 2013 at 8:55 AM, Peizhao Hu <peizhao.research@gmail.com> wrote:
->> > Hi,
->> >
->> > Is there anyone has the same problem with me? I have a cm9 radio card with
->> > the node.
->> >
->> > The kernel compiled and booted alright, but crashed short after I set it up
->> > in the ad hoc mode. From the debug message output, it looks like something
->> > wrong with the rate control mechanism when it is trying to the rate
->> > (minstreal_get_rate function in this case).
->> >
->> > Is this a bug?
->> >
->> > Kernel version
->> > 3.10.0-rc7
->> >
->> 
->> Please, always add your kernel-config and some outputs like dmesg and
->> lspci/lsusb for better understanding.
->> 2nd, try v3.10 (released a few hours ago)... There were wireless
->> patches pushed after v3.10-rc7.
->> Then report again.
->> 
-> 
-> I have the same problem. I'm using:
-> 
-> 02:04.0 Network controller: Broadcom Corporation BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller (rev 02)
-> 	Subsystem: Hewlett-Packard Company Broadcom 802.11b/g WLAN
-> 	Flags: bus master, fast devsel, latency 64, IRQ 21
-> 	Memory at d0000000 (32-bit, non-prefetchable) [size=8K]
-> 	Kernel driver in use: b43-pci-bridge
-> 
-> with b43 driver and I can easily trigger similar Oops with:
-> # ip link set wlan0 up
-> # iwlist scan
-> 
-> The bug is introduced by commit 06d961a8e210035bff7e82f466107f9ab4a8fd94
-> ("mac80211/minstrel: use the new rate control API").
-> The v3.9 is ok and the v3.11-rc1 is still bad. I haven't checked
-> wireless tree yet.
-> 
-> Wireless related part of my .config:
-> [...]
-> CONFIG_WIRELESS=y
-> CONFIG_WEXT_CORE=y
-> CONFIG_WEXT_PROC=y
-> CONFIG_CFG80211=y
-> CONFIG_CFG80211_DEFAULT_PS=y
-> CONFIG_CFG80211_WEXT=y
-> CONFIG_MAC80211=y
-> CONFIG_MAC80211_HAS_RC=y
-> CONFIG_MAC80211_RC_MINSTREL=y
-> CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-> CONFIG_MAC80211_RC_DEFAULT="minstrel"
-> CONFIG_RFKILL=y
-> CONFIG_RFKILL_INPUT=y
-> [...]
-> CONFIG_WLAN=y
-> CONFIG_B43=y
-> CONFIG_B43_SSB=y
-> CONFIG_B43_PCI_AUTOSELECT=y
-> CONFIG_B43_PCICORE_AUTOSELECT=y
-> CONFIG_B43_PIO=y
-> CONFIG_B43_PHY_LP=y
-> 
-> Krzysiek
-Please post the actual message output. Saying "it looks like something
-wrong with the rate control mechanism" doesn't give me anything useful
-to work with.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-- Felix
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
+
+This is a country that belongs CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
+
+Quoting:
+
+  considering [...]
+  e. that the systems covered by this ECC Decision operate
+  typically in a 20 MHz channel bandwidth, other values for
+  the channel bandwidth are also feasible provided they
+  comply with the relevant maximum mean e.i.r.p. and the
+  corresponding maximum mean e.i.r.p. density limits;
+
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 7077b53..88ba709 100644
+--- a/db.txt
++++ b/db.txt
+@@ -384,9 +384,9 @@ country ID:
+ 
+ country IE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.10.4
+
