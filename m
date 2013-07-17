@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:41757 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932140Ab3GKJIW (ORCPT
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:64500 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754039Ab3GQLsu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:08:22 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Johan Hovold <jhovold@gmail.com>
-Subject: [PATCH 13/50] USB: serial: io_ti: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:36 +0800
-Message-Id: <1373533573-12272-14-git-send-email-ming.lei@canonical.com> (sfid-20130711_110834_320769_2362479E)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Wed, 17 Jul 2013 07:48:50 -0400
+Received: by mail-qa0-f52.google.com with SMTP id bv4so1047817qab.11
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Jul 2013 04:48:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130716102743.GA8321@redhat.com>
+References: <20130107110759.GC6931@redhat.com> <20130603085239.GA26920@mac.home>
+ <20130603141804.GA2146@redhat.com> <CAJZjf_xoCOTFsLAB29uLKeW7+O+k255Amspn6GKFMysc7CTsBg@mail.gmail.com>
+ <CAJZjf_xGdvStOG0=FR2+2WsVcjyizQukH+RxysZf8f9-Tk9L9w@mail.gmail.com>
+ <20130611161924.GB1696@redhat.com> <CAJZjf_zOF=qGEE=pWDRe0YDpAYophm93cVM8pfuL0sTRGq56EA@mail.gmail.com>
+ <20130614131829.GA5125@redhat.com> <20130625142514.GA1938@redhat.com>
+ <CAJZjf_z=+QW_Y3yuz6nJ+muVA_6bGRut8EQ7fCopDqqj2Fn9Yw@mail.gmail.com> <20130716102743.GA8321@redhat.com>
+From: Pedro Francisco <pedrogfrancisco@gmail.com>
+Date: Wed, 17 Jul 2013 12:48:30 +0100
+Message-ID: <CAJZjf_y9fnkHLp4YPdYY2sVo4r4+hKJcZAebJmjVKCBh-0EUtA@mail.gmail.com> (sfid-20130717_134854_197986_CBC6DC63)
+Subject: Re: Power saving features for iwl4965
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Tino Keitel <tino.keitel@tikei.de>,
+	ML linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+On Tue, Jul 16, 2013 at 11:27 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> I seem only to be able to trigger it with disable_hw_scan=0, I need
+>> further testing with disable_hw_scan=1 (I use disable_hw_scan=0
+>> because it prevents me from getting disconnected from eduroam Cisco
+>> APs -- haven't tested disable_hw_scan=0 since the VOIP-friendly SW
+>> scanning patch, however).
+>>
+>> Do you want the log anyway? (modprobe iwl3945 debug=0x47ffffff
+>> disable_hw_scan=0 and runtime PCI powersave also enabled -- I don't
+>> know if it matters).
+>
+> As this is not causing troubles with default disable_hw_scan option,
+> I'll post that patch.
 
-Cc: Johan Hovold <jhovold@gmail.com>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/usb/serial/io_ti.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+My mistake, I can trigger error conditions _independently_ of
+disable_hw_scan option being enabled or disabled, as long as powersave
+is enabled.
 
-diff --git a/drivers/usb/serial/io_ti.c b/drivers/usb/serial/io_ti.c
-index 60054e7..4943194 100644
---- a/drivers/usb/serial/io_ti.c
-+++ b/drivers/usb/serial/io_ti.c
-@@ -1615,6 +1615,7 @@ static void edge_bulk_in_callback(struct urb *urb)
- 	int retval = 0;
- 	int port_number;
- 	int status = urb->status;
-+	unsigned long flags;
- 
- 	switch (status) {
- 	case 0:
-@@ -1663,13 +1664,13 @@ static void edge_bulk_in_callback(struct urb *urb)
- 
- exit:
- 	/* continue read unless stopped */
--	spin_lock(&edge_port->ep_lock);
-+	spin_lock_irqsave(&edge_port->ep_lock, flags);
- 	if (edge_port->ep_read_urb_state == EDGE_READ_URB_RUNNING)
- 		retval = usb_submit_urb(urb, GFP_ATOMIC);
- 	else if (edge_port->ep_read_urb_state == EDGE_READ_URB_STOPPING)
- 		edge_port->ep_read_urb_state = EDGE_READ_URB_STOPPED;
- 
--	spin_unlock(&edge_port->ep_lock);
-+	spin_unlock_irqrestore(&edge_port->ep_lock, flags);
- 	if (retval)
- 		dev_err(dev, "%s - usb_submit_urb failed with result %d\n", __func__, retval);
- }
--- 
-1.7.9.5
-
+I'll send you a private email with the logs.
