@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50117 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759143Ab3GaIuj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 04:50:39 -0400
-Message-ID: <1375260632.8289.10.camel@jlt4.sipsolutions.net> (sfid-20130731_105052_925662_9BA0255A)
-Subject: Re: AP changed bandwidth, new config is  ... changed bandwidth in a
- way we can't support - disconnect - why? (intel advanced-n 6250)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>,
-	Andy Isaacson <adi@hexapodia.org>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Date: Wed, 31 Jul 2013 10:50:32 +0200
-In-Reply-To: <201307310855.28080.a.miskiewicz@gmail.com> (sfid-20130731_085534_667847_F735B965)
-References: <201307310855.28080.a.miskiewicz@gmail.com>
-	 (sfid-20130731_085534_667847_F735B965)
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:34474 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754804Ab3GQNqe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jul 2013 09:46:34 -0400
+Date: Wed, 17 Jul 2013 09:47:01 -0400
+From: Jeff Layton <jlayton@redhat.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: hung task while plugging in cfg80211
+Message-ID: <20130717094701.03624329@corrin.poochiereds.net> (sfid-20130717_154704_056473_9F59DC01)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-07-31 at 08:55 +0200, Arkadiusz Miskiewicz wrote:
+(Resending with wider distribution list since my earlier email to
+linux-wireless didn't get a response)
 
-> It basically reports:
-> [79477.496067] eth1: AP 68:7f:74:06:b3:1b changed bandwidth, new config is 2422 MHz, width 1 (2422/0 MHz)
-> [79477.496072] eth1: AP 68:7f:74:06:b3:1b changed bandwidth in a way we can't support - disconnect
-> 
-> (note I have two wrt160nl here and problem happens with both)
-> 
-> Any hints on why "we can't support" configuration issued by this (common) AP?
+I updated the kernel on my fedora rawhide KVM guest, and noticed that
+the ethernet interface wasn't coming up at all. While poking around, I
+saw this stack trace pop up:
 
-As far as I can tell, it seems to be an AP bug, but I had no idea this
-was so common.
+Jul 12 07:29:25 rawhide kernel: [  241.156196] INFO: task modprobe:501 blocked for more than 120 seconds.
+Jul 12 07:29:25 rawhide kernel: [  241.157222] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Jul 12 07:29:25 rawhide kernel: [  241.158379] modprobe        D ffff880118c526e0  4584   501    500 0x00000080
+Jul 12 07:29:25 rawhide kernel: [  241.159458]  ffff8800d10c3ba8 0000000000000046 00000000001d5300 ffff8800d10c3fd8
+Jul 12 07:29:25 rawhide kernel: [  241.160644]  ffff8800d10c3fd8 00000000001d5300 ffff8800d2ae4dc0 ffff8800d2ae4dc0
+Jul 12 07:29:25 rawhide kernel: [  241.161875]  ffffffff81d0bfa0 ffffffff81d0bfa8 ffffffff00000000 ffffffff81d0bff0
+Jul 12 07:29:25 rawhide kernel: [  241.163096] Call Trace:
+Jul 12 07:29:25 rawhide kernel: [  241.163460]  [<ffffffff817377e9>] schedule+0x29/0x70
+Jul 12 07:29:25 rawhide kernel: [  241.164235]  [<ffffffff817392ad>] rwsem_down_write_failed+0xed/0x1a0
+Jul 12 07:29:25 rawhide kernel: [  241.165489]  [<ffffffff810bb600>] ? update_cpu_load_active+0xb0/0xb0
+Jul 12 07:29:25 rawhide kernel: [  241.166267]  [<ffffffff8137d503>] call_rwsem_down_write_failed+0x13/0x20
+Jul 12 07:29:25 rawhide kernel: [  241.166760]  [<ffffffff81736aad>] ? down_write+0x9d/0xb2
+Jul 12 07:29:25 rawhide kernel: [  241.167189]  [<ffffffff8162d975>] ? genl_lock_all+0x15/0x30
+Jul 12 07:29:25 rawhide kernel: [  241.167603]  [<ffffffff8162d975>] genl_lock_all+0x15/0x30
+Jul 12 07:29:25 rawhide kernel: [  241.168036]  [<ffffffff8162ea83>] genl_register_family+0x53/0x1f0
+Jul 12 07:29:25 rawhide kernel: [  241.168490]  [<ffffffffa015e000>] ? 0xffffffffa015dfff
+Jul 12 07:29:25 rawhide kernel: [  241.168877]  [<ffffffff8162f520>] genl_register_family_with_ops+0x20/0x80
+Jul 12 07:29:25 rawhide kernel: [  241.169406]  [<ffffffffa015e000>] ? 0xffffffffa015dfff
+Jul 12 07:29:25 rawhide kernel: [  241.169802]  [<ffffffffa0101ec4>] nl80211_init+0x24/0xf0 [cfg80211]
+Jul 12 07:29:25 rawhide kernel: [  241.170297]  [<ffffffffa015e000>] ? 0xffffffffa015dfff
+Jul 12 07:29:25 rawhide kernel: [  241.170686]  [<ffffffffa015e043>] cfg80211_init+0x43/0xdb [cfg80211]
+Jul 12 07:29:25 rawhide kernel: [  241.171230]  [<ffffffff810020fa>] do_one_initcall+0xfa/0x1b0
+Jul 12 07:29:25 rawhide kernel: [  241.171651]  [<ffffffff8105cb93>] ? set_memory_nx+0x43/0x50
+Jul 12 07:29:25 rawhide kernel: [  241.172099]  [<ffffffff810fa2bf>] load_module+0x1c6f/0x27f0
+Jul 12 07:29:25 rawhide kernel: [  241.172515]  [<ffffffff810f59a0>] ? store_uevent+0x40/0x40
+Jul 12 07:29:25 rawhide kernel: [  241.172933]  [<ffffffff810fafd6>] SyS_finit_module+0x86/0xb0
+Jul 12 07:29:25 rawhide kernel: [  241.173379]  [<ffffffff81744019>] system_call_fastpath+0x16/0x1b
 
-Testing with hostapd, I can switch bandwidth between 20 and 40 MHz just
-fine, and it only prints "new config is ..." and then carries on.
+...on a hunch, I blacklisted the cfg80211 module, and that seems to
+have worked around the problem for now. I suspect that NM was trying to
+plug in this module and it hung, and it couldn't proceed any further to
+configure the virtual ethernet interface.
 
-Since you seem to be able to reproduce this easily, can you run tcpdump
-with the beacon info?
+In the fedora rawhide kernels, last known good one is
+kernel-3.11.0-0.rc0.git3.1.fc20, and bad one is
+kernel-3.11.0-0.rc0.git6.1.fc20. I haven't bisected it further.
 
-sudo iw wlan0 interface add moni0 type monitor flags none
-sudo ip link set moni0 up
-sudo tcpdump -i moni0 -s0 -w /tmp/dump
-
-and then wait for the problem to occur and send me (privately) the dump
-file (best compressed)?
-
-There's also a bug here:
-https://bugzilla.redhat.com/show_bug.cgi?id=981445
-
-johannes
-
-
+-- 
+Jeff Layton <jlayton@redhat.com>
