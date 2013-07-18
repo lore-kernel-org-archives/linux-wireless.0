@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:57764 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757651Ab3GWPBP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 11:01:15 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:14508 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758368Ab3GRKxG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jul 2013 06:53:06 -0400
+Date: Thu, 18 Jul 2013 12:55:51 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ortwin =?iso-8859-1?Q?Gl=FCck?= <odi@odi.ch>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [BUG] 3.10 regression: hang on suspend
+Message-ID: <20130718105550.GA4628@redhat.com> (sfid-20130718_125327_226068_3B3B6A7E)
+References: <51E4501D.3010001@odi.ch>
+ <20130716065626.GA1587@redhat.com>
+ <51E4F790.6090308@odi.ch>
+ <51E51712.4020609@broadcom.com>
+ <51E58FA5.4000804@odi.ch>
+ <20130717122944.GA25894@redhat.com>
+ <51E6E1AB.5010300@odi.ch>
 MIME-Version: 1.0
-In-Reply-To: <20130723162659.5aa59750@tux.DEF.witbe.net>
-References: <20130611123814.GA9854@lnx-rg> <20130626142241.GA13107@lnx-rg>
- <51CB0E9C.50408@lwfinger.net> <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
- <20130723142907.53103aab@tux.DEF.witbe.net> <20130723162659.5aa59750@tux.DEF.witbe.net>
-From: Richard Genoud <richard.genoud@gmail.com>
-Date: Tue, 23 Jul 2013 17:00:54 +0200
-Message-ID: <CACQ1gAiyc6e39S8FnjTE7GX7SeorHjJP6gLZGRWsgi8f1zjEaw@mail.gmail.com> (sfid-20130723_170119_380595_EBD46860)
-Subject: Re: rtl8192cu: slow path warning
-To: Paul Rolland <rol@witbe.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <51E6E1AB.5010300@odi.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/7/23 Paul Rolland <rol@witbe.net>:
-> Hello Richard,
->
-> If you still have the required HW and still would like a patch to remove
-> that warning on your machine, could you please try the attached one ?
->
-> I slightly reworked the original patch by moving the function
-> rtl_lps_change_work_callback from pci.c to ps.c.
->
-> I've successfully compiled that on my machine, but I have PCI set in
-> my .config, so I'd like your feedback.
->
-> Best,
-> Paul
+On Wed, Jul 17, 2013 at 08:25:47PM +0200, Ortwin Glück wrote:
+> On 07/17/2013 02:29 PM, Stanislaw Gruszka wrote:
+> >This looks like livelock
+> 
+> OK got it. Just a GPF in the suspend path, not a livelock
+> fortunately. With no_console_suspend the trace appears. Attached is
+> a screenshot, transcription for your convenience is here:
+> 
+> NULL pointer deref at iwlagn_mac_remove_interface+0x43/0x120
 
-Hi Paul,
+Unfortunately I still don't know why this happen. Please do
 
-Well, I don't know why this patch didn't make it to 3.11-rc1, but it
-seems that the patch you sent is the same as Larry's second patch :
-https://lkml.org/lkml/2013/6/27/548
+objdump -r -d --prefix-addresses net/mac80211/mac80211.ko > mac80211.txt
+objdump -r -d --prefix-addresses drivers/net/wireless/iwlwifi/dvm/iwldvm.ko > iwldvm.txt
 
-Best regards,
-Richard.
+and send me mac80211.txt & iwldvm.txt files.
+
+Thanks
+Stanislaw
+
