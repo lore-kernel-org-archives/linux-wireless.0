@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:63157 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753118Ab3G2Iji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 04:39:38 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 0/3] introduce chan_time parameter to scan request
-Date: Mon, 29 Jul 2013 10:39:15 +0200
-Message-ID: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com> (sfid-20130729_103941_885990_9756E761)
+Received: from cooperlighting-sw.cooperlighting.com ([216.130.131.68]:55622
+	"EHLO cooperlighting-sw.cooperlighting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756379Ab3GRBL6 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jul 2013 21:11:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: So, which IEEE<->Frequency mappings should we be all using?
+Date: Thu, 18 Jul 2013 08:58:42 +0800
+Message-ID: <475A4E02EFF4724A9E58F55A56AC1316089BB77C@APEVS1.ap.ci.root> (sfid-20130718_031202_552406_2881BB23)
+In-Reply-To: <CAJ-Vmo=yvHUgv6pwK42n+NhPrAu9shxc5pigRkhZE+x91W_FoA@mail.gmail.com>
+References: <CAJ-Vmo=yvHUgv6pwK42n+NhPrAu9shxc5pigRkhZE+x91W_FoA@mail.gmail.com>
+From: "Wright, Brett" <Brett.Wright@cooperindustries.com>
+To: "Adrian Chadd" <adrian@freebsd.org>,
+	<freebsd-wireless@freebsd.org>, <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> -----Original Message-----
+> From: owner-freebsd-wireless@freebsd.org [mailto:owner-freebsd-
+> wireless@freebsd.org] On Behalf Of Adrian Chadd
+> Sent: Thursday, 18 July 2013 3:42 AM
+> To: freebsd-wireless@freebsd.org; linux-wireless@vger.kernel.org
+> Subject: So, which IEEE<->Frequency mappings should we be all using?
+> 
+> Hi all,
+> 
+> I've been increasingly asked to bring up FreeBSD on "other" bands.
+> 
+> * 420MHz
+> * 700MHz
+> * 900MHz (which we already have, due to history);
+> * 3.6GHz
+> * 4.9GHz
+> 
+> I'd also like to support half and quarter width channels on these
+frequencies.
+> If I use the 2GHz channel mapping method, I end up with a very
+restricted
+> channel set and it definitely has no "gaps" for 5/10MHz increments.
+> 
+> Now, what I'd like to do is figure out some sane, shared method of
+> translating channel frequencies to IEEE numbers and back. That way the
+BSDs
+> and Linux (and maybe commercial stacks; I dunno what they do) can have
+> some sane chance of interoperating.
+> 
+> So: Is there some standardised or semi-standardised channel mapping
+> method? Or should we invent one?
+> 
+> 
+> -adrian
 
-This patchset adds a new scan parameter. It allows
-specyfing for how long each channel should be
-visited during scan.
+Hi Adrian,
 
-I've tested this with ath9k (which doesn't have
-hw_scan) and ath10k (does have hw_scan). It's not
-super time-precise, but seems reasonable.
+I wanted to make similar changes to madwifi some years ago, and as there
+was no standard I invented one.
+This likely won't align with your requirements, but share some details
+below in case it may help.
 
-The main motivation behind this is to allow easier
-ACS implementation in hostapd.
-
-This could also perhaps be useful for spectral
-scan and anyone interested in having ability to
-tune scan times (e.g. very fast initial channel
-scanning on mobile devices, long passive scans).
-
-I'm wondering if it would be okay to set swscan
-probe delay to 0 if chan_time is non-zero? Or does
-probe delay need to be non-zero? Or maybe it
-should also be configurable via a parameter?
+The approach I took was that the ieee channel numbers should overlap for
+the different frequency bands, as there are a huge number of different
+channels once you include all bands + 5, 10, 20, (and maybe 40) channel
+widths (not such a big deal since no manufacturers seem to offer a radio
+that supports more than one of the lower frequency bands on one board).
+This way the 20MHz channel numbers were unchanged for all bands (as they
+report as 2.4GHz band anyway), and the 5 and 10 MHz widths I mapped
+above channel 14 using mapgsm() and ath_hal_mhz2ieee(), plus other
+additions like unmapgsm, etc.
+To cut a long story short I ended up with channels 1-14 for 20MHz, 21-34
+for 5MHz, and 41-54 for 10MHz.
 
 
-Pozdrawiam / Best regards,
-Michal Kazior.
-
-
-Michal Kazior (3):
-  nl/cfg80211: add chan_time for scan request
-  mac80211: add support for scan chan_time parameter
-  ath10k: respect chan_time parameter in scan request
-
- drivers/net/wireless/ath/ath10k/mac.c |    6 ++++++
- include/net/cfg80211.h                |    3 +++
- include/uapi/linux/nl80211.h          |    7 +++++++
- net/mac80211/scan.c                   |   22 ++++++++++++++++++++--
- net/wireless/nl80211.c                |    4 ++++
- 5 files changed, 40 insertions(+), 2 deletions(-)
-
--- 
-1.7.9.5
 
