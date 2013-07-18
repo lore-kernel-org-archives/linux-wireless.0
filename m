@@ -1,124 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46464 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752273Ab3GPHUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:20:10 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infraread.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 02/10] ath10k: decouple core start/stop logic
-Date: Tue, 16 Jul 2013 09:19:45 +0200
-Message-ID: <1373959193-5164-3-git-send-email-michal.kazior@tieto.com> (sfid-20130716_092039_514405_84EA8DAE)
-In-Reply-To: <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
-References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
- <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:52860 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933880Ab3GRXep convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jul 2013 19:34:45 -0400
+Received: by mail-lb0-f173.google.com with SMTP id v1so3017372lbd.18
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jul 2013 16:34:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A01AD31E3C@HASMSX106.ger.corp.intel.com>
+References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
+ <1372768095-26053-4-git-send-email-ilan.peer@intel.com> <CAB=NE6VQXQPRK9_Q-Nh+ripRa+PdCd=4_EZvPxeghBjc32ejyQ@mail.gmail.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A01AD2DFC5@HASMSX106.ger.corp.intel.com>
+ <CAB=NE6WY43BYDehH5-MyF0GQORC1dTrNToUsRVC-Q5bDwcna3A@mail.gmail.com> <CB3B3D4774441E42AA3EA0E1BA8230A01AD31E3C@HASMSX106.ger.corp.intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 18 Jul 2013 16:34:23 -0700
+Message-ID: <CAB=NE6Vcqrs-US-HJzxcnFhjF0-dsnvPdcWoUpuo-UDV_5cReQ@mail.gmail.com> (sfid-20130719_013448_867273_2F6EC6AE)
+Subject: Re: [PATCH 3/3] [RFC] cfg80211: Enable GO operation on additional channels
+To: "Peer, Ilan" <ilan.peer@intel.com>
+Cc: "Spinadel, David" <david.spinadel@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>, Jouni Malinen <j@w1.fi>,
+	"Ginsburg, Noam" <noam.ginsburg@intel.com>,
+	"Perelmooter, Liraz" <liraz.perelmooter@intel.com>,
+	"Shalev, Oz" <oz.shalev@intel.com>,
+	Michael Green <green@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enables code reuse for proper hw reconfiguration
-that is in turn required for proper
-suspend/hibernation/wowlan support.
+On Wed, Jul 17, 2013 at 12:15 PM, Peer, Ilan <ilan.peer@intel.com> wrote:
+>> It was unclear for what exact channels you needed to deal with here.
+>> Given review so far wouldn't it just be DFS flagged channels on some UNII
+>> bands ? Then again if the indoor flag needs to be pegged to to a specific UNII
+>> band and we can do that on wireless-regdb do we even need the UNII band
+>> check routine helper?
+>>
+>
+> Generally it is possible that the indoor property is not pegged to the 'other_channel', or it is possible that it is pegged but they are not in the same UNII band, so the verification is still needed. I guess that once I get the list you requested things will be clearer :)
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c |   44 +++++++++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/core.h |    2 ++
- 2 files changed, 34 insertions(+), 12 deletions(-)
+OK so there are exceptions to the indoor flag affecting GO under these
+rules or not. Looking forward to the respin.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index f1312fa..dcddae4 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -502,8 +502,7 @@ void ath10k_core_destroy(struct ath10k *ar)
- }
- EXPORT_SYMBOL(ath10k_core_destroy);
- 
--
--int ath10k_core_register(struct ath10k *ar)
-+int ath10k_core_start(struct ath10k *ar)
- {
- 	struct bmi_target_info target_info;
- 	int status;
-@@ -589,9 +588,36 @@ int ath10k_core_register(struct ath10k *ar)
- 	if (status)
- 		goto err_disconnect_htc;
- 
-+	return 0;
-+
-+err_disconnect_htc:
-+	ath10k_htc_stop(&ar->htc);
-+err_htt_detach:
-+	ath10k_htt_detach(&ar->htt);
-+err_wmi_detach:
-+	ath10k_wmi_detach(ar);
-+err:
-+	return status;
-+}
-+
-+void ath10k_core_stop(struct ath10k *ar)
-+{
-+	ath10k_htc_stop(&ar->htc);
-+	ath10k_htt_detach(&ar->htt);
-+	ath10k_wmi_detach(ar);
-+}
-+
-+int ath10k_core_register(struct ath10k *ar)
-+{
-+	int status;
-+
-+	status = ath10k_core_start(ar);
-+	if (status)
-+		goto err;
-+
- 	status = ath10k_mac_register(ar);
- 	if (status)
--		goto err_disconnect_htc;
-+		goto err_core_stop;
- 
- 	status = ath10k_debug_create(ar);
- 	if (status) {
-@@ -603,12 +629,8 @@ int ath10k_core_register(struct ath10k *ar)
- 
- err_unregister_mac:
- 	ath10k_mac_unregister(ar);
--err_disconnect_htc:
--	ath10k_htc_stop(&ar->htc);
--err_htt_detach:
--	ath10k_htt_detach(&ar->htt);
--err_wmi_detach:
--	ath10k_wmi_detach(ar);
-+err_core_stop:
-+	ath10k_core_stop(ar);
- err:
- 	return status;
- }
-@@ -620,9 +642,7 @@ void ath10k_core_unregister(struct ath10k *ar)
- 	 * Otherwise we will fail to submit commands to FW and mac80211 will be
- 	 * unhappy about callback failures. */
- 	ath10k_mac_unregister(ar);
--	ath10k_htc_stop(&ar->htc);
--	ath10k_htt_detach(&ar->htt);
--	ath10k_wmi_detach(ar);
-+	ath10k_core_stop(ar);
- }
- EXPORT_SYMBOL(ath10k_core_unregister);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 2f7065c..5a0b2ce 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -353,6 +353,8 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
- 				  const struct ath10k_hif_ops *hif_ops);
- void ath10k_core_destroy(struct ath10k *ar);
- 
-+int ath10k_core_start(struct ath10k *ar);
-+void ath10k_core_stop(struct ath10k *ar);
- int ath10k_core_register(struct ath10k *ar);
- void ath10k_core_unregister(struct ath10k *ar);
- 
--- 
-1.7.9.5
-
+  Luis
