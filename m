@@ -1,185 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34318 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753599Ab3G2KiS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 06:38:18 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Add a debugfs file for antenna diversity
-Date: Mon, 29 Jul 2013 16:04:49 +0530
-Message-Id: <1375094089-13501-1-git-send-email-sujith@msujith.org> (sfid-20130729_123839_010881_63B77AE2)
+Received: from ebb05.tieto.com ([131.207.168.36]:55153 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753787Ab3GRGdY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jul 2013 02:33:24 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: prevent HTC from being used after stopping
+Date: Thu, 18 Jul 2013 08:33:11 +0200
+Message-ID: <1374129193-3533-2-git-send-email-michal.kazior@tieto.com> (sfid-20130718_083330_942502_F0AE75C3)
+In-Reply-To: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
+References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+It was possible to submit new HTC commands
+after/while HTC stopped. This led to memory
+corruption in some rare cases.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/antenna.c | 10 ++++-
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 +-
- drivers/net/wireless/ath/ath9k/debug.c   | 64 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/debug.h   | 13 +++++++
- 4 files changed, 86 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/htc.c |   28 +++++++++++++---------------
+ drivers/net/wireless/ath/ath10k/htc.h |    4 ++--
+ 2 files changed, 15 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
-index 6560dcb..2785dc3 100644
---- a/drivers/net/wireless/ath/ath9k/antenna.c
-+++ b/drivers/net/wireless/ath/ath9k/antenna.c
-@@ -600,10 +600,16 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
- 		antcomb->total_pkt_count++;
- 		antcomb->main_total_rssi += main_rssi;
- 		antcomb->alt_total_rssi  += alt_rssi;
--		if (main_ant_conf == rx_ant_conf)
-+
-+		if (main_ant_conf == rx_ant_conf) {
- 			antcomb->main_recv_cnt++;
--		else
-+			ANT_STAT_INC(ANT_MAIN, recv_cnt);
-+			ANT_LNA_INC(ANT_MAIN, rx_ant_conf);
-+		} else {
- 			antcomb->alt_recv_cnt++;
-+			ANT_STAT_INC(ANT_ALT, recv_cnt);
-+			ANT_LNA_INC(ANT_ALT, rx_ant_conf);
-+		}
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 7d5a366..f5610f1 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -251,10 +251,14 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 		return -ENOENT;
  	}
  
- 	/* Short scan check */
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 2992fd0..2d7e26d 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -609,7 +609,7 @@ struct ath_ant_comb {
- 	int rssi_third;
- 	bool alt_good;
- 	int quick_scan_cnt;
--	int main_conf;
-+	enum ath9k_ant_div_comb_lna_conf main_conf;
- 	enum ath9k_ant_div_comb_lna_conf first_quick_scan_conf;
- 	enum ath9k_ant_div_comb_lna_conf second_quick_scan_conf;
- 	bool first_ratio;
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 5639c5b..56cbe5d 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -321,6 +321,68 @@ static const struct file_operations fops_bt_ant_diversity = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t read_file_antenna_diversity(struct file *file,
-+					   char __user *user_buf,
-+					   size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
-+	struct ath_antenna_stats *as_main = &sc->debug.stats.ant_stats[ANT_MAIN];
-+	struct ath_antenna_stats *as_alt = &sc->debug.stats.ant_stats[ANT_ALT];
-+	unsigned int len = 0, size = 1024;
-+	ssize_t retval = 0;
-+	char *buf;
-+
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (buf == NULL)
-+		return -ENOMEM;
-+
-+	if (!(pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)) {
-+		len += snprintf(buf + len, size - len, "%s\n",
-+				"Antenna Diversity Combining is disabled");
-+		goto exit;
+-	skb_push(skb, sizeof(struct ath10k_htc_hdr));
+-
+ 	spin_lock_bh(&htc->tx_lock);
++	if (htc->stopped) {
++		spin_unlock_bh(&htc->tx_lock);
++		return -ESHUTDOWN;
 +	}
 +
-+	len += snprintf(buf + len, size - len, "%30s%15s\n",
-+			"MAIN", "ALT");
-+	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
-+			"RECV CNT",
-+			as_main->recv_cnt,
-+			as_alt->recv_cnt);
-+	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
-+			"LNA1",
-+			as_main->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1],
-+			as_alt->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1]);
-+	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
-+			"LNA2",
-+			as_main->lna_config_cnt[ATH_ANT_DIV_COMB_LNA2],
-+			as_alt->lna_config_cnt[ATH_ANT_DIV_COMB_LNA2]);
-+	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
-+			"LNA1 + LNA2",
-+			as_main->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2],
-+			as_alt->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2]);
-+	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
-+			"LNA1 - LNA2",
-+			as_main->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2],
-+			as_alt->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2]);
-+exit:
-+	if (len > size)
-+		len = size;
-+
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return retval;
-+}
-+
-+static const struct file_operations fops_antenna_diversity = {
-+	.read = read_file_antenna_diversity,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 			     size_t count, loff_t *ppos)
+ 	__skb_queue_tail(&ep->tx_queue, skb);
++	skb_push(skb, sizeof(struct ath10k_htc_hdr));
+ 	spin_unlock_bh(&htc->tx_lock);
+ 
+ 	queue_work(htc->ar->workqueue, &ep->send_work);
+@@ -267,23 +271,17 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
  {
-@@ -1816,6 +1878,8 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_val);
- 	debugfs_create_file("bt_ant_diversity", S_IRUSR | S_IWUSR,
- 			    sc->debug.debugfs_phy, sc, &fops_bt_ant_diversity);
-+	debugfs_create_file("antenna_diversity", S_IRUSR,
-+			    sc->debug.debugfs_phy, sc, &fops_antenna_diversity);
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	debugfs_create_file("btcoex", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_btcoex);
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index fc67919..a879e45 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -28,9 +28,13 @@ struct fft_sample_tlv;
- #ifdef CONFIG_ATH9K_DEBUGFS
- #define TX_STAT_INC(q, c) sc->debug.stats.txstats[q].c++
- #define RESET_STAT_INC(sc, type) sc->debug.stats.reset[type]++
-+#define ANT_STAT_INC(i, c) sc->debug.stats.ant_stats[i].c++
-+#define ANT_LNA_INC(i, c) sc->debug.stats.ant_stats[i].lna_config_cnt[c]++;
- #else
- #define TX_STAT_INC(q, c) do { } while (0)
- #define RESET_STAT_INC(sc, type) do { } while (0)
-+#define ANT_STAT_INC(i, c) do { } while (0)
-+#define ANT_LNA_INC(i, c) do { } while (0)
- #endif
+ 	struct ath10k_htc *htc = &ar->htc;
+ 	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
+-	bool stopping;
  
- enum ath_reset_type {
-@@ -243,11 +247,20 @@ struct ath_rx_stats {
- 	u32 rx_spectral;
+ 	ath10k_htc_notify_tx_completion(ep, skb);
+ 	/* the skb now belongs to the completion handler */
+ 
++	/* note: when using TX credit flow, the re-checking of queues happens
++	 * when credits flow back from the target.  in the non-TX credit case,
++	 * we recheck after the packet completes */
+ 	spin_lock_bh(&htc->tx_lock);
+-	stopping = htc->stopping;
+-	spin_unlock_bh(&htc->tx_lock);
+-
+-	if (!ep->tx_credit_flow_enabled && !stopping)
+-		/*
+-		 * note: when using TX credit flow, the re-checking of
+-		 * queues happens when credits flow back from the target.
+-		 * in the non-TX credit case, we recheck after the packet
+-		 * completes
+-		 */
++	if (!ep->tx_credit_flow_enabled && !htc->stopped)
+ 		queue_work(ar->workqueue, &ep->send_work);
++	spin_unlock_bh(&htc->tx_lock);
+ 
+ 	return 0;
+ }
+@@ -948,7 +946,7 @@ void ath10k_htc_stop(struct ath10k_htc *htc)
+ 	struct ath10k_htc_ep *ep;
+ 
+ 	spin_lock_bh(&htc->tx_lock);
+-	htc->stopping = true;
++	htc->stopped = true;
+ 	spin_unlock_bh(&htc->tx_lock);
+ 
+ 	for (i = ATH10K_HTC_EP_0; i < ATH10K_HTC_EP_COUNT; i++) {
+@@ -957,7 +955,6 @@ void ath10k_htc_stop(struct ath10k_htc *htc)
+ 	}
+ 
+ 	ath10k_hif_stop(htc->ar);
+-	ath10k_htc_reset_endpoint_states(htc);
+ }
+ 
+ /* registered target arrival callback from the HIF layer */
+@@ -969,6 +966,7 @@ int ath10k_htc_init(struct ath10k *ar)
+ 
+ 	spin_lock_init(&htc->tx_lock);
+ 
++	htc->stopped = false;
+ 	ath10k_htc_reset_endpoint_states(htc);
+ 
+ 	/* setup HIF layer callbacks */
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 1606c9f..e1dd8c7 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -335,7 +335,7 @@ struct ath10k_htc {
+ 	struct ath10k *ar;
+ 	struct ath10k_htc_ep endpoint[ATH10K_HTC_EP_COUNT];
+ 
+-	/* protects endpoint and stopping fields */
++	/* protects endpoint and stopped fields */
+ 	spinlock_t tx_lock;
+ 
+ 	struct ath10k_htc_ops htc_ops;
+@@ -349,7 +349,7 @@ struct ath10k_htc {
+ 	struct ath10k_htc_svc_tx_credits service_tx_alloc[ATH10K_HTC_EP_COUNT];
+ 	int target_credit_size;
+ 
+-	bool stopping;
++	bool stopped;
  };
  
-+#define ANT_MAIN 0
-+#define ANT_ALT  1
-+
-+struct ath_antenna_stats {
-+	u32 recv_cnt;
-+	u32 lna_config_cnt[4];
-+};
-+
- struct ath_stats {
- 	struct ath_interrupt_stats istats;
- 	struct ath_tx_stats txstats[ATH9K_NUM_TX_QUEUES];
- 	struct ath_rx_stats rxstats;
- 	struct ath_dfs_stats dfs_stats;
-+	struct ath_antenna_stats ant_stats[2];
- 	u32 reset[__RESET_TYPE_MAX];
- };
- 
+ int ath10k_htc_init(struct ath10k *ar);
 -- 
-1.8.3.4
+1.7.9.5
 
