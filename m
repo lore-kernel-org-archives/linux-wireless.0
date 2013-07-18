@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:47396 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752Ab3GQCUZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:20:25 -0400
-Received: by mail-pb0-f43.google.com with SMTP id md12so1341936pbc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:24 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 18/53] wireless-regdb: VN, Vietnam - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:07 -0700
-Message-Id: <1374027522-18488-19-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043609_341466_34C5BFB5)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from st11p01mm-asmtp005.mac.com ([17.172.204.240]:57134 "EHLO
+	st11p01mm-asmtp005.mac.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758179Ab3GRNDf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jul 2013 09:03:35 -0400
+Received: from [10.228.216.210] (unknown [31.55.55.184])
+ by st11p01mm-asmtp005.mac.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Jan
+  3 2012)) with ESMTPSA id <0MQ40063AS51VV30@st11p01mm-asmtp005.mac.com> for
+ linux-wireless@vger.kernel.org; Thu, 18 Jul 2013 12:03:03 +0000 (GMT)
+Subject: USB drivers supporting master mode with large number of stations
+From: Matt Foster <matt_foster@me.com>
+Content-type: text/plain; charset=us-ascii
+Message-id: <4A31C912-E9AF-41BC-9A95-1A513A9F0571@me.com> (sfid-20130718_150339_382529_068F2604)
+Date: Thu, 18 Jul 2013 13:03:02 +0100
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+MIME-version: 1.0 (1.0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Hi,
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and update the max EIRP. This also adds
-two new 5 GHz bands:
+I've been using ath9k_htc happily for a while for low density access points. However I've recently bumped into the 8 stations limitation. 
 
-  * 5490 - 5710 MHz
-  * 5735 - 5835 MHz
+Tweaking the firmware & macros in the kernel confirm that 8 is probably the limit as "bad things" happen much past this. I suppose if my coding was up to it stripping out all the crypto and just having open network support might free up enough memory in the firmware to up max stations - but it's not, at least not without some guidance. 
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Of course there are always commercial APs available, however I'm looking for something that can feature as a full distro with at a total minimum OpenVPN and 3G dongle support for remote mgt. 
 
-diff --git a/db.txt b/db.txt
-index f714982..47bfc95 100644
---- a/db.txt
-+++ b/db.txt
-@@ -796,8 +796,10 @@ country VE:
- 
- country VN:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
- 
- country YE:
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
+My platforms are embedded, so PCI based cards are not an option. 
+
+Are there any USB based drivers out there that support more than 8 stations in master mode?
+
+I suppose I'd also be possibly partially happy with an AP with a proper distro on it subject to the 3G/OpenVPN requirements, and the ability to run my own coded captive portal, iptables for quota support etc
+
+Maybe OpenWRT does what I want, it's a very long time since I looked at that. 
+
+Any suggestions more than welcome
+
+Thanks
+
+Matt
 
