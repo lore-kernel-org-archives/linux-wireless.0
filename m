@@ -1,129 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58690 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503Ab3GHO4V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:21 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 18/18] ath5k: enable support for 5 MHz and 10 MHz channels
-Date: Mon,  8 Jul 2013 16:56:06 +0200
-Message-Id: <1373295366-12823-19-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_165634_885504_B1575727)
-In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mout.gmx.net ([212.227.15.19]:58589 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753054Ab3GSSQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jul 2013 14:16:29 -0400
+Received: from zwerg.Speedport_W_723V_1_28_000 ([93.218.114.45]) by
+ mail.gmx.com (mrgmx103) with ESMTPSA (Nemesis) id 0Lp3Qu-1UWQmc07xk-00ewVz
+ for <linux-wireless@vger.kernel.org>; Fri, 19 Jul 2013 20:16:28 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 1/2] ath9k_htc: do some initial hardware configuration
+Date: Fri, 19 Jul 2013 20:16:17 +0200
+Message-Id: <1374257778-9758-2-git-send-email-linux@rempel-privat.de> (sfid-20130719_201632_226167_C3B6F40A)
+In-Reply-To: <1374257778-9758-1-git-send-email-linux@rempel-privat.de>
+References: <1374257778-9758-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath5k/ath5k.h        |    1 +
- drivers/net/wireless/ath/ath5k/base.c         |   25 ++++++++++++++++++++++---
- drivers/net/wireless/ath/ath5k/base.h         |    2 +-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
- 4 files changed, 25 insertions(+), 5 deletions(-)
+Currently we configure harwdare and clock, only after
+interface start. In this case, if we reload module or
+reboot PC without configuring adapter, firmware will freeze.
+There is no software way to reset adpter.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 2d691b8..74bd54d 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -29,6 +29,7 @@
- #include <linux/average.h>
- #include <linux/leds.h>
- #include <net/mac80211.h>
-+#include <net/cfg80211.h>
+This patch add initial configuration and set it in
+disabled state, to avoid this freeze. Behaviour of this patch
+should be similar to: ifconfig wlan0 up; ifconfig wlan0 down.
+
+Bug: https://github.com/qca/open-ath9k-htc-firmware/issues/1
+Tested-by: Bo Shi <cnshibo@gmail.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 71a183f..c3676bf 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -861,6 +861,7 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
+ 	if (error != 0)
+ 		goto err_rx;
  
- /* RX/TX descriptor hw structs
-  * TODO: Driver part should only see sw structs */
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 7c298af..48161ed 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -56,6 +56,7 @@
- #include <linux/etherdevice.h>
- #include <linux/nl80211.h>
- 
-+#include <net/cfg80211.h>
- #include <net/ieee80211_radiotap.h>
- 
- #include <asm/unaligned.h>
-@@ -443,11 +444,27 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
-  * Called with ah->lock.
-  */
- int
--ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
-+ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef)
- {
- 	ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
- 		  "channel set, resetting (%u -> %u MHz)\n",
--		  ah->curchan->center_freq, chan->center_freq);
-+		  ah->curchan->center_freq, chandef->chan->center_freq);
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		ah->ah_bwmode = AR5K_BWMODE_DEFAULT;
-+		break;
-+	case NL80211_CHAN_WIDTH_5:
-+		ah->ah_bwmode = AR5K_BWMODE_5MHZ;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		ah->ah_bwmode = AR5K_BWMODE_10MHZ;
-+		break;
-+	default:
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
- 
- 	/*
- 	 * To switch channels clear any pending DMA operations;
-@@ -455,7 +472,7 @@ ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
- 	 * hardware at the new frequency, and then re-enable
- 	 * the relevant bits of the h/w.
- 	 */
--	return ath5k_reset(ah, chan, true);
-+	return ath5k_reset(ah, chandef->chan, true);
- }
- 
- void ath5k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-@@ -2525,6 +2542,8 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
- 	/* SW support for IBSS_RSN is provided by mac80211 */
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
-+	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
-+
- 	/* both antennas can be configured as RX or TX */
- 	hw->wiphy->available_antennas_tx = 0x3;
- 	hw->wiphy->available_antennas_rx = 0x3;
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index ca9a83c..97469d0 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -101,7 +101,7 @@ void ath5k_set_beacon_filter(struct ieee80211_hw *hw, bool enable);
- 
- void ath5k_update_bssid_mask_and_opmode(struct ath5k_hw *ah,
- 					struct ieee80211_vif *vif);
--int ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan);
-+int ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef);
- void ath5k_txbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
- void ath5k_rxbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
- void ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
-diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-index 81b686c..aa9d976 100644
---- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-+++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-@@ -202,7 +202,7 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
- 	mutex_lock(&ah->lock);
- 
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
--		ret = ath5k_chan_set(ah, conf->chandef.chan);
-+		ret = ath5k_chan_set(ah, &conf->chandef);
- 		if (ret < 0)
- 			goto unlock;
- 	}
++	ath9k_hw_disable(priv->ah);
+ #ifdef CONFIG_MAC80211_LEDS
+ 	/* must be initialized before ieee80211_register_hw */
+ 	priv->led_cdev.default_trigger = ieee80211_create_tpt_led_trigger(priv->hw,
 -- 
-1.7.10.4
+1.8.1.2
 
