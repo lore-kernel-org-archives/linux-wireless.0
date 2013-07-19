@@ -1,116 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta01.emeryville.ca.mail.comcast.net ([76.96.30.16]:40688 "EHLO
-	qmta01.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752775Ab3GBP00 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 11:26:26 -0400
-From: Shuah Khan <shuah.kh@samsung.com>
-To: bzhao@marvell.com, linville@tuxdriver.com, rjw@sisk.pl
-Cc: Shuah Khan <shuah.kh@samsung.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	shuahkhan@gmail.com
-Subject: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from legacy pm ops
-Date: Tue,  2 Jul 2013 09:24:35 -0600
-Message-Id: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com> (sfid-20130702_172629_361375_C60BBBA1)
+Received: from mout.gmx.net ([212.227.15.18]:54294 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753158Ab3GSSQd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jul 2013 14:16:33 -0400
+Received: from zwerg.Speedport_W_723V_1_28_000 ([93.218.114.45]) by
+ mail.gmx.com (mrgmx103) with ESMTPSA (Nemesis) id 0MAy40-1UsaFM2YFA-009zTb
+ for <linux-wireless@vger.kernel.org>; Fri, 19 Jul 2013 20:16:32 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 2/2] ath9k_htc: reboot firmware if it was loaded
+Date: Fri, 19 Jul 2013 20:16:18 +0200
+Message-Id: <1374257778-9758-3-git-send-email-linux@rempel-privat.de> (sfid-20130719_201635_434936_A15DBCE0)
+In-Reply-To: <1374257778-9758-1-git-send-email-linux@rempel-privat.de>
+References: <1374257778-9758-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert the mwifiex/pci driver to use dev_pm_ops for power management and
-remove Legacy PM handling. This change re-uses existing suspend and resume
-interfaces for dev_pm_ops.
+Currently ath9k_htc will reboot firmware only if interface was
+ever started. Which lead to the problem in case where interface
+was never started but module need to be reloaded.
 
-Signed-off-by: Shuah Khan <shuah.kh@samsung.com>
+This patch will partially fix bug "ath9k_htc: Target is unresponsive"
+https://github.com/qca/open-ath9k-htc-firmware/issues/1
+
+Reproduction case:
+- plug adapter
+- make sure nothing will touch it. Stop Networkmanager or blacklist mac address of this adapter.
+- rmmod ath9k_htc; sleep 1; modprobe ath9k_htc
+
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/mwifiex/pcie.c |   34 ++++++++++++++++++++++++++++------
- 1 file changed, 28 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 20c9c4c..b169318 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -85,7 +85,7 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
-  * If already not suspended, this function allocates and sends a host
-  * sleep activate request to the firmware and turns off the traffic.
-  */
--static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int __mwifiex_pcie_suspend(struct pci_dev *pdev)
- {
- 	struct mwifiex_adapter *adapter;
- 	struct pcie_service_card *card;
-@@ -112,6 +112,13 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 2469db5..5205a36 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -1295,7 +1295,9 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
  
-+static int mwifiex_pcie_suspend(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return __mwifiex_pcie_suspend(pdev);
-+}
-+
- /*
-  * Kernel needs to suspend all functions separately. Therefore all
-  * registered functions must have drivers with suspend and resume
-@@ -120,7 +127,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
-  * If already not resumed, this function turns on the traffic and
-  * sends a host sleep cancel request to the firmware.
-  */
--static int mwifiex_pcie_resume(struct pci_dev *pdev)
-+static int __mwifiex_pcie_resume(struct pci_dev *pdev)
- {
- 	struct mwifiex_adapter *adapter;
- 	struct pcie_service_card *card;
-@@ -150,6 +157,13 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
+ 	usb_set_intfdata(interface, NULL);
  
- 	return 0;
- }
-+
-+static int mwifiex_pcie_resume(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return __mwifiex_pcie_resume(pdev);
-+}
- #endif
+-	if (!unplugged && (hif_dev->flags & HIF_USB_START))
++	/* If firmware was loaded we should drop it
++	 * go back to first stage bootloader. */
++	if (!unplugged && (hif_dev->flags & HIF_USB_READY))
+ 		ath9k_hif_usb_reboot(udev);
  
- /*
-@@ -213,7 +227,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	if (user_rmmod) {
- #ifdef CONFIG_PM
- 		if (adapter->is_suspended)
--			mwifiex_pcie_resume(pdev);
-+			__mwifiex_pcie_resume(pdev);
- #endif
- 
- 		for (i = 0; i < adapter->priv_num; i++)
-@@ -249,6 +263,14 @@ static DEFINE_PCI_DEVICE_TABLE(mwifiex_ids) = {
- 
- MODULE_DEVICE_TABLE(pci, mwifiex_ids);
- 
-+#ifdef CONFIG_PM
-+/* Power Management Hooks */
-+static const struct dev_pm_ops mwifiex_pcie_pm_ops = {
-+	.suspend = mwifiex_pcie_suspend,
-+	.resume = mwifiex_pcie_resume,
-+};
-+#endif
-+
- /* PCI Device Driver */
- static struct pci_driver __refdata mwifiex_pcie = {
- 	.name     = "mwifiex_pcie",
-@@ -256,9 +278,9 @@ static struct pci_driver __refdata mwifiex_pcie = {
- 	.probe    = mwifiex_pcie_probe,
- 	.remove   = mwifiex_pcie_remove,
- #ifdef CONFIG_PM
--	/* Power Management Hooks */
--	.suspend  = mwifiex_pcie_suspend,
--	.resume   = mwifiex_pcie_resume,
-+	.driver   = {
-+		.pm = &mwifiex_pcie_pm_ops,
-+	},
- #endif
- };
- 
+ 	kfree(hif_dev);
 -- 
-1.7.10.4
+1.8.1.2
 
