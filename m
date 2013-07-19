@@ -1,36 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35294 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755504Ab3GUOTM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jul 2013 10:19:12 -0400
-Received: by mail-pa0-f44.google.com with SMTP id lj1so6143606pab.17
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jul 2013 07:19:11 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:57939 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751111Ab3GSMIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jul 2013 08:08:13 -0400
+Date: Fri, 19 Jul 2013 14:11:03 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ortwin =?iso-8859-1?Q?Gl=FCck?= <odi@odi.ch>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [BUG] 3.10 regression: hang on suspend
+Message-ID: <20130719121102.GB1570@redhat.com> (sfid-20130719_140829_858911_EADEB92E)
+References: <51E4501D.3010001@odi.ch>
+ <20130716065626.GA1587@redhat.com>
+ <51E4F790.6090308@odi.ch>
+ <51E51712.4020609@broadcom.com>
+ <51E58FA5.4000804@odi.ch>
+ <20130717122944.GA25894@redhat.com>
+ <51E6E1AB.5010300@odi.ch>
+ <20130718105550.GA4628@redhat.com>
+ <51E83AB7.6020002@odi.ch>
+ <20130719120842.GA1570@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20971.60401.394690.279877@gargle.gargle.HOWL>
-References: <1374413809-26005-1-git-send-email-arik@wizery.com>
- <1374413809-26005-2-git-send-email-arik@wizery.com> <20971.60401.394690.279877@gargle.gargle.HOWL>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 21 Jul 2013 17:18:56 +0300
-Message-ID: <CA+XVXfeFE4S-A0iPB3+2utfbKAPE6CTGFiCAhWABo_u+ZZ_4Lg@mail.gmail.com> (sfid-20130721_161927_085984_7859E3DB)
-Subject: Re: [PATCH 2/2] regulatory: take RTNL when restoring settings on CRDA timeout
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed; boundary="AhhlLboLdkugWU4S"
+In-Reply-To: <20130719120842.GA1570@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 21, 2013 at 5:10 PM, Sujith Manoharan <sujith@msujith.org> wrote:
-> Arik Nemtsov wrote:
->> The RTNL has to be held since this potentially changes the regdomain.
->> Locking was forgotten here due to recent locking simplification changes.
->
-> This is already present in the mac80211 tree:
-> https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211.git/commit/?id=f77b86d7d3acf9dfcb5ee834628d12207584b2cb
->
 
-Ah thanks. I missed that. Disregard then please.
+--AhhlLboLdkugWU4S
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-Arik
+On Fri, Jul 19, 2013 at 02:08:42PM +0200, Stanislaw Gruszka wrote:
+> On Thu, Jul 18, 2013 at 08:57:59PM +0200, Ortwin Glück wrote:
+> > On 07/18/2013 12:55 PM, Stanislaw Gruszka wrote:
+> > >objdump -r -d --prefix-addresses net/mac80211/mac80211.ko > mac80211.txt
+> > >objdump -r -d --prefix-addresses drivers/net/wireless/iwlwifi/dvm/iwldvm.ko > iwldvm.txt
+> > 
+> > Here you go. Please note, that the offsets have changed due to
+> > .config changes. New trace attached. Transcript:
+> > 
+> > iwlagn_mac_remove_interface+0x5f/0x160
+> > __ieee80211_suspend+0x4a1/0xb30
+> > ieee80211_suspend+0x1a/0x20
+> 
+> Crash happen because we call iwlagn_mac_remove_interface with
+> vif_priv->ctx NULL. I do not see any possibility of that other than
+> doing ->remove_interface without previous ->add_interface, but I do
+> not see how that possible. 
+> 
+> Does crash happen on any suspend or on second one ?  
+> 
+> I'm attaching patch, which should prevent crash (but not fix the issue,
+> just workaround it), plese apply it. If it make suspend work, please then
+> reload iwlwifi module with debug=0x3 option, suspend/resume machine and
+> provide dmesg output after that.
+
+This time really attaching forgotten patch.
+
+Stanislaw
+
+--AhhlLboLdkugWU4S
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="iwlwifi_check_ctx_null.patch"
+
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index cab23af..7f25fe1 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -1536,6 +1536,9 @@ static void iwlagn_mac_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ 
++	if (WARN(ctx == NULL, "remove interface with NULL ctx\n"))
++		return;
++
+ 	mutex_lock(&priv->mutex);
+ 
+ 	if (WARN_ON(ctx->vif != vif)) {
+
+--AhhlLboLdkugWU4S--
