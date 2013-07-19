@@ -1,77 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:55714 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755048Ab3GWLGp convert rfc822-to-8bit (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13544 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754372Ab3GSLnz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 07:06:45 -0400
-Received: by mail-pa0-f43.google.com with SMTP id hz11so8197631pad.30
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jul 2013 04:06:44 -0700 (PDT)
+	Fri, 19 Jul 2013 07:43:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/3] ath10k: fixes
+References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
+	<871u6u4xkk.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQna=a66_g+_WG8mnENEDEiUcAysa-joeP-xmTM+mYfY=Q@mail.gmail.com>
+Date: Fri, 19 Jul 2013 14:43:28 +0300
+In-Reply-To: <CA+BoTQna=a66_g+_WG8mnENEDEiUcAysa-joeP-xmTM+mYfY=Q@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 19 Jul 2013 13:10:52 +0200")
+Message-ID: <87wqom3hcv.fsf@kamboji.qca.qualcomm.com> (sfid-20130719_134358_450599_B8797B8B)
 MIME-Version: 1.0
-In-Reply-To: <CACna6rwU6-jC_cnU=vGv2u2D11aUCKNZN-YOuM9GYt_R9E79oA@mail.gmail.com>
-References: <1374546675-384-1-git-send-email-linville@tuxdriver.com>
- <51EE3018.4000507@hauke-m.de> <CACna6rwU6-jC_cnU=vGv2u2D11aUCKNZN-YOuM9GYt_R9E79oA@mail.gmail.com>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Date: Tue, 23 Jul 2013 12:06:04 +0100
-Message-ID: <CAGVrzcZfxei-p12+TDcJNg3TGSuJKfL3NvxvtWSfKEkxkZmYXw@mail.gmail.com> (sfid-20130723_130648_429897_526DEB9D)
-Subject: Re: [PATCH] Make BCMA_HOST_SOC depend on BCM47XX
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/7/23 Rafał Miłecki <zajec5@gmail.com>:
-> 2013/7/23 Hauke Mehrtens <hauke@hauke-m.de>:
->> On 07/23/2013 04:31 AM, John W. Linville wrote:
->>> From: "John W. Linville" <linville@tuxdriver.com>
->>>
->>> Otherwise, 'make allyesconfig' generates this:
->>>
->>>   CC [M]  drivers/net/ethernet/broadcom/bgmac.o
->>> drivers/net/ethernet/broadcom/bgmac.c:19:27: fatal error:
->>> bcm47xx_nvram.h: No such file or directory
->>> compilation terminated.
->>> make[4]: *** [drivers/net/ethernet/broadcom/bgmac.o] Error 1
->>> make[3]: *** [drivers/net/ethernet/broadcom] Error 2
->>> make[2]: *** [drivers/net/ethernet] Error 2
->>> make[1]: *** [drivers/net] Error 2
->>> make: *** [drivers] Error 2
->>>
->>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->>> ---
->>>  drivers/bcma/Kconfig | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
->>> index 7c081b3..a2bdab1 100644
->>> --- a/drivers/bcma/Kconfig
->>> +++ b/drivers/bcma/Kconfig
->>> @@ -36,7 +36,7 @@ config BCMA_DRIVER_PCI_HOSTMODE
->>>
->>>  config BCMA_HOST_SOC
->>>       bool "Support for BCMA in a SoC"
->>> -     depends on BCMA
->>> +     depends on BCMA && BCM47XX
->>>       help
->>>         Host interface for a Broadcom AIX bus directly mapped into
->>>         the memory. This only works with the Broadcom SoCs from the
->>>
->> I think bgmac should depend on BCM47XX.
->
-> Yeah, I'm wondering about that.
->
-> It's bgmac that calls BCM47XX specific functions (nvram).
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-And this is bad, make that a platform_data callback or something like
-that such that there is no build-time dependency on nvram functions.
-
+> On 19 July 2013 13:07, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> Hi,
+>>>
+>>> Here are some fixes for ath10k. The rts threshold
+>>> patch addresses my mistake in commit
+>>> 9aeb6fe53d1f0d6e58658484ce9ad7b59f0ef16b which
+>>> caused rts to be always enabled causing throughput
+>>> issues in some cases.
+>>>
+>>>
+>>> Michal Kazior (3):
+>>>   ath10k: prevent HTC from being used after stopping
+>>>   ath10k: fix memleak in mac setup
+>>>   ath10k: fix rts/fragmentation threshold setup
+>>
+>> Doesn't apply:
+>>
+>> Applying: ath10k: prevent HTC from being used after stopping
+>> Applying: ath10k: fix memleak in mac setup
+>> Applying: ath10k: fix rts/fragmentation threshold setup
+>> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/mac.c).
+>> Repository lacks necessary blobs to fall back on 3-way merge.
+>> Cannot fall back to three-way merge.
+>> Patch failed at 0003 ath10k: fix rts/fragmentation threshold setup
 >
-> On the other hand it doesn't make much sense to use BCMA_HOST_SOC on
-> anything else than BCM47XX, does it?
+> Eww. Sorry about that (I did warn you though). Perhaps that's because
+> you skipped one of the recovery patches that git is confused now.
 
-Hauke has been working on BCM53XX which is an ARM-based BCM47XX-like
-SoC, but that just means depends on (BCM47XX || ARCH_BCM53XX) then.
---
-Florian
+No worries. Most likely I could have fixed the conflict myself, but if
+3-way merge doesn't work it's too much work.
+
+> I'll resend the whole patchset rebased and with the HTC patch fixed.
+
+Thanks.
+
+-- 
+Kalle Valo
