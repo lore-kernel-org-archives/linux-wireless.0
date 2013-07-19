@@ -1,142 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:36092 "EHLO
-	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751547Ab3GGQMh (ORCPT
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:41375 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997Ab3GSLIO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 12:12:37 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: 'Daniel Drake' <dsd@laptop.org>
-CC: Bing Zhao <bzhao@marvell.com>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"'linville@tuxdriver.com'" <linville@tuxdriver.com>
-Date: Sun, 7 Jul 2013 09:15:26 -0700
-Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951035636356@SC-VEXCH1.marvell.com> (sfid-20130707_181240_753497_68B50379)
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951035636354@SC-VEXCH1.marvell.com>
-Content-Type: multipart/mixed;
-	boundary="_002_5FF020A1CFFEEC49BD1E09530C4FF5951035636356SCVEXCH1marve_"
+	Fri, 19 Jul 2013 07:08:14 -0400
+Received: by mail-bk0-f41.google.com with SMTP id jc3so1608985bkc.28
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jul 2013 04:08:12 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <8761w64xr0.fsf@kamboji.qca.qualcomm.com>
+References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
+	<1374129193-3533-2-git-send-email-michal.kazior@tieto.com>
+	<8761w64xr0.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 19 Jul 2013 13:08:12 +0200
+Message-ID: <CA+BoTQkD7U4KY5xq7YhTWz-qFP2f3NuQ=nHDZ2LgYaq+5M3pjg@mail.gmail.com> (sfid-20130719_130817_276636_B0187E44)
+Subject: Re: [PATCH 1/3] ath10k: prevent HTC from being used after stopping
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_002_5FF020A1CFFEEC49BD1E09530C4FF5951035636356SCVEXCH1marve_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On 19 July 2013 13:04, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> It was possible to submit new HTC commands
+>> after/while HTC stopped. This led to memory
+>> corruption in some rare cases.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> [...]
+>
+>> @@ -957,7 +955,6 @@ void ath10k_htc_stop(struct ath10k_htc *htc)
+>>       }
+>>
+>>       ath10k_hif_stop(htc->ar);
+>> -     ath10k_htc_reset_endpoint_states(htc);
+>>  }
+>
+> Is this on purpose? I can't fit it to the description.
+
+You're right. I should've mentioned that in the commit message.
+
+This line is simply unnecessary. Do you prefer fixing the commit
+message accordingly or should I post it as a separate patch?
 
 
-Hi Daniel,
-
->We didn't test the behavior of sdio_read/sdio_write API's when hardware is=
- >not present. But they should just return an error.
-
-I ran some tests which confirmed that there is no harm in calling these API=
-'s when hardware is removed. They returned ENOMEDIUM error.
-
-Can you please review and verify attached patch?
-
-Thanks,
-Amitkumar Karwar
-
---_002_5FF020A1CFFEEC49BD1E09530C4FF5951035636356SCVEXCH1marve_
-Content-Type: application/octet-stream;
-	name="0001-mwifiex-disable-SDIO-interrupts-in-remove-handler.patch"
-Content-Description: 0001-mwifiex-disable-SDIO-interrupts-in-remove-handler.patch
-Content-Disposition: attachment;
-	filename="0001-mwifiex-disable-SDIO-interrupts-in-remove-handler.patch";
-	size=5178; creation-date="Sun, 07 Jul 2013 16:00:49 GMT";
-	modification-date="Sun, 07 Jul 2013 16:04:18 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbSBkMWIwNjNkMjA5N2QzMGZkNDQ1YjMxYTk4NWMwMjQ3NjVhOWMxNGUxIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
-PgpEYXRlOiBNb24sIDggSnVsIDIwMTMgMjE6MTY6MDggKzA1MzAKU3ViamVjdDogW1BBVENIXSBt
-d2lmaWV4OiBkaXNhYmxlIFNESU8gaW50ZXJydXB0cyBpbiByZW1vdmUgaGFuZGxlcgoKT3VyIG13
-aWZpZXhfc2Rpb19yZW1vdmUoKSBoYW5kbGVyIHNldHMgc3VycHJpc2VkX3JlbW92ZWQKZmxhZy4g
-VGhpcyBjYXVzZXMgU0RJT19pbnRlcnJ1cHQgaGFuZGxlciB0byBpZ25vcmUgYWxsCmZ1cnRoZXIg
-aW50ZXJydXB0cyB3aXRob3V0IGFja2luZyB0aGVtLiBUaGlzIG1heSBsZWFkIHRvCmFuIGludGVy
-cnVwdCBzdG9ybSBjYXVzaW5nIHByb2JsZW0gZm9yIGJsdWV0b290aCBkcml2ZXIKd2hpY2ggb3Bl
-cmF0ZXMgc2FtZSB3aWZpIGNhcmQuCgpUaGUgcHJvYmxlbSBpcyBmaXhlZCBieSBkaXNhYmxpbmcg
-aW50ZXJydXB0cyBpbiByZW1vdmUKaGFuZGxlci4gSWYgdGhlcmUgaXMgYW4gaW50ZXJydXB0IGlu
-IHByb2Nlc3MsIHRoZSBsb2dpYwp0byB3YWl0IHVudGlsIGl0IGdldHMgY29tcGxldGVkIGlzIGFs
-cmVhZHkgdGhlcmUKKG13aWZpZXhfc2h1dGRvd25fZHJ2KCkgY2FsbCkuClNvbWUgY29kZSBpcyBt
-b3ZlZCBpbiB0aGlzIHBhdGNoIHRvIHByZXZlbnQgZm9yd2FyZApkZWNsYXJhdGlvbnMuCgpJbnNw
-aXJlZCBieSBhIHBhdGNoIHNlbnQgYnkgRGFuaWVsIERyYWtlIDxkc2RAbGFwdG9wLm9yZz4KClJl
-cG9ydGVkLWJ5OiBEYW5pZWwgRHJha2UgPGRzZEBsYXB0b3Aub3JnPgpTaWduZWQtb2ZmLWJ5OiBB
-bWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29tPgotLS0KIGRyaXZlcnMvbmV0L3dp
-cmVsZXNzL213aWZpZXgvc2Rpby5jIHwgIDEyMSArKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0t
-LS0tLS0tLQogMSBmaWxlcyBjaGFuZ2VkLCA1OCBpbnNlcnRpb25zKCspLCA2MyBkZWxldGlvbnMo
-LSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3NkaW8uYyBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Rpby5jCmluZGV4IDE0YWM1MWYuLmY3OTgwMGIg
-MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Rpby5jCisrKyBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Rpby5jCkBAIC0xMTEsNiArMTExLDYxIEBAIG13
-aWZpZXhfc2Rpb19wcm9iZShzdHJ1Y3Qgc2Rpb19mdW5jICpmdW5jLCBjb25zdCBzdHJ1Y3Qgc2Rp
-b19kZXZpY2VfaWQgKmlkKQogCXJldHVybiByZXQ7CiB9CiAKKy8qIFRoaXMgZnVuY3Rpb24gcmVh
-ZHMgZGF0YSBmcm9tIFNESU8gY2FyZCByZWdpc3Rlci4gKi8KK3N0YXRpYyBpbnQKK213aWZpZXhf
-cmVhZF9yZWcoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlciwgdTMyIHJlZywgdTggKmRh
-dGEpCit7CisJc3RydWN0IHNkaW9fbW1jX2NhcmQgKmNhcmQgPSBhZGFwdGVyLT5jYXJkOworCWlu
-dCByZXQgPSAtMTsKKwl1OCB2YWw7CisKKwlzZGlvX2NsYWltX2hvc3QoY2FyZC0+ZnVuYyk7CisJ
-dmFsID0gc2Rpb19yZWFkYihjYXJkLT5mdW5jLCByZWcsICZyZXQpOworCXNkaW9fcmVsZWFzZV9o
-b3N0KGNhcmQtPmZ1bmMpOworCisJKmRhdGEgPSB2YWw7CisKKwlyZXR1cm4gcmV0OworfQorCisv
-KiBUaGlzIGZ1bmN0aW9uIHdyaXRlcyBkYXRhIGludG8gU0RJTyBjYXJkIHJlZ2lzdGVyLiAqLwor
-c3RhdGljIGludAorbXdpZmlleF93cml0ZV9yZWcoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRh
-cHRlciwgdTMyIHJlZywgdTggZGF0YSkKK3sKKwlzdHJ1Y3Qgc2Rpb19tbWNfY2FyZCAqY2FyZCA9
-IGFkYXB0ZXItPmNhcmQ7CisJaW50IHJldCA9IC0xOworCisJc2Rpb19jbGFpbV9ob3N0KGNhcmQt
-PmZ1bmMpOworCXNkaW9fd3JpdGViKGNhcmQtPmZ1bmMsIGRhdGEsIHJlZywgJnJldCk7CisJc2Rp
-b19yZWxlYXNlX2hvc3QoY2FyZC0+ZnVuYyk7CisKKwlyZXR1cm4gcmV0OworfQorCisvKiBUaGlz
-IGZ1bmN0aW9uIGRpc2FibGVzIHRoZSBob3N0IGludGVycnVwdC4KKyAqCisgKiBUaGUgaG9zdCBp
-bnRlcnJ1cHQgbWFzayBpcyByZWFkLCB0aGUgZGlzYWJsZSBiaXQgaXMgcmVzZXQgYW5kCisgKiB3
-cml0dGVuIGJhY2sgdG8gdGhlIGNhcmQgaG9zdCBpbnRlcnJ1cHQgbWFzayByZWdpc3Rlci4KKyAq
-Lworc3RhdGljIGludCBtd2lmaWV4X3NkaW9fZGlzYWJsZV9ob3N0X2ludChzdHJ1Y3QgbXdpZmll
-eF9hZGFwdGVyICphZGFwdGVyKQoreworCXU4IGhvc3RfaW50X21hc2ssIGhvc3RfaW50X2Rpc2Fi
-bGUgPSBIT1NUX0lOVF9ESVNBQkxFOworCisJLyogUmVhZCBiYWNrIHRoZSBob3N0X2ludF9tYXNr
-IHJlZ2lzdGVyICovCisJaWYgKG13aWZpZXhfcmVhZF9yZWcoYWRhcHRlciwgSE9TVF9JTlRfTUFT
-S19SRUcsICZob3N0X2ludF9tYXNrKSkKKwkJcmV0dXJuIC0xOworCisJLyogVXBkYXRlIHdpdGgg
-dGhlIG1hc2sgYW5kIHdyaXRlIGJhY2sgdG8gdGhlIHJlZ2lzdGVyICovCisJaG9zdF9pbnRfbWFz
-ayAmPSB+aG9zdF9pbnRfZGlzYWJsZTsKKworCWlmIChtd2lmaWV4X3dyaXRlX3JlZyhhZGFwdGVy
-LCBIT1NUX0lOVF9NQVNLX1JFRywgaG9zdF9pbnRfbWFzaykpIHsKKwkJZGV2X2VycihhZGFwdGVy
-LT5kZXYsICJkaXNhYmxlIGhvc3QgaW50ZXJydXB0IGZhaWxlZFxuIik7CisJCXJldHVybiAtMTsK
-Kwl9CisKKwlyZXR1cm4gMDsKK30KKwogLyoKICAqIFNESU8gcmVtb3ZlLgogICoKQEAgLTE1Miw2
-ICsyMDcsOSBAQCBtd2lmaWV4X3NkaW9fcmVtb3ZlKHN0cnVjdCBzZGlvX2Z1bmMgKmZ1bmMpCiAJ
-CW13aWZpZXhfaW5pdF9zaHV0ZG93bl9mdyhwcml2LCBNV0lGSUVYX0ZVTkNfU0hVVERPV04pOwog
-CX0KIAorCS8qIERpc2FibGUgaG9zdCBpbnRlcnJ1cHQgbWFzayByZWdpc3RlciBmb3IgU0RJTyAq
-LworCW13aWZpZXhfc2Rpb19kaXNhYmxlX2hvc3RfaW50KGFkYXB0ZXIpOworCiAJbXdpZmlleF9y
-ZW1vdmVfY2FyZChjYXJkLT5hZGFwdGVyLCAmYWRkX3JlbW92ZV9jYXJkX3NlbSk7CiAJa2ZyZWUo
-Y2FyZCk7CiB9CkBAIC0yOTcsNDEgKzM1NSw2IEBAIHN0YXRpYyBzdHJ1Y3Qgc2Rpb19kcml2ZXIg
-bXdpZmlleF9zZGlvID0gewogfTsKIAogLyoKLSAqIFRoaXMgZnVuY3Rpb24gd3JpdGVzIGRhdGEg
-aW50byBTRElPIGNhcmQgcmVnaXN0ZXIuCi0gKi8KLXN0YXRpYyBpbnQKLW13aWZpZXhfd3JpdGVf
-cmVnKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIsIHUzMiByZWcsIHU4IGRhdGEpCi17
-Ci0Jc3RydWN0IHNkaW9fbW1jX2NhcmQgKmNhcmQgPSBhZGFwdGVyLT5jYXJkOwotCWludCByZXQg
-PSAtMTsKLQotCXNkaW9fY2xhaW1faG9zdChjYXJkLT5mdW5jKTsKLQlzZGlvX3dyaXRlYihjYXJk
-LT5mdW5jLCBkYXRhLCByZWcsICZyZXQpOwotCXNkaW9fcmVsZWFzZV9ob3N0KGNhcmQtPmZ1bmMp
-OwotCi0JcmV0dXJuIHJldDsKLX0KLQotLyoKLSAqIFRoaXMgZnVuY3Rpb24gcmVhZHMgZGF0YSBm
-cm9tIFNESU8gY2FyZCByZWdpc3Rlci4KLSAqLwotc3RhdGljIGludAotbXdpZmlleF9yZWFkX3Jl
-ZyhzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVyLCB1MzIgcmVnLCB1OCAqZGF0YSkKLXsK
-LQlzdHJ1Y3Qgc2Rpb19tbWNfY2FyZCAqY2FyZCA9IGFkYXB0ZXItPmNhcmQ7Ci0JaW50IHJldCA9
-IC0xOwotCXU4IHZhbDsKLQotCXNkaW9fY2xhaW1faG9zdChjYXJkLT5mdW5jKTsKLQl2YWwgPSBz
-ZGlvX3JlYWRiKGNhcmQtPmZ1bmMsIHJlZywgJnJldCk7Ci0Jc2Rpb19yZWxlYXNlX2hvc3QoY2Fy
-ZC0+ZnVuYyk7Ci0KLQkqZGF0YSA9IHZhbDsKLQotCXJldHVybiByZXQ7Ci19Ci0KLS8qCiAgKiBU
-aGlzIGZ1bmN0aW9uIHdyaXRlcyBtdWx0aXBsZSBkYXRhIGludG8gU0RJTyBjYXJkIG1lbW9yeS4K
-ICAqCiAgKiBUaGlzIGRvZXMgbm90IHdvcmsgaW4gc3VzcGVuZGVkIG1vZGUuCkBAIC02ODAsMzEg
-KzcwMyw2IEBAIG13aWZpZXhfc2Rpb19yZWFkX2Z3X3N0YXR1cyhzdHJ1Y3QgbXdpZmlleF9hZGFw
-dGVyICphZGFwdGVyLCB1MTYgKmRhdCkKIH0KIAogLyoKLSAqIFRoaXMgZnVuY3Rpb24gZGlzYWJs
-ZXMgdGhlIGhvc3QgaW50ZXJydXB0LgotICoKLSAqIFRoZSBob3N0IGludGVycnVwdCBtYXNrIGlz
-IHJlYWQsIHRoZSBkaXNhYmxlIGJpdCBpcyByZXNldCBhbmQKLSAqIHdyaXR0ZW4gYmFjayB0byB0
-aGUgY2FyZCBob3N0IGludGVycnVwdCBtYXNrIHJlZ2lzdGVyLgotICovCi1zdGF0aWMgaW50IG13
-aWZpZXhfc2Rpb19kaXNhYmxlX2hvc3RfaW50KHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0
-ZXIpCi17Ci0JdTggaG9zdF9pbnRfbWFzaywgaG9zdF9pbnRfZGlzYWJsZSA9IEhPU1RfSU5UX0RJ
-U0FCTEU7Ci0KLQkvKiBSZWFkIGJhY2sgdGhlIGhvc3RfaW50X21hc2sgcmVnaXN0ZXIgKi8KLQlp
-ZiAobXdpZmlleF9yZWFkX3JlZyhhZGFwdGVyLCBIT1NUX0lOVF9NQVNLX1JFRywgJmhvc3RfaW50
-X21hc2spKQotCQlyZXR1cm4gLTE7Ci0KLQkvKiBVcGRhdGUgd2l0aCB0aGUgbWFzayBhbmQgd3Jp
-dGUgYmFjayB0byB0aGUgcmVnaXN0ZXIgKi8KLQlob3N0X2ludF9tYXNrICY9IH5ob3N0X2ludF9k
-aXNhYmxlOwotCi0JaWYgKG13aWZpZXhfd3JpdGVfcmVnKGFkYXB0ZXIsIEhPU1RfSU5UX01BU0tf
-UkVHLCBob3N0X2ludF9tYXNrKSkgewotCQlkZXZfZXJyKGFkYXB0ZXItPmRldiwgImRpc2FibGUg
-aG9zdCBpbnRlcnJ1cHQgZmFpbGVkXG4iKTsKLQkJcmV0dXJuIC0xOwotCX0KLQotCXJldHVybiAw
-OwotfQotCi0vKgogICogVGhpcyBmdW5jdGlvbiBlbmFibGVzIHRoZSBob3N0IGludGVycnVwdC4K
-ICAqCiAgKiBUaGUgaG9zdCBpbnRlcnJ1cHQgZW5hYmxlIG1hc2sgaXMgd3JpdHRlbiB0byB0aGUg
-Y2FyZApAQCAtOTk3LDkgKzk5NSw2IEBAIG13aWZpZXhfc2Rpb19pbnRlcnJ1cHQoc3RydWN0IHNk
-aW9fZnVuYyAqZnVuYykKIAl9CiAJYWRhcHRlciA9IGNhcmQtPmFkYXB0ZXI7CiAKLQlpZiAoYWRh
-cHRlci0+c3VycHJpc2VfcmVtb3ZlZCkKLQkJcmV0dXJuOwotCiAJaWYgKCFhZGFwdGVyLT5wcHNf
-dWFwc2RfbW9kZSAmJiBhZGFwdGVyLT5wc19zdGF0ZSA9PSBQU19TVEFURV9TTEVFUCkKIAkJYWRh
-cHRlci0+cHNfc3RhdGUgPSBQU19TVEFURV9BV0FLRTsKIAotLSAKMS43LjMuNAoK
-
---_002_5FF020A1CFFEEC49BD1E09530C4FF5951035636356SCVEXCH1marve_--
+Pozdrawiam / Best regards,
+Michał Kazior.
