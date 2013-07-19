@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888Ab3GaTKw (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50630 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982Ab3GSKSr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 15:10:52 -0400
-Message-ID: <1375297845.8289.16.camel@jlt4.sipsolutions.net> (sfid-20130731_211055_326387_6D220131)
-Subject: Re: [PATCH 3.11] mac80211: continue using disabled channels while
- connected
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: chrisw@sous-sol.org
-Date: Wed, 31 Jul 2013 21:10:45 +0200
-In-Reply-To: <1375297799-2023-1-git-send-email-johannes@sipsolutions.net> (sfid-20130731_211029_520496_7736CF8B)
-References: <1375297799-2023-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130731_211029_520496_7736CF8B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 19 Jul 2013 06:18:47 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 00/10] ath10k: device setup refactor
+References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
+	<1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 19 Jul 2013 13:18:39 +0300
+In-Reply-To: <1373960339-8525-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 16 Jul 2013 09:38:49 +0200")
+Message-ID: <874nbq6ef4.fsf@kamboji.qca.qualcomm.com> (sfid-20130719_121902_700314_0ED09C58)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-07-31 at 21:09 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In case the AP has different regulatory information than we do,
-> it can happen that we connect to an AP based on e.g. the world
-> roaming regulatory data, and then update our database with the
-> AP's country information disables the channel the AP is using.
-> If this happens on an HT AP, the bandwidth tracking code will
-> hit the WARN_ON() and disconnect. Since that's not very useful,
-> ignore the channel-disable flag in bandwidth tracking.
-> 
-> Reported-by: Chris Wright <chrisw@sous-sol.org>
-> Tested-by: Chris Wright <chrisw@sous-sol.org>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Forgot Cc stable, will add.
+> This is a respin of my patchset that addresses
+> hibernation issues.
+>
+> This is also groundwork for proper hw recovery
+> that I'm going to post too.
+>
+> v4:
+>  * update comments in pci logic decoupling
+>  * add missing commit message for one of the patches
+>  * update commit message for free_vdev_map patch
+>
+> Michal Kazior (10):
+>   ath10k: decouple pci start/stop logic
+>   ath10k: decouple core start/stop logic
+>   ath10k: allow deferred regd update
+>   ath10k: reset BMI state upon init
+>   ath10k: decouple suspend code
+>   ath10k: move free_vdev_map initialization
+>   ath10k: make sure all resources are freed upon ath10k_stop()
+>   ath10k: defer hw setup to start/stop mac80211 hooks
+>   ath10k: store firmware files in memory
+>   ath10k: skip fw stats debugfs interface if device is down
 
-johannes
+Thanks, all 10 applied.
 
+-- 
+Kalle Valo
