@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:43854 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751222Ab3GXSuB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jul 2013 14:50:01 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Wed, 24 Jul 2013 11:48:25 -0700
-Subject: RE: [PATCH 18/21] mwifiex: handle driver initialization error paths
-Message-ID: <477F20668A386D41ADCC57781B1F70430EA311794C@SC-VEXCH1.marvell.com> (sfid-20130724_205006_550360_86869924)
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
- <1374545878-15683-19-git-send-email-bzhao@marvell.com>
- <20130724151651.GD2385@tuxdriver.com>
-In-Reply-To: <20130724151651.GD2385@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26384 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934500Ab3GSK34 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jul 2013 06:29:56 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 3/3] ath10k: create debugfs interface to trigger fw crash
+References: <1372148011-28234-1-git-send-email-michal.kazior@tieto.com>
+	<1373961277-14784-1-git-send-email-michal.kazior@tieto.com>
+	<1373961277-14784-4-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 19 Jul 2013 13:29:46 +0300
+In-Reply-To: <1373961277-14784-4-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 16 Jul 2013 09:54:37 +0200")
+Message-ID: <87zjti4zc5.fsf@kamboji.qca.qualcomm.com> (sfid-20130719_122959_734827_E20DBF62)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> This one didn't apply on the current wireless-next tree.  Can you
-> fix it up?
+> This can be useful for testing. To perform a
+> forced firmware crash write 'crash' to
+> 'simulate_fw_crash' debugfs file. E.g.
+>
+>   echo crash > /sys/kernel/debug/ieee80211/phy1/ath10k/simulate_fw_crash
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-18/21 and 19/21 depend on this patch:
+[...]
 
-commit 232fde062e0a2cc52e8e18a50cda361b4ba88f34
-Author: Daniel Drake <dsd@laptop.org>
-Date:   Sat Jul 13 10:57:10 2013 -0400
+> +static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
+> +					      const char __user *user_buf,
+> +					      size_t count, loff_t *ppos)
+> +{
+> +	struct ath10k *ar = file->private_data;
+> +	char buf[32] = {};
+> +	int ret;
+> +
+> +	mutex_lock(&ar->conf_mutex);
+> +
+> +	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
+> +	if (strcmp(buf, "crash") && strcmp(buf, "crash\n")) {
+> +		ath10k_warn("write keyword `crash` to simulate firmware crash\n");
+> +		goto exit;
+> +	}
 
-    mwifiex: fix IRQ enable/disable
+Better to just return an error here.
 
-which is in wireless.git and wireless-testing.git currently.
+> +	if (ar->state != ATH10K_STATE_ON &&
+> +	    ar->state != ATH10K_STATE_RESTARTED) {
+> +		ath10k_warn("firmware isn't loaded yet, nothing to crash\n");
+> +		goto exit;
+> +	}
 
+Ditto.
 
-We can apply 18 and 19 later after commit 232fde0 is merged back to wireless-next.git.
-(I will send you a reminder to merge these two patches once commit 232fde0 is in -next tree.)
-
-Thanks,
-Bing
-
+-- 
+Kalle Valo
