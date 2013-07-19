@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7138 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026Ab3GOHhQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 03:37:16 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: pass also QOS Null frames through mgmt tx path
-References: <1373624746-3244-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Mon, 15 Jul 2013 10:37:08 +0300
-In-Reply-To: <1373624746-3244-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Fri, 12 Jul 2013 12:25:46 +0200")
-Message-ID: <87mwpop93v.fsf@kamboji.qca.qualcomm.com> (sfid-20130715_093720_849588_23C1832A)
+Received: from mx1.redhat.com ([209.132.183.28]:57386 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751111Ab3GSMF7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jul 2013 08:05:59 -0400
+Date: Fri, 19 Jul 2013 14:08:43 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ortwin =?iso-8859-1?Q?Gl=FCck?= <odi@odi.ch>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [BUG] 3.10 regression: hang on suspend
+Message-ID: <20130719120842.GA1570@redhat.com> (sfid-20130719_140621_949637_B3DEDC64)
+References: <51E4501D.3010001@odi.ch>
+ <20130716065626.GA1587@redhat.com>
+ <51E4F790.6090308@odi.ch>
+ <51E51712.4020609@broadcom.com>
+ <51E58FA5.4000804@odi.ch>
+ <20130717122944.GA25894@redhat.com>
+ <51E6E1AB.5010300@odi.ch>
+ <20130718105550.GA4628@redhat.com>
+ <51E83AB7.6020002@odi.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <51E83AB7.6020002@odi.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+On Thu, Jul 18, 2013 at 08:57:59PM +0200, Ortwin Glück wrote:
+> On 07/18/2013 12:55 PM, Stanislaw Gruszka wrote:
+> >objdump -r -d --prefix-addresses net/mac80211/mac80211.ko > mac80211.txt
+> >objdump -r -d --prefix-addresses drivers/net/wireless/iwlwifi/dvm/iwldvm.ko > iwldvm.txt
+> 
+> Here you go. Please note, that the offsets have changed due to
+> .config changes. New trace attached. Transcript:
+> 
+> iwlagn_mac_remove_interface+0x5f/0x160
+> __ieee80211_suspend+0x4a1/0xb30
+> ieee80211_suspend+0x1a/0x20
 
-> Fw will report wrong tx status for QOS Null frames
-> sent through data tx path.
->
-> This patch fixes station(s) keep alive detection
-> triggered from wpa_supplicant/hostapd when work
-> as AP/GO and WMM enabled.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Crash happen because we call iwlagn_mac_remove_interface with
+vif_priv->ctx NULL. I do not see any possibility of that other than
+doing ->remove_interface without previous ->add_interface, but I do
+not see how that possible. 
 
-I think you mentioned privately that this patch should be dropped. Is
-that still the case?
+Does crash happen on any suspend or on second one ?  
 
--- 
-Kalle Valo
+I'm attaching patch, which should prevent crash (but not fix the issue,
+just workaround it), plese apply it. If it make suspend work, please then
+reload iwlwifi module with debug=0x3 option, suspend/resume machine and
+provide dmesg output after that.
+
+Thanks
+Stanislaw
+ 
