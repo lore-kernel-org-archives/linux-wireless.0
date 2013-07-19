@@ -1,129 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:55153 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753787Ab3GRGdY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jul 2013 02:33:24 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/3] ath10k: prevent HTC from being used after stopping
-Date: Thu, 18 Jul 2013 08:33:11 +0200
-Message-ID: <1374129193-3533-2-git-send-email-michal.kazior@tieto.com> (sfid-20130718_083330_942502_F0AE75C3)
-In-Reply-To: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
-References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:45745 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759274Ab3GSLKx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jul 2013 07:10:53 -0400
+Received: by mail-bk0-f41.google.com with SMTP id jc3so1609888bkc.28
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jul 2013 04:10:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <871u6u4xkk.fsf@kamboji.qca.qualcomm.com>
+References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
+	<871u6u4xkk.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 19 Jul 2013 13:10:52 +0200
+Message-ID: <CA+BoTQna=a66_g+_WG8mnENEDEiUcAysa-joeP-xmTM+mYfY=Q@mail.gmail.com> (sfid-20130719_131056_763980_7B4F0341)
+Subject: Re: [PATCH 0/3] ath10k: fixes
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was possible to submit new HTC commands
-after/while HTC stopped. This led to memory
-corruption in some rare cases.
+On 19 July 2013 13:07, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Hi,
+>>
+>> Here are some fixes for ath10k. The rts threshold
+>> patch addresses my mistake in commit
+>> 9aeb6fe53d1f0d6e58658484ce9ad7b59f0ef16b which
+>> caused rts to be always enabled causing throughput
+>> issues in some cases.
+>>
+>>
+>> Michal Kazior (3):
+>>   ath10k: prevent HTC from being used after stopping
+>>   ath10k: fix memleak in mac setup
+>>   ath10k: fix rts/fragmentation threshold setup
+>
+> Doesn't apply:
+>
+> Applying: ath10k: prevent HTC from being used after stopping
+> Applying: ath10k: fix memleak in mac setup
+> Applying: ath10k: fix rts/fragmentation threshold setup
+> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/mac.c).
+> Repository lacks necessary blobs to fall back on 3-way merge.
+> Cannot fall back to three-way merge.
+> Patch failed at 0003 ath10k: fix rts/fragmentation threshold setup
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htc.c |   28 +++++++++++++---------------
- drivers/net/wireless/ath/ath10k/htc.h |    4 ++--
- 2 files changed, 15 insertions(+), 17 deletions(-)
+Eww. Sorry about that (I did warn you though). Perhaps that's because
+you skipped one of the recovery patches that git is confused now.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 7d5a366..f5610f1 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -251,10 +251,14 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 		return -ENOENT;
- 	}
- 
--	skb_push(skb, sizeof(struct ath10k_htc_hdr));
--
- 	spin_lock_bh(&htc->tx_lock);
-+	if (htc->stopped) {
-+		spin_unlock_bh(&htc->tx_lock);
-+		return -ESHUTDOWN;
-+	}
-+
- 	__skb_queue_tail(&ep->tx_queue, skb);
-+	skb_push(skb, sizeof(struct ath10k_htc_hdr));
- 	spin_unlock_bh(&htc->tx_lock);
- 
- 	queue_work(htc->ar->workqueue, &ep->send_work);
-@@ -267,23 +271,17 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
- {
- 	struct ath10k_htc *htc = &ar->htc;
- 	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
--	bool stopping;
- 
- 	ath10k_htc_notify_tx_completion(ep, skb);
- 	/* the skb now belongs to the completion handler */
- 
-+	/* note: when using TX credit flow, the re-checking of queues happens
-+	 * when credits flow back from the target.  in the non-TX credit case,
-+	 * we recheck after the packet completes */
- 	spin_lock_bh(&htc->tx_lock);
--	stopping = htc->stopping;
--	spin_unlock_bh(&htc->tx_lock);
--
--	if (!ep->tx_credit_flow_enabled && !stopping)
--		/*
--		 * note: when using TX credit flow, the re-checking of
--		 * queues happens when credits flow back from the target.
--		 * in the non-TX credit case, we recheck after the packet
--		 * completes
--		 */
-+	if (!ep->tx_credit_flow_enabled && !htc->stopped)
- 		queue_work(ar->workqueue, &ep->send_work);
-+	spin_unlock_bh(&htc->tx_lock);
- 
- 	return 0;
- }
-@@ -948,7 +946,7 @@ void ath10k_htc_stop(struct ath10k_htc *htc)
- 	struct ath10k_htc_ep *ep;
- 
- 	spin_lock_bh(&htc->tx_lock);
--	htc->stopping = true;
-+	htc->stopped = true;
- 	spin_unlock_bh(&htc->tx_lock);
- 
- 	for (i = ATH10K_HTC_EP_0; i < ATH10K_HTC_EP_COUNT; i++) {
-@@ -957,7 +955,6 @@ void ath10k_htc_stop(struct ath10k_htc *htc)
- 	}
- 
- 	ath10k_hif_stop(htc->ar);
--	ath10k_htc_reset_endpoint_states(htc);
- }
- 
- /* registered target arrival callback from the HIF layer */
-@@ -969,6 +966,7 @@ int ath10k_htc_init(struct ath10k *ar)
- 
- 	spin_lock_init(&htc->tx_lock);
- 
-+	htc->stopped = false;
- 	ath10k_htc_reset_endpoint_states(htc);
- 
- 	/* setup HIF layer callbacks */
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 1606c9f..e1dd8c7 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -335,7 +335,7 @@ struct ath10k_htc {
- 	struct ath10k *ar;
- 	struct ath10k_htc_ep endpoint[ATH10K_HTC_EP_COUNT];
- 
--	/* protects endpoint and stopping fields */
-+	/* protects endpoint and stopped fields */
- 	spinlock_t tx_lock;
- 
- 	struct ath10k_htc_ops htc_ops;
-@@ -349,7 +349,7 @@ struct ath10k_htc {
- 	struct ath10k_htc_svc_tx_credits service_tx_alloc[ATH10K_HTC_EP_COUNT];
- 	int target_credit_size;
- 
--	bool stopping;
-+	bool stopped;
- };
- 
- int ath10k_htc_init(struct ath10k *ar);
--- 
-1.7.9.5
+I'll resend the whole patchset rebased and with the HTC patch fixed.
 
+
+Pozdrawiam / Best regards,
+Micha³ Kazior.
