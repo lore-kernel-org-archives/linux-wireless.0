@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:55460 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751855Ab3GXIxm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jul 2013 04:53:42 -0400
-Date: Wed, 24 Jul 2013 10:53:37 +0200
-From: Fabio Baltieri <fabio.baltieri@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mac80211: use oneshot blink API for LED triggers
-Message-ID: <20130724085337.GA7096@balto.lan> (sfid-20130724_105410_462690_97E5DBE0)
-References: <1374624581-6012-1-git-send-email-fabio.baltieri@gmail.com>
- <1374624581-6012-2-git-send-email-fabio.baltieri@gmail.com>
- <1374653665.8180.0.camel@jlt4.sipsolutions.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:3664 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755845Ab3GSNPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jul 2013 09:15:51 -0400
+Message-ID: <51E93BFA.4090808@broadcom.com> (sfid-20130719_151610_462727_759EC916)
+Date: Fri, 19 Jul 2013 15:15:38 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1374653665.8180.0.camel@jlt4.sipsolutions.net>
+To: "Jiri Slaby" <jslaby@suse.cz>
+cc: brcm80211-dev-list@broadcom.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Linux kernel mailing list" <linux-kernel@vger.kernel.org>
+Subject: Re: brcm80211: machine freezing hard with rfkill on
+References: <51E8E482.30505@suse.cz>
+In-Reply-To: <51E8E482.30505@suse.cz>
+Content-Type: text/plain;
+ charset=iso-8859-2;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 24, 2013 at 10:14:25AM +0200, Johannes Berg wrote:
-> On Wed, 2013-07-24 at 02:09 +0200, Fabio Baltieri wrote:
-> > Changes mac80211 LED trigger code to use the generic
-> > led_trigger_blink_oneshot() API for transmit and receive activity
-> > indication.
-> > 
-> > This gives a better feedback to the user, as with the new API each
-> > activity event results in a visible blink, while a constant traffic
-> > results in a continuous blink at constant rate.
-> 
-> This seems a little pointless since our throughput-based trigger can do
-> very similar (but somewhat better) behaviour? Maybe that should just be
-> the default instead, with some sane default setup values?
+On 07/19/13 09:02, Jiri Slaby wrote:
+> Hi,
+>
+> our users report [1] that their machines freeze hard when they have
+> rfkill turned on and try to run wpa_supplicant or enable network
+> otherwise. This is with BCM43225 over PCI chip.
+>
+> Any ideas what that could be or how to fix this?
+>
+> [1] https://bugzilla.novell.com/show_bug.cgi?id=787649
+>
+> thanks,
 
-Ok but that requires driver specific support and it's only implemented
-on a subset of currently available drivers.
+Hi Jiri,
 
-This at least makes the basic tx/rx indication capability a better.
+Looking in the bug report it seems to be on 3.4 kernel. The commit below 
+is done later.
 
-> (Regardless of that, you also have indentation problems in your patch)
+Regards,
+Arend
+---------------
+commit 82d8eba358badb466a4e988ecabf0668a8d92e9c
+Author: Piotr Haber <phaber@broadcom.com>
+Date:   Wed Sep 19 22:21:15 2012 +0200
 
-Ok, I guess you are referring to the this:
+     brcmsmac: don't start device when RfKill is engaged
 
-+       led_trigger_blink_oneshot(local->tx_led,                                
-+                       &led_delay, &led_delay, 0);                             
+     This patch fixes a bug when device is being started
+     while RfKill switch is engaged, leading to hang
+     due to partial initialization of hardware.
 
-So, are you definitely rejecting this patch or should I fix indentation
-and send a v2?
+     Tested-by: <dragonn@op.pl>
+     Reviewed-by: Arend van Spriel <arend@broadcom.com>
+     Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+     Signed-off-by: Piotr Haber <phaber@broadcom.com>
+     Signed-off-by: Arend van Spriel <arend@broadcom.com>
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Thanks,
-Fabio
 
--- 
-Fabio Baltieri
