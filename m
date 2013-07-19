@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53329 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751745Ab3GYH6Y (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:39663 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760121Ab3GSKc5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jul 2013 03:58:24 -0400
-Message-ID: <1374739101.8827.7.camel@jlt4.sipsolutions.net> (sfid-20130725_095829_487367_68918856)
-Subject: Re: [PATCH] mac80211: use oneshot blink API for LED triggers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Fabio Baltieri <fabio.baltieri@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 25 Jul 2013 09:58:21 +0200
-In-Reply-To: <20130724085337.GA7096@balto.lan> (sfid-20130724_105341_536708_82A83A0A)
-References: <1374624581-6012-1-git-send-email-fabio.baltieri@gmail.com>
-	 <1374624581-6012-2-git-send-email-fabio.baltieri@gmail.com>
-	 <1374653665.8180.0.camel@jlt4.sipsolutions.net>
-	 <20130724085337.GA7096@balto.lan> (sfid-20130724_105341_536708_82A83A0A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 19 Jul 2013 06:32:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 0/3] ath10k: hardware recovery
+References: <1372148011-28234-1-git-send-email-michal.kazior@tieto.com>
+	<1373961277-14784-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 19 Jul 2013 13:32:48 +0300
+In-Reply-To: <1373961277-14784-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 16 Jul 2013 09:54:34 +0200")
+Message-ID: <87vc464z73.fsf@kamboji.qca.qualcomm.com> (sfid-20130719_123302_433243_51A53DED)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-07-24 at 10:53 +0200, Fabio Baltieri wrote:
-> On Wed, Jul 24, 2013 at 10:14:25AM +0200, Johannes Berg wrote:
-> > On Wed, 2013-07-24 at 02:09 +0200, Fabio Baltieri wrote:
-> > > Changes mac80211 LED trigger code to use the generic
-> > > led_trigger_blink_oneshot() API for transmit and receive activity
-> > > indication.
-> > > 
-> > > This gives a better feedback to the user, as with the new API each
-> > > activity event results in a visible blink, while a constant traffic
-> > > results in a continuous blink at constant rate.
-> > 
-> > This seems a little pointless since our throughput-based trigger can do
-> > very similar (but somewhat better) behaviour? Maybe that should just be
-> > the default instead, with some sane default setup values?
-> 
-> Ok but that requires driver specific support and it's only implemented
-> on a subset of currently available drivers.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Not necessarily, it's just done that way because we expected everyone to
-have their own idea of what the blink speeds should be, possibly even
-depending on the maximum speed the hardware can do etc.
+> Respin of hw recovery. This implements recovery
+> from a firmware crash.
+>
+> Note: this is based on my
+>       "ath10k: device setup refactor" patchset.
+>
+> v3:
+>  * rename RESTARTING_ON/OFF to RESTARTING/RESTARTED
+>  * update commit message for 'create debufs..'
+>
+> Michal Kazior (3):
+>   ath10k: implement device recovery
+>   ath10k: implement fw crash simulation command
+>   ath10k: create debugfs interface to trigger fw crash
 
-> This at least makes the basic tx/rx indication capability a better.
+Thanks, applied patches 1-2 and dropped patch 3.
 
-Fair enough.
-
-> > (Regardless of that, you also have indentation problems in your patch)
-> 
-> Ok, I guess you are referring to the this:
-> 
-> +       led_trigger_blink_oneshot(local->tx_led,                                
-> +                       &led_delay, &led_delay, 0);                             
-
-Yes, that was the place I noticed, didn't check more closely.
-
-> So, are you definitely rejecting this patch or should I fix indentation
-> and send a v2?
-
-I think I'll take it, I kinda hope nobody will really care much about it
-but the behaviour looks better and the code is simpler, so ... :)
-
-johannes
-
+-- 
+Kalle Valo
