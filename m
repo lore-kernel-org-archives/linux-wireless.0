@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:59714 "EHLO mx4.wp.pl"
+Received: from mout.gmx.net ([212.227.17.22]:56018 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752912Ab3GDSZE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jul 2013 14:25:04 -0400
-Date: Thu, 4 Jul 2013 20:27:46 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 4/5] rt2x00: rt2800lib: introduce
- rt2800_eeprom_word_index helper
-Message-ID: <20130704182746.GA2061@localhost.localdomain> (sfid-20130704_202509_059350_E1D7A6D7)
-References: <1372269318-30233-1-git-send-email-juhosg@openwrt.org>
- <1372269318-30233-5-git-send-email-juhosg@openwrt.org>
- <20130703192813.GD2245@localhost.localdomain>
- <51D4883E.2050607@openwrt.org>
+	id S1752401Ab3GTLki (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Jul 2013 07:40:38 -0400
+Received: from zwerg.Speedport_W_723V_1_28_000 ([93.218.114.45]) by
+ mail.gmx.com (mrgmx001) with ESMTPSA (Nemesis) id 0MUHoI-1UZSDJ2cWQ-00Qy9D
+ for <linux-wireless@vger.kernel.org>; Sat, 20 Jul 2013 13:40:36 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: stable@vger.kernel.org, Stefan Lippers-Hollmann <s.L-H@gmx.de>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com
+Subject: Re: [PATCH 0/2] ath9k_htc fixes, resend
+Date: Sat, 20 Jul 2013 13:40:13 +0200
+Message-Id: <51EA76A6.8090006@rempel-privat.de> (sfid-20130720_134104_669203_E2552369)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51D4883E.2050607@openwrt.org>
+References: <1374257778-9758-1-git-send-email-linux@rempel-privat.de> <201307200143.56632.s.L-H@gmx.de>
+In-Reply-To: <201307200143.56632.s.L-H@gmx.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Oleksij Rempel <linux@rempel-privat.de>
 
-On Wed, Jul 03, 2013 at 10:23:26PM +0200, Gabor Juhos wrote:
-> > I have two nit-picks, but they can be fixed later on top of your current
-> > patches.
-> > 
-> >> +	if (WARN_ON(word >= EEPROM_WORD_COUNT)) {
-> >> +		rt2x00_warn(rt2x00dev, "invalid EEPROM word %d\n", word);
-> >> +		return 0;
-> >> +	}
-> > 
-> > Since we take "enum rt2800_eeprom_word" as word argument, it can not
-> > have different values than already listed, so this warning is not needed.
-> 
-> EEPROM_WORD_COUNT is listed in the enums and the word argument can be equal to
-> that, however it is not a valid index for the EEPROM map. Additionally, if
-> someone puts a new enum value after EEPROM_WORD_COUNT by mistake that will be an
-> invalid index as well.
+Am 20.07.2013 01:43, schrieb Stefan Lippers-Hollmann:
+> Hi
+>
+> On Friday 19 July 2013, Oleksij Rempel wrote:
+>> Hi John,
+>> this patches needed to fix firmare/adapter hang issue on
+>> reboot or module reload.
+>>
+>> Oleksij Rempel (2):
+>>    ath9k_htc: do some initial hardware configuration
+>>    ath9k_htc: reboot firmware if it was loaded
+>
+> Given that this is a longstanding issue, affecting actual users, I'd
+> suggest to "Cc: <stable@vger.kernel.org>" for these patches. They
+> should meet the bar even under the new, stricter, interpretation of
+> the -stable rules and are small and self contained.
 
-I do not feel that there is big chance that someone will do such
-mistakes, but yes, they are at least theoretically possible, so warning
-can stay.
+ok, thank you for the tip.
 
-> My reason behind the rt2x00_warn call was that it shows the wiphy name. If you
-> are testing different devices in parallel it is good to know which one causes
-> the warning. However I can use 'wiphy_name(rt2x00dev->hw->wiphy)' to get that
-> information.
-> 
-> I will send a follow-up patch which removes the rt2x00_warn calls. Do you also
-> prefer WARN_ONCE instead of WARN?
-
-I prefer WARN_ONCE variant to avoid possible spamming dmesg with lot of
-warnings.
-
-Thanks
-Stanislaw
+-- 
+Regards,
+Oleksij
