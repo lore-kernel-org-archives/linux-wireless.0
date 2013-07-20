@@ -1,77 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50035 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759120Ab3GaIWp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 04:22:45 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.11] mac80211: don't wait for TX status forever
-Date: Wed, 31 Jul 2013 10:22:41 +0200
-Message-Id: <1375258961-26321-1-git-send-email-johannes@sipsolutions.net> (sfid-20130731_102255_451028_6D22D481)
+Received: from mail.tomasu.net ([64.85.170.232]:53627 "EHLO mail.tomasu.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754733Ab3GTWtf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Jul 2013 18:49:35 -0400
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Reply-To: thomas@fjellstrom.ca
+Cc: linux-wireless@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: wil6210 driver compilation failure
+Date: Sat, 20 Jul 2013 16:48:44 -0600
+Message-ID: <1742592.1EKM6OfRNf@balsa> (sfid-20130721_004938_910085_E6C252CE)
+In-Reply-To: <51EAFD2A.6060909@lwfinger.net>
+References: <6363399.uASIm9rubl@balsa> <1546638.YtIzlZyRv2@balsa> <51EAFD2A.6060909@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat 20 July 2013 16:12:10 Larry Finger wrote:
+> On 07/20/2013 02:40 PM, Thomas Fjellstrom wrote:
+> > The warnings have gone away, and the first error, but the second one is
+> > still there.
+> 
+> Sorry, I missed the second one in your original message. Does this one fix
+> it?
 
-TX status notification can get lost, or the frames could
-get stuck on the queue, so don't wait for the callback
-from the driver forever and instead time out after half
-a second.
+That seems to have done the trick.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fa19828..8a02018 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -31,10 +31,12 @@
- #include "led.h"
- 
- #define IEEE80211_AUTH_TIMEOUT		(HZ / 5)
-+#define IEEE80211_AUTH_TIMEOUT_LONG	(HZ / 2)
- #define IEEE80211_AUTH_TIMEOUT_SHORT	(HZ / 10)
- #define IEEE80211_AUTH_MAX_TRIES	3
- #define IEEE80211_AUTH_WAIT_ASSOC	(HZ * 5)
- #define IEEE80211_ASSOC_TIMEOUT		(HZ / 5)
-+#define IEEE80211_ASSOC_TIMEOUT_LONG	(HZ / 2)
- #define IEEE80211_ASSOC_TIMEOUT_SHORT	(HZ / 10)
- #define IEEE80211_ASSOC_MAX_TRIES	3
- 
-@@ -3412,10 +3414,13 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
- 
- 	if (tx_flags == 0) {
- 		auth_data->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
--		ifmgd->auth_data->timeout_started = true;
-+		auth_data->timeout_started = true;
- 		run_again(sdata, auth_data->timeout);
- 	} else {
--		auth_data->timeout_started = false;
-+		auth_data->timeout =
-+			round_jiffies_up(jiffies + IEEE80211_AUTH_TIMEOUT_LONG);
-+		auth_data->timeout_started = true;
-+		run_again(sdata, auth_data->timeout);
- 	}
- 
- 	return 0;
-@@ -3452,7 +3457,11 @@ static int ieee80211_do_assoc(struct ieee80211_sub_if_data *sdata)
- 		assoc_data->timeout_started = true;
- 		run_again(sdata, assoc_data->timeout);
- 	} else {
--		assoc_data->timeout_started = false;
-+		assoc_data->timeout =
-+			round_jiffies_up(jiffies +
-+					 IEEE80211_ASSOC_TIMEOUT_LONG);
-+		assoc_data->timeout_started = true;
-+		run_again(sdata, assoc_data->timeout);
- 	}
- 
- 	return 0;
+> Larry
 -- 
-1.8.0
-
+Thomas Fjellstrom
+thomas@fjellstrom.ca
