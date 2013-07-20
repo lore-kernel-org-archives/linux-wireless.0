@@ -1,108 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:47512 "EHLO arrakis.dune.hu"
+Received: from mail.tomasu.net ([64.85.170.232]:36506 "EHLO mail.tomasu.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752956Ab3GAHsc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:48:32 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 13/20] rt2x00: rt2800lib: add default_power3 field for three-chain devices
-Date: Mon,  1 Jul 2013 09:47:52 +0200
-Message-Id: <1372664879-18474-14-git-send-email-juhosg@openwrt.org> (sfid-20130701_094838_704455_6B5720D8)
-In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+	id S1754723Ab3GTSpJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Jul 2013 14:45:09 -0400
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+To: linux-wireless@vger.kernel.org
+Reply-To: thomas@fjellstrom.ca
+Subject: wil6210 driver compilation failure
+Date: Sat, 20 Jul 2013 12:37:02 -0600
+Message-ID: <6363399.uASIm9rubl@balsa> (sfid-20130720_204513_968685_45EB1A4E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The actual code uses two default TX power values.
-This is enough for 1T and for 2T devices however
-on 3T devices another value is needed for the third
-chain.
+Hi, 
 
-Add a new field to struct channel_info and initialize
-it from the 'rt2800_probe_hw_mode' function. Also modify
-the 'rt2800_config_channel' to handle the new field as
-well.
+Recently while trying to figure out a separate issue, I did a
+make allmodconfig and a make oldconfig with debian's default config on
+the 3.10.1 kernel, and debian's config with 3.10.0.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   22 ++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- 2 files changed, 23 insertions(+)
+It failed in the wil6210 driver.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index f079d70..bc21a57 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2769,6 +2769,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 						     info->default_power1);
- 	info->default_power2 = rt2800_txpower_to_dev(rt2x00dev, rf->channel,
- 						     info->default_power2);
-+	if (rt2x00dev->default_ant.tx_chain_num > 2)
-+		info->default_power3 =
-+			rt2800_txpower_to_dev(rt2x00dev, rf->channel,
-+					      info->default_power3);
- 
- 	switch (rt2x00dev->chip.rf) {
- 	case RF2020:
-@@ -6964,6 +6968,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	struct channel_info *info;
- 	char *default_power1;
- 	char *default_power2;
-+	char *default_power3;
- 	unsigned int i;
- 	u16 eeprom;
- 	u32 reg;
-@@ -7116,9 +7121,17 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	default_power1 = rt2800_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_BG1);
- 	default_power2 = rt2800_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_BG2);
- 
-+	if (rt2x00dev->default_ant.tx_chain_num > 2)
-+		default_power3 = rt2800_eeprom_addr(rt2x00dev,
-+						    EEPROM_EXT_TXPOWER_BG3);
-+	else
-+		default_power3 = NULL;
-+
- 	for (i = 0; i < 14; i++) {
- 		info[i].default_power1 = default_power1[i];
- 		info[i].default_power2 = default_power2[i];
-+		if (default_power3)
-+			info[i].default_power3 = default_power3[i];
- 	}
- 
- 	if (spec->num_channels > 14) {
-@@ -7127,9 +7140,18 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 		default_power2 = rt2800_eeprom_addr(rt2x00dev,
- 						    EEPROM_TXPOWER_A2);
- 
-+		if (rt2x00dev->default_ant.tx_chain_num > 2)
-+			default_power3 =
-+				rt2800_eeprom_addr(rt2x00dev,
-+						   EEPROM_EXT_TXPOWER_A3);
-+		else
-+			default_power3 = NULL;
-+
- 		for (i = 14; i < spec->num_channels; i++) {
- 			info[i].default_power1 = default_power1[i - 14];
- 			info[i].default_power2 = default_power2[i - 14];
-+			if (default_power3)
-+				info[i].default_power3 = default_power3[i - 14];
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index ee3fc57..fe4c572 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -211,6 +211,7 @@ struct channel_info {
- 	short max_power;
- 	short default_power1;
- 	short default_power2;
-+	short default_power3;
- };
- 
- /*
+The system it failed on is running a fresh install of Debian Sid, with gcc
+4.8.1.
+
+This is the error I got:
+
+  CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
+drivers/net/wireless/ath/wil6210/debugfs.c: In function âwil_print_ringâ:
+drivers/net/wireless/ath/wil6210/debugfs.c:163:11: error: pointer targets in passing argument 5 of âhex_dump_to_bufferâ differ in signedness [-Werror=pointer-sign]
+           false);
+           ^
+In file included from include/linux/kernel.h:13:0,
+                 from include/linux/cache.h:4,
+                 from include/linux/time.h:4,
+                 from include/linux/stat.h:18,
+                 from include/linux/module.h:10,
+                 from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+include/linux/printk.h:361:13: note: expected âchar *â but argument is of type âunsigned char *â
+ extern void hex_dump_to_buffer(const void *buf, size_t len,
+             ^
+drivers/net/wireless/ath/wil6210/debugfs.c: In function âwil_txdesc_debugfs_showâ:
+drivers/net/wireless/ath/wil6210/debugfs.c:429:10: error: pointer targets in passing argument 5 of âhex_dump_to_bufferâ differ in signedness [-Werror=pointer-sign]
+          sizeof(printbuf), false);
+          ^
+In file included from include/linux/kernel.h:13:0,
+                 from include/linux/cache.h:4,
+                 from include/linux/time.h:4,
+                 from include/linux/stat.h:18,
+                 from include/linux/module.h:10,
+                 from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+include/linux/printk.h:361:13: note: expected âchar *â but argument is of type âunsigned char *â
+ extern void hex_dump_to_buffer(const void *buf, size_t len,
+             ^
+cc1: all warnings being treated as errors
+make[5]: *** [drivers/net/wireless/ath/wil6210/debugfs.o] Error 1
+make[4]: *** [drivers/net/wireless/ath/wil6210] Error 2
+make[3]: *** [drivers/net/wireless/ath] Error 2
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
+
+please excuse the mangled quotes, fresh install and I negelected to set up
+the locale properly. It's fixed now, but it seems I need to restart X for it to
+notice.
+
 -- 
-1.7.10
-
+Thomas Fjellstrom
+thomas@fjellstrom.ca
