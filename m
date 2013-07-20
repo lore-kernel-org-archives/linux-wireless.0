@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12786 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755740Ab3GOLYm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 07:24:42 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3.10 0/3] Enable 7000 device family on 3.10
-Date: Mon, 15 Jul 2013 14:24:30 +0300
-Message-Id: <1373887470-2889-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_132449_473886_CB3BD387)
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:46982 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab3GTIzd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Jul 2013 04:55:33 -0400
+Received: by mail-pa0-f43.google.com with SMTP id hz11so5243349pad.30
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Jul 2013 01:55:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAAevFRQ7dfk2UeackHR1sMJaAG1f70DWmZ4kfGW91A5opmioaA@mail.gmail.com>
+References: <CAAevFRQ7dfk2UeackHR1sMJaAG1f70DWmZ4kfGW91A5opmioaA@mail.gmail.com>
+From: Pui Yong Ng <desire@gmail.com>
+Date: Sat, 20 Jul 2013 16:55:02 +0800
+Message-ID: <CAAevFRQCEKMq4x2GOAHfxo-Zsqw1_JM9kePQeeuydfOw1QQpZQ@mail.gmail.com> (sfid-20130720_105538_674609_849F580F)
+Subject: Re: wireless-regdb: Update regulatory rules for Singapore (SG) on
+ 2.4GHz and 5GHz
+To: John Linville <linville@tuxdriver.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This small patch series enables 7260 and 3160 devices on 3.10
-kernel. Three patches are already in linux.git (3.11-rc1).
-One patch is 3.10 specific and disables configuration that is not
-supported in 3.10.
+Hi.  I'd like to update that maximum EIRP for Singapore has changed.
 
-Emmanuel Grumbach (1):
-  iwlwifi: mvm: support BSS only
+The updated Technical Specification for Short Range Devices was
+published at http://www.ida.gov.sg/~/media/Files/PCDG/Licensees/StandardsQoS/RadiocomEquipStd/TSSRD.pdf.
+ In case the link changes, it can be retrieved from www.ida.gov.sg ->
+Policies & Regulation -> Industry & Licensees -> Standards & Quality
+of Service -> Radio-communication Equipment Standards
 
-Johannes Berg (2):
-  iwlwifi: mvm: adjust firmware D3 configuration API
-  iwlwifi: bump required firmware API version for 3160/7260
+In the above URL, table 1 rows 25 and 27-29 are applicable (i think).
 
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h |    4 +++-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c  |    4 ++--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c  |   24 +-----------------------
- drivers/net/wireless/iwlwifi/pcie/7000.c     |   12 ++++++------
- 4 files changed, 12 insertions(+), 32 deletions(-)
+Briefly, the changes applicable to wireless LAN are:
 
--- 
-1.7.10.4
+> Technical requirements have also been revised for the wireless LAN and broadband access applications:
+>
+> Output power limit for 2.4000 - 2.4835 GHz band increased from 100 mW EIRP to 200 mW
+> Output power limit for 5.725 - 5.850 GHz band increased from 100 mW EIRP to 1 W EIRP
 
+
+Thanks.
