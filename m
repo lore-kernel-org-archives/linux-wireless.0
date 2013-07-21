@@ -1,114 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3072 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750775Ab3GaLGB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 07:06:01 -0400
-Message-ID: <51F8EF8F.90109@broadcom.com> (sfid-20130731_130609_084468_C4D40260)
-Date: Wed, 31 Jul 2013 13:05:51 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Mathieu Devos" <mathieu.devos@ugent.be>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: Skb and ieee80211 headers
-References: <CAE_+Soy5=MfUUahaP3Ka2onp+jP9aupbhGu_QHco=CP7Y9sqhQ@mail.gmail.com>
- <51F8E228.9080600@broadcom.com>
- <CAE_+Soyxz-RfyVeg-Z4Fv5tmUtH=9wutxgM0CGjHEne9zJq+Kg@mail.gmail.com>
-In-Reply-To: <CAE_+Soyxz-RfyVeg-Z4Fv5tmUtH=9wutxgM0CGjHEne9zJq+Kg@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:39986 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755288Ab3GUCrF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Jul 2013 22:47:05 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	wil6210@qca.qualcomm.com, Stable <stable@vger.kernel.org>,
+	Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: [PATCH] ath: wil6210: Fix build error
+Date: Sat, 20 Jul 2013 21:46:48 -0500
+Message-Id: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130721_044710_850428_669F3E04)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/31/2013 12:28 PM, Mathieu Devos wrote:
-> Hi,
->
-> It's an android smartphone (I 9100 - Samsung galaxy S2) so it does not
-> have a normal ethernet 802.3 input even. I check before selecting the
-> device that it's wireless (through ieee80211_ptr) and this properly
-> returns the wlan0 device which should be on the 80211 standard.
+Building driver wil6210 in 3.10 and 3.11 kernels yields the following errors:
 
-*sigh* Welcome in the world of protocol stacks, wireless, networking 
-(choose your poison). Let me draw the picture.
+  CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
+drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_print_ring':
+drivers/net/wireless/ath/wil6210/debugfs.c:163:11: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
+           false);
+           ^
+In file included from include/linux/kernel.h:13:0,
+                 from include/linux/cache.h:4,
+                 from include/linux/time.h:4,
+                 from include/linux/stat.h:18,
+                 from include/linux/module.h:10,
+                 from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
+ extern void hex_dump_to_buffer(const void *buf, size_t len,
+             ^
+drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_txdesc_debugfs_show':
+drivers/net/wireless/ath/wil6210/debugfs.c:429:10: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
+          sizeof(printbuf), false);
+          ^
+In file included from include/linux/kernel.h:13:0,
+                 from include/linux/cache.h:4,
+                 from include/linux/time.h:4,
+                 from include/linux/stat.h:18,
+                 from include/linux/module.h:10,
+                 from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
+ extern void hex_dump_to_buffer(const void *buf, size_t len,
+             ^
+cc1: all warnings being treated as errors
+make[5]: *** [drivers/net/wireless/ath/wil6210/debugfs.o] Error 1
+make[4]: *** [drivers/net/wireless/ath/wil6210] Error 2
+make[3]: *** [drivers/net/wireless/ath] Error 2
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
 
-	o user-space
-	|
-----------------------
-	| kernel
-   +-----------+
-   |    NET    | networking subsystem, ie. TCP/IP stack
-   +-----------+
-	| 802.3
-+----------------+
-|	| driver |
-| +------------+ |
-| |802.11 stack| |
-| +------------+ |
-|       | 802.11 |
-+----------------+
-	|
-	o RF
+These errors are fixed by changing the type of the buffer from "unsigned char *" to "char *".
 
-The device hooks up to the networking subsystem as an ethernet device 
-and as such it receives 802.3 packets. These are converted to 802.11 
-packets by the 802.11 stack. Now depending on your device that happens 
-in the device driver or on the device itself. Another option is that 
-this is done by mac80211 (kernel provided 802.11 stack), but that is 
-probably not the case, but to be sure I ask again: what wireless device 
-do you have in your galaxy S2?
+Reported-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Tested-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>  [3.10]
+Cc: Thomas Fjellstrom <thomas@fjellstrom.ca>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Gr. AvS
-
-> My goal is to get the ieee80211_header properly on the skb with this
-> device, but some of the pointers and original data in the skb seem
-> totally off. This leaves me clueless as to where to put this
-> ieee80211_header.
-> I've tried putting it right on skb->head (wrong I know, but I was
-> getting desperate), on skb->mac_header (also wrong, no idea why
-> though), I went back from skb->tail with len and even added ETH_HLEN
-> to that as well because you can see that before my hook gets
-> activated: skb_pull_inline(skb, ETH_HLEN);
-> In the end I'm left with a header that is forced onto data but with a
-> wrong origin pointer thus basically leaving me with all wrong data in
-> the header.
->
-> Kind regards,
-> Mathieu Devos
->
-> On Wed, Jul 31, 2013 at 12:08 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 07/31/2013 11:39 AM, Mathieu Devos wrote:
->>>
->>> Hi,
->>>
->>> I hope this is the right place to ask for a little bit of help as I'm
->>> currently beyond stuck on a challenge I'm trying to accomplish. I'm
->>> trying to write a "simple" LKM that properly uses a ieee80211 header
->>> to print information about the mac addresses (addr1->addr4) and later
->>> down the road try to send my own data.
->>>
->>> I only need to get L2 working, no need for TCP/IP, just a proper
->>> ieee80211 based on input from skb would be huge for me.
->>>
->>> So my issue: when placing the ieee80211 on my mac_header after I hook
->>> my skb from my wireless device (wlan0 on android - I9100)
->>
->>
->> Not sure what you goal is, but what wireless device is that? You may just
->> get 802.3 packets from the device.
->>
->> Gr. AvS
->>
->>
->>> I get a huge
->>> amount of zero's and random(?) numbers when trying to print the
->>> addresses. This leads me to the first conclusion that mac_header is
->>> placed wrong when using 80211. After that I saw a lot of people just
->>> using the skb->data pointer. Now this gives even weirder issues for me
->>> and actually totally crashes my kernel.
->>
->>
->>
->>
->
-
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index e8308ec..ab63676 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -145,7 +145,7 @@ static void wil_print_ring(struct seq_file *s, const char *prefix,
+ 				   le16_to_cpu(hdr.type), hdr.flags);
+ 			if (len <= MAX_MBOXITEM_SIZE) {
+ 				int n = 0;
+-				unsigned char printbuf[16 * 3 + 2];
++				char printbuf[16 * 3 + 2];
+ 				unsigned char databuf[MAX_MBOXITEM_SIZE];
+ 				void __iomem *src = wmi_buffer(wil, d.addr) +
+ 					sizeof(struct wil6210_mbox_hdr);
+@@ -416,7 +416,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
+ 		seq_printf(s, "  SKB = %p\n", skb);
+ 
+ 		if (skb) {
+-			unsigned char printbuf[16 * 3 + 2];
++			char printbuf[16 * 3 + 2];
+ 			int i = 0;
+ 			int len = le16_to_cpu(d->dma.length);
+ 			void *p = skb->data;
+-- 
+1.8.1.4
 
