@@ -1,74 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:57661 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753745Ab3GWCS7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:18:59 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 14/21] mwifiex: add unregister_dev handler for usb interface
-Date: Mon, 22 Jul 2013 19:17:51 -0700
-Message-ID: <1374545878-15683-15-git-send-email-bzhao@marvell.com> (sfid-20130723_041914_349198_7CDBF25A)
-In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
-References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+Received: from purkki.adurom.net ([80.68.90.206]:38400 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755748Ab3GUQzh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Jul 2013 12:55:37 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: <thomas@fjellstrom.ca>, Larry Finger <Larry.Finger@lwfinger.net>,
+	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH] ath: wil6210: Fix build error
+References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net>
+	<51EBFABB.8080701@lwfinger.net> <1559869.yu0fjJXVeX@balsa>
+	<5330916.8NnOO4SNAp@lx-vladimir>
+Date: Sun, 21 Jul 2013 19:55:34 +0300
+In-Reply-To: <5330916.8NnOO4SNAp@lx-vladimir> (Vladimir Kondratiev's message
+	of "Sun, 21 Jul 2013 18:52:38 +0300")
+Message-ID: <87bo5vyhrt.fsf@purkki.adurom.net> (sfid-20130721_185541_112359_5CFBC720)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+(Dropping stable)
 
-Clear the data pointer stored in USB interface structure in
-this handler. This helps to return from mwifiex_usb_disconnect()
-if driver deinitialization is already performed while handling
-an error path for mwifiex_usb_probe().
+Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
 
-USB8797 card gets enumerated twice. First enumeration is for
-firmware download and second enumeration expects firmware
-initialization. mwifiex_usb_probe() always takes care of
-deinitialization for first enumeration after firmware download.
+>> It also looked like that that driver or section of the kernel was compiling 
+>> with -Werror. I haven't verrified that but I remember seeing "treating all 
+>> warnings as errors" at one point.
+>> 
+> You are right, I have this in Makefile:
+> (if one turn on extra warnings with -W, there will be lots of false alarms,
+> that's why this ifeq())
+>
+> ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
+> 	subdir-ccflags-y += -Werror
+> endif
 
-Also, this change matches our handling for SDIO and PCIe
-interfaces.
+This is exactly why it's recommended not to use -Werror on releases.
+It's ok when developers use it, but for end users -Werror should not be
+enabled by default.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/usb.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index f90fe21..fca98b5 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -786,6 +786,13 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 	return 0;
- }
- 
-+static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
-+{
-+	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
-+
-+	usb_set_intfdata(card->intf, NULL);
-+}
-+
- static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 				    struct mwifiex_fw_image *fw)
- {
-@@ -978,6 +985,7 @@ static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
- 
- static struct mwifiex_if_ops usb_ops = {
- 	.register_dev =		mwifiex_register_dev,
-+	.unregister_dev =	mwifiex_unregister_dev,
- 	.wakeup =		mwifiex_pm_wakeup_card,
- 	.wakeup_complete =	mwifiex_pm_wakeup_card_complete,
- 
 -- 
-1.8.2.3
-
+Kalle Valo
