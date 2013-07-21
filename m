@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34214 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755264Ab3GDBFF (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:59137 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755451Ab3GUNg7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:05:05 -0400
-Received: by mail-pa0-f51.google.com with SMTP id lf11so772689pab.24
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:04 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 02/53] wireless-regdb: BR, Brazil - enable VHT80
-Date: Wed,  3 Jul 2013 18:03:58 -0700
-Message-Id: <1372899889-19183-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_030543_396648_0E5E3AF0)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Sun, 21 Jul 2013 09:36:59 -0400
+Received: by mail-ee0-f47.google.com with SMTP id e49so3233980eek.6
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Jul 2013 06:36:58 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 2/2] regulatory: take RTNL when restoring settings on CRDA timeout
+Date: Sun, 21 Jul 2013 16:36:49 +0300
+Message-Id: <1374413809-26005-2-git-send-email-arik@wizery.com> (sfid-20130721_154508_123281_3A56647A)
+In-Reply-To: <1374413809-26005-1-git-send-email-arik@wizery.com>
+References: <1374413809-26005-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+The RTNL has to be held since this potentially changes the regdomain.
+Locking was forgotten here due to recent locking simplification changes.
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and increases the max EIRP on two
-5 GHz bands.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- db.txt |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ net/wireless/reg.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index 0e7794e..a6c23bd 100644
---- a/db.txt
-+++ b/db.txt
-@@ -125,10 +125,10 @@ country BO:
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1ec3933..b25390a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2285,7 +2285,9 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
+ static void reg_timeout_work(struct work_struct *work)
+ {
+ 	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, restoring regulatory settings\n");
++	rtnl_lock();
+ 	restore_regulatory_settings(true);
++	rtnl_unlock();
+ }
  
- country BR:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (3, 17)
--	(5250 - 5330 @ 40), (3, 20), DFS
--	(5490 - 5710 @ 40), (3, 20), DFS
--	(5735 - 5835 @ 40), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
- 
- country BY:
- 	(2402 - 2482 @ 40), (N/A, 20)
+ int __init regulatory_init(void)
 -- 
-1.7.10.4
+1.8.1.2
 
