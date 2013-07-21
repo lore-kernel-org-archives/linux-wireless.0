@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:56207 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752860Ab3GPHz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:55:57 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 0/3] ath10k: hardware recovery
-Date: Tue, 16 Jul 2013 09:54:34 +0200
-Message-ID: <1373961277-14784-1-git-send-email-michal.kazior@tieto.com> (sfid-20130716_095600_463156_E8FF4C6E)
-In-Reply-To: <1372148011-28234-1-git-send-email-michal.kazior@tieto.com>
-References: <1372148011-28234-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:35294 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755504Ab3GUOTM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Jul 2013 10:19:12 -0400
+Received: by mail-pa0-f44.google.com with SMTP id lj1so6143606pab.17
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Jul 2013 07:19:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20971.60401.394690.279877@gargle.gargle.HOWL>
+References: <1374413809-26005-1-git-send-email-arik@wizery.com>
+ <1374413809-26005-2-git-send-email-arik@wizery.com> <20971.60401.394690.279877@gargle.gargle.HOWL>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 21 Jul 2013 17:18:56 +0300
+Message-ID: <CA+XVXfeFE4S-A0iPB3+2utfbKAPE6CTGFiCAhWABo_u+ZZ_4Lg@mail.gmail.com> (sfid-20130721_161927_085984_7859E3DB)
+Subject: Re: [PATCH 2/2] regulatory: take RTNL when restoring settings on CRDA timeout
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Respin of hw recovery. This implements recovery
-from a firmware crash.
+On Sun, Jul 21, 2013 at 5:10 PM, Sujith Manoharan <sujith@msujith.org> wrote:
+> Arik Nemtsov wrote:
+>> The RTNL has to be held since this potentially changes the regdomain.
+>> Locking was forgotten here due to recent locking simplification changes.
+>
+> This is already present in the mac80211 tree:
+> https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211.git/commit/?id=f77b86d7d3acf9dfcb5ee834628d12207584b2cb
+>
 
-Note: this is based on my
-      "ath10k: device setup refactor" patchset.
+Ah thanks. I missed that. Disregard then please.
 
-v3:
- * rename RESTARTING_ON/OFF to RESTARTING/RESTARTED
- * update commit message for 'create debufs..'
-
-Michal Kazior (3):
-  ath10k: implement device recovery
-  ath10k: implement fw crash simulation command
-  ath10k: create debugfs interface to trigger fw crash
-
- drivers/net/wireless/ath/ath10k/core.c  |   30 +++++++++
- drivers/net/wireless/ath/ath10k/core.h  |   19 ++++++
- drivers/net/wireless/ath/ath10k/debug.c |   54 +++++++++++++++++
- drivers/net/wireless/ath/ath10k/htc.c   |    3 +
- drivers/net/wireless/ath/ath10k/mac.c   |  101 +++++++++++++++++++++++++------
- drivers/net/wireless/ath/ath10k/mac.h   |    1 +
- drivers/net/wireless/ath/ath10k/pci.c   |    2 +
- drivers/net/wireless/ath/ath10k/wmi.c   |   26 ++++++++
- drivers/net/wireless/ath/ath10k/wmi.h   |   19 ++++++
- 9 files changed, 236 insertions(+), 19 deletions(-)
-
--- 
-1.7.9.5
-
+Arik
