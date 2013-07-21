@@ -1,61 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:52922 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756658Ab3GENPU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:15:20 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 04/16] ath10k: do not setup rts/frag thresholds for suspended interfaces
-Date: Fri,  5 Jul 2013 16:15:05 +0300
-Message-Id: <1373030117-18077-5-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_152039_897140_82CA1574)
-In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+Received: from mail.tomasu.net ([64.85.170.232]:49063 "EHLO mail.tomasu.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755675Ab3GUPgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Jul 2013 11:36:45 -0400
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Reply-To: thomas@fjellstrom.ca
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] ath: wil6210: Fix build error
+Date: Sun, 21 Jul 2013 09:35:40 -0600
+Message-ID: <1559869.yu0fjJXVeX@balsa> (sfid-20130721_173651_800295_1B589926)
+In-Reply-To: <51EBFABB.8080701@lwfinger.net>
+References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net> <1958736.oRuXAUfNGd@lx-vladimir> <51EBFABB.8080701@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+On Sun 21 July 2013 10:14:03 Larry Finger wrote:
+> On 07/21/2013 02:06 AM, Vladimir Kondratiev wrote:
+> > On Saturday, July 20, 2013 09:46:48 PM Larry Finger wrote:
+> >> Building driver wil6210 in 3.10 and 3.11 kernels yields the following 
+errors:
+> >>
+> >>    CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
+> >> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_print_ring':
+> >> drivers/net/wireless/ath/wil6210/debugfs.c:163:11: error: pointer targets 
+in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-
+Werror=pointer-sign]
+> >>             false);
+> >>             ^
+> >> In file included from include/linux/kernel.h:13:0,
+> >>                   from include/linux/cache.h:4,
+> >>                   from include/linux/time.h:4,
+> >>                   from include/linux/stat.h:18,
+> >>                   from include/linux/module.h:10,
+> >>                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+> >> include/linux/printk.h:361:13: note: expected 'char *' but argument is of 
+type 'unsigned char *'
+> >>   extern void hex_dump_to_buffer(const void *buf, size_t len,
+> >>               ^
+> >> drivers/net/wireless/ath/wil6210/debugfs.c: In function 
+'wil_txdesc_debugfs_show':
+> >> drivers/net/wireless/ath/wil6210/debugfs.c:429:10: error: pointer targets 
+in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-
+Werror=pointer-sign]
+> >>            sizeof(printbuf), false);
+> >>            ^
+> >> In file included from include/linux/kernel.h:13:0,
+> >>                   from include/linux/cache.h:4,
+> >>                   from include/linux/time.h:4,
+> >>                   from include/linux/stat.h:18,
+> >>                   from include/linux/module.h:10,
+> >>                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+> >> include/linux/printk.h:361:13: note: expected 'char *' but argument is of 
+type 'unsigned char *'
+> >>   extern void hex_dump_to_buffer(const void *buf, size_t len,
+> >>               ^
+> >> cc1: all warnings being treated as errors
+> >> make[5]: *** [drivers/net/wireless/ath/wil6210/debugfs.o] Error 1
+> >> make[4]: *** [drivers/net/wireless/ath/wil6210] Error 2
+> >> make[3]: *** [drivers/net/wireless/ath] Error 2
+> >> make[2]: *** [drivers/net/wireless] Error 2
+> >> make[1]: *** [drivers/net] Error 2
+> >> make: *** [drivers] Error 2
+> >>
+> >> These errors are fixed by changing the type of the buffer from "unsigned 
+char *" to "char *".
+> >>
+> >> Reported-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
+> >> Tested-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
+> >> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> >> Cc: Stable <stable@vger.kernel.org>  [3.10]
+> >> Cc: Thomas Fjellstrom <thomas@fjellstrom.ca>
+> >> ---
+> >>   drivers/net/wireless/ath/wil6210/debugfs.c | 4 ++--
+> >>   1 file changed, 2 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c 
+b/drivers/net/wireless/ath/wil6210/debugfs.c
+> >> index e8308ec..ab63676 100644
+> >> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
+> >> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+> >> @@ -145,7 +145,7 @@ static void wil_print_ring(struct seq_file *s, const 
+char *prefix,
+> >>   				   le16_to_cpu(hdr.type), hdr.flags);
+> >>   			if (len <= MAX_MBOXITEM_SIZE) {
+> >>   				int n = 0;
+> >> -				unsigned char printbuf[16 * 3 + 2];
+> >> +				char printbuf[16 * 3 + 2];
+> >>   				unsigned char databuf[MAX_MBOXITEM_SIZE];
+> >>   				void __iomem *src = wmi_buffer(wil, d.addr) +
+> >>   					sizeof(struct wil6210_mbox_hdr);
+> >> @@ -416,7 +416,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, 
+void *data)
+> >>   		seq_printf(s, "  SKB = %p\n", skb);
+> >>
+> >>   		if (skb) {
+> >> -			unsigned char printbuf[16 * 3 + 2];
+> >> +			char printbuf[16 * 3 + 2];
+> >>   			int i = 0;
+> >>   			int len = le16_to_cpu(d->dma.length);
+> >>   			void *p = skb->data;
+> >>
+> > Hmm, I have no warning for this with neither 3.10 nor 3.11 kernel version; 
+but
+> > patch is correct, and here is my
+> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> 
+> Thanks. I did not see any warning or error either; however, it did happen 
+for 
+> Thomas. I'm not sure what combination of compiler version and/or switches 
+lead 
+> to the problem, but his system apparently uses them.
 
-mac80211 calls for rts/frag threshold hooks before
-any interface is brought back up again when
-resuming.
+If it helps, I'm running a fresh install of Debian Sid with gcc 4.8.1. I've 
+noticed that each newer successive version of gcc gets more strict with what 
+code it accepts without warning, or error. A lot of my only somewhat old code 
+tends to have a lot more warnings. Especially that signedness warning.
 
-We would set vdev parameters before given vdev is
-created lading to a FW crash.
+It also looked like that that driver or section of the kernel was compiling 
+with -Werror. I haven't verrified that but I remember seeing "treating all 
+warnings as errors" at one point.
 
-rts/frag thresholds will be re-set accordingly in
-add_interface() hook anyway.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index ff0bb38..cdee800 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2597,7 +2597,7 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
- 
- 	mutex_lock(&ar->conf_mutex);
- 	ieee80211_iterate_active_interfaces_atomic(
--		hw, IEEE80211_IFACE_ITER_RESUME_ALL,
-+		hw, IEEE80211_IFACE_ITER_NORMAL,
- 		ath10k_set_rts_iter, &ar_iter);
- 	mutex_unlock(&ar->conf_mutex);
- 
-@@ -2639,7 +2639,7 @@ static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
- 
- 	mutex_lock(&ar->conf_mutex);
- 	ieee80211_iterate_active_interfaces_atomic(
--		hw, IEEE80211_IFACE_ITER_RESUME_ALL,
-+		hw, IEEE80211_IFACE_ITER_NORMAL,
- 		ath10k_set_frag_iter, &ar_iter);
- 	mutex_unlock(&ar->conf_mutex);
- 
+> Larry
+> 
+> 
 -- 
-1.7.9.5
-
+Thomas Fjellstrom
+thomas@fjellstrom.ca
