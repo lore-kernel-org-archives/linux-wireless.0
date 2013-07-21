@@ -1,95 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48287 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751642Ab3GHOIw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:08:52 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 08/20] rt2x00: rt2800lib: add rt2800_txpower_to_dev helper
-Date: Mon,  8 Jul 2013 16:08:23 +0200
-Message-Id: <1373292515-21332-9-git-send-email-juhosg@openwrt.org> (sfid-20130708_160856_309524_7D9D73C8)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:38981 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755629Ab3GUPOG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Jul 2013 11:14:06 -0400
+Message-ID: <51EBFABB.8080701@lwfinger.net> (sfid-20130721_171416_751602_A23480ED)
+Date: Sun, 21 Jul 2013 10:14:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Stable <stable@vger.kernel.org>,
+	Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: [PATCH] ath: wil6210: Fix build error
+References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net> <1958736.oRuXAUfNGd@lx-vladimir>
+In-Reply-To: <1958736.oRuXAUfNGd@lx-vladimir>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce a new helper function for converting
-the default TX power values from EEPROM into
-mac80211 values.
+On 07/21/2013 02:06 AM, Vladimir Kondratiev wrote:
+> On Saturday, July 20, 2013 09:46:48 PM Larry Finger wrote:
+>> Building driver wil6210 in 3.10 and 3.11 kernels yields the following errors:
+>>
+>>    CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
+>> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_print_ring':
+>> drivers/net/wireless/ath/wil6210/debugfs.c:163:11: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
+>>             false);
+>>             ^
+>> In file included from include/linux/kernel.h:13:0,
+>>                   from include/linux/cache.h:4,
+>>                   from include/linux/time.h:4,
+>>                   from include/linux/stat.h:18,
+>>                   from include/linux/module.h:10,
+>>                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+>> include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
+>>   extern void hex_dump_to_buffer(const void *buf, size_t len,
+>>               ^
+>> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_txdesc_debugfs_show':
+>> drivers/net/wireless/ath/wil6210/debugfs.c:429:10: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
+>>            sizeof(printbuf), false);
+>>            ^
+>> In file included from include/linux/kernel.h:13:0,
+>>                   from include/linux/cache.h:4,
+>>                   from include/linux/time.h:4,
+>>                   from include/linux/stat.h:18,
+>>                   from include/linux/module.h:10,
+>>                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+>> include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
+>>   extern void hex_dump_to_buffer(const void *buf, size_t len,
+>>               ^
+>> cc1: all warnings being treated as errors
+>> make[5]: *** [drivers/net/wireless/ath/wil6210/debugfs.o] Error 1
+>> make[4]: *** [drivers/net/wireless/ath/wil6210] Error 2
+>> make[3]: *** [drivers/net/wireless/ath] Error 2
+>> make[2]: *** [drivers/net/wireless] Error 2
+>> make[1]: *** [drivers/net] Error 2
+>> make: *** [drivers] Error 2
+>>
+>> These errors are fixed by changing the type of the buffer from "unsigned char *" to "char *".
+>>
+>> Reported-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
+>> Tested-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Stable <stable@vger.kernel.org>  [3.10]
+>> Cc: Thomas Fjellstrom <thomas@fjellstrom.ca>
+>> ---
+>>   drivers/net/wireless/ath/wil6210/debugfs.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+>> index e8308ec..ab63676 100644
+>> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
+>> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+>> @@ -145,7 +145,7 @@ static void wil_print_ring(struct seq_file *s, const char *prefix,
+>>   				   le16_to_cpu(hdr.type), hdr.flags);
+>>   			if (len <= MAX_MBOXITEM_SIZE) {
+>>   				int n = 0;
+>> -				unsigned char printbuf[16 * 3 + 2];
+>> +				char printbuf[16 * 3 + 2];
+>>   				unsigned char databuf[MAX_MBOXITEM_SIZE];
+>>   				void __iomem *src = wmi_buffer(wil, d.addr) +
+>>   					sizeof(struct wil6210_mbox_hdr);
+>> @@ -416,7 +416,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
+>>   		seq_printf(s, "  SKB = %p\n", skb);
+>>
+>>   		if (skb) {
+>> -			unsigned char printbuf[16 * 3 + 2];
+>> +			char printbuf[16 * 3 + 2];
+>>   			int i = 0;
+>>   			int len = le16_to_cpu(d->dma.length);
+>>   			void *p = skb->data;
+>>
+> Hmm, I have no warning for this with neither 3.10 nor 3.11 kernel version; but
+> patch is correct, and here is my
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-The change improves the readability and it makes
-it easier to add support for other chipsets.
+Thanks. I did not see any warning or error either; however, it did happen for 
+Thomas. I'm not sure what combination of compiler version and/or switches lead 
+to the problem, but his system apparently uses them.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-Changes since v2: ---
----
- drivers/net/wireless/rt2x00/rt2800.h    |    6 ------
- drivers/net/wireless/rt2x00/rt2800lib.c |   21 ++++++++++++++-------
- 2 files changed, 14 insertions(+), 13 deletions(-)
+Larry
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 7b7caeb..d3e8f6d 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -2887,15 +2887,9 @@ enum rt2800_eeprom_word {
- #define TXPOWER_G_FROM_DEV(__txpower) \
- 	((__txpower) > MAX_G_TXPOWER) ? DEFAULT_TXPOWER : (__txpower)
- 
--#define TXPOWER_G_TO_DEV(__txpower) \
--	clamp_t(char, __txpower, MIN_G_TXPOWER, MAX_G_TXPOWER)
--
- #define TXPOWER_A_FROM_DEV(__txpower) \
- 	((__txpower) > MAX_A_TXPOWER) ? DEFAULT_TXPOWER : (__txpower)
- 
--#define TXPOWER_A_TO_DEV(__txpower) \
--	clamp_t(char, __txpower, MIN_A_TXPOWER, MAX_A_TXPOWER)
--
- /*
-  *  Board's maximun TX power limitation
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 958215c..1738a9d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2724,6 +2724,16 @@ static void rt2800_iq_calibrate(struct rt2x00_dev *rt2x00dev, int channel)
- 	rt2800_bbp_write(rt2x00dev, 159, cal != 0xff ? cal : 0);
- }
- 
-+static char rt2800_txpower_to_dev(struct rt2x00_dev *rt2x00dev,
-+				  unsigned int channel,
-+				  char txpower)
-+{
-+	if (channel <= 14)
-+		return clamp_t(char, txpower, MIN_G_TXPOWER, MAX_G_TXPOWER);
-+	else
-+		return clamp_t(char, txpower, MIN_A_TXPOWER, MAX_A_TXPOWER);
-+}
-+
- static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 				  struct ieee80211_conf *conf,
- 				  struct rf_channel *rf,
-@@ -2733,13 +2743,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	unsigned int tx_pin;
- 	u8 bbp, rfcsr;
- 
--	if (rf->channel <= 14) {
--		info->default_power1 = TXPOWER_G_TO_DEV(info->default_power1);
--		info->default_power2 = TXPOWER_G_TO_DEV(info->default_power2);
--	} else {
--		info->default_power1 = TXPOWER_A_TO_DEV(info->default_power1);
--		info->default_power2 = TXPOWER_A_TO_DEV(info->default_power2);
--	}
-+	info->default_power1 = rt2800_txpower_to_dev(rt2x00dev, rf->channel,
-+						     info->default_power1);
-+	info->default_power2 = rt2800_txpower_to_dev(rt2x00dev, rf->channel,
-+						     info->default_power2);
- 
- 	switch (rt2x00dev->chip.rf) {
- 	case RF2020:
--- 
-1.7.10
 
