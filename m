@@ -1,78 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:45745 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757011Ab3GZPA0 (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:35992 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755451Ab3GUNg5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 11:00:26 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so2990185wgg.24
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Jul 2013 08:00:24 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <op.w0t16tbme4gg2u@xp>
-References: <op.w0sd9ujye4gg2u@xp>
-	<51F16993.20207@rempel-privat.de>
-	<op.w0t16tbme4gg2u@xp>
-Date: Fri, 26 Jul 2013 17:00:24 +0200
-Message-ID: <CA+icZUVbHkKz7VLs-NoVf47S_fUF855aho0CSGG3p5skpRDNmg@mail.gmail.com> (sfid-20130726_170029_354747_B1B08D09)
-Subject: Re: TP-LINK wireless USB adapter don't work.
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: atar <atar.yosef@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 21 Jul 2013 09:36:57 -0400
+Received: by mail-ee0-f50.google.com with SMTP id d49so3327618eek.9
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Jul 2013 06:36:55 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 1/2] regulatory: use correct regulatory initiator on wiphy register
+Date: Sun, 21 Jul 2013 16:36:48 +0300
+Message-Id: <1374413809-26005-1-git-send-email-arik@wizery.com> (sfid-20130721_154507_440351_5B8F6C3E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 4:22 PM, atar <atar.yosef@gmail.com> wrote:
-> Thank you about your answer, but how can I install the firmware? which
-> processes are need to be taken in order to accomplish the firmware
-> installation and configuration?
->
+The current regdomain was not always set by the core. This causes
+cards with a custom regulatory domain to ignore user initiated changes
+if done before the card was registered.
 
-Please, do not top-post.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/wireless/reg.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-You should get a bit familiar with your operating system.
-This mailing-list is no $distro support-channel.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ddeff80..1ec3933 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2250,10 +2250,13 @@ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 
+ void wiphy_regulatory_register(struct wiphy *wiphy)
+ {
++	struct regulatory_request *lr;
++
+ 	if (!reg_dev_ignore_cell_hint(wiphy))
+ 		reg_num_devs_support_basehint++;
+ 
+-	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
++	lr = get_last_request();
++	wiphy_update_regulatory(wiphy, lr->initiator);
+ }
+ 
+ void wiphy_regulatory_deregister(struct wiphy *wiphy)
+-- 
+1.8.1.2
 
-We now have Debian/wheezy (v7.x)!
-You should upgrade (check release-notes and upgrade-process).
-Can't say off-hand which of the firmware-package you need, just check
-by yourself [1] (wild speculation: install firmware-linux-nonfree) or
-consult one of Debian's WiFi wiki-pages.
-Or ask on Debian's IRC channel for users - it's sometimes faster.
-
-- Sedat -
-
-[1] http://packages.debian.org/search?keywords=firmware
-
-> Thanks in advance!!
->
-> atar.
->
->> Am 25.07.2013 18:47, schrieb atar:
->>>
->>> Hi there!!
->>>
->>>
->>> I've a TP-LINK USB wireless adapter with model number TL-WN722N. When I
->>> plug it in to one of the USB slots in my PC, its LED diode isn't
->>> flashing (although under WIN XP it is flashing) and I cannot use it.
->>> from the messages of the 'dmesg' command it seems that the kernel detect
->>> it, but I unable to use it because it doesn't appear on the wicd window
->>> of available interfaces.
->>>
->>> My Linux distro is Debian squeeze with kernel 2.6.32-5-686.
->>>
->>> What should I do in order to solve this problem?
->>
->>
->> It is ath9k-htc based adapter. Please update your kernel and use latest
->> firmware. I think Debian squeeze do not provided this firmware, so you
->> should install it manually.
->>
->>
-> --
->
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
