@@ -1,69 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61673 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755837Ab3G3X7V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 19:59:21 -0400
-Date: Wed, 31 Jul 2013 01:59:15 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@lists.01.org>
-Subject: [GIT] [NFC] 3.11 fixes
-Message-ID: <20130730235915.GA4641@zurbaran> (sfid-20130731_015924_572172_73D87B0E)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22243 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752292Ab3GUHGm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Jul 2013 03:06:42 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	Stable <stable@vger.kernel.org>,
+	Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: [PATCH] ath: wil6210: Fix build error
+Date: Sun, 21 Jul 2013 10:06:31 +0300
+Message-ID: <1958736.oRuXAUfNGd@lx-vladimir> (sfid-20130721_090705_842512_EB1E148D)
+In-Reply-To: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Saturday, July 20, 2013 09:46:48 PM Larry Finger wrote:
+> Building driver wil6210 in 3.10 and 3.11 kernels yields the following errors:
+> 
+>   CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
+> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_print_ring':
+> drivers/net/wireless/ath/wil6210/debugfs.c:163:11: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
+>            false);
+>            ^
+> In file included from include/linux/kernel.h:13:0,
+>                  from include/linux/cache.h:4,
+>                  from include/linux/time.h:4,
+>                  from include/linux/stat.h:18,
+>                  from include/linux/module.h:10,
+>                  from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+> include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
+>  extern void hex_dump_to_buffer(const void *buf, size_t len,
+>              ^
+> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_txdesc_debugfs_show':
+> drivers/net/wireless/ath/wil6210/debugfs.c:429:10: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
+>           sizeof(printbuf), false);
+>           ^
+> In file included from include/linux/kernel.h:13:0,
+>                  from include/linux/cache.h:4,
+>                  from include/linux/time.h:4,
+>                  from include/linux/stat.h:18,
+>                  from include/linux/module.h:10,
+>                  from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+> include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
+>  extern void hex_dump_to_buffer(const void *buf, size_t len,
+>              ^
+> cc1: all warnings being treated as errors
+> make[5]: *** [drivers/net/wireless/ath/wil6210/debugfs.o] Error 1
+> make[4]: *** [drivers/net/wireless/ath/wil6210] Error 2
+> make[3]: *** [drivers/net/wireless/ath] Error 2
+> make[2]: *** [drivers/net/wireless] Error 2
+> make[1]: *** [drivers/net] Error 2
+> make: *** [drivers] Error 2
+> 
+> These errors are fixed by changing the type of the buffer from "unsigned char *" to "char *".
+> 
+> Reported-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
+> Tested-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>  [3.10]
+> Cc: Thomas Fjellstrom <thomas@fjellstrom.ca>
+> ---
+>  drivers/net/wireless/ath/wil6210/debugfs.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+> index e8308ec..ab63676 100644
+> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
+> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+> @@ -145,7 +145,7 @@ static void wil_print_ring(struct seq_file *s, const char *prefix,
+>  				   le16_to_cpu(hdr.type), hdr.flags);
+>  			if (len <= MAX_MBOXITEM_SIZE) {
+>  				int n = 0;
+> -				unsigned char printbuf[16 * 3 + 2];
+> +				char printbuf[16 * 3 + 2];
+>  				unsigned char databuf[MAX_MBOXITEM_SIZE];
+>  				void __iomem *src = wmi_buffer(wil, d.addr) +
+>  					sizeof(struct wil6210_mbox_hdr);
+> @@ -416,7 +416,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
+>  		seq_printf(s, "  SKB = %p\n", skb);
+>  
+>  		if (skb) {
+> -			unsigned char printbuf[16 * 3 + 2];
+> +			char printbuf[16 * 3 + 2];
+>  			int i = 0;
+>  			int len = le16_to_cpu(d->dma.length);
+>  			void *p = skb->data;
+> 
+Hmm, I have no warning for this with neither 3.10 nor 3.11 kernel version; but
+patch is correct, and here is my
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-This is the second NFC fixes pull request for 3.11.
-
-We have:
-
-1) A build failure fix for the NCI SPI transport layer due to a
-   missing CRC_CCITT Kconfig dependency.
-
-2) A netlink command rename: CMD_FW_UPLOAD was merged during the 3.11
-   merge window but the typical terminology for loading a firmware to a
-   target is firmware download rather than upload. In order to avoid any
-   confusion in a file exported to userspace, we rename this command to
-   CMD_FW_DOWNLOAD.
-
-I realize 2) might not meet the net.git criteria for what fixes are. If
-you don't want to take it then I'll have to push it through the
-3.12 merge window. If that's the case, and you only want to take 1) then
-please use tags/nfc-3.11-1 instead of tags/nfc-3.11-2 in your pull URL.
-
-The following changes since commit 64b6f46f1141ad938e354f37af62e28da972e8eb:
-
-  ath9k_hw: Fix multicast search for AR9002 family (2013-07-18 16:22:00 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.11-2
-
-for you to fetch changes up to 9ea7187c53f63e31f2d1b2b1e474e31808565009:
-
-  NFC: netlink: Rename CMD_FW_UPLOAD to CMD_FW_DOWNLOAD (2013-07-31 01:19:43 +0200)
-
-----------------------------------------------------------------
-Frederic Danis (1):
-      NFC: Fix NCI over SPI build
-
-Samuel Ortiz (1):
-      NFC: netlink: Rename CMD_FW_UPLOAD to CMD_FW_DOWNLOAD
-
- include/net/nfc/hci.h    |    2 +-
- include/net/nfc/nfc.h    |    4 ++--
- include/uapi/linux/nfc.h |    6 +++---
- net/nfc/core.c           |   20 ++++++++++----------
- net/nfc/hci/core.c       |    8 ++++----
- net/nfc/nci/Kconfig      |    1 +
- net/nfc/netlink.c        |   12 ++++++------
- net/nfc/nfc.h            |    6 +++---
- 8 files changed, 30 insertions(+), 29 deletions(-)
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
