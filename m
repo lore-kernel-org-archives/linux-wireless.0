@@ -1,84 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:46240 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab3GKJHI (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:36290 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932521Ab3GVRf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:07:08 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Lisa Nguyen <lisa@xenapiadmin.com>
-Subject: [PATCH 04/50] USB: adutux: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:27 +0800
-Message-Id: <1373533573-12272-5-git-send-email-ming.lei@canonical.com> (sfid-20130711_110723_495694_3FB3ED6D)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Mon, 22 Jul 2013 13:35:28 -0400
+Received: by mail-wi0-f177.google.com with SMTP id ey16so2190329wid.10
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jul 2013 10:35:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1374504059.14517.12.camel@jlt4.sipsolutions.net>
+References: <CAJ-Vmo=yvHUgv6pwK42n+NhPrAu9shxc5pigRkhZE+x91W_FoA@mail.gmail.com>
+	<1374504059.14517.12.camel@jlt4.sipsolutions.net>
+Date: Mon, 22 Jul 2013 10:35:27 -0700
+Message-ID: <CAJ-VmokHRAUsL7XEeM8HUNt2WEtj-G8o8uXM2=cQ2moaTbKe4w@mail.gmail.com> (sfid-20130722_193532_647343_65F32A0A)
+Subject: Re: So, which IEEE<->Frequency mappings should we be all using?
+From: Adrian Chadd <adrian@freebsd.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: freebsd-wireless@freebsd.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+Well, the UHF stuff is available now and vendors are making cards for
+them. I'm happy just mapping them to 2.4GHz channels for now but it
+severely restricts the channels (ie, spacing/width) we can use in that
+range.
 
-Cc: Lisa Nguyen <lisa@xenapiadmin.com>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/usb/misc/adutux.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/usb/misc/adutux.c b/drivers/usb/misc/adutux.c
-index eb3c8c1..387c75e 100644
---- a/drivers/usb/misc/adutux.c
-+++ b/drivers/usb/misc/adutux.c
-@@ -195,12 +195,13 @@ static void adu_interrupt_in_callback(struct urb *urb)
- {
- 	struct adu_device *dev = urb->context;
- 	int status = urb->status;
-+	unsigned long flags;
- 
- 	dbg(4, " %s : enter, status %d", __func__, status);
- 	adu_debug_data(5, __func__, urb->actual_length,
- 		       urb->transfer_buffer);
- 
--	spin_lock(&dev->buflock);
-+	spin_lock_irqsave(&dev->buflock, flags);
- 
- 	if (status != 0) {
- 		if ((status != -ENOENT) && (status != -ECONNRESET) &&
-@@ -229,7 +230,7 @@ static void adu_interrupt_in_callback(struct urb *urb)
- 
- exit:
- 	dev->read_urb_finished = 1;
--	spin_unlock(&dev->buflock);
-+	spin_unlock_irqrestore(&dev->buflock, flags);
- 	/* always wake up so we recover from errors */
- 	wake_up_interruptible(&dev->read_wait);
- 	adu_debug_data(5, __func__, urb->actual_length,
-@@ -241,6 +242,7 @@ static void adu_interrupt_out_callback(struct urb *urb)
- {
- 	struct adu_device *dev = urb->context;
- 	int status = urb->status;
-+	unsigned long flags;
- 
- 	dbg(4, " %s : enter, status %d", __func__, status);
- 	adu_debug_data(5, __func__, urb->actual_length, urb->transfer_buffer);
-@@ -254,10 +256,10 @@ static void adu_interrupt_out_callback(struct urb *urb)
- 		goto exit;
- 	}
- 
--	spin_lock(&dev->buflock);
-+	spin_lock_irqsave(&dev->buflock, flags);
- 	dev->out_urb_finished = 1;
- 	wake_up(&dev->write_wait);
--	spin_unlock(&dev->buflock);
-+	spin_unlock_irqrestore(&dev->buflock, flags);
- exit:
- 
- 	adu_debug_data(5, __func__, urb->actual_length,
--- 
-1.7.9.5
 
+adrian
+
+On 22 July 2013 07:40, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2013-07-17 at 10:42 -0700, Adrian Chadd wrote:
+>
+>> * 420MHz
+>> * 700MHz
+>> * 900MHz (which we already have, due to history);
+>> * 3.6GHz
+>> * 4.9GHz
+>
+> 3.6 should have been defined in the spec recently, 4.9 surely is defined
+> already (though the whole stack will have to support the
+> dot11ChannelStartingFactor)
+>
+> The others are kinda non-standard extensions, and you probably won't
+> even be able to properly support them since they're kinda
+> pretend-handled like 2.4 GHz.
+>
+> johannes
+>
