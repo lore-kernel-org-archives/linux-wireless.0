@@ -1,58 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:65289 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752680Ab3GHREY (ORCPT
+Received: from mtava1.carestreamhealth.com ([205.173.211.14]:45316 "EHLO
+	ashop0009.corp.carestreamhealth.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751830Ab3GVMWR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 13:04:24 -0400
-Received: by mail-pb0-f43.google.com with SMTP id md12so4495537pbc.2
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jul 2013 10:04:24 -0700 (PDT)
-From: Colleen Twitty <colleen@cozybit.com>
-To: linux-wirelss <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	open80211s <devel@lists.open80211s.org>
-Subject: [PATCH] iw: Add support for mesh peer link expiration.
-Date: Mon,  8 Jul 2013 10:04:18 -0700
-Message-Id: <1373303058-4229-1-git-send-email-colleen@cozybit.com> (sfid-20130708_190427_820204_FF047937)
+	Mon, 22 Jul 2013 08:22:17 -0400
+Message-ID: <51ED23F5.5030702@carestream.com> (sfid-20130722_142221_811729_D8111631)
+Date: Mon, 22 Jul 2013 08:22:13 -0400
+From: "greg.huber" <greg.huber@carestream.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	daniel.wagner@oss.bmw-carit.de, Dan Williams <dcbw@redhat.com>
+Subject: Re: Wake-On-Wireless and Deauthentication
+References: <51E6DE4D.50902@carestream.com> <CAB=NE6UPz=6NuCMvy5FEM9QBg9rhwFTw0mG2YVTX3r3dLG=1cQ@mail.gmail.com> <51E9800C.8040007@carestream.com> <51EABFCA.4060307@broadcom.com>
+In-Reply-To: <51EABFCA.4060307@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-User can configure the peer link expiration time with a
-new mesh parameter, mesh_plink_timeout.  This parameter
-sets the expiration time, in seconds, for peer links.
-After this time, the peer link is expired.  This means the
-inactive STA is removed from the list of peers and is not
-considered a peer again unless it re-peers.
+Arend, Thank You.
 
-Signed-off-by: Colleen Twitty <colleen@cozybit.com>
----
- mesh.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+I was able to disable NetworkManager and wpa_supplicant and then
+restarted the supplicant manually. The system did not disconnect when
+suspended, but it would not wake up on magic packet (what I set it to).
+On resume it again disconnected and reconnected however.
 
-diff --git a/mesh.c b/mesh.c
-index 5a09b62..ca065bf 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -157,6 +157,11 @@ static void _print_u32_timeout(struct nlattr *a)
- 	printf("%u milliseconds", nla_get_u32(a));
- }
- 
-+static void _print_u32_in_seconds(struct nlattr *a)
-+{
-+	printf("%d seconds", nla_get_u32(a));
-+}
-+
- static void _print_u32_in_TUs(struct nlattr *a)
- {
- 	printf("%d TUs", nla_get_u32(a));
-@@ -258,6 +263,8 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
- 	_my_nla_put_u32, _parse_u32_power_mode, _print_u32_power_mode},
- 	{"mesh_awake_window", NL80211_MESHCONF_AWAKE_WINDOW,
- 	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
-+	{"mesh_plink_timeout", NL80211_MESHCONF_PLINK_TIMEOUT,
-+	_my_nla_put_u32, _parse_u32, _print_u32_in_seconds},
- };
- 
- static void print_all_mesh_param_descr(void)
--- 
-1.7.9.5
+I put a WOW compatible NIC in my laptop and will do some more
+testing. I also need to verify that the wake packets are making it
+onto the air.
+
+Thank you for all your help.
+
+Greg
+
+On 07/20/2013 12:50 PM, Arend van Spriel wrote:
+> On 07/19/13 20:06, greg.huber wrote:
+>> Thank you for your reply, I'm trying this now.
+>>
+>> Greg
+>>
+>> On 07/18/2013 09:38 PM, Luis R. Rodriguez wrote:
+>>> On Wed, Jul 17, 2013 at 11:11 AM, greg.huber<greg.huber@carestream.com>  wrote:
+>>>> I'm trying to get Wake-on-wireless working with an Atheros AR9462.
+>>>> The problem I seem to be having is that there is a Deauth requested
+>>>> when the system is suspended. Does anyone know how to keep the
+>>>> association while suspended?? I'm using kernel 3.9.9.
+>>>>
+>>>> The log after waking (from keyboard)
+>>>>
+>>>> [  320.117062] wlp3s0: deauthenticating from 00:24:01:12:de:7a by local choice
+>>>> (reason=3)
+>>> Typical managers for networking will disassociate you (and therefore
+>>> deauth first) prior to kicking the system to suspend. To test WoW you
+>>> need to run the supplicant manually because as far as I can tell the
+>>> GUI managers don't consider if WoW was enabled or not. In such a case
+>>> that WoW was enabled the GUI managers should not send the
+>>> deauth/disassoc.
+>
+> There has been recent commit, which may affect you:
+>
+> commit 8125696991194aacb1173b6e8196d19098b44e17
+> Author: Stanislaw Gruszka <sgruszka@redhat.com>
+> Date:   Thu Feb 28 10:55:25 2013 +0100
+>
+>     cfg80211/mac80211: disconnect on suspend
+>
+> It is mentioning something about wowlan so I am not sure whether it does. As
+> you are on 3.9.9 I guess you do not have this commit.
+>
+> Regards,
+> Arend
+>
+>
 
