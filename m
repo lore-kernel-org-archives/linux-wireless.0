@@ -1,143 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58687 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752494Ab3GHO4V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:21 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 17/18] ath5k: set 5/10 MHz supported channels and fix duration
-Date: Mon,  8 Jul 2013 16:56:05 +0200
-Message-Id: <1373295366-12823-18-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_165630_272042_2F9D3E21)
-In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from ebb05.tieto.com ([131.207.168.36]:49373 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751369Ab3GVMJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 08:09:03 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4] ath10k: create debugfs interface to trigger fw crash
+Date: Mon, 22 Jul 2013 14:08:51 +0200
+Message-ID: <1374494931-18913-1-git-send-email-michal.kazior@tieto.com> (sfid-20130722_140912_765838_DFB6F82D)
+In-Reply-To: <878v1122id.fsf@kamboji.qca.qualcomm.com>
+References: <878v1122id.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath5k/base.c |   24 ++++++++++++++++--------
- drivers/net/wireless/ath/ath5k/pcu.c  |    2 ++
- drivers/net/wireless/ath/ath5k/qcu.c  |   25 ++++++++++++++++++++++++-
- 3 files changed, 42 insertions(+), 9 deletions(-)
+This can be useful for testing. To perform a
+forced firmware crash write 'crash' to
+'simulate_fw_crash' debugfs file. E.g.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 260a6fc..7c298af 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -165,28 +165,36 @@ static const struct ieee80211_rate ath5k_rates[] = {
- 	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
- 	{ .bitrate = 60,
- 	  .hw_value = ATH5K_RATE_CODE_6M,
--	  .flags = 0 },
-+	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
-+		   IEEE80211_RATE_SUPPORTS_10MHZ },
- 	{ .bitrate = 90,
- 	  .hw_value = ATH5K_RATE_CODE_9M,
--	  .flags = 0 },
-+	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
-+		   IEEE80211_RATE_SUPPORTS_10MHZ },
- 	{ .bitrate = 120,
- 	  .hw_value = ATH5K_RATE_CODE_12M,
--	  .flags = 0 },
-+	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
-+		   IEEE80211_RATE_SUPPORTS_10MHZ },
- 	{ .bitrate = 180,
- 	  .hw_value = ATH5K_RATE_CODE_18M,
--	  .flags = 0 },
-+	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
-+		   IEEE80211_RATE_SUPPORTS_10MHZ },
- 	{ .bitrate = 240,
- 	  .hw_value = ATH5K_RATE_CODE_24M,
--	  .flags = 0 },
-+	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
-+		   IEEE80211_RATE_SUPPORTS_10MHZ },
- 	{ .bitrate = 360,
- 	  .hw_value = ATH5K_RATE_CODE_36M,
--	  .flags = 0 },
-+	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
-+		   IEEE80211_RATE_SUPPORTS_10MHZ },
- 	{ .bitrate = 480,
- 	  .hw_value = ATH5K_RATE_CODE_48M,
--	  .flags = 0 },
-+	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
-+		   IEEE80211_RATE_SUPPORTS_10MHZ },
- 	{ .bitrate = 540,
- 	  .hw_value = ATH5K_RATE_CODE_54M,
--	  .flags = 0 },
-+	  .flags = IEEE80211_RATE_SUPPORTS_5MHZ |
-+		   IEEE80211_RATE_SUPPORTS_10MHZ },
+  echo crash > /sys/kernel/debug/ieee80211/phy1/ath10k/simulate_fw_crash
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+v3: return an appropriate errno instead of using ath10k_warn()
+
+ drivers/net/wireless/ath/ath10k/debug.c |   57 +++++++++++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 65279f5..3d65594 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -445,6 +445,60 @@ static const struct file_operations fops_fw_stats = {
+ 	.llseek = default_llseek,
  };
  
- static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 1f16b42..c60d36a 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -144,11 +144,13 @@ ath5k_hw_get_frame_duration(struct ath5k_hw *ah, enum ieee80211_band band,
- 		sifs = AR5K_INIT_SIFS_HALF_RATE;
- 		preamble *= 2;
- 		sym_time *= 2;
-+		bitrate = DIV_ROUND_UP(bitrate, 2);
- 		break;
- 	case AR5K_BWMODE_5MHZ:
- 		sifs = AR5K_INIT_SIFS_QUARTER_RATE;
- 		preamble *= 4;
- 		sym_time *= 4;
-+		bitrate = DIV_ROUND_UP(bitrate, 4);
- 		break;
- 	default:
- 		sifs = AR5K_INIT_SIFS_DEFAULT_BG;
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index 65fe929..0583c69 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -566,9 +566,11 @@ int ath5k_hw_set_ifs_intervals(struct ath5k_hw *ah, unsigned int slot_time)
- {
- 	struct ieee80211_channel *channel = ah->ah_current_channel;
- 	enum ieee80211_band band;
-+	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rate *rate;
- 	u32 ack_tx_time, eifs, eifs_clock, sifs, sifs_clock;
- 	u32 slot_time_clock = ath5k_hw_htoclock(ah, slot_time);
-+	u32 rate_flags, i;
- 
- 	if (slot_time < 6 || slot_time_clock > AR5K_SLOT_TIME_MAX)
- 		return -EINVAL;
-@@ -605,7 +607,28 @@ int ath5k_hw_set_ifs_intervals(struct ath5k_hw *ah, unsigned int slot_time)
- 	else
- 		band = IEEE80211_BAND_2GHZ;
- 
--	rate = &ah->sbands[band].bitrates[0];
-+	switch (ah->ah_bwmode) {
-+	case AR5K_BWMODE_5MHZ:
-+		rate_flags = IEEE80211_RATE_SUPPORTS_5MHZ;
-+		break;
-+	case AR5K_BWMODE_10MHZ:
-+		rate_flags = IEEE80211_RATE_SUPPORTS_10MHZ;
-+		break;
-+	default:
-+		rate_flags = 0;
-+		break;
-+	}
-+	sband = &ah->sbands[band];
-+	rate = NULL;
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
-+			continue;
-+		rate = &sband->bitrates[i];
-+		break;
-+	}
-+	if (WARN_ON(!rate))
-+		return -EINVAL;
++static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
++					     char __user *user_buf,
++					     size_t count, loff_t *ppos)
++{
++	const char buf[] = "To simulate firmware crash write the keyword"
++			   " `crash` to this file.\nThis will force firmware"
++			   " to report a crash to the host system.\n";
++	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
++}
 +
- 	ack_tx_time = ath5k_hw_get_frame_duration(ah, band, 10, rate, false);
++static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
++					      const char __user *user_buf,
++					      size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	char buf[32] = {};
++	int ret;
++
++	mutex_lock(&ar->conf_mutex);
++
++	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
++	if (strcmp(buf, "crash") && strcmp(buf, "crash\n")) {
++		ret = -EINVAL;
++		goto exit;
++	}
++
++	if (ar->state != ATH10K_STATE_ON &&
++	    ar->state != ATH10K_STATE_RESTARTED) {
++		ret = -ENETDOWN;
++		goto exit;
++	}
++
++	ath10k_info("simulating firmware crash\n");
++
++	ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
++	if (ret)
++		ath10k_warn("failed to force fw hang (%d)\n", ret);
++
++	if (ret == 0)
++		ret = count;
++
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static const struct file_operations fops_simulate_fw_crash = {
++	.read = ath10k_read_simulate_fw_crash,
++	.write = ath10k_write_simulate_fw_crash,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath10k_debug_create(struct ath10k *ar)
+ {
+ 	ar->debug.debugfs_phy = debugfs_create_dir("ath10k",
+@@ -461,6 +515,9 @@ int ath10k_debug_create(struct ath10k *ar)
+ 	debugfs_create_file("wmi_services", S_IRUSR, ar->debug.debugfs_phy, ar,
+ 			    &fops_wmi_services);
  
- 	/* ack_tx_time includes an SIFS already */
++	debugfs_create_file("simulate_fw_crash", S_IRUSR, ar->debug.debugfs_phy,
++			    ar, &fops_simulate_fw_crash);
++
+ 	return 0;
+ }
+ #endif /* CONFIG_ATH10K_DEBUGFS */
 -- 
-1.7.10.4
+1.7.9.5
 
