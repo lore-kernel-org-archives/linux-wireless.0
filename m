@@ -1,65 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:46856 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756796Ab3GaT7c (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41720 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752301Ab3GVNds (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 15:59:32 -0400
-Received: by mail-pb0-f41.google.com with SMTP id rp2so686035pbb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 12:59:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1374826090-17322-1-git-send-email-johannes@sipsolutions.net>
-References: <1374826090-17322-1-git-send-email-johannes@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 31 Jul 2013 22:59:16 +0300
-Message-ID: <CA+XVXfe_B08ELpNwfmiK1DJrhLWVVXLPvJH_s=g6DeUKgcotQQ@mail.gmail.com> (sfid-20130731_215935_331800_6B1E6DD7)
-Subject: Re: [PATCH] mac80211: implement critical protocol protection
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 22 Jul 2013 09:33:48 -0400
+Message-ID: <1374500018.14517.10.camel@jlt4.sipsolutions.net> (sfid-20130722_153351_314238_3A202564)
+Subject: Re: [PATCH v2] mac80211: prevent the buffering or frame
+ transmission to non-assoc mesh STA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Mon, 22 Jul 2013 15:33:38 +0200
+In-Reply-To: <1374226659-2929-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130719_114620_739880_0A8DC3A3)
+References: <1374226659-2929-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20130719_114620_739880_0A8DC3A3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 11:08 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->
-> This new API add in cfg80211 wasn't implemented in mac80211.
-> Advertise the capabilities based on the device's
-> implementation (possibly NULL) of crit_prot mac80211 ops.
->
-> This callback will be called by cfg80211 when hinted by
-> userspace that a critical protocol is happening, e.g. it can
-> be EAPOL, DHCP.
->
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-[...]
-> +static int ieee80211_crit_proto_start(struct wiphy *wiphy,
-> +                                     struct wireless_dev *wdev,
-> +                                     enum nl80211_crit_proto_id protocol,
-> +                                     u16 duration)
-> +{
-> +       struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       int ret;
-> +
-> +       ret = drv_crit_proto(local, sdata, protocol, true);
-> +       if (!ret)
-> +               return ret;
+On Fri, 2013-07-19 at 17:37 +0800, Chun-Yeow Yeoh wrote:
+> This patch is intended to avoid the buffering to non-assoc mesh STA
+> and also to avoid the triggering of frame to non-assoc mesh STA which
+> could cause kernel panic in specific hw.
 
-Shouldn't this be "if (ret)" ?
+Applied. I still find checking the station state a bit odd, but I guess
+making sure the station is fine in the callers isn't possible?
 
-Also maybe the low-level driver should get the duration and indicate
-completion on its own? (similar to what Eliad suggested).
-Seems to me very similar to ROC, and would probably be implemented as
-such for some drivers.
+johannes
 
-> +
-> +       ieee80211_queue_delayed_work(&sdata->local->hw,
-> +                                    &sdata->crit_prot_end_wk,
-> +                                    msecs_to_jiffies(duration));
-> +       return 0;
-> +}
-
-Arik
