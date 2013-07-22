@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:54021 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754467Ab3GaFWz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 01:22:55 -0400
-Message-ID: <1375248163.30009.10.camel@cumari.coelho.fi> (sfid-20130731_072300_874323_F6354662)
-Subject: Re: [PATCH] MAINTAINERS: change email of TI WiLink drivers'
- maintainer
-From: Luciano Coelho <coelho@ti.com>
-To: <linville@tuxdriver.com>
-CC: <balbi@ti.com>, <linux-wireless@vger.kernel.org>, <luca@coelho.fi>
-Date: Wed, 31 Jul 2013 08:22:43 +0300
-In-Reply-To: <1375206341-26211-1-git-send-email-coelho@ti.com>
-References: <1375206341-26211-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:48218 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757125Ab3GVJca (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 05:32:30 -0400
+Subject: [PATCH 2/2] MAINTAINERS: update ath6kl git location
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org
+Date: Mon, 22 Jul 2013 12:32:27 +0300
+Message-ID: <20130722093227.26562.41254.stgit@localhost6.localdomain6> (sfid-20130722_113233_402827_E68E181B)
+In-Reply-To: <20130722093113.26562.11543.stgit@localhost6.localdomain6>
+References: <20130722093113.26562.11543.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+The git tree is in github.com nowadays.
 
-Could you queue this for 3.11?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ MAINTAINERS |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I don't currently have anything else for 3.11, so it would just be an
-overhead to send you a pull request for this tiny change. ;)
-
---
-Cheers,
-Luca.
-
-On Tue, 2013-07-30 at 20:45 +0300, Luciano Coelho wrote:
-> Soon the coelho@ti.com email will not be valid anymore, so change it
-> to my private one.
-> 
-> Cc: Luciano Coelho <luca@coelho.fi>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->  MAINTAINERS | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index c6dc128..77be3f4 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -8278,7 +8278,7 @@ S:	Maintained
->  F:	sound/soc/codecs/twl4030*
->  
->  TI WILINK WIRELESS DRIVERS
-> -M:	Luciano Coelho <coelho@ti.com>
-> +M:	Luciano Coelho <luca@coelho.fi>
->  L:	linux-wireless@vger.kernel.org
->  W:	http://wireless.kernel.org/en/users/Drivers/wl12xx
->  W:	http://wireless.kernel.org/en/users/Drivers/wl1251
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 44626b8..7a403ba 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1406,7 +1406,7 @@ ATHEROS ATH6KL WIRELESS DRIVER
+ M:	Kalle Valo <kvalo@qca.qualcomm.com>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/en/users/Drivers/ath6kl
+-T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath6kl.git
++T:	git git://github.com/kvalo/ath.git
+ S:	Supported
+ F:	drivers/net/wireless/ath/ath6kl/
+ 
 
