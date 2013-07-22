@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:65136 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902Ab3GXNTb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53980 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932230Ab3GVUPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jul 2013 09:19:31 -0400
-Received: by mail-qc0-f176.google.com with SMTP id z10so252880qcx.35
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Jul 2013 06:19:30 -0700 (PDT)
+	Mon, 22 Jul 2013 16:15:13 -0400
+Date: Mon, 22 Jul 2013 16:01:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: 2013-07-22
+Message-ID: <20130722200124.GA29803@tuxdriver.com> (sfid-20130722_221518_178538_0B3DD7C7)
+References: <1374494325.14517.4.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <CAEZsi7GVZuBXhn-K+O0sjA_fZXjOQwOmVPuYWDS0ofX65cSvoA@mail.gmail.com>
-References: <CAEZsi7GVZuBXhn-K+O0sjA_fZXjOQwOmVPuYWDS0ofX65cSvoA@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 24 Jul 2013 23:19:10 +1000
-Message-ID: <CAGRGNgU_=ms=A0OQMmU1C9gXj8sgf9bCkTWyAmCU_-hyYMZFnA@mail.gmail.com> (sfid-20130724_151935_010567_700030F6)
-Subject: Re: Nexus 4 causes system hang (xhci_hcd)
-To: Vincent Thiele <vincentthiele@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	1203453@bugs.launchpad.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1374494325.14517.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vincent,
+On Mon, Jul 22, 2013 at 01:58:45PM +0200, Johannes Berg wrote:
+> John,
+> 
+> Here's a pull request for 3.11 (and some fixes with cc stable), sorry
+> for the delay - I was travelling.
+> 
+> Here I have a fix for RSSI thresholds in mesh, two minstrel fixes from
+> Felix, an nl80211 fix from Michal and four various fixes I did myself.
+> 
+> Let me know if there's any problem.
+> 
+> johannes
+> 
+> 
+> 
+> The following changes since commit ad81f0545ef01ea651886dddac4bef6cec930092:
+> 
+>   Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to 5c9fc93bc9bc417418fc1b6366833ae6a07b804d:
+> 
+>   mac80211/minstrel: fix NULL pointer dereference issue (2013-07-16 17:48:14 +0300)
 
-On Wed, Jul 24, 2013 at 11:10 PM, Vincent Thiele
-<vincentthiele@gmail.com> wrote:
-> Nexus 4 causes system hang (xhci_hcd):
->
-> When I connect my Nexus 4 to the USB-Port (Front USB 3.0) the whole
-> system hangs. Sometimes it starts working again after a short time.
-> But often I need to press the reset button.
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1203453
->
-> Keywords: kernel, usb
-
-So why have you sent this to linux-wireless? Surely you mean to send
-it to linux-usb or something.
-
-Thanks,
+Pulling now...
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
