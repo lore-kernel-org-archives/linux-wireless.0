@@ -1,80 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:46266 "EHLO comal.ext.ti.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4511 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753469Ab3GBO4x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 10:56:53 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>
-Subject: [PATCH v2 7/9] wlcore: sdio: add wilink clock providers
-Date: Tue, 2 Jul 2013 17:55:46 +0300
-Message-ID: <1372776948-24840-8-git-send-email-coelho@ti.com> (sfid-20130702_165741_134640_A55806CF)
-In-Reply-To: <1372776948-24840-1-git-send-email-coelho@ti.com>
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+	id S932580Ab3GVSbf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 14:31:35 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 for-3.11 1/2] brcmfmac: decrement pending 8021x count
+ upon tx failure
+Date: Mon, 22 Jul 2013 20:31:22 +0200
+Message-ID: <1374517882-2649-1-git-send-email-arend@broadcom.com> (sfid-20130722_203140_917808_606487FF)
+In-Reply-To: <1374489984-18250-2-git-send-email-arend@broadcom.com>
+References: <1374489984-18250-2-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add refclock and tcxoclock as clock providers in WiLink.  These clocks
-are not accesible outside the WiLink module, but they are registered
-in the clock framework anyway.  Only the WiLink chip consumes these
-clocks.
+If the transmit fails because there are no hanger slots or
+any other reason and the packet was an EAPOL packet the
+pending counter should be decreased although it was not
+transmitted so the driver does not end up in a dead-lock.
 
-In theory, the WiLink chip could be connected to external clocks
-instead of using these internal clocks, so make the clock consumer
-code generic enough.  If external clocks are used, then the internal
-clock device tree nodes are not necessary, but the external ones must
-be specified.
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ti/wlcore/sdio.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+Fixed typo in commit message: coutner -> counter.
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 9370d7e..980bf3d 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -34,6 +34,7 @@
- #include <linux/wl12xx.h>
- #include <linux/pm_runtime.h>
- #include <linux/printk.h>
-+#include <linux/clk-provider.h>
+Replaces patch with:
+Message-ID: <1374489984-18250-2-git-send-email-arend@broadcom.com>
+
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index f0d9f7f..29b1f24 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1744,13 +1744,14 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 	ulong flags;
+ 	int fifo = BRCMF_FWS_FIFO_BCMC;
+ 	bool multicast = is_multicast_ether_addr(eh->h_dest);
++	bool pae = eh->h_proto == htons(ETH_P_PAE);
  
- #include "wlcore.h"
- #include "wl12xx_80211.h"
-@@ -214,10 +215,15 @@ static struct wl1271_if_operations sdio_ops = {
- 	.set_block_size = wl1271_sdio_set_block_size,
- };
+ 	/* determine the priority */
+ 	if (!skb->priority)
+ 		skb->priority = cfg80211_classify8021d(skb);
  
-+static const struct of_device_id wlcore_sdio_of_clk_match_table[] = {
-+	{ .compatible = "ti,wilink-clock" },
-+};
-+
- static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- {
- 	struct wl12xx_platform_data *pdata;
- 	struct device_node *np = dev->of_node;
-+	struct device_node *clock_node;
+ 	drvr->tx_multicast += !!multicast;
+-	if (ntohs(eh->h_proto) == ETH_P_PAE)
++	if (pae)
+ 		atomic_inc(&ifp->pend_8021x_cnt);
  
- 	if (!np) {
- 		np = of_find_matching_node(NULL, dev->driver->of_match_table);
-@@ -241,6 +247,9 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- 		goto out_free;
+ 	if (!brcmf_fws_fc_active(fws)) {
+@@ -1781,6 +1782,11 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		brcmf_fws_schedule_deq(fws);
+ 	} else {
+ 		brcmf_err("drop skb: no hanger slot\n");
++		if (pae) {
++			atomic_dec(&ifp->pend_8021x_cnt);
++			if (waitqueue_active(&ifp->pend_8021x_wait))
++				wake_up(&ifp->pend_8021x_wait);
++		}
+ 		brcmu_pkt_buf_free_skb(skb);
  	}
- 
-+	for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
-+		of_fixed_clk_setup(clock_node);
-+
- 	goto out;
- 
- out_free:
+ 	brcmf_fws_unlock(drvr, flags);
 -- 
 1.7.10.4
+
 
