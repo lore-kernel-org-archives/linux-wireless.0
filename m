@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36295 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBIs (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41899 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756603Ab3GVOlE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:08:48 -0400
-Received: by mail-pa0-f42.google.com with SMTP id rl6so781912pac.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:08:48 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 53/53] wireless-regdb: EC, Ecauador - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:49 -0700
-Message-Id: <1372899889-19183-54-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032040_696275_18A867E1)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 22 Jul 2013 10:41:04 -0400
+Message-ID: <1374504059.14517.12.camel@jlt4.sipsolutions.net> (sfid-20130722_164108_399142_BEFE9603)
+Subject: Re: So, which IEEE<->Frequency mappings should we be all using?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: freebsd-wireless@freebsd.org, linux-wireless@vger.kernel.org
+Date: Mon, 22 Jul 2013 16:40:59 +0200
+In-Reply-To: <CAJ-Vmo=yvHUgv6pwK42n+NhPrAu9shxc5pigRkhZE+x91W_FoA@mail.gmail.com> (sfid-20130717_194238_629152_551DCEC6)
+References: <CAJ-Vmo=yvHUgv6pwK42n+NhPrAu9shxc5pigRkhZE+x91W_FoA@mail.gmail.com>
+	 (sfid-20130717_194238_629152_551DCEC6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Wed, 2013-07-17 at 10:42 -0700, Adrian Chadd wrote:
 
-This enables 80 MHz bandwidth usage for Ecuador,
-updates the max EIRP and adds a new 5 GHz band:
+> * 420MHz
+> * 700MHz
+> * 900MHz (which we already have, due to history);
+> * 3.6GHz
+> * 4.9GHz
 
-* 5490 - 5710
+3.6 should have been defined in the spec recently, 4.9 surely is defined
+already (though the whole stack will have to support the
+dot11ChannelStartingFactor)
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+The others are kinda non-standard extensions, and you probably won't
+even be able to properly support them since they're kinda
+pretend-handled like 2.4 GHz.
 
-diff --git a/db.txt b/db.txt
-index 43a062f..f9a3350 100644
---- a/db.txt
-+++ b/db.txt
-@@ -256,9 +256,10 @@ country DZ:
- 
- country EC:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (3, 17)
--	(5250 - 5330 @ 20), (3, 23), DFS
--	(5735 - 5835 @ 20), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
- 
- country EE: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
+johannes
 
