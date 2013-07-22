@@ -1,74 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:36950 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357Ab3GKMSV (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41408 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876Ab3GVMBQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 08:18:21 -0400
-Received: by mail-la0-f49.google.com with SMTP id ea20so6595886lab.22
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 05:18:20 -0700 (PDT)
-Message-ID: <51DEA289.5050509@cogentembedded.com> (sfid-20130711_141830_687977_AE52E3F1)
-Date: Thu, 11 Jul 2013 16:18:17 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Ming Lei <ming.lei@canonical.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Juergen Stuber <starblue@users.sourceforge.net>
-Subject: Re: [PATCH 08/50] USB: legousbtower: spin_lock in complete() cleanup
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-9-git-send-email-ming.lei@canonical.com>
-In-Reply-To: <1373533573-12272-9-git-send-email-ming.lei@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 22 Jul 2013 08:01:16 -0400
+Message-ID: <1374494473.14517.8.camel@jlt4.sipsolutions.net> (sfid-20130722_140119_234957_9D1B97F3)
+Subject: pull-request: iwlwifi-fixes 2013-07-22
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 22 Jul 2013 14:01:13 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-BZbtl5oS9w4NzBloDOmS"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
 
-On 11-07-2013 13:05, Ming Lei wrote:
+--=-BZbtl5oS9w4NzBloDOmS
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Complete() will be run with interrupt enabled, so change to
-> spin_lock_irqsave().
+John,
 
-> Cc: Juergen Stuber <starblue@users.sourceforge.net>
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-> ---
->   drivers/usb/misc/legousbtower.c |    5 +++--
->   1 file changed, 3 insertions(+), 2 deletions(-)
+And another one for iwlwifi.
 
-> diff --git a/drivers/usb/misc/legousbtower.c b/drivers/usb/misc/legousbtower.c
-> index 8089479..4044989 100644
-> --- a/drivers/usb/misc/legousbtower.c
-> +++ b/drivers/usb/misc/legousbtower.c
-> @@ -771,6 +771,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
->   	struct lego_usb_tower *dev = urb->context;
->   	int status = urb->status;
->   	int retval;
-> +	unsigned long flags;
->
->   	dbg(4, "%s: enter, status %d", __func__, status);
->
-> @@ -788,7 +789,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
->   	}
->
->   	if (urb->actual_length > 0) {
-> -		spin_lock (&dev->read_buffer_lock);
-> +		spin_lock_irqsave (&dev->read_buffer_lock, flags);
->   		if (dev->read_buffer_length + urb->actual_length < read_buffer_size) {
->   			memcpy (dev->read_buffer + dev->read_buffer_length,
->   				dev->interrupt_in_buffer,
-> @@ -799,7 +800,7 @@ static void tower_interrupt_in_callback (struct urb *urb)
->   		} else {
->   			printk(KERN_WARNING "%s: read_buffer overflow, %d bytes dropped", __func__, urb->actual_length);
->   		}
-> -		spin_unlock (&dev->read_buffer_lock);
-> +		spin_unlock_irqrestore (&dev->read_buffer_lock, flags);
->   	}
+Here I have a fix for debugfs directory creation (causing a spurious
+error message), two scanning fixes from David Spinadel, an LED fix and
+two patches related to a BA session problem that eventually caused
+firmware crashes from Emmanuel and a small BT fix for older devices as
+well as a workaround for a firmware problem with APs with very small
+beacon intervals from myself.
 
-    I don't think this patch passes checkpatch.pl.
+Let me know if there's any problem.
 
-WBR, Sergei
+johannes
 
+The following changes since commit ad81f0545ef01ea651886dddac4bef6cec930092=
+:
+
+  Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
+or-john
+
+for you to fetch changes up to a590ad411891de551e6de1b51ea635c0484148d6:
+
+  iwlwifi: mvm: remove extra SSID from probe request (2013-07-16 13:55:15 +=
+0300)
+
+----------------------------------------------------------------
+Alexander Bondar (1):
+      iwlwifi: mvm: Fix VIF specific debugfs directory creation
+
+David Spinadel (2):
+      iwlwifi: mvm: fix bug in scan ssid
+      iwlwifi: mvm: remove extra SSID from probe request
+
+Emmanuel Grumbach (3):
+      iwlwifi: mvm: unregister leds when registration failed
+      iwlwifi: mvm: fix L2P BA ressources leak
+      iwlwifi: mvm: track the number of Rx BA sessions
+
+Johannes Berg (2):
+      iwlwifi: dvm: don't send BT_CONFIG on devices w/o Bluetooth
+      iwlwifi: mvm: refuse connection to APs with BI < 16
+
+ drivers/net/wireless/iwlwifi/dvm/main.c     |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c  |  6 +++++-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 23 ++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  1 +
+ drivers/net/wireless/iwlwifi/mvm/scan.c     | 10 ++++++----
+ drivers/net/wireless/iwlwifi/mvm/sta.c      | 23 +++++++++++++++++++++--
+ 6 files changed, 56 insertions(+), 9 deletions(-)
+
+
+--=-BZbtl5oS9w4NzBloDOmS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJR7R8JAAoJEDBSmw7B7bqrPJ0P/35dN0zrxFQ48qKo/OhCMSPQ
+PES9TizJdCk76pHF3Grzb3b+8KWgNOFEJcvkFuJYNUEVsFbQ+ftksKTW9pT9Jq4o
+lad84ee42iewtFsTJa3f+8720E5EeYDnwmOm5Zs2oPpeLsZSmGZtLoeka+IirvGt
+Eg2BMHgBgIpL1vMMNKJsVN9V1NW3dVzTNqu+2Siq4FiQRLTENW9KFJkpWQKE6hn8
+BFTXIdV80iou8UYVcIN3nyO1qESwMo3m9yT+63Pdu+WjB88Jlm0/pfeNQ4ihTJ0b
+Qp04coWN+GcrxAj7kASbSbxh4HABBG2ceA7XJvoQeLv8JKNvis4+LeYHFCDjOWyS
+a1dirO/i1YXnH0aSZ/TCSuazsNyF4betOl/hFDZhvj3UwXGcOmEKWd+oZGVEVjdn
+b8XO07gIVjwnRLjnBNM4LmO4EJ6CSKauVx19q4AMLggQFSukjmxfz0bMLUEzV/Y+
+eZWHP1qGBDGUmofbny6Jlm0QUz4vsAyFyCSHBdZjAR/gFi0trLrU7oVh6EaStoNJ
+N3X1Ft1Gn2iarOcWaZgDCDNz8rYWgcoh+vZ5/5YZVYrOHG8tgsWX6LuofweZ7YSL
+8c4Zfj/SNwDPLWM0bvSBQ6Zg+upZHNSP+ImjX0QKXH2IdjVaBHOo1KSj+F0pnZkM
+7ZOuJ51pOcmM/N2n4X5X
+=MmTq
+-----END PGP SIGNATURE-----
+
+--=-BZbtl5oS9w4NzBloDOmS--
 
