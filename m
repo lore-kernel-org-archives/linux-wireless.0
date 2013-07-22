@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:54622 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756242Ab3G3Rpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 13:45:50 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, <luca@coelho.fi>, <balbi@ti.com>
-Subject: [PATCH] MAINTAINERS: change email of TI WiLink drivers' maintainer
-Date: Tue, 30 Jul 2013 20:45:41 +0300
-Message-ID: <1375206341-26211-1-git-send-email-coelho@ti.com> (sfid-20130730_194603_887674_6B680018)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:41682 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754910Ab3GVJyD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 05:54:03 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	<wil6210@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wil6210: drop -Werror compiler flag
+Date: Mon, 22 Jul 2013 12:53:48 +0300
+Message-ID: <1374486828-22350-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130722_115407_564840_4A798EC5)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Soon the coelho@ti.com email will not be valid anymore, so change it
-to my private one.
+In production code, don't use -Werror,
+as it causes random compilation failures due to compiler version and options used.
 
-Cc: Luciano Coelho <luca@coelho.fi>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+With every new version of gcc, it becomes stricter and report more warnings.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/Makefile | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c6dc128..77be3f4 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8278,7 +8278,7 @@ S:	Maintained
- F:	sound/soc/codecs/twl4030*
+diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+index f891d51..990dd42a 100644
+--- a/drivers/net/wireless/ath/wil6210/Makefile
++++ b/drivers/net/wireless/ath/wil6210/Makefile
+@@ -11,9 +11,6 @@ wil6210-y += txrx.o
+ wil6210-y += debug.o
+ wil6210-$(CONFIG_WIL6210_TRACING) += trace.o
  
- TI WILINK WIRELESS DRIVERS
--M:	Luciano Coelho <coelho@ti.com>
-+M:	Luciano Coelho <luca@coelho.fi>
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org/en/users/Drivers/wl12xx
- W:	http://wireless.kernel.org/en/users/Drivers/wl1251
+-ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
+-	subdir-ccflags-y += -Werror
+-endif
+ # for tracing framework to find trace.h
+ CFLAGS_trace.o := -I$(src)
+ 
 -- 
-1.8.3.2
+1.8.1.2
 
