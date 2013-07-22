@@ -1,67 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:43054 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197Ab3GIP3m (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36169 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754031Ab3GVBqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 11:29:42 -0400
-Date: Tue, 9 Jul 2013 17:29:38 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv6 00/18] Add support for 5 and 10 MHz channels
-Message-ID: <20130709152938.GA22583@pandem0nium> (sfid-20130709_172945_738635_B454CF76)
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1373382510.8241.2.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
-In-Reply-To: <1373382510.8241.2.camel@jlt4.sipsolutions.net>
+	Sun, 21 Jul 2013 21:46:05 -0400
+Message-ID: <1374457543.16248.8.camel@deadeye.wl.decadent.org.uk> (sfid-20130722_034616_161246_04AB0066)
+Subject: Re: [PATCH] ath: wil6210: Fix build error
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: thomas@fjellstrom.ca, Larry Finger <Larry.Finger@lwfinger.net>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Stable <stable@vger.kernel.org>
+Date: Mon, 22 Jul 2013 02:45:43 +0100
+In-Reply-To: <5330916.8NnOO4SNAp@lx-vladimir>
+References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <51EBFABB.8080701@lwfinger.net> <1559869.yu0fjJXVeX@balsa>
+	 <5330916.8NnOO4SNAp@lx-vladimir>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-GnwfA4ZuOTPreBrfd/Zz"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+--=-GnwfA4ZuOTPreBrfd/Zz
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 09, 2013 at 05:08:30PM +0200, Johannes Berg wrote:
-> On Mon, 2013-07-08 at 16:55 +0200, Simon Wunderlich wrote:
-> > This patchset adds support for 5 and 10 MHz in nl80211/cfg80211/mac80211
-> > and enables support in ath5k and ath9k, which already support this feat=
-ure
-> > on the driver side. 5 and 10 MHz wide channels might be useful for:
-> >=20
-> >  * long shot links, as the transmissions are more robust
-> >  * future support for 802.11y which allows some 5 and 10 MHz channels in
-> >    3.6 GHz range
-> >  * future support for 802.11p which uses 10 MHz in 5.9 GHz range
-> >  * ... and more "special" applications.
-> >=20
-> > This patchset enables 5 and 10 MHz channels only for OFDM, and without
-> > HT/MIMO/aggregation (for now). Support may be added later.
+On Sun, 2013-07-21 at 18:52 +0300, Vladimir Kondratiev wrote:
+> On Sunday, July 21, 2013 09:35:40 AM Thomas Fjellstrom wrote:
+> > If it helps, I'm running a fresh install of Debian Sid with gcc 4.8.1. =
+I've=20
+> > noticed that each newer successive version of gcc gets more strict with=
+ what=20
+> > code it accepts without warning, or error. A lot of my only somewhat ol=
+d code=20
+> > tends to have a lot more warnings. Especially that signedness warning.
 >=20
-> I've applied patches 1-10, not going to take the ath patches.
+> Yes, this is the case; I have 4.7.3
+>=20
+> >=20
+> > It also looked like that that driver or section of the kernel was compi=
+ling=20
+> > with -Werror. I haven't verrified that but I remember seeing "treating =
+all=20
+> > warnings as errors" at one point.
+> >=20
+> You are right, I have this in Makefile:
+> (if one turn on extra warnings with -W, there will be lots of false alarm=
+s,
+> that's why this ifeq())
+>=20
+> ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
+> 	subdir-ccflags-y +=3D -Werror
+> endif
 
-Thanks! I'll ask John to merge them when pulls mac80211-next, you might want
-to mention that in your pull request too.
+This is a pretty weird thing to do, and you've failed to account for
+-Wextra.
 
-Thanks again,
-	Simon
+-Werror is generally a bad default in free software, as you have no
+control over which compiler version will be used.
 
---+QahgC5+KEYLbs62
+Ben.
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-GnwfA4ZuOTPreBrfd/Zz
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.12 (GNU/Linux)
 
-iEYEARECAAYFAlHcLGIACgkQrzg/fFk7axbzyQCgsbmNd4fGViaQyw3vmy984tBe
-nhMAoIJsP8jB8jSKCcREAn/G6Nt/9ZSq
-=luMr
+iQIVAwUAUeyOx+e/yOyVhhEJAQpy6A/+OUDbZP0eYSrz+bVkh1mxG2V9DS0gnVrM
+RiPCC/vtya0U1GjuvMKpjvqSXGBEAHCWs4nfty6r+X+9OVgtdZqYRbnw6KNgqpqX
+UvL+yVkT8oqb42GzlL03QTTlsiOggCGmsbdJp7x46gghg4wVCWNHmZRVSIQ2Ce+x
+RqU9XbfqLs8DH51RqBYylqUrHrrQwDJj2t9oHuznLJkpfxggJDC9GEZtz+N2+NX9
+8iI2qTZpXsfGMi8INLGZ+PvbI5T5hM9D72SUBxZUMxV3qkSzSGHgSFqbcGGzNZJK
+xAH/hwhwppDKKngeCJ2quZwZofOypXVGSUUlux77l1aEJb44DNknFbaH8Bd+fGME
+OLSjP1bBG2o2otRTvKSDoK/U2tEeYXPIzDNx6fVoVIgnxHm2EQDv115v0R9UPJHF
+NcdS/fNLpiUDIQFzDBKbxry+O0wGc3jEWdyLX2ZjwRPZp3hJ530iMxLke8RxR8yO
+SA/rSHZvGuJsK3nrqVV50/krarovET8GRtmZRfk9MpLgQ8bxyUJ8geOGQSiaWWjH
+8vTBVh+hHtDPhs6l8uMpMflSg9ku8DSCBSoZC1pzKzkczabSDIYTazmInspsarU8
+nR+w1gokbsY/0bJVXbJZb0KZnfX1r/ksvGnuy6R+DybBQiKSsqJoCd09m5qa90M7
+VxkxjcCRljA=
+=4NhL
 -----END PGP SIGNATURE-----
 
---+QahgC5+KEYLbs62--
+--=-GnwfA4ZuOTPreBrfd/Zz--
