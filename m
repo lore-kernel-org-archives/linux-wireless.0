@@ -1,106 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:38981 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755629Ab3GUPOG (ORCPT
+Received: from mail-vb0-f47.google.com ([209.85.212.47]:47813 "EHLO
+	mail-vb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755213Ab3GVO0j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jul 2013 11:14:06 -0400
-Message-ID: <51EBFABB.8080701@lwfinger.net> (sfid-20130721_171416_751602_A23480ED)
-Date: Sun, 21 Jul 2013 10:14:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 22 Jul 2013 10:26:39 -0400
+Received: by mail-vb0-f47.google.com with SMTP id x14so4728546vbb.20
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jul 2013 07:26:38 -0700 (PDT)
 MIME-Version: 1.0
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Stable <stable@vger.kernel.org>,
-	Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: [PATCH] ath: wil6210: Fix build error
-References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net> <1958736.oRuXAUfNGd@lx-vladimir>
-In-Reply-To: <1958736.oRuXAUfNGd@lx-vladimir>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Mon, 22 Jul 2013 09:26:37 -0500
+Message-ID: <CAJ8GFOgqLdk3vYAQunEOJ_O6xejEDy0uFeENmpn_s1STzyvYCQ@mail.gmail.com> (sfid-20130722_162642_208449_913CE01C)
+Subject: Any way to disable RTS/CTS in minstrel_ht?
+From: Harshal Chhaya <harshal@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/21/2013 02:06 AM, Vladimir Kondratiev wrote:
-> On Saturday, July 20, 2013 09:46:48 PM Larry Finger wrote:
->> Building driver wil6210 in 3.10 and 3.11 kernels yields the following errors:
->>
->>    CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
->> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_print_ring':
->> drivers/net/wireless/ath/wil6210/debugfs.c:163:11: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
->>             false);
->>             ^
->> In file included from include/linux/kernel.h:13:0,
->>                   from include/linux/cache.h:4,
->>                   from include/linux/time.h:4,
->>                   from include/linux/stat.h:18,
->>                   from include/linux/module.h:10,
->>                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
->> include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
->>   extern void hex_dump_to_buffer(const void *buf, size_t len,
->>               ^
->> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_txdesc_debugfs_show':
->> drivers/net/wireless/ath/wil6210/debugfs.c:429:10: error: pointer targets in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-Werror=pointer-sign]
->>            sizeof(printbuf), false);
->>            ^
->> In file included from include/linux/kernel.h:13:0,
->>                   from include/linux/cache.h:4,
->>                   from include/linux/time.h:4,
->>                   from include/linux/stat.h:18,
->>                   from include/linux/module.h:10,
->>                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
->> include/linux/printk.h:361:13: note: expected 'char *' but argument is of type 'unsigned char *'
->>   extern void hex_dump_to_buffer(const void *buf, size_t len,
->>               ^
->> cc1: all warnings being treated as errors
->> make[5]: *** [drivers/net/wireless/ath/wil6210/debugfs.o] Error 1
->> make[4]: *** [drivers/net/wireless/ath/wil6210] Error 2
->> make[3]: *** [drivers/net/wireless/ath] Error 2
->> make[2]: *** [drivers/net/wireless] Error 2
->> make[1]: *** [drivers/net] Error 2
->> make: *** [drivers] Error 2
->>
->> These errors are fixed by changing the type of the buffer from "unsigned char *" to "char *".
->>
->> Reported-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
->> Tested-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@vger.kernel.org>  [3.10]
->> Cc: Thomas Fjellstrom <thomas@fjellstrom.ca>
->> ---
->>   drivers/net/wireless/ath/wil6210/debugfs.c | 4 ++--
->>   1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
->> index e8308ec..ab63676 100644
->> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
->> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
->> @@ -145,7 +145,7 @@ static void wil_print_ring(struct seq_file *s, const char *prefix,
->>   				   le16_to_cpu(hdr.type), hdr.flags);
->>   			if (len <= MAX_MBOXITEM_SIZE) {
->>   				int n = 0;
->> -				unsigned char printbuf[16 * 3 + 2];
->> +				char printbuf[16 * 3 + 2];
->>   				unsigned char databuf[MAX_MBOXITEM_SIZE];
->>   				void __iomem *src = wmi_buffer(wil, d.addr) +
->>   					sizeof(struct wil6210_mbox_hdr);
->> @@ -416,7 +416,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
->>   		seq_printf(s, "  SKB = %p\n", skb);
->>
->>   		if (skb) {
->> -			unsigned char printbuf[16 * 3 + 2];
->> +			char printbuf[16 * 3 + 2];
->>   			int i = 0;
->>   			int len = le16_to_cpu(d->dma.length);
->>   			void *p = skb->data;
->>
-> Hmm, I have no warning for this with neither 3.10 nor 3.11 kernel version; but
-> patch is correct, and here is my
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+On an AR9342-based AP with several AR6102 and AR6203 clients,
+minstrel_ht uses RTS/CTS more often than it seems necessary.
 
-Thanks. I did not see any warning or error either; however, it did happen for 
-Thomas. I'm not sure what combination of compiler version and/or switches lead 
-to the problem, but his system apparently uses them.
+Is there a way to disable RTS/CTS in minstrel_ht?
 
-Larry
+I found a discussion from a couple of years back that talked about
+adding an option that tells minstel_ht to really, really turn off
+RTS/CTS but I can't determine if that was implemented.
 
-
+Thanks,
+- Harshal
