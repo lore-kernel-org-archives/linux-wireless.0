@@ -1,68 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:52257 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932278Ab3GCWko convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 18:40:44 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Wed, 3 Jul 2013 15:39:50 -0700
-Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-Message-ID: <477F20668A386D41ADCC57781B1F70430EA2E0674B@SC-VEXCH1.marvell.com> (sfid-20130704_004047_956989_5DAD5E8F)
-References: <20130703015653.82651FAAD5@dev.laptop.org>
-In-Reply-To: <20130703015653.82651FAAD5@dev.laptop.org>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx1.redhat.com ([209.132.183.28]:22370 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932318Ab3GVLTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 07:19:42 -0400
+Date: Mon, 22 Jul 2013 13:22:37 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ortwin =?iso-8859-1?Q?Gl=FCck?= <odi@odi.ch>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [BUG] 3.10 regression: hang on suspend
+Message-ID: <20130722112236.GA7364@redhat.com> (sfid-20130722_131959_851600_A6FE2519)
+References: <20130716065626.GA1587@redhat.com>
+ <51E4F790.6090308@odi.ch>
+ <51E51712.4020609@broadcom.com>
+ <51E58FA5.4000804@odi.ch>
+ <20130717122944.GA25894@redhat.com>
+ <51E6E1AB.5010300@odi.ch>
+ <20130718105550.GA4628@redhat.com>
+ <51E83AB7.6020002@odi.ch>
+ <20130719120842.GA1570@redhat.com>
+ <51E9899E.3080307@odi.ch>
 MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="9jxsPFA5p3P2qPhR"
+In-Reply-To: <51E9899E.3080307@odi.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
 
-> Make the driver continue to ack interrupts during shutdown to avoid
-> this. This is harder than it might sound.
+--9jxsPFA5p3P2qPhR
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+
+On Fri, Jul 19, 2013 at 08:46:54PM +0200, Ortwin Glück wrote:
+> On 07/19/2013 02:08 PM, Stanislaw Gruszka wrote:
+> >I'm attaching patch, which should prevent crash (but not fix the issue,
+> >just workaround it), plese apply it. If it make suspend work, please then
+> >reload iwlwifi module with debug=0x3 option, suspend/resume machine and
+> >provide dmesg output after that.
 > 
-> We must be careful not to act upon the interrupt, only ack it.
-> Otherwise, we end up setting int_status to something. And hw_status is
-> set to MWIFIEX_HW_STATUS_CLOSING for obvious reasons. We would hit the
-> following infinite loop in mwifiex_main_process:
 > 
-> 	process_start:
-> 	do {
-> 		if ((adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) ||
-> 		    (adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY))
-> 			break;
-> 		[...]
-> 	} while (true);
-> 	if ((adapter->int_status) || IS_CARD_RX_RCVD(adapter))
-> 		goto process_start;
+> Here the requested dmesg. Please note that two different WARN_ONs
+> trigger here directly after each other.
 > 
-> We must also observe that ACKing interrupts involves reading a load
-> of data into the mp_regs buffer. The driver doesn't do much in the
-> way of ensuring that interrupts are disabled before freeing buffers
-> such as mp_regs, but we do need something here to make sure that we
-> don't get any interrupts after mp_regs is freed.
-> 
-> This whole thing feels rather fragile, but I couldn't see a clean
-> way to do it, the driver seems a bit disorganised here. I would
-> welcome a review from the designers.
+> To me it looks like iwlagn_mac_remove_interface() is called twice,
+> but I am not familiar with the code.
 
-Followings are the actions taken for driver unload.
+We remove interface that we do not add in the driver. I think I found
+reason of that - I removed below code in bad commit:
 
-   a) If device is connected, sync deauth command is sent.
-   b) Auto deep sleep is cancelled by sending sync command
-   c) Sync shutdown command is queued and HW_STATUS is changed to reset.
-   d) Now no other command gets queued based on HW_STATUS.
-   e) Wait for shutdown command response and handle it.
-   f) Set surprise_removed flag which blocks SDIO interrupts
+        list_for_each_entry(sdata, &local->interfaces, list) {
+[snip]
+-               switch (sdata->vif.type) {
+-               case NL80211_IFTYPE_AP_VLAN:
+-               case NL80211_IFTYPE_MONITOR:
+-                       /* skip these */
+-                       continue;
 
-As per our design, we don't send any command to firmware after SHUTDOWN command. Also, firmware doesn't send any interrupt after SHUTDOWN command response.
-The interrupt received after setting surprise_removed flag is unexpected. We need to get the exact procedure to replicate and figure out the root cause.
+Attached patch should correct that. Please test if it fixes the
+crash.
 
-By thy way, I will be OOO for approximately two weeks. Amitkumar Karwar will continue to work with you to debug the issue.
+Thanks
+Stanislaw
 
-Thanks,
-Bing
 
+--9jxsPFA5p3P2qPhR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mac80211_fix_suspend_crash.patch"
+
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 7fc5d0d..3401262 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -99,10 +99,13 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
+-	/* remove all interfaces */
++	/* remove all interfaces that were created in the driver */
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (!ieee80211_sdata_running(sdata))
++		if (!ieee80211_sdata_running(sdata) ||
++		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++		    sdata->vif.type == NL80211_IFTYPE_MONITOR)
+ 			continue;
++
+ 		drv_remove_interface(local, sdata);
+ 	}
+ 
+
+--9jxsPFA5p3P2qPhR--
