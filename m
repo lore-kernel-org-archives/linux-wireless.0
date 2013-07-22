@@ -1,94 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48235 "EHLO arrakis.dune.hu"
+Received: from ebb06.tieto.com ([131.207.168.38]:43240 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751962Ab3GHOIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:08:46 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 10/20] rt2x00: rt2800lib: introduce rt2800_get_txmixer_gain_{24,5}g helpers
-Date: Mon,  8 Jul 2013 16:08:25 +0200
-Message-Id: <1373292515-21332-11-git-send-email-juhosg@openwrt.org> (sfid-20130708_162043_644063_79B61ED8)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+	id S1752024Ab3GVMNp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 08:13:45 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/4] ath10k: fixes
+Date: Mon, 22 Jul 2013 14:13:27 +0200
+Message-ID: <1374495211-20353-1-git-send-email-michal.kazior@tieto.com> (sfid-20130722_141349_237198_2AD9A560)
+In-Reply-To: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
+References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the TX mixer gain reading code into separate
-helper functions in preparation for RT3593 support.
+Hi,
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-Changes since v2: ---
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   38 +++++++++++++++++++------------
- 1 file changed, 24 insertions(+), 14 deletions(-)
+Here are some fixes for ath10k. The rts threshold
+patch addresses my mistake in commit
+9aeb6fe53d1f0d6e58658484ce9ad7b59f0ef16b which
+caused rts to be always enabled causing throughput
+issues in some cases.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index b11f0b0..1f32732 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6361,6 +6361,28 @@ int rt2800_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
- }
- EXPORT_SYMBOL_GPL(rt2800_read_eeprom_efuse);
- 
-+static u8 rt2800_get_txmixer_gain_24g(struct rt2x00_dev *rt2x00dev)
-+{
-+	u16 word;
-+
-+	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
-+	if ((word & 0x00ff) != 0x00ff)
-+		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
-+
-+	return 0;
-+}
-+
-+static u8 rt2800_get_txmixer_gain_5g(struct rt2x00_dev *rt2x00dev)
-+{
-+	u16 word;
-+
-+	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
-+	if ((word & 0x00ff) != 0x00ff)
-+		return rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
-+
-+	return 0;
-+}
-+
- static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-@@ -6455,13 +6477,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 		rt2x00_set_field16(&word, EEPROM_RSSI_BG_OFFSET1, 0);
- 	rt2800_eeprom_write(rt2x00dev, EEPROM_RSSI_BG, word);
- 
--	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &word);
--	if ((word & 0x00ff) != 0x00ff) {
--		drv_data->txmixer_gain_24g =
--			rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_BG_VAL);
--	} else {
--		drv_data->txmixer_gain_24g = 0;
--	}
-+	drv_data->txmixer_gain_24g = rt2800_get_txmixer_gain_24g(rt2x00dev);
- 
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_BG2, &word);
- 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_BG2_OFFSET2)) > 10)
-@@ -6472,13 +6488,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 				   default_lna_gain);
- 	rt2800_eeprom_write(rt2x00dev, EEPROM_RSSI_BG2, word);
- 
--	rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A, &word);
--	if ((word & 0x00ff) != 0x00ff) {
--		drv_data->txmixer_gain_5g =
--			rt2x00_get_field16(word, EEPROM_TXMIXER_GAIN_A_VAL);
--	} else {
--		drv_data->txmixer_gain_5g = 0;
--	}
-+	drv_data->txmixer_gain_5g = rt2800_get_txmixer_gain_5g(rt2x00dev);
- 
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_A, &word);
- 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_A_OFFSET0)) > 10)
+v2: first patch is split now into two as requested
+    rebased on top of latest github master branch
+
+
+Michal Kazior (4):
+  ath10k: prevent HTC from being used after stopping
+  ath10k: don't reset HTC endpoints unnecessarily
+  ath10k: fix memleak in mac setup
+  ath10k: fix rts/fragmentation threshold setup
+
+ drivers/net/wireless/ath/ath10k/htc.c |   28 ++++++------
+ drivers/net/wireless/ath/ath10k/htc.h |    4 +-
+ drivers/net/wireless/ath/ath10k/mac.c |   80 ++++++++++++++++++---------------
+ 3 files changed, 58 insertions(+), 54 deletions(-)
+
 -- 
-1.7.10
+1.7.9.5
 
