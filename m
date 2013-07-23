@@ -1,65 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lmv.inov.pt ([146.193.64.2]:49540 "EHLO lmv.inov.pt"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754728Ab3GJRsz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 13:48:55 -0400
-Message-ID: <51DD9E6C.5060008@inov.pt> (sfid-20130710_194857_960554_D4C34571)
-Date: Wed, 10 Jul 2013 18:48:28 +0100
-From: =?UTF-8?B?Sm9zw6kgTWlndWVsIEdvbsOnYWx2ZXM=?=
-	<jose.goncalves@inov.pt>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:43356 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752473Ab3GWCSq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 22:18:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 00/21] mwifiex updates for 3.12
+Date: Mon, 22 Jul 2013 19:17:37 -0700
+Message-ID: <1374545878-15683-1-git-send-email-bzhao@marvell.com> (sfid-20130723_041900_525564_11AE0EF7)
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
-Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
-References: <51DB0ACC.7050800@inov.pt>   <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>   <51DB4195.8090103@inov.pt>   <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>   <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>   <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>   <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>   <51DC0E7C.9080306@inov.pt>   <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>   <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>  <51DD54D4.6090502@inov.pt> <51DD8C20.7010900@inov.pt> <1373476663.8385.28.camel@cumari.coelho.fi>
-In-Reply-To: <1373476663.8385.28.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10-07-2013 18:17, Luciano Coelho wrote:
-> On Wed, 2013-07-10 at 17:30 +0100, José Miguel Gonçalves wrote:
->> On 10-07-2013 13:34, José Miguel Gonçalves wrote:
->>> I will try a new AP to see how it behaves...
->>>
->> I've tested with my Android smartphone acting as an AP, without authentication,
->> and I'm also unable to associate!
->>
->> I get from iw the following error message:
->>
->> wlan0 (phy #0): failed to connect to b4:07:f9:49:cc:65, status: 1: Unspecified failure
->>
->> Complete log is here:
->>
->> http://pastebin.com/DzPmMw8i
->>
->> So, something is definitely wrong with my setup... but what?
->> Hope that log has some useful info for you...
-> This definitely looks like RF problems.  Especially this:
->
-> [  177.575000] wlan0: send auth to b4:07:f9:49:cc:65 (try 1/3)
-> [  177.595000] wlan0: send auth to b4:07:f9:49:cc:65 (try 2/3)
-> [  177.605000] wlcore: EVENT on mbox 1
-> [  177.605000] wlcore: MBOX vector: 0x100000
-> [  177.610000] wlcore: MAX_TX_FAILURE_EVENT_ID
-> [  177.615000] wlan0: send auth to b4:07:f9:49:cc:65 (try 3/3)
-> [  177.640000] wlan0: authentication with b4:07:f9:49:cc:65 timed out
->
-> You are send auth requests out, but not getting anything back.
-> Apparently you're not even getting ACKs (as pointed out by the
-> MAX_TX_FAILURE_EVENT_ID).
+This series includes error case handling, bridged packet handling
+in AP mode, p2p updates, random cleanups, etc.
 
-Hum. I never considered RF problems because I'm testing this module with a 
-Jorjin's development kit, so I was considering that Jorjin knows how to make PCBs 
-for RF. Also seeing that when I remove the antenna the AP signal strength changes 
-from -51 dBm to -73 dBm was a signal to me that the RF was OK.
+Amitkumar Karwar (11):
+  mwifiex: add PCIe shutdown handler to avoid system hang on reboot
+  mwifiex: move del_timer_sync(scan_delay_timer) call to fix memleak
+  mwifiex: remove unnecessary del_timer(cmd_timer)
+  mwifiex: move if_ops.cleanup_if() call
+  mwifiex: add unregister_dev handler for usb interface
+  mwifiex: reduce firmware poll retries
+  mwifiex: replace mdelay with msleep
+  mwifiex: correction in mwifiex_check_fw_status() return status
+  mwifiex: handle driver initialization error paths
+  mwifiex: code rearrangement in sdio.c
+  mwifiex: remove duplicate structure host_cmd_tlv
 
->
-> Do you have a sniffer? You could try to use your TP-Link dongle with
-> wireshark to see if it works fine as a sniffer.
+Avinash Patil (5):
+  mwifiex: rename pkt_count to ba_pkt_count in mwifiex_ra_list_tbl
+    struct
+  mwifiex: maintain outstanding packet count for RA list instead of
+    packet size
+  mwifiex: delete AP TX queues when bridged packets reach threshold
+  mwifiex: correct max IE length check for WPS IE
+  mwifiex: modify mwifiex_ap_sta_limits to advertise support for P2P
 
-I have a text console only system. I could put tcpdump on my system, but I think I 
-can not monitor wireless traffic with it, or can I?
+Huawei Yang (2):
+  mwifiex: remove stop_net_dev_queue operation in AP forwarding
+  mwifiex: add tx info to skb when forming mgmt frame
 
-José Gonçalves
+Stone Piao (3):
+  mwifiex: discard deauth and disassoc event during WPS session
+  mwifiex: skip registering mgmt frame that has already registered
+  mwifiex: support to send deauth for P2P client
+
+ drivers/net/wireless/mwifiex/11n_aggr.c  |   4 +-
+ drivers/net/wireless/mwifiex/cfg80211.c  |  25 +++-
+ drivers/net/wireless/mwifiex/decl.h      |   3 +-
+ drivers/net/wireless/mwifiex/fw.h        |  44 +++----
+ drivers/net/wireless/mwifiex/ie.c        |   2 +-
+ drivers/net/wireless/mwifiex/init.c      |  14 +-
+ drivers/net/wireless/mwifiex/join.c      |   1 +
+ drivers/net/wireless/mwifiex/main.c      |  87 +++++++++----
+ drivers/net/wireless/mwifiex/main.h      |   6 +-
+ drivers/net/wireless/mwifiex/pcie.c      |  13 +-
+ drivers/net/wireless/mwifiex/sdio.c      | 213 +++++++++++++++----------------
+ drivers/net/wireless/mwifiex/sta_cmd.c   |   5 +-
+ drivers/net/wireless/mwifiex/sta_event.c |  10 ++
+ drivers/net/wireless/mwifiex/sta_ioctl.c |  11 +-
+ drivers/net/wireless/mwifiex/uap_cmd.c   | 130 ++++++++++---------
+ drivers/net/wireless/mwifiex/uap_txrx.c  |  70 +++++++++-
+ drivers/net/wireless/mwifiex/usb.c       |   8 ++
+ drivers/net/wireless/mwifiex/wmm.c       |  16 +--
+ 18 files changed, 390 insertions(+), 272 deletions(-)
+
+-- 
+1.8.2.3
 
