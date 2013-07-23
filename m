@@ -1,48 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:16843 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754273Ab3GOICx (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:42185 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752473Ab3GWCSa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 04:02:53 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 22 Jul 2013 22:18:30 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: <linux-wireless@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 00/16] ath10k: pending patches
-References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
-Date: Mon, 15 Jul 2013 11:02:45 +0300
-In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com> (Kalle
-	Valo's message of "Fri, 5 Jul 2013 16:15:01 +0300")
-Message-ID: <87a9lop7x6.fsf@kamboji.qca.qualcomm.com> (sfid-20130715_100310_059633_D69D7DEC)
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 02/21] mwifiex: rename pkt_count to ba_pkt_count in mwifiex_ra_list_tbl struct
+Date: Mon, 22 Jul 2013 19:17:39 -0700
+Message-ID: <1374545878-15683-3-git-send-email-bzhao@marvell.com> (sfid-20130723_041833_551103_0C669429)
+In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Avinash Patil <patila@marvell.com>
 
-> here are pending patches which were commited to ath10k.git while
-> ath10k was under review. They were only sent to ath9k-devel, I'm
-> resending them now before I reapply them to my new ath.git tree.
->
-> Michal Kazior (16):
->   ath10k: fix teardown ordering
->   ath10k: fix possible deadlock
->   ath10k: setup rts/frag thresholds upon vdev creation
->   ath10k: do not setup rts/frag thresholds for suspended interfaces
->   ath10k: remove ath10k_bus
->   ath10k: fix typo in define name
->   ath10k: silent warning in IBSS mode
->   ath10k: lower print level for a message
->   ath10k: provide errno if bmi read/write fails
->   ath10k: change function to take struct ath10k as arg
->   ath10k: rename hif callback
->   ath10k: embed HTC struct inside ath10k
->   ath10k: embed HTT struct inside ath10k
->   ath10k: improve locking
->   ath10k: abort scan properly if wmi_scan_stop fails
->   ath10k: add missing debug prints
+pkt_count is used to determine if BA can be formed on this RA list
+by comparing it with randomly generated BA threshold. The pkt_count
+variable name here is ambiguous and does not reflect its usage
+correctly. Rename it to ba_pkt_count.
 
-All 16 applied.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.h | 2 +-
+ drivers/net/wireless/mwifiex/wmm.c  | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 253e0bd..884b42b 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -207,7 +207,7 @@ struct mwifiex_ra_list_tbl {
+ 	u32 total_pkts_size;
+ 	u32 is_11n_enabled;
+ 	u16 max_amsdu;
+-	u16 pkt_count;
++	u16 ba_pkt_count;
+ 	u8 ba_packet_thr;
+ };
+ 
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 944e884..9c1eeee 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -188,7 +188,7 @@ mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra)
+ 			ra_list, ra_list->is_11n_enabled);
+ 
+ 		if (ra_list->is_11n_enabled) {
+-			ra_list->pkt_count = 0;
++			ra_list->ba_pkt_count = 0;
+ 			ra_list->ba_packet_thr =
+ 					      mwifiex_get_random_ba_threshold();
+ 		}
+@@ -680,7 +680,7 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+ 	skb_queue_tail(&ra_list->skb_head, skb);
+ 
+ 	ra_list->total_pkts_size += skb->len;
+-	ra_list->pkt_count++;
++	ra_list->ba_pkt_count++;
+ 
+ 	if (atomic_read(&priv->wmm.highest_queued_prio) <
+ 						tos_to_tid_inv[tid_down])
+@@ -1063,7 +1063,7 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
+ 		skb_queue_tail(&ptr->skb_head, skb);
+ 
+ 		ptr->total_pkts_size += skb->len;
+-		ptr->pkt_count++;
++		ptr->ba_pkt_count++;
+ 		tx_info->flags |= MWIFIEX_BUF_FLAG_REQUEUED_PKT;
+ 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
+ 				       ra_list_flags);
+@@ -1224,7 +1224,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
+ 		   mwifiex_send_single_packet() */
+ 	} else {
+ 		if (mwifiex_is_ampdu_allowed(priv, tid) &&
+-		    ptr->pkt_count > ptr->ba_packet_thr) {
++		    ptr->ba_pkt_count > ptr->ba_packet_thr) {
+ 			if (mwifiex_space_avail_for_new_ba_stream(adapter)) {
+ 				mwifiex_create_ba_tbl(priv, ptr->ra, tid,
+ 						      BA_SETUP_INPROGRESS);
 -- 
-Kalle Valo
+1.8.2.3
+
