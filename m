@@ -1,159 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([178.77.74.210]:51553 "EHLO daemonizer.de"
+Received: from mout.gmx.net ([212.227.17.20]:59472 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964794Ab3GLMzq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 08:55:46 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: brcm80211-dev-list@broadcom.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Poor wireless reception on BCM4313
-Date: Fri, 12 Jul 2013 14:55:33 +0200
-Message-ID: <30534146.LWDmOHhHCG@eisbaer> (sfid-20130712_145549_836386_D1C79BEF)
-In-Reply-To: <1624172.s6pnfBcJL7@fuchs>
-References: <1624172.s6pnfBcJL7@fuchs>
+	id S1751162Ab3GWE7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jul 2013 00:59:49 -0400
+Received: from [192.168.2.102] ([93.218.114.45]) by mail.gmx.com (mrgmx103)
+ with ESMTPSA (Nemesis) id 0LdYSM-1UJ7XV1wNm-00ilqQ for
+ <linux-wireless@vger.kernel.org>; Tue, 23 Jul 2013 06:59:48 +0200
+Message-ID: <51EE0DC2.3030200@rempel-privat.de> (sfid-20130723_065953_167757_C80EF56B)
+Date: Tue, 23 Jul 2013 06:59:46 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1694392.91f12hcUQB"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linux-wireless@vger.kernel.org,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	USB list <linux-usb@vger.kernel.org>
+Subject: Re: FUSB200 xhci issue
+References: <51ED4E12.8030006@rempel-privat.de> <1559414.LIxku4Z5O8@blech> <51ED9A6D.4070900@rempel-privat.de> <3155156.7uKpoiQrxp@blech>
+In-Reply-To: <3155156.7uKpoiQrxp@blech>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am 22.07.2013 23:23, schrieb Christian Lamparter:
+> On Monday, July 22, 2013 10:47:41 PM Oleksij Rempel wrote:
+>> Am 22.07.2013 21:54, schrieb Christian Lamparter:
+>>> Hello!
+>>>
+>>> On Monday, July 22, 2013 05:21:54 PM Oleksij Rempel wrote:
+>>>> i'm one of ath9k_htc devs. Currently i'm working on usb_suspend issue of
+>>>> this adapters. Looks like ar9271 and ar7010 have FUSB200, and i
+>>>> accidentally discovered that 9170 have it too. Are there any issue with
+>>>> usb-suspend + xhci controllers by you? Did you some how specially
+>>>> handled it?
+>>>
+>>> No, I haven't heard any complains about xhci + suspend. In fact,
+>>> it's working fine with the NEC xhci I have. I also have a AR9271
+>>> and AR7010, so if you want I could try if they survive a suspend
+>>> +resume cycle when attached.
+>>>
+>>> But, I do have a bug-report from someone else who has/had? problems
+>>> with carl9170 and xhci. If you want, you can get the details from:
+>>> "carl9170 A-MPDU transmit problem":
+>>> <http://comments.gmane.org/gmane.linux.kernel.wireless.general/104597>
+>>>
+>>> The likely cause is related to Intel's xhci silicon (Ivy Bridge is
+>>> affected, but I don't know about Haswell):
+>>> <http://permalink.gmane.org/gmane.linux.kernel.wireless.general/104602>
+>>
+>> Same situation is here - i have problem on Ivy Bridge.
+> (Note: I don't have any Ivy Bridge system. Just Sandy Bridge
+> and AMD's new A6-1450 Temash and both xhci work. So I can't
+> do any proper comparisons like you.)
+>
+>> Steps to reproduce:
+>> - plug adapter. Module and firmware will be loaded
+>> - make sure usb autosupend is enabled. By default it is not! Use
+>> powertop or directly sysfs to enable autosuspend for this device
+>> - rmmod .... and wait some seconds until adapter is suspended and then
+>> modprobe ath9k_htc
 
---nextPart1694392.91f12hcUQB
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+>> first packet which is bigger as 64Byte will kill EP4 FIFO. Size register
+>> will report wrong size.. bigger as FIFO can handle. And only first ~40
+>> readet bytes will be actually OK.. all the rest of packet will be trashed.
+>
+> This is what happens with a WN721 (ar9271):
+>
+> [17619.597905] usbcore: deregistering interface driver ath9k_htc
+> [17619.679549] usb 2-2: ath9k_htc: USB layer deinitialized
+> [17619.679602] ath9k_htc: Driver unloaded
+> <suspend>
+>
+> <resume>
+> [17667.543024] usb 2-2: reset high-speed USB device number 3 using xhci_hcd <----
+> [17667.572168] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77600
+> [17667.572174] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77640
+> [17667.572177] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77680
+> [17667.572180] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa776c0
+> [17667.572183] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77700
+> [17667.572185] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77740
+> [17667.573826] usb 2-2: ath9k_htc: Firmware htc_9271.fw requested
+> [17667.573873] usbcore: registered new interface driver ath9k_htc
+> [17668.038200] usb 2-2: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
+> [17668.273249] ath9k_htc 2-2:1.0: ath9k_htc: HTC initialized with 33 credits
+>
+> The driver loads, but there's no "wlanX" interface, no phyX interface
+> and the driver can't be unloaded due to "Error: Module ath9k_htc is in use".
 
-On Friday 21 June 2013 20:26:25 Maximilian Engelhardt wrote:
-> Hello developers,
-> 
-> I'm having problems with the reception performance of my BCM4313 wireless
-> card. The card is basically working fine, but the reception is quite bad
-> compared to other wifi equipment. I first suspected a hardware problem, but
-> after I tried Windows 7 with the same hardware and having no problem there
-> I'm quite sure this is a software issue.
-> 
-> 
-> Here is a more detailed explanation of a test setup I performed to show the
-> problem:
-> 
-> I have an AP in about 2m distance and I connected to it by my BCM4313 card
-> and by a USB dongle (TP-Link TL-WN821N, using ath9k_htc). Both connections
-> work and I can ping the AP using both cards.
-> 
-> iw dev $DEV link shows a signal of about -68 dBm for the broadcom card and
-> about -51 dBm for the atheros dongle. I have no idea in how far one can
-> trust these values, but the difference between these two cards mostly seems
-> to be 20-30 dB, also in my further experiments (greater distance from the
-> AP).
-> 
-> Now with both dongles being connected I move my laptop away from the AP and
-> of course the signal is getting weaker. However at some point the broadcom
-> card looses the connection to the AP while the USB dongle still has good
-> connection (at this point the signal strength of the broadcom card is about
-> -90dBm and -60dBm for the USB dongle). In my test with the Windows driver
-> at that point the connection was still good and maximum distance till I
-> lost the connection was much larger. So I don't think is a hardware
-> problem.
-> 
-> In general I can say my BCM4313 card is only usable when I'm in vicinity of
-> the AP. If I move further away the connection becomes unusable slow or is
-> lost, while it is still working well using other cards/drivers.
-> 
-> 
-> I'm currently using a 3.10-rc5 kernel with Debian jessie (kernel is from
-> experimental, but the same behavior has been there with kernel 3.9, 3.8 (and
-> older)). The driver used for the broadcom card is brcmsmac.
-> 
-> 
-> I did a search non the Internet regarding this issue and found some other
-> people having the same problem but no real solution to this. There is a
-> workaround some Ubuntu related sites, which consists of blacklisting the
-> brcmsmac driver and installing the wl driver. With the wl driver this
-> problem seems to be fixed according to the web (I didn't try it myself).
-> 
-> As I have no idea where this problem could be and how I can debug it, so I'm
-> writing this mail now. If you need any addition information I'm happy to
-> provide it.
-> From the numbers shown above it seems like there is an attenuator of 20-30dB
-> active on the receiver of the broadcom card.
-> 
-[...]
+So, it is exactly this bug.
+After firmware was loaded ath9k trying to set some registers. Since 
+command buffer is trashed it will write some nonsense to registers and 
+some times in wrong to wrong addresses. I have some patches to do crc 
+check of commands, to easy detect corrupted ones.
 
+You reproduced it on NEC xhci? Is it possible to reproduce it in 
+carl9170? How about "carl9170 A-MPDU transmit problem"?
 
-Hello,
+I noticed one more workaround. By reducing skb size to 64byte for EP4, 
+this bug can be avoided. But, since it works on EHCI, and on XHCI before 
+usb-suspend, i would prefer to fix host controller driver.
 
-Is there any progress on this issue?
-Here are the results of some additional test I performed.
-
-
-I set up a AP (11g) and connected two client to it. The clients were my 
-bcm4313 wireless card and the TP-Link TL-WN821N USB dongle which was connected 
-to the laptop with the broadcom card. I connected both cards to the AP. The 
-distance between the cards and the AP was about 3m.
-Then I set up another wireless card (TP-WN722N) in monitor mode about 3m away 
-from the AP and about 3m away from the laptop with the two wireless cards. 
-This card was connected to a different PC and I captured the data of the 
-clients and the AP. I then had a look at the reported SSI. You can see my 
-measured results below:
-
-SSI for packets from the AP:              -27 to -23dBm
-SSI for packets from client1 (broadcom):  -20 to -14dBm
-SSI for packets from client2 (atheros):   -40 to -38dBm
-
-The received signal from the broadcom card were quite strong. The signal from 
-the AP was a bit weaker. Interestingly the signal from the second card was 
-noticeably weaker. I didn't investigate any further as I wanted to know how 
-the broadcom cards performs in transmitting. So for me transmitting power 
-seems to be fine with the broadcom card. My guess for the weaker signal from 
-the 2nd client is ether some active power saving or different propagation 
-conditions.
-
-Here are the reported signal strength from the clients (while being connected 
-to the AP):
-client1 (broadcom): -74 to -75dBm
-client2 (atheros):  -44 to -42dBm
-
-
-So for me this test shows that the card only seems to have problems on 
-receiving packets, transmitting seems to work fine.
-
-
-
-Additionally I performed a test with the wl driver. I booted an ubuntu live CD 
-and installed the wl driver there. Then I connected to my AP using this driver 
-and tested reception. Everything looked like it was supposed to work. After 
-connecting to the AP I got a reported signal strength of about -38dBm. I then 
-moved away from the AP and was still able to get good connection where before 
-I wasn't able to get any connection at all using the brcmsmac driver.
-
-
-
-Please let me know if I should perform any additional tests or if you need any 
-additional information.
-
-
-Greetings,
-Maxi
---nextPart1694392.91f12hcUQB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAABCgAGBQJR3/zKAAoJEIHqZH0kK9IVaUgP/jQfaUH7otUj0D48P+qfWvTv
-ocHWD15g5+zQzT0YWzx/ZOHxccgMpZMi6pOf0TfQhShcCL+FRCHWhT0oDsbwqzr6
-s4xs/56cL9WMPNvx6ZrlYJG3rs/9dRu7nUytTBCvz/YTsrgAXWgVfjv5JNnqMj89
-sV9F4yuNpJPWhXAPuoZ8Fhr2cJ1XnHP6+ct2DzB2O5XNtFqeJwFMcxwNOL1mJVlJ
-E4ftzv+dXrmob/HtVa0D5YKRUA5JI/84tDX2turYEgyn9v2MtRayDhhO/ClVY0Bj
-hJ7B5vUsTrQlCmzXgEKNvMHvM7j8+ZmR1Qgs/D6TE8vPQ/OajmdD0O9IwCnIIjPx
-ocu/eLcinyPcYCH6oq7TL56GkyjI7vFadr3BYLiag/5Hln+sgJJv9CINlYwUz91h
-G3gH/mCZyq2JXh5vLoD5vlY3173p+hxCzvOYMdLWtXTkn/unPEv6X0U+ivfqcRHU
-KOx70KJpeS1v76/Xv9tUojeQNEYx7hT0pfvYmysfsAiYueM/IWgHbARQXk1fDfZ2
-xnabYrtG0l94A9E6ZyDKVBy+nSf0D7VEeAi5JIOGS0CSI7fBfXykq7sbQEkSj3Va
-G4hpfDLo1b6soUZEVDU/SMokgOWU/wnq8lqA9xo6mDoF53zrSDQOM/RNraWAYcOy
-pYPgbDLZv+ima7cGOGOF
-=V0gY
------END PGP SIGNATURE-----
-
---nextPart1694392.91f12hcUQB--
-
+-- 
+Regards,
+Oleksij
