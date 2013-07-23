@@ -1,122 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:63256 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932278Ab3GKJKq (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:11289 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994Ab3GWHGu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:10:46 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 31/50] wireless: zd1211rw: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:54 +0800
-Message-Id: <1373533573-12272-32-git-send-email-ming.lei@canonical.com> (sfid-20130711_111100_953129_29F5C449)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Tue, 23 Jul 2013 03:06:50 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath: wil6210: Fix build error
+Date: Tue, 23 Jul 2013 10:06:46 +0300
+Message-ID: <6487488.19IqyPtizJ@lx-vladimir> (sfid-20130723_090653_483574_E91D7B92)
+In-Reply-To: <20130722161554.GR17130@pogo>
+References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net> <1958736.oRuXAUfNGd@lx-vladimir> <20130722161554.GR17130@pogo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+On Monday, July 22, 2013 09:17:01 AM Luis R. Rodriguez wrote:
+> On Sun, Jul 21, 2013 at 10:06:31AM +0300, Vladimir Kondratiev wrote:
+> > Hmm, I have no warning for this with neither 3.10 nor 3.11 kernel version; but
+> > patch is correct, and here is my
+> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> 
+> If you agree with a patch you don't say you Sign-off-by it as well,
+> you say Acked-by. The Signed-off-by tag has a very specific meaning
+> from development to a maintainer's hands, and its definition is on
+> the Developer Certificate or Origin.
+> 
+> So in this case Acked-by is better.
+> 
+>   Luis
 
-Cc: Daniel Drake <dsd@gentoo.org>
-Cc: Ulrich Kunitz <kune@deine-taler.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+<drop most of CC>
+
+I thought that I need to add Signed-off-by: as driver's maintainer, because
+(quote Documentation/SubmittingPatches):
 ---
- drivers/net/wireless/zd1211rw/zd_usb.c |   21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+The Signed-off-by: tag indicates that the signer was involved in the
+development of the patch, or that he/she was in the patch's delivery path.
+---
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 7ef0b4a..8169ee0 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -372,14 +372,15 @@ static inline void handle_regs_int_override(struct urb *urb)
- {
- 	struct zd_usb *usb = urb->context;
- 	struct zd_usb_interrupt *intr = &usb->intr;
-+	unsigned long flags;
- 
--	spin_lock(&intr->lock);
-+	spin_lock_irqsave(&intr->lock, flags);
- 	if (atomic_read(&intr->read_regs_enabled)) {
- 		atomic_set(&intr->read_regs_enabled, 0);
- 		intr->read_regs_int_overridden = 1;
- 		complete(&intr->read_regs.completion);
- 	}
--	spin_unlock(&intr->lock);
-+	spin_unlock_irqrestore(&intr->lock, flags);
- }
- 
- static inline void handle_regs_int(struct urb *urb)
-@@ -388,9 +389,10 @@ static inline void handle_regs_int(struct urb *urb)
- 	struct zd_usb_interrupt *intr = &usb->intr;
- 	int len;
- 	u16 int_num;
-+	unsigned long flags;
- 
- 	ZD_ASSERT(in_interrupt());
--	spin_lock(&intr->lock);
-+	spin_lock_irqsave(&intr->lock, flags);
- 
- 	int_num = le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
- 	if (int_num == CR_INTERRUPT) {
-@@ -426,7 +428,7 @@ static inline void handle_regs_int(struct urb *urb)
- 	}
- 
- out:
--	spin_unlock(&intr->lock);
-+	spin_unlock_irqrestore(&intr->lock, flags);
- 
- 	/* CR_INTERRUPT might override read_reg too. */
- 	if (int_num == CR_INTERRUPT && atomic_read(&intr->read_regs_enabled))
-@@ -666,6 +668,7 @@ static void rx_urb_complete(struct urb *urb)
- 	struct zd_usb_rx *rx;
- 	const u8 *buffer;
- 	unsigned int length;
-+	unsigned long flags;
- 
- 	switch (urb->status) {
- 	case 0:
-@@ -694,14 +697,14 @@ static void rx_urb_complete(struct urb *urb)
- 		/* If there is an old first fragment, we don't care. */
- 		dev_dbg_f(urb_dev(urb), "*** first fragment ***\n");
- 		ZD_ASSERT(length <= ARRAY_SIZE(rx->fragment));
--		spin_lock(&rx->lock);
-+		spin_lock_irqsave(&rx->lock, flags);
- 		memcpy(rx->fragment, buffer, length);
- 		rx->fragment_length = length;
--		spin_unlock(&rx->lock);
-+		spin_unlock_irqrestore(&rx->lock, flags);
- 		goto resubmit;
- 	}
- 
--	spin_lock(&rx->lock);
-+	spin_lock_irqsave(&rx->lock, flags);
- 	if (rx->fragment_length > 0) {
- 		/* We are on a second fragment, we believe */
- 		ZD_ASSERT(length + rx->fragment_length <=
-@@ -711,9 +714,9 @@ static void rx_urb_complete(struct urb *urb)
- 		handle_rx_packet(usb, rx->fragment,
- 			         rx->fragment_length + length);
- 		rx->fragment_length = 0;
--		spin_unlock(&rx->lock);
-+		spin_unlock_irqrestore(&rx->lock, flags);
- 	} else {
--		spin_unlock(&rx->lock);
-+		spin_unlock_irqrestore(&rx->lock, flags);
- 		handle_rx_packet(usb, buffer, length);
- 	}
- 
--- 
-1.7.9.5
+This is similar to other maintainers adding its Signed-off-by:.
+Or, is driver's maintainer an exception from the rule quoted above?
 
+Thanks, Vladimir
