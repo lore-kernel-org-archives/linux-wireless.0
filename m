@@ -1,49 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12469 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902Ab3GSLID (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:50639 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932175Ab3GWM40 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 07:08:03 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/3] ath10k: fixes
-References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 19 Jul 2013 14:07:55 +0300
-In-Reply-To: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 18 Jul 2013 08:33:10 +0200")
-Message-ID: <871u6u4xkk.fsf@kamboji.qca.qualcomm.com> (sfid-20130719_130808_136089_E745DE11)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 23 Jul 2013 08:56:26 -0400
+Received: by mail-wg0-f47.google.com with SMTP id j13so2160504wgh.14
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Jul 2013 05:56:25 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] wireless: rt2x00: rt2800usb: add RT3573 devices
+Date: Tue, 23 Jul 2013 14:55:15 +0200
+Message-Id: <1374584115-18361-1-git-send-email-xose.vazquez@gmail.com> (sfid-20130723_145630_163947_602F89EC)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+taken from Ralink linux and windows drivers:
 
-> Hi,
->
-> Here are some fixes for ath10k. The rts threshold
-> patch addresses my mistake in commit
-> 9aeb6fe53d1f0d6e58658484ce9ad7b59f0ef16b which
-> caused rts to be always enabled causing throughput
-> issues in some cases.
->
->
-> Michal Kazior (3):
->   ath10k: prevent HTC from being used after stopping
->   ath10k: fix memleak in mac setup
->   ath10k: fix rts/fragmentation threshold setup
+0x1b75, 0x7733 AirLive 450Mbps Wireless-N Dual Band USB Adapter
+0x0b05, 0x17bc ASUS USB-N66 450Mbps Dual Band USB Adapter
+0x0b05, 0x17ad ASUS USB-N66 Dual Band N Network Adapter
+0x050d, 0x1103 Belkin Wireless Adapter
+0x148f, 0xf301 Cameo Ralink3573 3x3 single band USB dongle
+0x7392, 0x7733 Edimax
+0x0e66, 0x0020 Hawking HD45U Dual Band USB Wireless-N Adapter
+0x0e66, 0x0021 Hawking HD45U Dual Band Wls-450N Adapter
+0x04bb, 0x094e I-O DATA WN-AG450U Wireless LAN Adapter
+0x0789, 0x016b Logitec LAN-W450AN/U2
+0x0846, 0x9012 NETGEAR WNDA4100 N900 Wireless Dual Band USB Adapter
+0x0846, 0x9019 NETGEAR WNDA4200D Wireless Dual Band USB Adapter
+0x2019, 0xed19 Planex GW-USDual450
+0x148f, 0x3573 Ralink 802.11n USB Wireless LAN Card
+0x0df6, 0x0067 Sitecom Wireless Dualband Network Adapter N750 X6
+0x0df6, 0x006a Sitecom Wireless Dualband Network Adapter N900 X7
+0x0586, 0x3421 ZyXEL Dual-Band Wireless N450 USB Adapter
 
-Doesn't apply:
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-Applying: ath10k: prevent HTC from being used after stopping
-Applying: ath10k: fix memleak in mac setup
-Applying: ath10k: fix rts/fragmentation threshold setup
-fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/mac.c).
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0003 ath10k: fix rts/fragmentation threshold setup
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index ab609ae..fc9efdf 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1198,8 +1198,38 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x5a57, 0x0284) },
+ #endif
+ #ifdef CONFIG_RT2800USB_RT3573
++	/* AirLive */
++	{ USB_DEVICE(0x1b75, 0x7733) },
++	/* ASUS */
++	{ USB_DEVICE(0x0b05, 0x17bc) },
++	{ USB_DEVICE(0x0b05, 0x17ad) },
++	/* Belkin */
++	{ USB_DEVICE(0x050d, 0x1103) },
++	/* Cameo */
++	{ USB_DEVICE(0x148f, 0xf301) },
++	/* Edimax */
++	{ USB_DEVICE(0x7392, 0x7733) },
++	/* Hawking */
++	{ USB_DEVICE(0x0e66, 0x0020) },
++	{ USB_DEVICE(0x0e66, 0x0021) },
++	/* I-O DATA */
++	{ USB_DEVICE(0x04bb, 0x094e) },
+ 	/* Linksys */
+ 	{ USB_DEVICE(0x13b1, 0x003b) },
++	/* Logitec */
++	{ USB_DEVICE(0x0789, 0x016b) },
++	/* NETGEAR */
++	{ USB_DEVICE(0x0846, 0x9012) },
++	{ USB_DEVICE(0x0846, 0x9019) },
++	/* Planex */
++	{ USB_DEVICE(0x2019, 0xed19) },
++	/* Ralink */
++	{ USB_DEVICE(0x148f, 0x3573) },
++	/* Sitecom */
++	{ USB_DEVICE(0x0df6, 0x0067) },
++	{ USB_DEVICE(0x0df6, 0x006a) },
++	/* ZyXEL */
++	{ USB_DEVICE(0x0586, 0x3421) },
+ #endif
+ #ifdef CONFIG_RT2800USB_RT53XX
+ 	/* Arcadyan */
 -- 
-Kalle Valo
+1.8.3.1
+
