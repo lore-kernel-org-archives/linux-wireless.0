@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4193 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932106Ab3GVKqa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 06:46:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for-3.11 1/2] brcmfmac: decrement pending 8021x count
- upon tx failure
-Date: Mon, 22 Jul 2013 12:46:23 +0200
-Message-ID: <1374489984-18250-2-git-send-email-arend@broadcom.com> (sfid-20130722_124635_315134_0F510666)
-In-Reply-To: <1374489984-18250-1-git-send-email-arend@broadcom.com>
-References: <1374489984-18250-1-git-send-email-arend@broadcom.com>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:56140 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754566Ab3GWPF2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jul 2013 11:05:28 -0400
+Message-ID: <51EE9BB6.8000501@lwfinger.net> (sfid-20130723_170545_924035_F6963EDB)
+Date: Tue, 23 Jul 2013 10:05:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?IlBhdWwgUm9sbGFuZCAo44Od44O844Or44O744Ot44Op44OzKSI=?=
+	<rol@witbe.net>
+CC: Richard Genoud <richard.genoud@gmail.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: rtl8192cu: slow path warning
+References: <20130611123814.GA9854@lnx-rg> <20130626142241.GA13107@lnx-rg> <51CB0E9C.50408@lwfinger.net> <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com> <20130723142907.53103aab@tux.DEF.witbe.net>
+In-Reply-To: <20130723142907.53103aab@tux.DEF.witbe.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the transmit fails because there are no hanger slots or
-any other reason and the packet was an EAPOL packet the
-pending coutner should be decreased although it was not
-transmitted so the driver does not end up in a dead-lock.
+On 07/23/2013 07:29 AM, Paul Rolland (ポール・ロラン) wrote:
+> Hello,
+>
+> On Thu, 27 Jun 2013 09:33:20 +0200
+> Richard Genoud <richard.genoud@gmail.com> wrote:
+>
+>> Yes, of course, you can add my
+>> Reported-by: Richard Genoud <richard.genoud@gmail.com>
+>>
+>> But the patch doesn't compile on my platform ( since I'm on ARM, I
+>> haven't got a PCI bus, so rtlwifi/pci.c is not compiled ) :
+>>
+>> ERROR: "rtl_lps_change_work_callback"
+>> [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+>
+> Is that the reason why this patch is not yet in 3.10.x or 3.11-rcY ?
+> I'm running a 3.10.1 with USB dongle including 8192CU, and I can see this
+> warning when the machine starts.
+> I've check 3.10.1, 3.10.2 and 3.11-rc3 source code, but this fix is not
+> there. Is there a different fix that went in in 3.10.2 or 3.11-rc?
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+The reason that patch is not in mainline is that it takes time. If you want to 
+have it, you can get the official patch from 
+http://marc.info/?l=linux-wireless&m=137242880222442&w=2, or you need to 
+implement kernels from the wireless-testing git tree, where it was added on June 
+28 as commit bcfb879. My original patch included the following note for John 
+Linville:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index f0d9f7f..29b1f24 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1744,13 +1744,14 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 	ulong flags;
- 	int fifo = BRCMF_FWS_FIFO_BCMC;
- 	bool multicast = is_multicast_ether_addr(eh->h_dest);
-+	bool pae = eh->h_proto == htons(ETH_P_PAE);
- 
- 	/* determine the priority */
- 	if (!skb->priority)
- 		skb->priority = cfg80211_classify8021d(skb);
- 
- 	drvr->tx_multicast += !!multicast;
--	if (ntohs(eh->h_proto) == ETH_P_PAE)
-+	if (pae)
- 		atomic_inc(&ifp->pend_8021x_cnt);
- 
- 	if (!brcmf_fws_fc_active(fws)) {
-@@ -1781,6 +1782,11 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 		brcmf_fws_schedule_deq(fws);
- 	} else {
- 		brcmf_err("drop skb: no hanger slot\n");
-+		if (pae) {
-+			atomic_dec(&ifp->pend_8021x_cnt);
-+			if (waitqueue_active(&ifp->pend_8021x_wait))
-+				wake_up(&ifp->pend_8021x_wait);
-+		}
- 		brcmu_pkt_buf_free_skb(skb);
- 	}
- 	brcmf_fws_unlock(drvr, flags);
--- 
-1.7.10.4
+"Ideally, this patch should be pushed to the 3.10 stream; however, at this late 
+time that is not possible. Please push it for 3.11 and the Cc to stable will get 
+it into 3.10.X."
 
+As you see, it was marked with a Cc for Stable, and it will be propagated to 
+3.10 when it gets incorporated by Linus. I think I have done all that I can do 
+for now.
+
+If you want to lobby Linus to get stuff accepted faster, that is your 
+prerogative; however, I could not recommend that action, and I certainly will 
+never do anything like that.
+
+Larry
 
