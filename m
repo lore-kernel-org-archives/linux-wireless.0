@@ -1,59 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:42051 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932278Ab3GKJKG (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:40823 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754113Ab3GWCTR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:10:06 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH 26/50] USBNET: cdc-phonet: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:49 +0800
-Message-Id: <1373533573-12272-27-git-send-email-ming.lei@canonical.com> (sfid-20130711_111025_808722_A1C99336)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Mon, 22 Jul 2013 22:19:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 17/21] mwifiex: correction in mwifiex_check_fw_status() return status
+Date: Mon, 22 Jul 2013 19:17:54 -0700
+Message-ID: <1374545878-15683-18-git-send-email-bzhao@marvell.com> (sfid-20130723_041923_056928_942BCB66)
+In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Cc: netdev@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+For PCIe cards, when wrong firmware is downloaded, firmware is
+failed to be ready in 10 seconds. We should return an error at
+this point. But currently we are sending first command to firmware.
+As expected firmware doesn't respond to this command and command
+timeout occurs.
+
+This patch fixes the problem by removing unnecessary 'ret'
+variable modifications in "if (ret) {" block.
+The block is just supposed to update "adapter->winner" flag.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/usb/cdc-phonet.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/pcie.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/usb/cdc-phonet.c b/drivers/net/usb/cdc-phonet.c
-index 7d78669..413ec32 100644
---- a/drivers/net/usb/cdc-phonet.c
-+++ b/drivers/net/usb/cdc-phonet.c
-@@ -99,6 +99,7 @@ static void tx_complete(struct urb *req)
- 	struct net_device *dev = skb->dev;
- 	struct usbpn_dev *pnd = netdev_priv(dev);
- 	int status = req->status;
-+	unsigned long flags;
- 
- 	switch (status) {
- 	case 0:
-@@ -115,10 +116,10 @@ static void tx_complete(struct urb *req)
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 098153f..52da8ee 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1954,12 +1954,10 @@ mwifiex_check_fw_status(struct mwifiex_adapter *adapter, u32 poll_num)
+ 		else if (!winner_status) {
+ 			dev_err(adapter->dev, "PCI-E is the winner\n");
+ 			adapter->winner = 1;
+-			ret = -1;
+ 		} else {
+ 			dev_err(adapter->dev,
+ 				"PCI-E is not the winner <%#x,%d>, exit dnld\n",
+ 				ret, adapter->winner);
+-			ret = 0;
+ 		}
  	}
- 	dev->stats.tx_packets++;
  
--	spin_lock(&pnd->tx_lock);
-+	spin_lock_irqsave(&pnd->tx_lock, flags);
- 	pnd->tx_queue--;
- 	netif_wake_queue(dev);
--	spin_unlock(&pnd->tx_lock);
-+	spin_unlock_irqrestore(&pnd->tx_lock, flags);
- 
- 	dev_kfree_skb_any(skb);
- 	usb_free_urb(req);
 -- 
-1.7.9.5
+1.8.2.3
 
