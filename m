@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:47650 "EHLO arrakis.dune.hu"
+Received: from smtp.witbe.net ([81.88.96.48]:44784 "EHLO smtp.witbe.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753013Ab3GAHsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:48:43 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 20/20] rt2x00: rt2800usb: add USB device ID for Linksys AE3000
-Date: Mon,  1 Jul 2013 09:47:59 +0200
-Message-Id: <1372664879-18474-21-git-send-email-juhosg@openwrt.org> (sfid-20130701_094848_428691_5FF4AD9F)
-In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+	id S932138Ab3GWPvj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jul 2013 11:51:39 -0400
+Date: Tue, 23 Jul 2013 17:49:04 +0200
+From: Paul Rolland (=?UTF-8?B?44Od44O844Or44O744Ot44Op44Oz?=)
+	<rol@witbe.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Richard Genoud <richard.genoud@gmail.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rol@witbe.net
+Subject: Re: rtl8192cu: slow path warning
+Message-ID: <20130723174904.00d6fab4@tux.DEF.witbe.net> (sfid-20130723_175154_221713_49C3039E)
+In-Reply-To: <51EE9BB6.8000501@lwfinger.net>
+References: <20130611123814.GA9854@lnx-rg>
+	<20130626142241.GA13107@lnx-rg>
+	<51CB0E9C.50408@lwfinger.net>
+	<CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
+	<20130723142907.53103aab@tux.DEF.witbe.net>
+	<51EE9BB6.8000501@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/AagHTG=sZ422WoRYeybo2nQ"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Linksys AE3000 device is based on the RT3573
-chipset. The support for this chipset is available
-already, and the AE3000 device works with the driver.
+--Sig_/AagHTG=sZ422WoRYeybo2nQ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Only managed mode works correctly at the moment,
-for AP mode additional changes are needed in the
-driver.
+Hello Larry,
 
-Also add a new RT2800USB_RT3573 Kconfig option and
-only enable support for RT3573 based devices if
-that is enabled.
+On Tue, 23 Jul 2013 10:05:26 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
-Changes since v1:
-  - Make the support selectable by a Kconfig option.
----
- drivers/net/wireless/rt2x00/Kconfig     |    6 ++++++
- drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++++
- 2 files changed, 10 insertions(+)
+> The reason that patch is not in mainline is that it takes time. If you
+> want to have it, you can get the official patch from=20
+> http://marc.info/?l=3Dlinux-wireless&m=3D137242880222442&w=3D2, or you ne=
+ed to=20
+> implement kernels from the wireless-testing git tree, where it was added
+> on June 28 as commit bcfb879. My original patch included the following
+> note for John Linville:
+>=20
+> "Ideally, this patch should be pushed to the 3.10 stream; however, at
+> this late time that is not possible. Please push it for 3.11 and the Cc
+> to stable will get it into 3.10.X."
+>=20
+> As you see, it was marked with a Cc for Stable, and it will be propagated
+> to 3.10 when it gets incorporated by Linus. I think I have done all that
+> I can do for now.
+>=20
+> If you want to lobby Linus to get stuff accepted faster, that is your=20
+> prerogative; however, I could not recommend that action, and I certainly
+> will never do anything like that.
 
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index 9b915d3..c60d6e8 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -166,6 +166,12 @@ config RT2800USB_RT35XX
- 	  rt2800usb driver.
- 	  Supported chips: RT3572
- 
-+config RT2800USB_RT3573
-+	bool "rt2800usb - Include support for rt3573 devices (EXPERIMENTAL)"
-+	---help---
-+	  This enables support for RT3573 chipset based wireless USB devices
-+	  in the rt2800usb driver.
-+
- config RT2800USB_RT53XX
-        bool "rt2800usb - Include support for rt53xx devices (EXPERIMENTAL)"
-        ---help---
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index c24c1fd..ab609ae 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1197,6 +1197,10 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Zinwell */
- 	{ USB_DEVICE(0x5a57, 0x0284) },
- #endif
-+#ifdef CONFIG_RT2800USB_RT3573
-+	/* Linksys */
-+	{ USB_DEVICE(0x13b1, 0x003b) },
-+#endif
- #ifdef CONFIG_RT2800USB_RT53XX
- 	/* Arcadyan */
- 	{ USB_DEVICE(0x043e, 0x7a12) },
--- 
-1.7.10
+Neither will I... I was just wondering and asking, nothing else, as I'm
+also facing this warning.=20
 
+I'm glad to see the link you sent is presenting a patch that is the same as
+the one I prepared. I'm going to use that while waiting for the patch to
+hit mainline !
+
+Thanks for replying,=20
+Best,
+Paul
+
+
+--Sig_/AagHTG=sZ422WoRYeybo2nQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEUEARECAAYFAlHupfEACgkQZP464AVDf+CdpACWIJ2aZ7LfcAW9oFqtoH9Tv3y0
+GACgmrpBsLaQR+9fyV+gnu6ujzjtHDY=
+=4B0j
+-----END PGP SIGNATURE-----
+
+--Sig_/AagHTG=sZ422WoRYeybo2nQ--
