@@ -1,235 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:51002 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932080Ab3GCOEQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 10:04:16 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>,
-	<nm@ti.com>
-Subject: [PATCH v3 1/8] wl1251: split wl251 platform data to a separate structure
-Date: Wed, 3 Jul 2013 17:03:22 +0300
-Message-ID: <1372860209-3504-2-git-send-email-coelho@ti.com> (sfid-20130703_160801_016345_C6D44258)
-In-Reply-To: <1372860209-3504-1-git-send-email-coelho@ti.com>
-References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:35944 "EHLO
+	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753745Ab3GWCSr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 22:18:47 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 03/21] mwifiex: maintain outstanding packet count for RA list instead of packet size
+Date: Mon, 22 Jul 2013 19:17:40 -0700
+Message-ID: <1374545878-15683-4-git-send-email-bzhao@marvell.com> (sfid-20130723_041903_256067_EA82AFE3)
+In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the wl1251 part of the wl12xx platform data structure into a new
-structure specifically for wl1251.  Change the platform data built-in
-block and board files accordingly.
+From: Avinash Patil <patila@marvell.com>
 
-Cc: Tony Lindgren <tony@atomide.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Acked-by: Tony Lindgren <tony@atomide.com>
+Maintain total outstanding packet count for RA list instead of total
+outstanding size as packet count metric seems more reasonable for
+checking threshold etc.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- arch/arm/mach-omap2/board-omap3pandora.c       |    4 +--
- arch/arm/mach-omap2/board-rx51-peripherals.c   |    2 +-
- drivers/net/wireless/ti/wilink_platform_data.c |   37 ++++++++++++++++++++----
- drivers/net/wireless/ti/wl1251/sdio.c          |   12 ++++----
- drivers/net/wireless/ti/wl1251/spi.c           |    2 +-
- include/linux/wl12xx.h                         |   22 +++++++++++++-
- 6 files changed, 62 insertions(+), 17 deletions(-)
+ drivers/net/wireless/mwifiex/11n_aggr.c | 4 ++--
+ drivers/net/wireless/mwifiex/main.h     | 2 +-
+ drivers/net/wireless/mwifiex/wmm.c      | 8 ++++----
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/arch/arm/mach-omap2/board-omap3pandora.c b/arch/arm/mach-omap2/board-omap3pandora.c
-index 28133d5..bf06d95 100644
---- a/arch/arm/mach-omap2/board-omap3pandora.c
-+++ b/arch/arm/mach-omap2/board-omap3pandora.c
-@@ -540,7 +540,7 @@ static struct spi_board_info omap3pandora_spi_board_info[] __initdata = {
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index a78e065..8f9f542 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -189,7 +189,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
  
- static void __init pandora_wl1251_init(void)
- {
--	struct wl12xx_platform_data pandora_wl1251_pdata;
-+	struct wl1251_platform_data pandora_wl1251_pdata;
- 	int ret;
+ 		skb_src = skb_dequeue(&pra_list->skb_head);
  
- 	memset(&pandora_wl1251_pdata, 0, sizeof(pandora_wl1251_pdata));
-@@ -554,7 +554,7 @@ static void __init pandora_wl1251_init(void)
- 		goto fail_irq;
+-		pra_list->total_pkts_size -= skb_src->len;
++		pra_list->total_pkt_count--;
  
- 	pandora_wl1251_pdata.use_eeprom = true;
--	ret = wl12xx_set_platform_data(&pandora_wl1251_pdata);
-+	ret = wl1251_set_platform_data(&pandora_wl1251_pdata);
- 	if (ret < 0)
- 		goto fail_irq;
+ 		atomic_dec(&priv->wmm.tx_pkts_queued);
  
-diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
-index 18ca61e..733f3f2 100644
---- a/arch/arm/mach-omap2/board-rx51-peripherals.c
-+++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
-@@ -80,7 +80,7 @@ enum {
- 	RX51_SPI_MIPID,		/* LCD panel */
+@@ -268,7 +268,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 
+ 		skb_queue_tail(&pra_list->skb_head, skb_aggr);
+ 
+-		pra_list->total_pkts_size += skb_aggr->len;
++		pra_list->total_pkt_count++;
+ 
+ 		atomic_inc(&priv->wmm.tx_pkts_queued);
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 884b42b..a3036d1 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -204,11 +204,11 @@ struct mwifiex_ra_list_tbl {
+ 	struct list_head list;
+ 	struct sk_buff_head skb_head;
+ 	u8 ra[ETH_ALEN];
+-	u32 total_pkts_size;
+ 	u32 is_11n_enabled;
+ 	u16 max_amsdu;
+ 	u16 ba_pkt_count;
+ 	u8 ba_packet_thr;
++	u16 total_pkt_count;
  };
  
--static struct wl12xx_platform_data wl1251_pdata;
-+static struct wl1251_platform_data wl1251_pdata;
- static struct tsc2005_platform_data tsc2005_pdata;
+ struct mwifiex_tid_tbl {
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 9c1eeee..2e8f9cd 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -120,7 +120,7 @@ mwifiex_wmm_allocate_ralist_node(struct mwifiex_adapter *adapter, u8 *ra)
  
- #if defined(CONFIG_SENSORS_LIS3_I2C) || defined(CONFIG_SENSORS_LIS3_I2C_MODULE)
-diff --git a/drivers/net/wireless/ti/wilink_platform_data.c b/drivers/net/wireless/ti/wilink_platform_data.c
-index 998e958..a92bd3e 100644
---- a/drivers/net/wireless/ti/wilink_platform_data.c
-+++ b/drivers/net/wireless/ti/wilink_platform_data.c
-@@ -23,17 +23,17 @@
- #include <linux/err.h>
- #include <linux/wl12xx.h>
+ 	memcpy(ra_list->ra, ra, ETH_ALEN);
  
--static struct wl12xx_platform_data *platform_data;
-+static struct wl12xx_platform_data *wl12xx_platform_data;
+-	ra_list->total_pkts_size = 0;
++	ra_list->total_pkt_count = 0;
  
- int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
- {
--	if (platform_data)
-+	if (wl12xx_platform_data)
- 		return -EBUSY;
- 	if (!data)
- 		return -EINVAL;
+ 	dev_dbg(adapter->dev, "info: allocated ra_list %p\n", ra_list);
  
--	platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
--	if (!platform_data)
-+	wl12xx_platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
-+	if (!wl12xx_platform_data)
- 		return -ENOMEM;
+@@ -679,8 +679,8 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
  
- 	return 0;
-@@ -41,9 +41,34 @@ int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
+ 	skb_queue_tail(&ra_list->skb_head, skb);
  
- struct wl12xx_platform_data *wl12xx_get_platform_data(void)
- {
--	if (!platform_data)
-+	if (!wl12xx_platform_data)
- 		return ERR_PTR(-ENODEV);
+-	ra_list->total_pkts_size += skb->len;
+ 	ra_list->ba_pkt_count++;
++	ra_list->total_pkt_count++;
  
--	return platform_data;
-+	return wl12xx_platform_data;
- }
- EXPORT_SYMBOL(wl12xx_get_platform_data);
-+
-+static struct wl1251_platform_data *wl1251_platform_data;
-+
-+int __init wl1251_set_platform_data(const struct wl1251_platform_data *data)
-+{
-+	if (wl1251_platform_data)
-+		return -EBUSY;
-+	if (!data)
-+		return -EINVAL;
-+
-+	wl1251_platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
-+	if (!wl1251_platform_data)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
-+struct wl1251_platform_data *wl1251_get_platform_data(void)
-+{
-+	if (!wl1251_platform_data)
-+		return ERR_PTR(-ENODEV);
-+
-+	return wl1251_platform_data;
-+}
-+EXPORT_SYMBOL(wl1251_get_platform_data);
-diff --git a/drivers/net/wireless/ti/wl1251/sdio.c b/drivers/net/wireless/ti/wl1251/sdio.c
-index e2b3d9c..b75a37a 100644
---- a/drivers/net/wireless/ti/wl1251/sdio.c
-+++ b/drivers/net/wireless/ti/wl1251/sdio.c
-@@ -227,7 +227,7 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 	struct wl1251 *wl;
- 	struct ieee80211_hw *hw;
- 	struct wl1251_sdio *wl_sdio;
--	const struct wl12xx_platform_data *wl12xx_board_data;
-+	const struct wl1251_platform_data *wl1251_board_data;
+ 	if (atomic_read(&priv->wmm.highest_queued_prio) <
+ 						tos_to_tid_inv[tid_down])
+@@ -1037,7 +1037,7 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
+ 	tx_info = MWIFIEX_SKB_TXCB(skb);
+ 	dev_dbg(adapter->dev, "data: dequeuing the packet %p %p\n", ptr, skb);
  
- 	hw = wl1251_alloc_hw();
- 	if (IS_ERR(hw))
-@@ -254,11 +254,11 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 	wl->if_priv = wl_sdio;
- 	wl->if_ops = &wl1251_sdio_ops;
+-	ptr->total_pkts_size -= skb->len;
++	ptr->total_pkt_count--;
  
--	wl12xx_board_data = wl12xx_get_platform_data();
--	if (!IS_ERR(wl12xx_board_data)) {
--		wl->set_power = wl12xx_board_data->set_power;
--		wl->irq = wl12xx_board_data->irq;
--		wl->use_eeprom = wl12xx_board_data->use_eeprom;
-+	wl1251_board_data = wl1251_get_platform_data();
-+	if (!IS_ERR(wl1251_board_data)) {
-+		wl->set_power = wl1251_board_data->set_power;
-+		wl->irq = wl1251_board_data->irq;
-+		wl->use_eeprom = wl1251_board_data->use_eeprom;
- 	}
+ 	if (!skb_queue_empty(&ptr->skb_head))
+ 		skb_next = skb_peek(&ptr->skb_head);
+@@ -1062,7 +1062,7 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
  
- 	if (wl->irq) {
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index c7dc6fe..6bbbfe6 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -238,7 +238,7 @@ static const struct wl1251_if_operations wl1251_spi_ops = {
+ 		skb_queue_tail(&ptr->skb_head, skb);
  
- static int wl1251_spi_probe(struct spi_device *spi)
- {
--	struct wl12xx_platform_data *pdata;
-+	struct wl1251_platform_data *pdata;
- 	struct ieee80211_hw *hw;
- 	struct wl1251 *wl;
- 	int ret;
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index a54fe82..b516b4f 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -48,11 +48,15 @@ enum {
- 	WL12XX_TCXOCLOCK_33_6	= 7, /* 33.6 MHz */
- };
- 
--struct wl12xx_platform_data {
-+struct wl1251_platform_data {
- 	void (*set_power)(bool enable);
- 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
- 	int irq;
- 	bool use_eeprom;
-+};
-+
-+struct wl12xx_platform_data {
-+	int irq;
- 	int board_ref_clock;
- 	int board_tcxo_clock;
- 	unsigned long platform_quirks;
-@@ -68,6 +72,10 @@ int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
- 
- struct wl12xx_platform_data *wl12xx_get_platform_data(void);
- 
-+int wl1251_set_platform_data(const struct wl1251_platform_data *data);
-+
-+struct wl1251_platform_data *wl1251_get_platform_data(void);
-+
- #else
- 
- static inline
-@@ -82,6 +90,18 @@ struct wl12xx_platform_data *wl12xx_get_platform_data(void)
- 	return ERR_PTR(-ENODATA);
- }
- 
-+static inline
-+int wl1251_set_platform_data(const struct wl1251_platform_data *data)
-+{
-+	return -ENOSYS;
-+}
-+
-+static inline
-+struct wl1251_platform_data *wl1251_get_platform_data(void)
-+{
-+	return ERR_PTR(-ENODATA);
-+}
-+
- #endif
- 
- #endif
+-		ptr->total_pkts_size += skb->len;
++		ptr->total_pkt_count++;
+ 		ptr->ba_pkt_count++;
+ 		tx_info->flags |= MWIFIEX_BUF_FLAG_REQUEUED_PKT;
+ 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
 -- 
-1.7.10.4
+1.8.2.3
 
