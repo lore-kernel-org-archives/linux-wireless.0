@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:42541 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756716Ab3G3UJC (ORCPT
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:50622 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753895Ab3GWCSy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 16:09:02 -0400
-Received: by mail-we0-f181.google.com with SMTP id p58so5328861wes.26
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2013 13:09:01 -0700 (PDT)
-Message-ID: <1375214934.5852.10.camel@canaries64> (sfid-20130730_220906_582734_96883B3C)
-Subject: [PATCH 2/2] staging: vt6656: device.h unused variables
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 30 Jul 2013 21:08:54 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 22 Jul 2013 22:18:54 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 12/21] mwifiex: remove unnecessary del_timer(cmd_timer)
+Date: Mon, 22 Jul 2013 19:17:49 -0700
+Message-ID: <1374545878-15683-13-git-send-email-bzhao@marvell.com> (sfid-20130723_041925_643457_FC80E439)
+In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wACKDuration
-wRTSTransmitLen
-byRTSServiceField
-byRTSSignalField
+From: Amitkumar Karwar <akarwar@marvell.com>
 
+It is already there in mwifiex_unregister(). So unnecessary
+call in mwifiex_adapter_cleanup() is removed in this patch.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/staging/vt6656/device.h | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/net/wireless/mwifiex/init.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 5324c24..4986910 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -591,11 +591,6 @@ struct vnt_private {
- 	u8 abyBSSID[ETH_ALEN];
- 	u8 abyDesireBSSID[ETH_ALEN];
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 787cff8..8ff5d7b 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -392,8 +392,6 @@ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ 	dev_dbg(adapter->dev, "info: free cmd buffer\n");
+ 	mwifiex_free_cmd_buffer(adapter);
  
--	u16 wACKDuration;
--	u16 wRTSTransmitLen;
--	u8 byRTSServiceField;
--	u8 byRTSSignalField;
+-	del_timer(&adapter->cmd_timer);
 -
- 	u32 dwMaxReceiveLifetime;  /* dot11MaxReceiveLifetime */
+ 	dev_dbg(adapter->dev, "info: free scan table\n");
  
- 	int bCCK;
+ 	if (adapter->if_ops.cleanup_if)
 -- 
-1.8.1.2
-
+1.8.2.3
 
