@@ -1,65 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:50089 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090Ab3GKJJC (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:33551 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752473Ab3GWCSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:09:02 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Johan Hovold <jhovold@gmail.com>
-Subject: [PATCH 18/50] USB: serial: symbolserial: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:41 +0800
-Message-Id: <1373533573-12272-19-git-send-email-ming.lei@canonical.com> (sfid-20130711_111745_697564_AB12E26A)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Mon, 22 Jul 2013 22:18:35 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Huawei Yang <harvey.huawei.yang@gmail.com>,
+	Stone Piao <piaoyun@marvell.com>
+Subject: [PATCH 05/21] mwifiex: add tx info to skb when forming mgmt frame
+Date: Mon, 22 Jul 2013 19:17:42 -0700
+Message-ID: <1374545878-15683-6-git-send-email-bzhao@marvell.com> (sfid-20130723_041838_155761_314D04F0)
+In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+From: Huawei Yang <harvey.huawei.yang@gmail.com>
 
-Cc: Johan Hovold <jhovold@gmail.com>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+In function 'mwifiex_write_data_complete' it need tx info to find
+the mwifiex_private to updates statistics and wake up tx queues.
+Or we may trigger tx queues timeout when transmitting lots of mgmt
+frames.
+
+Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/usb/serial/symbolserial.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/usb/serial/symbolserial.c b/drivers/usb/serial/symbolserial.c
-index 9b16489..b4f5cbe 100644
---- a/drivers/usb/serial/symbolserial.c
-+++ b/drivers/usb/serial/symbolserial.c
-@@ -41,6 +41,7 @@ static void symbol_int_callback(struct urb *urb)
- 	int status = urb->status;
- 	int result;
- 	int data_length;
-+	unsigned long flags;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index ef5fa89..d824fee 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -189,6 +189,7 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	struct sk_buff *skb;
+ 	u16 pkt_len;
+ 	const struct ieee80211_mgmt *mgmt;
++	struct mwifiex_txinfo *tx_info;
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
  
- 	switch (status) {
- 	case 0:
-@@ -81,7 +82,7 @@ static void symbol_int_callback(struct urb *urb)
+ 	if (!buf || !len) {
+@@ -216,6 +217,10 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		return -ENOMEM;
  	}
  
- exit:
--	spin_lock(&priv->lock);
-+	spin_lock_irqsave(&priv->lock, flags);
++	tx_info = MWIFIEX_SKB_TXCB(skb);
++	tx_info->bss_num = priv->bss_num;
++	tx_info->bss_type = priv->bss_type;
++
+ 	mwifiex_form_mgmt_frame(skb, buf, len);
+ 	mwifiex_queue_tx_pkt(priv, skb);
  
- 	/* Continue trying to always read if we should */
- 	if (!priv->throttled) {
-@@ -92,7 +93,7 @@ exit:
- 							__func__, result);
- 	} else
- 		priv->actually_throttled = true;
--	spin_unlock(&priv->lock);
-+	spin_unlock_irqrestore(&priv->lock, flags);
- }
- 
- static int symbol_open(struct tty_struct *tty, struct usb_serial_port *port)
 -- 
-1.7.9.5
+1.8.2.3
 
