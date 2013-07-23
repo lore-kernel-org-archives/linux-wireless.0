@@ -1,28 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58171 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753938Ab3GZIg3 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38587 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756067Ab3GWIqk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:36:29 -0400
-Message-ID: <1374827785.8248.16.camel@jlt4.sipsolutions.net> (sfid-20130726_103632_964263_B4CBB05C)
-Subject: Re: pull-request: mac80211-next 2013-07-26
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 26 Jul 2013 10:36:25 +0200
-In-Reply-To: <1374827740.8248.15.camel@jlt4.sipsolutions.net> (sfid-20130726_103547_059837_EC3771F9)
-References: <1374827740.8248.15.camel@jlt4.sipsolutions.net>
-	 (sfid-20130726_103547_059837_EC3771F9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 23 Jul 2013 04:46:40 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/4] ath10k: don't reset HTC endpoints unnecessarily
+References: <1374129193-3533-1-git-send-email-michal.kazior@tieto.com>
+	<1374495211-20353-1-git-send-email-michal.kazior@tieto.com>
+	<1374495211-20353-3-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 23 Jul 2013 11:46:30 +0300
+In-Reply-To: <1374495211-20353-3-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 22 Jul 2013 14:13:29 +0200")
+Message-ID: <87r4epwtnd.fsf@kamboji.qca.qualcomm.com> (sfid-20130723_104656_577282_2881F9D2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Let me know if there's any problem.
+> Endpoints are re-initialized upon HTC start anyway
+> so there's no need to do that twice in case of
+> restarting HTC (i.e. in case of hardware
+> recovery).
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Well here's a problem - I sent the same message twice ;-) It's a perfect
-duplicate though, my mistake.
+This is much better, thanks.
 
-johannes
-
+-- 
+Kalle Valo
