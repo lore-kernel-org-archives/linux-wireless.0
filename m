@@ -1,87 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36369 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752754Ab3GaHIn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 03:08:43 -0400
-Received: by mail-pa0-f49.google.com with SMTP id bi5so515200pad.36
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 00:08:43 -0700 (PDT)
-From: Mark Schulte <schultetwin@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	Mark Schulte <schultetwin@gmail.com>
-Subject: [PATCH 2/2] rtlwifi: sparse warnings: cast to restricted type
-Date: Wed, 31 Jul 2013 00:08:27 -0700
-Message-Id: <1375254507-26154-2-git-send-email-schultetwin@gmail.com> (sfid-20130731_090846_504239_45F85835)
-In-Reply-To: <1375254507-26154-1-git-send-email-schultetwin@gmail.com>
-References: <1375254507-26154-1-git-send-email-schultetwin@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:37721 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753632Ab3GWH0Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jul 2013 03:26:24 -0400
+Message-ID: <51EE3018.4000507@hauke-m.de> (sfid-20130723_092627_336232_48B79847)
+Date: Tue, 23 Jul 2013 09:26:16 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [PATCH] Make BCMA_HOST_SOC depend on BCM47XX
+References: <1374546675-384-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1374546675-384-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding type casts to suppress sparse warnings:
- * warning: cast to restricted __le32/__le16
+On 07/23/2013 04:31 AM, John W. Linville wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> 
+> Otherwise, 'make allyesconfig' generates this:
+> 
+>   CC [M]  drivers/net/ethernet/broadcom/bgmac.o
+> drivers/net/ethernet/broadcom/bgmac.c:19:27: fatal error:
+> bcm47xx_nvram.h: No such file or directory
+> compilation terminated.
+> make[4]: *** [drivers/net/ethernet/broadcom/bgmac.o] Error 1
+> make[3]: *** [drivers/net/ethernet/broadcom] Error 2
+> make[2]: *** [drivers/net/ethernet] Error 2
+> make[1]: *** [drivers/net] Error 2
+> make: *** [drivers] Error 2
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/bcma/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+> index 7c081b3..a2bdab1 100644
+> --- a/drivers/bcma/Kconfig
+> +++ b/drivers/bcma/Kconfig
+> @@ -36,7 +36,7 @@ config BCMA_DRIVER_PCI_HOSTMODE
+>  
+>  config BCMA_HOST_SOC
+>  	bool "Support for BCMA in a SoC"
+> -	depends on BCMA
+> +	depends on BCMA && BCM47XX
+>  	help
+>  	  Host interface for a Broadcom AIX bus directly mapped into
+>  	  the memory. This only works with the Broadcom SoCs from the
+> 
+I think bgmac should depend on BCM47XX.
 
-Signed-off-by: Mark Schulte <schultetwin@gmail.com>
----
- drivers/net/wireless/rtlwifi/ps.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
-index 298b615..f646b75 100644
---- a/drivers/net/wireless/rtlwifi/ps.c
-+++ b/drivers/net/wireless/rtlwifi/ps.c
-@@ -688,7 +688,7 @@ static void rtl_p2p_noa_ie(struct ieee80211_hw *hw, void *data,
- 	find_p2p_ie = true;
- 	/*to find noa ie*/
- 	while (ie + 1 < end) {
--		noa_len = READEF2BYTE(&ie[1]);
-+		noa_len = READEF2BYTE((__le16 *)&ie[1]);
- 		if (ie + 3 + ie[1] > end)
- 			return;
- 
-@@ -717,13 +717,13 @@ static void rtl_p2p_noa_ie(struct ieee80211_hw *hw, void *data,
- 						 READEF1BYTE(ie+index);
- 					index += 1;
- 					p2pinfo->noa_duration[i] =
--						 READEF4BYTE(ie+index);
-+						 READEF4BYTE((__le32 *)ie+index);
- 					index += 4;
- 					p2pinfo->noa_interval[i] =
--						 READEF4BYTE(ie+index);
-+						 READEF4BYTE((__le32 *)ie+index);
- 					index += 4;
- 					p2pinfo->noa_start_time[i] =
--						 READEF4BYTE(ie+index);
-+						 READEF4BYTE((__le32 *)ie+index);
- 					index += 4;
- 				}
- 
-@@ -780,7 +780,7 @@ static void rtl_p2p_action_ie(struct ieee80211_hw *hw, void *data,
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "action frame find P2P IE.\n");
- 	/*to find noa ie*/
- 	while (ie + 1 < end) {
--		noa_len = READEF2BYTE(&ie[1]);
-+		noa_len = READEF2BYTE((__le16 *)&ie[1]);
- 		if (ie + 3 + ie[1] > end)
- 			return;
- 
-@@ -809,13 +809,13 @@ static void rtl_p2p_action_ie(struct ieee80211_hw *hw, void *data,
- 							 READEF1BYTE(ie+index);
- 					index += 1;
- 					p2pinfo->noa_duration[i] =
--							 READEF4BYTE(ie+index);
-+							 READEF4BYTE((__le32 *)ie+index);
- 					index += 4;
- 					p2pinfo->noa_interval[i] =
--							 READEF4BYTE(ie+index);
-+							 READEF4BYTE((__le32 *)ie+index);
- 					index += 4;
- 					p2pinfo->noa_start_time[i] =
--							 READEF4BYTE(ie+index);
-+							 READEF4BYTE((__le32 *)ie+index);
- 					index += 4;
- 				}
- 
--- 
-1.8.3.3
-
+Hauke
