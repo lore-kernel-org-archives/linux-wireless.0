@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:58172 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751873Ab3GSJqS (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:34241 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932832Ab3GWVgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 05:46:18 -0400
-Received: by mail-pb0-f41.google.com with SMTP id rp16so4253843pbb.14
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jul 2013 02:46:17 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] mac80211: prevent the buffering or frame transmission to non-assoc mesh STA
-Date: Fri, 19 Jul 2013 17:37:39 +0800
-Message-Id: <1374226659-2929-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130719_114621_880705_B00AAAE5)
+	Tue, 23 Jul 2013 17:36:54 -0400
+Received: by mail-wg0-f50.google.com with SMTP id m15so2157135wgh.17
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Jul 2013 14:36:53 -0700 (PDT)
+Message-ID: <51EEF771.7030102@free.fr> (sfid-20130723_233656_907232_709F8AB3)
+Date: Tue, 23 Jul 2013 23:36:49 +0200
+From: Etienne Champetier <etienne.champetier@free.fr>
+Reply-To: etienne.champetier@free.fr
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Subject: Re: authsae, 'ath9k nohwcrypt=1' & AR9100
+References: <800088722.345614075.1374079656592.JavaMail.root@zimbra65-e11.priv.proxad.net>
+In-Reply-To: <800088722.345614075.1374079656592.JavaMail.root@zimbra65-e11.priv.proxad.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is intended to avoid the buffering to non-assoc mesh STA
-and also to avoid the triggering of frame to non-assoc mesh STA which
-could cause kernel panic in specific hw.
+Hi
 
-One of the examples, is kernel panic happens to ath9k if user space
-inserts the mesh STA and not proceed with the SAE and AMPE, and later
-the same mesh STA is detected again. The sta_state of the mesh STA remains
-at IEEE80211_STA_NONE and if the ieee80211_sta_ps_deliver_wakeup is called
-and subsequently the ath_tx_aggr_wakeup, the kernel panic due to
-ath_tx_node_init is not called before to initialize the require data
-structures.
+Le 17/07/2013 18:47, etienne.champetier@free.fr a écrit :
+> Hi
+>
+> I'm making some test with authsae on openrwt and for wr1043nd router (AR9100 wireless) i still need 'ath9k nohwcrypt=1'
+> for the secure mesh to work when on another router (AR9280 wireless) i don't need it.
+> Is it a drivers bug? or is it hardware?
+>
+> -Router A: wr1043nd (need nohwcrypt=1 option)
+>   -AR9100 wireless
+>   -authsae - 2013-06-25-e2f67612101dc83f2c459d8ddc75c34bc83e1e83 (https://github.com/cozybit/authsae/tree/e2f67612101dc83f2c459d8ddc75c34bc83e1e83)
+>   -kmod-ath9k - 3.10.1+2013-06-27-1 (backports-20130617-4-ge3220f5)
+>   -openwrt BB r37364
+>
+> -Router B: ubnt rspro
+>   -AR9280 wireless
+it's an AR9220 wireless (Mikrotik RB R52Hn), recognized as AR9280
+>   -openwrt BB r37369 (same authsae/ath9k)
+>
+> Thanks in advance
+> Etienne
 
-This issue is reported by Cedric Voncken before.
-http://www.spinics.net/lists/linux-wireless/msg106342.html
+This patch http://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=a549459c96ba99a691aa1cafeabdd327a7a2bfcf
+make AR9160 and previous (AR9100) run in promiscuous mode (in order to catch all frames), does this influence hardware encryption (hwcrypt)?
 
-[<831ea6b4>] ath_tx_aggr_wakeup+0x44/0xcc [ath9k]
-[<83084214>] ieee80211_sta_ps_deliver_wakeup+0xb8/0x208 [mac80211]
-[<830b9824>] ieee80211_mps_sta_status_update+0x94/0x108 [mac80211]
-[<83099398>] ieee80211_sta_ps_transition+0xc94/0x34d8 [mac80211]
-[<8022399c>] nf_iterate+0x98/0x104
-[<8309bb60>] ieee80211_sta_ps_transition+0x345c/0x34d8 [mac80211]
-
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
-v2: 
-	change the subject to be less ath9k-centric (Johannes)
-	push the checking higher to prevent buffering for non-assoc STA (Bob Copeland)
-
- net/mac80211/mesh_ps.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
-index 3b7bfc0..22290a9 100644
---- a/net/mac80211/mesh_ps.c
-+++ b/net/mac80211/mesh_ps.c
-@@ -229,6 +229,10 @@ void ieee80211_mps_sta_status_update(struct sta_info *sta)
- 	enum nl80211_mesh_power_mode pm;
- 	bool do_buffer;
- 
-+	/* For non-assoc STA, prevent buffering or frame transmission */
-+	if (sta->sta_state < IEEE80211_STA_ASSOC)
-+		return;
-+
- 	/*
- 	 * use peer-specific power mode if peering is established and the
- 	 * peer's power mode is known
--- 
-1.7.0.4
+Thanks in advance
+Etienne
 
