@@ -1,124 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perceval.ideasonboard.com ([95.142.166.194]:44860 "EHLO
-	perceval.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756143Ab3GaKfI (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:47421 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753862Ab3GWCSv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 06:35:08 -0400
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	mturquette@linaro.org, mark.rutland@arm.com, balbi@ti.com,
-	grant.likely@linaro.org, rob.herring@calxeda.com,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, tony@atomide.com, nm@ti.com
-Subject: Re: [PATCH v3] Documentation: dt: bindings: TI WiLink modules
-Date: Wed, 31 Jul 2013 12:36:07 +0200
-Message-ID: <19103383.PkgSdCFM10@avalon> (sfid-20130731_123534_583748_0B836524)
-In-Reply-To: <1375215668-29171-1-git-send-email-coelho@ti.com>
-References: <1375215668-29171-1-git-send-email-coelho@ti.com>
+	Mon, 22 Jul 2013 22:18:51 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>, Stone Piao <piaoyun@marvell.com>
+Subject: [PATCH 08/21] mwifiex: support to send deauth for P2P client
+Date: Mon, 22 Jul 2013 19:17:45 -0700
+Message-ID: <1374545878-15683-9-git-send-email-bzhao@marvell.com> (sfid-20130723_041904_713433_2566F1EA)
+In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luciano,
+From: Stone Piao <piaoyun@marvell.com>
 
-On Tuesday 30 July 2013 23:21:08 Luciano Coelho wrote:
-> Add device tree bindings documentation for the TI WiLink modules.
-> Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
-> modules is supported.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
+During P2P handshake, P2P client needs to send deauth after EAPOL
+FAILURE to GO. We need add bss mode for P2P client when handle deauth
+request.
 
-Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Without this change, deauth can not be sent out from P2P client side.
 
-> ---
-> 
-> In v3, use IRQ_TYPE_LEVEL_HIGH in the example, as suggested by Laurent.
-> 
->  .../devicetree/bindings/net/wireless/ti-wilink.txt | 68
-> ++++++++++++++++++++++ 1 file changed, 68 insertions(+)
->  create mode 100644
-> Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt new file
-> mode 100644
-> index 0000000..aafebb1
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> @@ -0,0 +1,68 @@
-> +TI WiLink Wireless Modules Device Tree Bindings
-> +===============================================
-> +
-> +The WiLink modules provide wireless connectivity, such as WLAN,
-> +Bluetooth, FM and NFC.
-> +
-> +There are several different modules available, which can be grouped by
-> +their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
-> +currently supported with device tree.
-> +
-> +Currently, only the WLAN portion of the modules is supported with
-> +device tree.
-> +
-> +Required properties:
-> +--------------------
-> +
-> +- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
-> +- interrupt-parent: the interrupt controller
-> +- interrupts: out-of-band WLAN interrupt
-> +	See the interrupt controller's bindings documentation for
-> +	detailed definition.
-> +
-> +Optional properties:
-> +--------------------
-> +
-> +- clocks: list of clocks needed by the chip as follows:
-> +
-> +  refclock: the internal WLAN reference clock frequency (required for
-> +	WiLink6 and WiLink7; not used for WiLink8).
-> +
-> +  tcxoclock: the internal WLAN TCXO clock frequency (required for
-> +	WiLink7 not used for WiLink6 and WiLink8).
-> +
-> +  The clocks must be defined and named accordingly.  For example:
-> +
-> +  clocks = <&refclock>
-> +  clock-names = "refclock";
-> +
-> +  refclock: refclock {
-> +		     compatible = "ti,wilink-clock";
-> +		     #clock-cells = <0>;
-> +		     clock-frequency = <38400000>;
-> +	};
-> +
-> +  Some modules that contain the WiLink chip provide clocks in the
-> +  module itself.  In this case, we define a "ti,wilink-clock" as shown
-> +  above.  But any other clock could in theory be used, so the proper
-> +  clock definition should be used.
-> +
-> +
-> +Example:
-> +--------
-> +
-> +Example definition that can be used in OMAP4 Panda:
-> +
-> +wlan {
-> +	compatible = "ti,wilink6";
-> +	interrupt-parent = <&gpio2>;
-> +	interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;	/* gpio line 53 */
-> +	clocks = <&refclock>;
-> +	clock-names = "refclock";
-> +
-> +	refclock: refclock {
-> +		compatible = "ti,wilink-clock";
-> +		#clock-cells = <0>;
-> +		clock-frequency = <38400000>;
-> +	};
-> +};
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/join.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 1c8a771..ba043ca 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -1425,6 +1425,7 @@ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
+ 
+ 	switch (priv->bss_mode) {
+ 	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
+ 		return mwifiex_deauthenticate_infra(priv, mac);
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return mwifiex_send_cmd_sync(priv,
 -- 
-Regards,
-
-Laurent Pinchart
+1.8.2.3
 
