@@ -1,83 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52422 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759509Ab3GSAqS (ORCPT
+Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:46078 "EHLO
+	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754162Ab3GWCTW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jul 2013 20:46:18 -0400
-Message-ID: <1374194768.15633.32.camel@deadeye.wl.decadent.org.uk> (sfid-20130719_024622_659297_296CEEB6)
-Subject: Re: [PATCH] reglib: Validate all structure and array lengths
-From: Ben Hutchings <ben@decadent.org.uk>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>, alexandre <alexandre@cmu.edu>
-Date: Fri, 19 Jul 2013 01:46:08 +0100
-In-Reply-To: <CAB=NE6Vz_3d9Vz62dNTWocT3MTqvG4Ez+MZc0w-w8KBgkaapxg@mail.gmail.com>
-References: <1372636171.5155.56.camel@deadeye.wl.decadent.org.uk>
-	 <CAB=NE6Vz_3d9Vz62dNTWocT3MTqvG4Ez+MZc0w-w8KBgkaapxg@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-VWOJSSIPUGV2ekG1vyZg"
-Mime-Version: 1.0
+	Mon, 22 Jul 2013 22:19:22 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 16/21] mwifiex: replace mdelay with msleep
+Date: Mon, 22 Jul 2013 19:17:53 -0700
+Message-ID: <1374545878-15683-17-git-send-email-bzhao@marvell.com> (sfid-20130723_041929_789555_11EF4106)
+In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Amitkumar Karwar <akarwar@marvell.com>
 
---=-VWOJSSIPUGV2ekG1vyZg
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+It is observed that when wrong firmware is downloaded for
+PCIe card, system hangs for 10 seconds. The reason is mdelay()
+is used when firmware status is polled.
 
-On Tue, 2013-07-16 at 18:31 -0700, Luis R. Rodriguez wrote:
-> On Sun, Jun 30, 2013 at 4:49 PM, Ben Hutchings <ben@decadent.org.uk> wrot=
-e:
-> > Add checks that:
-> > - Signature length does not exceed the file length (this was already
-> >   checked, but did not account for signature lengths greater than 2 GB)
-> > - Database length is long enough for all structures we expect in it
-> > - Array length calculations will not overflow
-> >
-> > To keep these checks simple, change the types of array length and index
-> > variables to unsigned int (must be at least 32-bit, matching the file
-> > format) and the types of byte-length variables to size_t.
-> >
-> > Alexandre Rebert <alexandre@cmu.edu> reported and provided a test case
-> > for the signature length issue; the others I found by inspection.
-> >
-> > Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
->=20
-> Thanks! Despite the fact you didn't resend for a wider review and I
-> would have preferred this split up into a few patches this has been
-> sitting on wireless-regdb for a while, so after my review I just
-> applied and pushed. Thanks again!
+Replace mdelay with msleep(non-blocking API) to fix the issue.
 
-Sorry about that - I was meaning to re-send but it never quite got to
-the top of my to-do list.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c | 2 +-
+ drivers/net/wireless/mwifiex/sdio.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Ben.
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index dce6486..098153f 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1942,7 +1942,7 @@ mwifiex_check_fw_status(struct mwifiex_adapter *adapter, u32 poll_num)
+ 			ret = 0;
+ 			break;
+ 		} else {
+-			mdelay(100);
++			msleep(100);
+ 			ret = -1;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 5ef49f2..c32a735 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -944,7 +944,7 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
+ 			ret = 0;
+ 			break;
+ 		} else {
+-			mdelay(100);
++			msleep(100);
+ 			ret = -1;
+ 		}
+ 	}
+-- 
+1.8.2.3
 
---=20
-Ben Hutchings
-Humans are not rational beings; they are rationalising beings.
-
---=-VWOJSSIPUGV2ekG1vyZg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUeiMUOe/yOyVhhEJAQoeQBAAqHb8o28Uiz/SjyG59he2b/xJjLsQd7oc
-6PglNUY7qsJ5m0fZTmdWctwdKexPJOF4YCQrInPXr/jKoJ0sJVCUeWUoT7Nft+Mm
-xA1D0Ruxc9DbIZzEDysJ6V1P9AIlJVIeUCt9y4I4fzj1vx/MYBfdg5DdXZ00g8NY
-UqzPXAtgMDr1k1D2od3xYeXqs97oxKLZhky08Y6sVKTCdmDrVVt6BIjYpoMtrfTo
-1H+9Hjo5PIkusXbm0iYsoRvAd1p4GS4R0eSHW981SWTQtOa4579KV9jla+G1cVHa
-nvwyM53z+/H55+NT9TVVbINKy2lR06xn/uadPUX/qcQ1v1MpwBNxQ66bhGtZSjer
-UK375FKF23s1kf/2GbhKQ+IaNhbeei6VErcEHUt7rFMl7Ia+fEJgaGOja9pL5yuX
-3Myd3zsqmdehIqEjGrZmupjNo5tmQxMnAeGx4YZeJqNkiB6qupKpnDSmkzz5/lqY
-UXuID4fxea9iGBAbZlwUy+TM2oxvDwzRNpHj5ci28u2Q3MX7ZfZpaEYmgkxSVmJB
-qSDxX9GH3BU4RsMg6cO1/4U5WkV8vduJyT5iicKgF4xmtxZU23lkoN2eBSE23s61
-Kb3xWHwJsbGdBlDU/Fc1gGBhnDxG9DKwiVBqqBxj3mXzJdc1osjlQmTPQBM3cBcm
-i7zzUptdZLM=
-=wVOA
------END PGP SIGNATURE-----
-
---=-VWOJSSIPUGV2ekG1vyZg--
