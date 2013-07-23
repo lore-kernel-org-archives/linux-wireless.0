@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39389 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753142Ab3GBSFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 14:05:50 -0400
-Message-ID: <51D3167D.3070000@openwrt.org> (sfid-20130702_200553_552881_CD849E9C)
-Date: Tue, 02 Jul 2013 20:05:49 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:51034 "EHLO
+	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753773Ab3GWCSx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 22:18:53 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 09/21] mwifiex: correct max IE length check for WPS IE
+Date: Mon, 22 Jul 2013 19:17:46 -0700
+Message-ID: <1374545878-15683-10-git-send-email-bzhao@marvell.com> (sfid-20130723_041902_395996_CB0950EB)
+In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: Use libnl-configurable values for retry counts
-References: <1372351227-25575-1-git-send-email-jp.tosoni@acksys.fr> <51CF3EC9.3000707@openwrt.org> <000001ce7728$18b07de0$4a1179a0$@acksys.fr> <51D2DAB9.4050002@openwrt.org> <000101ce774b$3925e380$ab71aa80$@acksys.fr>
-In-Reply-To: <000101ce774b$3925e380$ab71aa80$@acksys.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-07-02 7:40 PM, Jean-Pierre Tosoni wrote:
-> Hi Felix,
-> 
-> Sorry to use your time again...
-> 
->> But much more important than that is to not cause regressions for other
->> people via aggressive packet dropping.
-> 
-> Agreed, but see below.
-> 
->> If you put the code in minstrel (and minstrel_ht), it not only allows
->> making a better tradeoff for retry handling, the code also doesn't have
->> to be run for every single packet. You can run it during the rate
->> control stats update.
-> 
-> OK, I'll have a look at that part now.
-> 
->> 
->> The reduction of retry attempts definitely needs to be balanced
->> properly. Retries with max_prob_rate can be more important than retries
->> with max_tp_rate, but there needs to be a minimum for each of those.
-> 
-> This leads to a question about regressions and backward compatibility:
-> 
-> Since minstrel can compute as much as 28 retries for a frame,
-> And since the (standard) default value for "short_frame_max_tx_count" is 7,
-> 
-> ... there is no way I can enforce the configured value while keeping
-> minstrel counts by default !
-> The standard itself gives a very aggressive limit! Or am I mistaken about
-> the significance of this configuration parameter ?
-I think you're right about this. Specifically because the standard limit
-is much lower than what is being used now, we need to really make sure
-that it's applied in a way that it does not harm the normal use case in
-any visible way.
+From: Avinash Patil <patila@marvell.com>
 
-- Felix
+This patch is bug fix for an invalid boundry check for WPS IE.
+We should check max IE length against defined macro; instead we were
+checking it against size of pointer. Fix it.
+Also move IE length check before allocation of memory.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 206c3e0..c071ce9 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -797,15 +797,16 @@ static int mwifiex_set_wps_ie(struct mwifiex_private *priv,
+ 			       u8 *ie_data_ptr, u16 ie_len)
+ {
+ 	if (ie_len) {
+-		priv->wps_ie = kzalloc(MWIFIEX_MAX_VSIE_LEN, GFP_KERNEL);
+-		if (!priv->wps_ie)
+-			return -ENOMEM;
+-		if (ie_len > sizeof(priv->wps_ie)) {
++		if (ie_len > MWIFIEX_MAX_VSIE_LEN) {
+ 			dev_dbg(priv->adapter->dev,
+ 				"info: failed to copy WPS IE, too big\n");
+-			kfree(priv->wps_ie);
+ 			return -1;
+ 		}
++
++		priv->wps_ie = kzalloc(MWIFIEX_MAX_VSIE_LEN, GFP_KERNEL);
++		if (!priv->wps_ie)
++			return -ENOMEM;
++
+ 		memcpy(priv->wps_ie, ie_data_ptr, ie_len);
+ 		priv->wps_ie_len = ie_len;
+ 		dev_dbg(priv->adapter->dev, "cmd: Set wps_ie_len=%d IE=%#x\n",
+-- 
+1.8.2.3
+
