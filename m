@@ -1,123 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:46114 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753628Ab3G3NFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 09:05:50 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <coelho@ti.com>, <luca@coelho.fi>, <mturquette@linaro.org>,
-	<mark.rutland@arm.com>, <balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>,
-	<martinez.javier@gmail.com>
-Subject: [PATCH v4 7/8] wlcore: sdio: get clocks from device tree
-Date: Tue, 30 Jul 2013 16:04:35 +0300
-Message-ID: <1375189476-21557-8-git-send-email-coelho@ti.com> (sfid-20130730_150618_354642_2529D8DB)
-In-Reply-To: <1375189476-21557-1-git-send-email-coelho@ti.com>
-References: <1375189476-21557-1-git-send-email-coelho@ti.com>
+Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:40073 "EHLO
+	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752473Ab3GWCSm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jul 2013 22:18:42 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Huawei Yang <harvey.huawei.yang@gmail.com>
+Subject: [PATCH 01/21] mwifiex: remove stop_net_dev_queue operation in AP forwarding
+Date: Mon, 22 Jul 2013 19:17:38 -0700
+Message-ID: <1374545878-15683-2-git-send-email-bzhao@marvell.com> (sfid-20130723_041844_636714_6AC34D28)
+In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Read the clock nodes from the device tree and use them to set the
-frequency for the refclock and the tcxo clock.
+From: Huawei Yang <harvey.huawei.yang@gmail.com>
 
-Also, call sdio_set_drvdata() earlier, so the glue is already set in
-the driver data when we call wlcore_get_pdata_from_of() and we don't
-need to pass it as a parameter.
+Under uAP mode mwifiex may stop all net tx queues on forwarding
+packets. This may stop some tx queues and they never have chance
+to be waked up. There is also no need to check tx_pending and
+stop queues here. Because local host has such kind of check when
+transmitting packets and it's not proper to have forwarding affect
+local transmitting.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Reviewed-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
+Reviewed-by: Avinash Patil <patila@marvell.com>
+Acked-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ti/wlcore/sdio.c | 36 +++++++++++++++++++++++++++++++++--
- 1 file changed, 34 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/uap_txrx.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 980bf3d..60fce49 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -53,6 +53,7 @@ static bool dump = false;
- struct wl12xx_sdio_glue {
- 	struct device *dev;
- 	struct platform_device *core;
-+	struct clk *refclock, *tcxoclock;
- };
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index a018e42..11df2b2 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -95,10 +95,6 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+ 	atomic_inc(&adapter->tx_pending);
+ 	atomic_inc(&adapter->pending_bridged_pkts);
  
- static const struct sdio_device_id wl1271_devices[] = {
-@@ -224,6 +225,7 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- 	struct wl12xx_platform_data *pdata;
- 	struct device_node *np = dev->of_node;
- 	struct device_node *clock_node;
-+	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(dev_to_sdio_func(dev));
- 
- 	if (!np) {
- 		np = of_find_matching_node(NULL, dev->driver->of_match_table);
-@@ -250,6 +252,26 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- 	for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
- 		of_fixed_clk_setup(clock_node);
- 
-+	/* TODO: make sure we have this when needed (ie. for WL6 and WL7) */
-+	glue->refclock = of_clk_get_by_name(np, "refclock");
-+	if (IS_ERR(glue->refclock)) {
-+		dev_err(dev, "couldn't find refclock on the device tree\n");
-+		glue->refclock = NULL;
-+	} else {
-+		clk_prepare_enable(glue->refclock);
-+		pdata->ref_clock_freq = clk_get_rate(glue->refclock);
-+	}
-+
-+	/* TODO: make sure we have this when needed (ie. for WL7) */
-+	glue->tcxoclock = of_clk_get_by_name(np, "tcxoclock");
-+	if (IS_ERR(glue->tcxoclock)) {
-+		dev_err(dev, "couldn't find tcxoclock on the device tree\n");
-+		glue->tcxoclock = NULL;
-+	} else {
-+		clk_prepare_enable(glue->tcxoclock);
-+		pdata->ref_clock_freq = clk_get_rate(glue->tcxoclock);
-+	}
-+
- 	goto out;
- 
- out_free:
-@@ -294,6 +316,8 @@ static int wl1271_probe(struct sdio_func *func,
- 	/* Use block mode for transferring over one block size of data */
- 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
- 
-+	sdio_set_drvdata(func, glue);
-+
- 	/* The pdata allocated here is freed when the device is freed,
- 	 * so we don't need an additional out label to free it in case
- 	 * of error further on.
-@@ -319,8 +343,6 @@ static int wl1271_probe(struct sdio_func *func,
- 	if (mmcflags & MMC_PM_KEEP_POWER)
- 		pdev_data->pwr_in_suspend = true;
- 
--	sdio_set_drvdata(func, glue);
--
- 	/* Tell PM core that we don't need the card to be powered now */
- 	pm_runtime_put_noidle(&func->dev);
- 
-@@ -387,6 +409,16 @@ static void wl1271_remove(struct sdio_func *func)
- {
- 	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
- 
-+	if (glue->refclock) {
-+		clk_disable_unprepare(glue->refclock);
-+		clk_put(glue->refclock);
-+	}
-+
-+	if (glue->tcxoclock) {
-+		clk_disable_unprepare(glue->tcxoclock);
-+		clk_put(glue->tcxoclock);
-+	}
-+
- 	/* Undo decrement done above in wl1271_probe */
- 	pm_runtime_get_noresume(&func->dev);
+-	if ((atomic_read(&adapter->tx_pending) >= MAX_TX_PENDING)) {
+-		mwifiex_set_trans_start(priv->netdev);
+-		mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
+-	}
+ 	return;
+ }
  
 -- 
-1.8.3.2
+1.8.2.3
 
