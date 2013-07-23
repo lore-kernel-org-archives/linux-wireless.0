@@ -1,70 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34684 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648Ab3GMXAM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jul 2013 19:00:12 -0400
-Date: Sat, 13 Jul 2013 18:57:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Using CC BY-SA for wireless wiki content
-Message-ID: <20130713225735.GA2023@tuxdriver.com> (sfid-20130714_010037_474429_634E113B)
-References: <51E1B6BB.7060903@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51E1B6BB.7060903@gmail.com>
+Received: from smtp.witbe.net ([81.88.96.48]:60992 "EHLO smtp.witbe.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756432Ab3GWMnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jul 2013 08:43:33 -0400
+Date: Tue, 23 Jul 2013 14:29:07 +0200
+From: Paul Rolland (=?UTF-8?B?44Od44O844Or44O744Ot44Op44Oz?=)
+	<rol@witbe.net>
+To: Richard Genoud <richard.genoud@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rol@witbe.net
+Subject: Re: rtl8192cu: slow path warning
+Message-ID: <20130723142907.53103aab@tux.DEF.witbe.net> (sfid-20130723_144350_206049_67D00DE5)
+In-Reply-To: <CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
+References: <20130611123814.GA9854@lnx-rg>
+	<20130626142241.GA13107@lnx-rg>
+	<51CB0E9C.50408@lwfinger.net>
+	<CACQ1gAh+WjQZHo+_afZpzcwt1=KPM8VMBOe=YCHN_LEZu+jPNQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Vmhjf/KX18mZcfFQH++q5Q+"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 13, 2013 at 10:21:15PM +0200, Xose Vazquez Perez wrote:
-> Luis R. Rodriguez wrote:
-> 
-> > Anyone have any issues if we license the wiki content on
-> > wireless.kernel.org under CC BY-SA license? That would make it
-> > compatible with  Wikipedia. Please shout out if you disagree with this
-> > move as at this point we have random collaborations but at least as
-> > per initial review it seems this would be a good idea. Want to see if
-> > anyone disagrees before we do the move.
-> 
-> No problem from my side.
-> 
-> 
-> waiting for the rest of http://wireless.kernel.org/TrustedEditorsGroup
-> 
-> JohannesBerg
-> Zajec
-> AlbertPool
-> blubber
-> SeanSantos
-> Nick Lee
-> HaukeMehrtens
-> gabs
-> aspriel
-> ChandrakantSharpa
-> WimLewis
-> PaterStein
-> LarryFinger
-> KalleValo
-> Yuryu
-> John Linville
+--Sig_/Vmhjf/KX18mZcfFQH++q5Q+
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-OK by me...
+Hello,
 
-> David Wang
-> Christian Lamparter
-> LucianoCoelho
-> ZefirKurtisi
-> nbd
-> kevin
-> BuZZ-dEE
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+On Thu, 27 Jun 2013 09:33:20 +0200
+Richard Genoud <richard.genoud@gmail.com> wrote:
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> Yes, of course, you can add my
+> Reported-by: Richard Genoud <richard.genoud@gmail.com>
+>=20
+> But the patch doesn't compile on my platform ( since I'm on ARM, I
+> haven't got a PCI bus, so rtlwifi/pci.c is not compiled ) :
+>=20
+> ERROR: "rtl_lps_change_work_callback"
+> [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+
+Is that the reason why this patch is not yet in 3.10.x or 3.11-rcY ?
+I'm running a 3.10.1 with USB dongle including 8192CU, and I can see this
+warning when the machine starts.
+I've check 3.10.1, 3.10.2 and 3.11-rc3 source code, but this fix is not
+there. Is there a different fix that went in in 3.10.2 or 3.11-rc?
+
+Best,
+Paul
+
+--Sig_/Vmhjf/KX18mZcfFQH++q5Q+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEYEARECAAYFAlHudxMACgkQZP464AVDf+DQQwCggiZm/Z9jhld9l6twYkzKDgrf
+P7IAn3BHVpFJNQoiGoK96Rvac8xZ9ezx
+=45Kc
+-----END PGP SIGNATURE-----
+
+--Sig_/Vmhjf/KX18mZcfFQH++q5Q+--
