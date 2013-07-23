@@ -1,90 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:43309 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab3GKJHA (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37193 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756216Ab3GWJ1A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:07:00 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Pete Zaitcev <zaitcev@redhat.com>
-Subject: [PATCH 03/50] USB: usblp: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:26 +0800
-Message-Id: <1373533573-12272-4-git-send-email-ming.lei@canonical.com> (sfid-20130711_111921_110028_910A5C08)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Tue, 23 Jul 2013 05:27:00 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 0/2] MAINTAINERS: ath10k and ath6kl updates
+References: <20130722093113.26562.11543.stgit@localhost6.localdomain6>
+Date: Tue, 23 Jul 2013 12:26:53 +0300
+In-Reply-To: <20130722093113.26562.11543.stgit@localhost6.localdomain6> (Kalle
+	Valo's message of "Mon, 22 Jul 2013 12:32:13 +0300")
+Message-ID: <87ip01wrs2.fsf@kamboji.qca.qualcomm.com> (sfid-20130723_112711_923989_3B242AC8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Cc: Pete Zaitcev <zaitcev@redhat.com>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/usb/class/usblp.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+> here few patches for MAINTAINERS. If they are ok I'll add them to ath.git and
+> send a pull request to John.
 
-diff --git a/drivers/usb/class/usblp.c b/drivers/usb/class/usblp.c
-index d4c47d5..04163d8 100644
---- a/drivers/usb/class/usblp.c
-+++ b/drivers/usb/class/usblp.c
-@@ -297,6 +297,7 @@ static void usblp_bulk_read(struct urb *urb)
- {
- 	struct usblp *usblp = urb->context;
- 	int status = urb->status;
-+	unsigned long flags;
- 
- 	if (usblp->present && usblp->used) {
- 		if (status)
-@@ -304,14 +305,14 @@ static void usblp_bulk_read(struct urb *urb)
- 			    "nonzero read bulk status received: %d\n",
- 			    usblp->minor, status);
- 	}
--	spin_lock(&usblp->lock);
-+	spin_lock_irqsave(&usblp->lock, flags);
- 	if (status < 0)
- 		usblp->rstatus = status;
- 	else
- 		usblp->rstatus = urb->actual_length;
- 	usblp->rcomplete = 1;
- 	wake_up(&usblp->rwait);
--	spin_unlock(&usblp->lock);
-+	spin_unlock_irqrestore(&usblp->lock, flags);
- 
- 	usb_free_urb(urb);
- }
-@@ -320,6 +321,7 @@ static void usblp_bulk_write(struct urb *urb)
- {
- 	struct usblp *usblp = urb->context;
- 	int status = urb->status;
-+	unsigned long flags;
- 
- 	if (usblp->present && usblp->used) {
- 		if (status)
-@@ -327,7 +329,7 @@ static void usblp_bulk_write(struct urb *urb)
- 			    "nonzero write bulk status received: %d\n",
- 			    usblp->minor, status);
- 	}
--	spin_lock(&usblp->lock);
-+	spin_lock_irqsave(&usblp->lock, flags);
- 	if (status < 0)
- 		usblp->wstatus = status;
- 	else
-@@ -335,7 +337,7 @@ static void usblp_bulk_write(struct urb *urb)
- 	usblp->no_paper = 0;
- 	usblp->wcomplete = 1;
- 	wake_up(&usblp->wwait);
--	spin_unlock(&usblp->lock);
-+	spin_unlock_irqrestore(&usblp->lock, flags);
- 
- 	usb_free_urb(urb);
- }
+Applied to ath-current branch of ath.git.
+
 -- 
-1.7.9.5
-
+Kalle Valo
