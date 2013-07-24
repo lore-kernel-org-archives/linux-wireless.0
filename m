@@ -1,148 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:46240 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753384Ab3GBO4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 10:56:43 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>
-Subject: [PATCH v2 6/9] wlcore: add initial device tree support to the sdio module
-Date: Tue, 2 Jul 2013 17:55:45 +0300
-Message-ID: <1372776948-24840-7-git-send-email-coelho@ti.com> (sfid-20130702_165830_605536_B302BDD2)
-In-Reply-To: <1372776948-24840-1-git-send-email-coelho@ti.com>
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:50584 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323Ab3GXR61 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jul 2013 13:58:27 -0400
+Received: by mail-wg0-f47.google.com with SMTP id j13so707219wgh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Jul 2013 10:58:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <51EFF3DD.80000@lwfinger.net>
+References: <CA+Gu+Kx3RNkenmHD4dGP5NxC1zzq9sxwjdRxuj5qLFCg32DLeQ@mail.gmail.com>
+	<CA+Gu+Ky5rCwCrWJkCKXsPEFodaARdf5DkmES3TN_UNuUqTnYVA@mail.gmail.com>
+	<51EFF3DD.80000@lwfinger.net>
+Date: Thu, 25 Jul 2013 01:58:26 +0800
+Message-ID: <CA+Gu+KzKhWs5_U-6wQSLT4s2STZBGH8-z4r5cM9zE1tEEFvnKw@mail.gmail.com> (sfid-20130724_195830_714976_FF92352D)
+Subject: Re: Fwd: TP-LINK 8200ND
+From: Vihang Patel <vihang08@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If platform data is not available, try to get the required information
-from the device tree.  Register an OF match table and parse the
-appropriate device tree nodes.
+Thanks Larry,
 
-Parse interrupt property only, for now.
+I have already tried the Ndiswrapper using both the TP-Link provided
+Windows XP(64 & 32bit) drivers as well as ones provided by Realtek on
+Ubuntu 12.04 and 13.04. Both scenarios freezes the OS. And in scenario
+that I save it in conf file for it to load on startup, the OS freezes
+on startup. No luck there. Would be interesting to see if anyone else
+got it to work using ndiswrapper.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/sdio.c |   69 ++++++++++++++++++++++++++++++---
- 1 file changed, 63 insertions(+), 6 deletions(-)
+Vihang
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 4c7e8ac..9370d7e 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -30,7 +30,7 @@
- #include <linux/mmc/sdio_ids.h>
- #include <linux/mmc/card.h>
- #include <linux/mmc/host.h>
--#include <linux/gpio.h>
-+#include <linux/of_irq.h>
- #include <linux/wl12xx.h>
- #include <linux/pm_runtime.h>
- #include <linux/printk.h>
-@@ -214,6 +214,43 @@ static struct wl1271_if_operations sdio_ops = {
- 	.set_block_size = wl1271_sdio_set_block_size,
- };
- 
-+static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
-+{
-+	struct wl12xx_platform_data *pdata;
-+	struct device_node *np = dev->of_node;
-+
-+	if (!np) {
-+		np = of_find_matching_node(NULL, dev->driver->of_match_table);
-+		if (!np) {
-+			dev_notice(dev, "device tree node not available\n");
-+			pdata = ERR_PTR(-ENODEV);
-+			goto out;
-+		}
-+	}
-+
-+	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
-+	if (!pdata) {
-+		dev_err(dev, "can't allocate platform data\n");
-+		pdata = ERR_PTR(-ENODEV);
-+		goto out;
-+	}
-+
-+	pdata->irq = irq_of_parse_and_map(np, 0);
-+	if (pdata->irq < 0) {
-+		dev_err(dev, "can't get interrupt gpio from the device tree\n");
-+		goto out_free;
-+	}
-+
-+	goto out;
-+
-+out_free:
-+	kfree(pdata);
-+	pdata = ERR_PTR(-ENODEV);
-+
-+out:
-+	return pdata;
-+}
-+
- static int wl1271_probe(struct sdio_func *func,
- 				  const struct sdio_device_id *id)
- {
-@@ -248,11 +285,22 @@ static int wl1271_probe(struct sdio_func *func,
- 	/* Use block mode for transferring over one block size of data */
- 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
- 
-+	/* The pdata allocated here is freed when the device is freed,
-+	 * so we don't need an additional out label to free it in case
-+	 * of error further on.
-+	 */
-+
-+	/* Try to get legacy platform data from the board file */
- 	pdev_data->pdata = wl12xx_get_platform_data();
- 	if (IS_ERR(pdev_data->pdata)) {
--		ret = PTR_ERR(pdev_data->pdata);
--		dev_err(glue->dev, "missing wlan platform data: %d\n", ret);
--		goto out_free_glue;
-+		dev_info(&func->dev,
-+			 "legacy platform data not found, trying device tree\n");
-+
-+		pdev_data->pdata = wlcore_get_pdata_from_of(&func->dev);
-+		if (IS_ERR(pdev_data->pdata)) {
-+			dev_err(&func->dev, "can't get platform data\n");
-+			goto out_free_glue;
-+		}
- 	}
- 
- 	/* if sdio can keep power while host is suspended, enable wow */
-@@ -386,16 +434,25 @@ static const struct dev_pm_ops wl1271_sdio_pm_ops = {
- };
- #endif
- 
-+static const struct of_device_id wlcore_sdio_of_match_table[] = {
-+	{ .compatible = "ti,wilink6" },
-+	{ .compatible = "ti,wilink7" },
-+	{ .compatible = "ti,wilink8" },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(of, wlcore_sdio_of_match_table);
-+
- static struct sdio_driver wl1271_sdio_driver = {
- 	.name		= "wl1271_sdio",
- 	.id_table	= wl1271_devices,
- 	.probe		= wl1271_probe,
- 	.remove		= wl1271_remove,
--#ifdef CONFIG_PM
- 	.drv = {
-+#ifdef CONFIG_PM
- 		.pm = &wl1271_sdio_pm_ops,
--	},
- #endif
-+		.of_match_table = of_match_ptr(wlcore_sdio_of_match_table),
-+	},
- };
- 
- static int __init wl1271_init(void)
--- 
-1.7.10.4
-
+On Wed, Jul 24, 2013 at 11:33 PM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> On 07/24/2013 08:50 AM, Vihang Patel wrote:
+>>
+>> Hi,
+>>
+>> I understand there was a thread on linux drivers for TP-LINK8200ND
+>> with rtl8192cu chipset, but it ran cold with no resolution. I was
+>> wondering if there if anyone found a resolution on that.
+>>
+>> I have tried installing the drivers provided by realtek as well on
+>> both Ubuntu 12.004 and 13.04. Scorched the internet, and was able to
+>> get it to detect the device but it wont connect to any of the Wireless
+>> networks.
+>>
+>> Any help would be helpful.
+>
+>
+> The USB ID has been added to the mainline and stable kernels; however, the
+> device does not work for me. The latest vendor driver sent privately to me
+> can make a connection; however, the throughput is less than 1 Mbps. I have
+> not yet had a chance to investigate as this card is low on my priority list.
+>
+> I have added the Realtek developer to this reply (Bcc). Perhaps the company
+> has made some progress; however, when I last contacted them, they did not
+> have an instance of this particular card. It seems that your only viable
+> option at this time would probably be the Windows driver with ndiswrapper. I
+> have not tested this option.
+>
+> Larry
+>
+>
