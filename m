@@ -1,77 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:58017 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755900Ab3GOLqu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 07:46:50 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH RESEND 3.9 2/4] iwlwifi: mvm: support BSS only
-Date: Mon, 15 Jul 2013 14:46:42 +0300
-Message-Id: <1373888804-3077-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134655_659612_25E20E96)
-In-Reply-To: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1373888804-3077-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from s72.web-hosting.com ([198.187.29.21]:40332 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751803Ab3GXIZA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jul 2013 04:25:00 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/5] ath9k: Add PCI IDs that support WLAN/BT RX diversity
+Date: Wed, 24 Jul 2013 13:51:30 +0530
+Message-Id: <1374654090-24408-5-git-send-email-sujith@msujith.org> (sfid-20130724_102516_843115_36408C94)
+In-Reply-To: <1374654090-24408-1-git-send-email-sujith@msujith.org>
+References: <1374654090-24408-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only BSS is support in 3.9. In later kernels, other modes
-have been fixed and tested to work.
-This will at least allow user to use the regular wifi
-functionality.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |   24 +-----------------------
- 1 file changed, 1 insertion(+), 23 deletions(-)
+ drivers/net/wireless/ath/ath9k/pci.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 8572358..c9569a0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -76,23 +76,6 @@
- #include "fw-api-scan.h"
- #include "iwl-phy-db.h"
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index c585c9b..ad48702 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -40,29 +40,29 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 			 0x0032,
+ 			 PCI_VENDOR_ID_AZWAVE,
+ 			 0x2086),
+-	  .driver_data = ATH9K_PCI_CUS198 },
++	  .driver_data = ATH9K_PCI_CUS198 | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0032,
+ 			 PCI_VENDOR_ID_AZWAVE,
+ 			 0x1237),
+-	  .driver_data = ATH9K_PCI_CUS198 },
++	  .driver_data = ATH9K_PCI_CUS198 | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0032,
+ 			 PCI_VENDOR_ID_AZWAVE,
+ 			 0x2126),
+-	  .driver_data = ATH9K_PCI_CUS198 },
++	  .driver_data = ATH9K_PCI_CUS198 | ATH9K_PCI_BT_ANT_DIV },
  
--static const struct ieee80211_iface_limit iwl_mvm_limits[] = {
--	{
--		.max = 1,
--		.types = BIT(NL80211_IFTYPE_STATION) |
--			BIT(NL80211_IFTYPE_AP),
--	},
--};
--
--static const struct ieee80211_iface_combination iwl_mvm_iface_combinations[] = {
--	{
--		.num_different_channels = 1,
--		.max_interfaces = 3,
--		.limits = iwl_mvm_limits,
--		.n_limits = ARRAY_SIZE(iwl_mvm_limits),
--	},
--};
--
- int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- {
- 	struct ieee80211_hw *hw = mvm->hw;
-@@ -126,17 +109,12 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	hw->vif_data_size = sizeof(struct iwl_mvm_vif);
- 	hw->chanctx_data_size = sizeof(struct iwl_mvm_phy_ctxt);
+ 	/* PCI-E CUS230 */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0032,
+ 			 PCI_VENDOR_ID_AZWAVE,
+ 			 0x2152),
+-	  .driver_data = ATH9K_PCI_CUS230 },
++	  .driver_data = ATH9K_PCI_CUS230 | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0032,
+ 			 PCI_VENDOR_ID_FOXCONN,
+ 			 0xE075),
+-	  .driver_data = ATH9K_PCI_CUS230 },
++	  .driver_data = ATH9K_PCI_CUS230 | ATH9K_PCI_BT_ANT_DIV },
  
--	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_AP);
-+	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
+@@ -138,7 +138,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
  
- 	hw->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY |
- 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
- 			    WIPHY_FLAG_IBSS_RSN;
- 
--	hw->wiphy->iface_combinations = iwl_mvm_iface_combinations;
--	hw->wiphy->n_iface_combinations =
--		ARRAY_SIZE(iwl_mvm_iface_combinations);
--
- 	hw->wiphy->max_remain_on_channel_duration = 500;
- 	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
+ 	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0037) }, /* PCI-E  AR1111/AR9485 */
+-	{ PCI_VDEVICE(ATHEROS, 0x0036) }, /* PCI-E  AR9565 */
++
++	/* PCI-E AR9565 */
++	{ PCI_VDEVICE(ATHEROS, 0x0036),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++
+ 	{ 0 }
+ };
  
 -- 
-1.7.10.4
+1.8.3.3
 
