@@ -1,115 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:61054 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792Ab3GICdS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 22:33:18 -0400
-Message-ID: <51DB766B.5010304@lwfinger.net> (sfid-20130709_043326_748692_FEAD8B88)
-Date: Mon, 08 Jul 2013 21:33:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46732 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751971Ab3GXOkY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jul 2013 10:40:24 -0400
+Message-ID: <51EFE74E.3090006@hauke-m.de> (sfid-20130724_164036_204195_57D26E6E)
+Date: Wed, 24 Jul 2013 16:40:14 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [PATCH] rtlwifi: Fix Kconfig for some corner cases
-References: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>  <1373190151.3428.13.camel@deadeye.wl.decadent.org.uk>  <51D9AFB2.2030707@lwfinger.net> <1373330415.1860.14.camel@bwh-desktop.uk.level5networks.com>
-In-Reply-To: <1373330415.1860.14.camel@bwh-desktop.uk.level5networks.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Jordan McCarthy <mccarthy@opentechinstitute.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: IBSS-RSN support for BCM4313
+References: <51EFC944.40502@opentechinstitute.org>
+In-Reply-To: <51EFC944.40502@opentechinstitute.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/2013 07:40 PM, Ben Hutchings wrote:
-> On Sun, 2013-07-07 at 13:13 -0500, Larry Finger wrote:
->> On 07/07/2013 04:42 AM, Ben Hutchings wrote:
->>> On Sat, 2013-07-06 at 21:47 -0500, Larry Finger wrote:
->>>>
->>>> Although I could not duplicate this result on my machine, it seemed likely
->>>> that it was due to the unusual configuration where rtlwifi was being built,
->>>> but none of its dependent drivers were selected.
->>>
->>> I think it just requires:
->>>
->>> CONFIG_USB=m
->>> CONFIG_RTLWIFI=y
->>>
->>>> The fix is to select rtlwifi only when it is needed.
->>>
->>> I don't think so.  Consider this configuration:
->>>
->>> CONFIG_PCI=y
->>> CONFIG_USB=m
->>> CONFIG_RTL_CARDS=y
->>> CONFIG_RTL8192CE=y
->>> CONFIG_RTL8192CU=m
->>> CONFIG_RTLWIFI=y     # maximum of RTL8192CE=y and RTL8192CU=m
->>>
->>> The same breakage occurs.
->>
->> Ben,
->>
->> Thanks for your comments. I certainly do not claim to understand very much about
->> the whole Kbuild process.
->>
->> After setting up the above configuration manually, I ran 'make oldconfig' and
->> got back
->>
->> CONFIG_RTL_CARDS=m
->> CONFIG_RTL8192CE=m
->> CONFIG_RTL8192SE=m
->> CONFIG_RTL8192DE=m
->> CONFIG_RTL8723AE=m
->> CONFIG_RTL8188EE=m
->> CONFIG_RTL8192CU=m
->> CONFIG_RTLWIFI=m
->> CONFIG_RTLWIFI_DEBUG=y
->> CONFIG_RTL8192C_COMMON=m
->>
->> That set of configuration parameters built normally.
->
-> But you can still manually set:
->
-> CONFIG_PCI=y
-> CONFIG_USB=m
-> CONFIG_MAC80211=y   # maybe you had =m here?
-> CONFIG_RTL_CARDS=y
-> CONFIG_RTL8192CE=y
->
-> and that will select:
->
-> CONFIG_RTLWIFI=y
->
->>>> While making this
->>>> change, I simplified the configuration so that variable RTLWIFI is never seen
->>>> by the user.
->>> [...]
->>>
->>> This will break existing configurations as RTL_CARDS defaults to n.
->>
->> I added a 'default y' to the RTL_CARDS stanza. I now get the following:
->>
->> finger@larrylap:~/staging> make
->> scripts/kconfig/conf --silentoldconfig Kconfig
->> *
->> * Restart config...
->> *
->> *
->> * Realtek rtlwifi family of devices
->> *
->> Realtek rtlwifi family of devices (RTL_CARDS) [M/n/?] (NEW)
->>
->> That should prevent breakage of existing configurations. It defaults to "m"
->> because mac80211 is built as a module in my configuration.
->>
->>> Perhaps you should introduce separate modules for the common PCI and USB
->>> support code, similarly to how the rt2x00 modules are organised.
->>
->> That would not be very difficult, but it would involve converting the single
->> module rtlwifi into 3 separate entities. Does that make sense to you? I'm not sure.
->
-> Yes it does make sense.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I will be submitting a new patch as an RFC.
+On 07/24/2013 02:32 PM, Jordan McCarthy wrote:
+> Hi Linux wireless folk, I am a developer at a non-profit working on
+> a wireless mesh networking platform, and we've just discovered that
+> we have a fleet of netbooks with the Broadcom 4313 chipset, one
+> that does not work particularly well (and sometimes not at all) in
+> ad-hoc mode.
+> 
+> What's more, none of the available drivers seem to support
+> IBSS-RSN, which is absolutely essential for the requirements of our
+> platform. Accordingly, I wondered if anyone has any experience
+> trying to get the BCM4313 to work in an IBSS-RSN configuration, and
+> if not, what is needed to get either of the following:
+> 
+> - brcmsmac to support adhoc mode - b43 to cover the BCM4313
 
-Larry
+Hi Jordan,
 
+I added basic adhoc mode support to brcmsmac in 3.10 [0].
+This did not got much testing by me. If you want to improve this have
+a look on how b43 handles adhoc mode and looking into the initial
+brcmsmac commit to staging also helps.
 
+Hauke
+
+[0]:
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=c55b3766054d3db7a9732c6c8a1c81afac2cfaa6
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with undefined - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJR7+dOAAoJEIZ0px9YPRMy/XEP/0B7JBgJYZwwbZZOX4reia6F
+XGDoJ3FARwmTgsrIyR9ad8bkEjGUnBfXaln/9we1ePRGG+3floLgY7AifX6iaKib
+C6wh3ivFLD05l2CkHLUR1As9o0kh09m+ke34gF0JzQ5g7CLAmNtHhoE1NcPXVsfd
+VyRI35Gz47hO1w5b66zPmM8rMx1ua1I31gCJ50Cjbk3EEgnrQqtERxpwKrZTd13w
+0qDR7gShcAoFYYBvKbf4mScJbuzOkYwOU9cpn6nIbZm48uhgpPHjR1fuuK5UF7dn
+ZyDxdap4S4f9lQPPZtC+ne9SWigP6wuYxHZiUTL6jbcZcL14AHzDdQfuIzO+4cjK
++GPomc4BkDnhWg9AcbzquF9tw9YE7h0aKGHknB1DYTkRZnvTrwKjsGdu9TBxwlFz
+QHe+pTHOndf+s9/aGqYm/sxq3GOGXHl+OUp8ErOUzLRCvCvy+QyHDBPoeT8BYe6/
+k513hqc1eV64ypV/Mns2V1ZbLiLC7huK6pgcrQSeNfvq6JHw8fmMZuhuIVARum1R
+iiEnuX7ZbR3L+MgJTE9K7RT5nkrRyj1/IAxd4/hPulBmCHkQnRFM2f+rVOBa5U/k
+MsqgaCwEVotlHDy+lXFDQTyhWsizEGW2ebZihP3EI2I3U4qEuLgFg2pNG29ded8w
+OrVIlJi8TbUXAbJWpyDC
+=M1wB
+-----END PGP SIGNATURE-----
