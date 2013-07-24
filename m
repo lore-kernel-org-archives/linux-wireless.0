@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:58589 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753054Ab3GSSQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 14:16:29 -0400
-Received: from zwerg.Speedport_W_723V_1_28_000 ([93.218.114.45]) by
- mail.gmx.com (mrgmx103) with ESMTPSA (Nemesis) id 0Lp3Qu-1UWQmc07xk-00ewVz
- for <linux-wireless@vger.kernel.org>; Fri, 19 Jul 2013 20:16:28 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 1/2] ath9k_htc: do some initial hardware configuration
-Date: Fri, 19 Jul 2013 20:16:17 +0200
-Message-Id: <1374257778-9758-2-git-send-email-linux@rempel-privat.de> (sfid-20130719_201632_226167_C3B6F40A)
-In-Reply-To: <1374257778-9758-1-git-send-email-linux@rempel-privat.de>
-References: <1374257778-9758-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:42357 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752631Ab3GXPdv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jul 2013 11:33:51 -0400
+Received: by mail-oa0-f51.google.com with SMTP id i4so1300601oah.24
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Jul 2013 08:33:51 -0700 (PDT)
+Message-ID: <51EFF3DD.80000@lwfinger.net> (sfid-20130724_173355_225276_A3073EF5)
+Date: Wed, 24 Jul 2013 10:33:49 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Vihang Patel <vihang08@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Fwd: TP-LINK 8200ND
+References: <CA+Gu+Kx3RNkenmHD4dGP5NxC1zzq9sxwjdRxuj5qLFCg32DLeQ@mail.gmail.com> <CA+Gu+Ky5rCwCrWJkCKXsPEFodaARdf5DkmES3TN_UNuUqTnYVA@mail.gmail.com>
+In-Reply-To: <CA+Gu+Ky5rCwCrWJkCKXsPEFodaARdf5DkmES3TN_UNuUqTnYVA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently we configure harwdare and clock, only after
-interface start. In this case, if we reload module or
-reboot PC without configuring adapter, firmware will freeze.
-There is no software way to reset adpter.
+On 07/24/2013 08:50 AM, Vihang Patel wrote:
+> Hi,
+>
+> I understand there was a thread on linux drivers for TP-LINK8200ND
+> with rtl8192cu chipset, but it ran cold with no resolution. I was
+> wondering if there if anyone found a resolution on that.
+>
+> I have tried installing the drivers provided by realtek as well on
+> both Ubuntu 12.004 and 13.04. Scorched the internet, and was able to
+> get it to detect the device but it wont connect to any of the Wireless
+> networks.
+>
+> Any help would be helpful.
 
-This patch add initial configuration and set it in
-disabled state, to avoid this freeze. Behaviour of this patch
-should be similar to: ifconfig wlan0 up; ifconfig wlan0 down.
+The USB ID has been added to the mainline and stable kernels; however, the 
+device does not work for me. The latest vendor driver sent privately to me can 
+make a connection; however, the throughput is less than 1 Mbps. I have not yet 
+had a chance to investigate as this card is low on my priority list.
 
-Bug: https://github.com/qca/open-ath9k-htc-firmware/issues/1
-Tested-by: Bo Shi <cnshibo@gmail.com>
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 1 +
- 1 file changed, 1 insertion(+)
+I have added the Realtek developer to this reply (Bcc). Perhaps the company has 
+made some progress; however, when I last contacted them, they did not have an 
+instance of this particular card. It seems that your only viable option at this 
+time would probably be the Windows driver with ndiswrapper. I have not tested 
+this option.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 71a183f..c3676bf 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -861,6 +861,7 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
- 	if (error != 0)
- 		goto err_rx;
- 
-+	ath9k_hw_disable(priv->ah);
- #ifdef CONFIG_MAC80211_LEDS
- 	/* must be initialized before ieee80211_register_hw */
- 	priv->led_cdev.default_trigger = ieee80211_create_tpt_led_trigger(priv->hw,
--- 
-1.8.1.2
+Larry
+
 
