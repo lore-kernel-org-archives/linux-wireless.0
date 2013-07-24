@@ -1,27 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:56862 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751788Ab3GGOMX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 10:12:23 -0400
-Date: Sun, 7 Jul 2013 16:15:09 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 10/20] rt2x00: rt2800lib: introduce
- rt2800_get_txmixer_gain_{24, 5}g helpers
-Message-ID: <20130707141509.GF2073@localhost.localdomain> (sfid-20130707_161225_805026_80F8286D)
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
- <1372664879-18474-11-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372664879-18474-11-git-send-email-juhosg@openwrt.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55406 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753918Ab3GXWGI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jul 2013 18:06:08 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 32/36] net: wireless: convert class code to use dev_groups
+Date: Wed, 24 Jul 2013 15:05:35 -0700
+Message-Id: <1374703539-9705-33-git-send-email-gregkh@linuxfoundation.org> (sfid-20130725_001152_931436_74BF3126)
+In-Reply-To: <1374703539-9705-1-git-send-email-gregkh@linuxfoundation.org>
+References: <1374703539-9705-1-git-send-email-gregkh@linuxfoundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 01, 2013 at 09:47:49AM +0200, Gabor Juhos wrote:
-> Move the TX mixer gain reading code into separate
-> helper functions in preparation for RT3593 support.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+The dev_attrs field of struct class is going away soon, dev_groups
+should be used instead.  This converts the networking wireless class
+code to use the correct field.
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+
+John, feel free to take this through your tree, or ACK it and I can take
+it through mine.
+
+ net/wireless/sysfs.c | 25 ++++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index a23253e0..9ee6bc1a 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -30,7 +30,8 @@ static ssize_t name ## _show(struct device *dev,			\
+ 			      char *buf)				\
+ {									\
+ 	return sprintf(buf, fmt "\n", dev_to_rdev(dev)->member);	\
+-}
++}									\
++static DEVICE_ATTR_RO(name)
+ 
+ SHOW_FMT(index, "%d", wiphy_idx);
+ SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
+@@ -42,7 +43,7 @@ static ssize_t name_show(struct device *dev,
+ 	struct wiphy *wiphy = &dev_to_rdev(dev)->wiphy;
+ 	return sprintf(buf, "%s\n", dev_name(&wiphy->dev));
+ }
+-
++static DEVICE_ATTR_RO(name);
+ 
+ static ssize_t addresses_show(struct device *dev,
+ 			      struct device_attribute *attr,
+@@ -60,15 +61,17 @@ static ssize_t addresses_show(struct device *dev,
+ 
+ 	return buf - start;
+ }
+-
+-static struct device_attribute ieee80211_dev_attrs[] = {
+-	__ATTR_RO(index),
+-	__ATTR_RO(macaddress),
+-	__ATTR_RO(address_mask),
+-	__ATTR_RO(addresses),
+-	__ATTR_RO(name),
+-	{}
++static DEVICE_ATTR_RO(addresses);
++
++static struct attribute *ieee80211_attrs[] = {
++	&dev_attr_index.attr,
++	&dev_attr_macaddress.attr,
++	&dev_attr_address_mask.attr,
++	&dev_attr_addresses.attr,
++	&dev_attr_name.attr,
++	NULL,
+ };
++ATTRIBUTE_GROUPS(ieee80211);
+ 
+ static void wiphy_dev_release(struct device *dev)
+ {
+@@ -146,7 +149,7 @@ struct class ieee80211_class = {
+ 	.name = "ieee80211",
+ 	.owner = THIS_MODULE,
+ 	.dev_release = wiphy_dev_release,
+-	.dev_attrs = ieee80211_dev_attrs,
++	.dev_groups = ieee80211_groups,
+ 	.dev_uevent = wiphy_uevent,
+ #ifdef CONFIG_PM
+ 	.suspend = wiphy_suspend,
+-- 
+1.8.3.rc0.20.gb99dd2e
+
