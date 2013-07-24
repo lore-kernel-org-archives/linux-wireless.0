@@ -1,51 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:45821 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759213Ab3GaIzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 04:55:25 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/5] ath10k: zero arvif memory on add_interface()
-Date: Wed, 31 Jul 2013 10:55:14 +0200
-Message-ID: <1375260915-22500-5-git-send-email-michal.kazior@tieto.com> (sfid-20130731_105535_942114_933F4C72)
-In-Reply-To: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
-References: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55411 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753966Ab3GXWGJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jul 2013 18:06:09 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 33/36] net: rfkill: convert class code to use dev_groups
+Date: Wed, 24 Jul 2013 15:05:36 -0700
+Message-Id: <1374703539-9705-34-git-send-email-gregkh@linuxfoundation.org> (sfid-20130725_001132_334268_E1D3F696)
+In-Reply-To: <1374703539-9705-1-git-send-email-gregkh@linuxfoundation.org>
+References: <1374703539-9705-1-git-send-email-gregkh@linuxfoundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The private memory area in vif provided by
-mac80211 isn't guaranteed to be zeroed.
+The dev_attrs field of struct class is going away soon, dev_groups
+should be used instead.  This converts the rfkill class code to use the
+correct field.
 
-This patch should fix issues when switching
-between STA and AP interface types.
-
-The tim_bitmap could become polluted by STA bssid
-field (since it's a union), wep_keys array
-could also become polluted with invalid pointers
-and probably much more.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |    2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6a130c5..1aa5a39 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1925,6 +1925,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+Johnannes, feel free to take this through your tree, or ACK it and I can
+take it through mine.
+
+ net/rfkill/core.c | 90 +++++++++++++++++++++++++------------------------------
+ 1 file changed, 41 insertions(+), 49 deletions(-)
+
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 1cec5e4f..1bacc107 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -576,14 +576,14 @@ void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw)
+ }
+ EXPORT_SYMBOL(rfkill_set_states);
  
- 	mutex_lock(&ar->conf_mutex);
+-static ssize_t rfkill_name_show(struct device *dev,
+-				struct device_attribute *attr,
+-				char *buf)
++static ssize_t name_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
  
-+	memset(arvif, 0, sizeof(*arvif));
+ 	return sprintf(buf, "%s\n", rfkill->name);
+ }
++static DEVICE_ATTR_RO(name);
+ 
+ static const char *rfkill_get_type_str(enum rfkill_type type)
+ {
+@@ -611,54 +611,52 @@ static const char *rfkill_get_type_str(enum rfkill_type type)
+ 	}
+ }
+ 
+-static ssize_t rfkill_type_show(struct device *dev,
+-				struct device_attribute *attr,
+-				char *buf)
++static ssize_t type_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 
+ 	return sprintf(buf, "%s\n", rfkill_get_type_str(rfkill->type));
+ }
++static DEVICE_ATTR_RO(type);
+ 
+-static ssize_t rfkill_idx_show(struct device *dev,
+-			       struct device_attribute *attr,
+-			       char *buf)
++static ssize_t index_show(struct device *dev, struct device_attribute *attr,
++			  char *buf)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 
+ 	return sprintf(buf, "%d\n", rfkill->idx);
+ }
++static DEVICE_ATTR_RO(index);
+ 
+-static ssize_t rfkill_persistent_show(struct device *dev,
+-			       struct device_attribute *attr,
+-			       char *buf)
++static ssize_t persistent_show(struct device *dev,
++			       struct device_attribute *attr, char *buf)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 
+ 	return sprintf(buf, "%d\n", rfkill->persistent);
+ }
++static DEVICE_ATTR_RO(persistent);
+ 
+-static ssize_t rfkill_hard_show(struct device *dev,
+-				 struct device_attribute *attr,
+-				 char *buf)
++static ssize_t hard_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 
+ 	return sprintf(buf, "%d\n", (rfkill->state & RFKILL_BLOCK_HW) ? 1 : 0 );
+ }
++static DEVICE_ATTR_RO(hard);
+ 
+-static ssize_t rfkill_soft_show(struct device *dev,
+-				 struct device_attribute *attr,
+-				 char *buf)
++static ssize_t soft_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 
+ 	return sprintf(buf, "%d\n", (rfkill->state & RFKILL_BLOCK_SW) ? 1 : 0 );
+ }
+ 
+-static ssize_t rfkill_soft_store(struct device *dev,
+-				  struct device_attribute *attr,
+-				  const char *buf, size_t count)
++static ssize_t soft_store(struct device *dev, struct device_attribute *attr,
++			  const char *buf, size_t count)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 	unsigned long state;
+@@ -680,6 +678,7 @@ static ssize_t rfkill_soft_store(struct device *dev,
+ 
+ 	return count;
+ }
++static DEVICE_ATTR_RW(soft);
+ 
+ static u8 user_state_from_blocked(unsigned long state)
+ {
+@@ -691,18 +690,16 @@ static u8 user_state_from_blocked(unsigned long state)
+ 	return RFKILL_USER_STATE_UNBLOCKED;
+ }
+ 
+-static ssize_t rfkill_state_show(struct device *dev,
+-				 struct device_attribute *attr,
+-				 char *buf)
++static ssize_t state_show(struct device *dev, struct device_attribute *attr,
++			  char *buf)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 
+ 	return sprintf(buf, "%d\n", user_state_from_blocked(rfkill->state));
+ }
+ 
+-static ssize_t rfkill_state_store(struct device *dev,
+-				  struct device_attribute *attr,
+-				  const char *buf, size_t count)
++static ssize_t state_store(struct device *dev, struct device_attribute *attr,
++			   const char *buf, size_t count)
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 	unsigned long state;
+@@ -725,32 +722,27 @@ static ssize_t rfkill_state_store(struct device *dev,
+ 
+ 	return count;
+ }
++static DEVICE_ATTR_RW(state);
+ 
+-static ssize_t rfkill_claim_show(struct device *dev,
+-				 struct device_attribute *attr,
+-				 char *buf)
++static ssize_t claim_show(struct device *dev, struct device_attribute *attr,
++			  char *buf)
+ {
+ 	return sprintf(buf, "%d\n", 0);
+ }
+-
+-static ssize_t rfkill_claim_store(struct device *dev,
+-				  struct device_attribute *attr,
+-				  const char *buf, size_t count)
+-{
+-	return -EOPNOTSUPP;
+-}
+-
+-static struct device_attribute rfkill_dev_attrs[] = {
+-	__ATTR(name, S_IRUGO, rfkill_name_show, NULL),
+-	__ATTR(type, S_IRUGO, rfkill_type_show, NULL),
+-	__ATTR(index, S_IRUGO, rfkill_idx_show, NULL),
+-	__ATTR(persistent, S_IRUGO, rfkill_persistent_show, NULL),
+-	__ATTR(state, S_IRUGO|S_IWUSR, rfkill_state_show, rfkill_state_store),
+-	__ATTR(claim, S_IRUGO|S_IWUSR, rfkill_claim_show, rfkill_claim_store),
+-	__ATTR(soft, S_IRUGO|S_IWUSR, rfkill_soft_show, rfkill_soft_store),
+-	__ATTR(hard, S_IRUGO, rfkill_hard_show, NULL),
+-	__ATTR_NULL
++static DEVICE_ATTR_RO(claim);
 +
- 	arvif->ar = ar;
- 	arvif->vif = vif;
++static struct attribute *rfkill_dev_attrs[] = {
++	&dev_attr_name.attr,
++	&dev_attr_type.attr,
++	&dev_attr_index.attr,
++	&dev_attr_persistent.attr,
++	&dev_attr_state.attr,
++	&dev_attr_claim.attr,
++	&dev_attr_soft.attr,
++	&dev_attr_hard.attr,
++	NULL,
+ };
++ATTRIBUTE_GROUPS(rfkill_dev);
  
+ static void rfkill_release(struct device *dev)
+ {
+@@ -830,7 +822,7 @@ static int rfkill_resume(struct device *dev)
+ static struct class rfkill_class = {
+ 	.name		= "rfkill",
+ 	.dev_release	= rfkill_release,
+-	.dev_attrs	= rfkill_dev_attrs,
++	.dev_groups	= rfkill_dev_groups,
+ 	.dev_uevent	= rfkill_dev_uevent,
+ 	.suspend	= rfkill_suspend,
+ 	.resume		= rfkill_resume,
 -- 
-1.7.9.5
+1.8.3.rc0.20.gb99dd2e
 
