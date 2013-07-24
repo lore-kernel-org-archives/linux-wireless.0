@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:34744 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753966Ab3GWCTC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55544 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752737Ab3GXTPL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 22:19:02 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
+	Wed, 24 Jul 2013 15:15:11 -0400
+Date: Wed, 24 Jul 2013 15:02:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	Amitkumar Karwar <akarwar@marvell.com>,
 	Avinash Patil <patila@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
 	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 21/21] mwifiex: modify mwifiex_ap_sta_limits to advertise support for P2P
-Date: Mon, 22 Jul 2013 19:17:58 -0700
-Message-ID: <1374545878-15683-22-git-send-email-bzhao@marvell.com> (sfid-20130723_041908_925506_1493DC08)
-In-Reply-To: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+	Frank Huang <frankh@marvell.com>
+Subject: Re: [PATCH 18/21] mwifiex: handle driver initialization error paths
+Message-ID: <20130724190250.GG2385@tuxdriver.com> (sfid-20130724_211516_475803_977AFA22)
 References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+ <1374545878-15683-19-git-send-email-bzhao@marvell.com>
+ <20130724151651.GD2385@tuxdriver.com>
+ <477F20668A386D41ADCC57781B1F70430EA311794C@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430EA311794C@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Wed, Jul 24, 2013 at 11:48:25AM -0700, Bing Zhao wrote:
+> Hi John,
+> 
+> > This one didn't apply on the current wireless-next tree.  Can you
+> > fix it up?
+> 
+> 18/21 and 19/21 depend on this patch:
+> 
+> commit 232fde062e0a2cc52e8e18a50cda361b4ba88f34
+> Author: Daniel Drake <dsd@laptop.org>
+> Date:   Sat Jul 13 10:57:10 2013 -0400
+> 
+>     mwifiex: fix IRQ enable/disable
+> 
+> which is in wireless.git and wireless-testing.git currently.
+> 
+> 
+> We can apply 18 and 19 later after commit 232fde0 is merged back to wireless-next.git.
+> (I will send you a reminder to merge these two patches once commit 232fde0 is in -next tree.)
+> 
+> Thanks,
+> Bing
 
-We support maximum simultaneous 2 non-AP station interfaces and
-they can assume role of Station/P2P client/P2P GO.
-Advertise this support to cfg80211 so that concurrent P2P/STA
-operation is possible.
+OK, thanks for checking!
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index dbdd3b2..cc334d5 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -25,7 +25,9 @@ module_param(reg_alpha2, charp, 0);
- 
- static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
- 	{
--		.max = 2, .types = BIT(NL80211_IFTYPE_STATION),
-+		.max = 2, .types = BIT(NL80211_IFTYPE_STATION) |
-+				   BIT(NL80211_IFTYPE_P2P_GO) |
-+				   BIT(NL80211_IFTYPE_P2P_CLIENT),
- 	},
- 	{
- 		.max = 1, .types = BIT(NL80211_IFTYPE_AP),
 -- 
-1.8.2.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
