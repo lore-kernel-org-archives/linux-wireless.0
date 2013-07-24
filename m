@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:40661 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756728Ab3GDRvt (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:53686 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013Ab3GXMlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jul 2013 13:51:49 -0400
-Received: by mail-wi0-f169.google.com with SMTP id c10so7567666wiw.4
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jul 2013 10:51:48 -0700 (PDT)
+	Wed, 24 Jul 2013 08:41:51 -0400
+Received: from mail0.frost.chambana.net (209-66-96-68.chambana.net [209.66.96.68])
+	by www19.servergod.com (Postfix) with ESMTP id 2ECCE11FCDA
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Jul 2013 05:32:07 -0700 (PDT)
+Received: from [0.0.0.0] (unknown [192.168.12.1])
+	(Authenticated sender: mccarthy)
+	by mail0.frost.chambana.net (Postfix) with ESMTPSA id 29DF7A1A078DAD574055B
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Jul 2013 12:34:27 +0000 (UTC)
+Message-ID: <51EFC944.40502@opentechinstitute.org> (sfid-20130724_144155_045514_4D7CF592)
+Date: Wed, 24 Jul 2013 08:32:04 -0400
+From: Jordan McCarthy <mccarthy@opentechinstitute.org>
 MIME-Version: 1.0
-In-Reply-To: <1372899889-19183-43-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-	<1372899889-19183-43-git-send-email-mcgrof@do-not-panic.com>
-Date: Thu, 4 Jul 2013 10:51:48 -0700
-Message-ID: <CAMcMvsiQb=byYEV4z2aZUYCLjRmqJUm_SQrUrOPUXrrfkcjeLA@mail.gmail.com> (sfid-20130704_195152_540700_6BD4E1F6)
-Subject: Re: [RFC 42/53] wireless-regdb: ID, Indonesia - enable 5 GHz and VHT80
-From: Paul Stewart <pstew@chromium.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	wireless-regdb@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: linux-wireless@vger.kernel.org
+Subject: IBSS-RSN support for BCM4313
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 3, 2013 at 6:04 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
->
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
->
-> Pursuant to:
->
-> http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf,
->
-> provide a 5GHz rule for Indonesian regulatory domain. QCA has
-> also verified VHT80 can be enabled. Patch originally posted by
-> Paul Stewart <pstew@chromium.org>, I just modified to enable 80 MHz
-> bandwidth.
->
-> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-Signed-off-by: Paul Stewart <pstew@chromium.org>
->
-> ---
->
->  db.txt |    2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/db.txt b/db.txt
-> index 0ebb934..a101b1e 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -380,7 +380,9 @@ country HU: DFS-ETSI
->         (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
->
->  country ID:
-> +       # ref: http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf
->         (2402 - 2482 @ 40), (N/A, 20)
-> +       (5735 - 5815 @ 20), (N/A, 20)
->
->  country IE: DFS-ETSI
->         (2402 - 2482 @ 40), (N/A, 20)
-> --
-> 1.7.10.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi Linux wireless folk,
+	I am a developer at a non-profit working on a wireless mesh networking
+platform, and we've just discovered that we have a fleet of netbooks
+with the Broadcom 4313 chipset, one that does not work particularly well
+(and sometimes not at all) in ad-hoc mode.
+
+What's more, none of the available drivers seem to support IBSS-RSN,
+which is absolutely essential for the requirements of our platform.
+Accordingly, I wondered if anyone has any experience trying to get the
+BCM4313 to work in an IBSS-RSN configuration, and if not, what is needed
+to get either of the following:
+
+- - brcmsmac to support adhoc mode
+- - b43 to cover the BCM4313
+
+Many thanks,
+Jordan
+
+- -- 
+Jordan McCarthy
+Technical Program Associate | Open Technology Institute | New America
+Foundation
+My Public Key: 0xC08D8042 | 4A61 3D39 4125 127D 65EA DDC2 BFBD A2E9 C08D
+8042
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJR78lDAAoJEL+9ounAjYBClsUH/RgqnocuAhxTyHaXR9EHenhA
+ZaSvOQCoCcWP5nOvSNSVHF/xmE7GJq+sPWzQs6O9iLI9bYiSE5NlO1V5wfISaQo/
+xxdhczKyVZNFmzUgHnN+HCus99l6wOq5g+nHB8hALP9+iJ9gxJ5zyPVzgiOLLlgZ
+3VXLRkQTeNNN/htTPrbiYQ6H/FPHXi4WOOxovpsYWSTw2B0BXwAJXDvP5wsBxzza
+W0Gqb25Ipu3z2GtcH1qupPX1myARF1ZIN6hksJPcxgY5g/1IkYVI7kqr5B99ANo8
+CCMxi/non3sFSPEBsiDlXKIw2toQG8xmjKYyAh+EY1PLQE48f2XAbj/jbwSmyPo=
+=9usr
+-----END PGP SIGNATURE-----
