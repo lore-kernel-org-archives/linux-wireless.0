@@ -1,57 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46464 "EHLO ebb05.tieto.com"
+Received: from mx1.redhat.com ([209.132.183.28]:15044 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752697Ab3GPHUN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:20:13 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infraread.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 06/10] ath10k: move free_vdev_map initialization
-Date: Tue, 16 Jul 2013 09:19:49 +0200
-Message-ID: <1373959193-5164-7-git-send-email-michal.kazior@tieto.com> (sfid-20130716_092023_026652_714C8E1E)
-In-Reply-To: <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
-References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
- <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
+	id S1751539Ab3GXJ4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jul 2013 05:56:43 -0400
+Date: Wed, 24 Jul 2013 11:59:12 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jeff Layton <jlayton@redhat.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	netdev@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+	Stephen Hemminger <shemminger@vyatta.com>, rjones@redhat.com,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: hung task while plugging in cfg80211
+Message-ID: <20130724095911.GA1637@redhat.com> (sfid-20130724_115654_820212_88D5994C)
+References: <20130712074911.01b5945a@corrin.poochiereds.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130712074911.01b5945a@corrin.poochiereds.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is necessary for hw reconfiguration to work.
-Since mac80211 is not calling remove_interface()
-is such case we must reset free_vdev_map.
+On Fri, Jul 12, 2013 at 07:49:11AM -0400, Jeff Layton wrote:
+> I updated the kernel on my rawhide KVM guest, and noticed that the
+> ethernet interface wasn't coming up at all. While poking around, I saw
+> this stack trace pop up:
+> 
+> Jul 12 07:29:25 rawhide kernel: [  241.156196] INFO: task modprobe:501 blocked for more than 120 seconds.
+> Jul 12 07:29:25 rawhide kernel: [  241.157222] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> Jul 12 07:29:25 rawhide kernel: [  241.158379] modprobe        D ffff880118c526e0  4584   501    500 0x00000080
+> Jul 12 07:29:25 rawhide kernel: [  241.159458]  ffff8800d10c3ba8 0000000000000046 00000000001d5300 ffff8800d10c3fd8
+> Jul 12 07:29:25 rawhide kernel: [  241.160644]  ffff8800d10c3fd8 00000000001d5300 ffff8800d2ae4dc0 ffff8800d2ae4dc0
+> Jul 12 07:29:25 rawhide kernel: [  241.161875]  ffffffff81d0bfa0 ffffffff81d0bfa8 ffffffff00000000 ffffffff81d0bff0
+> Jul 12 07:29:25 rawhide kernel: [  241.163096] Call Trace:
+> Jul 12 07:29:25 rawhide kernel: [  241.163460]  [<ffffffff817377e9>] schedule+0x29/0x70
+> Jul 12 07:29:25 rawhide kernel: [  241.164235]  [<ffffffff817392ad>] rwsem_down_write_failed+0xed/0x1a0
+> Jul 12 07:29:25 rawhide kernel: [  241.165489]  [<ffffffff810bb600>] ? update_cpu_load_active+0xb0/0xb0
+> Jul 12 07:29:25 rawhide kernel: [  241.166267]  [<ffffffff8137d503>] call_rwsem_down_write_failed+0x13/0x20
+> Jul 12 07:29:25 rawhide kernel: [  241.166760]  [<ffffffff81736aad>] ? down_write+0x9d/0xb2
+> Jul 12 07:29:25 rawhide kernel: [  241.167189]  [<ffffffff8162d975>] ? genl_lock_all+0x15/0x30
+> Jul 12 07:29:25 rawhide kernel: [  241.167603]  [<ffffffff8162d975>] genl_lock_all+0x15/0x30
 
-Also use a define instead of a hardcoded value for
-vdev map initialization.
+I reproduced that on qemu-kvm with rawhide LiveCD. Below more
+information gathered using sysrq:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+(qemu) [ 2458.110724] SysRq : Show Locks Held
+[ 2458.111347] 
+[ 2458.111347] Showing all locks held in the system:
+[ 2458.111347] 1 lock held by NetworkManager/582:
+[ 2458.111347]  #0:  (cb_lock){++++++}, at: [<ffffffff8162bc79>] genl_rcv+0x19/0x40
+[ 2458.111347] 1 lock held by modprobe/603:
+[ 2458.111347]  #0:  (cb_lock){++++++}, at: [<ffffffff8162baa5>] genl_lock_all+0x15/0x30
+[ 2458.111347] 
+[ 2458.111347] =============================================
+[ 2458.111347] 
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 01c1d82..0e4a704 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -458,8 +458,6 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
- 	ar->hif.priv = hif_priv;
- 	ar->hif.ops = hif_ops;
- 
--	ar->free_vdev_map = 0xFF; /* 8 vdevs */
--
- 	init_completion(&ar->scan.started);
- 	init_completion(&ar->scan.completed);
- 	init_completion(&ar->scan.on_channel);
-@@ -590,6 +588,8 @@ int ath10k_core_start(struct ath10k *ar)
- 	if (status)
- 		goto err_disconnect_htc;
- 
-+	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
-+
- 	return 0;
- 
- err_disconnect_htc:
--- 
-1.7.9.5
+(qemu) sendkey alt-sysrq-w
+(qemu) [ 2461.579457] SysRq : Show Blocked State
+[ 2461.580103]   task                        PC stack   pid father
+[ 2461.580103] NetworkManager  D ffff880034b84500  4040   582      1 0x00000080
+[ 2461.580103]  ffff8800197ff720 0000000000000046 00000000001d5340 ffff8800197fffd8
+[ 2461.580103]  ffff8800197fffd8 00000000001d5340 ffff880019631700 7fffffffffffffff
+[ 2461.580103]  ffff8800197ff880 ffff8800197ff878 ffff880019631700 ffff880019631700
+[ 2461.580103] Call Trace:
+[ 2461.580103]  [<ffffffff817355f9>] schedule+0x29/0x70
+[ 2461.580103]  [<ffffffff81731ad1>] schedule_timeout+0x1c1/0x360
+[ 2461.580103]  [<ffffffff810e69eb>] ? mark_held_locks+0xbb/0x140
+[ 2461.580103]  [<ffffffff817377ac>] ? _raw_spin_unlock_irq+0x2c/0x50
+[ 2461.580103]  [<ffffffff810e6b6d>] ? trace_hardirqs_on_caller+0xfd/0x1c0
+[ 2461.580103]  [<ffffffff81736398>] wait_for_completion_killable+0xe8/0x170
+[ 2461.580103]  [<ffffffff810b7fa0>] ? wake_up_state+0x20/0x20
+[ 2461.580103]  [<ffffffff81095825>] call_usermodehelper_exec+0x1a5/0x210
+[ 2461.580103]  [<ffffffff817362ed>] ? wait_for_completion_killable+0x3d/0x170
+[ 2461.580103]  [<ffffffff81095cc3>] __request_module+0x1b3/0x370
+[ 2461.580103]  [<ffffffff810e6b6d>] ? trace_hardirqs_on_caller+0xfd/0x1c0
+[ 2461.580103]  [<ffffffff8162c5c9>] ctrl_getfamily+0x159/0x190
+[ 2461.580103]  [<ffffffff8162d8a4>] genl_family_rcv_msg+0x1f4/0x2e0
+[ 2461.580103]  [<ffffffff8162d990>] ? genl_family_rcv_msg+0x2e0/0x2e0
+[ 2461.580103]  [<ffffffff8162da1e>] genl_rcv_msg+0x8e/0xd0
+[ 2461.580103]  [<ffffffff8162b729>] netlink_rcv_skb+0xa9/0xc0
+[ 2461.580103]  [<ffffffff8162bc88>] genl_rcv+0x28/0x40
+[ 2461.580103]  [<ffffffff8162ad6d>] netlink_unicast+0xdd/0x190
+[ 2461.580103]  [<ffffffff8162b149>] netlink_sendmsg+0x329/0x750
+[ 2461.580103]  [<ffffffff815db849>] sock_sendmsg+0x99/0xd0
+[ 2461.580103]  [<ffffffff810bb58f>] ? local_clock+0x5f/0x70
+[ 2461.580103]  [<ffffffff810e96e8>] ? lock_release_non_nested+0x308/0x350
+[ 2461.580103]  [<ffffffff815dbc6e>] ___sys_sendmsg+0x39e/0x3b0
+[ 2461.580103]  [<ffffffff810565af>] ? kvm_clock_read+0x2f/0x50
+[ 2461.580103]  [<ffffffff810218b9>] ? sched_clock+0x9/0x10
+[ 2461.580103]  [<ffffffff810bb2bd>] ? sched_clock_local+0x1d/0x80
+[ 2461.580103]  [<ffffffff810bb448>] ? sched_clock_cpu+0xa8/0x100
+[ 2461.580103]  [<ffffffff810e33ad>] ? trace_hardirqs_off+0xd/0x10
+[ 2461.580103]  [<ffffffff810bb58f>] ? local_clock+0x5f/0x70
+[ 2461.580103]  [<ffffffff810e3f7f>] ? lock_release_holdtime.part.28+0xf/0x1a0
+[ 2461.580103]  [<ffffffff8120fec9>] ? fget_light+0xf9/0x510
+[ 2461.580103]  [<ffffffff8120fe0c>] ? fget_light+0x3c/0x510
+[ 2461.580103]  [<ffffffff815dd1d2>] __sys_sendmsg+0x42/0x80
+[ 2461.580103]  [<ffffffff815dd222>] SyS_sendmsg+0x12/0x20
+[ 2461.580103]  [<ffffffff81741ad9>] system_call_fastpath+0x16/0x1b
+[ 2461.580103] modprobe        D ffff88000f2c8000  4632   603    602 0x00000080
+[ 2461.580103]  ffff88000f04fba8 0000000000000046 00000000001d5340 ffff88000f04ffd8
+[ 2461.580103]  ffff88000f04ffd8 00000000001d5340 ffff8800377d4500 ffff8800377d4500
+[ 2461.580103]  ffffffff81d0b260 ffffffff81d0b268 ffffffff00000000 ffffffff81d0b2b0
+[ 2461.580103] Call Trace:
+[ 2461.580103]  [<ffffffff817355f9>] schedule+0x29/0x70
+[ 2461.580103]  [<ffffffff81736d4d>] rwsem_down_write_failed+0xed/0x1a0
+[ 2461.580103]  [<ffffffff810bb200>] ? update_cpu_load_active+0x10/0xb0
+[ 2461.580103]  [<ffffffff8137b473>] call_rwsem_down_write_failed+0x13/0x20
+[ 2461.580103]  [<ffffffff8173492d>] ? down_write+0x9d/0xb2
+[ 2461.580103]  [<ffffffff8162baa5>] ? genl_lock_all+0x15/0x30
+[ 2461.580103]  [<ffffffff8162baa5>] genl_lock_all+0x15/0x30
+[ 2461.580103]  [<ffffffff8162cbb3>] genl_register_family+0x53/0x1f0
+[ 2461.580103]  [<ffffffffa01dc000>] ? 0xffffffffa01dbfff
+[ 2461.580103]  [<ffffffff8162d650>] genl_register_family_with_ops+0x20/0x80
+[ 2461.580103]  [<ffffffffa01dc000>] ? 0xffffffffa01dbfff
+[ 2461.580103]  [<ffffffffa017fe84>] nl80211_init+0x24/0xf0 [cfg80211]
+[ 2461.580103]  [<ffffffffa01dc000>] ? 0xffffffffa01dbfff
+[ 2461.580103]  [<ffffffffa01dc043>] cfg80211_init+0x43/0xdb [cfg80211]
+[ 2461.580103]  [<ffffffff810020fa>] do_one_initcall+0xfa/0x1b0
+[ 2461.580103]  [<ffffffff8105cb93>] ? set_memory_nx+0x43/0x50
+[ 2461.580103]  [<ffffffff810f75af>] load_module+0x1c6f/0x27f0
+[ 2461.580103]  [<ffffffff810f2c90>] ? store_uevent+0x40/0x40
+[ 2461.580103]  [<ffffffff810f82c6>] SyS_finit_module+0x86/0xb0
+[ 2461.580103]  [<ffffffff81741ad9>] system_call_fastpath+0x16/0x1b
+[ 2461.580103] Sched Debug Version: v0.10, 3.11.0-0.rc1.git4.1.fc20.x86_64 #1
 
+So call user space to load cfg80211 module (alias
+net-pf-16-proto-16-family-nl80211) from ctrl_getfamily() with read taken
+cb_lock semaphore. That deadlock in modprobe process in
+genl_register_family() when try to down_write cb_lock.
+
+This is consequence of commit:
+
+commit fb4e156886ce6e8309e912d8b370d192330d19d3
+Author: Marcel Holtmann <marcel@holtmann.org>
+Date:   Sun Apr 28 16:22:06 2013 -0700
+
+    nl80211: Add generic netlink module alias for cfg80211/nl80211
+
+I prepared a possible fix for that (patch below), but I'm not sure if it
+do right thing, it can cause other oddity, please test (with
+CONFIG_LOCKDEP compiled). I think I would prefer rather remove
+autoloading genetlink modules from kernel or use just one lock
+in instead of two cb_lock & genl_mutex .
+
+Stanislaw
+
+diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
+index 2fd6dbe..1076fe1 100644
+--- a/net/netlink/genetlink.c
++++ b/net/netlink/genetlink.c
+@@ -877,8 +877,10 @@ static int ctrl_getfamily(struct sk_buff *skb, struct genl_info *info)
+ #ifdef CONFIG_MODULES
+ 		if (res == NULL) {
+ 			genl_unlock();
++			up_read(&cb_lock);
+ 			request_module("net-pf-%d-proto-%d-family-%s",
+ 				       PF_NETLINK, NETLINK_GENERIC, name);
++			down_read(&cb_lock);
+ 			genl_lock();
+ 			res = genl_family_find_byname(name);
+ 		}
