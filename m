@@ -1,65 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:58386 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3GDBGj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:06:39 -0400
-Received: by mail-pb0-f43.google.com with SMTP id md12so665206pbc.2
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:06:39 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 24/53] wireless-regdb: CZ, Czech Republic - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:20 -0700
-Message-Id: <1372899889-19183-25-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032042_214927_1100127F)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1863 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752713Ab3GYVBv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jul 2013 17:01:51 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Ben Greear" <greearb@candelatech.com>
+Subject: [PATCH] brcmfmac: inform cfg80211 about disconnect when device
+ is unplugged
+Date: Thu, 25 Jul 2013 23:01:34 +0200
+Message-ID: <1374786094-3882-1-git-send-email-arend@broadcom.com> (sfid-20130725_230155_688864_53BE6896)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+When the brcmfmac device is physically removed cfg80211 gives a
+warning upon unregistering the net device (see below).
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+[23052.390197] WARNING: CPU: 0 PID: 30 at net/wireless/core.c:937 cfg80211_netdev_notifier_call+0x164/0x600 [cfg80211]()
+[23052.400843] Modules linked in: brcmfmac(O) brcmutil(O) cfg80211(O) pl2303 usbserial binfmt_misc snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_intel snd_hda_codec snd_hwdep snd_pcm snd_seq_midi snd_rawmidi snd_seq_midi_event lpc_ich snd_seq snd_timer snd_seq_device snd psmouse mfd_core serio_raw soundcore snd_page_alloc intel_ips dell_laptop dell_wmi sparse_keymap dcdbas nouveau ttm drm_kms_helper drm i2c_algo_bit mxm_wmi ahci libahci sdhci_pci firewire_ohci firewire_core sdhci crc_itu_t mmc_core intel_agp intel_gtt e1000e ptp pps_core agpgart video [last unloaded: brcmfmac]
+[23052.452987] CPU: 0 PID: 30 Comm: khubd Tainted: G           O 3.11.0-rc1-wl-testing-lockdep-00002-g41cc093-dirty #1
+[23052.463480] Hardware name: Dell Inc. Latitude E6410/07XJP9, BIOS A07 02/15/2011
+[23052.470852]  00000000 00000000 f4efdc18 c1522e3d f845bed2 f4efdc48 c103fbe4 c16a9254
+[23052.478762]  00000000 0000001e f845bed2 000003a9 f841da44 f841da44 f3790004 f25539c0
+[23052.486741]  e2700200 f4efdc58 c103fc22 00000009 00000000 f4efdcc0 f841da44 00000002
+[23052.494712] Call Trace:
+[23052.497165]  [<c1522e3d>] dump_stack+0x4b/0x66
+[23052.501685]  [<c103fbe4>] warn_slowpath_common+0x84/0xa0
+[23052.507085]  [<f841da44>] ? cfg80211_netdev_notifier_call+0x164/0x600 [cfg80211]
+[23052.514542]  [<f841da44>] ? cfg80211_netdev_notifier_call+0x164/0x600 [cfg80211]
+[23052.521981]  [<c103fc22>] warn_slowpath_null+0x22/0x30
+[23052.527191]  [<f841da44>] cfg80211_netdev_notifier_call+0x164/0x600 [cfg80211]
+[23052.534494]  [<c150abe8>] ? packet_notifier+0xc8/0x1d0
+[23052.539703]  [<c150abfc>] ? packet_notifier+0xdc/0x1d0
+[23052.544880]  [<c150ab20>] ? packet_seq_stop+0x30/0x30
+[23052.550002]  [<c152d655>] notifier_call_chain+0x45/0x60
+[23052.555298]  [<c106839f>] raw_notifier_call_chain+0x1f/0x30
+[23052.560963]  [<c143c693>] call_netdevice_notifiers_info+0x33/0x70
+[23052.567153]  [<c1459869>] ? qdisc_destroy+0x99/0xb0
+[23052.572116]  [<c143c6e3>] call_netdevice_notifiers+0x13/0x20
+[23052.577861]  [<c143df93>] rollback_registered_many+0xf3/0x1d0
+[23052.583687]  [<c1524cfc>] ? mutex_lock_nested+0x25c/0x350
+[23052.589150]  [<c143e0f4>] rollback_registered+0x24/0x40
+[23052.594445]  [<c143e15f>] unregister_netdevice_queue+0x4f/0xb0
+[23052.600344]  [<c143e299>] unregister_netdev+0x19/0x30
+[23052.605484]  [<f865b38f>] brcmf_del_if+0xbf/0x160 [brcmfmac]
+[23052.611223]  [<f865b7ae>] brcmf_detach+0x5e/0xd0 [brcmfmac]
+[23052.616881]  [<f8667413>] brcmf_usb_disconnect+0x63/0xa0 [brcmfmac]
+[23052.623217]  [<c13e09aa>] usb_unbind_interface+0x4a/0x180
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+When the device is physically connected the driver sends a disassoc
+command to the device and response triggers the driver to inform cfg80211
+about it. However, with the device removed the disassoc command fails.
+This patch adds a call to cfg80211_disconnected() when that command fails.
 
-Quoting:
+The warning was added by commit below and also cleans up, but better
+doing it in the driver if only to get rid of the warning.
 
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
+commit f9bef3df52fe61067e4c1c6cfb2037cb6b259a6a
+Author: Ben Greear <greearb@candelatech.com>
+Date:   Wed Jun 19 14:06:26 2013 -0700
 
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
+    wireless: check for dangling wdev->current_bss pointer
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Cc: Ben Greear <greearb@candelatech.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Hi John,
 
-diff --git a/db.txt b/db.txt
-index 5e17129..94be114 100644
---- a/db.txt
-+++ b/db.txt
-@@ -204,9 +204,9 @@ country CY: DFS-ETSI
- # implemented.
- country CZ: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
--	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
--	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
--	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
-+	(5150 - 5250 @ 80), (N/A, 200 mW), NO-OUTDOOR
-+	(5250 - 5350 @ 80), (N/A, 100 mW), NO-OUTDOOR, DFS
-+	(5470 - 5725 @ 80), (N/A, 500 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
+One more fix for the wireless repository, which happens when unloading
+the brcmfmac driver or unplug the device while being connected.
+
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 277b37a..7fa71f7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -1093,8 +1093,11 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif)
+ 		brcmf_dbg(INFO, "Call WLC_DISASSOC to stop excess roaming\n ");
+ 		err = brcmf_fil_cmd_data_set(vif->ifp,
+ 					     BRCMF_C_DISASSOC, NULL, 0);
+-		if (err)
++		if (err) {
+ 			brcmf_err("WLC_DISASSOC failed (%d)\n", err);
++			cfg80211_disconnected(vif->wdev.netdev, 0,
++					      NULL, 0, GFP_KERNEL);
++		}
+ 		clear_bit(BRCMF_VIF_STATUS_CONNECTED, &vif->sme_state);
+ 	}
+ 	clear_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state);
 -- 
 1.7.10.4
+
 
