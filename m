@@ -1,44 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fep13.mx.upcmail.net ([62.179.121.33]:38426 "EHLO
-	fep13.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752320Ab3GPHex (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:47951 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121Ab3GYKAl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:34:53 -0400
-Message-ID: <51E4F790.6090308@odi.ch> (sfid-20130716_093515_557850_B16A0639)
-Date: Tue, 16 Jul 2013 09:34:40 +0200
-From: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [BUG] 3.10 regression: hang on suspend
-References: <51E4501D.3010001@odi.ch> <20130716065626.GA1587@redhat.com>
-In-Reply-To: <20130716065626.GA1587@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 25 Jul 2013 06:00:41 -0400
+From: Fabio Baltieri <fabio.baltieri@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Fabio Baltieri <fabio.baltieri@gmail.com>
+Subject: [PATCH v2] mac80211: use oneshot blink API for LED triggers
+Date: Thu, 25 Jul 2013 12:00:26 +0200
+Message-Id: <1374746426-22030-1-git-send-email-fabio.baltieri@gmail.com> (sfid-20130725_120100_982003_3D14D8D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Change mac80211 LED trigger code to use the generic
+led_trigger_blink_oneshot() API for transmit and receive activity
+indication.
 
+This gives a better feedback to the user, as with the new API each
+activity event results in a visible blink, while a constant traffic
+results in a continuous blink at constant rate.
 
-On 16.07.2013 08:56, Stanislaw Gruszka wrote:
-> Apparently this commit changed suspend procedure on mac80211, but it's
-> not obvious for me why it hangs :-(
+Signed-off-by: Fabio Baltieri <fabio.baltieri@gmail.com>
+---
 
-Hangs are hard :-) It just sits there with a black screen and a white 
-cursor in the top left corner...
+Changes from v1:
+- fixed some wrong indentations
 
-> What is your user space configuration (are you using NM or other
-> software or maybe just wpa_supplicant)? Are you using wowlan?
-> If you do add no_console_suspend boot parameter does it print some
-> diagnostic messages during suspend before the hang ?
+ net/mac80211/ieee80211_i.h |  1 -
+ net/mac80211/led.c         | 19 +++++++------------
+ net/mac80211/led.h         |  2 +-
+ net/mac80211/status.c      |  2 +-
+ net/mac80211/tx.c          |  1 -
+ 5 files changed, 9 insertions(+), 16 deletions(-)
 
-Yes, I am using NM under KDE, with KDE triggered suspend. No wowlan 
-AFAIK. The last thing I see in the log is something from NetworkManager 
-that sees the device switching off. I can try again tonight and give you 
-the exact message.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8412a30..1178139 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1063,7 +1063,6 @@ struct ieee80211_local {
+ 	u32 dot11TransmittedFrameCount;
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+-	int tx_led_counter, rx_led_counter;
+ 	struct led_trigger *tx_led, *rx_led, *assoc_led, *radio_led;
+ 	struct tpt_led_trigger *tpt_led_trigger;
+ 	char tx_led_name[32], rx_led_name[32],
+diff --git a/net/mac80211/led.c b/net/mac80211/led.c
+index bcffa69..e2b8364 100644
+--- a/net/mac80211/led.c
++++ b/net/mac80211/led.c
+@@ -12,27 +12,22 @@
+ #include <linux/export.h>
+ #include "led.h"
+ 
++#define MAC80211_BLINK_DELAY 50 /* ms */
++
+ void ieee80211_led_rx(struct ieee80211_local *local)
+ {
++	unsigned long led_delay = MAC80211_BLINK_DELAY;
+ 	if (unlikely(!local->rx_led))
+ 		return;
+-	if (local->rx_led_counter++ % 2 == 0)
+-		led_trigger_event(local->rx_led, LED_OFF);
+-	else
+-		led_trigger_event(local->rx_led, LED_FULL);
++	led_trigger_blink_oneshot(local->rx_led, &led_delay, &led_delay, 0);
+ }
+ 
+-/* q is 1 if a packet was enqueued, 0 if it has been transmitted */
+-void ieee80211_led_tx(struct ieee80211_local *local, int q)
++void ieee80211_led_tx(struct ieee80211_local *local)
+ {
++	unsigned long led_delay = MAC80211_BLINK_DELAY;
+ 	if (unlikely(!local->tx_led))
+ 		return;
+-	/* not sure how this is supposed to work ... */
+-	local->tx_led_counter += 2*q-1;
+-	if (local->tx_led_counter % 2 == 0)
+-		led_trigger_event(local->tx_led, LED_OFF);
+-	else
+-		led_trigger_event(local->tx_led, LED_FULL);
++	led_trigger_blink_oneshot(local->tx_led, &led_delay, &led_delay, 0);
+ }
+ 
+ void ieee80211_led_assoc(struct ieee80211_local *local, bool associated)
+diff --git a/net/mac80211/led.h b/net/mac80211/led.h
+index e0275d9..6ca2f29 100644
+--- a/net/mac80211/led.h
++++ b/net/mac80211/led.h
+@@ -13,7 +13,7 @@
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+ void ieee80211_led_rx(struct ieee80211_local *local);
+-void ieee80211_led_tx(struct ieee80211_local *local, int q);
++void ieee80211_led_tx(struct ieee80211_local *local);
+ void ieee80211_led_assoc(struct ieee80211_local *local,
+ 			 bool associated);
+ void ieee80211_led_radio(struct ieee80211_local *local,
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 4343920..e3c889b 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -557,7 +557,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	rcu_read_unlock();
+ 
+-	ieee80211_led_tx(local, 0);
++	ieee80211_led_tx(local);
+ 
+ 	/* SNMP counters
+ 	 * Fragments are passed to low-level drivers as separate skbs, so these
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 4105d0c..6c4e60d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1281,7 +1281,6 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
+ 				    txpending);
+ 
+ 	ieee80211_tpt_led_trig_tx(local, fc, led_len);
+-	ieee80211_led_tx(local, 1);
+ 
+ 	WARN_ON_ONCE(!skb_queue_empty(skbs));
+ 
+-- 
+1.8.2
 
-I will also try without NM and bare wpa_supplicant and a plain suspend 
-through sysfs.
-
-Any debug options you want me to enable? Netconsole won't work however...
-
-Ortwin
