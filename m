@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lmv.inov.pt ([146.193.64.2]:51066 "EHLO lmv.inov.pt"
+Received: from mout.gmx.net ([212.227.15.19]:62938 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753981Ab3GJMes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jul 2013 08:34:48 -0400
-Message-ID: <51DD54D4.6090502@inov.pt> (sfid-20130710_143452_018740_F5831907)
-Date: Wed, 10 Jul 2013 13:34:28 +0100
-From: =?UTF-8?B?Sm9zw6kgTWlndWVsIEdvbsOnYWx2ZXM=?=
-	<jose.goncalves@inov.pt>
+	id S1757962Ab3GYSIX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jul 2013 14:08:23 -0400
+Received: from [192.168.2.100] ([93.218.66.75]) by mail.gmx.com (mrgmx002)
+ with ESMTPSA (Nemesis) id 0MN0jA-1V0E6I0c24-006cJc for
+ <linux-wireless@vger.kernel.org>; Thu, 25 Jul 2013 20:08:22 +0200
+Message-ID: <51F16993.20207@rempel-privat.de> (sfid-20130725_200843_086751_BCE2ABFA)
+Date: Thu, 25 Jul 2013 20:08:19 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
-Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
-References: <51DB0ACC.7050800@inov.pt>  <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>  <51DB4195.8090103@inov.pt>  <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>  <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>  <1373362817.21065.191.camel@cumari.coelho.fi> <51DBF389.5060209@inov.pt>  <CA+XVXfeB3jpXaaV4vgbHUVRdPeH9tPVRWvRhZsYHmg33HNzmmw@mail.gmail.com>  <51DC0E7C.9080306@inov.pt>  <CA+XVXfd8WouC7UWwD5z=OAMT2AUaU25d13thinjRDe-JpTQCEw@mail.gmail.com>  <51DCA3EF.8090900@inov.pt> <1373448177.8385.22.camel@cumari.coelho.fi>
-In-Reply-To: <1373448177.8385.22.camel@cumari.coelho.fi>
+To: atar <atar.yosef@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: TP-LINK wireless USB adapter don't work.
+References: <op.w0sd9ujye4gg2u@xp>
+In-Reply-To: <op.w0sd9ujye4gg2u@xp>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10-07-2013 10:22, Luciano Coelho wrote:
->> Can my problems be related with an inadequate NVS file? I've generated
->> it with the calibrate tool from ti-utils and the INI file TQS_D_1.7.ini
->> with the command "calibrator plt calibrate". Is this the correct INI for
->> my module (Jorjin's WG7350 - wl1273 based)?
-> Yes, the problem can be because of a bad NVS file.  Try with the
-> "default" NVS file that is provided in linux-firmware.git.  That one
-> won't be optimal, but should work okay.
-
-I have the same problems with the default NVS file.
-
+Am 25.07.2013 18:47, schrieb atar:
+> aHi there!!
 >
-> I'm not sure which FEM Jorjin's module use.  Can you ask them?
-
-I will ask my contact.
-
+> I've a TP-LINK USB wireless adapter with model number TL-WN722N. When I
+> plug it in to one of the USB slots in my PC, its LED diode isn't
+> flashing (although under WIN XP it is flashing) and I cannot use it.
+> from the messages of the 'dmesg' command it seems that the kernel detect
+> it, but I unable to use it because it doesn't appear on the wicd window
+> of available interfaces.
 >
-> I found this on github (Dick Chiang appears to work for Jorjin):
-> https://github.com/dickychiang/compat-wireless-r5/blob/master/jorjin/ini_files/TQS_D_1.7_WG7350_NLCP.ini
+> My Linux distro is Debian squeeze with kernel 2.6.32-5-686.
 >
-> DISCLAIMER: I have no clue whether this is the correct INI file or not
-> and I'm not claiming it's associated with TI in any way, so use it at
-> your own risk.
->
+> What should I do in order to solve this problem?
 
-Same problem after generating a new NVS file from this INI.
+It is ath9k-htc based adapter. Please update your kernel and use latest 
+firmware. I think Debian squeeze do not provided this firmware, so you 
+should install it manually.
 
-I will try a new AP to see how it behaves...
 
-José Gonçalves
+
+-- 
+Regards,
+Oleksij
