@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:50170 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3GDBFw (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:58795 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755345Ab3GYLSd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:05:52 -0400
-Received: by mail-pa0-f50.google.com with SMTP id fb1so776442pad.9
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:05:52 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 13/53] wireless-regdb: SA, Saudi Arabia - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:09 -0700
-Message-Id: <1372899889-19183-14-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032044_155749_E886D393)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 25 Jul 2013 07:18:33 -0400
+Received: by mail-oa0-f41.google.com with SMTP id n10so3993129oag.14
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jul 2013 04:18:32 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 25 Jul 2013 13:18:32 +0200
+Message-ID: <CABikg9w6fGa=6ZxEa+X3npkrupQPCrqnHxDbwNzD6GrepWdSZg@mail.gmail.com> (sfid-20130725_131836_087703_BC042ED8)
+Subject: AR5008 "Failed to stop TX DMA"
+From: Sergei Antonov <saproj@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Hello!
+I use "Atheros Communications Inc. AR5008 Wireless Network Adapter
+(rev 01)" PCI card.
+The following messages appear in my console approx. once in a minute.
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and update the max EIRP. This also adds
-a new DFS 5 GHz band: 5490 - 5710 MHz.
+cfg80211: Calling CRDA to update world regulatory domain
+ath: phy0: Failed to stop TX DMA, queues=0x001!
+wlan0: authenticate with 00:15:af:xx:xx:xx
+wlan0: send auth to 00:15:af:xx:xx:xx (try 1/3)
+wlan0: authenticated
+ath9k 0000:03:06.0 wlan0: disabling HT as WMM/QoS is not supported by the AP
+ath9k 0000:03:06.0 wlan0: disabling VHT as WMM/QoS is not supported by the AP
+wlan0: associate with 00:15:af:xx:xx:xx (try 1/3)
+wlan0: RX AssocResp from 00:15:af:xx:xx:xx (capab=0x411 status=0 aid=3)
+wlan0: associated
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+The connection to WPA access point works, although SSH freezes
+regulary for several seconds.
 
-diff --git a/db.txt b/db.txt
-index 867b070..8e7fe8d 100644
---- a/db.txt
-+++ b/db.txt
-@@ -674,9 +674,10 @@ country RW:
- 
- country SA:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (3, 23)
--	(5250 - 5330 @ 20), (3, 23), DFS
--	(5735 - 5835 @ 20), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
- 
- country SE: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
-
+I'm running an x86_64 kernel version 3.10.2. But earlier versions had
+the same problem too.
+Please, help me to fix that.
