@@ -1,59 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48224 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872Ab3GHOIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:08:44 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 07/20] rt2x00: rt2800lib: fix antenna configuration for RT3593
-Date: Mon,  8 Jul 2013 16:08:22 +0200
-Message-Id: <1373292515-21332-8-git-send-email-juhosg@openwrt.org> (sfid-20130708_160848_152849_84C4ED65)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:53315 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753653Ab3GYHx1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jul 2013 03:53:27 -0400
+Message-ID: <1374738804.8827.4.camel@jlt4.sipsolutions.net> (sfid-20130725_095330_511327_81378172)
+Subject: Re: [PATCH 1/2] regulatory: use correct regulatory initiator on
+ wiphy register
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 25 Jul 2013 09:53:24 +0200
+In-Reply-To: <1374413809-26005-1-git-send-email-arik@wizery.com> (sfid-20130721_154507_440351_5B8F6C3E)
+References: <1374413809-26005-1-git-send-email-arik@wizery.com>
+	 (sfid-20130721_154507_440351_5B8F6C3E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the RT3593 chipset, BBP register 86 must be
-configured by different values based on the RX
-antenna numbers.
+On Sun, 2013-07-21 at 16:36 +0300, Arik Nemtsov wrote:
+> The current regdomain was not always set by the core. This causes
+> cards with a custom regulatory domain to ignore user initiated changes
+> if done before the card was registered.
 
-Configure this register from the 'rt2800_config_ant'
-function.
+Applied, thanks.
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
-
-Reference:
-  RT3593_CONFIG_SET_BY_ANTENNA in include/chip/rt3593.h
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-Changes since v2: ---
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 1a6a4eb..958215c 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1803,6 +1803,13 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
- 
- 	rt2800_bbp_write(rt2x00dev, 3, r3);
- 	rt2800_bbp_write(rt2x00dev, 1, r1);
-+
-+	if (rt2x00_rt(rt2x00dev, RT3593)) {
-+		if (ant->rx_chain_num == 1)
-+			rt2800_bbp_write(rt2x00dev, 86, 0x00);
-+		else
-+			rt2800_bbp_write(rt2x00dev, 86, 0x46);
-+	}
- }
- EXPORT_SYMBOL_GPL(rt2800_config_ant);
- 
--- 
-1.7.10
+johannes
 
