@@ -1,60 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:64331 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932259Ab3GKJJZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:09:25 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Jiri Kosina <jkosina@suse.cz>
-Subject: [PATCH 21/50] hid: usbhid: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:44 +0800
-Message-Id: <1373533573-12272-22-git-send-email-ming.lei@canonical.com> (sfid-20130711_110941_967874_0D53C432)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+Received: from elwsc.co.jp ([27.50.121.29]:54519 "EHLO elwsc.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755358Ab3GYMhz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jul 2013 08:37:55 -0400
+Received: from [192.168.0.199] (p2192-ipbf202hodogaya.kanagawa.ocn.ne.jp [221.191.33.192])
+	(authenticated bits=0)
+	by elwsc.co.jp (8.14.5/8.14.5) with ESMTP id r6PC2lhU009597
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Jul 2013 21:02:49 +0900
+Date: Thu, 25 Jul 2013 21:02:51 +0900
+From: KATSUMI masanori <masanori-katsumi@elwsc.co.jp>
+To: linux-wireless@vger.kernel.org
+Subject: How to read WiFi radio frequency.
+Message-Id: <20130725210249.89DD.635158EF@elwsc.co.jp> (sfid-20130725_143758_484049_47990893)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
-
-Cc: Jiri Kosina <jkosina@suse.cz>
-Cc: linux-input@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/hid/usbhid/hid-core.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/hid/usbhid/hid-core.c b/drivers/hid/usbhid/hid-core.c
-index 9941828..e1d8518 100644
---- a/drivers/hid/usbhid/hid-core.c
-+++ b/drivers/hid/usbhid/hid-core.c
-@@ -489,8 +489,9 @@ static void hid_ctrl(struct urb *urb)
- 	struct hid_device *hid = urb->context;
- 	struct usbhid_device *usbhid = hid->driver_data;
- 	int unplug = 0, status = urb->status;
-+	unsigned long flags;
- 
--	spin_lock(&usbhid->lock);
-+	spin_lock_irqsave(&usbhid->lock, flags);
- 
- 	switch (status) {
- 	case 0:			/* success */
-@@ -525,7 +526,7 @@ static void hid_ctrl(struct urb *urb)
- 	}
- 
- 	clear_bit(HID_CTRL_RUNNING, &usbhid->iofl);
--	spin_unlock(&usbhid->lock);
-+	spin_unlock_irqrestore(&usbhid->lock, flags);
- 	usb_autopm_put_interface_async(usbhid->intf);
- 	wake_up(&usbhid->wait);
- }
--- 
-1.7.9.5
+I am trying to make p2p software with the current device as the group
+owner.
+I would like to acquire the channel that GO started, from normal user(NOT
+root).
+How can I get this information?
 
