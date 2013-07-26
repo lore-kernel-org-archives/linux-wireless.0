@@ -1,54 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57386 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751111Ab3GSMF7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 08:05:59 -0400
-Date: Fri, 19 Jul 2013 14:08:43 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Ortwin =?iso-8859-1?Q?Gl=FCck?= <odi@odi.ch>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [BUG] 3.10 regression: hang on suspend
-Message-ID: <20130719120842.GA1570@redhat.com> (sfid-20130719_140621_949637_B3DEDC64)
-References: <51E4501D.3010001@odi.ch>
- <20130716065626.GA1587@redhat.com>
- <51E4F790.6090308@odi.ch>
- <51E51712.4020609@broadcom.com>
- <51E58FA5.4000804@odi.ch>
- <20130717122944.GA25894@redhat.com>
- <51E6E1AB.5010300@odi.ch>
- <20130718105550.GA4628@redhat.com>
- <51E83AB7.6020002@odi.ch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <51E83AB7.6020002@odi.ch>
+Received: from s3.sipsolutions.net ([144.76.43.152]:58128 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757952Ab3GZI3i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jul 2013 04:29:38 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/30] iwlwifi: mvm: remove the default calibration values for 7000
+Date: Fri, 26 Jul 2013 10:28:31 +0200
+Message-Id: <1374827327-3464-15-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103018_957456_30D3D803)
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 18, 2013 at 08:57:59PM +0200, Ortwin Glück wrote:
-> On 07/18/2013 12:55 PM, Stanislaw Gruszka wrote:
-> >objdump -r -d --prefix-addresses net/mac80211/mac80211.ko > mac80211.txt
-> >objdump -r -d --prefix-addresses drivers/net/wireless/iwlwifi/dvm/iwldvm.ko > iwldvm.txt
-> 
-> Here you go. Please note, that the offsets have changed due to
-> .config changes. New trace attached. Transcript:
-> 
-> iwlagn_mac_remove_interface+0x5f/0x160
-> __ieee80211_suspend+0x4a1/0xb30
-> ieee80211_suspend+0x1a/0x20
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Crash happen because we call iwlagn_mac_remove_interface with
-vif_priv->ctx NULL. I do not see any possibility of that other than
-doing ->remove_interface without previous ->add_interface, but I do
-not see how that possible. 
+The fw is now able to run TX_IQ_SKEW and RX_IQ_SKEW by
+itself. No need for default values any more.
 
-Does crash happen on any suspend or on second one ?  
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Dor Shaish <dor.shaish@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw.c | 55 -----------------------------------
+ 1 file changed, 55 deletions(-)
 
-I'm attaching patch, which should prevent crash (but not fix the issue,
-just workaround it), plese apply it. If it make suspend work, please then
-reload iwlwifi module with debug=0x3 option, suspend/resume machine and
-provide dmesg output after that.
-
-Thanks
-Stanislaw
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index cd7c003..c76299a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -78,22 +78,6 @@
  
+ #define UCODE_VALID_OK	cpu_to_le32(0x1)
+ 
+-/* Default calibration values for WkP - set to INIT image w/o running */
+-static const u8 wkp_calib_values_rx_iq_skew[] = { 0x00, 0x00, 0x01, 0x00 };
+-static const u8 wkp_calib_values_tx_iq_skew[] = { 0x01, 0x00, 0x00, 0x00 };
+-
+-struct iwl_calib_default_data {
+-	u16 size;
+-	void *data;
+-};
+-
+-#define CALIB_SIZE_N_DATA(_buf) {.size = sizeof(_buf), .data = &_buf}
+-
+-static const struct iwl_calib_default_data wkp_calib_default_data[12] = {
+-	[9] = CALIB_SIZE_N_DATA(wkp_calib_values_tx_iq_skew),
+-	[11] = CALIB_SIZE_N_DATA(wkp_calib_values_rx_iq_skew),
+-};
+-
+ struct iwl_mvm_alive_data {
+ 	bool valid;
+ 	u32 scd_base_addr;
+@@ -248,40 +232,6 @@ static int iwl_send_phy_cfg_cmd(struct iwl_mvm *mvm)
+ 				    sizeof(phy_cfg_cmd), &phy_cfg_cmd);
+ }
+ 
+-static int iwl_set_default_calibrations(struct iwl_mvm *mvm)
+-{
+-	u8 cmd_raw[16]; /* holds the variable size commands */
+-	struct iwl_set_calib_default_cmd *cmd =
+-		(struct iwl_set_calib_default_cmd *)cmd_raw;
+-	int ret, i;
+-
+-	/* Setting default values for calibrations we don't run */
+-	for (i = 0; i < ARRAY_SIZE(wkp_calib_default_data); i++) {
+-		u16 cmd_len;
+-
+-		if (wkp_calib_default_data[i].size == 0)
+-			continue;
+-
+-		memset(cmd_raw, 0, sizeof(cmd_raw));
+-		cmd_len = wkp_calib_default_data[i].size + sizeof(cmd);
+-		cmd->calib_index = cpu_to_le16(i);
+-		cmd->length = cpu_to_le16(wkp_calib_default_data[i].size);
+-		if (WARN_ONCE(cmd_len > sizeof(cmd_raw),
+-			      "Need to enlarge cmd_raw to %d\n", cmd_len))
+-			break;
+-		memcpy(cmd->data, wkp_calib_default_data[i].data,
+-		       wkp_calib_default_data[i].size);
+-		ret = iwl_mvm_send_cmd_pdu(mvm, SET_CALIB_DEFAULT_CMD, 0,
+-					   sizeof(*cmd) +
+-					   wkp_calib_default_data[i].size,
+-					   cmd);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	return 0;
+-}
+-
+ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ {
+ 	struct iwl_notification_wait calib_wait;
+@@ -342,11 +292,6 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 	if (ret)
+ 		goto error;
+ 
+-	/* need to set default values */
+-	ret = iwl_set_default_calibrations(mvm);
+-	if (ret)
+-		goto error;
+-
+ 	/*
+ 	 * Send phy configurations command to init uCode
+ 	 * to start the 16.0 uCode init image internal calibrations.
+-- 
+1.8.0
+
