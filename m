@@ -1,116 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:53491 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748Ab3G3Miw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58144 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758081Ab3GZI3x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 08:38:52 -0400
-Date: Tue, 30 Jul 2013 13:38:48 +0100
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2013-07-30
-Message-ID: <20130730123848.GE5975@joana> (sfid-20130730_143934_189156_C7C47B2C)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
+	Fri, 26 Jul 2013 04:29:53 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 17/30] iwlwifi: mvm: support six IPv6 addresses in D3
+Date: Fri, 26 Jul 2013 10:28:34 +0200
+Message-Id: <1374827327-3464-18-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103018_204574_B5B2BBF7)
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Newer firmware supports offloading more IPv6 addresses for NDP,
+adjust the code to send the correct command depending on the
+firmware capability.
 
-Hi John,
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw.h        |  3 ++
+ drivers/net/wireless/iwlwifi/mvm/d3.c        | 66 +++++++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h | 52 +++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/mvm/mvm.h       |  2 +-
+ 4 files changed, 94 insertions(+), 29 deletions(-)
 
-A few fixes and devices ID additions for 3.11:=20
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 46dc38a..b766ee9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -76,6 +76,8 @@
+  * @IWL_UCODE_TLV_FLAGS_DW_BC_TABLE: The SCD byte count table is in DWORDS
+  * @IWL_UCODE_TLV_FLAGS_UAPSD: This uCode image supports uAPSD
+  * @IWL_UCODE_TLV_FLAGS_RX_ENERGY_API: supports rx signal strength api
++ * @IWL_UCODE_TLV_FLAGS_D3_6_IPV6_ADDRS: D3 image supports up to six
++ *	(rather than two) IPv6 addresses
+  */
+ enum iwl_ucode_tlv_flag {
+ 	IWL_UCODE_TLV_FLAGS_PAN			= BIT(0),
+@@ -85,6 +87,7 @@ enum iwl_ucode_tlv_flag {
+ 	IWL_UCODE_TLV_FLAGS_DW_BC_TABLE		= BIT(4),
+ 	IWL_UCODE_TLV_FLAGS_UAPSD		= BIT(6),
+ 	IWL_UCODE_TLV_FLAGS_RX_ENERGY_API	= BIT(8),
++	IWL_UCODE_TLV_FLAGS_D3_6_IPV6_ADDRS	= BIT(10),
+ };
+ 
+ /* The default calibrate table size if not specified by firmware file */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 7e5e5c2..ebf7f94 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -105,7 +105,7 @@ void iwl_mvm_ipv6_addr_change(struct ieee80211_hw *hw,
+ 	list_for_each_entry(ifa, &idev->addr_list, if_list) {
+ 		mvmvif->target_ipv6_addrs[idx] = ifa->addr;
+ 		idx++;
+-		if (idx >= IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS)
++		if (idx >= IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_MAX)
+ 			break;
+ 	}
+ 	read_unlock_bh(&idev->lock);
+@@ -373,36 +373,68 @@ static int iwl_mvm_send_patterns(struct iwl_mvm *mvm,
+ static int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm,
+ 				      struct ieee80211_vif *vif)
+ {
+-	struct iwl_proto_offload_cmd cmd = {};
++	union {
++		struct iwl_proto_offload_cmd_v1 v1;
++		struct iwl_proto_offload_cmd_v2 v2;
++	} cmd = {};
++	struct iwl_proto_offload_cmd_common *common;
++	u32 enabled = 0, size;
+ #if IS_ENABLED(CONFIG_IPV6)
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	int i;
+ 
+-	if (mvmvif->num_target_ipv6_addrs) {
+-		cmd.enabled |= cpu_to_le32(IWL_D3_PROTO_OFFLOAD_NS);
+-		memcpy(cmd.ndp_mac_addr, vif->addr, ETH_ALEN);
+-	}
++	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_D3_6_IPV6_ADDRS) {
++		if (mvmvif->num_target_ipv6_addrs) {
++			enabled |= IWL_D3_PROTO_OFFLOAD_NS;
++			memcpy(cmd.v2.ndp_mac_addr, vif->addr, ETH_ALEN);
++		}
++
++		BUILD_BUG_ON(sizeof(cmd.v2.target_ipv6_addr[0]) !=
++			     sizeof(mvmvif->target_ipv6_addrs[0]));
++
++		for (i = 0; i < min(mvmvif->num_target_ipv6_addrs,
++				    IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_V2); i++)
++			memcpy(cmd.v2.target_ipv6_addr[i],
++			       &mvmvif->target_ipv6_addrs[i],
++			       sizeof(cmd.v2.target_ipv6_addr[i]));
++	} else {
++		if (mvmvif->num_target_ipv6_addrs) {
++			enabled |= IWL_D3_PROTO_OFFLOAD_NS;
++			memcpy(cmd.v1.ndp_mac_addr, vif->addr, ETH_ALEN);
++		}
+ 
+-	BUILD_BUG_ON(sizeof(cmd.target_ipv6_addr[i]) !=
+-		     sizeof(mvmvif->target_ipv6_addrs[i]));
++		BUILD_BUG_ON(sizeof(cmd.v1.target_ipv6_addr[0]) !=
++			     sizeof(mvmvif->target_ipv6_addrs[0]));
+ 
+-	for (i = 0; i < mvmvif->num_target_ipv6_addrs; i++)
+-		memcpy(cmd.target_ipv6_addr[i],
+-		       &mvmvif->target_ipv6_addrs[i],
+-		       sizeof(cmd.target_ipv6_addr[i]));
++		for (i = 0; i < min(mvmvif->num_target_ipv6_addrs,
++				    IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_V1); i++)
++			memcpy(cmd.v1.target_ipv6_addr[i],
++			       &mvmvif->target_ipv6_addrs[i],
++			       sizeof(cmd.v1.target_ipv6_addr[i]));
++	}
+ #endif
+ 
++	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_D3_6_IPV6_ADDRS) {
++		common = &cmd.v2.common;
++		size = sizeof(cmd.v2);
++	} else {
++		common = &cmd.v1.common;
++		size = sizeof(cmd.v1);
++	}
++
+ 	if (vif->bss_conf.arp_addr_cnt) {
+-		cmd.enabled |= cpu_to_le32(IWL_D3_PROTO_OFFLOAD_ARP);
+-		cmd.host_ipv4_addr = vif->bss_conf.arp_addr_list[0];
+-		memcpy(cmd.arp_mac_addr, vif->addr, ETH_ALEN);
++		enabled |= IWL_D3_PROTO_OFFLOAD_ARP;
++		common->host_ipv4_addr = vif->bss_conf.arp_addr_list[0];
++		memcpy(common->arp_mac_addr, vif->addr, ETH_ALEN);
+ 	}
+ 
+-	if (!cmd.enabled)
++	if (!enabled)
+ 		return 0;
+ 
++	common->enabled = cpu_to_le32(enabled);
++
+ 	return iwl_mvm_send_cmd_pdu(mvm, PROT_OFFLOAD_CONFIG_CMD, CMD_SYNC,
+-				    sizeof(cmd), &cmd);
++				    size, &cmd);
+ }
+ 
+ enum iwl_mvm_tcp_packet_type {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
+index 6f8b2c1..64fe8c9 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
+@@ -98,34 +98,64 @@ enum iwl_proto_offloads {
+ 	IWL_D3_PROTO_OFFLOAD_NS = BIT(1),
+ };
+ 
+-#define IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS	2
++#define IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_V1	2
++#define IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_V2	6
++#define IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_MAX	6
+ 
+ /**
+- * struct iwl_proto_offload_cmd - ARP/NS offload configuration
++ * struct iwl_proto_offload_cmd_common - ARP/NS offload common part
+  * @enabled: enable flags
+  * @remote_ipv4_addr: remote address to answer to (or zero if all)
+  * @host_ipv4_addr: our IPv4 address to respond to queries for
+  * @arp_mac_addr: our MAC address for ARP responses
+- * @remote_ipv6_addr: remote address to answer to (or zero if all)
+- * @solicited_node_ipv6_addr: broken -- solicited node address exists
+- *	for each target address
+- * @target_ipv6_addr: our target addresses
+- * @ndp_mac_addr: neighbor soliciation response MAC address
++ * @reserved: unused
+  */
+-struct iwl_proto_offload_cmd {
++struct iwl_proto_offload_cmd_common {
+ 	__le32 enabled;
+ 	__be32 remote_ipv4_addr;
+ 	__be32 host_ipv4_addr;
+ 	u8 arp_mac_addr[ETH_ALEN];
+-	__le16 reserved1;
++	__le16 reserved;
++} __packed;
+ 
++/**
++ * struct iwl_proto_offload_cmd_v1 - ARP/NS offload configuration
++ * @common: common/IPv4 configuration
++ * @remote_ipv6_addr: remote address to answer to (or zero if all)
++ * @solicited_node_ipv6_addr: broken -- solicited node address exists
++ *	for each target address
++ * @target_ipv6_addr: our target addresses
++ * @ndp_mac_addr: neighbor soliciation response MAC address
++ */
++struct iwl_proto_offload_cmd_v1 {
++	struct iwl_proto_offload_cmd_common common;
+ 	u8 remote_ipv6_addr[16];
+ 	u8 solicited_node_ipv6_addr[16];
+-	u8 target_ipv6_addr[IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS][16];
++	u8 target_ipv6_addr[IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_V1][16];
+ 	u8 ndp_mac_addr[ETH_ALEN];
+-	__le16 reserved2;
++	u8 numValidIPv6Addresses;
++	u8 reserved2[3];
+ } __packed; /* PROT_OFFLOAD_CONFIG_CMD_DB_S_VER_1 */
+ 
++/**
++ * struct iwl_proto_offload_cmd_v2 - ARP/NS offload configuration
++ * @common: common/IPv4 configuration
++ * @remote_ipv6_addr: remote address to answer to (or zero if all)
++ * @solicited_node_ipv6_addr: broken -- solicited node address exists
++ *	for each target address
++ * @target_ipv6_addr: our target addresses
++ * @ndp_mac_addr: neighbor soliciation response MAC address
++ */
++struct iwl_proto_offload_cmd_v2 {
++	struct iwl_proto_offload_cmd_common common;
++	u8 remote_ipv6_addr[16];
++	u8 solicited_node_ipv6_addr[16];
++	u8 target_ipv6_addr[IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_V2][16];
++	u8 ndp_mac_addr[ETH_ALEN];
++	u8 numValidIPv6Addresses;
++	u8 reserved2[3];
++} __packed; /* PROT_OFFLOAD_CONFIG_CMD_DB_S_VER_2 */
++
+ 
+ /*
+  * WOWLAN_PATTERNS
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index caa6a175..879fb01 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -282,7 +282,7 @@ struct iwl_mvm_vif {
+ 
+ #if IS_ENABLED(CONFIG_IPV6)
+ 	/* IPv6 addresses for WoWLAN */
+-	struct in6_addr target_ipv6_addrs[IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS];
++	struct in6_addr target_ipv6_addrs[IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_MAX];
+ 	int num_target_ipv6_addrs;
+ #endif
+ #endif
+-- 
+1.8.0
 
- * There are 4 new ath3k device ids=20
- * Fixed stack memory usage in ath3k.
- * Fixed the init process of BlueFRITZ! devices, they were failing to init
-   due to an unsupported command we sent.=20
- * Fixed wrong use of PTR_ERR in btusb code that was preventing intel devic=
-es
-   to work properly.
- * Fixed race condition between hci_register_dev() and hci_dev_open() that
-   could cause a NULL pointer dereference.
- * Fixed race condition that could call hci_req_cmd_complete() and make some
-   devices to fail as showed in the log added to the commit message.
-
-Please pull or let me know of any issues. Thanks.
-
-	Gustavo
-
---
-The following changes since commit 075163bbb0f51174359947e1bce84f5edb23f21e:
-
-  ath9k_htc: Handle IDLE state transition properly (2013-06-24 13:52:52 -04=
-00)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-
-for you to fetch changes up to 53e21fbc288218a423959f878c86471a0e323a9a:
-
-  Bluetooth: Fix calling request callback more than once (2013-07-29 12:28:=
-04 +0100)
-
-----------------------------------------------------------------
-AceLan Kao (2):
-      Bluetooth: Add support for Atheros [0cf3:3121]
-      Bluetooth: Add support for Atheros [0cf3:e003]
-
-Adam Lee (1):
-      Bluetooth: fix wrong use of PTR_ERR() in btusb
-
-Gustavo Padovan (1):
-      Bluetooth: Fix race between hci_register_dev() and hci_dev_open()
-
-Jaganath Kanakkassery (1):
-      Bluetooth: Fix invalid length check in l2cap_information_rsp()
-
-Johan Hedberg (2):
-      Bluetooth: Fix HCI init for BlueFRITZ! devices
-      Bluetooth: Fix calling request callback more than once
-
-Stanislaw Gruszka (1):
-      Bluetooth: ath3k: don't use stack memory for DMA
-
-Sujith Manoharan (1):
-      Bluetooth: ath3k: Add support for ID 0x13d3/0x3402
-
-Thomas Loo (1):
-      Bluetooth: ath3k: Add support for Fujitsu Lifebook UH5x2 [04c5:1330]
-
- drivers/bluetooth/ath3k.c  | 46 +++++++++++++++++++++++++++++++++++++-----=
-----
- drivers/bluetooth/btusb.c  | 18 +++++++++++-------
- net/bluetooth/hci_core.c   | 26 +++++++++++++++++---------
- net/bluetooth/l2cap_core.c |  2 +-
- 4 files changed, 66 insertions(+), 26 deletions(-)
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iQIcBAEBAgAGBQJR97PYAAoJEPs3PUX4s20ocDYP/jkiaZtLDJNxdG6WmcFaciBv
-hgjbraGZ1cW0jXJmOfbpjK0P+YcHcrx2j+RlDNj55rs+JY+GKeAuQUzXuR0vy7cB
-uxAWWaqNbUziLYG+QUD6gq0GnM6AkgGz5I62gVly3UZ0i+qr5Bo8ayEY1ZBSTqws
-jrTNE5FKUQtGjinxxxQalnpjbcnUyw0mfQ6xmbF+yYqRiJZUTUNVuKeDwu6e3xIQ
-ummvCcKyoucey9D0s2U8SvpmvXWrXo3cAEe9rXolYcfzKHjYPAihISdTovI7qL3q
-XRKfL7FSJTHzl4NudLS/d8klueItSjtFzVmRpdKihH2spSA+RNSMZr4IQHGJoJgw
-A4XdTRrM3CORAzF/hkjAe9TxkB8gsnVHjFazER/TUGYBsTuzfXEmQFtepqE/cRjH
-imzLiStzSgaIEJQgpUEchDy+RxPoDcOox/q0PUWeHhnjVShUcjTnuvxKtdcNbgFl
-G/qSxjUfsCIu/5+uw0PFu7mEt+CKnNesP21Y2vETujXz1p2murpm1rHqlS0gLrtE
-QlemfdKL735aWolFXkCNZ4YxjnNwm7zju7rh52xd+6h0wxQiqUb6CdNf7O87jtc7
-s+50+t7PAtiEWX+TtxJr80pQmCKndOh5e1lr1ZOa8rQvhOt6RRBzkyzuj11gf9mP
-aTUzvpALst82EWooWUd1
-=qQs1
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
