@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:61015 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505Ab3GQCUe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:20:34 -0400
-Received: by mail-pb0-f51.google.com with SMTP id um15so1339190pbc.38
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:20:34 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 20/53] wireless-regdb: FR, France - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:09 -0700
-Message-Id: <1374027522-18488-21-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043607_614538_9B2E9497)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:42235 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750793Ab3GZEZq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jul 2013 00:25:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 25 Jul 2013 21:25:25 -0700
+Subject: RE: [PATCH 18/21] mwifiex: handle driver initialization error paths
+Message-ID: <477F20668A386D41ADCC57781B1F70430EA3117E7A@SC-VEXCH1.marvell.com> (sfid-20130726_062549_448210_D8E5FD00)
+References: <1374545878-15683-1-git-send-email-bzhao@marvell.com>
+ <1374545878-15683-19-git-send-email-bzhao@marvell.com>
+ <20130724151651.GD2385@tuxdriver.com>
+ <477F20668A386D41ADCC57781B1F70430EA311794C@SC-VEXCH1.marvell.com>
+ <20130724190250.GG2385@tuxdriver.com>
+In-Reply-To: <20130724190250.GG2385@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Hi John,
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+> > 18/21 and 19/21 depend on this patch:
+> >
+> > commit 232fde062e0a2cc52e8e18a50cda361b4ba88f34
+> > Author: Daniel Drake <dsd@laptop.org>
+> > Date:   Sat Jul 13 10:57:10 2013 -0400
+> >
+> >     mwifiex: fix IRQ enable/disable
+> >
+> > which is in wireless.git and wireless-testing.git currently.
+> >
+> >
+> > We can apply 18 and 19 later after commit 232fde0 is merged back to wireless-next.git.
+> > (I will send you a reminder to merge these two patches once commit 232fde0 is in -next tree.)
+> >
+> > Thanks,
+> > Bing
+> 
+> OK, thanks for checking!
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
+As the commit 232fde0 has been merged to wireless-next you may apply 18/21 and 19/21 now.
 
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index fb83f7a..15e413e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -288,9 +288,9 @@ country FI: DFS-ETSI
- 
- country FR: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
+Thanks,
+Bing
 
