@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:61816 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933890Ab3GPXyb (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58065 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753938Ab3GZITe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 19:54:31 -0400
-Received: by mail-lb0-f176.google.com with SMTP id z5so1079753lbh.35
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 16:54:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6WmcGs6u8ZCrWXcKQe=MsQk_C7R7i+x1V-cDbjQ+A8d-w@mail.gmail.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com> <CAB=NE6WmcGs6u8ZCrWXcKQe=MsQk_C7R7i+x1V-cDbjQ+A8d-w@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 16 Jul 2013 16:54:10 -0700
-Message-ID: <CAB=NE6VQTVbVvQha3+UXoLwqkUTeYq5tEa5sWfFEMO-R-tOvMg@mail.gmail.com> (sfid-20130717_015435_010996_255BF3E5)
-Subject: Re: [RFC 00/53] wireless-regdb: mostly VHT80 updates
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 26 Jul 2013 04:19:34 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>
+Subject: [PATCH 3/7] iwlwifi: mvm: set SSID bits for passive channels
+Date: Fri, 26 Jul 2013 10:19:24 +0200
+Message-Id: <1374826768-2440-3-git-send-email-johannes@sipsolutions.net> (sfid-20130726_101946_345590_B10FCA2B)
+In-Reply-To: <1374826768-2440-1-git-send-email-johannes@sipsolutions.net>
+References: <1374826675.8248.11.camel@jlt4.sipsolutions.net>
+ <1374826768-2440-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 16, 2013 at 1:18 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Wed, Jul 3, 2013 at 6:03 PM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
->> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
->>
->> Here's a series of updates for wireless-regdb. Most of this is
->> to just enable VHT80 support to enable support for 802.11ac
->> where this has been verified to be usable. I cannot meet the
->> criteria of providing full documentation for sources for all
->> patches, only a few ones so what I recommend for the rest is
->> to let this sit on the list for a bit and I'd hope after
->> review if no one spots any issues I'd hope we can merge this.
->>
->> I reviewed the idea of vendor namespaces on wireless-regdb
->> and at least through review with pkgadd on IRC we concluded
->> its best to try to take this approach instead of encouraging
->> divergence due to any lack of full source documentation or
->> inability to provide such documentation for whatever reason.
->> This seems to be better than not getting any updates at all
->> and keeps vendors hopefully encouraged to push changes upstream.
->
-> I saw one comment addressing a typo on ID, I've fixed that. If there
-> are no complaints can we merge these to get VHT80?
+From: David Spinadel <david.spinadel@intel.com>
 
-Please hold off on these for a bit. I need to test one more thing.
+Set SSID bitmap for direct scan even on passive channels,
+for the passive-to-active feature. Without this patch only
+the SSID from probe request template is sent on passive
+channels, after passive-to-active switching, causing us to
+not find all desired networks.
 
-  Luis
+Remove the unused passive scan mask constant.
+
+Cc: stable@vger.kernel.org
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |  1 -
+ drivers/net/wireless/iwlwifi/mvm/scan.c        | 11 ++---------
+ 2 files changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+index b60d141..365095a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+@@ -69,7 +69,6 @@
+ /* Scan Commands, Responses, Notifications */
+ 
+ /* Masks for iwl_scan_channel.type flags */
+-#define SCAN_CHANNEL_TYPE_PASSIVE	0
+ #define SCAN_CHANNEL_TYPE_ACTIVE	BIT(0)
+ #define SCAN_CHANNEL_NARROW_BAND	BIT(22)
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 268f027..acdff6b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -178,19 +178,12 @@ static void iwl_mvm_scan_fill_channels(struct iwl_scan_cmd *cmd,
+ 	struct iwl_scan_channel *chan = (struct iwl_scan_channel *)
+ 		(cmd->data + le16_to_cpu(cmd->tx_cmd.len));
+ 	int i;
+-	__le32 chan_type_value;
+-
+-	if (req->n_ssids > 0)
+-		chan_type_value = cpu_to_le32(BIT(req->n_ssids) - 1);
+-	else
+-		chan_type_value = SCAN_CHANNEL_TYPE_PASSIVE;
+ 
+ 	for (i = 0; i < cmd->channel_count; i++) {
+ 		chan->channel = cpu_to_le16(req->channels[i]->hw_value);
++		chan->type = cpu_to_le32(BIT(req->n_ssids) - 1);
+ 		if (req->channels[i]->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-			chan->type = SCAN_CHANNEL_TYPE_PASSIVE;
+-		else
+-			chan->type = chan_type_value;
++			chan->type &= cpu_to_le32(~SCAN_CHANNEL_TYPE_ACTIVE);
+ 		chan->active_dwell = cpu_to_le16(active_dwell);
+ 		chan->passive_dwell = cpu_to_le16(passive_dwell);
+ 		chan->iteration_count = cpu_to_le16(1);
+-- 
+1.8.0
+
