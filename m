@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60973 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:35868 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757610Ab3GLTf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 15:35:59 -0400
-Date: Fri, 12 Jul 2013 21:35:31 +0200
-From: Mark Wielaard <mjw@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Xenia Ragiadakou <burzalodowa@gmail.com>,
-	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Steven Rostedt <rostedt@goodmis.org>,
-	linux-trace-users@vger.kernel.org, lttng-dev@lists.lttng.org
-Subject: Re: Help adding trace events to xHCI
-Message-ID: <20130712193531.GA6954@toonder.wildebeest.org> (sfid-20130712_213628_655120_BF1ACAA8)
-References: <51DB0257.1010709@gmail.com>
- <20130711162002.GA5240@xanatos>
- <1373562533.8201.33.camel@jlt4.sipsolutions.net>
- <20130711190035.GD5240@xanatos>
- <87y59c4d60.fsf@kamboji.qca.qualcomm.com>
- <20130712164104.GA15531@xanatos>
- <20130712170827.GA18819@Krystal>
+	id S1758361Ab3GZJ4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jul 2013 05:56:20 -0400
+Message-ID: <51F247C1.3090702@openwrt.org> (sfid-20130726_115638_698029_DD1385A2)
+Date: Fri, 26 Jul 2013 11:56:17 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130712170827.GA18819@Krystal>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [WT PATCH 4/6] mac80211: Add per-sdata station hash, and sdata
+ hash.
+References: <1372546738-25827-1-git-send-email-greearb@candelatech.com>   <1372546738-25827-4-git-send-email-greearb@candelatech.com>   (sfid-20130630_005944_514926_D21D8724) <1373532936.8201.5.camel@jlt4.sipsolutions.net>  <51DECF5B.7040002@candelatech.com> <1374828780.8248.24.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1374828780.8248.24.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mathieu,
-
-On Fri, Jul 12, 2013 at 01:08:28PM -0400, Mathieu Desnoyers wrote:
-> * Sarah Sharp (sarah.a.sharp@linux.intel.com) wrote:
-> > Thanks for the suggestion.  I'm not familiar with all the userspace
-> > tools for trace events, so I didn't know about the command parser.  Is
-> > there documentation or a list of resources for all the userspace trace
-> > event plugins?  If so, can you give us a pointer to it?
+On 2013-07-26 10:53 AM, Johannes Berg wrote:
+> On Thu, 2013-07-11 at 08:29 -0700, Ben Greear wrote:
 > 
-> You might want to try out LTTng-UST. It provides TRACEPOINT_EVENT() and
-> tracepoint() for user-space instrumentation. See:
+>> > I also don't like maintaining two separate hash tables and all that.
+>> >
+>> > I'd reconsider if you actually remove the hash entirely, but that'll be
+>> > tricky to walk the station list and will quite possibly make the RX path
+>> > there more expensive?
+>> 
+>> Remove local->sta_hash ?
 > 
-> - https://lttng.org/files/doc/man-pages/man3/lttng-ust.3.html
+> To be honest, I'm undecided. Yes, I was thinking that, but I also think
+> having a huge hashtable like that for each virtual interface is way
+> overkill, in particular for station interfaces that usually have one
+> peer (the AP) and maybe a few TDLS peers. Or P2P-Device interfaces that
+> have no peers at all ...
+> 
+> I don't see a good way to improve the hash either, since we don't always
+> (e.g. in RX path) have the interface address.
+How about mixing in the interface address into the hash. Theoretically
+you should always have that available, even in the rx path. Multicast
+data packets contain the BSSID, so you can get the address from there.
+You just need to be careful about checking the DS bits to figure out
+which address to use ;)
+I think this is a much better solution than duplicating the hash, or
+moving it into sdata entirely.
 
-Is that build on the <sys/sdt.h> ust probe points as embedded in glibc
-for example that gdb and systemtap use to access user space trace
-points? Can tools use lttng-ust and <sys/sdt.h> tracepoints
-interchangeably by parsing the ELF notes described in
-http://sourceware.org/systemtap/wiki/UserSpaceProbeImplementation
+- Felix
 
-Thanks,
-
-Mark
