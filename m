@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:64859 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBHg (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58126 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757930Ab3GZI3g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:36 -0400
-Received: by mail-pa0-f54.google.com with SMTP id kx10so771209pab.41
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:35 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 37/53] wireless-regdb: CH, Switzerland - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:33 -0700
-Message-Id: <1372899889-19183-38-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_932149_E41C8925)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 26 Jul 2013 04:29:36 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Subject: [PATCH 18/30] iwlwifi: mvm: Change AM->PSM timeout for EAPOL frames
+Date: Fri, 26 Jul 2013 10:28:35 +0200
+Message-Id: <1374827327-3464-19-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103019_244841_32037DDF)
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+Currently after sending EAPOL frame FW transition to power saving mode
+within 10 or 100 msec (as specified by power table command). According
+to new requirement this timeout for a specific EAPOL frame must be
+controlled by the driver by setting tx_pm_timeout field of TX_CMD to 2
+(PM_FRAME_ENUM_MGMT). This value corresponds to 32 msec timeout.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/tx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index ab718f3..f19f637 100644
---- a/db.txt
-+++ b/db.txt
-@@ -150,9 +150,9 @@ country CA:
- 
- country CH: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index f0e96a9..7694b8f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -123,6 +123,8 @@ static void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		 * it
+ 		 */
+ 		WARN_ON_ONCE(info->flags & IEEE80211_TX_CTL_AMPDU);
++	} else if (skb->protocol == cpu_to_be16(ETH_P_PAE)) {
++		tx_cmd->pm_frame_timeout = cpu_to_le16(2);
+ 	} else {
+ 		tx_cmd->pm_frame_timeout = 0;
+ 	}
 -- 
-1.7.10.4
+1.8.0
 
