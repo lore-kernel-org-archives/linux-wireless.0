@@ -1,54 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:57251 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755057Ab3GAUz0 (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:43014 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757519Ab3GZPF7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 16:55:26 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: backports@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 0/3] backports: backport alx
-Date: Mon,  1 Jul 2013 13:55:17 -0700
-Message-Id: <1372712120-16606-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130701_225529_112852_15F3046E)
+	Fri, 26 Jul 2013 11:05:59 -0400
+Received: by mail-wg0-f45.google.com with SMTP id x12so2919228wgg.0
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Jul 2013 08:05:58 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CA+icZUVbHkKz7VLs-NoVf47S_fUF855aho0CSGG3p5skpRDNmg@mail.gmail.com>
+References: <op.w0sd9ujye4gg2u@xp>
+	<51F16993.20207@rempel-privat.de>
+	<op.w0t16tbme4gg2u@xp>
+	<CA+icZUVbHkKz7VLs-NoVf47S_fUF855aho0CSGG3p5skpRDNmg@mail.gmail.com>
+Date: Fri, 26 Jul 2013 17:05:55 +0200
+Message-ID: <CA+icZUXQu3PGy=JT5cN2D8DuZ7tGvWA=FPFyYigVsAMbyKv8uQ@mail.gmail.com> (sfid-20130726_170602_261436_A05E4089)
+Subject: Re: TP-LINK wireless USB adapter don't work.
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: atar <atar.yosef@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Fri, Jul 26, 2013 at 5:00 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Fri, Jul 26, 2013 at 4:22 PM, atar <atar.yosef@gmail.com> wrote:
+>> Thank you about your answer, but how can I install the firmware? which
+>> processes are need to be taken in order to accomplish the firmware
+>> installation and configuration?
+>>
+>
+> Please, do not top-post.
+>
+> You should get a bit familiar with your operating system.
+> This mailing-list is no $distro support-channel.
+>
+> We now have Debian/wheezy (v7.x)!
+> You should upgrade (check release-notes and upgrade-process).
+> Can't say off-hand which of the firmware-package you need, just check
+> by yourself [1] (wild speculation: install firmware-linux-nonfree) or
+> consult one of Debian's WiFi wiki-pages.
+> Or ask on Debian's IRC channel for users - it's sometimes faster.
+>
 
-Johannes threw alx upstream, this fixes the backport based on
-the new shiny code.
+If you insist on Debian/squeeze you can activate squeeze-backports
+software-archive (or download it directly and install manually).
+As these are only firmware-blobs you might take a higher version of the package.
 
-Luis R. Rodriguez (3):
-  backports: remove alx extra patch
-  backports: add new alx upstream backport
-  backports: add SPEED_UNKNOWN and DUPLEX_UNKNOWN
+- Sedat -
 
- backport/backport-include/linux/ethtool.h          |    8 ++
- .../network/0001-netdev_ops/alx.patch              |   11 ++
- .../network/0001-netdev_ops/mwifiex.patch          |    2 +-
- .../network/0007-pci_dev_dev_flags/INFO            |   28 +++++
- .../network/0007-pci_dev_dev_flags/alx.patch       |   13 +++
- .../drivers_net_ethernet_atheros_alx_main.patch    |   24 ++++
- .../drivers_net_ethernet_atheros_alx_main.patch    |   14 +++
- .../drivers_net_ethernet_atheros_alx_main.patch    |   58 +++++++++
- .../drivers_net_ethernet_atheros_alx_main.patch    |   13 +++
- ...drivers_net_wireless_rtlwifi_rtl8192cu_sw.patch |    2 +-
- .../network/0001-backport-alx/alx.patch            |  123 --------------------
- .../network/0002-alx-make-kconfig/alx.patch        |   32 -----
- .../0003-alx-deactivate-loopback-test/alx.patch    |   25 ----
- 13 files changed, 171 insertions(+), 182 deletions(-)
- create mode 100644 patches/collateral-evolutions/network/0001-netdev_ops/alx.patch
- create mode 100644 patches/collateral-evolutions/network/0007-pci_dev_dev_flags/INFO
- create mode 100644 patches/collateral-evolutions/network/0007-pci_dev_dev_flags/alx.patch
- create mode 100644 patches/collateral-evolutions/network/11-dev-pm-ops/drivers_net_ethernet_atheros_alx_main.patch
- create mode 100644 patches/collateral-evolutions/network/25-multicast-list_head/drivers_net_ethernet_atheros_alx_main.patch
- create mode 100644 patches/collateral-evolutions/network/40-netdev-hw-features/drivers_net_ethernet_atheros_alx_main.patch
- create mode 100644 patches/collateral-evolutions/network/61-netdev-addr_assign_type/drivers_net_ethernet_atheros_alx_main.patch
- delete mode 100644 patches/unified-drivers/network/0001-backport-alx/alx.patch
- delete mode 100644 patches/unified-drivers/network/0002-alx-make-kconfig/alx.patch
- delete mode 100644 patches/unified-drivers/network/0003-alx-deactivate-loopback-test/alx.patch
+[1] http://packages.debian.org/search?keywords=firmware-atheros
+[2] http://packages.debian.org/squeeze-backports/firmware-atheros
 
--- 
-1.7.10.4
-
+> - Sedat -
+>
+> [1] http://packages.debian.org/search?keywords=firmware
+>
+>> Thanks in advance!!
+>>
+>> atar.
+>>
+>>> Am 25.07.2013 18:47, schrieb atar:
+>>>>
+>>>> Hi there!!
+>>>>
+>>>>
+>>>> I've a TP-LINK USB wireless adapter with model number TL-WN722N. When I
+>>>> plug it in to one of the USB slots in my PC, its LED diode isn't
+>>>> flashing (although under WIN XP it is flashing) and I cannot use it.
+>>>> from the messages of the 'dmesg' command it seems that the kernel detect
+>>>> it, but I unable to use it because it doesn't appear on the wicd window
+>>>> of available interfaces.
+>>>>
+>>>> My Linux distro is Debian squeeze with kernel 2.6.32-5-686.
+>>>>
+>>>> What should I do in order to solve this problem?
+>>>
+>>>
+>>> It is ath9k-htc based adapter. Please update your kernel and use latest
+>>> firmware. I think Debian squeeze do not provided this firmware, so you
+>>> should install it manually.
+>>>
+>>>
+>> --
+>>
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
