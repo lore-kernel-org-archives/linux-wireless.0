@@ -1,167 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:33163 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749Ab3GIS1R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 14:27:17 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv4 5/5] ath9k: enable CSA functionality in ath9k
-Date: Tue,  9 Jul 2013 20:27:04 +0200
-Message-Id: <1373394424-23298-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130709_202724_593303_7DAE81C1)
-In-Reply-To: <1373394424-23298-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373394424-23298-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mx1.redhat.com ([209.132.183.28]:57575 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757620Ab3GZN0E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jul 2013 09:26:04 -0400
+Date: Fri, 26 Jul 2013 15:29:09 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: ilw@linux.intel.com
+Subject: [PATCH 3.11] iwlwifi: dvm: fix calling ieee80211_chswitch_done()
+ with NULL
+Message-ID: <20130726132909.GA21925@redhat.com> (sfid-20130726_152609_851490_821A0124)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CSA is only enabled for one interface, but the same limitation applies
-for mac80211 too. It checks whether the beacon has been sent (different
-approaches for non-EDMA-enabled and EDMA-enabled devices), and completes
-the channel switch after that.
+If channel switch is pending and we remove interface we can
+crash like showed below due to passing NULL vif to mac80211:
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+BUG: unable to handle kernel paging request at fffffffffffff8cc
+IP: [<ffffffff8130924d>] strnlen+0xd/0x40
+Call Trace:
+ [<ffffffff8130ad2e>] string.isra.3+0x3e/0xd0
+ [<ffffffff8130bf99>] vsnprintf+0x219/0x640
+ [<ffffffff8130c481>] vscnprintf+0x11/0x30
+ [<ffffffff81061585>] vprintk_emit+0x115/0x4f0
+ [<ffffffff81657bd5>] printk+0x61/0x63
+ [<ffffffffa048987f>] ieee80211_chswitch_done+0xaf/0xd0 [mac80211]
+ [<ffffffffa04e7b34>] iwl_chswitch_done+0x34/0x40 [iwldvm]
+ [<ffffffffa04f83c3>] iwlagn_commit_rxon+0x2a3/0xdc0 [iwldvm]
+ [<ffffffffa04ebc50>] ? iwlagn_set_rxon_chain+0x180/0x2c0 [iwldvm]
+ [<ffffffffa04e5e76>] iwl_set_mode+0x36/0x40 [iwldvm]
+ [<ffffffffa04e5f0d>] iwlagn_mac_remove_interface+0x8d/0x1b0 [iwldvm]
+ [<ffffffffa0459b3d>] ieee80211_do_stop+0x29d/0x7f0 [mac80211]
+
+This is because we nulify ctx->vif in iwlagn_mac_remove_interface()
+before calling some other functions that teardown interface. To fix
+just check ctx->vif on iwl_chswitch_done(). We should not call
+ieee80211_chswitch_done() as channel switch works were already canceled
+by mac80211 in ieee80211_do_stop() -> ieee80211_mgd_stop().
+
+Resolve:
+https://bugzilla.redhat.com/show_bug.cgi?id=979581
+
+Cc: stable@vger.kernel.org
+Reported-by: Lukasz Jagiello <jagiello.lukasz@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-Changes to PATCHv2:
- * announce support for channel switch
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Changes to PATCHv1:
- * complete channel switch after the last beacon has been sent
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |    2 ++
- drivers/net/wireless/ath/ath9k/beacon.c |   21 +++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/init.c   |    1 +
- drivers/net/wireless/ath/ath9k/main.c   |   17 +++++++++++++++++
- drivers/net/wireless/ath/ath9k/xmit.c   |    2 ++
- 5 files changed, 43 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 579ed9c..3745487 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -424,6 +424,7 @@ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_set_beacon(struct ath_softc *sc);
-+bool ath9k_csa_is_finished(struct ath_softc *sc);
- 
- /*******************/
- /* Link Monitoring */
-@@ -751,6 +752,7 @@ struct ath_softc {
- #endif
- 
- 	struct ath_descdma txsdma;
-+	struct ieee80211_vif *csa_vif;
- 
- 	struct ath_ant_comb ant_comb;
- 	u8 ant_tx, ant_rx;
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index fd1eeba..e400151 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -310,6 +310,23 @@ void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
- 		(unsigned long long)tsfadjust, avp->av_bslot);
- }
- 
-+bool ath9k_csa_is_finished(struct ath_softc *sc)
-+{
-+	struct ieee80211_vif *vif;
-+
-+	vif = sc->csa_vif;
-+	if (!vif || !vif->csa_active)
-+		return false;
-+
-+	if (!ieee80211_csa_is_complete(vif))
-+		return false;
-+
-+	ieee80211_csa_finish(vif);
-+	vif->csa_active = 0;
-+	sc->csa_vif = NULL;
-+	return true;
-+}
-+
- void ath9k_beacon_tasklet(unsigned long data)
- {
- 	struct ath_softc *sc = (struct ath_softc *)data;
-@@ -355,6 +372,10 @@ void ath9k_beacon_tasklet(unsigned long data)
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index 323e4a3..9a817df 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -1046,7 +1046,10 @@ void iwl_chswitch_done(struct iwl_priv *priv, bool is_success)
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
  		return;
- 	}
  
-+	/* EDMA devices check that in the tx completion function. */
-+	if (!edma && ath9k_csa_is_finished(sc))
+-	if (test_and_clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status))
++	if (!test_and_clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status))
 +		return;
 +
- 	slot = ath9k_beacon_choose_slot(sc);
- 	vif = sc->beacon.bslot[slot];
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index f359b0d..3ce83c4 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -807,6 +807,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-+	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 
- #ifdef CONFIG_PM_SLEEP
- 	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d1ce3da..6844968 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1026,6 +1026,9 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_remove_slot(sc, vif);
- 
-+	if (sc->csa_vif == vif)
-+		sc->csa_vif = NULL;
-+
- 	ath9k_ps_wakeup(sc);
- 	ath9k_calculate_summary_state(hw, NULL);
- 	ath9k_ps_restore(sc);
-@@ -2319,6 +2322,19 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
- 	clear_bit(SC_OP_SCANNING, &sc->sc_flags);
++	if (ctx->vif)
+ 		ieee80211_chswitch_done(ctx->vif, is_success);
  }
- 
-+static void ath9k_channel_switch_beacon(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif,
-+					struct cfg80211_chan_def *chandef)
-+{
-+	struct ath_softc *sc = hw->priv;
-+
-+	/* mac80211 does not support CSA in multi-if cases (yet) */
-+	if (WARN_ON(sc->csa_vif))
-+		return;
-+
-+	sc->csa_vif = vif;
-+}
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2366,4 +2382,5 @@ struct ieee80211_ops ath9k_ops = {
- #endif
- 	.sw_scan_start	    = ath9k_sw_scan_start,
- 	.sw_scan_complete   = ath9k_sw_scan_complete,
-+	.channel_switch_beacon     = ath9k_channel_switch_beacon,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index eab0fcb..cec670d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2282,6 +2282,8 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		if (ts.qid == sc->beacon.beaconq) {
- 			sc->beacon.tx_processed = true;
- 			sc->beacon.tx_last = !(ts.ts_status & ATH9K_TXERR_MASK);
-+
-+			ath9k_csa_is_finished(sc);
- 			continue;
- 		}
  
 -- 
-1.7.10.4
+1.7.11.7
 
