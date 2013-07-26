@@ -1,110 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:65392 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab3GKJGh (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58134 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757930Ab3GZI3o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:06:37 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org
-Subject: [PATCH 00/50] USB: cleanup spin_lock in URB->complete()
-Date: Thu, 11 Jul 2013 17:05:23 +0800
-Message-Id: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> (sfid-20130711_110658_363692_647EE930)
+	Fri, 26 Jul 2013 04:29:44 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Avri Altman <avri.altman@intel.com>
+Subject: [PATCH 13/30] iwlwifi: rx_phy_info: new api to get signal strength
+Date: Fri, 26 Jul 2013 10:28:30 +0200
+Message-Id: <1374827327-3464-14-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103018_524121_AB83C139)
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Avri Altman <avri.altman@intel.com>
 
-As we are going to run URB->complete() in tasklet context[1][2], and
-hard interrupt may be enabled when running URB completion handler[3],
-so we might need to disable interrupt when acquiring one lock in
-the completion handler for the below reasons:
+A new API that replaces the rx signal strength calculation via agc & rssi.
+The energy is now calculated outside the driver and transferred by the fw.
 
-- URB->complete() holds a subsystem wide lock which may be acquired
-in another hard irq context, and the subsystem wide lock is acquired
-by spin_lock()/read_lock()/write_lock() in complete()
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw.h     | 14 ++++++-----
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h |  8 ++++++
+ drivers/net/wireless/iwlwifi/mvm/rx.c     | 41 ++++++++++++++++++++++---------
+ 3 files changed, 46 insertions(+), 17 deletions(-)
 
-- URB->complete() holds a private lock with spin_lock()/read_lock()/write_lock()
-but driver may export APIs to make other drivers acquire the same private
-lock in its interrupt handler.
-
-For the sake of safety and making the change simple, this patch set
-converts all spin_lock()/read_lock()/write_lock() in completion handler
-path into their irqsave version mechanically.
-
-But if you are sure the above two cases do not happen in your driver,
-please let me know and I can drop the unnecessary change.
-
-Also if you find some conversions are missed, also please let me know so
-that I can add it in the next round.
-
-
-[1], http://marc.info/?l=linux-usb&m=137286322526312&w=2
-[2], http://marc.info/?l=linux-usb&m=137286326726326&w=2
-[3], http://marc.info/?l=linux-usb&m=137286330626363&w=2
-
- drivers/bluetooth/bfusb.c                     |   12 ++++----
- drivers/bluetooth/btusb.c                     |    5 ++--
- drivers/hid/usbhid/hid-core.c                 |    5 ++--
- drivers/input/misc/cm109.c                    |   10 ++++---
- drivers/isdn/hardware/mISDN/hfcsusb.c         |   36 ++++++++++++-----------
- drivers/media/dvb-core/dvb_demux.c            |   17 +++++++----
- drivers/media/usb/cx231xx/cx231xx-audio.c     |    6 ++++
- drivers/media/usb/cx231xx/cx231xx-core.c      |   10 ++++---
- drivers/media/usb/cx231xx/cx231xx-vbi.c       |    5 ++--
- drivers/media/usb/em28xx/em28xx-audio.c       |    3 ++
- drivers/media/usb/em28xx/em28xx-core.c        |    5 ++--
- drivers/media/usb/sn9c102/sn9c102_core.c      |    7 +++--
- drivers/media/usb/tlg2300/pd-alsa.c           |    3 ++
- drivers/media/usb/tlg2300/pd-video.c          |    5 ++--
- drivers/media/usb/tm6000/tm6000-video.c       |    5 ++--
- drivers/net/usb/cdc-phonet.c                  |    5 ++--
- drivers/net/usb/hso.c                         |   38 ++++++++++++++-----------
- drivers/net/usb/kaweth.c                      |    7 +++--
- drivers/net/usb/rtl8150.c                     |    5 ++--
- drivers/net/wireless/ath/ath9k/hif_usb.c      |   29 ++++++++++---------
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    9 +++---
- drivers/net/wireless/ath/ath9k/wmi.c          |   11 +++----
- drivers/net/wireless/ath/carl9170/rx.c        |    5 ++--
- drivers/net/wireless/libertas/if_usb.c        |    5 ++--
- drivers/net/wireless/libertas_tf/if_usb.c     |    6 ++--
- drivers/net/wireless/zd1211rw/zd_usb.c        |   21 ++++++++------
- drivers/staging/bcm/InterfaceRx.c             |    5 ++--
- drivers/staging/btmtk_usb/btmtk_usb.c         |    5 ++--
- drivers/staging/ced1401/usb1401.c             |   35 ++++++++++++-----------
- drivers/staging/vt6656/usbpipe.c              |    9 +++---
- drivers/usb/class/cdc-wdm.c                   |   16 +++++++----
- drivers/usb/class/usblp.c                     |   10 ++++---
- drivers/usb/core/devio.c                      |    5 ++--
- drivers/usb/misc/adutux.c                     |   10 ++++---
- drivers/usb/misc/iowarrior.c                  |    5 ++--
- drivers/usb/misc/ldusb.c                      |    7 +++--
- drivers/usb/misc/legousbtower.c               |    5 ++--
- drivers/usb/misc/usbtest.c                    |   10 ++++---
- drivers/usb/misc/uss720.c                     |    6 +++-
- drivers/usb/serial/cyberjack.c                |   15 ++++++----
- drivers/usb/serial/digi_acceleport.c          |   23 ++++++++-------
- drivers/usb/serial/io_edgeport.c              |   14 +++++----
- drivers/usb/serial/io_ti.c                    |    5 ++--
- drivers/usb/serial/mos7720.c                  |    5 ++--
- drivers/usb/serial/mos7840.c                  |    5 ++--
- drivers/usb/serial/quatech2.c                 |    5 ++--
- drivers/usb/serial/sierra.c                   |    9 +++---
- drivers/usb/serial/symbolserial.c             |    5 ++--
- drivers/usb/serial/ti_usb_3410_5052.c         |    9 +++---
- drivers/usb/serial/usb_wwan.c                 |    5 ++--
- sound/usb/caiaq/audio.c                       |    5 ++--
- sound/usb/midi.c                              |    5 ++--
- sound/usb/misc/ua101.c                        |   14 +++++++--
- sound/usb/usx2y/usbusx2yaudio.c               |    4 +++
- 54 files changed, 322 insertions(+), 209 deletions(-)
-
-
-Thanks,
---
-Ming Lei
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index f26f126..46dc38a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -75,14 +75,16 @@
+  * @IWL_UCODE_TLV_FLAGS_P2P: This uCode image supports P2P.
+  * @IWL_UCODE_TLV_FLAGS_DW_BC_TABLE: The SCD byte count table is in DWORDS
+  * @IWL_UCODE_TLV_FLAGS_UAPSD: This uCode image supports uAPSD
++ * @IWL_UCODE_TLV_FLAGS_RX_ENERGY_API: supports rx signal strength api
+  */
+ enum iwl_ucode_tlv_flag {
+-	IWL_UCODE_TLV_FLAGS_PAN		= BIT(0),
+-	IWL_UCODE_TLV_FLAGS_NEWSCAN	= BIT(1),
+-	IWL_UCODE_TLV_FLAGS_MFP		= BIT(2),
+-	IWL_UCODE_TLV_FLAGS_P2P		= BIT(3),
+-	IWL_UCODE_TLV_FLAGS_DW_BC_TABLE	= BIT(4),
+-	IWL_UCODE_TLV_FLAGS_UAPSD	= BIT(6),
++	IWL_UCODE_TLV_FLAGS_PAN			= BIT(0),
++	IWL_UCODE_TLV_FLAGS_NEWSCAN		= BIT(1),
++	IWL_UCODE_TLV_FLAGS_MFP			= BIT(2),
++	IWL_UCODE_TLV_FLAGS_P2P			= BIT(3),
++	IWL_UCODE_TLV_FLAGS_DW_BC_TABLE		= BIT(4),
++	IWL_UCODE_TLV_FLAGS_UAPSD		= BIT(6),
++	IWL_UCODE_TLV_FLAGS_RX_ENERGY_API	= BIT(8),
+ };
+ 
+ /* The default calibrate table size if not specified by firmware file */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+index 44614f5..28cab82 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+@@ -768,6 +768,14 @@ struct iwl_phy_context_cmd {
+ } __packed; /* PHY_CONTEXT_CMD_API_VER_1 */
+ 
+ #define IWL_RX_INFO_PHY_CNT 8
++#define IWL_RX_INFO_ENERGY_ANT_ABC_IDX 1
++#define IWL_RX_INFO_ENERGY_ANT_A_MSK 0x000000ff
++#define IWL_RX_INFO_ENERGY_ANT_B_MSK 0x0000ff00
++#define IWL_RX_INFO_ENERGY_ANT_C_MSK 0x00ff0000
++#define IWL_RX_INFO_ENERGY_ANT_A_POS 0
++#define IWL_RX_INFO_ENERGY_ANT_B_POS 8
++#define IWL_RX_INFO_ENERGY_ANT_C_POS 16
++
+ #define IWL_RX_INFO_AGC_IDX 1
+ #define IWL_RX_INFO_RSSI_AB_IDX 2
+ #define IWL_OFDM_AGC_A_MSK 0x0000007f
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
+index e4930d5..c02487e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
+@@ -124,10 +124,6 @@ static void iwl_mvm_pass_packet_to_mac80211(struct iwl_mvm *mvm,
+ 	ieee80211_rx_ni(mvm->hw, skb);
+ }
+ 
+-/*
+- * iwl_mvm_calc_rssi - calculate the rssi in dBm
+- * @phy_info: the phy information for the coming packet
+- */
+ static int iwl_mvm_calc_rssi(struct iwl_mvm *mvm,
+ 			     struct iwl_rx_phy_info *phy_info)
+ {
+@@ -136,12 +132,6 @@ static int iwl_mvm_calc_rssi(struct iwl_mvm *mvm,
+ 	u32 agc_a, agc_b, max_agc;
+ 	u32 val;
+ 
+-	/* Find max rssi among 2 possible receivers.
+-	 * These values are measured by the Digital Signal Processor (DSP).
+-	 * They should stay fairly constant even as the signal strength varies,
+-	 * if the radio's Automatic Gain Control (AGC) is working right.
+-	 * AGC value (see below) will provide the "interesting" info.
+-	 */
+ 	val = le32_to_cpu(phy_info->non_cfg_phy[IWL_RX_INFO_AGC_IDX]);
+ 	agc_a = (val & IWL_OFDM_AGC_A_MSK) >> IWL_OFDM_AGC_A_POS;
+ 	agc_b = (val & IWL_OFDM_AGC_B_MSK) >> IWL_OFDM_AGC_B_POS;
+@@ -170,6 +160,32 @@ static int iwl_mvm_calc_rssi(struct iwl_mvm *mvm,
+ }
+ 
+ /*
++ * iwl_mvm_get_signal_strength - use new rx PHY INFO API
++ */
++static int iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
++				       struct iwl_rx_phy_info *phy_info)
++{
++	int energy_a, energy_b, energy_c, max_energy;
++	u32 val;
++
++	val =
++	    le32_to_cpu(phy_info->non_cfg_phy[IWL_RX_INFO_ENERGY_ANT_ABC_IDX]);
++	energy_a = (val & IWL_RX_INFO_ENERGY_ANT_A_MSK) >>
++						IWL_RX_INFO_ENERGY_ANT_A_POS;
++	energy_b = (val & IWL_RX_INFO_ENERGY_ANT_B_MSK) >>
++						IWL_RX_INFO_ENERGY_ANT_B_POS;
++	energy_c = (val & IWL_RX_INFO_ENERGY_ANT_C_MSK) >>
++						IWL_RX_INFO_ENERGY_ANT_C_POS;
++	max_energy = max(energy_a, energy_b);
++	max_energy = max(max_energy, energy_c);
++
++	IWL_DEBUG_STATS(mvm, "energy In A %d B %d C %d , and max %d\n",
++			energy_a, energy_b, energy_c, max_energy);
++
++	return max_energy;
++}
++
++/*
+  * iwl_mvm_set_mac80211_rx_flag - translate fw status to mac80211 format
+  * @mvm: the mvm object
+  * @hdr: 80211 header
+@@ -290,7 +306,10 @@ int iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 	/*rx_status.flag |= RX_FLAG_MACTIME_MPDU;*/
+ 
+ 	/* Find max signal strength (dBm) among 3 antenna/receiver chains */
+-	rx_status.signal = iwl_mvm_calc_rssi(mvm, phy_info);
++	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_RX_ENERGY_API)
++		rx_status.signal = iwl_mvm_get_signal_strength(mvm, phy_info);
++	else
++		rx_status.signal = iwl_mvm_calc_rssi(mvm, phy_info);
+ 
+ 	IWL_DEBUG_STATS_LIMIT(mvm, "Rssi %d, TSF %llu\n", rx_status.signal,
+ 			      (unsigned long long)rx_status.mactime);
+-- 
+1.8.0
 
