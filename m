@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:65340 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBHz (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:12136 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932179Ab3GZOFn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:55 -0400
-Received: by mail-pd0-f181.google.com with SMTP id 14so580195pdj.40
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:55 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 41/53] wireless-regdb: US, United States - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:37 -0700
-Message-Id: <1372899889-19183-42-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032040_283422_D15B079C)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 26 Jul 2013 10:05:43 -0400
+Message-ID: <1374847540.6580.26.camel@gandalf.local.home> (sfid-20130726_160547_926731_EA782230)
+Subject: Re: Help adding trace events to xHCI
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Xenia Ragiadakou <burzalodowa@gmail.com>,
+	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Fri, 26 Jul 2013 10:05:40 -0400
+In-Reply-To: <1374846358.8248.53.camel@jlt4.sipsolutions.net>
+References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos>
+	 (sfid-20130711_182013_255578_2722BE3F) <1373562533.8201.33.camel@jlt4.sipsolutions.net>
+	 <1373570955.17876.58.camel@gandalf.local.home>
+	 <1374830340.8248.43.camel@jlt4.sipsolutions.net>
+	 <1374841699.6580.21.camel@gandalf.local.home>
+	 <1374844013.8248.47.camel@jlt4.sipsolutions.net>
+	 <1374844649.6580.24.camel@gandalf.local.home>
+	 <1374846358.8248.53.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Fri, 2013-07-26 at 15:45 +0200, Johannes Berg wrote:
 
-This enables 80 MHz bandwidth support on the US 5 GHz
-frequencies. This also updates the 5 GHz bands with higher
-max EIRP.
+> Well, right now I can live with allocation 110 bytes for each
+> tracepoint, this would just optimise it down. If I was in the middle of
+> writing one such event while an interrupt came in, I'd not be able to
+> reduce the ring-buffer allocation again. I doubt that an interrupt would
+> come in much of the time between allocating the new event and
+> deallocating it partially. The more difficult question would seem to be
+> whether or not we can reliably detect an interrupt having written
+> another event.
+> 
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Hmm, you may be convincing me ;-)
 
-diff --git a/db.txt b/db.txt
-index 63ee9b4..0ebb934 100644
---- a/db.txt
-+++ b/db.txt
-@@ -767,11 +767,11 @@ country UA:
- 
- country US: DFS-FCC
- 	(2402 - 2472 @ 40), (3, 27)
--	(5170 - 5250 @ 40), (3, 17)
--	(5250 - 5330 @ 40), (3, 20), DFS
--	(5490 - 5600 @ 40), (3, 20), DFS
--	(5650 - 5710 @ 40), (3, 20), DFS
--	(5735 - 5835 @ 40), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5600 @ 80), (3, 24), DFS
-+	(5650 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
- 	# 60g band
- 	# reference: http://cfr.regstoday.com/47cfr15.aspx#47_CFR_15p255
- 	# channels 1,2,3, EIRP=40dBm(43dBm peak)
--- 
-1.7.10.4
+As it just allocates the "max" anyway, this feature will actually help.
+
+Don't worry about the detection of interrupt, it already does that with
+the discard event. It wouldn't be that hard to extend that into a
+reduction too.
+
+-- Steve
+
 
