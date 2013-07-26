@@ -1,101 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:41453 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752601Ab3G3NFg (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58058 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753397Ab3GZISF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 09:05:36 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <coelho@ti.com>, <luca@coelho.fi>, <mturquette@linaro.org>,
-	<mark.rutland@arm.com>, <balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>,
-	<martinez.javier@gmail.com>
-Subject: [PATCH v4 3/8] wlcore: remove pwr_in_suspend from platform data
-Date: Tue, 30 Jul 2013 16:04:31 +0300
-Message-ID: <1375189476-21557-4-git-send-email-coelho@ti.com> (sfid-20130730_151133_253358_B7752C9D)
-In-Reply-To: <1375189476-21557-1-git-send-email-coelho@ti.com>
-References: <1375189476-21557-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 26 Jul 2013 04:18:05 -0400
+Message-ID: <1374826675.8248.11.camel@jlt4.sipsolutions.net> (sfid-20130726_101813_440989_C8E804CF)
+Subject: pull-request: iwlwifi-fixes 2013-07-26
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 26 Jul 2013 10:17:55 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-FtN9qDVi7XkSFqu13IYo"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The pwr_in_suspend flag depends on the MMC settings which can be
-retrieved from the SDIO subsystem, so it doesn't need to be part of
-the platform data structure.  Move it to the platform device data that
-is passed from SDIO to wlcore.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Reviewed-by: Felipe Balbi <balbi@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c     | 3 +--
- drivers/net/wireless/ti/wlcore/sdio.c     | 2 +-
- drivers/net/wireless/ti/wlcore/wlcore_i.h | 1 +
- include/linux/wl12xx.h                    | 1 -
- 4 files changed, 3 insertions(+), 4 deletions(-)
+--=-FtN9qDVi7XkSFqu13IYo
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 11dab9a..e771de0 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5900,7 +5900,6 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	struct wl1271 *wl = context;
- 	struct platform_device *pdev = wl->pdev;
- 	struct wlcore_platdev_data *pdev_data = pdev->dev.platform_data;
--	struct wl12xx_platform_data *pdata = pdev_data->pdata;
- 
- 	int ret;
- 
-@@ -5947,7 +5946,7 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	if (!ret) {
- 		wl->irq_wake_enabled = true;
- 		device_init_wakeup(wl->dev, 1);
--		if (pdata->pwr_in_suspend)
-+		if (pdev_data->pwr_in_suspend)
- 			wl->hw->wiphy->wowlan = &wlcore_wowlan_support;
- 	}
- #endif
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 29ef249..4c7e8ac 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -260,7 +260,7 @@ static int wl1271_probe(struct sdio_func *func,
- 	dev_dbg(glue->dev, "sdio PM caps = 0x%x\n", mmcflags);
- 
- 	if (mmcflags & MMC_PM_KEEP_POWER)
--		pdev_data->pdata->pwr_in_suspend = true;
-+		pdev_data->pwr_in_suspend = true;
- 
- 	sdio_set_drvdata(func, glue);
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index e5e1464..f2c4227 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -209,6 +209,7 @@ struct wl1271_if_operations {
- struct wlcore_platdev_data {
- 	struct wl12xx_platform_data *pdata;
- 	struct wl1271_if_operations *if_ops;
-+	bool pwr_in_suspend;
- };
- 
- #define MAX_NUM_KEYS 14
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index 1bfcd19..ab90b1c 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -59,7 +59,6 @@ struct wl12xx_platform_data {
- 	int irq;
- 	int board_ref_clock;
- 	int board_tcxo_clock;
--	bool pwr_in_suspend;
- };
- 
- #ifdef CONFIG_WILINK_PLATFORM_DATA
--- 
-1.8.3.2
+John,
+
+Yet some more fixes - we're adding tests and are doing a debug cycle
+with them.
+
+We have a scan fix for passive channels, a new PCI device ID for an old
+device, a NIC reset fix, an RF-Kill fix, a fix for powersave when GO
+interfaces are present as well as an aggregation session fix (for a
+corner case) and a workaround for a firmware design issue - it only
+supports a single GTK in D3.
+
+Let me know if there's any problem.
+
+johannes
+
+
+
+The following changes since commit a590ad411891de551e6de1b51ea635c0484148d6=
+:
+
+  iwlwifi: mvm: remove extra SSID from probe request (2013-07-16 13:55:15 +=
+0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
+or-john
+
+for you to fetch changes up to a53ee0a308b16e392e0219c585b10f329345766b:
+
+  iwlwifi: pcie: clear RFKILL interrupt in AMPG (2013-07-26 10:07:10 +0200)
+
+----------------------------------------------------------------
+David Spinadel (1):
+      iwlwifi: mvm: set SSID bits for passive channels
+
+Emmanuel Grumbach (3):
+      iwlwifi: add DELL SKU for 5150 HMC
+      iwlwifi: pcie: reset the NIC before the bring up
+      iwlwifi: pcie: clear RFKILL interrupt in AMPG
+
+Ilan Peer (1):
+      iwlwifi: mvm: Disable managed PS when GO is added
+
+Johannes Berg (2):
+      iwlwifi: mvm: use only a single GTK in D3
+      iwlwifi: mvm: fix flushing not started aggregation sessions
+
+ drivers/net/wireless/iwlwifi/iwl-prph.h        |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/d3.c          | 15 ++++++---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |  1 -
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c    | 42 +++++++++++++---------=
+----
+ drivers/net/wireless/iwlwifi/mvm/scan.c        | 11 ++-----
+ drivers/net/wireless/iwlwifi/mvm/sta.c         | 11 +++++--
+ drivers/net/wireless/iwlwifi/pcie/drv.c        |  1 +
+ drivers/net/wireless/iwlwifi/pcie/rx.c         |  8 +++++
+ drivers/net/wireless/iwlwifi/pcie/trans.c      |  5 +++
+ 9 files changed, 57 insertions(+), 39 deletions(-)
+
+
+--=-FtN9qDVi7XkSFqu13IYo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJR8jCzAAoJEDBSmw7B7bqrWtoP/14X9Uaw4u0Fg182pnDihVHg
+ZueMUZerc17yitX5wHMXu5+KkPShY6i6I85XyG2WhqM+dZa3L5JPqwATmJMJXK/q
+1BYOpXpShCP47AxrriE8b0BNKBwEovrIPXfe5TsMtiHeSuxWjUHTAfRWPIzbMx3V
+djRZZDNkoDnaAT93a+Q5KdRSHnR0HlfHhxz/RHnRBVX1ZpnqaTBTsrzU+jjfJCsY
+JGzQp+LEBiegNXPMvrID4sycktTwcjpCBqxTL1kepKmPFLFBV36HsyBVHxohCmXX
+wnJNr/vlDkZPuXKYvwIS7Mk2tFVt15DhzkXik2uNXqhFtlv+ny67BespyqFFaU44
+ARHA9yeRWTDBrPZuO/aHYOFOMfHgvw00pad/7wrZ0ndTl2Sdvz1GDMcuwxheTLu1
+tJE8gMA6vBbYZZRCEhGT+wkoLk8Is6arANzCzI6oUD5udw4++Td2fakE9boM/egF
+or1jPKIC4q/Hhp08++C4ZpK/QVWBRd4MHvqFfilqJn/cytTOxM4tTwphQ1Fyp6wb
+mbcZE10gIA3bCo9slIows2fk+P3kj8PJkSxCKgR2q7C4DoctSoSOFo/5NRHwNGzH
+vEHtptwd2gs69WqP3F47pGBRz1E83dtChnvSXCd6qukrxo/Jq4FSU0+sV8KgfXer
+Y7Qa3AjdjMXgQIUHvq/K
+=lwf/
+-----END PGP SIGNATURE-----
+
+--=-FtN9qDVi7XkSFqu13IYo--
 
