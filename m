@@ -1,102 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:61506 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753150Ab3G2Iji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 04:39:38 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 1/3] nl/cfg80211: add chan_time for scan request
-Date: Mon, 29 Jul 2013 10:39:16 +0200
-Message-ID: <1375087158-22077-2-git-send-email-michal.kazior@tieto.com> (sfid-20130729_103943_645360_300806D2)
-In-Reply-To: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com>
-References: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from diserzione.investici.org ([82.221.99.153]:59409 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704Ab3GZTg5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jul 2013 15:36:57 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCH] mac80211: ibss - remove not authorized station earlier
+Date: Fri, 26 Jul 2013 21:15:02 +0200
+Message-Id: <1374866102-850-1-git-send-email-ordex@autistici.org> (sfid-20130726_213701_013329_E388F9C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new scan parameter allows user to specify how
-long driver should remain on each scanned channel.
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-The default is to leave it up to driver to decide.
-If specified it is preferred for driver to respect
-this setting although it may ignore it if it can't
-support it.
+A station which is not authorized has to be purged earlier
+to give it a chance to re-try to establish an IBSS/RSN
+session soon. Set the timeout to 10 seconds.
 
-This can be useful to do very quick/slow scans
-and/or gether survey data, e.g. for automatic
-channel selection.
+Some refactoring has also been done to allow the IBSS
+submodule to have its own expiring function.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reported-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- include/net/cfg80211.h       |    3 +++
- include/uapi/linux/nl80211.h |    7 +++++++
- net/wireless/nl80211.c       |    4 ++++
- 3 files changed, 14 insertions(+)
+ net/mac80211/ibss.c | 30 +++++++++++++++++++++++++++++-
+ 1 file changed, 29 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index aeaf6df..2d46112 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1323,6 +1323,8 @@ struct cfg80211_ssid {
-  * @aborted: (internal) scan request was notified as aborted
-  * @notified: (internal) scan request was notified as done or aborted
-  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
-+ * @chan_time: how many msec driver should stay on each channel during scan.
-+ *	Setting 0 leaves the decision up to the driver.
-  */
- struct cfg80211_scan_request {
- 	struct cfg80211_ssid *ssids;
-@@ -1332,6 +1334,7 @@ struct cfg80211_scan_request {
- 	const u8 *ie;
- 	size_t ie_len;
- 	u32 flags;
-+	int chan_time;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 5e6836c..e08387c 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -30,6 +30,7 @@
  
- 	u32 rates[IEEE80211_NUM_BANDS];
+ #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
+ #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
++#define IEEE80211_IBSS_RSN_INACTIVITY_LIMIT (10 * HZ)
  
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index eb68735..4ea1d9b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1469,6 +1469,11 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_COALESCE_RULE: Coalesce rule information.
-  *
-+ * @NL80211_ATTR_SCAN_CHAN_TIME: Specifies how many msec should a driver spend
-+ *	on each channel during scanning. This is optional and the default is
-+ *	leave the decision up to the driver. This setting may, but preferrably
-+ *	shouldn't, be ignored by driver.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1771,6 +1776,8 @@ enum nl80211_attrs {
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
  
- 	NL80211_ATTR_COALESCE_RULE,
+@@ -740,6 +741,33 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
+ 	return active;
+ }
  
-+	NL80211_ATTR_SCAN_CHAN_TIME,
++static void ieee80211_ibss_sta_expire(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta, *tmp;
++	unsigned long exp_time = IEEE80211_IBSS_INACTIVITY_LIMIT;
++	unsigned long exp_rsn_time = IEEE80211_IBSS_RSN_INACTIVITY_LIMIT;
 +
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 03d4ef9..27a8fef 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5298,6 +5298,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	request->no_cck =
- 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
- 
-+	if (info->attrs[NL80211_ATTR_SCAN_CHAN_TIME])
-+		request->chan_time =
-+			nla_get_u32(info->attrs[NL80211_ATTR_SCAN_CHAN_TIME]);
++	mutex_lock(&local->sta_mtx);
 +
- 	request->wdev = wdev;
- 	request->wiphy = &rdev->wiphy;
- 	request->scan_start = jiffies;
++	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
++		if (sdata != sta->sdata)
++			continue;
++
++		if (time_after(jiffies, sta->last_rx + exp_time) ||
++		    (time_after(jiffies, sta->last_rx + exp_rsn_time) &&
++		     sta->sta_state != IEEE80211_STA_AUTHORIZED)) {
++			sta_dbg(sta->sdata, "expiring inactive %sSTA %pM\n",
++				sta->sta_state != IEEE80211_STA_AUTHORIZED ?
++				"not authorized " : "", sta->sta.addr);
++
++			WARN_ON(__sta_info_destroy(sta));
++		}
++	}
++
++	mutex_unlock(&local->sta_mtx);
++}
++
+ /*
+  * This function is called with state == IEEE80211_IBSS_MLME_JOINED
+  */
+@@ -754,7 +782,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 	mod_timer(&ifibss->timer,
+ 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
+ 
+-	ieee80211_sta_expire(sdata, IEEE80211_IBSS_INACTIVITY_LIMIT);
++	ieee80211_ibss_sta_expire(sdata);
+ 
+ 	if (time_before(jiffies, ifibss->last_scan_completed +
+ 		       IEEE80211_IBSS_MERGE_INTERVAL))
 -- 
-1.7.9.5
+1.8.1.5
 
