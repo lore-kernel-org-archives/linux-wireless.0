@@ -1,193 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1182 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759741Ab3GaPE1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 11:04:27 -0400
-Message-ID: <51F9276F.1040908@broadcom.com> (sfid-20130731_170430_955247_914A9FE9)
-Date: Wed, 31 Jul 2013 17:04:15 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Mathieu Devos" <mathieu.devos@ugent.be>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: Skb and ieee80211 headers
-References: <CAE_+Soy5=MfUUahaP3Ka2onp+jP9aupbhGu_QHco=CP7Y9sqhQ@mail.gmail.com>
- <51F8E228.9080600@broadcom.com>
- <CAE_+Soyxz-RfyVeg-Z4Fv5tmUtH=9wutxgM0CGjHEne9zJq+Kg@mail.gmail.com>
- <51F8EF8F.90109@broadcom.com>
- <CAE_+SozB3cE36SKaHsyO9B1Eypm7KZFExV_uWBSsoiQ-Rn66Dw@mail.gmail.com>
- <51F90937.9080009@broadcom.com>
- <CAE_+Soy4Hy+uMAsn30PX9QpqY=Jah2f5qUCa=MkCskJczQB05w@mail.gmail.com>
-In-Reply-To: <CAE_+Soy4Hy+uMAsn30PX9QpqY=Jah2f5qUCa=MkCskJczQB05w@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:58117 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757029Ab3GZI3X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jul 2013 04:29:23 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 29/30] iwlwifi: list Emmanuel in maintainers file
+Date: Fri, 26 Jul 2013 10:28:46 +0200
+Message-Id: <1374827327-3464-30-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103017_660094_62262845)
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/31/2013 03:45 PM, Mathieu Devos wrote:
-> Alright,
->
-> Seems like I have fixed some issues while added some others. Since I
-> assume that when my hook gets activated the data pointer should be at
-> the start of the 802.3 header I casted an ethhdr (8023) on top of that
-> and it seems that on my notebook this is handled correctly (I can
-> actually check on my own mac addr and see that these frames are
-> for/from me).
+From: Johannes Berg <johannes.berg@intel.com>
 
-How does your hook work? Are you intercepting packets?
+Wey-Yi has moved on a while ago, but we forgot to update the
+maintainers file. Since Emmanuel is de facto maintaining the
+driver along with myself now, list him instead.
 
-Regards,
-Arend
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> On Wed, Jul 31, 2013 at 2:55 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 07/31/2013 02:39 PM, Mathieu Devos wrote:
->>>
->>> Hi,
->>>
->>> The wireless chip is a Broadcast BCM4330 chip. After looking around a
->>> bit I found that this is a fullMAC and links to the driver on
->>> wireless.kernel: http://wireless.kernel.org/en/users/Drivers/brcm80211
->>> and also links directly to android itself:
->>> https://android.googlesource.com/platform/hardware/broadcom/wlan
->>
->>
->> I suspected. The bcm4330 is indeed a fullmac device, which means the 802.11
->> stack is running on the device. The driver on Android is located under:
->>
->> https://android.googlesource.com/kernel/samsung/+/android-samsung-3.0-ics-mr1/drivers/net/wireless/bcmdhd/
->>
->> Not sure which android version you have.
->>
->> The brcm80211 on wireless.kernel.org is the upstream linux driver.
->>
->> Gr. AvS
->>
->>
->>> Still trying to learn a lot in this tightly packed world of protocol
->>> stacks, wireless and all the other poisons. Seems like I still have a
->>> long way to go. Thank you already for helping me out with these issues
->>> and taking the time to explain these things to me.
->>>
->>> Kind regards,
->>> Mathieu Devos
->>>
->>> On Wed, Jul 31, 2013 at 1:05 PM, Arend van Spriel <arend@broadcom.com>
->>> wrote:
->>>>
->>>> On 07/31/2013 12:28 PM, Mathieu Devos wrote:
->>>>>
->>>>>
->>>>> Hi,
->>>>>
->>>>> It's an android smartphone (I 9100 - Samsung galaxy S2) so it does not
->>>>> have a normal ethernet 802.3 input even. I check before selecting the
->>>>> device that it's wireless (through ieee80211_ptr) and this properly
->>>>> returns the wlan0 device which should be on the 80211 standard.
->>>>
->>>>
->>>>
->>>> *sigh* Welcome in the world of protocol stacks, wireless, networking
->>>> (choose
->>>> your poison). Let me draw the picture.
->>>>
->>>>           o user-space
->>>>           |
->>>> ----------------------
->>>>           | kernel
->>>>     +-----------+
->>>>     |    NET    | networking subsystem, ie. TCP/IP stack
->>>>     +-----------+
->>>>           | 802.3
->>>> +----------------+
->>>> |       | driver |
->>>> | +------------+ |
->>>> | |802.11 stack| |
->>>> | +------------+ |
->>>> |       | 802.11 |
->>>> +----------------+
->>>>           |
->>>>           o RF
->>>>
->>>> The device hooks up to the networking subsystem as an ethernet device and
->>>> as
->>>> such it receives 802.3 packets. These are converted to 802.11 packets by
->>>> the
->>>> 802.11 stack. Now depending on your device that happens in the device
->>>> driver
->>>> or on the device itself. Another option is that this is done by mac80211
->>>> (kernel provided 802.11 stack), but that is probably not the case, but to
->>>> be
->>>> sure I ask again: what wireless device do you have in your galaxy S2?
->>>>
->>>> Gr. AvS
->>>>
->>>>
->>>>> My goal is to get the ieee80211_header properly on the skb with this
->>>>> device, but some of the pointers and original data in the skb seem
->>>>> totally off. This leaves me clueless as to where to put this
->>>>> ieee80211_header.
->>>>> I've tried putting it right on skb->head (wrong I know, but I was
->>>>> getting desperate), on skb->mac_header (also wrong, no idea why
->>>>> though), I went back from skb->tail with len and even added ETH_HLEN
->>>>> to that as well because you can see that before my hook gets
->>>>> activated: skb_pull_inline(skb, ETH_HLEN);
->>>>> In the end I'm left with a header that is forced onto data but with a
->>>>> wrong origin pointer thus basically leaving me with all wrong data in
->>>>> the header.
->>>>>
->>>>> Kind regards,
->>>>> Mathieu Devos
->>>>>
->>>>> On Wed, Jul 31, 2013 at 12:08 PM, Arend van Spriel <arend@broadcom.com>
->>>>> wrote:
->>>>>>
->>>>>>
->>>>>> On 07/31/2013 11:39 AM, Mathieu Devos wrote:
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> Hi,
->>>>>>>
->>>>>>> I hope this is the right place to ask for a little bit of help as I'm
->>>>>>> currently beyond stuck on a challenge I'm trying to accomplish. I'm
->>>>>>> trying to write a "simple" LKM that properly uses a ieee80211 header
->>>>>>> to print information about the mac addresses (addr1->addr4) and later
->>>>>>> down the road try to send my own data.
->>>>>>>
->>>>>>> I only need to get L2 working, no need for TCP/IP, just a proper
->>>>>>> ieee80211 based on input from skb would be huge for me.
->>>>>>>
->>>>>>> So my issue: when placing the ieee80211 on my mac_header after I hook
->>>>>>> my skb from my wireless device (wlan0 on android - I9100)
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> Not sure what you goal is, but what wireless device is that? You may
->>>>>> just
->>>>>> get 802.3 packets from the device.
->>>>>>
->>>>>> Gr. AvS
->>>>>>
->>>>>>
->>>>>>> I get a huge
->>>>>>> amount of zero's and random(?) numbers when trying to print the
->>>>>>> addresses. This leads me to the first conclusion that mac_header is
->>>>>>> placed wrong when using 80211. After that I saw a lot of people just
->>>>>>> using the skb->data pointer. Now this gives even weirder issues for me
->>>>>>> and actually totally crashes my kernel.
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>
->>>>
->>>>
->>>
->>
->>
->
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index bf61e04..d44a5e8 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -4362,7 +4362,7 @@ F:	drivers/net/wireless/iwlegacy/
+ 
+ INTEL WIRELESS WIFI LINK (iwlwifi)
+ M:	Johannes Berg <johannes.berg@intel.com>
+-M:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
++M:	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+ M:	Intel Linux Wireless <ilw@linux.intel.com>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://intellinuxwireless.org
+-- 
+1.8.0
 
