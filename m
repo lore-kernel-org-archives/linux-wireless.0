@@ -1,90 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42187 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932255Ab3GKMmw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58156 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756248Ab3GZIaE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 08:42:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <51DEA289.5050509@cogentembedded.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-	<1373533573-12272-9-git-send-email-ming.lei@canonical.com>
-	<51DEA289.5050509@cogentembedded.com>
-Date: Thu, 11 Jul 2013 20:42:49 +0800
-Message-ID: <CACVXFVOF4e=+GjXHTJ-suitQO3TsvCnUBCsfoXj+QahxRqVz7Q@mail.gmail.com> (sfid-20130711_144300_697720_B4639287)
-Subject: Re: [PATCH 08/50] USB: legousbtower: spin_lock in complete() cleanup
-From: Ming Lei <ming.lei@canonical.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Juergen Stuber <starblue@users.sourceforge.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 26 Jul 2013 04:30:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 15/30] iwlwifi: mvm: reprobe device on firmware error during restart
+Date: Fri, 26 Jul 2013 10:28:32 +0200
+Message-Id: <1374827327-3464-16-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103019_812200_A7B09F56)
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 8:18 PM, Sergei Shtylyov
-<sergei.shtylyov@cogentembedded.com> wrote:
-> Hello.
->
->
-> On 11-07-2013 13:05, Ming Lei wrote:
->
->> Complete() will be run with interrupt enabled, so change to
->> spin_lock_irqsave().
->
->
->> Cc: Juergen Stuber <starblue@users.sourceforge.net>
->> Signed-off-by: Ming Lei <ming.lei@canonical.com>
->> ---
->>   drivers/usb/misc/legousbtower.c |    5 +++--
->>   1 file changed, 3 insertions(+), 2 deletions(-)
->
->
->> diff --git a/drivers/usb/misc/legousbtower.c
->> b/drivers/usb/misc/legousbtower.c
->> index 8089479..4044989 100644
->> --- a/drivers/usb/misc/legousbtower.c
->> +++ b/drivers/usb/misc/legousbtower.c
->> @@ -771,6 +771,7 @@ static void tower_interrupt_in_callback (struct urb
->> *urb)
->>         struct lego_usb_tower *dev = urb->context;
->>         int status = urb->status;
->>         int retval;
->> +       unsigned long flags;
->>
->>         dbg(4, "%s: enter, status %d", __func__, status);
->>
->> @@ -788,7 +789,7 @@ static void tower_interrupt_in_callback (struct urb
->> *urb)
->>         }
->>
->>         if (urb->actual_length > 0) {
->> -               spin_lock (&dev->read_buffer_lock);
->> +               spin_lock_irqsave (&dev->read_buffer_lock, flags);
->>                 if (dev->read_buffer_length + urb->actual_length <
->> read_buffer_size) {
->>                         memcpy (dev->read_buffer +
->> dev->read_buffer_length,
->>                                 dev->interrupt_in_buffer,
->> @@ -799,7 +800,7 @@ static void tower_interrupt_in_callback (struct urb
->> *urb)
->>                 } else {
->>                         printk(KERN_WARNING "%s: read_buffer overflow, %d
->> bytes dropped", __func__, urb->actual_length);
->>                 }
->> -               spin_unlock (&dev->read_buffer_lock);
->> +               spin_unlock_irqrestore (&dev->read_buffer_lock, flags);
->>         }
->
->
->    I don't think this patch passes checkpatch.pl.
+From: Johannes Berg <johannes.berg@intel.com>
 
-No errors reported from checkpatch.pl, only warnings which isn't introduced
-by this patch.
+If we get a firmware error during restart, we currently abandon any
+hope and simply fail, getting stuck until the driver is reloaded.
+Unfortunately, there isn't really much else we can do since restart
+will likely continue to fail, and asking mac80211 for disconnection
+just causes more error.
 
-Thanks,
---
-Ming Lei
+To allow the user to at least set up the device again completely
+from scratch, reprobe the device and in doing so completely destroy
+any mac80211/driver state.
+
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 38 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 37 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index fa1e1ce..2ffa593 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -644,6 +644,22 @@ static void iwl_mvm_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
+ 	ieee80211_free_txskb(mvm->hw, skb);
+ }
+ 
++struct iwl_mvm_reprobe {
++	struct device *dev;
++	struct work_struct work;
++};
++
++static void iwl_mvm_reprobe_wk(struct work_struct *wk)
++{
++	struct iwl_mvm_reprobe *reprobe;
++
++	reprobe = container_of(wk, struct iwl_mvm_reprobe, work);
++	if (device_reprobe(reprobe->dev))
++		dev_err(reprobe->dev, "reprobe failed!\n");
++	kfree(reprobe);
++	module_put(THIS_MODULE);
++}
++
+ static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
+ {
+ 	iwl_abort_notification_waits(&mvm->notif_wait);
+@@ -655,7 +671,27 @@ static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
+ 	 * can't recover this since we're already half suspended.
+ 	 */
+ 	if (test_and_set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
+-		IWL_ERR(mvm, "Firmware error during reconfiguration! Abort.\n");
++		struct iwl_mvm_reprobe *reprobe;
++
++		IWL_ERR(mvm,
++			"Firmware error during reconfiguration - reprobe!\n");
++
++		/*
++		 * get a module reference to avoid doing this while unloading
++		 * anyway and to avoid scheduling a work with code that's
++		 * being removed.
++		 */
++		if (!try_module_get(THIS_MODULE)) {
++			IWL_ERR(mvm, "Module is being unloaded - abort\n");
++			return;
++		}
++
++		reprobe = kzalloc(sizeof(*reprobe), GFP_ATOMIC);
++		if (!reprobe)
++			return;
++		reprobe->dev = mvm->trans->dev;
++		INIT_WORK(&reprobe->work, iwl_mvm_reprobe_wk);
++		schedule_work(&reprobe->work);
+ 	} else if (mvm->cur_ucode == IWL_UCODE_REGULAR &&
+ 		   iwlwifi_mod_params.restart_fw) {
+ 		/*
+-- 
+1.8.0
+
