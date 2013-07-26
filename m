@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:36939 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751410Ab3G2Tiq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jul 2013 15:38:46 -0400
-Date: Mon, 29 Jul 2013 21:38:28 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH V2] fwcutter: Add firmware 6.30.163.46
-Message-ID: <20130729213828.1e469aa3@milhouse> (sfid-20130729_213850_926019_F1453B04)
-In-Reply-To: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/9esGAue8sJ3G8jrLZE6t6je"; protocol="application/pgp-signature"
+Received: from s3.sipsolutions.net ([144.76.43.152]:58109 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757029Ab3GZI24 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jul 2013 04:28:56 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/30] iwlwifi: mvm: fix the ACK / CTS kill mask upon RSSI event
+Date: Fri, 26 Jul 2013 10:28:26 +0200
+Message-Id: <1374827327-3464-10-git-send-email-johannes@sipsolutions.net> (sfid-20130726_102918_380186_1840E041)
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/9esGAue8sJ3G8jrLZE6t6je
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Mon, 29 Jul 2013 13:56:53 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+If a vif's RSSI gets good enough, we can enable reduced
+Tx power. If so, we need to update the ACK / CTS kill mask
+accordingly. Since the auditing for the interfaces was bad,
+we enabled reduced Tx power, but didn't update the ACK / CTS
+kill mask.
+This is harmless since the firmware is most likely to
+discard this setting anyway, but it is a good practice
+to update it.
 
-> V2 - Add original URL for full GPL package
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/bt-coex.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks.
-I applied this and released b43-fwcutter-018.
-It also contains a few minor fixes.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+index 9195779..3a48cd9 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+@@ -527,6 +527,8 @@ static void iwl_mvm_bt_rssi_iterator(void *_data, u8 *mac,
+ 					lockdep_is_held(&mvm->mutex));
+ 	mvmsta = (void *)sta->drv_priv;
+ 
++	data->num_bss_ifaces++;
++
+ 	/*
+ 	 * This interface doesn't support reduced Tx power (because of low
+ 	 * RSSI probably), then set bt_kill_msk to default values.
+-- 
+1.8.0
 
---=20
-Michael
-
---Sig_/9esGAue8sJ3G8jrLZE6t6je
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJR9sS4AAoJEPUyvh2QjYsOg9gP/2seyASnESmvbVlO/Vj3YLSz
-AtqE3iKjNqGbN9EeHAgcCbgGkqjHT7Cjb42sdbgG4paMI9RV9hgXCmVfsf8U+pXK
-xCNJwRnhuQMpEduuAiYWB0sV1qDaSkifa+OgLarUVsWMdVanyff9zBxvPJAj/bJ7
-phRuxhVa6ax2kNVAknJD7dIG8fk14Xsq1v8agPUv4hXIuk38Yq1BBUkxwltpgKZw
-Z50kpJVar6NZiMYhuUedsasYOdDGPmLJKAmcxm6TJx2OAUuL2GJQ1mUe1xAofaQG
-9Nre8FDv1z2kBhw0VgWlOW9lm4T/slyYv3Q9Aia7LuiCAUp+kRK5ve6qGBuDshqc
-L2GhqDxqzid+dTVIydE5Ip5q+AI8tENSoljU1i/3oboNuZkabkYdWjsfeJuOh5/Y
-yNxAesgqFNIqGjS8J1P6CTxR1WweQnI30cgxku53s6hJ4V3p3W7b8jYLadVq7qI3
-dcWzdOvCHOpMRAvCrMReXF41makaw3X5vkIs+BWw3IKDptPXYXRuHee/SL+BT/3p
-fxdP+Dlcb7FMj7SMbdtLWpfFC3O1H16DP4Bzi4IqXXwLnyeC1QmhESQV6Ml4A6+i
-vpJTeLApgCRcwCcNzjXJ2Pmw5wjvPMIcqgExG3jOcfIHZaan2aHHnphZO4X8SJRn
-y3Q3tTe5coo8/ATSINdB
-=hnFV
------END PGP SIGNATURE-----
-
---Sig_/9esGAue8sJ3G8jrLZE6t6je--
