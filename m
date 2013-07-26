@@ -1,36 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:7230 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752318Ab3GGOi4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 10:38:56 -0400
-Date: Sun, 7 Jul 2013 16:41:42 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 20/20] rt2x00: rt2800usb: add USB
- device ID for Linksys AE3000
-Message-ID: <20130707144142.GT2073@localhost.localdomain> (sfid-20130707_163858_427617_C19A0624)
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
- <1372664879-18474-21-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372664879-18474-21-git-send-email-juhosg@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:58074 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757029Ab3GZITf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jul 2013 04:19:35 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 7/7] iwlwifi: pcie: clear RFKILL interrupt in AMPG
+Date: Fri, 26 Jul 2013 10:19:28 +0200
+Message-Id: <1374826768-2440-7-git-send-email-johannes@sipsolutions.net> (sfid-20130726_101950_206396_94C3F4B2)
+In-Reply-To: <1374826768-2440-1-git-send-email-johannes@sipsolutions.net>
+References: <1374826675.8248.11.camel@jlt4.sipsolutions.net>
+ <1374826768-2440-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 01, 2013 at 09:47:59AM +0200, Gabor Juhos wrote:
-> The Linksys AE3000 device is based on the RT3573
-> chipset. The support for this chipset is available
-> already, and the AE3000 device works with the driver.
-> 
-> Only managed mode works correctly at the moment,
-> for AP mode additional changes are needed in the
-> driver.
-> 
-> Also add a new RT2800USB_RT3573 Kconfig option and
-> only enable support for RT3573 based devices if
-> that is enabled.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+
+If we forget to do so, we can't send HCMD to firmware while
+the NIC is in RFKILL state.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-prph.h | 2 ++
+ drivers/net/wireless/iwlwifi/pcie/rx.c  | 8 ++++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index ff8cc75..a70c7b9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -97,6 +97,8 @@
+ 
+ #define APMG_PCIDEV_STT_VAL_L1_ACT_DIS		(0x00000800)
+ 
++#define APMG_RTC_INT_STT_RFKILL		(0x10000000)
++
+ /* Device system time */
+ #define DEVICE_SYSTEM_TIME_REG 0xA0206C
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index fd848cd..f600e68 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -888,6 +888,14 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 
+ 		iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ 		if (hw_rfkill) {
++			/*
++			 * Clear the interrupt in APMG if the NIC is going down.
++			 * Note that when the NIC exits RFkill (else branch), we
++			 * can't access prph and the NIC will be reset in
++			 * start_hw anyway.
++			 */
++			iwl_write_prph(trans, APMG_RTC_INT_STT_REG,
++				       APMG_RTC_INT_STT_RFKILL);
+ 			set_bit(STATUS_RFKILL, &trans_pcie->status);
+ 			if (test_and_clear_bit(STATUS_HCMD_ACTIVE,
+ 					       &trans_pcie->status))
+-- 
+1.8.0
+
