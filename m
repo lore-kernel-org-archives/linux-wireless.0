@@ -1,123 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:59845 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932934Ab3GCOEm (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58157 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756248Ab3GZIaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 10:04:42 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>,
-	<nm@ti.com>
-Subject: [PATCH v3 7/8] wlcore: sdio: get clocks from device tree
-Date: Wed, 3 Jul 2013 17:03:28 +0300
-Message-ID: <1372860209-3504-8-git-send-email-coelho@ti.com> (sfid-20130703_160540_332042_3F8FD41D)
-In-Reply-To: <1372860209-3504-1-git-send-email-coelho@ti.com>
-References: <1372860209-3504-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 26 Jul 2013 04:30:08 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Subject: [PATCH 30/30] iwlwifi: mvm: add high temperature SKU thermal throttling parameters
+Date: Fri, 26 Jul 2013 10:28:47 +0200
+Message-Id: <1374827327-3464-31-git-send-email-johannes@sipsolutions.net> (sfid-20130726_103018_805782_A1951DE7)
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Read the clock nodes from the device tree and use them to set the
-frequency for the refclock and the tcxo clock.
+From: Eytan Lifshitz <eytan.lifshitz@intel.com>
 
-Also, call sdio_set_drvdata() earlier, so the glue is already set in
-the driver data when we call wlcore_get_pdata_from_of() and we don't
-need to pass it as a parameter.
+When the NIC is expected to operate in high temperature,
+it is advisable to put more aggresive thermal throttling
+parameters, in order to prevent CT-kill.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Reviewed-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: eytan lifshitz <eytan.lifshitz@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ti/wlcore/sdio.c |   36 +++++++++++++++++++++++++++++++--
- 1 file changed, 34 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-7000.c   | 10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-config.h |  3 +++
+ drivers/net/wireless/iwlwifi/mvm/tt.c     | 29 ++++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/pcie/drv.c   |  6 +++---
+ 4 files changed, 44 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 980bf3d..60fce49 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -53,6 +53,7 @@ static bool dump = false;
- struct wl12xx_sdio_glue {
- 	struct device *dev;
- 	struct platform_device *core;
-+	struct clk *refclock, *tcxoclock;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 7f61674..76e14c0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -127,6 +127,16 @@ const struct iwl_cfg iwl7260_2ac_cfg = {
+ 	.nvm_calib_ver = IWL7260_TX_POWER_VERSION,
  };
  
- static const struct sdio_device_id wl1271_devices[] = {
-@@ -224,6 +225,7 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- 	struct wl12xx_platform_data *pdata;
- 	struct device_node *np = dev->of_node;
- 	struct device_node *clock_node;
-+	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(dev_to_sdio_func(dev));
- 
- 	if (!np) {
- 		np = of_find_matching_node(NULL, dev->driver->of_match_table);
-@@ -250,6 +252,26 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- 	for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
- 		of_fixed_clk_setup(clock_node);
- 
-+	/* TODO: make sure we have this when needed (ie. for WL6 and WL7) */
-+	glue->refclock = of_clk_get_by_name(np, "refclock");
-+	if (IS_ERR(glue->refclock)) {
-+		dev_err(dev, "couldn't find refclock on the device tree\n");
-+		glue->refclock = NULL;
-+	} else {
-+		clk_prepare_enable(glue->refclock);
-+		pdata->ref_clock_freq = clk_get_rate(glue->refclock);
-+	}
++const struct iwl_cfg iwl7260_2ac_cfg_high_temp = {
++	.name = "Intel(R) Dual Band Wireless AC 7260",
++	.fw_name_pre = IWL7260_FW_PRE,
++	IWL_DEVICE_7000,
++	.ht_params = &iwl7000_ht_params,
++	.nvm_ver = IWL7260_NVM_VERSION,
++	.nvm_calib_ver = IWL7260_TX_POWER_VERSION,
++	.high_temp = true,
++};
 +
-+	/* TODO: make sure we have this when needed (ie. for WL7) */
-+	glue->tcxoclock = of_clk_get_by_name(np, "tcxoclock");
-+	if (IS_ERR(glue->tcxoclock)) {
-+		dev_err(dev, "couldn't find tcxoclock on the device tree\n");
-+		glue->tcxoclock = NULL;
-+	} else {
-+		clk_prepare_enable(glue->tcxoclock);
-+		pdata->ref_clock_freq = clk_get_rate(glue->tcxoclock);
-+	}
+ const struct iwl_cfg iwl7260_2n_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless N 7260",
+ 	.fw_name_pre = IWL7260_FW_PRE,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 87fe955..e4d370b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -206,6 +206,7 @@ struct iwl_eeprom_params {
+  * @led_mode: 0=blinking, 1=On(RF On)/Off(RF Off)
+  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
+  * @internal_wimax_coex: internal wifi/wimax combo device
++ * @high_temp: Is this NIC is designated to be in high temperature.
+  *
+  * We enable the driver to be backward compatible wrt. hardware features.
+  * API differences in uCode shouldn't be handled here but through TLVs
+@@ -234,6 +235,7 @@ struct iwl_cfg {
+ 	enum iwl_led_mode led_mode;
+ 	const bool rx_with_siso_diversity;
+ 	const bool internal_wimax_coex;
++	bool high_temp;
+ };
+ 
+ /*
+@@ -284,6 +286,7 @@ extern const struct iwl_cfg iwl135_bgn_cfg;
+ #endif /* CONFIG_IWLDVM */
+ #if IS_ENABLED(CONFIG_IWLMVM)
+ extern const struct iwl_cfg iwl7260_2ac_cfg;
++extern const struct iwl_cfg iwl7260_2ac_cfg_high_temp;
+ extern const struct iwl_cfg iwl7260_2n_cfg;
+ extern const struct iwl_cfg iwl7260_n_cfg;
+ extern const struct iwl_cfg iwl3160_2ac_cfg;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
+index f5ba185f..1f3282d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
+@@ -512,12 +512,39 @@ static const struct iwl_tt_params iwl7000_tt_params = {
+ 	.support_tx_backoff = true,
+ };
+ 
++static const struct iwl_tt_params iwl7000_high_temp_tt_params = {
++	.ct_kill_entry = 118,
++	.ct_kill_exit = 96,
++	.ct_kill_duration = 5,
++	.dynamic_smps_entry = 114,
++	.dynamic_smps_exit = 110,
++	.tx_protection_entry = 114,
++	.tx_protection_exit = 108,
++	.tx_backoff = {
++		{.temperature = 112, .backoff = 300},
++		{.temperature = 113, .backoff = 800},
++		{.temperature = 114, .backoff = 1500},
++		{.temperature = 115, .backoff = 3000},
++		{.temperature = 116, .backoff = 5000},
++		{.temperature = 117, .backoff = 10000},
++	},
++	.support_ct_kill = true,
++	.support_dynamic_smps = true,
++	.support_tx_protection = true,
++	.support_tx_backoff = true,
++};
 +
- 	goto out;
- 
- out_free:
-@@ -294,6 +316,8 @@ static int wl1271_probe(struct sdio_func *func,
- 	/* Use block mode for transferring over one block size of data */
- 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
- 
-+	sdio_set_drvdata(func, glue);
-+
- 	/* The pdata allocated here is freed when the device is freed,
- 	 * so we don't need an additional out label to free it in case
- 	 * of error further on.
-@@ -319,8 +343,6 @@ static int wl1271_probe(struct sdio_func *func,
- 	if (mmcflags & MMC_PM_KEEP_POWER)
- 		pdev_data->pwr_in_suspend = true;
- 
--	sdio_set_drvdata(func, glue);
--
- 	/* Tell PM core that we don't need the card to be powered now */
- 	pm_runtime_put_noidle(&func->dev);
- 
-@@ -387,6 +409,16 @@ static void wl1271_remove(struct sdio_func *func)
+ void iwl_mvm_tt_initialize(struct iwl_mvm *mvm)
  {
- 	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
+ 	struct iwl_mvm_tt_mgmt *tt = &mvm->thermal_throttle;
  
-+	if (glue->refclock) {
-+		clk_disable_unprepare(glue->refclock);
-+		clk_put(glue->refclock);
-+	}
+ 	IWL_DEBUG_TEMP(mvm, "Initialize Thermal Throttling\n");
+-	tt->params = &iwl7000_tt_params;
 +
-+	if (glue->tcxoclock) {
-+		clk_disable_unprepare(glue->tcxoclock);
-+		clk_put(glue->tcxoclock);
-+	}
++	if (mvm->cfg->high_temp)
++		tt->params = &iwl7000_high_temp_tt_params;
++	else
++		tt->params = &iwl7000_tt_params;
 +
- 	/* Undo decrement done above in wl1271_probe */
- 	pm_runtime_get_noresume(&func->dev);
- 
+ 	tt->throttle = false;
+ 	INIT_DELAYED_WORK(&tt->ct_kill_exit, check_exit_ctkill);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 81f3ea5..db6be24 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -272,9 +272,9 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x08B1, 0x4462, iwl7260_n_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B1, 0x4870, iwl7260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B1, 0x486E, iwl7260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x08B1, 0x4A70, iwl7260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x08B1, 0x4A6E, iwl7260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x08B1, 0x4A6C, iwl7260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x08B1, 0x4A70, iwl7260_2ac_cfg_high_temp)},
++	{IWL_PCI_DEVICE(0x08B1, 0x4A6E, iwl7260_2ac_cfg_high_temp)},
++	{IWL_PCI_DEVICE(0x08B1, 0x4A6C, iwl7260_2ac_cfg_high_temp)},
+ 	{IWL_PCI_DEVICE(0x08B1, 0x4020, iwl7260_2n_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B2, 0x4220, iwl7260_2n_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B1, 0x4420, iwl7260_2n_cfg)},
 -- 
-1.7.10.4
+1.8.0
 
