@@ -1,37 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24158 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965524Ab3GSKgQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58171 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753938Ab3GZIg3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 06:36:16 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	<ymir.kr@gmail.com>
-Subject: Re: [PATCH] ath10k: fix NULL dereference for injected packets
-References: <CAMQ0DfRpqk6ufb4rAifjy651oM9-GZyDpMLL+mGVzzVSVjVyJA@mail.gmail.com>
-	<1373965494-17726-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 19 Jul 2013 13:36:05 +0300
-In-Reply-To: <1373965494-17726-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 16 Jul 2013 11:04:54 +0200")
-Message-ID: <87r4eu4z1m.fsf@kamboji.qca.qualcomm.com> (sfid-20130719_123636_626283_B57DC765)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 26 Jul 2013 04:36:29 -0400
+Message-ID: <1374827785.8248.16.camel@jlt4.sipsolutions.net> (sfid-20130726_103632_964263_B4CBB05C)
+Subject: Re: pull-request: mac80211-next 2013-07-26
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 26 Jul 2013 10:36:25 +0200
+In-Reply-To: <1374827740.8248.15.camel@jlt4.sipsolutions.net> (sfid-20130726_103547_059837_EC3771F9)
+References: <1374827740.8248.15.camel@jlt4.sipsolutions.net>
+	 (sfid-20130726_103547_059837_EC3771F9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Tx processing functions dereference vif and caused
-> NULL to be dereferenced for injected frames.
->
-> Don't call these functions at all for injected
-> frames. It doesn't make much sense to do so
-> anyway.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Let me know if there's any problem.
 
-Thanks, applied.
+Well here's a problem - I sent the same message twice ;-) It's a perfect
+duplicate though, my mistake.
 
--- 
-Kalle Valo
+johannes
+
