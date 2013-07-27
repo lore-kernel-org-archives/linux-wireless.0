@@ -1,103 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58581 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754774Ab3GKOJS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 10:09:18 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Received: from purkki.adurom.net ([80.68.90.206]:59225 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752690Ab3G0Fly (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Jul 2013 01:41:54 -0400
+From: Kalle Valo <kvalo@adurom.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 2/4] mac80211: add functions to duplicate a cfg80211_beacon
-Date: Thu, 11 Jul 2013 16:09:06 +0200
-Message-Id: <1373551749-5107-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130711_160924_183421_4F863C05)
-In-Reply-To: <1373551749-5107-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373551749-5107-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Cc: emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/2] beacon measurement (beacon filtering disable)
+References: <1373971517-315-1-git-send-email-johannes@sipsolutions.net>
+	<87oba1yggl.fsf@purkki.adurom.net>
+	<1374825838.8248.6.camel@jlt4.sipsolutions.net>
+Date: Sat, 27 Jul 2013 08:41:52 +0300
+In-Reply-To: <1374825838.8248.6.camel@jlt4.sipsolutions.net> (Johannes Berg's
+	message of "Fri, 26 Jul 2013 10:03:58 +0200")
+Message-ID: <87wqocwodb.fsf@purkki.adurom.net> (sfid-20130727_074216_686590_9F05E164)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the channel switch announcement, it is required to set a new beacon
-after the driver arrived on the new channel. The new beacon will be set
-by nl80211, but is required to duplicate the beacon as the original
-memory within the netlink message will be gone.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
-Changes to PATCHv2:
- * allocate only one memory chunk
----
- net/mac80211/cfg.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+> On Wed, 2013-07-17 at 07:10 +0300, Kalle Valo wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>> 
+>> > We have beacon filtering (to reduce host wakeups) in our device,
+>> > but for some measurement/debug purposes we need to turn it off.
+>> 
+>> TBH I'm not really fond of this. I'm not really sure what's the use
+>> case but first this sounded a like a factory test for me, not something
+>> which a regular user would want to do.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b82fff6..8e6c935 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2775,6 +2775,62 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static struct cfg80211_beacon_data *
-+cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
-+{
-+	struct cfg80211_beacon_data *new_beacon;
-+	u8 *pos;
-+	int len;
-+
-+	len = beacon->head_len + beacon->tail_len + beacon->beacon_ies_len +
-+	      beacon->proberesp_ies_len + beacon->assocresp_ies_len +
-+	      beacon->probe_resp_len;
-+
-+	new_beacon = kzalloc(sizeof(*new_beacon) + len, GFP_KERNEL);
-+	if (!new_beacon)
-+		return NULL;
-+
-+	pos = (u8 *)(new_beacon + 1);
-+	if (beacon->head_len) {
-+		new_beacon->head_len = beacon->head_len;
-+		new_beacon->head = pos;
-+		memcpy(pos, beacon->head, beacon->head_len);
-+		pos += beacon->head_len;
-+	}
-+	if (beacon->tail_len) {
-+		new_beacon->tail_len = beacon->tail_len;
-+		new_beacon->tail = pos;
-+		memcpy(pos, beacon->tail, beacon->tail_len);
-+		pos += beacon->tail_len;
-+	}
-+	if (beacon->beacon_ies_len) {
-+		new_beacon->beacon_ies_len = beacon->beacon_ies_len;
-+		new_beacon->beacon_ies = pos;
-+		memcpy(pos, beacon->beacon_ies, beacon->beacon_ies_len);
-+		pos += beacon->beacon_ies_len;
-+	}
-+	if (beacon->proberesp_ies_len) {
-+		new_beacon->proberesp_ies_len = beacon->proberesp_ies_len;
-+		new_beacon->proberesp_ies = pos;
-+		memcpy(pos, beacon->proberesp_ies, beacon->proberesp_ies_len);
-+		pos += beacon->proberesp_ies_len;
-+	}
-+	if (beacon->assocresp_ies_len) {
-+		new_beacon->assocresp_ies_len = beacon->assocresp_ies_len;
-+		new_beacon->assocresp_ies = pos;
-+		memcpy(pos, beacon->assocresp_ies, beacon->assocresp_ies_len);
-+		pos += beacon->assocresp_ies_len;
-+	}
-+	if (beacon->probe_resp_len) {
-+		new_beacon->probe_resp_len = beacon->probe_resp_len;
-+		beacon->probe_resp = pos;
-+		memcpy(pos, beacon->probe_resp, beacon->probe_resp_len);
-+		pos += beacon->probe_resp_len;
-+	}
-+
-+	return new_beacon;
-+}
-+
- static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			     struct ieee80211_channel *chan, bool offchan,
- 			     unsigned int wait, const u8 *buf, size_t len,
+Sure, that's good to do. I'm just worried that if we add a new command
+to enable/disable each small feature we will have a lot of commands in
+nl80211. But I guess that's not a problem as you are the maintainer
+anyway :)
+
+But I do see benefits from this, so I guess in the end this is good to
+have. It would be nice if someone would add a similar command for BT
+coexistance as well, that always seems to be a common source of
+problems.
+
+> Yeah, in a way that's true. FWIW, we could also connect it to testmode
+> and not worry about it for upstream, but it seemed that others might
+> want/need similar functionality.
+>
+>> Can't we connect this to power save? When disabling power save we could
+>> also disable beacon filtering and would not need a separate command.
+>
+> I'm not so sure that's a good idea. While superficially beacon filtering
+> is related to saving power, it's really a different thing - it's about
+> CPU/host power while powersave is about device power (RX chains etc.)
+> Connecting them, in particular where disabling beacon filtering isn't
+> even supported by all devices, doesn't really seem like a good idea,
+> particularly not for any tool that would require such functionality.
+
+Makes sense.
+
 -- 
-1.7.10.4
-
+Kalle Valo
