@@ -1,257 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58706 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751743Ab3GHO4W (ORCPT
+Received: from brisi.sourcepole.ch ([5.9.57.43]:33656 "EHLO
+	brisi.sourcepole.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751848Ab3G0Obx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:56:22 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 12/18] ath9k: use chandef instead of channel_type
-Date: Mon,  8 Jul 2013 16:56:00 +0200
-Message-Id: <1373295366-12823-13-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130708_172039_644380_61EF7C50)
-In-Reply-To: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Sat, 27 Jul 2013 10:31:53 -0400
+Received: from cable-dynamic-87-245-83-117.shinternet.ch ([87.245.83.117] helo=[192.168.2.35])
+	by vilan-mail with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <tpo2@sourcepole.ch>)
+	id 1V34ol-0005Pe-I3
+	for linux-wireless@vger.kernel.org; Sat, 27 Jul 2013 15:45:55 +0200
+Message-ID: <51F3CEF7.4030200@sourcepole.ch> (sfid-20130727_163157_239174_6DBD158E)
+Date: Sat, 27 Jul 2013 15:45:27 +0200
+From: Tomas Pospisek <tpo2@sourcepole.ch>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: unable to unblock Bluetooth
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To enable support for 5/10 MHz, some internal functions must be
-converted from using the (old) channel_type to chandef. This is a good
-chance to change all remaining occurences.
+Hello
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/common.c       |   67 +++++++++++++++----------
- drivers/net/wireless/ath/ath9k/common.h       |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    5 +-
- drivers/net/wireless/ath/ath9k/init.c         |    4 +-
- drivers/net/wireless/ath/ath9k/main.c         |    8 ++-
- drivers/net/wireless/ath/ath9k/rc.c           |    4 +-
- 6 files changed, 51 insertions(+), 40 deletions(-)
+I am not able to unblock Bluetooth:
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 344fdde..d3063c2 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -49,37 +49,40 @@ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb)
- }
- EXPORT_SYMBOL(ath9k_cmn_get_hw_crypto_keytype);
- 
--static u32 ath9k_get_extchanmode(struct ieee80211_channel *chan,
--				 enum nl80211_channel_type channel_type)
-+static u32 ath9k_get_extchanmode(struct cfg80211_chan_def *chandef)
- {
- 	u32 chanmode = 0;
- 
--	switch (chan->band) {
-+	switch (chandef->chan->band) {
- 	case IEEE80211_BAND_2GHZ:
--		switch (channel_type) {
--		case NL80211_CHAN_NO_HT:
--		case NL80211_CHAN_HT20:
-+		switch (chandef->width) {
-+		case NL80211_CHAN_WIDTH_20_NOHT:
-+		case NL80211_CHAN_WIDTH_20:
- 			chanmode = CHANNEL_G_HT20;
- 			break;
--		case NL80211_CHAN_HT40PLUS:
--			chanmode = CHANNEL_G_HT40PLUS;
-+		case NL80211_CHAN_WIDTH_40:
-+			if (chandef->center_freq1 > chandef->chan->center_freq)
-+				chanmode = CHANNEL_G_HT40PLUS;
-+			else
-+				chanmode = CHANNEL_G_HT40MINUS;
- 			break;
--		case NL80211_CHAN_HT40MINUS:
--			chanmode = CHANNEL_G_HT40MINUS;
-+		default:
- 			break;
- 		}
- 		break;
- 	case IEEE80211_BAND_5GHZ:
--		switch (channel_type) {
--		case NL80211_CHAN_NO_HT:
--		case NL80211_CHAN_HT20:
-+		switch (chandef->width) {
-+		case NL80211_CHAN_WIDTH_20_NOHT:
-+		case NL80211_CHAN_WIDTH_20:
- 			chanmode = CHANNEL_A_HT20;
- 			break;
--		case NL80211_CHAN_HT40PLUS:
--			chanmode = CHANNEL_A_HT40PLUS;
-+		case NL80211_CHAN_WIDTH_40:
-+			if (chandef->center_freq1 > chandef->chan->center_freq)
-+				chanmode = CHANNEL_A_HT40PLUS;
-+			else
-+				chanmode = CHANNEL_A_HT40MINUS;
- 			break;
--		case NL80211_CHAN_HT40MINUS:
--			chanmode = CHANNEL_A_HT40MINUS;
-+		default:
- 			break;
- 		}
- 		break;
-@@ -94,13 +97,12 @@ static u32 ath9k_get_extchanmode(struct ieee80211_channel *chan,
-  * Update internal channel flags.
-  */
- void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
--			       struct ieee80211_channel *chan,
--			       enum nl80211_channel_type channel_type)
-+			       struct cfg80211_chan_def *chandef)
- {
--	ichan->channel = chan->center_freq;
--	ichan->chan = chan;
-+	ichan->channel = chandef->chan->center_freq;
-+	ichan->chan = chandef->chan;
- 
--	if (chan->band == IEEE80211_BAND_2GHZ) {
-+	if (chandef->chan->band == IEEE80211_BAND_2GHZ) {
- 		ichan->chanmode = CHANNEL_G;
- 		ichan->channelFlags = CHANNEL_2GHZ | CHANNEL_OFDM;
- 	} else {
-@@ -108,8 +110,22 @@ void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
- 		ichan->channelFlags = CHANNEL_5GHZ | CHANNEL_OFDM;
- 	}
- 
--	if (channel_type != NL80211_CHAN_NO_HT)
--		ichan->chanmode = ath9k_get_extchanmode(chan, channel_type);
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		ichan->channelFlags |= CHANNEL_QUARTER;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		ichan->channelFlags |= CHANNEL_HALF;
-+		break;
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		break;
-+	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_40:
-+		ichan->chanmode = ath9k_get_extchanmode(chandef);
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
- }
- EXPORT_SYMBOL(ath9k_cmn_update_ichannel);
- 
-@@ -125,8 +141,7 @@ struct ath9k_channel *ath9k_cmn_get_curchannel(struct ieee80211_hw *hw,
- 
- 	chan_idx = curchan->hw_value;
- 	channel = &ah->channels[chan_idx];
--	ath9k_cmn_update_ichannel(channel, curchan,
--				  cfg80211_get_chandef_type(&hw->conf.chandef));
-+	ath9k_cmn_update_ichannel(channel, &hw->conf.chandef);
- 
- 	return channel;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index 207d069..e039bcb 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -44,8 +44,7 @@
- 
- int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
- void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
--			       struct ieee80211_channel *chan,
--			       enum nl80211_channel_type channel_type);
-+			       struct cfg80211_chan_def *chandef);
- struct ath9k_channel *ath9k_cmn_get_curchannel(struct ieee80211_hw *hw,
- 					       struct ath_hw *ah);
- int ath9k_cmn_count_streams(unsigned int chainmask, int max);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 5c1bec1..d442581 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1203,16 +1203,13 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || chip_reset) {
- 		struct ieee80211_channel *curchan = hw->conf.chandef.chan;
--		enum nl80211_channel_type channel_type =
--			cfg80211_get_chandef_type(&hw->conf.chandef);
- 		int pos = curchan->hw_value;
- 
- 		ath_dbg(common, CONFIG, "Set channel: %d MHz\n",
- 			curchan->center_freq);
- 
- 		ath9k_cmn_update_ichannel(&priv->ah->channels[pos],
--					  hw->conf.chandef.chan,
--					  channel_type);
-+					  &hw->conf.chandef);
- 
- 		if (ath9k_htc_set_channel(priv, hw, &priv->ah->channels[pos]) < 0) {
- 			ath_err(common, "Unable to set channel\n");
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 16f8b20..71aa5c9 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -710,13 +710,15 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
- 	struct ath_hw *ah = sc->sc_ah;
-+	struct cfg80211_chan_def chandef;
- 	int i;
- 
- 	sband = &sc->sbands[band];
- 	for (i = 0; i < sband->n_channels; i++) {
- 		chan = &sband->channels[i];
- 		ah->curchan = &ah->channels[chan->hw_value];
--		ath9k_cmn_update_ichannel(ah->curchan, chan, NL80211_CHAN_HT20);
-+		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
-+		ath9k_cmn_update_ichannel(ah->curchan, &chandef);
- 		ath9k_hw_set_txpowerlimit(ah, MAX_RATE_POWER, true);
- 	}
- }
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1737a3e..ff91f4a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1193,8 +1193,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || reset_channel) {
- 		struct ieee80211_channel *curchan = hw->conf.chandef.chan;
--		enum nl80211_channel_type channel_type =
--			cfg80211_get_chandef_type(&conf->chandef);
- 		int pos = curchan->hw_value;
- 		int old_pos = -1;
- 		unsigned long flags;
-@@ -1202,8 +1200,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		if (ah->curchan)
- 			old_pos = ah->curchan - &ah->channels[0];
- 
--		ath_dbg(common, CONFIG, "Set channel: %d MHz type: %d\n",
--			curchan->center_freq, channel_type);
-+		ath_dbg(common, CONFIG, "Set channel: %d MHz width: %d\n",
-+			curchan->center_freq, hw->conf.chandef.width);
- 
- 		/* update survey stats for the old channel before switching */
- 		spin_lock_irqsave(&common->cc_lock, flags);
-@@ -1211,7 +1209,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		spin_unlock_irqrestore(&common->cc_lock, flags);
- 
- 		ath9k_cmn_update_ichannel(&sc->sc_ah->channels[pos],
--					  curchan, channel_type);
-+					  &conf->chandef);
- 
- 		/*
- 		 * If the operating channel changes, change the survey in-use flags
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index a3c4ca0..e41f563 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1326,8 +1326,8 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
- 		ath_rc_init(sc, priv_sta);
- 
- 		ath_dbg(ath9k_hw_common(sc->sc_ah), CONFIG,
--			"Operating HT Bandwidth changed to: %d\n",
--			cfg80211_get_chandef_type(&sc->hw->conf.chandef));
-+			"Operating Bandwidth changed to: %d\n",
-+			&sc->hw->conf.chandef->width);
- 	}
- }
- 
--- 
-1.7.10.4
+# rfkill unblock all
+# rfkill list 4
+4: hp-bluetooth: Bluetooth
+         Soft blocked: yes
+         Hard blocked: no
 
+The Bluetooth layer remains "Soft blocked".
+
+My system looks like this:
+
+- Linux: 3.11-rc1
+- Userspace: Debian wheezy
+- rfkill: 0.5
+- HW: HP dv7 6130ez
+- Bluetooth probably provided by:
+  # lspci
+  ...
+  0d:00.0 Network controller: Ralink corp. RT5390
+ [802.11 b/g/n 1T1R G-band PCI Express Single Chip]
+
+Kernel logs show no trace of a problem:
+
+  Bluetooth: Core ver 2.16
+  Bluetooth: HCI device and connection manager initialized
+  Bluetooth: HCI socket layer initialized
+  Bluetooth: L2CAP socket layer initialized
+  Bluetooth: SCO socket layer initialized
+  Bluetooth: RFCOMM TTY layer initialized
+  Bluetooth: RFCOMM socket layer initialized
+  Bluetooth: RFCOMM ver 1.11
+  Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+  Bluetooth: BNEP filters: protocol multicast
+  Bluetooth: BNEP socket layer initialized
+
+I had to provide some firware in order for the Bluetooth device to show
+up in rfkill. I copied those firmware blobs over from Debian's
+"firmware-ralink" package. It must be one of these:
+
+rt2661.bin
+rtl_nic
+rtl_nic/rtl8168f-1.fw
+rtl_nic/rtl8168e-1.fw
+rtl_nic/rtl8168f-2.fw
+rtl_nic/rtl8168e-3.fw
+rtl_nic/rtl8168d-2.fw
+rtl_nic/rtl8168e-2.fw
+rtl_nic/rtl8105e-1.fw
+rtl_nic/rtl8168d-1.fw
+RTL8192SU
+RTL8192SU/rtl8192sfw.bin
+rt2561.bin
+rt2870.bin
+rt2860.bin
+rt73.bin
+rt3070.bin
+rtlwifi
+rtlwifi/rtl8192cufw.bin
+rtlwifi/rtl8192cfwU.bin
+rtlwifi/rtl8192cfw.bin
+rtlwifi/rtl8192cfwU_B.bin
+rtlwifi/rtl8192sefw.bin
+rtlwifi/rtl8192defw.bin
+rtlwifi/rtl8712u.bin
+rt3071.bin
+rt3090.bin
+rt2561s.bin
+RTL8192E
+RTL8192E/main.img
+RTL8192E/boot.img
+RTL8192E/data.img
+
+Additional possibly useful info:
+
+  # lsmod |grep blue
+  bluetooth             169854  10 bnep,rfcomm
+  rfkill                 19242  6 cfg80211,hp_wmi,bluetooth
+  crc16                  12343  2 ext4,bluetooth
+
+What can I do to unblock the Bluetooth?
+
+Thank you,
+*t
