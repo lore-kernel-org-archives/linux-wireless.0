@@ -1,110 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta10.emeryville.ca.mail.comcast.net ([76.96.30.17]:37098 "EHLO
-	qmta10.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756185Ab3GCQyX (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:58872 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962Ab3G0IwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 12:54:23 -0400
-From: Shuah Khan <shuah.kh@samsung.com>
-To: bzhao@marvell.com, linville@tuxdriver.com, rjw@sisk.pl,
-	hauke@hauke-m.de, lars@metafoo.de
-Cc: Shuah Khan <shuah.kh@samsung.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	shuahkhan@gmail.com
-Subject: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from legacy pm_ops
-Date: Wed,  3 Jul 2013 10:47:10 -0600
-Message-Id: <1372870030-2596-1-git-send-email-shuah.kh@samsung.com> (sfid-20130703_185430_518945_8D39B347)
+	Sat, 27 Jul 2013 04:52:09 -0400
+Received: by mail-wi0-f174.google.com with SMTP id j17so1001962wiw.7
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Jul 2013 01:52:08 -0700 (PDT)
+Date: Sat, 27 Jul 2013 10:51:53 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH] [PATCH] mac80211: handle VHT radiotap info for tx status
+Message-ID: <20130727085153.GA31401@gobelin> (sfid-20130727_105215_584631_0A55EFD8)
+References: <1374861514-29022-1-git-send-email-karl.beldan@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1374861514-29022-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert the mwifiex/pci driver to use dev_pm_ops for power management and
-remove Legacy PM handling. This change re-uses existing suspend and resume
-interfaces for dev_pm_ops, and changes CONFIG_PM ifdefs to CONFIG_PM_SLEEP
-as the driver does not support run-time PM.
+On Fri, Jul 26, 2013 at 07:58:34PM +0200, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> The radiotap VHT info is 12 bytes (required to be aligned on 2) :
+> u16 known - IEEE80211_RADIOTAP_VHT_KNOWN_*
+> u8 flags - IEEE80211_RADIOTAP_VHT_FLAG_*
+> u8 bandwidth
+> u8 mcs_nss[4]
+> u8 coding
+> u8 group_id
+> u16 partial_aid
+> 
+> ATM mac80211 can properly handle IEEE80211_RADIOTAP_VHT_KNOWN_GI,
+> IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH and mcs_nss[0] (i.e single user).
+> 
+> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+> ---
+>  net/mac80211/status.c | 76 ++++++++++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 63 insertions(+), 13 deletions(-)
+> 
+> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+> index 6ad4c14..1a1c7fd 100644
+> --- a/net/mac80211/status.c
+> +++ b/net/mac80211/status.c
+> @@ -235,7 +235,8 @@ static int ieee80211_tx_radiotap_len(struct ieee80211_tx_info *info)
+>  
+>  	/* IEEE80211_RADIOTAP_RATE rate */
+>  	if (info->status.rates[0].idx >= 0 &&
+> -	    !(info->status.rates[0].flags & IEEE80211_TX_RC_MCS))
+> +	    !(info->status.rates[0].flags & (IEEE80211_TX_RC_MCS |
+> +					     IEEE80211_TX_RC_VHT_MCS)))
+>  		len += 2;
+>  
+>  	/* IEEE80211_RADIOTAP_TX_FLAGS */
+> @@ -244,16 +245,21 @@ static int ieee80211_tx_radiotap_len(struct ieee80211_tx_info *info)
+>  	/* IEEE80211_RADIOTAP_DATA_RETRIES */
+>  	len += 1;
+>  
+> -	/* IEEE80211_TX_RC_MCS */
+> -	if (info->status.rates[0].idx >= 0 &&
+> -	    info->status.rates[0].flags & IEEE80211_TX_RC_MCS)
+> -		len += 3;
+> +	/* IEEE80211_RADIOTAP_MCS
+> +	 * IEEE80211_RADIOTAP_VHT */
+> +	if (info->status.rates[0].idx >= 0) {
+> +		if (info->status.rates[0].flags & IEEE80211_TX_RC_MCS)
+> +			len += 3;
+> +		else if (info->status.rates[0].flags & IEEE80211_TX_RC_VHT_MCS)
+> +			len += ALIGN(len, 2) + 12;
+The '+' is a typo, should be
+			len = ALIGN(len, 2) + 12;
 
-Signed-off-by: Shuah Khan <shuah.kh@samsung.com>
----
- drivers/net/wireless/mwifiex/pcie.c |   26 +++++++++++++++++---------
- 1 file changed, 17 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 20c9c4c..4a57eb4 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -76,7 +76,7 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
- 	return false;
- }
- 
--#ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- /*
-  * Kernel needs to suspend all functions separately. Therefore all
-  * registered functions must have drivers with suspend and resume
-@@ -85,11 +85,12 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
-  * If already not suspended, this function allocates and sends a host
-  * sleep activate request to the firmware and turns off the traffic.
-  */
--static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int mwifiex_pcie_suspend(struct device *dev)
- {
- 	struct mwifiex_adapter *adapter;
- 	struct pcie_service_card *card;
- 	int hs_actived;
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	if (pdev) {
- 		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
-@@ -120,10 +121,11 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
-  * If already not resumed, this function turns on the traffic and
-  * sends a host sleep cancel request to the firmware.
-  */
--static int mwifiex_pcie_resume(struct pci_dev *pdev)
-+static int mwifiex_pcie_resume(struct device *dev)
- {
- 	struct mwifiex_adapter *adapter;
- 	struct pcie_service_card *card;
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	if (pdev) {
- 		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
-@@ -211,9 +213,9 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	wait_for_completion(&adapter->fw_load);
- 
- 	if (user_rmmod) {
--#ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- 		if (adapter->is_suspended)
--			mwifiex_pcie_resume(pdev);
-+			mwifiex_pcie_resume(&pdev->dev);
- #endif
- 
- 		for (i = 0; i < adapter->priv_num; i++)
-@@ -249,16 +251,22 @@ static DEFINE_PCI_DEVICE_TABLE(mwifiex_ids) = {
- 
- MODULE_DEVICE_TABLE(pci, mwifiex_ids);
- 
-+#ifdef CONFIG_PM_SLEEP
-+/* Power Management Hooks */
-+static SIMPLE_DEV_PM_OPS(mwifiex_pcie_pm_ops, mwifiex_pcie_suspend,
-+				mwifiex_pcie_resume);
-+#endif
-+
- /* PCI Device Driver */
- static struct pci_driver __refdata mwifiex_pcie = {
- 	.name     = "mwifiex_pcie",
- 	.id_table = mwifiex_ids,
- 	.probe    = mwifiex_pcie_probe,
- 	.remove   = mwifiex_pcie_remove,
--#ifdef CONFIG_PM
--	/* Power Management Hooks */
--	.suspend  = mwifiex_pcie_suspend,
--	.resume   = mwifiex_pcie_resume,
-+#ifdef CONFIG_PM_SLEEP
-+	.driver   = {
-+		.pm = &mwifiex_pcie_pm_ops,
-+	},
- #endif
- };
- 
 -- 
-1.7.10.4
-
+Karl
