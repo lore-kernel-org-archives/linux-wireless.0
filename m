@@ -1,35 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:55665 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722Ab3GSNw4 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:34415 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105Ab3G0JeL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 09:52:56 -0400
-Message-ID: <1374241974.26476.7.camel@edumazet-glaptop> (sfid-20130719_155306_238371_5E2EADAD)
-Subject: Re: net-next is now OPEN
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Eliezer Tamir <eliezer.tamir@linux.intel.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Fri, 19 Jul 2013 06:52:54 -0700
-In-Reply-To: <1374241922.26476.6.camel@edumazet-glaptop>
-References: <20130719.023518.589482296695696122.davem@davemloft.net>
-	 <51E93ECE.9000108@linux.intel.com>
-	 <1374241922.26476.6.camel@edumazet-glaptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 27 Jul 2013 05:34:11 -0400
+MIME-Version: 1.0
+In-Reply-To: <51F2878E.90705@xs4all.nl>
+References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	<1373533573-12272-36-git-send-email-ming.lei@canonical.com>
+	<51F2878E.90705@xs4all.nl>
+Date: Sat, 27 Jul 2013 17:34:07 +0800
+Message-ID: <CACVXFVMHecbxaGWe6-EeF-sDXRx0GnPHb4shRYOQxUXPbRMyGg@mail.gmail.com> (sfid-20130727_113421_216196_A233A6EE)
+Subject: Re: [PATCH 35/50] media: usb: cx231xx: spin_lock in complete() cleanup
+From: Ming Lei <ming.lei@canonical.com>
+To: Hans Verkuil <hverkuil@xs4all.nl>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Hans Verkuil <hans.verkuil@cisco.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-07-19 at 06:52 -0700, Eric Dumazet wrote:
+On Fri, Jul 26, 2013 at 10:28 PM, Hans Verkuil <hverkuil@xs4all.nl> wrote:
+>
+>
+> On 07/11/2013 11:05 AM, Ming Lei wrote:
+>> Complete() will be run with interrupt enabled, so change to
+>> spin_lock_irqsave().
+>>
+>> Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+>> Cc: Hans Verkuil <hans.verkuil@cisco.com>
+>> Cc: linux-media@vger.kernel.org
+>> Signed-off-by: Ming Lei <ming.lei@canonical.com>
+>> ---
+>>  drivers/media/usb/cx231xx/cx231xx-audio.c |    6 ++++++
+>>  drivers/media/usb/cx231xx/cx231xx-core.c  |   10 ++++++----
+>>  drivers/media/usb/cx231xx/cx231xx-vbi.c   |    5 +++--
+>>  3 files changed, 15 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/media/usb/cx231xx/cx231xx-audio.c b/drivers/media/usb/cx231xx/cx231xx-audio.c
+>> index 81a1d97..58c1b5c 100644
+>> --- a/drivers/media/usb/cx231xx/cx231xx-audio.c
+>> +++ b/drivers/media/usb/cx231xx/cx231xx-audio.c
+>> @@ -136,6 +136,7 @@ static void cx231xx_audio_isocirq(struct urb *urb)
+>>               stride = runtime->frame_bits >> 3;
+>>
+>>               for (i = 0; i < urb->number_of_packets; i++) {
+>> +                     unsigned long flags;
+>>                       int length = urb->iso_frame_desc[i].actual_length /
+>>                                    stride;
+>>                       cp = (unsigned char *)urb->transfer_buffer +
+>> @@ -158,6 +159,7 @@ static void cx231xx_audio_isocirq(struct urb *urb)
+>>                                      length * stride);
+>>                       }
+>>
+>> +                     local_irq_save(flags);
+>>                       snd_pcm_stream_lock(substream);
+>
+> Can't you use snd_pcm_stream_lock_irqsave here?
 
-> > In the next couple of weeks, I would like to post changes to epoll that
-> > add busy polling support.
-> > 
-> > Who should be CC-ed on the patches?
-> 
-> netdev is fine ;)
+Sure, that is already in my mind, :-)
 
-I meant : netdev + lkml
+> Ditto for the other media drivers where this happens: em28xx and tlg2300.
 
+Yes.
 
+>
+> I've reviewed the media driver changes and they look OK to me, so if
+> my comment above is fixed, then I can merge them for 3.12. Or are these
+> changes required for 3.11?
 
+These are for 3.12.
+
+I will send out v2 next week, and thanks for your review.
+
+Thanks,
+--
+Ming Lei
