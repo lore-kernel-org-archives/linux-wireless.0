@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18020 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964972Ab3GLS7e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 14:59:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Xenia Ragiadakou <burzalodowa@gmail.com>,
-	OPW Kernel Interns List <opw-kernel-interns@googlegroups.com>,
-	<linux-usb@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	<linux-trace-users@vger.kernel.org>
-Subject: Re: Help adding trace events to xHCI
-References: <51DB0257.1010709@gmail.com> <20130711162002.GA5240@xanatos>
-	<1373562533.8201.33.camel@jlt4.sipsolutions.net>
-	<20130711190035.GD5240@xanatos>
-	<87y59c4d60.fsf@kamboji.qca.qualcomm.com>
-	<20130712164104.GA15531@xanatos>
-Date: Fri, 12 Jul 2013 21:59:18 +0300
-In-Reply-To: <20130712164104.GA15531@xanatos> (Sarah Sharp's message of "Fri,
-	12 Jul 2013 09:41:04 -0700")
-Message-ID: <878v1b4nax.fsf@kamboji.qca.qualcomm.com> (sfid-20130712_205940_209960_246582B3)
+Received: from mx3.wp.pl ([212.77.101.7]:15166 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752354Ab3G0Qm5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Jul 2013 12:42:57 -0400
+Date: Sat, 27 Jul 2013 18:46:00 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: treeve@scarlet.be, linux-wireless <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Jacob Oursland <jacob.oursland@gmail.com>
+Subject: Re: [rt2x00-users] [NETWORKING DRIVERS RT2X00] please add support
+ for Asus PCE-N53 (0x1814, 0x5592)
+Message-ID: <20130727164600.GA2493@localhost.localdomain> (sfid-20130727_184321_295233_906CCAE8)
+References: <51EE8B74.8080206@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51EE8B74.8080206@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sarah Sharp <sarah.a.sharp@linux.intel.com> writes:
+On Tue, Jul 23, 2013 at 03:56:04PM +0200, Xose Vazquez Perez wrote:
+> Treeve Jelbert wrote:
+> 
+> > linux-3.10.0 does not support device  (0x1814, 0x5592) Asus PCE-N53 which I 
+> > would like to use on with 5GHz network.
+> > 
+> > #lspci
+> > 02:00.0 Network controller: Ralink corp. Device 5592
+> >         Subsystem: ASUSTeK Computer Inc. Device 851a
+> > 
+> > # lspci -d :5592 -nn
+> > 02:00.0 Network controller [0280]: Ralink corp. Device [1814:5592]
+> 
+> RT5592 devices are still unsupported by rt2x00 drivers.
+> Stanislaw Gruszka <stf_xl@wp.pl> was working on it.
 
-> On Fri, Jul 12, 2013 at 07:25:59AM +0300, Kalle Valo wrote:
->
->> Instead of individual trace points for command I would recommend to
->> consider just pushing the whole command buffer to the trace point and
->> parse the command in trace-cmd plugin in user space. Kernel code would
->> be simpler that way.
->
-> Thanks for the suggestion.  I'm not familiar with all the userspace
-> tools for trace events, so I didn't know about the command parser.  Is
-> there documentation or a list of resources for all the userspace trace
-> event plugins?  If so, can you give us a pointer to it?
+I did not make any progress :-(  I did some tracing using mmiotrace
+to compare with vendor driver, but still did not find difference,
+which couse rt2x00 do not work on that adapter.
 
-For ath6kl I started writing (but did not finish yet) a simple python
-plugin for trace-cmd. I really like the idea of implementing of
-implementing the parser with python, it's so much faster and more
-convenient. I haven't published the plugin yet so that's not going to
-help you right now.
+Stanislaw
 
-But trace-cmd documentation about python plugins should give some ideas
-how to use python:
-
-https://git.kernel.org/cgit/linux/kernel/git/rostedt/trace-cmd.git/tree/Documentation/README.PythonPlugin
-
-And as usual, Johannes is a good source of information ;)
-
--- 
-Kalle Valo
