@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60202 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753289Ab3GaSNY (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:43255 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752417Ab3G0AFV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 14:13:24 -0400
-Message-ID: <51F953BB.6050205@candelatech.com> (sfid-20130731_201327_287494_B5E801CE)
-Date: Wed, 31 Jul 2013 11:13:15 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 26 Jul 2013 20:05:21 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Avinash Patil <patila@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] ieee80211: add definition for interworking support
+Date: Fri, 26 Jul 2013 17:02:29 -0700
+Message-ID: <1374883349-22912-1-git-send-email-bzhao@marvell.com> (sfid-20130727_020524_573843_860E270E)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Felix Fietkau <nbd@openwrt.org>, Jouni Malinen <j@w1.fi>
-Subject: Re: 802.11 infrastructure for regression testing - upstream / mac80211
- / cfg80211
-References: <CAB=NE6Vm18RcDYQn+QoEzSG202HezT0rqV_hwb_UOzyecstu5w@mail.gmail.com>
-In-Reply-To: <CAB=NE6Vm18RcDYQn+QoEzSG202HezT0rqV_hwb_UOzyecstu5w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/30/2013 05:53 PM, Luis R. Rodriguez wrote:
-> Folks,
->
-> Back in 2009 Intel had put out a wifi-test tree [0] but that seems
-> deprecated now. The git tree at least is gone. Can someone confirm if
-> that's dead? We later had Google present at the 2010 San Francisco
-> wireless summit [1] their test infrastructure using autotest. Last I
-> checked that stuff was not merged back upstream to autotest. Can
-> someone confirm ? Lastly we have mac80211_hwsim [2] and also a slew of
-> internal testing infrastructures that obviously are not open.
->
-> If we are to embark on a new journey towards an open testing
-> infrastructure what should be used? Ben, you have some stuff, and I
-> know you also report some interesting bugs with insane amount of
-> stations. Is any of it open?
+From: Avinash Patil <patila@marvell.com>
 
-Our user-space app is not open.  I'm happy to offer free licenses
-for good causes, but I understand that is probably not so interesting to most
-folks.
+IEEE802.11u interworking support is advertised via extended
+capabilities IE bit 31. This is 7th bit of 4th byte of extended
+capabilities.
 
-Our stuff only really works with ath9k (and possibly ath5k).  Might
-work in the future with ath10k if we can get the firmware and other
-limitations resolved.  And, maybe some other vendors will start
-supporting lots of virtual stations..but I don't know of any others
-at this time.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ include/linux/ieee80211.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-At the least, we'll keep running our internal testing & dev efforts
-and will continue to report strange bugs :)
-
-Thanks,
-Ben
-
-
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index b0dc87a..22c9094 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1860,6 +1860,11 @@ enum ieee80211_tdls_actioncode {
+ 	WLAN_TDLS_DISCOVERY_REQUEST = 10,
+ };
+ 
++/* Interworking capabilities are set in 7th bit of 4th byte of the
++ * @WLAN_EID_EXT_CAPABILITY information element
++ */
++#define WLAN_EXT_CAPA4_INTERWORKING_ENABLED	BIT(7)
++
+ /*
+  * TDLS capabililites to be enabled in the 5th byte of the
+  * @WLAN_EID_EXT_CAPABILITY information element
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+1.8.0
 
