@@ -1,116 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:42680 "EHLO bear.ext.ti.com"
+Received: from erley.org ([97.107.129.9]:58822 "EHLO remote.erley.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753227Ab3GBO4x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 10:56:53 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>
-Subject: [PATCH v2 8/9] wlcore: sdio: get clocks from device tree
-Date: Tue, 2 Jul 2013 17:55:47 +0300
-Message-ID: <1372776948-24840-9-git-send-email-coelho@ti.com> (sfid-20130702_165715_879879_9CD26A2E)
-In-Reply-To: <1372776948-24840-1-git-send-email-coelho@ti.com>
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+	id S1753188Ab3G1TGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Jul 2013 15:06:00 -0400
+Message-ID: <51F569A6.5090800@erley.org> (sfid-20130728_210625_587837_E6EAF2AE)
+Date: Sun, 28 Jul 2013 14:57:42 -0400
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Tomas Pospisek <tpo2@sourcepole.ch>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: unable to unblock Bluetooth
+References: <51F3CEF7.4030200@sourcepole.ch>
+In-Reply-To: <51F3CEF7.4030200@sourcepole.ch>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Read the clock nodes from the device tree and use them to set the
-frequency for the refclock and the tcxo clock.
+On 07/27/2013 09:45 AM, Tomas Pospisek wrote:
+> Hello
+>
+> I am not able to unblock Bluetooth:
+>
+> # rfkill unblock all
+> # rfkill list 4
+> 4: hp-bluetooth: Bluetooth
+>           Soft blocked: yes
+>           Hard blocked: no
+>
+> The Bluetooth layer remains "Soft blocked".
+>
+> My system looks like this:
+>
+> - Linux: 3.11-rc1
+> - Userspace: Debian wheezy
+> - rfkill: 0.5
+> - HW: HP dv7 6130ez
+> - Bluetooth probably provided by:
+>    # lspci
+>    ...
+>    0d:00.0 Network controller: Ralink corp. RT5390
+>   [802.11 b/g/n 1T1R G-band PCI Express Single Chip]
+>
+> Kernel logs show no trace of a problem:
+>
+>    Bluetooth: Core ver 2.16
+>    Bluetooth: HCI device and connection manager initialized
+>    Bluetooth: HCI socket layer initialized
+>    Bluetooth: L2CAP socket layer initialized
+>    Bluetooth: SCO socket layer initialized
+>    Bluetooth: RFCOMM TTY layer initialized
+>    Bluetooth: RFCOMM socket layer initialized
+>    Bluetooth: RFCOMM ver 1.11
+>    Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+>    Bluetooth: BNEP filters: protocol multicast
+>    Bluetooth: BNEP socket layer initialized
+>
+> I had to provide some firware in order for the Bluetooth device to show
+> up in rfkill. I copied those firmware blobs over from Debian's
+> "firmware-ralink" package. It must be one of these:
+>
+> rt2661.bin
+> rtl_nic
+> rtl_nic/rtl8168f-1.fw
+> rtl_nic/rtl8168e-1.fw
+> rtl_nic/rtl8168f-2.fw
+> rtl_nic/rtl8168e-3.fw
+> rtl_nic/rtl8168d-2.fw
+> rtl_nic/rtl8168e-2.fw
+> rtl_nic/rtl8105e-1.fw
+> rtl_nic/rtl8168d-1.fw
+> RTL8192SU
+> RTL8192SU/rtl8192sfw.bin
+> rt2561.bin
+> rt2870.bin
+> rt2860.bin
+> rt73.bin
+> rt3070.bin
+> rtlwifi
+> rtlwifi/rtl8192cufw.bin
+> rtlwifi/rtl8192cfwU.bin
+> rtlwifi/rtl8192cfw.bin
+> rtlwifi/rtl8192cfwU_B.bin
+> rtlwifi/rtl8192sefw.bin
+> rtlwifi/rtl8192defw.bin
+> rtlwifi/rtl8712u.bin
+> rt3071.bin
+> rt3090.bin
+> rt2561s.bin
+> RTL8192E
+> RTL8192E/main.img
+> RTL8192E/boot.img
+> RTL8192E/data.img
+>
+> Additional possibly useful info:
+>
+>    # lsmod |grep blue
+>    bluetooth             169854  10 bnep,rfcomm
+>    rfkill                 19242  6 cfg80211,hp_wmi,bluetooth
+>    crc16                  12343  2 ext4,bluetooth
+>
+> What can I do to unblock the Bluetooth?
+>
+> Thank you,
+> *t
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/sdio.c |   36 +++++++++++++++++++++++++++++++--
- 1 file changed, 34 insertions(+), 2 deletions(-)
+lsusb might be useful here too.  hp_wmi hooked into rfkill might mean 
+that hp-wmi is setting that soft block.  Perhaps you have a keyboard 
+combo to unblock it?
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 980bf3d..60fce49 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -53,6 +53,7 @@ static bool dump = false;
- struct wl12xx_sdio_glue {
- 	struct device *dev;
- 	struct platform_device *core;
-+	struct clk *refclock, *tcxoclock;
- };
- 
- static const struct sdio_device_id wl1271_devices[] = {
-@@ -224,6 +225,7 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- 	struct wl12xx_platform_data *pdata;
- 	struct device_node *np = dev->of_node;
- 	struct device_node *clock_node;
-+	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(dev_to_sdio_func(dev));
- 
- 	if (!np) {
- 		np = of_find_matching_node(NULL, dev->driver->of_match_table);
-@@ -250,6 +252,26 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- 	for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
- 		of_fixed_clk_setup(clock_node);
- 
-+	/* TODO: make sure we have this when needed (ie. for WL6 and WL7) */
-+	glue->refclock = of_clk_get_by_name(np, "refclock");
-+	if (IS_ERR(glue->refclock)) {
-+		dev_err(dev, "couldn't find refclock on the device tree\n");
-+		glue->refclock = NULL;
-+	} else {
-+		clk_prepare_enable(glue->refclock);
-+		pdata->ref_clock_freq = clk_get_rate(glue->refclock);
-+	}
-+
-+	/* TODO: make sure we have this when needed (ie. for WL7) */
-+	glue->tcxoclock = of_clk_get_by_name(np, "tcxoclock");
-+	if (IS_ERR(glue->tcxoclock)) {
-+		dev_err(dev, "couldn't find tcxoclock on the device tree\n");
-+		glue->tcxoclock = NULL;
-+	} else {
-+		clk_prepare_enable(glue->tcxoclock);
-+		pdata->ref_clock_freq = clk_get_rate(glue->tcxoclock);
-+	}
-+
- 	goto out;
- 
- out_free:
-@@ -294,6 +316,8 @@ static int wl1271_probe(struct sdio_func *func,
- 	/* Use block mode for transferring over one block size of data */
- 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
- 
-+	sdio_set_drvdata(func, glue);
-+
- 	/* The pdata allocated here is freed when the device is freed,
- 	 * so we don't need an additional out label to free it in case
- 	 * of error further on.
-@@ -319,8 +343,6 @@ static int wl1271_probe(struct sdio_func *func,
- 	if (mmcflags & MMC_PM_KEEP_POWER)
- 		pdev_data->pwr_in_suspend = true;
- 
--	sdio_set_drvdata(func, glue);
--
- 	/* Tell PM core that we don't need the card to be powered now */
- 	pm_runtime_put_noidle(&func->dev);
- 
-@@ -387,6 +409,16 @@ static void wl1271_remove(struct sdio_func *func)
- {
- 	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
- 
-+	if (glue->refclock) {
-+		clk_disable_unprepare(glue->refclock);
-+		clk_put(glue->refclock);
-+	}
-+
-+	if (glue->tcxoclock) {
-+		clk_disable_unprepare(glue->tcxoclock);
-+		clk_put(glue->tcxoclock);
-+	}
-+
- 	/* Undo decrement done above in wl1271_probe */
- 	pm_runtime_get_noresume(&func->dev);
- 
--- 
-1.7.10.4
+Pat Erley
 
