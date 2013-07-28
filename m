@@ -1,65 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:45953 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBHO (ORCPT
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:48411 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043Ab3G1IwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:14 -0400
-Received: by mail-pa0-f41.google.com with SMTP id bj3so780678pad.28
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:14 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 32/53] wireless-regdb: PL, Poland - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:28 -0700
-Message-Id: <1372899889-19183-33-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032042_004404_6250750C)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Sun, 28 Jul 2013 04:52:09 -0400
+Received: by mail-pb0-f42.google.com with SMTP id un1so3567503pbc.15
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Jul 2013 01:52:09 -0700 (PDT)
+Received: from [192.168.2.5] ([117.213.249.15])
+        by mx.google.com with ESMTPSA id x8sm70148740pbb.39.2013.07.28.01.52.06
+        for <linux-wireless@vger.kernel.org>
+        (version=SSLv3 cipher=RC4-SHA bits=128/128);
+        Sun, 28 Jul 2013 01:52:08 -0700 (PDT)
+Message-ID: <1375021308.7557.3.camel@piu-xps> (sfid-20130728_105213_551198_7B0E4ABF)
+Subject: 
+From: piuvatsa <piuvatsa@gmail.com>
+To: linux-wireless@vger.kernel.org
+Date: Sun, 28 Jul 2013 19:51:48 +0530
+Content-Type: text/plain; charset="us-ascii"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+i am using debian 7.1 whezzy but there is a problem in the wi-fi blooth
+is working but wi-fi is not showing it may be due to driver problem. I
+am a Dell xps user plz help me to solve out this problem 
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
-
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 8f8e8fc..2f71dba 100644
---- a/db.txt
-+++ b/db.txt
-@@ -622,9 +622,9 @@ country PK:
- 
- country PL: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
 
