@@ -1,60 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:50015 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932451Ab3GKJLu (ORCPT
+Received: from brisi.sourcepole.ch ([5.9.57.43]:57594 "EHLO
+	brisi.sourcepole.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753291Ab3G1JuJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:11:50 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>
-Subject: [PATCH 39/50] media: usb: tm6000: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:06:02 +0800
-Message-Id: <1373533573-12272-40-git-send-email-ming.lei@canonical.com> (sfid-20130711_111200_550723_3AF5AD8A)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+	Sun, 28 Jul 2013 05:50:09 -0400
+Received: from cable-dynamic-87-245-83-117.shinternet.ch ([87.245.83.117] helo=[192.168.2.35])
+	by vilan-mail with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <tpo2@sourcepole.ch>)
+	id 1V3Nc7-0001QM-Aj
+	for linux-wireless@vger.kernel.org; Sun, 28 Jul 2013 11:50:07 +0200
+Message-ID: <51F4E935.8040007@sourcepole.ch> (sfid-20130728_115031_281399_ECD3DE38)
+Date: Sun, 28 Jul 2013 11:49:41 +0200
+From: Tomas Pospisek <tpo2@sourcepole.ch>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re:
+References: <1375021308.7557.3.camel@piu-xps>
+In-Reply-To: <1375021308.7557.3.camel@piu-xps>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+Am 28.07.2013 16:21, schrieb piuvatsa:
+> i am using debian 7.1 whezzy but there is a problem in the wi-fi blooth
+> is working but wi-fi is not showing it may be due to driver problem. I
+> am a Dell xps user plz help me to solve out this problem
 
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: linux-media@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/media/usb/tm6000/tm6000-video.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+You may want to have a look at these:
 
-diff --git a/drivers/media/usb/tm6000/tm6000-video.c b/drivers/media/usb/tm6000/tm6000-video.c
-index cc1aa14..8bb440f 100644
---- a/drivers/media/usb/tm6000/tm6000-video.c
-+++ b/drivers/media/usb/tm6000/tm6000-video.c
-@@ -434,6 +434,7 @@ static void tm6000_irq_callback(struct urb *urb)
- 	struct tm6000_dmaqueue  *dma_q = urb->context;
- 	struct tm6000_core *dev = container_of(dma_q, struct tm6000_core, vidq);
- 	int i;
-+	unsigned long flags;
- 
- 	switch (urb->status) {
- 	case 0:
-@@ -450,9 +451,9 @@ static void tm6000_irq_callback(struct urb *urb)
- 		break;
- 	}
- 
--	spin_lock(&dev->slock);
-+	spin_lock_irqsave(&dev->slock, flags);
- 	tm6000_isoc_copy(urb);
--	spin_unlock(&dev->slock);
-+	spin_unlock_irqrestore(&dev->slock, flags);
- 
- 	/* Reset urb buffers */
- 	for (i = 0; i < urb->number_of_packets; i++) {
--- 
-1.7.9.5
+http://catb.org/~esr/faqs/smart-questions.html#writewell
+http://catb.org/~esr/faqs/smart-questions.html#beprecise
 
+*t
