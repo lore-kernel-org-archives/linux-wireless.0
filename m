@@ -1,120 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48134 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752775Ab3GBP2O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 11:28:14 -0400
-Date: Tue, 2 Jul 2013 18:26:57 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
-	<balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 2/9] wlcore: use irq_flags in pdata instead of hiding
- it behind a quirk
-Message-ID: <20130702152657.GE7013@arwen.pp.htv.fi> (sfid-20130702_172833_385434_F9C14993)
-Reply-To: <balbi@ti.com>
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
- <1372776948-24840-3-git-send-email-coelho@ti.com>
+Received: from brisi.sourcepole.ch ([5.9.57.43]:42919 "EHLO
+	brisi.sourcepole.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723Ab3G1VBn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Jul 2013 17:01:43 -0400
+Received: from cable-dynamic-87-245-83-117.shinternet.ch ([87.245.83.117] helo=[192.168.2.35])
+	by vilan-mail with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <tpo2@sourcepole.ch>)
+	id 1V3Y62-0008PR-2T
+	for linux-wireless@vger.kernel.org; Sun, 28 Jul 2013 23:01:42 +0200
+Message-ID: <51F58698.7030508@sourcepole.ch> (sfid-20130728_230204_999004_DD1509B3)
+Date: Sun, 28 Jul 2013 23:01:12 +0200
+From: Tomas Pospisek <tpo2@sourcepole.ch>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HnQK338I3UIa/qiP"
-In-Reply-To: <1372776948-24840-3-git-send-email-coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: unable to unblock Bluetooth
+References: <51F3CEF7.4030200@sourcepole.ch> <51F569A6.5090800@erley.org>
+In-Reply-To: <51F569A6.5090800@erley.org>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---HnQK338I3UIa/qiP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Am 28.07.2013 20:57, schrieb Pat Erley:
+> On 07/27/2013 09:45 AM, Tomas Pospisek wrote:
+>> Hello
+>>
+>> I am not able to unblock Bluetooth:
+>>
+>> # rfkill unblock all
+>> # rfkill list 4
+>> 4: hp-bluetooth: Bluetooth
+>>           Soft blocked: yes
+>>           Hard blocked: no
+>>
+>> The Bluetooth layer remains "Soft blocked".
+>>
+>> My system looks like this:
+>>
+>> - Linux: 3.11-rc1
+>> - Userspace: Debian wheezy
+>> - rfkill: 0.5
+>> - HW: HP dv7 6130ez
+>> - Bluetooth probably provided by:
+>>    # lspci
+>>    ...
+>>    0d:00.0 Network controller: Ralink corp. RT5390
+>>   [802.11 b/g/n 1T1R G-band PCI Express Single Chip]
+>>
+>> Kernel logs show no trace of a problem:
+>>
+>>    Bluetooth: Core ver 2.16
+>>    Bluetooth: HCI device and connection manager initialized
+>>    Bluetooth: HCI socket layer initialized
+>>    Bluetooth: L2CAP socket layer initialized
+>>    Bluetooth: SCO socket layer initialized
+>>    Bluetooth: RFCOMM TTY layer initialized
+>>    Bluetooth: RFCOMM socket layer initialized
+>>    Bluetooth: RFCOMM ver 1.11
+>>    Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+>>    Bluetooth: BNEP filters: protocol multicast
+>>    Bluetooth: BNEP socket layer initialized
+>>
+>> I had to provide some firware in order for the Bluetooth device to show
+>> up in rfkill. I copied those firmware blobs over from Debian's
+>> "firmware-ralink" package. It must be one of these:
+>>
+>> rt2661.bin
+>> rtl_nic
+>> rtl_nic/rtl8168f-1.fw
+>> rtl_nic/rtl8168e-1.fw
+>> rtl_nic/rtl8168f-2.fw
+>> rtl_nic/rtl8168e-3.fw
+>> rtl_nic/rtl8168d-2.fw
+>> rtl_nic/rtl8168e-2.fw
+>> rtl_nic/rtl8105e-1.fw
+>> rtl_nic/rtl8168d-1.fw
+>> RTL8192SU
+>> RTL8192SU/rtl8192sfw.bin
+>> rt2561.bin
+>> rt2870.bin
+>> rt2860.bin
+>> rt73.bin
+>> rt3070.bin
+>> rtlwifi
+>> rtlwifi/rtl8192cufw.bin
+>> rtlwifi/rtl8192cfwU.bin
+>> rtlwifi/rtl8192cfw.bin
+>> rtlwifi/rtl8192cfwU_B.bin
+>> rtlwifi/rtl8192sefw.bin
+>> rtlwifi/rtl8192defw.bin
+>> rtlwifi/rtl8712u.bin
+>> rt3071.bin
+>> rt3090.bin
+>> rt2561s.bin
+>> RTL8192E
+>> RTL8192E/main.img
+>> RTL8192E/boot.img
+>> RTL8192E/data.img
+>>
+>> Additional possibly useful info:
+>>
+>>    # lsmod |grep blue
+>>    bluetooth             169854  10 bnep,rfcomm
+>>    rfkill                 19242  6 cfg80211,hp_wmi,bluetooth
+>>    crc16                  12343  2 ext4,bluetooth
+>>
+>> What can I do to unblock the Bluetooth?
+> 
+> lsusb might be useful here too.  hp_wmi hooked into rfkill might mean
+> that hp-wmi is setting that soft block.  Perhaps you have a keyboard
+> combo to unblock it?
 
-Hi,
+Thanks Pat, there's only the "lighthouse" button, that I'm interpreting
+as wifi on/off button. Other than that there doesn't seem to be any
+"bluetooth" or related button.
 
-On Tue, Jul 02, 2013 at 05:55:41PM +0300, Luciano Coelho wrote:
-> The platform_quirk element in the platform data was used to change the
-> way the IRQ is triggered.  When set, the EDGE_IRQ quirk would change
-> the irqflags used and treat edge trigger differently from the rest.
->=20
-> Instead of hiding this irq flag setting behind the quirk, export the
-> whole irq_flags element and let the board file define what to use.
-> This will be more meaningful than driver-specific quirks when we
-> switch to DT.
->=20
-> Cc: Tony Lindgren <tony@atomide.com>
-> Cc: Sekhar Nori <nsekhar@ti.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> Acked-by: Tony Lindgren <tony@atomide.com>
-> ---
->  arch/arm/mach-davinci/board-da850-evm.c      |    2 +-
->  arch/arm/mach-omap2/board-4430sdp.c          |    1 +
->  arch/arm/mach-omap2/board-omap3evm.c         |    1 +
->  arch/arm/mach-omap2/board-omap4panda.c       |    1 +
->  arch/arm/mach-omap2/board-zoom-peripherals.c |    1 +
->  drivers/net/wireless/ti/wlcore/debugfs.c     |    2 +-
->  drivers/net/wireless/ti/wlcore/main.c        |   13 +++----------
->  drivers/net/wireless/ti/wlcore/wlcore.h      |    5 ++---
->  include/linux/wl12xx.h                       |    5 +----
->  9 files changed, 12 insertions(+), 19 deletions(-)
->=20
-> diff --git a/arch/arm/mach-davinci/board-da850-evm.c b/arch/arm/mach-davi=
-nci/board-da850-evm.c
-> index 8a24b6c..d2a2a98 100644
-> --- a/arch/arm/mach-davinci/board-da850-evm.c
-> +++ b/arch/arm/mach-davinci/board-da850-evm.c
-> @@ -1377,8 +1377,8 @@ static const short da850_wl12xx_pins[] __initconst =
-=3D {
-> =20
->  static struct wl12xx_platform_data da850_wl12xx_wlan_data __initdata =3D=
- {
->  	.irq			=3D -1,
-> +	.irq_flags		=3D IRQF_TRIGGER_RISING,
->  	.board_ref_clock	=3D WL12XX_REFCLOCK_38,
-> -	.platform_quirks	=3D WL12XX_PLATFORM_QUIRK_EDGE_IRQ,
->  };
-> =20
->  static __init int da850_wl12xx_init(void)
-> diff --git a/arch/arm/mach-omap2/board-4430sdp.c b/arch/arm/mach-omap2/bo=
-ard-4430sdp.c
-> index 56a9a4f..c2334aa 100644
-> --- a/arch/arm/mach-omap2/board-4430sdp.c
-> +++ b/arch/arm/mach-omap2/board-4430sdp.c
-> @@ -693,6 +693,7 @@ static void __init omap4_sdp4430_wifi_mux_init(void)
->  }
-> =20
->  static struct wl12xx_platform_data omap4_sdp4430_wlan_data __initdata =
-=3D {
-> +	.irq_flags =3D IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
+As for:
+# lsusb
+Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 004 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 003 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 004 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 003: ID 138a:0018 Validity Sensors, Inc.
+Bus 001 Device 004: ID 064e:e258 Suyin Corp.
 
-couldn't you just call irq_set_irq_type() from the board-file itself ?
-Then on your driver you can just pass IRQF_ONESHOT (to make sure heh) to
-your request_threaded_irq_handler()
+"Validity Sensors" seems to be the fingerprint reader and "Suyin Corp."
+seems to be the laptop camera.
 
---=20
-balbi
+I wrote Matthew Garrett the hp_wmi author, but haven heard back. I'm not
+sure, maybe I shouldn't contact him directly or maybe he's just busy or
+on holidays currently.
 
---HnQK338I3UIa/qiP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+If anybody can point out to me what direction to take from here I'd be
+very glad.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Thanks,
+*t
+*t
 
-iQIcBAEBAgAGBQJR0vFBAAoJEIaOsuA1yqRECwQP/2IQS04PpctSEMcrjcDpUu92
-tSnO/JSi9PxeftIE/brxPLI0x0fvzeR6t7W8mAo9aki1rIEfIgNdVPXBaaQmM7Ng
-jqzQ/66sp3f6ukuQGKmtfsIRTbORHRa2O232MfTAjULr4By1pSwB3SFg3qbg1Jd4
-csAc99AajYy54HAQA7ZrI4u0XO802rqa5MJMwa1QXrTVwhwPCMYQaJxToDg9FzLG
-3pnI2ImTgN2oKx93il+lcbL2v9eDoGruZ1l/iIdKlljLPkvbM1baDqc0hNuAtVUP
-ty27MDze9BhO2ZO5S4l/Oui/XlPtXt6tpebB5QaqtUFcUWEzkoQ9nwEqBkDzrfZA
-zB7h2g0R5GxaFJBVz/px8A8gCkXPS0fpAkstMCMHI59r/fk27GROmvuoLFE3oD9v
-aMUnqjqtRWr9ZLaxFO8i+Vq6gxI8LLIOxoWg3eTlRyo/eUorTp6qccAY/4nb49Ii
-Dp2T465o+MWWZS6E4OlbJh9R7uGhCY/Yrd6iOezfr4gQoaNttaSMIwElivZSJySd
-M3WHbHlpczxmzBEy94yvh+vb5DE2dmNwDcOu2aXU9A/+SBVoAy+7bwhM9RgwamMC
-nZ/cbOLf2zhfunCGXqNZy6ukqiS7SW9keaTiurx1rejg0Nkrckm2pfbphqqOIc6I
-ZKIynSdelkum1AQUfEEO
-=Tmqu
------END PGP SIGNATURE-----
-
---HnQK338I3UIa/qiP--
