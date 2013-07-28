@@ -1,89 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from diserzione.investici.org ([82.221.99.153]:59409 "EHLO
-	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704Ab3GZTg5 (ORCPT
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:55768 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752153Ab3G1UlS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 15:36:57 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCH] mac80211: ibss - remove not authorized station earlier
-Date: Fri, 26 Jul 2013 21:15:02 +0200
-Message-Id: <1374866102-850-1-git-send-email-ordex@autistici.org> (sfid-20130726_213701_013329_E388F9C3)
+	Sun, 28 Jul 2013 16:41:18 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: FUSB200 xhci issue
+Date: Sun, 28 Jul 2013 22:41:12 +0200
+Message-ID: <6066029.JHY9cn8Gkh@blech> (sfid-20130728_224140_990585_8FE6D823)
+In-Reply-To: <51F52A89.4050506@rempel-privat.de>
+References: <51ED4E12.8030006@rempel-privat.de> <51F50AB7.3030204@rempel-privat.de> <51F52A89.4050506@rempel-privat.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+On Sunday, July 28, 2013 04:28:25 PM Oleksij Rempel wrote:
+> Am 28.07.2013 14:12, schrieb Oleksij Rempel:
+> > Am 28.07.2013 13:38, schrieb Christian Lamparter:
+> >
+> >>>>
+> >>>> Anyway, I tried the -next branch.
+> >>>>
+> >>>> commit dbbb809d592dde0b3c9ecb97b3b387ff8e40e799
+> >>>> Author: Oleksij Rempel <linux@rempel-privat.de>
+> >>>> Date:   Wed Jul 24 10:26:18 2013 +0200
+> >>>>
+> >>>>       k2_fw_usb_api: workaround for EP4 bug.
+> >>>>
+> >>>> but still, the device won't show up after autosuspend.
+> >>>
+> >>> Hm... firmware probably didn't rebooted before suspend. Did interface
+> >>> was up, before autosuspend? If no, you need latest wireles-testing -
+> >>> there are patches to handle this issue. Or just make "ifconfig wlan1 up"
+> >>>    before  rmmod.
+> >> Oh, I it was on the latest wireless-testing. (And the "ath9k_htc" module
+> >> had the patch "ath9k_htc: reboot firmwware if it was loaded").
+> >>
+> >> Furthermore, I did the same test with one of the ehci-only ports
+> >> and it worked. Both, devices (one had a AR7015, the other a AR9271)
+> >> came back after autosuspend there.
+> >
+> > Grrr... so it brings us back to xhci issue. Even EP4 workaround wont
+> > work here :( Suddenly i have no more ideas.
+> >
+> > Sarah, it's your turn now.
+> 
+> Christian,
+> can you please provide some more info about your xhci controller. I'll 
+> try to get me same.
 
-A station which is not authorized has to be purged earlier
-to give it a chance to re-try to establish an IBSS/RSN
-session soon. Set the timeout to 10 seconds.
+Well, it's a laptop (HP DV6-6003EG). I recon that getting 100% the
+same setup will be difficult. However, since the uPD720200 was/is
+very popular, it should be very easy to find one. [It's probably
+on all of these "10 euro usb-3.0 pcie-adapters". So as long as you
+got a free 1x-pcie port you should be good.]
 
-Some refactoring has also been done to allow the IBSS
-submodule to have its own expiring function.
+Here's the lspci summary:
 
-Reported-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- net/mac80211/ibss.c | 30 +++++++++++++++++++++++++++++-
- 1 file changed, 29 insertions(+), 1 deletion(-)
+19:00.0 USB controller [0c03]: NEC Corporation uPD720200 USB 3.0 Host Controller [1033:0194] (rev 04) (prog-if 30 [XHCI])
+        Subsystem: Hewlett-Packard Company Device [103c:1657]
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 19
+        Region 0: Memory at d3400000 (64-bit, non-prefetchable) [size=8K]
+        Capabilities: <access denied>
+        Kernel driver in use: xhci_hcd
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 5e6836c..e08387c 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -30,6 +30,7 @@
- 
- #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
- #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
-+#define IEEE80211_IBSS_RSN_INACTIVITY_LIMIT (10 * HZ)
- 
- #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
- 
-@@ -740,6 +741,33 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
- 	return active;
- }
- 
-+static void ieee80211_ibss_sta_expire(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta, *tmp;
-+	unsigned long exp_time = IEEE80211_IBSS_INACTIVITY_LIMIT;
-+	unsigned long exp_rsn_time = IEEE80211_IBSS_RSN_INACTIVITY_LIMIT;
-+
-+	mutex_lock(&local->sta_mtx);
-+
-+	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
-+		if (sdata != sta->sdata)
-+			continue;
-+
-+		if (time_after(jiffies, sta->last_rx + exp_time) ||
-+		    (time_after(jiffies, sta->last_rx + exp_rsn_time) &&
-+		     sta->sta_state != IEEE80211_STA_AUTHORIZED)) {
-+			sta_dbg(sta->sdata, "expiring inactive %sSTA %pM\n",
-+				sta->sta_state != IEEE80211_STA_AUTHORIZED ?
-+				"not authorized " : "", sta->sta.addr);
-+
-+			WARN_ON(__sta_info_destroy(sta));
-+		}
-+	}
-+
-+	mutex_unlock(&local->sta_mtx);
-+}
-+
- /*
-  * This function is called with state == IEEE80211_IBSS_MLME_JOINED
-  */
-@@ -754,7 +782,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- 	mod_timer(&ifibss->timer,
- 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
- 
--	ieee80211_sta_expire(sdata, IEEE80211_IBSS_INACTIVITY_LIMIT);
-+	ieee80211_ibss_sta_expire(sdata);
- 
- 	if (time_before(jiffies, ifibss->last_scan_completed +
- 		       IEEE80211_IBSS_MERGE_INTERVAL))
--- 
-1.8.1.5
-
+Regards,
+	Chr
