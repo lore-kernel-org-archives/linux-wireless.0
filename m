@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp04.smtpout.orange.fr ([80.12.242.126]:19981 "EHLO
-	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904Ab3GKGbr (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:53188 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730Ab3G1FUF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 02:31:47 -0400
-Message-ID: <51DE514E.7080309@free.fr> (sfid-20130711_083150_873295_055AEA3D)
-Date: Thu, 11 Jul 2013 08:31:42 +0200
-From: Eric Valette <eric.valette@free.fr>
-Reply-To: eric.valette@free.fr
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ralink 3290: still lots of misc errors reported by Iwconfig with
- 3.10 + HD streaming on WiFi fails
-References: <51DBEB0C.6040704@Free.fr> <20130709142202.GB3681@redhat.com> <51DC1F9D.7000705@Free.fr> <51DC259D.9010505@Free.fr> <20130710113158.GA3887@redhat.com>
-In-Reply-To: <20130710113158.GA3887@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 28 Jul 2013 01:20:05 -0400
+Date: Sat, 27 Jul 2013 22:20:03 -0700 (PDT)
+Message-Id: <20130727.222003.1753039618642833143.davem@davemloft.net> (sfid-20130728_072016_166996_0B53E932)
+To: pshelar@nicira.com
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, netdev@vger.kernel.org, tgraf@suug.ch,
+	shemminger@vyatta.com, rjones@redhat.com, marcel@holtmann.org,
+	jlayton@redhat.com
+Subject: Re: [PATCH 3.11] genetlink: release cb_lock before requesting
+ additional module
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CALnjE+rcMoFkDPSQbD7VKvv2rYzKKEYcARtBH5y_A+ngrLbAzA@mail.gmail.com>
+References: <20130725105116.043a6b9c@corrin.poochiereds.net>
+	<20130726090010.GA1756@redhat.com>
+	<CALnjE+rcMoFkDPSQbD7VKvv2rYzKKEYcARtBH5y_A+ngrLbAzA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2013 13:31, Stanislaw Gruszka wrote:
-> On Tue, Jul 09, 2013 at 05:00:45PM +0200, Eric Valette wrote:
->> On 07/09/2013 04:35 PM, Eric Valette wrote:
+From: Pravin Shelar <pshelar@nicira.com>
+Date: Fri, 26 Jul 2013 10:08:25 -0700
+
+> On Fri, Jul 26, 2013 at 2:00 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> Requesting external module with cb_lock taken can result in
+>> the deadlock like showed below:
+ ...
+>> Problem start to happen after adding net-pf-16-proto-16-family-nl80211
+>> alias name to cfg80211 module by below commit (though that commit
+>> itself is perfectly fine):
 >>
->>>> Do you mean that 3.10 perform better than 3.9.9 ? I do not see any
->>>> rt2x00 fixes between 3.9 and 3.10 that are not yet applied on 3.9.9.
->>>> I can see only some cleanups and new hardware support patches.
->>>
->>>  From memory I think I had a lot of reported TX error with 3.9.9 and
->>> they are now gone with 3.10 but the number of misc error reported by
->>> iwconfig is still high with 3.10. But you are right the fix for TX is
->>> still in wireless git and does not seem to be in 3.10. As I checked
->>> several git trees I mist have been confused...
+>> commit fb4e156886ce6e8309e912d8b370d192330d19d3
+>> Author: Marcel Holtmann <marcel@holtmann.org>
+>> Date:   Sun Apr 28 16:22:06 2013 -0700
 >>
->> Unless I'm really tired, this patch is in 3.10 and not in 3.9.9 :
+>>     nl80211: Add generic netlink module alias for cfg80211/nl80211
 >>
->> http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-testing.git/patch/drivers/net/wireless/rt2x00?id=8857d6dc77e4e3afeee2f33c49597010130ed858
->
-> You have right, I missed that one. It's on 3.10 but not on 3.9. We could
-> post it to 3.9 -stable, but since 3.10 is now realised, 3.9 will become
-> end of life probably.
+>> Reported-and-tested-by: Jeff Layton <jlayton@redhat.com>
+>> Reported-by: Richard W.M. Jones <rjones@redhat.com>
+>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+ ...
+> This is genl issue and it was introduced by commit def3117493eafd
+> (genl: Allow concurrent genl callbacks.).
+> 
+> Reviewed-by: Pravin B Shelar <pshelar@nicira.com>
 
-
-Usually there is a small overlap at least until .1 or .2. For me it 
-fixes reported TX errors but cannot test if it also fixes link 
-quality/throughput due to lack of AMD/ati drivers.
-
-Thanks again for your time.
-
---eric
-
-
+Applied and queued up for -stable, thanks.
