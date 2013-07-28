@@ -1,50 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:33621 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754701Ab3GEO3Y convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 10:29:24 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: 'Daniel Drake' <dsd@laptop.org>, Bing Zhao <bzhao@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Fri, 5 Jul 2013 07:26:51 -0700
-Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951035636350@SC-VEXCH1.marvell.com> (sfid-20130705_162930_705448_6C180E1B)
-In-Reply-To: <CAMLZHHSSfPnWK957Yd+vrLrsPHtUDW3b4ZxSjMe2SdpaQPk5hQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx3.wp.pl ([212.77.101.7]:31683 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753406Ab3G1LOS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Jul 2013 07:14:18 -0400
+Received: from ip-78-102-117-165.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[78.102.117.165])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 28 Jul 2013 13:14:15 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 3.11] rt2x00: fix stop queue
+Date: Sun, 28 Jul 2013 13:17:22 +0200
+Message-Id: <1375010242-15555-1-git-send-email-stf_xl@wp.pl> (sfid-20130728_131421_407598_C392A561)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
->> Followings are the actions taken for driver unload.
->>
->>    a) If device is connected, sync deauth command is sent.
->>    b) Auto deep sleep is cancelled by sending sync command
->>    c) Sync shutdown command is queued and HW_STATUS is changed to reset.
->>    d) Now no other command gets queued based on HW_STATUS.
->>    e) Wait for shutdown command response and handle it.
->>    f) Set surprise_removed flag which blocks SDIO interrupts
->>
->> As per our design, we don't send any command to firmware after SHUTDOWN command. Also, firmware doesn't send any interrupt after SHUTDOWN command response.
+Since we clear QUEUE_STARTED in rt2x00queue_stop_queue(), following
+call to rt2x00queue_pause_queue() reduce to noop, i.e we do not
+stop queue in mac80211.
 
->I cannot see how the driver behaviour matches the above description
->for when the card is removed as the system is suspended. For example I
->cannot see where the SHUTDOWN command gets sent in such cases.
+To fix that introduce rt2x00queue_pause_queue_nocheck() function,
+which will stop queue in mac80211 directly.
 
-This behavior (i.e. mwifiex_sdio_remove() handler) is for driver unload(rmmod mwifiex_sdio) or when the system is powering down.
+Note that rt2x00_start_queue() explicitly set QUEUE_PAUSED bit.
 
-Our mwifiex_sdio_suspend() handler gets called when system is supended. It just informs firmware/hardware that host is going into sleep state by sending a command. The sleep is cancelled in mwifiex_sdio_resume() handler when sytem resumes.
-We support wake-on-lan feature. User can configure wol conditions(using 'ethtool wol' or 'iw wowlan') before system suspend. Firmware wakes up the host if Rx packet matching configured condition is received.
+Note also that reordering operations i.e. first call to
+rt2x00queue_pause_queue() and then clear QUEUE_STARTED bit, will race
+with rt2x00queue_unpause_queue(), so calling ieee80211_stop_queue()
+directly is the only available solution to fix the problem without
+major rework.
 
-I think, we should probably look into mwifiex_sdio_suspend() routine instead of mwifiex_sdio_remove() to debug interrupt storm issue. Please correct me if I am missing something.
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   18 +++++++++++-------
+ 1 files changed, 11 insertions(+), 7 deletions(-)
 
-We have wait_event_interruptible() call in suspend handler to make sure that we don't return from the handler until we get host sleep activated event from firmware. Firmware is not supposed to send any event after this.
-We can't disable interrupts at this point, because we expect wakeup event from firmware upon packet arrival
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index e571298..8c1de0f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -936,13 +936,8 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
+ 	spin_unlock_irqrestore(&queue->index_lock, irqflags);
+ }
+ 
+-void rt2x00queue_pause_queue(struct data_queue *queue)
++void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
+ {
+-	if (!test_bit(DEVICE_STATE_PRESENT, &queue->rt2x00dev->flags) ||
+-	    !test_bit(QUEUE_STARTED, &queue->flags) ||
+-	    test_and_set_bit(QUEUE_PAUSED, &queue->flags))
+-		return;
+-
+ 	switch (queue->qid) {
+ 	case QID_AC_VO:
+ 	case QID_AC_VI:
+@@ -958,6 +953,15 @@ void rt2x00queue_pause_queue(struct data_queue *queue)
+ 		break;
+ 	}
+ }
++void rt2x00queue_pause_queue(struct data_queue *queue)
++{
++	if (!test_bit(DEVICE_STATE_PRESENT, &queue->rt2x00dev->flags) ||
++	    !test_bit(QUEUE_STARTED, &queue->flags) ||
++	    test_and_set_bit(QUEUE_PAUSED, &queue->flags))
++		return;
++
++	rt2x00queue_pause_queue_nocheck(queue);
++}
+ EXPORT_SYMBOL_GPL(rt2x00queue_pause_queue);
+ 
+ void rt2x00queue_unpause_queue(struct data_queue *queue)
+@@ -1019,7 +1023,7 @@ void rt2x00queue_stop_queue(struct data_queue *queue)
+ 		return;
+ 	}
+ 
+-	rt2x00queue_pause_queue(queue);
++	rt2x00queue_pause_queue_nocheck(queue);
+ 
+ 	queue->rt2x00dev->ops->lib->stop_queue(queue);
+ 
+-- 
+1.7.4.4
 
-Can you please share system suspend logs with dynamic debug enabled for mwifiex?
-
-Thanks,
-Amitkumar Karwar
