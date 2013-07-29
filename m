@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:41596 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754701Ab3GENPU (ORCPT
+Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:58925 "EHLO
+	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750946Ab3G2XdB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:15:20 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [PATCH 00/16] ath10k: pending patches
-Date: Fri,  5 Jul 2013 16:15:01 +0300
-Message-Id: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_151525_293493_DD9C5BE5)
+	Mon, 29 Jul 2013 19:33:01 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.11 2/3] mwifiex: fix wrong data rates in P2P client
+Date: Mon, 29 Jul 2013 16:32:38 -0700
+Message-ID: <1375140759-29767-2-git-send-email-bzhao@marvell.com> (sfid-20130730_013305_651301_C07A6236)
+In-Reply-To: <1375140759-29767-1-git-send-email-bzhao@marvell.com>
+References: <1375140759-29767-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Avinash Patil <patila@marvell.com>
 
-here are pending patches which were commited to ath10k.git while
-ath10k was under review. They were only sent to ath9k-devel, I'm
-resending them now before I reapply them to my new ath.git tree.
+This patch fixes an issue wherein adhoc rates were being copied
+into association request from P2P client.
 
-Michal Kazior (16):
-  ath10k: fix teardown ordering
-  ath10k: fix possible deadlock
-  ath10k: setup rts/frag thresholds upon vdev creation
-  ath10k: do not setup rts/frag thresholds for suspended interfaces
-  ath10k: remove ath10k_bus
-  ath10k: fix typo in define name
-  ath10k: silent warning in IBSS mode
-  ath10k: lower print level for a message
-  ath10k: provide errno if bmi read/write fails
-  ath10k: change function to take struct ath10k as arg
-  ath10k: rename hif callback
-  ath10k: embed HTC struct inside ath10k
-  ath10k: embed HTT struct inside ath10k
-  ath10k: improve locking
-  ath10k: abort scan properly if wmi_scan_stop fails
-  ath10k: add missing debug prints
+Cc: <stable@vger.kernel.org> # 3.10.y
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfp.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/ath/ath10k/bmi.c    |    6 +-
- drivers/net/wireless/ath/ath10k/ce.c     |    2 +-
- drivers/net/wireless/ath/ath10k/core.c   |   42 +++++-------
- drivers/net/wireless/ath/ath10k/core.h   |   15 ++---
- drivers/net/wireless/ath/ath10k/hif.h    |   10 +--
- drivers/net/wireless/ath/ath10k/htc.c    |   30 +++------
- drivers/net/wireless/ath/ath10k/htc.h    |    4 +-
- drivers/net/wireless/ath/ath10k/htt.c    |   27 ++++----
- drivers/net/wireless/ath/ath10k/htt.h    |    3 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c |    3 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c |   12 ++--
- drivers/net/wireless/ath/ath10k/mac.c    |  107 +++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/pci.c    |   23 +++----
- drivers/net/wireless/ath/ath10k/pci.h    |    4 +-
- drivers/net/wireless/ath/ath10k/wmi.c    |   14 ++--
- 15 files changed, 180 insertions(+), 122 deletions(-)
-
+diff --git a/drivers/net/wireless/mwifiex/cfp.c b/drivers/net/wireless/mwifiex/cfp.c
+index 988552d..5178c46 100644
+--- a/drivers/net/wireless/mwifiex/cfp.c
++++ b/drivers/net/wireless/mwifiex/cfp.c
+@@ -415,7 +415,8 @@ u32 mwifiex_get_supported_rates(struct mwifiex_private *priv, u8 *rates)
+ 	u32 k = 0;
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 
+-	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
++	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
++	    priv->bss_mode == NL80211_IFTYPE_P2P_CLIENT) {
+ 		switch (adapter->config_bands) {
+ 		case BAND_B:
+ 			dev_dbg(adapter->dev, "info: infra band=%d "
 -- 
-1.7.9.5
+1.8.2.3
 
