@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:51684 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308Ab3GQCTS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:19:18 -0400
-Received: by mail-pa0-f49.google.com with SMTP id ld11so1409199pab.8
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:19:18 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 06/53] wireless-regdb: AR, Argentina - enable VHT80
-Date: Tue, 16 Jul 2013 19:17:55 -0700
-Message-Id: <1374027522-18488-7-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_041921_294860_709A7343)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from plane.gmane.org ([80.91.229.3]:42659 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755698Ab3G3QzE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 12:55:04 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1V4DCR-0002iq-DT
+	for linux-wireless@vger.kernel.org; Tue, 30 Jul 2013 18:55:03 +0200
+Received: from 223.228.27.131 ([223.228.27.131])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2013 18:55:03 +0200
+Received: from priti.pce by 223.228.27.131 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2013 18:55:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Priti <priti.pce@gmail.com>
+Subject: Re: Passing a custom MAC to ath6kl
+Date: Mon, 29 Jul 2013 11:14:44 +0000 (UTC)
+Message-ID: <loom.20130729T130127-14@post.gmane.org> (sfid-20130730_185508_631868_2B7DA300)
+References: <51D6E484.9060000@digi.com> <87vc4pf1ln.fsf@kamboji.qca.qualcomm.com> <51D6EC90.40009@digi.com> <51D70A22.20607@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Hi,
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies and increases the max EIRP on two
-5 GHz bands.
+i am looking for a way to update MAC address for ar6103.
+i am using compat-wirless-3.4.rc3-1 package and linux 2.3.31 kernel.
+i have tried many ways to hard code the mac address value just to see the
+change in mac address.i am able to see the updated mac address while giving
+the ifconfig command,but my device is not sending any packet and not getting
+IP address.
+i have been trying to dig each and every source file in ath6kl folder but
+not able to figure out why i am not able to change the mac address.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+can any one please tell me the exact steps to achieve this.
+it will be really helpful.
 
-diff --git a/db.txt b/db.txt
-index 1f16aff..b82b255 100644
---- a/db.txt
-+++ b/db.txt
-@@ -38,10 +38,10 @@ country AN:
- 
- country AR:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (3, 17)
--	(5250 - 5330 @ 40), (3, 20), DFS
--	(5490 - 5710 @ 40), (3, 20), DFS
--	(5735 - 5835 @ 40), (3, 30)
-+	(5170 - 5250 @ 80), (3, 17)
-+	(5250 - 5330 @ 80), (3, 24), DFS
-+	(5490 - 5710 @ 80), (3, 24), DFS
-+	(5735 - 5835 @ 80), (3, 30)
- 
- country AT: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--- 
-1.7.10.4
+THanks,
+Priti
 
