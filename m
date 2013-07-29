@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:31440 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755789Ab3GOLpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 07:45:13 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3.10 2/3] iwlwifi: mvm: adjust firmware D3 configuration API
-Date: Mon, 15 Jul 2013 14:44:59 +0300
-Message-Id: <1373888700-3040-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_134524_887366_38D2894F)
-In-Reply-To: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:43702 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755551Ab3G2VXo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 17:23:44 -0400
+Received: by mail-oa0-f51.google.com with SMTP id h2so2072817oag.38
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jul 2013 14:23:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51F6DB65.4000302@hauke-m.de>
+References: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net>
+	<CACna6rzu4U+v1v1vj-+XyJHpReXMB3nscKP_C5jjbAAbKLQcKA@mail.gmail.com>
+	<CACna6rxvnU_cwphP+Vvn_-CLuEcqMufEo4Zk7-Xqd63OA4Zmqg@mail.gmail.com>
+	<51F6DB65.4000302@hauke-m.de>
+Date: Mon, 29 Jul 2013 23:23:43 +0200
+Message-ID: <CACna6ryQTWhyFtrWaKc_E-Zx_O16qb78uYRCwHT6x6n3pQzkVw@mail.gmail.com> (sfid-20130729_232348_045515_AD202EA9)
+Subject: Re: [PATCH V2] fwcutter: Add firmware 6.30.163.46
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	m@bues.ch
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2013/7/29 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 07/29/2013 10:07 PM, Rafał Miłecki wrote:
+>> 2013/7/29 Rafał Miłecki <zajec5@gmail.com>:
+>>> 2013/7/29 Larry Finger <Larry.Finger@lwfinger.net>:
+>>>> This firmware version can be extracted from the GPL tarball for the ASUS
+>>>> GPL code for the RT-AC66U 802.11ac Dual-Band Wireless-AC1750 Gigabit Router.
+>>>>
+>>>> I believe this to be the first instance of 802.11ac firmware for Broadcom
+>>>> hardware. The firmware is version 784.2.
+>>>>
+>>>> Note: The http://www.lwfinger.com/broadcom-wl-6.30.163.46.tar.bz2 is the URL
+>>>> of the extracted apsta binary. The full GPL package is at
+>>>> http://dlcdnet.asus.com/pub/ASUS/wireless/RT-AC66U/GPL_RT_AC66U_3004372.zip.
+>>>
+>>> There is some (probably outdated) list of Broadcom 802.11ac routers:
+>>> ASUS RT-AC66U
+>>> Linksys EA6500
+>>> Netgear R6300
+>>>
+>>> Did you compare wl.ko drivers from the 2 other firmwares? Is this the
+>>> newest one?
+>>>
+>>> Did you start AC-PHY RE process?
+>>
+>> In case you wonder, I have a MIPS router with BCM4331 + BCM4360,
+>> unfrotunately there isn't mmiotrace available for MIPS, so I can't
+>> start RE that way :(
+>>
+>> I may think about buying PCE-AC66 at some point.
+>>
+> Hi Rafał,
+>
+> I have a Netgear R6250 (BCM4708 ARM Contex-A9) router with BCM4331 +
+> BCM4360 and I am currently adding support for it to OpenWrt and mainline
+> Linux kernel, could mmiotrace work on this CPU?
 
-commit dfcb4c3aacedee6838e436fb575b31e138505203 upstream.
+mmiotrace is x86/x86_64 only at this point :(
 
-The D3 firmware API changed to include a new field, adjust
-the driver to it to avoid getting an NMI when configuring.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-index 51e015d..6f8b2c1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-@@ -75,13 +75,15 @@ enum iwl_d3_wakeup_flags {
-  * struct iwl_d3_manager_config - D3 manager configuration command
-  * @min_sleep_time: minimum sleep time (in usec)
-  * @wakeup_flags: wakeup flags, see &enum iwl_d3_wakeup_flags
-+ * @wakeup_host_timer: force wakeup after this many seconds
-  *
-  * The structure is used for the D3_CONFIG_CMD command.
-  */
- struct iwl_d3_manager_config {
- 	__le32 min_sleep_time;
- 	__le32 wakeup_flags;
--} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_3 */
-+	__le32 wakeup_host_timer;
-+} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_4 */
- 
- 
- /* TODO: OFFLOADS_QUERY_API_S_VER_1 */
 -- 
-1.7.10.4
-
+Rafał
