@@ -1,211 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48219 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751470Ab3GHOIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:08:44 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 03/20] rt2x00: rt2800lib: add RFCSR register initialization for RT3593
-Date: Mon,  8 Jul 2013 16:08:18 +0200
-Message-Id: <1373292515-21332-4-git-send-email-juhosg@openwrt.org> (sfid-20130708_160900_580627_B3C1D046)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52611 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150Ab3G2SpJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 14:45:09 -0400
+Date: Mon, 29 Jul 2013 14:43:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2013-07-25
+Message-ID: <20130729184312.GE31172@tuxdriver.com> (sfid-20130729_204541_699670_903A7917)
+References: <20130725130552.GE9913@joana>
+ <20130725150156.GA21959@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130725150156.GA21959@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
+On Thu, Jul 25, 2013 at 04:01:58PM +0100, Gustavo Padovan wrote:
+> Hi John,
+> 
+> * Gustavo Padovan <gustavo@padovan.org> [2013-07-25 14:05:54 +0100]:
+> 
+> > Hi John,
+> > 
+> > A few fixes and devices ID additions for 3.11: 
+> > 
+> >  * There are 3 new ath3k device ids 
+> >  * Fixed stack memory usage in ath3k.
+> >  * Fixed the init process of BlueFRITZ! devices, they were failing to init
+> >    due to an unsupported command we sent. 
+> >  * Fixed wrong use of PTR_ERR in btusb code that was preventing intel devices
+> >    to work properly 
+> >  * Fixed race codition between hci_register_dev() and hci_dev_open() that
+> >    could cause a NULL pointer dereference.
+> 
+> Marcel just raised the comment that we need to add more information to
+> the BlueFRITZ! fixes so I'm steping back with it. So just ignore it for
+> now.
+> 
+> 	Gustavo
 
-References:
-  NICInitRT3593RFRegisters in chips/rt3593.c
-  RT3593LoadRFNormalModeSetup in chips/rt3593.c
+Is a new version of this request still coming?
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
-Changes since v2:
- - keep case statements in alphabetical order
----
- drivers/net/wireless/rt2x00/rt2800.h    |   10 +++
- drivers/net/wireless/rt2x00/rt2800lib.c |  122 +++++++++++++++++++++++++++++++
- 2 files changed, 132 insertions(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 02bc80d..47aceae 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -2093,6 +2093,10 @@ struct mac_iveiv_entry {
- #define RFCSR17_R			FIELD8(0x20)
- #define RFCSR17_CODE                   FIELD8(0x7f)
- 
-+/* RFCSR 18 */
-+#define RFCSR18_XO_TUNE_BYPASS		FIELD8(0x40)
-+
-+
- /*
-  * RFCSR 20:
-  */
-@@ -2174,6 +2178,12 @@ struct mac_iveiv_entry {
-  */
- #define RFCSR50_TX			FIELD8(0x3f)
- #define RFCSR50_EP			FIELD8(0xc0)
-+/* bits for RT3593*/
-+#define RFCSR50_TX_LO2_EN		FIELD8(0x10)
-+
-+/* RFCSR 51 */
-+/* bits for RT3593*/
-+#define RFCSR51_BITS24			FIELD8(0x1c)
- 
- /*
-  * RF registers
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 53ebdb9..b650569 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4963,6 +4963,42 @@ static void rt2800_normal_mode_setup_3xxx(struct rt2x00_dev *rt2x00dev)
- 	}
- }
- 
-+static void rt2800_normal_mode_setup_3593(struct rt2x00_dev *rt2x00dev)
-+{
-+	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-+	u8 rfcsr;
-+	u8 tx_gain;
-+
-+	rt2800_rfcsr_read(rt2x00dev, 50, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR50_TX_LO2_EN, 0);
-+	rt2800_rfcsr_write(rt2x00dev, 50, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 51, &rfcsr);
-+	tx_gain = rt2x00_get_field8(drv_data->txmixer_gain_24g,
-+				    RFCSR17_TXMIXER_GAIN);
-+	rt2x00_set_field8(&rfcsr, RFCSR51_BITS24, tx_gain);
-+	rt2800_rfcsr_write(rt2x00dev, 51, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 38, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR38_RX_LO1_EN, 0);
-+	rt2800_rfcsr_write(rt2x00dev, 38, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 39, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR39_RX_LO2_EN, 0);
-+	rt2800_rfcsr_write(rt2x00dev, 39, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR1_RF_BLOCK_EN, 1);
-+	rt2x00_set_field8(&rfcsr, RFCSR1_PLL_PD, 1);
-+	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR30_RX_VCM, 2);
-+	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
-+
-+	/* TODO: enable stream mode */
-+}
-+
- static void rt2800_normal_mode_setup_5xxx(struct rt2x00_dev *rt2x00dev)
- {
- 	u8 reg;
-@@ -5345,6 +5381,89 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
- 	rt2800_normal_mode_setup_3xxx(rt2x00dev);
- }
- 
-+static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
-+{
-+	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-+	u32 reg;
-+	u8 rfcsr;
-+
-+	/* Disable GPIO #4 and #7 function for LAN PE control */
-+	rt2800_register_read(rt2x00dev, GPIO_SWITCH, &reg);
-+	rt2x00_set_field32(&reg, GPIO_SWITCH_4, 0);
-+	rt2x00_set_field32(&reg, GPIO_SWITCH_7, 0);
-+	rt2800_register_write(rt2x00dev, GPIO_SWITCH, reg);
-+
-+	/* Initialize default register values */
-+	rt2800_rfcsr_write(rt2x00dev, 1, 0x03);
-+	rt2800_rfcsr_write(rt2x00dev, 3, 0x80);
-+	rt2800_rfcsr_write(rt2x00dev, 5, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 6, 0x40);
-+	rt2800_rfcsr_write(rt2x00dev, 8, 0xf1);
-+	rt2800_rfcsr_write(rt2x00dev, 9, 0x02);
-+	rt2800_rfcsr_write(rt2x00dev, 10, 0xd3);
-+	rt2800_rfcsr_write(rt2x00dev, 11, 0x40);
-+	rt2800_rfcsr_write(rt2x00dev, 12, 0x4e);
-+	rt2800_rfcsr_write(rt2x00dev, 13, 0x12);
-+	rt2800_rfcsr_write(rt2x00dev, 18, 0x40);
-+	rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
-+	rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
-+	rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
-+	rt2800_rfcsr_write(rt2x00dev, 32, 0x78);
-+	rt2800_rfcsr_write(rt2x00dev, 33, 0x3b);
-+	rt2800_rfcsr_write(rt2x00dev, 34, 0x3c);
-+	rt2800_rfcsr_write(rt2x00dev, 35, 0xe0);
-+	rt2800_rfcsr_write(rt2x00dev, 38, 0x86);
-+	rt2800_rfcsr_write(rt2x00dev, 39, 0x23);
-+	rt2800_rfcsr_write(rt2x00dev, 44, 0xd3);
-+	rt2800_rfcsr_write(rt2x00dev, 45, 0xbb);
-+	rt2800_rfcsr_write(rt2x00dev, 46, 0x60);
-+	rt2800_rfcsr_write(rt2x00dev, 49, 0x8e);
-+	rt2800_rfcsr_write(rt2x00dev, 50, 0x86);
-+	rt2800_rfcsr_write(rt2x00dev, 51, 0x75);
-+	rt2800_rfcsr_write(rt2x00dev, 52, 0x45);
-+	rt2800_rfcsr_write(rt2x00dev, 53, 0x18);
-+	rt2800_rfcsr_write(rt2x00dev, 54, 0x18);
-+	rt2800_rfcsr_write(rt2x00dev, 55, 0x18);
-+	rt2800_rfcsr_write(rt2x00dev, 56, 0xdb);
-+	rt2800_rfcsr_write(rt2x00dev, 57, 0x6e);
-+
-+	/* Initiate calibration */
-+	/* TODO: use rt2800_rf_init_calibration ? */
-+	rt2800_rfcsr_read(rt2x00dev, 2, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
-+	rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
-+
-+	rt2800_adjust_freq_offset(rt2x00dev);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 18, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR18_XO_TUNE_BYPASS, 1);
-+	rt2800_rfcsr_write(rt2x00dev, 18, rfcsr);
-+
-+	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
-+	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
-+	rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
-+	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
-+	usleep_range(1000, 1500);
-+	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
-+	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
-+	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
-+
-+	/* Set initial values for RX filter calibration */
-+	drv_data->calibration_bw20 = 0x1f;
-+	drv_data->calibration_bw40 = 0x2f;
-+
-+	/* Save BBP 25 & 26 values for later use in channel switching */
-+	rt2800_bbp_read(rt2x00dev, 25, &drv_data->bbp25);
-+	rt2800_bbp_read(rt2x00dev, 26, &drv_data->bbp26);
-+
-+	rt2800_led_open_drain_enable(rt2x00dev);
-+	rt2800_normal_mode_setup_3593(rt2x00dev);
-+
-+	/* TODO: post BBP initialization */
-+
-+	/* TODO: enable stream mode support */
-+}
-+
- static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
- {
- 	rt2800_rf_init_calibration(rt2x00dev, 2);
-@@ -5573,6 +5692,9 @@ static void rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	case RT3572:
- 		rt2800_init_rfcsr_3572(rt2x00dev);
- 		break;
-+	case RT3593:
-+		rt2800_init_rfcsr_3593(rt2x00dev);
-+		break;
- 	case RT5390:
- 		rt2800_init_rfcsr_5390(rt2x00dev);
- 		break;
 -- 
-1.7.10
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
