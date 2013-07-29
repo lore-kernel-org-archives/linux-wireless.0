@@ -1,117 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f179.google.com ([209.85.160.179]:39532 "EHLO
-	mail-gh0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755090Ab3GAVIZ (ORCPT
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:57544 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751238Ab3G2S5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 17:08:25 -0400
+	Mon, 29 Jul 2013 14:57:04 -0400
+Received: by mail-oa0-f45.google.com with SMTP id m1so3778087oag.32
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jul 2013 11:57:03 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: [PATCH] brcmsmac: Fix WARNING caused by lack of calls to dma_mapping_error()
-Date: Mon,  1 Jul 2013 16:08:03 -0500
-Message-Id: <1372712883-4464-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130701_230832_913806_BB4EAFB8)
+To: m@bues.ch
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH V2] fwcutter: Add firmware 6.30.163.46
+Date: Mon, 29 Jul 2013 13:56:53 -0500
+Message-Id: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130729_205708_891260_331C6C5C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver fails to check the results of DMA mapping in twp places, which results
-in the following warning:
+This firmware version can be extracted from the GPL tarball for the ASUS
+GPL code for the RT-AC66U 802.11ac Dual-Band Wireless-AC1750 Gigabit Router.
 
-[   28.078515] ------------[ cut here ]------------
-[   28.078529] WARNING: at lib/dma-debug.c:937 check_unmap+0x47e/0x930()
-[   28.078533] bcma-pci-bridge 0000:0e:00.0: DMA-API: device driver failed to check map error[device address=0x00000000b5d60d6c] [size=1876 bytes] [mapped as
- single]
-[   28.078536] Modules linked in: bnep bluetooth vboxpci(O) vboxnetadp(O) vboxnetflt(O) vboxdrv(O) ipv6 b43 brcmsmac rtl8192cu rtl8192c_common rtlwifi mac802
-11 brcmutil cfg80211 snd_hda_codec_conexant rng_core snd_hda_intel kvm_amd snd_hda_codec ssb kvm mmc_core snd_pcm snd_seq snd_timer snd_seq_device snd k8temp
- cordic joydev serio_raw hwmon sr_mod sg pcmcia pcmcia_core soundcore cdrom i2c_nforce2 i2c_core forcedeth bcma snd_page_alloc autofs4 ext4 jbd2 mbcache crc1
-6 scsi_dh_alua scsi_dh_hp_sw scsi_dh_rdac scsi_dh_emc scsi_dh ata_generic pata_amd
-[   28.078602] CPU: 1 PID: 2570 Comm: NetworkManager Tainted: G           O 3.10.0-rc7-wl+ #42
-[   28.078605] Hardware name: Hewlett-Packard HP Pavilion dv2700 Notebook PC/30D6, BIOS F.27 11/27/2008
-[   28.078607]  0000000000000009 ffff8800bbb03ad8 ffffffff8144f898 ffff8800bbb03b18
-[   28.078612]  ffffffff8103e1eb 0000000000000002 ffff8800b719f480 ffff8800b7b9c010
-[   28.078617]  ffffffff824204c0 ffffffff81754d57 0000000000000754 ffff8800bbb03b78
-[   28.078622] Call Trace:
-[   28.078624]  <IRQ>  [<ffffffff8144f898>] dump_stack+0x19/0x1b
-[   28.078634]  [<ffffffff8103e1eb>] warn_slowpath_common+0x6b/0xa0
-[   28.078638]  [<ffffffff8103e2c1>] warn_slowpath_fmt+0x41/0x50
-[   28.078650]  [<ffffffff8122d7ae>] check_unmap+0x47e/0x930
-[   28.078655]  [<ffffffff8122de4c>] debug_dma_unmap_page+0x5c/0x70
-[   28.078679]  [<ffffffffa04a808c>] dma64_getnextrxp+0x10c/0x190 [brcmsmac]
-[   28.078691]  [<ffffffffa04a9042>] dma_rx+0x62/0x240 [brcmsmac]
-[   28.078707]  [<ffffffffa0479101>] brcms_c_dpc+0x211/0x9d0 [brcmsmac]
-[   28.078717]  [<ffffffffa046d927>] ? brcms_dpc+0x27/0xf0 [brcmsmac]
-[   28.078731]  [<ffffffffa046d947>] brcms_dpc+0x47/0xf0 [brcmsmac]
-[   28.078736]  [<ffffffff81047dcc>] tasklet_action+0x6c/0xf0
---snip--
-[   28.078974]  [<ffffffff813891bd>] SyS_sendmsg+0xd/0x20
-[   28.078979]  [<ffffffff81455c24>] tracesys+0xdd/0xe2
-[   28.078982] ---[ end trace 6164d1a08148e9c8 ]---
-[   28.078984] Mapped at:
-[   28.078985]  [<ffffffff8122c8fd>] debug_dma_map_page+0x9d/0x150
-[   28.078989]  [<ffffffffa04a9322>] dma_rxfill+0x102/0x3d0 [brcmsmac]
-[   28.079001]  [<ffffffffa047a13d>] brcms_c_init+0x87d/0x1100 [brcmsmac]
-[   28.079010]  [<ffffffffa046d851>] brcms_init+0x21/0x30 [brcmsmac]
-[   28.079018]  [<ffffffffa04786e0>] brcms_c_up+0x150/0x430 [brcmsmac]
+I believe this to be the first instance of 802.11ac firmware for Broadcom
+hardware. The firmware is version 784.2.
 
-As the patch adds a new failure mechanism to dma_rxfill(). When I changed the
-comment at the start of the routine to add that information, I also polished
-the wording.
+Note: The http://www.lwfinger.com/broadcom-wl-6.30.163.46.tar.bz2 is the URL
+of the extracted apsta binary. The full GPL package is at
+http://dlcdnet.asus.com/pub/ASUS/wireless/RT-AC66U/GPL_RT_AC66U_3004372.zip.
 
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Cc: Hante Meuleman <meuleman@broadcom.com>
-Cc: brcm80211-dev-list@broadcom.com
 ---
 
- drivers/net/wireless/brcm80211/brcmsmac/dma.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+V2 - Add original URL for full GPL package
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index 1860c57..6260571 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -1015,9 +1015,10 @@ static bool dma64_txidle(struct dma_info *di)
+---
+
+ fwcutter/fwcutter_list.h | 182 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 182 insertions(+)
+
+diff --git a/fwcutter/fwcutter_list.h b/fwcutter/fwcutter_list.h
+index f84607f..4e0c07a 100644
+--- a/fwcutter/fwcutter_list.h
++++ b/fwcutter/fwcutter_list.h
+@@ -771,6 +771,179 @@ static struct extract _e1b05e268bcdbfef3560c28fc161f30e[] =
+ 	EXTRACT_LIST_END
+ };
  
++static struct extract _29c8a47094fbae342902d84881a465ff[] =
++{
++	{ .name = "lcn1bsinitvals26", .offset = 0x22CF88, .type = EXT_IV, .length = 0x118 },
++	{ .name = "n0bsinitvals22", .offset = 0x28D3D8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lcn0bsinitvals26", .offset = 0x22BF18, .type = EXT_IV, .length = 0x118 },
++	{ .name = "ac1bsinitvals42", .offset = 0x274530, .type = EXT_IV, .length = 0x248 },
++	{ .name = "ucode24_lcn", .offset = 0x23AF24, .type = EXT_UCODE_3, .length = 0x891A },
++	/* ucode minor version at offset 0x288284 */
++	{ .name = "ht0bsinitvals26", .offset = 0x22F068, .type = EXT_IV, .length = 0x118 },
++	{ .name = "ucode24_mimo", .offset = 0x231300, .type = EXT_UCODE_3, .length = 0x9C20 },
++	{ .name = "n20initvals36", .offset = 0x2312D0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ucode15", .offset = 0x2E86A0, .type = EXT_UCODE_3, .length = 0x7190 },
++	{ .name = "b0g0bsinitvals9", .offset = 0x2C8AF8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lcn405initvals35", .offset = 0x2312C0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ac1initvals42", .offset = 0x273218, .type = EXT_IV, .length = 0x1310 },
++	{ .name = "lp0bsinitvals13", .offset = 0x2CC668, .type = EXT_IV, .length = 0x118 },
++	{ .name = "b0g0bsinitvals5", .offset = 0x2C6898, .type = EXT_IV, .length = 0x118 },
++	{ .name = "ucode43", .offset = 0x288270, .type = EXT_UCODE_3, .length = 0x4 },
++	{ .name = "lp0initvals16", .offset = 0x28A3F8, .type = EXT_IV, .length = 0xF90 },
++	{ .name = "lp1bsinitvals20", .offset = 0x28C408, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lcn1initvals25", .offset = 0x2279C8, .type = EXT_IV, .length = 0x10D8 },
++	{ .name = "b0g0initvals13", .offset = 0x2CC788, .type = EXT_IV, .length = 0xBF0 },
++	{ .name = "lcn402initvals33", .offset = 0x231270, .type = EXT_IV, .length = 0x0 },
++	{ .name = "sslpn3bsinitvals21", .offset = 0x28D2B0, .type = EXT_IV, .length = 0x118 },
++	{ .name = "ht0initvals29", .offset = 0x22F198, .type = EXT_IV, .length = 0xF98 },
++	{ .name = "n2bsinitvals19", .offset = 0x28C3B8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "sslpn1bsinitvals20", .offset = 0x28C3F8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ucode25_lcn", .offset = 0x24B570, .type = EXT_UCODE_3, .length = 0x8657 },
++	{ .name = "lcn0initvals24", .offset = 0x221FA8, .type = EXT_IV, .length = 0x10E0 },
++	{ .name = "lcn404initvals33", .offset = 0x231290, .type = EXT_IV, .length = 0x0 },
++	{ .name = "sslpn1bsinitvals27", .offset = 0x22F190, .type = EXT_IV, .length = 0x0 },
++/*	{ .name = "a0g0bsinitvals4", .offset = 0x2C5E80, .type = EXT_IV, .length = 0x0 }, */
++	{ .name = "lcn404bsinitvals33", .offset = 0x231298, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ucode22_sslpn", .offset = 0x2C5E44, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "lcn1bsinitvals25", .offset = 0x228AA8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lcn406initvals37", .offset = 0x2312E0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ac3initvals43", .offset = 0x274780, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lcn2initvals26", .offset = 0x22D0A8, .type = EXT_IV, .length = 0xF48 },
++/*	{ .name = "b0g0initvals4", .offset = 0x2C5E68, .type = EXT_IV, .length = 0x0 }, */
++	{ .name = "ucode20_sslpn", .offset = 0x2B761C, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "lcn403bsinitvals33", .offset = 0x231288, .type = EXT_IV, .length = 0x0 },
++	{ .name = "a0g0bsinitvals9", .offset = 0x2CA1D8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "n0initvals17", .offset = 0x28B4B0, .type = EXT_IV, .length = 0xDD8 },
++	{ .name = "ht0bsinitvals29", .offset = 0x230138, .type = EXT_IV, .length = 0x118 },
++	{ .name = "ucode21_sslpn", .offset = 0x2B762C, .type = EXT_UCODE_3, .length = 0x7405 },
++	{ .name = "sslpn1initvals20", .offset = 0x28C3F0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "sslpn0initvals16", .offset = 0x289340, .type = EXT_IV, .length = 0xF90 },
++	{ .name = "lcn0initvals26", .offset = 0x22AFC8, .type = EXT_IV, .length = 0xF48 },
++	{ .name = "ucode27_sslpn", .offset = 0x25D6E0, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "ucode29_mimo", .offset = 0x25D6E8, .type = EXT_UCODE_3, .length = 0xA8D0 },
++	{ .name = "ucode21_sslpn_nobt", .offset = 0x2BEA38, .type = EXT_UCODE_3, .length = 0x7405 },
++	{ .name = "lp0initvals15", .offset = 0x2CE1C8, .type = EXT_IV, .length = 0xE68 },
++	{ .name = "ucode19_sslpn", .offset = 0x2B760C, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "lcn1bsinitvals24", .offset = 0x224298, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lcn401bsinitvals33", .offset = 0x231268, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lp0bsinitvals14", .offset = 0x2CE1C0, .type = EXT_IV, .length = 0x0 },
++/*	{ .name = "b0g0bsinitvals4", .offset = 0x2C5E70, .type = EXT_IV, .length = 0x0 }, */
++	{ .name = "ucode16_sslpn_nobt", .offset = 0x29DF44, .type = EXT_UCODE_3, .length = 0x701C },
++	{ .name = "n16bsinitvals30", .offset = 0x231120, .type = EXT_IV, .length = 0x118 },
++	{ .name = "a0g1bsinitvals13", .offset = 0x2CE098, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lcn402bsinitvals33", .offset = 0x231278, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ucode19_sslpn_nobt", .offset = 0x2B7614, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "ucode40", .offset = 0x274790, .type = EXT_UCODE_3, .length = 0x9E80 },
++	{ .name = "lcn1initvals24", .offset = 0x2231B0, .type = EXT_IV, .length = 0x10E0 },
++	{ .name = "sslpn2initvals19", .offset = 0x28C3C0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ac2initvals41", .offset = 0x273208, .type = EXT_IV, .length = 0x0 },
++	{ .name = "n16initvals30", .offset = 0x230258, .type = EXT_IV, .length = 0xEC0 },
++	{ .name = "ucode16_lp", .offset = 0x28D400, .type = EXT_UCODE_3, .length = 0x83E8 },
++	{ .name = "n0initvals22", .offset = 0x28D3D0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "sslpn3initvals21", .offset = 0x28C410, .type = EXT_IV, .length = 0xE98 },
++	{ .name = "lp1initvals22", .offset = 0x28D3F0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ac2bsinitvals41", .offset = 0x273210, .type = EXT_IV, .length = 0x0 },
++	{ .name = "a0g1bsinitvals9", .offset = 0x2CA2F8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "n0bsinitvals11", .offset = 0x2CB030, .type = EXT_IV, .length = 0x118 },
++	{ .name = "a0g1bsinitvals5", .offset = 0x2C7EF8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lcn2bsinitvals26", .offset = 0x22DFF8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "ucode34_mimo", .offset = 0x271C58, .type = EXT_UCODE_3, .length = 0x4 },
++	{ .name = "n1initvals20", .offset = 0x28C3E0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lcn2initvals25", .offset = 0x228BC8, .type = EXT_IV, .length = 0x10D8 },
++	{ .name = "ucode37_lcn40", .offset = 0x271C70, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "n0initvals16", .offset = 0x288288, .type = EXT_IV, .length = 0xF90 },
++	{ .name = "n0bsinitvals24", .offset = 0x2266A8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "n1bsinitvals20", .offset = 0x28C3E8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "b0g0initvals5", .offset = 0x2C5E88, .type = EXT_IV, .length = 0xA08 },
++	{ .name = "b0g0initvals9", .offset = 0x2C8018, .type = EXT_IV, .length = 0xAD8 },
++	{ .name = "lcn0bsinitvals24", .offset = 0x223090, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lcn2bsinitvals25", .offset = 0x229CA8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "sslpn4bsinitvals22", .offset = 0x28D3E8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ucode11", .offset = 0x2DA198, .type = EXT_UCODE_2, .length = 0x7818 },
++	{ .name = "n2initvals19", .offset = 0x28C3B0, .type = EXT_IV, .length = 0x0 },
++/*	{ .name = "a0g0initvals4", .offset = 0x2C5E78, .type = EXT_IV, .length = 0x0 }, */
++	{ .name = "pcm4", .offset = 0x2EF834, .type = EXT_PCM, .length = 0x4 },
++	{ .name = "ucode13", .offset = 0x2E19B4, .type = EXT_UCODE_2, .length = 0x6CE0 },
++	{ .name = "lcn0initvals25", .offset = 0x2267C8, .type = EXT_IV, .length = 0x10D8 },
++	{ .name = "sslpn1initvals27", .offset = 0x22F188, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lp0bsinitvals15", .offset = 0x2CF038, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lp0initvals14", .offset = 0x2CE1B8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lp1bsinitvals22", .offset = 0x28D3F8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "n18initvals32", .offset = 0x231240, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lcn405bsinitvals35", .offset = 0x2312C8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ucode41", .offset = 0x27E614, .type = EXT_UCODE_3, .length = 0x4 },
++	{ .name = "lcn400initvals33", .offset = 0x231250, .type = EXT_IV, .length = 0x0 },
++	{ .name = "sslpn0bsinitvals16", .offset = 0x28A2D8, .type = EXT_IV, .length = 0x118 },
++	/* ucode minor version at offset 0x2c5e64 */
++	{ .name = "lcn401initvals33", .offset = 0x231260, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ucode33_lcn40", .offset = 0x271C50, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "a0g1initvals9", .offset = 0x2C96F8, .type = EXT_IV, .length = 0xAD8 },
++	{ .name = "ucode32_mimo", .offset = 0x271C48, .type = EXT_UCODE_3, .length = 0x4 },
++	{ .name = "lcn400bsinitvals33", .offset = 0x231258, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lcn404bsinitvals35", .offset = 0x2312B8, .type = EXT_IV, .length = 0x0 },
++	/* ucode major version at offset 0x221fa0 */
++	{ .name = "n19initvals34", .offset = 0x2312A0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ac3bsinitvals43", .offset = 0x274788, .type = EXT_IV, .length = 0x0 },
++	{ .name = "n0initvals25", .offset = 0x229DC8, .type = EXT_IV, .length = 0x10D8 },
++	{ .name = "ucode26_mimo", .offset = 0x253BCC, .type = EXT_UCODE_3, .length = 0x9B10 },
++	{ .name = "n0bsinitvals16", .offset = 0x289220, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lcn404initvals35", .offset = 0x2312B0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lp2bsinitvals19", .offset = 0x28C3D8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "n19bsinitvals34", .offset = 0x2312A8, .type = EXT_IV, .length = 0x0 },
++/*	{ .name = "ucode4", .offset = 0x2CF158, .type = EXT_UCODE_1, .length = 0x4 }, */
++	{ .name = "ucode20_sslpn_nobt", .offset = 0x2B7624, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "ac0bsinitvals40", .offset = 0x272FB8, .type = EXT_IV, .length = 0x248 },
++	/* ucode minor version at offset 0x271c84 */
++	{ .name = "lcn2initvals24", .offset = 0x2243B8, .type = EXT_IV, .length = 0x10E0 },
++	{ .name = "sslpn4initvals22", .offset = 0x28D3E0, .type = EXT_IV, .length = 0x0 },
++	/* ucode major version at offset 0x288280 */
++	{ .name = "sslpn2bsinitvals19", .offset = 0x28C3C8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "n0bsinitvals25", .offset = 0x22AEA8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lp2initvals19", .offset = 0x28C3D0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "n18bsinitvals32", .offset = 0x231248, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lcn0bsinitvals25", .offset = 0x2278A8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "n0initvals11", .offset = 0x2CA418, .type = EXT_IV, .length = 0xC10 },
++	{ .name = "lcn2bsinitvals24", .offset = 0x2254A0, .type = EXT_IV, .length = 0x118 },
++	/* ucode major version at offset 0x2c5e60 */
++	{ .name = "n0absinitvals11", .offset = 0x2CB150, .type = EXT_IV, .length = 0x118 },
++	{ .name = "a0g0initvals5", .offset = 0x2C69B8, .type = EXT_IV, .length = 0xA08 },
++	{ .name = "a0g1initvals13", .offset = 0x2CD4A0, .type = EXT_IV, .length = 0xBF0 },
++	{ .name = "pcm5", .offset = 0x2EF83C, .type = EXT_PCM, .length = 0x520 },
++	{ .name = "ucode35_lcn40", .offset = 0x271C60, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "ucode14", .offset = 0x2E8698, .type = EXT_UCODE_2, .length = 0x4 },
++	{ .name = "ucode36_mimo", .offset = 0x271C68, .type = EXT_UCODE_3, .length = 0x4 },
++	{ .name = "a0g0initvals9", .offset = 0x2C8C18, .type = EXT_IV, .length = 0xAD8 },
++	{ .name = "ucode17_mimo", .offset = 0x2AE928, .type = EXT_UCODE_3, .length = 0x8CE0 },
++	{ .name = "lp0initvals13", .offset = 0x2CB270, .type = EXT_IV, .length = 0x13F0 },
++	{ .name = "ucode25_mimo", .offset = 0x243844, .type = EXT_UCODE_3, .length = 0x7D28 },
++	{ .name = "lp0bsinitvals16", .offset = 0x28B390, .type = EXT_IV, .length = 0x118 },
++	{ .name = "lcn406bsinitvals37", .offset = 0x2312E8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ac0initvals40", .offset = 0x271C88, .type = EXT_IV, .length = 0x1328 },
++	{ .name = "ucode30_mimo", .offset = 0x267FBC, .type = EXT_UCODE_3, .length = 0x9C88 },
++	{ .name = "b0g0bsinitvals13", .offset = 0x2CD380, .type = EXT_IV, .length = 0x118 },
++	{ .name = "n20bsinitvals36", .offset = 0x2312D8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ucode42", .offset = 0x27E61C, .type = EXT_UCODE_3, .length = 0x9C50 },
++	{ .name = "lcn407initvals38", .offset = 0x2312F0, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lcn1initvals26", .offset = 0x22C038, .type = EXT_IV, .length = 0xF48 },
++	/* ucode major version at offset 0x271c80 */
++	{ .name = "ht0initvals26", .offset = 0x22E118, .type = EXT_IV, .length = 0xF48 },
++	{ .name = "ucode38_lcn40", .offset = 0x271C78, .type = EXT_UCODE_3, .length = 0x1 },
++	{ .name = "lcn407bsinitvals38", .offset = 0x2312F8, .type = EXT_IV, .length = 0x0 },
++	{ .name = "lcn403initvals33", .offset = 0x231280, .type = EXT_IV, .length = 0x0 },
++	{ .name = "ucode16_sslpn", .offset = 0x2957EC, .type = EXT_UCODE_3, .length = 0x8753 },
++	{ .name = "ucode16_mimo", .offset = 0x2A4F64, .type = EXT_UCODE_3, .length = 0x99C0 },
++	/* ucode minor version at offset 0x221fa4 */
++	{ .name = "n0bsinitvals17", .offset = 0x28C290, .type = EXT_IV, .length = 0x118 },
++	{ .name = "a0g1initvals5", .offset = 0x2C73C8, .type = EXT_IV, .length = 0xA08 },
++	{ .name = "n0initvals24", .offset = 0x2255C0, .type = EXT_IV, .length = 0x10E0 },
++	{ .name = "lp1initvals20", .offset = 0x28C400, .type = EXT_IV, .length = 0x0 },
++	{ .name = "a0g0bsinitvals5", .offset = 0x2C7DD8, .type = EXT_IV, .length = 0x118 },
++	{ .name = "ucode9", .offset = 0x2D4394, .type = EXT_UCODE_2, .length = 0x5E00 },
++	{ .name = "ucode5", .offset = 0x2CF160, .type = EXT_UCODE_2, .length = 0x5230 },
++	{ .name = "ucode22_mimo", .offset = 0x2C5E4C, .type = EXT_UCODE_3, .length = 0x4 },
++	EXTRACT_LIST_END
++};
++
  /*
-  * post receive buffers
-- *  return false is refill failed completely and ring is empty this will stall
-- *  the rx dma and user might want to call rxfill again asap. This unlikely
-- *  happens on memory-rich NIC, but often on memory-constrained dongle
-+ *  return false is refill failed completely or dma mapping failed. The ring
-+ *  is empty, which will stall the rx dma and user might want to call rxfill
-+ *  again asap. This is unlikely to happen on a memory-rich NIC, but often on
-+ *  memory-constrained dongle
-  */
- bool dma_rxfill(struct dma_pub *pub)
- {
-@@ -1078,6 +1079,8 @@ bool dma_rxfill(struct dma_pub *pub)
- 
- 		pa = dma_map_single(di->dmadev, p->data, di->rxbufsize,
- 				    DMA_FROM_DEVICE);
-+		if (dma_mapping_error(di->dmadev,pa))
-+			return false;
- 
- 		/* save the free packet pointer */
- 		di->rxp[rxout] = p;
-@@ -1284,7 +1287,8 @@ static void dma_txenq(struct dma_info *di, struct sk_buff *p)
- 
- 	/* get physical address of buffer start */
- 	pa = dma_map_single(di->dmadev, data, len, DMA_TO_DEVICE);
--
-+	if(dma_mapping_error(di->dmadev, pa))
-+		return;
- 	/* With a DMA segment list, Descriptor table is filled
- 	 * using the segment list instead of looping over
- 	 * buffers in multi-chain DMA. Therefore, EOF for SGLIST
+  * Links change, so let's not put them into the README.
+  * I still put them here so we know where the file was obtained.
+@@ -874,4 +1047,13 @@ static const struct file files[] =
+ 		.flags		= FW_FLAG_LE | FW_FLAG_V4,
+ 		.extract	= _e1b05e268bcdbfef3560c28fc161f30e,
+ 	},
++	{
++		/* http://www.lwfinger.com/b43-firmware/broadcom-wl-6.30.163.46.tar.bz2 */
++		/* http://dlcdnet.asus.com/pub/ASUS/wireless/RT-AC66U/GPL_RT_AC66U_3004372.zip */
++		.name		= "wl_apsta.o",
++		.ucode_version	= "784.2",
++		.md5		= "29c8a47094fbae342902d84881a465ff",
++		.flags		= FW_FLAG_LE | FW_FLAG_V4,
++		.extract	= _29c8a47094fbae342902d84881a465ff,
++	},
+ };
 -- 
 1.8.1.4
 
