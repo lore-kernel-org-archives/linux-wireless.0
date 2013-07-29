@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:51140 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755340Ab3GOLTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 07:19:35 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3.10 0/3] Enable 7000 device family on 3.10
-Date: Mon, 15 Jul 2013 14:19:13 +0300
-Message-Id: <1373887153-2748-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130715_131938_562822_8CDAA4CA)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52816 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456Ab3G2TAL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 15:00:11 -0400
+Date: Mon, 29 Jul 2013 14:45:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-fixes 2013-07-26
+Message-ID: <20130729184551.GF31172@tuxdriver.com> (sfid-20130729_210016_245530_4A934B4F)
+References: <1374826675.8248.11.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1374826675.8248.11.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This small patch series enables 7260 and 3160 devices on 3.10
-kernel. Three patches are already in linux.git (3.11-rc1).
-One patch is 3.10 specific and disables configuration that is not
-supported in 3.10.
+On Fri, Jul 26, 2013 at 10:17:55AM +0200, Johannes Berg wrote:
+> John,
+> 
+> Yet some more fixes - we're adding tests and are doing a debug cycle
+> with them.
+> 
+> We have a scan fix for passive channels, a new PCI device ID for an old
+> device, a NIC reset fix, an RF-Kill fix, a fix for powersave when GO
+> interfaces are present as well as an aggregation session fix (for a
+> corner case) and a workaround for a firmware design issue - it only
+> supports a single GTK in D3.
+> 
+> Let me know if there's any problem.
+> 
+> johannes
+> 
+> 
+> 
+> The following changes since commit a590ad411891de551e6de1b51ea635c0484148d6:
+> 
+>   iwlwifi: mvm: remove extra SSID from probe request (2013-07-16 13:55:15 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to a53ee0a308b16e392e0219c585b10f329345766b:
+> 
+>   iwlwifi: pcie: clear RFKILL interrupt in AMPG (2013-07-26 10:07:10 +0200)
 
-Emmanuel Grumbach (1):
-  iwlwifi: mvm: support BSS only
-
-Johannes Berg (2):
-  iwlwifi: mvm: adjust firmware D3 configuration API
-  iwlwifi: bump required firmware API version for 3160/7260
-
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h |    4 +++-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c  |    4 ++--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c  |   24 +-----------------------
- drivers/net/wireless/iwlwifi/pcie/7000.c     |   12 ++++++------
- 4 files changed, 12 insertions(+), 32 deletions(-)
+Pulling now...
 
 -- 
-1.7.10.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
