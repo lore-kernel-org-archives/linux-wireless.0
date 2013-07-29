@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:54159 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753232Ab3GBPgB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 11:36:01 -0400
-Date: Tue, 2 Jul 2013 18:35:26 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
-	<balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 8/9] wlcore: sdio: get clocks from device tree
-Message-ID: <20130702153526.GI7013@arwen.pp.htv.fi> (sfid-20130702_173624_321900_7F631CD9)
-Reply-To: <balbi@ti.com>
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
- <1372776948-24840-9-git-send-email-coelho@ti.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:63157 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753118Ab3G2Iji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 04:39:38 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 0/3] introduce chan_time parameter to scan request
+Date: Mon, 29 Jul 2013 10:39:15 +0200
+Message-ID: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com> (sfid-20130729_103941_885990_9756E761)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3eH4Qcq5fItR5cpy"
-In-Reply-To: <1372776948-24840-9-git-send-email-coelho@ti.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---3eH4Qcq5fItR5cpy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
 Hi,
 
-On Tue, Jul 02, 2013 at 05:55:47PM +0300, Luciano Coelho wrote:
-> @@ -294,6 +316,8 @@ static int wl1271_probe(struct sdio_func *func,
->  	/* Use block mode for transferring over one block size of data */
->  	func->card->quirks |=3D MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
-> =20
-> +	sdio_set_drvdata(func, glue);
+This patchset adds a new scan parameter. It allows
+specyfing for how long each channel should be
+visited during scan.
 
-is this move really necessary ?
+I've tested this with ath9k (which doesn't have
+hw_scan) and ath10k (does have hw_scan). It's not
+super time-precise, but seems reasonable.
 
---=20
-balbi
+The main motivation behind this is to allow easier
+ACS implementation in hostapd.
 
---3eH4Qcq5fItR5cpy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+This could also perhaps be useful for spectral
+scan and anyone interested in having ability to
+tune scan times (e.g. very fast initial channel
+scanning on mobile devices, long passive scans).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+I'm wondering if it would be okay to set swscan
+probe delay to 0 if chan_time is non-zero? Or does
+probe delay need to be non-zero? Or maybe it
+should also be configurable via a parameter?
 
-iQIcBAEBAgAGBQJR0vM+AAoJEIaOsuA1yqREC0QQAJ6PUt5wCGYot1Z9OVllgCWy
-4JvzQJKqDKB9TtP7/OpCJFjWiwxRmC/Vg6FxKwpetCOwFJW9sWPbgBjUWuyVKyZj
-R3pZM2h6oCiJdOxMdoAlmrNC8IswXksivnjN/PEmUJUYDMKcSVWqo+v/ssk+2gYg
-fyfSRgoPef2KbL9xDnRuft30CNRa8QaiaF+tpM0M9QLqlsmB2Mf/QjmXfcf5Gh+O
-eMFCGNsfjZKrkMhZZo4QzeZUkA3fM0jGhI6EmmocOdW9I51mFn2Zg9+mrZdREd/e
-Hf+3nZZ+KtusXrtzcQfP8mu5kTD+mzET/dvklKp4d2xQdc2zLiDl11lQDqgxs889
-e7Oly32DHFMMyKgyOEnnOHt9AExR2mZ7qJs8/2Xf6DHK0wSaK9864n1mlSC6XuDT
-izvKmNnk7kNY1ZPCwHa9yt85FPlcH8mq0l1TmH3Z10HS/NpTtOzyZ+PGyPs4c6FC
-SjbiB71LRie3gAY43wTETKCFXQ/RGvNE110v6sVHH350orMTg+hGd+mwrtx+ovj7
-5qvlWxAZ64QVpiAFDxl7F2L8pDnU80L+D8a6FcGoKU1PPtO2FNmkP+x6fe96Q2zg
-4SCewk9i6SblMV0Rk8vSlBh0cVUrsP9rYJBe/QsnizC6bIUi9oqunIlP9zcSheX5
-RDl7TCEZjO/o9oIvABby
-=h1mL
------END PGP SIGNATURE-----
 
---3eH4Qcq5fItR5cpy--
+Pozdrawiam / Best regards,
+Michal Kazior.
+
+
+Michal Kazior (3):
+  nl/cfg80211: add chan_time for scan request
+  mac80211: add support for scan chan_time parameter
+  ath10k: respect chan_time parameter in scan request
+
+ drivers/net/wireless/ath/ath10k/mac.c |    6 ++++++
+ include/net/cfg80211.h                |    3 +++
+ include/uapi/linux/nl80211.h          |    7 +++++++
+ net/mac80211/scan.c                   |   22 ++++++++++++++++++++--
+ net/wireless/nl80211.c                |    4 ++++
+ 5 files changed, 40 insertions(+), 2 deletions(-)
+
+-- 
+1.7.9.5
+
