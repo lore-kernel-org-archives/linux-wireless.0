@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:41682 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754910Ab3GVJyD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 05:54:03 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<wil6210@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wil6210: drop -Werror compiler flag
-Date: Mon, 22 Jul 2013 12:53:48 +0300
-Message-ID: <1374486828-22350-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130722_115407_564840_4A798EC5)
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:32945 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751288Ab3G2XUK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 19:20:10 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Mon, 29 Jul 2013 16:20:03 -0700
+Subject: RE: [PATCH] Bluetooth: btmrvl: add calibration data download support
+Message-ID: <477F20668A386D41ADCC57781B1F70430EA3215F9B@SC-VEXCH1.marvell.com> (sfid-20130730_012015_954781_1A25CB03)
+References: <1375126147-28642-1-git-send-email-bzhao@marvell.com>
+ <39BF90E7-8341-412E-A372-6039B703980D@holtmann.org>
+ <477F20668A386D41ADCC57781B1F70430EA3215F2E@SC-VEXCH1.marvell.com>
+ <791D5341-CA33-425C-BFB8-CB65F5451E39@holtmann.org>
+In-Reply-To: <791D5341-CA33-425C-BFB8-CB65F5451E39@holtmann.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In production code, don't use -Werror,
-as it causes random compilation failures due to compiler version and options used.
+Hi Marcel,
 
-With every new version of gcc, it becomes stricter and report more warnings.
+> it is also way harder to use and things need to be manually configured. Don't know know when the
+> device needs calibration information or not. And you can just request_firmware() that file. If it is
+> there, then load it, if not then skip the step.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/Makefile | 3 ---
- 1 file changed, 3 deletions(-)
+Thanks for your suggestion. This approach should work for me.
 
-diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
-index f891d51..990dd42a 100644
---- a/drivers/net/wireless/ath/wil6210/Makefile
-+++ b/drivers/net/wireless/ath/wil6210/Makefile
-@@ -11,9 +11,6 @@ wil6210-y += txrx.o
- wil6210-y += debug.o
- wil6210-$(CONFIG_WIL6210_TRACING) += trace.o
- 
--ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
--	subdir-ccflags-y += -Werror
--endif
- # for tracing framework to find trace.h
- CFLAGS_trace.o := -I$(src)
- 
--- 
-1.8.1.2
+> 
+> > The firmware_request() requires a relative file path under /lib/firmware/.
+> > What is the standard location you are referring to?
+> 
+> You have to create proper filenames for your hardware. Like mrvl/cal_data_v1.conf or similar.
+
+Sure.
+
+> As I said above, the device should know if it needs calibration or not. And just installing a file on
+> disk is simpler than having to modify the module parameters somewhere.
+
+This makes sense. I'll take your approach and re-spin the patch.
+
+Thanks,
+Bing
 
