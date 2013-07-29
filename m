@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:41749 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755755Ab3GQRm1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jul 2013 13:42:27 -0400
-Received: by mail-wi0-f178.google.com with SMTP id k10so2284459wiv.5
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jul 2013 10:42:25 -0700 (PDT)
+Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:40253 "EHLO
+	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752633Ab3G2V27 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 17:28:59 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Mon, 29 Jul 2013 14:28:01 -0700
+Subject: RE: [PATCH] Bluetooth: btmrvl: add calibration data download support
+Message-ID: <477F20668A386D41ADCC57781B1F70430EA3215F2E@SC-VEXCH1.marvell.com> (sfid-20130729_232913_248173_E37A678D)
+References: <1375126147-28642-1-git-send-email-bzhao@marvell.com>
+ <39BF90E7-8341-412E-A372-6039B703980D@holtmann.org>
+In-Reply-To: <39BF90E7-8341-412E-A372-6039B703980D@holtmann.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Date: Wed, 17 Jul 2013 10:42:25 -0700
-Message-ID: <CAJ-Vmo=yvHUgv6pwK42n+NhPrAu9shxc5pigRkhZE+x91W_FoA@mail.gmail.com> (sfid-20130717_194238_629152_551DCEC6)
-Subject: So, which IEEE<->Frequency mappings should we be all using?
-From: Adrian Chadd <adrian@freebsd.org>
-To: freebsd-wireless@freebsd.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Hi Marcel,
 
-I've been increasingly asked to bring up FreeBSD on "other" bands.
+Thanks for your comments.
 
-* 420MHz
-* 700MHz
-* 900MHz (which we already have, due to history);
-* 3.6GHz
-* 4.9GHz
+> Hi Bing,
+> 
+> > A text file containing calibration data in hex format can
+> > be provided while loading btmrvl module. The data will be
+> > downloaded to firmware.
+> > eg. insmod btmrvl.ko cal_data_cfg=mrvl/bt_cal_data.conf
+> 
+> why is this a module parameter and you do not just request a standard location via request_firmware().
 
-I'd also like to support half and quarter width channels on these
-frequencies. If I use the 2GHz channel mapping method, I end up with a
-very restricted channel set and it definitely has no "gaps" for
-5/10MHz increments.
+Not all devices need downloading the calibration data from host to firmware.
+A module parameter seems more flexible than others.
 
-Now, what I'd like to do is figure out some sane, shared method of
-translating channel frequencies to IEEE numbers and back. That way the
-BSDs and Linux (and maybe commercial stacks; I dunno what they do) can
-have some sane chance of interoperating.
+The firmware_request() requires a relative file path under /lib/firmware/.
+What is the standard location you are referring to?
 
-So: Is there some standardised or semi-standardised channel mapping
-method? Or should we invent one?
+> I do not like the module parameter approach.
 
+I'm open to any other approaches. Do you have any suggestions?
 
--adrian
+Thanks,
+Bing
+
+> 
+> Regards
+> 
+> Marcel
+
