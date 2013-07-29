@@ -1,75 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48229 "EHLO arrakis.dune.hu"
+Received: from ebb06.tieto.com ([131.207.168.38]:61506 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751981Ab3GHOIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:08:46 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 20/20] rt2x00: rt2800usb: add USB device ID for Linksys AE3000
-Date: Mon,  8 Jul 2013 16:08:35 +0200
-Message-Id: <1373292515-21332-21-git-send-email-juhosg@openwrt.org> (sfid-20130708_160859_923816_8A9B87E8)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+	id S1753150Ab3G2Iji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 04:39:38 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 1/3] nl/cfg80211: add chan_time for scan request
+Date: Mon, 29 Jul 2013 10:39:16 +0200
+Message-ID: <1375087158-22077-2-git-send-email-michal.kazior@tieto.com> (sfid-20130729_103943_645360_300806D2)
+In-Reply-To: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com>
+References: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Linksys AE3000 device is based on the RT3573
-chipset. The support for this chipset is available
-already, and the AE3000 device works with the driver.
+The new scan parameter allows user to specify how
+long driver should remain on each scanned channel.
 
-Only managed mode works correctly at the moment,
-for AP mode additional changes are needed in the
-driver.
+The default is to leave it up to driver to decide.
+If specified it is preferred for driver to respect
+this setting although it may ignore it if it can't
+support it.
 
-Also add a new RT2800USB_RT3573 Kconfig option and
-only enable support for RT3573 based devices if
-that is enabled.
+This can be useful to do very quick/slow scans
+and/or gether survey data, e.g. for automatic
+channel selection.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-Changes since v2: ---
-Changes since v1:
-  - Make the support selectable by a Kconfig option.
----
- drivers/net/wireless/rt2x00/Kconfig     |    6 ++++++
- drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++++
- 2 files changed, 10 insertions(+)
+ include/net/cfg80211.h       |    3 +++
+ include/uapi/linux/nl80211.h |    7 +++++++
+ net/wireless/nl80211.c       |    4 ++++
+ 3 files changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index 9b915d3..c60d6e8 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -166,6 +166,12 @@ config RT2800USB_RT35XX
- 	  rt2800usb driver.
- 	  Supported chips: RT3572
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index aeaf6df..2d46112 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1323,6 +1323,8 @@ struct cfg80211_ssid {
+  * @aborted: (internal) scan request was notified as aborted
+  * @notified: (internal) scan request was notified as done or aborted
+  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
++ * @chan_time: how many msec driver should stay on each channel during scan.
++ *	Setting 0 leaves the decision up to the driver.
+  */
+ struct cfg80211_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -1332,6 +1334,7 @@ struct cfg80211_scan_request {
+ 	const u8 *ie;
+ 	size_t ie_len;
+ 	u32 flags;
++	int chan_time;
  
-+config RT2800USB_RT3573
-+	bool "rt2800usb - Include support for rt3573 devices (EXPERIMENTAL)"
-+	---help---
-+	  This enables support for RT3573 chipset based wireless USB devices
-+	  in the rt2800usb driver.
+ 	u32 rates[IEEE80211_NUM_BANDS];
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index eb68735..4ea1d9b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1469,6 +1469,11 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_COALESCE_RULE: Coalesce rule information.
+  *
++ * @NL80211_ATTR_SCAN_CHAN_TIME: Specifies how many msec should a driver spend
++ *	on each channel during scanning. This is optional and the default is
++ *	leave the decision up to the driver. This setting may, but preferrably
++ *	shouldn't, be ignored by driver.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1771,6 +1776,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_COALESCE_RULE,
+ 
++	NL80211_ATTR_SCAN_CHAN_TIME,
 +
- config RT2800USB_RT53XX
-        bool "rt2800usb - Include support for rt53xx devices (EXPERIMENTAL)"
-        ---help---
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index c24c1fd..ab609ae 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1197,6 +1197,10 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Zinwell */
- 	{ USB_DEVICE(0x5a57, 0x0284) },
- #endif
-+#ifdef CONFIG_RT2800USB_RT3573
-+	/* Linksys */
-+	{ USB_DEVICE(0x13b1, 0x003b) },
-+#endif
- #ifdef CONFIG_RT2800USB_RT53XX
- 	/* Arcadyan */
- 	{ USB_DEVICE(0x043e, 0x7a12) },
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 03d4ef9..27a8fef 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5298,6 +5298,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
++	if (info->attrs[NL80211_ATTR_SCAN_CHAN_TIME])
++		request->chan_time =
++			nla_get_u32(info->attrs[NL80211_ATTR_SCAN_CHAN_TIME]);
++
+ 	request->wdev = wdev;
+ 	request->wiphy = &rdev->wiphy;
+ 	request->scan_start = jiffies;
 -- 
-1.7.10
+1.7.9.5
 
