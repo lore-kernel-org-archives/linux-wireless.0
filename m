@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:32962 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753708Ab3GCOUm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 10:20:42 -0400
-Date: Wed, 3 Jul 2013 17:19:48 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>, <mturquette@linaro.org>, <mark.rutland@arm.com>,
-	<balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>
-Subject: Re: [PATCH v3 8/8] wlcore/wl12xx: check if we got correct clock data
- from DT
-Message-ID: <20130703141948.GS15056@arwen.pp.htv.fi> (sfid-20130703_162115_280439_D964DF33)
-Reply-To: <balbi@ti.com>
-References: <1372860209-3504-1-git-send-email-coelho@ti.com>
- <1372860209-3504-9-git-send-email-coelho@ti.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43613 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755464Ab3G2VPx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 17:15:53 -0400
+Message-ID: <51F6DB65.4000302@hauke-m.de> (sfid-20130729_231558_754187_A15552F0)
+Date: Mon, 29 Jul 2013 23:15:17 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="u+FGODhbLwgAeSOU"
-In-Reply-To: <1372860209-3504-9-git-send-email-coelho@ti.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	m@bues.ch
+Subject: Re: [PATCH V2] fwcutter: Add firmware 6.30.163.46
+References: <1375124213-28051-1-git-send-email-Larry.Finger@lwfinger.net> <CACna6rzu4U+v1v1vj-+XyJHpReXMB3nscKP_C5jjbAAbKLQcKA@mail.gmail.com> <CACna6rxvnU_cwphP+Vvn_-CLuEcqMufEo4Zk7-Xqd63OA4Zmqg@mail.gmail.com>
+In-Reply-To: <CACna6rxvnU_cwphP+Vvn_-CLuEcqMufEo4Zk7-Xqd63OA4Zmqg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---u+FGODhbLwgAeSOU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 07/29/2013 10:07 PM, Rafał Miłecki wrote:
+> 2013/7/29 Rafał Miłecki <zajec5@gmail.com>:
+>> 2013/7/29 Larry Finger <Larry.Finger@lwfinger.net>:
+>>> This firmware version can be extracted from the GPL tarball for the ASUS
+>>> GPL code for the RT-AC66U 802.11ac Dual-Band Wireless-AC1750 Gigabit Router.
+>>>
+>>> I believe this to be the first instance of 802.11ac firmware for Broadcom
+>>> hardware. The firmware is version 784.2.
+>>>
+>>> Note: The http://www.lwfinger.com/broadcom-wl-6.30.163.46.tar.bz2 is the URL
+>>> of the extracted apsta binary. The full GPL package is at
+>>> http://dlcdnet.asus.com/pub/ASUS/wireless/RT-AC66U/GPL_RT_AC66U_3004372.zip.
+>>
+>> There is some (probably outdated) list of Broadcom 802.11ac routers:
+>> ASUS RT-AC66U
+>> Linksys EA6500
+>> Netgear R6300
+>>
+>> Did you compare wl.ko drivers from the 2 other firmwares? Is this the
+>> newest one?
+>>
+>> Did you start AC-PHY RE process?
+> 
+> In case you wonder, I have a MIPS router with BCM4331 + BCM4360,
+> unfrotunately there isn't mmiotrace available for MIPS, so I can't
+> start RE that way :(
+> 
+> I may think about buying PCE-AC66 at some point.
+> 
+Hi Rafał,
 
-On Wed, Jul 03, 2013 at 05:03:29PM +0300, Luciano Coelho wrote:
-> The fref and the tcxo clocks settings are optional in some platforms.
-> WiLink8 doesn't need either, so we don't check the values.  WiLink 6
-> only needs the fref clock, so we check that it is valid or return with
-> an error.  WiLink7 needs both clocks, if either is not available we
-> return with an error.
->=20
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
+I have a Netgear R6250 (BCM4708 ARM Contex-A9) router with BCM4331 +
+BCM4360 and I am currently adding support for it to OpenWrt and mainline
+Linux kernel, could mmiotrace work on this CPU?
 
-Reviewed-by: Felipe Balbi <balbi@ti.com>
-
---=20
-balbi
-
---u+FGODhbLwgAeSOU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJR1DMEAAoJEIaOsuA1yqREugcP/3uTpWP5GRAs6LFNea2T0c5G
-SFiWgOQuvQXE/zidY0v1cNW8bH1ka9WYN2ib3hQaFFsuuegYp64JWRda/1jrjkE2
-F2h3+FqPNTenxUe9cRIY3rlQSfh4FzMUzNbNki5PlZcs2u6ruWvW2vbANoFtMvxr
-M14LadV7hVzj19+fTKWjjW+ef84+lxl53VTlK4aGBWOUeLeZV4HKI9Zr6Fj78Gdn
-WL2AJd5HYsZc0pg4BEMFku2Ds9qGckI0ZDmeU6vWVxHSL5jwdeiQZjW+TLPIEdd2
-PkjYJT41pLrQQ0J2FNHNs881LdXIP1EQ7Zdo+d8WNsujoWjS10xjs1EnrN/tXPoo
-swNM2j+1pIPKVROcyMlVBbc8bXoWFGixSYikY+X8rbhNBQpPbGWNlAvN8UY8RIMe
-hA7q7jIHwf2ZygmeZbKiHUOW93R7xzc9wOoWx12+PNNt8td5eRn3hR33odLDfXqv
-psVXQ6yHa5sX1Xp3zo2aHfbpgCYzh81RP8Ls+iYf268U2VKdl0FnYpwAbSTeSQRG
-OKt5XkeUBRBnnXRgq0TC6jIaj33Cdaf8+ZRDu95r7I/j0mxb5Vb0JxoSE9ItMwgI
-v9Z6ecFgj3CGNUYOMLFER6VkhL57ImupeDDfvRi3o9i5XX5hyuIzN0TjimJKkc8h
-AirDbR8RSKCVPcNR4K50
-=E2O1
------END PGP SIGNATURE-----
-
---u+FGODhbLwgAeSOU--
+Hauke
