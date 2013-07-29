@@ -1,87 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtava1.carestreamhealth.com ([205.173.211.14]:33314 "EHLO
-	ashop0009.corp.carestreamhealth.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933204Ab3GWSXh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 14:23:37 -0400
-Message-ID: <51EECA26.90500@carestream.com> (sfid-20130723_202341_092739_4538E473)
-Date: Tue, 23 Jul 2013 14:23:34 -0400
-From: "greg.huber" <greg.huber@carestream.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:47357 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757024Ab3G2Ozv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 10:55:51 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>
+CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <linux-arm@vger.kernel.org>,
+	<tony@atomide.com>, <nm@ti.com>,
+	<laurent.pinchart@ideasonboard.com>
+Subject: [PATCH v2] Documentation: dt: bindings: TI WiLink modules
+Date: Mon, 29 Jul 2013 17:55:28 +0300
+Message-ID: <1375109728-5931-1-git-send-email-coelho@ti.com> (sfid-20130729_165616_144287_79BEA039)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	daniel.wagner@oss.bmw-carit.de, Dan Williams <dcbw@redhat.com>
-Subject: Re: Wake-On-Wireless and Deauthentication
-References: <51E6DE4D.50902@carestream.com> <CAB=NE6UPz=6NuCMvy5FEM9QBg9rhwFTw0mG2YVTX3r3dLG=1cQ@mail.gmail.com> <51E9800C.8040007@carestream.com> <51EABFCA.4060307@broadcom.com>
-In-Reply-To: <51EABFCA.4060307@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not working yet, here's an update
+Add device tree bindings documentation for the TI WiLink modules.
+Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
+modules is supported.
 
-I'm running wireshark wireless and can decode the packets between the test laptop
-and the AP. Once authenticated I can see the WoW magic-packet on the air.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
 
-On the laptop, I disabled the NetworkManager and wpa_supplicant in systemd and
-run wpa_supplicant manually with an appropriate conf file. I see the association
-and authentication on wireshark.
+Changes in v2:
 
-Again I can also see WoW magic-packets on the air.
+Use generic clock definitions to get the clock data instead of passing
+the frequencies directly.  Also added definition for "internal"
+ti,wilink-clock.
 
-I now put the laptop in suspend to ram. Neither wireshark nor the AP log record
-any disconnect, but I no longer see the WoW magic-packets on the air.
+Please review.
 
-After resuming from the keyboard I see a 4-way authentication cycle, a deauth
-and  another 4-way. I can see the WoW magic-packets again on wireshark.
+Luca.
 
-Can anyone suggest what I might be doing wrong, or something else to try?
-Also, if it's system normal to deauth on suspend, can WoW ever work??
+ .../devicetree/bindings/net/wireless/ti-wilink.txt | 68 ++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
 
-I'll pull down the latest RC kernel and give it a try.
-
-Thank You again for your assistance.
-
-Greg
-
-On 07/20/2013 12:50 PM, Arend van Spriel wrote:
-> On 07/19/13 20:06, greg.huber wrote:
->> Thank you for your reply, I'm trying this now.
->>
->> Greg
->>
->> On 07/18/2013 09:38 PM, Luis R. Rodriguez wrote:
->>> On Wed, Jul 17, 2013 at 11:11 AM, greg.huber<greg.huber@carestream.com>  wrote:
->>>> I'm trying to get Wake-on-wireless working with an Atheros AR9462.
->>>> The problem I seem to be having is that there is a Deauth requested
->>>> when the system is suspended. Does anyone know how to keep the
->>>> association while suspended?? I'm using kernel 3.9.9.
->>>>
->>>> The log after waking (from keyboard)
->>>>
->>>> [  320.117062] wlp3s0: deauthenticating from 00:24:01:12:de:7a by local choice
->>>> (reason=3)
->>> Typical managers for networking will disassociate you (and therefore
->>> deauth first) prior to kicking the system to suspend. To test WoW you
->>> need to run the supplicant manually because as far as I can tell the
->>> GUI managers don't consider if WoW was enabled or not. In such a case
->>> that WoW was enabled the GUI managers should not send the
->>> deauth/disassoc.
->
-> There has been recent commit, which may affect you:
->
-> commit 8125696991194aacb1173b6e8196d19098b44e17
-> Author: Stanislaw Gruszka <sgruszka@redhat.com>
-> Date:   Thu Feb 28 10:55:25 2013 +0100
->
->     cfg80211/mac80211: disconnect on suspend
->
-> It is mentioning something about wowlan so I am not sure whether it does. As
-> you are on 3.9.9 I guess you do not have this commit.
->
-> Regards,
-> Arend
->
->
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+new file mode 100644
+index 0000000..5fd27dc
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+@@ -0,0 +1,68 @@
++TI WiLink Wireless Modules Device Tree Bindings
++===============================================
++
++The WiLink modules provide wireless connectivity, such as WLAN,
++Bluetooth, FM and NFC.
++
++There are several different modules available, which can be grouped by
++their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
++currently supported with device tree.
++
++Currently, only the WLAN portion of the modules is supported with
++device tree.
++
++Required properties:
++--------------------
++
++- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
++- interrupt-parent: the interrupt controller
++- interrupts: out-of-band WLAN interrupt
++	See the interrupt controller's bindings documentation for
++	detailed definition.
++
++Optional properties:
++--------------------
++
++- clocks: list of clocks needed by the chip as follows:
++
++  refclock: the internal WLAN reference clock frequency (required for
++	WiLink6 and WiLink7; not used for WiLink8).
++
++  tcxoclock: the internal WLAN TCXO clock frequency (required for
++	WiLink7 not used for WiLink6 and WiLink8).
++
++  The clocks must be defined and named accordingly.  For example:
++
++  clocks = <&refclock>
++  clock-names = "refclock";
++
++  refclock: refclock {
++		     compatible = "ti,wilink-clock";
++		     #clock-cells = <0>;
++		     clock-frequency = <38400000>;
++	};
++
++  Some modules that contain the WiLink chip provide clocks in the
++  module itself.  In this case, we define a "ti,wilink-clock" as shown
++  above.  But any other clock could in theory be used, so the proper
++  clock definition should be used.
++
++
++Example:
++--------
++
++Example definition that can be used in OMAP4 Panda:
++
++wlan {
++	compatible = "ti,wilink6";
++	interrupt-parent = <&gpio2>;
++	interrupts = <21 0x4>;	/* gpio line 53, high level triggered */
++	clocks = <&refclock>;
++	clock-names = "refclock";
++
++	refclock: refclock {
++		compatible = "ti,wilink-clock";
++		#clock-cells = <0>;
++		clock-frequency = <38400000>;
++	};
++};
+-- 
+1.8.3.2
 
