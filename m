@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41584 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503Ab3GBOA7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 10:00:59 -0400
-Message-ID: <1372773647.8615.1.camel@jlt4.sipsolutions.net> (sfid-20130702_160103_590052_3B6627C1)
-Subject: Re: [PATCH 2/3] [RFC] cfg80211: Add Kconfig option for cellular BS
- hints
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Ilan Peer <ilan.peer@intel.com>, linux-wireless@vger.kernel.org,
-	mcgrof@do-not-panic.com
-Date: Tue, 02 Jul 2013 16:00:47 +0200
-In-Reply-To: <51D2DBB9.4010500@broadcom.com> (sfid-20130702_155518_357097_AF2DF864)
-References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
-	 <1372768095-26053-3-git-send-email-ilan.peer@intel.com>
-	 <51D2DBB9.4010500@broadcom.com> (sfid-20130702_155518_357097_AF2DF864)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from bear.ext.ti.com ([192.94.94.41]:59434 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754889Ab3G3R2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 13:28:09 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <tony@atomide.com>, <linux-omap@vger.kernel.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>, <coelho@ti.com>,
+	<luca@coelho.fi>, <balbi@ti.com>
+Subject: [PATCH 4/4] arm: dts: omap4-sdp: add WiLink7 device tree node
+Date: Tue, 30 Jul 2013 20:27:28 +0300
+Message-ID: <1375205248-25708-5-git-send-email-coelho@ti.com> (sfid-20130730_192818_738962_B5BD579A)
+In-Reply-To: <1375205248-25708-1-git-send-email-coelho@ti.com>
+References: <1375205248-25708-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-07-02 at 15:55 +0200, Arend van Spriel wrote:
-> On 07/02/2013 02:28 PM, Ilan Peer wrote:
-> > Move the regulatory cellular base station hints support under
-> > a specific configuration option and make the option depend
-> > on CFG80211_CERTIFICATION_ONUS.
-> 
-> This one seems not really related to the other patches. On itself it is 
-> not clear to me what itch is being scratched here. Is the aim to get rid 
-> of the CERTIFICATION_ONUS dependency further along the road?
+Add appropriate device tree node for Blaze's WiLink7 module.  It uses
+a GPIO as interrupt, so configure the gpio2 node as interrupt parent
+and assign the corresponding GPIO.  Additionally, add the clock
+frequencies used by the module.
 
-No, it's really just so patch 3 can add a separate option under
-CERTIFICATION_ONUS while allowing cell base station and the new option
-to be separate.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ arch/arm/boot/dts/omap4-sdp.dts | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-johannes
+diff --git a/arch/arm/boot/dts/omap4-sdp.dts b/arch/arm/boot/dts/omap4-sdp.dts
+index 3845615..2fecca1 100644
+--- a/arch/arm/boot/dts/omap4-sdp.dts
++++ b/arch/arm/boot/dts/omap4-sdp.dts
+@@ -150,6 +150,26 @@
+ 		startup-delay-us = <70000>;
+ 		enable-active-high;
+ 	};
++
++	wlan {
++		compatible = "ti,wilink7";
++		interrupt-parent = <&gpio2>;
++		interrupts = <21 0x4>;	/* gpio line 53, high level triggered */
++		clocks = <&refclock &tcxoclock>;
++		clock-names = "refclock tcxoclock";
++
++		refclock: refclock {
++			compatible = "ti,wilink-clock";
++			#clock-cells = <0>;
++			clock-frequency = <26000000>;
++		};
++
++		tcxoclock: tcxoclock {
++			compatible = "ti,wilink-clock";
++			#clock-cells = <0>;
++			clock-frequency = <26000000>;
++		};
++	 };
+ };
+ 
+ &omap4_pmx_wkup {
+-- 
+1.8.3.2
 
