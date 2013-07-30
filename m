@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:44471 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751752Ab3GHKE1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 06:04:27 -0400
-Date: Mon, 8 Jul 2013 13:04:18 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
-	David Spinadel <david.spinadel@intel.com>
-Subject: Re: [PATCH 3/3] [RFC] cfg80211: Enable GO operation on additional
- channels
-Message-ID: <20130708100418.GA10670@w1.fi> (sfid-20130708_120429_950200_5440BE81)
-References: <1372768095-26053-1-git-send-email-ilan.peer@intel.com>
- <1372768095-26053-4-git-send-email-ilan.peer@intel.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:53786 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754525Ab3G3R15 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 13:27:57 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <tony@atomide.com>, <linux-omap@vger.kernel.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>, <coelho@ti.com>,
+	<luca@coelho.fi>, <balbi@ti.com>
+Subject: [PATCH 0/4] ARM: dts: add WiLink support to panda and omap4-sdp
+Date: Tue, 30 Jul 2013 20:27:24 +0300
+Message-ID: <1375205248-25708-1-git-send-email-coelho@ti.com> (sfid-20130730_192806_706149_0AA9DA75)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372768095-26053-4-git-send-email-ilan.peer@intel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 02, 2013 at 03:28:15PM +0300, Ilan Peer wrote:
-> Allow GO operation on a channel marked with
-> IEEE80211_CHAN_INDOOR_ONLY or IEEE80211_CHAN_GO_CONCURRENT
-> iff there is an active station interface that is associated to
-> an AP operating on this channel.
-> 
-> Note that this is a permissive approach to the FCC definitions,
-> that require a clear assessment that either the platform device
-> is an indoor device, or the device operating the AP is an indoor
-> device, i.e., AC powered.
-> It is assumed that these restrictions are enforced by user space.
+Hi,
 
-The introduction in 0/3 mentioned DFS, but I did not see it being
-addressed in any of the actual changes. Is this only for indoors vs.
-outdoors?
+These patches add the necessary DT configuration to use the WLAN part
+of WiLink on OMAP4 Pandaboard and on OMAP4-SDP (including Blaze).
 
-> Furthermore, it is assumed, that if the conditions that allowed for
-> the operation of the GO on such a channel change, it is the
-> responsibility of user space to evacuate the GO from the channel.
+I've tested these changes on Panda and it works fine.  But I couldn't
+test the OMAP4 SDP changes properly on 3.11-rc3 because I'm having
+problems with clocks and SDIO stuff.  So it's pretty much just
+compiled tested.  I've tried this (without the new clock definition
+stuff) on Blaze with 3.10 and it was working, though.
 
-Do you have plans or changes to address this? I'd assume wpa_supplicant
-could stop the group on channel list changes, but I don't think it does
-that currently.
+Please take a look and let me know what you think.
+
+Luca.
+
+
+Luciano Coelho (4):
+  ARM: dts: omap4-panda: add MMC5 (WiLink WLAN) configuration
+  arm: dts: omap4-panda-common: add WiLink6 device tree nodes
+  ARM: dts: omap4-sdp: add MMC5 (WiLink WLAN) configuration
+  arm: dts: omap4-sdp: add WiLink7 device tree node
+
+ arch/arm/boot/dts/omap4-panda-common.dtsi | 45 +++++++++++++++++++++++++++-
+ arch/arm/boot/dts/omap4-sdp.dts           | 49 +++++++++++++++++++++++++++++++
+ 2 files changed, 93 insertions(+), 1 deletion(-)
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.8.3.2
+
