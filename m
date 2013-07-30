@@ -1,39 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:57567 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752733Ab3GSNwG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 09:52:06 -0400
-Message-ID: <1374241922.26476.6.camel@edumazet-glaptop> (sfid-20130719_155214_566646_9F44FA97)
-Subject: Re: net-next is now OPEN
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Eliezer Tamir <eliezer.tamir@linux.intel.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Fri, 19 Jul 2013 06:52:02 -0700
-In-Reply-To: <51E93ECE.9000108@linux.intel.com>
-References: <20130719.023518.589482296695696122.davem@davemloft.net>
-	 <51E93ECE.9000108@linux.intel.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:46037 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753487Ab3G3XFD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 19:05:03 -0400
+Message-ID: <1375225466.30009.7.camel@cumari.coelho.fi> (sfid-20130731_010527_891489_2F38FB23)
+Subject: Re: [PATCH v4 6/8] wlcore: sdio: add wilink clock providers
+From: Luciano Coelho <coelho@ti.com>
+To: Mike Turquette <mturquette@linaro.org>
+CC: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>,
+	<martinez.javier@gmail.com>
+Date: Wed, 31 Jul 2013 02:04:26 +0300
+In-Reply-To: <20130730223535.5270.39864@quantum>
+References: <1375189476-21557-1-git-send-email-coelho@ti.com>
+	 <1375189476-21557-7-git-send-email-coelho@ti.com>
+	 <20130730223535.5270.39864@quantum>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-07-19 at 16:27 +0300, Eliezer Tamir wrote:
-> On 19/07/2013 12:35, David Miller wrote:
-> > 
-> > Please feel free to submit net-next patches now, thanks for being
-> > so patient.
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe netdev" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, 2013-07-30 at 15:35 -0700, Mike Turquette wrote:
+> Quoting Luciano Coelho (2013-07-30 06:04:34)
+> > +static const struct of_device_id wlcore_sdio_of_clk_match_table[] = {
+> > +       { .compatible = "ti,wilink-clock" },
+> > +};
+> > +
+> >  static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
+> >  {
+> >         struct wl12xx_platform_data *pdata;
+> >         struct device_node *np = dev->of_node;
+> > +       struct device_node *clock_node;
+> >  
+> >         if (!np) {
+> >                 np = of_find_matching_node(NULL, dev->driver->of_match_table);
+> > @@ -241,6 +247,9 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
+> >                 goto out_free;
+> >         }
+> >  
+> > +       for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
+> > +               of_fixed_clk_setup(clock_node);
 > 
-> In the next couple of weeks, I would like to post changes to epoll that
-> add busy polling support.
-> 
-> Who should be CC-ed on the patches?
+> Hi Luciano,
 
-netdev is fine ;)
+Hi Mike,
 
+
+> Any reason for establishing your own compatible string if you just plan
+> to use the fixed rate clock? You could just use "fixed-clock" compatible
+> in your DTS.
+
+The reason is that I can't call of_clk_init(), because this function is
+not exported and my module can't use it.  I would have to link with the
+clk code to be able to call it.
+
+Also, I reckoned that, since these clock cannot be used by anyone else
+than the WiLink module itself, it would make sense to have a different
+compatible string.
+
+
+> I will be posting patches this week which makes the fixed-rate clock a
+> proper driver and matches that compatible string to instantiate those
+> clocks. That means that your driver could probably remove the clock
+> setup code completely.
+
+Okay, if this is done, then I could probably use "fixed-clock" directly,
+since the driver itself will take care of going through the DT and
+initializing all the fixed-clocks.
+
+--
+Luca.
 
