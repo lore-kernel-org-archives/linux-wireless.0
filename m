@@ -1,70 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:49853 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749Ab3GIS1O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 14:27:14 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv4 0/5] add master channel switch announcement support
-Date: Tue,  9 Jul 2013 20:26:59 +0200
-Message-Id: <1373394424-23298-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130709_202719_839578_A8E217C9)
+Received: from bear.ext.ti.com ([192.94.94.41]:46311 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752601Ab3G3NF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 09:05:27 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>
+CC: <coelho@ti.com>, <luca@coelho.fi>, <mturquette@linaro.org>,
+	<mark.rutland@arm.com>, <balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>,
+	<martinez.javier@gmail.com>
+Subject: [PATCH v4 0/8] wilink: add device tree support
+Date: Tue, 30 Jul 2013 16:04:28 +0300
+Message-ID: <1375189476-21557-1-git-send-email-coelho@ti.com> (sfid-20130730_151158_743447_5898AABB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the 4th edition of the CSA support patch series. This patchset adds
-generic channel switch support for AP. This is required for DFS operation
-(e.g. Wi-Fi Alliance requires this for 802.11h certification). This will also
-be required for IBSS-DFS later.
+Hi,
 
-Changes from PATCHv3:
- * check for more multi-interface stuff before starting CSA (thanks Michal
-   for your suggestions)
- * fix problem if going down during CSA
+This patch series adds device tree support to the wlcore_sdio driver,
+which is used by WiLink6, WiLink7 and WiLink8.
 
-The rough design is:
- * userspace asks kernel to switch a channel using the new NL80211_CMD_CHANNEL_SWITCH
-   command. It supplies IE information for the time while staying on the old channel and
-   announcing the switch, and IE information for after the switch to the new channel. 
- * IE information contains the beacon and optionally probe responses, which should
-   include (E)CSA IEs for the CSA case. Furthermore an offset is provided (for beacon
-   and probe response) to point to the counter field within the channel switch IEs.
- * The driver gets the new beacons passed and must set them, and decrement the
-   counter field. When it reaches 0, the channel is changed and userspace notified.
+The first patches do some clean-up to make the data needed in the
+wilink device tree node smaller.  The remaining patches implement the
+actual device tree node parsing in wlcore_sdio.
 
-As always, any comments are appreciated.
+Regarding the XTAL clock issues, for now we don't support XTAL mode
+with DT, but I have sent a proposal for a small change in the clock
+framework to support this, but it's still under discussions [1].
 
-Cheers,
-	Simon 
+The DTS file changes will be sent separately, since they need to go
+via different trees.
 
-Simon Wunderlich (5):
-  nl80211/cfg80211: add channel switch command
-  mac80211: add functions to duplicate a cfg80211_beacon
-  mac80211: allow chanctx to change channels
-  mac80211: add channel switch command and beacon callbacks
-  ath9k: enable CSA functionality in ath9k
+A new version of the bindings documentation has been sent [2] and, if
+no more comments are given to it, I'll apply it via my tree.
 
- drivers/net/wireless/ath/ath9k/ath9k.h  |    2 +
- drivers/net/wireless/ath/ath9k/beacon.c |   21 ++++
- drivers/net/wireless/ath/ath9k/init.c   |    1 +
- drivers/net/wireless/ath/ath9k/main.c   |   17 +++
- drivers/net/wireless/ath/ath9k/xmit.c   |    2 +
- include/net/cfg80211.h                  |   30 +++++
- include/net/mac80211.h                  |   38 +++++++
- include/uapi/linux/nl80211.h            |   30 +++++
- net/mac80211/cfg.c                      |  188 ++++++++++++++++++++++++++++++-
- net/mac80211/chan.c                     |   55 +++++++++
- net/mac80211/driver-ops.h               |   13 +++
- net/mac80211/ieee80211_i.h              |   17 +++
- net/mac80211/iface.c                    |    9 ++
- net/mac80211/trace.h                    |   26 +++++
- net/mac80211/tx.c                       |   80 +++++++++++++
- net/wireless/nl80211.c                  |  126 ++++++++++++++++++++-
- 16 files changed, 652 insertions(+), 3 deletions(-)
+[1] http://news.gmane.org/find-root.php?message_id=1372971912-10877-1-git-send-email-coelho@ti.com
+[2] http://news.gmane.org/find-root.php?message_id=1375109728-5931-1-git-send-email-coelho@ti.com
+
+Changes in v4:
+
+* Rebased on top of 3.11-rc3 (eg. no more changes on the board files
+  that were removed);
+
+* Use the new irq_get_trigger_type() instead of
+  irqd_get_trigger_type() (thanks Javier);
+
+* Added some missing const's (thanks Felipe);
+
+* Reverted Tony's workaround to get WiLink to work on Panda while DT
+  was not supported yet.
+
+
+Please review.
+
+
+Luciano Coelho (8):
+  wl1251: split wl251 platform data to a separate structure
+  wlcore: set irq_flags in the board files instead of hiding behind a
+    quirk
+  wlcore: remove pwr_in_suspend from platform data
+  wl12xx: use frequency instead of enumerations for pdata clocks
+  wlcore: add initial device tree support to the sdio module
+  wlcore: sdio: add wilink clock providers
+  wlcore: sdio: get clocks from device tree
+  wlcore/wl12xx: check if we got correct clock data from DT
+
+ arch/arm/mach-davinci/board-da850-evm.c        |  11 ++-
+ arch/arm/mach-omap2/board-omap3evm.c           |  22 ++++-
+ arch/arm/mach-omap2/board-omap3pandora.c       |   4 +-
+ arch/arm/mach-omap2/board-rx51-peripherals.c   |   2 +-
+ arch/arm/mach-omap2/board-zoom-peripherals.c   |  33 +++++++-
+ arch/arm/mach-omap2/devices.c                  |  39 ---------
+ drivers/net/wireless/ti/wilink_platform_data.c |  37 ++++++--
+ drivers/net/wireless/ti/wl1251/sdio.c          |  12 +--
+ drivers/net/wireless/ti/wl1251/spi.c           |   2 +-
+ drivers/net/wireless/ti/wl12xx/main.c          |  78 +++++++++++++++--
+ drivers/net/wireless/ti/wl12xx/wl12xx.h        |  28 +++++++
+ drivers/net/wireless/ti/wlcore/debugfs.c       |   2 +-
+ drivers/net/wireless/ti/wlcore/main.c          |  20 ++---
+ drivers/net/wireless/ti/wlcore/sdio.c          | 112 +++++++++++++++++++++++--
+ drivers/net/wireless/ti/wlcore/wlcore.h        |   5 +-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h      |   1 +
+ include/linux/wl12xx.h                         |  52 +++++-------
+ 17 files changed, 340 insertions(+), 120 deletions(-)
 
 -- 
-1.7.10.4
+1.8.3.2
 
