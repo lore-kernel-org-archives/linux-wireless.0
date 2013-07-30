@@ -1,165 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:53536 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932611Ab3GKJNJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:13:09 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>, devel@driverdev.osuosl.org
-Subject: [PATCH 49/50] staging: ced1401: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:06:12 +0800
-Message-Id: <1373533573-12272-50-git-send-email-ming.lei@canonical.com> (sfid-20130711_111330_549997_BE241558)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:46114 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753628Ab3G3NFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 09:05:50 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>
+CC: <coelho@ti.com>, <luca@coelho.fi>, <mturquette@linaro.org>,
+	<mark.rutland@arm.com>, <balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>,
+	<martinez.javier@gmail.com>
+Subject: [PATCH v4 7/8] wlcore: sdio: get clocks from device tree
+Date: Tue, 30 Jul 2013 16:04:35 +0300
+Message-ID: <1375189476-21557-8-git-send-email-coelho@ti.com> (sfid-20130730_150618_354642_2529D8DB)
+In-Reply-To: <1375189476-21557-1-git-send-email-coelho@ti.com>
+References: <1375189476-21557-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+Read the clock nodes from the device tree and use them to set the
+frequency for the refclock and the tcxo clock.
 
-Cc: devel@driverdev.osuosl.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+Also, call sdio_set_drvdata() earlier, so the glue is already set in
+the driver data when we call wlcore_get_pdata_from_of() and we don't
+need to pass it as a parameter.
+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Reviewed-by: Felipe Balbi <balbi@ti.com>
 ---
- drivers/staging/ced1401/usb1401.c |   35 +++++++++++++++++++----------------
- 1 file changed, 19 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ti/wlcore/sdio.c | 36 +++++++++++++++++++++++++++++++++--
+ 1 file changed, 34 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/ced1401/usb1401.c b/drivers/staging/ced1401/usb1401.c
-index 97c55f9..70d2f43 100644
---- a/drivers/staging/ced1401/usb1401.c
-+++ b/drivers/staging/ced1401/usb1401.c
-@@ -265,6 +265,7 @@ static void ced_writechar_callback(struct urb *pUrb)
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 980bf3d..60fce49 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -53,6 +53,7 @@ static bool dump = false;
+ struct wl12xx_sdio_glue {
+ 	struct device *dev;
+ 	struct platform_device *core;
++	struct clk *refclock, *tcxoclock;
+ };
+ 
+ static const struct sdio_device_id wl1271_devices[] = {
+@@ -224,6 +225,7 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
+ 	struct wl12xx_platform_data *pdata;
+ 	struct device_node *np = dev->of_node;
+ 	struct device_node *clock_node;
++	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(dev_to_sdio_func(dev));
+ 
+ 	if (!np) {
+ 		np = of_find_matching_node(NULL, dev->driver->of_match_table);
+@@ -250,6 +252,26 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
+ 	for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
+ 		of_fixed_clk_setup(clock_node);
+ 
++	/* TODO: make sure we have this when needed (ie. for WL6 and WL7) */
++	glue->refclock = of_clk_get_by_name(np, "refclock");
++	if (IS_ERR(glue->refclock)) {
++		dev_err(dev, "couldn't find refclock on the device tree\n");
++		glue->refclock = NULL;
++	} else {
++		clk_prepare_enable(glue->refclock);
++		pdata->ref_clock_freq = clk_get_rate(glue->refclock);
++	}
++
++	/* TODO: make sure we have this when needed (ie. for WL7) */
++	glue->tcxoclock = of_clk_get_by_name(np, "tcxoclock");
++	if (IS_ERR(glue->tcxoclock)) {
++		dev_err(dev, "couldn't find tcxoclock on the device tree\n");
++		glue->tcxoclock = NULL;
++	} else {
++		clk_prepare_enable(glue->tcxoclock);
++		pdata->ref_clock_freq = clk_get_rate(glue->tcxoclock);
++	}
++
+ 	goto out;
+ 
+ out_free:
+@@ -294,6 +316,8 @@ static int wl1271_probe(struct sdio_func *func,
+ 	/* Use block mode for transferring over one block size of data */
+ 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
+ 
++	sdio_set_drvdata(func, glue);
++
+ 	/* The pdata allocated here is freed when the device is freed,
+ 	 * so we don't need an additional out label to free it in case
+ 	 * of error further on.
+@@ -319,8 +343,6 @@ static int wl1271_probe(struct sdio_func *func,
+ 	if (mmcflags & MMC_PM_KEEP_POWER)
+ 		pdev_data->pwr_in_suspend = true;
+ 
+-	sdio_set_drvdata(func, glue);
+-
+ 	/* Tell PM core that we don't need the card to be powered now */
+ 	pm_runtime_put_noidle(&func->dev);
+ 
+@@ -387,6 +409,16 @@ static void wl1271_remove(struct sdio_func *func)
  {
- 	DEVICE_EXTENSION *pdx = pUrb->context;
- 	int nGot = pUrb->actual_length;	/*  what we transferred */
-+	unsigned long flags;
+ 	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
  
- 	if (pUrb->status) {	/*  sync/async unlink faults aren't errors */
- 		if (!
-@@ -275,24 +276,24 @@ static void ced_writechar_callback(struct urb *pUrb)
- 				__func__, pUrb->status);
- 		}
++	if (glue->refclock) {
++		clk_disable_unprepare(glue->refclock);
++		clk_put(glue->refclock);
++	}
++
++	if (glue->tcxoclock) {
++		clk_disable_unprepare(glue->tcxoclock);
++		clk_put(glue->tcxoclock);
++	}
++
+ 	/* Undo decrement done above in wl1271_probe */
+ 	pm_runtime_get_noresume(&func->dev);
  
--		spin_lock(&pdx->err_lock);
-+		spin_lock_irqsave(&pdx->err_lock, flags);
- 		pdx->errors = pUrb->status;
--		spin_unlock(&pdx->err_lock);
-+		spin_unlock_irqrestore(&pdx->err_lock, flags);
- 		nGot = 0;	/*   and tidy up again if so */
- 
--		spin_lock(&pdx->charOutLock);	/*  already at irq level */
-+		spin_lock_irqsave(&pdx->charOutLock, flags);	/*  already at irq level */
- 		pdx->dwOutBuffGet = 0;	/*  Reset the output buffer */
- 		pdx->dwOutBuffPut = 0;
- 		pdx->dwNumOutput = 0;	/*  Clear the char count */
- 		pdx->bPipeError[0] = 1;	/*  Flag an error for later */
- 		pdx->bSendCharsPending = false;	/*  Allow other threads again */
--		spin_unlock(&pdx->charOutLock);	/*  already at irq level */
-+		spin_unlock_irqrestore(&pdx->charOutLock, flags);	/*  already at irq level */
- 		dev_dbg(&pdx->interface->dev,
- 			"%s - char out done, 0 chars sent", __func__);
- 	} else {
- 		dev_dbg(&pdx->interface->dev,
- 			"%s - char out done, %d chars sent", __func__, nGot);
--		spin_lock(&pdx->charOutLock);	/*  already at irq level */
-+		spin_lock_irqsave(&pdx->charOutLock, flags);	/*  already at irq level */
- 		pdx->dwNumOutput -= nGot;	/*  Now adjust the char send buffer */
- 		pdx->dwOutBuffGet += nGot;	/*  to match what we did */
- 		if (pdx->dwOutBuffGet >= OUTBUF_SZ)	/*  Can't do this any earlier as data could be overwritten */
-@@ -305,7 +306,7 @@ static void ced_writechar_callback(struct urb *pUrb)
- 			unsigned int dwCount = pdx->dwNumOutput;	/*  maximum to send */
- 			if ((pdx->dwOutBuffGet + dwCount) > OUTBUF_SZ)	/*  does it cross buffer end? */
- 				dwCount = OUTBUF_SZ - pdx->dwOutBuffGet;
--			spin_unlock(&pdx->charOutLock);	/*  we are done with stuff that changes */
-+			spin_unlock_irqrestore(&pdx->charOutLock, flags);	/*  we are done with stuff that changes */
- 			memcpy(pdx->pCoherCharOut, pDat, dwCount);	/*  copy output data to the buffer */
- 			usb_fill_bulk_urb(pdx->pUrbCharOut, pdx->udev,
- 					  usb_sndbulkpipe(pdx->udev,
-@@ -318,7 +319,7 @@ static void ced_writechar_callback(struct urb *pUrb)
- 			iReturn = usb_submit_urb(pdx->pUrbCharOut, GFP_ATOMIC);
- 			dev_dbg(&pdx->interface->dev, "%s n=%d>%s<", __func__,
- 				dwCount, pDat);
--			spin_lock(&pdx->charOutLock);	/*  grab lock for errors */
-+			spin_lock_irqsave(&pdx->charOutLock, flags);	/*  grab lock for errors */
- 			if (iReturn) {
- 				pdx->bPipeError[nPipe] = 1;	/*  Flag an error to be handled later */
- 				pdx->bSendCharsPending = false;	/*  Allow other threads again */
-@@ -329,7 +330,7 @@ static void ced_writechar_callback(struct urb *pUrb)
- 			}
- 		} else
- 			pdx->bSendCharsPending = false;	/*  Allow other threads again */
--		spin_unlock(&pdx->charOutLock);	/*  already at irq level */
-+		spin_unlock_irqrestore(&pdx->charOutLock, flags);	/*  already at irq level */
- 	}
- }
- 
-@@ -505,8 +506,9 @@ static void staged_callback(struct urb *pUrb)
- 	unsigned int nGot = pUrb->actual_length;	/*  what we transferred */
- 	bool bCancel = false;
- 	bool bRestartCharInput;	/*  used at the end */
-+	unsigned long flags;
- 
--	spin_lock(&pdx->stagedLock);	/*  stop ReadWriteMem() action while this routine is running */
-+	spin_lock_irqsave(&pdx->stagedLock, flags);	/*  stop ReadWriteMem() action while this routine is running */
- 	pdx->bStagedUrbPending = false;	/*  clear the flag for staged IRP pending */
- 
- 	if (pUrb->status) {	/*  sync/async unlink faults aren't errors */
-@@ -679,7 +681,7 @@ static void staged_callback(struct urb *pUrb)
- 	bRestartCharInput = !bCancel && (pdx->dwDMAFlag == MODE_CHAR)
- 	    && !pdx->bXFerWaiting;
- 
--	spin_unlock(&pdx->stagedLock);	/*  Finally release the lock again */
-+	spin_unlock_irqrestore(&pdx->stagedLock, flags);	/*  Finally release the lock again */
- 
- 	/*  This is not correct as dwDMAFlag is protected by the staged lock, but it is treated */
- 	/*  in Allowi as if it were protected by the char lock. In any case, most systems will */
-@@ -1093,6 +1095,7 @@ static void ced_readchar_callback(struct urb *pUrb)
- {
- 	DEVICE_EXTENSION *pdx = pUrb->context;
- 	int nGot = pUrb->actual_length;	/*  what we transferred */
-+	unsigned long flags;
- 
- 	if (pUrb->status) {	/*  Do we have a problem to handle? */
- 		int nPipe = pdx->nPipes == 4 ? 1 : 0;	/*  The pipe number to use for error */
-@@ -1108,19 +1111,19 @@ static void ced_readchar_callback(struct urb *pUrb)
- 				"%s - 0 chars pUrb->status=%d (shutdown?)",
- 				__func__, pUrb->status);
- 
--		spin_lock(&pdx->err_lock);
-+		spin_lock_irqsave(&pdx->err_lock, flags);
- 		pdx->errors = pUrb->status;
--		spin_unlock(&pdx->err_lock);
-+		spin_unlock_irqrestore(&pdx->err_lock, flags);
- 		nGot = 0;	/*   and tidy up again if so */
- 
--		spin_lock(&pdx->charInLock);	/*  already at irq level */
-+		spin_lock_irqsave(&pdx->charInLock, flags);	/*  already at irq level */
- 		pdx->bPipeError[nPipe] = 1;	/*  Flag an error for later */
- 	} else {
- 		if ((nGot > 1) && ((pdx->pCoherCharIn[0] & 0x7f) == 0x1b)) {	/*  Esc sequence? */
- 			Handle1401Esc(pdx, &pdx->pCoherCharIn[1], nGot - 1);	/*  handle it */
--			spin_lock(&pdx->charInLock);	/*  already at irq level */
-+			spin_lock_irqsave(&pdx->charInLock, flags);	/*  already at irq level */
- 		} else {
--			spin_lock(&pdx->charInLock);	/*  already at irq level */
-+			spin_lock_irqsave(&pdx->charInLock, flags);	/*  already at irq level */
- 			if (nGot > 0) {
- 				unsigned int i;
- 				if (nGot < INBUF_SZ) {
-@@ -1147,7 +1150,7 @@ static void ced_readchar_callback(struct urb *pUrb)
- 	}
- 
- 	pdx->bReadCharsPending = false;	/*  No longer have a pending read */
--	spin_unlock(&pdx->charInLock);	/*  already at irq level */
-+	spin_unlock_irqrestore(&pdx->charInLock, flags);	/*  already at irq level */
- 
- 	Allowi(pdx);	/*  see if we can do the next one */
- }
 -- 
-1.7.9.5
+1.8.3.2
 
