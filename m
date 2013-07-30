@@ -1,97 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:47470 "EHLO arrakis.dune.hu"
+Received: from bear.ext.ti.com ([192.94.94.41]:41840 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752765Ab3GAHsS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:48:18 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 04/20] rt2x00: rt2800lib: add BBP post initialization for RT3593
-Date: Mon,  1 Jul 2013 09:47:43 +0200
-Message-Id: <1372664879-18474-5-git-send-email-juhosg@openwrt.org> (sfid-20130701_094822_305892_1D9A2997)
-In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+	id S1757491Ab3G3VQG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 17:16:06 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <tony@atomide.com>, <linux-omap@vger.kernel.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>, <coelho@ti.com>,
+	<luca@coelho.fi>, <balbi@ti.com>,
+	<laurent.pinchart@ideasonboard.com>
+Subject: [PATCH v2 3/4] ARM: dts: omap4-sdp: add MMC5 (WiLink WLAN) configuration
+Date: Wed, 31 Jul 2013 00:15:22 +0300
+Message-ID: <1375218923-29876-4-git-send-email-coelho@ti.com> (sfid-20130730_231622_565373_4566C62F)
+In-Reply-To: <1375218923-29876-1-git-send-email-coelho@ti.com>
+References: <1375218923-29876-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
+Add regulator, pin muxing and MMC5 configuration to be used by the
+on-board WiLink6 module.
 
-Reference:
-  RT3593_PostBBPInitialization in chips/rt3553.c
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   48 ++++++++++++++++++++++++++++++-
- 1 file changed, 47 insertions(+), 1 deletion(-)
+ arch/arm/boot/dts/omap4-sdp.dts | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 0041b2c..87b7f94 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -5382,6 +5382,52 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
- 	rt2800_normal_mode_setup_3xxx(rt2x00dev);
- }
+diff --git a/arch/arm/boot/dts/omap4-sdp.dts b/arch/arm/boot/dts/omap4-sdp.dts
+index 7951b4e..3845615 100644
+--- a/arch/arm/boot/dts/omap4-sdp.dts
++++ b/arch/arm/boot/dts/omap4-sdp.dts
+@@ -140,6 +140,16 @@
+ 			"DMic", "Digital Mic",
+ 			"Digital Mic", "Digital Mic1 Bias";
+ 	};
++
++	wilink_wl_en: fixedregulator@1 {
++		compatible = "regulator-fixed";
++		regulator-name = "wilink_wl_en";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		gpio = <&gpio2 22 0>; /* gpio line 54 */
++		startup-delay-us = <70000>;
++		enable-active-high;
++	};
+ };
  
-+static void rt3593_post_bbp_init(struct rt2x00_dev *rt2x00dev)
-+{
-+	u8 bbp;
-+	bool txbf_enabled = false; /* FIXME */
-+
-+	rt2800_bbp_read(rt2x00dev, 105, &bbp);
-+	if (rt2x00dev->default_ant.rx_chain_num == 1)
-+		rt2x00_set_field8(&bbp, BBP105_MLD, 0);
-+	else
-+		rt2x00_set_field8(&bbp, BBP105_MLD, 1);
-+	rt2800_bbp_write(rt2x00dev, 105, bbp);
-+
-+	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
-+
-+	rt2800_bbp_write(rt2x00dev, 92, 0x02);
-+	rt2800_bbp_write(rt2x00dev, 82, 0x82);
-+	rt2800_bbp_write(rt2x00dev, 106, 0x05);
-+	rt2800_bbp_write(rt2x00dev, 104, 0x92);
-+	rt2800_bbp_write(rt2x00dev, 88, 0x90);
-+	rt2800_bbp_write(rt2x00dev, 148, 0xc8);
-+	rt2800_bbp_write(rt2x00dev, 47, 0x48);
-+	rt2800_bbp_write(rt2x00dev, 120, 0x50);
-+
-+	if (txbf_enabled)
-+		rt2800_bbp_write(rt2x00dev, 163, 0xbd);
-+	else
-+		rt2800_bbp_write(rt2x00dev, 163, 0x9d);
-+
-+	/* SNR mapping */
-+	rt2800_bbp_write(rt2x00dev, 142, 6);
-+	rt2800_bbp_write(rt2x00dev, 143, 160);
-+	rt2800_bbp_write(rt2x00dev, 142, 7);
-+	rt2800_bbp_write(rt2x00dev, 143, 161);
-+	rt2800_bbp_write(rt2x00dev, 142, 8);
-+	rt2800_bbp_write(rt2x00dev, 143, 162);
-+
-+	/* ADC/DAC control */
-+	rt2800_bbp_write(rt2x00dev, 31, 0x08);
-+
-+	/* RX AGC energy lower bound in log2 */
-+	rt2800_bbp_write(rt2x00dev, 68, 0x0b);
-+
-+	/* FIXME: BBP 105 owerwrite? */
-+	rt2800_bbp_write(rt2x00dev, 105, 0x04);
-+}
-+
- static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
- {
- 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-@@ -5460,7 +5506,7 @@ static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
- 	rt2800_led_open_drain_enable(rt2x00dev);
- 	rt2800_normal_mode_setup_3593(rt2x00dev);
+ &omap4_pmx_wkup {
+@@ -166,6 +176,7 @@
+ 			&mcbsp2_pins
+ 			&dss_hdmi_pins
+ 			&tpd12s015_pins
++			&wilink_pins
+ 	>;
  
--	/* TODO: post BBP initialization */
-+	rt3593_post_bbp_init(rt2x00dev);
+ 	uart2_pins: pinmux_uart2_pins {
+@@ -295,6 +306,19 @@
+ 			0xf0 (PIN_INPUT_PULLUP | MUX_MODE0)	/* i2c4_sda */
+ 		>;
+ 	};
++
++	wilink_pins: pinmux_wilink_pins {
++		pinctrl-single,pins = <
++			0x7a 0x103      /* gpio_53  INPUT | MODE3 */
++			0x7c 0x3	/* gpio_54  OUTPUT | MODE3 */
++			0x148 0x118     /* clk	    INPUT PULLUP | MODE0 */
++			0x14a 0x118     /* cmd	    INPUT PULLUP | MODE0 */
++			0x14c 0x118     /* dat0	    INPUT PULLUP | MODE0 */
++			0x14e 0x118     /* dat1	    INPUT PULLUP | MODE0 */
++			0x150 0x118     /* dat2	    INPUT PULLUP | MODE0 */
++			0x152 0x118     /* dat3	    INPUT PULLUP | MODE0 */
++		>;
++	};
+ };
  
- 	/* TODO: enable stream mode support */
- }
+ &i2c1 {
+@@ -420,8 +444,13 @@
+ };
+ 
+ &mmc5 {
++	status = "okay";
++	vmmc-supply = <&wilink_wl_en>;
+ 	bus-width = <4>;
++	cap-power-off-card;
++	keep-power-in-suspend;
+ 	ti,non-removable;
++	ti,needs-special-hs-handling;
+ };
+ 
+ &emif1 {
 -- 
-1.7.10
+1.8.3.2
 
