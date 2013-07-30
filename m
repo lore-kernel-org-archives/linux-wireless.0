@@ -1,90 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:35338 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932316Ab3GVVXP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jul 2013 17:23:15 -0400
-Received: by mail-ea0-f173.google.com with SMTP id g15so4122194eak.18
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jul 2013 14:23:13 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: FUSB200 xhci issue
-Date: Mon, 22 Jul 2013 23:23:10 +0200
-Message-ID: <3155156.7uKpoiQrxp@blech> (sfid-20130722_232318_739663_4FCD6F29)
-In-Reply-To: <51ED9A6D.4070900@rempel-privat.de>
-References: <51ED4E12.8030006@rempel-privat.de> <1559414.LIxku4Z5O8@blech> <51ED9A6D.4070900@rempel-privat.de>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:57740 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756758Ab3G3SzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 14:55:10 -0400
+Message-ID: <1375210496.20048.80.camel@cumari.coelho.fi> (sfid-20130730_205531_965549_2FD013F9)
+Subject: Re: [PATCH v2] Documentation: dt: bindings: TI WiLink modules
+From: Luciano Coelho <coelho@ti.com>
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+CC: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <linux-arm@vger.kernel.org>,
+	<tony@atomide.com>, <nm@ti.com>
+Date: Tue, 30 Jul 2013 21:54:56 +0300
+In-Reply-To: <1551085.3MDKgN8U89@avalon>
+References: <1375109728-5931-1-git-send-email-coelho@ti.com>
+	 <1551085.3MDKgN8U89@avalon>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, July 22, 2013 10:47:41 PM Oleksij Rempel wrote:
-> Am 22.07.2013 21:54, schrieb Christian Lamparter:
-> > Hello!
-> >
-> > On Monday, July 22, 2013 05:21:54 PM Oleksij Rempel wrote:
-> >> i'm one of ath9k_htc devs. Currently i'm working on usb_suspend issue of
-> >> this adapters. Looks like ar9271 and ar7010 have FUSB200, and i
-> >> accidentally discovered that 9170 have it too. Are there any issue with
-> >> usb-suspend + xhci controllers by you? Did you some how specially
-> >> handled it?
-> >
-> > No, I haven't heard any complains about xhci + suspend. In fact,
-> > it's working fine with the NEC xhci I have. I also have a AR9271
-> > and AR7010, so if you want I could try if they survive a suspend
-> > +resume cycle when attached.
-> >
-> > But, I do have a bug-report from someone else who has/had? problems
-> > with carl9170 and xhci. If you want, you can get the details from:
-> > "carl9170 A-MPDU transmit problem":
-> > <http://comments.gmane.org/gmane.linux.kernel.wireless.general/104597>
-> >
-> > The likely cause is related to Intel's xhci silicon (Ivy Bridge is
-> > affected, but I don't know about Haswell):
-> > <http://permalink.gmane.org/gmane.linux.kernel.wireless.general/104602>
+(using the new devicetree mailing list address)
+
+On Tue, 2013-07-30 at 20:24 +0200, Laurent Pinchart wrote:
+> Hi Luciano,
 > 
-> Same situation is here - i have problem on Ivy Bridge.
-(Note: I don't have any Ivy Bridge system. Just Sandy Bridge
-and AMD's new A6-1450 Temash and both xhci work. So I can't
-do any proper comparisons like you.)
-
-> Steps to reproduce:
-> - plug adapter. Module and firmware will be loaded
-> - make sure usb autosupend is enabled. By default it is not! Use 
-> powertop or directly sysfs to enable autosuspend for this device
-> - rmmod .... and wait some seconds until adapter is suspended and then 
-> modprobe ath9k_htc
+> Thank you for the patch.
 > 
-> first packet which is bigger as 64Byte will kill EP4 FIFO. Size register 
-> will report wrong size.. bigger as FIFO can handle. And only first ~40 
-> readet bytes will be actually OK.. all the rest of packet will be trashed.
+> On Monday 29 July 2013 17:55:28 Luciano Coelho wrote:
+> > Add device tree bindings documentation for the TI WiLink modules.
+> > Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
+> > modules is supported.
+> > 
+> > Signed-off-by: Luciano Coelho <coelho@ti.com>
+> > ---
+> > 
+> > Changes in v2:
+> > 
+> > Use generic clock definitions to get the clock data instead of passing
+> > the frequencies directly.  Also added definition for "internal"
+> > ti,wilink-clock.
+> > 
+> > Please review.
+> 
+> The proposal looks good to me, I just have one small comment.
 
-This is what happens with a WN721 (ar9271):
+Cool! Thanks for the review.
 
-[17619.597905] usbcore: deregistering interface driver ath9k_htc
-[17619.679549] usb 2-2: ath9k_htc: USB layer deinitialized
-[17619.679602] ath9k_htc: Driver unloaded
-<suspend>
+[...]
+> > +Example:
+> > +--------
+> > +
+> > +Example definition that can be used in OMAP4 Panda:
+> > +
+> > +wlan {
+> > +	compatible = "ti,wilink6";
+> > +	interrupt-parent = <&gpio2>;
+> > +	interrupts = <21 0x4>;	/* gpio line 53, high level triggered */
+> 
+> Could you please use the IRQ_TYPE_LEVEL_HIGH macro (defined in <dt-
+> bindings/interrupt-controller/irq.h>) instead of the hardcode 0x4 constant ?
 
-<resume>
-[17667.543024] usb 2-2: reset high-speed USB device number 3 using xhci_hcd <----
-[17667.572168] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77600
-[17667.572174] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77640
-[17667.572177] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77680
-[17667.572180] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa776c0
-[17667.572183] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77700
-[17667.572185] xhci_hcd 0000:19:00.0: xHCI xhci_drop_endpoint called with disabled ep ffff88031aa77740
-[17667.573826] usb 2-2: ath9k_htc: Firmware htc_9271.fw requested
-[17667.573873] usbcore: registered new interface driver ath9k_htc
-[17668.038200] usb 2-2: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
-[17668.273249] ath9k_htc 2-2:1.0: ath9k_htc: HTC initialized with 33 credits
+Ah, right, I saw this new header file recently but forgot to update my
+example.  I'll update the OMAP4 Panda and OMAP4 SDP dts files I just
+sent out as well.
 
-The driver loads, but there's no "wlanX" interface, no phyX interface
-and the driver can't be unloaded due to "Error: Module ath9k_htc is in use".
+--
+Cheers,
+Luca.
 
-Regards
-
-Christian
