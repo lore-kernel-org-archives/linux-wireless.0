@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sous-sol.org ([216.99.217.87]:33822 "EHLO sequoia2.sous-sol.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753289Ab3GaTPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 15:15:08 -0400
-Date: Wed, 31 Jul 2013 12:12:24 -0700
-From: Chris Wright <chrisw@sous-sol.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Chris Wright <chrisw@sous-sol.org>, linux-wireless@vger.kernel.org,
-	Derek Atkins <DAtkins@mocana.com>
-Subject: [PATCH] mac80211: fix infinite loop in ieee80211_determine_chantype
-Message-ID: <20130731191224.GB28308@sequoia2.sous-sol.org> (sfid-20130731_211512_501019_9CB8E323)
+Received: from elwsc.co.jp ([27.50.121.29]:44013 "EHLO elwsc.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751649Ab3G3LWL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 07:22:11 -0400
+Received: from [192.168.0.199] (p2192-ipbf202hodogaya.kanagawa.ocn.ne.jp [221.191.33.192])
+	(authenticated bits=0)
+	by elwsc.co.jp (8.14.5/8.14.5) with ESMTP id r6UBM7mg027943
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2013 20:22:10 +0900
+Date: Tue, 30 Jul 2013 20:22:11 +0900
+From: KATSUMI masanori <masanori-katsumi@elwsc.co.jp>
+To: linux-wireless@vger.kernel.org
+Subject: Re: How to read WiFi radio frequency.
+In-Reply-To: <20130725210249.89DD.635158EF@elwsc.co.jp>
+References: <20130725210249.89DD.635158EF@elwsc.co.jp>
+Message-Id: <20130730202208.9333.635158EF@elwsc.co.jp> (sfid-20130730_132215_767394_291B90AC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130731132625.GA23521@sequoia2.sous-sol.org>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit "3d9646d mac80211: fix channel selection bug" introduced a possible
-infinite loop by moving the out target above the chandef_downgrade
-while loop.  When we downgrade to NL80211_CHAN_WIDTH_20_NOHT, we jump
-back up to re-run the while loop...indefinitely.  Replace goto with
-break and carry on.  This may not be sufficient to connect to the AP,
-but will at least keep the cpu from livelocking.  Thanks to Derek Atkins
-as an extra pair of debugging eyes.
+On Thu, 25 Jul 2013 21:02:51 +0900
+KATSUMI masanori <masanori-katsumi@elwsc.co.jp> wrote:
 
-Cc: stable@kernel.org
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
----
+> I am trying to make p2p software with the current device as the group
+> owner.
+> I would like to acquire the channel that GO started, from normal user(NOT
+> root).
+> How can I get this information?
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0e5aab1..b68ca05 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -336,7 +336,7 @@ out:
- 		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
- 			ret = IEEE80211_STA_DISABLE_HT |
- 			      IEEE80211_STA_DISABLE_VHT;
--			goto out;
-+			break;
- 		}
- 
- 		ret |= chandef_downgrade(chandef);
+I think I can get own GO operating channel or freq through NL80211_ATTR_WIPHY_FREQ attribute
+in nl80211 interface.
+
+However, I was not able to get this attribute by NL80211_CMD_GET_INTERFACE which is used in
+iw command.
+In addition to that, I tried several nl80211 commands but I couldn't get it.
+e.g) 
+   NL80211_CMD_GET_WIPHY
+   NL80211_CMD_GET_INTERFACE
+   NL80211_CMD_GET_SCAN
+   NL80211_CMD_GET_SURVEY
+   NL80211_CMD_REMAIN_ON_CHANNEL
+
+I can get the operating freq during STA but I cannot find the way to
+get the own operating freq during running GO.
+
+BTW, NL80211_CMD_FRAME_TX_STATUS event is only notified when GO started.
+But, even this event didn't contain the frequency information.
+
+Is there any other way to get the own GO's operating channel ??
+
+I tried kernel v3.0.31
+And do you know this feature supports in the latest kernel ??
+
+Regards,
+
