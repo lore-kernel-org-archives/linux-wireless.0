@@ -1,59 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:38856 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756001Ab3GOM2T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 08:28:19 -0400
-Date: Mon, 15 Jul 2013 14:28:17 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: pull request: bluetooth 2013-06-23
-Message-ID: <20130715122816.GA8383@amd.pavel.ucw.cz> (sfid-20130715_142835_143069_54DF6756)
-References: <20130623021351.GA2327@joana>
- <20130625201217.GA13879@amd.pavel.ucw.cz>
- <E95EC814-F064-4AEB-AE13-79982D3BE5E8@holtmann.org>
- <20130625210039.GA28448@joana>
- <20130626115255.GA7940@amd.pavel.ucw.cz>
- <20130626124736.GA3337@joana>
+Received: from bear.ext.ti.com ([192.94.94.41]:46322 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753087Ab3G3NFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 09:05:38 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
+	<nsekhar@ti.com>
+CC: <coelho@ti.com>, <luca@coelho.fi>, <mturquette@linaro.org>,
+	<mark.rutland@arm.com>, <balbi@ti.com>, <grant.likely@linaro.org>,
+	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>,
+	<martinez.javier@gmail.com>
+Subject: [PATCH v4 5/8] wlcore: add initial device tree support to the sdio module
+Date: Tue, 30 Jul 2013 16:04:33 +0300
+Message-ID: <1375189476-21557-6-git-send-email-coelho@ti.com> (sfid-20130730_151149_706569_65B49C1F)
+In-Reply-To: <1375189476-21557-1-git-send-email-coelho@ti.com>
+References: <1375189476-21557-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130626124736.GA3337@joana>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->On Wed 2013-06-26 13:47:36, Gustavo Padovan wrote:
-> * Pavel Machek <pavel@ucw.cz> [2013-06-26 13:52:55 +0200]:
-> 
-> > On Tue 2013-06-25 22:00:39, Gustavo Padovan wrote:
-> > > Hi Marcel,
-> > > 
-> > > * Marcel Holtmann <marcel@holtmann.org> [2013-06-25 13:49:19 -0700]:
-> > > 
-> > > > Hi Pavel,
-> > > > 
-> > > > >> Jaganath Kanakkassery (1):
-> > > > >>      Bluetooth: Fix invalid length check in l2cap_information_rsp()
-> > > > > 
-> > > > > Could we add the "3.10 vs. thinkpad x60" patch that fixes regression?
-> > > > > It is from Johan Hedberg…
-> > > > 
-> > > > that one went into net-next tree. It is scheduled for 3.11 right now.
-> > > > 
-> > > > After 3.10 is out, maybe it can go into -stable, but otherwise I think it is bit late now. Unless someone wants to cherry-pick it.
-> > > 
-> > > That patch is actually in 3.10 already, it was included in the last pull
-> > > request and John took it to wireless.git.
-> > 
-> > Is it? I tried pulling yesterday (some updates) and today (no
-> > changes), am on:
-> 
-> Dave already pulled it so it should land in mainline anytime soon.
+If platform data is not available, try to get the required information
+from the device tree.  Register an OF match table and parse the
+appropriate device tree nodes.
 
-It seems to work in 3.10 and 3.11-rc1. Thanks!
-									Pavel
+Parse interrupt property only, for now.
+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Reviewed-by: Felipe Balbi <balbi@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/sdio.c | 69 ++++++++++++++++++++++++++++++++---
+ 1 file changed, 63 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 4c7e8ac..9370d7e 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -30,7 +30,7 @@
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/host.h>
+-#include <linux/gpio.h>
++#include <linux/of_irq.h>
+ #include <linux/wl12xx.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/printk.h>
+@@ -214,6 +214,43 @@ static struct wl1271_if_operations sdio_ops = {
+ 	.set_block_size = wl1271_sdio_set_block_size,
+ };
+ 
++static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
++{
++	struct wl12xx_platform_data *pdata;
++	struct device_node *np = dev->of_node;
++
++	if (!np) {
++		np = of_find_matching_node(NULL, dev->driver->of_match_table);
++		if (!np) {
++			dev_notice(dev, "device tree node not available\n");
++			pdata = ERR_PTR(-ENODEV);
++			goto out;
++		}
++	}
++
++	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
++	if (!pdata) {
++		dev_err(dev, "can't allocate platform data\n");
++		pdata = ERR_PTR(-ENODEV);
++		goto out;
++	}
++
++	pdata->irq = irq_of_parse_and_map(np, 0);
++	if (pdata->irq < 0) {
++		dev_err(dev, "can't get interrupt gpio from the device tree\n");
++		goto out_free;
++	}
++
++	goto out;
++
++out_free:
++	kfree(pdata);
++	pdata = ERR_PTR(-ENODEV);
++
++out:
++	return pdata;
++}
++
+ static int wl1271_probe(struct sdio_func *func,
+ 				  const struct sdio_device_id *id)
+ {
+@@ -248,11 +285,22 @@ static int wl1271_probe(struct sdio_func *func,
+ 	/* Use block mode for transferring over one block size of data */
+ 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
+ 
++	/* The pdata allocated here is freed when the device is freed,
++	 * so we don't need an additional out label to free it in case
++	 * of error further on.
++	 */
++
++	/* Try to get legacy platform data from the board file */
+ 	pdev_data->pdata = wl12xx_get_platform_data();
+ 	if (IS_ERR(pdev_data->pdata)) {
+-		ret = PTR_ERR(pdev_data->pdata);
+-		dev_err(glue->dev, "missing wlan platform data: %d\n", ret);
+-		goto out_free_glue;
++		dev_info(&func->dev,
++			 "legacy platform data not found, trying device tree\n");
++
++		pdev_data->pdata = wlcore_get_pdata_from_of(&func->dev);
++		if (IS_ERR(pdev_data->pdata)) {
++			dev_err(&func->dev, "can't get platform data\n");
++			goto out_free_glue;
++		}
+ 	}
+ 
+ 	/* if sdio can keep power while host is suspended, enable wow */
+@@ -386,16 +434,25 @@ static const struct dev_pm_ops wl1271_sdio_pm_ops = {
+ };
+ #endif
+ 
++static const struct of_device_id wlcore_sdio_of_match_table[] = {
++	{ .compatible = "ti,wilink6" },
++	{ .compatible = "ti,wilink7" },
++	{ .compatible = "ti,wilink8" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, wlcore_sdio_of_match_table);
++
+ static struct sdio_driver wl1271_sdio_driver = {
+ 	.name		= "wl1271_sdio",
+ 	.id_table	= wl1271_devices,
+ 	.probe		= wl1271_probe,
+ 	.remove		= wl1271_remove,
+-#ifdef CONFIG_PM
+ 	.drv = {
++#ifdef CONFIG_PM
+ 		.pm = &wl1271_sdio_pm_ops,
+-	},
+ #endif
++		.of_match_table = of_match_ptr(wlcore_sdio_of_match_table),
++	},
+ };
+ 
+ static int __init wl1271_init(void)
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.8.3.2
+
