@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpe-075-189-159-031.nc.res.rr.com ([75.189.159.31]:33282 "EHLO
-	jgpicker.rdu.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932863Ab3GLP3D (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:38336 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754613Ab3G3TOF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jul 2013 11:29:03 -0400
-From: John Greene <jogreene@redhat.com>
-To: linville@tuxdriver.com
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] brcmsmac: Further reduce log spam from tx phy messages
-Date: Fri, 12 Jul 2013 10:55:19 -0400
-Message-Id: <1373640919-2685-1-git-send-email-jogreene@redhat.com> (sfid-20130712_172907_266472_30C56BE8)
+	Tue, 30 Jul 2013 15:14:05 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Eliad Peller <eliad@wizery.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: implement critical protocol protection
+Date: Tue, 30 Jul 2013 19:14:00 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301A1F285@HASMSX103.ger.corp.intel.com> (sfid-20130730_211419_897841_CF24538C)
+References: <1374826090-17322-1-git-send-email-johannes@sipsolutions.net>
+ <CAB3XZEfy_ts00HnEgaLYQqzMhLR2KbZsn1KVH6eOMYUiTSjD-g@mail.gmail.com>
+In-Reply-To: <CAB3XZEfy_ts00HnEgaLYQqzMhLR2KbZsn1KVH6eOMYUiTSjD-g@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Relegate 2 phy messages to debug status as they create excessive
-log spam, noted in multiple bugzillas for brcmsmac v3.8 and up.
-This is a follow on to net-next 99e94940697adec4f84758adb2db71f4a82c7ba5:
-brcmsmac: Reduce log spam in heavy tx, make err print in debug
+> On Fri, Jul 26, 2013 at 11:08 AM, Johannes Berg <johannes@sipsolutions.net>
+> wrote:
+> > From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> >
+> > This new API add in cfg80211 wasn't implemented in mac80211.
+> > Advertise the capabilities based on the device's implementation
+> > (possibly NULL) of crit_prot mac80211 ops.
+> >
+> > This callback will be called by cfg80211 when hinted by userspace that
+> > a critical protocol is happening, e.g. it can be EAPOL, DHCP.
+> >
+> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > ---
+> 
+> > +static void ieee80211_crit_prot_timeout(struct work_struct *wk) {
+> > +       struct ieee80211_sub_if_data *sdata;
+> > +
+> > +       sdata = container_of(wk, struct ieee80211_sub_if_data,
+> > +                            crit_prot_end_wk.work);
+> > +
+> > +       drv_crit_proto(sdata->local, sdata, NL80211_CRIT_PROTO_UNSPEC,
+> > +false); }
+> > +
+> 
+> i think you should call cfg80211_crit_proto_stopped()?
+> and even better, maybe provide some callback to let/require the driver
+> indicate completion (and implicitly call cfg80211_crit_proto_stopped() there).
 
- brcmsmac bcma0:0: phyerr 0x10, rate 0x14
- brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete:
-ampdu tx phy error (0x10)
+Oops, your're right.
+Otherwise I won't be able to issue another crit_prot_session since start reads:
 
-Signed-off-by: John Greene <jogreene@redhat.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c | 2 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c  | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+	if (rdev->crit_proto_nlportid)
+		return -EBUSY;
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-index bd98285..42efac7 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-@@ -928,7 +928,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 			}
- 		} else if (txs->phyerr) {
- 			update_rate = false;
--			brcms_err(wlc->hw->d11core,
-+			brcms_dbg_ht(wlc->hw->d11core,
- 				  "%s: ampdu tx phy error (0x%x)\n",
- 				  __func__, txs->phyerr);
- 		}
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 9fd6f2f..fdb4c3f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -882,7 +882,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
- 	mcl = le16_to_cpu(txh->MacTxControlLow);
- 
- 	if (txs->phyerr)
--		brcms_err(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
-+		brcms_dbg_tx(wlc->hw->d11core, "phyerr 0x%x, rate 0x%x\n",
- 			  txs->phyerr, txh->MainRates);
- 
- 	if (txs->frameid != le16_to_cpu(txh->TxFrameID)) {
--- 
-1.7.11.7
-
+The API is just a bit funny: there is a duration, but I am still supposed to call stop when I am done?
+If so, why not put the timer internally in cfg80211?
