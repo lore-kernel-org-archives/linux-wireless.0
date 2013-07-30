@@ -1,73 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:33176 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753353Ab3GATeT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 15:34:19 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Harvey Yang <harvey.huawei.yang@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>
-Date: Mon, 1 Jul 2013 12:34:05 -0700
-Subject: RE: [PATCH 1/1] mwifiex: add tx info to skb when forming mgmt frame
-Message-ID: <477F20668A386D41ADCC57781B1F70430EA2CE60BC@SC-VEXCH1.marvell.com> (sfid-20130701_213439_225699_33538763)
-References: <1372671230-8733-1-git-send-email-harvey.huawei.yang@gmail.com>
-In-Reply-To: <1372671230-8733-1-git-send-email-harvey.huawei.yang@gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:44396 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754220Ab3G3BsT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jul 2013 21:48:19 -0400
+Received: by mail-pa0-f49.google.com with SMTP id bi5so6562649pad.22
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jul 2013 18:48:19 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH] mac80211: allow lowest basic rate for unicast management frame in mesh
+Date: Mon, 29 Jul 2013 18:48:12 -0700
+Message-Id: <1375148892-18121-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130730_034823_046616_309CE6A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Harvey,
+Allow lowest basic rate to be used for unicast management frame in
+mesh. Otherwise, the lowest supported rate is used for unicast
+management frame, such as 1Mbps for 2.4GHz and 6Mbps for 5GHz. Rename
+the rc_send_low_broadcast to re_send_low_basicrate since now it is
+also applied to unicast management frame in mesh.
 
-Thanks for your patch.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+---
+ net/mac80211/rate.c |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-> From: Huawei Yang <harvey.huawei.yang@gmail.com>
-> 
-> In function 'mwifiex_write_data_complete' it need tx info to find the mwifiex_private to updates
-> statistics and wake up tx queues. Or we may trigger tx queues timeout when transmitting lots of mgmt
-> frames burstly.
-
-Please shorten the commit log to less than 68 characters per line.
-
-> 
-> Signed-off-by: Huawei Yang <harvey.huawei.yang@gmail.com>
-> ---
->  drivers/net/wireless/mwifiex/cfg80211.c |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-> index e42b266..e8655f9 100644
-> --- a/drivers/net/wireless/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-> @@ -166,6 +166,10 @@ mwifiex_form_mgmt_frame(struct sk_buff *skb, const u8 *buf, size_t len)
->  	memcpy(skb_put(skb, len - sizeof(struct ieee80211_hdr_3addr)),
->  	       buf + sizeof(struct ieee80211_hdr_3addr),
->  	       len - sizeof(struct ieee80211_hdr_3addr));
-> +
-> +	tx_info = MWIFIEX_SKB_TXCB(skb);
-> +	tx_info->bss_num = priv->bss_num;
-> +	tx_info->bss_type = priv->bss_type;
-
-This code doesn't compile because both tx_info and priv are undefined in this function.
-Perhaps you meant to add it in mwifiex_cfg80211_mgmt_tx() instead?
-
-@@ -216,6 +216,10 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wirele
-                return -ENOMEM;
-        }
-
-+       tx_info = MWIFIEX_SKB_TXCB(skb);
-+       tx_info->bss_num = priv->bss_num;
-+       tx_info->bss_type = priv->bss_type;
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index ba63ac8..8038d47 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -210,7 +210,7 @@ static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
+ 		!ieee80211_is_data(fc);
+ }
+ 
+-static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
++static void rc_send_low_basicrate(s8 *idx, u32 basic_rates,
+ 				  struct ieee80211_supported_band *sband)
+ {
+ 	u8 i;
+@@ -269,6 +269,7 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
+ 	struct ieee80211_supported_band *sband = txrc->sband;
++	struct sta_info *sta_mesh = container_of(sta, struct sta_info, sta);
+ 	int mcast_rate;
+ 
+ 	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
+@@ -281,10 +282,16 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
+ 				return true;
+ 			}
+ 
+-			rc_send_low_broadcast(&info->control.rates[0].idx,
++			rc_send_low_basicrate(&info->control.rates[0].idx,
+ 					      txrc->bss_conf->basic_rates,
+ 					      sband);
+ 		}
 +
-        mwifiex_form_mgmt_frame(skb, buf, len);
-        mwifiex_queue_tx_pkt(priv, skb);
++		if (sta && ieee80211_vif_is_mesh(&sta_mesh->sdata->vif))
++			rc_send_low_basicrate(&info->control.rates[0].idx,
++					      txrc->bss_conf->basic_rates,
++					      sband);
++
+ 		return true;
+ 	}
+ 	return false;
+-- 
+1.7.9.5
 
-> 
->  	skb->priority = LOW_PRIO_TID;
->  	do_gettimeofday(&tv);
-
-Thanks,
-Bing
