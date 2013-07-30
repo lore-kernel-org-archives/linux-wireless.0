@@ -1,57 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:60806 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753595Ab3GPJF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 05:05:27 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <ymir.kr@gmail.com>, <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix NULL dereference for injected packets
-Date: Tue, 16 Jul 2013 11:04:54 +0200
-Message-ID: <1373965494-17726-1-git-send-email-michal.kazior@tieto.com> (sfid-20130716_110532_674782_BFF507B0)
-In-Reply-To: <CAMQ0DfRpqk6ufb4rAifjy651oM9-GZyDpMLL+mGVzzVSVjVyJA@mail.gmail.com>
-References: <CAMQ0DfRpqk6ufb4rAifjy651oM9-GZyDpMLL+mGVzzVSVjVyJA@mail.gmail.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:36560 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754010Ab3G3UVo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 16:21:44 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>
+CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
+	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>,
+	<nm@ti.com>, <laurent.pinchart@ideasonboard.com>
+Subject: [PATCH v3] Documentation: dt: bindings: TI WiLink modules
+Date: Tue, 30 Jul 2013 23:21:08 +0300
+Message-ID: <1375215668-29171-1-git-send-email-coelho@ti.com> (sfid-20130730_222202_352739_3E51CB66)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tx processing functions dereference vif and caused
-NULL to be dereferenced for injected frames.
+Add device tree bindings documentation for the TI WiLink modules.
+Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
+modules is supported.
 
-Don't call these functions at all for injected
-frames. It doesn't make much sense to do so
-anyway.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5082503..cdc08a0 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1687,10 +1687,14 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
- 	}
- 
--	ath10k_tx_h_qos_workaround(hw, control, skb);
--	ath10k_tx_h_update_wep_key(skb);
--	ath10k_tx_h_add_p2p_noa_ie(ar, skb);
--	ath10k_tx_h_seq_no(skb);
-+	/* it makes no sense to process injected frames like that */
-+	if (info->control.vif &&
-+	    info->control.vif->type != NL80211_IFTYPE_MONITOR) {
-+		ath10k_tx_h_qos_workaround(hw, control, skb);
-+		ath10k_tx_h_update_wep_key(skb);
-+		ath10k_tx_h_add_p2p_noa_ie(ar, skb);
-+		ath10k_tx_h_seq_no(skb);
-+	}
- 
- 	memset(ATH10K_SKB_CB(skb), 0, sizeof(*ATH10K_SKB_CB(skb)));
- 	ATH10K_SKB_CB(skb)->htt.vdev_id = vdev_id;
+In v3, use IRQ_TYPE_LEVEL_HIGH in the example, as suggested by Laurent.
+
+ .../devicetree/bindings/net/wireless/ti-wilink.txt | 68 ++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+new file mode 100644
+index 0000000..aafebb1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+@@ -0,0 +1,68 @@
++TI WiLink Wireless Modules Device Tree Bindings
++===============================================
++
++The WiLink modules provide wireless connectivity, such as WLAN,
++Bluetooth, FM and NFC.
++
++There are several different modules available, which can be grouped by
++their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
++currently supported with device tree.
++
++Currently, only the WLAN portion of the modules is supported with
++device tree.
++
++Required properties:
++--------------------
++
++- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
++- interrupt-parent: the interrupt controller
++- interrupts: out-of-band WLAN interrupt
++	See the interrupt controller's bindings documentation for
++	detailed definition.
++
++Optional properties:
++--------------------
++
++- clocks: list of clocks needed by the chip as follows:
++
++  refclock: the internal WLAN reference clock frequency (required for
++	WiLink6 and WiLink7; not used for WiLink8).
++
++  tcxoclock: the internal WLAN TCXO clock frequency (required for
++	WiLink7 not used for WiLink6 and WiLink8).
++
++  The clocks must be defined and named accordingly.  For example:
++
++  clocks = <&refclock>
++  clock-names = "refclock";
++
++  refclock: refclock {
++		     compatible = "ti,wilink-clock";
++		     #clock-cells = <0>;
++		     clock-frequency = <38400000>;
++	};
++
++  Some modules that contain the WiLink chip provide clocks in the
++  module itself.  In this case, we define a "ti,wilink-clock" as shown
++  above.  But any other clock could in theory be used, so the proper
++  clock definition should be used.
++
++
++Example:
++--------
++
++Example definition that can be used in OMAP4 Panda:
++
++wlan {
++	compatible = "ti,wilink6";
++	interrupt-parent = <&gpio2>;
++	interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;	/* gpio line 53 */
++	clocks = <&refclock>;
++	clock-names = "refclock";
++
++	refclock: refclock {
++		compatible = "ti,wilink-clock";
++		#clock-cells = <0>;
++		clock-frequency = <38400000>;
++	};
++};
 -- 
-1.7.9.5
+1.8.3.2
 
