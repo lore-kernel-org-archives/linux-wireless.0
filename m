@@ -1,36 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:10025 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752227Ab3GGORT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 10:17:19 -0400
-Date: Sun, 7 Jul 2013 16:20:05 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 09/20] rt2x00: rt2800lib: fix default
- TX power values for RT3593
-Message-ID: <20130707142005.GK2073@localhost.localdomain> (sfid-20130707_161721_994962_6C974E32)
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
- <1372664879-18474-10-git-send-email-juhosg@openwrt.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49634 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758142Ab3G3Xxw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 19:53:52 -0400
+Date: Tue, 30 Jul 2013 16:55:08 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Hector Palacios <hector.palacios@digi.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	"gustavo@padovan.org" <gustavo@padovan.org>,
+	"johan.hedberg@gmail.com" <johan.hedberg@gmail.com>,
+	mcgrof@do-not-panic.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"surajs@qca.qualcomm.com" <surajs@qca.qualcomm.com>,
+	jjohnson@qca.qualcomm.com, Adrian Chadd <adrian@freebsd.org>,
+	ddahlby@qca.qualcomm.com, Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: ROM Patching (was: [PATCH] bluetooth: remove wrong dependency
+ for BT_ATH3K)
+Message-ID: <20130730235508.GA25319@kroah.com> (sfid-20130731_015410_583499_1F079B3F)
+References: <1375114325-25498-1-git-send-email-hector.palacios@digi.com>
+ <5438CD3C-E28C-485C-94B8-F743E8B13D4A@holtmann.org>
+ <51F7722E.9050708@digi.com>
+ <20130730205601.GI17130@pogo>
+ <2C94C740-76BA-4058-B0D7-C37D44875CA1@holtmann.org>
+ <20130730224809.GN17130@pogo>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372664879-18474-10-git-send-email-juhosg@openwrt.org>
+In-Reply-To: <20130730224809.GN17130@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 01, 2013 at 09:47:48AM +0200, Gabor Juhos wrote:
-> The TX power values in the EEPROM are using
-> a different format for the RT3593 chip. The
-> default TX power value uses bits 0..4 only.
-> Bits 5..8 contains value for fine grained
-> power control. Additionally, the lower and
-> upper limits of the TX power values are the
-> same for both bands.
+On Tue, Jul 30, 2013 at 03:48:09PM -0700, Luis R. Rodriguez wrote:
+> > We are planning to take one extra step and split this into a
+> > mini-driver approach similar to what has been done for usbnet, but we
+> > are not there yet.
 > 
-> Improve the rt2800_txpower_to_dev function,
-> in order to compute the correct default power
-> values for the RT3593 chip as well.
+> Neat. Perhaps we need something that we can share with 802.11 or other
+> hardare I highly doubt we're the only ones patching ROM. Don't we even
+> patch up core CPUs? I'm wondering if firmware_class could be expanded to
+> support serialized ROM patching. The biggest hurdle I see with splititng
+> ROM patching from a single firmware is serializing that, addressing
+> revision dependencies and of course kernel dependencies.
+
+What does the firmware_class need to do here that it doesn't do today?
+
+> > However the ROM patching drivers need to be in the kernel since
+> > otherwise they will race with the core init sequence.
 > 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> Sure and depending on the architecture -- if this is kicked off to
+> userspace helpers or not then we may need to consider dbus in
+> kernel thing to help with speed / races, dependenecies / async
+> loading, -EPROBE_DEFER, etc.
+
+How would dbus in the kernel change anything here?
+
+> > There are also just firmware download drivers that do nothing else
+> > than just loading the firmware. And here it can be done via userspace
+> > or kernel space. In the Bluetooth world we have seen both, but
+> > generally the kernel ones stayed around while the userspace ones had a
+> > hard time to work with udev, libusb, libusb1 etc.
+> 
+> Ah I see. Perhaps we can address this once we get some form of dbus in
+> kernel.
+
+The kernel directly loads firmware from the filesystem now, no userspace
+helpers are involved, so no need for udev, libusb, etc.  And as such, no
+need for any "dbus" in the kernel to do this either.
+
+> > For UART based drivers it is a little bit different since we had to
+> > bring up the line discipline from userspace anyway and configure all
+> > the UART parameters. For these drivers the firmware download or ROM
+> > patching has been done normally via userspace since there is full
+> > exclusive access before the Bluetooth subsystem knows about the
+> > device.
+> 
+> Is this something that dbus in kernel can help clean up a bit?
+
+I don't understand how it could, please explain.
+
+Also note, for those not knowing, we have been working on dbus in the
+kernel (google "kdbus" for the github repo), but it is all
+outward-facing (i.e. userspace using the kdbus code to interact with
+other processes with a dbus-like protocol, not for in-kernel dbus
+things, although adding it wouldn't be that hard, just really strange.
+
+thanks,
+
+greg k-h
