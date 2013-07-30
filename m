@@ -1,134 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tomasu.net ([64.85.170.232]:49063 "EHLO mail.tomasu.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755675Ab3GUPgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jul 2013 11:36:45 -0400
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Reply-To: thomas@fjellstrom.ca
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH] ath: wil6210: Fix build error
-Date: Sun, 21 Jul 2013 09:35:40 -0600
-Message-ID: <1559869.yu0fjJXVeX@balsa> (sfid-20130721_173651_800295_1B589926)
-In-Reply-To: <51EBFABB.8080701@lwfinger.net>
-References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net> <1958736.oRuXAUfNGd@lx-vladimir> <51EBFABB.8080701@lwfinger.net>
+Received: from mail-we0-f172.google.com ([74.125.82.172]:53491 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750748Ab3G3Miw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 08:38:52 -0400
+Date: Tue, 30 Jul 2013 13:38:48 +0100
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2013-07-30
+Message-ID: <20130730123848.GE5975@joana> (sfid-20130730_143934_189156_C7C47B2C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 21 July 2013 10:14:03 Larry Finger wrote:
-> On 07/21/2013 02:06 AM, Vladimir Kondratiev wrote:
-> > On Saturday, July 20, 2013 09:46:48 PM Larry Finger wrote:
-> >> Building driver wil6210 in 3.10 and 3.11 kernels yields the following 
-errors:
-> >>
-> >>    CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
-> >> drivers/net/wireless/ath/wil6210/debugfs.c: In function 'wil_print_ring':
-> >> drivers/net/wireless/ath/wil6210/debugfs.c:163:11: error: pointer targets 
-in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-
-Werror=pointer-sign]
-> >>             false);
-> >>             ^
-> >> In file included from include/linux/kernel.h:13:0,
-> >>                   from include/linux/cache.h:4,
-> >>                   from include/linux/time.h:4,
-> >>                   from include/linux/stat.h:18,
-> >>                   from include/linux/module.h:10,
-> >>                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
-> >> include/linux/printk.h:361:13: note: expected 'char *' but argument is of 
-type 'unsigned char *'
-> >>   extern void hex_dump_to_buffer(const void *buf, size_t len,
-> >>               ^
-> >> drivers/net/wireless/ath/wil6210/debugfs.c: In function 
-'wil_txdesc_debugfs_show':
-> >> drivers/net/wireless/ath/wil6210/debugfs.c:429:10: error: pointer targets 
-in passing argument 5 of 'hex_dump_to_buffer' differ in signedness [-
-Werror=pointer-sign]
-> >>            sizeof(printbuf), false);
-> >>            ^
-> >> In file included from include/linux/kernel.h:13:0,
-> >>                   from include/linux/cache.h:4,
-> >>                   from include/linux/time.h:4,
-> >>                   from include/linux/stat.h:18,
-> >>                   from include/linux/module.h:10,
-> >>                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
-> >> include/linux/printk.h:361:13: note: expected 'char *' but argument is of 
-type 'unsigned char *'
-> >>   extern void hex_dump_to_buffer(const void *buf, size_t len,
-> >>               ^
-> >> cc1: all warnings being treated as errors
-> >> make[5]: *** [drivers/net/wireless/ath/wil6210/debugfs.o] Error 1
-> >> make[4]: *** [drivers/net/wireless/ath/wil6210] Error 2
-> >> make[3]: *** [drivers/net/wireless/ath] Error 2
-> >> make[2]: *** [drivers/net/wireless] Error 2
-> >> make[1]: *** [drivers/net] Error 2
-> >> make: *** [drivers] Error 2
-> >>
-> >> These errors are fixed by changing the type of the buffer from "unsigned 
-char *" to "char *".
-> >>
-> >> Reported-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
-> >> Tested-by: Thomas Fjellstrom <thomas@fjellstrom.ca>
-> >> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> >> Cc: Stable <stable@vger.kernel.org>  [3.10]
-> >> Cc: Thomas Fjellstrom <thomas@fjellstrom.ca>
-> >> ---
-> >>   drivers/net/wireless/ath/wil6210/debugfs.c | 4 ++--
-> >>   1 file changed, 2 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c 
-b/drivers/net/wireless/ath/wil6210/debugfs.c
-> >> index e8308ec..ab63676 100644
-> >> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
-> >> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-> >> @@ -145,7 +145,7 @@ static void wil_print_ring(struct seq_file *s, const 
-char *prefix,
-> >>   				   le16_to_cpu(hdr.type), hdr.flags);
-> >>   			if (len <= MAX_MBOXITEM_SIZE) {
-> >>   				int n = 0;
-> >> -				unsigned char printbuf[16 * 3 + 2];
-> >> +				char printbuf[16 * 3 + 2];
-> >>   				unsigned char databuf[MAX_MBOXITEM_SIZE];
-> >>   				void __iomem *src = wmi_buffer(wil, d.addr) +
-> >>   					sizeof(struct wil6210_mbox_hdr);
-> >> @@ -416,7 +416,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, 
-void *data)
-> >>   		seq_printf(s, "  SKB = %p\n", skb);
-> >>
-> >>   		if (skb) {
-> >> -			unsigned char printbuf[16 * 3 + 2];
-> >> +			char printbuf[16 * 3 + 2];
-> >>   			int i = 0;
-> >>   			int len = le16_to_cpu(d->dma.length);
-> >>   			void *p = skb->data;
-> >>
-> > Hmm, I have no warning for this with neither 3.10 nor 3.11 kernel version; 
-but
-> > patch is correct, and here is my
-> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> 
-> Thanks. I did not see any warning or error either; however, it did happen 
-for 
-> Thomas. I'm not sure what combination of compiler version and/or switches 
-lead 
-> to the problem, but his system apparently uses them.
 
-If it helps, I'm running a fresh install of Debian Sid with gcc 4.8.1. I've 
-noticed that each newer successive version of gcc gets more strict with what 
-code it accepts without warning, or error. A lot of my only somewhat old code 
-tends to have a lot more warnings. Especially that signedness warning.
+--d6Gm4EdcadzBjdND
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-It also looked like that that driver or section of the kernel was compiling 
-with -Werror. I haven't verrified that but I remember seeing "treating all 
-warnings as errors" at one point.
+Hi John,
 
-> Larry
-> 
-> 
--- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+A few fixes and devices ID additions for 3.11:=20
+
+ * There are 4 new ath3k device ids=20
+ * Fixed stack memory usage in ath3k.
+ * Fixed the init process of BlueFRITZ! devices, they were failing to init
+   due to an unsupported command we sent.=20
+ * Fixed wrong use of PTR_ERR in btusb code that was preventing intel devic=
+es
+   to work properly.
+ * Fixed race condition between hci_register_dev() and hci_dev_open() that
+   could cause a NULL pointer dereference.
+ * Fixed race condition that could call hci_req_cmd_complete() and make some
+   devices to fail as showed in the log added to the commit message.
+
+Please pull or let me know of any issues. Thanks.
+
+	Gustavo
+
+--
+The following changes since commit 075163bbb0f51174359947e1bce84f5edb23f21e:
+
+  ath9k_htc: Handle IDLE state transition properly (2013-06-24 13:52:52 -04=
+00)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+
+for you to fetch changes up to 53e21fbc288218a423959f878c86471a0e323a9a:
+
+  Bluetooth: Fix calling request callback more than once (2013-07-29 12:28:=
+04 +0100)
+
+----------------------------------------------------------------
+AceLan Kao (2):
+      Bluetooth: Add support for Atheros [0cf3:3121]
+      Bluetooth: Add support for Atheros [0cf3:e003]
+
+Adam Lee (1):
+      Bluetooth: fix wrong use of PTR_ERR() in btusb
+
+Gustavo Padovan (1):
+      Bluetooth: Fix race between hci_register_dev() and hci_dev_open()
+
+Jaganath Kanakkassery (1):
+      Bluetooth: Fix invalid length check in l2cap_information_rsp()
+
+Johan Hedberg (2):
+      Bluetooth: Fix HCI init for BlueFRITZ! devices
+      Bluetooth: Fix calling request callback more than once
+
+Stanislaw Gruszka (1):
+      Bluetooth: ath3k: don't use stack memory for DMA
+
+Sujith Manoharan (1):
+      Bluetooth: ath3k: Add support for ID 0x13d3/0x3402
+
+Thomas Loo (1):
+      Bluetooth: ath3k: Add support for Fujitsu Lifebook UH5x2 [04c5:1330]
+
+ drivers/bluetooth/ath3k.c  | 46 +++++++++++++++++++++++++++++++++++++-----=
+----
+ drivers/bluetooth/btusb.c  | 18 +++++++++++-------
+ net/bluetooth/hci_core.c   | 26 +++++++++++++++++---------
+ net/bluetooth/l2cap_core.c |  2 +-
+ 4 files changed, 66 insertions(+), 26 deletions(-)
+
+--d6Gm4EdcadzBjdND
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iQIcBAEBAgAGBQJR97PYAAoJEPs3PUX4s20ocDYP/jkiaZtLDJNxdG6WmcFaciBv
+hgjbraGZ1cW0jXJmOfbpjK0P+YcHcrx2j+RlDNj55rs+JY+GKeAuQUzXuR0vy7cB
+uxAWWaqNbUziLYG+QUD6gq0GnM6AkgGz5I62gVly3UZ0i+qr5Bo8ayEY1ZBSTqws
+jrTNE5FKUQtGjinxxxQalnpjbcnUyw0mfQ6xmbF+yYqRiJZUTUNVuKeDwu6e3xIQ
+ummvCcKyoucey9D0s2U8SvpmvXWrXo3cAEe9rXolYcfzKHjYPAihISdTovI7qL3q
+XRKfL7FSJTHzl4NudLS/d8klueItSjtFzVmRpdKihH2spSA+RNSMZr4IQHGJoJgw
+A4XdTRrM3CORAzF/hkjAe9TxkB8gsnVHjFazER/TUGYBsTuzfXEmQFtepqE/cRjH
+imzLiStzSgaIEJQgpUEchDy+RxPoDcOox/q0PUWeHhnjVShUcjTnuvxKtdcNbgFl
+G/qSxjUfsCIu/5+uw0PFu7mEt+CKnNesP21Y2vETujXz1p2murpm1rHqlS0gLrtE
+QlemfdKL735aWolFXkCNZ4YxjnNwm7zju7rh52xd+6h0wxQiqUb6CdNf7O87jtc7
+s+50+t7PAtiEWX+TtxJr80pQmCKndOh5e1lr1ZOa8rQvhOt6RRBzkyzuj11gf9mP
+aTUzvpALst82EWooWUd1
+=qQs1
+-----END PGP SIGNATURE-----
+
+--d6Gm4EdcadzBjdND--
