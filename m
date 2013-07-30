@@ -1,112 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from erley.org ([97.107.129.9]:58822 "EHLO remote.erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753188Ab3G1TGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Jul 2013 15:06:00 -0400
-Message-ID: <51F569A6.5090800@erley.org> (sfid-20130728_210625_587837_E6EAF2AE)
-Date: Sun, 28 Jul 2013 14:57:42 -0400
-From: Pat Erley <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: Tomas Pospisek <tpo2@sourcepole.ch>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: unable to unblock Bluetooth
-References: <51F3CEF7.4030200@sourcepole.ch>
-In-Reply-To: <51F3CEF7.4030200@sourcepole.ch>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:47972 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757149Ab3G3Uiv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 16:38:51 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Hutchings <ben@decadent.org.uk>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.11] nl80211: fix another nl80211_fam.attrbuf race
+Date: Tue, 30 Jul 2013 22:38:42 +0200
+Message-Id: <1375216722-31194-1-git-send-email-johannes@sipsolutions.net> (sfid-20130730_223853_966724_46A21D35)
+In-Reply-To: <1375211931.2664.21.camel@deadeye.wl.decadent.org.uk>
+References: <1375211931.2664.21.camel@deadeye.wl.decadent.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/27/2013 09:45 AM, Tomas Pospisek wrote:
-> Hello
->
-> I am not able to unblock Bluetooth:
->
-> # rfkill unblock all
-> # rfkill list 4
-> 4: hp-bluetooth: Bluetooth
->           Soft blocked: yes
->           Hard blocked: no
->
-> The Bluetooth layer remains "Soft blocked".
->
-> My system looks like this:
->
-> - Linux: 3.11-rc1
-> - Userspace: Debian wheezy
-> - rfkill: 0.5
-> - HW: HP dv7 6130ez
-> - Bluetooth probably provided by:
->    # lspci
->    ...
->    0d:00.0 Network controller: Ralink corp. RT5390
->   [802.11 b/g/n 1T1R G-band PCI Express Single Chip]
->
-> Kernel logs show no trace of a problem:
->
->    Bluetooth: Core ver 2.16
->    Bluetooth: HCI device and connection manager initialized
->    Bluetooth: HCI socket layer initialized
->    Bluetooth: L2CAP socket layer initialized
->    Bluetooth: SCO socket layer initialized
->    Bluetooth: RFCOMM TTY layer initialized
->    Bluetooth: RFCOMM socket layer initialized
->    Bluetooth: RFCOMM ver 1.11
->    Bluetooth: BNEP (Ethernet Emulation) ver 1.3
->    Bluetooth: BNEP filters: protocol multicast
->    Bluetooth: BNEP socket layer initialized
->
-> I had to provide some firware in order for the Bluetooth device to show
-> up in rfkill. I copied those firmware blobs over from Debian's
-> "firmware-ralink" package. It must be one of these:
->
-> rt2661.bin
-> rtl_nic
-> rtl_nic/rtl8168f-1.fw
-> rtl_nic/rtl8168e-1.fw
-> rtl_nic/rtl8168f-2.fw
-> rtl_nic/rtl8168e-3.fw
-> rtl_nic/rtl8168d-2.fw
-> rtl_nic/rtl8168e-2.fw
-> rtl_nic/rtl8105e-1.fw
-> rtl_nic/rtl8168d-1.fw
-> RTL8192SU
-> RTL8192SU/rtl8192sfw.bin
-> rt2561.bin
-> rt2870.bin
-> rt2860.bin
-> rt73.bin
-> rt3070.bin
-> rtlwifi
-> rtlwifi/rtl8192cufw.bin
-> rtlwifi/rtl8192cfwU.bin
-> rtlwifi/rtl8192cfw.bin
-> rtlwifi/rtl8192cfwU_B.bin
-> rtlwifi/rtl8192sefw.bin
-> rtlwifi/rtl8192defw.bin
-> rtlwifi/rtl8712u.bin
-> rt3071.bin
-> rt3090.bin
-> rt2561s.bin
-> RTL8192E
-> RTL8192E/main.img
-> RTL8192E/boot.img
-> RTL8192E/data.img
->
-> Additional possibly useful info:
->
->    # lsmod |grep blue
->    bluetooth             169854  10 bnep,rfcomm
->    rfkill                 19242  6 cfg80211,hp_wmi,bluetooth
->    crc16                  12343  2 ext4,bluetooth
->
-> What can I do to unblock the Bluetooth?
->
-> Thank you,
-> *t
+From: Johannes Berg <johannes.berg@intel.com>
 
-lsusb might be useful here too.  hp_wmi hooked into rfkill might mean 
-that hp-wmi is setting that soft block.  Perhaps you have a keyboard 
-combo to unblock it?
+This is similar to the race Linus had reported, but in this case
+it's an older bug: nl80211_prepare_wdev_dump() uses the wiphy
+index in cb->args[0] as it is and thus parses the message over
+and over again instead of just once because 0 is the first valid
+wiphy index. Similar code in nl80211_testmode_dump() correctly
+offsets the wiphy_index by 1, do that here as well.
 
-Pat Erley
+Cc: stable@vger.kernel.org
+Reported-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 25d217d..3fcba69 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -441,10 +441,12 @@ static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
+ 			goto out_unlock;
+ 		}
+ 		*rdev = wiphy_to_dev((*wdev)->wiphy);
+-		cb->args[0] = (*rdev)->wiphy_idx;
++		/* 0 is the first index - add 1 to parse only once */
++		cb->args[0] = (*rdev)->wiphy_idx + 1;
+ 		cb->args[1] = (*wdev)->identifier;
+ 	} else {
+-		struct wiphy *wiphy = wiphy_idx_to_wiphy(cb->args[0]);
++		/* subtract the 1 again here */
++		struct wiphy *wiphy = wiphy_idx_to_wiphy(cb->args[0] - 1);
+ 		struct wireless_dev *tmp;
+ 
+ 		if (!wiphy) {
+-- 
+1.8.0
 
