@@ -1,36 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f49.google.com ([209.85.128.49]:46039 "EHLO
-	mail-qe0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756154Ab3GKOiS (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47976 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757149Ab3G3Ui5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 10:38:18 -0400
-Received: by mail-qe0-f49.google.com with SMTP id cz11so4396438qeb.22
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 07:38:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951035636367@SC-VEXCH1.marvell.com>
-References: <CAMLZHHR_8Zsp2xe=9x4oJ1Rj7XLGOEza3r0uPt_Ht8TDC781aQ@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951035636367@SC-VEXCH1.marvell.com>
-Date: Thu, 11 Jul 2013 08:38:17 -0600
-Message-ID: <CAMLZHHQUghAsT8AM2to2rNJ3nwCfYEvPaqTcEk_7GmPWTOpQyQ@mail.gmail.com> (sfid-20130711_163837_105674_9BB88083)
-Subject: Re: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-From: Daniel Drake <dsd@laptop.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 30 Jul 2013 16:38:57 -0400
+Message-ID: <1375216719.8176.5.camel@jlt4.sipsolutions.net> (sfid-20130730_223859_563958_F3F5D705)
+Subject: Re: Oops in nl80211_set_reg, Linux 3.10.3
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 30 Jul 2013 22:38:39 +0200
+In-Reply-To: <1375214899.8176.4.camel@jlt4.sipsolutions.net> (sfid-20130730_220849_379151_0B5CC1C0)
+References: <1375211931.2664.21.camel@deadeye.wl.decadent.org.uk>
+	 (sfid-20130730_211910_708043_1782E991) <1375214899.8176.4.camel@jlt4.sipsolutions.net>
+	 (sfid-20130730_220849_379151_0B5CC1C0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 8:17 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
-> Hi Daniel,
->
-> Thanks for your elaborative comments. We can go with your patch which fixes the issue in a cleaner way. I ran some tests and verified remove path with it.
+On Tue, 2013-07-30 at 22:08 +0200, Johannes Berg wrote:
 
-Hmm. Now that I heard back from you and Bing, that interrupts at this
-point are totally unexpected, I would prefer to see the interrupt
-handler being disabled at the appropriate time, I think we can do
-better than my original patch. Let me see if I can find some time
-today/tomorrow to explore a better approach.
+> I don't see a similar issue with the other code that uses
+> nl80211_fam.attrbuf
 
-Daniel
+That's just because I'm blind -- it *looks* correct but isn't.. patch
+coming.
+
+johannes
+
