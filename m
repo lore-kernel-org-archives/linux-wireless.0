@@ -1,75 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46464 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751894Ab3GPHUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:20:11 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infraread.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 04/10] ath10k: reset BMI state upon init
-Date: Tue, 16 Jul 2013 09:19:47 +0200
-Message-ID: <1373959193-5164-5-git-send-email-michal.kazior@tieto.com> (sfid-20130716_092019_526377_D4924E1F)
-In-Reply-To: <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
-References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
- <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24027 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754396Ab3G3Sfr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 14:35:47 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: move irq setup
+References: <1374129572-6079-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 30 Jul 2013 21:35:39 +0300
+In-Reply-To: <1374129572-6079-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 18 Jul 2013 08:39:32 +0200")
+Message-ID: <87d2pzuc90.fsf@kamboji.qca.qualcomm.com> (sfid-20130730_203550_919820_DD00EBCF)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is necessary if we want to be able to restart
-hw on-the-fly.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/bmi.c  |    6 ++++++
- drivers/net/wireless/ath/ath10k/bmi.h  |    1 +
- drivers/net/wireless/ath/ath10k/core.c |    2 ++
- 3 files changed, 9 insertions(+)
+> There was a slight race during PCI shutdown. Since
+> interrupts weren't really stopped (only Copy
+> Engine interrupts were disabled through device hw
+> registers) it was possible for a firmware
+> indication (crash) interrupt to come in after
+> tasklets were synced/killed. This would cause
+> memory corruption and a panic in most cases. It
+> was also possible for interrupt to come before CE
+> was initialized during device probing.
+>
+> Interrupts are required for BMI phase so they are enabled as soon as
+> power_up() is called but are freed upon both power_down() and stop()
+> so there's asymmetry here. As by design stop() cannot be followed by
+> start() it is okay. Both power_down() and stop() should be merged
+> later on to avoid confusion.
 
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.c b/drivers/net/wireless/ath/ath10k/bmi.c
-index aeae029..744da6d 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.c
-+++ b/drivers/net/wireless/ath/ath10k/bmi.c
-@@ -20,6 +20,12 @@
- #include "debug.h"
- #include "htc.h"
- 
-+void ath10k_bmi_start(struct ath10k *ar)
-+{
-+	ath10k_dbg(ATH10K_DBG_CORE, "BMI started\n");
-+	ar->bmi.done_sent = false;
-+}
-+
- int ath10k_bmi_done(struct ath10k *ar)
- {
- 	struct bmi_cmd cmd;
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
-index 32c56aa..8d81ce1 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.h
-+++ b/drivers/net/wireless/ath/ath10k/bmi.h
-@@ -184,6 +184,7 @@ struct bmi_target_info {
- #define BMI_CE_NUM_TO_TARG 0
- #define BMI_CE_NUM_TO_HOST 1
- 
-+void ath10k_bmi_start(struct ath10k *ar);
- int ath10k_bmi_done(struct ath10k *ar);
- int ath10k_bmi_get_target_info(struct ath10k *ar,
- 			       struct bmi_target_info *target_info);
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index dcddae4..3d75c6a 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -507,6 +507,8 @@ int ath10k_core_start(struct ath10k *ar)
- 	struct bmi_target_info target_info;
- 	int status;
- 
-+	ath10k_bmi_start(ar);
-+
- 	memset(&target_info, 0, sizeof(target_info));
- 	status = ath10k_bmi_get_target_info(ar, &target_info);
- 	if (status)
+Why are the interrupts freed both in power_down() and stop()? I don't
+get that.
+
+What if we call disable_irq() in power_down() instead?
+
+> Before this can be really properly fixed var/hw
+> init code split is necessary.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>
+> Please note: this is based on my (still under
+> review at the time of posting) previous patchests:
+> device setup refactor and recovery.
+>
+> I'm posting this before those patchsets are merged
+> so anyone interested in testing this fix (I can't
+> reproduce the problem on my setup) can give it a
+> try.
+
+This was reported by Ben, right? So this sould have a Reported-by line
+attributing him.
+
+> @@ -1783,16 +1792,24 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+>  	return 0;
+>  
+>  err_ce:
+> +	/* XXX: Until var/hw init is split it's impossible to fix the ordering
+> +	 * here so we must call stop_intr() here too to prevent interrupts after
+> +	 * CE is teared down. It's okay to double call the stop_intr()
+> */
+
+"FIXME:"
+
+>  exit:
+> +	ar_pci->intr_started = ret == 0;
+
+A bit too clever for the sake of readibility for my taste, but I guess
+it's ok.
+
+> --- a/drivers/net/wireless/ath/ath10k/pci.h
+> +++ b/drivers/net/wireless/ath/ath10k/pci.h
+> @@ -198,6 +198,7 @@ struct ath10k_pci {
+>  	 * interrupts.
+>  	 */
+>  	int num_msi_intrs;
+> +	bool intr_started;
+
+Adding a new state variable makes me worried. I really would prefer a
+solution which would not require that.
+
+Also if we call request_irq() in ath10k_pci_probe() we should also call
+free_irq() in ath10k_pci_remove() for symmetry. Just doing a temporary
+hack will most likely stay forever :)
+
 -- 
-1.7.9.5
-
+Kalle Valo
