@@ -1,150 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.ugent.be ([157.193.71.182]:50798 "EHLO smtp1.ugent.be"
+Received: from bear.ext.ti.com ([192.94.94.41]:59433 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751754Ab3GaMjf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 08:39:35 -0400
-Received: from localhost (mcheck2.ugent.be [157.193.49.249])
-	by smtp1.ugent.be (Postfix) with ESMTP id F0E3080D9
-	for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 14:39:33 +0200 (CEST)
-Received: from smtp1.ugent.be ([157.193.71.182])
-	by localhost (mcheck2.UGent.be [157.193.43.11]) (amavisd-new, port 10024)
-	with ESMTP id lyeStsO0c2jE for <linux-wireless@vger.kernel.org>;
-	Wed, 31 Jul 2013 14:39:33 +0200 (CEST)
-Received: from mail-la0-f49.google.com (mail-la0-f49.google.com [209.85.215.49])
-	(Authenticated sender: mathieu.devos@ugent.be)
-	by smtp1.ugent.be (Postfix) with ESMTPSA id D9BA48138
-	for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 14:39:32 +0200 (CEST)
-Received: by mail-la0-f49.google.com with SMTP id ev20so455021lab.36
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 05:39:32 -0700 (PDT)
+	id S1750957Ab3G3R2I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 13:28:08 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <tony@atomide.com>, <linux-omap@vger.kernel.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>, <coelho@ti.com>,
+	<luca@coelho.fi>, <balbi@ti.com>
+Subject: [PATCH 1/4] ARM: dts: omap4-panda: add MMC5 (WiLink WLAN) configuration
+Date: Tue, 30 Jul 2013 20:27:25 +0300
+Message-ID: <1375205248-25708-2-git-send-email-coelho@ti.com> (sfid-20130730_192817_195374_6F288FDD)
+In-Reply-To: <1375205248-25708-1-git-send-email-coelho@ti.com>
+References: <1375205248-25708-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <51F8EF8F.90109@broadcom.com>
-References: <CAE_+Soy5=MfUUahaP3Ka2onp+jP9aupbhGu_QHco=CP7Y9sqhQ@mail.gmail.com>
-	<51F8E228.9080600@broadcom.com>
-	<CAE_+Soyxz-RfyVeg-Z4Fv5tmUtH=9wutxgM0CGjHEne9zJq+Kg@mail.gmail.com>
-	<51F8EF8F.90109@broadcom.com>
-Date: Wed, 31 Jul 2013 14:39:32 +0200
-Message-ID: <CAE_+SozB3cE36SKaHsyO9B1Eypm7KZFExV_uWBSsoiQ-Rn66Dw@mail.gmail.com> (sfid-20130731_143939_154572_E2308E80)
-Subject: Re: Skb and ieee80211 headers
-From: Mathieu Devos <mathieu.devos@ugent.be>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Add regulator, pin muxing and MMC5 configuration to be used by the
+on-board WiLink6 module.
 
-The wireless chip is a Broadcast BCM4330 chip. After looking around a
-bit I found that this is a fullMAC and links to the driver on
-wireless.kernel: http://wireless.kernel.org/en/users/Drivers/brcm80211
-and also links directly to android itself:
-https://android.googlesource.com/platform/hardware/broadcom/wlan
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ arch/arm/boot/dts/omap4-panda-common.dtsi | 31 ++++++++++++++++++++++++++++++-
+ 1 file changed, 30 insertions(+), 1 deletion(-)
 
-Still trying to learn a lot in this tightly packed world of protocol
-stacks, wireless and all the other poisons. Seems like I still have a
-long way to go. Thank you already for helping me out with these issues
-and taking the time to explain these things to me.
+diff --git a/arch/arm/boot/dts/omap4-panda-common.dtsi b/arch/arm/boot/dts/omap4-panda-common.dtsi
+index faa95b5..b3f6e1f 100644
+--- a/arch/arm/boot/dts/omap4-panda-common.dtsi
++++ b/arch/arm/boot/dts/omap4-panda-common.dtsi
+@@ -107,6 +107,16 @@
+ 	 */
+ 		clock-frequency = <19200000>;
+ 	};
++
++	wilink_wl_en: fixedregulator@1 {
++		compatible = "regulator-fixed";
++		regulator-name = "wilink_wl_en";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		gpio = <&gpio2 11 0>; /* gpio line 43 */
++		startup-delay-us = <70000>;
++		enable-active-high;
++	};
+ };
+ 
+ &omap4_pmx_wkup {
+@@ -132,6 +142,7 @@
+ 			&dss_hdmi_pins
+ 			&tpd12s015_pins
+ 			&hsusbb1_pins
++			&wilink_pins
+ 	>;
+ 
+ 	twl6030_pins: pinmux_twl6030_pins {
+@@ -235,6 +246,19 @@
+ 			0x1c (PIN_OUTPUT | MUX_MODE3)	/* gpio_wk8 */
+ 		>;
+ 	};
++
++	wilink_pins: pinmux_wilink_pins {
++		pinctrl-single,pins = <
++			0x7a 0x103      /* gpio_53  INPUT | MODE3 */
++			0x66 0x3	/* gpio_43  OUTPUT | MODE3 */
++			0x148 0x118     /* clk	    INPUT PULLUP | MODE0 */
++			0x14a 0x118     /* cmd	    INPUT PULLUP | MODE0 */
++			0x14c 0x118     /* dat0	    INPUT PULLUP | MODE0 */
++			0x14e 0x118     /* dat1	    INPUT PULLUP | MODE0 */
++			0x150 0x118     /* dat2	    INPUT PULLUP | MODE0 */
++			0x152 0x118     /* dat3	    INPUT PULLUP | MODE0 */
++		>;
++	};
+ };
+ 
+ &i2c1 {
+@@ -314,8 +338,13 @@
+ };
+ 
+ &mmc5 {
+-	ti,non-removable;
++	status = "okay";
++	vmmc-supply = <&wilink_wl_en>;
+ 	bus-width = <4>;
++	cap-power-off-card;
++	keep-power-in-suspend;
++	ti,non-removable;
++	ti,needs-special-hs-handling;
+ };
+ 
+ &emif1 {
+-- 
+1.8.3.2
 
-Kind regards,
-Mathieu Devos
-
-On Wed, Jul 31, 2013 at 1:05 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 07/31/2013 12:28 PM, Mathieu Devos wrote:
->>
->> Hi,
->>
->> It's an android smartphone (I 9100 - Samsung galaxy S2) so it does not
->> have a normal ethernet 802.3 input even. I check before selecting the
->> device that it's wireless (through ieee80211_ptr) and this properly
->> returns the wlan0 device which should be on the 80211 standard.
->
->
-> *sigh* Welcome in the world of protocol stacks, wireless, networking (choose
-> your poison). Let me draw the picture.
->
->         o user-space
->         |
-> ----------------------
->         | kernel
->   +-----------+
->   |    NET    | networking subsystem, ie. TCP/IP stack
->   +-----------+
->         | 802.3
-> +----------------+
-> |       | driver |
-> | +------------+ |
-> | |802.11 stack| |
-> | +------------+ |
-> |       | 802.11 |
-> +----------------+
->         |
->         o RF
->
-> The device hooks up to the networking subsystem as an ethernet device and as
-> such it receives 802.3 packets. These are converted to 802.11 packets by the
-> 802.11 stack. Now depending on your device that happens in the device driver
-> or on the device itself. Another option is that this is done by mac80211
-> (kernel provided 802.11 stack), but that is probably not the case, but to be
-> sure I ask again: what wireless device do you have in your galaxy S2?
->
-> Gr. AvS
->
->
->> My goal is to get the ieee80211_header properly on the skb with this
->> device, but some of the pointers and original data in the skb seem
->> totally off. This leaves me clueless as to where to put this
->> ieee80211_header.
->> I've tried putting it right on skb->head (wrong I know, but I was
->> getting desperate), on skb->mac_header (also wrong, no idea why
->> though), I went back from skb->tail with len and even added ETH_HLEN
->> to that as well because you can see that before my hook gets
->> activated: skb_pull_inline(skb, ETH_HLEN);
->> In the end I'm left with a header that is forced onto data but with a
->> wrong origin pointer thus basically leaving me with all wrong data in
->> the header.
->>
->> Kind regards,
->> Mathieu Devos
->>
->> On Wed, Jul 31, 2013 at 12:08 PM, Arend van Spriel <arend@broadcom.com>
->> wrote:
->>>
->>> On 07/31/2013 11:39 AM, Mathieu Devos wrote:
->>>>
->>>>
->>>> Hi,
->>>>
->>>> I hope this is the right place to ask for a little bit of help as I'm
->>>> currently beyond stuck on a challenge I'm trying to accomplish. I'm
->>>> trying to write a "simple" LKM that properly uses a ieee80211 header
->>>> to print information about the mac addresses (addr1->addr4) and later
->>>> down the road try to send my own data.
->>>>
->>>> I only need to get L2 working, no need for TCP/IP, just a proper
->>>> ieee80211 based on input from skb would be huge for me.
->>>>
->>>> So my issue: when placing the ieee80211 on my mac_header after I hook
->>>> my skb from my wireless device (wlan0 on android - I9100)
->>>
->>>
->>>
->>> Not sure what you goal is, but what wireless device is that? You may just
->>> get 802.3 packets from the device.
->>>
->>> Gr. AvS
->>>
->>>
->>>> I get a huge
->>>> amount of zero's and random(?) numbers when trying to print the
->>>> addresses. This leads me to the first conclusion that mac_header is
->>>> placed wrong when using 80211. After that I saw a lot of people just
->>>> using the skb->data pointer. Now this gives even weirder issues for me
->>>> and actually totally crashes my kernel.
->>>
->>>
->>>
->>>
->>>
->>
->
->
