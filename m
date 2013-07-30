@@ -1,120 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62223 "EHLO ebb06.tieto.com"
+Received: from mga14.intel.com ([143.182.124.37]:40380 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752552Ab3GPHUR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:20:17 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infraread.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 10/10] ath10k: skip fw stats debugfs interface if device is down
-Date: Tue, 16 Jul 2013 09:19:53 +0200
-Message-ID: <1373959193-5164-11-git-send-email-michal.kazior@tieto.com> (sfid-20130716_092030_039132_306F5CF7)
-In-Reply-To: <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
-References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
- <1373959193-5164-1-git-send-email-michal.kazior@tieto.com>
+	id S1755594Ab3G3NIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jul 2013 09:08:46 -0400
+Date: Tue, 30 Jul 2013 15:08:43 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux NFC <linux-nfc@lists.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: [GIT] [3.11] NFC fixes
+Message-ID: <20130730130843.GA28677@zurbaran> (sfid-20130730_150909_126941_5740D86E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the device is not running then there may be no
-FW at all to send the query to. If the FW is
-already there it might still trigger a crash if
-the command is sent before the device is fully
-initialized.
+Hi John,
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |   30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+This is the first NFC fixes pull request for 3.11.
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 499034b..65279f5 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -161,7 +161,7 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
- 	struct wmi_pdev_stats *ps;
- 	int i;
- 
--	mutex_lock(&ar->conf_mutex);
-+	spin_lock_bh(&ar->data_lock);
- 
- 	stats = &ar->debug.target_stats;
- 
-@@ -259,6 +259,7 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
- 		}
- 	}
- 
-+	spin_unlock_bh(&ar->data_lock);
- 	mutex_unlock(&ar->conf_mutex);
- 	complete(&ar->debug.event_stats_compl);
- }
-@@ -268,35 +269,35 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
- {
- 	struct ath10k *ar = file->private_data;
- 	struct ath10k_target_stats *fw_stats;
--	char *buf;
-+	char *buf = NULL;
- 	unsigned int len = 0, buf_len = 2500;
--	ssize_t ret_cnt;
-+	ssize_t ret_cnt = 0;
- 	long left;
- 	int i;
- 	int ret;
- 
- 	fw_stats = &ar->debug.target_stats;
- 
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state != ATH10K_STATE_ON)
-+		goto exit;
-+
- 	buf = kzalloc(buf_len, GFP_KERNEL);
- 	if (!buf)
--		return -ENOMEM;
-+		goto exit;
- 
- 	ret = ath10k_wmi_request_stats(ar, WMI_REQUEST_PEER_STAT);
- 	if (ret) {
- 		ath10k_warn("could not request stats (%d)\n", ret);
--		kfree(buf);
--		return -EIO;
-+		goto exit;
- 	}
- 
- 	left = wait_for_completion_timeout(&ar->debug.event_stats_compl, 1*HZ);
-+	if (left <= 0)
-+		goto exit;
- 
--	if (left <= 0) {
--		kfree(buf);
--		return -ETIMEDOUT;
--	}
--
--	mutex_lock(&ar->conf_mutex);
--
-+	spin_lock_bh(&ar->data_lock);
- 	len += scnprintf(buf + len, buf_len - len, "\n");
- 	len += scnprintf(buf + len, buf_len - len, "%30s\n",
- 			 "ath10k PDEV stats");
-@@ -424,14 +425,15 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
- 				 fw_stats->peer_stat[i].peer_tx_rate);
- 		len += scnprintf(buf + len, buf_len - len, "\n");
- 	}
-+	spin_unlock_bh(&ar->data_lock);
- 
- 	if (len > buf_len)
- 		len = buf_len;
- 
- 	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
- 
-+exit:
- 	mutex_unlock(&ar->conf_mutex);
--
- 	kfree(buf);
- 	return ret_cnt;
- }
+We only have one build failure fix for the NCI SPI transport layer
+due to a missing CRC_CCITT Kconfig dependency.
+
+Thanks in advance for pulling.
+
+The following changes since commit 64b6f46f1141ad938e354f37af62e28da972e8eb:
+
+  ath9k_hw: Fix multicast search for AR9002 family (2013-07-18 16:22:00 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.11-1
+
+for you to fetch changes up to 7427b370e0aa6226c763af94fc5c4e3433383543:
+
+  NFC: Fix NCI over SPI build (2013-07-19 16:55:26 +0200)
+
+----------------------------------------------------------------
+Frederic Danis (1):
+      NFC: Fix NCI over SPI build
+
+ net/nfc/nci/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 -- 
-1.7.9.5
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
