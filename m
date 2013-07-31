@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:41537 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752251Ab3HVNxg (ORCPT
+Received: from mx1.HRZ.Uni-Dortmund.DE ([129.217.128.51]:54650 "EHLO
+	unimail.uni-dortmund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835Ab3GaWEU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Aug 2013 09:53:36 -0400
-Received: by mail-oa0-f46.google.com with SMTP id j10so3401032oah.5
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 06:53:35 -0700 (PDT)
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: ignore obviously bogus ECSAs in probe response frames
-Date: Thu, 22 Aug 2013 08:53:33 -0500
-Message-Id: <1377179613-26591-1-git-send-email-seth.forshee@canonical.com> (sfid-20130822_155339_483780_E02FA567)
+	Wed, 31 Jul 2013 18:04:20 -0400
+Message-ID: <51F9807A.6080000@uni-dortmund.de> (sfid-20130801_000423_273546_D009E065)
+Date: Wed, 31 Jul 2013 23:24:10 +0200
+From: Thomas Klute <thomas2.klute@uni-dortmund.de>
+MIME-Version: 1.0
+To: Michael McElroy <mikem388@gmail.com>
+CC: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: CLI scan tool needed
+References: <CAJt7DwytQzEMzn9way1z5ag-vo=GsYF72uvmAJEcJeJs=Y-hfw@mail.gmail.com> <CABPxzYJQB_Lsi4aYkSfvULEgToECAdfZfJCtpm1u4Fo7ibc02g@mail.gmail.com> <CAJt7DwzwyOKso_zNyemnX0LdXvtrWiuoaRJ8dnN8FKVjxiaayg@mail.gmail.com>
+In-Reply-To: <CAJt7DwzwyOKso_zNyemnX0LdXvtrWiuoaRJ8dnN8FKVjxiaayg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Netgear WNDAP360 sends invalid ECSA IEs in probe response
-frames which have the operating class and channel number fields
-set to 0, even when no channel switch is pending. mac80211
-responds to invalid ECSAs by disconnecting. The result is that
-every scan when associated to one of these APs triggers a
-disconnect.
+Am 31.07.2013 22:51, schrieb Michael McElroy:
+> Thanks Krishna, but all it returns is OK. Running the version 2.0 of
+> wpa_supplicant.
 
-Since these ECSAs are obviously bogus, ignore them in probe
-response and beacon frames. Do not disconnect.
+I think the command you want is "scan_results" instead of "scan", so
+"wpa_cli -i <interface> scan_results" over all. ;-)
 
-Cc: <stable@vger.kernel.org> # 3.10+
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- net/mac80211/mlme.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cc9e02d..f921b67 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1054,6 +1054,13 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		if (!ieee80211_operating_class_to_band(
- 				elems->ext_chansw_ie->new_operating_class,
- 				&new_band)) {
-+			/*
-+			 * Some APs send invalid ECSA IEs in probe response
-+			 * frames, so check for these and ignore them.
-+			 */
-+			if (beacon && elems->ext_chansw_ie->new_ch_num == 0 &&
-+			    elems->ext_chansw_ie->new_operating_class == 0)
-+				return;
- 			sdata_info(sdata,
- 				   "cannot understand ECSA IE operating class %d, disconnecting\n",
- 				   elems->ext_chansw_ie->new_operating_class);
--- 
-1.8.1.2
-
+> On Wed, Jul 31, 2013 at 4:30 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Wed, Jul 31, 2013 at 11:57 PM, Michael McElroy <mikem388@gmail.com> wrote:
+>>> Using the backports project, I have one of the latest ralink driver
+>>> going on an arm processor running 2.6.29 along with all nl80211 parts.
+>>> Works great, thank you! The last piece I need is to get the to SSID
+>>> list, their security protocols, and signal strength. I'm looking for
+>>> output similar to 'wilist scanning'. 'iw scan' gives a lot of info but
+>>> not quite what I need without a lot of massaging.
+>>
+>> "wpa_cli -i <interface> scan"
+>> this should give you the required info, if you are already running the
+>> wpa_supplicant.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
