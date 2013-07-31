@@ -1,45 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f48.google.com ([209.85.128.48]:40325 "EHLO
-	mail-qe0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755247Ab3GDOhQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50284 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759066Ab3GaJuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jul 2013 10:37:16 -0400
-Received: by mail-qe0-f48.google.com with SMTP id 2so765239qea.21
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jul 2013 07:37:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMLZHHSSfPnWK957Yd+vrLrsPHtUDW3b4ZxSjMe2SdpaQPk5hQ@mail.gmail.com>
-References: <20130703015653.82651FAAD5@dev.laptop.org>
-	<477F20668A386D41ADCC57781B1F70430EA2E0674B@SC-VEXCH1.marvell.com>
-	<CAMLZHHSSfPnWK957Yd+vrLrsPHtUDW3b4ZxSjMe2SdpaQPk5hQ@mail.gmail.com>
-Date: Thu, 4 Jul 2013 08:37:15 -0600
-Message-ID: <CAMLZHHRCJTx2EPZq0U_+kCVBh3vVRa3EivhnZstEPxadSE0uVw@mail.gmail.com> (sfid-20130704_163720_773374_68FE632E)
-Subject: Re: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-From: Daniel Drake <dsd@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 31 Jul 2013 05:50:39 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>,
+	Andy Isaacson <adi@hexapodia.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.11] mac80211: ignore HT primary channel while connected
+Date: Wed, 31 Jul 2013 11:50:34 +0200
+Message-Id: <1375264234-31077-1-git-send-email-johannes@sipsolutions.net> (sfid-20130731_115057_319103_0639D869)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 4, 2013 at 8:32 AM, Daniel Drake <dsd@laptop.org> wrote:
-> I cannot see how the driver behaviour matches the above description
-> for when the card is removed as the system is suspended. For example I
-> cannot see where the SHUTDOWN command gets sent in such cases.
->
-> Also, at which point do we wait upon all async commands to complete
-> before shutting down? I walked through all the driver code in the
-> codepaths hit when the card is removed as the system is going into
-> suspend, and I found no such point. (This is why interrupts then
-> arrive later, because those commands are completing.)
+From: Johannes Berg <johannes.berg@intel.com>
 
-Also, from a more general standpoint, I would say it is bad
-practice/design to leave an interrupt handler running but in a state
-where it does not ACK interrupts. You're just asking for trouble. If
-you really don't expect interrupts beyond a certain point, and bad
-things would happen if interrupts *were* to arrive for any valid or
-invalid reason, disable the interrupt and remove the handler at that
-point.
+While we're connected, the AP shouldn't change the primary channel
+in the HT information. We checked this, and dropped the connection
+if it did change it.
 
-Daniel
+Unfortunately, this is causing problems on some APs, e.g. on the
+Netgear WRT610NL: the beacons seem to always contain a bad channel
+and if we made a connection using a probe response (correct data)
+we drop the connection immediately and can basically not connect
+properly at all.
+
+Work around this by ignoring the HT primary channel information in
+beacons if we're already connected.
+
+Also print out more verbose messages in the other situations to
+help diagnose similar bugs quicker in the future.
+
+Cc: stable@vger.kernel.org [3.10]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 383a961..77e7796 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -211,8 +211,9 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 			     struct ieee80211_channel *channel,
+ 			     const struct ieee80211_ht_operation *ht_oper,
+ 			     const struct ieee80211_vht_operation *vht_oper,
+-			     struct cfg80211_chan_def *chandef, bool verbose)
++			     struct cfg80211_chan_def *chandef, bool tracking)
+ {
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct cfg80211_chan_def vht_chandef;
+ 	u32 ht_cfreq, ret;
+ 
+@@ -231,7 +232,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 	ht_cfreq = ieee80211_channel_to_frequency(ht_oper->primary_chan,
+ 						  channel->band);
+ 	/* check that channel matches the right operating channel */
+-	if (channel->center_freq != ht_cfreq) {
++	if (!tracking && channel->center_freq != ht_cfreq) {
+ 		/*
+ 		 * It's possible that some APs are confused here;
+ 		 * Netgear WNDR3700 sometimes reports 4 higher than
+@@ -239,11 +240,10 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 		 * since we look at probe response/beacon data here
+ 		 * it should be OK.
+ 		 */
+-		if (verbose)
+-			sdata_info(sdata,
+-				   "Wrong control channel: center-freq: %d ht-cfreq: %d ht->primary_chan: %d band: %d - Disabling HT\n",
+-				   channel->center_freq, ht_cfreq,
+-				   ht_oper->primary_chan, channel->band);
++		sdata_info(sdata,
++			   "Wrong control channel: center-freq: %d ht-cfreq: %d ht->primary_chan: %d band: %d - Disabling HT\n",
++			   channel->center_freq, ht_cfreq,
++			   ht_oper->primary_chan, channel->band);
+ 		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
+ 		goto out;
+ 	}
+@@ -297,7 +297,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 				channel->band);
+ 		break;
+ 	default:
+-		if (verbose)
++		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
+ 			sdata_info(sdata,
+ 				   "AP VHT operation IE has invalid channel width (%d), disable VHT\n",
+ 				   vht_oper->chan_width);
+@@ -306,7 +306,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (!cfg80211_chandef_valid(&vht_chandef)) {
+-		if (verbose)
++		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
+ 			sdata_info(sdata,
+ 				   "AP VHT information is invalid, disable VHT\n");
+ 		ret = IEEE80211_STA_DISABLE_VHT;
+@@ -319,7 +319,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (!cfg80211_chandef_compatible(chandef, &vht_chandef)) {
+-		if (verbose)
++		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
+ 			sdata_info(sdata,
+ 				   "AP VHT information doesn't match HT, disable VHT\n");
+ 		ret = IEEE80211_STA_DISABLE_VHT;
+@@ -346,7 +346,7 @@ out:
+ 		ret |= chandef_downgrade(chandef);
+ 	}
+ 
+-	if (chandef->width != vht_chandef.width && verbose)
++	if (chandef->width != vht_chandef.width && !tracking)
+ 		sdata_info(sdata,
+ 			   "capabilities/regulatory prevented using AP HT/VHT configuration, downgraded\n");
+ 
+@@ -386,7 +386,7 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* calculate new channel (type) based on HT/VHT operation IEs */
+ 	flags = ieee80211_determine_chantype(sdata, sband, chan, ht_oper,
+-					     vht_oper, &chandef, false);
++					     vht_oper, &chandef, true);
+ 
+ 	/*
+ 	 * Downgrade the new channel if we associated with restricted
+@@ -3838,7 +3838,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 	ifmgd->flags |= ieee80211_determine_chantype(sdata, sband,
+ 						     cbss->channel,
+ 						     ht_oper, vht_oper,
+-						     &chandef, true);
++						     &chandef, false);
+ 
+ 	sdata->needed_rx_chains = min(ieee80211_ht_vht_rx_chains(sdata, cbss),
+ 				      local->rx_chains);
+-- 
+1.8.0
+
