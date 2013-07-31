@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fep13.mx.upcmail.net ([62.179.121.33]:59599 "EHLO
-	fep13.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759912Ab3GSMPr (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:57439 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754008Ab3GaVYJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jul 2013 08:15:47 -0400
-Message-ID: <51E92DEB.6020506@odi.ch> (sfid-20130719_141603_576369_DD8B96B8)
-Date: Fri, 19 Jul 2013 14:15:39 +0200
-From: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
+	Wed, 31 Jul 2013 17:24:09 -0400
+Received: by mail-wi0-f174.google.com with SMTP id j17so5493391wiw.7
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 14:24:08 -0700 (PDT)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [BUG] 3.10 regression: hang on suspend
-References: <51E4501D.3010001@odi.ch> <20130716065626.GA1587@redhat.com> <51E4F790.6090308@odi.ch> <51E51712.4020609@broadcom.com> <51E58FA5.4000804@odi.ch> <20130717122944.GA25894@redhat.com> <51E6E1AB.5010300@odi.ch> <20130718105550.GA4628@redhat.com> <51E83AB7.6020002@odi.ch> <20130719120842.GA1570@redhat.com>
-In-Reply-To: <20130719120842.GA1570@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAJt7DwzwyOKso_zNyemnX0LdXvtrWiuoaRJ8dnN8FKVjxiaayg@mail.gmail.com>
+References: <CAJt7DwytQzEMzn9way1z5ag-vo=GsYF72uvmAJEcJeJs=Y-hfw@mail.gmail.com>
+	<CABPxzYJQB_Lsi4aYkSfvULEgToECAdfZfJCtpm1u4Fo7ibc02g@mail.gmail.com>
+	<CAJt7DwzwyOKso_zNyemnX0LdXvtrWiuoaRJ8dnN8FKVjxiaayg@mail.gmail.com>
+Date: Wed, 31 Jul 2013 17:24:08 -0400
+Message-ID: <CAJt7Dwyqn42Rx45mZZwGjPiqPsq=MMX8RhM_9OArmPO86JGTyQ@mail.gmail.com> (sfid-20130731_232413_822193_582C5980)
+Subject: Re: CLI scan tool needed
+From: Michael McElroy <mikem388@gmail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Got it. Had to do a scan_results after the scan.
 
+Thank you.
 
-On 19.07.2013 14:08, Stanislaw Gruszka wrote:
-> Does crash happen on any suspend or on second one ?
-
-The crash always happens on the first suspend.
-
-Thanks for the patch, I will send results tonight.
-
-Ortwin
+On Wed, Jul 31, 2013 at 4:51 PM, Michael McElroy <mikem388@gmail.com> wrote:
+> Thanks Krishna, but all it returns is OK. Running the version 2.0 of
+> wpa_supplicant.
+>
+>
+> On Wed, Jul 31, 2013 at 4:30 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Wed, Jul 31, 2013 at 11:57 PM, Michael McElroy <mikem388@gmail.com> wrote:
+>>> Using the backports project, I have one of the latest ralink driver
+>>> going on an arm processor running 2.6.29 along with all nl80211 parts.
+>>> Works great, thank you! The last piece I need is to get the to SSID
+>>> list, their security protocols, and signal strength. I'm looking for
+>>> output similar to 'wilist scanning'. 'iw scan' gives a lot of info but
+>>> not quite what I need without a lot of massaging.
+>>
+>> "wpa_cli -i <interface> scan"
+>> this should give you the required info, if you are already running the
+>> wpa_supplicant.
