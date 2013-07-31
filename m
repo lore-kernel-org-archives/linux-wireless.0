@@ -1,40 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55267 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755424Ab3GOLP3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jul 2013 07:15:29 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/5] bcma: return correct error code when bus scan failed
-Date: Mon, 15 Jul 2013 13:15:07 +0200
-Message-Id: <1373886908-4460-5-git-send-email-hauke@hauke-m.de> (sfid-20130715_131533_415374_90A23DDE)
-In-Reply-To: <1373886908-4460-1-git-send-email-hauke@hauke-m.de>
-References: <1373886908-4460-1-git-send-email-hauke@hauke-m.de>
+Received: from perceval.ideasonboard.com ([95.142.166.194]:44860 "EHLO
+	perceval.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756143Ab3GaKfI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 06:35:08 -0400
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	mturquette@linaro.org, mark.rutland@arm.com, balbi@ti.com,
+	grant.likely@linaro.org, rob.herring@calxeda.com,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, tony@atomide.com, nm@ti.com
+Subject: Re: [PATCH v3] Documentation: dt: bindings: TI WiLink modules
+Date: Wed, 31 Jul 2013 12:36:07 +0200
+Message-ID: <19103383.PkgSdCFM10@avalon> (sfid-20130731_123534_583748_0B836524)
+In-Reply-To: <1375215668-29171-1-git-send-email-coelho@ti.com>
+References: <1375215668-29171-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is better to return the actual error code than just -1.
+Hi Luciano,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Tuesday 30 July 2013 23:21:08 Luciano Coelho wrote:
+> Add device tree bindings documentation for the TI WiLink modules.
+> Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
+> modules is supported.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 0067422..90ee350 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -237,7 +237,7 @@ int bcma_bus_register(struct bcma_bus *bus)
- 	err = bcma_bus_scan(bus);
- 	if (err) {
- 		bcma_err(bus, "Failed to scan: %d\n", err);
--		return -1;
-+		return err;
- 	}
- 
- 	/* Early init CC core */
+Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+
+> ---
+> 
+> In v3, use IRQ_TYPE_LEVEL_HIGH in the example, as suggested by Laurent.
+> 
+>  .../devicetree/bindings/net/wireless/ti-wilink.txt | 68
+> ++++++++++++++++++++++ 1 file changed, 68 insertions(+)
+>  create mode 100644
+> Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+> b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt new file
+> mode 100644
+> index 0000000..aafebb1
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
+> @@ -0,0 +1,68 @@
+> +TI WiLink Wireless Modules Device Tree Bindings
+> +===============================================
+> +
+> +The WiLink modules provide wireless connectivity, such as WLAN,
+> +Bluetooth, FM and NFC.
+> +
+> +There are several different modules available, which can be grouped by
+> +their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
+> +currently supported with device tree.
+> +
+> +Currently, only the WLAN portion of the modules is supported with
+> +device tree.
+> +
+> +Required properties:
+> +--------------------
+> +
+> +- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
+> +- interrupt-parent: the interrupt controller
+> +- interrupts: out-of-band WLAN interrupt
+> +	See the interrupt controller's bindings documentation for
+> +	detailed definition.
+> +
+> +Optional properties:
+> +--------------------
+> +
+> +- clocks: list of clocks needed by the chip as follows:
+> +
+> +  refclock: the internal WLAN reference clock frequency (required for
+> +	WiLink6 and WiLink7; not used for WiLink8).
+> +
+> +  tcxoclock: the internal WLAN TCXO clock frequency (required for
+> +	WiLink7 not used for WiLink6 and WiLink8).
+> +
+> +  The clocks must be defined and named accordingly.  For example:
+> +
+> +  clocks = <&refclock>
+> +  clock-names = "refclock";
+> +
+> +  refclock: refclock {
+> +		     compatible = "ti,wilink-clock";
+> +		     #clock-cells = <0>;
+> +		     clock-frequency = <38400000>;
+> +	};
+> +
+> +  Some modules that contain the WiLink chip provide clocks in the
+> +  module itself.  In this case, we define a "ti,wilink-clock" as shown
+> +  above.  But any other clock could in theory be used, so the proper
+> +  clock definition should be used.
+> +
+> +
+> +Example:
+> +--------
+> +
+> +Example definition that can be used in OMAP4 Panda:
+> +
+> +wlan {
+> +	compatible = "ti,wilink6";
+> +	interrupt-parent = <&gpio2>;
+> +	interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;	/* gpio line 53 */
+> +	clocks = <&refclock>;
+> +	clock-names = "refclock";
+> +
+> +	refclock: refclock {
+> +		compatible = "ti,wilink-clock";
+> +		#clock-cells = <0>;
+> +		clock-frequency = <38400000>;
+> +	};
+> +};
 -- 
-1.7.10.4
+Regards,
+
+Laurent Pinchart
 
