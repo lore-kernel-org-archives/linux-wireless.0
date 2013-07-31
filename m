@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:47626 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753006Ab3GAHsk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jul 2013 03:48:40 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 18/20] rt2x00: rt2800lib: enable RT3593 support
-Date: Mon,  1 Jul 2013 09:47:57 +0200
-Message-Id: <1372664879-18474-19-git-send-email-juhosg@openwrt.org> (sfid-20130701_094847_215132_61325F49)
-In-Reply-To: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:51937 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754304Ab3GaTRG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 15:17:06 -0400
+Message-ID: <1375298223.8289.18.camel@jlt4.sipsolutions.net> (sfid-20130731_211711_087744_77CA0953)
+Subject: Re: [PATCH 3.11] mac80211: continue using disabled channels while
+ connected
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: chrisw@sous-sol.org
+Date: Wed, 31 Jul 2013 21:17:03 +0200
+In-Reply-To: <1375297799-2023-1-git-send-email-johannes@sipsolutions.net> (sfid-20130731_211029_520496_7736CF8B)
+References: <1375297799-2023-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130731_211029_520496_7736CF8B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support for the RT3593 has been implemented in
-the previous changes, so it is safe to mark it
-supported in the driver.
+On Wed, 2013-07-31 at 21:09 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In case the AP has different regulatory information than we do,
+> it can happen that we connect to an AP based on e.g. the world
+> roaming regulatory data, and then update our database with the
+> AP's country information disables the channel the AP is using.
+> If this happens on an HT AP, the bandwidth tracking code will
+> hit the WARN_ON() and disconnect. Since that's not very useful,
+> ignore the channel-disable flag in bandwidth tracking.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
- 1 file changed, 1 insertion(+)
+Applied.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index b7fa8f9..d20c9f3 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -7637,6 +7637,7 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
- 	case RT3352:
- 	case RT3390:
- 	case RT3572:
-+	case RT3593:
- 	case RT5390:
- 	case RT5392:
- 	case RT5592:
--- 
-1.7.10
+(ok, so this was a short time, but it's kinda an important fix ...)
+
+johannes
 
