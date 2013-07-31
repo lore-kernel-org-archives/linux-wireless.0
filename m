@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:11289 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751994Ab3GWHGu (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:46856 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756796Ab3GaT7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jul 2013 03:06:50 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath: wil6210: Fix build error
-Date: Tue, 23 Jul 2013 10:06:46 +0300
-Message-ID: <6487488.19IqyPtizJ@lx-vladimir> (sfid-20130723_090653_483574_E91D7B92)
-In-Reply-To: <20130722161554.GR17130@pogo>
-References: <1374374808-12768-1-git-send-email-Larry.Finger@lwfinger.net> <1958736.oRuXAUfNGd@lx-vladimir> <20130722161554.GR17130@pogo>
+	Wed, 31 Jul 2013 15:59:32 -0400
+Received: by mail-pb0-f41.google.com with SMTP id rp2so686035pbb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 12:59:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1374826090-17322-1-git-send-email-johannes@sipsolutions.net>
+References: <1374826090-17322-1-git-send-email-johannes@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 31 Jul 2013 22:59:16 +0300
+Message-ID: <CA+XVXfe_B08ELpNwfmiK1DJrhLWVVXLPvJH_s=g6DeUKgcotQQ@mail.gmail.com> (sfid-20130731_215935_331800_6B1E6DD7)
+Subject: Re: [PATCH] mac80211: implement critical protocol protection
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, July 22, 2013 09:17:01 AM Luis R. Rodriguez wrote:
-> On Sun, Jul 21, 2013 at 10:06:31AM +0300, Vladimir Kondratiev wrote:
-> > Hmm, I have no warning for this with neither 3.10 nor 3.11 kernel version; but
-> > patch is correct, and here is my
-> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> 
-> If you agree with a patch you don't say you Sign-off-by it as well,
-> you say Acked-by. The Signed-off-by tag has a very specific meaning
-> from development to a maintainer's hands, and its definition is on
-> the Developer Certificate or Origin.
-> 
-> So in this case Acked-by is better.
-> 
->   Luis
+On Fri, Jul 26, 2013 at 11:08 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>
+> This new API add in cfg80211 wasn't implemented in mac80211.
+> Advertise the capabilities based on the device's
+> implementation (possibly NULL) of crit_prot mac80211 ops.
+>
+> This callback will be called by cfg80211 when hinted by
+> userspace that a critical protocol is happening, e.g. it can
+> be EAPOL, DHCP.
+>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+[...]
+> +static int ieee80211_crit_proto_start(struct wiphy *wiphy,
+> +                                     struct wireless_dev *wdev,
+> +                                     enum nl80211_crit_proto_id protocol,
+> +                                     u16 duration)
+> +{
+> +       struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+> +       struct ieee80211_local *local = wiphy_priv(wiphy);
+> +       int ret;
+> +
+> +       ret = drv_crit_proto(local, sdata, protocol, true);
+> +       if (!ret)
+> +               return ret;
 
-<drop most of CC>
+Shouldn't this be "if (ret)" ?
 
-I thought that I need to add Signed-off-by: as driver's maintainer, because
-(quote Documentation/SubmittingPatches):
----
-The Signed-off-by: tag indicates that the signer was involved in the
-development of the patch, or that he/she was in the patch's delivery path.
----
+Also maybe the low-level driver should get the duration and indicate
+completion on its own? (similar to what Eliad suggested).
+Seems to me very similar to ROC, and would probably be implemented as
+such for some drivers.
 
-This is similar to other maintainers adding its Signed-off-by:.
-Or, is driver's maintainer an exception from the rule quoted above?
+> +
+> +       ieee80211_queue_delayed_work(&sdata->local->hw,
+> +                                    &sdata->crit_prot_end_wk,
+> +                                    msecs_to_jiffies(duration));
+> +       return 0;
+> +}
 
-Thanks, Vladimir
+Arik
