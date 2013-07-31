@@ -1,117 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42727 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755025Ab3GKONi (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57172 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757178Ab3GaTaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 10:13:38 -0400
+	Wed, 31 Jul 2013 15:30:09 -0400
+Date: Wed, 31 Jul 2013 15:15:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux NFC <linux-nfc@ml01.01.org>
+Subject: Re: [GIT] [NFC] 3.11 fixes
+Message-ID: <20130731191551.GF2311@tuxdriver.com> (sfid-20130731_213014_697204_8BD838DA)
+References: <20130730235915.GA4641@zurbaran>
 MIME-Version: 1.0
-In-Reply-To: <s5hip0hb3y6.wl%tiwai@suse.de>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-	<1373533573-12272-46-git-send-email-ming.lei@canonical.com>
-	<51DEAE4E.90204@cogentembedded.com>
-	<s5hip0hb3y6.wl%tiwai@suse.de>
-Date: Thu, 11 Jul 2013 22:13:35 +0800
-Message-ID: <CACVXFVPuv4VD_xCocP2QVOqUqAXm9gjwgwcRn6y=3qXPntOxCQ@mail.gmail.com> (sfid-20130711_161354_985508_68094981)
-Subject: Re: [PATCH 45/50] sound: usb: usx2y: spin_lock in complete() cleanup
-From: Ming Lei <ming.lei@canonical.com>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Jaroslav Kysela <perex@perex.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130730235915.GA4641@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 11, 2013 at 9:50 PM, Takashi Iwai <tiwai@suse.de> wrote:
-> At Thu, 11 Jul 2013 17:08:30 +0400,
-> Sergei Shtylyov wrote:
->>
->> On 11-07-2013 13:06, Ming Lei wrote:
->>
->> > Complete() will be run with interrupt enabled, so change to
->> > spin_lock_irqsave().
->>
->>     Changelog doesn't match the patch.
->
-> Yep, but moreover...
->
->> > Cc: Jaroslav Kysela <perex@perex.cz>
->> > Cc: Takashi Iwai <tiwai@suse.de>
->> > Cc: alsa-devel@alsa-project.org
->> > Signed-off-by: Ming Lei <ming.lei@canonical.com>
->> > ---
->> >   sound/usb/usx2y/usbusx2yaudio.c |    4 ++++
->> >   1 file changed, 4 insertions(+)
->>
->> > diff --git a/sound/usb/usx2y/usbusx2yaudio.c b/sound/usb/usx2y/usbusx2yaudio.c
->> > index 4967fe9..e2ee893 100644
->> > --- a/sound/usb/usx2y/usbusx2yaudio.c
->> > +++ b/sound/usb/usx2y/usbusx2yaudio.c
->> > @@ -273,7 +273,11 @@ static void usX2Y_clients_stop(struct usX2Ydev *usX2Y)
->> >             struct snd_usX2Y_substream *subs = usX2Y->subs[s];
->> >             if (subs) {
->> >                     if (atomic_read(&subs->state) >= state_PRERUNNING) {
->> > +                           unsigned long flags;
->> > +
->> > +                           local_irq_save(flags);
->> >                             snd_pcm_stop(subs->pcm_substream, SNDRV_PCM_STATE_XRUN);
->> > +                           local_irq_restore(flags);
->> >                     }
->
-> ... actually this snd_pcm_stop() call should have been covered by
-> snd_pcm_stream_lock().  Maybe it'd be enough to have a single patch
-> together with the change, i.e. wrapping with
-> snd_pcm_stream_lock_irqsave().
+On Wed, Jul 31, 2013 at 01:59:15AM +0200, Samuel Ortiz wrote:
+> Hi John,
+> 
+> This is the second NFC fixes pull request for 3.11.
+> 
+> We have:
+> 
+> 1) A build failure fix for the NCI SPI transport layer due to a
+>    missing CRC_CCITT Kconfig dependency.
+> 
+> 2) A netlink command rename: CMD_FW_UPLOAD was merged during the 3.11
+>    merge window but the typical terminology for loading a firmware to a
+>    target is firmware download rather than upload. In order to avoid any
+>    confusion in a file exported to userspace, we rename this command to
+>    CMD_FW_DOWNLOAD.
+> 
+> I realize 2) might not meet the net.git criteria for what fixes are. If
+> you don't want to take it then I'll have to push it through the
+> 3.12 merge window. If that's the case, and you only want to take 1) then
+> please use tags/nfc-3.11-1 instead of tags/nfc-3.11-2 in your pull URL.
+> 
+> The following changes since commit 64b6f46f1141ad938e354f37af62e28da972e8eb:
+> 
+>   ath9k_hw: Fix multicast search for AR9002 family (2013-07-18 16:22:00 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.11-2
+> 
+> for you to fetch changes up to 9ea7187c53f63e31f2d1b2b1e474e31808565009:
+> 
+>   NFC: netlink: Rename CMD_FW_UPLOAD to CMD_FW_DOWNLOAD (2013-07-31 01:19:43 +0200)
 
-Please use snd_pcm_stream_lock_irqsave() so that I can avoid sending
-out similar patch later, :-)
+Pulling now...
 
->
-> I'll prepare the patch for 3.11 independently from your patch series,
-> so please drop this one.
-
-OK, thanks for dealing with that.
-
->
->
-> BTW, the word "cleanup" in the subject is inappropriate.  This is
-> rather a fix together with the core change.
-
-It is a cleanup since the patchset only addresses lock problem which
-is caused by the tasklet conversion.
-
->
-> And, I wonder whether we can take a safer approach.  When the caller
-> condition changed, we often introduced either a different ops
-> (e.g. ioctl case) or a flag for the new condition, at least during the
-> transition period.
-
-Interrupt is't enabled until all current drivers are cleaned up, so it is really
-safe, please see patch [2].
-
->
-> Last but not least, is a conversion to tasklet really preferred?
-> tasklet is rather an obsoleted infrastructure nowadays, and people
-> don't recommend to use it any longer, AFAIK.
-
-We discussed the problem in the below link previously[1], Steven
-and Thomas suggested to use threaded irq handler, but which
-may degrade USB mass storage performance, so we have to
-take tasklet now until we rewrite transport part of USB mass storage
-driver.
-
-Also the conversion[2] has avoided the tasklet spin lock problem
-already.
-
-
-[1], http://marc.info/?t=137079119200001&r=1&w=2
-[2], http://marc.info/?l=linux-usb&m=137286326726326&w=2
-
-Thanks,
---
-Ming Lei
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
