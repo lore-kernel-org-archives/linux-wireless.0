@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:53953 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBHv (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51870 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752223Ab3GaTCd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:51 -0400
-Received: by mail-pb0-f41.google.com with SMTP id rp16so669962pbb.14
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:51 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 40/53] wireless-regdb: enable VHT80 and VHT160 for JP
-Date: Wed,  3 Jul 2013 18:04:36 -0700
-Message-Id: <1372899889-19183-41-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032039_562766_95D68197)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 31 Jul 2013 15:02:33 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.11] cfg80211: fix P2P GO interface teardown
+Date: Wed, 31 Jul 2013 21:02:27 +0200
+Message-Id: <1375297347-1380-1-git-send-email-johannes@sipsolutions.net> (sfid-20130731_210237_569724_A4F81D1E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-As per Michael Green we can enable VHT80 and VHT160 on
-the enabled JP channels now. I've enabled them only for
-the channels where either 80 MHz or 160 MHz actually fits
-on the channel spacing for the band defined.
+When a P2P GO interface goes down, cfg80211 doesn't properly
+tear it down, leading to warnings later. Add the GO interface
+type to the enumeration to tear it down like AP interfaces.
+Otherwise, we leave it pending and mac80211's state can get
+very confused, leading to warnings later.
 
-When passed to the kernel I have verified we get:
-
-cfg80211: Regulatory domain changed to country: JP
-cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-cfg80211:   (4910000 KHz - 4990000 KHz @ 40000 KHz), (N/A, 2300 mBm)
-cfg80211:   (5030000 KHz - 5090000 KHz @ 40000 KHz), (N/A, 2300 mBm)
-cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz), (N/A, 2000 mBm)
-cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz), (N/A, 2000 mBm)
-cfg80211:   (5490000 KHz - 5710000 KHz @ 160000 KHz), (N/A, 2300 mBm)
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Cc: stable@vger.kernel.org
+Reported-by: Ilan Peer <ilan.peer@intel.com>
+Tested-by: Ilan Peer <ilan.peer@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/wireless/core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/db.txt b/db.txt
-index ead6646..63ee9b4 100644
---- a/db.txt
-+++ b/db.txt
-@@ -433,9 +433,9 @@ country JP:
- 	(2474 - 2494 @ 20), (N/A, 20), NO-OFDM
- 	(4910 - 4990 @ 40), (N/A, 23)
- 	(5030 - 5090 @ 40), (N/A, 23)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 23), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 160), (N/A, 23), DFS
- 
- country JO:
- 	(2402 - 2482 @ 40), (N/A, 20)
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 4f9f216..a8c29fa4 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -765,6 +765,7 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 		cfg80211_leave_mesh(rdev, dev);
+ 		break;
+ 	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
+ 		cfg80211_stop_ap(rdev, dev);
+ 		break;
+ 	default:
 -- 
-1.7.10.4
+1.8.0
 
