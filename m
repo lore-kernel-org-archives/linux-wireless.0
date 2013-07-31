@@ -1,31 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53315 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653Ab3GYHx1 (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:39903 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754260Ab3GaHsu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jul 2013 03:53:27 -0400
-Message-ID: <1374738804.8827.4.camel@jlt4.sipsolutions.net> (sfid-20130725_095330_511327_81378172)
-Subject: Re: [PATCH 1/2] regulatory: use correct regulatory initiator on
- wiphy register
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 25 Jul 2013 09:53:24 +0200
-In-Reply-To: <1374413809-26005-1-git-send-email-arik@wizery.com> (sfid-20130721_154507_440351_5B8F6C3E)
-References: <1374413809-26005-1-git-send-email-arik@wizery.com>
-	 (sfid-20130721_154507_440351_5B8F6C3E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 31 Jul 2013 03:48:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <1375253182.8289.3.camel@jlt4.sipsolutions.net>
+References: <1375114325-25498-1-git-send-email-hector.palacios@digi.com>
+ <5438CD3C-E28C-485C-94B8-F743E8B13D4A@holtmann.org> <51F7722E.9050708@digi.com>
+ <20130730205601.GI17130@pogo> <2C94C740-76BA-4058-B0D7-C37D44875CA1@holtmann.org>
+ <20130730224809.GN17130@pogo> <1375253182.8289.3.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Wed, 31 Jul 2013 00:48:28 -0700
+Message-ID: <CAB=NE6XOe2fXs-ZVWikxVj2zKuPN2VLaX6PMTYEP4mKb7+5cqA@mail.gmail.com> (sfid-20130731_094912_698423_488BF74B)
+Subject: Re: ROM Patching (was: [PATCH] bluetooth: remove wrong dependency for BT_ATH3K)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Hector Palacios <hector.palacios@digi.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	"gustavo@padovan.org" <gustavo@padovan.org>,
+	"johan.hedberg@gmail.com" <johan.hedberg@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"surajs@qca.qualcomm.com" <surajs@qca.qualcomm.com>,
+	jjohnson@qca.qualcomm.com, Adrian Chadd <adrian@freebsd.org>,
+	ddahlby@qca.qualcomm.com, Ben Hutchings <ben@decadent.org.uk>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-07-21 at 16:36 +0300, Arik Nemtsov wrote:
-> The current regdomain was not always set by the core. This causes
-> cards with a custom regulatory domain to ignore user initiated changes
-> if done before the card was registered.
+On Tue, Jul 30, 2013 at 11:46 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2013-07-30 at 15:48 -0700, Luis R. Rodriguez wrote:
+>
+>> Neat. Perhaps we need something that we can share with 802.11 or other
+>> hardare I highly doubt we're the only ones patching ROM. Don't we even
+>> patch up core CPUs? I'm wondering if firmware_class could be expanded to
+>> support serialized ROM patching. The biggest hurdle I see with splititng
+>> ROM patching from a single firmware is serializing that, addressing
+>> revision dependencies and of course kernel dependencies.
+>
+> I don't really see what you're trying to get it so I arbitrarily picked
+> this ...
+>
+> I think "ROM patching" like in BT and 802.11 are two completely
+> different things. In BT at least you have a common transport to the
+> device, a more-or-less common command set (HCI) etc.
 
-Applied, thanks.
+Sure.
 
-johannes
+> None of that exists
+> for wireless (today) so trying to find common ground between firmware
+> (patches) for different 802.11 hardware seems completely futile?
 
+So long as we can gaurantee mobile drivers get fw updated as much as
+is really needed in the industry great.
+
+  Luis
