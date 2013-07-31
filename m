@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:56740 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752840Ab3GIJkW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jul 2013 05:40:22 -0400
-Message-ID: <1373362817.21065.191.camel@cumari.coelho.fi> (sfid-20130709_114025_519183_4A697FE0)
-Subject: Re: wl127x: Unable to associate with a WPA2-PSK AP
-From: Luciano Coelho <coelho@ti.com>
-To: =?ISO-8859-1?Q?Jos=E9?= Miguel =?ISO-8859-1?Q?Gon=E7alves?=
-	<jose.goncalves@inov.pt>
-CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
-Date: Tue, 9 Jul 2013 12:40:17 +0300
-In-Reply-To: <51DBD904.6020007@inov.pt>
-References: <51DB0ACC.7050800@inov.pt>
-	  <CA+XVXfcakDiN1pPqGDQAN=VR8p_C1LUWGt_nX-rGXDLsBkk+Dw@mail.gmail.com>
-	  <51DB4195.8090103@inov.pt>
-	  <CA+XVXffKKVMeD5GXkzDsnvR7=Ocb8QP0Y7eeD-ZZTzsxJL7PqA@mail.gmail.com>
-	 <1373360959.21065.183.camel@cumari.coelho.fi> <51DBD904.6020007@inov.pt>
-Content-Type: text/plain; charset="UTF-8"
+Received: from ebb05.tieto.com ([131.207.168.36]:47387 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759229Ab3GaIz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 04:55:27 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/5] ath10k: fix failpath in MSI-X setup
+Date: Wed, 31 Jul 2013 10:55:15 +0200
+Message-ID: <1375260915-22500-6-git-send-email-michal.kazior@tieto.com> (sfid-20130731_105544_804529_6C4C830D)
+In-Reply-To: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
+References: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-07-09 at 10:33 +0100, José Miguel Gonçalves wrote:
-> On 09-07-2013 10:09, Luciano Coelho wrote:
-> >>> wlcore: Beacon loss detected. roles:0xff
-> >> This one is possibly a FW version issue. I'd give it a go with the
-> >> latest FW in TI's git:
-> >> https://github.com/TI-OpenLink/ti-utils/tree/master/hw/firmware
-> > More specifically, try the hw/firmware/wl127x-fw-4-sr.bin and the
-> > hw/firmware/wl127x-fw-4-mr.bin (if you're using multirole).  Note that
-> > you need to rename them to wl127x-fw-5-sr.bin and wl127x-fw-5-mr.bin,
-> > respectively.
-> >
-> > What we have in the linux-firmware git at the moment are versions
-> > 6.3.10.0.133 (singlerole) and 6.5.7.0.42 (multirole).  The new ones in
-> > TI's github repo are 6.3.10.0.136 and 6.5.7.0.46.
-> >
-> > If the new firmwares solve your problem, please let me know and I'll
-> > push them to the linux-firmware git repo.
-> 
-> Just to clarify. I was using the latest firmware files from 
-> linux-firmware and the driver picks the file wl127x-fw-5-sr.bin which is 
-> Rev 6.3.10.0.133. So are you saying that I should install the 
-> wl127x-fw-4-sr.bin from TI's github repo named as wl127x-fw-5-sr.bin and 
-> give it a try?
+pci_disable_msi() must be called if the initial
+request_irq() fails.
 
-Exactly.  The name used with TI's forked kernel hasn't update the
-version number to 5, so you need to rename it manually.  When the
-firmware boots, you should see Rev. 6.3.10.0.136 printed out.
+Also add a warning message so it's possible to
+distinguish request_irq() failure and
+pci_enable_msi() failure.
 
-You may also want to update the mr version, if you'll use P2P, or other
-multirole scenarios.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index c71b488..d95439b 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1990,8 +1990,13 @@ static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
+ 	ret = request_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW,
+ 			  ath10k_pci_msi_fw_handler,
+ 			  IRQF_SHARED, "ath10k_pci", ar);
+-	if (ret)
++	if (ret) {
++		ath10k_warn("request_irq(%d) failed %d\n",
++			    ar_pci->pdev->irq + MSI_ASSIGN_FW, ret);
++
++		pci_disable_msi(ar_pci->pdev);
+ 		return ret;
++	}
+ 
+ 	for (i = MSI_ASSIGN_CE_INITIAL; i <= MSI_ASSIGN_CE_MAX; i++) {
+ 		ret = request_irq(ar_pci->pdev->irq + i,
+-- 
+1.7.9.5
 
