@@ -1,100 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48267 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751642Ab3GHOIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jul 2013 10:08:49 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:51963 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759747Ab3GaTZo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 15:25:44 -0400
+Message-ID: <1375298735.8289.25.camel@jlt4.sipsolutions.net> (sfid-20130731_212557_264097_5CACBE65)
+Subject: pull-request: mac80211 2013-07-31
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3 04/20] rt2x00: rt2800lib: add BBP post initialization for RT3593
-Date: Mon,  8 Jul 2013 16:08:19 +0200
-Message-Id: <1373292515-21332-5-git-send-email-juhosg@openwrt.org> (sfid-20130708_160852_961738_7E1BFEF4)
-In-Reply-To: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
-References: <1373292515-21332-1-git-send-email-juhosg@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 31 Jul 2013 21:25:35 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-cNK/biyHxVSOYaOfRUTV"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
 
-Reference:
-  RT3593_PostBBPInitialization in chips/rt3553.c
+--=-cNK/biyHxVSOYaOfRUTV
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-Changes since v2: ---
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   48 ++++++++++++++++++++++++++++++-
- 1 file changed, 47 insertions(+), 1 deletion(-)
+John,
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index b650569..7b5c593 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -5381,6 +5381,52 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
- 	rt2800_normal_mode_setup_3xxx(rt2x00dev);
- }
- 
-+static void rt3593_post_bbp_init(struct rt2x00_dev *rt2x00dev)
-+{
-+	u8 bbp;
-+	bool txbf_enabled = false; /* FIXME */
-+
-+	rt2800_bbp_read(rt2x00dev, 105, &bbp);
-+	if (rt2x00dev->default_ant.rx_chain_num == 1)
-+		rt2x00_set_field8(&bbp, BBP105_MLD, 0);
-+	else
-+		rt2x00_set_field8(&bbp, BBP105_MLD, 1);
-+	rt2800_bbp_write(rt2x00dev, 105, bbp);
-+
-+	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
-+
-+	rt2800_bbp_write(rt2x00dev, 92, 0x02);
-+	rt2800_bbp_write(rt2x00dev, 82, 0x82);
-+	rt2800_bbp_write(rt2x00dev, 106, 0x05);
-+	rt2800_bbp_write(rt2x00dev, 104, 0x92);
-+	rt2800_bbp_write(rt2x00dev, 88, 0x90);
-+	rt2800_bbp_write(rt2x00dev, 148, 0xc8);
-+	rt2800_bbp_write(rt2x00dev, 47, 0x48);
-+	rt2800_bbp_write(rt2x00dev, 120, 0x50);
-+
-+	if (txbf_enabled)
-+		rt2800_bbp_write(rt2x00dev, 163, 0xbd);
-+	else
-+		rt2800_bbp_write(rt2x00dev, 163, 0x9d);
-+
-+	/* SNR mapping */
-+	rt2800_bbp_write(rt2x00dev, 142, 6);
-+	rt2800_bbp_write(rt2x00dev, 143, 160);
-+	rt2800_bbp_write(rt2x00dev, 142, 7);
-+	rt2800_bbp_write(rt2x00dev, 143, 161);
-+	rt2800_bbp_write(rt2x00dev, 142, 8);
-+	rt2800_bbp_write(rt2x00dev, 143, 162);
-+
-+	/* ADC/DAC control */
-+	rt2800_bbp_write(rt2x00dev, 31, 0x08);
-+
-+	/* RX AGC energy lower bound in log2 */
-+	rt2800_bbp_write(rt2x00dev, 68, 0x0b);
-+
-+	/* FIXME: BBP 105 owerwrite? */
-+	rt2800_bbp_write(rt2x00dev, 105, 0x04);
-+}
-+
- static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
- {
- 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-@@ -5459,7 +5505,7 @@ static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
- 	rt2800_led_open_drain_enable(rt2x00dev);
- 	rt2800_normal_mode_setup_3593(rt2x00dev);
- 
--	/* TODO: post BBP initialization */
-+	rt3593_post_bbp_init(rt2x00dev);
- 
- 	/* TODO: enable stream mode support */
- }
--- 
-1.7.10
+Another pull request for mac80211 - this time with a bunch of important
+fixes.
+
+I have a fix from Chris for an infinite loop along with fixes from
+myself to prevent it entering the loop to start with (continue using
+disabled channels, many thanks to Chris for his debug/test help) and a
+workaround for broken APs that advertise a bad HT primary channel in
+their beacons. Additionally, a fix for another attrbuf race in mac80211
+and a fix to clean up properly while P2P GO interfaces go down.
+
+Let me know if there's any problem.
+
+johannes
+
+The following changes since commit 23df0b731954502a9391e739b92927cee4360343=
+:
+
+  regulatory: use correct regulatory initiator on wiphy register (2013-07-2=
+5 09:52:46 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to ddfe49b42d8ad4bfdf92d63d4a74f162660d878d:
+
+  mac80211: continue using disabled channels while connected (2013-07-31 21=
+:18:17 +0200)
+
+----------------------------------------------------------------
+Chris Wright (1):
+      mac80211: fix infinite loop in ieee80211_determine_chantype
+
+Johannes Berg (5):
+      nl80211: fix another nl80211_fam.attrbuf race
+      mac80211: don't wait for TX status forever
+      mac80211: ignore HT primary channel while connected
+      cfg80211: fix P2P GO interface teardown
+      mac80211: continue using disabled channels while connected
+
+ net/mac80211/mlme.c    | 54 +++++++++++++++++++++++++++++++++-------------=
+----
+ net/wireless/core.c    |  1 +
+ net/wireless/nl80211.c |  6 ++++--
+ 3 files changed, 41 insertions(+), 20 deletions(-)
+
+
+--=-cNK/biyHxVSOYaOfRUTV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJR+WSvAAoJEDBSmw7B7bqrpgQP/A6XoGOvaVcW8h+De9DgJlLC
+ghjf906dubZp2bUQDh2zI/wu4VKdB5xX54LOQhqeghwWeZqyTHY043wUCgtgk2dK
+1yj6R1BzbPKyfU9+rPNgTS1fbTdWpJy8VvyGFbgP9zNmUBbVlWqNMiUNc6nEVRrk
+rSPG12L6cRp23TTv+FuLiIqrkypyAXbqNdJju2QmadpJSG38AH4sTzb+AOxMQlWz
+mihJPGUm51jE5wew/ykb5GGdKK48FZ591GeKH5c5MuCEh7gabC3G/E4f4SG8H3Oj
+Ry5dm/ERewddEiVds9wM26/qqTTvGQNL5Ig5xdJcDtYiy/LrROay0EM9XUk4r3w1
+nXNSFsCCzdoY/gIc4Evi/l5i+EW9dZ6GtlGy20SdZLWsFpJ2KZ295itEFqspnHtP
+DjUgjX31/rwauQvyYrBuQvbd1SyT9aYTFhUI6e4oUdI1xP0q+SK3CmIT+tlVuUs8
+POSfXXHsFOkbGJW4mDydHx1n4ZbLvMmO5PY9LbFmpezIegFv+gbCttLzHMLpPxzC
+UqRX8RElHy1UnnXiUw7ycP89ot70hnkZE4rzKwiYU8MW+USqbz5CRLBoK1eWlLMO
+olVDsqFmeQvRiPW6gIik9umgC4e+8FwMqtakBe6R5UFPhWn7Sg/CNvVSQ7SyjXWv
+MFUV+F54GWL3FH5cQU3w
+=3cgC
+-----END PGP SIGNATURE-----
+
+--=-cNK/biyHxVSOYaOfRUTV--
 
