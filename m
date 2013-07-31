@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53863 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756219Ab3GEJ5S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 05:57:18 -0400
-Message-ID: <1373018235.8548.4.camel@jlt4.sipsolutions.net> (sfid-20130705_115720_990474_C8EC87BD)
-Subject: Re: [PATCH V2] vlan priority handling in WMM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: cedric.voncken@acksys.fr
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 05 Jul 2013 11:57:15 +0200
-In-Reply-To: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
-References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:47387 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755275Ab3GaIzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 04:55:23 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/5] ath10k: make sure to use passive scan when n_ssids is 0
+Date: Wed, 31 Jul 2013 10:55:12 +0200
+Message-ID: <1375260915-22500-3-git-send-email-michal.kazior@tieto.com> (sfid-20130731_105541_001183_95C4606F)
+In-Reply-To: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
+References: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Normally user specifies broadcast ssid for
+scanning. If the user wants to do a passive scan
+it does not pass any ssids.
 
-Subject line should have a "wireless: " (or "cfg80211: ") prefix.
+The patch makes sure we ath10k tells firmware to
+not send anything at all in case it decides no
+ssids equals broadcast ssid.
 
-> If the VLAN tci is set in skb->vlan_tci use the priority field to determine the WMM priority.
-> 
-> V2 modifications :
-> 	Fix indentation
-> 	Use symbolic constant
-> 	include the header linux/if_vlan.h
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-This doesn't belong into the changelog, it should be after --- with the
-diffstat.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 344ad27..1ea386e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2338,6 +2338,8 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
+ 			arg.ssids[i].len  = req->ssids[i].ssid_len;
+ 			arg.ssids[i].ssid = req->ssids[i].ssid;
+ 		}
++	} else {
++		arg.scan_ctrl_flags |= WMI_SCAN_FLAG_PASSIVE;
+ 	}
+ 
+ 	if (req->n_channels) {
+-- 
+1.7.9.5
 
