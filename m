@@ -1,132 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33188 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754072Ab3GBSvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jul 2013 14:51:16 -0400
-Message-ID: <51D32116.4010109@hauke-m.de> (sfid-20130702_205136_454876_FB8A0224)
-Date: Tue, 02 Jul 2013 20:51:02 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Shuah Khan <shuah.kh@samsung.com>
-CC: bzhao@marvell.com, linville@tuxdriver.com, rjw@sisk.pl,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, shuahkhan@gmail.com
-Subject: Re: [PATCH] wireless: Convert mwifiex/pcie to dev_pm_ops from legacy
- pm ops
-References: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com>
-In-Reply-To: <1372778675-2909-1-git-send-email-shuah.kh@samsung.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from s3.sipsolutions.net ([144.76.43.152]:51935 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab3GaTQE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 15:16:04 -0400
+Message-ID: <1375298159.8289.17.camel@jlt4.sipsolutions.net> (sfid-20130731_211608_922691_0459C342)
+Subject: Re: [PATCH] mac80211: fix infinite loop in
+ ieee80211_determine_chantype
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chris Wright <chrisw@sous-sol.org>
+Cc: linux-wireless@vger.kernel.org, Derek Atkins <DAtkins@mocana.com>
+Date: Wed, 31 Jul 2013 21:15:59 +0200
+In-Reply-To: <20130731191224.GB28308@sequoia2.sous-sol.org>
+References: <20130731191224.GB28308@sequoia2.sous-sol.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/02/2013 05:24 PM, Shuah Khan wrote:
-> Convert the mwifiex/pci driver to use dev_pm_ops for power management and
-> remove Legacy PM handling. This change re-uses existing suspend and resume
-> interfaces for dev_pm_ops.
-> 
-> Signed-off-by: Shuah Khan <shuah.kh@samsung.com>
-> ---
->  drivers/net/wireless/mwifiex/pcie.c |   34 ++++++++++++++++++++++++++++------
->  1 file changed, 28 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-> index 20c9c4c..b169318 100644
-> --- a/drivers/net/wireless/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/mwifiex/pcie.c
-> @@ -85,7 +85,7 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
->   * If already not suspended, this function allocates and sends a host
->   * sleep activate request to the firmware and turns off the traffic.
->   */
-> -static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
-> +static int __mwifiex_pcie_suspend(struct pci_dev *pdev)
->  {
->  	struct mwifiex_adapter *adapter;
->  	struct pcie_service_card *card;
-> @@ -112,6 +112,13 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
->  	return 0;
->  }
->  
-> +static int mwifiex_pcie_suspend(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	return __mwifiex_pcie_suspend(pdev);
-> +}
-> +
+On Wed, 2013-07-31 at 12:12 -0700, Chris Wright wrote:
+> Commit "3d9646d mac80211: fix channel selection bug" introduced a possible
+> infinite loop by moving the out target above the chandef_downgrade
+> while loop.  When we downgrade to NL80211_CHAN_WIDTH_20_NOHT, we jump
+> back up to re-run the while loop...indefinitely.  Replace goto with
+> break and carry on.  This may not be sufficient to connect to the AP,
+> but will at least keep the cpu from livelocking.  Thanks to Derek Atkins
+> as an extra pair of debugging eyes.
 
-For what do you need __mwifiex_pcie_suspend() ? Why not make one
-function out of these two?
+Applied, thanks.
 
->  /*
->   * Kernel needs to suspend all functions separately. Therefore all
->   * registered functions must have drivers with suspend and resume
-> @@ -120,7 +127,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
->   * If already not resumed, this function turns on the traffic and
->   * sends a host sleep cancel request to the firmware.
->   */
-> -static int mwifiex_pcie_resume(struct pci_dev *pdev)
-> +static int __mwifiex_pcie_resume(struct pci_dev *pdev)
->  {
->  	struct mwifiex_adapter *adapter;
->  	struct pcie_service_card *card;
-> @@ -150,6 +157,13 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
->  
->  	return 0;
->  }
-> +
-> +static int mwifiex_pcie_resume(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	return __mwifiex_pcie_resume(pdev);
-> +}
->  #endif
->  
->  /*
-> @@ -213,7 +227,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
->  	if (user_rmmod) {
->  #ifdef CONFIG_PM
->  		if (adapter->is_suspended)
-> -			mwifiex_pcie_resume(pdev);
-> +			__mwifiex_pcie_resume(pdev);
-
-You could use mwifiex_pcie_resume(&pdev->dev) here and then the extra
-function __mwifiex_pcie_resume() is not needed any more.
-
->  #endif
->  
->  		for (i = 0; i < adapter->priv_num; i++)
-> @@ -249,6 +263,14 @@ static DEFINE_PCI_DEVICE_TABLE(mwifiex_ids) = {
->  
->  MODULE_DEVICE_TABLE(pci, mwifiex_ids);
->  
-> +#ifdef CONFIG_PM
-> +/* Power Management Hooks */
-> +static const struct dev_pm_ops mwifiex_pcie_pm_ops = {
-> +	.suspend = mwifiex_pcie_suspend,
-> +	.resume = mwifiex_pcie_resume,
-> +};
-> +#endif
-> +
-
-Is it intended that you do not use SIMPLE_DEV_PM_OPS() like most of the
-other wifi drivers?
-
->  /* PCI Device Driver */
->  static struct pci_driver __refdata mwifiex_pcie = {
->  	.name     = "mwifiex_pcie",
-> @@ -256,9 +278,9 @@ static struct pci_driver __refdata mwifiex_pcie = {
->  	.probe    = mwifiex_pcie_probe,
->  	.remove   = mwifiex_pcie_remove,
->  #ifdef CONFIG_PM
-> -	/* Power Management Hooks */
-> -	.suspend  = mwifiex_pcie_suspend,
-> -	.resume   = mwifiex_pcie_resume,
-> +	.driver   = {
-> +		.pm = &mwifiex_pcie_pm_ops,
-> +	},
->  #endif
->  };
->  
-> 
+johannes
 
