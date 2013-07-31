@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46464 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751894Ab3GPHUI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 03:20:08 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infraread.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 00/10] ath10k: device setup refactor
-Date: Tue, 16 Jul 2013 09:19:43 +0200
-Message-ID: <1373959193-5164-1-git-send-email-michal.kazior@tieto.com> (sfid-20130716_092013_417117_201E3777)
-In-Reply-To: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
-References: <1371041642-20273-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:42499 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753966Ab3GaJ2u convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 05:28:50 -0400
+Received: by mail-ee0-f49.google.com with SMTP id d41so225042eek.8
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 02:28:49 -0700 (PDT)
+From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: AP changed bandwidth, new config is  ... changed bandwidth in a way we can't support - disconnect - why? (intel advanced-n 6250)
+Date: Wed, 31 Jul 2013 11:28:46 +0200
+Cc: Andy Isaacson <adi@hexapodia.org>, linux-wireless@vger.kernel.org,
+	ilw@linux.intel.com
+References: <201307310855.28080.a.miskiewicz@gmail.com> <1375260632.8289.10.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1375260632.8289.10.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201307311128.47064.a.miskiewicz@gmail.com> (sfid-20130731_112853_556594_1C2C86A1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a respin of my patchset that addresses
-hibernation issues.
+On Wednesday 31 of July 2013, Johannes Berg wrote:
+> On Wed, 2013-07-31 at 08:55 +0200, Arkadiusz Miskiewicz wrote:
+> > It basically reports:
+> > [79477.496067] eth1: AP 68:7f:74:06:b3:1b changed bandwidth, new config
+> > is 2422 MHz, width 1 (2422/0 MHz) [79477.496072] eth1: AP
+> > 68:7f:74:06:b3:1b changed bandwidth in a way we can't support -
+> > disconnect
+> > 
+> > (note I have two wrt160nl here and problem happens with both)
+> > 
+> > Any hints on why "we can't support" configuration issued by this (common)
+> > AP?
+> 
+> As far as I can tell, it seems to be an AP bug, but I had no idea this
+> was so common.
+> 
+> Testing with hostapd, I can switch bandwidth between 20 and 40 MHz just
+> fine, and it only prints "new config is ..." and then carries on.
+> 
+> Since you seem to be able to reproduce this easily, can you run tcpdump
+> with the beacon info?
 
-This is also groundwork for proper hw recovery
-that I'm going to post too.
+Will do. Unfortunately the problem doesn't always happen. Sometimes things 
+work fine with this AP, sometimes they don't (and right now can't reproduce, 
+so waiting for thing to happen again).
 
-v3:
- * update comments in pci logic decoupling
- * add missing commit message for one of the patches
- * update commit message for free_vdev_map patch
+btw. full dmesg
+http://pastebin.com/zTfR5rTK
 
-Michal Kazior (10):
-  ath10k: decouple pci start/stop logic
-  ath10k: decouple core start/stop logic
-  ath10k: allow deferred regd update
-  ath10k: reset BMI state upon init
-  ath10k: decouple suspend code
-  ath10k: move free_vdev_map initialization
-  ath10k: make sure all resources are freed upon ath10k_stop()
-  ath10k: defer hw setup to start/stop mac80211 hooks
-  ath10k: store firmware files in memory
-  ath10k: skip fw stats debugfs interface if device is down
+> johannes
 
- drivers/net/wireless/ath/ath10k/bmi.c   |    6 +
- drivers/net/wireless/ath/ath10k/bmi.h   |    1 +
- drivers/net/wireless/ath/ath10k/core.c  |  249 +++++++++++++++++----------
- drivers/net/wireless/ath/ath10k/core.h  |   16 +-
- drivers/net/wireless/ath/ath10k/debug.c |   30 ++--
- drivers/net/wireless/ath/ath10k/hif.h   |   39 +++++
- drivers/net/wireless/ath/ath10k/mac.c   |  151 ++++++++++++++++-
- drivers/net/wireless/ath/ath10k/pci.c   |  283 +++++++++++++------------------
- 8 files changed, 497 insertions(+), 278 deletions(-)
 
 -- 
-1.7.9.5
-
+Arkadiusz Miśkiewicz, arekm / maven.pl
