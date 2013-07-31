@@ -1,77 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55991 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754774Ab3GKOJQ (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:49400 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755201Ab3GaHZt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 10:09:16 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 0/4] add master channel switch announcement support
-Date: Thu, 11 Jul 2013 16:09:04 +0200
-Message-Id: <1373551749-5107-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130711_160920_167223_EE17B243)
+	Wed, 31 Jul 2013 03:25:49 -0400
+Date: Wed, 31 Jul 2013 10:25:31 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Paul Stewart <pstew@chromium.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: 802.11 infrastructure for regression testing - upstream /
+ mac80211 / cfg80211
+Message-ID: <20130731072531.GA3956@w1.fi> (sfid-20130731_092552_305095_587A0575)
+References: <CAB=NE6Vm18RcDYQn+QoEzSG202HezT0rqV_hwb_UOzyecstu5w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6Vm18RcDYQn+QoEzSG202HezT0rqV_hwb_UOzyecstu5w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the 5th edition of the CSA support patch series. This patchset adds
-generic channel switch support for AP. This is required for DFS operation
-(e.g. Wi-Fi Alliance requires this for 802.11h certification). This will also
-be required for IBSS-DFS later.
+On Tue, Jul 30, 2013 at 05:53:31PM -0700, Luis R. Rodriguez wrote:
+> AFAICT mac80211_hwism should and likely already is used for a slew of
+> core API changes / tests. Addressing testing using that shoud
+> hopefully address tons of testings and find a lot of issues. We'd then
+> just need vendors to replicate behaviour on top of their drivers. The
+> core test stuff though still needs to be available.
 
-Changes from PATCHv4:
- * finally remove use_chanctx check (Michal)
- * squashed the chanctx channel change patch into the "main" channel switch command patch,
-   as channel change command now checks if a CSA is currently in operation and therefore
-   now depends on that.
- * add tracing for nl80211 part (Johannes)
- * removed BSS_CHANGED_CHANNEL (Johannes)
- * fix rcu_read lock (Johannes)
- * check for csa in chanctx change channel (Johannes)
- * ... and a few more minor changes
+I have automated tests running mainly from wpa_supplicant/hostapd
+regression testing view point on top of mac80211_hwsim. The test cases
+are in hostap.git:
+http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=tree;f=tests/hwsim;hb=HEAD
 
-The rough design is:
- * userspace asks kernel to switch a channel using the new NL80211_CMD_CHANNEL_SWITCH
-   command. It supplies IE information for the time while staying on the old channel and
-   announcing the switch, and IE information for after the switch to the new channel. 
- * IE information contains the beacon and optionally probe responses, which should
-   include (E)CSA IEs for the CSA case. Furthermore an offset is provided (for beacon
-   and probe response) to point to the counter field within the channel switch IEs.
- * The driver gets the new beacons passed and must set them, and decrement the
-   counter field. When it reaches 0, the channel is changed and userspace notified.
+These tests are run automatically on all hostap.git commits in a simple
+Buildbot setup: http://buildbot.w1.fi:8010/
 
-As always, any comments are appreciated.
+There's currently 51 test cases covering relatively large set of basic
+functionality (and various corner cases, too). I'm hoping to extend this
+to cover all common use cases and lot of protocol conformance testing
+for that matter. In addition, I use this for development time testing,
+so new tests show up at the same time with new functionality.
 
-Cheers,
-	Simon 
+These tests are currently run on top of a single cfg80211/mac80211
+version that I'm updating manually every now and then. I have found
+regressions on those components, too, and not just
+wpa_supplicant/hostapd, so it would sound useful to get this running
+automatically on cfg80211/mac80211 snapshots, too, to get faster reports
+on regressions. My buildbot.w1.fi server is a very low-end virtual
+server, so it won't be able to do this, but if someone has a bit more
+beefier server available, it would be straightforward to extend this
+type of Buildbot setup to trigger both on hostap.git and
+wireless-testing.git commits to run the tests. The server would need to
+be able to run kvm and build kernel.
 
-Simon Wunderlich (4):
-  nl80211/cfg80211: add channel switch command
-  mac80211: add functions to duplicate a cfg80211_beacon
-  mac80211: add channel switch command and beacon callbacks
-  ath9k: enable CSA functionality in ath9k
-
- drivers/net/wireless/ath/ath9k/ath9k.h  |    2 +
- drivers/net/wireless/ath/ath9k/beacon.c |   21 ++++
- drivers/net/wireless/ath/ath9k/init.c   |    1 +
- drivers/net/wireless/ath/ath9k/main.c   |   17 +++
- drivers/net/wireless/ath/ath9k/xmit.c   |    2 +
- include/net/cfg80211.h                  |   30 +++++
- include/net/mac80211.h                  |   36 ++++++
- include/uapi/linux/nl80211.h            |   29 +++++
- net/mac80211/cfg.c                      |  185 ++++++++++++++++++++++++++++++-
- net/mac80211/chan.c                     |   58 ++++++++++
- net/mac80211/driver-ops.h               |   13 +++
- net/mac80211/ieee80211_i.h              |   18 +++
- net/mac80211/iface.c                    |    9 ++
- net/mac80211/trace.h                    |   26 +++++
- net/mac80211/tx.c                       |   78 +++++++++++++
- net/wireless/nl80211.c                  |  124 ++++++++++++++++++++-
- net/wireless/rdev-ops.h                 |   12 ++
- net/wireless/trace.h                    |   33 ++++++
- 18 files changed, 691 insertions(+), 3 deletions(-)
+Obviously mac80211_hwsim tests won't cover everything, but so far, I've
+been quite happy with the coverage it can give for testing
+wpa_supplicant, hostapd, cfg80211, and mac80211.
 
 -- 
-1.7.10.4
-
+Jouni Malinen                                            PGP id EFC895FA
