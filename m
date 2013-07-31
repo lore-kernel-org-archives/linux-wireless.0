@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:42008 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753942Ab3GaGui (ORCPT
+Received: from straum.hexapodia.org ([66.109.99.53]:44430 "EHLO
+	straum.hexapodia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759747Ab3GaPJo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 02:50:38 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hr7so3506051wib.10
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2013 23:50:37 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1375253292.8289.6.camel@jlt4.sipsolutions.net>
-References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
-	<1375253292.8289.6.camel@jlt4.sipsolutions.net>
-Date: Wed, 31 Jul 2013 08:50:37 +0200
-Message-ID: <CA+icZUW7umexAMJDqL0_WL5_t=pcBuMjTXxh5KLYia1OCp9njQ@mail.gmail.com> (sfid-20130731_085041_883828_32D649F8)
-Subject: Re: pull-request: iwlwifi-next 2013-07-26
-From: Sedat Dilek <sedat.dilek@gmail.com>
+	Wed, 31 Jul 2013 11:09:44 -0400
+Date: Wed, 31 Jul 2013 08:09:44 -0700
+From: Andy Isaacson <adi@hexapodia.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org,
+	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 3.11] mac80211: ignore HT primary channel while
+ connected
+Message-ID: <20130731150944.GA31411@hexapodia.org> (sfid-20130731_170955_012397_54FD5EBD)
+References: <1375264234-31077-1-git-send-email-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1375264234-31077-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 31, 2013 at 8:48 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2013-07-26 at 10:28 +0200, Johannes Berg wrote:
->> John,
->>
->> First -next pull request for iwlwifi.
->
-> I'll respin this, Eliad noticed one bug and we also found one.
->
+On Wed, Jul 31, 2013 at 11:50:34AM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> While we're connected, the AP shouldn't change the primary channel
+> in the HT information. We checked this, and dropped the connection
+> if it did change it.
+> 
+> Unfortunately, this is causing problems on some APs, e.g. on the
+> Netgear WRT610NL: the beacons seem to always contain a bad channel
+> and if we made a connection using a probe response (correct data)
+> we drop the connection immediately and can basically not connect
+> properly at all.
+> 
+> Work around this by ignoring the HT primary channel information in
+> beacons if we're already connected.
+> 
+> Also print out more verbose messages in the other situations to
+> help diagnose similar bugs quicker in the future.
+> 
+> Cc: stable@vger.kernel.org [3.10]
 
-BTW, johill which kill-bug-spray do you prefer?
-It seems to be very effective... if it kills also real (alive) bugs
-it's double-good.
+Acked-by: Andy Isaacson <adi@hexapodia.org>
 
-- Sedat -
+LGTM.  Wasn't able to test though.  Recommend this for -stable,
+regressing wifi connectivity makes it hard to report bugs.
 
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-andy
