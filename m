@@ -1,65 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:39830 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932355Ab3GKNNh (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49730 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316Ab3GaGrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 09:13:37 -0400
-Received: by mail-la0-f42.google.com with SMTP id eb20so6683570lab.29
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jul 2013 06:13:36 -0700 (PDT)
-Message-ID: <51DEAF7D.4010609@cogentembedded.com> (sfid-20130711_151353_353823_74C19F1D)
-Date: Thu, 11 Jul 2013 17:13:33 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Ming Lei <ming.lei@canonical.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>
-Subject: Re: [PATCH 42/50] media: usb: tlg2300: spin_lock in complete() cleanup
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com> <1373533573-12272-43-git-send-email-ming.lei@canonical.com>
-In-Reply-To: <1373533573-12272-43-git-send-email-ming.lei@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 31 Jul 2013 02:47:42 -0400
+Message-ID: <1375253258.8289.5.camel@jlt4.sipsolutions.net> (sfid-20130731_084744_690301_F13FF4FB)
+Subject: Re: [PATCH 15/30] iwlwifi: mvm: reprobe device on firmware error
+ during restart
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 31 Jul 2013 08:47:38 +0200
+In-Reply-To: <CAB3XZEcZX8u5Fcsf7mbbso9O0krhLVgzdT9Ay8dxsv_T+_SOhQ@mail.gmail.com> (sfid-20130730_235612_198515_881B7B34)
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+	 <1374827327-3464-16-git-send-email-johannes@sipsolutions.net>
+	 <CAB3XZEcZX8u5Fcsf7mbbso9O0krhLVgzdT9Ay8dxsv_T+_SOhQ@mail.gmail.com>
+	 (sfid-20130730_235612_198515_881B7B34)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-07-2013 13:06, Ming Lei wrote:
+On Wed, 2013-07-31 at 00:56 +0300, Eliad Peller wrote:
 
-     Subject doesn't match the patch.
+> > +               reprobe = kzalloc(sizeof(*reprobe), GFP_ATOMIC);
+> > +               if (!reprobe)
+> > +                       return;
+> 
+> missing module_put() :)
 
-> Complete() will be run with interrupt enabled, so disable local
-> interrupt before holding a global lock which is held without
-> irqsave.
->
-> Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-> Cc: linux-media@vger.kernel.org
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-> ---
->   drivers/media/usb/tlg2300/pd-alsa.c |    3 +++
->   1 file changed, 3 insertions(+)
+Doh, good catch. All the more reason to respin this pull request.
 
-> diff --git a/drivers/media/usb/tlg2300/pd-alsa.c b/drivers/media/usb/tlg2300/pd-alsa.c
-> index 3f3e141..cbccc96 100644
-> --- a/drivers/media/usb/tlg2300/pd-alsa.c
-> +++ b/drivers/media/usb/tlg2300/pd-alsa.c
-[...]
-> @@ -156,6 +157,7 @@ static inline void handle_audio_data(struct urb *urb, int *period_elapsed)
->   		memcpy(runtime->dma_area + oldptr * stride, cp, len * stride);
->
->   	/* update the statas */
-> +	local_irq_save(flags);
->   	snd_pcm_stream_lock(pa->capture_pcm_substream);
->   	pa->rcv_position	+= len;
->   	if (pa->rcv_position >= runtime->buffer_size)
-> @@ -167,6 +169,7 @@ static inline void handle_audio_data(struct urb *urb, int *period_elapsed)
->   		*period_elapsed = 1;
->   	}
->   	snd_pcm_stream_unlock(pa->capture_pcm_substream);
-> +	local_irq_restore(flags);
->   }
-
-WBR, Sergei
-
+johannes
 
