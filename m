@@ -1,34 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53866 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756219Ab3GEJ7m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 05:59:42 -0400
-Message-ID: <1373018378.8548.6.camel@jlt4.sipsolutions.net> (sfid-20130705_115945_081349_187143C9)
-Subject: Re: [PATCH V2] vlan priority handling in WMM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: cedric.voncken@acksys.fr
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 05 Jul 2013 11:59:38 +0200
-In-Reply-To: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
-References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:47387 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752830Ab3GaIzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 04:55:25 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/5] ath10k: advertise more conservative intf combinations
+Date: Wed, 31 Jul 2013 10:55:13 +0200
+Message-ID: <1375260915-22500-4-git-send-email-michal.kazior@tieto.com> (sfid-20130731_105534_782757_C475B769)
+In-Reply-To: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
+References: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Apparently the available firmware has a limit of
+handling 7 APs, 3 GOs or 8 STAs. This is based on
+empirical tests and it is still possible some
+combinations may crash the firmware.
 
-> +	vlan_priority = (skb->vlan_tci & VLAN_PRIO_MASK) >> VLAN_PRIO_SHIFT;
-> +	if (vlan_priority > 0)
-> +		return vlan_priority;
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-Is this really correct? For once, checking vlan_priority for non-zero
-seems weird since that ought to be a valid value -- is there no other
-way to determine that the value is valid?
-
-Also, this gives you a 2-bit value, while the return value should be a
-3-bit value, maybe you need to shift this up by one to spread into the
-correct buckets?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1ea386e..6a130c5 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3078,9 +3078,15 @@ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
+ 	.max	= 8,
+ 	.types	= BIT(NL80211_IFTYPE_STATION)
+ 		| BIT(NL80211_IFTYPE_P2P_CLIENT)
+-		| BIT(NL80211_IFTYPE_P2P_GO)
+-		| BIT(NL80211_IFTYPE_AP)
+-	}
++	},
++	{
++	.max	= 3,
++	.types	= BIT(NL80211_IFTYPE_P2P_GO)
++	},
++	{
++	.max	= 7,
++	.types	= BIT(NL80211_IFTYPE_AP)
++	},
+ };
+ 
+ static const struct ieee80211_iface_combination ath10k_if_comb = {
+-- 
+1.7.9.5
 
