@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:52917 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756495Ab3GENPU (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60202 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753289Ab3GaSNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jul 2013 09:15:20 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 01/16] ath10k: fix teardown ordering
-Date: Fri,  5 Jul 2013 16:15:02 +0300
-Message-Id: <1373030117-18077-2-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130705_151525_860640_F109B4B0)
-In-Reply-To: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1373030117-18077-1-git-send-email-kvalo@qca.qualcomm.com>
+	Wed, 31 Jul 2013 14:13:24 -0400
+Message-ID: <51F953BB.6050205@candelatech.com> (sfid-20130731_201327_287494_B5E801CE)
+Date: Wed, 31 Jul 2013 11:13:15 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Paul Stewart <pstew@chromium.org>,
+	Felix Fietkau <nbd@openwrt.org>, Jouni Malinen <j@w1.fi>
+Subject: Re: 802.11 infrastructure for regression testing - upstream / mac80211
+ / cfg80211
+References: <CAB=NE6Vm18RcDYQn+QoEzSG202HezT0rqV_hwb_UOzyecstu5w@mail.gmail.com>
+In-Reply-To: <CAB=NE6Vm18RcDYQn+QoEzSG202HezT0rqV_hwb_UOzyecstu5w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+On 07/30/2013 05:53 PM, Luis R. Rodriguez wrote:
+> Folks,
+>
+> Back in 2009 Intel had put out a wifi-test tree [0] but that seems
+> deprecated now. The git tree at least is gone. Can someone confirm if
+> that's dead? We later had Google present at the 2010 San Francisco
+> wireless summit [1] their test infrastructure using autotest. Last I
+> checked that stuff was not merged back upstream to autotest. Can
+> someone confirm ? Lastly we have mac80211_hwsim [2] and also a slew of
+> internal testing infrastructures that obviously are not open.
+>
+> If we are to embark on a new journey towards an open testing
+> infrastructure what should be used? Ben, you have some stuff, and I
+> know you also report some interesting bugs with insane amount of
+> stations. Is any of it open?
 
-This should fix memory corruption if HIF is tried
-to be restarted.
+Our user-space app is not open.  I'm happy to offer free licenses
+for good causes, but I understand that is probably not so interesting to most
+folks.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Our stuff only really works with ath9k (and possibly ath5k).  Might
+work in the future with ath10k if we can get the firmware and other
+limitations resolved.  And, maybe some other vendors will start
+supporting lots of virtual stations..but I don't know of any others
+at this time.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 8e4e832..1bd381f 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1263,7 +1263,6 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
- 	ath10k_pci_process_ce(ar);
- 	ath10k_pci_cleanup_ce(ar);
- 	ath10k_pci_buffer_cleanup(ar);
--	ath10k_pci_ce_deinit(ar);
- }
- 
- static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
-@@ -2332,6 +2331,7 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
- 	tasklet_kill(&ar_pci->msi_fw_err);
- 
- 	ath10k_core_unregister(ar);
-+	ath10k_pci_ce_deinit(ar);
- 	ath10k_pci_stop_intr(ar);
- 
- 	pci_set_drvdata(pdev, NULL);
+At the least, we'll keep running our internal testing & dev efforts
+and will continue to report strange bugs :)
+
+Thanks,
+Ben
+
+
 -- 
-1.7.9.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
 
