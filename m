@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:49835 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964870Ab3GCSlt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 14:41:49 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Wed, 3 Jul 2013 11:41:24 -0700
-Subject: RE: [PATCH] mwifiex: don't ignore SDIO interrupts during shutdown
-Message-ID: <477F20668A386D41ADCC57781B1F70430EA2E06694@SC-VEXCH1.marvell.com> (sfid-20130703_204240_774919_B5AA59F9)
-References: <20130703015653.82651FAAD5@dev.laptop.org>
-In-Reply-To: <20130703015653.82651FAAD5@dev.laptop.org>
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp102.biz.mail.bf1.yahoo.com ([98.139.221.61]:20891 "HELO
+	smtp102.biz.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751894Ab3GaR7Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 13:59:25 -0400
+Message-ID: <51F94EEA.8040503@gespk.com> (sfid-20130731_195928_298047_0C398D03)
+Date: Wed, 31 Jul 2013 22:52:42 +0500
+From: Abdur Rehman <arqureshi@gespk.com>
 MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Subject: Intel WiFi Link 4965AGN - Failed, HW not ready
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+Hi we are unable to load the driver for Intel 4965agn module on a linux 
+system.
+We are seeing "HW not ready" error. Please see the log below
 
-> When the card is being removed, mwifiex_remove_card() immediately sets
-> surprise_removed to 1. This flag then causes the SDIO interrupt handler
-> to ignore all interrupts without even acking them.
-
-Since the card is removed, even if there is a pending interrupt received after card removal, it's not possible to ack it or disable interrupts. We cannot access hardware registers after card removal.
-
-Perhaps you are talking about unloading driver (rmmod mwifiex_sdio) instead?
-
-Thanks,
-Bing
-
-
+modprobe iwlagn
+[ 54.690000] cfg80211: Using static regulatory domain info
+[ 54.700000] cfg80211: Regulatory domain: US
+[ 54.710000] (start_freq - end_freq @ bandwidth), (max_antenna_gain, 
+max_eirp)
+[ 54.720000] (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+[ 54.730000] (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[ 54.740000] (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[ 54.750000] (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[ 54.760000] (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[ 54.770000] (5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+[ 54.780000] cfg80211: Calling CRDA for country: US
+[ 55.080000] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 
+1.3.27k
+[ 55.090000] iwlagn: Copyright(c) 2003-2009 Intel Corporation
+[ 55.100000] PCI: enabling device 0000:04:00.0 (0000 -> 0002)
+[ 55.110000] iwlagn 0000:04:00.0: Detected Intel Wireless WiFi Link 
+4965AGN REV=0x0
+[ 55.120000] iwlagn 0000:04:00.0: Failed, HW not ready
