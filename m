@@ -1,124 +1,253 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:64677 "EHLO ebb06.tieto.com"
+Received: from smtp3.ugent.be ([157.193.49.127]:38912 "EHLO smtp3.ugent.be"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750795Ab3GXKgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jul 2013 06:36:52 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: detect the number of spatial streams supported by hw
-Date: Wed, 24 Jul 2013 12:36:46 +0200
-Message-ID: <1374662206-19198-1-git-send-email-michal.kazior@tieto.com> (sfid-20130724_123656_255695_EFC81259)
+	id S1752000Ab3GaPLq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 11:11:46 -0400
+Received: from localhost (mcheck2.ugent.be [157.193.49.249])
+	by smtp3.ugent.be (Postfix) with ESMTP id 123D4C376
+	for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 17:11:45 +0200 (CEST)
+Received: from smtp3.ugent.be ([157.193.49.127])
+	by localhost (mcheck2.UGent.be [157.193.43.11]) (amavisd-new, port 10024)
+	with ESMTP id aFxYgkhrEAUg for <linux-wireless@vger.kernel.org>;
+	Wed, 31 Jul 2013 17:11:44 +0200 (CEST)
+Received: from mail-lb0-f171.google.com (mail-lb0-f171.google.com [209.85.217.171])
+	(Authenticated sender: mathieu.devos@ugent.be)
+	by smtp3.ugent.be (Postfix) with ESMTPSA id 22E7DC36B
+	for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 17:11:44 +0200 (CEST)
+Received: by mail-lb0-f171.google.com with SMTP id t13so695152lbd.30
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 08:11:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <51F9276F.1040908@broadcom.com>
+References: <CAE_+Soy5=MfUUahaP3Ka2onp+jP9aupbhGu_QHco=CP7Y9sqhQ@mail.gmail.com>
+	<51F8E228.9080600@broadcom.com>
+	<CAE_+Soyxz-RfyVeg-Z4Fv5tmUtH=9wutxgM0CGjHEne9zJq+Kg@mail.gmail.com>
+	<51F8EF8F.90109@broadcom.com>
+	<CAE_+SozB3cE36SKaHsyO9B1Eypm7KZFExV_uWBSsoiQ-Rn66Dw@mail.gmail.com>
+	<51F90937.9080009@broadcom.com>
+	<CAE_+Soy4Hy+uMAsn30PX9QpqY=Jah2f5qUCa=MkCskJczQB05w@mail.gmail.com>
+	<51F9276F.1040908@broadcom.com>
+Date: Wed, 31 Jul 2013 17:11:43 +0200
+Message-ID: <CAE_+Soydmjwp=gXxc74R3BGczbU7OKF2U3hehBi3kqGaEv_pwg@mail.gmail.com> (sfid-20130731_171149_449755_76FDB73C)
+Subject: Re: Skb and ieee80211 headers
+From: Mathieu Devos <mathieu.devos@ugent.be>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Until now ath10k assumed 3 spatial streams.
-However some devices support only 2 spatial
-streams.
+This is my hook: it gets called after I set dev to wlan0. I used a
+guide for this and it seems to work for my notebook where I'm able to
+find the 802.3 header but still no 802.11.
 
-This patch improves performance on devices that
-don't support 3 spatial streams.
+static int ptype_function(struct sk_buff *skb, struct net_device *dev,
+struct packet_type *ptype, struct net_device *dev2);
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.h |    1 +
- drivers/net/wireless/ath/ath10k/mac.c  |   19 +++++++++----------
- drivers/net/wireless/ath/ath10k/wmi.c  |   12 ++++++++++--
- 3 files changed, 20 insertions(+), 12 deletions(-)
+static void throw_hook(struct net_device *dev){
+   ptype.type = htons(ETH_P_ALL);
+   ptype.func = &ptype_function;
+   ptype.dev = dev;
+   dev_add_pack(&ptype);
+   printk(KERN_CRIT "Done setting up packet type");
+}
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 9f21ecb..ff42bb7 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -285,6 +285,7 @@ struct ath10k {
- 	u32 hw_max_tx_power;
- 	u32 ht_cap_info;
- 	u32 vht_cap_info;
-+	u32 num_rf_chains;
- 
- 	struct targetdef *targetdef;
- 	struct hostdef *hostdef;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index d0a7761..330ba93 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3093,19 +3093,18 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
- {
- 	struct ieee80211_sta_vht_cap vht_cap = {0};
- 	u16 mcs_map;
-+	int i;
- 
- 	vht_cap.vht_supported = 1;
- 	vht_cap.cap = ar->vht_cap_info;
- 
--	/* FIXME: check dynamically how many streams board supports */
--	mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 |
--		IEEE80211_VHT_MCS_SUPPORT_0_9 << 2 |
--		IEEE80211_VHT_MCS_SUPPORT_0_9 << 4 |
--		IEEE80211_VHT_MCS_NOT_SUPPORTED << 6 |
--		IEEE80211_VHT_MCS_NOT_SUPPORTED << 8 |
--		IEEE80211_VHT_MCS_NOT_SUPPORTED << 10 |
--		IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
--		IEEE80211_VHT_MCS_NOT_SUPPORTED << 14;
-+	mcs_map = 0;
-+	for (i = 0; i < 8; i++) {
-+		if (i < ar->num_rf_chains)
-+			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i*2);
-+		else
-+			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i*2);
-+	}
- 
- 	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
- 	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
-@@ -3168,7 +3167,7 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
- 	if (ar->vht_cap_info & WMI_VHT_CAP_MAX_MPDU_LEN_MASK)
- 		ht_cap.cap |= IEEE80211_HT_CAP_MAX_AMSDU;
- 
--	for (i = 0; i < WMI_MAX_SPATIAL_STREAM; i++)
-+	for (i = 0; i < ar->num_rf_chains; i++)
- 		ht_cap.mcs.rx_mask[i] = 0xFF;
- 
- 	ht_cap.mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 5e42460..1cbcb2e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -868,6 +868,13 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
- 		(__le32_to_cpu(ev->sw_version_1) & 0xffff0000) >> 16;
- 	ar->fw_version_build = (__le32_to_cpu(ev->sw_version_1) & 0x0000ffff);
- 	ar->phy_capability = __le32_to_cpu(ev->phy_capability);
-+	ar->num_rf_chains = __le32_to_cpu(ev->num_rf_chains);
-+
-+	if (ar->num_rf_chains > WMI_MAX_SPATIAL_STREAM) {
-+		ath10k_warn("hardware advertises support for more spatial streams than it should (%d > %d)\n",
-+			    ar->num_rf_chains, WMI_MAX_SPATIAL_STREAM);
-+		ar->num_rf_chains = WMI_MAX_SPATIAL_STREAM;
-+	}
- 
- 	ar->ath_common.regulatory.current_rd =
- 		__le32_to_cpu(ev->hal_reg_capabilities.eeprom_rd);
-@@ -892,7 +899,7 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
- 	}
- 
- 	ath10k_dbg(ATH10K_DBG_WMI,
--		   "wmi event service ready sw_ver 0x%08x sw_ver1 0x%08x abi_ver %u phy_cap 0x%08x ht_cap 0x%08x vht_cap 0x%08x vht_supp_msc 0x%08x sys_cap_info 0x%08x mem_reqs %u\n",
-+		   "wmi event service ready sw_ver 0x%08x sw_ver1 0x%08x abi_ver %u phy_cap 0x%08x ht_cap 0x%08x vht_cap 0x%08x vht_supp_msc 0x%08x sys_cap_info 0x%08x mem_reqs %u num_rf_chains %u\n",
- 		   __le32_to_cpu(ev->sw_version),
- 		   __le32_to_cpu(ev->sw_version_1),
- 		   __le32_to_cpu(ev->abi_version),
-@@ -901,7 +908,8 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
- 		   __le32_to_cpu(ev->vht_cap_info),
- 		   __le32_to_cpu(ev->vht_supp_mcs),
- 		   __le32_to_cpu(ev->sys_cap_info),
--		   __le32_to_cpu(ev->num_mem_reqs));
-+		   __le32_to_cpu(ev->num_mem_reqs),
-+		   __le32_to_cpu(ev->num_rf_chains));
- 
- 	complete(&ar->wmi.service_ready);
- }
--- 
-1.7.9.5
+All code can be found here:
+android: https://github.com/mathieudevos/kernelmodules/blob/master/ethernet_test.c
+notebook: https://github.com/mathieudevos/wifi_kernelmodules/blob/master/ethernet_test.c
 
+Kind regards,
+Mathieu Devos
+
+On Wed, Jul 31, 2013 at 5:04 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 07/31/2013 03:45 PM, Mathieu Devos wrote:
+>>
+>> Alright,
+>>
+>> Seems like I have fixed some issues while added some others. Since I
+>> assume that when my hook gets activated the data pointer should be at
+>> the start of the 802.3 header I casted an ethhdr (8023) on top of that
+>> and it seems that on my notebook this is handled correctly (I can
+>> actually check on my own mac addr and see that these frames are
+>> for/from me).
+>
+>
+> How does your hook work? Are you intercepting packets?
+>
+> Regards,
+> Arend
+>
+>
+>> On Wed, Jul 31, 2013 at 2:55 PM, Arend van Spriel <arend@broadcom.com>
+>> wrote:
+>>>
+>>> On 07/31/2013 02:39 PM, Mathieu Devos wrote:
+>>>>
+>>>>
+>>>> Hi,
+>>>>
+>>>> The wireless chip is a Broadcast BCM4330 chip. After looking around a
+>>>> bit I found that this is a fullMAC and links to the driver on
+>>>> wireless.kernel: http://wireless.kernel.org/en/users/Drivers/brcm80211
+>>>> and also links directly to android itself:
+>>>> https://android.googlesource.com/platform/hardware/broadcom/wlan
+>>>
+>>>
+>>>
+>>> I suspected. The bcm4330 is indeed a fullmac device, which means the
+>>> 802.11
+>>> stack is running on the device. The driver on Android is located under:
+>>>
+>>>
+>>> https://android.googlesource.com/kernel/samsung/+/android-samsung-3.0-ics-mr1/drivers/net/wireless/bcmdhd/
+>>>
+>>> Not sure which android version you have.
+>>>
+>>> The brcm80211 on wireless.kernel.org is the upstream linux driver.
+>>>
+>>> Gr. AvS
+>>>
+>>>
+>>>> Still trying to learn a lot in this tightly packed world of protocol
+>>>> stacks, wireless and all the other poisons. Seems like I still have a
+>>>> long way to go. Thank you already for helping me out with these issues
+>>>> and taking the time to explain these things to me.
+>>>>
+>>>> Kind regards,
+>>>> Mathieu Devos
+>>>>
+>>>> On Wed, Jul 31, 2013 at 1:05 PM, Arend van Spriel <arend@broadcom.com>
+>>>> wrote:
+>>>>>
+>>>>>
+>>>>> On 07/31/2013 12:28 PM, Mathieu Devos wrote:
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> Hi,
+>>>>>>
+>>>>>> It's an android smartphone (I 9100 - Samsung galaxy S2) so it does not
+>>>>>> have a normal ethernet 802.3 input even. I check before selecting the
+>>>>>> device that it's wireless (through ieee80211_ptr) and this properly
+>>>>>> returns the wlan0 device which should be on the 80211 standard.
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>> *sigh* Welcome in the world of protocol stacks, wireless, networking
+>>>>> (choose
+>>>>> your poison). Let me draw the picture.
+>>>>>
+>>>>>           o user-space
+>>>>>           |
+>>>>> ----------------------
+>>>>>           | kernel
+>>>>>     +-----------+
+>>>>>     |    NET    | networking subsystem, ie. TCP/IP stack
+>>>>>     +-----------+
+>>>>>           | 802.3
+>>>>> +----------------+
+>>>>> |       | driver |
+>>>>> | +------------+ |
+>>>>> | |802.11 stack| |
+>>>>> | +------------+ |
+>>>>> |       | 802.11 |
+>>>>> +----------------+
+>>>>>           |
+>>>>>           o RF
+>>>>>
+>>>>> The device hooks up to the networking subsystem as an ethernet device
+>>>>> and
+>>>>> as
+>>>>> such it receives 802.3 packets. These are converted to 802.11 packets
+>>>>> by
+>>>>> the
+>>>>> 802.11 stack. Now depending on your device that happens in the device
+>>>>> driver
+>>>>> or on the device itself. Another option is that this is done by
+>>>>> mac80211
+>>>>> (kernel provided 802.11 stack), but that is probably not the case, but
+>>>>> to
+>>>>> be
+>>>>> sure I ask again: what wireless device do you have in your galaxy S2?
+>>>>>
+>>>>> Gr. AvS
+>>>>>
+>>>>>
+>>>>>> My goal is to get the ieee80211_header properly on the skb with this
+>>>>>> device, but some of the pointers and original data in the skb seem
+>>>>>> totally off. This leaves me clueless as to where to put this
+>>>>>> ieee80211_header.
+>>>>>> I've tried putting it right on skb->head (wrong I know, but I was
+>>>>>> getting desperate), on skb->mac_header (also wrong, no idea why
+>>>>>> though), I went back from skb->tail with len and even added ETH_HLEN
+>>>>>> to that as well because you can see that before my hook gets
+>>>>>> activated: skb_pull_inline(skb, ETH_HLEN);
+>>>>>> In the end I'm left with a header that is forced onto data but with a
+>>>>>> wrong origin pointer thus basically leaving me with all wrong data in
+>>>>>> the header.
+>>>>>>
+>>>>>> Kind regards,
+>>>>>> Mathieu Devos
+>>>>>>
+>>>>>> On Wed, Jul 31, 2013 at 12:08 PM, Arend van Spriel
+>>>>>> <arend@broadcom.com>
+>>>>>> wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> On 07/31/2013 11:39 AM, Mathieu Devos wrote:
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> Hi,
+>>>>>>>>
+>>>>>>>> I hope this is the right place to ask for a little bit of help as
+>>>>>>>> I'm
+>>>>>>>> currently beyond stuck on a challenge I'm trying to accomplish. I'm
+>>>>>>>> trying to write a "simple" LKM that properly uses a ieee80211 header
+>>>>>>>> to print information about the mac addresses (addr1->addr4) and
+>>>>>>>> later
+>>>>>>>> down the road try to send my own data.
+>>>>>>>>
+>>>>>>>> I only need to get L2 working, no need for TCP/IP, just a proper
+>>>>>>>> ieee80211 based on input from skb would be huge for me.
+>>>>>>>>
+>>>>>>>> So my issue: when placing the ieee80211 on my mac_header after I
+>>>>>>>> hook
+>>>>>>>> my skb from my wireless device (wlan0 on android - I9100)
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> Not sure what you goal is, but what wireless device is that? You may
+>>>>>>> just
+>>>>>>> get 802.3 packets from the device.
+>>>>>>>
+>>>>>>> Gr. AvS
+>>>>>>>
+>>>>>>>
+>>>>>>>> I get a huge
+>>>>>>>> amount of zero's and random(?) numbers when trying to print the
+>>>>>>>> addresses. This leads me to the first conclusion that mac_header is
+>>>>>>>> placed wrong when using 80211. After that I saw a lot of people just
+>>>>>>>> using the skb->data pointer. Now this gives even weirder issues for
+>>>>>>>> me
+>>>>>>>> and actually totally crashes my kernel.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>
+>>>>>
+>>>>>
+>>>>
+>>>
+>>>
+>>
+>
+>
