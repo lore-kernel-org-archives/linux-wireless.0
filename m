@@ -1,114 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58094 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753446Ab3GZI2w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jul 2013 04:28:52 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 02/30] iwlwifi: remove forward debugfs function declarations
-Date: Fri, 26 Jul 2013 10:28:19 +0200
-Message-Id: <1374827327-3464-3-git-send-email-johannes@sipsolutions.net> (sfid-20130726_102901_066069_A3D4AE5F)
-In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
-References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+Received: from sous-sol.org ([216.99.217.87]:33756 "EHLO sequoia2.sous-sol.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751894Ab3GaRwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 13:52:10 -0400
+Date: Wed, 31 Jul 2013 10:49:15 -0700
+From: Chris Wright <chrisw@sous-sol.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Chris Wright <chrisw@sous-sol.org>, linux-wireless@vger.kernel.org,
+	Derek Atkins <DAtkins@mocana.com>
+Subject: Re: [PATCH 3.11] mac80211: ignore HT primary channel while connected
+Message-ID: <20130731174915.GA28308@sequoia2.sous-sol.org> (sfid-20130731_195213_445935_0F91641C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130731132625.GA23521@sequoia2.sous-sol.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+* Chris Wright (chrisw@sous-sol.org) wrote:
+> 	while (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+> 					IEEE80211_CHAN_DISABLED)) {
+> 		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
+> 			ret = IEEE80211_STA_DISABLE_HT |
+> 			      IEEE80211_STA_DISABLE_VHT;
+> 			goto out;
+> 		}
 
-There's no need to have 'forward' debugfs function declarations
-as part of the macros because the macros are always used after
-the static functions are defined already, so remove them.
+Actually, it just looks like this above loop is broken.  Code flow is:
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/iwlwifi/dvm/debugfs.c | 15 ---------------
- drivers/net/wireless/iwlwifi/pcie/trans.c  | 14 --------------
- 2 files changed, 29 deletions(-)
+	chandef->width = NL80211_CHAN_WIDTH_20;
+...
+	if (!vht_oper || !sband->vht_cap.vht_supported) {
+		ret = IEEE80211_STA_DISABLE_VHT;
+		goto out;
+	}
+...
+out:
+	/* don't print the message below for VHT mismatch if VHT is disabled */
+	if (ret & IEEE80211_STA_DISABLE_VHT)
+		vht_chandef = *chandef;
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-index d532948..d94f8ab 100644
---- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-@@ -69,19 +69,7 @@
- } while (0)
- 
- /* file operation */
--#define DEBUGFS_READ_FUNC(name)                                         \
--static ssize_t iwl_dbgfs_##name##_read(struct file *file,               \
--					char __user *user_buf,          \
--					size_t count, loff_t *ppos);
--
--#define DEBUGFS_WRITE_FUNC(name)                                        \
--static ssize_t iwl_dbgfs_##name##_write(struct file *file,              \
--					const char __user *user_buf,    \
--					size_t count, loff_t *ppos);
--
--
- #define DEBUGFS_READ_FILE_OPS(name)                                     \
--	DEBUGFS_READ_FUNC(name);                                        \
- static const struct file_operations iwl_dbgfs_##name##_ops = {          \
- 	.read = iwl_dbgfs_##name##_read,				\
- 	.open = simple_open,						\
-@@ -89,7 +77,6 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
- };
- 
- #define DEBUGFS_WRITE_FILE_OPS(name)                                    \
--	DEBUGFS_WRITE_FUNC(name);                                       \
- static const struct file_operations iwl_dbgfs_##name##_ops = {          \
- 	.write = iwl_dbgfs_##name##_write,                              \
- 	.open = simple_open,						\
-@@ -98,8 +85,6 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
- 
- 
- #define DEBUGFS_READ_WRITE_FILE_OPS(name)                               \
--	DEBUGFS_READ_FUNC(name);                                        \
--	DEBUGFS_WRITE_FUNC(name);                                       \
- static const struct file_operations iwl_dbgfs_##name##_ops = {          \
- 	.write = iwl_dbgfs_##name##_write,                              \
- 	.read = iwl_dbgfs_##name##_read,                                \
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 82194e8..bc908d3 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1113,18 +1113,7 @@ void iwl_pcie_dump_csr(struct iwl_trans *trans)
- } while (0)
- 
- /* file operation */
--#define DEBUGFS_READ_FUNC(name)                                         \
--static ssize_t iwl_dbgfs_##name##_read(struct file *file,               \
--					char __user *user_buf,          \
--					size_t count, loff_t *ppos);
--
--#define DEBUGFS_WRITE_FUNC(name)                                        \
--static ssize_t iwl_dbgfs_##name##_write(struct file *file,              \
--					const char __user *user_buf,    \
--					size_t count, loff_t *ppos);
--
- #define DEBUGFS_READ_FILE_OPS(name)					\
--	DEBUGFS_READ_FUNC(name);					\
- static const struct file_operations iwl_dbgfs_##name##_ops = {		\
- 	.read = iwl_dbgfs_##name##_read,				\
- 	.open = simple_open,						\
-@@ -1132,7 +1121,6 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {		\
- };
- 
- #define DEBUGFS_WRITE_FILE_OPS(name)                                    \
--	DEBUGFS_WRITE_FUNC(name);                                       \
- static const struct file_operations iwl_dbgfs_##name##_ops = {          \
- 	.write = iwl_dbgfs_##name##_write,                              \
- 	.open = simple_open,						\
-@@ -1140,8 +1128,6 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
- };
- 
- #define DEBUGFS_READ_WRITE_FILE_OPS(name)				\
--	DEBUGFS_READ_FUNC(name);					\
--	DEBUGFS_WRITE_FUNC(name);					\
- static const struct file_operations iwl_dbgfs_##name##_ops = {		\
- 	.write = iwl_dbgfs_##name##_write,				\
- 	.read = iwl_dbgfs_##name##_read,				\
--- 
-1.8.0
+	while (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+					IEEE80211_CHAN_DISABLED)) {
+		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
+			ret = IEEE80211_STA_DISABLE_HT |
+			      IEEE80211_STA_DISABLE_VHT;
+			goto out;
+		}
 
+		ret |= chandef_downgrade(chandef);
+	}
+
+We enter the while loop w/ width NL80211_CHAN_WIDTH_20
+(i.e. ht_cap.ht_supported is true), do one downgrade to
+NL80211_CHAN_WIDTH_20_NOHT, and then we are stuck in a permanent loop.
+I did not see any way that cfg80211_chandef_usable() will update chandef->width
+so once width is NL80211_CHAN_WIDTH_20_NOHT and ht_cap.ht_supported is
+true there is no end to the goto loop.
+
+So here is a hack that at least gets wireless working (only because
+there's another AP that's not got 11n enabled I believe).
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0e5aab1..b68ca05 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -336,7 +336,7 @@ out:
+ 		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
+ 			ret = IEEE80211_STA_DISABLE_HT |
+ 			      IEEE80211_STA_DISABLE_VHT;
+-			goto out;
++			break;
+ 		}
+ 
+ 		ret |= chandef_downgrade(chandef);
