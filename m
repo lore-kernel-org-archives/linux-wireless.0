@@ -1,31 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:20989 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751759Ab3GGOER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 10:04:17 -0400
-Date: Sun, 7 Jul 2013 16:07:01 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 01/20] rt2x00: rt2800lib: add MAC
- register initialization for RT3593
-Message-ID: <20130707140701.GA2073@localhost.localdomain> (sfid-20130707_160423_293509_23590E41)
-References: <1372664879-18474-1-git-send-email-juhosg@openwrt.org>
- <1372664879-18474-2-git-send-email-juhosg@openwrt.org>
+Received: from straum.hexapodia.org ([66.109.99.53]:44419 "EHLO
+	straum.hexapodia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756442Ab3GaO5i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 10:57:38 -0400
+Date: Wed, 31 Jul 2013 07:57:37 -0700
+From: Andy Isaacson <adi@hexapodia.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Subject: Re: 3.10, iwlwifi 6200AGN: AP changed bandwidth in a way we can't
+ support - disconnect
+Message-ID: <20130731145737.GC31017@hexapodia.org> (sfid-20130731_165746_082110_A8A42A60)
+References: <20130729163452.GA454@hexapodia.org>
+ <20130731085956.GC1681@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372664879-18474-2-git-send-email-juhosg@openwrt.org>
+In-Reply-To: <20130731085956.GC1681@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 01, 2013 at 09:47:40AM +0200, Gabor Juhos wrote:
-> Based on the Ralink DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-> driver.
+On Wed, Jul 31, 2013 at 10:59:56AM +0200, Stanislaw Gruszka wrote:
+> We have few reports about this. Johannes, proposed this patch
+> http://p.sipsolutions.net/9d1dd0734d2c3a7a.txt
 > 
-> Reference:
->   NICInitRT3593MacRegisters in chips/rt3593.c
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> Could you check if it fixes the problem for you?
 
+I unfortunately didn't get a chance to confirm before leaving Berlin,
+but the patch Johannes posted in the other thread seems to agree with my
+analysis of the problem, and Johannes confirmed from my pcap that it
+is the same problem.
+
+-andy
