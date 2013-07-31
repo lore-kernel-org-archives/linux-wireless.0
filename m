@@ -1,65 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:52940 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3GQCVF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49731 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751290Ab3GaGsP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jul 2013 22:21:05 -0400
-Received: by mail-pd0-f177.google.com with SMTP id p10so1295414pdj.8
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2013 19:21:04 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 26/53] wireless-regdb: FI, Finland - enable VHT80
-Date: Tue, 16 Jul 2013 19:18:15 -0700
-Message-Id: <1374027522-18488-27-git-send-email-mcgrof@do-not-panic.com> (sfid-20130717_043606_874291_65F75C6F)
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 31 Jul 2013 02:48:15 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1V4QCk-0006Sh-7U
+	for linux-wireless@vger.kernel.org; Wed, 31 Jul 2013 08:48:14 +0200
+Message-ID: <1375253292.8289.6.camel@jlt4.sipsolutions.net> (sfid-20130731_084817_857868_A363F266)
+Subject: Re: pull-request: iwlwifi-next 2013-07-26
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 31 Jul 2013 08:48:12 +0200
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net> (sfid-20130726_102907_482078_CA749114)
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130726_102907_482078_CA749114)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Fri, 2013-07-26 at 10:28 +0200, Johannes Berg wrote:
+> John,
+> 
+> First -next pull request for iwlwifi.
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+I'll respin this, Eliad noticed one bug and we also found one.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 26cc023..3790d4e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -280,9 +280,9 @@ country ES: DFS-ETSI
- 
- country FI: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
--- 
-1.7.10.4
+johannes
 
