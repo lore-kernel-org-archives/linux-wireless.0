@@ -1,82 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:27692 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751769Ab3GGJmj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jul 2013 05:42:39 -0400
-Message-ID: <1373190151.3428.13.camel@deadeye.wl.decadent.org.uk> (sfid-20130707_114300_799343_032829B3)
-Subject: Re: [PATCH] rtlwifi: Fix Kconfig for some corner cases
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
-Date: Sun, 7 Jul 2013 10:42:31 +0100
-In-Reply-To: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1373165244-9536-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from ebb05.tieto.com ([131.207.168.36]:47387 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752830Ab3GaIzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 04:55:22 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/5] ath10k: fixes
+Date: Wed, 31 Jul 2013 10:55:10 +0200
+Message-ID: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com> (sfid-20130731_105526_612654_4E233B96)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-07-06 at 21:47 -0500, Larry Finger wrote:
-> Fengguang Wu reported the following errors in the build of rtlwifi with
-> a random configuration:
-> 
-> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux master
-> head:   bcd7351e83728859833e3c5b8aae9a2816914e4b
-> commit: 06e7cda3ce30dadc3454539127b4cfc3888c349e rtlwifi: Rework Kconfig
-> date:   5 months ago
-> config: i386-randconfig-s05-0703
-> 
->    drivers/built-in.o: In function `rtl_usb_cleanup':
->    usb.c:(.text+0x114895): undefined reference to `usb_kill_anchored_urbs'
->    usb.c:(.text+0x114964): undefined reference to `usb_kill_anchored_urbs'
->    usb.c:(.text+0x11497c): undefined reference to `usb_kill_anchored_urbs'
->    drivers/built-in.o: In function `_usb_writeN_sync':
->    usb.c:(.text+0x114c9e): undefined reference to `usb_control_msg'
->    drivers/built-in.o: In function `rtl_usb_disconnect':
->    (.text+0x114d9c): undefined reference to `usb_put_dev'
->    drivers/built-in.o: In function `rtl_usb_start':
->    usb.c:(.text+0x114fb0): undefined reference to `usb_alloc_urb'
->    usb.c:(.text+0x115049): undefined reference to `usb_free_urb'
-> --snip--
-> 
-> Although I could not duplicate this result on my machine, it seemed likely
-> that it was due to the unusual configuration where rtlwifi was being built,
-> but none of its dependent drivers were selected.
+Hi,
 
-I think it just requires:
+This is a batch up of a few fixes for ath10k
+driver I had in my queue for some time now.
 
-CONFIG_USB=m
-CONFIG_RTLWIFI=y
 
-> The fix is to select rtlwifi only when it is needed.
+Michal Kazior (5):
+  ath10k: prevent using invalid ringbuffer indexes
+  ath10k: make sure to use passive scan when n_ssids is 0
+  ath10k: advertise more conservative intf combinations
+  ath10k: zero arvif memory on add_interface()
+  ath10k: fix failpath in MSI-X setup
 
-I don't think so.  Consider this configuration:
-
-CONFIG_PCI=y
-CONFIG_USB=m
-CONFIG_RTL_CARDS=y
-CONFIG_RTL8192CE=y
-CONFIG_RTL8192CU=m
-CONFIG_RTLWIFI=y     # maximum of RTL8192CE=y and RTL8192CU=m
-
-The same breakage occurs.
-
-> While making this
-> change, I simplified the configuration so that variable RTLWIFI is never seen
-> by the user.
-[...]
-
-This will break existing configurations as RTL_CARDS defaults to n.
-
-Perhaps you should introduce separate modules for the common PCI and USB
-support code, similarly to how the rt2x00 modules are organised.
-
-Ben.
+ drivers/net/wireless/ath/ath10k/ce.c  |    5 +++++
+ drivers/net/wireless/ath/ath10k/mac.c |   16 +++++++++++++---
+ drivers/net/wireless/ath/ath10k/pci.c |    7 ++++++-
+ 3 files changed, 24 insertions(+), 4 deletions(-)
 
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+1.7.9.5
 
