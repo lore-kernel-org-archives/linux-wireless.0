@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:54503 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932170Ab3GKJIi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jul 2013 05:08:38 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org,
-	Ming Lei <ming.lei@canonical.com>,
-	Johan Hovold <jhovold@gmail.com>
-Subject: [PATCH 15/50] USB: serial: mos77840: spin_lock in complete() cleanup
-Date: Thu, 11 Jul 2013 17:05:38 +0800
-Message-Id: <1373533573-12272-16-git-send-email-ming.lei@canonical.com> (sfid-20130711_110849_011294_0D80DDE2)
-In-Reply-To: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
-References: <1373533573-12272-1-git-send-email-ming.lei@canonical.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4977 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751903Ab3GaKJB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 06:09:01 -0400
+Message-ID: <51F8E228.9080600@broadcom.com> (sfid-20130731_120905_182184_47A78D14)
+Date: Wed, 31 Jul 2013 12:08:40 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Mathieu Devos" <mathieu.devos@ugent.be>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: Skb and ieee80211 headers
+References: <CAE_+Soy5=MfUUahaP3Ka2onp+jP9aupbhGu_QHco=CP7Y9sqhQ@mail.gmail.com>
+In-Reply-To: <CAE_+Soy5=MfUUahaP3Ka2onp+jP9aupbhGu_QHco=CP7Y9sqhQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+On 07/31/2013 11:39 AM, Mathieu Devos wrote:
+> Hi,
+>
+> I hope this is the right place to ask for a little bit of help as I'm
+> currently beyond stuck on a challenge I'm trying to accomplish. I'm
+> trying to write a "simple" LKM that properly uses a ieee80211 header
+> to print information about the mac addresses (addr1->addr4) and later
+> down the road try to send my own data.
+>
+> I only need to get L2 working, no need for TCP/IP, just a proper
+> ieee80211 based on input from skb would be huge for me.
+>
+> So my issue: when placing the ieee80211 on my mac_header after I hook
+> my skb from my wireless device (wlan0 on android - I9100)
 
-Cc: Johan Hovold <jhovold@gmail.com>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/usb/serial/mos7840.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Not sure what you goal is, but what wireless device is that? You may 
+just get 802.3 packets from the device.
 
-diff --git a/drivers/usb/serial/mos7840.c b/drivers/usb/serial/mos7840.c
-index 0a818b2..f21dcd0 100644
---- a/drivers/usb/serial/mos7840.c
-+++ b/drivers/usb/serial/mos7840.c
-@@ -788,17 +788,18 @@ static void mos7840_bulk_out_data_callback(struct urb *urb)
- 	struct usb_serial_port *port;
- 	int status = urb->status;
- 	int i;
-+	unsigned long flags;
- 
- 	mos7840_port = urb->context;
- 	port = mos7840_port->port;
--	spin_lock(&mos7840_port->pool_lock);
-+	spin_lock_irqsave(&mos7840_port->pool_lock, flags);
- 	for (i = 0; i < NUM_URBS; i++) {
- 		if (urb == mos7840_port->write_urb_pool[i]) {
- 			mos7840_port->busy[i] = 0;
- 			break;
- 		}
- 	}
--	spin_unlock(&mos7840_port->pool_lock);
-+	spin_unlock_irqrestore(&mos7840_port->pool_lock, flags);
- 
- 	if (status) {
- 		dev_dbg(&port->dev, "nonzero write bulk status received:%d\n", status);
--- 
-1.7.9.5
+Gr. AvS
+
+> I get a huge
+> amount of zero's and random(?) numbers when trying to print the
+> addresses. This leads me to the first conclusion that mac_header is
+> placed wrong when using 80211. After that I saw a lot of people just
+> using the skb->data pointer. Now this gives even weirder issues for me
+> and actually totally crashes my kernel.
+
+
 
