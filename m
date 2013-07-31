@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:34903 "EHLO
-	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932990Ab3GDITh convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:37509 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755295Ab3GaS17 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jul 2013 04:19:37 -0400
-Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
-	by smtp-out03.msg.oleane.net with ESMTP id r648JZKU027927
-	for <linux-wireless@vger.kernel.org>; Thu, 4 Jul 2013 10:19:35 +0200
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-References: <1372319520-29087-1-git-send-email-cedric.voncken@acksys.fr>	 <070e01ce762c$24fa5ff0$6eef1fd0$@acksys.fr>	 <00e901ce7886$ae44d360$0ace7a20$@acksys.fr> <1372923998.8235.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1372923998.8235.1.camel@jlt4.sipsolutions.net>
-Subject: RE: [PATCH V2] vlan priority handling in WMM
-Date: Thu, 4 Jul 2013 09:59:04 +0200
-Message-ID: <00ea01ce788c$5a2d35f0$0e87a1d0$@acksys.fr> (sfid-20130704_101942_172001_4D31F54B)
+	Wed, 31 Jul 2013 14:27:59 -0400
+Received: by mail-we0-f177.google.com with SMTP id m46so916727wev.36
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 11:27:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+Date: Wed, 31 Jul 2013 14:27:58 -0400
+Message-ID: <CAJt7DwytQzEMzn9way1z5ag-vo=GsYF72uvmAJEcJeJs=Y-hfw@mail.gmail.com> (sfid-20130731_202806_326496_0CEA19F5)
+Subject: CLI scan tool needed
+From: Michael McElroy <mikem388@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry but I have some problems with my mail server, and actually, I have a lot of mail not sent. So I was not sure you received my message.
+I've done a lot of searching before posting but can't seem to find the answer.
 
-I waiting the end of merge windows
+Using the backports project, I have one of the latest ralink driver
+going on an arm processor running 2.6.29 along with all nl80211 parts.
+Works great, thank you! The last piece I need is to get the to SSID
+list, their security protocols, and signal strength. I'm looking for
+output similar to 'wilist scanning'. 'iw scan' gives a lot of info but
+not quite what I need without a lot of massaging.
+GUI based utilities won't work for my environment.Can anyone give me
+some suggestions where to look?
 
-Cedric
+Thanks,
 
------Message d'origine-----
-De : Johannes Berg [mailto:johannes@sipsolutions.net] 
-Envoyé : jeudi 4 juillet 2013 09:47
-À : voncken
-Cc : linux-wireless@vger.kernel.org
-Objet : Re: [PATCH V2] vlan priority handling in WMM
-
-On Thu, 2013-07-04 at 09:18 +0200, voncken wrote:
-> If the VLAN tci is set in skb->vlan_tci use the priority field to 
-> determine the WMM priority.
-
-Pinging me and resending your patch isn't going to make it more likely that I apply it. We're in the merge window, so naturally patch application is stalled.
-
-johannes
-
-
+Mike
