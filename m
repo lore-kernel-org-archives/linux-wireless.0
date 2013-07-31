@@ -1,65 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:40051 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933393Ab3GDBHG (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50035 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759120Ab3GaIWp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 21:07:06 -0400
-Received: by mail-pa0-f47.google.com with SMTP id kl14so764006pab.20
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jul 2013 18:07:05 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 30/53] wireless-regdb: LU, Luxembourg - enable VHT80
-Date: Wed,  3 Jul 2013 18:04:26 -0700
-Message-Id: <1372899889-19183-31-git-send-email-mcgrof@do-not-panic.com> (sfid-20130704_032043_823255_D7993F5B)
-In-Reply-To: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1372899889-19183-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 31 Jul 2013 04:22:45 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.11] mac80211: don't wait for TX status forever
+Date: Wed, 31 Jul 2013 10:22:41 +0200
+Message-Id: <1375258961-26321-1-git-send-email-johannes@sipsolutions.net> (sfid-20130731_102255_451028_6D22D481)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This enables 80 MHz bandwidth usage on all 5 GHz
-frequencies.
+TX status notification can get lost, or the frames could
+get stuck on the queue, so don't wait for the callback
+from the driver forever and instead time out after half
+a second.
 
-This is a country that belongs CEPT [0] and an available
-regulatory source is ECC/DEC/(04)08 [1].
-
-Quoting:
-
-  considering [...]
-  e. that the systems covered by this ECC Decision operate
-  typically in a 20 MHz channel bandwidth, other values for
-  the channel bandwidth are also feasible provided they
-  comply with the relevant maximum mean e.i.r.p. and the
-  corresponding maximum mean e.i.r.p. density limits;
-
-[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
-[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- db.txt |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/mlme.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index b8ddd9e..04a176e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -500,9 +500,9 @@ country LT: DFS-ETSI
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index fa19828..8a02018 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -31,10 +31,12 @@
+ #include "led.h"
  
- country LU: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 80), (N/A, 20)
-+	(5250 - 5330 @ 80), (N/A, 20), DFS
-+	(5490 - 5710 @ 80), (N/A, 27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ #define IEEE80211_AUTH_TIMEOUT		(HZ / 5)
++#define IEEE80211_AUTH_TIMEOUT_LONG	(HZ / 2)
+ #define IEEE80211_AUTH_TIMEOUT_SHORT	(HZ / 10)
+ #define IEEE80211_AUTH_MAX_TRIES	3
+ #define IEEE80211_AUTH_WAIT_ASSOC	(HZ * 5)
+ #define IEEE80211_ASSOC_TIMEOUT		(HZ / 5)
++#define IEEE80211_ASSOC_TIMEOUT_LONG	(HZ / 2)
+ #define IEEE80211_ASSOC_TIMEOUT_SHORT	(HZ / 10)
+ #define IEEE80211_ASSOC_MAX_TRIES	3
  
+@@ -3412,10 +3414,13 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
+ 
+ 	if (tx_flags == 0) {
+ 		auth_data->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
+-		ifmgd->auth_data->timeout_started = true;
++		auth_data->timeout_started = true;
+ 		run_again(sdata, auth_data->timeout);
+ 	} else {
+-		auth_data->timeout_started = false;
++		auth_data->timeout =
++			round_jiffies_up(jiffies + IEEE80211_AUTH_TIMEOUT_LONG);
++		auth_data->timeout_started = true;
++		run_again(sdata, auth_data->timeout);
+ 	}
+ 
+ 	return 0;
+@@ -3452,7 +3457,11 @@ static int ieee80211_do_assoc(struct ieee80211_sub_if_data *sdata)
+ 		assoc_data->timeout_started = true;
+ 		run_again(sdata, assoc_data->timeout);
+ 	} else {
+-		assoc_data->timeout_started = false;
++		assoc_data->timeout =
++			round_jiffies_up(jiffies +
++					 IEEE80211_ASSOC_TIMEOUT_LONG);
++		assoc_data->timeout_started = true;
++		run_again(sdata, assoc_data->timeout);
+ 	}
+ 
+ 	return 0;
 -- 
-1.7.10.4
+1.8.0
 
