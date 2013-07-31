@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33975 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932143Ab3GDAB1 (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:42008 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753942Ab3GaGui (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 20:01:27 -0400
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r6401QnU000309
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 3 Jul 2013 17:01:26 -0700
-Message-ID: <51D4BB56.9070401@candelatech.com> (sfid-20130704_020129_998241_BE6D0EF6)
-Date: Wed, 03 Jul 2013 17:01:26 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 31 Jul 2013 02:50:38 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hr7so3506051wib.10
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2013 23:50:37 -0700 (PDT)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Replacement for local->hw.conf.channel
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1375253292.8289.6.camel@jlt4.sipsolutions.net>
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+	<1375253292.8289.6.camel@jlt4.sipsolutions.net>
+Date: Wed, 31 Jul 2013 08:50:37 +0200
+Message-ID: <CA+icZUW7umexAMJDqL0_WL5_t=pcBuMjTXxh5KLYia1OCp9njQ@mail.gmail.com> (sfid-20130731_085041_883828_32D649F8)
+Subject: Re: pull-request: iwlwifi-next 2013-07-26
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm trying to port some patches forward to 3.10....
+On Wed, Jul 31, 2013 at 8:48 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2013-07-26 at 10:28 +0200, Johannes Berg wrote:
+>> John,
+>>
+>> First -next pull request for iwlwifi.
+>
+> I'll respin this, Eliad noticed one bug and we also found one.
+>
 
-I am trying to find the current channel for a radio.  Since
-hw.conf.channel no longer exists, what is the best way to
-go about this?
+BTW, johill which kill-bug-spray do you prefer?
+It seems to be very effective... if it kills also real (alive) bugs
+it's double-good.
 
-Thanks,
-Ben
+- Sedat -
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
