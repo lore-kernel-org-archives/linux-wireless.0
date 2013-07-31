@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43328 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678Ab3FDWAQ (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:60055 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753900Ab3GaAxx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jun 2013 18:00:16 -0400
-Date: Tue, 4 Jun 2013 17:53:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Gustavo Padovan <gustavo.padovan@collabora.co.uk>,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: wireless tree rebased (from 5/28), Broadcom bits dropped
-Message-ID: <20130604215320.GC11199@tuxdriver.com> (sfid-20130605_000022_753591_1B1E52D0)
-References: <20130604212602.GB11199@tuxdriver.com>
+	Tue, 30 Jul 2013 20:53:53 -0400
+Received: by mail-la0-f50.google.com with SMTP id fn20so55236lab.23
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2013 17:53:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130604212602.GB11199@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 30 Jul 2013 17:53:31 -0700
+Message-ID: <CAB=NE6Vm18RcDYQn+QoEzSG202HezT0rqV_hwb_UOzyecstu5w@mail.gmail.com> (sfid-20130731_025357_256380_141CDEED)
+Subject: 802.11 infrastructure for regression testing - upstream / mac80211 / cfg80211
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	Paul Stewart <pstew@chromium.org>,
+	Felix Fietkau <nbd@openwrt.org>, Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I messed this up too -- bad day...
+Folks,
 
-If you pulled in between the earlier message and this one, please
-do so again.  If you saw this message before taking any action to
-clean-up my mess, then you are OK.
+Back in 2009 Intel had put out a wifi-test tree [0] but that seems
+deprecated now. The git tree at least is gone. Can someone confirm if
+that's dead? We later had Google present at the 2010 San Francisco
+wireless summit [1] their test infrastructure using autotest. Last I
+checked that stuff was not merged back upstream to autotest. Can
+someone confirm ? Lastly we have mac80211_hwsim [2] and also a slew of
+internal testing infrastructures that obviously are not open.
 
-John
+If we are to embark on a new journey towards an open testing
+infrastructure what should be used? Ben, you have some stuff, and I
+know you also report some interesting bugs with insane amount of
+stations. Is any of it open?
 
-On Tue, Jun 04, 2013 at 05:26:03PM -0400, John W. Linville wrote:
-> All,
-> 
-> Due to my poor judgment in accepting the brcmfmac/brcmsmac series,
-> I've made a mess of the wireless tree.  To fix it, I have rebased from
-> before that series was applied.  I'm sure there were other potential
-> courses of action, but this is the one I chose...
-> 
-> If you maintain a tree that pulls from wireless.git (and has done
-> so within the past week), then you will need to rebase as well.
-> This is particularly true if you wish for me to pull from your tree
-> in the future.
-> 
-> I sincerely apologize for the inconvenience.  I hope that it won't
-> be happening again anytime soon (if at all).
-> 
-> John
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+AFAICT mac80211_hwism should and likely already is used for a slew of
+core API changes / tests. Addressing testing using that shoud
+hopefully address tons of testings and find a lot of issues. We'd then
+just need vendors to replicate behaviour on top of their drivers. The
+core test stuff though still needs to be available.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+What do we have, anyone have any lofty plans?
+
+[0] http://wireless.kernel.org/en/developers/Testing/wifi-test
+[1] http://wireless.kernel.org/en/developers/Summits/SanFranciscoBayArea-2010
+[2] http://wireless.kernel.org/en/users/Drivers/mac80211_hwsim
+
+  Luis
