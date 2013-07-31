@@ -1,237 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:46310 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751287Ab3G3NF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 09:05:27 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <coelho@ti.com>, <luca@coelho.fi>, <mturquette@linaro.org>,
-	<mark.rutland@arm.com>, <balbi@ti.com>, <grant.likely@linaro.org>,
-	<rob.herring@calxeda.com>, <devicetree-discuss@lists.ozlabs.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <nm@ti.com>,
-	<martinez.javier@gmail.com>
-Subject: [PATCH v4 1/8] wl1251: split wl251 platform data to a separate structure
-Date: Tue, 30 Jul 2013 16:04:29 +0300
-Message-ID: <1375189476-21557-2-git-send-email-coelho@ti.com> (sfid-20130730_151232_535598_5030885E)
-In-Reply-To: <1375189476-21557-1-git-send-email-coelho@ti.com>
-References: <1375189476-21557-1-git-send-email-coelho@ti.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:61519 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751290Ab3GaGG1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 02:06:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: improve tx throughput on slow machines
+References: <1374495928-29514-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 31 Jul 2013 09:06:10 +0300
+In-Reply-To: <1374495928-29514-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 22 Jul 2013 14:25:28 +0200")
+Message-ID: <87ehafs1pp.fsf@kamboji.qca.qualcomm.com> (sfid-20130731_080631_219941_D21A1F9C)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the wl1251 part of the wl12xx platform data structure into a new
-structure specifically for wl1251.  Change the platform data built-in
-block and board files accordingly.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Cc: Tony Lindgren <tony@atomide.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Acked-by: Tony Lindgren <tony@atomide.com>
-Reviewed-by: Felipe Balbi <balbi@ti.com>
----
- arch/arm/mach-omap2/board-omap3pandora.c       |  4 +--
- arch/arm/mach-omap2/board-rx51-peripherals.c   |  2 +-
- drivers/net/wireless/ti/wilink_platform_data.c | 37 +++++++++++++++++++++-----
- drivers/net/wireless/ti/wl1251/sdio.c          | 12 ++++-----
- drivers/net/wireless/ti/wl1251/spi.c           |  2 +-
- include/linux/wl12xx.h                         | 22 ++++++++++++++-
- 6 files changed, 62 insertions(+), 17 deletions(-)
+> It is more efficient to move just the 802.11
+> header instead of the whole payload in most cases.
+>
+> This has no measurable effect on modern hardware.
+> It should improve performance by a few percent on
+> hardware such as an Access Point that have a slow
+> CPU compared to a typical desktop CPU.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/arch/arm/mach-omap2/board-omap3pandora.c b/arch/arm/mach-omap2/board-omap3pandora.c
-index b1547a0..84d56e8 100644
---- a/arch/arm/mach-omap2/board-omap3pandora.c
-+++ b/arch/arm/mach-omap2/board-omap3pandora.c
-@@ -541,7 +541,7 @@ static struct spi_board_info omap3pandora_spi_board_info[] __initdata = {
- 
- static void __init pandora_wl1251_init(void)
- {
--	struct wl12xx_platform_data pandora_wl1251_pdata;
-+	struct wl1251_platform_data pandora_wl1251_pdata;
- 	int ret;
- 
- 	memset(&pandora_wl1251_pdata, 0, sizeof(pandora_wl1251_pdata));
-@@ -555,7 +555,7 @@ static void __init pandora_wl1251_init(void)
- 		goto fail_irq;
- 
- 	pandora_wl1251_pdata.use_eeprom = true;
--	ret = wl12xx_set_platform_data(&pandora_wl1251_pdata);
-+	ret = wl1251_set_platform_data(&pandora_wl1251_pdata);
- 	if (ret < 0)
- 		goto fail_irq;
- 
-diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
-index 9c2dd10..01e5711 100644
---- a/arch/arm/mach-omap2/board-rx51-peripherals.c
-+++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
-@@ -80,7 +80,7 @@ enum {
- 	RX51_SPI_MIPID,		/* LCD panel */
- };
- 
--static struct wl12xx_platform_data wl1251_pdata;
-+static struct wl1251_platform_data wl1251_pdata;
- static struct tsc2005_platform_data tsc2005_pdata;
- 
- #if defined(CONFIG_SENSORS_LIS3_I2C) || defined(CONFIG_SENSORS_LIS3_I2C_MODULE)
-diff --git a/drivers/net/wireless/ti/wilink_platform_data.c b/drivers/net/wireless/ti/wilink_platform_data.c
-index 998e958..a92bd3e 100644
---- a/drivers/net/wireless/ti/wilink_platform_data.c
-+++ b/drivers/net/wireless/ti/wilink_platform_data.c
-@@ -23,17 +23,17 @@
- #include <linux/err.h>
- #include <linux/wl12xx.h>
- 
--static struct wl12xx_platform_data *platform_data;
-+static struct wl12xx_platform_data *wl12xx_platform_data;
- 
- int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
- {
--	if (platform_data)
-+	if (wl12xx_platform_data)
- 		return -EBUSY;
- 	if (!data)
- 		return -EINVAL;
- 
--	platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
--	if (!platform_data)
-+	wl12xx_platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
-+	if (!wl12xx_platform_data)
- 		return -ENOMEM;
- 
- 	return 0;
-@@ -41,9 +41,34 @@ int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
- 
- struct wl12xx_platform_data *wl12xx_get_platform_data(void)
- {
--	if (!platform_data)
-+	if (!wl12xx_platform_data)
- 		return ERR_PTR(-ENODEV);
- 
--	return platform_data;
-+	return wl12xx_platform_data;
- }
- EXPORT_SYMBOL(wl12xx_get_platform_data);
-+
-+static struct wl1251_platform_data *wl1251_platform_data;
-+
-+int __init wl1251_set_platform_data(const struct wl1251_platform_data *data)
-+{
-+	if (wl1251_platform_data)
-+		return -EBUSY;
-+	if (!data)
-+		return -EINVAL;
-+
-+	wl1251_platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
-+	if (!wl1251_platform_data)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
-+struct wl1251_platform_data *wl1251_get_platform_data(void)
-+{
-+	if (!wl1251_platform_data)
-+		return ERR_PTR(-ENODEV);
-+
-+	return wl1251_platform_data;
-+}
-+EXPORT_SYMBOL(wl1251_get_platform_data);
-diff --git a/drivers/net/wireless/ti/wl1251/sdio.c b/drivers/net/wireless/ti/wl1251/sdio.c
-index e2b3d9c..b75a37a 100644
---- a/drivers/net/wireless/ti/wl1251/sdio.c
-+++ b/drivers/net/wireless/ti/wl1251/sdio.c
-@@ -227,7 +227,7 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 	struct wl1251 *wl;
- 	struct ieee80211_hw *hw;
- 	struct wl1251_sdio *wl_sdio;
--	const struct wl12xx_platform_data *wl12xx_board_data;
-+	const struct wl1251_platform_data *wl1251_board_data;
- 
- 	hw = wl1251_alloc_hw();
- 	if (IS_ERR(hw))
-@@ -254,11 +254,11 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 	wl->if_priv = wl_sdio;
- 	wl->if_ops = &wl1251_sdio_ops;
- 
--	wl12xx_board_data = wl12xx_get_platform_data();
--	if (!IS_ERR(wl12xx_board_data)) {
--		wl->set_power = wl12xx_board_data->set_power;
--		wl->irq = wl12xx_board_data->irq;
--		wl->use_eeprom = wl12xx_board_data->use_eeprom;
-+	wl1251_board_data = wl1251_get_platform_data();
-+	if (!IS_ERR(wl1251_board_data)) {
-+		wl->set_power = wl1251_board_data->set_power;
-+		wl->irq = wl1251_board_data->irq;
-+		wl->use_eeprom = wl1251_board_data->use_eeprom;
- 	}
- 
- 	if (wl->irq) {
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index c7dc6fe..6bbbfe6 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -238,7 +238,7 @@ static const struct wl1251_if_operations wl1251_spi_ops = {
- 
- static int wl1251_spi_probe(struct spi_device *spi)
- {
--	struct wl12xx_platform_data *pdata;
-+	struct wl1251_platform_data *pdata;
- 	struct ieee80211_hw *hw;
- 	struct wl1251 *wl;
- 	int ret;
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index a54fe82..b516b4f 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -48,11 +48,15 @@ enum {
- 	WL12XX_TCXOCLOCK_33_6	= 7, /* 33.6 MHz */
- };
- 
--struct wl12xx_platform_data {
-+struct wl1251_platform_data {
- 	void (*set_power)(bool enable);
- 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
- 	int irq;
- 	bool use_eeprom;
-+};
-+
-+struct wl12xx_platform_data {
-+	int irq;
- 	int board_ref_clock;
- 	int board_tcxo_clock;
- 	unsigned long platform_quirks;
-@@ -68,6 +72,10 @@ int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
- 
- struct wl12xx_platform_data *wl12xx_get_platform_data(void);
- 
-+int wl1251_set_platform_data(const struct wl1251_platform_data *data);
-+
-+struct wl1251_platform_data *wl1251_get_platform_data(void);
-+
- #else
- 
- static inline
-@@ -82,6 +90,18 @@ struct wl12xx_platform_data *wl12xx_get_platform_data(void)
- 	return ERR_PTR(-ENODATA);
- }
- 
-+static inline
-+int wl1251_set_platform_data(const struct wl1251_platform_data *data)
-+{
-+	return -ENOSYS;
-+}
-+
-+static inline
-+struct wl1251_platform_data *wl1251_get_platform_data(void)
-+{
-+	return ERR_PTR(-ENODATA);
-+}
-+
- #endif
- 
- #endif
+Applied, thanks.
+
 -- 
-1.8.3.2
-
+Kalle Valo
