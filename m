@@ -1,82 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:55403 "EHLO comal.ext.ti.com"
+Received: from ebb05.tieto.com ([131.207.168.36]:42466 "EHLO ebb05.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932804Ab3GCOEk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jul 2013 10:04:40 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>, <tony@atomide.com>,
-	<nsekhar@ti.com>
-CC: <mturquette@linaro.org>, <mark.rutland@arm.com>, <balbi@ti.com>,
-	<grant.likely@linaro.org>, <rob.herring@calxeda.com>,
-	<devicetree-discuss@lists.ozlabs.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <coelho@ti.com>,
-	<nm@ti.com>
-Subject: [PATCH v3 6/8] wlcore: sdio: add wilink clock providers
-Date: Wed, 3 Jul 2013 17:03:27 +0300
-Message-ID: <1372860209-3504-7-git-send-email-coelho@ti.com> (sfid-20130703_160559_537424_D35A753E)
-In-Reply-To: <1372860209-3504-1-git-send-email-coelho@ti.com>
-References: <1372860209-3504-1-git-send-email-coelho@ti.com>
+	id S1755043Ab3GaIsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 04:48:11 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/2] ath10k: implement tx checksum offloading
+Date: Wed, 31 Jul 2013 10:47:57 +0200
+Message-ID: <1375260477-17030-3-git-send-email-michal.kazior@tieto.com> (sfid-20130731_104818_606995_4857CFAD)
+In-Reply-To: <1375260477-17030-1-git-send-email-michal.kazior@tieto.com>
+References: <1375260477-17030-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add refclock and tcxoclock as clock providers in WiLink.  These clocks
-are not accesible outside the WiLink module, but they are registered
-in the clock framework anyway.  Only the WiLink chip consumes these
-clocks.
+HW supports L3/L4 tx checksum offloading.
 
-In theory, the WiLink chip could be connected to external clocks
-instead of using these internal clocks, so make the clock consumer
-code generic enough.  If external clocks are used, then the internal
-clock device tree nodes are not necessary, but the external ones must
-be specified.
+This should reduce CPU load and improve
+performance on slow host machines.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Reviewed-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ti/wlcore/sdio.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    2 ++
+ drivers/net/wireless/ath/ath10k/mac.c    |    2 ++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 9370d7e..980bf3d 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -34,6 +34,7 @@
- #include <linux/wl12xx.h>
- #include <linux/pm_runtime.h>
- #include <linux/printk.h>
-+#include <linux/clk-provider.h>
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index dc3f3e8..656c254 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -465,6 +465,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	flags1  = 0;
+ 	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
+ 	flags1 |= SM((u16)tid, HTT_DATA_TX_DESC_FLAGS1_EXT_TID);
++	flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
++	flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
  
- #include "wlcore.h"
- #include "wl12xx_80211.h"
-@@ -214,10 +215,15 @@ static struct wl1271_if_operations sdio_ops = {
- 	.set_block_size = wl1271_sdio_set_block_size,
- };
+ 	frags_paddr = ATH10K_SKB_CB(txfrag)->paddr;
  
-+static const struct of_device_id wlcore_sdio_of_clk_match_table[] = {
-+	{ .compatible = "ti,wilink-clock" },
-+};
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 344ad27..5784337 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3309,6 +3309,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	ar->hw->wiphy->iface_combinations = &ath10k_if_comb;
+ 	ar->hw->wiphy->n_iface_combinations = 1;
+ 
++	ar->hw->netdev_features = NETIF_F_HW_CSUM;
 +
- static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- {
- 	struct wl12xx_platform_data *pdata;
- 	struct device_node *np = dev->of_node;
-+	struct device_node *clock_node;
- 
- 	if (!np) {
- 		np = of_find_matching_node(NULL, dev->driver->of_match_table);
-@@ -241,6 +247,9 @@ static struct wl12xx_platform_data *wlcore_get_pdata_from_of(struct device *dev)
- 		goto out_free;
- 	}
- 
-+	for_each_matching_node(clock_node, wlcore_sdio_of_clk_match_table)
-+		of_fixed_clk_setup(clock_node);
-+
- 	goto out;
- 
- out_free:
+ 	ret = ath_regd_init(&ar->ath_common.regulatory, ar->hw->wiphy,
+ 			    ath10k_reg_notifier);
+ 	if (ret) {
 -- 
-1.7.10.4
+1.7.9.5
 
