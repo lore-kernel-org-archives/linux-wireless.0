@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:59434 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754889Ab3G3R2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jul 2013 13:28:09 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <tony@atomide.com>, <linux-omap@vger.kernel.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>, <coelho@ti.com>,
-	<luca@coelho.fi>, <balbi@ti.com>
-Subject: [PATCH 4/4] arm: dts: omap4-sdp: add WiLink7 device tree node
-Date: Tue, 30 Jul 2013 20:27:28 +0300
-Message-ID: <1375205248-25708-5-git-send-email-coelho@ti.com> (sfid-20130730_192818_738962_B5BD579A)
-In-Reply-To: <1375205248-25708-1-git-send-email-coelho@ti.com>
-References: <1375205248-25708-1-git-send-email-coelho@ti.com>
+Received: from sous-sol.org ([216.99.217.87]:33822 "EHLO sequoia2.sous-sol.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753289Ab3GaTPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jul 2013 15:15:08 -0400
+Date: Wed, 31 Jul 2013 12:12:24 -0700
+From: Chris Wright <chrisw@sous-sol.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Chris Wright <chrisw@sous-sol.org>, linux-wireless@vger.kernel.org,
+	Derek Atkins <DAtkins@mocana.com>
+Subject: [PATCH] mac80211: fix infinite loop in ieee80211_determine_chantype
+Message-ID: <20130731191224.GB28308@sequoia2.sous-sol.org> (sfid-20130731_211512_501019_9CB8E323)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130731132625.GA23521@sequoia2.sous-sol.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add appropriate device tree node for Blaze's WiLink7 module.  It uses
-a GPIO as interrupt, so configure the gpio2 node as interrupt parent
-and assign the corresponding GPIO.  Additionally, add the clock
-frequencies used by the module.
+Commit "3d9646d mac80211: fix channel selection bug" introduced a possible
+infinite loop by moving the out target above the chandef_downgrade
+while loop.  When we downgrade to NL80211_CHAN_WIDTH_20_NOHT, we jump
+back up to re-run the while loop...indefinitely.  Replace goto with
+break and carry on.  This may not be sufficient to connect to the AP,
+but will at least keep the cpu from livelocking.  Thanks to Derek Atkins
+as an extra pair of debugging eyes.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Cc: stable@kernel.org
+Signed-off-by: Chris Wright <chrisw@sous-sol.org>
 ---
- arch/arm/boot/dts/omap4-sdp.dts | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
 
-diff --git a/arch/arm/boot/dts/omap4-sdp.dts b/arch/arm/boot/dts/omap4-sdp.dts
-index 3845615..2fecca1 100644
---- a/arch/arm/boot/dts/omap4-sdp.dts
-+++ b/arch/arm/boot/dts/omap4-sdp.dts
-@@ -150,6 +150,26 @@
- 		startup-delay-us = <70000>;
- 		enable-active-high;
- 	};
-+
-+	wlan {
-+		compatible = "ti,wilink7";
-+		interrupt-parent = <&gpio2>;
-+		interrupts = <21 0x4>;	/* gpio line 53, high level triggered */
-+		clocks = <&refclock &tcxoclock>;
-+		clock-names = "refclock tcxoclock";
-+
-+		refclock: refclock {
-+			compatible = "ti,wilink-clock";
-+			#clock-cells = <0>;
-+			clock-frequency = <26000000>;
-+		};
-+
-+		tcxoclock: tcxoclock {
-+			compatible = "ti,wilink-clock";
-+			#clock-cells = <0>;
-+			clock-frequency = <26000000>;
-+		};
-+	 };
- };
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0e5aab1..b68ca05 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -336,7 +336,7 @@ out:
+ 		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
+ 			ret = IEEE80211_STA_DISABLE_HT |
+ 			      IEEE80211_STA_DISABLE_VHT;
+-			goto out;
++			break;
+ 		}
  
- &omap4_pmx_wkup {
--- 
-1.8.3.2
-
+ 		ret |= chandef_downgrade(chandef);
