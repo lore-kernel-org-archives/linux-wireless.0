@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.160]:34176 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755853Ab3HFQE6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 12:04:58 -0400
-Date: Tue, 6 Aug 2013 18:04:55 +0200
-From: Michael Braun <michael.braun@fem.tu-ilmenau.de>
-To: projekt-wlan@fem.tu-ilmenau.de, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: ath9k AR9380 packets take long to be sent
-Message-ID: <20130806160455.GA29320@dynamic.fami-braun.de> (sfid-20130806_180501_130520_712E2941)
-Reply-To: projekt-wlan@fem.tu-ilmenau.de, linux-wireless@vger.kernel.org
-References: <e86f61ba4c0540d1d22be989362cbeb1@fami-braun.de>
- <5200D199.8080808@openwrt.org>
- <5200D1C9.1090008@openwrt.org>
- <20130806111851.GA25326@dynamic.fami-braun.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130806111851.GA25326@dynamic.fami-braun.de>
+Received: from perches-mx.perches.com ([206.117.179.246]:59272 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752667Ab3HARFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Aug 2013 13:05:53 -0400
+Message-ID: <1375376752.2034.60.camel@joe-AO722> (sfid-20130801_190614_586795_7D59A530)
+Subject: Re: [PATCH 0/8] include/net: next set of extern removals
+From: Joe Perches <joe@perches.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: David Howells <dhowells@redhat.com>, netdev@vger.kernel.org,
+	linux-hams@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org
+Date: Thu, 01 Aug 2013 10:05:52 -0700
+In-Reply-To: <1375375486.10515.170.camel@edumazet-glaptop>
+References: <cover.1375316912.git.joe@perches.com>
+	 <24958.1375358650@warthog.procyon.org.uk>
+	 <1375374560.2034.52.camel@joe-AO722>
+	 <1375375486.10515.170.camel@edumazet-glaptop>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 01:18:51PM +0200, Michael Braun wrote:
-> > > Also, can you please test
-> > > with the latest one (I just committed some more fixes).
+On Thu, 2013-08-01 at 09:44 -0700, Eric Dumazet wrote:
+> 'extern' in include files are an easy way to have a grep friendly
+> marker, and otherwise are harmless.
+> 
+> _You_ believe they are useless, other people think otherwise.
 
-those have been running for for some hours and I could not reproduce the problem anymore, although before it used to reproduce quickly.
+I believe I wrote superfluous.
 
-Regards,
- M. Braun
+> I learned C 30 years ago, and using 'extern' is quite natural for me.
+
+I think I've got a few years headstart on you.
+All that means is we're both relatively old...
+
+cheers, Joe
 
