@@ -1,129 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:58049 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753444Ab3HQQZj (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:35528 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751112Ab3HABQy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Aug 2013 12:25:39 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-input@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, alsa-devel@alsa-project.org
-Subject: [PATCH v1 00/49] USB: prepare for enabling irq in complete()
-Date: Sun, 18 Aug 2013 00:24:25 +0800
-Message-Id: <1376756714-25479-1-git-send-email-ming.lei@canonical.com> (sfid-20130817_182556_489609_FD5DAA91)
+	Wed, 31 Jul 2013 21:16:54 -0400
+Received: by mail-pa0-f45.google.com with SMTP id bg4so1511254pad.18
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 18:16:53 -0700 (PDT)
+From: Mark Schulte <schultetwin@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	Mark Schulte <schultetwin@gmail.com>
+Subject: [PATCH v2] rtlwifi: rtl8192cu: fix function declaration header
+Date: Wed, 31 Jul 2013 18:16:50 -0700
+Message-Id: <1375319810-20392-1-git-send-email-schultetwin@gmail.com> (sfid-20130801_031657_641511_5213497D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Move rtl92cu_update_hal_rate_tbl declartion to hw.h to correspond with function
+definition in hw.c.
+Fixes sparse warning in hw.c warning: symbol 'rtl92cu_update_hal_rate_tbl' was
+not declared.
 
-As we are going to run URB->complete() in tasklet context[1][2], and
-hard interrupt may be enabled when running URB completion handler[3],
-so we might need to disable interrupt when acquiring one lock in
-the completion handler for the below reasons:
+Signed-off-by: Mark Schulte <schultetwin@gmail.com>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.h | 3 +++
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.h | 3 ---
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-- URB->complete() holds a subsystem wide lock which may be acquired
-in another hard irq context, and the subsystem wide lock is acquired
-by spin_lock()/read_lock()/write_lock() in complete()
-
-- URB->complete() holds a private lock with spin_lock()/read_lock()/write_lock()
-but driver may export APIs to make other drivers acquire the same private
-lock in its interrupt handler.
-
-For the sake of safety and making the change simple, this patch set
-converts all spin_lock()/read_lock()/write_lock() in completion handler
-path into their irqsave version mechanically.
-
-But if you are sure the above two cases do not happen in your driver,
-please let me know and I can drop the unnecessary change.
-
-Also if you find some conversions are missed, also please let me know so
-that I can add it in the next round.
-
-
-[1], USB: URB documentation: claim complete() will be run with IRQs enabled
-https://git.kernel.org/cgit/linux/kernel/git/gregkh/usb.git/commit/?h=usb-next&id=85721d45261c4be684730c7509a59daa6cda30d8
-
-[2], USB: HCD: support giveback of URB in tasklet context
-https://git.kernel.org/cgit/linux/kernel/git/gregkh/usb.git/commit/?h=usb-next&id=94dfd7edfd5c9b605caf7b562de7a813d216e011
-
-[3], http://marc.info/?l=linux-usb&m=137286330626363&w=2
-
-V1:
-	- rename patchset title
-	- add missed changes on 'usb_skeleon and usb sg lib'
-	- remove several sound usb drivers which have been done via sound tree
-	- some patch style fix
-	- replace snd_pcm_stream_lock with snd_pcm_stream_lock_irqsave for related
-	a/v drivers
-
-Cc: linux-input@vger.kernel.org
-Cc: linux-bluetooth@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: alsa-devel@alsa-project.org
-
- drivers/bluetooth/bfusb.c                     |   12 ++++----
- drivers/bluetooth/btusb.c                     |    5 ++--
- drivers/hid/usbhid/hid-core.c                 |    5 ++--
- drivers/input/misc/cm109.c                    |   10 ++++---
- drivers/isdn/hardware/mISDN/hfcsusb.c         |   36 ++++++++++++-----------
- drivers/media/dvb-core/dvb_demux.c            |   17 +++++++----
- drivers/media/usb/cx231xx/cx231xx-audio.c     |   10 ++++---
- drivers/media/usb/cx231xx/cx231xx-core.c      |   10 ++++---
- drivers/media/usb/cx231xx/cx231xx-vbi.c       |    5 ++--
- drivers/media/usb/em28xx/em28xx-audio.c       |    5 ++--
- drivers/media/usb/em28xx/em28xx-core.c        |    5 ++--
- drivers/media/usb/sn9c102/sn9c102_core.c      |    7 +++--
- drivers/media/usb/tlg2300/pd-alsa.c           |    5 ++--
- drivers/media/usb/tlg2300/pd-video.c          |    5 ++--
- drivers/media/usb/tm6000/tm6000-video.c       |    5 ++--
- drivers/net/usb/cdc-phonet.c                  |    5 ++--
- drivers/net/usb/hso.c                         |   38 ++++++++++++++-----------
- drivers/net/usb/kaweth.c                      |    7 +++--
- drivers/net/usb/rtl8150.c                     |    5 ++--
- drivers/net/wireless/ath/ath9k/hif_usb.c      |   29 ++++++++++---------
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    9 +++---
- drivers/net/wireless/ath/ath9k/wmi.c          |   11 +++----
- drivers/net/wireless/ath/carl9170/rx.c        |    5 ++--
- drivers/net/wireless/libertas/if_usb.c        |    5 ++--
- drivers/net/wireless/libertas_tf/if_usb.c     |    6 ++--
- drivers/net/wireless/zd1211rw/zd_usb.c        |   21 ++++++++------
- drivers/staging/bcm/InterfaceRx.c             |    5 ++--
- drivers/staging/btmtk_usb/btmtk_usb.c         |    5 ++--
- drivers/staging/ced1401/usb1401.c             |   35 ++++++++++++-----------
- drivers/staging/vt6656/usbpipe.c              |    9 +++---
- drivers/usb/class/cdc-wdm.c                   |   16 +++++++----
- drivers/usb/class/usblp.c                     |   10 ++++---
- drivers/usb/core/devio.c                      |    5 ++--
- drivers/usb/core/message.c                    |    5 ++--
- drivers/usb/misc/adutux.c                     |   10 ++++---
- drivers/usb/misc/iowarrior.c                  |    5 ++--
- drivers/usb/misc/ldusb.c                      |    7 +++--
- drivers/usb/misc/legousbtower.c               |    6 ++--
- drivers/usb/misc/usbtest.c                    |   10 ++++---
- drivers/usb/misc/uss720.c                     |    7 ++++-
- drivers/usb/serial/cyberjack.c                |   15 ++++++----
- drivers/usb/serial/digi_acceleport.c          |   23 ++++++++-------
- drivers/usb/serial/io_edgeport.c              |   14 +++++----
- drivers/usb/serial/io_ti.c                    |    5 ++--
- drivers/usb/serial/mos7720.c                  |    5 ++--
- drivers/usb/serial/mos7840.c                  |    5 ++--
- drivers/usb/serial/quatech2.c                 |    5 ++--
- drivers/usb/serial/sierra.c                   |    9 +++---
- drivers/usb/serial/symbolserial.c             |    5 ++--
- drivers/usb/serial/ti_usb_3410_5052.c         |    9 +++---
- drivers/usb/serial/usb_wwan.c                 |    5 ++--
- drivers/usb/usb-skeleton.c                    |   11 ++++---
- sound/usb/caiaq/audio.c                       |    5 ++--
- sound/usb/midi.c                              |    5 ++--
- 54 files changed, 318 insertions(+), 221 deletions(-)
-
-
-Thanks,
---
-Ming Lei
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
+index 8e3ec1e..0f7812e 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
+@@ -109,5 +109,8 @@ void rtl92c_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
+ void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw,
+ 			 u8 element_id, u32 cmd_len, u8 *p_cmdbuffer);
+ bool rtl92cu_phy_mac_config(struct ieee80211_hw *hw);
++void rtl92cu_update_hal_rate_tbl(struct ieee80211_hw *hw,
++				 struct ieee80211_sta *sta,
++				 u8 rssi_level);
+ 
+ #endif
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
+index 262e1e4..a1310ab 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
+@@ -49,8 +49,5 @@ bool rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ u32 rtl92cu_phy_query_rf_reg(struct ieee80211_hw *hw,
+ 			    enum radio_path rfpath, u32 regaddr, u32 bitmask);
+ void rtl92cu_phy_set_bw_mode_callback(struct ieee80211_hw *hw);
+-void rtl92cu_update_hal_rate_tbl(struct ieee80211_hw *hw,
+-				 struct ieee80211_sta *sta,
+-				 u8 rssi_level);
+ 
+ #endif
+-- 
+1.8.3.3
 
