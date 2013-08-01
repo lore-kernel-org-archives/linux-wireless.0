@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:34123 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144Ab3HTQ3m (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:58055 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941Ab3HAQot (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 12:29:42 -0400
-Received: by mail-pd0-f174.google.com with SMTP id y13so597834pdi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 09:29:42 -0700 (PDT)
-Date: Tue, 20 Aug 2013 09:29:39 -0700
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: changing dev->needed_headroom/needed_tailroom?
-Message-ID: <20130820092939.7d4cad35@nehalam.linuxnetplumber.net> (sfid-20130820_182949_890908_8CE83FD8)
-In-Reply-To: <1377015897.13829.16.camel@jlt4.sipsolutions.net>
-References: <1374850210.8248.59.camel@jlt4.sipsolutions.net>
-	<1375433758.24371.20.camel@deadeye.wl.decadent.org.uk>
-	<1375449082.3927.5.camel@edumazet-glaptop>
-	<1375711240.8120.11.camel@jlt4.sipsolutions.net>
-	<CAGVrzcaGV6AqLTAxpM6zMv7_C-LNxp-WNg+J47d7a9S+Ca1bDw@mail.gmail.com>
-	<20130820092013.6ca909e2@nehalam.linuxnetplumber.net>
-	<1377015897.13829.16.camel@jlt4.sipsolutions.net>
+	Thu, 1 Aug 2013 12:44:49 -0400
+Message-ID: <1375375486.10515.170.camel@edumazet-glaptop> (sfid-20130801_184512_768594_01FBFF7D)
+Subject: Re: [PATCH 0/8] include/net: next set of extern removals
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: David Howells <dhowells@redhat.com>, netdev@vger.kernel.org,
+	linux-hams@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org
+Date: Thu, 01 Aug 2013 09:44:46 -0700
+In-Reply-To: <1375374560.2034.52.camel@joe-AO722>
+References: <cover.1375316912.git.joe@perches.com>
+	 <24958.1375358650@warthog.procyon.org.uk>
+	 <1375374560.2034.52.camel@joe-AO722>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 20 Aug 2013 18:24:57 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+On Thu, 2013-08-01 at 09:29 -0700, Joe Perches wrote:
+> On Thu, 2013-08-01 at 13:04 +0100, David Howells wrote:
+> > Joe Perches <joe@perches.com> wrote:
+> > > Standardize on no extern use on function prototypes
+> > Can we please standardise on _having_ externs on function prototypes?
+> 
+> Why?
+> 
+> What value is there in using extern for function prototypes?
+> 
+> Your argument for "picking out at a glance"
+> https://lkml.org/lkml/2013/8/1/237
+> really doesn't make sense to me.
+> 
+> Basically, anything with parentheses that's not a #define
+> is an extern.
+> 
+> Exceptions exist for extern function pointers, but those
+> are fairly unusual anyway.  Outside of netfilter,
+> extern function pointers are only used about a dozen times
+> total in the kernel tree.
+> 
+> So, please provide some examples supporting your view.
 
-> On Tue, 2013-08-20 at 09:20 -0700, Stephen Hemminger wrote:
-> 
-> > All code must check for needed headroom first, and copy packet
-> > if space is not available. Since excess headroom is always safe,
-> > most devices just always use the same worst case headroom.
-> > 
-> > Even with your changes this will still be necessary since packets will
-> > be still in flight while features change.
-> 
-> I agree, it will always be necessary. I guess the question boils down to
-> whether/what N bytes headroom more or less actually make a difference.
-> 
-> The wireless stack currently sets needed_headroom to 34 or so I think,
-> but I will need to increase by 8 which was why I had this question to
-> start with. However, those 34 are an absolute worst case - in most cases
-> it's much less...
-> 
-> So I suppose the other question we should ask is will increasing from
-> ~34 to ~42 make a significant different that it's worth thinking about
-> avoiding it in the common cases at all?
-> 
-> johannes
-> 
+My main concern about these changes is they are a huge pain for us
+doing bug tracking, rebases and backports. "git blame" and friends will
+show lot of noise.
 
-The only thing that might matter is alignment. but +/- 8 bytes isn't going
-to change that.
+'extern' in include files are an easy way to have a grep friendly
+marker, and otherwise are harmless.
+
+_You_ believe they are useless, other people think otherwise.
+
+I really don't see any value doing all these changes on existing code,
+apart from adding noise to netdev and adding more work for us.
+
+Using rules for new code is fine, but changing 10 years old code is
+really not worth the pain.
+
+I learned C 30 years ago, and using 'extern' is quite natural for me.
+
+It's crazy the time we have to spend on these issues, while we have so
+many bugs to fix in the kernel.
+
+
+
