@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:47795 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753847Ab3HFPUJ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:53911 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752039Ab3HAHf6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 11:20:09 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1375802297.8219.25.camel@jlt4.sipsolutions.net>
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
-	<CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
-	<1375800617.8219.23.camel@jlt4.sipsolutions.net>
-	<CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
-	<1375801059.8219.24.camel@jlt4.sipsolutions.net>
-	<CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
-	<CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
-	<1375802297.8219.25.camel@jlt4.sipsolutions.net>
-Date: Tue, 6 Aug 2013 17:20:07 +0200
-Message-ID: <CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com> (sfid-20130806_172044_653968_41E392E3)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 1 Aug 2013 03:35:58 -0400
+Message-ID: <1375342554.8608.4.camel@jlt4.sipsolutions.net> (sfid-20130801_093600_965516_9E203B0F)
+Subject: Re: [PATCH v2] mac80211: report some VHT radiotap infos for tx
+ status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Thu, 01 Aug 2013 09:35:54 +0200
+In-Reply-To: <1374918424-1305-1-git-send-email-karl.beldan@gmail.com> (sfid-20130727_114728_154202_BD456F83)
+References: <1374918424-1305-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20130727_114728_154202_BD456F83)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 5:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->
->> I have sent you a v2 of my logs (with -d and rsyslog-7.x).
->
-> Hmm, that looks different? There no longer is anything about "PSK might
-> be wrong", but now just disconnections by the AP, which unfortunately
-> indicate no reason.
->
-> When was it working last?
->
+On Sat, 2013-07-27 at 11:47 +0200, Karl Beldan wrote:
 
-next-20130801 was OK here.
+> +		/* required alignment from rthdr */
+> +		pos = (u8 *)rthdr + ALIGN(pos - (u8 *)rthdr, 2);
 
-- Sedat -
+This is bad, it potentially leaks a byte of kernel data, please
+explicitly clear the padding, like
 
-> johannes
->
+if ((pos - (u8 *)rthdr) & 1)
+  *pos++ = 0;
+
+or so.
+
+johannes
+
