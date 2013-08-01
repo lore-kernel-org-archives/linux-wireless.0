@@ -1,109 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:55770 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874Ab3HSPM2 (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:41659 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604Ab3HAJJ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 11:12:28 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 5/6] mac80211: send a CSA action frame when changing channel
-Date: Mon, 19 Aug 2013 17:12:19 +0200
-Message-Id: <1376925141-15353-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130819_171242_810611_EFADDC36)
-In-Reply-To: <1376925141-15353-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376925141-15353-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Thu, 1 Aug 2013 05:09:58 -0400
+Received: by mail-ea0-f176.google.com with SMTP id q16so859700ead.35
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Aug 2013 02:09:57 -0700 (PDT)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH] ath10k: add SoC power save option to PCI features map
+Date: Thu,  1 Aug 2013 11:09:47 +0200
+Message-Id: <1375348187-18216-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20130801_111004_818059_EB748D93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IBSS members may not immediately be able to send out their beacon when
-performing CSA, therefore also send a CSA action frame.
+Unify the PCI options location.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+By default the SoC PS option is disabled to boost the
+performance and due to poor stability on early HW revisions.
+In future we can remove the module parameter and turn on/off
+the PS for given hardware.
+
+This change also makes the pci module parameter for SoC PS static.
+
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- net/mac80211/ibss.c |   60 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
+ drivers/net/wireless/ath/ath10k/pci.c |   24 ++++++++++++++----------
+ drivers/net/wireless/ath/ath10k/pci.h |   11 +++++++----
+ 2 files changed, 21 insertions(+), 14 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index e4b880e..92d4922 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -405,6 +405,60 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				  tsf, false);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index c71b488..287098e 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -32,7 +32,7 @@
+ #include "ce.h"
+ #include "pci.h"
+ 
+-unsigned int ath10k_target_ps;
++static unsigned int ath10k_target_ps;
+ module_param(ath10k_target_ps, uint, 0644);
+ MODULE_PARM_DESC(ath10k_target_ps, "Enable ath10k Target (SoC) PS option");
+ 
+@@ -1740,6 +1740,7 @@ static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
+ 
+ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+ 
+ 	/*
+@@ -1758,13 +1759,8 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 	if (ret)
+ 		goto err;
+ 
+-	if (ath10k_target_ps) {
+-		ath10k_dbg(ATH10K_DBG_PCI, "on-chip power save enabled\n");
+-	} else {
+-		/* Force AWAKE forever */
+-		ath10k_dbg(ATH10K_DBG_PCI, "on-chip power save disabled\n");
+-		ath10k_do_pci_wake(ar);
+-	}
++	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
++		ath10k_do_pci_wake(ar); /* Force AWAKE forever */
+ 
+ 	ret = ath10k_pci_ce_init(ar);
+ 	if (ret)
+@@ -1785,7 +1781,7 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ err_ce:
+ 	ath10k_pci_ce_deinit(ar);
+ err_ps:
+-	if (!ath10k_target_ps)
++	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+ 		ath10k_do_pci_sleep(ar);
+ err:
+ 	return ret;
+@@ -1793,8 +1789,10 @@ err:
+ 
+ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
+ 	ath10k_pci_ce_deinit(ar);
+-	if (!ath10k_target_ps)
++	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+ 		ath10k_do_pci_sleep(ar);
  }
  
-+static int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
-+				     struct cfg80211_csa_settings *csa_settings)
-+{
-+	struct sk_buff *skb;
-+	struct ieee80211_mgmt *mgmt;
-+	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct ieee80211_local *local = sdata->local;
-+	int freq;
-+	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.chan_switch) +
-+		      sizeof(mgmt->u.action.u.chan_switch);
-+	u8 *pos;
-+
-+	skb = dev_alloc_skb(local->tx_headroom + hdr_len +
-+			    5 +	/* channel switch announcement element */
-+			    3);	/* secondary channel offset element */
-+	if (!skb)
-+		return -1;
-+
-+	skb_reserve(skb, local->tx_headroom);
-+	mgmt = (struct ieee80211_mgmt *)skb_put(skb, hdr_len);
-+	memset(mgmt, 0, hdr_len);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
-+
-+	eth_broadcast_addr(mgmt->da);
-+	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
-+	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
-+	mgmt->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
-+	mgmt->u.action.u.chan_switch.action_code = WLAN_ACTION_SPCT_CHL_SWITCH;
-+	pos = skb_put(skb, 5);
-+	*pos++ = WLAN_EID_CHANNEL_SWITCH;			/* EID */
-+	*pos++ = 3;						/* IE length */
-+	*pos++ = csa_settings->block_tx ? 1 : 0;		/* CSA mode */
-+	freq = csa_settings->chandef.chan->center_freq;
-+	*pos++ = ieee80211_frequency_to_channel(freq);		/* channel */
-+	*pos++ = csa_settings->count;				/* count */
-+
-+	if (csa_settings->chandef.width == NL80211_CHAN_WIDTH_40) {
-+		enum nl80211_channel_type ch_type;
-+
-+		skb_put(skb, 3);
-+		*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;	/* EID */
-+		*pos++ = 1;					/* IE length */
-+		ch_type = cfg80211_get_chandef_type(&csa_settings->chandef);
-+		if (ch_type == NL80211_CHAN_HT40PLUS)
-+			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-+		else
-+			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-+	}
-+
-+	ieee80211_tx_skb(sdata, skb);
-+	return 0;
-+}
-+
- int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 			      struct cfg80211_csa_settings *csa_settings)
- {
-@@ -457,6 +511,12 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (old_presp)
- 		kfree_rcu(old_presp, rcu_head);
+@@ -2239,6 +2237,9 @@ static void ath10k_pci_dump_features(struct ath10k_pci *ar_pci)
+ 		case ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND:
+ 			ath10k_dbg(ATH10K_DBG_PCI, "QCA988X_1.0 workaround enabled\n");
+ 			break;
++		case ATH10K_PCI_FEATURE_SOC_POWER_SAVE:
++			ath10k_dbg(ATH10K_DBG_PCI, "QCA98XX SoC power save enabled\n");
++			break;
+ 		}
+ 	}
+ }
+@@ -2274,6 +2275,9 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_ar_pci;
+ 	}
  
-+	/* it might not send the beacon for a while. send an action frame
-+	 * immediately to announce the channel switch.
-+	 */
-+	if (csa_settings)
-+		ieee80211_send_action_csa(sdata, csa_settings);
++	if (ath10k_target_ps)
++		set_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features);
 +
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-  out:
- 	return ret;
+ 	ath10k_pci_dump_features(ar_pci);
+ 
+ 	ar = ath10k_core_create(ar_pci, ar_pci->dev, &ath10k_pci_hif_ops);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index d3a2e6c..871bb33 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -153,6 +153,7 @@ struct service_to_pipe {
+ enum ath10k_pci_features {
+ 	ATH10K_PCI_FEATURE_MSI_X		= 0,
+ 	ATH10K_PCI_FEATURE_HW_1_0_WORKAROUND	= 1,
++	ATH10K_PCI_FEATURE_SOC_POWER_SAVE	= 2,
+ 
+ 	/* keep last */
+ 	ATH10K_PCI_FEATURE_COUNT
+@@ -335,20 +336,22 @@ static inline u32 ath10k_pci_read32(struct ath10k *ar, u32 offset)
+ 	return ioread32(ar_pci->mem + offset);
+ }
+ 
+-extern unsigned int ath10k_target_ps;
+-
+ void ath10k_do_pci_wake(struct ath10k *ar);
+ void ath10k_do_pci_sleep(struct ath10k *ar);
+ 
+ static inline void ath10k_pci_wake(struct ath10k *ar)
+ {
+-	if (ath10k_target_ps)
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
++	if (test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+ 		ath10k_do_pci_wake(ar);
+ }
+ 
+ static inline void ath10k_pci_sleep(struct ath10k *ar)
+ {
+-	if (ath10k_target_ps)
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
++	if (test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+ 		ath10k_do_pci_sleep(ar);
+ }
+ 
 -- 
-1.7.10.4
+1.7.9.5
 
