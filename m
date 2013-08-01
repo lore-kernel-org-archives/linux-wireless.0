@@ -1,69 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:40644 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918Ab3HTRlr (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:55177 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755737Ab3HAPCI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 13:41:47 -0400
-Received: by mail-lb0-f180.google.com with SMTP id a16so712470lbj.39
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:46 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH 08/16] wcn36xx: Add pmc.h
-Date: Tue, 20 Aug 2013 19:41:11 +0200
-Message-Id: <1377020479-16935-9-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_194152_400688_9E1F9BFC)
-In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+	Thu, 1 Aug 2013 11:02:08 -0400
+Message-ID: <1375369316.8608.16.camel@jlt4.sipsolutions.net> (sfid-20130801_170211_986931_F6EADFFF)
+Subject: Re: [PATCHv5 0/4] add master channel switch announcement support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Thu, 01 Aug 2013 17:01:56 +0200
+In-Reply-To: <1373551749-5107-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1373551749-5107-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding pmc.h
+On Thu, 2013-07-11 at 16:09 +0200, Simon Wunderlich wrote:
+> This is the 5th edition of the CSA support patch series. This patchset adds
+> generic channel switch support for AP. This is required for DFS operation
+> (e.g. Wi-Fi Alliance requires this for 802.11h certification). This will also
+> be required for IBSS-DFS later.
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
----
- drivers/net/wireless/ath/wcn36xx/pmc.h | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
+Applied 1-3 with some changes (merging 2/3 and small fixes)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/pmc.h b/drivers/net/wireless/ath/wcn36xx/pmc.h
-new file mode 100644
-index 0000000..b00d425
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/pmc.h
-@@ -0,0 +1,32 @@
-+/*
-+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _WCN36XX_PMC_H_
-+#define _WCN36XX_PMC_H_
-+
-+struct wcn36xx;
-+
-+enum wcn36xx_power_state {
-+	WCN36XX_FULL_POWER,
-+	WCN36XX_BMPS
-+};
-+
-+int wcn36xx_pmc_init(struct wcn36xx *wcn);
-+int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn, u64 tbtt);
-+int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn);
-+int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn);
-+int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn);
-+#endif	/* _WCN36XX_PMC_H_ */
--- 
-1.8.2.2
+johannes
 
