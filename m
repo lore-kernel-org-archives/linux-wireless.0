@@ -1,109 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35086 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753688Ab3H1Lln (ORCPT
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:60576 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751627Ab3HAVLd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 07:41:43 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv4 5/6] mac80211: send a CSA action frame when changing channel
-Date: Wed, 28 Aug 2013 13:41:32 +0200
-Message-Id: <1377690093-27024-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130828_134155_895523_E0C97E8E)
-In-Reply-To: <1377690093-27024-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1377690093-27024-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Thu, 1 Aug 2013 17:11:33 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Date: Thu, 1 Aug 2013 14:09:54 -0700
+Subject: RE: [PATCH] ieee80211: add definition for interworking support
+Message-ID: <477F20668A386D41ADCC57781B1F70430EA32169C6@SC-VEXCH1.marvell.com> (sfid-20130801_231136_744906_780C9B80)
+References: <1374883349-22912-1-git-send-email-bzhao@marvell.com>
+ <1375342361.8608.2.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1375342361.8608.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IBSS members may not immediately be able to send out their beacon when
-performing CSA, therefore also send a CSA action frame.
-
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/mac80211/ibss.c |   60 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index c004213..5ea9b3a 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -428,6 +428,60 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				  tsf, false);
- }
- 
-+static int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
-+				     struct cfg80211_csa_settings *csa_settings)
-+{
-+	struct sk_buff *skb;
-+	struct ieee80211_mgmt *mgmt;
-+	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct ieee80211_local *local = sdata->local;
-+	int freq;
-+	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.chan_switch) +
-+		      sizeof(mgmt->u.action.u.chan_switch);
-+	u8 *pos;
-+
-+	skb = dev_alloc_skb(local->tx_headroom + hdr_len +
-+			    5 +	/* channel switch announcement element */
-+			    3);	/* secondary channel offset element */
-+	if (!skb)
-+		return -1;
-+
-+	skb_reserve(skb, local->tx_headroom);
-+	mgmt = (struct ieee80211_mgmt *)skb_put(skb, hdr_len);
-+	memset(mgmt, 0, hdr_len);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
-+
-+	eth_broadcast_addr(mgmt->da);
-+	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
-+	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
-+	mgmt->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
-+	mgmt->u.action.u.chan_switch.action_code = WLAN_ACTION_SPCT_CHL_SWITCH;
-+	pos = skb_put(skb, 5);
-+	*pos++ = WLAN_EID_CHANNEL_SWITCH;			/* EID */
-+	*pos++ = 3;						/* IE length */
-+	*pos++ = csa_settings->block_tx ? 1 : 0;		/* CSA mode */
-+	freq = csa_settings->chandef.chan->center_freq;
-+	*pos++ = ieee80211_frequency_to_channel(freq);		/* channel */
-+	*pos++ = csa_settings->count;				/* count */
-+
-+	if (csa_settings->chandef.width == NL80211_CHAN_WIDTH_40) {
-+		enum nl80211_channel_type ch_type;
-+
-+		skb_put(skb, 3);
-+		*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;	/* EID */
-+		*pos++ = 1;					/* IE length */
-+		ch_type = cfg80211_get_chandef_type(&csa_settings->chandef);
-+		if (ch_type == NL80211_CHAN_HT40PLUS)
-+			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-+		else
-+			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-+	}
-+
-+	ieee80211_tx_skb(sdata, skb);
-+	return 0;
-+}
-+
- int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 			      struct cfg80211_csa_settings *csa_settings)
- {
-@@ -480,6 +534,12 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (old_presp)
- 		kfree_rcu(old_presp, rcu_head);
- 
-+	/* it might not send the beacon for a while. send an action frame
-+	 * immediately to announce the channel switch.
-+	 */
-+	if (csa_settings)
-+		ieee80211_send_action_csa(sdata, csa_settings);
-+
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-  out:
- 	return ret;
--- 
-1.7.10.4
-
+SGkgSm9oYW5uZXMsDQoNCj4gPiBGcm9tOiBBdmluYXNoIFBhdGlsIDxwYXRpbGFAbWFydmVsbC5j
+b20+DQo+ID4NCj4gPiBJRUVFODAyLjExdSBpbnRlcndvcmtpbmcgc3VwcG9ydCBpcyBhZHZlcnRp
+c2VkIHZpYSBleHRlbmRlZA0KPiA+IGNhcGFiaWxpdGllcyBJRSBiaXQgMzEuIFRoaXMgaXMgN3Ro
+IGJpdCBvZiA0dGggYnl0ZSBvZiBleHRlbmRlZA0KPiA+IGNhcGFiaWxpdGllcy4NCj4gDQo+IEkn
+dmUgYXBwbGllZCB0aGlzLCBidXQgd2h5IGlzIHRoaXMgbmVlZGVkIGluIHRoZSBrZXJuZWw/IElz
+bid0IHRoZQ0KPiBzdXBwbGljYW50IG1hbmFnaW5nIHRoZSBpbnRlcndvcmtpbmcgc3R1ZmY/DQoN
+CldlIGhhdmUgYSBtd2lmaWV4IHBhdGNoIGRlcGVuZHMgb24gaXQuIFBhcnQgb2YgdGhlIHBhdGNo
+IGxvb2tzIHRoaXM6DQoNCisgICAgICAgICAgICAgICBpZiAoaGRyLT5sZW4gPiAzICYmDQorICAg
+ICAgICAgICAgICAgICAgIGV4dF9jYXAtPmV4dF9jYXBhYlszXSAmIFdMQU5fRVhUX0NBUEE0X0lO
+VEVSV09SS0lOR19FTkFCTEVEKQ0KKyAgICAgICAgICAgICAgICAgICAgICAgcHJpdi0+aHMyX2Vu
+YWJsZWQgPSAxOw0KKyAgICAgICAgICAgICAgIGVsc2UNCisgICAgICAgICAgICAgICAgICAgICAg
+IHByaXYtPmhzMl9lbmFibGVkID0gMDsNCg0KSWYgdGhpcyBiaXQgaXMgZW5hYmxlZCB3ZSB3aWxs
+IGRyb3AgdGhlIEdBUlAgZnJhbWVzIHJlY2VpdmVkLiBUaGlzIGlzIHJlcXVpcmVkIGZvciBXRkEg
+SG90c3BvdDIuMC4NCg0KVGhhbmtzLA0KQmluZw0KDQo=
