@@ -1,101 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:49698 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753728Ab3H1H5h (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:55764 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750742Ab3HAG06 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 03:57:37 -0400
-Received: by mail-lb0-f177.google.com with SMTP id p5so3430483lbi.36
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 00:57:36 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v3 00/16] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-Date: Wed, 28 Aug 2013 09:56:30 +0200
-Message-Id: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com> (sfid-20130828_095740_944969_6485296B)
+	Thu, 1 Aug 2013 02:26:58 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/8] ath9k: Do a quick scan only when scan_not_start is true
+Date: Thu,  1 Aug 2013 11:53:17 +0530
+Message-Id: <1375338204-2021-1-git-send-email-sujith@msujith.org> (sfid-20130801_082702_001898_82EAF40B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
-far WCN3660/WCN3680 is available only on MSM platform.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-During second round some dead code was found. Functionality was not changed
-after second review.
+Right now, it is being done for all cases.
 
-To make review easier the driver sent in several patches, one patch per file, but after
-review it will be sent as one big file.
-
-Firmware can be found here:
-https://github.com/AOKP/vendor_sony/find/jb-mr1
-
-Wiki page is available here:
-http://wireless.kernel.org/en/users/Drivers/wcn36xx
-
-A lot people made a contribution to this driver. Her is the list in
-alphabetical order:
-
-Eugene Krasnikov <k.eugene.e@gmail.com>
-Kalle Valo <kvalo@qca.qualcomm.com>
-Olof Johansson <dev@skyshaper.net>
-Pontus Fuchs <pontus.fuchs@gmail.com>
-Yanbo Li <yanbol@qti.qualcomm.com>
-
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
-
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/antenna.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-Eugene Krasnikov (16):
-  wcn36xx: add main.c
-  wcn36xx: add debug.c
-  wcn36xx: add debug.h
-  wcn36xx: add dxe.c
-  wcn36xx: add dxe.h
-  wcn36xx: add hal.h
-  wcn36xx: add pmc.c
-  wcn36xx: add pmc.h
-  wcn36xx: add smd.c
-  wcn36xx: add smd.h
-  wcn36xx: add txrx.c
-  wcn36xx: add txrx.h
-  wcn36xx: add wcn36xx.h
-  wcn36xx: add Makefile
-  wcn36xx: add Kconfig
-  wcn36xx: Add wcn36xx to ath Makefile and Kconfig
-
- drivers/net/wireless/ath/Kconfig           |    1 +
- drivers/net/wireless/ath/Makefile          |    1 +
- drivers/net/wireless/ath/wcn36xx/Kconfig   |   16 +
- drivers/net/wireless/ath/wcn36xx/Makefile  |    9 +
- drivers/net/wireless/ath/wcn36xx/debug.c   |  166 +
- drivers/net/wireless/ath/wcn36xx/debug.h   |   49 +
- drivers/net/wireless/ath/wcn36xx/dxe.c     |  804 +++++
- drivers/net/wireless/ath/wcn36xx/dxe.h     |  281 ++
- drivers/net/wireless/ath/wcn36xx/hal.h     | 4657 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/main.c    | 1035 +++++++
- drivers/net/wireless/ath/wcn36xx/pmc.c     |   46 +
- drivers/net/wireless/ath/wcn36xx/pmc.h     |   32 +
- drivers/net/wireless/ath/wcn36xx/smd.c     | 1530 +++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h     |  121 +
- drivers/net/wireless/ath/wcn36xx/txrx.c    |  256 ++
- drivers/net/wireless/ath/wcn36xx/txrx.h    |  160 +
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  236 ++
- 17 files changed, 9400 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Makefile
- create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/hal.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/main.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-
+diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
+index 2785dc3..0ba5b86 100644
+--- a/drivers/net/wireless/ath/ath9k/antenna.c
++++ b/drivers/net/wireless/ath/ath9k/antenna.c
+@@ -798,14 +798,12 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
+ 			}
+ 			goto div_comb_done;
+ 		}
++		ath_select_ant_div_from_quick_scan(antcomb, &div_ant_conf,
++						   main_rssi_avg, alt_rssi_avg,
++						   alt_ratio);
++		antcomb->quick_scan_cnt++;
+ 	}
+ 
+-	ath_select_ant_div_from_quick_scan(antcomb, &div_ant_conf,
+-					   main_rssi_avg, alt_rssi_avg,
+-					   alt_ratio);
+-
+-	antcomb->quick_scan_cnt++;
+-
+ div_comb_done:
+ 	ath_ant_div_conf_fast_divbias(&div_ant_conf, antcomb, alt_ratio);
+ 	ath9k_hw_antdiv_comb_conf_set(sc->sc_ah, &div_ant_conf);
 -- 
-1.8.2.2
+1.8.3.4
 
