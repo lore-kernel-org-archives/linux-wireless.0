@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:64146 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753342Ab3HVPJw (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:34365 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777Ab3HACaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Aug 2013 11:09:52 -0400
-Received: by mail-ob0-f169.google.com with SMTP id wc20so3912711obb.28
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 08:09:51 -0700 (PDT)
-Date: Thu, 22 Aug 2013 10:09:50 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: ignore obviously bogus ECSAs in probe response
- frames
-Message-ID: <20130822150950.GD24445@thinkpad-t410> (sfid-20130822_170955_581484_C5E13799)
-References: <1377179613-26591-1-git-send-email-seth.forshee@canonical.com>
- <1377180063.14110.23.camel@jlt4.sipsolutions.net>
- <20130822141011.GA24445@thinkpad-t410>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130822141011.GA24445@thinkpad-t410>
+	Wed, 31 Jul 2013 22:30:19 -0400
+Received: by mail-pa0-f49.google.com with SMTP id bi5so1564724pad.8
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 19:30:18 -0700 (PDT)
+From: Mark Schulte <schultetwin@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	Mark Schulte <schultetwin@gmail.com>
+Subject: [PATCH v3] rtlwifi: rtl8192cu: fix function declaration header
+Date: Wed, 31 Jul 2013 19:30:14 -0700
+Message-Id: <1375324214-24271-1-git-send-email-schultetwin@gmail.com> (sfid-20130801_043022_093148_10025C67)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 22, 2013 at 09:10:11AM -0500, Seth Forshee wrote:
-> On Thu, Aug 22, 2013 at 04:01:03PM +0200, Johannes Berg wrote:
-> > On Thu, 2013-08-22 at 08:53 -0500, Seth Forshee wrote:
-> > > The Netgear WNDAP360 sends invalid ECSA IEs in probe response
-> > > frames
-> > 
-> > I think we shouldn't be checking probe response frames at all. That
-> > seems like a mistake. Can you try this?
-> 
-> I had considered this, but the spec says that it's at least valid for
-> the AP to be sending ECSAs in probe responses. IEEE 802.11-2012 section
-> 10.3.3.2:
-> 
->   ...an AP shall inform associated STAs that the AP is moving to a new
->   channel and/or operating class and maintain the association by
->   advertising the switch using Extended Channel Switch Announcement
->   elements in any transmitted Beacon frames, Probe Response frames, and
->   Extended Channel Switch Announcement frames until the intended channel
->   switch time.
-> 
-> Perhaps we can still ignore them though? I suppose we'd expect to
-> receive some other frame with the ECSA before it actually happens.
+Move rtl92cu_update_hal_rate_tbl declaration to hw.h to correspond with function
+definition in hw.c.
+Fixes sparse warning in hw.c warning: symbol 'rtl92cu_update_hal_rate_tbl' was
+not declared.
 
-Anyway, your fix also eliminates the disconnects, so whichever solution
-you think best is fine. There is a build failure though.
+Signed-off-by: Mark Schulte <schultetwin@gmail.com>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.h | 3 +++
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.h | 3 ---
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-+       ieee80211_sta_process_chanswitch(sdata, rx_status->mactime,
-+                                        elems, true);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
+index 8e3ec1e..0f7812e 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
+@@ -109,5 +109,8 @@ void rtl92c_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
+ void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw,
+ 			 u8 element_id, u32 cmd_len, u8 *p_cmdbuffer);
+ bool rtl92cu_phy_mac_config(struct ieee80211_hw *hw);
++void rtl92cu_update_hal_rate_tbl(struct ieee80211_hw *hw,
++				 struct ieee80211_sta *sta,
++				 u8 rssi_level);
+ 
+ #endif
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
+index 262e1e4..a1310ab 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
+@@ -49,8 +49,5 @@ bool rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ u32 rtl92cu_phy_query_rf_reg(struct ieee80211_hw *hw,
+ 			    enum radio_path rfpath, u32 regaddr, u32 bitmask);
+ void rtl92cu_phy_set_bw_mode_callback(struct ieee80211_hw *hw);
+-void rtl92cu_update_hal_rate_tbl(struct ieee80211_hw *hw,
+-				 struct ieee80211_sta *sta,
+-				 u8 rssi_level);
+ 
+ #endif
+-- 
+1.8.3.3
 
-Needs to be &elems here.
-
-Thanks,
-Seth
