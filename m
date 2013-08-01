@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38725 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752012Ab3HPKTz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 06:19:55 -0400
-Message-ID: <1376648388.15299.1.camel@jlt4.sipsolutions.net> (sfid-20130816_121959_346508_D5C43DD8)
-Subject: Re: [PATCHv2 2/2] mac80211: non-functional change of rx handler
- location
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Johan Almbladh <ja@anyfi.net>
-Cc: ordex@autistici.org, linux-wireless@vger.kernel.org
-Date: Fri, 16 Aug 2013 12:19:48 +0200
-In-Reply-To: <1376486987-23224-2-git-send-email-ja@anyfi.net> (sfid-20130814_153105_600659_D0025A65)
-References: <1376323275.11514.26.camel@jlt4.sipsolutions.net>
-	 <1376486987-23224-1-git-send-email-ja@anyfi.net>
-	 <1376486987-23224-2-git-send-email-ja@anyfi.net>
-	 (sfid-20130814_153105_600659_D0025A65)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.lenbrook.com ([216.94.44.85]:24870 "EHLO mail.lenbrook.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753087Ab3HAT0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Aug 2013 15:26:52 -0400
+Message-ID: <51FAB45A.9080306@lenbrook.com> (sfid-20130801_212700_965749_D28102E4)
+Date: Thu, 01 Aug 2013 15:17:46 -0400
+From: Jonathan Bagg <jbagg@lenbrook.com>
+MIME-Version: 1.0
+To: backports@vger.kernel.org
+CC: Solomon Peachy <pizza@shaftnet.org>, linux-wireless@vger.kernel.org
+Subject: Re: cross compile backports with LTIB
+References: <1375338204-2021-8-git-send-email-sujith@msujith.org> <1375370826-1387-1-git-send-email-sujith@msujith.org> <51FA8ECD.7070401@lenbrook.com> <20130801174749.GC10904@shaftnet.org> <51FAB31F.6050207@lenbrook.com>
+In-Reply-To: <51FAB31F.6050207@lenbrook.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-08-14 at 15:29 +0200, Johan Almbladh wrote:
-> This patch changes the location of the rx handler functions to match
-> the new order in which they are invoked.
-
-Applied both, but I squashed them into one.
-
-johannes
-
+On 13-08-01 03:12 PM, Jonathan Bagg wrote:
+> On 13-08-01 01:47 PM, Solomon Peachy wrote:
+>> On Thu, Aug 01, 2013 at 12:37:33PM -0400, Jonathan Bagg wrote:
+>>> I've been cross compiling compat-wireless and now I'm trying
+>>> backports.  It looks like conf.c and zconf.tab.c are being compiled
+>>> as arm and then the build process is trying to run conf on my x86
+>>> host.  Results using the below make parameters I was using for
+>>> compat-wireless......
+> Learned some things....Problem was LTIB (ltib = Freescale tool) 
+> environment.  Outside of LTIB, backports cross compiles fine.  To get 
+> backports happy in LTIB need to use UNSPOOF/SPOOF_PATH to switch 
+> between host and cross environment....
+>
+(this is for the LTIBs spec file for backports = 
+dist/lfs-5.1/backports/backports.spec - forgot to mention in previous post)
+> %Build
+> export PATH=$UNSPOOF_PATH
+>
+> make defconfig-cw1200 make prefix=%{_prefix} 
+> CROSS_COMPILE=${TOOLCHAIN_PATH}/bin/${TOOLCHAIN_PREFIX} ARCH=$LINTARCH 
+> KLIB=${TOP}/rootfs/lib/modules/%{kversion} 
+> KLIB_BUILD=${TOP}/rpm/BUILD/linux
+>
+> export PATH=$SPOOF_PATH
+>
+> make prefix=%{_prefix} 
+> CROSS_COMPILE=${TOOLCHAIN_PATH}/bin/${TOOLCHAIN_PREFIX} ARCH=$LINTARCH 
+> KLIB=${TOP}/rootfs/lib/modules/%{kversion} 
+> KLIB_BUILD=${TOP}/rpm/BUILD/linux
+>
+> Jon 
