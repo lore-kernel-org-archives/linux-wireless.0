@@ -1,76 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nlpi176.sbcis.sbc.com ([207.115.36.48]:36059 "EHLO
-	nlpi176.prodigy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755992Ab3HFQk3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54011 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752167Ab3HAIHw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 12:40:29 -0400
-Date: Tue, 6 Aug 2013 09:31:58 -0700
-From: Bryan Kadzban <bryan@kadzban.is-a-geek.net>
-To: Tom Gundersen <teg@jklm.no>
-Cc: Maarten Lankhorst <m.b.lankhorst@gmail.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	systemd-devel@lists.freedesktop.org, linux-hotplug@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Kay Sievers <kay@vrfy.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [systemd-devel] [PATCH] Change CONFIG_FW_LOADER_USER_HELPER to default n and don't select it
-Message-ID: <20130806163158.GA23093@kadzban.is-a-geek.net> (sfid-20130806_184101_254740_C15FD5F1)
-References: <CALCETrXSnFPFVPkXHwz+FFA3=+pmz9V=cMHWwtN+jG1QJALWSQ@mail.gmail.com> <325b19bb936d7ebae11edad86aac8f0931e8abd9.1375719828.git.luto@amacapital.net> <5200B1BD.7030307@gmail.com> <CAG-2HqXEj06JbUOWee=NfuRXxL75uRf=55FZcXRLHroDzYUthQ@mail.gmail.com> <CAG-2HqVvoQK8ggErGGinO9i8Pbu-O-X=eYFW445ce24dpt7HyA@mail.gmail.com>
+	Thu, 1 Aug 2013 04:07:52 -0400
+Message-ID: <1375344469.8608.14.camel@jlt4.sipsolutions.net> (sfid-20130801_100800_043374_B4CD52CC)
+Subject: Re: [PATCH v2] mac80211: report some VHT radiotap infos for tx
+ status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Thu, 01 Aug 2013 10:07:49 +0200
+In-Reply-To: <20130801075649.GA30476@magnum.frso.rivierawaves.com> (sfid-20130801_100412_489490_6D30564D)
+References: <1374918424-1305-1-git-send-email-karl.beldan@gmail.com>
+	 <1375342554.8608.4.camel@jlt4.sipsolutions.net>
+	 <20130801075649.GA30476@magnum.frso.rivierawaves.com>
+	 (sfid-20130801_100412_489490_6D30564D)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAG-2HqVvoQK8ggErGGinO9i8Pbu-O-X=eYFW445ce24dpt7HyA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 11:17:17AM +0200, Tom Gundersen wrote:
-> On Tue, Aug 6, 2013 at 11:11 AM, Tom Gundersen <teg@jklm.no> wrote:
-> > On Tue, Aug 6, 2013 at 10:20 AM, Maarten Lankhorst
-> > <m.b.lankhorst@gmail.com> wrote:
-> >> Op 05-08-13 18:29, Andy Lutomirski schreef:
-> >>> The systemd commit below can delay firmware loading by multiple
-> >>> minutes if CONFIG_FW_LOADER_USER_HELPER=y.  Unfortunately no one
-> >>> noticed that the systemd-udev change would break new kernels as well
-> >>> as old kernels.
-> >>>
-> >>> Since the kernel apparently can't count on reasonable userspace
-> >>> support, turn this thing off by default.
-> >>>
-> >>> commit a3bd8447be4ea2ce230eb8ae0e815c04d85fa15a
-> >>> Author: Tom Gundersen <teg@jklm.no>
-> >>> Date:   Mon Mar 18 15:12:18 2013 +0100
-> >>>
-> >>>     udev: make firmware loading optional and disable by default
-> >>>
-> >>>     Distros that whish to support old kernels should set
-> >>>       --with-firmware-dirs="/usr/lib/firmware/updates:/usr/lib/firmware"
-> >>>     to retain the old behaviour.
-> >>>
-> >> methinks this patch should be reverted then,
-> >
-> > Well, all the code is still there, so it can be enabled if anyone wants it.
-> >
-> >> or a stub should be added to udev to always fail firmware loading so timeouts don't occur.
-> >
-> > I think the only use (if any) of a userspace firmware loader would be
-> > for anyone who wants a custom one (i.e., not udev), so we shouldn't
-> > just fail the loading from udev unconditionally.
-> >
-> > How about we just improve the udev documentation a bit, similar to
-> > Andy's kernel patch?
-> 
-> Sorry, I should first have checked. We already document this in the README:
-> 
-> >        Userspace firmware loading is deprecated, will go away, and
-> >        sometimes causes problems:
-> >          CONFIG_FW_LOADER_USER_HELPER=n
+On Thu, 2013-08-01 at 09:56 +0200, Karl Beldan wrote:
+> On Thu, Aug 01, 2013 at 09:35:54AM +0200, Johannes Berg wrote:
+> > On Sat, 2013-07-27 at 11:47 +0200, Karl Beldan wrote:
+> > 
+> > > +		/* required alignment from rthdr */
+> > > +		pos = (u8 *)rthdr + ALIGN(pos - (u8 *)rthdr, 2);
+> > 
+> > This is bad, it potentially leaks a byte of kernel data, please
+> > explicitly clear the padding, like
+> > 
+> > if ((pos - (u8 *)rthdr) & 1)
+> >   *pos++ = 0;
+> > 
+> I don't see what's wrong.
+> The whole radiotap space is already zeroed, as for the 'leaks' I don't
+> see how it could leak either.
 
-...And this patch is making the kernel default to the correct behavior,
-instead of the now-broken-by-udev behavior.
+Oh, I didn't see that, I'll apply the patch then.
 
-I'm not sure I see the issue with it?  :-)
-
-(Add me to the list of people that think udev is broken too, fwiw.  But
-let's at least not leave *both* sides in a broken-by-default state.)
+johannes
 
