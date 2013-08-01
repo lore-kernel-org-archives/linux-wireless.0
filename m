@@ -1,86 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:64039 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756243Ab3HZIxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 04:53:40 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 4/4] ath10k: fix issues on non-preemptible systems
-Date: Mon, 26 Aug 2013 10:53:25 +0200
-Message-ID: <1377507205-5386-5-git-send-email-michal.kazior@tieto.com> (sfid-20130826_105346_077751_3359D244)
-In-Reply-To: <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
- <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:42744 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840Ab3HAGHK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Aug 2013 02:07:10 -0400
+Received: by mail-lb0-f174.google.com with SMTP id w20so1207820lbh.5
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 23:07:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CA+XVXfe_B08ELpNwfmiK1DJrhLWVVXLPvJH_s=g6DeUKgcotQQ@mail.gmail.com>
+References: <1374826090-17322-1-git-send-email-johannes@sipsolutions.net>
+	<CA+XVXfe_B08ELpNwfmiK1DJrhLWVVXLPvJH_s=g6DeUKgcotQQ@mail.gmail.com>
+Date: Thu, 1 Aug 2013 09:07:08 +0300
+Message-ID: <CANUX_P3SiCMcHhLx1Sh6x3Q54M18sFVRFPOxk4S5normMqK3Tw@mail.gmail.com> (sfid-20130801_080720_421772_A076238E)
+Subject: Re: [PATCH] mac80211: implement critical protocol protection
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Workers may not call into a sleepable function
-(e.g. mutex_lock). Since ath10k workers can run
-for a very long time it is necessary to explicitly
-allow process rescheduling in case there's no
-preemption.
+>> This new API add in cfg80211 wasn't implemented in mac80211.
+>> Advertise the capabilities based on the device's
+>> implementation (possibly NULL) of crit_prot mac80211 ops.
+>>
+>> This callback will be called by cfg80211 when hinted by
+>> userspace that a critical protocol is happening, e.g. it can
+>> be EAPOL, DHCP.
+>>
+>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> [...]
+>> +static int ieee80211_crit_proto_start(struct wiphy *wiphy,
+>> +                                     struct wireless_dev *wdev,
+>> +                                     enum nl80211_crit_proto_id protocol,
+>> +                                     u16 duration)
+>> +{
+>> +       struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+>> +       struct ieee80211_local *local = wiphy_priv(wiphy);
+>> +       int ret;
+>> +
+>> +       ret = drv_crit_proto(local, sdata, protocol, true);
+>> +       if (!ret)
+>> +               return ret;
+>
+> Shouldn't this be "if (ret)" ?
 
-This fixes some issues with system freezes, hangs,
-watchdogs being triggered, userspace being
-unresponsive on slow host machines under heavy
-load.
+You're obviously right...
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htc.c    |    4 ++++
- drivers/net/wireless/ath/ath10k/htt_rx.c |    4 ++++
- drivers/net/wireless/ath/ath10k/wmi.c    |    4 ++++
- 3 files changed, 12 insertions(+)
+>
+> Also maybe the low-level driver should get the duration and indicate
+> completion on its own? (similar to what Eliad suggested).
+> Seems to me very similar to ROC, and would probably be implemented as
+> such for some drivers.
+>
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 7d445d3..99f1dbd 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -237,6 +237,10 @@ static void ath10k_htc_send_work(struct work_struct *work)
- 		ret = ath10k_htc_issue_skb(htc, ep, skb, credits);
- 		if (ret == -ENOSR)
- 			break;
-+
-+#ifndef CONFIG_PREEMPT
-+		cond_resched();
-+#endif
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 6cf4d95..80ea398 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1229,6 +1229,10 @@ static void ath10k_htt_rx_work(struct work_struct *work)
- 			break;
- 
- 		ath10k_htt_rx_process_skb(htt->ar, skb);
-+
-+#ifndef CONFIG_PREEMPT
-+		cond_resched();
-+#endif
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 32fd5e7..f36f0be 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1155,6 +1155,10 @@ static void ath10k_wmi_event_work(struct work_struct *work)
- 			break;
- 
- 		ath10k_wmi_event_process(ar, skb);
-+
-+#ifndef CONFIG_PREEMPT
-+		cond_resched();
-+#endif
- 	}
- }
- 
--- 
-1.7.9.5
-
+yeah - that could make it.
+I'll be unavailable in the coming 2 weeks though.
