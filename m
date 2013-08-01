@@ -1,81 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:37197 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385Ab3HUA5t (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:44884 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936Ab3HAG1H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 20:57:49 -0400
-Received: by mail-we0-f175.google.com with SMTP id n5so51402wev.6
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 17:57:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1376997139-6228-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1376997139-6228-1-git-send-email-emmanuel.grumbach@intel.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 21 Aug 2013 10:57:27 +1000
-Message-ID: <CAGRGNgVdMKmd6fPi7ugrWUVaSZeU54K+jyT=gLY2tnxvyBPogQ@mail.gmail.com> (sfid-20130821_025752_257376_D4253F8D)
-Subject: Re: [RFC 1/2] mac80211: allow APs to send SMPS frames
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 1 Aug 2013 02:27:07 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 7/8] ath9k: Use a subroutine to calculate ALT ratio
+Date: Thu,  1 Aug 2013 11:53:23 +0530
+Message-Id: <1375338204-2021-7-git-send-email-sujith@msujith.org> (sfid-20130801_082721_217940_F5787E1C)
+In-Reply-To: <1375338204-2021-1-git-send-email-sujith@msujith.org>
+References: <1375338204-2021-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-One minor thing I noticed:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/antenna.c | 173 ++++++++++++++-----------------
+ 1 file changed, 79 insertions(+), 94 deletions(-)
 
-On Tue, Aug 20, 2013 at 9:12 PM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> SMPS code checks all over the place that the vif is
-> BSS. Remove that constraint and allow SMPS for AP too.
->
-> Provide dummy implementation that will be used for
-> further patches.
->
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
->  net/mac80211/cfg.c            |   15 ++++++++++++---
->  net/mac80211/debugfs_netdev.c |   24 +++++++++++++++---------
->  net/mac80211/ht.c             |   38 ++++++++++++++++++++++++++++----------
->  net/mac80211/ieee80211_i.h    |   13 ++++++++++---
->  net/mac80211/iface.c          |    2 ++
->  net/mac80211/mlme.c           |    2 +-
->  6 files changed, 68 insertions(+), 26 deletions(-)
->
-> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-> index e601c9f..7609e47 100644
-> --- a/net/mac80211/debugfs_netdev.c
-> +++ b/net/mac80211/debugfs_netdev.c
-> @@ -245,12 +248,15 @@ static const char *smps_modes[IEEE80211_SMPS_NUM_MODES] = {
->  static ssize_t ieee80211_if_fmt_smps(const struct ieee80211_sub_if_data *sdata,
->                                      char *buf, int buflen)
->  {
-> -       if (sdata->vif.type != NL80211_IFTYPE_STATION)
-> -               return -EOPNOTSUPP;
-> -
-> -       return snprintf(buf, buflen, "request: %s\nused: %s\n",
-> -                       smps_modes[sdata->u.mgd.req_smps],
-> -                       smps_modes[sdata->smps_mode]);
-> +       if (sdata->vif.type == NL80211_IFTYPE_STATION)
-> +               return snprintf(buf, buflen, "request: %s\nused: %s\n",
-> +                               smps_modes[sdata->u.mgd.req_smps],
-> +                               smps_modes[sdata->smps_mode]);
-> +       if (sdata->vif.type == NL80211_IFTYPE_AP)
-> +               return snprintf(buf, buflen, "request: %s\nused: %s\n",
-> +                               smps_modes[sdata->u.ap.req_smps],
-> +                               smps_modes[sdata->smps_mode]);
-> +       return -EINVAL;
-
-Do you intend to change the return value for this function when we
-can't do SMPS from -EOPNOTSUPP to -EINVAL?
-
-You've also included a couple of other cases where you return -EINVAL.
-I'm assuming those are correct.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
+index 82839b0..42f3b87 100644
+--- a/drivers/net/wireless/ath/ath9k/antenna.c
++++ b/drivers/net/wireless/ath/ath9k/antenna.c
+@@ -164,6 +164,74 @@ static void ath_lnaconf_alt_good_scan(struct ath_ant_comb *antcomb,
+ 	}
+ }
+ 
++static void ath_ant_set_alt_ratio(struct ath_ant_comb *antcomb,
++				  struct ath_hw_antcomb_conf *conf)
++{
++	/* set alt to the conf with maximun ratio */
++	if (antcomb->first_ratio && antcomb->second_ratio) {
++		if (antcomb->rssi_second > antcomb->rssi_third) {
++			/* first alt*/
++			if ((antcomb->first_quick_scan_conf == ATH_ANT_DIV_COMB_LNA1) ||
++			    (antcomb->first_quick_scan_conf == ATH_ANT_DIV_COMB_LNA2))
++				/* Set alt LNA1 or LNA2*/
++				if (conf->main_lna_conf == ATH_ANT_DIV_COMB_LNA2)
++					conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA1;
++				else
++					conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA2;
++			else
++				/* Set alt to A+B or A-B */
++				conf->alt_lna_conf =
++					antcomb->first_quick_scan_conf;
++		} else if ((antcomb->second_quick_scan_conf == ATH_ANT_DIV_COMB_LNA1) ||
++			   (antcomb->second_quick_scan_conf == ATH_ANT_DIV_COMB_LNA2)) {
++			/* Set alt LNA1 or LNA2 */
++			if (conf->main_lna_conf == ATH_ANT_DIV_COMB_LNA2)
++				conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA1;
++			else
++				conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA2;
++		} else {
++			/* Set alt to A+B or A-B */
++			conf->alt_lna_conf = antcomb->second_quick_scan_conf;
++		}
++	} else if (antcomb->first_ratio) {
++		/* first alt */
++		if ((antcomb->first_quick_scan_conf == ATH_ANT_DIV_COMB_LNA1) ||
++		    (antcomb->first_quick_scan_conf == ATH_ANT_DIV_COMB_LNA2))
++			/* Set alt LNA1 or LNA2 */
++			if (conf->main_lna_conf == ATH_ANT_DIV_COMB_LNA2)
++				conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA1;
++			else
++				conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA2;
++		else
++			/* Set alt to A+B or A-B */
++			conf->alt_lna_conf = antcomb->first_quick_scan_conf;
++	} else if (antcomb->second_ratio) {
++		/* second alt */
++		if ((antcomb->second_quick_scan_conf == ATH_ANT_DIV_COMB_LNA1) ||
++		    (antcomb->second_quick_scan_conf == ATH_ANT_DIV_COMB_LNA2))
++			/* Set alt LNA1 or LNA2 */
++			if (conf->main_lna_conf == ATH_ANT_DIV_COMB_LNA2)
++				conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA1;
++			else
++				conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA2;
++		else
++			/* Set alt to A+B or A-B */
++			conf->alt_lna_conf = antcomb->second_quick_scan_conf;
++	} else {
++		/* main is largest */
++		if ((antcomb->main_conf == ATH_ANT_DIV_COMB_LNA1) ||
++		    (antcomb->main_conf == ATH_ANT_DIV_COMB_LNA2))
++			/* Set alt LNA1 or LNA2 */
++			if (conf->main_lna_conf == ATH_ANT_DIV_COMB_LNA2)
++				conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA1;
++			else
++				conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA2;
++		else
++			/* Set alt to A+B or A-B */
++			conf->alt_lna_conf = antcomb->main_conf;
++	}
++}
++
+ static void ath_select_ant_div_from_quick_scan(struct ath_ant_comb *antcomb,
+ 				       struct ath_hw_antcomb_conf *div_ant_conf,
+ 				       int main_rssi_avg, int alt_rssi_avg,
+@@ -220,17 +288,21 @@ static void ath_select_ant_div_from_quick_scan(struct ath_ant_comb *antcomb,
+ 		antcomb->rssi_first = main_rssi_avg;
+ 		antcomb->rssi_third = alt_rssi_avg;
+ 
+-		if (antcomb->second_quick_scan_conf == ATH_ANT_DIV_COMB_LNA1)
++		switch(antcomb->second_quick_scan_conf) {
++		case ATH_ANT_DIV_COMB_LNA1:
+ 			antcomb->rssi_lna1 = alt_rssi_avg;
+-		else if (antcomb->second_quick_scan_conf ==
+-			 ATH_ANT_DIV_COMB_LNA2)
++			break;
++		case ATH_ANT_DIV_COMB_LNA2:
+ 			antcomb->rssi_lna2 = alt_rssi_avg;
+-		else if (antcomb->second_quick_scan_conf ==
+-			 ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2) {
++			break;
++		case ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2:
+ 			if (antcomb->main_conf == ATH_ANT_DIV_COMB_LNA2)
+ 				antcomb->rssi_lna2 = main_rssi_avg;
+ 			else if (antcomb->main_conf == ATH_ANT_DIV_COMB_LNA1)
+ 				antcomb->rssi_lna1 = main_rssi_avg;
++			break;
++		default:
++			break;
+ 		}
+ 
+ 		if (antcomb->rssi_lna2 > antcomb->rssi_lna1 +
+@@ -268,95 +340,8 @@ static void ath_select_ant_div_from_quick_scan(struct ath_ant_comb *antcomb,
+ 				antcomb->second_ratio = false;
+ 		}
+ 
+-		/* set alt to the conf with maximun ratio */
+-		if (antcomb->first_ratio && antcomb->second_ratio) {
+-			if (antcomb->rssi_second > antcomb->rssi_third) {
+-				/* first alt*/
+-				if ((antcomb->first_quick_scan_conf ==
+-				    ATH_ANT_DIV_COMB_LNA1) ||
+-				    (antcomb->first_quick_scan_conf ==
+-				    ATH_ANT_DIV_COMB_LNA2))
+-					/* Set alt LNA1 or LNA2*/
+-					if (div_ant_conf->main_lna_conf ==
+-					    ATH_ANT_DIV_COMB_LNA2)
+-						div_ant_conf->alt_lna_conf =
+-							ATH_ANT_DIV_COMB_LNA1;
+-					else
+-						div_ant_conf->alt_lna_conf =
+-							ATH_ANT_DIV_COMB_LNA2;
+-				else
+-					/* Set alt to A+B or A-B */
+-					div_ant_conf->alt_lna_conf =
+-						antcomb->first_quick_scan_conf;
+-			} else if ((antcomb->second_quick_scan_conf ==
+-				   ATH_ANT_DIV_COMB_LNA1) ||
+-				   (antcomb->second_quick_scan_conf ==
+-				   ATH_ANT_DIV_COMB_LNA2)) {
+-				/* Set alt LNA1 or LNA2 */
+-				if (div_ant_conf->main_lna_conf ==
+-				    ATH_ANT_DIV_COMB_LNA2)
+-					div_ant_conf->alt_lna_conf =
+-						ATH_ANT_DIV_COMB_LNA1;
+-				else
+-					div_ant_conf->alt_lna_conf =
+-						ATH_ANT_DIV_COMB_LNA2;
+-			} else {
+-				/* Set alt to A+B or A-B */
+-				div_ant_conf->alt_lna_conf =
+-					antcomb->second_quick_scan_conf;
+-			}
+-		} else if (antcomb->first_ratio) {
+-			/* first alt */
+-			if ((antcomb->first_quick_scan_conf ==
+-			    ATH_ANT_DIV_COMB_LNA1) ||
+-			    (antcomb->first_quick_scan_conf ==
+-			    ATH_ANT_DIV_COMB_LNA2))
+-					/* Set alt LNA1 or LNA2 */
+-				if (div_ant_conf->main_lna_conf ==
+-				    ATH_ANT_DIV_COMB_LNA2)
+-					div_ant_conf->alt_lna_conf =
+-							ATH_ANT_DIV_COMB_LNA1;
+-				else
+-					div_ant_conf->alt_lna_conf =
+-							ATH_ANT_DIV_COMB_LNA2;
+-			else
+-				/* Set alt to A+B or A-B */
+-				div_ant_conf->alt_lna_conf =
+-						antcomb->first_quick_scan_conf;
+-		} else if (antcomb->second_ratio) {
+-				/* second alt */
+-			if ((antcomb->second_quick_scan_conf ==
+-			    ATH_ANT_DIV_COMB_LNA1) ||
+-			    (antcomb->second_quick_scan_conf ==
+-			    ATH_ANT_DIV_COMB_LNA2))
+-				/* Set alt LNA1 or LNA2 */
+-				if (div_ant_conf->main_lna_conf ==
+-				    ATH_ANT_DIV_COMB_LNA2)
+-					div_ant_conf->alt_lna_conf =
+-						ATH_ANT_DIV_COMB_LNA1;
+-				else
+-					div_ant_conf->alt_lna_conf =
+-						ATH_ANT_DIV_COMB_LNA2;
+-			else
+-				/* Set alt to A+B or A-B */
+-				div_ant_conf->alt_lna_conf =
+-						antcomb->second_quick_scan_conf;
+-		} else {
+-			/* main is largest */
+-			if ((antcomb->main_conf == ATH_ANT_DIV_COMB_LNA1) ||
+-			    (antcomb->main_conf == ATH_ANT_DIV_COMB_LNA2))
+-				/* Set alt LNA1 or LNA2 */
+-				if (div_ant_conf->main_lna_conf ==
+-				    ATH_ANT_DIV_COMB_LNA2)
+-					div_ant_conf->alt_lna_conf =
+-							ATH_ANT_DIV_COMB_LNA1;
+-				else
+-					div_ant_conf->alt_lna_conf =
+-							ATH_ANT_DIV_COMB_LNA2;
+-			else
+-				/* Set alt to A+B or A-B */
+-				div_ant_conf->alt_lna_conf = antcomb->main_conf;
+-		}
++		ath_ant_set_alt_ratio(antcomb, div_ant_conf);
++
+ 		break;
+ 	default:
+ 		break;
 -- 
-Julian Calaby
+1.8.3.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
