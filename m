@@ -1,74 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from numidia.opendz.org ([98.142.220.152]:47633 "EHLO
-	numidia.opendz.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754714Ab3HLMkH (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:53915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754020Ab3HAHhC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 08:40:07 -0400
-Date: Mon, 12 Aug 2013 13:33:09 +0100
-From: Djalal Harouni <tixxdz@opendz.org>
-To: "Berg, Johannes" <johannes.berg@intel.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: mvm: make debugfs write() operations write up
- to count bytes
-Message-ID: <20130812123309.GA2911@dztty> (sfid-20130812_144011_841391_D5BA1096)
-References: <1376267972-5636-1-git-send-email-tixxdz@opendz.org>
- <1DC40B07CD6EC041A66726C271A73AE61AA5E38C@IRSMSX102.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1DC40B07CD6EC041A66726C271A73AE61AA5E38C@IRSMSX102.ger.corp.intel.com>
+	Thu, 1 Aug 2013 03:37:02 -0400
+Message-ID: <1375342617.8608.5.camel@jlt4.sipsolutions.net> (sfid-20130801_093722_185131_3C1B6C20)
+Subject: Re: [RFC 0/3] introduce chan_time parameter to scan request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date: Thu, 01 Aug 2013 09:36:57 +0200
+In-Reply-To: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com>
+References: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 12, 2013 at 08:19:12AM +0000, Berg, Johannes wrote:
-> > Some debugfs write() operations of the MVM Firmware will ignore the count
-> > argument, and will copy more bytes than what was specified.
-> > Fix this by getting the right count of bytes.
-> > 
-> > This will also honor restrictions put on the number of bytes to write.
-> 
-> That makes some sense.
-And avoid strncmp() on garbage data.
+On Mon, 2013-07-29 at 10:39 +0200, Michal Kazior wrote:
 
-> > To be consitant this patch also switches the initializer from 'char buf[x] = {}' to
-> > the explicit memset() as it is done in other places of the same file.
-> 
-> I'd rather this (a) be done in a separate patch, and (b) the other way around, switch everything to C99.
-Ok
+> I'm wondering if it would be okay to set swscan
+> probe delay to 0 if chan_time is non-zero? Or does
+> probe delay need to be non-zero? Or maybe it
+> should also be configurable via a parameter?
 
-> > Cc: stable@vger.kernel.org
-> 
-> That doesn't really make sense for the debugfs interface.
-Ok
+probe delay needs to be non-zero for NAV adjustment.
 
-> > +	memset(buf, 0, sizeof(buf));
-> > +	if (count > sizeof(buf) - 1)
-> > +		count = sizeof(buf) - 1;
-> 
-> Why -1? And why not use min()/min_t()?
-Yes -1 to be sure that the processed string is null terminated
+johannes
 
-Ok will use min_t 
-
-
-Will send a second version, Thanks!
-
-> johannes
-> -- 
-> 
-> Intel GmbH
-> Dornacher Strasse 1
-> 85622 Feldkirchen/Muenchen, Deutschland
-> Sitz der Gesellschaft: Feldkirchen bei Muenchen
-> Geschaeftsfuehrer: Christian Lamprechter, Hannes Schwaderer, Douglas Lusk
-> Registergericht: Muenchen HRB 47456
-> Ust.-IdNr./VAT Registration No.: DE129385895
-> Citibank Frankfurt a.M. (BLZ 502 109 00) 600119052
-> 
-
--- 
-Djalal Harouni
-http://opendz.org
