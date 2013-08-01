@@ -1,75 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:45067 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753223Ab3HFOqI (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:49530 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850Ab3HAG06 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 10:46:08 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1375797260.8219.21.camel@jlt4.sipsolutions.net>
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
-Date: Tue, 6 Aug 2013 16:46:06 +0200
-Message-ID: <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com> (sfid-20130806_164627_037473_711CC4FB)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 1 Aug 2013 02:26:58 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/8] ath9k: Use a subroutine to check for short scan
+Date: Thu,  1 Aug 2013 11:53:18 +0530
+Message-Id: <1375338204-2021-2-git-send-email-sujith@msujith.org> (sfid-20130801_082704_078845_3F2AAC40)
+In-Reply-To: <1375338204-2021-1-git-send-email-sujith@msujith.org>
+References: <1375338204-2021-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 3:54 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-08-06 at 15:51 +0200, Sedat Dilek wrote:
->> OK, I did not try with debugging enabled and/or w/o Network-Manager.
->>
->> If you know of an issue, please let me know.
->
-> No, but the dmesg looks like security problems - check wpa_supplicant
-> log
->
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I start a debug-session like this:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/antenna.c | 37 ++++++++++++++++++++------------
+ 1 file changed, 23 insertions(+), 14 deletions(-)
 
-# stop network-manager
-# kill -9 $(pidof wpa_supplicant)
-# /sbin/wpa_supplicant -B -P /run/sendsigs.omit.d/wpasupplicant.pid -u
--s -O /var/run/wpa_supplicant -t -ddd
-# start network-manager
-# tail -f /var/log/syslog
+diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
+index 0ba5b86..130e983 100644
+--- a/drivers/net/wireless/ath/ath9k/antenna.c
++++ b/drivers/net/wireless/ath/ath9k/antenna.c
+@@ -579,6 +579,27 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 	}
+ }
+ 
++static bool ath_ant_short_scan_check(struct ath_ant_comb *antcomb)
++{
++	int alt_ratio;
++
++	if (!antcomb->scan || !antcomb->alt_good)
++		return false;
++
++	if (time_after(jiffies, antcomb->scan_start_time +
++		       msecs_to_jiffies(ATH_ANT_DIV_COMB_SHORT_SCAN_INTR)))
++		return true;
++
++	if (antcomb->total_pkt_count == ATH_ANT_DIV_COMB_SHORT_SCAN_PKTCOUNT) {
++		alt_ratio = ((antcomb->alt_recv_cnt * 100) /
++			     antcomb->total_pkt_count);
++		if (alt_ratio < ATH_ANT_DIV_COMB_ALT_ANT_RATIO)
++			return true;
++	}
++
++	return false;
++}
++
+ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
+ {
+ 	struct ath_hw_antcomb_conf div_ant_conf;
+@@ -613,22 +634,10 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
+ 	}
+ 
+ 	/* Short scan check */
+-	if (antcomb->scan && antcomb->alt_good) {
+-		if (time_after(jiffies, antcomb->scan_start_time +
+-		    msecs_to_jiffies(ATH_ANT_DIV_COMB_SHORT_SCAN_INTR)))
+-			short_scan = true;
+-		else
+-			if (antcomb->total_pkt_count ==
+-			    ATH_ANT_DIV_COMB_SHORT_SCAN_PKTCOUNT) {
+-				alt_ratio = ((antcomb->alt_recv_cnt * 100) /
+-					    antcomb->total_pkt_count);
+-				if (alt_ratio < ATH_ANT_DIV_COMB_ALT_ANT_RATIO)
+-					short_scan = true;
+-			}
+-	}
++	short_scan = ath_ant_short_scan_check(antcomb);
+ 
+ 	if (((antcomb->total_pkt_count < ATH_ANT_DIV_COMB_MAX_PKTCOUNT) ||
+-	    rs->rs_moreaggr) && !short_scan)
++	     rs->rs_moreaggr) && !short_scan)
+ 		return;
+ 
+ 	if (antcomb->total_pkt_count) {
+-- 
+1.8.3.4
 
-# egrep 'warn|fail|error' /root/syslog_for-johill.txt
-Aug  6 16:29:00 fambox wpa_supplicant[1150]: wlan0: WPA: 4-Way
-Handshake failed - pre-shared key may be incorrect
-Aug  6 16:29:07 fambox wpa_supplicant[1150]: wlan0: WPA: 4-Way
-Handshake failed - pre-shared key may be incorrect
-Aug  6 16:29:13 fambox NetworkManager[1064]: <warn> quit request
-received, terminating...
-Aug  6 16:30:21 fambox NetworkManager[2541]: <warn> (wlan0): driver
-supports Access Point (AP) mode
-Aug  6 16:30:21 fambox NetworkManager[2541]: <warn> failed to allocate
-link cache: (-10) Operation not supported
-Aug  6 16:30:21 fambox NetworkManager[2541]: <warn> Trying to remove a
-non-existant call id.
-Aug  6 16:30:21 fambox wpa_supplicant[2533]: nl80211: Scan trigger
-failed: ret=-16 (Device or resource busy)
-Aug  6 16:30:27 fambox wpa_supplicant[2533]: EAPOL: External
-notification - EAP fail=0
-Aug  6 16:30:34 fambox wpa_supplicant[2533]: EAPOL: External
-notification - EAP fail=0
-Aug  6 16:30:42 fambox wpa_supplicant[2533]: EAPOL: External
-notification - EAP fail=0
-Aug  6 16:30:48 fambox wpa_supplicant[2533]: EAPOL: External
-notification - EAP fail=0
-Aug  6 16:31:04 fambox NetworkManager[2541]: <warn> quit request
-received, terminating...
-
-I send you the full syslog.txt to your sipsolutions email-address (not
-sure if it contains sensitive data).
-
-- Sedat -
-
-> johannes
->
