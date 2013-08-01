@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33280 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757659Ab3HMMxE (ORCPT
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:33017 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752852Ab3HAJOJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 08:53:04 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 1 Aug 2013 05:14:09 -0400
+Received: by mail-bk0-f48.google.com with SMTP id jf20so572297bkc.7
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Aug 2013 02:14:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21002.11091.326462.787869@gargle.gargle.HOWL> (sfid-20130813_145307_946286_E61DB2F3)
-Date: Tue, 13 Aug 2013 18:19:23 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 3/5] ath9k: avoid accessing MRC registers on single-chain devices
-In-Reply-To: <1376390010-81819-3-git-send-email-nbd@openwrt.org>
-References: <1376390010-81819-1-git-send-email-nbd@openwrt.org>
-	<1376390010-81819-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1375342845.8608.8.camel@jlt4.sipsolutions.net>
+References: <1375087158-22077-1-git-send-email-michal.kazior@tieto.com>
+	<1375087158-22077-2-git-send-email-michal.kazior@tieto.com>
+	<1375342845.8608.8.camel@jlt4.sipsolutions.net>
+Date: Thu, 1 Aug 2013 11:14:07 +0200
+Message-ID: <CA+BoTQm+rWRRpp6XQ_-YHMBfH0Q4ecZ3z-6TV3cvFZ=8uXWsQA@mail.gmail.com> (sfid-20130801_111426_162218_648A5CE1)
+Subject: Re: [RFC 1/3] nl/cfg80211: add chan_time for scan request
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> They are not implemented, and accessing them might trigger errors
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_phy.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> index 39c3730..18a5aa4 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> @@ -1172,6 +1172,10 @@ skip_ws_det:
->  		 * is_on == 0 means MRC CCK is OFF (more noise imm)
->  		 */
->  		bool is_on = param ? 1 : 0;
-> +
-> +		if (ah->caps.rx_chainmask == 1)
-> +			break;
-> +
+On 1 August 2013 09:40, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2013-07-29 at 10:39 +0200, Michal Kazior wrote:
+>
+>> + * @NL80211_ATTR_SCAN_CHAN_TIME: Specifies how many msec should a driver spend
+>> + *   on each channel during scanning. This is optional and the default is
+>> + *   leave the decision up to the driver. This setting may, but preferrably
+>
+> typo: preferably :)
+>
+>> + *   shouldn't, be ignored by driver.
+>
+> This seems a bit iffy - you don't differentiate between active/passive
+> scans?
 
-This is done in ath9k_hw_set_cck_nil(). All the 1-chain devices are handled
-except AR9330. Maybe the chainmask check can be moved there ?
+Is there a reason this should be differentiated?
 
-Sujith
+
+> Also maybe there should be a bit saying "I support scan timing" or even
+> the min/max times?
+
+Sounds good. I can add it.
+
+
+> This also interferes a bit with some other scan optimisations that could
+> be done at a low firmware level, so I think we should be careful and
+> actually say that this is really more intended for measurement use cases
+> and not for normal scans?
+>
+> Or maybe we should have a separate measurement command with similar
+> semantics? This all doesn't seem very clear to me yet :)
+
+Motivation behind this patchset is to simplify ACS implementation and
+depend on scan. This also allows easier fallback from survey-based ACS
+to BSS-based one.
+
+Other use cases are a side-effect so perhaps clarifying the intent in
+the docs is enough.
+
+
+Pozdrawiam / Best regards,
+Micha³ Kazior.
