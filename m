@@ -1,87 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:48270 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752667Ab3HVLBK (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56956 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261Ab3HAG1B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Aug 2013 07:01:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAOMQbqHRkF4_gK=GA587LDghkYtd1hRQhLObV+Tbe9zEDbS5-Q@mail.gmail.com>
-References: <CAOMQbqHRkF4_gK=GA587LDghkYtd1hRQhLObV+Tbe9zEDbS5-Q@mail.gmail.com>
-From: Stan G <stangoesagain@gmail.com>
-Date: Thu, 22 Aug 2013 18:00:48 +0700
-Message-ID: <CAOMQbqEZKytz42CcjXwBiyiKotU0Wh1_9_TX2NP+qSjpP71+og@mail.gmail.com> (sfid-20130822_130114_503563_57821332)
-Subject: Fwd: ipw2200: Fix race condition in the command completion acknowledge
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 1 Aug 2013 02:27:01 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/8] ath9k: Use a subroutine to try LNA switch
+Date: Thu,  1 Aug 2013 11:53:20 +0530
+Message-Id: <1375338204-2021-4-git-send-email-sujith@msujith.org> (sfid-20130801_082734_438769_3B4079A0)
+In-Reply-To: <1375338204-2021-1-git-send-email-sujith@msujith.org>
+References: <1375338204-2021-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----------- Forwarded message ----------
-From: Stan G <stangoesagain@gmail.com>
-Date: Wed, Aug 21, 2013 at 3:16 PM
-Subject: ipw2200: Fix race condition in the command completion acknowledge
-To: stas.yakovlev@gmail.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/antenna.c | 92 ++++++++++++++++++--------------
+ 1 file changed, 52 insertions(+), 40 deletions(-)
 
-Hi,
+diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
+index ee25165..8675c3f 100644
+--- a/drivers/net/wireless/ath/ath9k/antenna.c
++++ b/drivers/net/wireless/ath/ath9k/antenna.c
+@@ -64,7 +64,7 @@ static inline bool ath_is_alt_ant_ratio_better(int alt_ratio, int maxdelta,
+ 		(alt_rssi_avg > main_rssi_avg + mindelta)) && (pkt_count > 50);
+ }
+ 
+-static inline bool ath_ant_div_comb_alt_check(struct ath_hw_antcomb_conf conf,
++static inline bool ath_ant_div_comb_alt_check(struct ath_hw_antcomb_conf *conf,
+ 					      int alt_ratio, int alt_rssi_avg,
+ 					      int main_rssi_avg)
+ {
+@@ -72,15 +72,15 @@ static inline bool ath_ant_div_comb_alt_check(struct ath_hw_antcomb_conf conf,
+ 
+ 	result = set1 = set2 = false;
+ 
+-	if (conf.main_lna_conf == ATH_ANT_DIV_COMB_LNA2 &&
+-	    conf.alt_lna_conf == ATH_ANT_DIV_COMB_LNA1)
++	if (conf->main_lna_conf == ATH_ANT_DIV_COMB_LNA2 &&
++	    conf->alt_lna_conf == ATH_ANT_DIV_COMB_LNA1)
+ 		set1 = true;
+ 
+-	if (conf.main_lna_conf == ATH_ANT_DIV_COMB_LNA1 &&
+-	    conf.alt_lna_conf == ATH_ANT_DIV_COMB_LNA2)
++	if (conf->main_lna_conf == ATH_ANT_DIV_COMB_LNA1 &&
++	    conf->alt_lna_conf == ATH_ANT_DIV_COMB_LNA2)
+ 		set2 = true;
+ 
+-	switch (conf.div_group) {
++	switch (conf->div_group) {
+ 	case 0:
+ 		if (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)
+ 			result = true;
+@@ -596,6 +596,43 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 	}
+ }
+ 
++static bool ath_ant_try_switch(struct ath_hw_antcomb_conf *div_ant_conf,
++			       int alt_ratio, int alt_rssi_avg,
++			       int main_rssi_avg, int curr_main_set,
++			       int curr_alt_set)
++{
++	bool ret = false;
++
++	if (ath_ant_div_comb_alt_check(div_ant_conf, alt_ratio,
++				       alt_rssi_avg, main_rssi_avg)) {
++		if (curr_alt_set == ATH_ANT_DIV_COMB_LNA2) {
++			/*
++			 * Switch main and alt LNA.
++			 */
++			div_ant_conf->main_lna_conf = ATH_ANT_DIV_COMB_LNA2;
++			div_ant_conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA1;
++		} else if (curr_alt_set == ATH_ANT_DIV_COMB_LNA1) {
++			div_ant_conf->main_lna_conf = ATH_ANT_DIV_COMB_LNA1;
++			div_ant_conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA2;
++		}
++
++		ret = true;
++	} else if ((curr_alt_set != ATH_ANT_DIV_COMB_LNA1) &&
++		   (curr_alt_set != ATH_ANT_DIV_COMB_LNA2)) {
++		/*
++		  Set alt to another LNA.
++		*/
++		if (curr_main_set == ATH_ANT_DIV_COMB_LNA2)
++			div_ant_conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA1;
++		else if (curr_main_set == ATH_ANT_DIV_COMB_LNA1)
++			div_ant_conf->alt_lna_conf = ATH_ANT_DIV_COMB_LNA2;
++
++		ret = true;
++	}
++
++	return ret;
++}
++
+ static bool ath_ant_short_scan_check(struct ath_ant_comb *antcomb)
+ {
+ 	int alt_ratio;
+@@ -626,7 +663,7 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
+ 	int main_rssi = rs->rs_rssi_ctl0;
+ 	int alt_rssi = rs->rs_rssi_ctl1;
+ 	int rx_ant_conf,  main_ant_conf;
+-	bool short_scan = false;
++	bool short_scan = false, ret;
+ 
+ 	rx_ant_conf = (rs->rs_rssi_ctl2 >> ATH_ANT_RX_CURRENT_SHIFT) &
+ 		       ATH_ANT_RX_MASK;
+@@ -666,11 +703,9 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
+ 				 antcomb->total_pkt_count);
+ 	}
+ 
+-
+ 	ath9k_hw_antdiv_comb_conf_get(sc->sc_ah, &div_ant_conf);
+ 	curr_alt_set = div_ant_conf.alt_lna_conf;
+ 	curr_main_set = div_ant_conf.main_lna_conf;
+-
+ 	antcomb->count++;
+ 
+ 	if (antcomb->count == ATH_ANT_DIV_COMB_MAX_COUNT) {
+@@ -688,40 +723,17 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
+ 	}
+ 
+ 	if (!antcomb->scan) {
+-		if (ath_ant_div_comb_alt_check(div_ant_conf, alt_ratio,
+-					       alt_rssi_avg, main_rssi_avg)) {
+-			if (curr_alt_set == ATH_ANT_DIV_COMB_LNA2) {
+-				/* Switch main and alt LNA */
+-				div_ant_conf.main_lna_conf =
+-						ATH_ANT_DIV_COMB_LNA2;
+-				div_ant_conf.alt_lna_conf  =
+-						ATH_ANT_DIV_COMB_LNA1;
+-			} else if (curr_alt_set == ATH_ANT_DIV_COMB_LNA1) {
+-				div_ant_conf.main_lna_conf =
+-						ATH_ANT_DIV_COMB_LNA1;
+-				div_ant_conf.alt_lna_conf  =
+-						ATH_ANT_DIV_COMB_LNA2;
+-			}
+-
+-			goto div_comb_done;
+-		} else if ((curr_alt_set != ATH_ANT_DIV_COMB_LNA1) &&
+-			   (curr_alt_set != ATH_ANT_DIV_COMB_LNA2)) {
+-			/* Set alt to another LNA */
+-			if (curr_main_set == ATH_ANT_DIV_COMB_LNA2)
+-				div_ant_conf.alt_lna_conf =
+-						ATH_ANT_DIV_COMB_LNA1;
+-			else if (curr_main_set == ATH_ANT_DIV_COMB_LNA1)
+-				div_ant_conf.alt_lna_conf =
+-						ATH_ANT_DIV_COMB_LNA2;
+-
+-			goto div_comb_done;
+-		}
+-
+-		if ((alt_rssi_avg < (main_rssi_avg +
+-				     div_ant_conf.lna1_lna2_delta)))
++		ret = ath_ant_try_switch(&div_ant_conf, alt_ratio,
++					 alt_rssi_avg, main_rssi_avg,
++					 curr_main_set, curr_alt_set);
++		if (ret)
+ 			goto div_comb_done;
+ 	}
+ 
++	if (!antcomb->scan &&
++	    (alt_rssi_avg < (main_rssi_avg + div_ant_conf.lna1_lna2_delta)))
++		goto div_comb_done;
++
+ 	if (!antcomb->scan_not_start) {
+ 		switch (curr_alt_set) {
+ 		case ATH_ANT_DIV_COMB_LNA2:
+-- 
+1.8.3.4
 
-This is regarding kernel patch history:
-
->>>>
-
-commit dd447319895d0c0af423e483d9b63f84f3f8869a
-Author: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Date: Thu Apr 19 15:55:09 2012 -0400
-ipw2200: Fix race condition in the command completion acknowledge
-
-Driver incorrectly validates command completion: instead of waiting
-for a command to be acknowledged it continues execution. Most of the
-time driver gets acknowledge of the command completion in a tasklet
-before it executes the next one. But sometimes it sends the next
-command before it gets acknowledge for the previous one. In such a
-case one of the following error messages appear in the log:
-
-Failed to send SYSTEM_CONFIG: Already sending a command.
-Failed to send ASSOCIATE: Already sending a command.
-Failed to send TX_POWER: Already sending a command.
-
-After that you need to reload the driver to get it working again.
-
-This bug occurs during roaming (reported by Sam Varshavchik)
-https://bugzilla.redhat.com/show_bug.cgi?id=738508
-and machine booting (reported by Tom Gundersen and Mads Kiilerich)
-https://bugs.archlinux.org/task/28097
-https://bugzilla.redhat.com/show_bug.cgi?id=802106
-
-This patch doesn't fix the delay issue during firmware load.
-But at least device now works as usual after boot.
-
-Cc: stable@kernel.org
-Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
->>>>
-
-I am having intermittent problems with dropping wifi network while the
- AP is still visible and dmesg produces this:
-
-      [26617.864791] ipw2200: Failed to send ASSOCIATE: Already
-sending a command.
-
-
-I'm on OpenSuse 12.3 with 3.7.10-1.16
-
-The whole story of this problem can be viewed here:
-
-https://forums.opensuse.org/english/get-technical-help-here/network-internet/489371-wifi-up-access-point-visible-but-network-goes-down.html
-
-where at the end I was advised to contact you, guys.
-
-Reloading driver restores network as expected.
-
-Can anything be done regarding this issue or is the driver too old to be fixed?
-
-Would updating to the latest kernel solve the problem?
-
-Stan
