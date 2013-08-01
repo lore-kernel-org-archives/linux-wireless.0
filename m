@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:52261 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752828Ab3HLJMF (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:34449 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752040Ab3HAG1F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 05:12:05 -0400
-Date: Mon, 12 Aug 2013 11:11:58 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: "Volker von Hoesslin @ SKBX Systems" <hoesslin.v@skbx.de>
+	Thu, 1 Aug 2013 02:27:05 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: 80211s with DFS
-Message-ID: <20130812091158.GA17024@pandem0nium> (sfid-20130812_111209_553595_87689FFE)
-References: <5207FC2A.4040207@skbx.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="a8Wt8u1KmwUX3Y2C"
-In-Reply-To: <5207FC2A.4040207@skbx.de>
+Subject: [PATCH 6/8] ath9k: Simplify checks in quick_scan
+Date: Thu,  1 Aug 2013 11:53:22 +0530
+Message-Id: <1375338204-2021-6-git-send-email-sujith@msujith.org> (sfid-20130801_082721_900980_77941ED6)
+In-Reply-To: <1375338204-2021-1-git-send-email-sujith@msujith.org>
+References: <1375338204-2021-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
---a8Wt8u1KmwUX3Y2C
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+There is a function to do a ratio comparison for ALT,
+so make use of it.
 
-On Sun, Aug 11, 2013 at 11:03:38PM +0200, Volker von Hoesslin @ SKBX System=
-s wrote:
-> i think this error is from the "netlink lib(libnl genl)"...
->=20
-> if i use a channel without DFS, it works fine (in germany channel
-> like 36-48)... so how it is possible to use mesh (80211s) with DFS ?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/antenna.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-mac80211 does not support DFS in mesh mode so far, the only DFS
-support implemented is AP mode (and only with ath9k compatible chips).
-I'm currently working on IBSS, I don't if/who will work on
-802.11s DFS ...
+diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
+index c52959b..82839b0 100644
+--- a/drivers/net/wireless/ath/ath9k/antenna.c
++++ b/drivers/net/wireless/ath/ath9k/antenna.c
+@@ -203,11 +203,11 @@ static void ath_select_ant_div_from_quick_scan(struct ath_ant_comb *antcomb,
+ 			else
+ 				antcomb->first_ratio = false;
+ 		} else {
+-			if ((((alt_ratio >= ATH_ANT_DIV_COMB_ALT_ANT_RATIO2) &&
+-			      (alt_rssi_avg > main_rssi_avg +
+-			       ATH_ANT_DIV_COMB_LNA1_DELTA_HI)) ||
+-			     (alt_rssi_avg > main_rssi_avg)) &&
+-			    (antcomb->total_pkt_count > 50))
++			if (ath_is_alt_ant_ratio_better(alt_ratio,
++						ATH_ANT_DIV_COMB_LNA1_DELTA_HI,
++						0,
++						main_rssi_avg, alt_rssi_avg,
++						antcomb->total_pkt_count))
+ 				antcomb->first_ratio = true;
+ 			else
+ 				antcomb->first_ratio = false;
+@@ -258,11 +258,11 @@ static void ath_select_ant_div_from_quick_scan(struct ath_ant_comb *antcomb,
+ 			else
+ 				antcomb->second_ratio = false;
+ 		} else {
+-			if ((((alt_ratio >= ATH_ANT_DIV_COMB_ALT_ANT_RATIO2) &&
+-			      (alt_rssi_avg > main_rssi_avg +
+-			       ATH_ANT_DIV_COMB_LNA1_DELTA_HI)) ||
+-			     (alt_rssi_avg > main_rssi_avg)) &&
+-			    (antcomb->total_pkt_count > 50))
++			if (ath_is_alt_ant_ratio_better(alt_ratio,
++						ATH_ANT_DIV_COMB_LNA1_DELTA_HI,
++						0,
++						main_rssi_avg, alt_rssi_avg,
++						antcomb->total_pkt_count))
+ 				antcomb->second_ratio = true;
+ 			else
+ 				antcomb->second_ratio = false;
+-- 
+1.8.3.4
 
-Cheers,
-	Simon
-
---a8Wt8u1KmwUX3Y2C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlIIpt4ACgkQrzg/fFk7axZVawCgtlqwNb2yexFkBAYz1V3bGOvX
-v1IAoKF0LUJQMVlpTIaM97KzJA5XkmmH
-=hSqx
------END PGP SIGNATURE-----
-
---a8Wt8u1KmwUX3Y2C--
