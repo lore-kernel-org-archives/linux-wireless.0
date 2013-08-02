@@ -1,77 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58366 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407Ab3HUIjO (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:39955 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754174Ab3HBPiU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 04:39:14 -0400
-Message-ID: <1377074351.15268.7.camel@jlt4.sipsolutions.net> (sfid-20130821_103918_932556_5ADC62C3)
-Subject: Re: [PATCH 01/16] wcn36xx: Add main.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 21 Aug 2013 10:39:11 +0200
-In-Reply-To: <CAFSJ42ZH3ZJ+-+6wUbqQvaM8D2t6oWqyqkGiGRRx4o2NA60EjA@mail.gmail.com> (sfid-20130821_103623_576237_81778620)
-References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
-	 <1377020479-16935-2-git-send-email-k.eugene.e@gmail.com>
-	 <1377032397.13829.40.camel@jlt4.sipsolutions.net>
-	 <CAFSJ42ZH3ZJ+-+6wUbqQvaM8D2t6oWqyqkGiGRRx4o2NA60EjA@mail.gmail.com>
-	 (sfid-20130821_103623_576237_81778620)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 2 Aug 2013 11:38:20 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 7/7] nl80211: enable IBSS support for channel switch announcements
+Date: Fri,  2 Aug 2013 17:38:06 +0200
+Message-Id: <1375457886-7275-8-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130802_173835_563077_94C6A658)
+In-Reply-To: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[remove wcn list, it annoys me with moderator messages]
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/wireless/nl80211.c |   49 +++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 34 insertions(+), 15 deletions(-)
 
-
-> >> +             if (IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags) {
-> >> +                     sta_priv->is_data_encrypted = true;
-> >> +                     /* Reconfigure bss with encrypt_type */
-> >> +                     if (NL80211_IFTYPE_STATION == vif->type)
-> >> +                             wcn36xx_smd_config_bss(wcn,
-> >> +                                                    vif,
-> >> +                                                    sta,
-> >> +                                                    sta->addr,
-> >> +                                                    true);
-> >
-> > It seems to me this should not be here but you should have mac80211 set
-> > something in e.g. bss_conf that indicates encryption?
-> >
-> 
-> It's a good idea and I tried to find anything encryption related in
-> bss_conf but without luck. I do not like this line myself so I would
-> really appreciate if you can point where exactly in
-> bss_conf/bss_info_changed information about encryption is located.
-
-There isn't anything, but you could always add it.
-
-> >> +     static const u32 cipher_suites[] = {
-> >> +             WLAN_CIPHER_SUITE_TKIP,
-> >> +             WLAN_CIPHER_SUITE_CCMP,
-> >> +     };
-> >
-> > You actually don't want to support WEP, not even in software? Otherwise
-> > just leave this out and mac80211 will add it.
-> 
-> WEP is supported by HW but wcn36xx does not configure it yet. Is that
-> ok to add HW WEP encryption in nearest future after wcn36xx is pushed
-> to upstream?
-
-I don't see why you'd even bother - why not just use software encryption
-for WEP for the time being? Then you don't need this code.
-
-> >> +     wcn->hw->wiphy->iface_combinations = &if_comb;
-> >> +     wcn->hw->wiphy->n_iface_combinations = 1;
-> >
-> > Your code with "wcn->current_vif = " etc. *really* doesn't look like you
-> > support combinations. Are you positive this is OK?
-> 
-> So far wcn36xx supports only one interface at once. But in the nearest
-> future it will definitely support more than one. So how about keeping
-> this for future?;)
-
-It's *wrong* though - you're saying two interfaces are supported and
-then they aren't. Don't do that.
-
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f7cb121..6d3d788 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5632,15 +5632,26 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 	static struct nlattr *csa_attrs[NL80211_ATTR_MAX+1];
+ 	u8 radar_detect_width = 0;
+ 	int err;
++	bool need_new_beacon = false;
+ 
+ 	if (!rdev->ops->channel_switch ||
+ 	    !(rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH))
+ 		return -EOPNOTSUPP;
+ 
+-	/* may add IBSS support later */
+-	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+-	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
++	switch (dev->ieee80211_ptr->iftype) {
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++		need_new_beacon = true;
++
++		/* useless if AP is not running */
++		if (!wdev->beacon_interval)
++			return -EINVAL;
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		break;
++	default:
+ 		return -EOPNOTSUPP;
++	}
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
+@@ -5649,15 +5660,16 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	/* only important for AP, IBSS and mesh create IEs internally */
+-	if (!info->attrs[NL80211_ATTR_CSA_IES])
+-		return -EINVAL;
+-
+-	/* useless if AP is not running */
+-	if (!wdev->beacon_interval)
++	if (need_new_beacon &&
++	    (!info->attrs[NL80211_ATTR_CSA_IES] ||
++	     !info->attrs[NL80211_ATTR_CSA_C_OFF_BEACON]))
+ 		return -EINVAL;
+ 
+ 	params.count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
+ 
++	if (!need_new_beacon)
++		goto skip_beacons;
++
+ 	err = nl80211_parse_beacon(info->attrs, &params.beacon_after);
+ 	if (err)
+ 		return err;
+@@ -5697,6 +5709,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
++skip_beacons:
+ 	err = nl80211_parse_chandef(rdev, info, &params.chandef);
+ 	if (err)
+ 		return err;
+@@ -5704,12 +5717,17 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
+ 		return -EINVAL;
+ 
+-	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
+-	if (err < 0) {
+-		return err;
+-	} else if (err) {
+-		radar_detect_width = BIT(params.chandef.width);
+-		params.radar_required = true;
++	/* DFS channels are only supported for AP/P2P GO ... for now. */
++	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
++	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO) {
++		err = cfg80211_chandef_dfs_required(wdev->wiphy,
++						    &params.chandef);
++		if (err < 0) {
++			return err;
++		} else if (err) {
++			radar_detect_width = BIT(params.chandef.width);
++			params.radar_required = true;
++		}
+ 	}
+ 
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+@@ -10725,7 +10743,8 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
+ 	wdev_lock(wdev);
+ 
+ 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
+-		    wdev->iftype != NL80211_IFTYPE_P2P_GO))
++		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
++		    wdev->iftype != NL80211_IFTYPE_ADHOC))
+ 		goto out;
+ 
+ 	wdev->channel = chandef->chan;
+-- 
+1.7.10.4
 
