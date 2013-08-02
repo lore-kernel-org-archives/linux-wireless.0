@@ -1,78 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:47621
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753558Ab3HARrz (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58728 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab3HBHrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 13:47:55 -0400
-Date: Thu, 1 Aug 2013 13:47:50 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Jonathan Bagg <jbagg@lenbrook.com>
-Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org
-Subject: Re: cross compile backports?
-Message-ID: <20130801174749.GC10904@shaftnet.org> (sfid-20130801_194758_736402_4A291089)
-References: <1375338204-2021-8-git-send-email-sujith@msujith.org>
- <1375370826-1387-1-git-send-email-sujith@msujith.org>
- <51FA8ECD.7070401@lenbrook.com>
+	Fri, 2 Aug 2013 03:47:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: add SoC power save option to PCI features map
+References: <1375348187-18216-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Fri, 2 Aug 2013 10:47:44 +0300
+In-Reply-To: <1375348187-18216-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Thu, 1 Aug 2013 11:09:47 +0200")
+Message-ID: <877gg4pm8v.fsf@kamboji.qca.qualcomm.com> (sfid-20130802_094756_278215_1E4096EF)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="5QAgd0e35j3NYeGe"
-In-Reply-To: <51FA8ECD.7070401@lenbrook.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
---5QAgd0e35j3NYeGe
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Unify the PCI options location.
+>
+> By default the SoC PS option is disabled to boost the
+> performance and due to poor stability on early HW revisions.
+> In future we can remove the module parameter and turn on/off
+> the PS for given hardware.
+>
+> This change also makes the pci module parameter for SoC PS static.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-On Thu, Aug 01, 2013 at 12:37:33PM -0400, Jonathan Bagg wrote:
-> I've been cross compiling compat-wireless and now I'm trying
-> backports.  It looks like conf.c and zconf.tab.c are being compiled
-> as arm and then the build process is trying to run conf on my x86
-> host.  Results using the below make parameters I was using for
-> compat-wireless......
+A minor nitpick:
 
-Howdy.  :)
+> +	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+> +		ath10k_do_pci_wake(ar); /* Force AWAKE forever */
 
-(btw, I'm CC'ing the backports mailing list, which is a better place to=20
- ask these sorts of questions)
+if (foo)
+        /* comment */
+        function_call();
 
-I found that the backports cross-compile process worked much the same=20
-way as building compat-wireless.  This is what I'm doing currently in my=20
-build script:  (This is using a backports package generated last night=20
-using the backports git HEAD code with the cw1200 driver integrated)
-
- set -a
- CROSS_COMPILE=3D${CROSS_COMPILE}=20
- ARCH=3D${TARGET_CPU}
- KLIB_BUILD=3D${DEV_PATH}/${LINUX_DIR}
- KLIB=3D${TARGET_ROOT_ON_HOST}
- set +a
- make oldconfig  # menuconfig worked here too
- make
- make install
-
-That said, the 'make install' target isn't currently sane for=20
-cross-builds due to the bacport_firmware_install script not respecting=20
-prefixes.  I just commented that script (and a few others like initrd=20
-updates) out of the Makefiles, and I had a successful build/install.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---5QAgd0e35j3NYeGe
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFR+p9FPuLgii2759ARAmwfAJ9xOHDt1S47vszd2UKeVEsFq6SOzACdEbVk
-ec4GTk3g0g9kjmUW9wlYCg8=
-=D2Ey
------END PGP SIGNATURE-----
-
---5QAgd0e35j3NYeGe--
+-- 
+Kalle Valo
