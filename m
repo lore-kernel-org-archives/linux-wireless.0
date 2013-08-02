@@ -1,72 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:62703 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752193Ab3HUGEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 02:04:37 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.10 4/8] iwlwifi: mvm: don't set the MCAST queue in STA's queue list
-Date: Wed, 21 Aug 2013 09:04:22 +0300
-Message-Id: <1377065066-13030-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130821_080442_752616_632567AB)
-In-Reply-To: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:39952 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754170Ab3HBPiU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Aug 2013 11:38:20 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 1/7] cfg80211: export cfg80211_chandef_dfs_required
+Date: Fri,  2 Aug 2013 17:38:00 +0200
+Message-Id: <1375457886-7275-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130802_173833_262894_6264CE28)
+In-Reply-To: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 837fb69f10588caafc883c4473a864660e1403ce upstream.
+It will be used later by the IBSS CSA implementation of mac80211.
 
-The MCAST queue should be enabled after DTIM only.
-According to fw API, the MCAST must not be attached to any
-station, but should appear in the mcast_qid of the AP's
-mac context only.
-
-This bug induces packet loss on MCAST frames since the
-firmware was sending them while the peer is asleep.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |    5 +----
- drivers/net/wireless/iwlwifi/mvm/sta.c      |    3 ---
- 2 files changed, 1 insertion(+), 7 deletions(-)
+ include/net/cfg80211.h |    9 +++++++++
+ net/wireless/chan.c    |    1 +
+ net/wireless/core.h    |    8 --------
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 3b69045..d8e858c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -193,14 +193,11 @@ static void iwl_mvm_mac_iface_iterator(void *_data, u8 *mac,
- u32 iwl_mvm_mac_get_queues_mask(struct iwl_mvm *mvm,
- 				struct ieee80211_vif *vif)
- {
--	u32 qmask, ac;
-+	u32 qmask = 0, ac;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6da5a6b..14c914f 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -437,6 +437,15 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 			     u32 prohibited_flags);
  
- 	if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
- 		return BIT(IWL_MVM_OFFCHANNEL_QUEUE);
+ /**
++ * cfg80211_chandef_dfs_required - checks if radar detection is required
++ * @wiphy: the wiphy to validate against
++ * @chandef: the channel definition to check
++ * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
++ */
++int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
++				  const struct cfg80211_chan_def *c);
++
++/**
+  * ieee80211_chandef_rate_flags - returns rate flags for a channel
+  *
+  * In some channel types, not all rates may be used - for example CCK
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 50f6195..16f3c3a 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -328,6 +328,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+ 	return cfg80211_get_chans_dfs_required(wiphy, chandef->center_freq2,
+ 					       width);
+ }
++EXPORT_SYMBOL(cfg80211_chandef_dfs_required);
  
--	qmask = (vif->cab_queue != IEEE80211_INVAL_HW_QUEUE) ?
--		BIT(vif->cab_queue) : 0;
--
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
- 		if (vif->hw_queue[ac] != IEEE80211_INVAL_HW_QUEUE)
- 			qmask |= BIT(vif->hw_queue[ac]);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 35c8ed5..68f0bbe 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -226,9 +226,6 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
- 		if (vif->hw_queue[i] != IEEE80211_INVAL_HW_QUEUE)
- 			mvm_sta->tfd_queue_msk |= BIT(vif->hw_queue[i]);
+ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
+ 					u32 center_freq, u32 bandwidth,
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 9ad43c6..8ed2094 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -382,14 +382,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 enum cfg80211_chan_mode chanmode,
+ 				 u8 radar_detect);
  
--	if (vif->cab_queue != IEEE80211_INVAL_HW_QUEUE)
--		mvm_sta->tfd_queue_msk |= BIT(vif->cab_queue);
--
- 	/* for HW restart - need to reset the seq_number etc... */
- 	memset(mvm_sta->tid_data, 0, sizeof(mvm_sta->tid_data));
+-/**
+- * cfg80211_chandef_dfs_required - checks if radar detection is required
+- * @wiphy: the wiphy to validate against
+- * @chandef: the channel definition to check
+- * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
+- */
+-int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+-				  const struct cfg80211_chan_def *c);
  
+ void cfg80211_set_dfs_state(struct wiphy *wiphy,
+ 			    const struct cfg80211_chan_def *chandef,
 -- 
 1.7.10.4
 
