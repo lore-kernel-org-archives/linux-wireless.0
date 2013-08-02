@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:62574 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757351Ab3HMMZy (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:42319 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab3HBI4D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 08:25:54 -0400
-Cc: Kirshenbaum Erez <erezk@wilocity.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<wil6210@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wil6210: let IP stack re-check HW TCP/UDP csum errors
-Date: Tue, 13 Aug 2013 15:25:32 +0300
-Message-ID: <1376396732-26632-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130813_142556_981908_40AB5FB9)
-In-Reply-To: <1376396732-26632-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1376396732-26632-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Fri, 2 Aug 2013 04:56:03 -0400
+Message-ID: <1375433758.24371.20.camel@deadeye.wl.decadent.org.uk> (sfid-20130802_105614_638017_845D5EF8)
+Subject: Re: changing dev->needed_headroom/needed_tailroom?
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Date: Fri, 2 Aug 2013 10:55:58 +0200
+In-Reply-To: <1374850210.8248.59.camel@jlt4.sipsolutions.net>
+References: <1374850210.8248.59.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix for TCP iperf from Windows to Linux stall after about 1sec
+On Fri, 2013-07-26 at 16:50 +0200, Johannes Berg wrote:
+> Does it seem reasonable to change dev->needed_headroom and
+> dev->needed_tailroom on the fly?
+> 
+> We currently set needed_headroom to the max of what we need, but we
+> could do better like making it depend on the interface type (e.g. only
+> asking for mesh space on mesh interfaces). This would be done only when
+> the interface isn't connected, I can't promise it would be down but the
+> carrier would be off.
+[...]
 
-Hardware reports false errors in some situations:
+I don't think this is safe when the interface is running (even if
+carrier is off).  Some functions may read dev->needed_headroom twice and
+rely on getting the same value each time.
 
-Microsoft IP stack, in violation of RFC 1624, set TCP checksum that should be 0x0
-as 0xffff. hardware report Rx csum error. If HW csum absolutely trusted,
-this frame can be never received, as re-transmitted one will have same csum problem.
-In addition, it mess up block ack reorder buffer, as if packet dropped, it is not score boarded
-there.
+Also, stacked devices would need to adjust their own needed_headroom
+accordingly.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Ben.
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index ea1abeb..d505b26 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -416,13 +416,13 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
- 	 */
- 	if (d->dma.status & RX_DMA_STATUS_L4_IDENT) {
- 		/* L4 protocol identified, csum calculated */
--		if ((d->dma.error & RX_DMA_ERROR_L4_ERR) == 0) {
-+		if ((d->dma.error & RX_DMA_ERROR_L4_ERR) == 0)
- 			skb->ip_summed = CHECKSUM_UNNECESSARY;
--		} else {
--			wil_err(wil, "Incorrect checksum reported\n");
--			kfree_skb(skb);
--			return NULL;
--		}
-+		/* If HW reports bad checksum, let IP stack re-check it
-+		 * For example, HW don't understand Microsoft IP stack that
-+		 * mis-calculates TCP checksum - if it should be 0x0,
-+		 * it writes 0xffff in violation of RFC 1624
-+		 */
- 	}
- 
- 	ds_bits = wil_rxdesc_ds_bits(d);
 -- 
-1.8.1.2
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
