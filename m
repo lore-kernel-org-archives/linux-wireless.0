@@ -1,83 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:37138 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753947Ab3HWI7d (ORCPT
+Received: from mail-ve0-f171.google.com ([209.85.128.171]:40304 "EHLO
+	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752134Ab3HBQZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 04:59:33 -0400
-Received: by mail-lb0-f170.google.com with SMTP id r10so267851lbi.15
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:32 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v2 07/16] wcn36xx: add pmc.c
-Date: Fri, 23 Aug 2013 10:58:10 +0200
-Message-Id: <1377248299-21007-8-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_105949_706653_34C2EE36)
-In-Reply-To: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+	Fri, 2 Aug 2013 12:25:00 -0400
+Received: by mail-ve0-f171.google.com with SMTP id pa12so893791veb.30
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Aug 2013 09:24:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1375460484.18144.11.camel@jlt4.sipsolutions.net>
+References: <CALCETrU+C+sO8tJ0X5G4RDVLV=kHQQHurOnEQCoqbAouh60dng@mail.gmail.com>
+ <1375460484.18144.11.camel@jlt4.sipsolutions.net>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 2 Aug 2013 09:24:38 -0700
+Message-ID: <CALCETrVOhq3Q3ieyscQfuqWHyHxjcCbxiJ4jt9ru_88BtVB+HA@mail.gmail.com> (sfid-20130802_182524_111388_6577EC18)
+Subject: Re: Slow firmware timeouts again (Re: [3.11 regression?] iwlwifi
+ firmware takes two minutes to load)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	systemd-devel@lists.freedesktop.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding pmc.c
+On Fri, Aug 2, 2013 at 9:21 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2013-08-02 at 09:04 -0700, Andy Lutomirski wrote:
+>
+>> > It wasn't exactly fixed and it's really more of a userspace problem - we
+>> > probably request firmware version 8, and then it takes 30 seconds to
+>> > time out for each of 8,7,6,5, after which the next request for 4 is
+>> > successful.
+>>
+>> Why's it requesting those firmwares?  They don't seem to exist on
+>> intellinuxwireless.org.
+>
+> Well for one you've never even mentioned what device you have, and then
+> also it's not requesting 8/7 only 6,5,4 -- I guess the timeout was
+> increased to 60 seconds (or I'm remembering wrong and it always was? I
+> thought it was 30s)
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
----
- drivers/net/wireless/ath/wcn36xx/pmc.c | 46 ++++++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.c
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/pmc.c b/drivers/net/wireless/ath/wcn36xx/pmc.c
-new file mode 100644
-index 0000000..f72096e
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/pmc.c
-@@ -0,0 +1,46 @@
-+/*
-+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
-+#include "wcn36xx.h"
-+
-+int wcn36xx_pmc_init(struct wcn36xx *wcn)
-+{
-+	wcn->pw_state = WCN36XX_FULL_POWER;
-+	return 0;
-+}
-+
-+int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn, u64 tsf)
-+{
-+	/* TODO: Make sure the TX chain clean */
-+	wcn36xx_smd_enter_bmps(wcn, tsf);
-+	wcn->pw_state = WCN36XX_BMPS;
-+	return 0;
-+}
-+
-+int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn)
-+{
-+	wcn36xx_smd_exit_bmps(wcn);
-+	wcn->pw_state = WCN36XX_FULL_POWER;
-+	return 0;
-+}
-+
-+int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn)
-+{
-+	wcn36xx_dbg(WCN36XX_DBG_PMC, "%s\n", __func__);
-+	return wcn36xx_smd_keep_alive_req(wcn, WCN36XX_HAL_KEEP_ALIVE_NULL_PKT);
-+}
--- 
-1.8.2.2
-
+I have an "Ultimate-N 6300 (rev 35)".  It's requesting at least
+versions 6 and 5 (I saw them in udevadm monitor).  It looks like the
+g2a and g2b variants have -5 and -6 versions, but 6000-4 appears to be
+the only relevant version for my hardware.
