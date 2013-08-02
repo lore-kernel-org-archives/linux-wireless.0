@@ -1,56 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:56551 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753685Ab3HVR3H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Aug 2013 13:29:07 -0400
-Received: by mail-pb0-f52.google.com with SMTP id wz12so2068562pbc.39
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 10:29:07 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH v3] mac80211: only respond to probe request with mesh ID
-Date: Thu, 22 Aug 2013 10:28:58 -0700
-Message-Id: <1377192538-5563-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130822_192914_239037_EBB98F47)
+Received: from ebb05.tieto.com ([131.207.168.36]:49704 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757358Ab3HBHQE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Aug 2013 03:16:04 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2] ath10k: fix device teardown
+Date: Fri, 2 Aug 2013 09:15:47 +0200
+Message-ID: <1375427747-9539-1-git-send-email-michal.kazior@tieto.com> (sfid-20130802_091612_748895_112AEA76)
+In-Reply-To: <1374129572-6079-1-git-send-email-michal.kazior@tieto.com>
+References: <1374129572-6079-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+This fixes interrupt-related issue when no
+interfaces were running thus the device was
+considered powered down.
 
-Previously, the mesh STA responds to probe request from legacy STA
-but now it will only respond to legacy STA if the legacy STA does include 
-the specific mesh ID or wildcard mesh ID in the probe request.
+The power_down() function isn't really powering
+down the device. It simply assumed it won't
+interrupt. This wasn't true in some cases and
+could lead to paging failures upon FW indication
+interrupt (i.e. FW crash) because some structures
+aren't allocated in that device state.
 
-The iw patch "iw: scan using meshid" can be used either by legacy STA
-or by mesh STA to do active scanning by inserting the mesh ID in the 
-probe request frame.
+One reason for that was that ar_pci->started
+wasn't reset. The other is interrupts should've
+been masked when teardown starts.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Acked-by: Thomas Pedersen <thomas@cozybit.com>
-Acked-by: Javier Cardona <javier@cozybit.com>
+The patch reorganized interrupt setup and makes
+sure ar_pci->started is reset accordingly.
+
+Reported-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-v2: modify comments (Thomas)
-v3: style problem (Bob)
+v2:
+ * updated commit message
+ * added Reported-By: Ben
+ * added disable_irq() in hif_stop()
+ * added ar_pci->started resetting
+ * removed ar_pci->intr_started
 
- net/mac80211/mesh.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath10k/pci.c |   41 ++++++++++++++++++++++++---------
+ 1 file changed, 30 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 885a5f6..a660fb8 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -832,6 +832,9 @@ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index c71b488..690a8b4 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -56,6 +56,8 @@ static void ath10k_pci_rx_pipe_cleanup(struct hif_ce_pipe_info *pipe_info);
+ static void ath10k_pci_stop_ce(struct ath10k *ar);
+ static void ath10k_pci_device_reset(struct ath10k *ar);
+ static int ath10k_pci_reset_target(struct ath10k *ar);
++static int ath10k_pci_start_intr(struct ath10k *ar);
++static void ath10k_pci_stop_intr(struct ath10k *ar);
  
- 	ieee802_11_parse_elems(pos, len - baselen, false, &elems);
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* host->target HTC control and raw streams */
+@@ -1254,10 +1256,25 @@ static void ath10k_pci_ce_deinit(struct ath10k *ar)
+ 	}
+ }
  
-+	if (!elems.mesh_id)
-+		return;
++static void ath10k_pci_disable_irqs(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	int i;
 +
- 	/* 802.11-2012 10.1.4.3.2 */
- 	if ((!ether_addr_equal(mgmt->da, sdata->vif.addr) &&
- 	     !is_broadcast_ether_addr(mgmt->da)) ||
++	for (i = 0; i < max(1, ar_pci->num_msi_intrs); i++)
++		disable_irq(ar_pci->pdev->irq + i);
++}
++
+ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
+ 	ath10k_dbg(ATH10K_DBG_PCI, "%s\n", __func__);
+ 
++	/* Irqs are never explicitly re-enabled. They are implicitly re-enabled
++	 * by ath10k_pci_start_intr(). */
++	ath10k_pci_disable_irqs(ar);
++
+ 	ath10k_pci_stop_ce(ar);
+ 
+ 	/* At this point, asynchronous threads are stopped, the target should
+@@ -1267,6 +1284,8 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 	ath10k_pci_process_ce(ar);
+ 	ath10k_pci_cleanup_ce(ar);
+ 	ath10k_pci_buffer_cleanup(ar);
++
++	ar_pci->started = 0;
+ }
+ 
+ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
+@@ -1742,6 +1761,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ {
+ 	int ret;
+ 
++	ret = ath10k_pci_start_intr(ar);
++	if (ret) {
++		ath10k_err("could not start interrupt handling (%d)\n", ret);
++		goto err;
++	}
++
+ 	/*
+ 	 * Bring the target up cleanly.
+ 	 *
+@@ -1756,7 +1781,7 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 
+ 	ret = ath10k_pci_reset_target(ar);
+ 	if (ret)
+-		goto err;
++		goto err_irq;
+ 
+ 	if (ath10k_target_ps) {
+ 		ath10k_dbg(ATH10K_DBG_PCI, "on-chip power save enabled\n");
+@@ -1787,12 +1812,15 @@ err_ce:
+ err_ps:
+ 	if (!ath10k_target_ps)
+ 		ath10k_do_pci_sleep(ar);
++err_irq:
++	ath10k_pci_stop_intr(ar);
+ err:
+ 	return ret;
+ }
+ 
+ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ {
++	ath10k_pci_stop_intr(ar);
+ 	ath10k_pci_ce_deinit(ar);
+ 	if (!ath10k_target_ps)
+ 		ath10k_do_pci_sleep(ar);
+@@ -2358,22 +2386,14 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 
+ 	ar_pci->cacheline_sz = dma_get_cache_alignment();
+ 
+-	ret = ath10k_pci_start_intr(ar);
+-	if (ret) {
+-		ath10k_err("could not start interrupt handling (%d)\n", ret);
+-		goto err_iomap;
+-	}
+-
+ 	ret = ath10k_core_register(ar);
+ 	if (ret) {
+ 		ath10k_err("could not register driver core (%d)\n", ret);
+-		goto err_intr;
++		goto err_iomap;
+ 	}
+ 
+ 	return 0;
+ 
+-err_intr:
+-	ath10k_pci_stop_intr(ar);
+ err_iomap:
+ 	pci_iounmap(pdev, mem);
+ err_master:
+@@ -2410,7 +2430,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 	tasklet_kill(&ar_pci->msi_fw_err);
+ 
+ 	ath10k_core_unregister(ar);
+-	ath10k_pci_stop_intr(ar);
+ 
+ 	pci_set_drvdata(pdev, NULL);
+ 	pci_iounmap(pdev, ar_pci->mem);
 -- 
 1.7.9.5
 
