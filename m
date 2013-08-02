@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:58054 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759341Ab3HNDpb (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:44350
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754833Ab3HBX5t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 23:45:31 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 14/14] ath9k: Remove unused function argument
-Date: Wed, 14 Aug 2013 09:11:22 +0530
-Message-Id: <1376451682-25862-14-git-send-email-sujith@msujith.org> (sfid-20130814_054537_690514_F7426AA1)
-In-Reply-To: <1376451682-25862-1-git-send-email-sujith@msujith.org>
-References: <1376451682-25862-1-git-send-email-sujith@msujith.org>
+	Fri, 2 Aug 2013 19:57:49 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH] cw1200:  Fix spurious BUG_ON() trigger when starting AP mode.
+Date: Fri,  2 Aug 2013 19:57:40 -0400
+Message-Id: <1375487860-345-1-git-send-email-pizza@shaftnet.org> (sfid-20130803_083953_617184_E14033FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+There's an underlying race condition with the unjoin_work() call that is
+sometimes triggered depending on scheduling order and the phase of the
+moon.  This doesn't fix the race condition, but it does remove the
+ill-advised BUG_ON() call in an easily-recoverable situation.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 ---
- drivers/net/wireless/ath/ath9k/recv.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+This should go into 3.11-rc!
+ drivers/net/wireless/cw1200/sta.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ec89280..3b47198 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -885,7 +885,6 @@ static int ath9k_process_rate(struct ath_common *common,
+diff --git a/drivers/net/wireless/cw1200/sta.c b/drivers/net/wireless/cw1200/sta.c
+index 7365674..010b252 100644
+--- a/drivers/net/wireless/cw1200/sta.c
++++ b/drivers/net/wireless/cw1200/sta.c
+@@ -1406,11 +1406,8 @@ static void cw1200_do_unjoin(struct cw1200_common *priv)
+ 	if (!priv->join_status)
+ 		goto done;
  
- static void ath9k_process_rssi(struct ath_common *common,
- 			       struct ieee80211_hw *hw,
--			       struct ieee80211_hdr *hdr,
- 			       struct ath_rx_status *rx_stats)
- {
- 	struct ath_softc *sc = hw->priv;
-@@ -1150,7 +1149,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		goto exit;
- 	}
+-	if (priv->join_status > CW1200_JOIN_STATUS_IBSS) {
+-		wiphy_err(priv->hw->wiphy, "Unexpected: join status: %d\n",
+-			  priv->join_status);
+-		BUG_ON(1);
+-	}
++	if (priv->join_status == CW1200_JOIN_STATUS_AP)
++		goto done;
  
--	ath9k_process_rssi(common, hw, hdr, rx_stats);
-+	ath9k_process_rssi(common, hw, rx_stats);
- 
- 	rx_status->band = hw->conf.chandef.chan->band;
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
+ 	cancel_work_sync(&priv->update_filtering_work);
+ 	cancel_work_sync(&priv->set_beacon_wakeup_period_work);
 -- 
-1.8.3.4
+1.8.3.1
 
