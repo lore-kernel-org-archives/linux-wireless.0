@@ -1,203 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:38908 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757720Ab3HMTRR (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:43893 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754155Ab3HBPiS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 15:17:17 -0400
-Received: by mail-ea0-f180.google.com with SMTP id h10so4340182eaj.39
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2013 12:17:15 -0700 (PDT)
-Message-ID: <1376421431.6292.18.camel@canaries32-MCP7A> (sfid-20130813_211721_673606_910006F4)
-Subject: [PATCH] staging: vt6656: rxtx.c s_uGetRTSCTSDuration return endian
- u16
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Aug 2013 20:17:11 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 2 Aug 2013 11:38:18 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 4/7] mac80211: move ibss presp generation in own function
+Date: Fri,  2 Aug 2013 17:38:03 +0200
+Message-Id: <1375457886-7275-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130802_173840_513538_F14DB07F)
+In-Reply-To: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return value of uGetRTSCTSDuration always needs to be
-corrected to a u16 little endian corrected value.
+Channel Switch will later require to generate beacons without setting
+them immediately. Therefore split the presp generation in an own
+function. Splitting the original very long function might be a good idea
+anyway.
 
-Some places the endian correction is done on the next line
-
-Change uGetRTSCTSDuration return u16 little endian corrected value.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/staging/vt6656/rxtx.c | 93 +++++++++++++++++++++++++++++--------------
- 1 file changed, 63 insertions(+), 30 deletions(-)
+ net/mac80211/ibss.c |  185 ++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 109 insertions(+), 76 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index a701120..9cd4158 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -136,7 +136,7 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
- static u32 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
- 	u8 byPktType, int bNeedAck);
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index e08387c..29f1a7b 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -34,13 +34,12 @@
  
--static unsigned int s_uGetRTSCTSDuration(struct vnt_private *pDevice,
-+static u16 s_uGetRTSCTSDuration(struct vnt_private *pDevice,
- 	u8 byDurType, u32 cbFrameLength, u8 byPktType, u16 wRate,
- 	int bNeedAck, u8 byFBOption);
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
  
-@@ -403,7 +403,7 @@ static u32 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
- }
- 
- //byFreqType: 0=>5GHZ 1=>2.4GHZ
--static u32 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
-+static u16 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
- 	u32 cbFrameLength, u8 byPktType, u16 wRate, int bNeedAck,
- 	u8 byFBOption)
- {
-@@ -486,8 +486,7 @@ static u32 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
-         break;
-     }
- 
--    return uDurTime;
 -
-+	return cpu_to_le16((u16)uDurTime);
- }
+-static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+-				      const u8 *bssid, const int beacon_int,
+-				      struct ieee80211_channel *chan,
+-				      const u32 basic_rates,
+-				      const u16 capability, u64 tsf,
+-				      bool creator)
++static struct beacon_data *
++ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
++			   const int beacon_int, const u32 basic_rates,
++			   const u16 capability, u64 tsf,
++			   struct cfg80211_chan_def *chandef,
++			   bool *have_higher_than_11mbit)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -48,70 +47,11 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_mgmt *mgmt;
+ 	u8 *pos;
+ 	struct ieee80211_supported_band *sband;
+-	struct cfg80211_bss *bss;
+-	u32 bss_change, rate_flags, rates = 0, rates_added = 0;
+-	struct cfg80211_chan_def chandef;
+-	enum nl80211_bss_scan_width scan_width;
+-	bool have_higher_than_11mbit = false;
++	u32 rate_flags, rates = 0, rates_added = 0;
+ 	struct beacon_data *presp;
+ 	int frame_len;
+ 	int shift;
  
- static u32 s_uFillDataHead(struct vnt_private *pDevice,
-@@ -641,9 +640,15 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-             );
-             pBuf->wTransmitLength_a = cpu_to_le16(wLen);
-             //Get Duration
--            pBuf->wDuration_bb = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_BB, cbFrameLength, PK_TYPE_11B, pDevice->byTopCCKBasicRate, bNeedAck, byFBOption));    //0:RTSDuration_bb, 1:2.4G, 1:CCKData
--            pBuf->wDuration_aa = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //2:RTSDuration_aa, 1:2.4G, 2,3: 2.4G OFDMData
--            pBuf->wDuration_ba = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_BA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //1:RTSDuration_ba, 1:2.4G, 2,3:2.4G OFDM Data
-+		pBuf->wDuration_bb = s_uGetRTSCTSDuration(pDevice, RTSDUR_BB,
-+			cbFrameLength, PK_TYPE_11B,
-+			pDevice->byTopCCKBasicRate, bNeedAck, byFBOption);
-+		pBuf->wDuration_aa = s_uGetRTSCTSDuration(pDevice, RTSDUR_AA,
-+			cbFrameLength, byPktType,
-+			wCurrentRate, bNeedAck, byFBOption);
-+		pBuf->wDuration_ba = s_uGetRTSCTSDuration(pDevice, RTSDUR_BA,
-+			cbFrameLength, byPktType,
-+			wCurrentRate, bNeedAck, byFBOption);
- 		pBuf->data.duration = pBuf->wDuration_aa;
- 		/*Get RTS Frame body */
- 		pBuf->data.frame_control = TYPE_CTL_RTS;
-@@ -671,13 +676,27 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-             );
-             pBuf->wTransmitLength_a = cpu_to_le16(wLen);
-             //Get Duration
--            pBuf->wDuration_bb = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_BB, cbFrameLength, PK_TYPE_11B, pDevice->byTopCCKBasicRate, bNeedAck, byFBOption));    //0:RTSDuration_bb, 1:2.4G, 1:CCKData
--            pBuf->wDuration_aa = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //2:RTSDuration_aa, 1:2.4G, 2,3:2.4G OFDMData
--            pBuf->wDuration_ba = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_BA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //1:RTSDuration_ba, 1:2.4G, 2,3:2.4G OFDMData
--            pBuf->wRTSDuration_ba_f0 = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_BA_F0, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption));    //4:wRTSDuration_ba_f0, 1:2.4G, 1:CCKData
--            pBuf->wRTSDuration_aa_f0 = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA_F0, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption));    //5:wRTSDuration_aa_f0, 1:2.4G, 1:CCKData
--            pBuf->wRTSDuration_ba_f1 = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_BA_F1, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption));    //6:wRTSDuration_ba_f1, 1:2.4G, 1:CCKData
--            pBuf->wRTSDuration_aa_f1 = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA_F1, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption));    //7:wRTSDuration_aa_f1, 1:2.4G, 1:CCKData
-+		pBuf->wDuration_bb = s_uGetRTSCTSDuration(pDevice, RTSDUR_BB,
-+			cbFrameLength, PK_TYPE_11B,
-+			pDevice->byTopCCKBasicRate, bNeedAck, byFBOption);
-+		pBuf->wDuration_aa = s_uGetRTSCTSDuration(pDevice, RTSDUR_AA,
-+			cbFrameLength, byPktType,
-+			wCurrentRate, bNeedAck, byFBOption);
-+		pBuf->wDuration_ba = s_uGetRTSCTSDuration(pDevice, RTSDUR_BA,
-+			cbFrameLength, byPktType,
-+			wCurrentRate, bNeedAck, byFBOption);
-+		pBuf->wRTSDuration_ba_f0 = s_uGetRTSCTSDuration(pDevice,
-+			RTSDUR_BA_F0, cbFrameLength, byPktType, wCurrentRate,
-+			bNeedAck, byFBOption);
-+		pBuf->wRTSDuration_aa_f0 = s_uGetRTSCTSDuration(pDevice,
-+			RTSDUR_AA_F0, cbFrameLength, byPktType,
-+			wCurrentRate, bNeedAck, byFBOption);
-+		pBuf->wRTSDuration_ba_f1 = s_uGetRTSCTSDuration(pDevice,
-+			RTSDUR_BA_F1, cbFrameLength, byPktType, wCurrentRate,
-+			bNeedAck, byFBOption);
-+		pBuf->wRTSDuration_aa_f1 = s_uGetRTSCTSDuration(pDevice,
-+			RTSDUR_AA_F1, cbFrameLength, byPktType, wCurrentRate,
-+			bNeedAck, byFBOption);
- 		pBuf->data.duration = pBuf->wDuration_aa;
- 		/*Get RTS Frame body*/
- 		pBuf->data.frame_control = TYPE_CTL_RTS;
-@@ -703,7 +722,9 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-             );
-             pBuf->wTransmitLength = cpu_to_le16(wLen);
-             //Get Duration
--            pBuf->wDuration = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //0:RTSDuration_aa, 0:5G, 0: 5G OFDMData
-+		pBuf->wDuration = s_uGetRTSCTSDuration(pDevice, RTSDUR_AA,
-+			cbFrameLength, byPktType, wCurrentRate,
-+				bNeedAck, byFBOption);
- 		pBuf->data.duration = pBuf->wDuration;
- 		/* Get RTS Frame body */
- 		pBuf->data.frame_control = TYPE_CTL_RTS;
-@@ -727,9 +748,15 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-             );
-             pBuf->wTransmitLength = cpu_to_le16(wLen);
-             //Get Duration
--            pBuf->wDuration = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //0:RTSDuration_aa, 0:5G, 0: 5G OFDMData
--    	    pBuf->wRTSDuration_f0 = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA_F0, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //5:RTSDuration_aa_f0, 0:5G, 0: 5G OFDMData
--    	    pBuf->wRTSDuration_f1 = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA_F1, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //7:RTSDuration_aa_f1, 0:5G, 0:
-+		pBuf->wDuration = s_uGetRTSCTSDuration(pDevice, RTSDUR_AA,
-+			cbFrameLength, byPktType, wCurrentRate,
-+			bNeedAck, byFBOption);
-+		pBuf->wRTSDuration_f0 = s_uGetRTSCTSDuration(pDevice,
-+			RTSDUR_AA_F0, cbFrameLength, byPktType,
-+			wCurrentRate, bNeedAck, byFBOption);
-+		pBuf->wRTSDuration_f1 = s_uGetRTSCTSDuration(pDevice,
-+			RTSDUR_AA_F1, cbFrameLength, byPktType,
-+			wCurrentRate, bNeedAck, byFBOption);
- 		pBuf->data.duration = pBuf->wDuration;
- 		/* Get RTS Frame body */
- 		pBuf->data.frame_control = TYPE_CTL_RTS;
-@@ -754,7 +781,9 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-         );
-         pBuf->wTransmitLength = cpu_to_le16(wLen);
-         //Get Duration
--        pBuf->wDuration = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_BB, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //0:RTSDuration_bb, 1:2.4G, 1:CCKData
-+	pBuf->wDuration = s_uGetRTSCTSDuration(pDevice, RTSDUR_BB,
-+		cbFrameLength, byPktType, wCurrentRate,
-+		bNeedAck, byFBOption);
+-	sdata_assert_lock(sdata);
+-
+-	/* Reset own TSF to allow time synchronization work. */
+-	drv_reset_tsf(local, sdata);
+-
+-	if (!ether_addr_equal(ifibss->bssid, bssid))
+-		sta_info_flush(sdata);
+-
+-	/* if merging, indicate to driver that we leave the old IBSS */
+-	if (sdata->vif.bss_conf.ibss_joined) {
+-		sdata->vif.bss_conf.ibss_joined = false;
+-		sdata->vif.bss_conf.ibss_creator = false;
+-		sdata->vif.bss_conf.enable_beacon = false;
+-		netif_carrier_off(sdata->dev);
+-		ieee80211_bss_info_change_notify(sdata,
+-						 BSS_CHANGED_IBSS |
+-						 BSS_CHANGED_BEACON_ENABLED);
+-	}
+-
+-	presp = rcu_dereference_protected(ifibss->presp,
+-					  lockdep_is_held(&sdata->wdev.mtx));
+-	rcu_assign_pointer(ifibss->presp, NULL);
+-	if (presp)
+-		kfree_rcu(presp, rcu_head);
+-
+-	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
+-
+-	chandef = ifibss->chandef;
+-	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef)) {
+-		if (chandef.width == NL80211_CHAN_WIDTH_5 ||
+-		    chandef.width == NL80211_CHAN_WIDTH_10 ||
+-		    chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+-		    chandef.width == NL80211_CHAN_WIDTH_20) {
+-			sdata_info(sdata,
+-				   "Failed to join IBSS, beacons forbidden\n");
+-			return;
+-		}
+-		chandef.width = NL80211_CHAN_WIDTH_20;
+-		chandef.center_freq1 = chan->center_freq;
+-	}
+-
+-	ieee80211_vif_release_channel(sdata);
+-	if (ieee80211_vif_use_channel(sdata, &chandef,
+-				      ifibss->fixed_channel ?
+-					IEEE80211_CHANCTX_SHARED :
+-					IEEE80211_CHANCTX_EXCLUSIVE)) {
+-		sdata_info(sdata, "Failed to join IBSS, no channel context\n");
+-		return;
+-	}
+-
+-	memcpy(ifibss->bssid, bssid, ETH_ALEN);
+-
+-	sband = local->hw.wiphy->bands[chan->band];
+-	shift = ieee80211_vif_get_shift(&sdata->vif);
+-
+ 	/* Build IBSS probe response */
+ 	frame_len = sizeof(struct ieee80211_hdr_3addr) +
+ 		    12 /* struct ieee80211_mgmt.u.beacon */ +
+@@ -125,7 +65,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		    ifibss->ie_len;
+ 	presp = kzalloc(sizeof(*presp) + frame_len, GFP_KERNEL);
+ 	if (!presp)
+-		return;
++		return NULL;
  
- 	pBuf->data.duration = pBuf->wDuration;
- 	/* Get RTS Frame body */
-@@ -799,14 +828,17 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
-                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField_b), (u8 *)&(pBuf->bySignalField_b)
-             );
-             pBuf->wTransmitLength_b = cpu_to_le16(wLen);
--            pBuf->wDuration_ba = (u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption); //3:CTSDuration_ba, 1:2.4G, 2,3:2.4G OFDM Data
--            pBuf->wDuration_ba = cpu_to_le16(pBuf->wDuration_ba);
--            //Get CTSDuration_ba_f0
--            pBuf->wCTSDuration_ba_f0 = (u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA_F0, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption); //8:CTSDuration_ba_f0, 1:2.4G, 2,3:2.4G OFDM Data
--            pBuf->wCTSDuration_ba_f0 = cpu_to_le16(pBuf->wCTSDuration_ba_f0);
--            //Get CTSDuration_ba_f1
--            pBuf->wCTSDuration_ba_f1 = (u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA_F1, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption); //9:CTSDuration_ba_f1, 1:2.4G, 2,3:2.4G OFDM Data
--            pBuf->wCTSDuration_ba_f1 = cpu_to_le16(pBuf->wCTSDuration_ba_f1);
-+		pBuf->wDuration_ba = s_uGetRTSCTSDuration(pDevice, CTSDUR_BA,
-+			cbFrameLength, byPktType,
-+			wCurrentRate, bNeedAck, byFBOption);
-+		/* Get CTSDuration_ba_f0 */
-+		pBuf->wCTSDuration_ba_f0 = s_uGetRTSCTSDuration(pDevice,
-+			CTSDUR_BA_F0, cbFrameLength, byPktType, wCurrentRate,
-+			bNeedAck, byFBOption);
-+		/* Get CTSDuration_ba_f1 */
-+		pBuf->wCTSDuration_ba_f1 = s_uGetRTSCTSDuration(pDevice,
-+			CTSDUR_BA_F1, cbFrameLength, byPktType, wCurrentRate,
-+			bNeedAck, byFBOption);
- 		/* Get CTS Frame body */
- 		pBuf->data.duration = pBuf->wDuration_ba;
- 		pBuf->data.frame_control = TYPE_CTL_CTS;
-@@ -818,9 +850,10 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
-                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField_b), (u8 *)&(pBuf->bySignalField_b)
-             );
-             pBuf->wTransmitLength_b = cpu_to_le16(wLen);
--            //Get CTSDuration_ba
--            pBuf->wDuration_ba = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //3:CTSDuration_ba, 1:2.4G, 2,3:2.4G OFDM Data
--            pBuf->wDuration_ba = cpu_to_le16(pBuf->wDuration_ba);
-+		/* Get CTSDuration_ba */
-+		pBuf->wDuration_ba = s_uGetRTSCTSDuration(pDevice,
-+			CTSDUR_BA, cbFrameLength, byPktType,
-+			wCurrentRate, bNeedAck, byFBOption);
- 		/*Get CTS Frame body*/
- 		pBuf->data.duration = pBuf->wDuration_ba;
- 		pBuf->data.frame_control = TYPE_CTL_CTS;
+ 	presp->head = (void *)(presp + 1);
+ 
+@@ -146,12 +86,19 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(pos, ifibss->ssid, ifibss->ssid_len);
+ 	pos += ifibss->ssid_len;
+ 
+-	rate_flags = ieee80211_chandef_rate_flags(&chandef);
++	sband = local->hw.wiphy->bands[chandef->chan->band];
++	rate_flags = ieee80211_chandef_rate_flags(chandef);
++	shift = ieee80211_chandef_get_shift(chandef);
++	rates_n = 0;
++	if (have_higher_than_11mbit)
++		*have_higher_than_11mbit = false;
++
+ 	for (i = 0; i < sband->n_bitrates; i++) {
+ 		if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
+ 			continue;
+-		if (sband->bitrates[i].bitrate > 110)
+-			have_higher_than_11mbit = true;
++		if (sband->bitrates[i].bitrate > 110 &&
++		    have_higher_than_11mbit)
++			*have_higher_than_11mbit = true;
+ 
+ 		rates |= BIT(i);
+ 		rates_n++;
+@@ -178,7 +125,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	if (sband->band == IEEE80211_BAND_2GHZ) {
+ 		*pos++ = WLAN_EID_DS_PARAMS;
+ 		*pos++ = 1;
+-		*pos++ = ieee80211_frequency_to_channel(chan->center_freq);
++		*pos++ = ieee80211_frequency_to_channel(
++				chandef->chan->center_freq);
+ 	}
+ 
+ 	*pos++ = WLAN_EID_IBSS_PARAMS;
+@@ -210,9 +158,9 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	/* add HT capability and information IEs */
+-	if (chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
+-	    chandef.width != NL80211_CHAN_WIDTH_5 &&
+-	    chandef.width != NL80211_CHAN_WIDTH_10 &&
++	if (chandef->width != NL80211_CHAN_WIDTH_20_NOHT &&
++	    chandef->width != NL80211_CHAN_WIDTH_5 &&
++	    chandef->width != NL80211_CHAN_WIDTH_10 &&
+ 	    sband->ht_cap.ht_supported) {
+ 		struct ieee80211_sta_ht_cap ht_cap;
+ 
+@@ -226,7 +174,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		 * keep them at 0
+ 		 */
+ 		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
+-						 &chandef, 0);
++						 chandef, 0);
+ 	}
+ 
+ 	if (local->hw.queues >= IEEE80211_NUM_ACS) {
+@@ -243,9 +191,94 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	presp->head_len = pos - presp->head;
+ 	if (WARN_ON(presp->head_len > frame_len))
++		goto error;
++
++	return presp;
++error:
++	kfree(presp);
++	return NULL;
++}
++
++static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
++				      const u8 *bssid, const int beacon_int,
++				      struct ieee80211_channel *chan,
++				      const u32 basic_rates,
++				      const u16 capability, u64 tsf,
++				      bool creator)
++{
++	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_mgmt *mgmt;
++	struct cfg80211_bss *bss;
++	u32 bss_change;
++	struct cfg80211_chan_def chandef;
++	struct beacon_data *presp;
++	enum nl80211_bss_scan_width scan_width;
++	bool have_higher_than_11mbit;
++
++	sdata_assert_lock(sdata);
++
++	/* Reset own TSF to allow time synchronization work. */
++	drv_reset_tsf(local, sdata);
++
++	if (!ether_addr_equal(ifibss->bssid, bssid))
++		sta_info_flush(sdata);
++
++	/* if merging, indicate to driver that we leave the old IBSS */
++	if (sdata->vif.bss_conf.ibss_joined) {
++		sdata->vif.bss_conf.ibss_joined = false;
++		sdata->vif.bss_conf.ibss_creator = false;
++		sdata->vif.bss_conf.enable_beacon = false;
++		netif_carrier_off(sdata->dev);
++		ieee80211_bss_info_change_notify(sdata,
++						 BSS_CHANGED_IBSS |
++						 BSS_CHANGED_BEACON_ENABLED);
++	}
++
++	presp = rcu_dereference_protected(ifibss->presp,
++					  lockdep_is_held(&sdata->wdev.mtx));
++	rcu_assign_pointer(ifibss->presp, NULL);
++	if (presp)
++		kfree_rcu(presp, rcu_head);
++
++	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
++
++	chandef = ifibss->chandef;
++	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef)) {
++		if (chandef.width == NL80211_CHAN_WIDTH_5 ||
++		    chandef.width == NL80211_CHAN_WIDTH_10 ||
++		    chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
++		    chandef.width == NL80211_CHAN_WIDTH_20) {
++			sdata_info(sdata,
++				   "Failed to join IBSS, beacons forbidden\n");
++			return;
++		}
++		chandef.width = NL80211_CHAN_WIDTH_20;
++		chandef.center_freq1 = chan->center_freq;
++	}
++
++	ieee80211_vif_release_channel(sdata);
++	if (ieee80211_vif_use_channel(sdata, &chandef,
++				      ifibss->fixed_channel ?
++					IEEE80211_CHANCTX_SHARED :
++					IEEE80211_CHANCTX_EXCLUSIVE)) {
++		sdata_info(sdata, "Failed to join IBSS, no channel context\n");
++		return;
++	}
++
++	memcpy(ifibss->bssid, bssid, ETH_ALEN);
++
++	sband = local->hw.wiphy->bands[chan->band];
++
++	presp = ieee80211_ibss_build_presp(sdata, beacon_int, basic_rates,
++					   capability, tsf, &chandef,
++					   &have_higher_than_11mbit);
++	if (!presp)
+ 		return;
+ 
+ 	rcu_assign_pointer(ifibss->presp, presp);
++	mgmt = (void *)presp->head;
+ 
+ 	sdata->vif.bss_conf.enable_beacon = true;
+ 	sdata->vif.bss_conf.beacon_int = beacon_int;
 -- 
-1.8.1.2
-
+1.7.10.4
 
