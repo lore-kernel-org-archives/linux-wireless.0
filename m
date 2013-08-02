@@ -1,80 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59486 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755995Ab3HLQYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 12:24:33 -0400
-Message-ID: <52090C37.2000103@hauke-m.de> (sfid-20130812_182436_262877_6EC1B18B)
-Date: Mon, 12 Aug 2013 18:24:23 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:63187 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756849Ab3HBHmH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Aug 2013 03:42:07 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: fix device teardown
+References: <1374129572-6079-1-git-send-email-michal.kazior@tieto.com>
+	<1375427747-9539-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 2 Aug 2013 10:41:56 +0300
+In-Reply-To: <1375427747-9539-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 2 Aug 2013 09:15:47 +0200")
+Message-ID: <87bo5gpmij.fsf@kamboji.qca.qualcomm.com> (sfid-20130802_094211_379336_8A4BF3CF)
 MIME-Version: 1.0
-To: Arik Nemtsov <arik@wizery.com>
-CC: linux-wireless@vger.kernel.org, mcgrof@kernel.org,
-	"backports@vger.kernel.org" <backports@vger.kernel.org>
-Subject: Re: [PATCH] backports: rename some mem functions to not break custom
- kernels
-References: <1375865563-1196-1-git-send-email-arik@wizery.com> <5202D173.4050408@hauke-m.de> <CA+XVXfdAUZGj7FjfRUxT2noa1b35xk1vn0bdcO70Vic6h9yXcg@mail.gmail.com>
-In-Reply-To: <CA+XVXfdAUZGj7FjfRUxT2noa1b35xk1vn0bdcO70Vic6h9yXcg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/08/2013 08:45 AM, Arik Nemtsov wrote:
-> On Thu, Aug 8, 2013 at 2:00 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> Please add backports mailing list ( backports@vger.kernel.org ) next time.
-> 
-> Ok. Thanks.
-> 
-> 
->>> diff --git a/backport/backport-include/asm/mtrr.h b/backport/backport-include/asm/mtrr.h
->>> index cf0f6fd..c5760b4 100644
->>> --- a/backport/backport-include/asm/mtrr.h
->>> +++ b/backport/backport-include/asm/mtrr.h
->>> @@ -7,14 +7,17 @@
->>>   * The following functions are for use by other drivers that cannot use
->>>   * arch_phys_wc_add and arch_phys_wc_del.
->>>   */
->>> +#ifndef phys_wc_to_mtrr_index
->>>  #ifdef CONFIG_MTRR
->>> -extern int phys_wc_to_mtrr_index(int handle);
->>> +extern int backport_phys_wc_to_mtrr_index(int handle);
->>>  #else
->>> -static inline int phys_wc_to_mtrr_index(int handle)
->>> +static inline int backport_phys_wc_to_mtrr_index(int handle)
->>>  {
->>>       return -1;
->>>  }
->>>  #endif /* CONFIG_MTRR */
->>> +#define phys_wc_to_mtrr_index LINUX_BACKPORT(phys_wc_to_mtrr_index)
->>
->> You should put this line before the #ifndef phy_.... and then you do not
->> have to use backport_phys_wc_to_mtrr_index with the prefix anywhere in
->> backports. This also applies for the other places where you manually add
->> backport_.
-> 
-> The case I'm trying to un-break here is one where the symbol is
-> defined by the kernel, even though it's not supposed to. This can
-> happen if someone cherry-picks patches containing this symbol into
-> their kernel.
-> The backported driver is better off using the kernel symbol in that
-> case I guess?
-> 
-> Arik
-Hi Arik,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-adding the LINUX_BACKPORT() line should be enough to rename it
-everywhere in backprots, so you do not have to modify
-backport/compat/backport-3.11.c or manually add the prefix anywhere else.
+> This fixes interrupt-related issue when no
+> interfaces were running thus the device was
+> considered powered down.
+>
+> The power_down() function isn't really powering
+> down the device. It simply assumed it won't
+> interrupt. This wasn't true in some cases and
+> could lead to paging failures upon FW indication
+> interrupt (i.e. FW crash) because some structures
+> aren't allocated in that device state.
+>
+> One reason for that was that ar_pci->started
+> wasn't reset. The other is interrupts should've
+> been masked when teardown starts.
+>
+> The patch reorganized interrupt setup and makes
+> sure ar_pci->started is reset accordingly.
+>
+> Reported-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+> v2:
+>  * updated commit message
+>  * added Reported-By: Ben
+>  * added disable_irq() in hif_stop()
+>  * added ar_pci->started resetting
+>  * removed ar_pci->intr_started
 
-Could you try if this fixes your problems with phys_wc_to_mtrr_index:
+Thanks, this looks much better now.
 
- ...
-+#define phys_wc_to_mtrr_index LINUX_BACKPORT(phys_wc_to_mtrr_index)
- #ifdef CONFIG_MTRR
- extern int phys_wc_to_mtrr_index(int handle);
- #else
- static inline int phys_wc_to_mtrr_index(int handle)
- {
- 	return -1;
- }
- #endif /* CONFIG_MTRR */
+But I still have one question:
 
+> @@ -1742,6 +1761,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+>  {
+>  	int ret;
+>  
+> +	ret = ath10k_pci_start_intr(ar);
+> +	if (ret) {
+> +		ath10k_err("could not start interrupt handling (%d)\n", ret);
+> +		goto err;
+> +	}
+
+So now we call start_intr() during power_up(), which means that we do
+the request_irq() calls during every interface up event. Does that cause
+any meaningful overhead?
+
+For me it looks better to do all resource allocation in
+ath10k_pci_probe(), like request_irq(), and free the resources in
+ath10k_pci_remove(). But then we would need to immeadiately call
+disable_irq() and then enable_irq() from power_up() so I'm not sure if
+that's any better.
+
+-- 
+Kalle Valo
