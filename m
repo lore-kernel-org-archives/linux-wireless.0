@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55694 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255Ab3HTQZI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59162 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755317Ab3HBTpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 12:25:08 -0400
-Message-ID: <1377015897.13829.16.camel@jlt4.sipsolutions.net> (sfid-20130820_182517_364693_7BE6C4BC)
-Subject: Re: changing dev->needed_headroom/needed_tailroom?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
-Date: Tue, 20 Aug 2013 18:24:57 +0200
-In-Reply-To: <20130820092013.6ca909e2@nehalam.linuxnetplumber.net> (sfid-20130820_182019_441833_A12DE7FE)
-References: <1374850210.8248.59.camel@jlt4.sipsolutions.net>
-	 <1375433758.24371.20.camel@deadeye.wl.decadent.org.uk>
-	 <1375449082.3927.5.camel@edumazet-glaptop>
-	 <1375711240.8120.11.camel@jlt4.sipsolutions.net>
-	 <CAGVrzcaGV6AqLTAxpM6zMv7_C-LNxp-WNg+J47d7a9S+Ca1bDw@mail.gmail.com>
-	 <20130820092013.6ca909e2@nehalam.linuxnetplumber.net>
-	 (sfid-20130820_182019_441833_A12DE7FE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 2 Aug 2013 15:45:13 -0400
+Date: Fri, 2 Aug 2013 15:38:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-next 2013-07-26
+Message-ID: <20130802193821.GD10800@tuxdriver.com> (sfid-20130802_214522_173000_6F7A5271)
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-08-20 at 09:20 -0700, Stephen Hemminger wrote:
-
-> All code must check for needed headroom first, and copy packet
-> if space is not available. Since excess headroom is always safe,
-> most devices just always use the same worst case headroom.
+On Fri, Jul 26, 2013 at 10:28:17AM +0200, Johannes Berg wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA256
 > 
-> Even with your changes this will still be necessary since packets will
-> be still in flight while features change.
+> John,
+> 
+> First -next pull request for iwlwifi. I'm trying something new, writing
+> the pull request directly into the cover letter of git send-email so I
+> can send the patches out at the same time as the pull request and don't
+> forget the patches - let me know if there's a problem with that.
+> 
+> There are a lot of various changes, I can't really list them all in a
+> meaningful way. One thing to note is maybe that we're removing the P2P
+> support from the older driver - it has never been really functional and
+> should be converted to P2P-Device, but we don't have time or testing
+> support to do that, and as it is it's not really functional.
+> 
+> 
+> johannes
+> 
+> 
+> The following changes since commit ad81f0545ef01ea651886dddac4bef6cec930092:
+> 
+>   Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+> 
+> for you to fetch changes up to 5e216eb4ed04b9b1725ce3e7779a4fb680e63446:
+> 
+>   iwlwifi: mvm: add high temperature SKU thermal throttling parameters (2013-07-26 10:21:14 +0200)
 
-I agree, it will always be necessary. I guess the question boils down to
-whether/what N bytes headroom more or less actually make a difference.
+Pulling now...
 
-The wireless stack currently sets needed_headroom to 34 or so I think,
-but I will need to increase by 8 which was why I had this question to
-start with. However, those 34 are an absolute worst case - in most cases
-it's much less...
-
-So I suppose the other question we should ask is will increasing from
-~34 to ~42 make a significant different that it's worth thinking about
-avoiding it in the common cases at all?
-
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
