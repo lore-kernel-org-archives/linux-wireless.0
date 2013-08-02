@@ -1,65 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2511 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758443Ab3HMNm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 09:42:28 -0400
-Message-ID: <520A3784.2060108@broadcom.com> (sfid-20130813_154247_471787_DBAE007A)
-Date: Tue, 13 Aug 2013 15:41:24 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:30764 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754448Ab3HBGfv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Aug 2013 02:35:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath10k: implement get_survey()
+References: <1375081712-9697-1-git-send-email-michal.kazior@tieto.com>
+	<1375259560-8784-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 2 Aug 2013 09:35:41 +0300
+In-Reply-To: <1375259560-8784-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 31 Jul 2013 10:32:40 +0200")
+Message-ID: <87ob9gppky.fsf@kamboji.qca.qualcomm.com> (sfid-20130802_083605_935007_9E6A7E9D)
 MIME-Version: 1.0
-To: "Daniel Wagner" <wagi@monom.org>
-cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: brcsmac kernel panic
-References: <5207BA00.3030709@monom.org> <5208BB2D.2000705@broadcom.com>
- <52094156.7010905@monom.org>
-In-Reply-To: <52094156.7010905@monom.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2013 10:11 PM, Daniel Wagner wrote:
-> Hi Arend,
->
-> On 08/12/2013 12:38 PM, Arend van Spriel wrote:
->> On 08/11/2013 06:21 PM, Daniel Wagner wrote:
->>> I just updated my laptop (MacBook Air 2012) from 3.11-rc3+ to 3.11-rc4+
->>> and since then brcsmac crashes short after enabling it. Unfortunately, I
->>> did also change some config flags in the area of cpufreq (enabling
->>> p-state driver) so the configuration is not exactly the same. Before I
->>> try to figure out what I have changed, I am posting the picture of the
->>> crash. Maybe it is something obvious.
->>>
->>> v3.11-rc4-197-gd92581f
->>> http://www.monom.org/misc/brcmsmac/v3.11-rc4.config
->>> http://www.monom.org/misc/brcmsmac/IMAG0064.jpg
->>
->> Thanks, Daniel
->>
->> I was looking at this issue two weeks ago and just got back from my
->> vacation. Can you apply the patch and send me a kernel log?
->
-> Sure, the patch does the trick, the panic is gone.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Unfortunately, it results in a lot of error print and phy tx errors that 
-has been reported by others. I think the two are related, but I have not 
-root caused it yet. Your laptop may be usable now, but wireless 
-performance is probably bad.
-
-Too bad I can not reproduce the issue over here. Are you willing to test 
-some patches when I got a better grasp on the issue?
-
-Regards,
-Arend
-
->> Sharing pictures, huh. What about this one :-p
+> This implements a limited subset of what can be
+> reported in the survey dump.
 >
-> No no, that isn't me, that is someone else! :P
+> This can be used for assessing approximate channel
+> load, e.g. for automatic channel selection.
 >
-> cheers,
-> daniel
->
->
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
+Thanks, applied.
 
+-- 
+Kalle Valo
