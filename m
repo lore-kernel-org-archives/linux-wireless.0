@@ -1,65 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2492 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751374Ab3HUJ2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 05:28:25 -0400
-Message-ID: <52148830.3020004@broadcom.com> (sfid-20130821_112830_128829_D41C6FA3)
-Date: Wed, 21 Aug 2013 11:28:16 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Joe Perches" <joe@perches.com>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 12/12] brcmsmac: add support for BCM4313 iPA variant
-References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
- <1377007246-9957-13-git-send-email-arend@broadcom.com>
- <1377023415.2016.63.camel@joe-AO722>
-In-Reply-To: <1377023415.2016.63.camel@joe-AO722>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:62733 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344Ab3HCKf4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Aug 2013 06:35:56 -0400
+Received: by mail-pd0-f177.google.com with SMTP id u10so1512947pdi.8
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Aug 2013 03:35:53 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH] mac80211: allow lowest basic rate for unicast management for mesh
+Date: Sat,  3 Aug 2013 03:35:43 -0700
+Message-Id: <1375526143-23534-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130803_123611_626134_83557C9E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/20/2013 08:30 PM, Joe Perches wrote:
-> On Tue, 2013-08-20 at 16:00 +0200, Arend van Spriel wrote:
->> This patch completes the changes needed for supporting the
->> iPA variant cards of the BCM4313 wireless chipset.
-> []
->> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-> []
->> @@ -1826,6 +1826,17 @@ wlc_lcnphy_radio_2064_channel_tune_4313(struct brcms_phy *pi, u8 channel)
->>   		write_radio_reg(pi, RADIO_2064_REG038, 3);
->>   		write_radio_reg(pi, RADIO_2064_REG091, 7);
->>   	}
->> +
->> +	if (!(pi->sh->boardflags & BFL_FEM)) {
->> +		u8 reg038[14] = {0xd, 0xe, 0xd, 0xd, 0xd, 0xc,
->> +			0xa, 0xb, 0xb, 0x3, 0x3, 0x2, 0x0, 0x0};
->
-> static const would reduce the object size.
+Allow lowest basic rate to be used for unicast management frame in
+mesh. Otherwise, the lowest supported rate is used for unicast
+management frame, such as 1Mbps for 2.4GHz and 6Mbps for 5GHz. Rename
+the rc_send_low_broadcast to re_send_low_basicrate since now it is
+also applied to unicast management frame in mesh.
 
-You are right. I will change that.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+---
+ net/mac80211/rate.c |   23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
 
->> +		write_radio_reg(pi, RADIO_2064_REG02A, 0xf);
->> +		write_radio_reg(pi, RADIO_2064_REG091, 0x3);
->> +		write_radio_reg(pi, RADIO_2064_REG038, 0x3);
->> +
->> +		write_radio_reg(pi, RADIO_2064_REG038, reg038[channel - 1]);
->
-> Does anything limit channel to < 15?
-
-The 4313 is a 2.4GHz wireless device so channel will always be in the 
-range 1 to 14. This is validated earlier in the call sequence leading to 
-this function.
-
-> There seem to be an awful lot of magic numbers
-> in the patch.
-
-Unfortunately, that is the case for most of the phy code. Most stuff is 
-the result of tuning the phy performance.
-
-Regards,
-Arend
-
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index ba63ac8..4aa7bb6 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -210,7 +210,7 @@ static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
+ 		!ieee80211_is_data(fc);
+ }
+ 
+-static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
++static void rc_send_low_basicrate(s8 *idx, u32 basic_rates,
+ 				  struct ieee80211_supported_band *sband)
+ {
+ 	u8 i;
+@@ -263,28 +263,37 @@ static void __rate_control_send_low(struct ieee80211_hw *hw,
+ }
+ 
+ 
+-bool rate_control_send_low(struct ieee80211_sta *sta,
++bool rate_control_send_low(struct ieee80211_sta *pubsta,
+ 			   void *priv_sta,
+ 			   struct ieee80211_tx_rate_control *txrc)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
+ 	struct ieee80211_supported_band *sband = txrc->sband;
++	struct sta_info *sta;
+ 	int mcast_rate;
++	bool use_basicrate = false;
+ 
+-	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
+-		__rate_control_send_low(txrc->hw, sband, sta, info);
++	if (!pubsta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
++		__rate_control_send_low(txrc->hw, sband, pubsta, info);
+ 
+-		if (!sta && txrc->bss) {
++		if (!pubsta && txrc->bss) {
+ 			mcast_rate = txrc->bss_conf->mcast_rate[sband->band];
+ 			if (mcast_rate > 0) {
+ 				info->control.rates[0].idx = mcast_rate - 1;
+ 				return true;
+ 			}
++			use_basicrate = true;
++		} else {
++			sta = container_of(pubsta, struct sta_info, sta);
++			if (ieee80211_vif_is_mesh(&sta->sdata->vif))
++				use_basicrate = true;
++		}
+ 
+-			rc_send_low_broadcast(&info->control.rates[0].idx,
++		if (use_basicrate)
++			rc_send_low_basicrate(&info->control.rates[0].idx,
+ 					      txrc->bss_conf->basic_rates,
+ 					      sband);
+-		}
++
+ 		return true;
+ 	}
+ 	return false;
+-- 
+1.7.9.5
 
