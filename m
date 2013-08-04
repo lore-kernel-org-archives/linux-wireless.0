@@ -1,56 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:39166 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174Ab3HOFMF (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:46242 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752442Ab3HDIzs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 01:12:05 -0400
-Received: by mail-pa0-f52.google.com with SMTP id kq13so401799pab.25
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Aug 2013 22:12:04 -0700 (PDT)
-Received: from [0.0.0.0] ([210.48.94.225])
-        by mx.google.com with ESMTPSA id ia5sm13817279pbc.42.2013.08.14.22.12.02
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Wed, 14 Aug 2013 22:12:03 -0700 (PDT)
-Message-ID: <520C631F.6010806@gna.org> (sfid-20130815_071230_086833_924D6F0A)
-Date: Thu, 15 Aug 2013 17:11:59 +1200
-From: Christian Gagneraud <chgans@gna.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Switching band of a dual-band WiFi device
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 4 Aug 2013 04:55:48 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 09/11] ath9k: Remove "shared_chain_lnadiv"
+Date: Sun,  4 Aug 2013 14:22:00 +0530
+Message-Id: <1375606322-9983-9-git-send-email-sujith@msujith.org> (sfid-20130804_105608_479600_35711E07)
+In-Reply-To: <1375606322-9983-1-git-send-email-sujith@msujith.org>
+References: <1375606322-9983-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi there,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I am using a TP-Link TL-WDN3200 on a ubuntu 13.04 (kernel 
-3.8.0-27-generic), and I have install relevant modules with 
-backports-3.11-rc3-1.
+This variable is redundant since we can use
+common->bt_ant_diversity to determine if diversity
+has to be enabled/disabled.
 
-I would like to switch my WiFi stick to 5GHz, I tried iwconfig wlan0 
-freq 5G, but I get ENOTSUPP.
-Is the freq settings suppose to handle this 2.4 vs 5GHz band or is it 
-only for selecting channel frequency within a given band?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 3 ++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 1 -
+ drivers/net/wireless/ath/ath9k/hw.c            | 2 +-
+ drivers/net/wireless/ath/ath9k/hw.h            | 1 -
+ 4 files changed, 3 insertions(+), 4 deletions(-)
 
-Does linux-wireless provides a way for selecting 2.4 or 5GHz band?
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index a98e6a3..c2f1f18 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3561,6 +3561,7 @@ static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah, int chain,
+ 
+ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ {
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	int chain;
+ 	u32 regval, value, gpio;
+@@ -3646,7 +3647,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		regval |= ((value >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
+ 
+ 		if (AR_SREV_9565(ah)) {
+-			if (ah->shared_chain_lnadiv) {
++			if (common->bt_ant_diversity) {
+ 				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
+ 			} else {
+ 				regval &= ~(1 << AR_PHY_ANT_DIV_LNADIV_S);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index f9fe9c8..55021f1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1420,7 +1420,6 @@ static void ar9003_hw_set_bt_ant_diversity(struct ath_hw *ah, bool enable)
+ 	if (!AR_SREV_9565(ah))
+ 		return;
+ 
+-	ah->shared_chain_lnadiv = enable;
+ 	ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
+ 
+ 	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8bd602c..151443b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2056,7 +2056,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	ath9k_hw_apply_gpio_override(ah);
+ 
+-	if (AR_SREV_9565(ah) && ah->shared_chain_lnadiv)
++	if (AR_SREV_9565(ah) && common->bt_ant_diversity)
+ 		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV, AR_BTCOEX_WL_LNADIV_FORCE_ON);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index c037718..9dc6773 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -767,7 +767,6 @@ struct ath_hw {
+ 	bool aspm_enabled;
+ 	bool is_monitoring;
+ 	bool need_an_top2_fixup;
+-	bool shared_chain_lnadiv;
+ 	u16 tx_trig_level;
+ 
+ 	u32 nf_regs[6];
+-- 
+1.8.3.4
 
-"iw phy phy11 info" tells me that in band 2, all the frequencies are 
-disabled except:
-                         * 5745 MHz [149] (30.0 dBm)
-                         * 5755 MHz [151] (30.0 dBm)
-                         * 5765 MHz [153] (30.0 dBm)
-                         * 5775 MHz [155] (30.0 dBm)
-                         * 5785 MHz [157] (30.0 dBm)
-                         * 5795 MHz [159] (30.0 dBm)
-                         * 5805 MHz [161] (30.0 dBm)
-                         * 5825 MHz [165] (30.0 dBm)
-
-As well, my understanding of WiFi might be a bit limited but, does a 
-dual-band WiFi device provides 2.4 and 5GHz services at the same time or 
-do I need to select one or the other myself? Or maybe I can just 
-enable/disable them manually (and separately)?
-
-Hope someone can shed some light at this.
-
-Regards,
-Chris
