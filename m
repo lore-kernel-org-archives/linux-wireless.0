@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:53466 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755881Ab3HLW66 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:42964 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752443Ab3HDIzu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 18:58:58 -0400
-Received: by mail-ob0-f179.google.com with SMTP id fb19so9586932obc.38
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Aug 2013 15:58:57 -0700 (PDT)
-Message-ID: <520968B0.80301@lwfinger.net> (sfid-20130813_005906_596894_A35F24D4)
-Date: Mon, 12 Aug 2013 17:58:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Colleen Josephson <cjoseph@mit.edu>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: issues with RTL8188CE device and rtl8192ce driver
-References: <CAN3-2D7=P=9VyV7xoANw_6B8VhOaTRC1iMw+mwUH2-g8YOmPMg@mail.gmail.com>
-In-Reply-To: <CAN3-2D7=P=9VyV7xoANw_6B8VhOaTRC1iMw+mwUH2-g8YOmPMg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 4 Aug 2013 04:55:50 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 10/11] ath9k: Set SWCOM value for CUS198
+Date: Sun,  4 Aug 2013 14:22:01 +0530
+Message-Id: <1375606322-9983-10-git-send-email-sujith@msujith.org> (sfid-20130804_105604_034612_22E38D26)
+In-Reply-To: <1375606322-9983-1-git-send-email-sujith@msujith.org>
+References: <1375606322-9983-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2013 05:54 PM, Colleen Josephson wrote:
-> I have been having consistent issues with certain networks with my
-> RTL8188CE device and the rtl8192ce driver (using kernel 3.8.13). I am
-> running Gentoo linux and use NetworkManager to manage connections. I
-> can utilize many networks fine, but some networks enter a
-> connect/reconnect cycle where the device connects (and gets an IP/DNS
-> info), but as soon as I try to actually transmit anything it
-> immediately disconnects.
->
-> When I look at /var/log/messages, I see this pattern happening a lot
-> around the time the connection fails:
-> wlan0: disassociated from 00:18:0a:36:83:36 (Reason: 2)
-> cfg80211: Calling CRDA to update world regulatory domain
-> wlan0: deauthenticating from 00:18:0a:36:83:36 by local choice (reason=3)
->
-> (sometimes it says "Calling CRDA for country: US" instead)
->
-> lspci -v:
-> 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE
-> 802.11b/g/n WiFi Adapter (rev 01)
-> Subsystem: Realtek Semiconductor Co., Ltd. Device 8195
-> Flags: bus master, fast devsel, latency 0, IRQ 17
-> I/O ports at 5000 [size=256]
-> Memory at f3800000 (64-bit, non-prefetchable) [size=16K]
-> Capabilities: [40] Power Management version 3
-> Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-> Capabilities: [70] Express Endpoint, MSI 00
-> Capabilities: [100] Advanced Error Reporting
-> Capabilities: [140] Virtual Channel
-> Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
-> Kernel driver in use: rtl8192ce
-> Kernel modules: rtl8192ce
->
-> some relevant logging:
-> http://pastebin.com/4jSQAhuM
->
-> Any help with resolving this issue is greatly appreciated!
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Have you tried the backports driver? There are a number of changes since 3.8, 
-which you will access that way.
+CUS198/CUS230 cards require a custom value to be
+programmed into the SWCOM register. Assign this during
+init time.
 
-Larry
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h   | 1 +
+ drivers/net/wireless/ath/ath9k/init.c | 1 +
+ 2 files changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9dc6773..38f461c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -312,6 +312,7 @@ struct ath9k_ops_config {
+ 
+ 	/* Platform specific config */
+ 	u32 xlna_gpio;
++	u32 ant_ctrl_comm2g_switch_enable;
+ 	bool xatten_margin_cfg;
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index b678add..4afe30e 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -526,6 +526,7 @@ static void ath9k_init_platform(struct ath_softc *sc)
+ 			       ATH9K_PCI_CUS230)) {
+ 		ah->config.xlna_gpio = 9;
+ 		ah->config.xatten_margin_cfg = true;
++		ah->config.ant_ctrl_comm2g_switch_enable = 0x000BBB88;
+ 		sc->ant_comb.low_rssi_thresh = 20;
+ 		sc->ant_comb.fast_div_bias = 3;
+ 
+-- 
+1.8.3.4
 
