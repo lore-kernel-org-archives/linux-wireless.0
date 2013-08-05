@@ -1,39 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:49244 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754694Ab3HBGjD (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:51881 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752701Ab3HEJmF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 02:39:03 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/5] ath10k: fixes
-References: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 2 Aug 2013 09:38:57 +0300
-In-Reply-To: <1375260915-22500-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 31 Jul 2013 10:55:10 +0200")
-Message-ID: <87k3k4ppfi.fsf@kamboji.qca.qualcomm.com> (sfid-20130802_083909_186578_C267EB6A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 5 Aug 2013 05:42:05 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] ath9k: Fix antenna control init for AR9485
+Date: Mon,  5 Aug 2013 15:08:27 +0530
+Message-Id: <1375695508-1997-2-git-send-email-sujith@msujith.org> (sfid-20130805_114211_145583_183C6D63)
+In-Reply-To: <1375695508-1997-1-git-send-email-sujith@msujith.org>
+References: <1375695508-1997-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> Hi,
->
-> This is a batch up of a few fixes for ath10k
-> driver I had in my queue for some time now.
->
->
-> Michal Kazior (5):
->   ath10k: prevent using invalid ringbuffer indexes
->   ath10k: make sure to use passive scan when n_ssids is 0
->   ath10k: advertise more conservative intf combinations
->   ath10k: zero arvif memory on add_interface()
->   ath10k: fix failpath in MSI-X setup
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-All applied, thanks.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 178052f..abdc7ee 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3614,6 +3614,11 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 	}
+ 
+ 	value = ar9003_hw_ant_ctrl_common_2_get(ah, is2ghz);
++	if (AR_SREV_9485(ah) && common->bt_ant_diversity) {
++		regval &= ~AR_SWITCH_TABLE_COM2_ALL;
++		regval |= ah->config.ant_ctrl_comm2g_switch_enable;
++
++	}
+ 	REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM_2, AR_SWITCH_TABLE_COM2_ALL, value);
+ 
+ 	if ((AR_SREV_9462(ah)) && (ah->rxchainmask == 0x2)) {
+@@ -3645,6 +3650,9 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		regval &= (~AR_PHY_ANT_DIV_LNADIV);
+ 		regval |= ((value >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
+ 
++		if (AR_SREV_9485(ah) && common->bt_ant_diversity)
++			regval |= AR_ANT_DIV_ENABLE;
++
+ 		if (AR_SREV_9565(ah)) {
+ 			if (common->bt_ant_diversity) {
+ 				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
+@@ -3656,10 +3664,14 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 
+ 		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
+ 
+-		/*enable fast_div */
++		/* enable fast_div */
+ 		regval = REG_READ(ah, AR_PHY_CCK_DETECT);
+ 		regval &= (~AR_FAST_DIV_ENABLE);
+ 		regval |= ((value >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
++
++		if (AR_SREV_9485(ah) && common->bt_ant_diversity)
++			regval |= AR_FAST_DIV_ENABLE;
++
+ 		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
+ 
+ 		if (pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
 -- 
-Kalle Valo
+1.8.3.4
+
