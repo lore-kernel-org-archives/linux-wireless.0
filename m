@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:63942 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752096Ab3HTRl7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 13:41:59 -0400
-Received: by mail-la0-f43.google.com with SMTP id ep20so557785lab.16
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:58 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH 15/16] wcn36xx: Add Kconfig
-Date: Tue, 20 Aug 2013 19:41:18 +0200
-Message-Id: <1377020479-16935-16-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_200909_154600_B4A93EB8)
-In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+Received: from mail.ispras.ru ([83.149.199.45]:57453 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750737Ab3HEEBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Aug 2013 00:01:10 -0400
+Message-ID: <51FF2384.2070008@ispras.ru> (sfid-20130805_060138_531681_0A1CC715)
+Date: Mon, 05 Aug 2013 08:01:08 +0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: Re: [PATCH] hostap: do not return positive number on failure path
+ in prism2_open()
+References: <1375672708-3017-1-git-send-email-khoroshilov@ispras.ru> <1375673616.3133.23.camel@joe-AO722>
+In-Reply-To: <1375673616.3133.23.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding Kconfig
+On 08/05/2013 07:33 AM, Joe Perches wrote:
+> On Mon, 2013-08-05 at 07:18 +0400, Alexey Khoroshilov wrote:
+>> prism2_open() as an .ndo_open handler should not return positive numbers
+>> in case of failure, but it does return 1 in a couple of places.
+>>
+>> Found by Linux Driver Verification project (linuxtesting.org).
+> How?
+>
+> http://linuxtesting.org/project/ldv
+> http://linuxtesting.org/results/ldv
+>
+> Shows defects and patches to fix them, but not any script
+> used to find it.
+There is a link to build instructions there:
+http://forge.ispras.ru/projects/ldv/wiki/Downloading_and_Building_LDV
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
----
- drivers/net/wireless/ath/wcn36xx/Kconfig | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
+Currently it requires some efforts to install all the dependencies, the
+simplest way is to use puppet script for Ubuntu 12.04 that you can find
+in the repository.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/Kconfig b/drivers/net/wireless/ath/wcn36xx/Kconfig
-new file mode 100644
-index 0000000..591ebae
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
-@@ -0,0 +1,16 @@
-+config WCN36XX
-+	tristate "Qualcomm Atheros WCN3660/3680 support"
-+	depends on MAC80211 && HAS_DMA
-+	---help---
-+	  This module adds support for wireless adapters based on
-+	  Qualcomm Atheros WCN3660 and WCN3680 mobile chipsets.
-+
-+	  If you choose to build a module, it'll be called wcn36xx.
-+
-+config WCN36XX_DEBUGFS
-+	bool "WCN36XX debugfs support"
-+	depends on WCN36XX
-+	---help---
-+	  Enabled debugfs support
-+
-+	  If unsure, say Y to make it easier to debug problems.
--- 
-1.8.2.2
-
+--
+Alexey
