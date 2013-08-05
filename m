@@ -1,109 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gw90.de ([188.40.100.199]:60115 "EHLO mail.gw90.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751489Ab3HZUUZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 16:20:25 -0400
-Message-ID: <1377548398.4408.4.camel@mattotaupa> (sfid-20130826_222028_340289_481C1226)
-Subject: Re: [rt2x00-users] [PATCH 3.11] rt2800: fix wrong TX power
- compensation
-From: Paul Menzel <paulepanter@users.sourceforge.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Fabien ADAM <id2ndr@crocobox.org>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Date: Mon, 26 Aug 2013 22:19:58 +0200
-In-Reply-To: <20130826131851.GB10525@redhat.com>
-References: <20130826131851.GB10525@redhat.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-bJA247uZy2sld7nEo5Dz"
-Mime-Version: 1.0
+Received: from mail-vb0-f44.google.com ([209.85.212.44]:48740 "EHLO
+	mail-vb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751570Ab3HEQKN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Aug 2013 12:10:13 -0400
+Received: by mail-vb0-f44.google.com with SMTP id e13so3033797vbg.3
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 09:10:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAPXgP13_WRX-asL=MwCM9ERDDMq_7PLkXLr9hwTG-xCg7cm6_A@mail.gmail.com>
+References: <CALCETrU+C+sO8tJ0X5G4RDVLV=kHQQHurOnEQCoqbAouh60dng@mail.gmail.com>
+ <20130802162850.GL32474@in.waw.pl> <CAPXgP13_WRX-asL=MwCM9ERDDMq_7PLkXLr9hwTG-xCg7cm6_A@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Mon, 5 Aug 2013 09:09:52 -0700
+Message-ID: <CALCETrXSnFPFVPkXHwz+FFA3=+pmz9V=cMHWwtN+jG1QJALWSQ@mail.gmail.com> (sfid-20130805_181048_679566_49AE52EC)
+Subject: Re: [systemd-devel] Slow firmware timeouts again (Re: [3.11
+ regression?] iwlwifi firmware takes two minutes to load)
+To: Kay Sievers <kay@vrfy.org>
+Cc: =?ISO-8859-2?Q?Zbigniew_J=EAdrzejewski=2DSzmek?=
+	<zbyszek@in.waw.pl>, systemd-devel@lists.freedesktop.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Aug 5, 2013 at 4:18 AM, Kay Sievers <kay@vrfy.org> wrote:
+> On Fri, Aug 2, 2013 at 6:28 PM, Zbigniew Jêdrzejewski-Szmek
+> <zbyszek@in.waw.pl> wrote:
+>> On Fri, Aug 02, 2013 at 09:04:44AM -0700, Andy Lutomirski wrote:
+>>> CONFIG_FW_LOADER_USER_HELPER=y
+>> Do you need this? Unsetting this should help.
+>>
+>> """This option enables / disables the invocation of user-helper
+>> (e.g. udev) for loading firmware files as a fallback after the
+>> direct file loading in kernel fails. The user-mode helper is
+>> no longer required unless you have a special firmware file that
+>> resides in a non-standard path."""
+>
+> On recent systems, if the kernel configures
+> CONFIG_FW_LOADER_USER_HELPER=y and a firmware is not found by the
+> kernel, the kernel will issue a request which is ignored by userspace
+> and will block in that for 60 seconds.
+>
+> Udev is no longer in the game of firmware loading, not even as a
+> fallback, it will just completely ignore all kernel firmware class
+> events.
+>
+> The source code in udev to handle firmware requests is disabled by
+> default, currently still kept around for old kernels without the
+> in-kernel firmware loader, but it will be deleted in the near future.
 
---=-bJA247uZy2sld7nEo5Dz
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Any chance you'd consider a less regression-inducing path to getting
+rid of this feature?  For example, have udev warn and immediate fail
+firmware loading requests for a few releases, then just warn, then
+drop support?
 
-Am Montag, den 26.08.2013, 15:18 +0200 schrieb Stanislaw Gruszka:
-> We should not do temperature compensation on devices without
-> EXTERNAL_TX_ALC bit set (called DynamicTxAgcControl on vendor driver).
-> Such devices can have totally bogus TSSI parameters on the EEPROM,
-> but still threaded by us as valid and result doing wrong TX power
+Meanwhile, CONFIG_FW_LOADER_USER_HELPER is still default y (!), so
+udev has introduced massive bootup delays into the default
+configuration with no warning.  It might be nice to change it to
+default n, get rid of everything that selects it, and possible even
+rename it to something with LEGACY or OBSOLETE in the name so that
+make oldconfig will prompt.
 
-=E2=80=A2 s,still threaded,are still treated,
-=E2=80=A2 =E2=80=A6 and results in wrong TX power calculations.
+--Andy
 
-> calculations.
->=20
-> This fix inability to connect to AP on slightly longer distance on
-
-=E2=80=A2 fixes
-
-> some Ralink chips/devices.
-
-Could you please add which ones you have tested?
-
-Is there a bug report about this?
-
-> Reported-and-tested-by: Fabien ADAM <id2ndr@crocobox.org>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c | 7 +++++++
->  1 file changed, 7 insertions(+)
->=20
-> John,
->=20
-> If possible this should go to 3.11, -next & cc -stable is also fine as
-> ususal.
->=20
-> Note that in -next version of the patch rt2x00_eeprom_read() should
-> be changed to rt2800_eeprom_read() do to commit
-> 3e38d3daf881a78ac13e93504a8ac5777040797e
-> =20
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wirele=
-ss/rt2x00/rt2800lib.c
-> index 1f80ea5..a0119d3 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2790,6 +2790,13 @@ static int rt2800_get_gain_calibration_delta(struc=
-t rt2x00_dev *rt2x00dev)
->  	int i;
-> =20
->  	/*
-> +	 * First check if temperature compensation is supported.
-> +	 */
-> +	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
-> +	if (!rt2x00_get_field16(eeprom, EEPROM_NIC_CONF1_EXTERNAL_TX_ALC))
-> +		return 0;
-> +
-> +	/*
->  	 * Read TSSI boundaries for temperature compensation from
->  	 * the EEPROM.
->  	 *
-
-With the improvements to the commit message,
-
-Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
+>
+> Any issues with firmware timeouts should be addressed in the kernel by
+> disabling CONFIG_FW_LOADER_USER_HELPER or by removing the fallback
+> code from the in-kernel loader.
+>
+> Kay
 
 
-Thanks,
 
-Paul
-
---=-bJA247uZy2sld7nEo5Dz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iEYEABECAAYFAlIbuG8ACgkQPX1aK2wOHVjyPwCdGy/J9MkbNKf3Noq3GmGlOilX
-F7kAn0PJc7MNhKpYD4m+SF5cbtGTNdaL
-=BHRZ
------END PGP SIGNATURE-----
-
---=-bJA247uZy2sld7nEo5Dz--
-
+-- 
+Andy Lutomirski
+AMA Capital Management, LLC
