@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:65255 "EHLO ebb05.tieto.com"
+Received: from mail.ispras.ru ([83.149.199.45]:57241 "EHLO mail.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752282Ab3HMF7o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 01:59:44 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/4] ath10k: fixes
-Date: Tue, 13 Aug 2013 07:59:34 +0200
-Message-ID: <1376373578-2180-1-git-send-email-michal.kazior@tieto.com> (sfid-20130813_075948_620568_7810F19F)
-In-Reply-To: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
-References: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754296Ab3HEDCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Aug 2013 23:02:46 -0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org,
+	Alexey Khoroshilov <khoroshilorv@ispras.ru>
+Subject: [PATCH] hostap: do not return positive number on failure path in prism2_open()
+Date: Mon,  5 Aug 2013 07:02:30 +0400
+Message-Id: <1375671750-2835-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130805_050306_348474_E35F0E05)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+prism2_open() as an .ndo_open handler should not return positive numbers
+in case of failure, but it does return 1 in a couple of places.
 
-This patchset contains some bugfixes and
-improvements.
+Found by Linux Driver Verification project (linuxtesting.org).
 
-v2:
- * fix indentation
- * use a comment instead of a no-op if clause
+Signed-off-by: Alexey Khoroshilov <khoroshilorv@ispras.ru>
+---
+ drivers/net/wireless/hostap/hostap_main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-Michal Kazior (4):
-  ath10k: fix HTT service setup
-  ath10k: fix HTC endpoint worker starvation
-  ath10k: implement 802.3 SNAP rx decap type A-MSDU handling
-  ath10k: plug possible memory leak in WMI
-
- drivers/net/wireless/ath/ath10k/htc.c    |   25 +++++++++++++------------
- drivers/net/wireless/ath/ath10k/htc.h    |    3 ++-
- drivers/net/wireless/ath/ath10k/htt_rx.c |   12 ++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.c    |    1 +
- 4 files changed, 26 insertions(+), 15 deletions(-)
-
+diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
+index 15f0fad..e4f56ad 100644
+--- a/drivers/net/wireless/hostap/hostap_main.c
++++ b/drivers/net/wireless/hostap/hostap_main.c
+@@ -667,7 +667,7 @@ static int prism2_open(struct net_device *dev)
+ 	if (local->no_pri) {
+ 		printk(KERN_DEBUG "%s: could not set interface UP - no PRI "
+ 		       "f/w\n", dev->name);
+-		return 1;
++		return -ENODEV;
+ 	}
+ 
+ 	if ((local->func->card_present && !local->func->card_present(local)) ||
+@@ -682,7 +682,7 @@ static int prism2_open(struct net_device *dev)
+ 		printk(KERN_WARNING "%s: could not enable MAC port\n",
+ 		       dev->name);
+ 		prism2_close(dev);
+-		return 1;
++		return -ENODEV;
+ 	}
+ 	if (!local->dev_enabled)
+ 		prism2_callback(local, PRISM2_CALLBACK_ENABLE);
 -- 
-1.7.9.5
+1.8.1.2
 
