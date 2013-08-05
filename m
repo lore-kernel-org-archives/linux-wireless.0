@@ -1,73 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56185 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752869Ab3HIRQC (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:45364 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345Ab3HEKBO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 13:16:02 -0400
-Date: Fri, 9 Aug 2013 13:16:00 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Oleksij Rempel <linux@rempel-privat.de>
-cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: FUSB200 xhci issue
-In-Reply-To: <52051009.9010001@rempel-privat.de>
-Message-ID: <Pine.LNX.4.44L0.1308091310560.1405-100000@iolanthe.rowland.org> (sfid-20130809_191608_560611_26FCC4E1)
+	Mon, 5 Aug 2013 06:01:14 -0400
+Date: Mon, 5 Aug 2013 12:01:07 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: pull-request: mac80211-next 2013-07-26
+Message-ID: <20130805100107.GA24729@pandem0nium> (sfid-20130805_120117_905068_DBE37A7A)
+References: <1374827740.8248.15.camel@jlt4.sipsolutions.net>
+ <20130801192723.GD13922@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
+In-Reply-To: <20130801192723.GD13922@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 9 Aug 2013, Oleksij Rempel wrote:
 
-> Am 09.08.2013 16:52, schrieb Alan Stern:
-> > On Fri, 9 Aug 2013, Oleksij Rempel wrote:
-> >
-> >>> What about a "get firmware version" sort of thing?  There really should
-> >>> be a way for the driver to tell whether the firmware has already been
-> >>> updated.
-> >>
-> >> I was not able to find good direct way to check firmware version. If i
-> >> would add some new command then i will get option like: if responding FW
-> >> is updated; if not, then dead or old.
-> >> How about overwriting iProduct field? Let say, if iProduct == ath9k_htc,
-> >> then firmware is updated? Is it more or less acceptable method? I need
-> >> to ask this because it is really new for me.
-> >
-> > Changing the iProduct string descriptor would work, because the
-> > descriptors_changed() routine doesn't compare the old value of that
-> > string with the new value.  (On the other hand, it does compare the
-> > iSerialNumber strings.)
-> 
-> Just to make sure. You mean, i should avoid changing iSerialNumber 
-> because host will initiate usb reset and this device will probably not 
-> survive it?
+--azLHFNyN32YCQGCU
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Right.  If the device would survive a reset then there would be no 
-problem.
+Hey John,
 
-BTW, it is common for new firmware to change the bcdDevice value in the 
-device descriptor.  That might be easier than changing a string 
-descriptor.
+since you have pulled the patches from Johannes, could you please also pick=
+ up
+the ath9k/ath5k patches for the 5/10 MHz feature? Johannes included the nl/=
+mac80211
+parts of the patchset only, leaving the ath5k/ath9k parts unmerged.
 
-> > Is there any way to read the firmware back from the device?  Then you
-> > could check directly.
-> 
-> No, this device is a SoC with usb client interface based on FUSB200 core 
-> (If i'm correct, same core as on carl9170 devices). We can't read memory 
-> unless FW provide this service.
-> At power on, this device will boot from external or internal ROM and 
-> load minimal FW. Without it, USB wont work.
-> If i read FW code correctly, it should be responsible for suspend and reset.
+It has been sent to this mailing list, the coverletter mail was:
 
-How do you tell the device to start running the new firmware after it 
-is loaded?  Normally this requires some sort of reset.
+> Subject: [PATCHv6 00/18] Add support for 5 and 10 MHz channels
+> Date: Mon,  8 Jul 2013 16:55:48 +0200
+> Message-Id: <1373295366-12823-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 
-Is there any way to prevent the device from losing its firmware during 
-a USB reset or suspend?
+It includes 5 ath9k and 3 ath5k patches.
 
-Alan Stern
+If there are any troubles, I can repost of course.
 
+Thanks,
+	Simon
+
+
+On Thu, Aug 01, 2013 at 03:27:24PM -0400, John W. Linville wrote:
+> On Fri, Jul 26, 2013 at 10:35:40AM +0200, Johannes Berg wrote:
+> > John,
+> >=20
+> > This is a more traditional pull request without patches since they've
+> > all been to the list :-) First set of updates for mac80211-next.
+> >=20
+> > The biggest change here is probably the initial 5/10 MHz support for
+> > IBSS, the remaining patches are smaller features and some cleanups.
+> >=20
+> > Let me know if there's any problem.
+> >=20
+> > johannes
+> >=20
+> >=20
+> > The following changes since commit ad81f0545ef01ea651886dddac4bef6cec93=
+0092:
+> >=20
+> >   Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
+> >=20
+> > are available in the git repository at:
+> >=20
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git=
+ for-john
+> >=20
+> > for you to fetch changes up to c82b5a74cc739385db6e4275fe504a0e9469bf01:
+> >=20
+> >   mac80211: make active monitor injection work w/ HW queue (2013-07-16 =
+09:58:19 +0300)
+>=20
+> Pulling now...
+>=20
+> --=20
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--azLHFNyN32YCQGCU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlH/d+MACgkQrzg/fFk7axbEQwCgx7IeByCxndiglDsOaTJ4rpbV
+BbwAoKfHJn8x7Y807UsOe685mhL7Uscy
+=Imf0
+-----END PGP SIGNATURE-----
+
+--azLHFNyN32YCQGCU--
