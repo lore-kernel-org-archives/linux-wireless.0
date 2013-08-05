@@ -1,73 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:53139 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754018Ab3HQR4Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Aug 2013 13:56:25 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 4/6] rt2x00: rt2800lib: add rt2800_hw_beacon_base helper
-Date: Sat, 17 Aug 2013 19:56:05 +0200
-Message-Id: <1376762167-24583-5-git-send-email-juhosg@openwrt.org> (sfid-20130817_195628_921174_057AD99F)
-In-Reply-To: <1376762167-24583-1-git-send-email-juhosg@openwrt.org>
-References: <1376762167-24583-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:58048 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753609Ab3HEVMs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Aug 2013 17:12:48 -0400
+Received: by mail-wg0-f45.google.com with SMTP id x12so2918335wgg.12
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 14:12:47 -0700 (PDT)
+Message-ID: <1375737162.9097.14.camel@canaries64> (sfid-20130805_231300_849223_949D3709)
+Subject: [PATCH 2/2] staging: vt6656: desc.h remove typedef struct
+ tagSCTSData
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 05 Aug 2013 22:12:42 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The HW_BEACON_BASE() macro returns the base address
-of a given beacon, however the returned values are
-not usable on all chipsets. On devices which have
-selectable shared memory parts, some beacon may be
-located in the high part of the shared memory.
+Replace structures with struct ieee80211_cts data
 
-Instead of extending the already complicated macro,
-add a new helper function and use that to get the
-base address of a given beacon.
+typedef struct tagSCTSData include extra packing wReserved
+not in struct ieee80211_cts
 
-Te helper function will be extended in a subsequent
-patch to handle different chipsets' requirements,
-the actual patch contains no functional changes.
+This is corrected by adding reserved2 to the structures.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/staging/vt6656/desc.h | 14 ++++----------
+ drivers/staging/vt6656/rxtx.c | 23 ++++++++---------------
+ 2 files changed, 12 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index ee7eede..b44eccf 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -948,6 +948,12 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
+diff --git a/drivers/staging/vt6656/desc.h b/drivers/staging/vt6656/desc.h
+index aa5e249..1a1cf34 100644
+--- a/drivers/staging/vt6656/desc.h
++++ b/drivers/staging/vt6656/desc.h
+@@ -254,21 +254,14 @@ typedef const SRTS_a_FB *PCSRTS_a_FB;
+ /*
+  * CTS buffer header
+  */
+-typedef struct tagSCTSData {
+-    u16    wFrameControl;
+-    u16    wDurationID;
+-    u8    abyRA[ETH_ALEN];
+-    u16    wReserved;
+-} __attribute__ ((__packed__))
+-SCTSData, *PSCTSData;
+-
+ typedef struct tagSCTS {
+     u8        bySignalField_b;
+     u8        byServiceField_b;
+     u16        wTransmitLength_b;
+     u16        wDuration_ba;
+     u16        wReserved;
+-    SCTSData    Data;
++	struct ieee80211_cts data;
++	u16 reserved2;
+ } __attribute__ ((__packed__))
+ SCTS, *PSCTS;
+ 
+@@ -282,7 +275,8 @@ typedef struct tagSCTS_FB {
+     u16        wReserved;
+     u16        wCTSDuration_ba_f0;
+     u16        wCTSDuration_ba_f1;
+-    SCTSData    Data;
++	struct ieee80211_cts data;
++	u16 reserved2;
+ } __attribute__ ((__packed__))
+ SCTS_FB, *PSCTS_FB;
+ 
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index fd6f817..1d58d1f 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -958,13 +958,10 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+             //Get CTSDuration_ba_f1
+             pBuf->wCTSDuration_ba_f1 = (u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA_F1, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption); //9:CTSDuration_ba_f1, 1:2.4G, 2,3:2.4G OFDM Data
+             pBuf->wCTSDuration_ba_f1 = cpu_to_le16(pBuf->wCTSDuration_ba_f1);
+-            //Get CTS Frame body
+-            pBuf->Data.wDurationID = pBuf->wDuration_ba;
+-            pBuf->Data.wFrameControl = TYPE_CTL_CTS;//0x00C4
+-            pBuf->Data.wReserved = 0x0000;
+-	memcpy(&(pBuf->Data.abyRA[0]),
+-	       &(pDevice->abyCurrentNetAddr[0]),
+-	       ETH_ALEN);
++		/* Get CTS Frame body */
++		pBuf->data.duration = pBuf->wDuration_ba;
++		pBuf->data.frame_control = TYPE_CTL_CTS;
++		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
+         } else { //if (byFBOption != AUTO_FB_NONE && uDMAIdx != TYPE_ATIMDMA && uDMAIdx != TYPE_BEACONDMA)
+             PSCTS pBuf = (PSCTS)pvCTS;
+             //Get SignalField,ServiceField,Length
+@@ -975,14 +972,10 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+             //Get CTSDuration_ba
+             pBuf->wDuration_ba = cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //3:CTSDuration_ba, 1:2.4G, 2,3:2.4G OFDM Data
+             pBuf->wDuration_ba = cpu_to_le16(pBuf->wDuration_ba);
+-
+-            //Get CTS Frame body
+-            pBuf->Data.wDurationID = pBuf->wDuration_ba;
+-            pBuf->Data.wFrameControl = TYPE_CTL_CTS;//0x00C4
+-            pBuf->Data.wReserved = 0x0000;
+-	memcpy(&(pBuf->Data.abyRA[0]),
+-	       &(pDevice->abyCurrentNetAddr[0]),
+-	       ETH_ALEN);
++		/*Get CTS Frame body*/
++		pBuf->data.duration = pBuf->wDuration_ba;
++		pBuf->data.frame_control = TYPE_CTL_CTS;
++		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
+         }
+     }
  }
- EXPORT_SYMBOL_GPL(rt2800_txdone_entry);
- 
-+static unsigned int rt2800_hw_beacon_base(struct rt2x00_dev *rt2x00dev,
-+					  unsigned int index)
-+{
-+	return HW_BEACON_BASE(index);
-+}
-+
- void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-@@ -1000,7 +1006,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- 		return;
- 	}
- 
--	beacon_base = HW_BEACON_BASE(entry->entry_idx);
-+	beacon_base = rt2800_hw_beacon_base(rt2x00dev, entry->entry_idx);
- 
- 	rt2800_shared_mem_lock(rt2x00dev);
- 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
-@@ -1028,7 +1034,7 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
- 	const int txwi_desc_size = rt2x00dev->bcn->winfo_size;
- 	unsigned int beacon_base;
- 
--	beacon_base = HW_BEACON_BASE(index);
-+	beacon_base = rt2800_hw_beacon_base(rt2x00dev, index);
- 
- 	rt2800_shared_mem_lock(rt2x00dev);
- 
 -- 
-1.7.10
+1.8.1.2
+
+
+
