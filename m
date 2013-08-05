@@ -1,73 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57257 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754415Ab3HaSkq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Aug 2013 14:40:46 -0400
-Message-ID: <522238A1.3080008@hauke-m.de> (sfid-20130831_204104_302435_07C403CF)
-Date: Sat, 31 Aug 2013 20:40:33 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Linux-Next <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	linux-kbuild <linux-kbuild@vger.kernel.org>
-Subject: Re: linux-next: Tree for Aug 30 (brcmfmac)
-References: <20130829200013.d9dde1eb64686a32c661b5d3@canb.auug.org.au> <52210AB9.2090104@infradead.org> <CAMuHMdXFmWyiUJF+4HbD=6oGPVXHBAVx=rOC7u=motTQFCKn7g@mail.gmail.com> <5222341B.4070205@broadcom.com>
-In-Reply-To: <5222341B.4070205@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:36214 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754877Ab3HET4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Aug 2013 15:56:31 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 07/12] ath9k: prepare queueing code for handling unaggregated traffic
+Date: Mon,  5 Aug 2013 21:56:18 +0200
+Message-Id: <1375732583-39001-7-git-send-email-nbd@openwrt.org> (sfid-20130805_215651_010014_1C55F37C)
+In-Reply-To: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
+References: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/31/2013 08:21 PM, Arend van Spriel wrote:
-> On 08/31/13 19:37, Geert Uytterhoeven wrote:
->> On Fri, Aug 30, 2013 at 11:12 PM, Randy Dunlap<rdunlap@infradead.org> 
->> wrote:
->>> This bool kconfig symbol:
->>>
->>> config BRCMFMAC_SDIO
->>>          bool "SDIO bus interface support for FullMAC driver"
->>>          depends on MMC
->>>
->>> allows BRCMFMAC_SDIO to be y even when MMC=m.
->>>
->>> Is there a reasonable solution to this?
-> 
-> Actually, BRCMFMAC should be built in same form as the MMC and/or USB,
-> but only when BRCMFMAC_SDIO or BRCMFMAC_USB are selected.
-> 
-> So valid combinations are:
-> MMC=m, USB=m, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y => BRCMFMAC=m
-> MMC=m, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y => BRCMFMAC=m
-> MMC=y, USB=m, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y => BRCMFMAC=m
-> MMC=m, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=n => BRCMFMAC=m
-> MMC=m, USB=y, BRCMFMAC_SDIO=n, BRCMFMAC_USB=y => BRCMFMAC=m|y
-> MMC=y, USB=m, BRCMFMAC_SDIO=y, BRCMFMAC_USB=n => BRCMFMAC=m|y
-> MMC=y, USB=m, BRCMFMAC_SDIO=n, BRCMFMAC_USB=y => BRCMFMAC=m
-> MMC=y, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y => BRCMFMAC=m|y
-> MMC=y, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=n => BRCMFMAC=m|y
-> MMC=y, USB=y, BRCMFMAC_SDIO=n, BRCMFMAC_USB=y => BRCMFMAC=m|y
-> 
-> Not sure how to express the above.
+- Allow ath_tx_get_tid_subframe to return non-AMPDU subframes.
+- Reset the tid paused state on aggregation stop
+- Initialize software queues even when HT is not supported
 
-This should be expressed with this Kconfig:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c |  3 ---
+ drivers/net/wireless/ath/ath9k/xmit.c | 20 ++++++++++++++------
+ 2 files changed, 14 insertions(+), 9 deletions(-)
 
-config BRCMFMAC_USB
-	bool "USB bus interface support for FullMAC driver"
-	depends on (USB = y || USB = BRCMFMAC)
-	depends on BRCMFMAC
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 1adb803..4da9864 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1374,9 +1374,6 @@ static void ath9k_sta_notify(struct ieee80211_hw *hw,
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_node *an = (struct ath_node *) sta->drv_priv;
+ 
+-	if (!sta->ht_cap.ht_supported)
+-		return;
+-
+ 	switch (cmd) {
+ 	case STA_NOTIFY_SLEEP:
+ 		an->sleeping = true;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 6c50249..e4d3723 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -672,7 +672,7 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 	} else
+ 		ath_tx_complete_aggr(sc, txq, bf, bf_head, ts, txok);
+ 
+-	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) && !flush)
++	if (!flush)
+ 		ath_txq_schedule(sc, txq);
+ }
+ 
+@@ -848,6 +848,7 @@ static struct ath_buf *
+ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
+ 			struct ath_atx_tid *tid, struct sk_buff_head **q)
+ {
++	struct ieee80211_tx_info *tx_info;
+ 	struct ath_frame_info *fi;
+ 	struct sk_buff *skb;
+ 	struct ath_buf *bf;
+@@ -874,6 +875,16 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
+ 			continue;
+ 		}
+ 
++		bf->bf_next = NULL;
++		bf->bf_lastbf = bf;
++
++		tx_info = IEEE80211_SKB_CB(skb);
++		tx_info->flags &= ~IEEE80211_TX_CTL_CLEAR_PS_FILT;
++		if (!(tx_info->flags & IEEE80211_TX_CTL_AMPDU)) {
++			bf->bf_state.bf_type = 0;
++			return bf;
++		}
++
+ 		bf->bf_state.bf_type = BUF_AMPDU | BUF_AGGR;
+ 		seqno = bf->bf_state.seqno;
+ 
+@@ -893,8 +904,6 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
+ 			continue;
+ 		}
+ 
+-		bf->bf_next = NULL;
+-		bf->bf_lastbf = bf;
+ 		return bf;
+ 	}
+ 
+@@ -1356,7 +1365,7 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ 
+ 	ath_txq_lock(sc, txq);
+ 	txtid->active = false;
+-	txtid->paused = true;
++	txtid->paused = false;
+ 	ath_tx_flush_tid(sc, txtid);
+ 	ath_txq_unlock_complete(sc, txq);
+ }
+@@ -2425,8 +2434,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 
+ 		if (list_empty(&txq->axq_q)) {
+ 			txq->axq_link = NULL;
+-			if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+-				ath_txq_schedule(sc, txq);
++			ath_txq_schedule(sc, txq);
+ 			break;
+ 		}
+ 		bf = list_first_entry(&txq->axq_q, struct ath_buf, list);
+-- 
+1.8.0.2
 
-config BRCMFMAC_SDIO
-	bool "SDIO bus interface support for FullMAC driver"
-	depends on (MMC = y || MMC = BRCMFMAC)
-	depends on BRCMFMAC
-	select FW_LOADER
-
-I haven't tested it, but we had a similar problem in b43 and fixed it
-like this.
-
-Hauke
