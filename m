@@ -1,74 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:9675 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754486Ab3HLGh1 (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:46738 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752290Ab3HEPgH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 02:37:27 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MRE00A7VNPZCGN0@mailout3.samsung.com> for
- linux-wireless@vger.kernel.org; Mon, 12 Aug 2013 15:37:14 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Lauro Ramos Venancio' <lauro.venancio@openbossa.org>
-Cc: 'Aloisio Almeida Jr' <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	'Thierry Escande' <thierry.escande@linux.intel.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH 1/2] NFC: nfcsim: Staticize local symbols
-Date: Mon, 12 Aug 2013 15:37:14 +0900
-Message-id: <000101ce9726$61bd4b30$2537e190$@samsung.com> (sfid-20130812_083741_035967_9E02F2B7)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Mon, 5 Aug 2013 11:36:07 -0400
+Received: by mail-ee0-f54.google.com with SMTP id e53so1696958eek.27
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 08:36:05 -0700 (PDT)
+In-Reply-To: <CA+aCzhVEu63FWO6+Y=_jD1+UK=e3NKJSx1+oGb7V_aF4dBgxXg@mail.gmail.com>
+References: <1375371582-31004-1-git-send-email-sylvain.roger.rieunier@gmail.com> <CAGXE3d9syXY6cZjsBs0vLi72zZAeo-xM+e0Zw2jhy+ZzdjhsOA@mail.gmail.com> <CA+aCzhVEu63FWO6+Y=_jD1+UK=e3NKJSx1+oGb7V_aF4dBgxXg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [[PATCHv2]rt2800usb: ampdu len] rt2800usb: update aggregation len
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Date: Mon, 05 Aug 2013 17:35:55 +0200
+To: Sylvain ROGER RIEUNIER <sylvain.roger.rieunier@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Message-ID: <22cbeb29-8fcf-43bd-bcb6-113b6e837942@email.android.com> (sfid-20130805_173614_601434_9E1E2CAE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These local symbols are used only in this file.
-Fix the following sparse warnings:
 
-drivers/nfc/nfcsim.c:63:25: warning: symbol 'wq' was not declared. Should it be static?
-drivers/nfc/nfcsim.c:484:12: warning: symbol 'nfcsim_init' was not declared. Should it be static?
-drivers/nfc/nfcsim.c:525:13: warning: symbol 'nfcsim_exit' was not declared. Should it be static?
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/nfc/nfcsim.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
-index c5c30fb..9a53f13 100644
---- a/drivers/nfc/nfcsim.c
-+++ b/drivers/nfc/nfcsim.c
-@@ -60,7 +60,7 @@ struct nfcsim {
- static struct nfcsim *dev0;
- static struct nfcsim *dev1;
- 
--struct workqueue_struct *wq;
-+static struct workqueue_struct *wq;
- 
- static void nfcsim_cleanup_dev(struct nfcsim *dev, u8 shutdown)
- {
-@@ -481,7 +481,7 @@ static void nfcsim_free_device(struct nfcsim *dev)
- 	kfree(dev);
- }
- 
--int __init nfcsim_init(void)
-+static int __init nfcsim_init(void)
- {
- 	int rc;
- 
-@@ -522,7 +522,7 @@ exit:
- 	return rc;
- }
- 
--void __exit nfcsim_exit(void)
-+static void __exit nfcsim_exit(void)
- {
- 	nfcsim_cleanup_dev(dev0, 1);
- 	nfcsim_cleanup_dev(dev1, 1);
+
+Sylvain ROGER RIEUNIER <sylvain.roger.rieunier@gmail.com> schrieb:
+>Dear Helmut,
+>
+>I already did a test using the Sysfs with an synchronous read. But more
+>you
+>read  TX_AGG_CNT counters and more you reduce the bandwith.
+>My idea was to make asynchronous read periodically to allow Sysfs
+>reading without
+>impact the bandwith performance.
+>Do you have an other suggestion?
+
+Maybe just rate limit register reading in the sysfs interface? Something like: we've just updated the stats a second ago, use the old data ...
+
+Or as a different idea, schedule a work from the tx status path (the counters can only change if we transmit something), also rate limited ... This could be used for rt2800pci as well then ...
+
+Helmut
+
+>
+>Sylvain
+>
+>
+>
+>2013/8/5 Helmut Schaa <helmut.schaa@googlemail.com>
+>
+>> On Thu, Aug 1, 2013 at 5:39 PM, Sylvain ROGER RIEUNIER
+>> <sylvain.roger.rieunier@gmail.com> wrote:
+>> > From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+>> >
+>> > I tried to read periodically TX_AGG_CNT registers on the rt2800usb
+>> driver.
+>> > I'had made USB synchronous and asynchronous read. But it's only
+>reduces
+>> the
+>> > bandwidth.
+>> > Does anyone have an idea?
+>> >
+>> >
+>> > Signed-off-by: Sylvain ROGER RIEUNIER
+><sylvain.roger.rieunier@gmail.com>
+>>
+>> Instead of updating the statistics from within a timer can't you just
+>> update them when reading the sysfs file?
+>> Helmut
+>>
+
 -- 
-1.7.10.4
-
-
+Diese Nachricht wurde von meinem Android-Mobiltelefon mit K-9 Mail gesendet.
