@@ -1,38 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48175 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751921Ab3HUTS6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 15:18:58 -0400
-Message-ID: <52151297.5010706@hauke-m.de> (sfid-20130821_211901_186226_AFA907D3)
-Date: Wed, 21 Aug 2013 21:18:47 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jonas Gorski <jogo@openwrt.org>,
-	David Herrmann <dh.herrmann@gmail.com>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	David Costa <david@zarel.net>
-Subject: Re: [RFT V2 02/13] brcmsmac: change pa_gain for bcm4313 iPA
-References: <1376424220-10765-1-git-send-email-arend@broadcom.com> <1376424220-10765-3-git-send-email-arend@broadcom.com>
-In-Reply-To: <1376424220-10765-3-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-we0-f172.google.com ([74.125.82.172]:56220 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754198Ab3HEUJV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Aug 2013 16:09:21 -0400
+Received: by mail-we0-f172.google.com with SMTP id t61so2924733wes.31
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 13:09:19 -0700 (PDT)
+Message-ID: <1375733354.7004.25.camel@canaries64> (sfid-20130805_220924_787998_49423902)
+Subject: [PATCH 2/3] staging: vt6656: rxtx.c: s_vGetFreeContext use single
+ tx memset.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 05 Aug 2013 21:09:14 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+memset to 0 structure _USB_SEND_CONTEXT pContext->Data to its
+size of MAX_TOTAL_SIZE_WITH_ALL_HEADERS as defined
+in device.h
 
-when you send a new patch please fix this typo.
+This removes the need for memset in the TX path.
 
-Hauke
+It also allows the removal of dead structure
+TX_BUFFER_CONTAINER BufferHeader;
 
-On 08/13/2013 10:03 PM, Arend van Spriel wrote:
-> The function wlc_lcnphy_load_tx_gain_table() has a target PA
-> gain specified for the iPA variant of the bcm4313. This gain
-> value is reduced to avoid PA distortion. The if-statement is
-> removed because it was rather redundant in the first place.
-> Please not that this patch does not provide full iPA support.
-         ^^^
-         note
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index be0c9ce..137608f 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -155,6 +155,7 @@ static void *s_vGetFreeContext(struct vnt_private *pDevice)
+         pContext = pDevice->apTD[ii];
+         if (pContext->bBoolInUse == false) {
+             pContext->bBoolInUse = true;
++		memset(pContext->Data, 0, MAX_TOTAL_SIZE_WITH_ALL_HEADERS);
+             pReturnContext = pContext;
+             break;
+         }
+@@ -1206,7 +1207,6 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 	}
+ 
+     pTxBufHead = (PTX_BUFFER) usbPacketBuf;
+-    memset(pTxBufHead, 0, sizeof(TX_BUFFER));
+ 
+     // Get pkt type
+     if (ntohs(psEthHeader->h_proto) > ETH_DATA_LEN) {
+@@ -1582,8 +1582,6 @@ static void s_vGenerateMACHeader(struct vnt_private *pDevice,
+ {
+ 	struct ieee80211_hdr *pMACHeader = (struct ieee80211_hdr *)pbyBufferAddr;
+ 
+-    memset(pMACHeader, 0, (sizeof(struct ieee80211_hdr)));
+-
+     if (uDMAIdx == TYPE_ATIMDMA) {
+     	pMACHeader->frame_control = TYPE_802_11_ATIM;
+     } else {
+@@ -1699,7 +1697,6 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+     cbFrameBodySize = pPacket->cbPayloadLen;
+     pTxBufHead = (PSTxBufHead) pbyTxBufferAddr;
+     wTxBufSize = sizeof(STxBufHead);
+-    memset(pTxBufHead, 0, wTxBufSize);
+ 
+     if (pDevice->byBBType == BB_TYPE_11A) {
+         wCurrentRate = RATE_6M;
+@@ -1828,9 +1825,6 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+         cbHeaderSize = wTxBufSize + sizeof(SRrvTime_ab) + sizeof(STxDataHead_ab);
+     }
+ 
+-    memset((void *)(pbyTxBufferAddr + wTxBufSize), 0,
+-	   (cbHeaderSize - wTxBufSize));
+-
+     memcpy(&(sEthHeader.h_dest[0]),
+ 	   &(pPacket->p80211Header->sA3.abyAddr1[0]),
+ 	   ETH_ALEN);
+@@ -1968,7 +1962,6 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+ 
+     pTxBufHead = (PSTxShortBufHead) pbyTxBufferAddr;
+     wTxBufSize = sizeof(STxShortBufHead);
+-    memset(pTxBufHead, 0, wTxBufSize);
+ 
+     if (pDevice->byBBType == BB_TYPE_11A) {
+         wCurrentRate = RATE_6M;
+@@ -2077,7 +2070,6 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+     pbyTxBufferAddr = (u8 *)(&pTX_Buffer->adwTxKey[0]);
+     pTxBufHead = (PSTxBufHead) pbyTxBufferAddr;
+     wTxBufSize = sizeof(STxBufHead);
+-    memset(pTxBufHead, 0, wTxBufSize);
+ 
+     if (pDevice->byBBType == BB_TYPE_11A) {
+         wCurrentRate = RATE_6M;
+@@ -2233,8 +2225,6 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+         pvTxDataHd = (PSTxDataHead_ab) (pbyTxBufferAddr + wTxBufSize + sizeof(SRrvTime_ab) + cbMICHDR);
+         cbHeaderSize = wTxBufSize + sizeof(SRrvTime_ab) + cbMICHDR + sizeof(STxDataHead_ab);
+     }
+-    memset((void *)(pbyTxBufferAddr + wTxBufSize), 0,
+-	   (cbHeaderSize - wTxBufSize));
+     memcpy(&(sEthHeader.h_dest[0]),
+ 	   &(p80211Header->sA3.abyAddr1[0]),
+ 	   ETH_ALEN);
+-- 
+1.8.1.2
+
+
 
 
