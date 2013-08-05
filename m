@@ -1,61 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:60769 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755772Ab3HFK1c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 06:27:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <000801ce927f$fc7549d0$f55fdd70$@samsung.com>
-References: <000801ce927f$fc7549d0$f55fdd70$@samsung.com>
-Date: Tue, 6 Aug 2013 12:27:31 +0200
-Message-ID: <CAL1gcdNVLRPRTwHMn5RZ4Mq=Mhq=omCN=8+wKiex3innhzCzDA@mail.gmail.com> (sfid-20130806_122739_408888_D92C4091)
-Subject: Re: [PATCH 3/3] net: wireless: rt2x00: Staticize rt2x00queue_pause_queue_nocheck()
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:36204 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754712Ab3HET4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Aug 2013 15:56:31 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 04/12] ath9k: add CAB queue info to debugfs
+Date: Mon,  5 Aug 2013 21:56:15 +0200
+Message-Id: <1375732583-39001-4-git-send-email-nbd@openwrt.org> (sfid-20130805_215639_171773_6F1C9C4A)
+In-Reply-To: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
+References: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 10:36 AM, Jingoo Han <jg1.han@samsung.com> wrote:
-> rt2x00queue_pause_queue_nocheck()is used only in this file.
-> Fix the following sparse warning:
->
-> drivers/net/wireless/rt2x00/rt2x00queue.c:939:6: warning: symbol 'rt2x00queue_pause_queue_nocheck' was not declared. Should it be
-> static?
->
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index aa95c6c..6c8a33b 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -936,7 +936,7 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
->         spin_unlock_irqrestore(&queue->index_lock, irqflags);
->  }
->
-> -void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
-> +static void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
->  {
->         switch (queue->qid) {
->         case QID_AC_VO:
-> --
-> 1.7.10.4
->
->
-
-
-
--- 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-Gertjan
+ drivers/net/wireless/ath/ath9k/debug.c | 43 +++++++++++++++++++++-------------
+ 1 file changed, 27 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index e744d97..d94facc 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -726,6 +726,28 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	return retval;
+ }
+ 
++static ssize_t print_queue(struct ath_softc *sc, struct ath_txq *txq,
++			   char *buf, ssize_t size)
++{
++	ssize_t len = 0;
++
++	ath_txq_lock(sc, txq);
++
++	len += snprintf(buf + len, size - len, "%s: %d ",
++			"qnum", txq->axq_qnum);
++	len += snprintf(buf + len, size - len, "%s: %2d ",
++			"qdepth", txq->axq_depth);
++	len += snprintf(buf + len, size - len, "%s: %2d ",
++			"ampdu-depth", txq->axq_ampdu_depth);
++	len += snprintf(buf + len, size - len, "%s: %3d ",
++			"pending", txq->pending_frames);
++	len += snprintf(buf + len, size - len, "%s: %d\n",
++			"stopped", txq->stopped);
++
++	ath_txq_unlock(sc, txq);
++	return len;
++}
++
+ static ssize_t read_file_queues(struct file *file, char __user *user_buf,
+ 				size_t count, loff_t *ppos)
+ {
+@@ -743,24 +765,13 @@ static ssize_t read_file_queues(struct file *file, char __user *user_buf,
+ 
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 		txq = sc->tx.txq_map[i];
+-		len += snprintf(buf + len, size - len, "(%s): ", qname[i]);
+-
+-		ath_txq_lock(sc, txq);
+-
+-		len += snprintf(buf + len, size - len, "%s: %d ",
+-				"qnum", txq->axq_qnum);
+-		len += snprintf(buf + len, size - len, "%s: %2d ",
+-				"qdepth", txq->axq_depth);
+-		len += snprintf(buf + len, size - len, "%s: %2d ",
+-				"ampdu-depth", txq->axq_ampdu_depth);
+-		len += snprintf(buf + len, size - len, "%s: %3d ",
+-				"pending", txq->pending_frames);
+-		len += snprintf(buf + len, size - len, "%s: %d\n",
+-				"stopped", txq->stopped);
+-
+-		ath_txq_unlock(sc, txq);
++		len += snprintf(buf + len, size - len, "(%s):  ", qname[i]);
++		len += print_queue(sc, txq, buf + len, size - len);
+ 	}
+ 
++	len += snprintf(buf + len, size - len, "(CAB): ");
++	len += print_queue(sc, sc->beacon.cabq, buf + len, size - len);
++
+ 	if (len > size)
+ 		len = size;
+ 
+-- 
+1.8.0.2
+
