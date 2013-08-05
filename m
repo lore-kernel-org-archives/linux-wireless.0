@@ -1,41 +1,637 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:51773 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757879Ab3HJL5O (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:52919 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754305Ab3HEUMB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 07:57:14 -0400
-Date: Sat, 10 Aug 2013 07:57:13 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Oleksij Rempel <linux@rempel-privat.de>
-cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: FUSB200 xhci issue
-In-Reply-To: <5205DB86.2050905@rempel-privat.de>
-Message-ID: <Pine.LNX.4.44L0.1308100755250.31571-100000@netrider.rowland.org> (sfid-20130810_135718_579082_BFED64C7)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Mon, 5 Aug 2013 16:12:01 -0400
+Received: by mail-wg0-f49.google.com with SMTP id y10so2791523wgg.4
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 13:11:59 -0700 (PDT)
+Message-ID: <1375733514.7004.28.camel@canaries64> (sfid-20130805_221206_058982_02C3E1BC)
+Subject: [PATCH 3/3] staging: vt6656: rxtx.h dead code typedef union
+ tagUTX_BUFFER_CONTAINER
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 05 Aug 2013 21:11:54 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 10 Aug 2013, Oleksij Rempel wrote:
+This is part of the Remote NDIS message format with patch
 
-> usb reset do not affect behaviour of firmware. At least after i remove 
-> all attempts to reboot FW from driver.
-> If adapter will got reset signal, FW will be notified about it. Then FW 
-> will remove reset flag and will just continue to work. After usb reset, 
-> lsusb show correct, update information - EP3 and EP4 was updated from 
-> INT to BULK.
-> 
-> I assume, no i need to add to the driver some kind of firmware check. 
-> What is the proper way to do it?
+vt6656: rxtx.c: s_vGetFreeContext use single tx memset.
 
-The simplest way is to put a new value for the device descriptor's 
-bcdDevice value in the firmware.  Then all you have to do is check that 
-value.
+there is not need for this structure.
 
-Alan Stern
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.h | 573 ------------------------------------------
+ 1 file changed, 573 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index d854b38..3e2a877 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -32,568 +32,6 @@
+ #include "device.h"
+ #include "wcmd.h"
+ 
+-//
+-// RTS buffer header
+-//
+-typedef struct tagSRTSDataF {
+-    u16    wFrameControl;
+-    u16    wDurationID;
+-    u8    abyRA[ETH_ALEN];
+-    u8    abyTA[ETH_ALEN];
+-} SRTSDataF, *PSRTSDataF;
+-
+-//
+-// CTS buffer header
+-//
+-typedef struct tagSCTSDataF {
+-    u16    wFrameControl;
+-    u16    wDurationID;
+-    u8    abyRA[ETH_ALEN];
+-    u16    wReserved;
+-} SCTSDataF, *PSCTSDataF;
+-
+-//
+-// MICHDR data header
+-//
+-typedef struct tagSMICHDR {
+-	u32 adwHDR0[4];
+-	u32 adwHDR1[4];
+-	u32 adwHDR2[4];
+-} SMICHDR, *PSMICHDR;
+-
+-typedef struct tagSTX_NAF_G_RTS
+-{
+-    //RsvTime
+-    u16            wRTSTxRrvTime_ba;
+-    u16            wRTSTxRrvTime_aa;
+-    u16            wRTSTxRrvTime_bb;
+-    u16            wReserved2;
+-    u16            wTxRrvTime_b;
+-    u16            wTxRrvTime_a;
+-
+-    //RTS
+-    u8            byRTSSignalField_b;
+-    u8            byRTSServiceField_b;
+-    u16            wRTSTransmitLength_b;
+-    u8            byRTSSignalField_a;
+-    u8            byRTSServiceField_a;
+-    u16            wRTSTransmitLength_a;
+-    u16            wRTSDuration_ba;
+-    u16            wRTSDuration_aa;
+-    u16            wRTSDuration_bb;
+-    u16            wReserved3;
+-    SRTSDataF       sRTS;
+-
+-    //Data
+-    u8            bySignalField_b;
+-    u8            byServiceField_b;
+-    u16            wTransmitLength_b;
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_b;
+-    u16            wDuration_a;
+-    u16            wTimeStampOff_b;
+-    u16            wTimeStampOff_a;
+-
+-} TX_NAF_G_RTS, *PTX_NAF_G_RTS;
+-
+-typedef struct tagSTX_NAF_G_RTS_MIC
+-{
+-    //RsvTime
+-    u16            wRTSTxRrvTime_ba;
+-    u16            wRTSTxRrvTime_aa;
+-    u16            wRTSTxRrvTime_bb;
+-    u16            wReserved2;
+-    u16            wTxRrvTime_b;
+-    u16            wTxRrvTime_a;
+-
+-    SMICHDR         sMICHDR;
+-
+-    //RTS
+-    u8            byRTSSignalField_b;
+-    u8            byRTSServiceField_b;
+-    u16            wRTSTransmitLength_b;
+-    u8            byRTSSignalField_a;
+-    u8            byRTSServiceField_a;
+-    u16            wRTSTransmitLength_a;
+-    u16            wRTSDuration_ba;
+-    u16            wRTSDuration_aa;
+-    u16            wRTSDuration_bb;
+-    u16            wReserved3;
+-    SRTSDataF       sRTS;
+-
+-    //Data
+-    u8            bySignalField_b;
+-    u8            byServiceField_b;
+-    u16            wTransmitLength_b;
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_b;
+-    u16            wDuration_a;
+-    u16            wTimeStampOff_b;
+-    u16            wTimeStampOff_a;
+-
+-} TX_NAF_G_RTS_MIC, *PTX_NAF_G_RTS_MIC;
+-
+-typedef struct tagSTX_NAF_G_CTS
+-{
+-    //RsvTime
+-    u16            wCTSTxRrvTime_ba;
+-    u16            wReserved2;
+-    u16            wTxRrvTime_b;
+-    u16            wTxRrvTime_a;
+-
+-    //CTS
+-    u8            byCTSSignalField_b;
+-    u8            byCTSServiceField_b;
+-    u16            wCTSTransmitLength_b;
+-    u16            wCTSDuration_ba;
+-    u16            wReserved3;
+-    SCTSDataF       sCTS;
+-
+-    //Data
+-    u8            bySignalField_b;
+-    u8            byServiceField_b;
+-    u16            wTransmitLength_b;
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_b;
+-    u16            wDuration_a;
+-    u16            wTimeStampOff_b;
+-    u16            wTimeStampOff_a;
+-
+-} TX_NAF_G_CTS, *PTX_NAF_G_CTS;
+-
+-typedef struct tagSTX_NAF_G_CTS_MIC
+-{
+-    //RsvTime
+-    u16            wCTSTxRrvTime_ba;
+-    u16            wReserved2;
+-    u16            wTxRrvTime_b;
+-    u16            wTxRrvTime_a;
+-
+-    SMICHDR         sMICHDR;
+-
+-    //CTS
+-    u8            byCTSSignalField_b;
+-    u8            byCTSServiceField_b;
+-    u16            wCTSTransmitLength_b;
+-    u16            wCTSDuration_ba;
+-    u16            wReserved3;
+-    SCTSDataF       sCTS;
+-
+-    //Data
+-    u8            bySignalField_b;
+-    u8            byServiceField_b;
+-    u16            wTransmitLength_b;
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_b;
+-    u16            wDuration_a;
+-    u16            wTimeStampOff_b;
+-    u16            wTimeStampOff_a;
+-
+-} TX_NAF_G_CTS_MIC, *PTX_NAF_G_CTS_MIC;
+-
+-typedef struct tagSTX_NAF_G_BEACON
+-{
+-    u16            wFIFOCtl;
+-    u16            wTimeStamp;
+-
+-    //CTS
+-    u8            byCTSSignalField_b;
+-    u8            byCTSServiceField_b;
+-    u16            wCTSTransmitLength_b;
+-    u16            wCTSDuration_ba;
+-    u16            wReserved1;
+-    SCTSDataF       sCTS;
+-
+-    //Data
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_a;
+-    u16            wTimeStampOff_a;
+-
+-} TX_NAF_G_BEACON, *PTX_NAF_G_BEACON;
+-
+-typedef struct tagSTX_NAF_AB_RTS
+-{
+-    //RsvTime
+-    u16            wRTSTxRrvTime_ab;
+-    u16            wTxRrvTime_ab;
+-
+-    //RTS
+-    u8            byRTSSignalField_ab;
+-    u8            byRTSServiceField_ab;
+-    u16            wRTSTransmitLength_ab;
+-    u16            wRTSDuration_ab;
+-    u16            wReserved2;
+-    SRTSDataF       sRTS;
+-
+-    //Data
+-    u8            bySignalField_ab;
+-    u8            byServiceField_ab;
+-    u16            wTransmitLength_ab;
+-    u16            wDuration_ab;
+-    u16            wTimeStampOff_ab;
+-
+-} TX_NAF_AB_RTS, *PTX_NAF_AB_RTS;
+-
+-typedef struct tagSTX_NAF_AB_RTS_MIC
+-{
+-    //RsvTime
+-    u16            wRTSTxRrvTime_ab;
+-    u16            wTxRrvTime_ab;
+-
+-    SMICHDR         sMICHDR;
+-
+-    //RTS
+-    u8            byRTSSignalField_ab;
+-    u8            byRTSServiceField_ab;
+-    u16            wRTSTransmitLength_ab;
+-    u16            wRTSDuration_ab;
+-    u16            wReserved2;
+-    SRTSDataF       sRTS;
+-
+-    //Data
+-    u8            bySignalField_ab;
+-    u8            byServiceField_ab;
+-    u16            wTransmitLength_ab;
+-    u16            wDuration_ab;
+-    u16            wTimeStampOff_ab;
+-
+-} TX_NAF_AB_RTS_MIC, *PTX_NAF_AB_RTS_MIC;
+-
+-typedef struct tagSTX_NAF_AB_CTS
+-{
+-    //RsvTime
+-    u16            wReserved2;
+-    u16            wTxRrvTime_ab;
+-
+-    //Data
+-    u8            bySignalField_ab;
+-    u8            byServiceField_ab;
+-    u16            wTransmitLength_ab;
+-    u16            wDuration_ab;
+-    u16            wTimeStampOff_ab;
+-
+-} TX_NAF_AB_CTS, *PTX_NAF_AB_CTS;
+-
+-typedef struct tagSTX_NAF_AB_CTS_MIC
+-{
+-    //RsvTime
+-    u16            wReserved2;
+-    u16            wTxRrvTime_ab;
+-
+-    SMICHDR         sMICHDR;
+-
+-    //Data
+-    u8            bySignalField_ab;
+-    u8            byServiceField_ab;
+-    u16            wTransmitLength_ab;
+-    u16            wDuration_ab;
+-    u16            wTimeStampOff_ab;
+-
+-} TX_NAF_AB_CTS_MIC, *PTX_NAF_AB_CTS_MIC;
+-
+-typedef struct tagSTX_NAF_AB_BEACON
+-{
+-    u16            wFIFOCtl;
+-    u16            wTimeStamp;
+-
+-   //Data
+-    u8            bySignalField_ab;
+-    u8            byServiceField_ab;
+-    u16            wTransmitLength_ab;
+-    u16            wDuration_ab;
+-    u16            wTimeStampOff_ab;
+-
+-} TX_NAF_AB_BEACON, *PTX_NAF_AB_BEACON;
+-
+-typedef struct tagSTX_AF_G_RTS
+-{
+-    //RsvTime
+-    u16            wRTSTxRrvTime_ba;
+-    u16            wRTSTxRrvTime_aa;
+-    u16            wRTSTxRrvTime_bb;
+-    u16            wReserved2;
+-    u16            wTxRrvTime_b;
+-    u16            wTxRrvTime_a;
+-
+-    //RTS
+-    u8            byRTSSignalField_b;
+-    u8            byRTSServiceField_b;
+-    u16            wRTSTransmitLength_b;
+-    u8            byRTSSignalField_a;
+-    u8            byRTSServiceField_a;
+-    u16            wRTSTransmitLength_a;
+-    u16            wRTSDuration_ba;
+-    u16            wRTSDuration_aa;
+-    u16            wRTSDuration_bb;
+-    u16            wReserved3;
+-    u16            wRTSDuration_ba_f0;
+-    u16            wRTSDuration_aa_f0;
+-    u16            wRTSDuration_ba_f1;
+-    u16            wRTSDuration_aa_f1;
+-    SRTSDataF       sRTS;
+-
+-    //Data
+-    u8            bySignalField_b;
+-    u8            byServiceField_b;
+-    u16            wTransmitLength_b;
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_b;
+-    u16            wDuration_a;
+-    u16            wDuration_a_f0;
+-    u16            wDuration_a_f1;
+-    u16            wTimeStampOff_b;
+-    u16            wTimeStampOff_a;
+-
+-} TX_AF_G_RTS, *PTX_AF_G_RTS;
+-
+-typedef struct tagSTX_AF_G_RTS_MIC
+-{
+-    //RsvTime
+-    u16            wRTSTxRrvTime_ba;
+-    u16            wRTSTxRrvTime_aa;
+-    u16            wRTSTxRrvTime_bb;
+-    u16            wReserved2;
+-    u16            wTxRrvTime_b;
+-    u16            wTxRrvTime_a;
+-
+-    SMICHDR         sMICHDR;
+-
+-    //RTS
+-    u8            byRTSSignalField_b;
+-    u8            byRTSServiceField_b;
+-    u16            wRTSTransmitLength_b;
+-    u8            byRTSSignalField_a;
+-    u8            byRTSServiceField_a;
+-    u16            wRTSTransmitLength_a;
+-    u16            wRTSDuration_ba;
+-    u16            wRTSDuration_aa;
+-    u16            wRTSDuration_bb;
+-    u16            wReserved3;
+-    u16            wRTSDuration_ba_f0;
+-    u16            wRTSDuration_aa_f0;
+-    u16            wRTSDuration_ba_f1;
+-    u16            wRTSDuration_aa_f1;
+-    SRTSDataF       sRTS;
+-
+-    //Data
+-    u8            bySignalField_b;
+-    u8            byServiceField_b;
+-    u16            wTransmitLength_b;
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_b;
+-    u16            wDuration_a;
+-    u16            wDuration_a_f0;
+-    u16            wDuration_a_f1;
+-    u16            wTimeStampOff_b;
+-    u16            wTimeStampOff_a;
+-
+-} TX_AF_G_RTS_MIC, *PTX_AF_G_RTS_MIC;
+-
+-typedef struct tagSTX_AF_G_CTS
+-{
+-    //RsvTime
+-    u16            wCTSTxRrvTime_ba;
+-    u16            wReserved2;
+-    u16            wTxRrvTime_b;
+-    u16            wTxRrvTime_a;
+-
+-    //CTS
+-    u8            byCTSSignalField_b;
+-    u8            byCTSServiceField_b;
+-    u16            wCTSTransmitLength_b;
+-    u16            wCTSDuration_ba;
+-    u16            wReserved3;
+-    u16            wCTSDuration_ba_f0;
+-    u16            wCTSDuration_ba_f1;
+-    SCTSDataF       sCTS;
+-
+-    //Data
+-    u8            bySignalField_b;
+-    u8            byServiceField_b;
+-    u16            wTransmitLength_b;
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_b;
+-    u16            wDuration_a;
+-    u16            wDuration_a_f0;
+-    u16            wDuration_a_f1;
+-    u16            wTimeStampOff_b;
+-    u16            wTimeStampOff_a;
+-
+-} TX_AF_G_CTS, *PTX_AF_G_CTS;
+-
+-typedef struct tagSTX_AF_G_CTS_MIC
+-{
+-    //RsvTime
+-    u16            wCTSTxRrvTime_ba;
+-    u16            wReserved2;
+-    u16            wTxRrvTime_b;
+-    u16            wTxRrvTime_a;
+-
+-    SMICHDR         sMICHDR;
+-
+-    //CTS
+-    u8            byCTSSignalField_b;
+-    u8            byCTSServiceField_b;
+-    u16            wCTSTransmitLength_b;
+-    u16            wCTSDuration_ba;
+-    u16            wReserved3;
+-    u16            wCTSDuration_ba_f0;
+-    u16            wCTSDuration_ba_f1;
+-    SCTSDataF       sCTS;
+-
+-    //Data
+-    u8            bySignalField_b;
+-    u8            byServiceField_b;
+-    u16            wTransmitLength_b;
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_b;
+-    u16            wDuration_a;
+-    u16            wDuration_a_f0;
+-    u16            wDuration_a_f1;
+-    u16            wTimeStampOff_b;
+-    u16            wTimeStampOff_a;
+-
+-} TX_AF_G_CTS_MIC, *PTX_AF_G_CTS_MIC;
+-
+-typedef struct tagSTX_AF_A_RTS
+-{
+-    //RsvTime
+-    u16            wRTSTxRrvTime_a;
+-    u16            wTxRrvTime_a;
+-
+-    //RTS
+-    u8            byRTSSignalField_a;
+-    u8            byRTSServiceField_a;
+-    u16            wRTSTransmitLength_a;
+-    u16            wRTSDuration_a;
+-    u16            wReserved2;
+-    u16            wRTSDuration_a_f0;
+-    u16            wRTSDuration_a_f1;
+-    SRTSDataF       sRTS;
+-
+-    //Data
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_a;
+-    u16            wTimeStampOff_a;
+-    u16            wDuration_a_f0;
+-    u16            wDuration_a_f1;
+-
+-} TX_AF_A_RTS, *PTX_AF_A_RTS;
+-
+-typedef struct tagSTX_AF_A_RTS_MIC
+-{
+-    //RsvTime
+-    u16            wRTSTxRrvTime_a;
+-    u16            wTxRrvTime_a;
+-
+-    SMICHDR         sMICHDR;
+-
+-    //RTS
+-    u8            byRTSSignalField_a;
+-    u8            byRTSServiceField_a;
+-    u16            wRTSTransmitLength_a;
+-    u16            wRTSDuration_a;
+-    u16            wReserved2;
+-    u16            wRTSDuration_a_f0;
+-    u16            wRTSDuration_a_f1;
+-    SRTSDataF       sRTS;
+-
+-    //Data
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_a;
+-    u16            wTimeStampOff_a;
+-    u16            wDuration_a_f0;
+-    u16            wDuration_a_f1;
+-
+-} TX_AF_A_RTS_MIC, *PTX_AF_A_RTS_MIC;
+-
+-typedef struct tagSTX_AF_A_CTS
+-{
+-    //RsvTime
+-    u16            wReserved2;
+-    u16            wTxRrvTime_a;
+-
+-    //Data
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_a;
+-    u16            wTimeStampOff_a;
+-    u16            wDuration_a_f0;
+-    u16            wDuration_a_f1;
+-
+-} TX_AF_A_CTS, *PTX_AF_A_CTS;
+-
+-typedef struct tagSTX_AF_A_CTS_MIC
+-{
+-    //RsvTime
+-    u16            wReserved2;
+-    u16            wTxRrvTime_a;
+-
+-    SMICHDR         sMICHDR;
+-
+-    //Data
+-    u8            bySignalField_a;
+-    u8            byServiceField_a;
+-    u16            wTransmitLength_a;
+-    u16            wDuration_a;
+-    u16            wTimeStampOff_a;
+-    u16            wDuration_a_f0;
+-    u16            wDuration_a_f1;
+-
+-} TX_AF_A_CTS_MIC, *PTX_AF_A_CTS_MIC;
+-
+-//
+-// union with all of the TX Buffer Type
+-//
+-typedef union tagUTX_BUFFER_CONTAINER
+-{
+-    TX_NAF_G_RTS                    RTS_G;
+-    TX_NAF_G_RTS_MIC                RTS_G_MIC;
+-    TX_NAF_G_CTS                    CTS_G;
+-    TX_NAF_G_CTS_MIC                CTS_G_MIC;
+-    //TX_NAF_G_BEACON                 Beacon_G;
+-    TX_NAF_AB_RTS                   RTS_AB;
+-    TX_NAF_AB_RTS_MIC               RTS_AB_MIC;
+-    TX_NAF_AB_CTS                   CTS_AB;
+-    TX_NAF_AB_CTS_MIC               CTS_AB_MIC;
+-    //TX_NAF_AB_BEACON                Beacon_AB;
+-    TX_AF_G_RTS                     RTS_G_AutoFB;
+-    TX_AF_G_RTS_MIC                 RTS_G_AutoFB_MIC;
+-    TX_AF_G_CTS                     CTS_G_AutoFB;
+-    TX_AF_G_CTS_MIC                 CTS_G_AutoFB_MIC;
+-    TX_AF_A_RTS                     RTS_A_AutoFB;
+-    TX_AF_A_RTS_MIC                 RTS_A_AutoFB_MIC;
+-    TX_AF_A_CTS                     CTS_A_AutoFB;
+-    TX_AF_A_CTS_MIC                 CTS_A_AutoFB_MIC;
+-
+-} TX_BUFFER_CONTAINER, *PTX_BUFFER_CONTAINER;
+-
+-//
+-// Remote NDIS message format
+-//
+ typedef struct tagSTX_BUFFER
+ {
+     u8                            byType;
+@@ -605,15 +43,8 @@ typedef struct tagSTX_BUFFER
+     u16                            wTimeStamp;
+     u16                            wFragCtl;
+     u16                            wReserved;
+-
+-    // Actual message
+-    TX_BUFFER_CONTAINER             BufferHeader;
+-
+ } __packed TX_BUFFER, *PTX_BUFFER;
+ 
+-//
+-// Remote NDIS message format
+-//
+ typedef struct tagSBEACON_BUFFER
+ {
+     u8                            byType;
+@@ -622,10 +53,6 @@ typedef struct tagSBEACON_BUFFER
+ 
+     u16                            wFIFOCtl;
+     u16                            wTimeStamp;
+-
+-    // Actual message
+-    TX_BUFFER_CONTAINER             BufferHeader;
+-
+ } __packed BEACON_BUFFER, *PBEACON_BUFFER;
+ 
+ void vDMA0_tx_80211(struct vnt_private *, struct sk_buff *skb);
+-- 
+1.8.1.2
+
+
+
 
