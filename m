@@ -1,55 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:62675 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753501Ab3HaRhg (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:59498 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352Ab3HEJmE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Aug 2013 13:37:36 -0400
-MIME-Version: 1.0
-In-Reply-To: <52210AB9.2090104@infradead.org>
-References: <20130829200013.d9dde1eb64686a32c661b5d3@canb.auug.org.au>
-	<52210AB9.2090104@infradead.org>
-Date: Sat, 31 Aug 2013 19:37:36 +0200
-Message-ID: <CAMuHMdXFmWyiUJF+4HbD=6oGPVXHBAVx=rOC7u=motTQFCKn7g@mail.gmail.com> (sfid-20130831_193754_443420_08519BEE)
-Subject: Re: linux-next: Tree for Aug 30 (brcmfmac)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Linux-Next <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	linux-kbuild <linux-kbuild@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 5 Aug 2013 05:42:04 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] ath9k: Add more PCI IDs for WB225 cards
+Date: Mon,  5 Aug 2013 15:08:28 +0530
+Message-Id: <1375695508-1997-3-git-send-email-sujith@msujith.org> (sfid-20130805_114213_136025_77F00905)
+In-Reply-To: <1375695508-1997-1-git-send-email-sujith@msujith.org>
+References: <1375695508-1997-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 30, 2013 at 11:12 PM, Randy Dunlap <rdunlap@infradead.org> wrote:
-> This bool kconfig symbol:
->
-> config BRCMFMAC_SDIO
->         bool "SDIO bus interface support for FullMAC driver"
->         depends on MMC
->
-> allows BRCMFMAC_SDIO to be y even when MMC=m.
->
-> Is there a reasonable solution to this?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-In order of preference:
-1. Make it tristate
-2. depends on MMC=y
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/pci.c | 72 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 72 insertions(+)
 
-However, the first solution cannot be used as there are several
-"#ifdef CONFIG_BRCMFMAC_SDIO" in the code itself.
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 30652b4..76e8c35 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -72,6 +72,78 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 			 0xE075),
+ 	  .driver_data = ATH9K_PCI_CUS230 | ATH9K_PCI_BT_ANT_DIV },
+ 
++	/* WB225 */
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_ATHEROS,
++			 0x3119),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_ATHEROS,
++			 0x3122),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 0x185F, /* WNC */
++			 0x3119),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 0x185F, /* WNC */
++			 0x3027),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_SAMSUNG,
++			 0x4105),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_SAMSUNG,
++			 0x4106),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_SAMSUNG,
++			 0x410D),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_SAMSUNG,
++			 0x410E),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_SAMSUNG,
++			 0x410F),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_SAMSUNG,
++			 0xC706),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_SAMSUNG,
++			 0xC680),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_SAMSUNG,
++			 0xC708),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_LENOVO,
++			 0x3218),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0032,
++			 PCI_VENDOR_ID_LENOVO,
++			 0x3219),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++
+ 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
+ 
+-- 
+1.8.3.4
 
-Note that there's a similar issue with BRCMFMAC_USB and USB.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
