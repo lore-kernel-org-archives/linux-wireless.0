@@ -1,58 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56035 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S967886Ab3HIONx (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:53692 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751309Ab3HEJmE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 10:13:53 -0400
-Date: Fri, 9 Aug 2013 10:13:52 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Christian Lamparter <chunkeey@googlemail.com>
-cc: Oleksij Rempel <linux@rempel-privat.de>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: FUSB200 xhci issue
-In-Reply-To: <201308090006.07690.chunkeey@googlemail.com>
-Message-ID: <Pine.LNX.4.44L0.1308091011130.1405-100000@iolanthe.rowland.org> (sfid-20130809_161357_910222_672D1993)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Mon, 5 Aug 2013 05:42:04 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] ath9k: Remove ath_ant_comb_update()
+Date: Mon,  5 Aug 2013 15:08:26 +0530
+Message-Id: <1375695508-1997-1-git-send-email-sujith@msujith.org> (sfid-20130805_114209_887143_D2B4E3EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 9 Aug 2013, Christian Lamparter wrote:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> > After loading firmware, a reset generally is necessary.  Some devices 
-> > will do it themselves; others require you to call usb_reset_device().
-> 
-> This makes things complicated. Because, as far as I remember,
-> usb_reset_device() will cause the current driver to be unbound
-> unless its called during .probe, right?
+During a HW reset, the diversity config is programmed
+in the set_board_values() eeprom callback, there is no
+need to do it again by calling ath_ant_comb_update().
 
-If the driver defines pre_reset and post_reset methods, it won't get 
-unbound during a reset.
+Fixed antenna support is not fully handled for 1-stream
+cards, it can be done later.
 
-> You see, ath9k_htc loads its firmware asynchronously in ".probe"
-> (ath9k_htc's .probe routine finishes before the firmware is
-> retrieved via the firmware loader helper... so part of the
-> firmware download is done in a firmware_complete callback
-> on a workqueue). 
-> 
-> So, if we call usb_reset_device there and the driver is unbound
-> and later rebound. the next ath9k_htc .probe will start again and
-> again and again not knowing that it is already initialized 
-> (and we have a loop).
-> 
-> 
-> This could be solved, if the devices changes the usb-id again 
-> when a proper "wifi" ath9k_htc firmware was downloaded. So, the
-> driver would know that it doesn't have to download and reset
-> the device... But we need a "free" USB-ID for that.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/antenna.c | 23 -----------------------
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  1 -
+ drivers/net/wireless/ath/ath9k/debug.c   |  2 +-
+ drivers/net/wireless/ath/ath9k/main.c    |  3 ---
+ 4 files changed, 1 insertion(+), 28 deletions(-)
 
-What about a "get firmware version" sort of thing?  There really should 
-be a way for the driver to tell whether the firmware has already been 
-updated.
-
-Alan Stern
+diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
+index 85391e6..dd1cc73 100644
+--- a/drivers/net/wireless/ath/ath9k/antenna.c
++++ b/drivers/net/wireless/ath/ath9k/antenna.c
+@@ -867,26 +867,3 @@ div_comb_done:
+ 	antcomb->main_recv_cnt = 0;
+ 	antcomb->alt_recv_cnt = 0;
+ }
+-
+-void ath_ant_comb_update(struct ath_softc *sc)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath_hw_antcomb_conf div_ant_conf;
+-	u8 lna_conf;
+-
+-	ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
+-
+-	if (sc->ant_rx == 1)
+-		lna_conf = ATH_ANT_DIV_COMB_LNA1;
+-	else
+-		lna_conf = ATH_ANT_DIV_COMB_LNA2;
+-
+-	div_ant_conf.main_lna_conf = lna_conf;
+-	div_ant_conf.alt_lna_conf = lna_conf;
+-
+-	ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
+-
+-	if (common->bt_ant_diversity)
+-		ath9k_hw_set_bt_ant_diversity(ah, true);
+-}
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 18898ab..c497d52 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -628,7 +628,6 @@ struct ath_ant_comb {
+ };
+ 
+ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
+-void ath_ant_comb_update(struct ath_softc *sc);
+ 
+ /********************/
+ /* Main driver core */
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index daa316b..a155190 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -307,7 +307,7 @@ static ssize_t write_file_bt_ant_diversity(struct file *file,
+ 
+ 	common->bt_ant_diversity = !!bt_ant_diversity;
+ 	ath9k_ps_wakeup(sc);
+-	ath_ant_comb_update(sc);
++	ath9k_hw_set_bt_ant_diversity(sc->sc_ah, common->bt_ant_diversity);
+ 	ath_dbg(common, CONFIG, "Enable WLAN/BT RX Antenna diversity: %d\n",
+ 		common->bt_ant_diversity);
+ 	ath9k_ps_restore(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 1adb803..afeab3c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -238,9 +238,6 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 		ath_restart_work(sc);
+ 	}
+ 
+-	if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx != 3)
+-		ath_ant_comb_update(sc);
+-
+ 	ieee80211_wake_queues(sc->hw);
+ 
+ 	return true;
+-- 
+1.8.3.4
 
