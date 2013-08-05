@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:56087 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755627Ab3H3MaE (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58650 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752741Ab3HEQkh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 08:30:04 -0400
-Subject: [PATCH 0/7] ath10k: pci cleanup
-To: ath10k@lists.infradead.org
+	Mon, 5 Aug 2013 12:40:37 -0400
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 30 Aug 2013 15:29:59 +0300
-Message-ID: <20130830122905.31164.50662.stgit@localhost6.localdomain6> (sfid-20130830_143008_360080_319B8283)
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Bartosz Markowski <bartosz.markowski@tieto.com>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2] ath10k: add SoC power save option to PCI features map
+References: <1375430329-23352-1-git-send-email-bartosz.markowski@tieto.com>
+	<CA+BoTQkD5grL_5dJDgkwo40ET1zax56oN=ZGFxnyGqboQShbgQ@mail.gmail.com>
+Date: Mon, 5 Aug 2013 19:40:14 +0300
+In-Reply-To: <CA+BoTQkD5grL_5dJDgkwo40ET1zax56oN=ZGFxnyGqboQShbgQ@mail.gmail.com>
+	(Michal Kazior's message of "Mon, 5 Aug 2013 15:31:31 +0200")
+Message-ID: <87iozkf5w0.fsf@kamboji.qca.qualcomm.com> (sfid-20130805_184040_855366_49B7726C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Small PCI related code cleanup. Depends on Michal's CE
-clean patchset.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
----
+> On 2 August 2013 09:58, Bartosz Markowski <bartosz.markowski@tieto.com> wrote:
+>> Unify the PCI options location.
+>>
+>> By default the SoC PS option is disabled to boost the
+>> performance and due to poor stability on early HW revisions.
+>> In future we can remove the module parameter and turn on/off
+>> the PS for given hardware.
+>>
+>> This change also makes the pci module parameter for SoC PS static.
+>>
+>> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+>
+> Hmm.. I'm worried about pci wake/sleep locking:
+>
+>  (a) pci_wake() (awake count =1)
+>  (a) do something
+>  Now, if pci_sleep() and pci_wake() happen simultaneously/are
+> preempted splitting primitive operations to:
+>  (a) pci_sleep(): decrease awake count (=0)
+>  (b) pci_wake(): increase awake count (=1), iowrite, wait for awake, return
+>  (a) pci_sleep(): iowrite(). return
+>  The flow in (b) now thinks the device is awake, but it's not
+> guaranteed to be anymore because it has been put to sleep by (a).
 
-Kalle Valo (7):
-      ath10k: pci: make host_ce_config_wlan[] more readable
-      ath10k: make target_ce_config_wlan more readable
-      ath10k: remove void pointer from struct ath10k_pci_compl
-      ath10k: convert ath10k_pci_reg_read/write32() to take struct ath10k
-      ath10k: clean up ath10k_ce_completed_send_next_nolock()
-      ath10k: convert ath10k_pci_wake() to return
-      ath10k: simplify ath10k_ce_init() wake up handling
+Yeah, there's a race alright. I wonder if I have ever seen a proper use
+of a atomic variable in a wireless driver :)
 
+But this doesn't prevent taking this patch as the race has existed since
+the beginning, right?
 
- drivers/net/wireless/ath/ath10k/ce.c  |   98 ++++++++++------
- drivers/net/wireless/ath/ath10k/pci.c |  208 ++++++++++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/pci.h |   22 ++-
- 3 files changed, 227 insertions(+), 101 deletions(-)
-
+-- 
+Kalle Valo
