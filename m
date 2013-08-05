@@ -1,147 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:39995 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751798Ab3HPIXv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 04:23:51 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/2] rt2x00: rt2800lib: introduce rt2800_get_txwi_rxwi_size helper
-Date: Fri, 16 Aug 2013 10:23:29 +0200
-Message-Id: <1376641410-20798-1-git-send-email-juhosg@openwrt.org> (sfid-20130816_102358_220331_CC8D9FF4)
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:49770 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752462Ab3HENbd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Aug 2013 09:31:33 -0400
+Received: by mail-bk0-f42.google.com with SMTP id jk14so988402bkc.29
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 06:31:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1375430329-23352-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1375430329-23352-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Mon, 5 Aug 2013 15:31:31 +0200
+Message-ID: <CA+BoTQkD5grL_5dJDgkwo40ET1zax56oN=ZGFxnyGqboQShbgQ@mail.gmail.com> (sfid-20130805_153138_270771_2B446A97)
+Subject: Re: [PATCH v2] ath10k: add SoC power save option to PCI features map
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rt2800pci driver uses the same [RT]XWI size
-for all chipsets, however some chips requires
-different values.
+On 2 August 2013 09:58, Bartosz Markowski <bartosz.markowski@tieto.com> wrote:
+> Unify the PCI options location.
+>
+> By default the SoC PS option is disabled to boost the
+> performance and due to poor stability on early HW revisions.
+> In future we can remove the module parameter and turn on/off
+> the PS for given hardware.
+>
+> This change also makes the pci module parameter for SoC PS static.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-The size of the [RT]XWI structures is a constant
-value for a given chipset and it does not depend
-on the underlying interface. Add a helper function
-which returns the correct values for the actual
-chipset and use the new helper both in the rt2800usb
-and in the rt2800pci drivers. This ensures that both
-drivers are using the correct values.
+Hmm.. I'm worried about pci wake/sleep locking:
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   23 +++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800lib.h |    4 ++++
- drivers/net/wireless/rt2x00/rt2800pci.c |   11 ++++++++---
- drivers/net/wireless/rt2x00/rt2800usb.c |   11 +----------
- 4 files changed, 36 insertions(+), 13 deletions(-)
+ (a) pci_wake() (awake count =1)
+ (a) do something
+ Now, if pci_sleep() and pci_wake() happen simultaneously/are
+preempted splitting primitive operations to:
+ (a) pci_sleep(): decrease awake count (=0)
+ (b) pci_wake(): increase awake count (=1), iowrite, wait for awake, return
+ (a) pci_sleep(): iowrite(). return
+ The flow in (b) now thinks the device is awake, but it's not
+guaranteed to be anymore because it has been put to sleep by (a).
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index dedc3d4..313da6a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -521,6 +521,29 @@ void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev)
- }
- EXPORT_SYMBOL_GPL(rt2800_disable_wpdma);
- 
-+void rt2800_get_txwi_rxwi_size(struct rt2x00_dev *rt2x00dev,
-+			       unsigned short *txwi_size,
-+			       unsigned short *rxwi_size)
-+{
-+	switch (rt2x00dev->chip.rt) {
-+	case RT3593:
-+		*txwi_size = TXWI_DESC_SIZE_4WORDS;
-+		*rxwi_size = RXWI_DESC_SIZE_5WORDS;
-+		break;
-+
-+	case RT5592:
-+		*txwi_size = TXWI_DESC_SIZE_5WORDS;
-+		*rxwi_size = RXWI_DESC_SIZE_6WORDS;
-+		break;
-+
-+	default:
-+		*txwi_size = TXWI_DESC_SIZE_4WORDS;
-+		*rxwi_size = RXWI_DESC_SIZE_4WORDS;
-+		break;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(rt2800_get_txwi_rxwi_size);
-+
- static bool rt2800_check_firmware_crc(const u8 *data, const size_t len)
- {
- 	u16 fw_crc;
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index 6ec7394..a94ba44 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -226,4 +226,8 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
- 		      struct survey_info *survey);
- void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
- 
-+void rt2800_get_txwi_rxwi_size(struct rt2x00_dev *rt2x00dev,
-+			       unsigned short *txwi_size,
-+			       unsigned short *rxwi_size);
-+
- #endif /* RT2800LIB_H */
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 1f6a4e3..e470fdb 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1223,12 +1223,17 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
- 
- static void rt2800pci_queue_init(struct data_queue *queue)
- {
-+	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
-+	unsigned short txwi_size, rxwi_size;
-+
-+	rt2800_get_txwi_rxwi_size(rt2x00dev, &txwi_size, &rxwi_size);
-+
- 	switch (queue->qid) {
- 	case QID_RX:
- 		queue->limit = 128;
- 		queue->data_size = AGGREGATION_SIZE;
- 		queue->desc_size = RXD_DESC_SIZE;
--		queue->winfo_size = RXWI_DESC_SIZE_4WORDS;
-+		queue->winfo_size = rxwi_size;
- 		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
- 		break;
- 
-@@ -1239,7 +1244,7 @@ static void rt2800pci_queue_init(struct data_queue *queue)
- 		queue->limit = 64;
- 		queue->data_size = AGGREGATION_SIZE;
- 		queue->desc_size = TXD_DESC_SIZE;
--		queue->winfo_size = TXWI_DESC_SIZE_4WORDS;
-+		queue->winfo_size = txwi_size;
- 		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
- 		break;
- 
-@@ -1247,7 +1252,7 @@ static void rt2800pci_queue_init(struct data_queue *queue)
- 		queue->limit = 8;
- 		queue->data_size = 0; /* No DMA required for beacons */
- 		queue->desc_size = TXD_DESC_SIZE;
--		queue->winfo_size = TXWI_DESC_SIZE_4WORDS;
-+		queue->winfo_size = txwi_size;
- 		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
- 		break;
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index fc9efdf..338034e 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -854,16 +854,7 @@ static void rt2800usb_queue_init(struct data_queue *queue)
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 	unsigned short txwi_size, rxwi_size;
- 
--	if (rt2x00_rt(rt2x00dev, RT3593)) {
--		txwi_size = TXWI_DESC_SIZE_4WORDS;
--		rxwi_size = RXWI_DESC_SIZE_5WORDS;
--	} else if (rt2x00_rt(rt2x00dev, RT5592)) {
--		txwi_size = TXWI_DESC_SIZE_5WORDS;
--		rxwi_size = RXWI_DESC_SIZE_6WORDS;
--	} else {
--		txwi_size = TXWI_DESC_SIZE_4WORDS;
--		rxwi_size = RXWI_DESC_SIZE_4WORDS;
--	}
-+	rt2800_get_txwi_rxwi_size(rt2x00dev, &txwi_size, &rxwi_size);
- 
- 	switch (queue->qid) {
- 	case QID_RX:
--- 
-1.7.10
+
+Pozdrawiam / Best regards,
+Michał Kazior.
