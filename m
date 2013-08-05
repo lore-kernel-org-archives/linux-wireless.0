@@ -1,30 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:53137 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752107Ab3HAT6Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 15:58:25 -0400
-Date: Thu, 01 Aug 2013 12:58:24 -0700 (PDT)
-Message-Id: <20130801.125824.1609798602437951363.davem@davemloft.net> (sfid-20130801_215857_265895_6954C9BF)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-08-01
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130801190144.GC13922@tuxdriver.com>
-References: <20130801190144.GC13922@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.ispras.ru ([83.149.199.45]:57295 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754347Ab3HEDSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Aug 2013 23:18:12 -0400
+Message-ID: <51FF1973.7080807@ispras.ru> (sfid-20130805_051832_733095_B35624A8)
+Date: Mon, 05 Aug 2013 07:18:11 +0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+MIME-Version: 1.0
+To: Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: Re: [PATCH] hostap: do not return positive number on failure path
+ in prism2_open()
+References: <1375671750-2835-1-git-send-email-khoroshilov@ispras.ru>
+In-Reply-To: <1375671750-2835-1-git-send-email-khoroshilov@ispras.ru>
+Content-Type: text/plain; charset=windows-1251
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 1 Aug 2013 15:01:44 -0400
+Please ignore this mail, there is a misprint in signed-off line.
+I will resend the patch.
 
-> I'll remind my feeder maintainers to slowdown the patchflow.
+On 08/05/2013 07:02 AM, Alexey Khoroshilov wrote:
+> prism2_open() as an .ndo_open handler should not return positive numbers
+> in case of failure, but it does return 1 in a couple of places.
+>
+> Found by Linux Driver Verification project (linuxtesting.org).
+>
+> Signed-off-by: Alexey Khoroshilov <khoroshilorv@ispras.ru>
+> ---
+>  drivers/net/wireless/hostap/hostap_main.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
+> index 15f0fad..e4f56ad 100644
+> --- a/drivers/net/wireless/hostap/hostap_main.c
+> +++ b/drivers/net/wireless/hostap/hostap_main.c
+> @@ -667,7 +667,7 @@ static int prism2_open(struct net_device *dev)
+>  	if (local->no_pri) {
+>  		printk(KERN_DEBUG "%s: could not set interface UP - no PRI "
+>  		       "f/w\n", dev->name);
+> -		return 1;
+> +		return -ENODEV;
+>  	}
+>  
+>  	if ((local->func->card_present && !local->func->card_present(local)) ||
+> @@ -682,7 +682,7 @@ static int prism2_open(struct net_device *dev)
+>  		printk(KERN_WARNING "%s: could not enable MAC port\n",
+>  		       dev->name);
+>  		prism2_close(dev);
+> -		return 1;
+> +		return -ENODEV;
+>  	}
+>  	if (!local->dev_enabled)
+>  		prism2_callback(local, PRISM2_CALLBACK_ENABLE);
 
-Yes, please do :-)
-
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
-
-Pulled, thanks.
