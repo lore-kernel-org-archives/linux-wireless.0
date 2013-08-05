@@ -1,60 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:57482 "EHLO ebb05.tieto.com"
+Received: from nbd.name ([46.4.11.11]:36218 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933978Ab3HHIQ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 04:16:59 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/4] ath10k: fix HTT service setup
-Date: Thu, 8 Aug 2013 10:16:50 +0200
-Message-ID: <1375949813-10969-2-git-send-email-michal.kazior@tieto.com> (sfid-20130808_101705_861978_0406FEDC)
-In-Reply-To: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
-References: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754897Ab3HET4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Aug 2013 15:56:31 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 11/12] ath9k: improve tx scheduling fairness
+Date: Mon,  5 Aug 2013 21:56:22 +0200
+Message-Id: <1375732583-39001-11-git-send-email-nbd@openwrt.org> (sfid-20130805_215645_324044_8EF3C5E1)
+In-Reply-To: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
+References: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The "disable credit flow" flag was set too late
-and it never was in the HTC service request
-message.
+Instead of trying to schedule the same TID multiple times in a loop,
+iterate over other TIDs/stations first.
 
-This patch prevents firmware from reporting
-(useless) HTC credits for HTT service. HTT service
-doesn't use nor need credits.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath10k/htc.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c | 84 ++++++++++++++++++++---------------
+ 1 file changed, 47 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index ef3329e..7d445d3 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -772,16 +772,16 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 037cc91..274fe3f 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1345,8 +1345,8 @@ ath_tx_form_burst(struct ath_softc *sc, struct ath_txq *txq,
+ 	} while (1);
+ }
  
- 	flags |= SM(tx_alloc, ATH10K_HTC_CONN_FLAGS_RECV_ALLOC);
+-static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+-			      struct ath_atx_tid *tid)
++static bool ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
++			      struct ath_atx_tid *tid, bool *stop)
+ {
+ 	struct ath_buf *bf;
+ 	struct ieee80211_tx_info *tx_info;
+@@ -1355,40 +1355,39 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	int aggr_len = 0;
+ 	bool aggr, last = true;
  
--	req_msg = &msg->connect_service;
--	req_msg->flags = __cpu_to_le16(flags);
--	req_msg->service_id = __cpu_to_le16(conn_req->service_id);
--
- 	/* Only enable credit flow control for WMI ctrl service */
- 	if (conn_req->service_id != ATH10K_HTC_SVC_ID_WMI_CONTROL) {
- 		flags |= ATH10K_HTC_CONN_FLAGS_DISABLE_CREDIT_FLOW_CTRL;
- 		disable_credit_flow_ctrl = true;
+-	do {
+-		if (!ath_tid_has_buffered(tid))
+-			return;
++	if (!ath_tid_has_buffered(tid))
++		return false;
+ 
+-		INIT_LIST_HEAD(&bf_q);
++	INIT_LIST_HEAD(&bf_q);
+ 
+-		bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
+-		if (!bf)
+-			break;
++	bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
++	if (!bf)
++		return false;
+ 
+-		tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
+-		aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
+-		if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
+-		    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH))
+-			break;
++	tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
++	aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
++	if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
++		(!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH))
++		return false;
+ 
+-		ath_set_rates(tid->an->vif, tid->an->sta, bf);
+-		if (aggr)
+-			last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
+-						tid_q, &aggr_len);
+-		else
+-			ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
++	ath_set_rates(tid->an->vif, tid->an->sta, bf);
++	if (aggr)
++		last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
++					tid_q, &aggr_len);
++	else
++		ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
+ 
+-		if (list_empty(&bf_q))
+-			return;
++	if (list_empty(&bf_q))
++		return false;
+ 
+-		if (tid->ac->clear_ps_filter) {
+-			tid->ac->clear_ps_filter = false;
+-			tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+-		}
++	if (tid->ac->clear_ps_filter) {
++		tid->ac->clear_ps_filter = false;
++		tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
++	}
+ 
+-		ath_tx_fill_desc(sc, bf, txq, aggr_len);
+-		ath_tx_txqaddbuf(sc, txq, &bf_q, false);
+-	} while (!last);
++	ath_tx_fill_desc(sc, bf, txq, aggr_len);
++	ath_tx_txqaddbuf(sc, txq, &bf_q, false);
++	return true;
+ }
+ 
+ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+@@ -1824,8 +1823,9 @@ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
+  */
+ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ {
+-	struct ath_atx_ac *ac, *ac_tmp, *last_ac;
++	struct ath_atx_ac *ac, *last_ac;
+ 	struct ath_atx_tid *tid, *last_tid;
++	bool sent = false;
+ 
+ 	if (test_bit(SC_OP_HW_RESET, &sc->sc_flags) ||
+ 	    list_empty(&txq->axq_acq) ||
+@@ -1834,15 +1834,17 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 
+ 	rcu_read_lock();
+ 
+-	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
+ 	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
++	while (!list_empty(&txq->axq_acq)) {
++		bool stop = false;
+ 
+-	list_for_each_entry_safe(ac, ac_tmp, &txq->axq_acq, list) {
++		ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
+ 		last_tid = list_entry(ac->tid_q.prev, struct ath_atx_tid, list);
+ 		list_del(&ac->list);
+ 		ac->sched = false;
+ 
+ 		while (!list_empty(&ac->tid_q)) {
++
+ 			tid = list_first_entry(&ac->tid_q, struct ath_atx_tid,
+ 					       list);
+ 			list_del(&tid->list);
+@@ -1851,7 +1853,8 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 			if (tid->paused)
+ 				continue;
+ 
+-			ath_tx_sched_aggr(sc, txq, tid);
++			if (ath_tx_sched_aggr(sc, txq, tid, &stop))
++				sent = true;
+ 
+ 			/*
+ 			 * add tid to round-robin queue if more frames
+@@ -1860,8 +1863,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 			if (ath_tid_has_buffered(tid))
+ 				ath_tx_queue_tid(txq, tid);
+ 
+-			if (tid == last_tid ||
+-			    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
++			if (stop || tid == last_tid)
+ 				break;
+ 		}
+ 
+@@ -1870,9 +1872,17 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 			list_add_tail(&ac->list, &txq->axq_acq);
+ 		}
+ 
+-		if (ac == last_ac ||
+-		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
++		if (stop)
+ 			break;
++
++		if (ac == last_ac) {
++			if (!sent)
++				break;
++
++			sent = false;
++			last_ac = list_entry(txq->axq_acq.prev,
++					     struct ath_atx_ac, list);
++		}
  	}
  
-+	req_msg = &msg->connect_service;
-+	req_msg->flags = __cpu_to_le16(flags);
-+	req_msg->service_id = __cpu_to_le16(conn_req->service_id);
-+
- 	INIT_COMPLETION(htc->ctl_resp);
- 
- 	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
+ 	rcu_read_unlock();
 -- 
-1.7.9.5
+1.8.0.2
 
