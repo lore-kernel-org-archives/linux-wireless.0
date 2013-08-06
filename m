@@ -1,48 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:56025 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933776Ab3HHIIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 04:08:24 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 0/3] ath10k: firmware-related updates
-Date: Thu, 8 Aug 2013 10:08:15 +0200
-Message-ID: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com> (sfid-20130808_100835_557051_AC6BF1D7)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:54470 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400Ab3HFI4i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 04:56:38 -0400
+Message-ID: <1375779392.8219.9.camel@jlt4.sipsolutions.net> (sfid-20130806_105643_842575_9CB65D5B)
+Subject: pull-request: mac80211-next 2013-08-06
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 06 Aug 2013 10:56:32 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-U37XtXKJdjldEWKBfA88"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-This patchset contains 2 firmware-related upgrades
-and 1 fix (that I though is a good pick to include
-here, since it's related with HTT tx).
+--=-U37XtXKJdjldEWKBfA88
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This keeps backward compatbility with old
-firmware.
+Hi John,
+
+And one more for mac80211-next (and I have nothing for mac80211 today).
+
+Here I have an IBSS improvement, interworking (11u) definitions, a
+change to make the LED blinking nicer, more VHT (11ac) definitions, VHT
+radiotap TX status, channel switch support in cfg80211 and mac80211 as
+well as a small new debugfs file showing driver-buffered data for
+sleeping clients.
+
+Let me know if there's any problem.
+
+Thanks,
+johannes
+
+The following changes since commit c82b5a74cc739385db6e4275fe504a0e9469bf01=
+:
+
+  mac80211: make active monitor injection work w/ HW queue (2013-07-16 09:5=
+8:19 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
+-john
+
+for you to fetch changes up to 73da7d5bab79ad7e16ff44d67c3fe8b9c0b33e5b:
+
+  mac80211: add channel switch command and beacon callbacks (2013-08-01 18:=
+30:33 +0200)
+
+----------------------------------------------------------------
+Antonio Quartulli (1):
+      mac80211: ibss - remove not authorized station earlier
+
+Avinash Patil (1):
+      ieee80211: add definition for interworking support
+
+Fabio Baltieri (1):
+      mac80211: use oneshot blink API for LED triggers
+
+Fred Zhou (1):
+      ieee80211: add definition for 802.11ac information elements
+
+Johannes Berg (1):
+      mac80211: add debugfs for driver-buffered TID bitmap
+
+Karl Beldan (1):
+      mac80211: report some VHT radiotap infos for tx status
+
+Simon Wunderlich (2):
+      nl80211/cfg80211: add channel switch command
+      mac80211: add channel switch command and beacon callbacks
+
+ include/linux/ieee80211.h    |   9 +++
+ include/net/cfg80211.h       |  33 ++++++++
+ include/net/mac80211.h       |  37 +++++++++
+ include/uapi/linux/nl80211.h |  30 +++++++
+ net/mac80211/cfg.c           | 187 +++++++++++++++++++++++++++++++++++++++=
++++-
+ net/mac80211/chan.c          |  58 ++++++++++++++
+ net/mac80211/debugfs_sta.c   |   9 +++
+ net/mac80211/driver-ops.h    |  13 +++
+ net/mac80211/ibss.c          |  30 ++++++-
+ net/mac80211/ieee80211_i.h   |  18 ++++-
+ net/mac80211/iface.c         |   9 +++
+ net/mac80211/led.c           |  19 ++---
+ net/mac80211/led.h           |   4 +-
+ net/mac80211/status.c        |  78 ++++++++++++++----
+ net/mac80211/trace.h         |  26 ++++++
+ net/mac80211/tx.c            |  79 +++++++++++++++++-
+ net/wireless/nl80211.c       | 122 +++++++++++++++++++++++++++-
+ net/wireless/rdev-ops.h      |  12 +++
+ net/wireless/trace.h         |  33 ++++++++
+ 19 files changed, 772 insertions(+), 34 deletions(-)
 
 
-Pozdrawiam / Best regards,
-Michal Kazior.
+--=-U37XtXKJdjldEWKBfA88
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
+-----BEGIN PGP SIGNATURE-----
 
-Michal Kazior (3):
-  ath10k: add support for firmware newer than 636
-  ath10k: clean up HTT tx tid handling
-  ath10k: add support for HTT 3.0
+iQIcBAABCAAGBQJSALpAAAoJEDBSmw7B7bqrp8IP/1SA198OkBlRxhyshYvkZHUw
+H2QhRKwhfFznkTZpgCk2EKt+lXElkQRHLJKUVP5kzBC7rKHXsdgG7MlcHrYBMMBd
+T7l8AeEr/kgTCu5VxjYQAzCKIC7sgI/g4N+ih1USwxKw+93yiyJyKttvnkHWUI8y
+XT5CpNfsRvBEg4FyvR4qivDf1te5pZ3GsznUlhegnfcvogiQDTw2d12yXCwsZu4o
+8q1pWHq7tCI6TK0xCoVs0W/xKtj54iqHU1nHZ1rgnfkOmdBAmO/tuAeeMjBy8ZUB
+CdubSHryi+Yym6C9ayFErGcPbHmD2+qc/CMH2MyA3DEAWcrVf/Rw2TCJSQ3mmaae
+gRpKvfRpLaFwruyvXUYbG2gde9ZAX29SZwiV1D/5cIHgf2P20OvsBgL3FuPELf7n
+qfBLAbU4PliMR88xkP/Sk5n1OdvWVrrm7r48fCZ7e3VNkxaDKXs35d3+5kJ2ETrg
+XGuU0eKCST6HY4X3sHKsyc3F5wfNhHplfRJFTuu1F+WO+HQD8aBhmqNWJGzNs4Ef
+Bbbwae8+5pjtxxQ+C6uB8B5wBv1lHEbNs/LQc17RIK7IS2kg7mELH054vUefkWGL
+C5XGtPvbTvn6Z+wWArKEvUA42k/uY7NsZxy9WjD8oym0fHZET5Fso1efBOEd+BZY
+zbRziphsc7G0f3udRH5A
+=tCwq
+-----END PGP SIGNATURE-----
 
- drivers/net/wireless/ath/ath10k/htt.c    |   16 +++----
- drivers/net/wireless/ath/ath10k/htt.h    |   12 ++---
- drivers/net/wireless/ath/ath10k/htt_tx.c |   70 ++++++++++++++++++++----------
- drivers/net/wireless/ath/ath10k/hw.h     |    3 ++
- drivers/net/wireless/ath/ath10k/mac.c    |   17 ++++++--
- drivers/net/wireless/ath/ath10k/wmi.c    |   29 +++++++++----
- drivers/net/wireless/ath/ath10k/wmi.h    |   16 +++++--
- 7 files changed, 111 insertions(+), 52 deletions(-)
-
--- 
-1.7.9.5
+--=-U37XtXKJdjldEWKBfA88--
 
