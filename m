@@ -1,88 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:40884 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752383Ab3HDIzo (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:45067 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223Ab3HFOqI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Aug 2013 04:55:44 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 07/11] ath9k: Enable WLAN/BT Ant Diversity for WB225/WB195
-Date: Sun,  4 Aug 2013 14:21:58 +0530
-Message-Id: <1375606322-9983-7-git-send-email-sujith@msujith.org> (sfid-20130804_105613_831746_4DC43BB1)
-In-Reply-To: <1375606322-9983-1-git-send-email-sujith@msujith.org>
-References: <1375606322-9983-1-git-send-email-sujith@msujith.org>
+	Tue, 6 Aug 2013 10:46:08 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1375797260.8219.21.camel@jlt4.sipsolutions.net>
+References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
+	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
+Date: Tue, 6 Aug 2013 16:46:06 +0200
+Message-ID: <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com> (sfid-20130806_164627_037473_711CC4FB)
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, Aug 6, 2013 at 3:54 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2013-08-06 at 15:51 +0200, Sedat Dilek wrote:
+>> OK, I did not try with debugging enabled and/or w/o Network-Manager.
+>>
+>> If you know of an issue, please let me know.
+>
+> No, but the dmesg looks like security problems - check wpa_supplicant
+> log
+>
 
-A custom solution for Asus is WB195 based and supports
-WLAN/BT Rx diversity. Identify this card and set the
-capability.
+I start a debug-session like this:
 
-CUS198/CUS230, which are based on WB225 also support
-WLAN/BT Rx diversity.
+# stop network-manager
+# kill -9 $(pidof wpa_supplicant)
+# /sbin/wpa_supplicant -B -P /run/sendsigs.omit.d/wpasupplicant.pid -u
+-s -O /var/run/wpa_supplicant -t -ddd
+# start network-manager
+# tail -f /var/log/syslog
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/pci.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+# egrep 'warn|fail|error' /root/syslog_for-johill.txt
+Aug  6 16:29:00 fambox wpa_supplicant[1150]: wlan0: WPA: 4-Way
+Handshake failed - pre-shared key may be incorrect
+Aug  6 16:29:07 fambox wpa_supplicant[1150]: wlan0: WPA: 4-Way
+Handshake failed - pre-shared key may be incorrect
+Aug  6 16:29:13 fambox NetworkManager[1064]: <warn> quit request
+received, terminating...
+Aug  6 16:30:21 fambox NetworkManager[2541]: <warn> (wlan0): driver
+supports Access Point (AP) mode
+Aug  6 16:30:21 fambox NetworkManager[2541]: <warn> failed to allocate
+link cache: (-10) Operation not supported
+Aug  6 16:30:21 fambox NetworkManager[2541]: <warn> Trying to remove a
+non-existant call id.
+Aug  6 16:30:21 fambox wpa_supplicant[2533]: nl80211: Scan trigger
+failed: ret=-16 (Device or resource busy)
+Aug  6 16:30:27 fambox wpa_supplicant[2533]: EAPOL: External
+notification - EAP fail=0
+Aug  6 16:30:34 fambox wpa_supplicant[2533]: EAPOL: External
+notification - EAP fail=0
+Aug  6 16:30:42 fambox wpa_supplicant[2533]: EAPOL: External
+notification - EAP fail=0
+Aug  6 16:30:48 fambox wpa_supplicant[2533]: EAPOL: External
+notification - EAP fail=0
+Aug  6 16:31:04 fambox NetworkManager[2541]: <warn> quit request
+received, terminating...
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index c585c9b..30652b4 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -29,6 +29,14 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
-+
-+	/* AR9285 card for Asus */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002B,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x2C37),
-+	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x002B) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
-@@ -40,29 +48,29 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 			 0x0032,
- 			 PCI_VENDOR_ID_AZWAVE,
- 			 0x2086),
--	  .driver_data = ATH9K_PCI_CUS198 },
-+	  .driver_data = ATH9K_PCI_CUS198 | ATH9K_PCI_BT_ANT_DIV },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0032,
- 			 PCI_VENDOR_ID_AZWAVE,
- 			 0x1237),
--	  .driver_data = ATH9K_PCI_CUS198 },
-+	  .driver_data = ATH9K_PCI_CUS198 | ATH9K_PCI_BT_ANT_DIV },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0032,
- 			 PCI_VENDOR_ID_AZWAVE,
- 			 0x2126),
--	  .driver_data = ATH9K_PCI_CUS198 },
-+	  .driver_data = ATH9K_PCI_CUS198 | ATH9K_PCI_BT_ANT_DIV },
- 
- 	/* PCI-E CUS230 */
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0032,
- 			 PCI_VENDOR_ID_AZWAVE,
- 			 0x2152),
--	  .driver_data = ATH9K_PCI_CUS230 },
-+	  .driver_data = ATH9K_PCI_CUS230 | ATH9K_PCI_BT_ANT_DIV },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0032,
- 			 PCI_VENDOR_ID_FOXCONN,
- 			 0xE075),
--	  .driver_data = ATH9K_PCI_CUS230 },
-+	  .driver_data = ATH9K_PCI_CUS230 | ATH9K_PCI_BT_ANT_DIV },
- 
- 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
--- 
-1.8.3.4
+I send you the full syslog.txt to your sipsolutions email-address (not
+sure if it contains sensitive data).
 
+- Sedat -
+
+> johannes
+>
