@@ -1,86 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1672 "EHLO mms1.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:54297 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968546Ab3HJK1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 06:27:46 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/12] brcmfmac: .txdata() bus callback should not call
- brcmf_txcomplete()
-Date: Sat, 10 Aug 2013 12:27:20 +0200
-Message-ID: <1376130450-29746-3-git-send-email-arend@broadcom.com> (sfid-20130810_122815_897367_AFBFF82B)
-In-Reply-To: <1376130450-29746-1-git-send-email-arend@broadcom.com>
-References: <1376130450-29746-1-git-send-email-arend@broadcom.com>
+	id S1755690Ab3HFKg7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 06:36:59 -0400
+Message-ID: <5200D1C9.1090008@openwrt.org> (sfid-20130806_123701_316111_45A54E56)
+Date: Tue, 06 Aug 2013 12:36:57 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: projekt-wlan@fem.tu-ilmenau.de
+CC: Michael Braun <michael.braun@fem.tu-ilmenau.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: ath9k AR9380 packets take long to be sent
+References: <e86f61ba4c0540d1d22be989362cbeb1@fami-braun.de> <5200D199.8080808@openwrt.org>
+In-Reply-To: <5200D199.8080808@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With firmware-signalling the packet handed to the bus specific driver
-layer should not be discarded with brcmf_txcomplete() in the failure
-path. Instead only an error is returned and the caller decides what
-to do with the packet.
+On 2013-08-06 12:36 PM, Felix Fietkau wrote:
+> On 2013-08-06 10:52 AM, Michael Braun wrote:
+>> Hi,
+>> 
+>> I've upgraded my OpenWRT based AP firmware from kernel 3.8 to kernel 
+>> 3.10.5 with compat-wireless 2013-06-27.
+>> Since then I started to notice that some packets take very long to be 
+>> actually sent from AP to STA.
+> Which specific OpenWrt revision are you using? Also, can you please test
+> with the latest one (I just committed some more fixes).
+One more thing, the clients you're talking about - are these 802.11n
+clients or 802.11a/b/g legacy?
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 1 -
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 6 +++++-
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      | 1 -
- 3 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 5cbce1d..db31312 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2297,7 +2297,6 @@ static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 	spin_lock_irqsave(&bus->txqlock, flags);
- 	if (!brcmf_c_prec_enq(bus->sdiodev->dev, &bus->txq, pkt, prec)) {
- 		skb_pull(pkt, SDPCM_HDRLEN);
--		brcmf_txcomplete(bus->sdiodev->dev, pkt, false);
- 		brcmf_err("out of bus->txq !!!\n");
- 		ret = -ENOSR;
- 	} else {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 29b1f24..601b0d0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1745,6 +1745,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 	int fifo = BRCMF_FWS_FIFO_BCMC;
- 	bool multicast = is_multicast_ether_addr(eh->h_dest);
- 	bool pae = eh->h_proto == htons(ETH_P_PAE);
-+	int ret;
- 
- 	/* determine the priority */
- 	if (!skb->priority)
-@@ -1759,7 +1760,10 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 		brcmf_proto_hdrpush(drvr, ifp->ifidx, 0, skb);
- 
- 		/* Use bus module to send data frame */
--		return brcmf_bus_txdata(drvr->bus_if, skb);
-+		ret = brcmf_bus_txdata(drvr->bus_if, skb);
-+		if (ret < 0)
-+			brcmf_txfinalize(drvr, skb, false);
-+		return ret;
- 	}
- 
- 	/* set control buffer information */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 322cadc..39e01a7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -614,7 +614,6 @@ static int brcmf_usb_tx(struct device *dev, struct sk_buff *skb)
- 	return 0;
- 
- fail:
--	brcmf_txcomplete(dev, skb, false);
- 	return ret;
- }
- 
--- 
-1.8.1.3
-
-
+- Felix
