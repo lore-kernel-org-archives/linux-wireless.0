@@ -1,73 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:60112 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030506Ab3HIINl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 04:13:41 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/3] ath10k: clean up HTT tx tid handling
-Date: Fri, 9 Aug 2013 10:13:32 +0200
-Message-ID: <1376036014-29707-2-git-send-email-michal.kazior@tieto.com> (sfid-20130809_101349_757669_32ADAB8D)
-In-Reply-To: <1376036014-29707-1-git-send-email-michal.kazior@tieto.com>
-References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
- <1376036014-29707-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:54996 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755869Ab3HFMLt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 08:11:49 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: clean up CQM settings code
+Date: Tue,  6 Aug 2013 14:11:42 +0200
+Message-Id: <1375791102-5505-1-git-send-email-johannes@sipsolutions.net> (sfid-20130806_141152_987236_ABFBBC5B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tids weren't mapped really properly. This
-doesn't fix any known bug but seems the right
-thing to do.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Clean up the CQM settings code a bit and while at it
+enforce that when setting the threshold to 0 (disable)
+the hysteresis is also set to 0 to avoid confusion.
+As we haven't enforce it, simply override userspace.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-patch:
- * use brackets {}
+ net/wireless/nl80211.c | 51 ++++++++++++++++++++++++--------------------------
+ 1 file changed, 24 insertions(+), 27 deletions(-)
 
- drivers/net/wireless/ath/ath10k/htt.h |    6 ++++--
- drivers/net/wireless/ath/ath10k/mac.c |    5 ++++-
- 2 files changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 318be46..de45d02 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -106,8 +106,10 @@ enum htt_data_tx_desc_flags1 {
- };
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7e2c389..334697d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7573,14 +7573,12 @@ static int nl80211_set_cqm_txe(struct genl_info *info,
+ 			       u32 rate, u32 pkts, u32 intvl)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct wireless_dev *wdev;
+ 	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
  
- enum htt_data_tx_ext_tid {
--	HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST = 16,
--	HTT_DATA_TX_EXT_TID_MGMT                = 17,
-+	HTT_DATA_TX_EXT_TID_NON_QOS_UNICAST     = 16,
-+	HTT_DATA_TX_EXT_TID_UNUSED              = 17,
-+	HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST = 18,
-+	HTT_DATA_TX_EXT_TID_MGMT                = 19,
- 	HTT_DATA_TX_EXT_TID_INVALID             = 31
- };
+ 	if (rate > 100 || intvl > NL80211_CQM_TXE_MAX_INTVL)
+ 		return -EINVAL;
  
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index cf2ba4d..cc6ad7a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1726,11 +1726,14 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+-	wdev = dev->ieee80211_ptr;
+-
+ 	if (!rdev->ops->set_cqm_txe_config)
+ 		return -EOPNOTSUPP;
  
- 	/* we must calculate tid before we apply qos workaround
- 	 * as we'd lose the qos control field */
--	tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
- 	if (ieee80211_is_data_qos(hdr->frame_control) &&
- 	    is_unicast_ether_addr(ieee80211_get_DA(hdr))) {
- 		u8 *qc = ieee80211_get_qos_ctl(hdr);
- 		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
-+	} else if (is_unicast_ether_addr(ieee80211_get_DA(hdr))) {
-+		tid = HTT_DATA_TX_EXT_TID_NON_QOS_UNICAST;
-+	} else {
-+		tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
- 	}
+@@ -7595,13 +7593,15 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
+ 				s32 threshold, u32 hysteresis)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct wireless_dev *wdev;
+ 	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
  
- 	/* it makes no sense to process injected frames like that */
+ 	if (threshold > 0)
+ 		return -EINVAL;
+ 
+-	wdev = dev->ieee80211_ptr;
++	/* disabling - hysteresis should also be zero then */
++	if (threshold == 0)
++		hysteresis = 0;
+ 
+ 	if (!rdev->ops->set_cqm_rssi_config)
+ 		return -EOPNOTSUPP;
+@@ -7620,36 +7620,33 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+ 	int err;
+ 
+ 	cqm = info->attrs[NL80211_ATTR_CQM];
+-	if (!cqm) {
+-		err = -EINVAL;
+-		goto out;
+-	}
++	if (!cqm)
++		return -EINVAL;
+ 
+ 	err = nla_parse_nested(attrs, NL80211_ATTR_CQM_MAX, cqm,
+ 			       nl80211_attr_cqm_policy);
+ 	if (err)
+-		goto out;
++		return err;
+ 
+ 	if (attrs[NL80211_ATTR_CQM_RSSI_THOLD] &&
+ 	    attrs[NL80211_ATTR_CQM_RSSI_HYST]) {
+-		s32 threshold;
+-		u32 hysteresis;
+-		threshold = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
+-		hysteresis = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_HYST]);
+-		err = nl80211_set_cqm_rssi(info, threshold, hysteresis);
+-	} else if (attrs[NL80211_ATTR_CQM_TXE_RATE] &&
+-		   attrs[NL80211_ATTR_CQM_TXE_PKTS] &&
+-		   attrs[NL80211_ATTR_CQM_TXE_INTVL]) {
+-		u32 rate, pkts, intvl;
+-		rate = nla_get_u32(attrs[NL80211_ATTR_CQM_TXE_RATE]);
+-		pkts = nla_get_u32(attrs[NL80211_ATTR_CQM_TXE_PKTS]);
+-		intvl = nla_get_u32(attrs[NL80211_ATTR_CQM_TXE_INTVL]);
+-		err = nl80211_set_cqm_txe(info, rate, pkts, intvl);
+-	} else
+-		err = -EINVAL;
++		s32 threshold = nla_get_s32(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
++		u32 hysteresis = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_HYST]);
+ 
+-out:
+-	return err;
++		return nl80211_set_cqm_rssi(info, threshold, hysteresis);
++	}
++
++	if (attrs[NL80211_ATTR_CQM_TXE_RATE] &&
++	    attrs[NL80211_ATTR_CQM_TXE_PKTS] &&
++	    attrs[NL80211_ATTR_CQM_TXE_INTVL]) {
++		u32 rate = nla_get_u32(attrs[NL80211_ATTR_CQM_TXE_RATE]);
++		u32 pkts = nla_get_u32(attrs[NL80211_ATTR_CQM_TXE_PKTS]);
++		u32 intvl = nla_get_u32(attrs[NL80211_ATTR_CQM_TXE_INTVL]);
++
++		return nl80211_set_cqm_txe(info, rate, pkts, intvl);
++	}
++
++	return -EINVAL;
+ }
+ 
+ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
 -- 
-1.7.9.5
+1.8.0
 
