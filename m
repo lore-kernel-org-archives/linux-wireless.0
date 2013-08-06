@@ -1,101 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:62549 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755156Ab3HWI7U (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:34176 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755853Ab3HFQE6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 04:59:20 -0400
-Received: by mail-lb0-f179.google.com with SMTP id v1so269721lbd.24
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:18 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v2 00/16] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-Date: Fri, 23 Aug 2013 10:58:03 +0200
-Message-Id: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_105923_830625_BEB8BF5D)
+	Tue, 6 Aug 2013 12:04:58 -0400
+Date: Tue, 6 Aug 2013 18:04:55 +0200
+From: Michael Braun <michael.braun@fem.tu-ilmenau.de>
+To: projekt-wlan@fem.tu-ilmenau.de, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: ath9k AR9380 packets take long to be sent
+Message-ID: <20130806160455.GA29320@dynamic.fami-braun.de> (sfid-20130806_180501_130520_712E2941)
+Reply-To: projekt-wlan@fem.tu-ilmenau.de, linux-wireless@vger.kernel.org
+References: <e86f61ba4c0540d1d22be989362cbeb1@fami-braun.de>
+ <5200D199.8080808@openwrt.org>
+ <5200D1C9.1090008@openwrt.org>
+ <20130806111851.GA25326@dynamic.fami-braun.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130806111851.GA25326@dynamic.fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
-far WCN3660/WCN3680 is available only on MSM platform.
+On Tue, Aug 06, 2013 at 01:18:51PM +0200, Michael Braun wrote:
+> > > Also, can you please test
+> > > with the latest one (I just committed some more fixes).
 
-We got a lot of useful comments from Joe and Johannes. Hopefully the second
-round will be the same productive.
+those have been running for for some hours and I could not reproduce the problem anymore, although before it used to reproduce quickly.
 
-To make review easier the driver sent in several patches, one patch per file, but after
-review it will be sent as one big file.
-
-Firmware can be found here:
-https://github.com/AOKP/vendor_sony/find/jb-mr1
-
-Wiki page is available here:
-http://wireless.kernel.org/en/users/Drivers/wcn36xx
-
-A lot people made a contribution to this driver. Her is the list in
-alphabetical order:
-
-Eugene Krasnikov <k.eugene.e@gmail.com>
-Kalle Valo <kvalo@qca.qualcomm.com>
-Olof Johansson <dev@skyshaper.net>
-Pontus Fuchs <pontus.fuchs@gmail.com>
-Yanbo Li <yanbol@qti.qualcomm.com>
-
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
-
----
-
-Eugene Krasnikov (16):
-  wcn36xx: Add main.c
-  wcn36xx: add debug.c
-  wcn36xx: add debug.h
-  wcn36xx: add dxe.c
-  wcn36xx: add dxe.h
-  wcn36xx: add hal.h
-  wcn36xx: add pmc.c
-  wcn36xx: add pmc.h
-  wcn36xx: add smd.c
-  wcn36xx: add smd.h
-  wcn36xx: add txrx.c
-  wcn36xx: add txrx.h
-  wcn36xx: add wcn36xx.h
-  wcn36xx: add Makefile
-  wcn36xx: add Kconfig
-  wcn36xx: Add wcn36xx to ath Makefile and Kconfig
-
- drivers/net/wireless/ath/Kconfig           |    1 +
- drivers/net/wireless/ath/Makefile          |    1 +
- drivers/net/wireless/ath/wcn36xx/Kconfig   |   16 +
- drivers/net/wireless/ath/wcn36xx/Makefile  |    9 +
- drivers/net/wireless/ath/wcn36xx/debug.c   |  166 +
- drivers/net/wireless/ath/wcn36xx/debug.h   |   49 +
- drivers/net/wireless/ath/wcn36xx/dxe.c     |  804 +++++
- drivers/net/wireless/ath/wcn36xx/dxe.h     |  281 ++
- drivers/net/wireless/ath/wcn36xx/hal.h     | 4657 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/main.c    | 1047 +++++++
- drivers/net/wireless/ath/wcn36xx/pmc.c     |   46 +
- drivers/net/wireless/ath/wcn36xx/pmc.h     |   32 +
- drivers/net/wireless/ath/wcn36xx/smd.c     | 1530 +++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h     |  121 +
- drivers/net/wireless/ath/wcn36xx/txrx.c    |  256 ++
- drivers/net/wireless/ath/wcn36xx/txrx.h    |  160 +
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  236 ++
- 17 files changed, 9412 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Makefile
- create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/hal.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/main.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-
--- 
-1.8.2.2
+Regards,
+ M. Braun
 
