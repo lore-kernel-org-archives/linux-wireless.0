@@ -1,98 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:35164 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751650Ab3HSNLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 09:11:25 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 2/6] rt2x00: rt2800lib: introduce RT2800_HAS_HIGH_SHARED_MEM flag
-Date: Mon, 19 Aug 2013 15:11:14 +0200
-Message-Id: <1376917878-25094-3-git-send-email-juhosg@openwrt.org> (sfid-20130819_151134_346684_64AC22C1)
-In-Reply-To: <1376917878-25094-1-git-send-email-juhosg@openwrt.org>
-References: <1376917878-25094-1-git-send-email-juhosg@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:55468 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753088Ab3HFOuX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 10:50:23 -0400
+Message-ID: <1375800617.8219.23.camel@jlt4.sipsolutions.net> (sfid-20130806_165045_832345_B832970D)
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: sedat.dilek@gmail.com
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 06 Aug 2013 16:50:17 +0200
+In-Reply-To: <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com> (sfid-20130806_164606_692527_0D2AF4DB)
+References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
+	 <1375797260.8219.21.camel@jlt4.sipsolutions.net>
+	 <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
+	 (sfid-20130806_164606_692527_0D2AF4DB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some chipsets have more than 16KB of shared memory.
-Introduce a new rt2800 specific flag to indicate that
-and add a helper function which helps to check the
-presence of the new flag.
+On Tue, 2013-08-06 at 16:46 +0200, Sedat Dilek wrote:
 
-Also enable the new flag for the RT3593 chipset which
-has 24KB of shared memory. The flag can also be used
-for other chipsets, but none of those has been tested
-yet.
+Heh, the interesting messages are always cut out of the log:
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
-Changes since v1:
-  - don't enable the new flag for RT3071 and RT5592
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++++
- drivers/net/wireless/rt2x00/rt2800lib.h |   13 +++++++++++++
- 2 files changed, 17 insertions(+)
+Aug  6 16:30:34 fambox wpa_supplicant[2533]: wlan0: WPA: RX message 1 of 4-Way Handshake from 00:04:0e:e4:00:3d (ver=2)
+Aug  6 16:30:34 fambox wpa_supplicant[2533]: RSN: msg 1/4 key data - hexdump(len=0):
+Aug  6 16:30:34 fambox wpa_supplicant[2533]: Get randomness: len=32 entropy=4
+Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from os_get_random - hexdump(len=32): [REMOVED]
+Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
+Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from internal pool - hexdump(len=16): [REMOVED]
+Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
+Aug  6 16:30:34 fambox rsyslogd-2177: imuxsock begins to drop messages from pid 2533 due to rate-limiting
+[...]
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index aa6b6b0..94da67c 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -7697,6 +7697,7 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
- 
- int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
-+	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
- 	int retval;
- 	u32 reg;
- 
-@@ -7704,6 +7705,9 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	if (retval)
- 		return retval;
- 
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		__set_bit(RT2800_HAS_HIGH_SHARED_MEM, &drv_data->rt2800_flags);
-+
- 	/*
- 	 * Allocate eeprom data.
- 	 */
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index 9b3e8ef..f89d413 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -22,6 +22,10 @@
- #ifndef RT2800LIB_H
- #define RT2800LIB_H
- 
-+enum rt2800_flag {
-+	RT2800_HAS_HIGH_SHARED_MEM,
-+};
-+
- /* RT2800 driver data structure */
- struct rt2800_drv_data {
- 	u8 calibration_bw20;
-@@ -31,6 +35,8 @@ struct rt2800_drv_data {
- 	u8 txmixer_gain_24g;
- 	u8 txmixer_gain_5g;
- 	unsigned int tbtt_tick;
-+
-+	unsigned long rt2800_flags;
- };
- 
- struct rt2800_ops {
-@@ -63,6 +69,13 @@ struct rt2800_ops {
- 	__le32 *(*drv_get_txwi)(struct queue_entry *entry);
- };
- 
-+static inline bool rt2800_has_high_shared_mem(struct rt2x00_dev *rt2x00dev)
-+{
-+	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-+
-+	return test_bit(RT2800_HAS_HIGH_SHARED_MEM, &drv_data->rt2800_flags);
-+}
-+
- static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
- 					const unsigned int offset,
- 					u32 *value)
--- 
-1.7.10
+johannes
+
