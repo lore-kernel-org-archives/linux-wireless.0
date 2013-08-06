@@ -1,101 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36202 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:57815 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754168Ab3HET4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Aug 2013 15:56:31 -0400
+	id S1756277Ab3HFMSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 08:18:25 -0400
 From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 05/12] ath9k: simplify ath_tx_form_aggr
-Date: Mon,  5 Aug 2013 21:56:16 +0200
-Message-Id: <1375732583-39001-5-git-send-email-nbd@openwrt.org> (sfid-20130805_215635_638035_53BE617C)
-In-Reply-To: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
-References: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
+Cc: linville@tuxdriver.com, sujith@msujith.org
+Subject: [PATCH v2 11/12] ath9k: improve tx scheduling fairness
+Date: Tue,  6 Aug 2013 14:18:12 +0200
+Message-Id: <1375791493-83971-11-git-send-email-nbd@openwrt.org> (sfid-20130806_141835_532833_C14B8DB4)
+In-Reply-To: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
+References: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The check for ATH_AMPDU_SUBFRAME_DEFAULT is unnecessary, since it's set
-to half the maximum BlockAck Window size, which is already the maximum
-value that h_baw could possibly have. Also remove unnecessary variables.
+Instead of trying to schedule the same TID multiple times in a loop,
+iterate over other TIDs/stations first.
 
 Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 -
- drivers/net/wireless/ath/ath9k/xmit.c  | 33 ++++++++++++---------------------
- 2 files changed, 12 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c | 89 ++++++++++++++++++++---------------
+ 1 file changed, 50 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 919c8ee..88ef785 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -137,7 +137,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- #define ATH_AGGR_ENCRYPTDELIM      10
- /* minimum h/w qdepth to be sustained to maximize aggregation */
- #define ATH_AGGR_MIN_QDEPTH        2
--#define ATH_AMPDU_SUBFRAME_DEFAULT 32
- 
- #define IEEE80211_SEQ_SEQ_SHIFT    4
- #define IEEE80211_SEQ_MAX          4096
 diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index e54c3e5..8ce2d36 100644
+index 3b66f2b..f9e6eb2 100644
 --- a/drivers/net/wireless/ath/ath9k/xmit.c
 +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -906,9 +906,9 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+@@ -1345,8 +1345,8 @@ ath_tx_form_burst(struct ath_softc *sc, struct ath_txq *txq,
+ 	} while (1);
+ }
+ 
+-static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+-			      struct ath_atx_tid *tid)
++static bool ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
++			      struct ath_atx_tid *tid, bool *stop)
  {
- #define PADBYTES(_len) ((4 - ((_len) % 4)) % 4)
- 	struct ath_buf *bf, *bf_first = NULL, *bf_prev = NULL;
--	int rl = 0, nframes = 0, ndelim, prev_al = 0;
-+	int nframes = 0, ndelim;
- 	u16 aggr_limit = 0, al = 0, bpad = 0,
--		al_delta, h_baw = tid->baw_size / 2;
-+	    al_delta, h_baw = tid->baw_size / 2;
- 	enum ATH_AGGR_STATUS status = ATH_AGGR_DONE;
+ 	struct ath_buf *bf;
  	struct ieee80211_tx_info *tx_info;
- 	struct ath_frame_info *fi;
-@@ -925,33 +925,24 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 		skb = bf->bf_mpdu;
- 		fi = get_frame_info(skb);
+@@ -1355,40 +1355,41 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	int aggr_len = 0;
+ 	bool aggr, last = true;
  
--		if (!bf_first)
-+		if (!bf_first) {
- 			bf_first = bf;
--
--		if (!rl) {
- 			ath_set_rates(tid->an->vif, tid->an->sta, bf);
- 			aggr_limit = ath_lookup_rate(sc, bf, tid);
--			rl = 1;
- 		}
+-	do {
+-		if (!ath_tid_has_buffered(tid))
+-			return;
++	if (!ath_tid_has_buffered(tid))
++		return false;
  
- 		/* do not exceed aggregation limit */
- 		al_delta = ATH_AGGR_DELIM_SZ + fi->framelen;
-+		if (nframes) {
-+			if (aggr_limit < al + bpad + al_delta ||
-+			    ath_lookup_legacy(bf) || nframes >= h_baw) {
-+				status = ATH_AGGR_LIMITED;
-+				break;
-+			}
+-		INIT_LIST_HEAD(&bf_q);
++	INIT_LIST_HEAD(&bf_q);
  
--		if (nframes &&
--		    ((aggr_limit < (al + bpad + al_delta + prev_al)) ||
--		     ath_lookup_legacy(bf))) {
--			status = ATH_AGGR_LIMITED;
+-		bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
+-		if (!bf)
 -			break;
--		}
--
++	bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
++	if (!bf)
++		return false;
+ 
 -		tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
--		if (nframes && (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
+-		aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
+-		if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
+-		    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH))
 -			break;
--
--		/* do not exceed subframe limit */
--		if (nframes >= min((int)h_baw, ATH_AMPDU_SUBFRAME_DEFAULT)) {
--			status = ATH_AGGR_LIMITED;
--			break;
-+			tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
-+			if (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
-+				break;
++	tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
++	aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
++	if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
++		(!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH)) {
++		*stop = true;
++		return false;
++	}
+ 
+-		ath_set_rates(tid->an->vif, tid->an->sta, bf);
+-		if (aggr)
+-			last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
+-						tid_q, &aggr_len);
+-		else
+-			ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
++	ath_set_rates(tid->an->vif, tid->an->sta, bf);
++	if (aggr)
++		last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
++					tid_q, &aggr_len);
++	else
++		ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
+ 
+-		if (list_empty(&bf_q))
+-			return;
++	if (list_empty(&bf_q))
++		return false;
+ 
+-		if (tid->ac->clear_ps_filter) {
+-			tid->ac->clear_ps_filter = false;
+-			tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+-		}
++	if (tid->ac->clear_ps_filter) {
++		tid->ac->clear_ps_filter = false;
++		tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
++	}
+ 
+-		ath_tx_fill_desc(sc, bf, txq, aggr_len);
+-		ath_tx_txqaddbuf(sc, txq, &bf_q, false);
+-	} while (!last);
++	ath_tx_fill_desc(sc, bf, txq, aggr_len);
++	ath_tx_txqaddbuf(sc, txq, &bf_q, false);
++	return true;
+ }
+ 
+ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+@@ -1824,25 +1825,27 @@ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
+  */
+ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ {
+-	struct ath_atx_ac *ac, *ac_tmp, *last_ac;
++	struct ath_atx_ac *ac, *last_ac;
+ 	struct ath_atx_tid *tid, *last_tid;
++	bool sent = false;
+ 
+ 	if (test_bit(SC_OP_HW_RESET, &sc->sc_flags) ||
+-	    list_empty(&txq->axq_acq) ||
+-	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
++	    list_empty(&txq->axq_acq))
+ 		return;
+ 
+ 	rcu_read_lock();
+ 
+-	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
+ 	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
++	while (!list_empty(&txq->axq_acq)) {
++		bool stop = false;
+ 
+-	list_for_each_entry_safe(ac, ac_tmp, &txq->axq_acq, list) {
++		ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
+ 		last_tid = list_entry(ac->tid_q.prev, struct ath_atx_tid, list);
+ 		list_del(&ac->list);
+ 		ac->sched = false;
+ 
+ 		while (!list_empty(&ac->tid_q)) {
++
+ 			tid = list_first_entry(&ac->tid_q, struct ath_atx_tid,
+ 					       list);
+ 			list_del(&tid->list);
+@@ -1851,7 +1854,8 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 			if (tid->paused)
+ 				continue;
+ 
+-			ath_tx_sched_aggr(sc, txq, tid);
++			if (ath_tx_sched_aggr(sc, txq, tid, &stop))
++				sent = true;
+ 
+ 			/*
+ 			 * add tid to round-robin queue if more frames
+@@ -1860,8 +1864,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 			if (ath_tid_has_buffered(tid))
+ 				ath_tx_queue_tid(txq, tid);
+ 
+-			if (tid == last_tid ||
+-			    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
++			if (stop || tid == last_tid)
+ 				break;
  		}
  
- 		/* add padding for previous frame to aggregation length */
+@@ -1870,9 +1873,17 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 			list_add_tail(&ac->list, &txq->axq_acq);
+ 		}
+ 
+-		if (ac == last_ac ||
+-		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
++		if (stop)
+ 			break;
++
++		if (ac == last_ac) {
++			if (!sent)
++				break;
++
++			sent = false;
++			last_ac = list_entry(txq->axq_acq.prev,
++					     struct ath_atx_ac, list);
++		}
+ 	}
+ 
+ 	rcu_read_unlock();
 -- 
 1.8.0.2
 
