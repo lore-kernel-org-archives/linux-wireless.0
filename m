@@ -1,158 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:50376 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755127Ab3HWI7i (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:40036 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751915Ab3HFNlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 04:59:38 -0400
-Received: by mail-lb0-f174.google.com with SMTP id w20so270942lbh.5
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:37 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v2 10/16] wcn36xx: add smd.h
-Date: Fri, 23 Aug 2013 10:58:13 +0200
-Message-Id: <1377248299-21007-11-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_110010_021412_0833E86D)
-In-Reply-To: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+	Tue, 6 Aug 2013 09:41:42 -0400
+Date: Tue, 6 Aug 2013 21:42:18 +0800
+From: Greg KH <greg@kroah.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	stable@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3.10 0/3] Enable 7000 device family on 3.10
+Message-ID: <20130806134218.GB525@kroah.com> (sfid-20130806_154146_011783_B3A8D496)
+References: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
+ <20130802090234.GA20470@kroah.com>
+ <1375792779.8219.16.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1375792779.8219.16.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding smd.h
+On Tue, Aug 06, 2013 at 02:39:39PM +0200, Johannes Berg wrote:
+> [Emmanuel is on vacation, I'll cover for him]
+> 
+> On Fri, 2013-08-02 at 17:02 +0800, Greg KH wrote:
+> > On Mon, Jul 15, 2013 at 02:44:57PM +0300, Emmanuel Grumbach wrote:
+> > > This small patch series enables 7260 and 3160 devices on 3.10
+> > > kernel. Three patches are already in linux.git (3.11-rc1).
+> > > One patch is 3.10 specific and disables configuration that is not
+> > > supported in 3.10.
+> > 
+> > I need the git commit id of these patches in Linus's tree before I can
+> > apply them.  Please resend them with that information.
+> 
+> The second and third patch does have it, and the first patch is only
+> relevant for 3.10 since 3.11 will have more device types enabled, we
+> just didn't get all the code in. This seems to be described in the
+> commit log, do you want more details?
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
----
- drivers/net/wireless/ath/wcn36xx/smd.h | 121 +++++++++++++++++++++++++++++++++
- 1 file changed, 121 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
+Yes, please resend them with those details.  For me to take a patch that
+is not in Linus's tree is a big deal, I need a whole lot of
+justification for it.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-new file mode 100644
-index 0000000..28d5826
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -0,0 +1,121 @@
-+/*
-+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _SMD_H_
-+#define _SMD_H_
-+
-+#include "wcn36xx.h"
-+
-+/* Max shared size is 4k but we take less.*/
-+#define WCN36XX_NV_FRAGMENT_SIZE			3072
-+
-+#define WCN36XX_SMD_BUF_SIZE				4096
-+
-+#define SMD_MSG_TIMEOUT 200
-+#define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
-+#define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
-+/* The PNO version info be contained in the rsp msg */
-+#define WCN36XX_FW_MSG_PNO_VERSION_MASK			0x8000
-+
-+enum wcn36xx_fw_msg_result {
-+	WCN36XX_FW_MSG_RESULT_SUCCESS			= 0,
-+	WCN36XX_FW_MSG_RESULT_SUCCESS_SYNC		= 1,
-+
-+	WCN36XX_FW_MSG_RESULT_MEM_FAIL			= 5,
-+};
-+
-+/******************************/
-+/* SMD requests and responses */
-+/******************************/
-+struct wcn36xx_fw_msg_status_rsp {
-+	u32	status;
-+} __packed;
-+
-+struct wcn36xx;
-+
-+int wcn36xx_smd_open(struct wcn36xx *wcn);
-+void wcn36xx_smd_close(struct wcn36xx *wcn);
-+
-+int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
-+int wcn36xx_smd_start(struct wcn36xx *wcn);
-+int wcn36xx_smd_stop(struct wcn36xx *wcn);
-+int wcn36xx_smd_init_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_start_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_end_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_finish_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
-+int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status);
-+int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
-+int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
-+int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch);
-+int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
-+			    const u8 *sta_mac,
-+			    enum wcn36xx_hal_link_state state);
-+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta, const u8 *bssid,
-+			   bool update);
-+int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
-+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta);
-+int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
-+			    u16 tim_off, u16 p2p_off);
-+int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch);
-+int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb);
-+int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
-+			   enum ani_ed_type enc_type,
-+			   u8 keyidx,
-+			   u8 keylen,
-+			   u8 *key,
-+			   u8 sta_index);
-+int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
-+			   enum ani_ed_type enc_type,
-+			   u8 keyidx,
-+			   u8 keylen,
-+			   u8 *key);
-+int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
-+			      enum ani_ed_type enc_type,
-+			      u8 keyidx,
-+			      u8 sta_index);
-+int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
-+			      enum ani_ed_type enc_type,
-+			      u8 keyidx);
-+int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt);
-+int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn);
-+int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type);
-+int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
-+			     u32 arg3, u32 arg4, u32 arg5);
-+int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);
-+
-+int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
-+		struct ieee80211_sta *sta,
-+		u16 tid,
-+		u16 *ssn,
-+		u8 direction,
-+		u8 sta_index);
-+int wcn36xx_smd_add_ba(struct wcn36xx *wcn);
-+int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
-+int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
-+
-+int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
-+/* WCN36XX configuration parameters */
-+struct wcn36xx_fw_cfg {
-+	u16		id;
-+	u16		len;
-+	u16		pad_bytes;
-+	u16		reserved;
-+	u8		*val;
-+};
-+#endif	/* _SMD_H_ */
--- 
-1.8.2.2
-
+greg k-h
