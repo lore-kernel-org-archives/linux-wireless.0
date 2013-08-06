@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:43003 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755128Ab3HGFYx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 01:24:53 -0400
-Received: by mail-ee0-f41.google.com with SMTP id d17so597154eek.14
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Aug 2013 22:24:51 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] ath10k: setup peer UAPSD flag correctly
-Date: Wed,  7 Aug 2013 07:23:56 +0200
-Message-Id: <1375853036-2418-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20130807_072517_652297_371B09D4)
+Received: from nbd.name ([46.4.11.11]:54278 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755690Ab3HFKgL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 06:36:11 -0400
+Message-ID: <5200D199.8080808@openwrt.org> (sfid-20130806_123614_652205_4E0BC474)
+Date: Tue, 06 Aug 2013 12:36:09 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: projekt-wlan@fem.tu-ilmenau.de
+CC: Michael Braun <michael.braun@fem.tu-ilmenau.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: ath9k AR9380 packets take long to be sent
+References: <e86f61ba4c0540d1d22be989362cbeb1@fami-braun.de>
+In-Reply-To: <e86f61ba4c0540d1d22be989362cbeb1@fami-braun.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup UAPSD peer rate control (FW flag)
-correctly.
+On 2013-08-06 10:52 AM, Michael Braun wrote:
+> Hi,
+> 
+> I've upgraded my OpenWRT based AP firmware from kernel 3.8 to kernel 
+> 3.10.5 with compat-wireless 2013-06-27.
+> Since then I started to notice that some packets take very long to be 
+> actually sent from AP to STA.
+Which specific OpenWrt revision are you using? Also, can you please test
+with the latest one (I just committed some more fixes).
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index cf2ba4d..505be82 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -973,7 +973,7 @@ static void ath10k_peer_assoc_h_qos_ap(struct ath10k *ar,
- 			   sta->uapsd_queues, sta->max_sp);
- 
- 		arg->peer_flags |= WMI_PEER_APSD;
--		arg->peer_flags |= WMI_RC_UAPSD_FLAG;
-+		arg->peer_rate_caps |= WMI_RC_UAPSD_FLAG;
- 
- 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
- 			uapsd |= WMI_AP_PS_UAPSD_AC3_DELIVERY_EN |
--- 
-1.7.9.5
-
+- Felix
