@@ -1,126 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:45995 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030623Ab3HIOgF (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:39145 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755826Ab3HFPn2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 10:36:05 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2 6/6] nl80211: enable IBSS support for channel switch announcements
-Date: Fri,  9 Aug 2013 16:35:20 +0200
-Message-Id: <1376058920-17779-7-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130809_163638_290530_6F9054F6)
-In-Reply-To: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Tue, 6 Aug 2013 11:43:28 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1375802993.8219.26.camel@jlt4.sipsolutions.net>
+References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
+	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
+	<CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
+	<1375800617.8219.23.camel@jlt4.sipsolutions.net>
+	<CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
+	<1375801059.8219.24.camel@jlt4.sipsolutions.net>
+	<CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
+	<CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
+	<1375802297.8219.25.camel@jlt4.sipsolutions.net>
+	<CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com>
+	<CA+icZUVuOqdZUGy2ALAF1CehOqYdr7rtEsXhqNvDtYEns2BuRQ@mail.gmail.com>
+	<1375802993.8219.26.camel@jlt4.sipsolutions.net>
+Date: Tue, 6 Aug 2013 17:43:27 +0200
+Message-ID: <CA+icZUW6P9Z_7z+o+z=qBWSFzyU8tgtY0ou+rmLcEzWbn94OXA@mail.gmail.com> (sfid-20130806_174345_687762_71DD74B2)
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/wireless/nl80211.c |   49 +++++++++++++++++++++++++++++++++---------------
- 1 file changed, 34 insertions(+), 15 deletions(-)
+On Tue, Aug 6, 2013 at 5:29 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2013-08-06 at 17:27 +0200, Sedat Dilek wrote:
+>> On Tue, Aug 6, 2013 at 5:20 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+>> > On Tue, Aug 6, 2013 at 5:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> >>
+>> >>
+>> >>> I have sent you a v2 of my logs (with -d and rsyslog-7.x).
+>> >>
+>> >> Hmm, that looks different? There no longer is anything about "PSK might
+>> >> be wrong", but now just disconnections by the AP, which unfortunately
+>> >> indicate no reason.
+>> >>
+>> >> When was it working last?
+>> >>
+>> >
+>> > next-20130801 was OK here.
+>> >
+>>
+>> What about these lines?
+>>
+>> Aug  6 17:03:37 fambox kernel: [  134.575120] wlan0: deauthenticated
+>> from 00:04:0e:e4:00:3d (Reason: 1)
+>> Aug  6 17:03:37 fambox wpa_supplicant[2424]: wlan0: Event DEAUTH (12) received
+>> Aug  6 17:03:37 fambox wpa_supplicant[2424]: wlan0: Deauthentication
+>> notification
+>> Aug  6 17:03:37 fambox wpa_supplicant[2424]: Deauthentication frame
+>> IE(s) - hexdump(len=0): [NULL]
+>> Aug  6 17:03:37 fambox wpa_supplicant[2424]: wlan0: WPA: 4-Way
+>> Handshake failed - pre-shared key may be incorrect
+>> Aug  6 17:03:37 fambox NetworkManager[2431]: <info> (wlan0):
+>> supplicant interface state: 4-way handshake -> disconnected
+>
+> Yeah but before you had a local deauth request, this time it's the AP
+> kicking you off.
+>
+> I really don't know. Can you try something like wireless-testing maybe?
+> -next could have any kind of breakage I guess ...
+>
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f7cb121..6d3d788 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5632,15 +5632,26 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	static struct nlattr *csa_attrs[NL80211_ATTR_MAX+1];
- 	u8 radar_detect_width = 0;
- 	int err;
-+	bool need_new_beacon = false;
- 
- 	if (!rdev->ops->channel_switch ||
- 	    !(rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH))
- 		return -EOPNOTSUPP;
- 
--	/* may add IBSS support later */
--	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
--	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-+	switch (dev->ieee80211_ptr->iftype) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+		need_new_beacon = true;
-+
-+		/* useless if AP is not running */
-+		if (!wdev->beacon_interval)
-+			return -EINVAL;
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		break;
-+	default:
- 		return -EOPNOTSUPP;
-+	}
- 
- 	memset(&params, 0, sizeof(params));
- 
-@@ -5649,15 +5660,16 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 
- 	/* only important for AP, IBSS and mesh create IEs internally */
--	if (!info->attrs[NL80211_ATTR_CSA_IES])
--		return -EINVAL;
--
--	/* useless if AP is not running */
--	if (!wdev->beacon_interval)
-+	if (need_new_beacon &&
-+	    (!info->attrs[NL80211_ATTR_CSA_IES] ||
-+	     !info->attrs[NL80211_ATTR_CSA_C_OFF_BEACON]))
- 		return -EINVAL;
- 
- 	params.count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
- 
-+	if (!need_new_beacon)
-+		goto skip_beacons;
-+
- 	err = nl80211_parse_beacon(info->attrs, &params.beacon_after);
- 	if (err)
- 		return err;
-@@ -5697,6 +5709,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+skip_beacons:
- 	err = nl80211_parse_chandef(rdev, info, &params.chandef);
- 	if (err)
- 		return err;
-@@ -5704,12 +5717,17 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
- 		return -EINVAL;
- 
--	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
--	if (err < 0) {
--		return err;
--	} else if (err) {
--		radar_detect_width = BIT(params.chandef.width);
--		params.radar_required = true;
-+	/* DFS channels are only supported for AP/P2P GO ... for now. */
-+	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
-+	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO) {
-+		err = cfg80211_chandef_dfs_required(wdev->wiphy,
-+						    &params.chandef);
-+		if (err < 0) {
-+			return err;
-+		} else if (err) {
-+			radar_detect_width = BIT(params.chandef.width);
-+			params.radar_required = true;
-+		}
- 	}
- 
- 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
-@@ -10725,7 +10743,8 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
- 	wdev_lock(wdev);
- 
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
--		    wdev->iftype != NL80211_IFTYPE_P2P_GO))
-+		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
-+		    wdev->iftype != NL80211_IFTYPE_ADHOC))
- 		goto out;
- 
- 	wdev->channel = chandef->chan;
--- 
-1.7.10.4
+I pulled in master-2013-08-05 tag on top of Linux v3.11-rc4... Building...
 
+You assume a breakage in a different area than wireless or network in general?
+
+- Sedat -
+
+
+> johannes
+>
