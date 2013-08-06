@@ -1,108 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38871 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753980Ab3HPLHR (ORCPT
+Received: from mailout1.samsung.com ([203.254.224.24]:35321 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753591Ab3HFIgF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 07:07:17 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>
-Subject: [PATCH 05/20] iwlwifi: pcie: Remove duplicate code from pcie irq handlers
-Date: Fri, 16 Aug 2013 13:06:55 +0200
-Message-Id: <1376651230-1060-5-git-send-email-johannes@sipsolutions.net> (sfid-20130816_130725_281386_7D014B3C)
-In-Reply-To: <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
-References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
- <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 6 Aug 2013 04:36:05 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: "'David S. Miller'" <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	'Ivo van Doorn' <IvDoorn@gmail.com>,
+	'Gertjan van Wingerde' <gwingerde@gmail.com>,
+	'Helmut Schaa' <helmut.schaa@googlemail.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH 3/3] net: wireless: rt2x00: Staticize
+ rt2x00queue_pause_queue_nocheck()
+Date: Tue, 06 Aug 2013 17:36:03 +0900
+Message-id: <000801ce927f$fc7549d0$f55fdd70$@samsung.com> (sfid-20130806_103615_186180_D4FEB79E)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+rt2x00queue_pause_queue_nocheck()is used only in this file.
+Fix the following sparse warning:
 
-Instead of having the same code sequentially, fall-through.
+drivers/net/wireless/rt2x00/rt2x00queue.c:939:6: warning: symbol 'rt2x00queue_pause_queue_nocheck' was not declared. Should it be
+static?
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/rx.c | 24 ++++++++----------------
- 1 file changed, 8 insertions(+), 16 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 8c9641b..3f237b4 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -1121,6 +1121,7 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
- 	struct iwl_trans *trans = data;
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 inta, inta_mask;
-+	irqreturn_t ret = IRQ_NONE;
- 
- 	lockdep_assert_held(&trans_pcie->irq_lock);
- 
-@@ -1169,10 +1170,8 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
- 	/* the thread will service interrupts and re-enable them */
- 	if (likely(inta))
- 		return IRQ_WAKE_THREAD;
--	else if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
--		 !trans_pcie->inta)
--		iwl_enable_interrupts(trans);
--	return IRQ_HANDLED;
-+
-+	ret = IRQ_HANDLED;
- 
- none:
- 	/* re-enable interrupts here since we don't have anything to service. */
-@@ -1181,7 +1180,7 @@ none:
- 	    !trans_pcie->inta)
- 		iwl_enable_interrupts(trans);
- 
--	return IRQ_NONE;
-+	return ret;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index aa95c6c..6c8a33b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -936,7 +936,7 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
+ 	spin_unlock_irqrestore(&queue->index_lock, irqflags);
  }
  
- /* interrupt handler using ict table, with this interrupt driver will
-@@ -1200,6 +1199,7 @@ irqreturn_t iwl_pcie_isr_ict(int irq, void *data)
- 	u32 val = 0;
- 	u32 read;
- 	unsigned long flags;
-+	irqreturn_t ret = IRQ_NONE;
- 
- 	if (!trans)
- 		return IRQ_NONE;
-@@ -1212,7 +1212,7 @@ irqreturn_t iwl_pcie_isr_ict(int irq, void *data)
- 	 * use legacy interrupt.
- 	 */
- 	if (unlikely(!trans_pcie->use_ict)) {
--		irqreturn_t ret = iwl_pcie_isr(irq, data);
-+		ret = iwl_pcie_isr(irq, data);
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 		return ret;
- 	}
-@@ -1281,17 +1281,9 @@ irqreturn_t iwl_pcie_isr_ict(int irq, void *data)
- 	if (likely(inta)) {
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 		return IRQ_WAKE_THREAD;
--	} else if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
--		 !trans_pcie->inta) {
--		/* Allow interrupt if was disabled by this handler and
--		 * no tasklet was schedules, We should not enable interrupt,
--		 * tasklet will enable it.
--		 */
--		iwl_enable_interrupts(trans);
- 	}
- 
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
--	return IRQ_HANDLED;
-+	ret = IRQ_HANDLED;
- 
-  none:
- 	/* re-enable interrupts here since we don't have anything to service.
-@@ -1302,5 +1294,5 @@ irqreturn_t iwl_pcie_isr_ict(int irq, void *data)
- 		iwl_enable_interrupts(trans);
- 
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
--	return IRQ_NONE;
-+	return ret;
- }
+-void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
++static void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
+ {
+ 	switch (queue->qid) {
+ 	case QID_AC_VO:
 -- 
-1.8.4.rc2
+1.7.10.4
+
 
