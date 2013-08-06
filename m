@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:53880 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408Ab3H0O7y (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:47795 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753847Ab3HFPUJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 10:59:54 -0400
-Received: by mail-wg0-f49.google.com with SMTP id a12so2102080wgh.28
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 07:59:53 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	johannes@sipsolutions.net
-Subject: [PATCH 2/2] mac80211: do not override fixed_rate_idx in minstrel_ht_update_stats
-Date: Tue, 27 Aug 2013 16:59:47 +0200
-Message-Id: <1377615587-6015-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20130827_165958_271584_010D32A2)
-In-Reply-To: <1377615587-6015-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1377615587-6015-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Tue, 6 Aug 2013 11:20:09 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1375802297.8219.25.camel@jlt4.sipsolutions.net>
+References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
+	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
+	<CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
+	<1375800617.8219.23.camel@jlt4.sipsolutions.net>
+	<CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
+	<1375801059.8219.24.camel@jlt4.sipsolutions.net>
+	<CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
+	<CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
+	<1375802297.8219.25.camel@jlt4.sipsolutions.net>
+Date: Tue, 6 Aug 2013 17:20:07 +0200
+Message-ID: <CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com> (sfid-20130806_172044_653968_41E392E3)
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not override max_tp_rate, max_tp_rate2 and max_prob_rate configured
-according to fixed_rate in minstrel_ht_update_stats throughput computation
+On Tue, Aug 6, 2013 at 5:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+>
+>> I have sent you a v2 of my logs (with -d and rsyslog-7.x).
+>
+> Hmm, that looks different? There no longer is anything about "PSK might
+> be wrong", but now just disconnections by the AP, which unfortunately
+> indicate no reason.
+>
+> When was it working last?
+>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- net/mac80211/rc80211_minstrel_ht.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+next-20130801 was OK here.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 339a6b8..597e09a 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -365,6 +365,14 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 		}
- 	}
- 
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+	/* use fixed index if set */
-+	if (mp->fixed_rate_idx != -1) {
-+		mi->max_tp_rate = mp->fixed_rate_idx;
-+		mi->max_tp_rate2 = mp->fixed_rate_idx;
-+		mi->max_prob_rate = mp->fixed_rate_idx;
-+	}
-+#endif
- 
- 	mi->stats_update = jiffies;
- }
-@@ -775,6 +783,11 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	info->flags |= mi->tx_flags;
- 	minstrel_ht_check_cck_shortpreamble(mp, mi, txrc->short_preamble);
- 
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+	if (mp->fixed_rate_idx != -1)
-+		return;
-+#endif
-+
- 	/* Don't use EAPOL frames for sampling on non-mrr hw */
- 	if (mp->hw->max_rates == 1 &&
- 	    (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO))
-@@ -782,16 +795,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	else
- 		sample_idx = minstrel_get_sample_rate(mp, mi);
- 
--#ifdef CONFIG_MAC80211_DEBUGFS
--	/* use fixed index if set */
--	if (mp->fixed_rate_idx != -1) {
--		mi->max_tp_rate = mp->fixed_rate_idx;
--		mi->max_tp_rate2 = mp->fixed_rate_idx;
--		mi->max_prob_rate = mp->fixed_rate_idx;
--		sample_idx = -1;
--	}
--#endif
--
- 	mi->total_packets++;
- 
- 	/* wraparound */
--- 
-1.8.1.2
+- Sedat -
 
+> johannes
+>
