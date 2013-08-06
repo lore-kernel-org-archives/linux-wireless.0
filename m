@@ -1,92 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59252 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751963Ab3HUNod (ORCPT
+Received: from mail-ve0-f179.google.com ([209.85.128.179]:53134 "EHLO
+	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755917Ab3HFQIu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 09:44:33 -0400
-Message-ID: <1377092661.15268.13.camel@jlt4.sipsolutions.net> (sfid-20130821_154449_261497_45B7E261)
-Subject: pull-request: mac80211 2013-08-21
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 21 Aug 2013 15:44:21 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-j60f5tLzX2bIHVg2FjQx"
-Mime-Version: 1.0
+	Tue, 6 Aug 2013 12:08:50 -0400
+Received: by mail-ve0-f179.google.com with SMTP id c13so621895vea.38
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Aug 2013 09:08:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAG-2HqVvoQK8ggErGGinO9i8Pbu-O-X=eYFW445ce24dpt7HyA@mail.gmail.com>
+References: <CALCETrXSnFPFVPkXHwz+FFA3=+pmz9V=cMHWwtN+jG1QJALWSQ@mail.gmail.com>
+ <325b19bb936d7ebae11edad86aac8f0931e8abd9.1375719828.git.luto@amacapital.net>
+ <5200B1BD.7030307@gmail.com> <CAG-2HqXEj06JbUOWee=NfuRXxL75uRf=55FZcXRLHroDzYUthQ@mail.gmail.com>
+ <CAG-2HqVvoQK8ggErGGinO9i8Pbu-O-X=eYFW445ce24dpt7HyA@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Tue, 6 Aug 2013 09:08:29 -0700
+Message-ID: <CALCETrX7aGpLAferwTbS3wQWwyw_v_DHh6se6c76fpfi6tJu=A@mail.gmail.com> (sfid-20130806_180907_653470_E46B9008)
+Subject: Re: [systemd-devel] [PATCH] Change CONFIG_FW_LOADER_USER_HELPER to
+ default n and don't select it
+To: Tom Gundersen <teg@jklm.no>
+Cc: Maarten Lankhorst <m.b.lankhorst@gmail.com>,
+	systemd-devel@lists.freedesktop.org, linux-hotplug@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Kay Sievers <kay@vrfy.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Aug 6, 2013 at 2:17 AM, Tom Gundersen <teg@jklm.no> wrote:
+> On Tue, Aug 6, 2013 at 11:11 AM, Tom Gundersen <teg@jklm.no> wrote:
+>> On Tue, Aug 6, 2013 at 10:20 AM, Maarten Lankhorst
+>> <m.b.lankhorst@gmail.com> wrote:
+>>> Op 05-08-13 18:29, Andy Lutomirski schreef:
+>>>> The systemd commit below can delay firmware loading by multiple
+>>>> minutes if CONFIG_FW_LOADER_USER_HELPER=y.  Unfortunately no one
+>>>> noticed that the systemd-udev change would break new kernels as well
+>>>> as old kernels.
+>>>>
+>>>> Since the kernel apparently can't count on reasonable userspace
+>>>> support, turn this thing off by default.
+>>>>
+>>>> commit a3bd8447be4ea2ce230eb8ae0e815c04d85fa15a
+>>>> Author: Tom Gundersen <teg@jklm.no>
+>>>> Date:   Mon Mar 18 15:12:18 2013 +0100
+>>>>
+>>>>     udev: make firmware loading optional and disable by default
+>>>>
+>>>>     Distros that whish to support old kernels should set
+>>>>       --with-firmware-dirs="/usr/lib/firmware/updates:/usr/lib/firmware"
+>>>>     to retain the old behaviour.
+>>>>
+>>> methinks this patch should be reverted then,
+>>
+>> Well, all the code is still there, so it can be enabled if anyone wants it.
+>>
+>>> or a stub should be added to udev to always fail firmware loading so timeouts don't occur.
+>>
+>> I think the only use (if any) of a userspace firmware loader would be
+>> for anyone who wants a custom one (i.e., not udev), so we shouldn't
+>> just fail the loading from udev unconditionally.
+>>
+>> How about we just improve the udev documentation a bit, similar to
+>> Andy's kernel patch?
+>
+> Sorry, I should first have checked. We already document this in the README:
+>
+>>        Userspace firmware loading is deprecated, will go away, and
+>>        sometimes causes problems:
+>>          CONFIG_FW_LOADER_USER_HELPER=n
 
---=-j60f5tLzX2bIHVg2FjQx
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+TBH, the udev README is the last thing I'm going to check to figure
+out why I don't have wifi for a couple minutes after boot.  Also, the
+message is missing the point.  It's not that it's deprecated and
+sometimes causes problems -- it's that udev *changed behavior* and
+breaks your system if you have CONFIG_FW_LOADER_USER_HELPER=y.
 
-John,
+If udev logged something (for a couple of years), that would be a
+different story.
 
-I have three more patches for the 3.11 stream: Felix's fix for the
-fairly visible brcmsmac crash, a fix from Simon for an IBSS join bug I
-found and a fix for a channel context bug in IBSS I'd introduced.
-
-Let me know if there's any problem.
-
-Thanks,
-johannes
-
-The following changes since commit dee8a9732e713480075adbbca8eb220c5b8d1216=
-:
-
-  cfg80211: don't request disconnect if not connected (2013-08-14 14:00:19 =
-+0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to 75a423f493ffdf741acae27bf179cd560f7813d7:
-
-  mac80211: ibss: fix ignored channel parameter (2013-08-21 15:33:08 +0200)
-
-----------------------------------------------------------------
-Felix Fietkau (1):
-      mac80211: add a flag to indicate CCK support for HT clients
-
-Johannes Berg (1):
-      mac80211: add missing channel context release
-
-Simon Wunderlich (1):
-      mac80211: ibss: fix ignored channel parameter
-
- drivers/net/wireless/ath/ath9k/init.c    |  3 ++-
- drivers/net/wireless/ath/carl9170/main.c |  3 ++-
- drivers/net/wireless/rt2x00/rt2800lib.c  |  3 ++-
- include/net/mac80211.h                   |  1 +
- net/mac80211/ibss.c                      | 34 ++++++++++++++++++++++++++++=
-----
- net/mac80211/rc80211_minstrel_ht.c       |  3 +++
- 6 files changed, 40 insertions(+), 7 deletions(-)
-
-
---=-j60f5tLzX2bIHVg2FjQx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJSFMQ1AAoJEDBSmw7B7bqrn+MP/R2jsPoiqSqAOowG7fGov5uB
-4anRzCMfShTAFvtrNn/o5V93nhpB9wI44pomT9Ep0FeT+4IKb9GobS8L/vNtCgIz
-ixKkh8LWUwBIK1IDuQSO9E3F/8n4shOlPrayIC7DTLA/vwpBGJtsJ/Z97OsfGo2/
-yAJDPr14cOLm/OOPqOPH3jPt3hkf/NbV0L95DxT3mzAYU3VD0mxnaeTDIxvK3Gi1
-wd0opGPhthUjGTYBreAdeM4CAPdExqCHKy6goRJQtqA0jTwr9vB8j/VeERX/B7EQ
-GzVMa4Mgxd1NFKfLfNqJhl5wu/25uKzBFAn4rzdGLwB5vTfJsiIawHKM9RMmswBU
-QQQ04rVeVzXboEyzHWpl1kdftFvWnWd0qrN8DF1P1Wb0ImE9CgjGaVDckxpb8omU
-rqajKQhVG8fowtUdWBNHGxupepzs4nDMZqw9exLQfjvM+0QJ4KJtMlx2WHzg3JeI
-baOyiET9NbTeokm0tgXj/WG9jEN6suuwz2zDLluvESyFeQg5XBC0cb3WOIoNOelH
-L7ZZsvfgVNsWTKRYlubUs2fqUJX0zHBeYU8Bx1XvRbCdbIXGfjfPnEdMfrlGNEqD
-J/KcfocYcEhGTEkGaOkPqf6p1z3HtW2bXSPsglxiis3iU61z1Jgi+Qb31oCxmhak
-HtRd8NoXQ4J14NwvcE3T
-=E82+
------END PGP SIGNATURE-----
-
---=-j60f5tLzX2bIHVg2FjQx--
-
+--Andy
