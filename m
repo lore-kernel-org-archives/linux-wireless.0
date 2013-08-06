@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51538 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757318Ab3HLQJL (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:55504 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754809Ab3HFI5Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 12:09:11 -0400
-Message-ID: <1376323740.11514.27.camel@jlt4.sipsolutions.net> (sfid-20130812_180931_414024_0C19E8C0)
-Subject: Re: [PATCHv2] mac80211: ibss - do not scan if not needed when
- creating an IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Date: Mon, 12 Aug 2013 18:09:00 +0200
-In-Reply-To: <1376067512-733-1-git-send-email-ordex@autistici.org>
-References: <1375862917-3625-1-git-send-email-ordex@autistici.org>
-	 <1376067512-733-1-git-send-email-ordex@autistici.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 6 Aug 2013 04:57:25 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20992.46948.427492.675142@gargle.gargle.HOWL> (sfid-20130806_105729_490367_1A775FED)
+Date: Tue, 6 Aug 2013 14:14:20 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 10/12] ath9k: use software queues for un-aggregated data packets
+In-Reply-To: <1375732583-39001-10-git-send-email-nbd@openwrt.org>
+References: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
+	<1375732583-39001-10-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-08-09 at 18:58 +0200, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
-> 
-> In some cases mac80211 will scan before creating an IBSS
-> even if bssid and frequency have been forced by the user.
-> This is not needed and leads only to a delay in the IBSS
-> establishment phase.
-> 
-> Immediately create the cell if both bssid and frequency
-> (and fixed_freq is set) have been specified.
+Felix Fietkau wrote:
+> +		aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
+> +		if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
+> +		    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH))
+> +			break;
+> +
+> +		ath_set_rates(tid->an->vif, tid->an->sta, bf);
+> +		if (aggr)
+> +			last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
+> +						tid_q, &aggr_len);
+> +		else
+> +			ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
+> +
+> +		if (list_empty(&bf_q))
+> +			return;
 
-Applied.
+Handling non-AMPDU and AMPDU packets in the same path makes the code hard
+to follow. Since a TID can either have aggregated or unaggregated packets,
+why not separate the logic early, maybe in the schedule() function ?
 
-johannes
-
+Sujith
