@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29246 "EHLO mga02.intel.com"
+Received: from purkki.adurom.net ([80.68.90.206]:43460 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753469Ab3H0Teg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 15:34:36 -0400
-Date: Tue, 27 Aug 2013 12:34:33 -0700
-From: Jesse Brandeburg <jesse.brandeburg@intel.com>
-To: Joe Perches <joe@perches.com>
-Cc: <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<e1000-devel@lists.sourceforge.net>,
-	<linux-wireless@vger.kernel.org>, <b43-dev@lists.infradead.org>,
-	<users@rt2x00.serialmonkey.com>, jesse.brandeburg@intel.com
-Subject: Re: [PATCH net-next] drivers:net: Convert
- dma_alloc_coherent(...__GFP_ZERO) to dma_zalloc_coherent
-Message-ID: <20130827123433.00002cb7@unknown> (sfid-20130827_213500_008450_FA624A5E)
-In-Reply-To: <1377582323.2658.10.camel@joe-AO722>
-References: <dbbfc5e66dba7d2b63549d218407fb0c4031f2ed.1363367992.git.joe@perches.com>
-	<1377582323.2658.10.camel@joe-AO722>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1756232Ab3HFUPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 16:15:11 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] mac80211: add control port protocol TX control flag
+References: <1375783056-2665-1-git-send-email-johannes@sipsolutions.net>
+Date: Tue, 06 Aug 2013 23:15:09 +0300
+In-Reply-To: <1375783056-2665-1-git-send-email-johannes@sipsolutions.net>
+	(Johannes Berg's message of "Tue, 6 Aug 2013 11:57:36 +0200")
+Message-ID: <87haf2wp82.fsf@purkki.adurom.net> (sfid-20130806_221516_293351_3C88C59C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 26 Aug 2013 22:45:23 -0700
-Joe Perches <joe@perches.com> wrote:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> __GFP_ZERO is an uncommon flag and perhaps is better
-> not used.  static inline dma_zalloc_coherent exists
-> so convert the uses of dma_alloc_coherent with __GFP_ZERO
-> to the more common kernel style with zalloc.
-> 
-> Remove memset from the static inline dma_zalloc_coherent
-> and add just one use of __GFP_ZERO instead.
-> 
-> Trivially reduces the size of the existing uses of
-> dma_zalloc_coherent.
-> 
-> Realign arguments as appropriate.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> A lot of drivers check the frame protocol for ETH_P_PAE,
+> for various reasons (like making those more reliable).
+> Add a new flags bitmap to the TX control info and a new
+> flag indicating the control port protocol is in use to
+> let all drivers also apply such logic to other control
+> port protocols, should they be configured.
+>
+> Change-Id: I292ba4865694142670f005856b6320f7f3fa05c8
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-e1000 and ixgb bits:
+I'm sure you noticed, but there's a Change-Id tag.
 
-Acked-by: Jesse Brandeburg <jesse.brandeburg@intel.com>
+-- 
+Kalle Valo
