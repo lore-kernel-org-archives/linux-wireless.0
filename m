@@ -1,49 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:51479 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755966Ab3H2KfE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Aug 2013 06:35:04 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] cfg80211: use the correct macro to check for active monitor support
-Date: Thu, 29 Aug 2013 13:26:57 +0300
-Message-Id: <1377772017-24764-1-git-send-email-luciano.coelho@intel.com> (sfid-20130829_123509_300315_529A334C)
+Received: from nbd.name ([46.4.11.11]:57814 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756275Ab3HFMSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 08:18:24 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, sujith@msujith.org
+Subject: [PATCH v2 03/12] ath9k: add function for getting the tx tid for a packet
+Date: Tue,  6 Aug 2013 14:18:04 +0200
+Message-Id: <1375791493-83971-3-git-send-email-nbd@openwrt.org> (sfid-20130806_141843_437531_CB73CBAA)
+In-Reply-To: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
+References: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use MONITOR_FLAG_ACTIVE, which is a flag mask, instead of
-NL80211_MNTR_FLAG_ACTIVE, which is a flag index, when checking if the
-hardware supports active monitoring.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/wireless/nl80211.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index af8d84a..626dc3b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2421,7 +2421,7 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
- 		change = true;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index c2b6cf0..350429b 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -168,6 +168,20 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
+ 	}
+ }
+ 
++static struct ath_atx_tid *
++ath_get_skb_tid(struct ath_softc *sc, struct ath_node *an, struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr;
++	u8 tidno = 0;
++
++	hdr = (struct ieee80211_hdr *) skb->data;
++	if (ieee80211_is_data_qos(hdr->frame_control))
++		tidno = ieee80211_get_qos_ctl(hdr)[0];
++
++	tidno &= IEEE80211_QOS_CTL_TID_MASK;
++	return ATH_AN_2_TID(an, tidno);
++}
++
+ static bool ath_tid_has_buffered(struct ath_atx_tid *tid)
+ {
+ 	return !skb_queue_empty(&tid->buf_q) || !skb_queue_empty(&tid->retry_q);
+@@ -419,7 +433,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	struct ieee80211_tx_rate rates[4];
+ 	struct ath_frame_info *fi;
+ 	int nframes;
+-	u8 tidno;
+ 	bool flush = !!(ts->ts_status & ATH9K_TX_FLUSH);
+ 	int i, retries;
+ 	int bar_index = -1;
+@@ -456,8 +469,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
  	}
  
--	if (flags && (*flags & NL80211_MNTR_FLAG_ACTIVE) &&
-+	if (flags && (*flags & MONITOR_FLAG_ACTIVE) &&
- 	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
- 		return -EOPNOTSUPP;
+ 	an = (struct ath_node *)sta->drv_priv;
+-	tidno = ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
+-	tid = ATH_AN_2_TID(an, tidno);
++	tid = ath_get_skb_tid(sc, an, skb);
+ 	seq_first = tid->seq_start;
+ 	isba = ts->ts_flags & ATH9K_TX_BA;
  
-@@ -2483,7 +2483,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 				  info->attrs[NL80211_ATTR_MNTR_FLAGS] : NULL,
- 				  &flags);
+@@ -469,7 +481,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	 * Only BlockAcks have a TID and therefore normal Acks cannot be
+ 	 * checked
+ 	 */
+-	if (isba && tidno != ts->tid)
++	if (isba && tid->tidno != ts->tid)
+ 		txok = false;
  
--	if (!err && (flags & NL80211_MNTR_FLAG_ACTIVE) &&
-+	if (!err && (flags & MONITOR_FLAG_ACTIVE) &&
- 	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
- 		return -EOPNOTSUPP;
+ 	isaggr = bf_isaggr(bf);
+@@ -2116,7 +2128,6 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ath_txq *txq = txctl->txq;
+ 	struct ath_atx_tid *tid = NULL;
+ 	struct ath_buf *bf;
+-	u8 tidno;
+ 	int q;
+ 	int ret;
  
+@@ -2147,9 +2158,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	}
+ 
+ 	if (txctl->an && ieee80211_is_data_qos(hdr->frame_control)) {
+-		tidno = ieee80211_get_qos_ctl(hdr)[0] &
+-			IEEE80211_QOS_CTL_TID_MASK;
+-		tid = ATH_AN_2_TID(txctl->an, tidno);
++		tid = ath_get_skb_tid(sc, txctl->an, skb);
+ 
+ 		WARN_ON(tid->ac->txq != txctl->txq);
+ 	}
 -- 
-1.7.10.4
+1.8.0.2
 
