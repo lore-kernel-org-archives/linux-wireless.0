@@ -1,198 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54641 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755869Ab3HFJ5m (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:33731 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756653Ab3HFSfI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 05:57:42 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: add control port protocol TX control flag
-Date: Tue,  6 Aug 2013 11:57:36 +0200
-Message-Id: <1375783056-2665-1-git-send-email-johannes@sipsolutions.net> (sfid-20130806_115746_886863_FC07E6F8)
+	Tue, 6 Aug 2013 14:35:08 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CA+icZUV++2+OG=P1SVbNrpHPLyzrfFX0eu8NHrd0nPjkPDUOtQ@mail.gmail.com>
+References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
+	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
+	<CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
+	<1375800617.8219.23.camel@jlt4.sipsolutions.net>
+	<CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
+	<1375801059.8219.24.camel@jlt4.sipsolutions.net>
+	<CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
+	<CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
+	<1375802297.8219.25.camel@jlt4.sipsolutions.net>
+	<CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com>
+	<CA+icZUVuOqdZUGy2ALAF1CehOqYdr7rtEsXhqNvDtYEns2BuRQ@mail.gmail.com>
+	<1375802993.8219.26.camel@jlt4.sipsolutions.net>
+	<CA+icZUW6P9Z_7z+o+z=qBWSFzyU8tgtY0ou+rmLcEzWbn94OXA@mail.gmail.com>
+	<CA+icZUW7LVzg7sM3O-w5oQpeaj=CT6MS6Q7cRZ1qK0h-Z4wZuw@mail.gmail.com>
+	<1375804998.8219.27.camel@jlt4.sipsolutions.net>
+	<CA+icZUVRgVfXUdJ1xoaN=nciqZDhV-f6EbH+6DS7HAh+My65oQ@mail.gmail.com>
+	<CA+icZUUmQbovkwXcdEp6eu=WJkiuiyO8nDVwCHFUuPDbJqU7Kg@mail.gmail.com>
+	<CA+icZUV++2+OG=P1SVbNrpHPLyzrfFX0eu8NHrd0nPjkPDUOtQ@mail.gmail.com>
+Date: Tue, 6 Aug 2013 20:35:06 +0200
+Message-ID: <CA+icZUXpZaHu-FjR6FGnbkG0XEkiukEgYYbDmrSjdqNz4rWCNg@mail.gmail.com> (sfid-20130806_203520_288095_ACDF703B)
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	wireless <linux-wireless@vger.kernel.org>, netdev@vger.kernel.org
+Content-Type: multipart/mixed; boundary=e89a8f6427ce1c26e604e34baf6d
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+--e89a8f6427ce1c26e604e34baf6d
+Content-Type: text/plain; charset=UTF-8
 
-A lot of drivers check the frame protocol for ETH_P_PAE,
-for various reasons (like making those more reliable).
-Add a new flags bitmap to the TX control info and a new
-flag indicating the control port protocol is in use to
-let all drivers also apply such logic to other control
-port protocols, should they be configured.
+On Tue, Aug 6, 2013 at 8:26 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Tue, Aug 6, 2013 at 6:51 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+>> On Tue, Aug 6, 2013 at 6:07 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+>>> On Tue, Aug 6, 2013 at 6:03 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>>> [reducing mailing lists - Stephen if you want off let us know]
+>>>>
+>>>> On Tue, 2013-08-06 at 17:58 +0200, Sedat Dilek wrote:
+>>>>
+>>>>> $ cat /proc/version
+>>>>> Linux version 3.11.0-rc4-1-wl-20130805 (sedat.dilek@gmail.com@fambox)
+>>>>> (gcc version 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5) ) #1 SMP Tue Aug 6
+>>>>> 17:52:45 CEST 2013
+>>>>>
+>>>>> This kernel boots fine and has no WiFi problems.
+>>>>>
+>>>>> > You assume a breakage in a different area than wireless or network in general?
+>>>>> >
+>>>>>
+>>>>> Any wild guess?
+>>>>
+>>>> Not really, but maybe you can pull the other trees on top again and see
+>>>> if those broke it? I don't really think/hope so but it's possible that
+>>>> one of my pending pull requests broke it, I guess?
+>>>>
+>>>
+>>> Hmm, I pulled in latest for-john of mac80211(-next) and
+>>> iwlwifi-(fixes|next) which did not help.
+>>>
+>>> I am testing next-20130805 and next-20130802 to identify which
+>>> Linux-next release is BROKEN.
+>>>
+>>
+>> GOOD: next-20130801 and next-20130802
+>>
+>> BROKEN: next-20130805 and next-20130806
+>>
+>> Comparing diffs between next-20130802 and next-20130805.
+>>
+>
+> [ To Dave and CC netdev ]
+>
+> [ Full thread see [1] ]
+>
+> The diff was not very helpful.
+>
+> $ cd linux-next-20130805
+>
+> $ git log --oneline v3.11-rc4.. | grep "Merge remote-tracking" | egrep
+> 'net-next|slave-dma|wireless'
+> 7f84622 Merge remote-tracking branch 'net-next/master' <--- BAD
+> (before slave-dma/next)
+> 3580d24 Merge remote-tracking branch 'slave-dma/next' <--- GOOD (after
+> net-next/master)
+> 88825c7 Merge remote-tracking branch 'wireless/master' <--- GOOD
+>
+> So, the culprit commit seems to be in the merge of 'net-next/master'.
+>
+> ( BTW, disabling IPv6 in NM/wifi-setup did not change behaviour -
+> still disconnected to AP. )
+>
+> - Sedat -
+>
+> [1] http://marc.info/?t=137579712800008&r=1&w=2
 
-Change-Id: I292ba4865694142670f005856b6320f7f3fa05c8
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/DocBook/80211.tmpl            |  1 +
- drivers/net/wireless/iwlwifi/dvm/tx.c       |  2 +-
- drivers/net/wireless/iwlwifi/iwl-devtrace.h |  3 ++-
- drivers/net/wireless/iwlwifi/mvm/tx.c       |  9 ++++-----
- include/net/mac80211.h                      | 19 ++++++++++++++++---
- net/mac80211/rc80211_minstrel_ht.c          |  5 +++--
- net/mac80211/tx.c                           |  8 +++++---
- 7 files changed, 32 insertions(+), 15 deletions(-)
+Attached is a diff comparing all new commits in next-20130805.
+If one of the commits smells bad to you, please let me know.
 
-diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
-index 49267ea..f403ec3 100644
---- a/Documentation/DocBook/80211.tmpl
-+++ b/Documentation/DocBook/80211.tmpl
-@@ -325,6 +325,7 @@
-           <title>functions/definitions</title>
- !Finclude/net/mac80211.h ieee80211_rx_status
- !Finclude/net/mac80211.h mac80211_rx_flags
-+!Finclude/net/mac80211.h mac80211_tx_info_flags
- !Finclude/net/mac80211.h mac80211_tx_control_flags
- !Finclude/net/mac80211.h mac80211_rate_control_flags
- !Finclude/net/mac80211.h ieee80211_tx_rate
-diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
-index 5ee983f..f364583 100644
---- a/drivers/net/wireless/iwlwifi/dvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
-@@ -87,7 +87,7 @@ static void iwlagn_tx_cmd_build_basic(struct iwl_priv *priv,
- 		 priv->lib->bt_params->advanced_bt_coexist &&
- 		 (ieee80211_is_auth(fc) || ieee80211_is_assoc_req(fc) ||
- 		 ieee80211_is_reassoc_req(fc) ||
--		 skb->protocol == cpu_to_be16(ETH_P_PAE)))
-+		 info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO))
- 		tx_flags |= TX_CMD_FLG_IGNORE_BT;
- 
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-index 4491c1c..9f43fb9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-@@ -33,9 +33,10 @@
- static inline bool iwl_trace_data(struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
- 	if (ieee80211_is_data(hdr->frame_control))
--		return skb->protocol != cpu_to_be16(ETH_P_PAE);
-+		return info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
- 	return false;
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index f0e96a9..d62a6d3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -91,11 +91,10 @@ static void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		tx_flags |= TX_CMD_FLG_ACK | TX_CMD_FLG_BAR;
- 
- 	/* High prio packet (wrt. BT coex) if it is EAPOL, MCAST or MGMT */
--	if (info->band == IEEE80211_BAND_2GHZ        &&
--	    (skb->protocol == cpu_to_be16(ETH_P_PAE)  ||
--	     is_multicast_ether_addr(hdr->addr1)      ||
--	     ieee80211_is_back_req(fc)                ||
--	     ieee80211_is_mgmt(fc)))
-+	if (info->band == IEEE80211_BAND_2GHZ &&
-+	    (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO ||
-+	     is_multicast_ether_addr(hdr->addr1) ||
-+	     ieee80211_is_back_req(fc) || ieee80211_is_mgmt(fc)))
- 		tx_flags |= TX_CMD_FLG_BT_DIS;
- 
- 	if (ieee80211_has_morefrags(fc))
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 839991a..df93c77 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -375,7 +375,7 @@ struct ieee80211_bss_conf {
- };
- 
- /**
-- * enum mac80211_tx_control_flags - flags to describe transmission information/status
-+ * enum mac80211_tx_info_flags - flags to describe transmission information/status
-  *
-  * These flags are used with the @flags member of &ieee80211_tx_info.
-  *
-@@ -471,7 +471,7 @@ struct ieee80211_bss_conf {
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-  */
--enum mac80211_tx_control_flags {
-+enum mac80211_tx_info_flags {
- 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
- 	IEEE80211_TX_CTL_ASSIGN_SEQ		= BIT(1),
- 	IEEE80211_TX_CTL_NO_ACK			= BIT(2),
-@@ -507,6 +507,18 @@ enum mac80211_tx_control_flags {
- 
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
- 
-+/**
-+ * enum mac80211_tx_control_flags - flags to describe transmit control
-+ *
-+ * @IEEE80211_TX_CTRL_PORT_CTRL_PROTO: this frame is a port control
-+ *	protocol frame (e.g. EAP)
-+ *
-+ * These flags are used in tx_info->control.flags.
-+ */
-+enum mac80211_tx_control_flags {
-+	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
-+};
-+
- /*
-  * This definition is used as a mask to clear all temporary flags, which are
-  * set by the tx handlers for each transmission attempt by the mac80211 stack.
-@@ -680,7 +692,8 @@ struct ieee80211_tx_info {
- 			/* NB: vif can be NULL for injected frames */
- 			struct ieee80211_vif *vif;
- 			struct ieee80211_key_conf *hw_key;
--			/* 8 bytes free */
-+			u32 flags;
-+			/* 4 bytes free */
- 		} control;
- 		struct {
- 			struct ieee80211_tx_rate rates[IEEE80211_TX_MAX_RATES];
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 7475a7a..9eff382 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -439,12 +439,13 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	u16 tid;
- 
- 	if (unlikely(!ieee80211_is_data_qos(hdr->frame_control)))
- 		return;
- 
--	if (unlikely(skb->protocol == cpu_to_be16(ETH_P_PAE)))
-+	if (unlikely(info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO))
- 		return;
- 
- 	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
-@@ -776,7 +777,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 
- 	/* Don't use EAPOL frames for sampling on non-mrr hw */
- 	if (mp->hw->max_rates == 1 &&
--	    txrc->skb->protocol == cpu_to_be16(ETH_P_PAE))
-+	    (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO))
- 		sample_idx = -1;
- 	else
- 		sample_idx = minstrel_get_sample_rate(mp, mi);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 0e42322..098ae85 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -539,9 +539,11 @@ ieee80211_tx_h_check_control_port_protocol(struct ieee80211_tx_data *tx)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
- 
--	if (unlikely(tx->sdata->control_port_protocol == tx->skb->protocol &&
--		     tx->sdata->control_port_no_encrypt))
--		info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	if (unlikely(tx->sdata->control_port_protocol == tx->skb->protocol)) {
-+		if (tx->sdata->control_port_no_encrypt)
-+			info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+		info->control.flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
-+	}
- 
- 	return TX_CONTINUE;
- }
--- 
-1.8.0
+- Sedat -
 
+--e89a8f6427ce1c26e604e34baf6d
+Content-Type: application/octet-stream;
+	name="list-of-commits-from-net-next_next-20130802-VS-next-20130805.diff"
+Content-Disposition: attachment;
+	filename="list-of-commits-from-net-next_next-20130802-VS-next-20130805.diff"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hk1g5ql01
+
+LS0tIGxpc3Qtb2YtY29tbWl0cy1mcm9tLW5ldC1uZXh0LWluLW5leHQtMjAxMzA4MDIudHh0CTIw
+MTMtMDgtMDYgMjA6Mjk6NDUuMzEyMzk1MzU5ICswMjAwCisrKyBsaXN0LW9mLWNvbW1pdHMtZnJv
+bS1uZXh0LW5leHQtaW4tbmV4dC0yMDEzMDgwNS50eHQJMjAxMy0wOC0wNiAyMDoyNjowMy44Mjk3
+MDQwMTMgKzAyMDAKQEAgLTEsMyArMSwyNiBAQAorZjI3MDcwMSBheDg4MTc5XzE3OGE6IGF2b2lk
+IGNvcHkgb2YgdHggdGNwIHBhY2tldHMKK2ZiYTM2NzkgZmliX3J1bGVzOiByZW9yZGVyIHN0cnVj
+dCBmaWJfcnVsZXMgZmllbGRzCis3M2Y1Njk4IGZpYl9ydWxlczogZml4IHN1cHByZXNzb3IgbmFt
+ZXMgYW5kIGRlZmF1bHQgdmFsdWVzCiswYzA2NjdhIHZsYW46IGNsZWFudXAgdGhlIHVzYWdlIG9m
+IHZsYW5fZGV2X3ByaXYoZGV2KQorOWU5NDAyZSBjbmljLCBibngyaTogRml4IGJ1ZyBvbiBzb21l
+IGJueDJ4IGRldmljZXMgdGhhdCBkb24ndCBzdXBwb3J0IGlTQ1NJCis5OTE4ZDViIGJvbmRpbmc6
+IG1vZGlmeSBvbmx5IG5laWdoX3Bhcm1zIG93bmVkIGJ5IHVzCis2MzEzNDgwIG5laWdoYm91cjog
+cG9wdWxhdGUgbmVpZ2hfcGFybXMgb24gYWxsb2MgYmVmb3JlIGNhbGxpbmcgbmRvX25laWdoX3Nl
+dHVwCis4YTg0OWJiIG5ldDogbmV0bGluazogbWlub3I6IHJlbW92ZSB1bnVzZWQgcG9pbnRlciBp
+biBhbGxvY19wZ192ZWMKKzZlZjk0Y2YgZmliX3J1bGVzOiBhZGQgcm91dGUgc3VwcHJlc3Npb24g
+YmFzZWQgb24gaWZncm91cAorZDFjNTNjOCBpY21wdjZfZmlsdGVyOiBhbGxvdyBJQ01QdjYgbWVz
+c2FnZXMgd2l0aCBib2RpZXMgPCA0IGJ5dGVzCis5Y2MwOGFmIGljbXB2Nl9maWx0ZXI6IGZpeCAi
+X2hkciIgaW5jb3JyZWN0bHkgYmVpbmcgYSBwb2ludGVyCitjNDgzZTAyIGFmX3BhY2tldDogc2lt
+cGxpZnkgVkxBTiBmcmFtZSBjaGVjayBpbiBwYWNrZXRfc25kCitjYmQ4OWFjIGFmX3BhY2tldDog
+Zml4IGZvciBzZW5kaW5nIFZMQU4gZnJhbWVzIHZpYSBwYWNrZXRfbW1hcAorMGY3NWIwOSBhZl9w
+YWNrZXQ6IHdoZW4gc2VuZGluZyBldGhlcm5ldCBmcmFtZXMsIHBhcnNlIGhlYWRlciBmb3Igc2ti
+LT5wcm90b2NvbAorZDI3ZmM3OCBzY3RwOiBEb24ndCBsb29rdXAgZHN0IGlmIHRyYW5zcG9ydCBk
+c3QgaXMgc3RpbGwgdmFsaWQKKzE0MDlhOTMgZXRoZXJuZXQ6IENvbnZlcnQgbWFjIGFkZHJlc3Mg
+dXNlcyBvZiA2IHRvIEVUSF9BTEVOCis1NzRlMmFmIGluY2x1ZGU6IENvbnZlcnQgZXRoZXJuZXQg
+bWFjIGFkZHJlc3MgZGVjbGFyYXRpb25zIHRvIHVzZSBFVEhfQUxFTgorZTIxNjk3NSB1YXBpOiBD
+b252ZXJ0IHNvbWUgdXNlcyBvZiA2IHRvIEVUSF9BTEVOCiszNzUzNDU2IHFsY25pYzogVXBkYXRl
+IHZlcnNpb24gdG8gNS4yLjQ1Cis3OWRhNGQwIHFsY25pYzogRW5hYmxlIG1haWxib3ggaW50ZXJm
+YWNlIGluIHBvbGwgbW9kZSB3aGVuIGludGVycnVwdHMgYXJlIG5vdCBhdmFpbGFibGUKKzA2OGE4
+ZDEgcWxjbmljOiBSZXBsYWNlIHBvbGwgbW9kZSBtYWlsYm94IGludGVyZmFjZSB3aXRoIGludGVy
+cnVwdCBiYXNlZCBtYWlsYm94IGludGVyZmFjZQorZTVjNGU2YyBxbGNuaWM6IEludGVycnVwdCBi
+YXNlZCBkcml2ZXIgZmlybXdhcmUgbWFpbGJveCBtZWNoYW5pc20KK2I5YzExOTggcWxjbmljOiBF
+bmhhbmNlIGRpYWdub3N0aWMgbG9vcGJhY2sgZXJyb3IgY29kZXMuCiAyNzhiMjA4IGJvbmRpbmc6
+IGluaXRpYWwgUkNVIGNvbnZlcnNpb24KIDE1MDc3MjIgYm9uZGluZzogZmFjdG9yIG91dCBzbGF2
+ZSBpZCB0eCBjb2RlIGFuZCBzaW1wbGlmeSB4bWl0IHBhdGhzCiA3OGE2NDZjIGJvbmRpbmc6IHNp
+bXBsaWZ5IGJyb2FkY2FzdF94bWl0IGZ1bmN0aW9uCg==
+--e89a8f6427ce1c26e604e34baf6d--
