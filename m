@@ -1,142 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:50645 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750792Ab3HSFh1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 01:37:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Add support for AR9485 1.2
-Date: Mon, 19 Aug 2013 11:03:43 +0530
-Message-Id: <1376890423-12480-1-git-send-email-sujith@msujith.org> (sfid-20130819_073737_592541_B38533BD)
+Received: from nbd.name ([46.4.11.11]:57807 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756303Ab3HFMSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 08:18:24 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, sujith@msujith.org
+Subject: [PATCH v2 08/12] ath9k: fix clearing expired A-MPDU subframes in tx completion
+Date: Tue,  6 Aug 2013 14:18:09 +0200
+Message-Id: <1375791493-83971-8-git-send-email-nbd@openwrt.org> (sfid-20130806_141837_930103_50CE8676)
+In-Reply-To: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
+References: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+When the tid aggregation state has been marked as inactive, free
+completed tx packets immediately. When a new aggregation session has not
+been initialized yet, the BAW checks do not recognize it as expired.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Might fix potential stalls in setting up a new aggregation session.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_hw.c  | 18 +++++++++---------
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |  2 +-
- drivers/net/wireless/ath/ath9k/reg.h        |  6 +++---
- 3 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index d402cb3..738aa7e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -153,7 +153,7 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 		if (!ah->is_clk_25mhz)
- 			INIT_INI_ARRAY(&ah->iniAdditional,
- 				       ar9340_1p0_radio_core_40M);
--	} else if (AR_SREV_9485_11(ah)) {
-+	} else if (AR_SREV_9485_11_OR_LATER(ah)) {
- 		/* mac */
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
- 				ar9485_1_1_mac_core);
-@@ -424,7 +424,7 @@ static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9340Modes_lowest_ob_db_tx_gain_table_1p0);
--	else if (AR_SREV_9485_11(ah))
-+	else if (AR_SREV_9485_11_OR_LATER(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9485_modes_lowest_ob_db_tx_gain_1_1);
- 	else if (AR_SREV_9550(ah))
-@@ -458,7 +458,7 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9340Modes_high_ob_db_tx_gain_table_1p0);
--	else if (AR_SREV_9485_11(ah))
-+	else if (AR_SREV_9485_11_OR_LATER(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9485Modes_high_ob_db_tx_gain_1_1);
- 	else if (AR_SREV_9580(ah))
-@@ -492,7 +492,7 @@ static void ar9003_tx_gain_table_mode2(struct ath_hw *ah)
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9340Modes_low_ob_db_tx_gain_table_1p0);
--	else if (AR_SREV_9485_11(ah))
-+	else if (AR_SREV_9485_11_OR_LATER(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9485Modes_low_ob_db_tx_gain_1_1);
- 	else if (AR_SREV_9580(ah))
-@@ -517,7 +517,7 @@ static void ar9003_tx_gain_table_mode3(struct ath_hw *ah)
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9340Modes_high_power_tx_gain_table_1p0);
--	else if (AR_SREV_9485_11(ah))
-+	else if (AR_SREV_9485_11_OR_LATER(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9485Modes_high_power_tx_gain_1_1);
- 	else if (AR_SREV_9580(ah))
-@@ -552,7 +552,7 @@ static void ar9003_tx_gain_table_mode4(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index e69f7fe..3ede3e9 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -520,7 +520,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		tx_info = IEEE80211_SKB_CB(skb);
+ 		fi = get_frame_info(skb);
  
- static void ar9003_tx_gain_table_mode5(struct ath_hw *ah)
- {
--	if (AR_SREV_9485_11(ah))
-+	if (AR_SREV_9485_11_OR_LATER(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9485Modes_green_ob_db_tx_gain_1_1);
- 	else if (AR_SREV_9340(ah))
-@@ -571,7 +571,7 @@ static void ar9003_tx_gain_table_mode6(struct ath_hw *ah)
- 	if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9340Modes_low_ob_db_and_spur_tx_gain_table_1p0);
--	else if (AR_SREV_9485_11(ah))
-+	else if (AR_SREV_9485_11_OR_LATER(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9485Modes_green_spur_ob_db_tx_gain_1_1);
- 	else if (AR_SREV_9580(ah))
-@@ -611,7 +611,7 @@ static void ar9003_rx_gain_table_mode0(struct ath_hw *ah)
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				ar9340Common_rx_gain_table_1p0);
--	else if (AR_SREV_9485_11(ah))
-+	else if (AR_SREV_9485_11_OR_LATER(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			       ar9485_common_rx_gain_1_1);
- 	else if (AR_SREV_9550(ah)) {
-@@ -644,7 +644,7 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			ar9340Common_wo_xlna_rx_gain_table_1p0);
--	else if (AR_SREV_9485_11(ah))
-+	else if (AR_SREV_9485_11_OR_LATER(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			ar9485Common_wo_xlna_rx_gain_1_1);
- 	else if (AR_SREV_9462_21(ah))
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 18a5aa4..46b910a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1449,7 +1449,7 @@ static void ar9003_hw_set_bt_ant_diversity(struct ath_hw *ah, bool enable)
- 	regval |= (ant_div_ctl1 & 0x3f) << AR_ANT_DIV_CTRL_ALL_S;
- 	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
- 
--	if (AR_SREV_9485_11(ah)) {
-+	if (AR_SREV_9485_11_OR_LATER(ah)) {
- 		/*
- 		 * Enable LNA diversity.
- 		 */
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 5af9744..a13b2d1 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -893,9 +893,9 @@
- 
- #define AR_SREV_9485(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
--#define AR_SREV_9485_11(_ah) \
--	(AR_SREV_9485(_ah) && \
--	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9485_11))
-+#define AR_SREV_9485_11_OR_LATER(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485) && \
-+	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9485_11))
- #define AR_SREV_9485_OR_LATER(_ah) \
- 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9485))
- 
+-		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
++		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno) ||
++		    !tid->active) {
+ 			/*
+ 			 * Outside of the current BlockAck window,
+ 			 * maybe part of a previous session
 -- 
-1.8.3.4
+1.8.0.2
 
