@@ -1,83 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60676 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750792Ab3HSFhj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 01:37:39 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Add antenna diversity tweak for CUS198
-Date: Mon, 19 Aug 2013 11:04:01 +0530
-Message-Id: <1376890441-13070-1-git-send-email-sujith@msujith.org> (sfid-20130819_073747_125077_F1C27B1C)
+Received: from nbd.name ([46.4.11.11]:57806 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756048Ab3HFMSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 08:18:24 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, sujith@msujith.org
+Subject: [PATCH v2 05/12] ath9k: simplify ath_tx_form_aggr
+Date: Tue,  6 Aug 2013 14:18:06 +0200
+Message-Id: <1375791493-83971-5-git-send-email-nbd@openwrt.org> (sfid-20130806_141828_390169_34EC5433)
+In-Reply-To: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
+References: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The check for ATH_AMPDU_SUBFRAME_DEFAULT is unnecessary, since it's set
+to half the maximum BlockAck Window size, which is already the maximum
+value that h_baw could possibly have. Also remove unnecessary variables.
 
-This improves RX diversity and performance for AR9485.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 5 +++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 2 ++
- drivers/net/wireless/ath/ath9k/hw.h            | 1 +
- drivers/net/wireless/ath/ath9k/init.c          | 1 +
- 4 files changed, 9 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 -
+ drivers/net/wireless/ath/ath9k/xmit.c  | 33 ++++++++++++---------------------
+ 2 files changed, 12 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index abdc7ee..a6846ab 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3825,6 +3825,11 @@ static void ar9003_hw_atten_apply(struct ath_hw *ah, struct ath9k_channel *chan)
- 			else
- 				value = ar9003_hw_atten_chain_get_margin(ah, i, chan);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 2ce79c1..725515f 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -137,7 +137,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ #define ATH_AGGR_ENCRYPTDELIM      10
+ /* minimum h/w qdepth to be sustained to maximize aggregation */
+ #define ATH_AGGR_MIN_QDEPTH        2
+-#define ATH_AMPDU_SUBFRAME_DEFAULT 32
  
-+			if (ah->config.alt_mingainidx)
-+				REG_RMW_FIELD(ah, AR_PHY_EXT_ATTEN_CTL_0,
-+					      AR_PHY_EXT_ATTEN_CTL_XATTEN1_MARGIN,
-+					      value);
-+
- 			REG_RMW_FIELD(ah, ext_atten_reg[i],
- 				      AR_PHY_EXT_ATTEN_CTL_XATTEN1_MARGIN,
- 				      value);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 23c019d..6fd7523 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -148,6 +148,8 @@
- #define AR_PHY_SFCORR_SPUR_SUBCHNL_SD_S   28
- #define AR_PHY_EXT_CCA_THRESH62 0x007F0000
- #define AR_PHY_EXT_CCA_THRESH62_S       16
-+#define AR_PHY_EXTCHN_PWRTHR1_ANT_DIV_ALT_ANT_MINGAINIDX    0x0000FF00
-+#define AR_PHY_EXTCHN_PWRTHR1_ANT_DIV_ALT_ANT_MINGAINIDX_S  8
- #define AR_PHY_EXT_MINCCA_PWR   0x01FF0000
- #define AR_PHY_EXT_MINCCA_PWR_S 16
- #define AR_PHY_EXT_CYCPWR_THR1 0x0000FE00L
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 64ff8e6..fa543a6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -314,6 +314,7 @@ struct ath9k_ops_config {
- 	u32 xlna_gpio;
- 	u32 ant_ctrl_comm2g_switch_enable;
- 	bool xatten_margin_cfg;
-+	bool alt_mingainidx;
- };
+ #define IEEE80211_SEQ_SEQ_SHIFT    4
+ #define IEEE80211_SEQ_MAX          4096
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 350429b..887f2d4 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -906,9 +906,9 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ {
+ #define PADBYTES(_len) ((4 - ((_len) % 4)) % 4)
+ 	struct ath_buf *bf, *bf_first = NULL, *bf_prev = NULL;
+-	int rl = 0, nframes = 0, ndelim, prev_al = 0;
++	int nframes = 0, ndelim;
+ 	u16 aggr_limit = 0, al = 0, bpad = 0,
+-		al_delta, h_baw = tid->baw_size / 2;
++	    al_delta, h_baw = tid->baw_size / 2;
+ 	enum ATH_AGGR_STATUS status = ATH_AGGR_DONE;
+ 	struct ieee80211_tx_info *tx_info;
+ 	struct ath_frame_info *fi;
+@@ -925,33 +925,24 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 		skb = bf->bf_mpdu;
+ 		fi = get_frame_info(skb);
  
- enum ath9k_int {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index abf1eb5..19b46c7 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -534,6 +534,7 @@ static void ath9k_init_platform(struct ath_softc *sc)
- 			       ATH9K_PCI_CUS230)) {
- 		ah->config.xlna_gpio = 9;
- 		ah->config.xatten_margin_cfg = true;
-+		ah->config.alt_mingainidx = true;
- 		ah->config.ant_ctrl_comm2g_switch_enable = 0x000BBB88;
- 		sc->ant_comb.low_rssi_thresh = 20;
- 		sc->ant_comb.fast_div_bias = 3;
+-		if (!bf_first)
++		if (!bf_first) {
+ 			bf_first = bf;
+-
+-		if (!rl) {
+ 			ath_set_rates(tid->an->vif, tid->an->sta, bf);
+ 			aggr_limit = ath_lookup_rate(sc, bf, tid);
+-			rl = 1;
+ 		}
+ 
+ 		/* do not exceed aggregation limit */
+ 		al_delta = ATH_AGGR_DELIM_SZ + fi->framelen;
++		if (nframes) {
++			if (aggr_limit < al + bpad + al_delta ||
++			    ath_lookup_legacy(bf) || nframes >= h_baw) {
++				status = ATH_AGGR_LIMITED;
++				break;
++			}
+ 
+-		if (nframes &&
+-		    ((aggr_limit < (al + bpad + al_delta + prev_al)) ||
+-		     ath_lookup_legacy(bf))) {
+-			status = ATH_AGGR_LIMITED;
+-			break;
+-		}
+-
+-		tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
+-		if (nframes && (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
+-			break;
+-
+-		/* do not exceed subframe limit */
+-		if (nframes >= min((int)h_baw, ATH_AMPDU_SUBFRAME_DEFAULT)) {
+-			status = ATH_AGGR_LIMITED;
+-			break;
++			tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
++			if (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
++				break;
+ 		}
+ 
+ 		/* add padding for previous frame to aggregation length */
 -- 
-1.8.3.4
+1.8.0.2
 
