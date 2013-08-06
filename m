@@ -1,68 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:37639 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755859Ab3HLJp0 (ORCPT
+Received: from order.stressinduktion.org ([87.106.68.36]:35726 "EHLO
+	order.stressinduktion.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756842Ab3HFXHu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 05:45:26 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 05/15] ath9k: Fix RX crypto processing
-Date: Mon, 12 Aug 2013 15:11:32 +0530
-Message-Id: <1376300502-2741-6-git-send-email-sujith@msujith.org> (sfid-20130812_114533_525743_86F924D5)
-In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
-References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+	Tue, 6 Aug 2013 19:07:50 -0400
+Date: Wed, 7 Aug 2013 01:07:49 +0200
+From: Hannes Frederic Sowa <hannes@stressinduktion.org>
+To: Sedat Dilek <sedat.dilek@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	wireless <linux-wireless@vger.kernel.org>, netdev@vger.kernel.org
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+Message-ID: <20130806230749.GC16410@order.stressinduktion.org> (sfid-20130807_010755_957280_2E2CFF05)
+References: <1375816128.8219.28.camel@jlt4.sipsolutions.net> <CA+icZUXaTYVc_iv3hny6Je9mVdX8KCVpFSNBeukS+Fh-347Wvw@mail.gmail.com> <1375816715.8219.29.camel@jlt4.sipsolutions.net> <CA+icZUXdAjEDgu2XrA4Dg2hsLDJYdFTCpJwiW6=ZUgULe2noyw@mail.gmail.com> <CA+icZUVmokQ1fKmtbuPyp7f5Z2wdFYfjG5HCAm4Kue7efyKV8w@mail.gmail.com> <20130806213006.078C72210F@mail.nwl.cc> <CA+icZUVk1HM-VVYcARvY7p5KBYz0YcY9+rW8s-nKPTeVYh4tgw@mail.gmail.com> <1375825538.10459.1.camel@jlt4.sipsolutions.net> <20130806215657.GA16410@order.stressinduktion.org> <CA+icZUWY8PfYeV-iaPCm4MZenNaHRboK6Kmc8=Fnse9_dwfdqg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CA+icZUWY8PfYeV-iaPCm4MZenNaHRboK6Kmc8=Fnse9_dwfdqg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Wed, Aug 07, 2013 at 12:55:33AM +0200, Sedat Dilek wrote:
+> No, tested only with iwlwifi.
+> Can you try the patch from [1]?
+> 
+> - Sedat -
+> 
+> [1] http://marc.info/?l=linux-netdev&m=137582524017840&w=2
 
-The keymiss events are valid only in the last descriptor
-of a packet. Fix this by making sure that we return
-early in case of chained descriptors.
+Fixed the problem with virtio_net, too.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index f8cc2b3..b04a971 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -785,10 +785,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	    !test_bit(rx_stats->rs_keyix, common->ccmp_keymap))
- 		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
- 
--	/* Only use error bits from the last fragment */
--	if (rx_stats->rs_more)
--		return true;
--
- 	mic_error = is_valid_tkip && !ieee80211_is_ctl(fc) &&
- 		!ieee80211_has_morefrags(fc) &&
- 		!(le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG) &&
-@@ -959,6 +955,10 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		return -EINVAL;
- 	}
- 
-+	/* Only use status info from the last fragment */
-+	if (rx_stats->rs_more)
-+		return 0;
-+
- 	/*
- 	 * everything but the rate is checked here, the rate check is done
- 	 * separately to avoid doing two lookups for a rate for each frame.
-@@ -966,10 +966,6 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	if (!ath9k_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error))
- 		return -EINVAL;
- 
--	/* Only use status info from the last fragment */
--	if (rx_stats->rs_more)
--		return 0;
--
- 	if (ath9k_process_rate(common, hw, rx_stats, rx_status))
- 		return -EINVAL;
- 
--- 
-1.8.3.4
+  Hannes
 
