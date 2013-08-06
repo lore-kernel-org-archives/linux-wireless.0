@@ -1,112 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from numidia.opendz.org ([98.142.220.152]:41498 "EHLO
-	numidia.opendz.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754347Ab3HYKvX (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54905 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756035Ab3HFLhB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Aug 2013 06:51:23 -0400
-From: Djalal Harouni <tixxdz@opendz.org>
-To: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Djalal Harouni <tixxdz@opendz.org>
-Subject: [PATCH] ath5k: debugfs: NULL-terminate strings
-Date: Sun, 25 Aug 2013 11:50:49 +0100
-Message-Id: <1377427849-13264-1-git-send-email-tixxdz@opendz.org> (sfid-20130825_125207_334019_D9F675D9)
+	Tue, 6 Aug 2013 07:37:01 -0400
+Message-ID: <1375789016.8219.14.camel@jlt4.sipsolutions.net> (sfid-20130806_133706_025220_495858A1)
+Subject: Re: [PATCH] mac80211: add control port protocol TX control flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 06 Aug 2013 13:36:56 +0200
+In-Reply-To: <CAB3XZEeYvi=i5crLsMKNhgbctPhU9BjEF=DTsHdickssRM480A@mail.gmail.com> (sfid-20130806_124006_577783_7F634B61)
+References: <1375783056-2665-1-git-send-email-johannes@sipsolutions.net>
+	 <CAB3XZEeYvi=i5crLsMKNhgbctPhU9BjEF=DTsHdickssRM480A@mail.gmail.com>
+	 (sfid-20130806_124006_577783_7F634B61)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid processing garbage data by NULL terminating the strings.
+On Tue, 2013-08-06 at 13:40 +0300, Eliad Peller wrote:
 
-Signed-off-by: Djalal Harouni <tixxdz@opendz.org>
----
-Patch compile tested only.
+> >  static inline bool iwl_trace_data(struct sk_buff *skb)
+> >  {
+> >         struct ieee80211_hdr *hdr = (void *)skb->data;
+> > +       struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+> >
+> >         if (ieee80211_is_data(hdr->frame_control))
+> > -               return skb->protocol != cpu_to_be16(ETH_P_PAE);
+> > +               return info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
+> >         return false;
+> >  }
+> this looks reversed...
 
- drivers/net/wireless/ath/ath5k/debug.c | 24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+Good catch, thanks.
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 9d00dab..b8d031a 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -245,9 +245,11 @@ static ssize_t write_file_beacon(struct file *file,
- 	struct ath5k_hw *ah = file->private_data;
- 	char buf[20];
- 
--	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, userbuf, count))
- 		return -EFAULT;
- 
-+	buf[count] = '\0';
- 	if (strncmp(buf, "disable", 7) == 0) {
- 		AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
- 		pr_info("debugfs disable beacons\n");
-@@ -345,9 +347,11 @@ static ssize_t write_file_debug(struct file *file,
- 	unsigned int i;
- 	char buf[20];
- 
--	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, userbuf, count))
- 		return -EFAULT;
- 
-+	buf[count] = '\0';
- 	for (i = 0; i < ARRAY_SIZE(dbg_info); i++) {
- 		if (strncmp(buf, dbg_info[i].name,
- 					strlen(dbg_info[i].name)) == 0) {
-@@ -448,9 +452,11 @@ static ssize_t write_file_antenna(struct file *file,
- 	unsigned int i;
- 	char buf[20];
- 
--	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, userbuf, count))
- 		return -EFAULT;
- 
-+	buf[count] = '\0';
- 	if (strncmp(buf, "diversity", 9) == 0) {
- 		ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
- 		pr_info("debug: enable diversity\n");
-@@ -619,9 +625,11 @@ static ssize_t write_file_frameerrors(struct file *file,
- 	struct ath5k_statistics *st = &ah->stats;
- 	char buf[20];
- 
--	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, userbuf, count))
- 		return -EFAULT;
- 
-+	buf[count] = '\0';
- 	if (strncmp(buf, "clear", 5) == 0) {
- 		st->rxerr_crc = 0;
- 		st->rxerr_phy = 0;
-@@ -766,9 +774,11 @@ static ssize_t write_file_ani(struct file *file,
- 	struct ath5k_hw *ah = file->private_data;
- 	char buf[20];
- 
--	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, userbuf, count))
- 		return -EFAULT;
- 
-+	buf[count] = '\0';
- 	if (strncmp(buf, "sens-low", 8) == 0) {
- 		ath5k_ani_init(ah, ATH5K_ANI_MODE_MANUAL_HIGH);
- 	} else if (strncmp(buf, "sens-high", 9) == 0) {
-@@ -862,9 +872,11 @@ static ssize_t write_file_queue(struct file *file,
- 	struct ath5k_hw *ah = file->private_data;
- 	char buf[20];
- 
--	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, userbuf, count))
- 		return -EFAULT;
- 
-+	buf[count] = '\0';
- 	if (strncmp(buf, "start", 5) == 0)
- 		ieee80211_wake_queues(ah->hw);
- 	else if (strncmp(buf, "stop", 4) == 0)
--- 
-1.7.11.7
+johannes
 
