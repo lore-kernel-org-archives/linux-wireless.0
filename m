@@ -1,34 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:40148 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753942Ab3H0XRp (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:62879 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756806Ab3HFVph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 19:17:45 -0400
-Received: by mail-oa0-f50.google.com with SMTP id i4so6694692oah.37
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 16:17:45 -0700 (PDT)
-Message-ID: <521D3397.2000805@lwfinger.net> (sfid-20130828_011748_880312_0260FD6B)
-Date: Tue, 27 Aug 2013 18:17:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Colleen Josephson <cjoseph@mit.edu>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: issues with RTL8188CE device and rtl8192ce driver
-References: <CAN3-2D7=P=9VyV7xoANw_6B8VhOaTRC1iMw+mwUH2-g8YOmPMg@mail.gmail.com> <520968B0.80301@lwfinger.net> <CAN3-2D5rCnXYogA6s6in_e6qpyLmZ0bpbGX=REi=Cn29U40nMw@mail.gmail.com> <520971BA.6040503@lwfinger.net> <CAN3-2D75TLTS-Fv3CgoBjA+RA3jv-QyLoSs+PZeKXLY_MUcSTQ@mail.gmail.com> <520975D8.8040908@lwfinger.net> <CAN3-2D6KSsFXQ5QOGfp-1c69dCSrCEdcgXMfPcuEC+Hx_dX_zw@mail.gmail.com> <520AF3BD.5020705@lwfinger.net> <CAN3-2D5+tvQyZKBP3vUwGWdctCcfCeBxAhPsZs+DCLDdr4dyCw@mail.gmail.com> <CAN3-2D6Cf6Ew2Ar5ZD5ZCamhKF92wnKjgP=dEk15UF1YDXJS5g@mail.gmail.com>
-In-Reply-To: <CAN3-2D6Cf6Ew2Ar5ZD5ZCamhKF92wnKjgP=dEk15UF1YDXJS5g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 6 Aug 2013 17:45:37 -0400
+Received: by mail-pb0-f41.google.com with SMTP id rp2so1026846pbb.14
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Aug 2013 14:45:36 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH v2] mac80211: allow lowest basic rate for unicast management for mesh
+Date: Tue,  6 Aug 2013 14:45:19 -0700
+Message-Id: <1375825519-24568-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130806_234545_966559_20874C17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/27/2013 06:09 PM, Colleen Josephson wrote:
-> Any updates? Or addition information that would be useful? I will be
-> relocating to the other side of the US next week, so I will be unable
-> to collect more information or traces on this specific network after
-> then.
+Allow lowest basic rate to be used for unicast management frame in
+mesh. Otherwise, the lowest supported rate is used for unicast
+management frame, such as 1Mbps for 2.4GHz and 6Mbps for 5GHz. Rename
+the rc_send_low_broadcast to re_send_low_basicrate since now it is
+also applied to unicast management frame in mesh.
 
-I have been busy getting a new driver into the kernel before 3.12 comes out. I 
-am now looking into both rtl8192ce and rtl8192cu. I think I have what I need 
-from you.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+---
 
-Larry
+v2: Refactor to avoid duplication of code (Johannes)
 
+ net/mac80211/rate.c |   23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index ba63ac8..4aa7bb6 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -210,7 +210,7 @@ static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
+ 		!ieee80211_is_data(fc);
+ }
+ 
+-static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
++static void rc_send_low_basicrate(s8 *idx, u32 basic_rates,
+ 				  struct ieee80211_supported_band *sband)
+ {
+ 	u8 i;
+@@ -263,28 +263,37 @@ static void __rate_control_send_low(struct ieee80211_hw *hw,
+ }
+ 
+ 
+-bool rate_control_send_low(struct ieee80211_sta *sta,
++bool rate_control_send_low(struct ieee80211_sta *pubsta,
+ 			   void *priv_sta,
+ 			   struct ieee80211_tx_rate_control *txrc)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
+ 	struct ieee80211_supported_band *sband = txrc->sband;
++	struct sta_info *sta;
+ 	int mcast_rate;
++	bool use_basicrate = false;
+ 
+-	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
+-		__rate_control_send_low(txrc->hw, sband, sta, info);
++	if (!pubsta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
++		__rate_control_send_low(txrc->hw, sband, pubsta, info);
+ 
+-		if (!sta && txrc->bss) {
++		if (!pubsta && txrc->bss) {
+ 			mcast_rate = txrc->bss_conf->mcast_rate[sband->band];
+ 			if (mcast_rate > 0) {
+ 				info->control.rates[0].idx = mcast_rate - 1;
+ 				return true;
+ 			}
++			use_basicrate = true;
++		} else {
++			sta = container_of(pubsta, struct sta_info, sta);
++			if (ieee80211_vif_is_mesh(&sta->sdata->vif))
++				use_basicrate = true;
++		}
+ 
+-			rc_send_low_broadcast(&info->control.rates[0].idx,
++		if (use_basicrate)
++			rc_send_low_basicrate(&info->control.rates[0].idx,
+ 					      txrc->bss_conf->basic_rates,
+ 					      sband);
+-		}
++
+ 		return true;
+ 	}
+ 	return false;
+-- 
+1.7.9.5
 
