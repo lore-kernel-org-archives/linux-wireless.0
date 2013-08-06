@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57807 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756303Ab3HFMSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 08:18:24 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, sujith@msujith.org
-Subject: [PATCH v2 08/12] ath9k: fix clearing expired A-MPDU subframes in tx completion
-Date: Tue,  6 Aug 2013 14:18:09 +0200
-Message-Id: <1375791493-83971-8-git-send-email-nbd@openwrt.org> (sfid-20130806_141837_930103_50CE8676)
-In-Reply-To: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
-References: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
+Received: from mail-we0-f177.google.com ([74.125.82.177]:37059 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755127Ab3HFP1Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 11:27:25 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com>
+References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
+	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
+	<CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
+	<1375800617.8219.23.camel@jlt4.sipsolutions.net>
+	<CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
+	<1375801059.8219.24.camel@jlt4.sipsolutions.net>
+	<CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
+	<CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
+	<1375802297.8219.25.camel@jlt4.sipsolutions.net>
+	<CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com>
+Date: Tue, 6 Aug 2013 17:27:24 +0200
+Message-ID: <CA+icZUVuOqdZUGy2ALAF1CehOqYdr7rtEsXhqNvDtYEns2BuRQ@mail.gmail.com> (sfid-20130806_172748_366063_5C846D65)
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the tid aggregation state has been marked as inactive, free
-completed tx packets immediately. When a new aggregation session has not
-been initialized yet, the BAW checks do not recognize it as expired.
+On Tue, Aug 6, 2013 at 5:20 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Tue, Aug 6, 2013 at 5:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>
+>>
+>>> I have sent you a v2 of my logs (with -d and rsyslog-7.x).
+>>
+>> Hmm, that looks different? There no longer is anything about "PSK might
+>> be wrong", but now just disconnections by the AP, which unfortunately
+>> indicate no reason.
+>>
+>> When was it working last?
+>>
+>
+> next-20130801 was OK here.
+>
 
-Might fix potential stalls in setting up a new aggregation session.
+What about these lines?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Aug  6 17:03:37 fambox kernel: [  134.575120] wlan0: deauthenticated
+from 00:04:0e:e4:00:3d (Reason: 1)
+Aug  6 17:03:37 fambox wpa_supplicant[2424]: wlan0: Event DEAUTH (12) received
+Aug  6 17:03:37 fambox wpa_supplicant[2424]: wlan0: Deauthentication
+notification
+Aug  6 17:03:37 fambox wpa_supplicant[2424]: Deauthentication frame
+IE(s) - hexdump(len=0): [NULL]
+Aug  6 17:03:37 fambox wpa_supplicant[2424]: wlan0: WPA: 4-Way
+Handshake failed - pre-shared key may be incorrect
+Aug  6 17:03:37 fambox NetworkManager[2431]: <info> (wlan0):
+supplicant interface state: 4-way handshake -> disconnected
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index e69f7fe..3ede3e9 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -520,7 +520,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		tx_info = IEEE80211_SKB_CB(skb);
- 		fi = get_frame_info(skb);
- 
--		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
-+		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno) ||
-+		    !tid->active) {
- 			/*
- 			 * Outside of the current BlockAck window,
- 			 * maybe part of a previous session
--- 
-1.8.0.2
-
+- Sedat -
