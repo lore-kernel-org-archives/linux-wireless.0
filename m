@@ -1,37 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60159 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753829Ab3H1RA7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 13:00:59 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1VEj73-0005Lk-JF
-	for linux-wireless@vger.kernel.org; Wed, 28 Aug 2013 19:00:57 +0200
-Message-ID: <1377709250.13797.13.camel@jlt4.sipsolutions.net> (sfid-20130828_190102_762760_A9BDE846)
-Subject: Re: [PATCH] mac80211: add ieee80211_iterate_active_interfaces_rtnl()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 28 Aug 2013 19:00:50 +0200
-In-Reply-To: <1377605145-21353-1-git-send-email-johannes@sipsolutions.net> (sfid-20130827_140558_058283_87FE2375)
-References: <1377605145-21353-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130827_140558_058283_87FE2375)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:52899 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755553Ab3HFJtX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 05:49:23 -0400
+Message-ID: <5200C6A1.3040902@openwrt.org> (sfid-20130806_114926_096193_FF686E6F)
+Date: Tue, 06 Aug 2013 11:49:21 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 09/12] ath9k: always clear ps filter bit on new assoc
+References: <1375732583-39001-1-git-send-email-nbd@openwrt.org> <1375732583-39001-9-git-send-email-nbd@openwrt.org> <20992.44003.432490.369935@gargle.gargle.HOWL>
+In-Reply-To: <20992.44003.432490.369935@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-08-27 at 14:05 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 2013-08-06 9:55 AM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> Otherwise in some cases, EAPOL frames might be filtered during the
+>> initial handshake, causing delays and assoc failures.
 > 
-> If it is needed to disconnect multiple virtual interfaces after
-> (WoWLAN-) suspend, the most obvious approach would be to iterate
-> all interfaces by calling ieee80211_iterate_active_interfaces()
-> and then call ieee80211_resume_disconnect() for each one. This
-> is what the iwlmvm driver does.
+> I think this is a stable candidate.
+Okay, will add Cc:stable in v2.
 
-Applied.
-
-johannes
-
+- Felix
