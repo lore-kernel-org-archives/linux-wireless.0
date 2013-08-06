@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59519 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754269Ab3HBQVf (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:43799 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755051Ab3HFPJx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 12:21:35 -0400
-Message-ID: <1375460484.18144.11.camel@jlt4.sipsolutions.net> (sfid-20130802_182214_261193_1A6778D0)
-Subject: Re: Slow firmware timeouts again (Re: [3.11 regression?] iwlwifi
- firmware takes two minutes to load)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	systemd-devel@lists.freedesktop.org
-Date: Fri, 02 Aug 2013 18:21:24 +0200
-In-Reply-To: <CALCETrU+C+sO8tJ0X5G4RDVLV=kHQQHurOnEQCoqbAouh60dng@mail.gmail.com> (sfid-20130802_180506_433399_849260E2)
-References: <CALCETrU+C+sO8tJ0X5G4RDVLV=kHQQHurOnEQCoqbAouh60dng@mail.gmail.com>
-	 (sfid-20130802_180506_433399_849260E2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 6 Aug 2013 11:09:53 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
+References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
+	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
+	<CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
+	<1375800617.8219.23.camel@jlt4.sipsolutions.net>
+	<CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
+	<1375801059.8219.24.camel@jlt4.sipsolutions.net>
+	<CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
+Date: Tue, 6 Aug 2013 17:09:52 +0200
+Message-ID: <CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com> (sfid-20130806_171013_696049_F3D8F3AF)
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-08-02 at 09:04 -0700, Andy Lutomirski wrote:
+On Tue, Aug 6, 2013 at 4:59 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Tue, Aug 6, 2013 at 4:57 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Tue, 2013-08-06 at 16:56 +0200, Sedat Dilek wrote:
+>>> On Tue, Aug 6, 2013 at 4:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>> > On Tue, 2013-08-06 at 16:46 +0200, Sedat Dilek wrote:
+>>> >
+>>> > Heh, the interesting messages are always cut out of the log:
+>>> >
+>>> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: wlan0: WPA: RX message 1 of 4-Way Handshake from 00:04:0e:e4:00:3d (ver=2)
+>>> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: RSN: msg 1/4 key data - hexdump(len=0):
+>>> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: Get randomness: len=32 entropy=4
+>>> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from os_get_random - hexdump(len=32): [REMOVED]
+>>> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
+>>> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from internal pool - hexdump(len=16): [REMOVED]
+>>> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
+>>> > Aug  6 16:30:34 fambox rsyslogd-2177: imuxsock begins to drop messages from pid 2533 due to rate-limiting
+>>> > [...]
+>>> >
+>>>
+>>> Do you know how I can workaround the rsyslogd rate-limiting?
+>>
+>> Me? no.
+>>
+>
+> Hmmm, I thought about reducing from -ddd to -d or install a newer rsyslog.
+>
 
-> > It wasn't exactly fixed and it's really more of a userspace problem - we
-> > probably request firmware version 8, and then it takes 30 seconds to
-> > time out for each of 8,7,6,5, after which the next request for 4 is
-> > successful.
-> 
-> Why's it requesting those firmwares?  They don't seem to exist on
-> intellinuxwireless.org.
+I have sent you a v2 of my logs (with -d and rsyslog-7.x).
 
-Well for one you've never even mentioned what device you have, and then
-also it's not requesting 8/7 only 6,5,4 -- I guess the timeout was
-increased to 60 seconds (or I'm remembering wrong and it always was? I
-thought it was 30s)
+- Sedat -
 
-johannes
-
+> - Sedat -
+>
+>> johannes
+>>
