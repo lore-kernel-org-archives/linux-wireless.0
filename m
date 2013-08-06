@@ -1,257 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:46485 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755965Ab3HAPaj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 11:30:39 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 8/8] ath9k: Add statistics for antenna diversity
-Date: Thu,  1 Aug 2013 20:57:06 +0530
-Message-Id: <1375370826-1387-1-git-send-email-sujith@msujith.org> (sfid-20130801_173043_462666_B7EA854F)
-In-Reply-To: <1375338204-2021-8-git-send-email-sujith@msujith.org>
-References: <1375338204-2021-8-git-send-email-sujith@msujith.org>
+Received: from nbd.name ([46.4.11.11]:57816 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756287Ab3HFMSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 08:18:24 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, sujith@msujith.org
+Subject: [PATCH v2 12/12] ath9k: use software queueing for multicast traffic
+Date: Tue,  6 Aug 2013 14:18:13 +0200
+Message-Id: <1375791493-83971-12-git-send-email-nbd@openwrt.org> (sfid-20130806_141841_879616_66181391)
+In-Reply-To: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
+References: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Create a per-vif dummy node entry for keeping the multicast software
+queues. This helps in setups with a lot of mulitcast traffic that could
+otherwise potentially drown out unicast traffic to stations.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/antenna.c | 18 ++++---
- drivers/net/wireless/ath/ath9k/debug.c   | 85 ++++++++++++++++++++++++++------
- drivers/net/wireless/ath/ath9k/debug.h   | 20 +++++---
- 3 files changed, 95 insertions(+), 28 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  2 ++
+ drivers/net/wireless/ath/ath9k/main.c  | 11 +++++++++++
+ drivers/net/wireless/ath/ath9k/xmit.c  | 12 ++++++++++--
+ 3 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
-index 42f3b87..391d557 100644
---- a/drivers/net/wireless/ath/ath9k/antenna.c
-+++ b/drivers/net/wireless/ath/ath9k/antenna.c
-@@ -734,15 +734,18 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
- 		antcomb->main_total_rssi += main_rssi;
- 		antcomb->alt_total_rssi  += alt_rssi;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 41ea3fd..505c615 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -265,6 +265,7 @@ struct ath_node {
+ 	u8 mpdudensity;
  
--		if (main_ant_conf == rx_ant_conf) {
-+		if (main_ant_conf == rx_ant_conf)
- 			antcomb->main_recv_cnt++;
--			ANT_STAT_INC(ANT_MAIN, recv_cnt);
--			ANT_LNA_INC(ANT_MAIN, rx_ant_conf);
--		} else {
-+		else
- 			antcomb->alt_recv_cnt++;
--			ANT_STAT_INC(ANT_ALT, recv_cnt);
--			ANT_LNA_INC(ANT_ALT, rx_ant_conf);
--		}
+ 	bool sleeping;
++	bool no_ps_filter;
+ 
+ #if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_ATH9K_DEBUGFS)
+ 	struct dentry *node_stat;
+@@ -364,6 +365,7 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ /********/
+ 
+ struct ath_vif {
++	struct ath_node mcast_node;
+ 	int av_bslot;
+ 	bool primary_sta_vif;
+ 	__le64 tsf_adjust; /* TSF adjustment for staggered beacons */
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 252497a..911744f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -963,6 +963,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath_vif *avp = (void *)vif->drv_priv;
++	struct ath_node *an = &avp->mcast_node;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+@@ -976,6 +978,12 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	if (ath9k_uses_beacons(vif->type))
+ 		ath9k_beacon_assign_slot(sc, vif);
+ 
++	an->sc = sc;
++	an->sta = NULL;
++	an->vif = vif;
++	an->no_ps_filter = true;
++	ath_tx_node_init(sc, an);
++
+ 	mutex_unlock(&sc->mutex);
+ 	return 0;
+ }
+@@ -1013,6 +1021,7 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_vif *avp = (void *)vif->drv_priv;
+ 
+ 	ath_dbg(common, CONFIG, "Detach Interface\n");
+ 
+@@ -1027,6 +1036,8 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 	ath9k_calculate_summary_state(hw, NULL);
+ 	ath9k_ps_restore(sc);
+ 
++	ath_tx_node_cleanup(sc, &avp->mcast_node);
++
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index f9e6eb2..d8dfb3e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -135,6 +135,9 @@ static struct ath_frame_info *get_frame_info(struct sk_buff *skb)
+ 
+ static void ath_send_bar(struct ath_atx_tid *tid, u16 seqno)
+ {
++	if (!tid->an->sta)
++		return;
++
+ 	ieee80211_send_bar(tid->an->vif, tid->an->sta->addr, tid->tidno,
+ 			   seqno << IEEE80211_SEQ_SEQ_SHIFT);
+ }
+@@ -1382,7 +1385,7 @@ static bool ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	if (list_empty(&bf_q))
+ 		return false;
+ 
+-	if (tid->ac->clear_ps_filter) {
++	if (tid->ac->clear_ps_filter || tid->an->no_ps_filter) {
+ 		tid->ac->clear_ps_filter = false;
+ 		tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 	}
+@@ -1572,7 +1575,7 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ 			sent++;
+ 			TX_STAT_INC(txq->axq_qnum, a_queued_hw);
+ 
+-			if (!ath_tid_has_buffered(tid))
++			if (an->sta && !ath_tid_has_buffered(tid))
+ 				ieee80211_sta_set_buffered(an->sta, i, false);
+ 		}
+ 		ath_txq_unlock_complete(sc, tid->ac->txq);
+@@ -2104,6 +2107,7 @@ static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_sta *sta = txctl->sta;
+ 	struct ieee80211_vif *vif = info->control.vif;
++	struct ath_vif *avp;
+ 	struct ath_softc *sc = hw->priv;
+ 	int frmlen = skb->len + FCS_LEN;
+ 	int padpos, padsize;
+@@ -2111,6 +2115,10 @@ static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	/* NOTE:  sta can be NULL according to net/mac80211.h */
+ 	if (sta)
+ 		txctl->an = (struct ath_node *)sta->drv_priv;
++	else if (vif && ieee80211_is_data(hdr->frame_control)) {
++		avp = (void *)vif->drv_priv;
++		txctl->an = &avp->mcast_node;
 +	}
-+
-+	if (main_ant_conf == rx_ant_conf) {
-+		ANT_STAT_INC(ANT_MAIN, recv_cnt);
-+		ANT_LNA_INC(ANT_MAIN, rx_ant_conf);
-+	} else {
-+		ANT_STAT_INC(ANT_ALT, recv_cnt);
-+		ANT_LNA_INC(ANT_ALT, rx_ant_conf);
- 	}
  
- 	/* Short scan check */
-@@ -821,6 +824,7 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
- div_comb_done:
- 	ath_ant_div_conf_fast_divbias(&div_ant_conf, antcomb, alt_ratio);
- 	ath9k_hw_antdiv_comb_conf_set(sc->sc_ah, &div_ant_conf);
-+	ath9k_debug_stat_ant(sc, &div_ant_conf, main_rssi_avg, alt_rssi_avg);
- 
- 	antcomb->scan_start_time = jiffies;
- 	antcomb->total_pkt_count = 0;
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 56cbe5d..a43bd8c 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -321,6 +321,20 @@ static const struct file_operations fops_bt_ant_diversity = {
- 	.llseek = default_llseek,
- };
- 
-+void ath9k_debug_stat_ant(struct ath_softc *sc,
-+			  struct ath_hw_antcomb_conf *div_ant_conf,
-+			  int main_rssi_avg, int alt_rssi_avg)
-+{
-+	struct ath_antenna_stats *as_main = &sc->debug.stats.ant_stats[ANT_MAIN];
-+	struct ath_antenna_stats *as_alt = &sc->debug.stats.ant_stats[ANT_ALT];
-+
-+	as_main->lna_attempt_cnt[div_ant_conf->main_lna_conf]++;
-+	as_alt->lna_attempt_cnt[div_ant_conf->alt_lna_conf]++;
-+
-+	as_main->rssi_avg = main_rssi_avg;
-+	as_alt->rssi_avg = alt_rssi_avg;
-+}
-+
- static ssize_t read_file_antenna_diversity(struct file *file,
- 					   char __user *user_buf,
- 					   size_t count, loff_t *ppos)
-@@ -330,9 +344,14 @@ static ssize_t read_file_antenna_diversity(struct file *file,
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_antenna_stats *as_main = &sc->debug.stats.ant_stats[ANT_MAIN];
- 	struct ath_antenna_stats *as_alt = &sc->debug.stats.ant_stats[ANT_ALT];
-+	struct ath_hw_antcomb_conf div_ant_conf;
- 	unsigned int len = 0, size = 1024;
- 	ssize_t retval = 0;
- 	char *buf;
-+	char *lna_conf_str[4] = {"LNA1_MINUS_LNA2",
-+				 "LNA2",
-+				 "LNA1",
-+				 "LNA1_PLUS_LNA2"};
- 
- 	buf = kzalloc(size, GFP_KERNEL);
- 	if (buf == NULL)
-@@ -344,28 +363,66 @@ static ssize_t read_file_antenna_diversity(struct file *file,
- 		goto exit;
- 	}
- 
-+	ath9k_ps_wakeup(sc);
-+	ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
-+	len += snprintf(buf + len, size - len, "Current MAIN config : %s\n",
-+			lna_conf_str[div_ant_conf.main_lna_conf]);
-+	len += snprintf(buf + len, size - len, "Current ALT config  : %s\n",
-+			lna_conf_str[div_ant_conf.alt_lna_conf]);
-+	len += snprintf(buf + len, size - len, "Average MAIN RSSI   : %d\n",
-+			as_main->rssi_avg);
-+	len += snprintf(buf + len, size - len, "Average ALT RSSI    : %d\n\n",
-+			as_alt->rssi_avg);
-+	ath9k_ps_restore(sc);
-+
-+	len += snprintf(buf + len, size - len, "Packet Receive Cnt:\n");
-+	len += snprintf(buf + len, size - len, "-------------------\n");
-+
- 	len += snprintf(buf + len, size - len, "%30s%15s\n",
- 			"MAIN", "ALT");
--	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
--			"RECV CNT",
-+	len += snprintf(buf + len, size - len, "%-14s:%15d%15d\n",
-+			"TOTAL COUNT",
- 			as_main->recv_cnt,
- 			as_alt->recv_cnt);
--	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
-+	len += snprintf(buf + len, size - len, "%-14s:%15d%15d\n",
-+			"LNA1",
-+			as_main->lna_recv_cnt[ATH_ANT_DIV_COMB_LNA1],
-+			as_alt->lna_recv_cnt[ATH_ANT_DIV_COMB_LNA1]);
-+	len += snprintf(buf + len, size - len, "%-14s:%15d%15d\n",
-+			"LNA2",
-+			as_main->lna_recv_cnt[ATH_ANT_DIV_COMB_LNA2],
-+			as_alt->lna_recv_cnt[ATH_ANT_DIV_COMB_LNA2]);
-+	len += snprintf(buf + len, size - len, "%-14s:%15d%15d\n",
-+			"LNA1 + LNA2",
-+			as_main->lna_recv_cnt[ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2],
-+			as_alt->lna_recv_cnt[ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2]);
-+	len += snprintf(buf + len, size - len, "%-14s:%15d%15d\n",
-+			"LNA1 - LNA2",
-+			as_main->lna_recv_cnt[ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2],
-+			as_alt->lna_recv_cnt[ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2]);
-+
-+	len += snprintf(buf + len, size - len, "\nLNA Config Attempts:\n");
-+	len += snprintf(buf + len, size - len, "--------------------\n");
-+
-+	len += snprintf(buf + len, size - len, "%30s%15s\n",
-+			"MAIN", "ALT");
-+	len += snprintf(buf + len, size - len, "%-14s:%15d%15d\n",
- 			"LNA1",
--			as_main->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1],
--			as_alt->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1]);
--	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
-+			as_main->lna_attempt_cnt[ATH_ANT_DIV_COMB_LNA1],
-+			as_alt->lna_attempt_cnt[ATH_ANT_DIV_COMB_LNA1]);
-+	len += snprintf(buf + len, size - len, "%-14s:%15d%15d\n",
- 			"LNA2",
--			as_main->lna_config_cnt[ATH_ANT_DIV_COMB_LNA2],
--			as_alt->lna_config_cnt[ATH_ANT_DIV_COMB_LNA2]);
--	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
-+			as_main->lna_attempt_cnt[ATH_ANT_DIV_COMB_LNA2],
-+			as_alt->lna_attempt_cnt[ATH_ANT_DIV_COMB_LNA2]);
-+	len += snprintf(buf + len, size - len, "%-14s:%15d%15d\n",
- 			"LNA1 + LNA2",
--			as_main->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2],
--			as_alt->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2]);
--	len += snprintf(buf + len, size - len, "%-15s%15d%15d\n",
-+			as_main->lna_attempt_cnt[ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2],
-+			as_alt->lna_attempt_cnt[ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2]);
-+	len += snprintf(buf + len, size - len, "%-14s:%15d%15d\n",
- 			"LNA1 - LNA2",
--			as_main->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2],
--			as_alt->lna_config_cnt[ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2]);
-+			as_main->lna_attempt_cnt[ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2],
-+			as_alt->lna_attempt_cnt[ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2]);
-+
- exit:
- 	if (len > size)
- 		len = size;
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index a879e45..01c5c6a 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -29,7 +29,7 @@ struct fft_sample_tlv;
- #define TX_STAT_INC(q, c) sc->debug.stats.txstats[q].c++
- #define RESET_STAT_INC(sc, type) sc->debug.stats.reset[type]++
- #define ANT_STAT_INC(i, c) sc->debug.stats.ant_stats[i].c++
--#define ANT_LNA_INC(i, c) sc->debug.stats.ant_stats[i].lna_config_cnt[c]++;
-+#define ANT_LNA_INC(i, c) sc->debug.stats.ant_stats[i].lna_recv_cnt[c]++;
- #else
- #define TX_STAT_INC(q, c) do { } while (0)
- #define RESET_STAT_INC(sc, type) do { } while (0)
-@@ -252,7 +252,9 @@ struct ath_rx_stats {
- 
- struct ath_antenna_stats {
- 	u32 recv_cnt;
--	u32 lna_config_cnt[4];
-+	u32 rssi_avg;
-+	u32 lna_recv_cnt[4];
-+	u32 lna_attempt_cnt[4];
- };
- 
- struct ath_stats {
-@@ -294,10 +296,11 @@ void ath9k_sta_remove_debugfs(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif,
- 			      struct ieee80211_sta *sta,
- 			      struct dentry *dir);
--
- void ath_debug_send_fft_sample(struct ath_softc *sc,
- 			       struct fft_sample_tlv *fft_sample);
--
-+void ath9k_debug_stat_ant(struct ath_softc *sc,
-+			  struct ath_hw_antcomb_conf *div_ant_conf,
-+			  int main_rssi_avg, int alt_rssi_avg);
- #else
- 
- #define RX_STAT_INC(c) /* NOP */
-@@ -310,12 +313,10 @@ static inline int ath9k_init_debug(struct ath_hw *ah)
- static inline void ath9k_deinit_debug(struct ath_softc *sc)
- {
- }
--
- static inline void ath_debug_stat_interrupt(struct ath_softc *sc,
- 					    enum ath9k_int status)
- {
- }
--
- static inline void ath_debug_stat_tx(struct ath_softc *sc,
- 				     struct ath_buf *bf,
- 				     struct ath_tx_status *ts,
-@@ -323,11 +324,16 @@ static inline void ath_debug_stat_tx(struct ath_softc *sc,
- 				     unsigned int flags)
- {
- }
--
- static inline void ath_debug_stat_rx(struct ath_softc *sc,
- 				     struct ath_rx_status *rs)
- {
- }
-+static inline void ath9k_debug_stat_ant(struct ath_softc *sc,
-+					struct ath_hw_antcomb_conf *div_ant_conf,
-+					int main_rssi_avg, int alt_rssi_avg)
-+{
-+
-+}
- 
- #endif /* CONFIG_ATH9K_DEBUGFS */
- 
+ 	if (info->control.hw_key)
+ 		frmlen += info->control.hw_key->icv_len;
 -- 
-1.8.3.4
+1.8.0.2
 
