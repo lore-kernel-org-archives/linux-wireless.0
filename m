@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:55181 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752500Ab3HVKF1 convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:42882 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755709Ab3HFQfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Aug 2013 06:05:27 -0400
-Received: by mail-bk0-f43.google.com with SMTP id mz13so591328bkb.16
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 03:05:26 -0700 (PDT)
+	Tue, 6 Aug 2013 12:35:52 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
-References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 22 Aug 2013 12:05:25 +0200
-Message-ID: <CA+BoTQksSJEJnkArCGb5Vkn=9REYSsfQ0HEsdrkoqNF-5FOj1w@mail.gmail.com> (sfid-20130822_120530_846236_7EE47A36)
-Subject: Re: [PATCH 0/3] ath10k: fixes
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20993.9487.618902.977950@gargle.gargle.HOWL> (sfid-20130806_183555_641846_CEA258AE)
+Date: Tue, 6 Aug 2013 22:02:15 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 07/12] ath9k: prepare queueing code for handling unaggregated
+ traffic
+In-Reply-To: <5200C64F.4080900@openwrt.org>
+References: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
+	<1375732583-39001-7-git-send-email-nbd@openwrt.org>
+	<20992.43399.220167.743676@gargle.gargle.HOWL>
+	<5200C64F.4080900@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 August 2013 08:34, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Hi,
->
-> This patchset addresses some throughput issues.
->
->
-> Pozdrawiam / Best regards,
-> Michal Kazior.
->
->
-> Michal Kazior (3):
->   ath10k: make the workqueue multithreaded
->   ath10k: move htt rx processing to worker
->   ath10k: fix issues on non-preemptible systems
->
->  drivers/net/wireless/ath/ath10k/core.c   |    4 ++-
->  drivers/net/wireless/ath/ath10k/core.h   |    7 ++++
->  drivers/net/wireless/ath/ath10k/htc.c    |    4 +++
->  drivers/net/wireless/ath/ath10k/htt.h    |    3 ++
->  drivers/net/wireless/ath/ath10k/htt_rx.c |   58 ++++++++++++++++++++++++++----
->  drivers/net/wireless/ath/ath10k/wmi.c    |    4 +++
->  6 files changed, 72 insertions(+), 8 deletions(-)
+Felix Fietkau wrote:
+> Because the previous value doesn't matter here. With software
+> scheduling, clearing the ps filter is triggered via
+> tid->ac->clear_ps_filter, and that is used to set the flag when a frame
+> is put into the hardware queue.
+> The IEEE80211_TX_CTL_CLEAR_PS_FILT is checked whenever a frame enters
+> the tid queue, and if it's set, tid->ac->clear_ps_filter gets set.
+> That way it doesn't have to loop the entire tid traffic up to the new
+> frame through the hw queue as filtered until the destination index gets
+> cleared.
 
-Drop this patchset for now, please, There are some minor issues I'd
-like to address first. Nevertheless, feel free to comment the patchset
-if you see any issues.
+Ok.
 
+> When going from aggregated to un-aggregated, the TID still needs to be
+> scheduled, and txtid->paused == true would prevent that.
 
-Pozdrawiam / Best regards,
-Michał Kazior.
+Yeah, makes sense.
+
+Sujith
