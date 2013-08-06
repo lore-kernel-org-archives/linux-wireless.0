@@ -1,94 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:43851 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752315Ab3H0LJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 07:09:51 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/6] ath10k: remove unused ce_attr parameters
-Date: Tue, 27 Aug 2013 13:08:00 +0200
-Message-ID: <1377601683-12072-4-git-send-email-michal.kazior@tieto.com> (sfid-20130827_130956_755817_B2C5F991)
-In-Reply-To: <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
-References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
- <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:60769 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755772Ab3HFK1c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Aug 2013 06:27:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <000801ce927f$fc7549d0$f55fdd70$@samsung.com>
+References: <000801ce927f$fc7549d0$f55fdd70$@samsung.com>
+Date: Tue, 6 Aug 2013 12:27:31 +0200
+Message-ID: <CAL1gcdNVLRPRTwHMn5RZ4Mq=Mhq=omCN=8+wKiex3innhzCzDA@mail.gmail.com> (sfid-20130806_122739_408888_D92C4091)
+Subject: Re: [PATCH 3/3] net: wireless: rt2x00: Staticize rt2x00queue_pause_queue_nocheck()
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some parameters were unused and are not required.
-They have no representation in firmware. Clean
-them up.
+On Tue, Aug 6, 2013 at 10:36 AM, Jingoo Han <jg1.han@samsung.com> wrote:
+> rt2x00queue_pause_queue_nocheck()is used only in this file.
+> Fix the following sparse warning:
+>
+> drivers/net/wireless/rt2x00/rt2x00queue.c:939:6: warning: symbol 'rt2x00queue_pause_queue_nocheck' was not declared. Should it be
+> static?
+>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/ce.h  |    6 ------
- drivers/net/wireless/ath/ath10k/pci.c |   18 +++++++++---------
- 2 files changed, 9 insertions(+), 15 deletions(-)
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 6f6bca0..ce4cbbf 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -314,9 +314,6 @@ struct ce_attr {
- 	/* CE_ATTR_* values */
- 	unsigned int flags;
- 
--	/* currently not in use */
--	unsigned int priority;
--
- 	/* #entries in source ring - Must be a power of 2 */
- 	unsigned int src_nentries;
- 
-@@ -328,9 +325,6 @@ struct ce_attr {
- 
- 	/* #entries in destination ring - Must be a power of 2 */
- 	unsigned int dest_nentries;
--
--	/* Future use */
--	void *reserved;
- };
- 
- /*
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 996efdd..80cc7fd 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -59,23 +59,23 @@ static void ath10k_pci_stop_intr(struct ath10k *ar);
- 
- static const struct ce_attr host_ce_config_wlan[] = {
- 	/* host->target HTC control and raw streams */
--	{ /* CE0 */ CE_ATTR_FLAGS, 0, 16, 256, 0, NULL,},
-+	{ /* CE0 */ CE_ATTR_FLAGS, 16, 256, 0 },
- 	/* could be moved to share CE3 */
- 	/* target->host HTT + HTC control */
--	{ /* CE1 */ CE_ATTR_FLAGS, 0, 0, 512, 512, NULL,},
-+	{ /* CE1 */ CE_ATTR_FLAGS, 0, 512, 512 },
- 	/* target->host WMI */
--	{ /* CE2 */ CE_ATTR_FLAGS, 0, 0, 2048, 32, NULL,},
-+	{ /* CE2 */ CE_ATTR_FLAGS, 0, 2048, 32 },
- 	/* host->target WMI */
--	{ /* CE3 */ CE_ATTR_FLAGS, 0, 32, 2048, 0, NULL,},
-+	{ /* CE3 */ CE_ATTR_FLAGS, 32, 2048, 0 },
- 	/* host->target HTT */
--	{ /* CE4 */ CE_ATTR_FLAGS | CE_ATTR_DIS_INTR, 0,
--		    CE_HTT_H2T_MSG_SRC_NENTRIES, 256, 0, NULL,},
-+	{ /* CE4 */ CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		    CE_HTT_H2T_MSG_SRC_NENTRIES, 256, 0 },
- 	/* unused */
--	{ /* CE5 */ CE_ATTR_FLAGS, 0, 0, 0, 0, NULL,},
-+	{ /* CE5 */ CE_ATTR_FLAGS, 0, 0, 0 },
- 	/* Target autonomous hif_memcpy */
--	{ /* CE6 */ CE_ATTR_FLAGS, 0, 0, 0, 0, NULL,},
-+	{ /* CE6 */ CE_ATTR_FLAGS, 0, 0, 0 },
- 	/* ce_diag, the Diagnostic Window */
--	{ /* CE7 */ CE_ATTR_FLAGS, 0, 2, DIAG_TRANSFER_LIMIT, 2, NULL,},
-+	{ /* CE7 */ CE_ATTR_FLAGS, 2, DIAG_TRANSFER_LIMIT, 2 },
- };
- 
- /* Target firmware's Copy Engine configuration. */
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> index aa95c6c..6c8a33b 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> @@ -936,7 +936,7 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
+>         spin_unlock_irqrestore(&queue->index_lock, irqflags);
+>  }
+>
+> -void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
+> +static void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
+>  {
+>         switch (queue->qid) {
+>         case QID_AC_VO:
+> --
+> 1.7.10.4
+>
+>
+
+
+
 -- 
-1.7.9.5
-
+---
+Gertjan
