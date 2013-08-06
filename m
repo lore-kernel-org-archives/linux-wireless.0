@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:49479 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932379Ab3HGKLl (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:57288 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752831Ab3HFBxb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 06:11:41 -0400
-Received: by mail-ea0-f169.google.com with SMTP id z7so756253eaf.28
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Aug 2013 03:11:40 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2] ath10k: setup peer UAPSD flag correctly
-Date: Wed,  7 Aug 2013 12:10:49 +0200
-Message-Id: <1375870249-29316-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20130807_121147_788098_1AC437B4)
+	Mon, 5 Aug 2013 21:53:31 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/4] mwifiex: increase max supported pattern offset
+Date: Mon, 5 Aug 2013 18:51:59 -0700
+Message-ID: <1375753920-10100-3-git-send-email-bzhao@marvell.com> (sfid-20130806_035333_610316_371F2F6D)
+In-Reply-To: <1375753920-10100-1-git-send-email-bzhao@marvell.com>
+References: <1375753920-10100-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup UAPSD peer/peer rate flags correctly.
-WMI_RC_UAPSD_FLAG is a peer rate capabilities flag
-and should not be set as a peer flag.
-Found during code review, doesn't fix a known
-issues.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+The offset number is increased to accomodate requests from
+user to match more fields in a Rx packet.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+ drivers/net/wireless/mwifiex/fw.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index cf2ba4d..505be82 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -973,7 +973,7 @@ static void ath10k_peer_assoc_h_qos_ap(struct ath10k *ar,
- 			   sta->uapsd_queues, sta->max_sp);
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index c0dfc4d..12c6223 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -450,7 +450,7 @@ enum P2P_MODES {
+ 	(((event_cause) >> 24) & 0x00ff)
  
- 		arg->peer_flags |= WMI_PEER_APSD;
--		arg->peer_flags |= WMI_RC_UAPSD_FLAG;
-+		arg->peer_rate_caps |= WMI_RC_UAPSD_FLAG;
- 
- 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
- 			uapsd |= WMI_AP_PS_UAPSD_AC3_DELIVERY_EN |
+ #define MWIFIEX_MAX_PATTERN_LEN		20
+-#define MWIFIEX_MAX_OFFSET_LEN		50
++#define MWIFIEX_MAX_OFFSET_LEN		100
+ #define STACK_NBYTES			100
+ #define TYPE_DNUM			1
+ #define TYPE_BYTESEQ			2
 -- 
-1.7.9.5
+1.8.2.3
 
