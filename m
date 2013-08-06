@@ -1,119 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:54607 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754768Ab3HWKce (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:55482 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754385Ab3HFO5p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 06:32:34 -0400
-Received: by mail-ee0-f44.google.com with SMTP id b47so209071eek.17
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 03:32:33 -0700 (PDT)
-Message-ID: <1377253946.8002.12.camel@canaries32-MCP7A> (sfid-20130823_123253_889050_E5A2A85D)
-Subject: [PATCH] staging: vt6656: rxtx.c s_create new function to endian
- correct uGetTxRsvTime.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 23 Aug 2013 11:32:26 +0100
+	Tue, 6 Aug 2013 10:57:45 -0400
+Message-ID: <1375801059.8219.24.camel@jlt4.sipsolutions.net> (sfid-20130806_165800_646455_ECCAD449)
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: sedat.dilek@gmail.com
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 06 Aug 2013 16:57:39 +0200
+In-Reply-To: <CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com> (sfid-20130806_165609_226807_76ACA1EA)
+References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
+	 <1375797260.8219.21.camel@jlt4.sipsolutions.net>
+	 <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
+	 <1375800617.8219.23.camel@jlt4.sipsolutions.net>
+	 <CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
+	 (sfid-20130806_165609_226807_76ACA1EA)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can't endian correct uGetTxRsvTime because it is called by other functions.
+On Tue, 2013-08-06 at 16:56 +0200, Sedat Dilek wrote:
+> On Tue, Aug 6, 2013 at 4:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2013-08-06 at 16:46 +0200, Sedat Dilek wrote:
+> >
+> > Heh, the interesting messages are always cut out of the log:
+> >
+> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: wlan0: WPA: RX message 1 of 4-Way Handshake from 00:04:0e:e4:00:3d (ver=2)
+> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: RSN: msg 1/4 key data - hexdump(len=0):
+> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: Get randomness: len=32 entropy=4
+> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from os_get_random - hexdump(len=32): [REMOVED]
+> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
+> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from internal pool - hexdump(len=16): [REMOVED]
+> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
+> > Aug  6 16:30:34 fambox rsyslogd-2177: imuxsock begins to drop messages from pid 2533 due to rate-limiting
+> > [...]
+> >
+> 
+> Do you know how I can workaround the rsyslogd rate-limiting?
 
-Create new function to vnt_rxtx_rsvtime_le16 to return little endian u16
-value.
+Me? no.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 33 +++++++++++++++++++++++++--------
- 1 file changed, 25 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 4f36ec8..f1eec60 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -348,6 +348,13 @@ static u32 s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
-     }
- }
- 
-+static u16 vnt_rxtx_rsvtime_le16(struct vnt_private *priv, u8 pkt_type,
-+	u32 frame_length, u16 rate, int need_ack)
-+{
-+	return cpu_to_le16((u16)s_uGetTxRsvTime(priv, pkt_type,
-+		frame_length, rate, need_ack));
-+}
-+
- //byFreqType: 0=>5GHZ 1=>2.4GHZ
- static u16 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice,
- 	u8 byRTSRsvType, u8 byPktType, u32 cbFrameLength, u16 wCurrentRate)
-@@ -882,8 +889,11 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 				byPktType, cbFrameSize, wCurrentRate);
- 		pBuf->wRTSTxRrvTime_bb = s_uGetRTSCTSRsvTime(pDevice, 0,
- 				byPktType, cbFrameSize, wCurrentRate);
--                pBuf->wTxRrvTime_a = cpu_to_le16((u16) s_uGetTxRsvTime(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK));//2.4G OFDM
--                pBuf->wTxRrvTime_b = cpu_to_le16((u16) s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate, bNeedACK));//1:CCK
-+		pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice,
-+			byPktType, cbFrameSize, wCurrentRate, bNeedACK);
-+		pBuf->wTxRrvTime_b = vnt_rxtx_rsvtime_le16(pDevice,
-+			PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate,
-+				bNeedACK);
-             }
-             //Fill RTS
-             s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK, bDisCRC, psEthHeader, wCurrentRate, byFBOption);
-@@ -894,8 +904,11 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-             if (pvRrvTime) {
- 		struct vnt_rrv_time_cts *pBuf =
- 				(struct vnt_rrv_time_cts *)pvRrvTime;
--                pBuf->wTxRrvTime_a = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK));//2.4G OFDM
--                pBuf->wTxRrvTime_b = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate, bNeedACK));//1:CCK
-+		pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice, byPktType,
-+			cbFrameSize, wCurrentRate, bNeedACK);
-+		pBuf->wTxRrvTime_b = vnt_rxtx_rsvtime_le16(pDevice,
-+			PK_TYPE_11B, cbFrameSize,
-+			pDevice->byTopCCKBasicRate, bNeedACK);
- 		pBuf->wCTSTxRrvTime_ba = s_uGetRTSCTSRsvTime(pDevice, 3,
- 				byPktType, cbFrameSize, wCurrentRate);
-             }
-@@ -912,7 +925,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 				(struct vnt_rrv_time_ab *)pvRrvTime;
- 		pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 2,
- 				byPktType, cbFrameSize, wCurrentRate);
--                pBuf->wTxRrvTime = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK));//0:OFDM
-+		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, byPktType,
-+				cbFrameSize, wCurrentRate, bNeedACK);
-             }
-             //Fill RTS
-             s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK, bDisCRC, psEthHeader, wCurrentRate, byFBOption);
-@@ -922,7 +936,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-             if (pvRrvTime) {
- 		struct vnt_rrv_time_ab *pBuf =
- 				(struct vnt_rrv_time_ab *)pvRrvTime;
--                pBuf->wTxRrvTime = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11A, cbFrameSize, wCurrentRate, bNeedACK)); //0:OFDM
-+		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11A,
-+			cbFrameSize, wCurrentRate, bNeedACK);
-             }
-         }
-     }
-@@ -935,7 +950,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 				(struct vnt_rrv_time_ab *)pvRrvTime;
- 		pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 0,
- 				byPktType, cbFrameSize, wCurrentRate);
--                pBuf->wTxRrvTime = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, wCurrentRate, bNeedACK));//1:CCK
-+		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B,
-+				cbFrameSize, wCurrentRate, bNeedACK);
-             }
-             //Fill RTS
-             s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK, bDisCRC, psEthHeader, wCurrentRate, byFBOption);
-@@ -945,7 +961,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-             if (pvRrvTime) {
- 		struct vnt_rrv_time_ab *pBuf =
- 				(struct vnt_rrv_time_ab *)pvRrvTime;
--                pBuf->wTxRrvTime = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, wCurrentRate, bNeedACK)); //1:CCK
-+		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B,
-+			cbFrameSize, wCurrentRate, bNeedACK);
-             }
-         }
-     }
--- 
-1.8.1.2
+johannes
 
