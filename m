@@ -1,108 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:35571 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751422Ab3HTIgY (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:54685 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933014Ab3HGU2v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 04:36:24 -0400
-Received: by mail-bk0-f47.google.com with SMTP id mx12so43322bkb.20
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 01:36:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <52132589.5000306@broadcom.com>
-References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
- <20130820000336.GA15548@kroah.com> <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
- <20130820002822.GA18023@kroah.com> <5212F6E8.3090107@openwrt.org> <52132589.5000306@broadcom.com>
-From: Tom Gundersen <teg@jklm.no>
-Date: Tue, 20 Aug 2013 16:36:03 +0800
-Message-ID: <CAG-2HqVo+Jn4QsmErCVcqgS6LcxvXESVWHHCp5BGapcv0A_+Ww@mail.gmail.com> (sfid-20130820_103630_019344_FC50C117)
-Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 7 Aug 2013 16:28:51 -0400
+Received: by mail-ee0-f41.google.com with SMTP id d17so1124163eek.28
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Aug 2013 13:28:50 -0700 (PDT)
+Message-ID: <1375907325.5626.38.camel@canaries64> (sfid-20130807_222855_637072_DB4A46A8)
+Subject: [PATCH 2/4] staging: vt6656: rxtx.c: s_uGetDataDuration remove dead
+ variables.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 07 Aug 2013 21:28:45 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 20, 2013 at 4:15 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 08/20/2013 06:56 AM, Felix Fietkau wrote:
->>
->> On 2013-08-20 2:28 AM, Greg Kroah-Hartman wrote:
->>>
->>> On Tue, Aug 20, 2013 at 08:26:11AM +0800, Tom Gundersen wrote:
->>>>
->>>> On Tue, Aug 20, 2013 at 8:03 AM, Greg Kroah-Hartman
->>>> <gregkh@linuxfoundation.org> wrote:
->>>>>
->>>>> On Tue, Aug 20, 2013 at 07:59:47AM +0800, Tom Gundersen wrote:
->>>>>>
->>>>>> Hi guys,
->>>>>>
->>>>>> Starting with 3.10.6 (and still present in .7) I get an oops on
->>>>>> connecting to the network.
->>>>>>
->>>>>> The attached picture shows the oops. In case it does not reach the ML,
->>>>>> the top of the call trace reads:
->>>>>>
->>>>>> brcms_c_compute_rtscts_dur
->>>>>> brcms_c_ampdu_finalize
->>>>>> ampdu_finalize
->>>>>> dma_txfast
->>>>>> brcms_c_txfifo
->>>>>> brcms_c_sendpkt_mac80211
->>>>>> brcms_ops_tx
->>>>>> __ieee80211_tx
->>>>>>
->>>>>> I bisected the problem and the first bad commit is
->>>>>>
->>>>>> commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
->>>>>> Author: Felix Fietkau <nbd@openwrt.org>
->>>>>> Date:   Fri Jun 28 21:04:35 2013 +0200
->>>>>>
->>>>>>      mac80211/minstrel_ht: fix cck rate sampling
->>>>>>
->>>>>>      commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5 upstream.
->>>>>>
->>>>>> Reverting it on top of .7 fixes the problem.
->>>>>>
->>>>>> I had the same (I suppose) problem on mainline some time ago, but I
->>>>>> have not bisected it, verified that the problem still occurs there, or
->>>>>> checked if reverting the upstream patch fixes it. I'd be happy to do
->>>>>> that if it would help though.
->>>>>>
->>>>>> Let me know if you need any more information.
->>>>>
->>>>>
->>>>> Do you have this same problem with 3.11-rc6 as well?
->>>>
->>>>
->>>> Yes, I just confirmed. I also confirmed that reverting the mainline
->>>> commit on top of -rc6 fixes the problem.
->>>
->>>
->>> Great, thanks.
->>>
->>> Felix and Johannes, any chance we can get this reverted in Linus tree
->>> soon, and push that revert back to the 3.10 stable tree as well?
->>
->> I'd like to avoid a revert, since that will simply replace one set of
->> issues with another. Let's limit the use of the feature that brcmsmac
->> can't handle to drivers that are known to work with it. Tom, Please
->> test this patch to see if it fixes your issue.
->
->
-> Hi Felix,
->
-> I have been diving into root causing why brcmsmac can not handle cck
-> fallback rates, because it should. Maybe it is better to flag no cck support
-> and only change brcmsmac.
+As result of patch
+staging: vt6656: rxtx.c s_uGetDataDuration remove First Frag or Mid Frag dead code.
 
-Hi Arend,
+cbFrameLength, wRate, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption are
+dead variables.
 
-In case you cannot reproduce, let me know if I can help with testing patches.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 74 ++++++++++++++++++-------------------------
+ 1 file changed, 30 insertions(+), 44 deletions(-)
 
-Cheers,
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index d3b9a6b..2751531 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -135,9 +135,7 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+ 	struct ethhdr *psEthHeader, u16 wCurrentRate, u8 byFBOption);
+ 
+ static u32 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
+-	u32 cbFrameLength, u8 byPktType, u16 wRate, int bNeedAck,
+-	u32 uFragIdx, u32 cbLastFragmentSize, u32 uMACfragNum,
+-	u8 byFBOption);
++	u8 byPktType, int bNeedAck);
+ 
+ static unsigned int s_uGetRTSCTSDuration(struct vnt_private *pDevice,
+ 	u8 byDurType, u32 cbFrameLength, u8 byPktType, u16 wRate,
+@@ -388,9 +386,7 @@ static u32 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice,
+ 
+ //byFreqType 0: 5GHz, 1:2.4Ghz
+ static u32 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
+-	u32 cbFrameLength, u8 byPktType, u16 wRate, int bNeedAck,
+-	u32 uFragIdx, u32 cbLastFragmentSize, u32 uMACfragNum,
+-	u8 byFBOption)
++	u8 byPktType, int bNeedAck)
+ {
+ 	u32 uAckTime = 0;
+ 
+@@ -545,10 +541,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+                 (u16 *)&(pBuf->wTransmitLength), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+             );
+             //Get Duration and TimeStampOff
+-            pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength, byPktType,
+-                                                       wCurrentRate, bNeedAck, uFragIdx,
+-                                                       cbLastFragmentSize, uMACfragNum,
+-                                                       byFBOption); //1: 2.4GHz
++		pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_A,
++					byPktType, bNeedAck);
+             if(uDMAIdx!=TYPE_ATIMDMA) {
+                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+             }
+@@ -565,14 +559,10 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+                     (u16 *)&(pBuf->wTransmitLength_b), (u8 *)&(pBuf->byServiceField_b), (u8 *)&(pBuf->bySignalField_b)
+                 );
+                 //Get Duration and TimeStamp
+-                pBuf->wDuration_a = (u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength,
+-                                                             byPktType, wCurrentRate, bNeedAck, uFragIdx,
+-                                                             cbLastFragmentSize, uMACfragNum,
+-                                                             byFBOption); //1: 2.4GHz
+-                pBuf->wDuration_b = (u16)s_uGetDataDuration(pDevice, DATADUR_B, cbFrameLength,
+-                                                             PK_TYPE_11B, pDevice->byTopCCKBasicRate,
+-                                                             bNeedAck, uFragIdx, cbLastFragmentSize,
+-                                                             uMACfragNum, byFBOption); //1: 2.4GHz
++		pBuf->wDuration_a = (u16)s_uGetDataDuration(pDevice, DATADUR_A,
++							byPktType, bNeedAck);
++		pBuf->wDuration_b = (u16)s_uGetDataDuration(pDevice, DATADUR_B,
++							PK_TYPE_11B, bNeedAck);
+ 
+                 pBuf->wTimeStampOff_a = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+                 pBuf->wTimeStampOff_b = wTimeStampOff[pDevice->byPreambleType%2][pDevice->byTopCCKBasicRate%MAX_RATE];
+@@ -588,14 +578,14 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+                     (u16 *)&(pBuf->wTransmitLength_b), (u8 *)&(pBuf->byServiceField_b), (u8 *)&(pBuf->bySignalField_b)
+                 );
+                 //Get Duration and TimeStamp
+-                pBuf->wDuration_a = (u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength, byPktType,
+-                                             wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption); //1: 2.4GHz
+-                pBuf->wDuration_b = (u16)s_uGetDataDuration(pDevice, DATADUR_B, cbFrameLength, PK_TYPE_11B,
+-                                             pDevice->byTopCCKBasicRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption); //1: 2.4GHz
+-                pBuf->wDuration_a_f0 = (u16)s_uGetDataDuration(pDevice, DATADUR_A_F0, cbFrameLength, byPktType,
+-                                             wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption); //1: 2.4GHz
+-                pBuf->wDuration_a_f1 = (u16)s_uGetDataDuration(pDevice, DATADUR_A_F1, cbFrameLength, byPktType,
+-                                             wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption); //1: 2.4GHz
++		pBuf->wDuration_a = (u16)s_uGetDataDuration(pDevice, DATADUR_A,
++							byPktType, bNeedAck);
++		pBuf->wDuration_b = (u16)s_uGetDataDuration(pDevice, DATADUR_B,
++							PK_TYPE_11B, bNeedAck);
++		pBuf->wDuration_a_f0 = (u16)s_uGetDataDuration(pDevice,
++					DATADUR_A_F0, byPktType, bNeedAck);
++		pBuf->wDuration_a_f1 = (u16)s_uGetDataDuration(pDevice,
++					DATADUR_A_F1, byPktType, bNeedAck);
+                 pBuf->wTimeStampOff_a = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+                 pBuf->wTimeStampOff_b = wTimeStampOff[pDevice->byPreambleType%2][pDevice->byTopCCKBasicRate%MAX_RATE];
+                 return (pBuf->wDuration_a);
+@@ -611,12 +601,12 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+                 (u16 *)&(pBuf->wTransmitLength), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+             );
+             //Get Duration and TimeStampOff
+-            pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength, byPktType,
+-                                        wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption); //0: 5GHz
+-            pBuf->wDuration_f0 = (u16)s_uGetDataDuration(pDevice, DATADUR_A_F0, cbFrameLength, byPktType,
+-                                        wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption); //0: 5GHz
+-            pBuf->wDuration_f1 = (u16)s_uGetDataDuration(pDevice, DATADUR_A_F1, cbFrameLength, byPktType,
+-                                        wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption); //0: 5GHz
++		pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_A,
++					byPktType, bNeedAck);
++		pBuf->wDuration_f0 = (u16)s_uGetDataDuration(pDevice,
++				DATADUR_A_F0, byPktType, bNeedAck);
++		pBuf->wDuration_f1 = (u16)s_uGetDataDuration(pDevice,
++				DATADUR_A_F1, byPktType, bNeedAck);
+             if(uDMAIdx!=TYPE_ATIMDMA) {
+                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+             }
+@@ -628,10 +618,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+                 (u16 *)&(pBuf->wTransmitLength), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+             );
+             //Get Duration and TimeStampOff
+-            pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength, byPktType,
+-                                                       wCurrentRate, bNeedAck, uFragIdx,
+-                                                       cbLastFragmentSize, uMACfragNum,
+-                                                       byFBOption);
++		pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_A,
++				byPktType, bNeedAck);
+ 
+             if(uDMAIdx!=TYPE_ATIMDMA) {
+                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+@@ -646,10 +634,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+                 (u16 *)&(pBuf->wTransmitLength), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+             );
+             //Get Duration and TimeStampOff
+-            pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_B, cbFrameLength, byPktType,
+-                                                       wCurrentRate, bNeedAck, uFragIdx,
+-                                                       cbLastFragmentSize, uMACfragNum,
+-                                                       byFBOption);
++		pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_B,
++				byPktType, bNeedAck);
+             if (uDMAIdx != TYPE_ATIMDMA) {
+                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+             }
+@@ -1834,8 +1820,8 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+             (u16 *)&(pTxDataHead->wTransmitLength), (u8 *)&(pTxDataHead->byServiceField), (u8 *)&(pTxDataHead->bySignalField)
+         );
+         //Get Duration and TimeStampOff
+-        pTxDataHead->wDuration = cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameSize, PK_TYPE_11A,
+-                                                          wCurrentRate, false, 0, 0, 1, AUTO_FB_NONE));
++	pTxDataHead->wDuration = cpu_to_le16((u16)s_uGetDataDuration(pDevice,
++				DATADUR_A, PK_TYPE_11A, false));
+         pTxDataHead->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+         cbHeaderSize = wTxBufSize + sizeof(STxDataHead_ab);
+     } else {
+@@ -1847,8 +1833,8 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+             (u16 *)&(pTxDataHead->wTransmitLength), (u8 *)&(pTxDataHead->byServiceField), (u8 *)&(pTxDataHead->bySignalField)
+         );
+         //Get Duration and TimeStampOff
+-        pTxDataHead->wDuration = cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_B, cbFrameSize, PK_TYPE_11B,
+-                                                          wCurrentRate, false, 0, 0, 1, AUTO_FB_NONE));
++	pTxDataHead->wDuration = cpu_to_le16((u16)s_uGetDataDuration(pDevice,
++				DATADUR_B, PK_TYPE_11B, false));
+         pTxDataHead->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+         cbHeaderSize = wTxBufSize + sizeof(STxDataHead_ab);
+     }
+-- 
+1.8.1.2
 
-Tom
