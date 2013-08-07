@@ -1,133 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:56548 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754841Ab3HKUTu (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59259 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757433Ab3HGMj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Aug 2013 16:19:50 -0400
-Received: by mail-lb0-f175.google.com with SMTP id 13so4311131lba.20
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Aug 2013 13:19:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJWpbEg74C7DYbDkWCpNJRte7X7+40UHgNAL7uWLFHJ64CApKw@mail.gmail.com>
-References: <1375968116-24331-1-git-send-email-ja@anyfi.net>
-	<1376053671.8355.4.camel@jlt4.sipsolutions.net>
-	<CAJWpbEg74C7DYbDkWCpNJRte7X7+40UHgNAL7uWLFHJ64CApKw@mail.gmail.com>
-Date: Sun, 11 Aug 2013 22:19:48 +0200
-Message-ID: <CAJWpbEjdHR0HJjPBwSPN0m4kabLWbfV5pWec+9cwbvyWD+AOgg@mail.gmail.com> (sfid-20130811_222016_502283_16A6E466)
-Subject: Re: [RFC] mac80211: add support for split-MAC implementations
-From: Johan Almbladh <ja@anyfi.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 7 Aug 2013 08:39:27 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Thomas Graf <tgraf@suug.ch>
+Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 3.11] genetlink: fix family dump race
+Date: Wed,  7 Aug 2013 14:39:23 +0200
+Message-Id: <1375879163-2116-1-git-send-email-johannes@sipsolutions.net> (sfid-20130807_143933_991257_A07B560B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I would prefer my original solution that puts the decryption handler
-after the sta_process handler. The code is cleaner since we avoid the
-extra flag and the coupling between decrypt and sta_process. My
-conclusion is that the change is correct, see below.
+From: Johannes Berg <johannes.berg@intel.com>
 
-ieee80211_rx_h_check_more_data, ieee80211_rx_h_uapsd_and_pspoll:
-The MOREDATA and PM bits are not protected by the encryption MIC. It
-should be valid to process those bits regardless of the decryption
-outcome.
+When dumping generic netlink families, only the first dump call
+is locked with genl_lock(), which protects the list of families,
+and thus subsequent calls can access the data without locking,
+racing against family addition/removal. This can cause a crash.
+Fix it - the locking needs to be conditional because the first
+time around it's already locked.
 
-ieee80211_rx_h_sta_process:
-The updating of last_rx for an IBSS STA is conditional on the STA
-being AUTHORIZED. That state is the same regardless of whether the
-updating is done before or after decryption.
+BUG: unable to handle kernel paging request at f8467360
+IP: [<c14c56bb>] ctrl_dumpfamily+0x6b/0xe0
+EIP: 0060:[<c14c56bb>] EFLAGS: 00210297 CPU: 2
+EIP is at ctrl_dumpfamily+0x6b/0xe0
+EAX: f8467378 EBX: f8467340 ECX: 00000000 EDX: ec1610c4
+ESI: 00000001 EDI: c2077cc0 EBP: c46c3c00 ESP: c46c3bd4
+ DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+CR0: 80050033 CR2: f8467360 CR3: 26e54000 CR4: 001407d0
+DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+DR6: ffff0ff0 DR7: 00000400
+Process wpa_supplicant (pid: 20081, ti=c46c2000 task=c44640b0 task.ti=c46c2000)
+Call Trace:
+ [<c14c20bc>] netlink_dump+0x5c/0x200
+ [<c14c3450>] __netlink_dump_start+0x140/0x160
+ [<c14c5172>] genl_rcv_msg+0x102/0x270
+ [<c14c4b5e>] netlink_rcv_skb+0x8e/0xb0
+ [<c14c505c>] genl_rcv+0x1c/0x30
+ [<c14c456b>] netlink_unicast+0x17b/0x1c0
+ [<c14c47d4>] netlink_sendmsg+0x224/0x370
+ [<c1485adf>] sock_sendmsg+0xff/0x120
+ [<c1486b0a>] __sys_sendmsg+0x24a/0x260
+ [<c1487fdb>] sys_sendmsg+0x3b/0x60
+ [<c1488683>] sys_socketcall+0x283/0x2e0
+ [<c15b7c1f>] sysenter_do_call+0x12/0x38
+Code: 8d 3c c5 c0 7c 07 c2 8b 04 c5 c0 7c 07 c2 39 c7 8d 58 c8 75 16 eb 71 90 81 7d ec 00 1f 86 c1 74 10 8b 43 38 39 c7 8d 58 c8 74 5d <80> 7b 20 00 74 e7 83 c6 01 3b 75 f0 7c e8 8b 55 e8 8b 42 04 8b
 
-The main argument that the MOREDATA and PM bits are not protected by
-the encryption and are therefore independent. You can always send a
-spoofed NULLFUNC frame to an RSN AP or STA and have the PM and
-MOREDATA bits processed accordingly. My change allows data frames that
-could not be decrypted to be processed similar to NULLFUNC frames.
+Cc: stable@vger.kernel.org
+Reported-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/netlink/genetlink.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-I have run mac80211 in STA and AP mode with this change for quite some
-time now without any problems. I will run it in IBSS mode also as you
-suggest.
+diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
+index 2fd6dbe..6b6a03a 100644
+--- a/net/netlink/genetlink.c
++++ b/net/netlink/genetlink.c
+@@ -789,6 +789,10 @@ static int ctrl_dumpfamily(struct sk_buff *skb, struct netlink_callback *cb)
+ 	struct net *net = sock_net(skb->sk);
+ 	int chains_to_skip = cb->args[0];
+ 	int fams_to_skip = cb->args[1];
++	bool need_locking = chains_to_skip || fams_to_skip;
++
++	if (need_locking)
++		genl_lock();
+ 
+ 	for (i = chains_to_skip; i < GENL_FAM_TAB_SIZE; i++) {
+ 		n = 0;
+@@ -810,6 +814,9 @@ errout:
+ 	cb->args[0] = i;
+ 	cb->args[1] = n;
+ 
++	if (need_locking)
++		genl_unlock();
++
+ 	return skb->len;
+ }
+ 
+-- 
+1.8.0
 
-Provided that my IBSS tests pass, should I send you a final patch that
-changes the RX handler order and their locations in the file?
-
-Johan
-
-On Sat, Aug 10, 2013 at 1:31 PM, Johan Almbladh <ja@anyfi.net> wrote:
-> On Fri, Aug 9, 2013 at 3:07 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->>
->> On Thu, 2013-08-08 at 15:21 +0200, Johan Almbladh wrote:
->> > This patch enables power save processing for encrypted frames even if the
->> > encryption key is not set. This is a requirement when implementing split-MAC
->> > systems like Anyfi.net [1] and CAPWAP [2] on mac80211 using monitor frame
->> > injection and reception.
->>
->> I have no idea what these are, nor do I actually want to care much...
->
-> Anyfi.net is a dynamic split-mac system where the security part of the
-> 802.11 stack is located in your home router and the realtime part is
-> handled by any router or AP that happens to be near your current
-> location. The two parts are connected dynamically via a UDP tunnel
-> that carries raw encrypted 802.11 frames, forming a complete 802.11
-> stack that provides your home Wi-Fi wherever you are. In a community
-> Wi-Fi deployment, the users get secure Wi-Fi access with automatic
-> sign-on via their home Wi-Fi network which is simply available
-> everywhere.
->
-> Should you find the concept interesting there is quite extensive
-> technical documentation at http://anyfi.net/documentation#architecture
-> :-)
->
->
->> You presumably use Felix's active monitor mode?
->
-> I use a monitor socket in a userspace daemon. The daemon receives
-> encrypted 802.11 frames with radiotap encapsulation on this monitor
-> socket. It also injects encrypted 802.11 frames with radiotap
-> encapsulation by transmitting them on the same socket. I believe this
-> is the way hostapd used to handle transmission of management and EAPOL
-> frames before they switched to nl80211.
->
->
->> > The mac80211 RX handlers are reordered slightly so
->> > that the power save handler is invoked before the decryption handler.
->> >
->> > The patch is minimal in the sense that it provides the required functionality
->> > with a minimal change, but I am open to suggestions if this change is too
->> > intrusive. Please let me know what you think.
->>
->> I think you should ask yourself if this makes sense in the normal wifi
->> context... :-)
->
-> You are right about that, but I think this little feature can be added
-> without affecting the normal operation :-) To be honest, mac80211 has
-> all the interfaces required for any split-mac implementation, thanks
-> to the mac80211/hostapd partitioning. The *only* thing missing is the
-> ability to handle AP power save processing without handling the
-> encryption...
->
->
->> It actually seems like it *does* make sense, so it should have an
->> appropriate description for that, but I'm a bit worried about IBSS in
->> sta_process.
->
-> The patch enables power save processing even if there is no unicast
-> key set, but *also* if key is set but the decryption failed. This is
-> what I meant with "intrusive". The IBSS updating in sta_process will
-> also run in this case, but the STA is still required to be authorized.
->
-> It's possible to narrow it down to only affect the case where no
-> encryption key is set:
->
-> * Keep the RX handlers in their original order
-> * Don't drop frames where rx->key is NULL in ieee80211_rx_h_decrypt.
-> Instead, mark the frame with a flag
-> * Drop any marked frames at the end of ieee80211_rx_h_sta_process with
-> RX_DROP_MONITOR
->
-> I can prepare a new patch if you prefer this solution.
->
->> Also I've tried to keep the code in the file sequential, so this patch
->> should be moving ieee80211_rx_h_decrypt() itself as well.
->
-> I'll make sure to put them in the right order.
->
-> Johan
