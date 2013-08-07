@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38295 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751906Ab3HNGBw (ORCPT
+Received: from mail-la0-f49.google.com ([209.85.215.49]:57874 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932188Ab3HGHmY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Aug 2013 02:01:52 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCH-resend 1/9] ath9k: always use SIFS times from OFDM for 5/10 MHz
-Date: Wed, 14 Aug 2013 08:01:30 +0200
-Message-Id: <1376460098-26648-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130814_080159_194339_0C705BAD)
-In-Reply-To: <1376460098-26648-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376460098-26648-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 7 Aug 2013 03:42:24 -0400
+Received: by mail-la0-f49.google.com with SMTP id ev20so958290lab.22
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Aug 2013 00:42:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87li4e6l67.fsf@kamboji.qca.qualcomm.com>
+References: <1375853036-2418-1-git-send-email-janusz.dziedzic@tieto.com>
+	<87li4e6l67.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 7 Aug 2013 09:42:22 +0200
+Message-ID: <CALhHN=pP32Vw6UMvS93cReWr6WHz3p_3d8mn0FNJtSQGvuGJ9w@mail.gmail.com> (sfid-20130807_094228_887708_E26D910A)
+Subject: Re: [PATCH] ath10k: setup peer UAPSD flag correctly
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-5/10 MHz channels should always use SIFS times as defined in IEEE
-802.11-2012 18.4.4 (OFDM PHY characteristics). This makes it compatible
-to ath5k, which does the same.
+On 7 August 2013 08:59, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+>
+>> Setup UAPSD peer rate control (FW flag)
+>> correctly.
+>>
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>
+> This doesn't answer the question "Why?". I have now added a section in
+> the wiki about what the commit log should contain. Hopefully that helps.
+>
+> Submitting patches
+>
+> Send patches to the mailing lists below. Kalle Valo reviews the patches
+> within the next few days and, if they are ok, commits them to ath.git.
+>
+> To: ath10k@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+>
+> Preferably use ath.git master as the baseline for patches. Other trees
+> can be used as well, but then the chances of conflicts are higher.
+>
+> Guidelines for patches:
+>
+> * MUST be compiler warning free.
+>
+> * MUST be sparse warning free.
+>
+> * Commit log MUST not be empty.
+>
+> * The commit log MUST answer the question "Why?":
+>
+>   * Describe the motivation behind the bug.
+>
+>   * How does it change the functionality from user's point of view?
+>
+>   * Does it fix a bug? If it does, please describe the bug (doesn't need
+>     to be long). Also if there's a public bug report add a link to the
+>     bug report.
+>
+> * If others have reported the issue commit log SHOULD use Reported-by:
+>   and Tested-by: tags.
+>
+> * SHOULD be checkpatch clean:
+>
+>   * FIXME: add checkpatch example with correct arguments
+>
+> * Patches SHOULD be sent with git send-email tool.
+>
+> * Patchsets SHOULD contain no more than 12 patches.
+>
+> The terminology is from http://www.ietf.org/rfc/rfc2119.txt
+>
+> http://wireless.kernel.org/en/users/Drivers/ath10k#Submitting_patches
+>
+> Please comment.
+>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/hw.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Setup UAPSD peer/peer rate flags correctly.
+WMI_RC_UAPSD_FLAG is a peer rate capabilities flag
+and should not be set as a peer flag.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 151443b..b3a6891 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1069,7 +1069,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 11;
- 
--		sifstime *= 2;
-+		sifstime = 32;
- 		ack_offset = 16;
- 		slottime = 13;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
-@@ -1079,7 +1079,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 22;
- 
--		sifstime *= 4;
-+		sifstime = 64;
- 		ack_offset = 32;
- 		slottime = 21;
- 	} else {
-@@ -1116,7 +1116,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		ctstimeout += 48 - sifstime - ah->slottime;
- 	}
- 
--
- 	ath9k_hw_set_sifs_time(ah, sifstime);
- 	ath9k_hw_setslottime(ah, slottime);
- 	ath9k_hw_set_ack_timeout(ah, acktimeout);
--- 
-1.7.10.4
+BTW this don't fix any known bug yet, just found during UAPSD check.
 
+
+BR
+Janusz
