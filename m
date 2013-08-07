@@ -1,58 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from order.stressinduktion.org ([87.106.68.36]:35607 "EHLO
-	order.stressinduktion.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754513Ab3HFV47 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:47597 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757206Ab3HGG7h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 17:56:59 -0400
-Date: Tue, 6 Aug 2013 23:56:57 +0200
-From: Hannes Frederic Sowa <hannes@stressinduktion.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: sedat.dilek@gmail.com, David Miller <davem@davemloft.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	wireless <linux-wireless@vger.kernel.org>, netdev@vger.kernel.org
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-Message-ID: <20130806215657.GA16410@order.stressinduktion.org> (sfid-20130806_235705_445861_4CDD734D)
-References: <CA+icZUV++2+OG=P1SVbNrpHPLyzrfFX0eu8NHrd0nPjkPDUOtQ@mail.gmail.com> <CA+icZUXpZaHu-FjR6FGnbkG0XEkiukEgYYbDmrSjdqNz4rWCNg@mail.gmail.com> <1375816128.8219.28.camel@jlt4.sipsolutions.net> <CA+icZUXaTYVc_iv3hny6Je9mVdX8KCVpFSNBeukS+Fh-347Wvw@mail.gmail.com> <1375816715.8219.29.camel@jlt4.sipsolutions.net> <CA+icZUXdAjEDgu2XrA4Dg2hsLDJYdFTCpJwiW6=ZUgULe2noyw@mail.gmail.com> <CA+icZUVmokQ1fKmtbuPyp7f5Z2wdFYfjG5HCAm4Kue7efyKV8w@mail.gmail.com> <20130806213006.078C72210F@mail.nwl.cc> <CA+icZUVk1HM-VVYcARvY7p5KBYz0YcY9+rW8s-nKPTeVYh4tgw@mail.gmail.com> <1375825538.10459.1.camel@jlt4.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1375825538.10459.1.camel@jlt4.sipsolutions.net>
+	Wed, 7 Aug 2013 02:59:37 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: setup peer UAPSD flag correctly
+References: <1375853036-2418-1-git-send-email-janusz.dziedzic@tieto.com>
+Date: Wed, 7 Aug 2013 09:59:28 +0300
+In-Reply-To: <1375853036-2418-1-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Wed, 7 Aug 2013 07:23:56 +0200")
+Message-ID: <87li4e6l67.fsf@kamboji.qca.qualcomm.com> (sfid-20130807_085941_298206_19FEBCA8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 06, 2013 at 11:45:38PM +0200, Johannes Berg wrote:
-> On Tue, 2013-08-06 at 23:40 +0200, Sedat Dilek wrote:
-> 
-> > > Does the problem occur on client or server side? AFAICT, hostapd as well
-> > > as wpa_supplicant use AF_PACKET.
-> > >
-> > > The tricky thing is, these patches are meant to *loosen* the
-> > > restrictions in af_packet.c, so *should* not be harmful. So either my
-> > > patches create a side effect I did not foresee, or it's something nasty
-> > > (too much delay introduced by calling eth_type_trans() or so).
-> 
-> > By reverting the culprit commit my network/wifi is fine, again.
-> > See also attached patch with changelog.
-> 
-> I think skb->protocol is probably getting set up wrong, and just putting
-> back the last two lines
-> 
->         skb->protocol = proto;
->         skb->dev = dev;
-> 
-> is probably sufficient to fix wifi. If skb->protocol isn't set to
-> ETH_P_PAE, then we'd drop the packet in the wifi stack - might be worth
-> printing out what it's set to at the point where the skb->protocol
-> assignment above was removed.
-> 
-> I'm trying to wrap my head around all this right now but I don't yet see
-> how the code after the patch would not get skb->protocol correct.
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-Has anybody tested plain ethernet? I have a malfunctioning dhclient on
-ethernet since the weekend(it seems to not receive any packet). I did not
-look after it because have other patches on my todo list currently. Maybe
-it is the same error?
+> Setup UAPSD peer rate control (FW flag)
+> correctly.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-Greetings,
+This doesn't answer the question "Why?". I have now added a section in
+the wiki about what the commit log should contain. Hopefully that helps.
 
-  Hannes
+Submitting patches
 
+Send patches to the mailing lists below. Kalle Valo reviews the patches
+within the next few days and, if they are ok, commits them to ath.git.
+
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+
+Preferably use ath.git master as the baseline for patches. Other trees
+can be used as well, but then the chances of conflicts are higher.
+
+Guidelines for patches:
+
+* MUST be compiler warning free.
+
+* MUST be sparse warning free.
+
+* Commit log MUST not be empty.
+
+* The commit log MUST answer the question "Why?":
+
+  * Describe the motivation behind the bug.
+
+  * How does it change the functionality from user's point of view?
+
+  * Does it fix a bug? If it does, please describe the bug (doesn't need
+    to be long). Also if there's a public bug report add a link to the
+    bug report.
+
+* If others have reported the issue commit log SHOULD use Reported-by:
+  and Tested-by: tags.
+
+* SHOULD be checkpatch clean:
+
+  * FIXME: add checkpatch example with correct arguments
+
+* Patches SHOULD be sent with git send-email tool.
+
+* Patchsets SHOULD contain no more than 12 patches.
+
+The terminology is from http://www.ietf.org/rfc/rfc2119.txt
+
+http://wireless.kernel.org/en/users/Drivers/ath10k#Submitting_patches
+
+Please comment.
+
+-- 
+Kalle Valo
