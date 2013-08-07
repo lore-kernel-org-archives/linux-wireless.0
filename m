@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23176 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752788Ab3HGHHy (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24881 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932141Ab3HGHzm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 03:07:54 -0400
+	Wed, 7 Aug 2013 03:55:42 -0400
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+	<ath6kl-devel@qca.qualcomm.com>
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: add SoC power save option to PCI features map
-References: <1375430329-23352-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Wed, 7 Aug 2013 10:07:47 +0300
-In-Reply-To: <1375430329-23352-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Fri, 2 Aug 2013 09:58:49 +0200")
-Message-ID: <87haf26ksc.fsf@kamboji.qca.qualcomm.com> (sfid-20130807_090757_825108_E953D0E3)
+Subject: Re: [PATCH] ath6kl: Fix race in heart beat polling
+References: <1371712640-12834-1-git-send-email-mohammed@qca.qualcomm.com>
+Date: Wed, 7 Aug 2013 10:55:31 +0300
+In-Reply-To: <1371712640-12834-1-git-send-email-mohammed@qca.qualcomm.com>
+	(Mohammed Shafi Shajakhan's message of "Thu, 20 Jun 2013 12:47:20
+	+0530")
+Message-ID: <871u666iks.fsf@kamboji.qca.qualcomm.com> (sfid-20130807_095546_934351_08B03ADE)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com> writes:
 
-> Unify the PCI options location.
+> From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 >
-> By default the SoC PS option is disabled to boost the
-> performance and due to poor stability on early HW revisions.
-> In future we can remove the module parameter and turn on/off
-> the PS for given hardware.
+> Make sure to cancel heart beat timer before
+> freeing wmi to avoid potential NULL pointer
+> dereference.
 >
-> This change also makes the pci module parameter for SoC PS static.
->
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Thanks, applied. But there were conflicts, please double check that I
-didn't break anything.
+Thanks, applied.
 
 -- 
 Kalle Valo
