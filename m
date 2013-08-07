@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50906 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794Ab3HLMJ1 (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:43003 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755128Ab3HGFYx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 08:09:27 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1V8qwA-0008VS-Gh
-	for linux-wireless@vger.kernel.org; Mon, 12 Aug 2013 14:09:26 +0200
-Message-ID: <1376309363.11514.17.camel@jlt4.sipsolutions.net> (sfid-20130812_140929_684368_43C73412)
-Subject: Re: [PATCH] mac80211: add control port protocol TX control flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 12 Aug 2013 14:09:23 +0200
-In-Reply-To: <1375783056-2665-1-git-send-email-johannes@sipsolutions.net> (sfid-20130806_115746_886863_FC07E6F8)
-References: <1375783056-2665-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130806_115746_886863_FC07E6F8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 7 Aug 2013 01:24:53 -0400
+Received: by mail-ee0-f41.google.com with SMTP id d17so597154eek.14
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Aug 2013 22:24:51 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: setup peer UAPSD flag correctly
+Date: Wed,  7 Aug 2013 07:23:56 +0200
+Message-Id: <1375853036-2418-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20130807_072517_652297_371B09D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-08-06 at 11:57 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> A lot of drivers check the frame protocol for ETH_P_PAE,
-> for various reasons (like making those more reliable).
-> Add a new flags bitmap to the TX control info and a new
-> flag indicating the control port protocol is in use to
-> let all drivers also apply such logic to other control
-> port protocols, should they be configured.
+Setup UAPSD peer rate control (FW flag)
+correctly.
 
-Applied (with fix for the problem Eliad pointed out, and the change-id
-removed)
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index cf2ba4d..505be82 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -973,7 +973,7 @@ static void ath10k_peer_assoc_h_qos_ap(struct ath10k *ar,
+ 			   sta->uapsd_queues, sta->max_sp);
+ 
+ 		arg->peer_flags |= WMI_PEER_APSD;
+-		arg->peer_flags |= WMI_RC_UAPSD_FLAG;
++		arg->peer_rate_caps |= WMI_RC_UAPSD_FLAG;
+ 
+ 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
+ 			uapsd |= WMI_AP_PS_UAPSD_AC3_DELIVERY_EN |
+-- 
+1.7.9.5
 
