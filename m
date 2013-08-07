@@ -1,208 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:46010 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754583Ab3HYLE1 (ORCPT
+Received: from mail-vb0-f48.google.com ([209.85.212.48]:64830 "EHLO
+	mail-vb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933366Ab3HGVZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Aug 2013 07:04:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Fix ASPM workaround usage
-Date: Sun, 25 Aug 2013 16:30:40 +0530
-Message-Id: <1377428440-32005-1-git-send-email-sujith@msujith.org> (sfid-20130825_130441_991738_95057352)
+	Wed, 7 Aug 2013 17:25:10 -0400
+Received: by mail-vb0-f48.google.com with SMTP id w16so2447565vbf.35
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Aug 2013 14:25:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5201FCA4.30804@gmail.com>
+References: <CALCETrXSnFPFVPkXHwz+FFA3=+pmz9V=cMHWwtN+jG1QJALWSQ@mail.gmail.com>
+ <325b19bb936d7ebae11edad86aac8f0931e8abd9.1375719828.git.luto@amacapital.net>
+ <5200B1BD.7030307@gmail.com> <CAG-2HqXEj06JbUOWee=NfuRXxL75uRf=55FZcXRLHroDzYUthQ@mail.gmail.com>
+ <CAG-2HqVvoQK8ggErGGinO9i8Pbu-O-X=eYFW445ce24dpt7HyA@mail.gmail.com>
+ <20130806163158.GA23093@kadzban.is-a-geek.net> <CAG-2HqU=yyxomNTg9-2+bxMKP=e5_pdVT7bhB_CHhFzB-ac_mQ@mail.gmail.com>
+ <CALCETrU-CWuefE5XUpC=xFuCXaL56Cox95nL35Bm9jMi_B+6_A@mail.gmail.com> <5201FCA4.30804@gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Wed, 7 Aug 2013 14:24:49 -0700
+Message-ID: <CALCETrUCjfPW6_avYxX1quPFunV_5tNgsVFyScLz_pw=1nooKA@mail.gmail.com> (sfid-20130807_232540_997809_4F1A3C6F)
+Subject: Re: [PATCH] udev: fail firmware loading immediately if no search path
+ is defined
+To: Maarten Lankhorst <m.b.lankhorst@gmail.com>
+Cc: Tom Gundersen <teg@jklm.no>,
+	Bryan Kadzban <bryan@kadzban.is-a-geek.net>,
+	systemd Mailing List <systemd-devel@lists.freedesktop.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-hotplug@vger.kernel.org, Kay Sievers <kay@vrfy.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Wed, Aug 7, 2013 at 12:52 AM, Maarten Lankhorst
+<m.b.lankhorst@gmail.com> wrote:
+> Op 07-08-13 02:26, Andy Lutomirski schreef:
+>> On Tue, Aug 6, 2013 at 5:24 PM, Tom Gundersen <teg@jklm.no> wrote:
+>>> On 6 Aug 2013 18:32, "Bryan Kadzban" <bryan@kadzban.is-a-geek.net> wrote:
+>>>> On Tue, Aug 06, 2013 at 11:17:17AM +0200, Tom Gundersen wrote:
+>>>>> On Tue, Aug 6, 2013 at 11:11 AM, Tom Gundersen <teg@jklm.no> wrote:
+>>>>>> On Tue, Aug 6, 2013 at 10:20 AM, Maarten Lankhorst
+>>>>>> <m.b.lankhorst@gmail.com> wrote:
+>>>>>>> Op 05-08-13 18:29, Andy Lutomirski schreef:
+>>>>>>>> The systemd commit below can delay firmware loading by multiple
+>>>>>>>> minutes if CONFIG_FW_LOADER_USER_HELPER=y.  Unfortunately no one
+>>>>>>>> noticed that the systemd-udev change would break new kernels as well
+>>>>>>>> as old kernels.
+>>>>>>>>
+>>>>>>>> Since the kernel apparently can't count on reasonable userspace
+>>>>>>>> support, turn this thing off by default.
+>>>>>>>>
+>>>>>>>> commit a3bd8447be4ea2ce230eb8ae0e815c04d85fa15a
+>>>>>>>> Author: Tom Gundersen <teg@jklm.no>
+>>>>>>>> Date:   Mon Mar 18 15:12:18 2013 +0100
+>>>>>>>>
+>>>>>>>>     udev: make firmware loading optional and disable by default
+>>>>>>>>
+>>>>>>>>     Distros that whish to support old kernels should set
+>>>>>>>>
+>>>>>>>> --with-firmware-dirs="/usr/lib/firmware/updates:/usr/lib/firmware"
+>>>>>>>>     to retain the old behaviour.
+>>>>>>>>
+>>>>>>> methinks this patch should be reverted then,
+>>>>>> Well, all the code is still there, so it can be enabled if anyone
+>>>>>> wants it.
+>>>>>>
+>>>>>>> or a stub should be added to udev to always fail firmware loading so
+>>>>>>> timeouts don't occur.
+>>>>>> I think the only use (if any) of a userspace firmware loader would be
+>>>>>> for anyone who wants a custom one (i.e., not udev), so we shouldn't
+>>>>>> just fail the loading from udev unconditionally.
+>>>>>>
+>>>>>> How about we just improve the udev documentation a bit, similar to
+>>>>>> Andy's kernel patch?
+>>>>> Sorry, I should first have checked. We already document this in the
+>>>>> README:
+>>>>>
+>>>>>>        Userspace firmware loading is deprecated, will go away, and
+>>>>>>        sometimes causes problems:
+>>>>>>          CONFIG_FW_LOADER_USER_HELPER=n
+>>>> ...And this patch is making the kernel default to the correct behavior,
+>>>> instead of the now-broken-by-udev behavior.
+>>>>
+>>>> I'm not sure I see the issue with it?  :-)
+>>> Oh yeah this patch is totally the right thing to do, I was just arguing that
+>>> there is nothing to be done on the udev side.
+>>>
+>>>> (Add me to the list of people that think udev is broken too, fwiw.  But
+>>>> let's at least not leave *both* sides in a broken-by-default state.)
+>>> Well I don't think it is too much to ask that the kernel and udev should be
+>>> configured in a consistent way. Especially as thing still work even if you
+>>> get it wrong, albeit with a delay.
+>> Except that the current defaults are inconsistent and there is no
+>> explanation anywhere in the logs when this is screwed up.
+>>
+> So what is wrong with my 'fail in udev immediately if not configured' idea? In that case it
+> doesn't matter whether CONFIG_FW_LOADER_USER_HELPER is set or not.
+>
+> You could even print a useful message for the user in udev to the log, so they have an idea of what
+> happened. Breaking udev on older still supported kernels by default without printing any debug info
+> is silly, and the only cost is a small increase in disk space when unused. I did so in below patch.
 
-The PCIE Workaround register (AR_WA/0x4004) is used to handle
-various hardware quirks. For AR9002 chips, AR_WA_D3_L1_DISABLE
-is used to prevent the HW from automatically entering L1 state
-when D3 is enforced.
+Seems reasonable to me.  It might be worth adding something to the
+message to suggest turning off CONFIG_FW_LOADER_USER_HELPER.
 
-AR_WA_D3_L1_DISABLE has to be enabled for a few AR9280 based
-cards, mark them based on their PCI subdevice/subvendor IDs
-and enforce it in ar9002_hw_configpcipowersave().
+>
+> ~Maarten
+>
+> I converted < ELEMENTSOF to != ELEMENTSOF in the loop to work correctly when the array is empty.
+> Most code in udev-builtin-firmware is eliminated at -O2 optimization level when FIRMWARE_PATH
+> is not explicitly set.
+>
+> 8<----
+> diff --git a/Makefile.am b/Makefile.am
+> index b8b8d06..2097629 100644
+> --- a/Makefile.am
+> +++ b/Makefile.am
+> @@ -2235,6 +2235,7 @@ libudev_core_la_SOURCES = \
+>         src/udev/udev-ctrl.c \
+>         src/udev/udev-builtin.c \
+>         src/udev/udev-builtin-btrfs.c \
+> +       src/udev/udev-builtin-firmware.c \
+>         src/udev/udev-builtin-hwdb.c \
+>         src/udev/udev-builtin-input_id.c \
+>         src/udev/udev-builtin-keyboard.c \
+> @@ -2271,14 +2272,6 @@ libudev_core_la_CPPFLAGS = \
+>         $(AM_CPPFLAGS) \
+>         -DFIRMWARE_PATH="$(FIRMWARE_PATH)"
+>
+> -if ENABLE_FIRMWARE
+> -libudev_core_la_SOURCES += \
+> -       src/udev/udev-builtin-firmware.c
+> -
+> -dist_udevrules_DATA += \
+> -       rules/50-firmware.rules
+> -endif
+> -
+>  if HAVE_KMOD
+>  libudev_core_la_SOURCES += \
+>         src/udev/udev-builtin-kmod.c
+> diff --git a/configure.ac b/configure.ac
+> index 0ecc716..dc7a3e3 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -823,8 +823,6 @@ for i in $with_firmware_path; do
+>  done
+>  IFS=$OLD_IFS
+>  AC_SUBST(FIRMWARE_PATH)
+> -AS_IF([test "x${FIRMWARE_PATH}" != "x"], [ AC_DEFINE(HAVE_FIRMWARE, 1, [Define if FIRMWARE is available]) ])
+> -AM_CONDITIONAL(ENABLE_FIRMWARE, [test "x${FIRMWARE_PATH}" != "x"])
+>
+>  # ------------------------------------------------------------------------------
+>  AC_ARG_ENABLE([gudev],
+> diff --git a/rules/50-firmware.rules b/rules/50-firmware.rules
+> deleted file mode 100644
+> index f0ae684..0000000
+> --- a/rules/50-firmware.rules
+> +++ /dev/null
+> @@ -1,3 +0,0 @@
+> -# do not edit this file, it will be overwritten on update
+> -
+> -SUBSYSTEM=="firmware", ACTION=="add", RUN{builtin}="firmware"
+> diff --git a/rules/50-udev-default.rules b/rules/50-udev-default.rules
+> index f764789..645830e 100644
+> --- a/rules/50-udev-default.rules
+> +++ b/rules/50-udev-default.rules
+> @@ -8,6 +8,7 @@ SUBSYSTEM=="rtc", KERNEL=="rtc0", SYMLINK+="rtc", OPTIONS+="link_priority=-100"
+>
+>  SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", IMPORT{builtin}="usb_id", IMPORT{builtin}="hwdb --subsystem=usb"
+>  SUBSYSTEM=="input", ENV{ID_INPUT}=="", IMPORT{builtin}="input_id"
+> +SUBSYSTEM=="firmware", ACTION=="add", IMPORT{builtin}="firmware"
+>  ENV{MODALIAS}!="", IMPORT{builtin}="hwdb --subsystem=$env{SUBSYSTEM}"
+>
+>  ACTION!="add", GOTO="default_permissions_end"
+> diff --git a/shell-completion/bash/udevadm b/shell-completion/bash/udevadm
+> index 8ad8550..c22a3e2 100644
+> --- a/shell-completion/bash/udevadm
+> +++ b/shell-completion/bash/udevadm
+> @@ -83,7 +83,7 @@ _udevadm() {
+>                          fi
+>                          ;;
+>                  'test-builtin')
+> -                        comps='blkid btrfs hwdb input_id keyboard kmod net_id path_id usb_id uaccess'
+> +                        comps='blkid btrfs firmware hwdb input_id keyboard kmod net_id path_id usb_id uaccess'
+>                          ;;
+>                  *)
+>                          comps=${VERBS[*]}
+> diff --git a/src/udev/udev-builtin-firmware.c b/src/udev/udev-builtin-firmware.c
+> index b80940b..e678545 100644
+> --- a/src/udev/udev-builtin-firmware.c
+> +++ b/src/udev/udev-builtin-firmware.c
+> @@ -97,7 +97,7 @@ static int builtin_firmware(struct udev_device *dev, int argc, char *argv[], boo
+>
+>          /* lookup firmware file */
+>          uname(&kernel);
+> -        for (i = 0; i < ELEMENTSOF(searchpath); i++) {
+> +        for (i = 0; i != ELEMENTSOF(searchpath); i++) {
+>                  strscpyl(fwpath, sizeof(fwpath), searchpath[i], kernel.release, "/", firmware, NULL);
+>                  fwfile = fopen(fwpath, "re");
+>                  if (fwfile != NULL)
+> @@ -112,7 +112,10 @@ static int builtin_firmware(struct udev_device *dev, int argc, char *argv[], boo
+>          strscpyl(loadpath, sizeof(loadpath), udev_device_get_syspath(dev), "/loading", NULL);
+>
+>          if (fwfile == NULL) {
+> -                log_debug("did not find firmware file '%s'\n", firmware);
+> +                if (ELEMENTSOF(searchpath))
+> +                    log_debug("did not find firmware file '%s'\n", firmware);
+> +                else
+> +                    log_error("could not load firmware file '%s', firmware loading not enabled\n", firmware);
+>                  rc = EXIT_FAILURE;
+>                  /*
+>                   * Do not cancel the request in the initrd, the real root might have
+> diff --git a/src/udev/udev-builtin.c b/src/udev/udev-builtin.c
+> index 6b3a518..5a5cb30 100644
+> --- a/src/udev/udev-builtin.c
+> +++ b/src/udev/udev-builtin.c
+> @@ -34,9 +34,7 @@ static const struct udev_builtin *builtins[] = {
+>          [UDEV_BUILTIN_BLKID] = &udev_builtin_blkid,
+>  #endif
+>          [UDEV_BUILTIN_BTRFS] = &udev_builtin_btrfs,
+> -#ifdef HAVE_FIRMWARE
+>          [UDEV_BUILTIN_FIRMWARE] = &udev_builtin_firmware,
+> -#endif
+>          [UDEV_BUILTIN_HWDB] = &udev_builtin_hwdb,
+>          [UDEV_BUILTIN_INPUT_ID] = &udev_builtin_input_id,
+>          [UDEV_BUILTIN_KEYBOARD] = &udev_builtin_keyboard,
+> diff --git a/src/udev/udev.h b/src/udev/udev.h
+> index 8395926..31fa606 100644
+> --- a/src/udev/udev.h
+> +++ b/src/udev/udev.h
+> @@ -140,9 +140,7 @@ enum udev_builtin_cmd {
+>          UDEV_BUILTIN_BLKID,
+>  #endif
+>          UDEV_BUILTIN_BTRFS,
+> -#ifdef HAVE_FIRMWARE
+>          UDEV_BUILTIN_FIRMWARE,
+> -#endif
+>          UDEV_BUILTIN_HWDB,
+>          UDEV_BUILTIN_INPUT_ID,
+>          UDEV_BUILTIN_KEYBOARD,
+> @@ -170,9 +168,7 @@ struct udev_builtin {
+>  extern const struct udev_builtin udev_builtin_blkid;
+>  #endif
+>  extern const struct udev_builtin udev_builtin_btrfs;
+> -#ifdef HAVE_FIRMWARE
+>  extern const struct udev_builtin udev_builtin_firmware;
+> -#endif
+>  extern const struct udev_builtin udev_builtin_hwdb;
+>  extern const struct udev_builtin udev_builtin_input_id;
+>  extern const struct udev_builtin udev_builtin_keyboard;
+> diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+> index 45ec3d6..e27a33a 100644
+> --- a/src/udev/udevd.c
+> +++ b/src/udev/udevd.c
+> @@ -98,9 +98,7 @@ struct event {
+>          dev_t devnum;
+>          int ifindex;
+>          bool is_block;
+> -#ifdef HAVE_FIRMWARE
+>          bool nodelay;
+> -#endif
+>  };
+>
+>  static inline struct event *node_to_event(struct udev_list_node *node)
+> @@ -444,10 +442,8 @@ static int event_queue_insert(struct udev_device *dev)
+>          event->devnum = udev_device_get_devnum(dev);
+>          event->is_block = streq("block", udev_device_get_subsystem(dev));
+>          event->ifindex = udev_device_get_ifindex(dev);
+> -#ifdef HAVE_FIRMWARE
+>          if (streq(udev_device_get_subsystem(dev), "firmware"))
+>                  event->nodelay = true;
+> -#endif
+>
+>          udev_queue_export_device_queued(udev_queue_export, dev);
+>          log_debug("seq %llu queued, '%s' '%s'\n", udev_device_get_seqnum(dev),
+> @@ -527,11 +523,9 @@ static bool is_devpath_busy(struct event *event)
+>                          return true;
+>                  }
+>
+> -#ifdef HAVE_FIRMWARE
+>                  /* allow to bypass the dependency tracking */
+>                  if (event->nodelay)
+>                          continue;
+> -#endif
+>
+>                  /* parent device event found */
+>                  if (event->devpath[common] == '/') {
+>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c | 29 +++++++------------
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |  7 +----
- drivers/net/wireless/ath/ath9k/ath9k.h     |  1 +
- drivers/net/wireless/ath/ath9k/hw.c        |  1 -
- drivers/net/wireless/ath/ath9k/init.c      |  5 ++++
- drivers/net/wireless/ath/ath9k/pci.c       | 46 ++++++++++++++++++++++++++++++
- 6 files changed, 64 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 8dc2d08..fb61b08 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -269,13 +269,12 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
- 			if (ah->config.pcie_waen & AR_WA_D3_L1_DISABLE)
- 				val |= AR_WA_D3_L1_DISABLE;
- 		} else {
--			if (((AR_SREV_9285(ah) ||
--			      AR_SREV_9271(ah) ||
--			      AR_SREV_9287(ah)) &&
--			     (AR9285_WA_DEFAULT & AR_WA_D3_L1_DISABLE)) ||
--			    (AR_SREV_9280(ah) &&
--			     (AR9280_WA_DEFAULT & AR_WA_D3_L1_DISABLE))) {
--				val |= AR_WA_D3_L1_DISABLE;
-+			if (AR_SREV_9285(ah) || AR_SREV_9271(ah) || AR_SREV_9287(ah)) {
-+				if (AR9285_WA_DEFAULT & AR_WA_D3_L1_DISABLE)
-+					val |= AR_WA_D3_L1_DISABLE;
-+			} else if (AR_SREV_9280(ah)) {
-+				if (AR9280_WA_DEFAULT & AR_WA_D3_L1_DISABLE)
-+					val |= AR_WA_D3_L1_DISABLE;
- 			}
- 		}
- 
-@@ -297,24 +296,18 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
- 	} else {
- 		if (ah->config.pcie_waen) {
- 			val = ah->config.pcie_waen;
--			if (!power_off)
--				val &= (~AR_WA_D3_L1_DISABLE);
-+			val &= (~AR_WA_D3_L1_DISABLE);
- 		} else {
--			if (AR_SREV_9285(ah) ||
--			    AR_SREV_9271(ah) ||
--			    AR_SREV_9287(ah)) {
-+			if (AR_SREV_9285(ah) || AR_SREV_9271(ah) || AR_SREV_9287(ah)) {
- 				val = AR9285_WA_DEFAULT;
--				if (!power_off)
--					val &= (~AR_WA_D3_L1_DISABLE);
--			}
--			else if (AR_SREV_9280(ah)) {
-+				val &= (~AR_WA_D3_L1_DISABLE);
-+			} else if (AR_SREV_9280(ah)) {
- 				/*
- 				 * For AR9280 chips, bit 22 of 0x4004
- 				 * needs to be set.
- 				 */
- 				val = AR9280_WA_DEFAULT;
--				if (!power_off)
--					val &= (~AR_WA_D3_L1_DISABLE);
-+				val &= (~AR_WA_D3_L1_DISABLE);
- 			} else {
- 				val = AR_WA_DEFAULT;
- 			}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 582cddd..608bb48 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -763,12 +763,7 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
- 	if (!power_off /* !restore */) {
- 		/* set bit 19 to allow forcing of pcie core into L1 state */
- 		REG_SET_BIT(ah, AR_PCIE_PM_CTRL, AR_PCIE_PM_CTRL_ENA);
--
--		/* Several PCIe massages to ensure proper behaviour */
--		if (ah->config.pcie_waen)
--			REG_WRITE(ah, AR_WA, ah->config.pcie_waen);
--		else
--			REG_WRITE(ah, AR_WA, ah->WARegVal);
-+		REG_WRITE(ah, AR_WA, ah->WARegVal);
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8519e75..2ee35f6 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -631,6 +631,7 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
- #define ATH9K_PCI_CUS217     0x0004
- #define ATH9K_PCI_WOW        0x0008
- #define ATH9K_PCI_BT_ANT_DIV 0x0010
-+#define ATH9K_PCI_D3_L1_WAR  0x0020
- 
- /*
-  * Default cache line size, in bytes.
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index b3a6891..2670bf6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -450,7 +450,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 	ah->config.ack_6mb = 0x0;
- 	ah->config.cwm_ignore_extcca = 0;
- 	ah->config.pcie_clock_req = 0;
--	ah->config.pcie_waen = 0;
- 	ah->config.analog_shiftreg = 1;
- 
- 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index b897183..9a1f349 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -551,6 +551,11 @@ static void ath9k_init_platform(struct ath_softc *sc)
- 		pCap->hw_caps |= ATH9K_HW_CAP_BT_ANT_DIV;
- 		ath_info(common, "Set BT/WLAN RX diversity capability\n");
- 	}
-+
-+	if (sc->driver_data & ATH9K_PCI_D3_L1_WAR) {
-+		ah->config.pcie_waen = 0x0040473b;
-+		ath_info(common, "Enable WAR for ASPM D3/L1\n");
-+	}
- }
- 
- static void ath9k_eeprom_request_cb(const struct firmware *eeprom_blob,
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index e7996a6..d089a7c 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -30,6 +30,52 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
- 
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002A,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x1C71),
-+	  .driver_data = ATH9K_PCI_D3_L1_WAR },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002A,
-+			 PCI_VENDOR_ID_FOXCONN,
-+			 0xE01F),
-+	  .driver_data = ATH9K_PCI_D3_L1_WAR },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002A,
-+			 0x11AD, /* LITEON */
-+			 0x6632),
-+	  .driver_data = ATH9K_PCI_D3_L1_WAR },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002A,
-+			 0x11AD, /* LITEON */
-+			 0x6642),
-+	  .driver_data = ATH9K_PCI_D3_L1_WAR },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002A,
-+			 PCI_VENDOR_ID_QMI,
-+			 0x0306),
-+	  .driver_data = ATH9K_PCI_D3_L1_WAR },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002A,
-+			 0x185F, /* WNC */
-+			 0x309D),
-+	  .driver_data = ATH9K_PCI_D3_L1_WAR },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002A,
-+			 0x10CF, /* Fujitsu */
-+			 0x147C),
-+	  .driver_data = ATH9K_PCI_D3_L1_WAR },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002A,
-+			 0x10CF, /* Fujitsu */
-+			 0x147D),
-+	  .driver_data = ATH9K_PCI_D3_L1_WAR },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x002A,
-+			 0x10CF, /* Fujitsu */
-+			 0x1536),
-+	  .driver_data = ATH9K_PCI_D3_L1_WAR },
-+
- 	/* AR9285 card for Asus */
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x002B,
+
 -- 
-1.8.3.4
-
+Andy Lutomirski
+AMA Capital Management, LLC
