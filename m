@@ -1,98 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:58463 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755890Ab3HLJpY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 05:45:24 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 04/15] ath9k: Discard invalid frames early
-Date: Mon, 12 Aug 2013 15:11:31 +0530
-Message-Id: <1376300502-2741-5-git-send-email-sujith@msujith.org> (sfid-20130812_114534_309956_EA59AB01)
-In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
-References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:2686 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932306Ab3HGKpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Aug 2013 06:45:19 -0400
+Message-ID: <5202252C.6030802@broadcom.com> (sfid-20130807_124522_412379_1841EF08)
+Date: Wed, 7 Aug 2013 12:45:00 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes.berg@intel.com>
+Subject: Re: [PATCH] brcmfmac: use CFG80211_TESTMODE_CMD
+References: <1375780399-1120-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1375780399-1120-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 08/06/2013 11:13 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> This is essentially the same, but written shorter.
 
-Frames with invalid or zero length can be discarded
-early, there is no need to check the crypto bits.
+I would have expected the macro to be called NL80211.. but no real 
+preference. So you can add
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 38 ++++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 16 deletions(-)
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 4 +---
+>   1 file changed, 1 insertion(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> index b7d8850..f393828 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> @@ -4163,9 +4163,7 @@ static struct cfg80211_ops wl_cfg80211_ops = {
+>   	.stop_p2p_device = brcmf_p2p_stop_device,
+>   	.crit_proto_start = brcmf_cfg80211_crit_proto_start,
+>   	.crit_proto_stop = brcmf_cfg80211_crit_proto_stop,
+> -#ifdef CONFIG_NL80211_TESTMODE
+> -	.testmode_cmd = brcmf_cfg80211_testmode
+> -#endif
+> +	CFG80211_TESTMODE_CMD(brcmf_cfg80211_testmode)
+>   };
+>
+>   static s32 brcmf_nl80211_iftype_to_mode(enum nl80211_iftype type)
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 83b3fc5..f8cc2b3 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -764,7 +764,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	bool is_mc, is_valid_tkip, strip_mic, mic_error;
- 	struct ath_hw *ah = common->ah;
- 	__le16 fc;
--	u8 rx_status_len = ah->caps.rx_status_len;
- 
- 	fc = hdr->frame_control;
- 
-@@ -786,21 +785,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	    !test_bit(rx_stats->rs_keyix, common->ccmp_keymap))
- 		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
- 
--	if (!rx_stats->rs_datalen) {
--		RX_STAT_INC(rx_len_err);
--		return false;
--	}
--
--        /*
--         * rs_status follows rs_datalen so if rs_datalen is too large
--         * we can take a hint that hardware corrupted it, so ignore
--         * those frames.
--         */
--	if (rx_stats->rs_datalen > (common->rx_bufsize - rx_status_len)) {
--		RX_STAT_INC(rx_len_err);
--		return false;
--	}
--
- 	/* Only use error bits from the last fragment */
- 	if (rx_stats->rs_more)
- 		return true;
-@@ -949,11 +933,33 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	bool discard_current = sc->rx.discard_next;
- 
-+	/*
-+	 * Discard corrupt descriptors which are marked in
-+	 * ath_get_next_rx_buf().
-+	 */
- 	sc->rx.discard_next = rx_stats->rs_more;
- 	if (discard_current)
- 		return -EINVAL;
- 
- 	/*
-+	 * Discard zero-length packets.
-+	 */
-+	if (!rx_stats->rs_datalen) {
-+		RX_STAT_INC(rx_len_err);
-+		return -EINVAL;
-+	}
-+
-+        /*
-+         * rs_status follows rs_datalen so if rs_datalen is too large
-+         * we can take a hint that hardware corrupted it, so ignore
-+         * those frames.
-+         */
-+	if (rx_stats->rs_datalen > (common->rx_bufsize - ah->caps.rx_status_len)) {
-+		RX_STAT_INC(rx_len_err);
-+		return -EINVAL;
-+	}
-+
-+	/*
- 	 * everything but the rate is checked here, the rate check is done
- 	 * separately to avoid doing two lookups for a rate for each frame.
- 	 */
--- 
-1.8.3.4
 
