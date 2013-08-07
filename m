@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:37386 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133Ab3HOXMb (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59888 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260Ab3HGQWT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 19:12:31 -0400
-Received: by mail-pb0-f41.google.com with SMTP id rp2so1345557pbb.14
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Aug 2013 16:12:30 -0700 (PDT)
-Received: from [0.0.0.0] ([210.48.94.225])
-        by mx.google.com with ESMTPSA id s6sm2018942pan.12.2013.08.15.16.12.28
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Thu, 15 Aug 2013 16:12:30 -0700 (PDT)
-Message-ID: <520D6058.7040405@gna.org> (sfid-20130816_011234_395319_57CE4E35)
-Date: Fri, 16 Aug 2013 11:12:24 +1200
-From: Christian Gagneraud <chgans@gna.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [TL-WN721N] No disconnect notification when AP is gone
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 7 Aug 2013 12:22:19 -0400
+Message-ID: <1375892522.8154.3.camel@jlt4.sipsolutions.net> (sfid-20130807_182239_682190_2C35FC35)
+Subject: Re: linux-next: Tree for Aug 7
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Phil Sutter <phil@nwl.cc>, Sedat Dilek <sedat.dilek@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, David Miller <davem@davemloft.net>,
+	Hannes Frederic Sowa <hannes@stressinduktion.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Date: Wed, 07 Aug 2013 18:22:02 +0200
+In-Reply-To: <1375892245.4004.31.camel@edumazet-glaptop> (sfid-20130807_181729_176093_C3201A13)
+References: <20130807155443.a0355d0429f3e0b4ccbed261@canb.auug.org.au>
+	 <CA+icZUW+uxCsvPYcY2RRvMxRVzaBLuH9u8M4ziQNWXv=nk4b2w@mail.gmail.com>
+	 <20130807155918.GA16263@orbit.nwl.cc>
+	 <1375891974.8154.1.camel@jlt4.sipsolutions.net>
+	 <1375892245.4004.31.camel@edumazet-glaptop>
+	 (sfid-20130807_181729_176093_C3201A13)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi there,
+On Wed, 2013-08-07 at 09:17 -0700, Eric Dumazet wrote:
+> On Wed, 2013-08-07 at 18:12 +0200, Johannes Berg wrote:
+> > On Wed, 2013-08-07 at 17:59 +0200, Phil Sutter wrote:
+> > 
+> > > The idea behind this patch is that users setting the protocol to
+> > > something else probably do know better and so should be left alone.
+> > 
+> > Regardless of that, I think that still the skb pointers would be changed
+> > by this patch which would confuse the receiver of the SKB (device
+> > driver), no? Has anyone verified that theory? :)
+> 
+> Maybe receivers made wrong assumptions about some headers being set or
+> not set ?
 
-I'm using a TP-LINK TL-WN721N, and experience a strange behaviour, I'm 
-running Ubuntu 13.04 (3.8.0-27-generic + backports-3.11-rc3-1).
+Maybe. I haven't tested it, but I'm thinking that skb->data doesn't
+point to the start of the data frame in this case, since we now call
+eth_type_trans() which pulls the ethernet header. So if the device just
+transmits skb->len starting from skb->data, it'll be wrong, no? That
+seems a basic assumption though.
 
-The problem is that if I am connected to my AP and then power it off, I 
-never receive a disconnect notification.
+johannes
 
-I first reported the bug to the connman mailing list [1], but it was 
-suggested there that it could be a bug in the device driver.
-
-At first I was using the Ubuntu kernel modules, but before reporting any 
-bugs, I switched to backports-3.11-rc3-1, and I still have the problem.
-
-Any thoughts?
-
-Regards,
-Chris
-
-[1] Latest messages haven't been archived  yet, but:
-  https://lists.connman.net/pipermail/connman/2013-August/015401.html
