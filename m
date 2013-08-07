@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lenbrook.com ([216.94.44.85]:26911 "EHLO mail.lenbrook.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753894Ab3HATMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 15:12:37 -0400
-Message-ID: <51FAB31F.6050207@lenbrook.com> (sfid-20130801_211520_702471_860620CB)
-Date: Thu, 01 Aug 2013 15:12:31 -0400
-From: Jonathan Bagg <jbagg@lenbrook.com>
-MIME-Version: 1.0
-To: backports@vger.kernel.org
-CC: Solomon Peachy <pizza@shaftnet.org>, linux-wireless@vger.kernel.org
-Subject: Re: cross compile backports with LTIB
-References: <1375338204-2021-8-git-send-email-sujith@msujith.org> <1375370826-1387-1-git-send-email-sujith@msujith.org> <51FA8ECD.7070401@lenbrook.com> <20130801174749.GC10904@shaftnet.org>
-In-Reply-To: <20130801174749.GC10904@shaftnet.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:56206 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932109Ab3HGQR1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Aug 2013 12:17:27 -0400
+Message-ID: <1375892245.4004.31.camel@edumazet-glaptop> (sfid-20130807_181800_940655_9ACBDBC9)
+Subject: Re: linux-next: Tree for Aug 7
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Phil Sutter <phil@nwl.cc>, Sedat Dilek <sedat.dilek@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, David Miller <davem@davemloft.net>,
+	Hannes Frederic Sowa <hannes@stressinduktion.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Date: Wed, 07 Aug 2013 09:17:25 -0700
+In-Reply-To: <1375891974.8154.1.camel@jlt4.sipsolutions.net>
+References: <20130807155443.a0355d0429f3e0b4ccbed261@canb.auug.org.au>
+	 <CA+icZUW+uxCsvPYcY2RRvMxRVzaBLuH9u8M4ziQNWXv=nk4b2w@mail.gmail.com>
+	 <20130807155918.GA16263@orbit.nwl.cc>
+	 <1375891974.8154.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13-08-01 01:47 PM, Solomon Peachy wrote:
-> On Thu, Aug 01, 2013 at 12:37:33PM -0400, Jonathan Bagg wrote:
->> I've been cross compiling compat-wireless and now I'm trying
->> backports.  It looks like conf.c and zconf.tab.c are being compiled
->> as arm and then the build process is trying to run conf on my x86
->> host.  Results using the below make parameters I was using for
->> compat-wireless......
-Learned some things....Problem was LTIB (ltib = Freescale tool) 
-environment.  Outside of LTIB, backports cross compiles fine.  To get 
-backports happy in LTIB need to use UNSPOOF/SPOOF_PATH to switch between 
-host and cross environment....
+On Wed, 2013-08-07 at 18:12 +0200, Johannes Berg wrote:
+> On Wed, 2013-08-07 at 17:59 +0200, Phil Sutter wrote:
+> 
+> > The idea behind this patch is that users setting the protocol to
+> > something else probably do know better and so should be left alone.
+> 
+> Regardless of that, I think that still the skb pointers would be changed
+> by this patch which would confuse the receiver of the SKB (device
+> driver), no? Has anyone verified that theory? :)
 
-%Build
-export PATH=$UNSPOOF_PATH
+Maybe receivers made wrong assumptions about some headers being set or
+not set ?
 
-make defconfig-cw1200 make prefix=%{_prefix} 
-CROSS_COMPILE=${TOOLCHAIN_PATH}/bin/${TOOLCHAIN_PREFIX} ARCH=$LINTARCH 
-KLIB=${TOP}/rootfs/lib/modules/%{kversion} KLIB_BUILD=${TOP}/rpm/BUILD/linux
+A patch can uncover prior bugs.
 
-export PATH=$SPOOF_PATH
-
-make prefix=%{_prefix} 
-CROSS_COMPILE=${TOOLCHAIN_PATH}/bin/${TOOLCHAIN_PREFIX} ARCH=$LINTARCH 
-KLIB=${TOP}/rootfs/lib/modules/%{kversion} KLIB_BUILD=${TOP}/rpm/BUILD/linux
-
-Jon
-
-> Howdy.  :)
->
-> (btw, I'm CC'ing the backports mailing list, which is a better place to
->   ask these sorts of questions)
->
-> I found that the backports cross-compile process worked much the same
-> way as building compat-wireless.  This is what I'm doing currently in my
-> build script:  (This is using a backports package generated last night
-> using the backports git HEAD code with the cw1200 driver integrated)
->
->   set -a
->   CROSS_COMPILE=${CROSS_COMPILE}
->   ARCH=${TARGET_CPU}
->   KLIB_BUILD=${DEV_PATH}/${LINUX_DIR}
->   KLIB=${TARGET_ROOT_ON_HOST}
->   set +a
->   make oldconfig  # menuconfig worked here too
->   make
->   make install
->
-> That said, the 'make install' target isn't currently sane for
-> cross-builds due to the bacport_firmware_install script not respecting
-> prefixes.  I just commented that script (and a few others like initrd
-> updates) out of the Makefiles, and I had a successful build/install.
->
->   - Solomon
+commit 76fe45812a3b134c3917 is an example of a fix we had to do because
+of another fix ;)
 
 
--- 
-Jonathan Bagg
-Software Developer
-NAD Electronics | Lenbrook Industries Limited
-633 Granite Court, Pickering, Ontario, Canada L1W 3K1 | 905-831-0799 ext 4478 | http://www.nadelectronics.com
 
