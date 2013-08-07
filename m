@@ -1,97 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:49835 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030353Ab3HISyQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 14:54:16 -0400
-Received: from [192.168.2.100] ([93.218.76.213]) by mail.gmx.com (mrgmx101)
- with ESMTPSA (Nemesis) id 0MDV5t-1VLpve0hll-00GqJD for
- <linux-wireless@vger.kernel.org>; Fri, 09 Aug 2013 20:54:15 +0200
-Message-ID: <52053AC4.3090509@rempel-privat.de> (sfid-20130809_205419_575788_15E1BE95)
-Date: Fri, 09 Aug 2013 20:53:56 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Alan Stern <stern@rowland.harvard.edu>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: FUSB200 xhci issue
-References: <Pine.LNX.4.44L0.1308091310560.1405-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1308091310560.1405-100000@iolanthe.rowland.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:59249 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757407Ab3HGMeX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Aug 2013 08:34:23 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Thomas Graf <tgraf@suug.ch>
+Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.11] genetlink: fix family dump race
+Date: Wed,  7 Aug 2013 14:34:14 +0200
+Message-Id: <1375878854-29997-1-git-send-email-johannes@sipsolutions.net> (sfid-20130807_143431_202253_42E326A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 09.08.2013 19:16, schrieb Alan Stern:
-> On Fri, 9 Aug 2013, Oleksij Rempel wrote:
->
->> Am 09.08.2013 16:52, schrieb Alan Stern:
->>> On Fri, 9 Aug 2013, Oleksij Rempel wrote:
->>>
->>>>> What about a "get firmware version" sort of thing?  There really should
->>>>> be a way for the driver to tell whether the firmware has already been
->>>>> updated.
->>>>
->>>> I was not able to find good direct way to check firmware version. If i
->>>> would add some new command then i will get option like: if responding FW
->>>> is updated; if not, then dead or old.
->>>> How about overwriting iProduct field? Let say, if iProduct == ath9k_htc,
->>>> then firmware is updated? Is it more or less acceptable method? I need
->>>> to ask this because it is really new for me.
->>>
->>> Changing the iProduct string descriptor would work, because the
->>> descriptors_changed() routine doesn't compare the old value of that
->>> string with the new value.  (On the other hand, it does compare the
->>> iSerialNumber strings.)
->>
->> Just to make sure. You mean, i should avoid changing iSerialNumber
->> because host will initiate usb reset and this device will probably not
->> survive it?
->
-> Right.  If the device would survive a reset then there would be no
-> problem.
->
-> BTW, it is common for new firmware to change the bcdDevice value in the
-> device descriptor.  That might be easier than changing a string
-> descriptor.
->
->>> Is there any way to read the firmware back from the device?  Then you
->>> could check directly.
->>
->> No, this device is a SoC with usb client interface based on FUSB200 core
->> (If i'm correct, same core as on carl9170 devices). We can't read memory
->> unless FW provide this service.
->> At power on, this device will boot from external or internal ROM and
->> load minimal FW. Without it, USB wont work.
->> If i read FW code correctly, it should be responsible for suspend and reset.
->
-> How do you tell the device to start running the new firmware after it
-> is loaded?  Normally this requires some sort of reset.
+From: Johannes Berg <johannes.berg@intel.com>
 
-There are two vendor commands cUSB_REQ_DOWNLOAD and 
-cUSB_REQ_DOWNLOAD_COMP. With cUSB_REQ_DOWNLOAD firmware will be uploaded 
-and cUSB_REQ_DOWNLOAD_COMP should just jump to first address of the 
-firmware.
+When dumping generic netlink families, only the first dump call
+is locked with genl_lock(), which protects the list of families,
+and thus subsequent calls can access the data without locking,
+racing against family addition/removal. This can cause a crash.
+Fix it - the locking needs to be conditional because the first
+time around it's already locked.
 
-This system has micro modular structure. Firmware can register own 
-modules. Or relink modules of bootloader, but this is limited only to 
-existing api.
+BUG: unable to handle kernel paging request at f8467360
+IP: [<c14c56bb>] ctrl_dumpfamily+0x6b/0xe0
+EIP: 0060:[<c14c56bb>] EFLAGS: 00210297 CPU: 2
+EIP is at ctrl_dumpfamily+0x6b/0xe0
+EAX: f8467378 EBX: f8467340 ECX: 00000000 EDX: ec1610c4
+ESI: 00000001 EDI: c2077cc0 EBP: c46c3c00 ESP: c46c3bd4
+ DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+CR0: 80050033 CR2: f8467360 CR3: 26e54000 CR4: 001407d0
+DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+DR6: ffff0ff0 DR7: 00000400
+Process wpa_supplicant (pid: 20081, ti=c46c2000 task=c44640b0 task.ti=c46c2000)
+Call Trace:
+ [<c14c20bc>] netlink_dump+0x5c/0x200
+ [<c14c3450>] __netlink_dump_start+0x140/0x160
+ [<c14c5172>] genl_rcv_msg+0x102/0x270
+ [<c14c4b5e>] netlink_rcv_skb+0x8e/0xb0
+ [<c14c505c>] genl_rcv+0x1c/0x30
+ [<c14c456b>] netlink_unicast+0x17b/0x1c0
+ [<c14c47d4>] netlink_sendmsg+0x224/0x370
+ [<c1485adf>] sock_sendmsg+0xff/0x120
+ [<c1486b0a>] __sys_sendmsg+0x24a/0x260
+ [<c1487fdb>] sys_sendmsg+0x3b/0x60
+ [<c1488683>] sys_socketcall+0x283/0x2e0
+ [<c15b7c1f>] sysenter_do_call+0x12/0x38
+Code: 8d 3c c5 c0 7c 07 c2 8b 04 c5 c0 7c 07 c2 39 c7 8d 58 c8 75 16 eb 71 90 81 7d ec 00 1f 86 c1 74 10 8b 43 38 39 c7 8d 58 c8 74 5d <80> 7b 20 00 74 e7 83 c6 01 3b 75 f0 7c e8 8b 55 e8 8b 42 04 8b
 
-> Is there any way to prevent the device from losing its firmware during
-> a USB reset or suspend?
+Cc: stable@vger.kernel.org
+Reported-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/netlink/genetlink.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-For suspend - yes. It is possible to ignore suspend command or put the 
-SoC in low power mode - but is it probably not so easy to bring it back. 
-I would need to read more code and create some doc as side effect untill 
-i understand how it works.
-I'm not sure how about reset command. I would need more testing and some 
-ones help. If i see it correctly, usb reset should affect only usb core 
-and usb pll.
-
-How can i trigger usb reset?
-
+diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
+index 2fd6dbe..07a0b18 100644
+--- a/net/netlink/genetlink.c
++++ b/net/netlink/genetlink.c
+@@ -790,6 +790,9 @@ static int ctrl_dumpfamily(struct sk_buff *skb, struct netlink_callback *cb)
+ 	int chains_to_skip = cb->args[0];
+ 	int fams_to_skip = cb->args[1];
+ 
++	if (chains_to_skip)
++		genl_lock();
++
+ 	for (i = chains_to_skip; i < GENL_FAM_TAB_SIZE; i++) {
+ 		n = 0;
+ 		list_for_each_entry(rt, genl_family_chain(i), family_list) {
+@@ -810,6 +813,9 @@ errout:
+ 	cb->args[0] = i;
+ 	cb->args[1] = n;
+ 
++	if (chains_to_skip)
++		genl_unlock();
++
+ 	return skb->len;
+ }
+ 
 -- 
-Regards,
-Oleksij
+1.8.0
+
