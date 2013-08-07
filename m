@@ -1,91 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:33007 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711Ab3H0Hab convert rfc822-to-8bit (ORCPT
+Received: from mail-vb0-f45.google.com ([209.85.212.45]:59807 "EHLO
+	mail-vb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756326Ab3HGA0Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 03:30:31 -0400
-Received: by mail-bk0-f54.google.com with SMTP id mz12so1501141bkb.13
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 00:30:30 -0700 (PDT)
+	Tue, 6 Aug 2013 20:26:24 -0400
+Received: by mail-vb0-f45.google.com with SMTP id e15so1185765vbg.18
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Aug 2013 17:26:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87ioyrmx3u.fsf@kamboji.qca.qualcomm.com>
-References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
-	<1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-	<1377507205-5386-5-git-send-email-michal.kazior@tieto.com>
-	<87ioyrmx3u.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 27 Aug 2013 09:30:29 +0200
-Message-ID: <CA+BoTQ=ycKd0Z60wHTWHoq7hBz1W2iW+ahjVmc_nFLQmU7-1Bg@mail.gmail.com> (sfid-20130827_093035_063579_CDACC005)
-Subject: Re: [PATCH v2 4/4] ath10k: fix issues on non-preemptible systems
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAG-2HqU=yyxomNTg9-2+bxMKP=e5_pdVT7bhB_CHhFzB-ac_mQ@mail.gmail.com>
+References: <CALCETrXSnFPFVPkXHwz+FFA3=+pmz9V=cMHWwtN+jG1QJALWSQ@mail.gmail.com>
+ <325b19bb936d7ebae11edad86aac8f0931e8abd9.1375719828.git.luto@amacapital.net>
+ <5200B1BD.7030307@gmail.com> <CAG-2HqXEj06JbUOWee=NfuRXxL75uRf=55FZcXRLHroDzYUthQ@mail.gmail.com>
+ <CAG-2HqVvoQK8ggErGGinO9i8Pbu-O-X=eYFW445ce24dpt7HyA@mail.gmail.com>
+ <20130806163158.GA23093@kadzban.is-a-geek.net> <CAG-2HqU=yyxomNTg9-2+bxMKP=e5_pdVT7bhB_CHhFzB-ac_mQ@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Tue, 6 Aug 2013 17:26:03 -0700
+Message-ID: <CALCETrU-CWuefE5XUpC=xFuCXaL56Cox95nL35Bm9jMi_B+6_A@mail.gmail.com> (sfid-20130807_022628_845955_C2F4D093)
+Subject: Re: [systemd-devel] [PATCH] Change CONFIG_FW_LOADER_USER_HELPER to
+ default n and don't select it
+To: Tom Gundersen <teg@jklm.no>
+Cc: Bryan Kadzban <bryan@kadzban.is-a-geek.net>,
+	systemd Mailing List <systemd-devel@lists.freedesktop.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-hotplug@vger.kernel.org,
+	Maarten Lankhorst <m.b.lankhorst@gmail.com>,
+	Kay Sievers <kay@vrfy.org>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 August 2013 09:06, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
+On Tue, Aug 6, 2013 at 5:24 PM, Tom Gundersen <teg@jklm.no> wrote:
 >
->> Workers may not call into a sleepable function
->> (e.g. mutex_lock). Since ath10k workers can run
->> for a very long time it is necessary to explicitly
->> allow process rescheduling in case there's no
->> preemption.
+> On 6 Aug 2013 18:32, "Bryan Kadzban" <bryan@kadzban.is-a-geek.net> wrote:
 >>
->> This fixes some issues with system freezes, hangs,
->> watchdogs being triggered, userspace being
->> unresponsive on slow host machines under heavy
->> load.
->
-> I consider this more as a workaround as a real fix. Would NAPI be a
-> proper fix for issues like this?
->
-> NAPI support was removed from mac80211 six months ago, but I guess we
-> could try to get it back if we have a good reason:
->
-> http://marc.info/?l=linux-wireless&m=136204135907491
-
-Hmm. From what I understand NAPI is used for RX polling. My patch
-addresses mainly WMI/HTT TX starvation.
-
-There's another solution that I had in mind. Instead of:
-
-  for (;;) { dequeue(z); process; }
-
-I did:
-
-  q = dequeue_all(z); for (;;) { dequeue(q); process; }
-
-I.e. move all queued stuff at the worker entry and move it out of the
-global queue, that can, and will be, having more stuff queued while
-the worker does its job).
-
-This way workers would exit/restart more often, but from what I tested
-it didn't really solve the problem. Given enough traffic HTC worker
-responsible for HTT TX gets overwhelmed eventually. You could try
-limit how many frames a worker can process during one execution, but
-how do you guess that? This starvation depends on how fast your CPU
-is.
-
-Thus I opted for sole cond_resched().
-
-
->> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
->> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
->> @@ -1229,6 +1229,10 @@ static void ath10k_htt_rx_work(struct work_struct *work)
->>                       break;
+>> On Tue, Aug 06, 2013 at 11:17:17AM +0200, Tom Gundersen wrote:
+>> > On Tue, Aug 6, 2013 at 11:11 AM, Tom Gundersen <teg@jklm.no> wrote:
+>> > > On Tue, Aug 6, 2013 at 10:20 AM, Maarten Lankhorst
+>> > > <m.b.lankhorst@gmail.com> wrote:
+>> > >> Op 05-08-13 18:29, Andy Lutomirski schreef:
+>> > >>> The systemd commit below can delay firmware loading by multiple
+>> > >>> minutes if CONFIG_FW_LOADER_USER_HELPER=y.  Unfortunately no one
+>> > >>> noticed that the systemd-udev change would break new kernels as well
+>> > >>> as old kernels.
+>> > >>>
+>> > >>> Since the kernel apparently can't count on reasonable userspace
+>> > >>> support, turn this thing off by default.
+>> > >>>
+>> > >>> commit a3bd8447be4ea2ce230eb8ae0e815c04d85fa15a
+>> > >>> Author: Tom Gundersen <teg@jklm.no>
+>> > >>> Date:   Mon Mar 18 15:12:18 2013 +0100
+>> > >>>
+>> > >>>     udev: make firmware loading optional and disable by default
+>> > >>>
+>> > >>>     Distros that whish to support old kernels should set
+>> > >>>
+>> > >>> --with-firmware-dirs="/usr/lib/firmware/updates:/usr/lib/firmware"
+>> > >>>     to retain the old behaviour.
+>> > >>>
+>> > >> methinks this patch should be reverted then,
+>> > >
+>> > > Well, all the code is still there, so it can be enabled if anyone
+>> > > wants it.
+>> > >
+>> > >> or a stub should be added to udev to always fail firmware loading so
+>> > >> timeouts don't occur.
+>> > >
+>> > > I think the only use (if any) of a userspace firmware loader would be
+>> > > for anyone who wants a custom one (i.e., not udev), so we shouldn't
+>> > > just fail the loading from udev unconditionally.
+>> > >
+>> > > How about we just improve the udev documentation a bit, similar to
+>> > > Andy's kernel patch?
+>> >
+>> > Sorry, I should first have checked. We already document this in the
+>> > README:
+>> >
+>> > >        Userspace firmware loading is deprecated, will go away, and
+>> > >        sometimes causes problems:
+>> > >          CONFIG_FW_LOADER_USER_HELPER=n
 >>
->>               ath10k_htt_rx_process_skb(htt->ar, skb);
->> +
->> +#ifndef CONFIG_PREEMPT
->> +             cond_resched();
->> +#endif
+>> ...And this patch is making the kernel default to the correct behavior,
+>> instead of the now-broken-by-udev behavior.
+>>
+>> I'm not sure I see the issue with it?  :-)
 >
-> Why the #ifndef? Why should we not call cond_resched() when PREEMPT is
-> enabled? Does something negative happen then?
+> Oh yeah this patch is totally the right thing to do, I was just arguing that
+> there is nothing to be done on the udev side.
+>
+>> (Add me to the list of people that think udev is broken too, fwiw.  But
+>> let's at least not leave *both* sides in a broken-by-default state.)
+>
+> Well I don't think it is too much to ask that the kernel and udev should be
+> configured in a consistent way. Especially as thing still work even if you
+> get it wrong, albeit with a delay.
 
-I think it should be okay. I saw the #ifndef thing in b43legacy and
-thought it simply makes sense (although it's unsightly).
+Except that the current defaults are inconsistent and there is no
+explanation anywhere in the logs when this is screwed up.
 
-
-Michał.
+--Andy
