@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lenbrook.com ([216.94.44.85]:24870 "EHLO mail.lenbrook.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753087Ab3HAT0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 15:26:52 -0400
-Message-ID: <51FAB45A.9080306@lenbrook.com> (sfid-20130801_212700_965749_D28102E4)
-Date: Thu, 01 Aug 2013 15:17:46 -0400
-From: Jonathan Bagg <jbagg@lenbrook.com>
-MIME-Version: 1.0
-To: backports@vger.kernel.org
-CC: Solomon Peachy <pizza@shaftnet.org>, linux-wireless@vger.kernel.org
-Subject: Re: cross compile backports with LTIB
-References: <1375338204-2021-8-git-send-email-sujith@msujith.org> <1375370826-1387-1-git-send-email-sujith@msujith.org> <51FA8ECD.7070401@lenbrook.com> <20130801174749.GC10904@shaftnet.org> <51FAB31F.6050207@lenbrook.com>
-In-Reply-To: <51FAB31F.6050207@lenbrook.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:59841 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932222Ab3HGQNZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Aug 2013 12:13:25 -0400
+Message-ID: <1375891974.8154.1.camel@jlt4.sipsolutions.net> (sfid-20130807_181346_909745_A8E26585)
+Subject: Re: linux-next: Tree for Aug 7
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Phil Sutter <phil@nwl.cc>
+Cc: Sedat Dilek <sedat.dilek@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, David Miller <davem@davemloft.net>,
+	Hannes Frederic Sowa <hannes@stressinduktion.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Date: Wed, 07 Aug 2013 18:12:54 +0200
+In-Reply-To: <20130807155918.GA16263@orbit.nwl.cc>
+References: <20130807155443.a0355d0429f3e0b4ccbed261@canb.auug.org.au>
+	 <CA+icZUW+uxCsvPYcY2RRvMxRVzaBLuH9u8M4ziQNWXv=nk4b2w@mail.gmail.com>
+	 <20130807155918.GA16263@orbit.nwl.cc>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13-08-01 03:12 PM, Jonathan Bagg wrote:
-> On 13-08-01 01:47 PM, Solomon Peachy wrote:
->> On Thu, Aug 01, 2013 at 12:37:33PM -0400, Jonathan Bagg wrote:
->>> I've been cross compiling compat-wireless and now I'm trying
->>> backports.  It looks like conf.c and zconf.tab.c are being compiled
->>> as arm and then the build process is trying to run conf on my x86
->>> host.  Results using the below make parameters I was using for
->>> compat-wireless......
-> Learned some things....Problem was LTIB (ltib = Freescale tool) 
-> environment.  Outside of LTIB, backports cross compiles fine.  To get 
-> backports happy in LTIB need to use UNSPOOF/SPOOF_PATH to switch 
-> between host and cross environment....
->
-(this is for the LTIBs spec file for backports = 
-dist/lfs-5.1/backports/backports.spec - forgot to mention in previous post)
-> %Build
-> export PATH=$UNSPOOF_PATH
->
-> make defconfig-cw1200 make prefix=%{_prefix} 
-> CROSS_COMPILE=${TOOLCHAIN_PATH}/bin/${TOOLCHAIN_PREFIX} ARCH=$LINTARCH 
-> KLIB=${TOP}/rootfs/lib/modules/%{kversion} 
-> KLIB_BUILD=${TOP}/rpm/BUILD/linux
->
-> export PATH=$SPOOF_PATH
->
-> make prefix=%{_prefix} 
-> CROSS_COMPILE=${TOOLCHAIN_PATH}/bin/${TOOLCHAIN_PREFIX} ARCH=$LINTARCH 
-> KLIB=${TOP}/rootfs/lib/modules/%{kversion} 
-> KLIB_BUILD=${TOP}/rpm/BUILD/linux
->
-> Jon 
+On Wed, 2013-08-07 at 17:59 +0200, Phil Sutter wrote:
+
+> The idea behind this patch is that users setting the protocol to
+> something else probably do know better and so should be left alone.
+
+Regardless of that, I think that still the skb pointers would be changed
+by this patch which would confuse the receiver of the SKB (device
+driver), no? Has anyone verified that theory? :)
+
+johannes
+
