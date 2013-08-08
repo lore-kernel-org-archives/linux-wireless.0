@@ -1,55 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:55972 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753041Ab3H2EiX (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:42372 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934118Ab3HHJ3R convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Aug 2013 00:38:23 -0400
-Received: by mail-qa0-f43.google.com with SMTP id bv4so948152qab.9
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 21:38:22 -0700 (PDT)
-From: adam.gradzki@gmail.com
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [BUG] iwlwifi Microcode SW error (firmware version: 18.168.6.1)
-Date: Thu, 29 Aug 2013 00:38:20 -0400
-Message-ID: <2449090.W0ZgYRKzHN@nuclearreactor> (sfid-20130829_063827_186030_D24FF204)
-In-Reply-To: <1377750599.4418.3.camel@porter.coelho.fi>
-References: <7144869.jC5clVvrrO@nuclearreactor> <1377750599.4418.3.camel@porter.coelho.fi>
+	Thu, 8 Aug 2013 05:29:17 -0400
+Received: by mail-bk0-f46.google.com with SMTP id 6so905397bkj.5
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Aug 2013 02:29:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <871u6435c6.fsf@kamboji.qca.qualcomm.com>
+References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
+	<1375949298-7159-4-git-send-email-michal.kazior@tieto.com>
+	<87eha4363n.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQnoVmQcMnajTx3vsKwct5PLCNOt6w2qo17fyigm=gO5-w@mail.gmail.com>
+	<871u6435c6.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 8 Aug 2013 11:29:15 +0200
+Message-ID: <CA+BoTQnsH6XxpgoBh0tTNCjXvNz-fL6OaCp=LP-Eap_4tqYNkw@mail.gmail.com> (sfid-20130808_112924_566419_F38247FA)
+Subject: Re: [RFC 3/3] ath10k: add support for HTT 3.0
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
+On 8 August 2013 11:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> On 8 August 2013 11:05, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>
+>>> This debug print is good to have, but with the new htt version it would
+>>> be good to print it always using the info level. For example, can we add
+>>> it to the same line with "firmware %s booted" string?
+>>
+>> HTT target version is not known when firmware boots up. It's not known
+>> until everything other (HTC, WMI) is set up. We then send a version
+>> request command and we get a response.
+>
+> Oh, missed that.
+>
+>> We need to print it in a separate line.
+>
+> Or could we print the "firmware booted" message later?
 
-I was browsing the web while in a large hall with many connected wireless 
-clients. There were also several routers sharing a common SSID. I remember 
-playing with various RTS and fragmentation thresholds so this may have been 
-the trigger. The connection itself involved WPA2 Enterprise PEAP w/ MSCHAPv2 
-authentication. I wish I could go into more detail but I was browsing the 
-system log long after the fact so I'm having trouble remembering things off the 
-top of my head.
-
-Linux laptop 3.10.9-1-ARCH #1 SMP PREEMPT Wed Aug 21 13:49:35 CEST 2013 x86_64 
-GNU/Linux
-
-Regards,
-Adam
+I'm worried it may be error-prone in case of firmware loading failure
+in-between (i.e. firmware is booted, but WMI init fails). We'd need to
+print the firmware version in the error path then.
 
 
-On Thursday, August 29, 2013 07:29:59 AM you wrote:
-> Hi Adam,
-> 
-> On Thu, 2013-08-29 at 00:17 -0400, adam.gradzki@gmail.com wrote:
-> > I would like to report a problem with the Intel iwlwifi driver
-> > Here is what I found in my system log:
-> > 
-> > http://pastebin.com/j5cVsqzz
-> 
-> Thanks for reporting! Could you please give a bit more details on what
-> you were doing when this happened? Just a simple connection to an AP?
-> Heavy traffic?
-> 
-> --
-> Cheers,
-> Luca.
+>
+>>> (Please take into account that the info messages still need to be
+>>> compact, by default they should not be longer than five lines or so.)
+>>>
+>>>> +     if (htt->target_version_major != 2 &&
+>>>> +         htt->target_version_major != 3) {
+>>>>               ath10k_err("htt major versions are incompatible!\n");
+>>>>               return -ENOTSUPP;
+>>>>       }
+>>>
+>>> Print the htt version in the error message as well?
+>>
+>> Target version is printed in ath10k_dbg() now. If we change that to
+>> ath10k_info() I don't see any reason to print the version again on
+>> error.
+>
+> Frequently users just copy the error message, that's why it's better to
+> have the firmware's htt version in the error message as well.
 
+Good point.
+
+
+Pozdrawiam / Best regards,
+Michał Kazior.
