@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f171.google.com ([209.85.128.171]:40304 "EHLO
-	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134Ab3HBQZA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 12:25:00 -0400
-Received: by mail-ve0-f171.google.com with SMTP id pa12so893791veb.30
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Aug 2013 09:24:59 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:54448 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933986Ab3HHIOX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Aug 2013 04:14:23 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/4] ath10k: print errcode when CE ring setup fails
+Date: Thu, 8 Aug 2013 10:14:10 +0200
+Message-ID: <1375949650-9699-5-git-send-email-michal.kazior@tieto.com> (sfid-20130808_101431_002271_4F6B2769)
+In-Reply-To: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
+References: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <1375460484.18144.11.camel@jlt4.sipsolutions.net>
-References: <CALCETrU+C+sO8tJ0X5G4RDVLV=kHQQHurOnEQCoqbAouh60dng@mail.gmail.com>
- <1375460484.18144.11.camel@jlt4.sipsolutions.net>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Fri, 2 Aug 2013 09:24:38 -0700
-Message-ID: <CALCETrVOhq3Q3ieyscQfuqWHyHxjcCbxiJ4jt9ru_88BtVB+HA@mail.gmail.com> (sfid-20130802_182524_111388_6577EC18)
-Subject: Re: Slow firmware timeouts again (Re: [3.11 regression?] iwlwifi
- firmware takes two minutes to load)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	systemd-devel@lists.freedesktop.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 2, 2013 at 9:21 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2013-08-02 at 09:04 -0700, Andy Lutomirski wrote:
->
->> > It wasn't exactly fixed and it's really more of a userspace problem - we
->> > probably request firmware version 8, and then it takes 30 seconds to
->> > time out for each of 8,7,6,5, after which the next request for 4 is
->> > successful.
->>
->> Why's it requesting those firmwares?  They don't seem to exist on
->> intellinuxwireless.org.
->
-> Well for one you've never even mentioned what device you have, and then
-> also it's not requesting 8/7 only 6,5,4 -- I guess the timeout was
-> increased to 60 seconds (or I'm remembering wrong and it always was? I
-> thought it was 30s)
+This makes it possible to see the reason why the
+setup fails. It also adheres to code style of
+error checking in ath drivers.
 
-I have an "Ultimate-N 6300 (rev 35)".  It's requesting at least
-versions 6 and 5 (I saw them in udevadm monitor).  It looks like the
-g2a and g2b variants have -5 and -6 versions, but 6000-4 appears to be
-the only relevant version for my hardware.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c |   15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index f8b969f..50d2ea2 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -1128,6 +1128,7 @@ struct ce_state *ath10k_ce_init(struct ath10k *ar,
+ {
+ 	struct ce_state *ce_state;
+ 	u32 ctrl_addr = ath10k_ce_base_address(ce_id);
++	int ret;
+ 
+ 	ce_state = ath10k_ce_init_state(ar, ce_id, attr);
+ 	if (!ce_state) {
+@@ -1136,18 +1137,20 @@ struct ce_state *ath10k_ce_init(struct ath10k *ar,
+ 	}
+ 
+ 	if (attr->src_nentries) {
+-		if (ath10k_ce_init_src_ring(ar, ce_id, ce_state, attr)) {
+-			ath10k_err("Failed to initialize CE src ring for ID: %d\n",
+-				   ce_id);
++		ret = ath10k_ce_init_src_ring(ar, ce_id, ce_state, attr);
++		if (ret) {
++			ath10k_err("Failed to initialize CE src ring for ID: %d (%d)\n",
++				   ce_id, ret);
+ 			ath10k_ce_deinit(ce_state);
+ 			return NULL;
+ 		}
+ 	}
+ 
+ 	if (attr->dest_nentries) {
+-		if (ath10k_ce_init_dest_ring(ar, ce_id, ce_state, attr)) {
+-			ath10k_err("Failed to initialize CE dest ring for ID: %d\n",
+-				   ce_id);
++		ret = ath10k_ce_init_dest_ring(ar, ce_id, ce_state, attr);
++		if (ret) {
++			ath10k_err("Failed to initialize CE dest ring for ID: %d (%d)\n",
++				   ce_id, ret);
+ 			ath10k_ce_deinit(ce_state);
+ 			return NULL;
+ 		}
+-- 
+1.7.9.5
+
