@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:45246 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624Ab3HUVIW (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:36160 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966588Ab3HHVHc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 17:08:22 -0400
-Message-ID: <1377118665.3006.1.camel@porter.Elisa> (sfid-20130821_230826_194769_D63F52F6)
-Subject: Re: [PATCH] mac80211: move setting WIPHY_FLAG_SUPPORTS_SCHED_SCAN
- into drivers
-From: Luciano Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Wed, 21 Aug 2013 23:57:45 +0300
-In-Reply-To: <1377077275-19429-1-git-send-email-johannes@sipsolutions.net>
-References: <1377077275-19429-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+	Thu, 8 Aug 2013 17:07:32 -0400
+Date: Thu, 08 Aug 2013 14:12:41 -0700 (PDT)
+Message-Id: <20130808.141241.2150105195238423513.davem@davemloft.net> (sfid-20130808_230752_488050_725625DA)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-08-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130808172940.GC30925@tuxdriver.com>
+References: <20130808172940.GC30925@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-08-21 at 11:27 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> mac80211 currently sets WIPHY_FLAG_SUPPORTS_SCHED_SCAN based on whether
-> the start_sched_scan operation is supported or not, but that will not
-> be correct for all drivers, we're adding scheduled scan to the iwlmvm
-> driver but it depends on firmware support.
-> 
-> Therefore, move setting WIPHY_FLAG_SUPPORTS_SCHED_SCAN into the drivers
-> so that they can control it regardless of implementing the operation.
-> 
-> This currently only affects the TI drivers since they're the only ones
-> implementing scheduled scan (in a mac80211 driver.)
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 8 Aug 2013 13:29:40 -0400
 
-For the wlcore part:
+> This is a batch of fixes intended for the 3.11 queue...
+> 
+> Regarding the mac80211 (and related) bits, Johannes says:
+> 
+> "I have a fix from Chris for an infinite loop along with fixes from
+> myself to prevent it entering the loop to start with (continue using
+> disabled channels, many thanks to Chris for his debug/test help) and a
+> workaround for broken APs that advertise a bad HT primary channel in
+> their beacons. Additionally, a fix for another attrbuf race in mac80211
+> and a fix to clean up properly while P2P GO interfaces go down."
+> 
+> Along with that...
+> 
+> Solomon Peachy corrects a range check in cw1200 that would lead to
+> a BUG_ON when starting AP mode.
+> 
+> Stanislaw Gruszka provides an iwl4965 patch to power-up the device
+> earlier (avoiding microcode errors), and another iwl4965 fix that
+> resets the firmware after turning rfkill off (resolving a bug in the
+> Red Hat Bugzilla).
+> 
+> Please let me know if there are problems!
 
-Acked-by: Luciano Coelho <luca@coelho.fi>
-
+Pulled, thanks John.
