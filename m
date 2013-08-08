@@ -1,138 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:64857 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750Ab3HTTr5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 15:47:57 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hj13so4781353wib.5
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 12:47:56 -0700 (PDT)
-Message-ID: <1377028069.8082.5.camel@canaries32-MCP7A> (sfid-20130820_214801_144237_223D76DD)
-Subject: [PATCH ] staging: vt6656: rxtx.c dead code
- TYPE_ATIMDMA/TYPE_BEACONDMA
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 20 Aug 2013 20:47:49 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.15.15]:57749 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965843Ab3HHPfi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Aug 2013 11:35:38 -0400
+Received: from [192.168.2.107] ([93.218.106.251]) by mail.gmx.com (mrgmx103)
+ with ESMTPSA (Nemesis) id 0Lqhaw-1VkLRS1XTG-00eNM8 for
+ <linux-wireless@vger.kernel.org>; Thu, 08 Aug 2013 17:35:36 +0200
+Message-ID: <5203BAC6.8070905@rempel-privat.de> (sfid-20130808_173542_707775_0FC938FD)
+Date: Thu, 08 Aug 2013 17:35:34 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: FUSB200 xhci issue
+References: <51ED4E12.8030006@rempel-privat.de> <51F50AB7.3030204@rempel-privat.de> <51F52A89.4050506@rempel-privat.de> <6066029.JHY9cn8Gkh@blech> <51F8B42F.102@rempel-privat.de>
+In-Reply-To: <51F8B42F.102@rempel-privat.de>
+Content-Type: multipart/mixed;
+ boundary="------------050702050000000407050200"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both TYPE_ATIMDMA/TYPE_BEACONDMA are not used in driver for the value of uDMAIdx.
+This is a multi-part message in MIME format.
+--------------050702050000000407050200
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Remove dead code.
+Am 31.07.2013 08:52, schrieb Oleksij Rempel:
+> Am 28.07.2013 22:41, schrieb Christian Lamparter:
+>> On Sunday, July 28, 2013 04:28:25 PM Oleksij Rempel wrote:
+>>> Am 28.07.2013 14:12, schrieb Oleksij Rempel:
+>>>> Am 28.07.2013 13:38, schrieb Christian Lamparter:
+>>>>
+>>>>>>     before  rmmod.
+>>>>> Oh, I it was on the latest wireless-testing. (And the "ath9k_htc"
+>>>>> module
+>>>>> had the patch "ath9k_htc: reboot firmwware if it was loaded").
+>>>>>
+>>>>> Furthermore, I did the same test with one of the ehci-only ports
+>>>>> and it worked. Both, devices (one had a AR7015, the other a AR9271)
+>>>>> came back after autosuspend there.
+>>>>
+>>>> Grrr... so it brings us back to xhci issue. Even EP4 workaround wont
+>>>> work here :( Suddenly i have no more ideas.
+>>>>
+>>>> Sarah, it's your turn now.
+>>>
+>>> Christian,
+>>> can you please provide some more info about your xhci controller. I'll
+>>> try to get me same.
+>>
+>> Well, it's a laptop (HP DV6-6003EG). I recon that getting 100% the
+>> same setup will be difficult. However, since the uPD720200 was/is
+>> very popular, it should be very easy to find one. [It's probably
+>> on all of these "10 euro usb-3.0 pcie-adapters". So as long as you
+>> got a free 1x-pcie port you should be good.]
+>>
+>> Here's the lspci summary:
+>>
+>> 19:00.0 USB controller [0c03]: NEC Corporation uPD720200 USB 3.0 Host
+>> Controller [1033:0194] (rev 04) (prog-if 30 [XHCI])
+>>          Subsystem: Hewlett-Packard Company Device [103c:1657]
+>>          Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>          Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast
+>> >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>          Latency: 0, Cache Line Size: 64 bytes
+>>          Interrupt: pin A routed to IRQ 19
+>>          Region 0: Memory at d3400000 (64-bit, non-prefetchable)
+>> [size=8K]
+>>          Capabilities: <access denied>
+>>          Kernel driver in use: xhci_hcd
+>>
+>
+> Thx... i purchased on random on ebay, will see what i get.
+>
+> I know now why carl9170 don't triggering this bug. Carl uses EP4 as
+> Interrupt with packet size 64. ath9k-htc initially have EP4=Intr,
+> Interval=1, but will reconfigure it to Bulk, Interval=0.
+> It mean, before usb suspend EP4=Bulk, Interval=0 and after resume
+> EP4=Intr, Inter=?. May be xhci can't handle some thing like this? Or may
+> be interval stay 0, and xhci will overfill usb buffer on adapter - at
+> least it looks so.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 41 +++++++----------------------------------
- 1 file changed, 7 insertions(+), 34 deletions(-)
+Christian,
+can you please test one more patch. It is working for me, but who knows. 
+More testing is never bad idea ;)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index d7f920d..06950c4 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -499,22 +499,6 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
-     }
- 
-     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
--	if ((uDMAIdx == TYPE_ATIMDMA) || (uDMAIdx == TYPE_BEACONDMA)) {
--		struct vnt_tx_datahead_ab *pBuf =
--			(struct vnt_tx_datahead_ab *)pTxDataHead;
--            //Get SignalField,ServiceField,Length
--            BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate, byPktType,
--                (u16 *)&(pBuf->wTransmitLength), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
--            );
--            //Get Duration and TimeStampOff
--		pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_A,
--					byPktType, bNeedAck);
--            if(uDMAIdx!=TYPE_ATIMDMA) {
--                pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
--            }
--            return (pBuf->wDuration);
--        }
--        else { // DATA & MANAGE Frame
-             if (byFBOption == AUTO_FB_NONE) {
- 		struct vnt_tx_datahead_g *pBuf =
- 				(struct vnt_tx_datahead_g *)pTxDataHead;
-@@ -558,11 +542,9 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
-                 pBuf->wTimeStampOff_b = wTimeStampOff[pDevice->byPreambleType%2][pDevice->byTopCCKBasicRate%MAX_RATE];
-                 return (pBuf->wDuration_a);
-             } //if (byFBOption == AUTO_FB_NONE)
--        }
-     }
-     else if (byPktType == PK_TYPE_11A) {
--        if ((byFBOption != AUTO_FB_NONE) && (uDMAIdx != TYPE_ATIMDMA) && (uDMAIdx != TYPE_BEACONDMA)) {
--            // Auto Fallback
-+	if (byFBOption != AUTO_FB_NONE) {
- 		struct vnt_tx_datahead_a_fb *pBuf =
- 			(struct vnt_tx_datahead_a_fb *)pTxDataHead;
-             //Get SignalField,ServiceField,Length
-@@ -576,9 +558,7 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
- 				DATADUR_A_F0, byPktType, bNeedAck);
- 		pBuf->wDuration_f1 = (u16)s_uGetDataDuration(pDevice,
- 				DATADUR_A_F1, byPktType, bNeedAck);
--            if(uDMAIdx!=TYPE_ATIMDMA) {
-                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
--            }
-             return (pBuf->wDuration);
-         } else {
- 		struct vnt_tx_datahead_ab *pBuf =
-@@ -590,10 +570,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
-             //Get Duration and TimeStampOff
- 		pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_A,
- 				byPktType, bNeedAck);
--
--            if(uDMAIdx!=TYPE_ATIMDMA) {
-                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
--            }
-+
-             return (pBuf->wDuration);
-         }
-     }
-@@ -607,9 +585,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
-             //Get Duration and TimeStampOff
- 		pBuf->wDuration = (u16)s_uGetDataDuration(pDevice, DATADUR_B,
- 				byPktType, bNeedAck);
--            if (uDMAIdx != TYPE_ATIMDMA) {
-                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
--            }
-+
-             return (pBuf->wDuration);
-     }
-     return 0;
-@@ -826,8 +803,8 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
-     }
- 
-     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
--        if (byFBOption != AUTO_FB_NONE && uDMAIdx != TYPE_ATIMDMA && uDMAIdx != TYPE_BEACONDMA) {
--            // Auto Fall back
-+	if (byFBOption != AUTO_FB_NONE) {
-+		/* Auto Fall back */
- 		struct vnt_cts_fb *pBuf = (struct vnt_cts_fb *)pvCTS;
-             //Get SignalField,ServiceField,Length
-             BBvCalculateParameter(pDevice, uCTSFrameLen, pDevice->byTopCCKBasicRate, PK_TYPE_11B,
-@@ -849,7 +826,7 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 		pBuf->data.duration = pBuf->wDuration_ba;
- 		pBuf->data.frame_control = TYPE_CTL_CTS;
- 		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
--        } else { //if (byFBOption != AUTO_FB_NONE && uDMAIdx != TYPE_ATIMDMA && uDMAIdx != TYPE_BEACONDMA)
-+	} else {
- 		struct vnt_cts *pBuf = (struct vnt_cts *)pvCTS;
-             //Get SignalField,ServiceField,Length
-             BBvCalculateParameter(pDevice, uCTSFrameLen, pDevice->byTopCCKBasicRate, PK_TYPE_11B,
-@@ -1462,11 +1439,7 @@ static void s_vGenerateMACHeader(struct vnt_private *pDevice,
- {
- 	struct ieee80211_hdr *pMACHeader = (struct ieee80211_hdr *)pbyBufferAddr;
- 
--    if (uDMAIdx == TYPE_ATIMDMA) {
--    	pMACHeader->frame_control = TYPE_802_11_ATIM;
--    } else {
--        pMACHeader->frame_control = TYPE_802_11_DATA;
--    }
-+	pMACHeader->frame_control = TYPE_802_11_DATA;
- 
-     if (pDevice->eOPMode == OP_MODE_AP) {
- 	memcpy(&(pMACHeader->addr1[0]),
 -- 
-1.8.1.2
+Regards,
+Oleksij
 
+--------------050702050000000407050200
+Content-Type: text/x-patch;
+ name="interval.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="interval.diff"
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 5205a36..6f4f39c 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -1053,7 +1053,7 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev)
+ 				== USB_ENDPOINT_XFER_INT) {
+ 			endp->bmAttributes &= ~USB_ENDPOINT_XFERTYPE_MASK;
+ 			endp->bmAttributes |= USB_ENDPOINT_XFER_BULK;
+-			endp->bInterval = 0;
++	//		endp->bInterval = 0;
+ 		}
+ 	}
+ 
+
+--------------050702050000000407050200--
