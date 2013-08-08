@@ -1,31 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50710 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890Ab3HSK25 (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:35881 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab3HHGpe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 06:28:57 -0400
-Message-ID: <1376908128.14734.7.camel@jlt4.sipsolutions.net> (sfid-20130819_122859_811362_02553DCF)
-Subject: Re: [PATCH] net: rfkill: Check the return value of
- regulator_enable()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Date: Mon, 19 Aug 2013 12:28:48 +0200
-In-Reply-To: <1376775367-17068-1-git-send-email-festevam@gmail.com> (sfid-20130817_233637_078502_E8973748)
-References: <1376775367-17068-1-git-send-email-festevam@gmail.com>
-	 (sfid-20130817_233637_078502_E8973748)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 8 Aug 2013 02:45:34 -0400
+MIME-Version: 1.0
+In-Reply-To: <5202D173.4050408@hauke-m.de>
+References: <1375865563-1196-1-git-send-email-arik@wizery.com> <5202D173.4050408@hauke-m.de>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 8 Aug 2013 09:45:17 +0300
+Message-ID: <CA+XVXfdAUZGj7FjfRUxT2noa1b35xk1vn0bdcO70Vic6h9yXcg@mail.gmail.com> (sfid-20130808_084537_541460_A00A6F46)
+Subject: Re: [PATCH] backports: rename some mem functions to not break custom kernels
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org,
+	"backports@vger.kernel.org" <backports@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-08-17 at 18:36 -0300, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> Fix the following build warning:
+On Thu, Aug 8, 2013 at 2:00 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Please add backports mailing list ( backports@vger.kernel.org ) next time.
 
-I already have a fix for this in my tree.
+Ok. Thanks.
 
-johannes
 
+>> diff --git a/backport/backport-include/asm/mtrr.h b/backport/backport-include/asm/mtrr.h
+>> index cf0f6fd..c5760b4 100644
+>> --- a/backport/backport-include/asm/mtrr.h
+>> +++ b/backport/backport-include/asm/mtrr.h
+>> @@ -7,14 +7,17 @@
+>>   * The following functions are for use by other drivers that cannot use
+>>   * arch_phys_wc_add and arch_phys_wc_del.
+>>   */
+>> +#ifndef phys_wc_to_mtrr_index
+>>  #ifdef CONFIG_MTRR
+>> -extern int phys_wc_to_mtrr_index(int handle);
+>> +extern int backport_phys_wc_to_mtrr_index(int handle);
+>>  #else
+>> -static inline int phys_wc_to_mtrr_index(int handle)
+>> +static inline int backport_phys_wc_to_mtrr_index(int handle)
+>>  {
+>>       return -1;
+>>  }
+>>  #endif /* CONFIG_MTRR */
+>> +#define phys_wc_to_mtrr_index LINUX_BACKPORT(phys_wc_to_mtrr_index)
+>
+> You should put this line before the #ifndef phy_.... and then you do not
+> have to use backport_phys_wc_to_mtrr_index with the prefix anywhere in
+> backports. This also applies for the other places where you manually add
+> backport_.
+
+The case I'm trying to un-break here is one where the symbol is
+defined by the kernel, even though it's not supposed to. This can
+happen if someone cherry-picks patches containing this symbol into
+their kernel.
+The backported driver is better off using the kernel symbol in that
+case I guess?
+
+Arik
