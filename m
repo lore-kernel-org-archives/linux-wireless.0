@@ -1,189 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:59884 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932343Ab3HGU03 (ORCPT
+Received: from diserzione.investici.org ([82.221.99.153]:29268 "EHLO
+	diserzione.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758112Ab3HHXYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 16:26:29 -0400
-Received: by mail-wg0-f44.google.com with SMTP id l18so1888597wgh.11
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Aug 2013 13:26:28 -0700 (PDT)
-Message-ID: <1375907172.5626.37.camel@canaries64> (sfid-20130807_222633_206613_DAD6D099)
-Subject: [PATCH 1/4] staging: vt6656: rxtx.c: s_uGetDataDuration remove
- First Frag or Mid Frag dead code.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 07 Aug 2013 21:26:12 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 8 Aug 2013 19:24:44 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv2] cfg/nl80211: send CMD_INTERFACE event on NETDEV_UNREGISTER
+Date: Fri,  9 Aug 2013 01:24:35 +0200
+Message-Id: <1376004275-606-1-git-send-email-ordex@autistici.org> (sfid-20130809_012446_788246_E0D30B94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver always calls s_uGetDataDuration with;
-uFragIdx = 0, cbLastFragmentSize = 0 and uMACfragNum = 1
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-uFragIdx == (uMACfragNum-1) is always true and bLastFrag = 1.
+Userspace applications may be listening for events (e.g.
+matching mgmt frame) on a given interface. If such interface
+is deleted they would keep hanging because no event will be
+delivered anymore.
 
-Remove dead First Frag or Mid Frag if/else and variables.
+Send a CMD_INTERFACE event on NETDEV_UNREGISTER to notify
+userspace that the interface does not exist anymore.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- drivers/staging/vt6656/rxtx.c | 105 +-----------------------------------------
- 1 file changed, 1 insertion(+), 104 deletions(-)
+ net/wireless/core.c    |  2 ++
+ net/wireless/nl80211.c | 31 +++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h |  3 +++
+ 3 files changed, 36 insertions(+)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index b26fb2a..d3b9a6b 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -392,147 +392,44 @@ static u32 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
- 	u32 uFragIdx, u32 cbLastFragmentSize, u32 uMACfragNum,
- 	u8 byFBOption)
- {
--	int bLastFrag = 0;
--	u32 uAckTime = 0, uNextPktTime = 0;
--
--    if (uFragIdx == (uMACfragNum-1)) {
--        bLastFrag = 1;
--    }
-+	u32 uAckTime = 0;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 389a3f2..ae4c148 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -913,6 +913,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 			}
+ 		break;
+ 	case NETDEV_UNREGISTER:
++		nl80211_send_del_iface(rdev, dev, GFP_KERNEL);
++
+ 		/*
+ 		 * It is possible to get NETDEV_UNREGISTER
+ 		 * multiple times. To detect that, check
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f7cb121..61be4ea 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10022,6 +10022,37 @@ void nl80211_send_disconnected(struct cfg80211_registered_device *rdev,
  
-     switch (byDurType) {
+ }
  
-     case DATADUR_B:    //DATADUR_B
--        if (((uMACfragNum == 1)) || (bLastFrag == 1)) {//Non Frag or Last Frag
-             if (bNeedAck) {
-             	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
-                 return (pDevice->uSIFS + uAckTime);
-             } else {
-                 return 0;
-             }
--        }
--        else {//First Frag or Mid Frag
--            if (uFragIdx == (uMACfragNum-2)) {
--            	uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbLastFragmentSize, wRate, bNeedAck);
--            } else {
--                uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wRate, bNeedAck);
--            }
--            if (bNeedAck) {
--            	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
--                return (pDevice->uSIFS + uAckTime + uNextPktTime);
--            } else {
--                return (pDevice->uSIFS + uNextPktTime);
--            }
--        }
-         break;
++void nl80211_send_del_iface(struct cfg80211_registered_device *rdev,
++			    struct net_device *netdev, gfp_t gfp)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_DEL_INTERFACE);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
++	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex))
++		goto nla_put_failure;
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
+ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
+ 			     struct net_device *netdev, const u8 *bssid,
+ 			     gfp_t gfp)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 44341bf..6071557 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -59,6 +59,9 @@ nl80211_send_beacon_hint_event(struct wiphy *wiphy,
+ 			       struct ieee80211_channel *channel_before,
+ 			       struct ieee80211_channel *channel_after);
  
-     case DATADUR_A:    //DATADUR_A
--        if (((uMACfragNum==1)) || (bLastFrag==1)) {//Non Frag or Last Frag
-             if(bNeedAck){
-             	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
-                 return (pDevice->uSIFS + uAckTime);
-             } else {
-                 return 0;
-             }
--        }
--        else {//First Frag or Mid Frag
--            if(uFragIdx == (uMACfragNum-2)){
--            	uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbLastFragmentSize, wRate, bNeedAck);
--            } else {
--                uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wRate, bNeedAck);
--            }
--            if(bNeedAck){
--            	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
--                return (pDevice->uSIFS + uAckTime + uNextPktTime);
--            } else {
--                return (pDevice->uSIFS + uNextPktTime);
--            }
--        }
-         break;
- 
-     case DATADUR_A_F0:    //DATADUR_A_F0
--	    if (((uMACfragNum==1)) || (bLastFrag==1)) {//Non Frag or Last Frag
-             if(bNeedAck){
-             	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
-                 return (pDevice->uSIFS + uAckTime);
-             } else {
-                 return 0;
-             }
--        }
--	    else { //First Frag or Mid Frag
--	        if (byFBOption == AUTO_FB_0) {
--                if (wRate < RATE_18M)
--                    wRate = RATE_18M;
--                else if (wRate > RATE_54M)
--                    wRate = RATE_54M;
--
--	            if(uFragIdx == (uMACfragNum-2)){
--            	    uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbLastFragmentSize, wFB_Opt0[FB_RATE0][wRate-RATE_18M], bNeedAck);
--                } else {
--                    uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wFB_Opt0[FB_RATE0][wRate-RATE_18M], bNeedAck);
--                }
--	        } else { // (byFBOption == AUTO_FB_1)
--                if (wRate < RATE_18M)
--                    wRate = RATE_18M;
--                else if (wRate > RATE_54M)
--                    wRate = RATE_54M;
--
--	            if(uFragIdx == (uMACfragNum-2)){
--            	    uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbLastFragmentSize, wFB_Opt1[FB_RATE0][wRate-RATE_18M], bNeedAck);
--                } else {
--                    uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wFB_Opt1[FB_RATE0][wRate-RATE_18M], bNeedAck);
--                }
--	        }
--
--	        if(bNeedAck){
--            	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
--                return (pDevice->uSIFS + uAckTime + uNextPktTime);
--            } else {
--                return (pDevice->uSIFS + uNextPktTime);
--            }
--	    }
-         break;
- 
-     case DATADUR_A_F1:    //DATADUR_A_F1
--        if (((uMACfragNum==1)) || (bLastFrag==1)) {//Non Frag or Last Frag
-             if(bNeedAck){
-             	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
-                 return (pDevice->uSIFS + uAckTime);
-             } else {
-                 return 0;
-             }
--        }
--	    else { //First Frag or Mid Frag
--	        if (byFBOption == AUTO_FB_0) {
--                if (wRate < RATE_18M)
--                    wRate = RATE_18M;
--                else if (wRate > RATE_54M)
--                    wRate = RATE_54M;
--
--	            if(uFragIdx == (uMACfragNum-2)){
--            	    uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbLastFragmentSize, wFB_Opt0[FB_RATE1][wRate-RATE_18M], bNeedAck);
--                } else {
--                    uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wFB_Opt0[FB_RATE1][wRate-RATE_18M], bNeedAck);
--                }
--
--	        } else { // (byFBOption == AUTO_FB_1)
--                if (wRate < RATE_18M)
--                    wRate = RATE_18M;
--                else if (wRate > RATE_54M)
--                    wRate = RATE_54M;
--
--	            if(uFragIdx == (uMACfragNum-2)){
--            	    uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbLastFragmentSize, wFB_Opt1[FB_RATE1][wRate-RATE_18M], bNeedAck);
--                } else {
--                    uNextPktTime = s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wFB_Opt1[FB_RATE1][wRate-RATE_18M], bNeedAck);
--                }
--	        }
--	        if(bNeedAck){
--            	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
--                return (pDevice->uSIFS + uAckTime + uNextPktTime);
--            } else {
--                return (pDevice->uSIFS + uNextPktTime);
--            }
--	    }
-         break;
- 
-     default:
++void nl80211_send_del_iface(struct cfg80211_registered_device *rdev,
++			    struct net_device *netdev, gfp_t gfp);
++
+ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
+ 			     struct net_device *netdev, const u8 *bssid,
+ 			     gfp_t gfp);
 -- 
-1.8.1.2
-
+1.8.1.5
 
