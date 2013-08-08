@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54480 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755155Ab3HFJAw (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:39774 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757795Ab3HHNXU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 05:00:52 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1V6d8L-00025k-Nm
-	for linux-wireless@vger.kernel.org; Tue, 06 Aug 2013 11:00:50 +0200
-Message-ID: <1375779646.8219.10.camel@jlt4.sipsolutions.net> (sfid-20130806_110056_189091_ACFC016E)
-Subject: Re: [PATCH] wireless: make TU conversion macros available
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 8 Aug 2013 09:23:20 -0400
+Received: by mail-lb0-f178.google.com with SMTP id z5so2406541lbh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Aug 2013 06:23:17 -0700 (PDT)
+From: Johan Almbladh <ja@anyfi.net>
 To: linux-wireless@vger.kernel.org
-Date: Tue, 06 Aug 2013 11:00:46 +0200
-In-Reply-To: <1375362444-7630-1-git-send-email-johannes@sipsolutions.net> (sfid-20130801_150732_308148_78046B0B)
-References: <1375362444-7630-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130801_150732_308148_78046B0B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: johannes@sipsolutions.net, Johan Almbladh <ja@anyfi.net>
+Subject: [RFC] mac80211: add support for split-MAC implementations
+Date: Thu,  8 Aug 2013 15:21:56 +0200
+Message-Id: <1375968116-24331-1-git-send-email-ja@anyfi.net> (sfid-20130808_152323_403398_02DCB2EC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-08-01 at 15:07 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> A few places in the code (mac80211 and iwlmvm) use the same
-> TU_TO_JIFFIES() macro and could use TU_TO_EXP_TIME() that
-> mac80211 has. Make these available to everyone and use them.
+This patch enables power save processing for encrypted frames even if the
+encryption key is not set. This is a requirement when implementing split-MAC
+systems like Anyfi.net [1] and CAPWAP [2] on mac80211 using monitor frame
+injection and reception. The mac80211 RX handlers are reordered slightly so
+that the power save handler is invoked before the decryption handler.
 
-Applied.
+The patch is minimal in the sense that it provides the required functionality
+with a minimal change, but I am open to suggestions if this change is too
+intrusive. Please let me know what you think.
 
-johannes
+[1] http://anyfi.net/documentation#architecture
+[2] http://tools.ietf.org/html/rfc5416
+
+Signed-off-by: Johan Almbladh <ja@anyfi.net>
+---
+ net/mac80211/rx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6b85f95..0f0017d 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2939,10 +2939,10 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
+ 		 */
+ 		rx->skb = skb;
+ 
+-		CALL_RXH(ieee80211_rx_h_decrypt)
+ 		CALL_RXH(ieee80211_rx_h_check_more_data)
+ 		CALL_RXH(ieee80211_rx_h_uapsd_and_pspoll)
+ 		CALL_RXH(ieee80211_rx_h_sta_process)
++		CALL_RXH(ieee80211_rx_h_decrypt)
+ 		CALL_RXH(ieee80211_rx_h_defragment)
+ 		CALL_RXH(ieee80211_rx_h_michael_mic_verify)
+ 		/* must be after MMIC verify so header is counted in MPDU mic */
+-- 
+1.7.9.5
 
