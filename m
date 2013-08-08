@@ -1,54 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:39774 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757795Ab3HHNXU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 09:23:20 -0400
-Received: by mail-lb0-f178.google.com with SMTP id z5so2406541lbh.37
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Aug 2013 06:23:17 -0700 (PDT)
-From: Johan Almbladh <ja@anyfi.net>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Johan Almbladh <ja@anyfi.net>
-Subject: [RFC] mac80211: add support for split-MAC implementations
-Date: Thu,  8 Aug 2013 15:21:56 +0200
-Message-Id: <1375968116-24331-1-git-send-email-ja@anyfi.net> (sfid-20130808_152323_403398_02DCB2EC)
+Received: from orbit.nwl.cc ([176.31.251.142]:44889 "EHLO mail.nwl.cc"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966555Ab3HHVOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Aug 2013 17:14:31 -0400
+Date: Thu, 8 Aug 2013 23:13:58 +0200
+From: Phil Sutter <phil@nwl.cc>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: sedat.dilek@gmail.com, David Miller <davem@davemloft.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	wireless <linux-wireless@vger.kernel.org>, netdev@vger.kernel.org
+Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+References: <CA+icZUXpZaHu-FjR6FGnbkG0XEkiukEgYYbDmrSjdqNz4rWCNg@mail.gmail.com>
+ <1375816128.8219.28.camel@jlt4.sipsolutions.net>
+ <CA+icZUXaTYVc_iv3hny6Je9mVdX8KCVpFSNBeukS+Fh-347Wvw@mail.gmail.com>
+ <1375816715.8219.29.camel@jlt4.sipsolutions.net>
+ <CA+icZUXdAjEDgu2XrA4Dg2hsLDJYdFTCpJwiW6=ZUgULe2noyw@mail.gmail.com>
+ <CA+icZUVmokQ1fKmtbuPyp7f5Z2wdFYfjG5HCAm4Kue7efyKV8w@mail.gmail.com>
+ <20130806213006.078C72210F@mail.nwl.cc>
+ <CA+icZUVk1HM-VVYcARvY7p5KBYz0YcY9+rW8s-nKPTeVYh4tgw@mail.gmail.com>
+ <1375825538.10459.1.camel@jlt4.sipsolutions.net>
+ <1375826322.10459.6.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1375826322.10459.6.camel@jlt4.sipsolutions.net>
+Message-Id: <20130808211404.467E620819@mail.nwl.cc> (sfid-20130808_231438_802465_CDE7F0DD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables power save processing for encrypted frames even if the
-encryption key is not set. This is a requirement when implementing split-MAC
-systems like Anyfi.net [1] and CAPWAP [2] on mac80211 using monitor frame
-injection and reception. The mac80211 RX handlers are reordered slightly so
-that the power save handler is invoked before the decryption handler.
+On Tue, Aug 06, 2013 at 11:58:42PM +0200, Johannes Berg wrote:
+> On Tue, 2013-08-06 at 23:45 +0200, Johannes Berg wrote:
+> 
+> > I think skb->protocol is probably getting set up wrong, and just putting
+> > back the last two lines
+> > 
+> >         skb->protocol = proto;
+> >         skb->dev = dev;
+> > 
+> > is probably sufficient to fix wifi. If skb->protocol isn't set to
+> > ETH_P_PAE, then we'd drop the packet in the wifi stack - might be worth
+> > printing out what it's set to at the point where the skb->protocol
+> > assignment above was removed.
+> > 
+> > I'm trying to wrap my head around all this right now but I don't yet see
+> > how the code after the patch would not get skb->protocol correct.
+> 
+> Actually, I think that's not it, but the code now behaves totally
+> differently?
+> 
+> Say this is the frame data with two points marked:
+> 
+> (1)                   (2)
+>  | dst | src | ethtype | ... |
+> 
+> As I understand it (in my admittedly rather tired state), previously we
+> had
+> 
+> skb_network_header() == (1)
+> skb_mac_header()     == (1)
+> skb->data            == (1)
+> 
+> After calling eth_type_trans(), we get
+> 
+> skb_network_header() == (1)
+> skb_mac_header()     == (1)
+> skb->data            == (2)
+> 
+> I think? Maybe I'm totally confused though.
 
-The patch is minimal in the sense that it provides the required functionality
-with a minimal change, but I am open to suggestions if this change is too
-intrusive. Please let me know what you think.
+Yes, indeed. And it's the explanation for at least some of the problems
+that arose with my doubtful change:
 
-[1] http://anyfi.net/documentation#architecture
-[2] http://tools.ietf.org/html/rfc5416
+Leaving my patch in place and reverting the above pointer by calling
+skb_push() after eth_type_trans(), the busybox DHCP client on my testing
+machine is functional again.
 
-Signed-off-by: Johan Almbladh <ja@anyfi.net>
----
- net/mac80211/rx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But as Dave has gone this path already (although in a different way) and
+it aparently didn't fix the wifi problem, there may be something else as
+well. Interestingly, my skb_push() hack from above fixes wpa_supplicant
+for me as well. So I will test Dave's patch myself tomorrow and search
+for the difference if I get the same result as Sedat.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6b85f95..0f0017d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2939,10 +2939,10 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
- 		 */
- 		rx->skb = skb;
- 
--		CALL_RXH(ieee80211_rx_h_decrypt)
- 		CALL_RXH(ieee80211_rx_h_check_more_data)
- 		CALL_RXH(ieee80211_rx_h_uapsd_and_pspoll)
- 		CALL_RXH(ieee80211_rx_h_sta_process)
-+		CALL_RXH(ieee80211_rx_h_decrypt)
- 		CALL_RXH(ieee80211_rx_h_defragment)
- 		CALL_RXH(ieee80211_rx_h_michael_mic_verify)
- 		/* must be after MMIC verify so header is counted in MPDU mic */
--- 
-1.7.9.5
-
+Best wishes, Phil
