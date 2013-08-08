@@ -1,77 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:63187 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756849Ab3HBHmH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 03:42:07 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: fix device teardown
-References: <1374129572-6079-1-git-send-email-michal.kazior@tieto.com>
-	<1375427747-9539-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 2 Aug 2013 10:41:56 +0300
-In-Reply-To: <1375427747-9539-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 2 Aug 2013 09:15:47 +0200")
-Message-ID: <87bo5gpmij.fsf@kamboji.qca.qualcomm.com> (sfid-20130802_094211_379336_8A4BF3CF)
+Received: from ebb06.tieto.com ([131.207.168.38]:47996 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933986Ab3HHIOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Aug 2013 04:14:17 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/4] ath10k: clean up monitor start code
+Date: Thu, 8 Aug 2013 10:14:07 +0200
+Message-ID: <1375949650-9699-2-git-send-email-michal.kazior@tieto.com> (sfid-20130808_101424_485358_B08D40F0)
+In-Reply-To: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
+References: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Remove useless code that was causing WARN_ON when
+a 80MHz+ vif entered promiscuous mode or monitor
+interface was started.
 
-> This fixes interrupt-related issue when no
-> interfaces were running thus the device was
-> considered powered down.
->
-> The power_down() function isn't really powering
-> down the device. It simply assumed it won't
-> interrupt. This wasn't true in some cases and
-> could lead to paging failures upon FW indication
-> interrupt (i.e. FW crash) because some structures
-> aren't allocated in that device state.
->
-> One reason for that was that ar_pci->started
-> wasn't reset. The other is interrupts should've
-> been masked when teardown starts.
->
-> The patch reorganized interrupt setup and makes
-> sure ar_pci->started is reset accordingly.
->
-> Reported-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-> v2:
->  * updated commit message
->  * added Reported-By: Ben
->  * added disable_irq() in hif_stop()
->  * added ar_pci->started resetting
->  * removed ar_pci->intr_started
+The channel mode is already computed by
+chan_to_phymode().
 
-Thanks, this looks much better now.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-But I still have one question:
-
-> @@ -1742,6 +1761,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
->  {
->  	int ret;
->  
-> +	ret = ath10k_pci_start_intr(ar);
-> +	if (ret) {
-> +		ath10k_err("could not start interrupt handling (%d)\n", ret);
-> +		goto err;
-> +	}
-
-So now we call start_intr() during power_up(), which means that we do
-the request_irq() calls during every interface up event. Does that cause
-any meaningful overhead?
-
-For me it looks better to do all resource allocation in
-ath10k_pci_probe(), like request_irq(), and free the resources in
-ath10k_pci_remove(). But then we would need to immeadiately call
-disable_irq() and then enable_irq() from power_up() so I'm not sure if
-that's any better.
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index cf2ba4d..05f5f76 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -503,13 +503,10 @@ static int ath10k_monitor_start(struct ath10k *ar, int vdev_id)
+ {
+ 	struct ieee80211_channel *channel = ar->hw->conf.chandef.chan;
+ 	struct wmi_vdev_start_request_arg arg = {};
+-	enum nl80211_channel_type type;
+ 	int ret = 0;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	type = cfg80211_get_chandef_type(&ar->hw->conf.chandef);
+-
+ 	arg.vdev_id = vdev_id;
+ 	arg.channel.freq = channel->center_freq;
+ 	arg.channel.band_center_freq1 = ar->hw->conf.chandef.center_freq1;
 -- 
-Kalle Valo
+1.7.9.5
+
