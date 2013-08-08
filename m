@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:59715 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757218Ab3HGHDJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 03:03:09 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 0/2] Antenna diversity fixes
-Date: Wed,  7 Aug 2013 12:29:26 +0530
-Message-Id: <1375858768-24655-1-git-send-email-sujith@msujith.org> (sfid-20130807_090315_736673_D9D15C81)
+Received: from ebb05.tieto.com ([131.207.168.36]:57482 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933981Ab3HHIRA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Aug 2013 04:17:00 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/4] ath10k: implement 802.3 SNAP rx decap type A-MSDU handling
+Date: Thu, 8 Aug 2013 10:16:52 +0200
+Message-ID: <1375949813-10969-4-git-send-email-michal.kazior@tieto.com> (sfid-20130808_101709_217968_6811B3F5)
+In-Reply-To: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
+References: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This enables driver to rx another decapped a-msdu
+frames. It should possibly help with throughputs
+in some cases and reduce (or eliminate) number of
+messages like this:
 
-Hi,
+  ath10k: error processing msdus -524
 
-Antenna diversity support for WLAN/BT combo cards WB195 and WB225
-is fairly complete. WB335, which is based on AR9565 requires more
-fixes.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-More information is here:
-http://wireless.kernel.org/en/users/Drivers/ath9k/antennadiversity
-
-Sujith
-
-Sujith Manoharan (2):
-  ath9k: Fix BTCOEX usage for RX diversity
-  ath9k: Run the LNA combining algorithm properly
-
- drivers/net/wireless/ath/ath9k/init.c |  4 +--
- drivers/net/wireless/ath/ath9k/recv.c | 46 ++++++++++++++++++++++-------------
- 2 files changed, 31 insertions(+), 19 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index e784c40..9b93aed 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -610,8 +610,7 @@ static int ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
+ 			RX_MPDU_START_INFO0_ENCRYPT_TYPE);
+ 
+ 	/* FIXME: No idea what assumptions are safe here. Need logs */
+-	if ((fmt == RX_MSDU_DECAP_RAW && skb->next) ||
+-	    (fmt == RX_MSDU_DECAP_8023_SNAP_LLC)) {
++	if ((fmt == RX_MSDU_DECAP_RAW && skb->next)) {
+ 		ath10k_htt_rx_free_msdu_chain(skb->next);
+ 		skb->next = NULL;
+ 		return -ENOTSUPP;
+@@ -659,6 +658,15 @@ static int ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
+ 			decap_hdr += roundup(crypto_len, 4);
+ 		}
+ 
++		if (fmt == RX_MSDU_DECAP_8023_SNAP_LLC) {
++			/* SNAP 802.3 consists of:
++			 * [dst:6][src:6][len:2][dsap:1][ssap:1][ctl:1][snap:5]
++			 * [data][fcs:4].
++			 *
++			 * Since this overlaps with A-MSDU header (da, sa, len)
++			 * there's nothing extra to do. */
++		}
++
+ 		if (fmt == RX_MSDU_DECAP_ETHERNET2_DIX) {
+ 			/* Ethernet2 decap inserts ethernet header in place of
+ 			 * A-MSDU subframe header. */
 -- 
-1.8.3.4
+1.7.9.5
 
