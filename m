@@ -1,312 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:43901 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754156Ab3HBPiT (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:58187 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966738Ab3HHWGR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 11:38:19 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 3/7] mac80211: split off channel switch parsing function
-Date: Fri,  2 Aug 2013 17:38:02 +0200
-Message-Id: <1375457886-7275-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130802_173839_900471_6B71A9CF)
-In-Reply-To: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Thu, 8 Aug 2013 18:06:17 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: FUSB200 xhci issue
+Date: Fri, 9 Aug 2013 00:06:06 +0200
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"ath9k_htc_fw" <ath9k_htc_fw@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+References: <Pine.LNX.4.44L0.1308081617010.1120-100000@iolanthe.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1308081617010.1120-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201308090006.07690.chunkeey@googlemail.com> (sfid-20130809_000623_690921_A1762F7C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The channel switch parsing function can be re-used for the IBSS code,
-put the common part into an extra function.
+On Thursday 08 August 2013 22:19:32 Alan Stern wrote:
+> On Thu, 8 Aug 2013, Christian Lamparter wrote:
+> 
+> > Anyway, I do have a question about something else too.
+> > 
+> > in ath9k_htc's hif_usb:
+> > 
+> > > struct usb_host_interface *alt = &hif_dev->interface->altsetting[0];
+> > > struct usb_endpoint_descriptor *endp;
+> > > ...
+> > > /* On downloading the firmware to the target, the USB descriptor of EP4
+> > >  * is 'patched' to change the type of the endpoint to Bulk. This will
+> > >  * bring down CPU usage during the scan period. */
+> > >
+> > > for (idx = 0; idx < alt->desc.bNumEndpoints; idx++) {
+> > >   endp = &alt->endpoint[idx].desc;
+> > >   if ((endp->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_INT) {
+> > >     endp->bmAttributes &= ~USB_ENDPOINT_XFERTYPE_MASK;
+> > >     endp->bmAttributes |= USB_ENDPOINT_XFER_BULK;
+> > >//     endp->bInterval = 0;
+> > >   }
+> > > }
+> > 
+> > Alan, can you please tell us, if it is really safe to
+> > override the bmAttributes this way? After all (according to
+> > the comment) the device has "morphed" (EP4 has changed).
+> 
+> This does not look like a good idea.  Why does the driver do it?
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/mac80211/ieee80211_i.h |   22 +++++++
- net/mac80211/mlme.c        |  136 ++++++++++++++++++++++++--------------------
- 2 files changed, 97 insertions(+), 61 deletions(-)
+Probably because people use ath9k_htc devices with everything that
+has some sort of usb port (devkits and embedded systems: Dockstar,
+Rasberry Pi, ...) to get "wifi connectivity". ...
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e94c840..1275bde 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1333,6 +1333,9 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				   struct sk_buff *skb);
-+int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
-+			      struct cfg80211_csa_settings *csa_settings);
-+int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata);
- 
- /* mesh code */
- void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata);
-@@ -1560,6 +1563,25 @@ static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
- u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc);
-+
-+/**
-+ * ieee80211_parse_ch_switch_ie - parses channel switch IEs
-+ * @sdata: the sdata of the interface which has received the frame
-+ * @elems: parsed 802.11 elements received with the frame
-+ * @beacon: indicates if the frame was a beacon or probe response
-+ * @current_band: indicates the current band
-+ * @sta_flags: contains information about own capabilities and restrictions
-+ * @count: to be filled with the counter until the switch (on success only)
-+ * @mode: to be filled with CSA mode (on success only)
-+ * @new_chandef: to be filled with destination chandef (on success only)
-+ * Return: 0 on success, <0 on error and >0 if there is nothing to parse.
-+ */
-+int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
-+				 struct ieee802_11_elems *elems, bool beacon,
-+				 enum ieee80211_band current_band,
-+				 u32 sta_flags, u8 *count, u8 *mode,
-+				 struct cfg80211_chan_def *new_chandef);
-+
- static inline void ieee802_11_parse_elems(const u8 *start, size_t len,
- 					  bool action,
- 					  struct ieee802_11_elems *elems)
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 45a87ee..60554c8 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -981,54 +981,35 @@ static void ieee80211_chswitch_timer(unsigned long data)
- 	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.chswitch_work);
- }
- 
--static void
--ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
--				 u64 timestamp, struct ieee802_11_elems *elems,
--				 bool beacon)
-+int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
-+				 struct ieee802_11_elems *elems, bool beacon,
-+				 enum ieee80211_band current_band,
-+				 u32 sta_flags, u8 *count, u8 *mode,
-+				 struct cfg80211_chan_def *new_chandef)
- {
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--	struct cfg80211_bss *cbss = ifmgd->associated;
--	struct ieee80211_bss *bss;
--	struct ieee80211_chanctx *chanctx;
- 	enum ieee80211_band new_band;
- 	int new_freq;
- 	u8 new_chan_no;
--	u8 count;
--	u8 mode;
- 	struct ieee80211_channel *new_chan;
--	struct cfg80211_chan_def new_chandef = {};
- 	struct cfg80211_chan_def new_vht_chandef = {};
- 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
- 	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
- 	const struct ieee80211_ht_operation *ht_oper;
- 	int secondary_channel_offset = -1;
- 
--	sdata_assert_lock(sdata);
--
--	if (!cbss)
--		return;
--
--	if (local->scanning)
--		return;
--
--	/* disregard subsequent announcements if we are already processing */
--	if (ifmgd->flags & IEEE80211_STA_CSA_RECEIVED)
--		return;
--
- 	sec_chan_offs = elems->sec_chan_offs;
- 	wide_bw_chansw_ie = elems->wide_bw_chansw_ie;
- 	ht_oper = elems->ht_operation;
- 
--	if (ifmgd->flags & (IEEE80211_STA_DISABLE_HT |
--			    IEEE80211_STA_DISABLE_40MHZ)) {
-+	if (sta_flags & (IEEE80211_STA_DISABLE_HT |
-+			 IEEE80211_STA_DISABLE_40MHZ)) {
- 		sec_chan_offs = NULL;
- 		wide_bw_chansw_ie = NULL;
- 		/* only used for bandwidth here */
- 		ht_oper = NULL;
- 	}
- 
--	if (ifmgd->flags & IEEE80211_STA_DISABLE_VHT)
-+	if (sta_flags & IEEE80211_STA_DISABLE_VHT)
- 		wide_bw_chansw_ie = NULL;
- 
- 	if (elems->ext_chansw_ie) {
-@@ -1038,33 +1019,28 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			sdata_info(sdata,
- 				   "cannot understand ECSA IE operating class %d, disconnecting\n",
- 				   elems->ext_chansw_ie->new_operating_class);
--			ieee80211_queue_work(&local->hw,
--					     &ifmgd->csa_connection_drop_work);
-+			return -EINVAL;
- 		}
- 		new_chan_no = elems->ext_chansw_ie->new_ch_num;
--		count = elems->ext_chansw_ie->count;
--		mode = elems->ext_chansw_ie->mode;
-+		*count = elems->ext_chansw_ie->count;
-+		*mode = elems->ext_chansw_ie->mode;
- 	} else if (elems->ch_switch_ie) {
--		new_band = cbss->channel->band;
-+		new_band = current_band;
- 		new_chan_no = elems->ch_switch_ie->new_ch_num;
--		count = elems->ch_switch_ie->count;
--		mode = elems->ch_switch_ie->mode;
-+		*count = elems->ch_switch_ie->count;
-+		*mode = elems->ch_switch_ie->mode;
- 	} else {
- 		/* nothing here we understand */
--		return;
-+		return 1;
- 	}
- 
--	bss = (void *)cbss->priv;
--
- 	new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
- 	new_chan = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
- 	if (!new_chan || new_chan->flags & IEEE80211_CHAN_DISABLED) {
- 		sdata_info(sdata,
--			   "AP %pM switches to unsupported channel (%d MHz), disconnecting\n",
--			   ifmgd->associated->bssid, new_freq);
--		ieee80211_queue_work(&local->hw,
--				     &ifmgd->csa_connection_drop_work);
--		return;
-+			   "network switches to unsupported channel (%d MHz), disconnecting\n",
-+			   new_freq);
-+		return -EINVAL;
- 	}
- 
- 	if (!beacon && sec_chan_offs) {
-@@ -1072,7 +1048,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	} else if (beacon && ht_oper) {
- 		secondary_channel_offset =
- 			ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET;
--	} else if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
-+	} else if (!(sta_flags & IEEE80211_STA_DISABLE_HT)) {
- 		/*
- 		 * If it's not a beacon, HT is enabled and the IE not present,
- 		 * it's 20 MHz, 802.11-2012 8.5.2.6:
-@@ -1088,25 +1064,25 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	default:
- 		/* secondary_channel_offset was present but is invalid */
- 	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
--		cfg80211_chandef_create(&new_chandef, new_chan,
-+		cfg80211_chandef_create(new_chandef, new_chan,
- 					NL80211_CHAN_HT20);
- 		break;
- 	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--		cfg80211_chandef_create(&new_chandef, new_chan,
-+		cfg80211_chandef_create(new_chandef, new_chan,
- 					NL80211_CHAN_HT40PLUS);
- 		break;
- 	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--		cfg80211_chandef_create(&new_chandef, new_chan,
-+		cfg80211_chandef_create(new_chandef, new_chan,
- 					NL80211_CHAN_HT40MINUS);
- 		break;
- 	case -1:
--		cfg80211_chandef_create(&new_chandef, new_chan,
-+		cfg80211_chandef_create(new_chandef, new_chan,
- 					NL80211_CHAN_NO_HT);
- 		/* keep width for 5/10 MHz channels */
- 		switch (sdata->vif.bss_conf.chandef.width) {
- 		case NL80211_CHAN_WIDTH_5:
- 		case NL80211_CHAN_WIDTH_10:
--			new_chandef.width = sdata->vif.bss_conf.chandef.width;
-+			new_chandef->width = sdata->vif.bss_conf.chandef.width;
- 			break;
- 		default:
- 			break;
-@@ -1142,13 +1118,13 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			new_vht_chandef.width = NL80211_CHAN_WIDTH_80P80;
- 			break;
- 		}
--		if (ifmgd->flags & IEEE80211_STA_DISABLE_80P80MHZ &&
-+		if (sta_flags & IEEE80211_STA_DISABLE_80P80MHZ &&
- 		    new_vht_chandef.width == NL80211_CHAN_WIDTH_80P80)
- 			chandef_downgrade(&new_vht_chandef);
--		if (ifmgd->flags & IEEE80211_STA_DISABLE_160MHZ &&
-+		if (sta_flags & IEEE80211_STA_DISABLE_160MHZ &&
- 		    new_vht_chandef.width == NL80211_CHAN_WIDTH_160)
- 			chandef_downgrade(&new_vht_chandef);
--		if (ifmgd->flags & IEEE80211_STA_DISABLE_40MHZ &&
-+		if (sta_flags & IEEE80211_STA_DISABLE_40MHZ &&
- 		    new_vht_chandef.width > NL80211_CHAN_WIDTH_20)
- 			chandef_downgrade(&new_vht_chandef);
- 	}
-@@ -1156,23 +1132,61 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	/* if VHT data is there validate & use it */
- 	if (new_vht_chandef.chan) {
- 		if (!cfg80211_chandef_compatible(&new_vht_chandef,
--						 &new_chandef)) {
-+						 new_chandef)) {
- 			sdata_info(sdata,
--				   "AP %pM CSA has inconsistent channel data, disconnecting\n",
--				   ifmgd->associated->bssid);
--			ieee80211_queue_work(&local->hw,
--					     &ifmgd->csa_connection_drop_work);
--			return;
-+				   "network CSA has inconsistent channel data, disconnecting\n");
-+			return -EINVAL;
- 		}
--		new_chandef = new_vht_chandef;
-+		*new_chandef = new_vht_chandef;
- 	}
- 
-+	return 0;
-+}
-+
-+static void
-+ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-+				 u64 timestamp, struct ieee802_11_elems *elems,
-+				 bool beacon)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct cfg80211_bss *cbss = ifmgd->associated;
-+	struct ieee80211_chanctx *chanctx;
-+	enum ieee80211_band current_band;
-+	u8 count;
-+	u8 mode;
-+	struct cfg80211_chan_def new_chandef = {};
-+	int res;
-+
-+	sdata_assert_lock(sdata);
-+
-+	if (!cbss)
-+		return;
-+
-+	if (local->scanning)
-+		return;
-+
-+	/* disregard subsequent announcements if we are already processing */
-+	if (ifmgd->flags & IEEE80211_STA_CSA_RECEIVED)
-+		return;
-+
-+	current_band = cbss->channel->band;
-+	res = ieee80211_parse_ch_switch_ie(sdata, elems, beacon, current_band,
-+					   ifmgd->flags, &count, &mode,
-+					   &new_chandef);
-+	if (res	< 0)
-+		ieee80211_queue_work(&local->hw,
-+				     &ifmgd->csa_connection_drop_work);
-+	if (res)
-+		return;
-+
- 	if (!cfg80211_chandef_usable(local->hw.wiphy, &new_chandef,
- 				     IEEE80211_CHAN_DISABLED)) {
- 		sdata_info(sdata,
--			   "AP %pM switches to unsupported channel (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
--			   ifmgd->associated->bssid, new_freq,
--			   new_chandef.width, new_chandef.center_freq1,
-+			   "network switches to unsupported channel (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
-+			   new_chandef.chan->center_freq,
-+			   new_chandef.width,
-+			   new_chandef.center_freq1,
- 			   new_chandef.center_freq2);
- 		ieee80211_queue_work(&local->hw,
- 				     &ifmgd->csa_connection_drop_work);
--- 
-1.7.10.4
 
+Yeah. I think we better ask "Rajkumar Manoharan" 
+(before I write more text out of thin air :-D )
+
+commit 4a0e8ecca4eeed38d4b3b7a317a3aaab4dd3cacd
+Author: Rajkumar Manoharan <rmanoharan@atheros.com>
+Date:   Tue Sep 14 14:35:55 2010 +0530
+
+    ath9k_htc: Fix CPU usage issue during scan period
+
+Does anyone know his Qualcomm Atheros address?
+ 
+> > Or, is it necessary for the driver call "usb_reset_device"
+> > or (usb_reset_configuration) in this case? 
+> 
+> After loading firmware, a reset generally is necessary.  Some devices 
+> will do it themselves; others require you to call usb_reset_device().
+
+This makes things complicated. Because, as far as I remember,
+usb_reset_device() will cause the current driver to be unbound
+unless its called during .probe, right?
+
+You see, ath9k_htc loads its firmware asynchronously in ".probe"
+(ath9k_htc's .probe routine finishes before the firmware is
+retrieved via the firmware loader helper... so part of the
+firmware download is done in a firmware_complete callback
+on a workqueue). 
+
+So, if we call usb_reset_device there and the driver is unbound
+and later rebound. the next ath9k_htc .probe will start again and
+again and again not knowing that it is already initialized 
+(and we have a loop).
+
+
+This could be solved, if the devices changes the usb-id again 
+when a proper "wifi" ath9k_htc firmware was downloaded. So, the
+driver would know that it doesn't have to download and reset
+the device... But we need a "free" USB-ID for that.
+
+Alan, Oleksij: What do you think?
+
+Regards,
+	Chr
