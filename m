@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:47028 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752Ab3H3AeN (ORCPT
+Received: from mail-qa0-f54.google.com ([209.85.216.54]:37837 "EHLO
+	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966455Ab3HHXS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Aug 2013 20:34:13 -0400
-Received: by mail-pb0-f48.google.com with SMTP id ma3so1142294pbc.35
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Aug 2013 17:34:13 -0700 (PDT)
+	Thu, 8 Aug 2013 19:18:28 -0400
+Received: by mail-qa0-f54.google.com with SMTP id bv4so623882qab.13
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Aug 2013 16:18:27 -0700 (PDT)
 MIME-Version: 1.0
-From: Blaise Gassend <blaise@suitabletech.com>
-Date: Thu, 29 Aug 2013 17:33:53 -0700
-Message-ID: <CAPvVjitJwgOH-LtGmbee22wnj=JPjeOY=6RDkBX4DVh_Aea+fg@mail.gmail.com> (sfid-20130830_023418_065102_30C29D98)
-Subject: 
-To: linux-wireless@vger.kernel.org
-Cc: Catalin Drula <catalin@suitabletech.com>
+In-Reply-To: <1376003573-1243-1-git-send-email-ordex@autistici.org>
+References: <1376003573-1243-1-git-send-email-ordex@autistici.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 9 Aug 2013 09:18:07 +1000
+Message-ID: <CAGRGNgV0n-nE9UFUiNyYqvgKNzrOE9zMuiRwxJvE5PZ1f6-EFA@mail.gmail.com> (sfid-20130809_011841_993338_5A3B91B4)
+Subject: Re: [PATCH] cfg/nl80211: send CMD_INTERFACE event on NETDEV_UNREGISTER
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Antonio,
 
-Tracking down a customer problem, I recently discovered that Linux
-does not currently support hidden SSIDs on DFS channels. As far as I
-can tell, there isn't a fundamental reason for this. You could switch
-to a frequency, listen for a beacon, once you see the beacon send a
-directed probe, and listen for responses. I'm sure there are folks on
-this list who have thought about this issue...
+On Fri, Aug 9, 2013 at 9:12 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+> From: Antonio Quartulli <antonio@open-mesh.com>
+>
+> Userspace applications may be listening for events (e.g.
+> matching mgmt frame) on a given interface. If such interface
+> is deleted they would keep hanging because no event will be
+> delivered anymore.
+>
+> Send a CMD_INTERFACE event on NETDEV_UNREGISTER to notify
+> userspace that the interface does not exist anymore.
+>
+> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+> ---
+>  net/wireless/Module.symvers | 118 ++++++++++++++++++++++++++++++++++++++++++++
 
-- Are there any reasons you know of why my proposed strategy would not
-work from a regulatory or technical point of view?
+I'm pretty sure you didn't mean to include this file =)
 
-- If a patch were prepared, is this something that would be considered
-for mainstream inclusion?
+Thanks,
 
-I know that hidden SSIDs are a bad idea. But some customers can be
-hard to convince, and dealing with customers who have hidden SSIDs on
-DFS channels can be a support burden. If we can make it just work for
-them then our life is that much easier.
+-- 
+Julian Calaby
 
-Regards,
-Blaise
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
