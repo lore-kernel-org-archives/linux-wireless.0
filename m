@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33824 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759202Ab3HNDpJ (ORCPT
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:52173 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934133Ab3HHKMF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 23:45:09 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 04/14] ath9k: Fix RX crypto processing
-Date: Wed, 14 Aug 2013 09:11:12 +0530
-Message-Id: <1376451682-25862-4-git-send-email-sujith@msujith.org> (sfid-20130814_060909_262575_7C5C001A)
-In-Reply-To: <1376451682-25862-1-git-send-email-sujith@msujith.org>
-References: <1376451682-25862-1-git-send-email-sujith@msujith.org>
+	Thu, 8 Aug 2013 06:12:05 -0400
+Received: by mail-bk0-f41.google.com with SMTP id na10so610071bkb.14
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Aug 2013 03:12:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1375949813-10969-3-git-send-email-michal.kazior@tieto.com>
+References: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
+	<1375949813-10969-3-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 8 Aug 2013 12:12:03 +0200
+Message-ID: <CA+BoTQk4n=kiWhwvzieuvXp5Wou_QpkY=8iU474XPwG7P4KSiQ@mail.gmail.com> (sfid-20130808_121209_885571_C331DDF5)
+Subject: Re: [PATCH 2/4] ath10k: fix HTC endpoint worker starvation
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 8 August 2013 10:16, Michal Kazior <michal.kazior@tieto.com> wrote:
+> HTC used a worker for each endpoint. This worked
+> until a slow host machine was flooded with massive
+> number of TX requests. HTT related worker would
+> remain active while WMI worker was starved. This
+> ended up with "could not send beacon" in AP mode.
+> It was even possible to see userspace being
+> starved.
+>
+> The patch switches from using workers to using
+> tasklets for processing and submitting HTC frames
+> to HIF.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> (...)
+>
+> @@ -602,7 +602,8 @@ static void ath10k_htc_reset_endpoint_states(struct ath10k_htc *htc)
+>                 skb_queue_head_init(&ep->tx_queue);
+>                 ep->htc = htc;
+>                 ep->tx_credit_flow_enabled = true;
+> -               INIT_WORK(&ep->send_work, ath10k_htc_send_work);
+> +               tasklet_init(&ep->send_task, ath10k_htc_send_task,
+> +                             (unsigned long)ep);
+>         }
+>  }
+>
 
-The keymiss events are valid only in the last descriptor
-of a packet. Fix this by making sure that we return
-early in case of chained descriptors.
+Indentation is off by one here. Is it okay if I just resend this
+single patch or is it easier for applying if I resend the whole
+patchset?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index f8cc2b3..b04a971 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -785,10 +785,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	    !test_bit(rx_stats->rs_keyix, common->ccmp_keymap))
- 		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
- 
--	/* Only use error bits from the last fragment */
--	if (rx_stats->rs_more)
--		return true;
--
- 	mic_error = is_valid_tkip && !ieee80211_is_ctl(fc) &&
- 		!ieee80211_has_morefrags(fc) &&
- 		!(le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG) &&
-@@ -959,6 +955,10 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		return -EINVAL;
- 	}
- 
-+	/* Only use status info from the last fragment */
-+	if (rx_stats->rs_more)
-+		return 0;
-+
- 	/*
- 	 * everything but the rate is checked here, the rate check is done
- 	 * separately to avoid doing two lookups for a rate for each frame.
-@@ -966,10 +966,6 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	if (!ath9k_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error))
- 		return -EINVAL;
- 
--	/* Only use status info from the last fragment */
--	if (rx_stats->rs_more)
--		return 0;
--
- 	if (ath9k_process_rate(common, hw, rx_stats, rx_status))
- 		return -EINVAL;
- 
--- 
-1.8.3.4
-
+Pozdrawiam / Best regards,
+Micha³ Kazior.
