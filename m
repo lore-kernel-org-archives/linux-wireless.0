@@ -1,82 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from numidia.opendz.org ([98.142.220.152]:47948 "EHLO
-	numidia.opendz.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754109Ab3HXNhU (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:51774 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933438Ab3HHAIM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Aug 2013 09:37:20 -0400
-From: Djalal Harouni <tixxdz@opendz.org>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Djalal Harouni <tixxdz@opendz.org>
-Subject: [PATCH v2] iwlwifi: mvm: make debugfs write() operations write up to count bytes
-Date: Sat, 24 Aug 2013 14:35:53 +0100
-Message-Id: <1377351353-18588-1-git-send-email-tixxdz@opendz.org> (sfid-20130824_153759_866417_83543693)
+	Wed, 7 Aug 2013 20:08:12 -0400
+Date: Wed, 07 Aug 2013 17:13:26 -0700 (PDT)
+Message-Id: <20130807.171326.61869230969773998.davem@davemloft.net> (sfid-20130808_020830_540284_23266641)
+To: sedat.dilek@gmail.com
+Cc: phil@nwl.cc, eric.dumazet@gmail.com, johannes@sipsolutions.net,
+	sfr@canb.auug.org.au, linux-next@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	hannes@stressinduktion.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: linux-next: Tree for Aug 7
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130807.170926.319558320779361738.davem@davemloft.net>
+References: <20130807.163621.84433966934449459.davem@davemloft.net>
+	<CA+icZUUm2nbmVj_WRznPTjXL0y6pcr1GzLjsL7UMhSGQWSm==g@mail.gmail.com>
+	<20130807.170926.319558320779361738.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some debugfs write() operations of the MVM Firmware will ignore the
-count argument, and will copy more bytes than what was specified.
-Fix this by getting the right count of bytes.
+From: David Miller <davem@davemloft.net>
+Date: Wed, 07 Aug 2013 17:09:26 -0700 (PDT)
 
-This will honor restrictions put on the number of bytes to write and
-avoid strcmp() calls on garbage data.
+> Ok, I'm going to simply revert all of these changes, thanks for testing.
 
-Signed-off-by: Djalal Harouni <tixxdz@opendz.org>
-Cc: "Berg, Johannes" <johannes.berg@intel.com>
+Here is what I just pushed to net-next:
+
+====================
+>From 09effa67a18d893fc4e6f81a3659fc9efef1445e Mon Sep 17 00:00:00 2001
+From: "David S. Miller" <davem@davemloft.net>
+Date: Wed, 7 Aug 2013 17:11:00 -0700
+Subject: [PATCH] packet: Revert recent header parsing changes.
+
+This reverts commits:
+
+0f75b09c798ed00c30d7d5551b896be883bc2aeb
+cbd89acb9eb257ed3b2be867142583fdcf7fdc5b
+c483e02614551e44ced3fe6eedda8e36d3277ccc
+
+Amongst other things, it's modifies the SKB header
+to pull the ethernet headers off via eth_type_trans()
+on the output path which is bogus.
+
+It's causing serious regressions for people.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
-Patch compile tested only.
-v2 Clean patch and use min_t() as noted by Berg Johannes
+ net/packet/af_packet.c |   53 ++++++++++++++++++++++--------------------------
+ 1 file changed, 24 insertions(+), 29 deletions(-)
 
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index aac81b8..299966a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -257,7 +257,8 @@ static ssize_t iwl_dbgfs_power_down_allow_write(struct file *file,
- 	if (!mvm->ucode_loaded)
- 		return -EIO;
+diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
+index 0c0f6c9..4cb28a7 100644
+--- a/net/packet/af_packet.c
++++ b/net/packet/af_packet.c
+@@ -88,7 +88,6 @@
+ #include <linux/virtio_net.h>
+ #include <linux/errqueue.h>
+ #include <linux/net_tstamp.h>
+-#include <linux/if_arp.h>
  
--	if (copy_from_user(buf, user_buf, sizeof(buf)))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, count))
- 		return -EFAULT;
+ #ifdef CONFIG_INET
+ #include <net/inet_common.h>
+@@ -1924,7 +1923,7 @@ static int tpacket_fill_skb(struct packet_sock *po, struct sk_buff *skb,
+ 		__be16 proto, unsigned char *addr, int hlen)
+ {
+ 	union tpacket_uhdr ph;
+-	int to_write, offset, len, tp_len, nr_frags, len_max, max_frame_len;
++	int to_write, offset, len, tp_len, nr_frags, len_max;
+ 	struct socket *sock = po->sk.sk_socket;
+ 	struct page *page;
+ 	void *data;
+@@ -1947,6 +1946,10 @@ static int tpacket_fill_skb(struct packet_sock *po, struct sk_buff *skb,
+ 		tp_len = ph.h1->tp_len;
+ 		break;
+ 	}
++	if (unlikely(tp_len > size_max)) {
++		pr_err("packet size is too long (%d > %d)\n", tp_len, size_max);
++		return -EMSGSIZE;
++	}
  
- 	if (sscanf(buf, "%d", &allow) != 1)
-@@ -281,7 +282,8 @@ static ssize_t iwl_dbgfs_power_down_d3_allow_write(struct file *file,
- 	char buf[8] = {};
- 	int allow;
+ 	skb_reserve(skb, hlen);
+ 	skb_reset_network_header(skb);
+@@ -2002,25 +2005,10 @@ static int tpacket_fill_skb(struct packet_sock *po, struct sk_buff *skb,
+ 		if (unlikely(err))
+ 			return err;
  
--	if (copy_from_user(buf, user_buf, sizeof(buf)))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, count))
- 		return -EFAULT;
+-		if (dev->type == ARPHRD_ETHER)
+-			skb->protocol = eth_type_trans(skb, dev);
+-
+ 		data += dev->hard_header_len;
+ 		to_write -= dev->hard_header_len;
+ 	}
  
- 	if (sscanf(buf, "%d", &allow) != 1)
-@@ -371,7 +373,8 @@ static ssize_t iwl_dbgfs_pm_params_write(struct file *file,
- 	int val;
- 	int ret;
+-	max_frame_len = dev->mtu + dev->hard_header_len;
+-	if (skb->protocol == htons(ETH_P_8021Q))
+-		max_frame_len += VLAN_HLEN;
+-
+-	if (size_max > max_frame_len)
+-		size_max = max_frame_len;
+-
+-	if (unlikely(tp_len > size_max)) {
+-		pr_err("packet size is too long (%d > %d)\n", tp_len, size_max);
+-		return -EMSGSIZE;
+-	}
+-
+ 	offset = offset_in_page(data);
+ 	len_max = PAGE_SIZE - offset;
+ 	len = ((to_write > len_max) ? len_max : to_write);
+@@ -2059,7 +2047,7 @@ static int tpacket_snd(struct packet_sock *po, struct msghdr *msg)
+ 	struct net_device *dev;
+ 	__be16 proto;
+ 	bool need_rls_dev = false;
+-	int err;
++	int err, reserve = 0;
+ 	void *ph;
+ 	struct sockaddr_ll *saddr = (struct sockaddr_ll *)msg->msg_name;
+ 	int tp_len, size_max;
+@@ -2092,6 +2080,8 @@ static int tpacket_snd(struct packet_sock *po, struct msghdr *msg)
+ 	if (unlikely(dev == NULL))
+ 		goto out;
  
--	if (copy_from_user(buf, user_buf, sizeof(buf)))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, count))
- 		return -EFAULT;
++	reserve = dev->hard_header_len;
++
+ 	err = -ENETDOWN;
+ 	if (unlikely(!(dev->flags & IFF_UP)))
+ 		goto out_put;
+@@ -2099,6 +2089,9 @@ static int tpacket_snd(struct packet_sock *po, struct msghdr *msg)
+ 	size_max = po->tx_ring.frame_size
+ 		- (po->tp_hdrlen - sizeof(struct sockaddr_ll));
  
- 	if (!strncmp("keep_alive=", buf, 11)) {
-@@ -968,7 +971,8 @@ static ssize_t iwl_dbgfs_d3_sram_write(struct file *file,
- 	char buf[8] = {};
- 	int store;
++	if (size_max > dev->mtu + reserve)
++		size_max = dev->mtu + reserve;
++
+ 	do {
+ 		ph = packet_current_frame(po, &po->tx_ring,
+ 				TP_STATUS_SEND_REQUEST);
+@@ -2331,20 +2324,22 @@ static int packet_snd(struct socket *sock,
  
--	if (copy_from_user(buf, user_buf, sizeof(buf)))
-+	count = min_t(size_t, count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, count))
- 		return -EFAULT;
+ 	sock_tx_timestamp(sk, &skb_shinfo(skb)->tx_flags);
  
- 	if (sscanf(buf, "%d", &store) != 1)
+-	if (dev->type == ARPHRD_ETHER) {
+-		skb->protocol = eth_type_trans(skb, dev);
+-		if (skb->protocol == htons(ETH_P_8021Q))
+-			reserve += VLAN_HLEN;
+-	} else {
+-		skb->protocol = proto;
+-		skb->dev = dev;
+-	}
+-
+ 	if (!gso_type && (len > dev->mtu + reserve + extra_len)) {
+-		err = -EMSGSIZE;
+-		goto out_free;
++		/* Earlier code assumed this would be a VLAN pkt,
++		 * double-check this now that we have the actual
++		 * packet in hand.
++		 */
++		struct ethhdr *ehdr;
++		skb_reset_mac_header(skb);
++		ehdr = eth_hdr(skb);
++		if (ehdr->h_proto != htons(ETH_P_8021Q)) {
++			err = -EMSGSIZE;
++			goto out_free;
++		}
+ 	}
+ 
++	skb->protocol = proto;
++	skb->dev = dev;
+ 	skb->priority = sk->sk_priority;
+ 	skb->mark = sk->sk_mark;
+ 
 -- 
-1.7.11.7
+1.7.10.4
 
