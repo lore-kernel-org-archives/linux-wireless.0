@@ -1,146 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1399 "EHLO mms3.broadcom.com"
+Received: from mout.gmx.net ([212.227.17.20]:62385 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751213Ab3HTOBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 10:01:00 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Jonas Gorski" <jogo@openwrt.org>
-Subject: [PATCH 06/12] brcmsmac: change lcnphy receive i/q calibration
- routine
-Date: Tue, 20 Aug 2013 16:00:40 +0200
-Message-ID: <1377007246-9957-7-git-send-email-arend@broadcom.com> (sfid-20130820_160203_615676_185B9662)
-In-Reply-To: <1377007246-9957-1-git-send-email-arend@broadcom.com>
-References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
+	id S1758223Ab3HIOe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Aug 2013 10:34:26 -0400
+Received: from [192.168.2.102] ([93.218.76.213]) by mail.gmx.com (mrgmx003)
+ with ESMTPSA (Nemesis) id 0MVdfD-1VeOND3IYJ-00YvY4 for
+ <linux-wireless@vger.kernel.org>; Fri, 09 Aug 2013 16:34:24 +0200
+Message-ID: <5204FDEF.5010108@rempel-privat.de> (sfid-20130809_163431_046078_AE32F03D)
+Date: Fri, 09 Aug 2013 16:34:23 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Alan Stern <stern@rowland.harvard.edu>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: FUSB200 xhci issue
+References: <Pine.LNX.4.44L0.1308091011130.1405-100000@iolanthe.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1308091011130.1405-100000@iolanthe.rowland.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The gain level control for the test tone has been changed. This
-calbration test tone is used to determine the i/q compensation.
-The i/q calibration routine has been reworked to accomodate this.
+Am 09.08.2013 16:13, schrieb Alan Stern:
+> On Fri, 9 Aug 2013, Christian Lamparter wrote:
+>
+>>> After loading firmware, a reset generally is necessary.  Some devices
+>>> will do it themselves; others require you to call usb_reset_device().
+>>
+>> This makes things complicated. Because, as far as I remember,
+>> usb_reset_device() will cause the current driver to be unbound
+>> unless its called during .probe, right?
+>
+> If the driver defines pre_reset and post_reset methods, it won't get
+> unbound during a reset.
+>
+>> You see, ath9k_htc loads its firmware asynchronously in ".probe"
+>> (ath9k_htc's .probe routine finishes before the firmware is
+>> retrieved via the firmware loader helper... so part of the
+>> firmware download is done in a firmware_complete callback
+>> on a workqueue).
+>>
+>> So, if we call usb_reset_device there and the driver is unbound
+>> and later rebound. the next ath9k_htc .probe will start again and
+>> again and again not knowing that it is already initialized
+>> (and we have a loop).
+>>
+>>
+>> This could be solved, if the devices changes the usb-id again
+>> when a proper "wifi" ath9k_htc firmware was downloaded. So, the
+>> driver would know that it doesn't have to download and reset
+>> the device... But we need a "free" USB-ID for that.
+>
+> What about a "get firmware version" sort of thing?  There really should
+> be a way for the driver to tell whether the firmware has already been
+> updated.
 
-Cc: Jonas Gorski <jogo@openwrt.org>
-Tested-by: David Herrmann <dh.herrmann@gmail.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   78 +++++++++++++++-----
- 1 file changed, 58 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-index 8dc5d0f..236e8d9 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -1329,6 +1329,43 @@ static u32 wlc_lcnphy_measure_digital_power(struct brcms_phy *pi, u16 nsamples)
- 	return (iq_est.i_pwr + iq_est.q_pwr) / nsamples;
- }
- 
-+static bool wlc_lcnphy_rx_iq_cal_gain(struct brcms_phy *pi, u16 biq1_gain,
-+				      u16 tia_gain, u16 lna2_gain)
-+{
-+	u32 i_thresh_l, q_thresh_l;
-+	u32 i_thresh_h, q_thresh_h;
-+	struct lcnphy_iq_est iq_est_h, iq_est_l;
-+
-+	wlc_lcnphy_set_rx_gain_by_distribution(pi, 0, 0, 0, biq1_gain, tia_gain,
-+					       lna2_gain, 0);
-+
-+	wlc_lcnphy_rx_gain_override_enable(pi, true);
-+	wlc_lcnphy_start_tx_tone(pi, 2000, (40 >> 1), 0);
-+	udelay(500);
-+	write_radio_reg(pi, RADIO_2064_REG112, 0);
-+	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_l))
-+		return false;
-+
-+	wlc_lcnphy_start_tx_tone(pi, 2000, 40, 0);
-+	udelay(500);
-+	write_radio_reg(pi, RADIO_2064_REG112, 0);
-+	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_h))
-+		return false;
-+
-+	i_thresh_l = (iq_est_l.i_pwr << 1);
-+	i_thresh_h = (iq_est_l.i_pwr << 2) + iq_est_l.i_pwr;
-+
-+	q_thresh_l = (iq_est_l.q_pwr << 1);
-+	q_thresh_h = (iq_est_l.q_pwr << 2) + iq_est_l.q_pwr;
-+	if ((iq_est_h.i_pwr > i_thresh_l) &&
-+	    (iq_est_h.i_pwr < i_thresh_h) &&
-+	    (iq_est_h.q_pwr > q_thresh_l) &&
-+	    (iq_est_h.q_pwr < q_thresh_h))
-+		return true;
-+
-+	return false;
-+}
-+
- static bool
- wlc_lcnphy_rx_iq_cal(struct brcms_phy *pi,
- 		     const struct lcnphy_rx_iqcomp *iqcomp,
-@@ -1343,8 +1380,8 @@ wlc_lcnphy_rx_iq_cal(struct brcms_phy *pi,
- 	    RFOverrideVal0_old, rfoverride2_old, rfoverride2val_old,
- 	    rfoverride3_old, rfoverride3val_old, rfoverride4_old,
- 	    rfoverride4val_old, afectrlovr_old, afectrlovrval_old;
--	int tia_gain;
--	u32 received_power, rx_pwr_threshold;
-+	int tia_gain, lna2_gain, biq1_gain;
-+	bool set_gain;
- 	u16 old_sslpnCalibClkEnCtrl, old_sslpnRxFeClkEnCtrl;
- 	u16 values_to_save[11];
- 	s16 *ptr;
-@@ -1432,29 +1469,30 @@ wlc_lcnphy_rx_iq_cal(struct brcms_phy *pi,
- 	mod_phy_reg(pi, 0x43b, (0x1 << 0), 1 << 0);
- 	mod_phy_reg(pi, 0x43c, (0x1 << 0), 0 << 0);
- 
--	wlc_lcnphy_start_tx_tone(pi, 2000, 120, 0);
- 	write_phy_reg(pi, 0x6da, 0xffff);
- 	or_phy_reg(pi, 0x6db, 0x3);
--	wlc_lcnphy_set_trsw_override(pi, tx_switch, rx_switch);
--	wlc_lcnphy_rx_gain_override_enable(pi, true);
--
--	tia_gain = 8;
--	rx_pwr_threshold = 950;
--	while (tia_gain > 0) {
--		tia_gain -= 1;
--		wlc_lcnphy_set_rx_gain_by_distribution(pi,
--						       0, 0, 2, 2,
--						       (u16)
--						       tia_gain, 1, 0);
--		udelay(500);
- 
--		received_power =
--			wlc_lcnphy_measure_digital_power(pi, 2000);
--		if (received_power < rx_pwr_threshold)
--			break;
-+	wlc_lcnphy_set_trsw_override(pi, tx_switch, rx_switch);
-+	for (lna2_gain = 3; lna2_gain >= 0; lna2_gain--) {
-+		for (tia_gain = 4; tia_gain >= 0; tia_gain--) {
-+			for (biq1_gain = 6; biq1_gain >= 0; biq1_gain--) {
-+				set_gain = wlc_lcnphy_rx_iq_cal_gain(pi,
-+								     (u16)
-+								     biq1_gain,
-+								     (u16)
-+								     tia_gain,
-+								     (u16)
-+								     lna2_gain);
-+				if (!set_gain)
-+					continue;
-+
-+				result = wlc_lcnphy_calc_rx_iq_comp(pi, 1024);
-+				goto stop_tone;
-+			}
-+		}
- 	}
--	result = wlc_lcnphy_calc_rx_iq_comp(pi, 0xffff);
- 
-+stop_tone:
- 	wlc_lcnphy_stop_tx_tone(pi);
- 
- 	write_phy_reg(pi, 0x631, Core1TxControl_old);
+I was not able to find good direct way to check firmware version. If i 
+would add some new command then i will get option like: if responding FW 
+is updated; if not, then dead or old.
+How about overwriting iProduct field? Let say, if iProduct == ath9k_htc, 
+then firmware is updated? Is it more or less acceptable method? I need 
+to ask this because it is really new for me.
 -- 
-1.7.10.4
-
-
+Regards,
+Oleksij
