@@ -1,98 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:46906 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781Ab3HTRlc (ORCPT
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:32852 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031243Ab3HIWIL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 13:41:32 -0400
-Received: by mail-lb0-f179.google.com with SMTP id v1so706207lbd.24
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:31 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH 00/16] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-Date: Tue, 20 Aug 2013 19:41:03 +0200
-Message-Id: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_194135_989973_6821547C)
+	Fri, 9 Aug 2013 18:08:11 -0400
+Received: by mail-oa0-f44.google.com with SMTP id l20so7566487oag.31
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Aug 2013 15:08:11 -0700 (PDT)
+Message-ID: <52056849.9070407@lwfinger.net> (sfid-20130810_000832_036558_49B4866F)
+Date: Fri, 09 Aug 2013 17:08:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Mark Schulte <schultetwin@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] rtlwifi: sparse warnings: cast to restricted type
+References: <1375254507-26154-1-git-send-email-schultetwin@gmail.com> <1375254507-26154-2-git-send-email-schultetwin@gmail.com> <51F947A9.3050802@lwfinger.net> <20130809174131.GI30925@tuxdriver.com>
+In-Reply-To: <20130809174131.GI30925@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
-far WCN3660/WCN3680 is available only on MSM platform.
+On 08/09/2013 12:41 PM, John W. Linville wrote:
+> On Wed, Jul 31, 2013 at 12:21:45PM -0500, Larry Finger wrote:
+>> On 07/31/2013 02:08 AM, Mark Schulte wrote:
+>>> Adding type casts to suppress sparse warnings:
+>>>   * warning: cast to restricted __le32/__le16
+>>>
+>>> Signed-off-by: Mark Schulte <schultetwin@gmail.com>
+>>> ---
+>>>   drivers/net/wireless/rtlwifi/ps.c | 16 ++++++++--------
+>>>   1 file changed, 8 insertions(+), 8 deletions(-)
+>>
+>> I think this patch is OK, but until I get a chance to test it on a
+>> big-endian machine (PowerBook G4 Titanium), please do not apply it.
+>>
+>> When I tried the patch, I discovered some kind of regression that
+>> causes a kernel oops with an RTL8192CU device installed. This patch
+>> is not the problem, but I will need to bisect the oops before I can
+>> test. The machine takes a long time to build each kernel, thus it
+>> will probably be a while.
+>
+> Any word on this?  The patch doesn't look like it should be causing
+> such problems...?
 
-To make review easier the driver sent in several patches, one patch per file, but after
-review it will be sent as one big file.
+I have not ywt solved the PPC crash. Unfortunately, thos processors are finicky 
+and my debugging skills on that architecture are quite low. Go ahaed any apply 
+this patch.
 
-Firmware can be found here:
-https://github.com/AOKP/vendor_sony/find/jb-mr1
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Wiki page is available here:
-http://wireless.kernel.org/en/users/Drivers/wcn36xx
+Larry
 
-A lot people made a contribution to this driver. Her is the list in
-alphabetical order:
-
-Eugene Krasnikov <k.eugene.e@gmail.com>
-Kalle Valo <kvalo@qca.qualcomm.com>
-Olof Johansson <dev@skyshaper.net>
-Pontus Fuchs <pontus.fuchs@gmail.com>
-Yanbo Li <yanbol@qti.qualcomm.com>
-
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
-
----
-
-Eugene Krasnikov (16):
-  wcn36xx: Add main.c
-  wcn36xx: Add debug.c
-  wcn36xx: Add debug.h
-  wcn36xx: Add dxe.c
-  wcn36xx: Add dxe.h
-  wcn36xx: Add hal.h
-  wcn36xx: Add pmc.c
-  wcn36xx: Add pmc.h
-  wcn36xx: Add smd.c
-  wcn36xx: Add smd.h
-  wcn36xx: Add txrx.c
-  wcn36xx: Add txrx.h
-  wcn36xx: Add wcn36xx.h
-  wcn36xx: Add Makefile
-  wcn36xx: Add Kconfig
-  wcn36xx: Add wcn36xx to ath Makefile and Kconfig
-
- drivers/net/wireless/ath/Kconfig           |    1 +
- drivers/net/wireless/ath/Makefile          |    1 +
- drivers/net/wireless/ath/wcn36xx/Kconfig   |   16 +
- drivers/net/wireless/ath/wcn36xx/Makefile  |    9 +
- drivers/net/wireless/ath/wcn36xx/debug.c   |  164 +
- drivers/net/wireless/ath/wcn36xx/debug.h   |   49 +
- drivers/net/wireless/ath/wcn36xx/dxe.c     |  802 +++++
- drivers/net/wireless/ath/wcn36xx/dxe.h     |  281 ++
- drivers/net/wireless/ath/wcn36xx/hal.h     | 4657 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/main.c    | 1034 ++++++
- drivers/net/wireless/ath/wcn36xx/pmc.c     |   44 +
- drivers/net/wireless/ath/wcn36xx/pmc.h     |   32 +
- drivers/net/wireless/ath/wcn36xx/smd.c     | 1530 +++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h     |  121 +
- drivers/net/wireless/ath/wcn36xx/txrx.c    |  261 ++
- drivers/net/wireless/ath/wcn36xx/txrx.h    |  160 +
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  239 ++
- 17 files changed, 9401 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Makefile
- create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/hal.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/main.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-
--- 
-1.8.2.2
 
