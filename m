@@ -1,36 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50442 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756474Ab3HZI6A (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35725 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030622Ab3HIOgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 04:58:00 -0400
-Message-ID: <1377507467.13247.3.camel@jlt4.sipsolutions.net> (sfid-20130826_105804_012090_A2050A40)
-Subject: Re: [PATCH v2] iwlwifi: mvm: make debugfs write() operations write
- up to count bytes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Djalal Harouni <tixxdz@opendz.org>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 26 Aug 2013 10:57:47 +0200
-In-Reply-To: <1377351353-18588-1-git-send-email-tixxdz@opendz.org> (sfid-20130824_153759_866417_83543693)
-References: <1377351353-18588-1-git-send-email-tixxdz@opendz.org>
-	 (sfid-20130824_153759_866417_83543693)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 9 Aug 2013 10:36:04 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2 1/6] cfg80211: export cfg80211_chandef_dfs_required
+Date: Fri,  9 Aug 2013 16:35:15 +0200
+Message-Id: <1376058920-17779-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130809_163616_340978_DE479A85)
+In-Reply-To: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-08-24 at 14:35 +0100, Djalal Harouni wrote:
-> Some debugfs write() operations of the MVM Firmware will ignore the
-> count argument, and will copy more bytes than what was specified.
-> Fix this by getting the right count of bytes.
-> 
-> This will honor restrictions put on the number of bytes to write and
-> avoid strcmp() calls on garbage data.
+It will be used later by the IBSS CSA implementation of mac80211.
 
-Applied, thanks.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 
-johannes
+---
+Changes to PATCHv1:
+ * remove one more newline in net/wireless/core.h
+---
+ include/net/cfg80211.h |    9 +++++++++
+ net/wireless/chan.c    |    1 +
+ net/wireless/core.h    |    9 ---------
+ 3 files changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b7495c7..3dd8fa3 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -437,6 +437,15 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 			     u32 prohibited_flags);
+ 
+ /**
++ * cfg80211_chandef_dfs_required - checks if radar detection is required
++ * @wiphy: the wiphy to validate against
++ * @chandef: the channel definition to check
++ * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
++ */
++int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
++				  const struct cfg80211_chan_def *c);
++
++/**
+  * ieee80211_chandef_rate_flags - returns rate flags for a channel
+  *
+  * In some channel types, not all rates may be used - for example CCK
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 50f6195..16f3c3a 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -328,6 +328,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+ 	return cfg80211_get_chans_dfs_required(wiphy, chandef->center_freq2,
+ 					       width);
+ }
++EXPORT_SYMBOL(cfg80211_chandef_dfs_required);
+ 
+ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
+ 					u32 center_freq, u32 bandwidth,
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 9ad43c6..b43efac 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -382,15 +382,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 enum cfg80211_chan_mode chanmode,
+ 				 u8 radar_detect);
+ 
+-/**
+- * cfg80211_chandef_dfs_required - checks if radar detection is required
+- * @wiphy: the wiphy to validate against
+- * @chandef: the channel definition to check
+- * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
+- */
+-int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+-				  const struct cfg80211_chan_def *c);
+-
+ void cfg80211_set_dfs_state(struct wiphy *wiphy,
+ 			    const struct cfg80211_chan_def *chandef,
+ 			    enum nl80211_dfs_state dfs_state);
+-- 
+1.7.10.4
 
