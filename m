@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55303 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022Ab3HFNy3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 09:54:29 -0400
-Message-ID: <1375797260.8219.21.camel@jlt4.sipsolutions.net> (sfid-20130806_155444_142388_112F393B)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: sedat.dilek@gmail.com
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 06 Aug 2013 15:54:20 +0200
-In-Reply-To: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com> (sfid-20130806_155146_826369_E50BB27F)
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	 (sfid-20130806_155146_826369_E50BB27F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb06.tieto.com ([131.207.168.38]:44235 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030525Ab3HIINl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Aug 2013 04:13:41 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/3] ath10k: firmware-related updates
+Date: Fri, 9 Aug 2013 10:13:31 +0200
+Message-ID: <1376036014-29707-1-git-send-email-michal.kazior@tieto.com> (sfid-20130809_101348_056259_10D30798)
+In-Reply-To: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
+References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-08-06 at 15:51 +0200, Sedat Dilek wrote:
-> OK, I did not try with debugging enabled and/or w/o Network-Manager.
-> 
-> If you know of an issue, please let me know.
+Hi,
 
-No, but the dmesg looks like security problems - check wpa_supplicant
-log
+This patchset contains 2 firmware-related upgrades
+and 1 fix (that I though is a good pick to include
+here, since it's related with HTT tx).
 
-johannes
+This keeps backward compatbility with old
+firmware.
+
+This includes fixes for issues pointed out during
+RFC review.
+
+
+Pozdrawiam / Best regards,
+Michal Kazior.
+
+
+Michal Kazior (3):
+  ath10k: clean up HTT tx tid handling
+  ath10k: add support for firmware newer than 636
+  ath10k: add support for HTT 3.0
+
+ drivers/net/wireless/ath/ath10k/core.h   |   10 ++++
+ drivers/net/wireless/ath/ath10k/htt.c    |   19 +++-----
+ drivers/net/wireless/ath/ath10k/htt.h    |   12 +++--
+ drivers/net/wireless/ath/ath10k/htt_tx.c |   74 +++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/hw.h     |    3 ++
+ drivers/net/wireless/ath/ath10k/mac.c    |   18 ++++++--
+ drivers/net/wireless/ath/ath10k/wmi.c    |   32 +++++++++----
+ drivers/net/wireless/ath/ath10k/wmi.h    |   16 +++++--
+ 8 files changed, 131 insertions(+), 53 deletions(-)
+
+-- 
+1.7.9.5
 
