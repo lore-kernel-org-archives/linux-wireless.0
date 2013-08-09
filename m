@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f53.google.com ([209.85.213.53]:34947 "EHLO
-	mail-yh0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754427Ab3HQVgd (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33511 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030485Ab3HITPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Aug 2013 17:36:33 -0400
-Received: by mail-yh0-f53.google.com with SMTP id b6so514117yha.40
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Aug 2013 14:36:32 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH] net: rfkill: Check the return value of regulator_enable()
-Date: Sat, 17 Aug 2013 18:36:07 -0300
-Message-Id: <1376775367-17068-1-git-send-email-festevam@gmail.com> (sfid-20130817_233637_078502_E8973748)
+	Fri, 9 Aug 2013 15:15:12 -0400
+Date: Fri, 9 Aug 2013 15:07:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-next 2013-08-06
+Message-ID: <20130809190743.GK30925@tuxdriver.com> (sfid-20130809_211516_622122_B23410F8)
+References: <1375779167.8219.5.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1375779167.8219.5.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On Tue, Aug 06, 2013 at 10:52:47AM +0200, Johannes Berg wrote:
+> Hi John,
+> 
+> And a few more things for the -next stream for iwlwifi. The signal
+> strength reporting fix is the reason I'd originally tried to ask you to
+> not pull before :-)
+> 
+> This time I have a signal strength reporting fix from Avri, some
+> cleanups from Eliad, Eyal and myself and a new debugfs file from Matti.
+> 
+> Please let me know if there's any problem.
+> 
+> Thanks,
+> johannes
+> 
+> The following changes since commit 147fc9be81d10e6e863323c0b54e140b42fd1ed6:
+> 
+>   iwlwifi: mvm: advertise support for DYNAMIC / STATIC SMPS (2013-07-31 11:05:08 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+> 
+> for you to fetch changes up to ef4394b9477f9078d78ae3e8359eae094c9b19d8:
+> 
+>   iwlwifi: mvm: use designated initialization for some arrays (2013-08-06 10:35:04 +0200)
 
-Fix the following build warning:
+Pulling now...
 
-net/rfkill/rfkill-regulator.c:43:20: warning: ignoring return value of 'regulator_enable', declared with attribute warn_unused_result [-Wunused-result]
-
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
- net/rfkill/rfkill-regulator.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
-index d11ac79..0aa922c 100644
---- a/net/rfkill/rfkill-regulator.c
-+++ b/net/rfkill/rfkill-regulator.c
-@@ -30,6 +30,7 @@ struct rfkill_regulator_data {
- static int rfkill_regulator_set_block(void *data, bool blocked)
- {
- 	struct rfkill_regulator_data *rfkill_data = data;
-+	int ret;
- 
- 	pr_debug("%s: blocked: %d\n", __func__, blocked);
- 
-@@ -40,7 +41,9 @@ static int rfkill_regulator_set_block(void *data, bool blocked)
- 		}
- 	} else {
- 		if (!rfkill_data->reg_enabled) {
--			regulator_enable(rfkill_data->vcc);
-+			ret = regulator_enable(rfkill_data->vcc);
-+			if (ret)
-+				return ret;
- 			rfkill_data->reg_enabled = true;
- 		}
- 	}
 -- 
-1.8.1.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
