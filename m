@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:55350 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755413Ab3HPWeF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 18:34:05 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 5/5] rt2x00: rt2800lib: adjust frequency offset for RF3053
-Date: Fri, 16 Aug 2013 22:38:18 +0200
-Message-Id: <1376685498-5167-6-git-send-email-juhosg@openwrt.org> (sfid-20130817_003418_183531_1CD8E581)
-In-Reply-To: <1376685498-5167-1-git-send-email-juhosg@openwrt.org>
-References: <1376685498-5167-1-git-send-email-juhosg@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:39155 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966645Ab3HINW3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Aug 2013 09:22:29 -0400
+Message-ID: <1376054546.8355.11.camel@jlt4.sipsolutions.net> (sfid-20130809_152232_384286_3BB4DB98)
+Subject: Re: [PATCH 5/7] mac80211: add support for CSA in IBSS mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 09 Aug 2013 15:22:26 +0200
+In-Reply-To: <1375457886-7275-6-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1375457886-7275-6-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Along with other chipsets, the Ralink driver uses the
-frequency adjustment code for RF3053 as well. Remove
-the bogus place-holder comment from the RF3053 specific
-channel configuration function and call the frequency
-adjustment function instead
+On Fri, 2013-08-02 at 17:38 +0200, Simon Wunderlich wrote:
 
-Based on the DPO_RT5572_LinuxSTA_2.6.0.1_20120629
-driver.
+> +	if (sdata->vif.type == NL80211_IFTYPE_AP) {
 
-Reference:
-  RT3593_ChipSwitchChannel function in chips/rt3593.c
+> +	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> +	} else {
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 9b4d836..fb71ed6 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2344,7 +2344,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	}
- 	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
- 
--	/* TODO: frequency calibration? */
-+	rt2800_adjust_freq_offset(rt2x00dev);
- 
- 	if (conf_is_ht40(conf)) {
- 		txrx_agc_fc = rt2x00_get_field8(drv_data->calibration_bw40,
--- 
-1.7.10
+switch() ?
+
+
+> +	case NL80211_CHAN_WIDTH_10:
+> +		if (WARN_ON(params.chandef.width != ifibss->chandef.width))
+
+You should really not make a WARN_ON remotely triggerable.
+
+johannes
+
