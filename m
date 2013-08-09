@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:55480 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753886Ab3H3QKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 12:10:14 -0400
-From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
-To: netdev@vger.kernel.org
-Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v2 net-next 6/9] net: airo: inherit addr_assign_type along with dev_addr
-Date: Fri, 30 Aug 2013 18:08:49 +0200
-Message-Id: <1377878932-26881-7-git-send-email-bjorn@mork.no> (sfid-20130830_181049_309604_EBECD570)
-In-Reply-To: <1377878932-26881-1-git-send-email-bjorn@mork.no>
-References: <1377878932-26881-1-git-send-email-bjorn@mork.no>
+Received: from iolanthe.rowland.org ([192.131.102.54]:56256 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753498Ab3HITco (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Aug 2013 15:32:44 -0400
+Date: Fri, 9 Aug 2013 15:32:43 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Oleksij Rempel <linux@rempel-privat.de>
+cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: FUSB200 xhci issue
+In-Reply-To: <52053AC4.3090509@rempel-privat.de>
+Message-ID: <Pine.LNX.4.44L0.1308091529080.1405-100000@iolanthe.rowland.org> (sfid-20130809_213248_163913_854F8761)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A device inheriting a random or set address should reflect this in
-its addr_assign_type.
+On Fri, 9 Aug 2013, Oleksij Rempel wrote:
 
-Acked-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Bjørn Mork <bjorn@mork.no>
----
- drivers/net/wireless/airo.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> > Is there any way to prevent the device from losing its firmware during
+> > a USB reset or suspend?
+> 
+> For suspend - yes. It is possible to ignore suspend command or put the 
+> SoC in low power mode - but is it probably not so easy to bring it back. 
+> I would need to read more code and create some doc as side effect untill 
+> i understand how it works.
+> I'm not sure how about reset command. I would need more testing and some 
+> ones help. If i see it correctly, usb reset should affect only usb core 
+> and usb pll.
+> 
+> How can i trigger usb reset?
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index d0adbaf..7fe1964 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -2693,7 +2693,7 @@ static struct net_device *init_wifidev(struct airo_info *ai,
- 	dev->base_addr = ethdev->base_addr;
- 	dev->wireless_data = ethdev->wireless_data;
- 	SET_NETDEV_DEV(dev, ethdev->dev.parent);
--	memcpy(dev->dev_addr, ethdev->dev_addr, dev->addr_len);
-+	eth_hw_addr_inherit(dev, ethdev);
- 	err = register_netdev(dev);
- 	if (err<0) {
- 		free_netdev(dev);
--- 
-1.7.10.4
+http://marc.info/?l=linux-usb&m=121459435621262&w=2
+
+Give the program the pathname for the USB device node.  For example:
+
+	usbreset /dev/bus/usb/001/004
+
+Alan Stern
 
