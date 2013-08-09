@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:39449 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934111Ab3HHJWL (ORCPT
+Received: from iolanthe.rowland.org ([192.131.102.54]:56064 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758188Ab3HIOcq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 05:22:11 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [RFC 3/3] ath10k: add support for HTT 3.0
-References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
-	<1375949298-7159-4-git-send-email-michal.kazior@tieto.com>
-	<87eha4363n.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnoVmQcMnajTx3vsKwct5PLCNOt6w2qo17fyigm=gO5-w@mail.gmail.com>
-Date: Thu, 8 Aug 2013 12:22:01 +0300
-In-Reply-To: <CA+BoTQnoVmQcMnajTx3vsKwct5PLCNOt6w2qo17fyigm=gO5-w@mail.gmail.com>
-	(Michal Kazior's message of "Thu, 8 Aug 2013 11:12:58 +0200")
-Message-ID: <871u6435c6.fsf@kamboji.qca.qualcomm.com> (sfid-20130808_112214_996546_D4B4600E)
+	Fri, 9 Aug 2013 10:32:46 -0400
+Date: Fri, 9 Aug 2013 10:32:45 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Sujith Manoharan <sujith@msujith.org>
+cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: ath9k_htc firmware problem [was: Re: FUSB200 xhci issue]
+In-Reply-To: <20996.22876.834304.94010@gargle.gargle.HOWL>
+Message-ID: <Pine.LNX.4.44L0.1308091020170.1405-100000@iolanthe.rowland.org> (sfid-20130809_163252_863251_3F6EE851)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Fri, 9 Aug 2013, Sujith Manoharan wrote:
 
-> On 8 August 2013 11:05, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Christian Lamparter wrote:
+> > So, if we call usb_reset_device there and the driver is unbound
+> > and later rebound. the next ath9k_htc .probe will start again and
+> > again and again not knowing that it is already initialized 
+> > (and we have a loop).
+> 
+> The HW/FW is buggy and this workaround is required:
+> http://marc.info/?l=linux-usb&m=127960864905646&w=2
 
->> This debug print is good to have, but with the new htt version it would
->> be good to print it always using the info level. For example, can we add
->> it to the same line with "firmware %s booted" string?
->
-> HTT target version is not known when firmware boots up. It's not known
-> until everything other (HTC, WMI) is set up. We then send a version
-> request command and we get a response.
+I see the problem.  The device loses its firmware when it gets reset or
+its port is disabled.  This is really a very serious bug.  For one
+thing, it means the device cannot support runtime PM.  (Not unless the
+driver caches a copy of the firmware and reloads it every time the
+device resumes.)  IMO a bug like this should disqualify the device from
+being allowed to wear the USB logo.
 
-Oh, missed that.
+One way around the problem might be for the firmware-loading thread to
+issue a usb_set_configuration call to switch to config 0 (i.e., to
+unconfigure the device), then patch the host's copy of the descriptor,
+and then switch back to the original configuration.
 
-> We need to print it in a separate line.
+This _will_ unbind and rebind the driver, so it definitely will need a
+way to tell whether the firmware has already been loaded.
 
-Or could we print the "firmware booted" message later?
+Alan Stern
 
->> (Please take into account that the info messages still need to be
->> compact, by default they should not be longer than five lines or so.)
->>
->>> +     if (htt->target_version_major != 2 &&
->>> +         htt->target_version_major != 3) {
->>>               ath10k_err("htt major versions are incompatible!\n");
->>>               return -ENOTSUPP;
->>>       }
->>
->> Print the htt version in the error message as well?
->
-> Target version is printed in ath10k_dbg() now. If we change that to
-> ath10k_info() I don't see any reason to print the version again on
-> error.
-
-Frequently users just copy the error message, that's why it's better to
-have the firmware's htt version in the error message as well.
-
-> We may want to print the list of supported HTT major version numbers
-> though?
-
-That's good to have as well, at least in the debug messages.
-
--- 
-Kalle Valo
