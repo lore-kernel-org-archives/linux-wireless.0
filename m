@@ -1,104 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60925 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751339Ab3HTRn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 13:43:59 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:45995 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030623Ab3HIOgF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Aug 2013 10:36:05 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, teg@jklm.no
-Subject: [PATCH 3.11] mac80211: add a flag to indicate CCK support for HT clients
-Date: Tue, 20 Aug 2013 19:43:54 +0200
-Message-Id: <1377020634-27064-1-git-send-email-nbd@openwrt.org> (sfid-20130820_200909_246669_FB6B2520)
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2 6/6] nl80211: enable IBSS support for channel switch announcements
+Date: Fri,  9 Aug 2013 16:35:20 +0200
+Message-Id: <1376058920-17779-7-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130809_163638_290530_6F9054F6)
+In-Reply-To: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcm80211 cannot handle sending frames with CCK rates as part of an
-A-MPDU session. Other drivers may have issues too. Set the flag in all
-drivers that have been tested with CCK rates.
-
-This fixes a reported brcmsmac regression introduced in
-commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
-"mac80211/minstrel_ht: fix cck rate sampling"
-
-Cc: stable@vger.kernel.org # 3.10
-Reported-by: Tom Gundersen <teg@jklm.no>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/ath/ath9k/init.c    | 3 ++-
- drivers/net/wireless/ath/carl9170/main.c | 3 ++-
- drivers/net/wireless/rt2x00/rt2800lib.c  | 3 ++-
- include/net/mac80211.h                   | 1 +
- net/mac80211/rc80211_minstrel_ht.c       | 3 +++
- 5 files changed, 10 insertions(+), 3 deletions(-)
+ net/wireless/nl80211.c |   49 +++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 34 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 16f8b20..026a2a0 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -802,7 +802,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		IEEE80211_HW_PS_NULLFUNC_STACK |
- 		IEEE80211_HW_SPECTRUM_MGMT |
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
--		IEEE80211_HW_SUPPORTS_RC_TABLE;
-+		IEEE80211_HW_SUPPORTS_RC_TABLE |
-+		IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f7cb121..6d3d788 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5632,15 +5632,26 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 	static struct nlattr *csa_attrs[NL80211_ATTR_MAX+1];
+ 	u8 radar_detect_width = 0;
+ 	int err;
++	bool need_new_beacon = false;
  
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
- 		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index 4a33c6e..349fa22 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1860,7 +1860,8 @@ void *carl9170_alloc(size_t priv_size)
- 		     IEEE80211_HW_PS_NULLFUNC_STACK |
- 		     IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC |
- 		     IEEE80211_HW_SUPPORTS_RC_TABLE |
--		     IEEE80211_HW_SIGNAL_DBM;
-+		     IEEE80211_HW_SIGNAL_DBM |
-+		     IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
+ 	if (!rdev->ops->channel_switch ||
+ 	    !(rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH))
+ 		return -EOPNOTSUPP;
  
- 	if (!modparam_noht) {
- 		/*
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 1f80ea5..1b41c8e 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6133,7 +6133,8 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	    IEEE80211_HW_SUPPORTS_PS |
- 	    IEEE80211_HW_PS_NULLFUNC_STACK |
- 	    IEEE80211_HW_AMPDU_AGGREGATION |
--	    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
-+	    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-+	    IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
- 
- 	/*
- 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5b7a3da..551ba6a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1499,6 +1499,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_RC_TABLE			= 1<<24,
- 	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
- 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
-+	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
- };
- 
- /**
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index f5aed96..f3bbea1 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -828,6 +828,9 @@ minstrel_ht_update_cck(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	if (sband->band != IEEE80211_BAND_2GHZ)
- 		return;
- 
-+	if (!(mp->hw->flags & IEEE80211_HW_SUPPORTS_HT_CCK_RATES))
-+		return;
+-	/* may add IBSS support later */
+-	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+-	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
++	switch (dev->ieee80211_ptr->iftype) {
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++		need_new_beacon = true;
 +
- 	mi->cck_supported = 0;
- 	mi->cck_supported_short = 0;
- 	for (i = 0; i < 4; i++) {
++		/* useless if AP is not running */
++		if (!wdev->beacon_interval)
++			return -EINVAL;
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		break;
++	default:
+ 		return -EOPNOTSUPP;
++	}
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
+@@ -5649,15 +5660,16 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	/* only important for AP, IBSS and mesh create IEs internally */
+-	if (!info->attrs[NL80211_ATTR_CSA_IES])
+-		return -EINVAL;
+-
+-	/* useless if AP is not running */
+-	if (!wdev->beacon_interval)
++	if (need_new_beacon &&
++	    (!info->attrs[NL80211_ATTR_CSA_IES] ||
++	     !info->attrs[NL80211_ATTR_CSA_C_OFF_BEACON]))
+ 		return -EINVAL;
+ 
+ 	params.count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
+ 
++	if (!need_new_beacon)
++		goto skip_beacons;
++
+ 	err = nl80211_parse_beacon(info->attrs, &params.beacon_after);
+ 	if (err)
+ 		return err;
+@@ -5697,6 +5709,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
++skip_beacons:
+ 	err = nl80211_parse_chandef(rdev, info, &params.chandef);
+ 	if (err)
+ 		return err;
+@@ -5704,12 +5717,17 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
+ 		return -EINVAL;
+ 
+-	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
+-	if (err < 0) {
+-		return err;
+-	} else if (err) {
+-		radar_detect_width = BIT(params.chandef.width);
+-		params.radar_required = true;
++	/* DFS channels are only supported for AP/P2P GO ... for now. */
++	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
++	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO) {
++		err = cfg80211_chandef_dfs_required(wdev->wiphy,
++						    &params.chandef);
++		if (err < 0) {
++			return err;
++		} else if (err) {
++			radar_detect_width = BIT(params.chandef.width);
++			params.radar_required = true;
++		}
+ 	}
+ 
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+@@ -10725,7 +10743,8 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
+ 	wdev_lock(wdev);
+ 
+ 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
+-		    wdev->iftype != NL80211_IFTYPE_P2P_GO))
++		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
++		    wdev->iftype != NL80211_IFTYPE_ADHOC))
+ 		goto out;
+ 
+ 	wdev->channel = chandef->chan;
 -- 
-1.8.0.2
+1.7.10.4
 
