@@ -1,76 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38891 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:39100 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754307Ab3HPLIE (ORCPT
+	with ESMTP id S1758289Ab3HINNr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 07:08:04 -0400
+	Fri, 9 Aug 2013 09:13:47 -0400
+Message-ID: <1376054020.8355.5.camel@jlt4.sipsolutions.net> (sfid-20130809_151351_589815_888AC6A1)
+Subject: Re: [PATCH v3] mac80211: allow lowest basic rate for unicast
+ management for mesh
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 18/20] iwlwifi: return -ENOMEM instead of NULL when OOM in iwl_drv_start()
-Date: Fri, 16 Aug 2013 13:07:08 +0200
-Message-Id: <1376651230-1060-18-git-send-email-johannes@sipsolutions.net> (sfid-20130816_130809_532400_0134D373)
-In-Reply-To: <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
-References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
- <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Date: Fri, 09 Aug 2013 15:13:40 +0200
+In-Reply-To: <1375828796-17877-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130807_004018_215215_DE229937)
+References: <1375828796-17877-1-git-send-email-yeohchunyeow@cozybit.com>
+	 (sfid-20130807_004018_215215_DE229937)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Tue, 2013-08-06 at 15:39 -0700, Chun-Yeow Yeoh wrote:
+> Allow lowest basic rate to be used for unicast management frame in
+> mesh. Otherwise, the lowest supported rate is used for unicast
+> management frame, such as 1Mbps for 2.4GHz and 6Mbps for 5GHz. Rename
+> the rc_send_low_broadcast to re_send_low_basicrate since now it is
+> also applied to unicast management frame in mesh.
 
-The callers of iwl_drv_start() are probe functions.  If a probe
-function returns 0, it means it succeeded.  So if NULL was returned by
-iwl_drv_start(), it would be considered as a success.
+Applied.
 
-Fix this by returning -ENOMEM if the driver struct allocation fails in
-iwl_drv_start().
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-drv.c  | 8 +++++---
- drivers/net/wireless/iwlwifi/pcie/drv.c | 2 +-
- 2 files changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index e88397b..99e1da3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -1032,8 +1032,10 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
- 	int ret;
- 
- 	drv = kzalloc(sizeof(*drv), GFP_KERNEL);
--	if (!drv)
--		return NULL;
-+	if (!drv) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
- 
- 	drv->trans = trans;
- 	drv->dev = trans->dev;
-@@ -1078,7 +1080,7 @@ err_free_dbgfs:
- err_free_drv:
- #endif
- 	kfree(drv);
--
-+err:
- 	return ERR_PTR(ret);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index e179efe..567ef01 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -332,7 +332,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(iwl_trans);
- 	trans_pcie->drv = iwl_drv_start(iwl_trans, cfg);
- 
--	if (IS_ERR_OR_NULL(trans_pcie->drv)) {
-+	if (IS_ERR(trans_pcie->drv)) {
- 		ret = PTR_ERR(trans_pcie->drv);
- 		goto out_free_trans;
- 	}
--- 
-1.8.4.rc2
+johannes
 
