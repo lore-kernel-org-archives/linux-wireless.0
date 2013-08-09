@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46506 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450Ab3HHTF1 (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:60729 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967928Ab3HIRBS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 15:05:27 -0400
-Date: Thu, 8 Aug 2013 15:04:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, marcel@holtmann.org,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org
-Subject: Re: Linux Wireless Mini-Summit in New Orleans -- 19-20 September (6
- weeks from today!)
-Message-ID: <20130808190428.GF30925@tuxdriver.com> (sfid-20130808_210531_801894_6AD83B80)
-References: <20130808185410.GD30925@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130808185410.GD30925@tuxdriver.com>
+	Fri, 9 Aug 2013 13:01:18 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv2] mac80211: ibss - do not scan if not needed when creating an IBSS
+Date: Fri,  9 Aug 2013 18:58:32 +0200
+Message-Id: <1376067512-733-1-git-send-email-ordex@autistici.org> (sfid-20130809_190121_441903_C7093BF3)
+In-Reply-To: <1375862917-3625-1-git-send-email-ordex@autistici.org>
+References: <1375862917-3625-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, forgot to copy linux-bluetooth and linux-nfc...
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-On Thu, Aug 08, 2013 at 02:54:11PM -0400, John W. Linville wrote:
-> Greetings!
-> 
-> This is a reminder that we will have a Linux Wireless Mini-Summit in
-> New Orleans this year on 19-20 September.  This will immediately follow
-> LinuxCon and will run concurrently with Linux Plumber's Conference.
-> This event includes Linux developers for wireless LAN (802.11),
-> Bluetooth, and NFC technologies.  Both kernel and userland developers
-> are welcomed and heartily encouraged to attend!
-> 
-> 	http://wireless.kernel.org/en/developers/Summits/New-Orleans-2013
-> 
-> The link above is a Wiki.  We are using it to collect discussion
-> topics and to negotiate agenda/scheduling options for the event.
-> Please go there to record your intent to attend the event and to
-> propopse topics for discussion.
-> 
-> Please be aware that in order to attend the event above one must
-> register for either LinuxCon or for Linux Plumbers Conference.
-> Act now, before those events fill-up and close their registrations!
-> 
-> We are allotted one "large" room (up to ~80 people "theater style"), and
-> two "small" rooms (up to ~25 people) for this event.  Based on history
-> and the numbers of contributors, the larger room will primarily be
-> for the 802.11 discussions and any "plenary" topics while the smaller
-> rooms will be for Bluetooth, NFC, and any "breakout" topics.
-> 
-> So...thoughts?  Topics to discuss?
-> 
-> John
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+In some cases mac80211 will scan before creating an IBSS
+even if bssid and frequency have been forced by the user.
+This is not needed and leads only to a delay in the IBSS
+establishment phase.
 
+Immediately create the cell if both bssid and frequency
+(and fixed_freq is set) have been specified.
+
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ net/mac80211/ibss.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index e08387c..79e294e 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -891,6 +891,17 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 		return;
+ 	}
+ 
++	/* if a fixed bssid and a fixed freq have been provided create the IBSS
++	 * directly and do not waste time scanning
++	 */
++	if (ifibss->fixed_bssid && ifibss->fixed_channel) {
++		sdata_info(sdata, "Created IBSS using preconfigured BSSID %pM\n",
++			   bssid);
++		ieee80211_sta_create_ibss(sdata);
++		return;
++	}
++
++
+ 	ibss_dbg(sdata, "sta_find_ibss: did not try to join ibss\n");
+ 
+ 	/* Selected IBSS not found in current scan results - try to scan */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.1.5
+
