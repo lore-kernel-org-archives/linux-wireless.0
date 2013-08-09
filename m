@@ -1,124 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:45899 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755512Ab3H3MaS (ORCPT
+Received: from iolanthe.rowland.org ([192.131.102.54]:56035 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S967886Ab3HIONx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 08:30:18 -0400
-Subject: [PATCH 2/7] ath10k: make target_ce_config_wlan more readable
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 30 Aug 2013 15:30:14 +0300
-Message-ID: <20130830123014.31164.32755.stgit@localhost6.localdomain6> (sfid-20130830_143022_236895_F502E6D9)
-In-Reply-To: <20130830122905.31164.50662.stgit@localhost6.localdomain6>
-References: <20130830122905.31164.50662.stgit@localhost6.localdomain6>
+	Fri, 9 Aug 2013 10:13:53 -0400
+Date: Fri, 9 Aug 2013 10:13:52 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Christian Lamparter <chunkeey@googlemail.com>
+cc: Oleksij Rempel <linux@rempel-privat.de>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: FUSB200 xhci issue
+In-Reply-To: <201308090006.07690.chunkeey@googlemail.com>
+Message-ID: <Pine.LNX.4.44L0.1308091011130.1405-100000@iolanthe.rowland.org> (sfid-20130809_161357_910222_672D1993)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's easier to read t if the field names are visible.
+On Fri, 9 Aug 2013, Christian Lamparter wrote:
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |   85 ++++++++++++++++++++++++++++-----
- 1 file changed, 71 insertions(+), 14 deletions(-)
+> > After loading firmware, a reset generally is necessary.  Some devices 
+> > will do it themselves; others require you to call usb_reset_device().
+> 
+> This makes things complicated. Because, as far as I remember,
+> usb_reset_device() will cause the current driver to be unbound
+> unless its called during .probe, right?
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index cf7a3e4..304bd4f 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -125,21 +125,78 @@ static const struct ce_attr host_ce_config_wlan[] = {
- 
- /* Target firmware's Copy Engine configuration. */
- static const struct ce_pipe_config target_ce_config_wlan[] = {
--	/* host->target HTC control and raw streams */
--	{ /* CE0 */ 0, PIPEDIR_OUT, 32, 256, CE_ATTR_FLAGS, 0,},
--	/* target->host HTT + HTC control */
--	{ /* CE1 */ 1, PIPEDIR_IN, 32, 512, CE_ATTR_FLAGS, 0,},
--	/* target->host WMI */
--	{ /* CE2 */ 2, PIPEDIR_IN, 32, 2048, CE_ATTR_FLAGS, 0,},
--	/* host->target WMI */
--	{ /* CE3 */ 3, PIPEDIR_OUT, 32, 2048, CE_ATTR_FLAGS, 0,},
--	/* host->target HTT */
--	{ /* CE4 */ 4, PIPEDIR_OUT, 256, 256, CE_ATTR_FLAGS, 0,},
-+	/* CE0: host->target HTC control and raw streams */
-+	{
-+		.pipenum = 0,
-+		.pipedir = PIPEDIR_OUT,
-+		.nentries = 32,
-+		.nbytes_max = 256,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE1: target->host HTT + HTC control */
-+	{
-+		.pipenum = 1,
-+		.pipedir = PIPEDIR_IN,
-+		.nentries = 32,
-+		.nbytes_max = 512,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE2: target->host WMI */
-+	{
-+		.pipenum = 2,
-+		.pipedir = PIPEDIR_IN,
-+		.nentries = 32,
-+		.nbytes_max = 2048,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE3: host->target WMI */
-+	{
-+		.pipenum = 3,
-+		.pipedir = PIPEDIR_OUT,
-+		.nentries = 32,
-+		.nbytes_max = 2048,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE4: host->target HTT */
-+	{
-+		.pipenum = 4,
-+		.pipedir = PIPEDIR_OUT,
-+		.nentries = 256,
-+		.nbytes_max = 256,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
- 	/* NB: 50% of src nentries, since tx has 2 frags */
--	/* unused */
--	{ /* CE5 */ 5, PIPEDIR_OUT, 32, 2048, CE_ATTR_FLAGS, 0,},
--	/* Reserved for target autonomous hif_memcpy */
--	{ /* CE6 */ 6, PIPEDIR_INOUT, 32, 4096, CE_ATTR_FLAGS, 0,},
-+
-+	/* CE5: unused */
-+	{
-+		.pipenum = 5,
-+		.pipedir = PIPEDIR_OUT,
-+		.nentries = 32,
-+		.nbytes_max = 2048,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE6: Reserved for target autonomous hif_memcpy */
-+	{
-+		.pipenum = 6,
-+		.pipedir = PIPEDIR_INOUT,
-+		.nentries = 32,
-+		.nbytes_max = 4096,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
- 	/* CE7 used only by Host */
- };
- 
+If the driver defines pre_reset and post_reset methods, it won't get 
+unbound during a reset.
+
+> You see, ath9k_htc loads its firmware asynchronously in ".probe"
+> (ath9k_htc's .probe routine finishes before the firmware is
+> retrieved via the firmware loader helper... so part of the
+> firmware download is done in a firmware_complete callback
+> on a workqueue). 
+> 
+> So, if we call usb_reset_device there and the driver is unbound
+> and later rebound. the next ath9k_htc .probe will start again and
+> again and again not knowing that it is already initialized 
+> (and we have a loop).
+> 
+> 
+> This could be solved, if the devices changes the usb-id again 
+> when a proper "wifi" ath9k_htc firmware was downloaded. So, the
+> driver would know that it doesn't have to download and reset
+> the device... But we need a "free" USB-ID for that.
+
+What about a "get firmware version" sort of thing?  There really should 
+be a way for the driver to tell whether the firmware has already been 
+updated.
+
+Alan Stern
 
