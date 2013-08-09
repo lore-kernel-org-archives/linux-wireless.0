@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:37319 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755342Ab3HFXOk (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37903 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967237Ab3HIG4k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 19:14:40 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20130806230749.GC16410@order.stressinduktion.org>
-References: <1375816128.8219.28.camel@jlt4.sipsolutions.net>
-	<CA+icZUXaTYVc_iv3hny6Je9mVdX8KCVpFSNBeukS+Fh-347Wvw@mail.gmail.com>
-	<1375816715.8219.29.camel@jlt4.sipsolutions.net>
-	<CA+icZUXdAjEDgu2XrA4Dg2hsLDJYdFTCpJwiW6=ZUgULe2noyw@mail.gmail.com>
-	<CA+icZUVmokQ1fKmtbuPyp7f5Z2wdFYfjG5HCAm4Kue7efyKV8w@mail.gmail.com>
-	<20130806213006.078C72210F@mail.nwl.cc>
-	<CA+icZUVk1HM-VVYcARvY7p5KBYz0YcY9+rW8s-nKPTeVYh4tgw@mail.gmail.com>
-	<1375825538.10459.1.camel@jlt4.sipsolutions.net>
-	<20130806215657.GA16410@order.stressinduktion.org>
-	<CA+icZUWY8PfYeV-iaPCm4MZenNaHRboK6Kmc8=Fnse9_dwfdqg@mail.gmail.com>
-	<20130806230749.GC16410@order.stressinduktion.org>
-Date: Wed, 7 Aug 2013 01:14:38 +0200
-Message-ID: <CA+icZUW4wJkDGuq4W3=uXeKmV=vS0-PdxrPDH60J1KT7Jbnd4g@mail.gmail.com> (sfid-20130807_011447_191257_F1D2EDAD)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Sedat Dilek <sedat.dilek@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	wireless <linux-wireless@vger.kernel.org>, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 9 Aug 2013 02:56:40 -0400
+Message-ID: <1376031393.8355.0.camel@jlt4.sipsolutions.net> (sfid-20130809_085643_944475_59C6586D)
+Subject: Re: [PATCHv2] cfg/nl80211: send CMD_INTERFACE event on
+ NETDEV_UNREGISTER
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Date: Fri, 09 Aug 2013 08:56:33 +0200
+In-Reply-To: <1376004275-606-1-git-send-email-ordex@autistici.org>
+References: <1376004275-606-1-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 7, 2013 at 1:07 AM, Hannes Frederic Sowa
-<hannes@stressinduktion.org> wrote:
-> On Wed, Aug 07, 2013 at 12:55:33AM +0200, Sedat Dilek wrote:
->> No, tested only with iwlwifi.
->> Can you try the patch from [1]?
->>
->> - Sedat -
->>
->> [1] http://marc.info/?l=linux-netdev&m=137582524017840&w=2
->
-> Fixed the problem with virtio_net, too.
->
-> Thanks,
->
+On Fri, 2013-08-09 at 01:24 +0200, Antonio Quartulli wrote:
+> From: Antonio Quartulli <antonio@open-mesh.com>
+> 
+> Userspace applications may be listening for events (e.g.
+> matching mgmt frame) on a given interface. If such interface
+> is deleted they would keep hanging because no event will be
+> delivered anymore.
+> 
+> Send a CMD_INTERFACE event on NETDEV_UNREGISTER to notify
+> userspace that the interface does not exist anymore.
 
-Cool!
-I retested with latest next-20130806 which is also fine with this patch.
+This is too slippery a slope for me, I'm not going to apply this. You
+can listen to normal interface events in rtnetlink.
 
-- Sedat -
+johannes
 
->   Hannes
->
