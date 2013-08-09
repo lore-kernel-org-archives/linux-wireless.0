@@ -1,635 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:63006 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757615Ab3HMSwO (ORCPT
+Received: from iolanthe.rowland.org ([192.131.102.54]:56185 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752869Ab3HIRQC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 14:52:14 -0400
-Received: by mail-ee0-f47.google.com with SMTP id d49so4382023eek.34
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2013 11:52:13 -0700 (PDT)
-Message-ID: <1376419928.6292.6.camel@canaries32-MCP7A> (sfid-20130813_205223_798352_44475B30)
-Subject: [PATCH 2/2 v2] staging: vt6656: rxtx.h dead code typedef union
- tagUTX_BUFFER_CONTAINER
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Aug 2013 19:52:08 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 9 Aug 2013 13:16:02 -0400
+Date: Fri, 9 Aug 2013 13:16:00 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Oleksij Rempel <linux@rempel-privat.de>
+cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: FUSB200 xhci issue
+In-Reply-To: <52051009.9010001@rempel-privat.de>
+Message-ID: <Pine.LNX.4.44L0.1308091310560.1405-100000@iolanthe.rowland.org> (sfid-20130809_191608_560611_26FCC4E1)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is part of the Remote NDIS message format with patch
+On Fri, 9 Aug 2013, Oleksij Rempel wrote:
 
-vt6656: rxtx.c: s_vGetFreeContext use single tx memset.
+> Am 09.08.2013 16:52, schrieb Alan Stern:
+> > On Fri, 9 Aug 2013, Oleksij Rempel wrote:
+> >
+> >>> What about a "get firmware version" sort of thing?  There really should
+> >>> be a way for the driver to tell whether the firmware has already been
+> >>> updated.
+> >>
+> >> I was not able to find good direct way to check firmware version. If i
+> >> would add some new command then i will get option like: if responding FW
+> >> is updated; if not, then dead or old.
+> >> How about overwriting iProduct field? Let say, if iProduct == ath9k_htc,
+> >> then firmware is updated? Is it more or less acceptable method? I need
+> >> to ask this because it is really new for me.
+> >
+> > Changing the iProduct string descriptor would work, because the
+> > descriptors_changed() routine doesn't compare the old value of that
+> > string with the new value.  (On the other hand, it does compare the
+> > iSerialNumber strings.)
+> 
+> Just to make sure. You mean, i should avoid changing iSerialNumber 
+> because host will initiate usb reset and this device will probably not 
+> survive it?
 
-there is not need for this structure and its members.
+Right.  If the device would survive a reset then there would be no 
+problem.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.h | 573 ------------------------------------------
- 1 file changed, 573 deletions(-)
+BTW, it is common for new firmware to change the bcdDevice value in the 
+device descriptor.  That might be easier than changing a string 
+descriptor.
 
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index d854b38..3e2a877 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -32,568 +32,6 @@
- #include "device.h"
- #include "wcmd.h"
- 
--//
--// RTS buffer header
--//
--typedef struct tagSRTSDataF {
--    u16    wFrameControl;
--    u16    wDurationID;
--    u8    abyRA[ETH_ALEN];
--    u8    abyTA[ETH_ALEN];
--} SRTSDataF, *PSRTSDataF;
--
--//
--// CTS buffer header
--//
--typedef struct tagSCTSDataF {
--    u16    wFrameControl;
--    u16    wDurationID;
--    u8    abyRA[ETH_ALEN];
--    u16    wReserved;
--} SCTSDataF, *PSCTSDataF;
--
--//
--// MICHDR data header
--//
--typedef struct tagSMICHDR {
--	u32 adwHDR0[4];
--	u32 adwHDR1[4];
--	u32 adwHDR2[4];
--} SMICHDR, *PSMICHDR;
--
--typedef struct tagSTX_NAF_G_RTS
--{
--    //RsvTime
--    u16            wRTSTxRrvTime_ba;
--    u16            wRTSTxRrvTime_aa;
--    u16            wRTSTxRrvTime_bb;
--    u16            wReserved2;
--    u16            wTxRrvTime_b;
--    u16            wTxRrvTime_a;
--
--    //RTS
--    u8            byRTSSignalField_b;
--    u8            byRTSServiceField_b;
--    u16            wRTSTransmitLength_b;
--    u8            byRTSSignalField_a;
--    u8            byRTSServiceField_a;
--    u16            wRTSTransmitLength_a;
--    u16            wRTSDuration_ba;
--    u16            wRTSDuration_aa;
--    u16            wRTSDuration_bb;
--    u16            wReserved3;
--    SRTSDataF       sRTS;
--
--    //Data
--    u8            bySignalField_b;
--    u8            byServiceField_b;
--    u16            wTransmitLength_b;
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_b;
--    u16            wDuration_a;
--    u16            wTimeStampOff_b;
--    u16            wTimeStampOff_a;
--
--} TX_NAF_G_RTS, *PTX_NAF_G_RTS;
--
--typedef struct tagSTX_NAF_G_RTS_MIC
--{
--    //RsvTime
--    u16            wRTSTxRrvTime_ba;
--    u16            wRTSTxRrvTime_aa;
--    u16            wRTSTxRrvTime_bb;
--    u16            wReserved2;
--    u16            wTxRrvTime_b;
--    u16            wTxRrvTime_a;
--
--    SMICHDR         sMICHDR;
--
--    //RTS
--    u8            byRTSSignalField_b;
--    u8            byRTSServiceField_b;
--    u16            wRTSTransmitLength_b;
--    u8            byRTSSignalField_a;
--    u8            byRTSServiceField_a;
--    u16            wRTSTransmitLength_a;
--    u16            wRTSDuration_ba;
--    u16            wRTSDuration_aa;
--    u16            wRTSDuration_bb;
--    u16            wReserved3;
--    SRTSDataF       sRTS;
--
--    //Data
--    u8            bySignalField_b;
--    u8            byServiceField_b;
--    u16            wTransmitLength_b;
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_b;
--    u16            wDuration_a;
--    u16            wTimeStampOff_b;
--    u16            wTimeStampOff_a;
--
--} TX_NAF_G_RTS_MIC, *PTX_NAF_G_RTS_MIC;
--
--typedef struct tagSTX_NAF_G_CTS
--{
--    //RsvTime
--    u16            wCTSTxRrvTime_ba;
--    u16            wReserved2;
--    u16            wTxRrvTime_b;
--    u16            wTxRrvTime_a;
--
--    //CTS
--    u8            byCTSSignalField_b;
--    u8            byCTSServiceField_b;
--    u16            wCTSTransmitLength_b;
--    u16            wCTSDuration_ba;
--    u16            wReserved3;
--    SCTSDataF       sCTS;
--
--    //Data
--    u8            bySignalField_b;
--    u8            byServiceField_b;
--    u16            wTransmitLength_b;
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_b;
--    u16            wDuration_a;
--    u16            wTimeStampOff_b;
--    u16            wTimeStampOff_a;
--
--} TX_NAF_G_CTS, *PTX_NAF_G_CTS;
--
--typedef struct tagSTX_NAF_G_CTS_MIC
--{
--    //RsvTime
--    u16            wCTSTxRrvTime_ba;
--    u16            wReserved2;
--    u16            wTxRrvTime_b;
--    u16            wTxRrvTime_a;
--
--    SMICHDR         sMICHDR;
--
--    //CTS
--    u8            byCTSSignalField_b;
--    u8            byCTSServiceField_b;
--    u16            wCTSTransmitLength_b;
--    u16            wCTSDuration_ba;
--    u16            wReserved3;
--    SCTSDataF       sCTS;
--
--    //Data
--    u8            bySignalField_b;
--    u8            byServiceField_b;
--    u16            wTransmitLength_b;
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_b;
--    u16            wDuration_a;
--    u16            wTimeStampOff_b;
--    u16            wTimeStampOff_a;
--
--} TX_NAF_G_CTS_MIC, *PTX_NAF_G_CTS_MIC;
--
--typedef struct tagSTX_NAF_G_BEACON
--{
--    u16            wFIFOCtl;
--    u16            wTimeStamp;
--
--    //CTS
--    u8            byCTSSignalField_b;
--    u8            byCTSServiceField_b;
--    u16            wCTSTransmitLength_b;
--    u16            wCTSDuration_ba;
--    u16            wReserved1;
--    SCTSDataF       sCTS;
--
--    //Data
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_a;
--    u16            wTimeStampOff_a;
--
--} TX_NAF_G_BEACON, *PTX_NAF_G_BEACON;
--
--typedef struct tagSTX_NAF_AB_RTS
--{
--    //RsvTime
--    u16            wRTSTxRrvTime_ab;
--    u16            wTxRrvTime_ab;
--
--    //RTS
--    u8            byRTSSignalField_ab;
--    u8            byRTSServiceField_ab;
--    u16            wRTSTransmitLength_ab;
--    u16            wRTSDuration_ab;
--    u16            wReserved2;
--    SRTSDataF       sRTS;
--
--    //Data
--    u8            bySignalField_ab;
--    u8            byServiceField_ab;
--    u16            wTransmitLength_ab;
--    u16            wDuration_ab;
--    u16            wTimeStampOff_ab;
--
--} TX_NAF_AB_RTS, *PTX_NAF_AB_RTS;
--
--typedef struct tagSTX_NAF_AB_RTS_MIC
--{
--    //RsvTime
--    u16            wRTSTxRrvTime_ab;
--    u16            wTxRrvTime_ab;
--
--    SMICHDR         sMICHDR;
--
--    //RTS
--    u8            byRTSSignalField_ab;
--    u8            byRTSServiceField_ab;
--    u16            wRTSTransmitLength_ab;
--    u16            wRTSDuration_ab;
--    u16            wReserved2;
--    SRTSDataF       sRTS;
--
--    //Data
--    u8            bySignalField_ab;
--    u8            byServiceField_ab;
--    u16            wTransmitLength_ab;
--    u16            wDuration_ab;
--    u16            wTimeStampOff_ab;
--
--} TX_NAF_AB_RTS_MIC, *PTX_NAF_AB_RTS_MIC;
--
--typedef struct tagSTX_NAF_AB_CTS
--{
--    //RsvTime
--    u16            wReserved2;
--    u16            wTxRrvTime_ab;
--
--    //Data
--    u8            bySignalField_ab;
--    u8            byServiceField_ab;
--    u16            wTransmitLength_ab;
--    u16            wDuration_ab;
--    u16            wTimeStampOff_ab;
--
--} TX_NAF_AB_CTS, *PTX_NAF_AB_CTS;
--
--typedef struct tagSTX_NAF_AB_CTS_MIC
--{
--    //RsvTime
--    u16            wReserved2;
--    u16            wTxRrvTime_ab;
--
--    SMICHDR         sMICHDR;
--
--    //Data
--    u8            bySignalField_ab;
--    u8            byServiceField_ab;
--    u16            wTransmitLength_ab;
--    u16            wDuration_ab;
--    u16            wTimeStampOff_ab;
--
--} TX_NAF_AB_CTS_MIC, *PTX_NAF_AB_CTS_MIC;
--
--typedef struct tagSTX_NAF_AB_BEACON
--{
--    u16            wFIFOCtl;
--    u16            wTimeStamp;
--
--   //Data
--    u8            bySignalField_ab;
--    u8            byServiceField_ab;
--    u16            wTransmitLength_ab;
--    u16            wDuration_ab;
--    u16            wTimeStampOff_ab;
--
--} TX_NAF_AB_BEACON, *PTX_NAF_AB_BEACON;
--
--typedef struct tagSTX_AF_G_RTS
--{
--    //RsvTime
--    u16            wRTSTxRrvTime_ba;
--    u16            wRTSTxRrvTime_aa;
--    u16            wRTSTxRrvTime_bb;
--    u16            wReserved2;
--    u16            wTxRrvTime_b;
--    u16            wTxRrvTime_a;
--
--    //RTS
--    u8            byRTSSignalField_b;
--    u8            byRTSServiceField_b;
--    u16            wRTSTransmitLength_b;
--    u8            byRTSSignalField_a;
--    u8            byRTSServiceField_a;
--    u16            wRTSTransmitLength_a;
--    u16            wRTSDuration_ba;
--    u16            wRTSDuration_aa;
--    u16            wRTSDuration_bb;
--    u16            wReserved3;
--    u16            wRTSDuration_ba_f0;
--    u16            wRTSDuration_aa_f0;
--    u16            wRTSDuration_ba_f1;
--    u16            wRTSDuration_aa_f1;
--    SRTSDataF       sRTS;
--
--    //Data
--    u8            bySignalField_b;
--    u8            byServiceField_b;
--    u16            wTransmitLength_b;
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_b;
--    u16            wDuration_a;
--    u16            wDuration_a_f0;
--    u16            wDuration_a_f1;
--    u16            wTimeStampOff_b;
--    u16            wTimeStampOff_a;
--
--} TX_AF_G_RTS, *PTX_AF_G_RTS;
--
--typedef struct tagSTX_AF_G_RTS_MIC
--{
--    //RsvTime
--    u16            wRTSTxRrvTime_ba;
--    u16            wRTSTxRrvTime_aa;
--    u16            wRTSTxRrvTime_bb;
--    u16            wReserved2;
--    u16            wTxRrvTime_b;
--    u16            wTxRrvTime_a;
--
--    SMICHDR         sMICHDR;
--
--    //RTS
--    u8            byRTSSignalField_b;
--    u8            byRTSServiceField_b;
--    u16            wRTSTransmitLength_b;
--    u8            byRTSSignalField_a;
--    u8            byRTSServiceField_a;
--    u16            wRTSTransmitLength_a;
--    u16            wRTSDuration_ba;
--    u16            wRTSDuration_aa;
--    u16            wRTSDuration_bb;
--    u16            wReserved3;
--    u16            wRTSDuration_ba_f0;
--    u16            wRTSDuration_aa_f0;
--    u16            wRTSDuration_ba_f1;
--    u16            wRTSDuration_aa_f1;
--    SRTSDataF       sRTS;
--
--    //Data
--    u8            bySignalField_b;
--    u8            byServiceField_b;
--    u16            wTransmitLength_b;
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_b;
--    u16            wDuration_a;
--    u16            wDuration_a_f0;
--    u16            wDuration_a_f1;
--    u16            wTimeStampOff_b;
--    u16            wTimeStampOff_a;
--
--} TX_AF_G_RTS_MIC, *PTX_AF_G_RTS_MIC;
--
--typedef struct tagSTX_AF_G_CTS
--{
--    //RsvTime
--    u16            wCTSTxRrvTime_ba;
--    u16            wReserved2;
--    u16            wTxRrvTime_b;
--    u16            wTxRrvTime_a;
--
--    //CTS
--    u8            byCTSSignalField_b;
--    u8            byCTSServiceField_b;
--    u16            wCTSTransmitLength_b;
--    u16            wCTSDuration_ba;
--    u16            wReserved3;
--    u16            wCTSDuration_ba_f0;
--    u16            wCTSDuration_ba_f1;
--    SCTSDataF       sCTS;
--
--    //Data
--    u8            bySignalField_b;
--    u8            byServiceField_b;
--    u16            wTransmitLength_b;
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_b;
--    u16            wDuration_a;
--    u16            wDuration_a_f0;
--    u16            wDuration_a_f1;
--    u16            wTimeStampOff_b;
--    u16            wTimeStampOff_a;
--
--} TX_AF_G_CTS, *PTX_AF_G_CTS;
--
--typedef struct tagSTX_AF_G_CTS_MIC
--{
--    //RsvTime
--    u16            wCTSTxRrvTime_ba;
--    u16            wReserved2;
--    u16            wTxRrvTime_b;
--    u16            wTxRrvTime_a;
--
--    SMICHDR         sMICHDR;
--
--    //CTS
--    u8            byCTSSignalField_b;
--    u8            byCTSServiceField_b;
--    u16            wCTSTransmitLength_b;
--    u16            wCTSDuration_ba;
--    u16            wReserved3;
--    u16            wCTSDuration_ba_f0;
--    u16            wCTSDuration_ba_f1;
--    SCTSDataF       sCTS;
--
--    //Data
--    u8            bySignalField_b;
--    u8            byServiceField_b;
--    u16            wTransmitLength_b;
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_b;
--    u16            wDuration_a;
--    u16            wDuration_a_f0;
--    u16            wDuration_a_f1;
--    u16            wTimeStampOff_b;
--    u16            wTimeStampOff_a;
--
--} TX_AF_G_CTS_MIC, *PTX_AF_G_CTS_MIC;
--
--typedef struct tagSTX_AF_A_RTS
--{
--    //RsvTime
--    u16            wRTSTxRrvTime_a;
--    u16            wTxRrvTime_a;
--
--    //RTS
--    u8            byRTSSignalField_a;
--    u8            byRTSServiceField_a;
--    u16            wRTSTransmitLength_a;
--    u16            wRTSDuration_a;
--    u16            wReserved2;
--    u16            wRTSDuration_a_f0;
--    u16            wRTSDuration_a_f1;
--    SRTSDataF       sRTS;
--
--    //Data
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_a;
--    u16            wTimeStampOff_a;
--    u16            wDuration_a_f0;
--    u16            wDuration_a_f1;
--
--} TX_AF_A_RTS, *PTX_AF_A_RTS;
--
--typedef struct tagSTX_AF_A_RTS_MIC
--{
--    //RsvTime
--    u16            wRTSTxRrvTime_a;
--    u16            wTxRrvTime_a;
--
--    SMICHDR         sMICHDR;
--
--    //RTS
--    u8            byRTSSignalField_a;
--    u8            byRTSServiceField_a;
--    u16            wRTSTransmitLength_a;
--    u16            wRTSDuration_a;
--    u16            wReserved2;
--    u16            wRTSDuration_a_f0;
--    u16            wRTSDuration_a_f1;
--    SRTSDataF       sRTS;
--
--    //Data
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_a;
--    u16            wTimeStampOff_a;
--    u16            wDuration_a_f0;
--    u16            wDuration_a_f1;
--
--} TX_AF_A_RTS_MIC, *PTX_AF_A_RTS_MIC;
--
--typedef struct tagSTX_AF_A_CTS
--{
--    //RsvTime
--    u16            wReserved2;
--    u16            wTxRrvTime_a;
--
--    //Data
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_a;
--    u16            wTimeStampOff_a;
--    u16            wDuration_a_f0;
--    u16            wDuration_a_f1;
--
--} TX_AF_A_CTS, *PTX_AF_A_CTS;
--
--typedef struct tagSTX_AF_A_CTS_MIC
--{
--    //RsvTime
--    u16            wReserved2;
--    u16            wTxRrvTime_a;
--
--    SMICHDR         sMICHDR;
--
--    //Data
--    u8            bySignalField_a;
--    u8            byServiceField_a;
--    u16            wTransmitLength_a;
--    u16            wDuration_a;
--    u16            wTimeStampOff_a;
--    u16            wDuration_a_f0;
--    u16            wDuration_a_f1;
--
--} TX_AF_A_CTS_MIC, *PTX_AF_A_CTS_MIC;
--
--//
--// union with all of the TX Buffer Type
--//
--typedef union tagUTX_BUFFER_CONTAINER
--{
--    TX_NAF_G_RTS                    RTS_G;
--    TX_NAF_G_RTS_MIC                RTS_G_MIC;
--    TX_NAF_G_CTS                    CTS_G;
--    TX_NAF_G_CTS_MIC                CTS_G_MIC;
--    //TX_NAF_G_BEACON                 Beacon_G;
--    TX_NAF_AB_RTS                   RTS_AB;
--    TX_NAF_AB_RTS_MIC               RTS_AB_MIC;
--    TX_NAF_AB_CTS                   CTS_AB;
--    TX_NAF_AB_CTS_MIC               CTS_AB_MIC;
--    //TX_NAF_AB_BEACON                Beacon_AB;
--    TX_AF_G_RTS                     RTS_G_AutoFB;
--    TX_AF_G_RTS_MIC                 RTS_G_AutoFB_MIC;
--    TX_AF_G_CTS                     CTS_G_AutoFB;
--    TX_AF_G_CTS_MIC                 CTS_G_AutoFB_MIC;
--    TX_AF_A_RTS                     RTS_A_AutoFB;
--    TX_AF_A_RTS_MIC                 RTS_A_AutoFB_MIC;
--    TX_AF_A_CTS                     CTS_A_AutoFB;
--    TX_AF_A_CTS_MIC                 CTS_A_AutoFB_MIC;
--
--} TX_BUFFER_CONTAINER, *PTX_BUFFER_CONTAINER;
--
--//
--// Remote NDIS message format
--//
- typedef struct tagSTX_BUFFER
- {
-     u8                            byType;
-@@ -605,15 +43,8 @@ typedef struct tagSTX_BUFFER
-     u16                            wTimeStamp;
-     u16                            wFragCtl;
-     u16                            wReserved;
--
--    // Actual message
--    TX_BUFFER_CONTAINER             BufferHeader;
--
- } __packed TX_BUFFER, *PTX_BUFFER;
- 
--//
--// Remote NDIS message format
--//
- typedef struct tagSBEACON_BUFFER
- {
-     u8                            byType;
-@@ -622,10 +53,6 @@ typedef struct tagSBEACON_BUFFER
- 
-     u16                            wFIFOCtl;
-     u16                            wTimeStamp;
--
--    // Actual message
--    TX_BUFFER_CONTAINER             BufferHeader;
--
- } __packed BEACON_BUFFER, *PBEACON_BUFFER;
- 
- void vDMA0_tx_80211(struct vnt_private *, struct sk_buff *skb);
--- 
-1.8.1.2
+> > Is there any way to read the firmware back from the device?  Then you
+> > could check directly.
+> 
+> No, this device is a SoC with usb client interface based on FUSB200 core 
+> (If i'm correct, same core as on carl9170 devices). We can't read memory 
+> unless FW provide this service.
+> At power on, this device will boot from external or internal ROM and 
+> load minimal FW. Without it, USB wont work.
+> If i read FW code correctly, it should be responsible for suspend and reset.
 
+How do you tell the device to start running the new firmware after it 
+is loaded?  Normally this requires some sort of reset.
+
+Is there any way to prevent the device from losing its firmware during 
+a USB reset or suspend?
+
+Alan Stern
 
