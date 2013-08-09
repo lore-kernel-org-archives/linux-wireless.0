@@ -1,298 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:34485 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918Ab3HTRlw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38296 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965659Ab3HIJXw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 13:41:52 -0400
-Received: by mail-lb0-f171.google.com with SMTP id t13so724012lbd.16
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:51 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
+	Fri, 9 Aug 2013 05:23:52 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH 11/16] wcn36xx: Add txrx.c
-Date: Tue, 20 Aug 2013 19:41:14 +0200
-Message-Id: <1377020479-16935-12-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_194157_436842_7EF6BDFF)
-In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] mac80211: add APIs to allow keeping connections after WoWLAN
+Date: Fri,  9 Aug 2013 11:23:47 +0200
+Message-Id: <1376040227-24751-1-git-send-email-johannes@sipsolutions.net> (sfid-20130809_112355_967120_2832C76B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding txrx.c
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+In order to be able to (securely) keep connections alive after
+the system was suspended for WoWLAN, we need some additional
+APIs. We already have API (ieee80211_gtk_rekey_notify) to tell
+wpa_supplicant about the new replay counter if GTK rekeying
+was done by the device while the host was asleep, but that's
+not sufficient.
+
+If no GTK rekeying wasn't done, we need to tell the host about
+sequence counters for the GTK (and PTK regardless of rekeying)
+that was used while asleep, add ieee80211_set_key_rx_seq() for
+that.
+
+If GTK rekeying was done, then we need to be able to disable
+the old keys (with ieee80211_remove_key()) and allocate the
+new GTK key(s) in mac80211 (with ieee80211_gtk_rekey_add()).
+
+If protocol offload (e.g. ARP) is implemented, then also the
+TX sequence counter for the PTK must be updated, using the new
+ieee80211_set_key_tx_seq() function.
+
+Change-Id: I789cb7d5467ea697e1b554af0a3e35f47d581c71
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/txrx.c | 261 ++++++++++++++++++++++++++++++++
- 1 file changed, 261 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.c
+ include/net/mac80211.h |  83 ++++++++++++++++++++++++++
+ net/mac80211/key.c     | 154 ++++++++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/util.c    |   2 +-
+ 3 files changed, 231 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-new file mode 100644
-index 0000000..54fb86e
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -0,0 +1,261 @@
-+/*
-+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b3f2c89..5c78d95 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3648,6 +3648,89 @@ void ieee80211_get_key_rx_seq(struct ieee80211_key_conf *keyconf,
+ 			      int tid, struct ieee80211_key_seq *seq);
+ 
+ /**
++ * ieee80211_set_key_tx_seq - set key TX sequence counter
 + *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
++ * @keyconf: the parameter passed with the set key
++ * @seq: new sequence data
 + *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ * This function allows a driver to set the current TX IV/PNs for the
++ * given key. This is useful when resuming from WoWLAN sleep and the
++ * device may have transmitted frames using the PTK, e.g. replies to
++ * ARP requests.
++ *
++ * Note that this function may only be called when no TX processing
++ * can be done concurrently.
 + */
++void ieee80211_set_key_tx_seq(struct ieee80211_key_conf *keyconf,
++			      struct ieee80211_key_seq *seq);
 +
-+#include "txrx.h"
++/**
++ * ieee80211_set_key_rx_seq - set key RX sequence counter
++ *
++ * @keyconf: the parameter passed with the set key
++ * @tid: The TID, or -1 for the management frame value (CCMP only);
++ *	the value on TID 0 is also used for non-QoS frames. For
++ *	CMAC, only TID 0 is valid.
++ * @seq: new sequence data
++ *
++ * This function allows a driver to set the current RX IV/PNs for the
++ * given key. This is useful when resuming from WoWLAN sleep and GTK
++ * rekey may have been done while suspended. It should not be called
++ * if IV checking is done by the device and not by mac80211.
++ *
++ * Note that this function may only be called when no RX processing
++ * can be done concurrently.
++ */
++void ieee80211_set_key_rx_seq(struct ieee80211_key_conf *keyconf,
++			      int tid, struct ieee80211_key_seq *seq);
 +
-+static inline int get_rssi0(struct wcn36xx_rx_bd *bd)
-+{
-+	return 100 - ((bd->phy_stat0 >> 24) & 0xff);
-+}
++/**
++ * ieee80211_remove_key - remove the given key
++ * @keyconf: the parameter passed with the set key
++ *
++ * Remove the given key. If the key was uploaded to the hardware at the
++ * time this function is called, it is not deleted in the hardware but
++ * instead assumed to have been removed already.
++ *
++ * Note that due to locking considerations this function can (currently)
++ * only be called during key iteration (ieee80211_iter_keys().)
++ */
++void ieee80211_remove_key(struct ieee80211_key_conf *keyconf);
 +
-+int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
-+{
-+	struct ieee80211_rx_status status;
-+	struct ieee80211_hdr *hdr;
-+	struct wcn36xx_rx_bd *bd;
-+	u16 fc, sn;
++/**
++ * ieee80211_gtk_rekey_add - add a GTK key from rekeying during WoWLAN
++ * @vif: the virtual interface to add the key on
++ * @keyconf: new key data
++ *
++ * When GTK rekeying was done while the system was suspended, (a) new
++ * key(s) will be available. These will be needed by mac80211 for proper
++ * RX processing, so this function allows setting them.
++ *
++ * The function returns the newly allocated key structure, which will
++ * have similar contents to the passed key configuration but point to
++ * mac80211-owned memory. In case of errors, the function returns an
++ * ERR_PTR(), use IS_ERR() etc.
++ *
++ * Note that this function assumes the key isn't added to hardware
++ * acceleration, so no TX will be done with the key. Since it's a GTK
++ * on managed (station) networks, this is true anyway. If the driver
++ * calls this function from the resume callback and subsequently uses
++ * the return code 1 to reconfigure the device, this key will be part
++ * of the reconfiguration.
++ *
++ * Note that the driver should also call ieee80211_set_key_rx_seq()
++ * for the new key for each TID to set up sequence counters properly.
++ *
++ * IMPORTANT: If this replaces a key that is present in the hardware,
++ * then it will attempt to remove it during this call. In many cases
++ * this isn't what you want, so call ieee80211_remove_key() first for
++ * the key that's being replaced.
++ */
++struct ieee80211_key_conf *
++ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
++			struct ieee80211_key_conf *keyconf);
 +
-+	/*
-+	 * All fields must be 0, otherwise it can lead to
-+	 * unexpected consequences.
-+	 */
-+	memset(&status, 0, sizeof(status));
-+
-+	bd = (struct wcn36xx_rx_bd *)skb->data;
-+	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
-+	wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP,
-+			 "BD   <<< ", (char *)bd,
-+			 sizeof(struct wcn36xx_rx_bd));
-+
-+	skb_put(skb, bd->pdu.mpdu_header_off + bd->pdu.mpdu_len);
-+	skb_pull(skb, bd->pdu.mpdu_header_off);
-+
-+	status.mactime = 10;
-+	status.freq = WCN36XX_CENTER_FREQ(wcn);
-+	status.band = WCN36XX_BAND(wcn);
-+	status.signal = -get_rssi0(bd);
-+	status.antenna = 1;
-+	status.rate_idx = 1;
-+	status.flag = 0;
-+	status.rx_flags = 0;
-+	status.flag |= RX_FLAG_IV_STRIPPED |
-+		       RX_FLAG_MMIC_STRIPPED |
-+		       RX_FLAG_DECRYPTED;
-+
-+	wcn36xx_dbg(WCN36XX_DBG_RX, "status.flags=%x status->vendor_radiotap_len=%x",
-+		    status.flag,  status.vendor_radiotap_len);
-+
-+	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
-+
-+	hdr = (struct ieee80211_hdr *) skb->data;
-+	fc = __le16_to_cpu(hdr->frame_control);
-+	sn = IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl));
-+
-+	if (ieee80211_is_beacon(hdr->frame_control)) {
-+		wcn36xx_dbg(WCN36XX_DBG_BEACON, "beacon skb %p len %d fc %04x sn %d",
-+			    skb, skb->len, fc, sn);
-+		wcn36xx_dbg_dump(WCN36XX_DBG_BEACON_DUMP, "SKB <<< ",
-+				 (char *)skb->data, skb->len);
-+	} else {
-+		wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %04x sn %d",
-+			    skb, skb->len, fc, sn);
-+		wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP, "SKB <<< ",
-+				 (char *)skb->data, skb->len);
-+	}
-+
-+	ieee80211_rx_irqsafe(wcn->hw, skb);
-+
-+	return 0;
-+}
-+
-+static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
-+			       u32 mpdu_header_len,
-+			       u32 len,
-+			       u16 tid)
-+{
-+	bd->pdu.mpdu_header_len = mpdu_header_len;
-+	bd->pdu.mpdu_header_off = sizeof(*bd);
-+	bd->pdu.mpdu_data_off = bd->pdu.mpdu_header_len +
-+		bd->pdu.mpdu_header_off;
-+	bd->pdu.mpdu_len = len;
-+	bd->pdu.tid = tid;
-+}
-+
-+static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
-+				struct wcn36xx *wcn,
-+				struct wcn36xx_sta *sta_priv,
-+				struct ieee80211_hdr *hdr,
-+				bool bcast)
-+{
-+	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
-+						 struct ieee80211_vif,
-+						 drv_priv);
-+	bd->bd_rate = WCN36XX_BD_RATE_DATA;
-+	bd->dpu_sign = wcn->current_vif->ucast_dpu_signature;
-+
-+	/*
-+	 * For not unicast frames mac80211 will not set sta pointer so use
-+	 * self_sta_index instead.
-+	 */
-+	if (sta_priv) {
-+		if (vif->type == NL80211_IFTYPE_STATION) {
-+			bd->sta_index = sta_priv->bss_sta_index;
-+			bd->dpu_desc_idx = sta_priv->bss_dpu_desc_index;
-+		} else if (vif->type == NL80211_IFTYPE_AP ||
-+			   vif->type == NL80211_IFTYPE_ADHOC ||
-+			   vif->type == NL80211_IFTYPE_MESH_POINT) {
-+			bd->sta_index = sta_priv->sta_index;
-+			bd->dpu_desc_idx = sta_priv->dpu_desc_index;
-+		}
-+	} else {
-+		bd->sta_index = wcn->current_vif->self_sta_index;
-+		bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
-+	}
-+
-+	if (ieee80211_is_nullfunc(hdr->frame_control) ||
-+	   (sta_priv && !sta_priv->is_data_encrypted))
-+		bd->dpu_ne = 1;
-+
-+	if (bcast) {
-+		bd->ub = 1;
-+		bd->ack_policy = 1;
-+	}
-+}
-+
-+static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
-+				struct wcn36xx *wcn,
-+				struct ieee80211_hdr *hdr,
-+				bool bcast)
-+{
-+	bd->sta_index = wcn->current_vif->self_sta_index;
-+	bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
-+	bd->dpu_ne = 1;
-+
-+	/* default rate for unicast */
-+	if (ieee80211_is_mgmt(hdr->frame_control))
-+		bd->bd_rate = (WCN36XX_BAND(wcn) == IEEE80211_BAND_5GHZ) ?
-+			WCN36XX_BD_RATE_CTRL :
-+			WCN36XX_BD_RATE_MGMT;
-+	else if (ieee80211_is_ctl(hdr->frame_control))
-+		bd->bd_rate = WCN36XX_BD_RATE_CTRL;
-+	else
-+		wcn36xx_warn("frame control type unknown");
-+
-+	/*
-+	 * In joining state trick hardware that probe is sent as
-+	 * unicast even if address is broadcast.
-+	 */
-+	if (wcn->is_joining &&
-+	    ieee80211_is_probe_req(hdr->frame_control))
-+		bcast = false;
-+
-+	if (bcast) {
-+		/* broadcast */
-+		bd->ub = 1;
-+		/* No ack needed not unicast */
-+		bd->ack_policy = 1;
-+		bd->queue_id = WCN36XX_TX_B_WQ_ID;
-+	} else
-+		bd->queue_id = WCN36XX_TX_U_WQ_ID;
-+}
-+
-+int wcn36xx_start_tx(struct wcn36xx *wcn,
-+		     struct wcn36xx_sta *sta_priv,
-+		     struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	unsigned long flags;
-+	bool is_low = ieee80211_is_data(hdr->frame_control);
-+	bool bcast = is_broadcast_ether_addr(hdr->addr1) ||
-+		is_multicast_ether_addr(hdr->addr1);
-+	struct wcn36xx_tx_bd *bd = wcn36xx_dxe_get_next_bd(wcn, is_low);
-+
-+	if (!bd) {
-+		/*
-+		 * TX DXE are used in pairs. One for the BD and one for the
-+		 * actual frame. The BD DXE's has a preallocated buffer while
-+		 * the skb ones does not. If this isn't true something is really
-+		 * wierd. TODO: Recover from this situation
-+		 */
-+
-+		wcn36xx_error("bd address may not be NULL for BD DXE");
++/**
+  * ieee80211_gtk_rekey_notify - notify userspace supplicant of rekeying
+  * @vif: virtual interface the rekeying was done on
+  * @bssid: The BSSID of the AP, for checking association
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index e39cc91..620677e 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -93,6 +93,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 
+ 	might_sleep();
+ 
++	if (key->flags & KEY_FLAG_TAINTED)
 +		return -EINVAL;
-+	}
 +
-+	memset(bd, 0, sizeof(*bd));
-+
-+	wcn36xx_dbg(WCN36XX_DBG_TX,
-+		    "tx skb %p len %d fc %04x sn %d %s %s",
-+		    skb, skb->len, __le16_to_cpu(hdr->frame_control),
-+		    IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl)),
-+		    is_low ? "low" : "high", bcast ? "bcast" : "ucast");
-+
-+	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
-+
-+	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
-+
-+	bd->tx_comp = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
-+	if (bd->tx_comp) {
-+		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested");
-+		spin_lock_irqsave(&wcn->dxe_lock, flags);
-+		if (wcn->tx_ack_skb) {
-+			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
-+			wcn36xx_warn("tx_ack_skb already set");
-+			ieee80211_free_txskb(wcn->hw, skb);
-+			return -EINVAL;
-+		}
-+
-+		wcn->tx_ack_skb = skb;
-+		spin_unlock_irqrestore(&wcn->dxe_lock, flags);
-+
-+		/* Only one at a time is supported by fw. Stop the TX queues
-+		 * until the ack status gets back.
-+		 *
-+		 * TODO: Add watchdog in case FW does not answer
-+		 */
-+		ieee80211_stop_queues(wcn->hw);
-+	}
-+
-+	/* Data frames served first*/
-+	if (is_low) {
-+		/*
-+		 * Sometimes in AP mode mac80211 is trying to send data
-+		 * frame to nobody. Why?
-+		 */
-+		if (!sta_priv)
-+			wcn36xx_warn("Sending data packet to nobody");
-+		wcn36xx_set_tx_data(bd, wcn, sta_priv, hdr, bcast);
-+		wcn36xx_set_tx_pdu(bd,
-+			   ieee80211_is_data_qos(hdr->frame_control) ?
-+			   sizeof(struct ieee80211_qos_hdr) :
-+			   sizeof(struct ieee80211_hdr_3addr),
-+			   skb->len, sta_priv ? sta_priv->tid : 0);
+ 	if (!key->local->ops->set_key)
+ 		goto out_unsupported;
+ 
+@@ -455,6 +458,7 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct sta_info *sta)
+ {
++	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_key *old_key;
+ 	int idx, ret;
+ 	bool pairwise;
+@@ -484,10 +488,13 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 
+ 	ieee80211_debugfs_key_add(key);
+ 
+-	ret = ieee80211_key_enable_hw_accel(key);
+-
+-	if (ret)
+-		ieee80211_key_free(key, true);
++	if (!local->wowlan) {
++		ret = ieee80211_key_enable_hw_accel(key);
++		if (ret)
++			ieee80211_key_free(key, true);
 +	} else {
-+		/* MGMT and CTRL frames are handeld here*/
-+		wcn36xx_set_tx_mgmt(bd, wcn, hdr, bcast);
-+		wcn36xx_set_tx_pdu(bd,
-+			   ieee80211_is_data_qos(hdr->frame_control) ?
-+			   sizeof(struct ieee80211_qos_hdr) :
-+			   sizeof(struct ieee80211_hdr_3addr),
-+			   skb->len, WCN36XX_TID);
++		ret = 0;
++	}
+ 
+ 	mutex_unlock(&sdata->local->key_mtx);
+ 
+@@ -540,7 +547,7 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
+ 			 void *iter_data)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	struct ieee80211_key *key;
++	struct ieee80211_key *key, *tmp;
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+ 	ASSERT_RTNL();
+@@ -548,13 +555,14 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
+ 	mutex_lock(&local->key_mtx);
+ 	if (vif) {
+ 		sdata = vif_to_sdata(vif);
+-		list_for_each_entry(key, &sdata->key_list, list)
++		list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
+ 			iter(hw, &sdata->vif,
+ 			     key->sta ? &key->sta->sta : NULL,
+ 			     &key->conf, iter_data);
+ 	} else {
+ 		list_for_each_entry(sdata, &local->interfaces, list)
+-			list_for_each_entry(key, &sdata->key_list, list)
++			list_for_each_entry_safe(key, tmp,
++						 &sdata->key_list, list)
+ 				iter(hw, &sdata->vif,
+ 				     key->sta ? &key->sta->sta : NULL,
+ 				     &key->conf, iter_data);
+@@ -751,3 +759,135 @@ void ieee80211_get_key_rx_seq(struct ieee80211_key_conf *keyconf,
+ 	}
+ }
+ EXPORT_SYMBOL(ieee80211_get_key_rx_seq);
++
++void ieee80211_set_key_tx_seq(struct ieee80211_key_conf *keyconf,
++			      struct ieee80211_key_seq *seq)
++{
++	struct ieee80211_key *key;
++	u64 pn64;
++
++	key = container_of(keyconf, struct ieee80211_key, conf);
++
++	switch (key->conf.cipher) {
++	case WLAN_CIPHER_SUITE_TKIP:
++		key->u.tkip.tx.iv32 = seq->tkip.iv32;
++		key->u.tkip.tx.iv16 = seq->tkip.iv16;
++		break;
++	case WLAN_CIPHER_SUITE_CCMP:
++		pn64 = (u64)seq->ccmp.pn[5] |
++		       ((u64)seq->ccmp.pn[4] << 8) |
++		       ((u64)seq->ccmp.pn[3] << 16) |
++		       ((u64)seq->ccmp.pn[2] << 24) |
++		       ((u64)seq->ccmp.pn[1] << 32) |
++		       ((u64)seq->ccmp.pn[0] << 40);
++		atomic64_set(&key->u.ccmp.tx_pn, pn64);
++		break;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++		pn64 = (u64)seq->aes_cmac.pn[5] |
++		       ((u64)seq->aes_cmac.pn[4] << 8) |
++		       ((u64)seq->aes_cmac.pn[3] << 16) |
++		       ((u64)seq->aes_cmac.pn[2] << 24) |
++		       ((u64)seq->aes_cmac.pn[1] << 32) |
++		       ((u64)seq->aes_cmac.pn[0] << 40);
++		atomic64_set(&key->u.aes_cmac.tx_pn, pn64);
++		break;
++	default:
++		WARN_ON(1);
++		break;
++	}
++}
++EXPORT_SYMBOL_GPL(ieee80211_set_key_tx_seq);
++
++void ieee80211_set_key_rx_seq(struct ieee80211_key_conf *keyconf,
++			      int tid, struct ieee80211_key_seq *seq)
++{
++	struct ieee80211_key *key;
++	u8 *pn;
++
++	key = container_of(keyconf, struct ieee80211_key, conf);
++
++	switch (key->conf.cipher) {
++	case WLAN_CIPHER_SUITE_TKIP:
++		if (WARN_ON(tid < 0 || tid >= IEEE80211_NUM_TIDS))
++			return;
++		key->u.tkip.rx[tid].iv32 = seq->tkip.iv32;
++		key->u.tkip.rx[tid].iv16 = seq->tkip.iv16;
++		break;
++	case WLAN_CIPHER_SUITE_CCMP:
++		if (WARN_ON(tid < -1 || tid >= IEEE80211_NUM_TIDS))
++			return;
++		if (tid < 0)
++			pn = key->u.ccmp.rx_pn[IEEE80211_NUM_TIDS];
++		else
++			pn = key->u.ccmp.rx_pn[tid];
++		memcpy(pn, seq->ccmp.pn, IEEE80211_CCMP_PN_LEN);
++		break;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++		if (WARN_ON(tid != 0))
++			return;
++		pn = key->u.aes_cmac.rx_pn;
++		memcpy(pn, seq->aes_cmac.pn, IEEE80211_CMAC_PN_LEN);
++		break;
++	default:
++		WARN_ON(1);
++		break;
++	}
++}
++EXPORT_SYMBOL_GPL(ieee80211_set_key_rx_seq);
++
++void ieee80211_remove_key(struct ieee80211_key_conf *keyconf)
++{
++	struct ieee80211_key *key;
++
++	key = container_of(keyconf, struct ieee80211_key, conf);
++
++	assert_key_lock(key->local);
++
++	/*
++	 * if key was uploaded, we assume the driver will/has remove(d)
++	 * it, so adjust bookkeeping accordingly
++	 */
++	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
++		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++
++		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++		      (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) ||
++		      (key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)))
++			increment_tailroom_need_count(key->sdata);
 +	}
 +
-+	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
-+	bd->tx_bd_sign = 0xbdbdbdbd;
-+
-+	return wcn36xx_dxe_tx_frame(wcn, skb, is_low);
++	ieee80211_key_free(key, false);
 +}
++EXPORT_SYMBOL_GPL(ieee80211_remove_key);
++
++struct ieee80211_key_conf *
++ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
++			struct ieee80211_key_conf *keyconf)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_key *key;
++	int err;
++
++	if (WARN_ON(!local->wowlan))
++		return ERR_PTR(-EINVAL);
++
++	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
++		return ERR_PTR(-EINVAL);
++
++	key = ieee80211_key_alloc(keyconf->cipher, keyconf->keyidx,
++				  keyconf->keylen, keyconf->key,
++				  0, NULL);
++	if (IS_ERR(key))
++		return ERR_PTR(PTR_ERR(key));
++
++	if (sdata->u.mgd.mfp != IEEE80211_MFP_DISABLED)
++		key->conf.flags |= IEEE80211_KEY_FLAG_RX_MGMT;
++
++	err = ieee80211_key_link(key, sdata, NULL);
++	if (err)
++		return ERR_PTR(err);
++
++	return &key->conf;
++}
++EXPORT_SYMBOL_GPL(ieee80211_gtk_rekey_add);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index d23c5a7..e1b34a1 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1453,8 +1453,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		local->resuming = true;
+ 
+ 	if (local->wowlan) {
+-		local->wowlan = false;
+ 		res = drv_resume(local);
++		local->wowlan = false;
+ 		if (res < 0) {
+ 			local->resuming = false;
+ 			return res;
 -- 
-1.8.2.2
+1.8.0
 
