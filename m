@@ -1,732 +1,949 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51401 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754405Ab3H2TAK (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:45999 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030632Ab3HIOgG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Aug 2013 15:00:10 -0400
-Date: Thu, 29 Aug 2013 14:53:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next 2013-08-29
-Message-ID: <20130829185352.GB2300@tuxdriver.com> (sfid-20130829_210018_354147_C3C849A3)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
+	Fri, 9 Aug 2013 10:36:06 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2 4/6] mac80211: add support for CSA in IBSS mode
+Date: Fri,  9 Aug 2013 16:35:18 +0200
+Message-Id: <1376058920-17779-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130809_163613_947080_9DC3926F)
+In-Reply-To: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ths function adds the channel switch announcement implementation for the
+IBSS code. It is triggered by userspace (mac80211/cfg) or by external
+channel switch announcement, which have to be adopted. Both CSAs in
+beacons and action frames are supported. As for AP mode, the channel
+switch is applied after some time. However in IBSS mode, the channel
+switch IEs are generated in the kernel.
 
---W/nzBZO5zC0uMSeA
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Dave,
-
-Please accept this batch of updates intended for the 3.12 stream.
-
-For the mac80211 bits, Johannes says this:
-
-"This time I have various improvements all over the place: IBSS, mesh,
-testmode, AP client powersave handling, one of the rare rfkill patches
-and some code cleanup."
-
-Also for mac80211:
-
-"And I also have some more changes for -next, just a few small fixes and
-improvements, nothing really stands out."
-
-And for iwlwifi:
-
-"This time I have some powersave work (notably uAPSD support), CQM
-offloads, support for a new firmware API and various code cleanups."
-
-Regarding the Bluetooth bits, Gustavo says:
-
-"Patches to 3.12, here we have:
-
-* implementation of a proper tty_port for RFCOMM devices, this fixes some
-issues people were seeing lately in the kernel.
-* Add voice_setting option for SCO, it is used for SCO Codec selection
-* bugfixes, small improvements and clean ups"
-
-For the NFC bits, Samuel says:
-
-"With this one we have:
-
-- A few pn533 improvements and minor fixes. Testing our pn533 driver
-  against Google's NCI stack triggered a few issues that we fixed now.
-  We also added Tx fragmentation support to this driver.
-
-- More NFC secure element handling. We added a GET_SE netlink command
-  for getting all the discovered secure elements, and we defined 2
-  additional secure element netlink event (transaction and connectivity).
-  We also fixed a couple of typos and copy-paste bugs from the secure
-  element handling code.
-
-- Firmware download support for the pn544 driver. This chipset can enter a
-  special mode where it's waiting for firmware blobs to replace the
-  already flashed one. We now support that mode."
-
-With repect to the ath tree, Kalle says:
-
-"New features in ath10k are rx/tx checsumming in hw and survey scan
-implemented by Michal. Also he made fixes to different areas of the
-driver, most notable being fixing the case when using two streams and
-reducing the number of interface combinations to avoid firmware crashes.
-Bartosz did a clean related to how we handle SoC power save in PCI
-layer.
-
-For ath6kl Mohammed and Vasanth sent each a patch to fix two infrequent
-crashes."
-
-I also pulled the wireless tree into wireless-next to support a
-request from Johannes.  On top of all that, there are the usual
-sort of driver updates.  The mwifiex, brcmfmac, brcmsmac, ath9k,
-and rt2x00 drivers all get some attention, as does the bcma bus and
-a few other random bits here and there.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 
 ---
-
-The following changes since commit 4c9d546f6c522f541dfb01e192ab7101eca0053b:
-
-  Merge branch 'for-davem' of git://git.kernel.org/pub/scm/linux/kernel/git=
-/bwh/sfc-next (2013-08-29 01:56:01 -0400)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
-for-davem
-
-for you to fetch changes up to 0d8165e9fca119b804de2cf35674e07c36c9704f:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
-nville/wireless-next into for-davem (2013-08-29 14:08:24 -0400)
-
-----------------------------------------------------------------
-
-Alexander Bondar (3):
-      iwlwifi: mvm: Fix beacon filtering enablement via debugfs
-      iwlwifi: mvm: Add basic uAPSD client support
-      iwlwifi: mvm: Add PBW snoozing enablement
-
-Amitkumar Karwar (1):
-      mwifiex: fix driver unload problem for usb chipsets
-
-Andrea Merello (1):
-      Update e-mail address for Andrea Merello (resubmit)
-
-Andrei Otcheretianski (1):
-      iwlwifi: mvm: Implement CQM offloading
-
-Andy Shevchenko (1):
-      Bluetooth: use DIV_ROUND_UP in suitable places in btmrvl_sdio
-
-Antonio Quartulli (1):
-      mac80211: ibss - do not scan if not needed when creating an IBSS
-
-Arend van Spriel (17):
-      brcmfmac: use irq safe spinlock in brcmf_sdbrcm_txdata()
-      brcmfmac: .txdata() bus callback should not call brcmf_txcomplete()
-      brcmfmac: add AMPDU reordering functionality
-      brcmfmac: ignore IF event if firmware indicates it
-      brcmfmac: add support for manual TDLS operations
-      brcmsmac: cosmetic change in phy_lcn.c
-      brcmsmac: change pa_gain for bcm4313 iPA
-      brcmsmac: use ARRAY_SIZE in phytbl_lcn.c
-      brcmsmac: add debug info message providing phy and radio info
-      brcmsmac: update transmit gain table for lcn phy
-      brcmsmac: change lcnphy receive i/q calibration routine
-      brcmsmac: fix TSSI idle estimation
-      brcmsmac: avoid calling set_txpwr_by_index() twice
-      brcmsmac: rework switch control table init including iPA BT-combo
-      brcmsmac: correct phy registers for TSSI-based power control
-      brcmsmac: reinitialize TSSI power control upon channel switch
-      brcmsmac: add support for BCM4313 iPA variant
-
-Arron Wang (2):
-      NFC: Fix secure element state check
-      NFC: Update secure element state
-
-Avinash Patil (2):
-      mwifiex: fix ext_capab IE structure definition
-      mwifiex: drop gratuitous ARP frames
-
-Bartosz Markowski (1):
-      ath10k: add SoC power save option to PCI features map
-
-Benjamin Tissoires (2):
-      Bluetooth: hidp: implement hidinput_input_event callback
-      Bluetooth: hidp: remove wrong send_report at init
-
-Bing Zhao (2):
-      mwifiex: do not create AP and P2P interfaces upon driver loading
-      mwifiex: break a long line into two lines
-
-Bob Copeland (1):
-      mac80211: assign seqnums for group QoS frames
-
-Chun-Yeow Yeoh (2):
-      mac80211: allow lowest basic rate for unicast management for mesh
-      mac80211: only respond to probe request with mesh ID
-
-Dan Carpenter (2):
-      iwlwifi: pcie: returning positive instead of negative
-      NFC: hci: Fix enable/disable confusion
-
-David Spinadel (2):
-      cfg80211: add wdev to testmode cmd
-      mac80211: add vif to testmode cmd
-
-Djalal Harouni (1):
-      ath5k: debugfs: NULL-terminate strings
-
-Eliad Peller (1):
-      iwlwifi: mvm: don't clear tbl->win mistakenly
-
-Eric Lapuyade (5):
-      NFC: Move nfc_fw_download_done() definition from private to public
-      NFC: pn544: i2c: Add firmware download mode power-on support
-      NFC: netlink: Add result of firmware operation to completion event
-      NFC: pn544: Add firmware operations hci ops
-      NFC: pn544: i2c: Add firmware download implementation for pn544
-
-Eyal Shapira (4):
-      iwlwifi: mvm: remove rate_scale_data debugfs entry
-      iwlwifi: mvm: remove unused fields of iwl_rs_rate_info
-      iwlwifi: mvm: remove MIMO3 from rate scale code
-      iwlwifi: mvm: remove unused param of rs_dbgfs_set_mcs
-
-Eytan Lifshitz (1):
-      iwlwifi: mvm: add support to the new FW time event API
-
-Felix Fietkau (8):
-      ath9k: fix rx descriptor related race condition
-      ath9k: shrink a few data structures by reordering fields
-      ath9k: remove ath9k_sta_remove_debugfs
-      ath9k: simplify debugfs chainmask handling
-      ath9k: avoid accessing MRC registers on single-chain devices
-      ath9k: simplify ath_tid_drain
-      ath9k: reset buffer stale flag in ath_tx_get_tid_subframe
-      mac80211: add a flag to indicate CCK support for HT clients
-
-Franky Lin (4):
-      brcmfmac: abstract tx packet processing functions
-      brcmfmac: remove align from brcmf_bus structure
-      brcmfmac: streamline sdio bus header code
-      brcmfmac: use configurable sdio bus header length for tx packet
-
-Fr=E9d=E9ric Dalleau (10):
-      Bluetooth: Use hci_connect_sco directly
-      Bluetooth: Remove unused mask parameter in sco_conn_defer_accept
-      Bluetooth: Add Bluetooth socket voice option
-      Bluetooth: Add constants for SCO airmode
-      Bluetooth: Use voice setting in deferred SCO connection request
-      Bluetooth: Parameters for outgoing SCO connections
-      Bluetooth: Add constants and macro declaration for transparent data
-      Bluetooth: Prevent transparent SCO on older devices
-      Bluetooth: Handle specific error for SCO connection fallback
-      Bluetooth: Add SCO connection fallback
-
-Gabor Juhos (12):
-      rt2x00: rt2800lib: introduce rt2800_get_txwi_rxwi_size helper
-      rt2x00: rt2800pci: fix AUX_CTRL register setup for RT3090/3390/3593/5=
-592
-      rt2x00: rt2800: rename HW_BEACON_OFFSET macro
-      rt2x00: rt2800lib: pass beacon index to rt2800_clear_beacon_register
-      rt2x00: rt2800lib: fix frequency offset boundary calculation
-      rt2x00: rt2800lib: optimize frequency offset adjustment
-      rt2x00: rt2800lib: use a MCU command for frequency adjustment on USB =
-devices
-      rt2x00: rt2800lib: use step-by-step frequency offset adjustment on MM=
-IO devices
-      rt2x00: rt2800lib: move rt2800_adjust_freq_offset function
-      rt2x00: rt2800lib: adjust frequency offset for RF3053
-      rt2x00: rt2800lib: add rt2800_hw_beacon_base helper
-      rt2x00: rt2800lib: don't hardcode beacon offsets
-
-Gianluca Anzolin (6):
-      Bluetooth: Take proper tty_struct references
-      Bluetooth: Remove the device from the list in the destructor
-      Bluetooth: Move the tty initialization and cleanup out of open/close
-      Bluetooth: Implement .activate, .shutdown and .carrier_raised methods
-      Bluetooth: Fix the reference counting of tty_port
-      Bluetooth: Purge the dlc->tx_queue to avoid circular dependency
-
-Gustavo Padovan (1):
-      Bluetooth: Add missing braces to an "else if"
-
-Hante Meuleman (2):
-      brcmfmac: always use worker thread for tx data.
-      brcmfmac: no fws locking outside fws module.
-
-Hauke Mehrtens (6):
-      bcma: change max PCI read request size to 128
-      bcma: add method to power up and down the PCIe core by wifi driver
-      brcmsmac: use bcma PCIe up and down functions
-      bcma: do not export bcma_core_pci_extend_L1timer()
-      bcma: add bcma_core_pci_power_save()
-      b43: call PCIe up and down functions
-
-Helmut Schaa (1):
-      ath9k_htc: Restore skb headroom when returning skb to mac80211
-
-Ido Yariv (3):
-      iwlwifi: pcie: Refactor iwl_queue_space
-      iwlwifi: pcie: Refactor iwl_rxq_space
-      iwlwifi: pcie: Remove duplicate code from pcie irq handlers
-
-Jingoo Han (1):
-      Bluetooth: replace strict_strtol() with kstrtol()
-
-Johan Almbladh (1):
-      mac80211: perform power save processing before decryption
-
-Johan Hedberg (1):
-      Bluetooth: Fix getting SCO socket options in deferred state
-
-Johannes Berg (10):
-      wireless: make TU conversion macros available
-      nl80211: clean up CQM settings code
-      mac80211: add control port protocol TX control flag
-      iwlwifi: mvm: refactor resume from WoWLAN code
-      mac80211: add APIs to allow keeping connections after WoWLAN
-      mac80211: add missing channel context release
-      mac80211: minstrel_ht: don't use control.flags in TX status path
-      mac80211: move setting WIPHY_FLAG_SUPPORTS_SCHED_SCAN into drivers
-      mac80211: ignore (E)CSA in probe response frames
-      mac80211: fix change_interface queue assignments
-
-John W. Linville (12):
-      Merge branch 'for-linville' of git://github.com/kvalo/ath
-      Merge tag 'nfc-next-3.12-1' of git://git.kernel.org/.../sameo/nfc-next
-      brcmsmac: Fix WARNING caused by lack of calls to dma_mapping_error()
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211-ne=
-xt
-      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-n=
-ext
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211
-      Merge branch 'master' of git://git.kernel.org/.../bluetooth/bluetooth=
--next
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless
-      ath9k: ar9003_eeprom.c:3618 fix variable name typo
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211-ne=
-xt
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
-ext into for-davem
-
-Luciano Coelho (4):
-      iwlwifi: pcie: don't swallow error codes in iwl_trans_pcie_alloc()
-      iwlwifi: use a macro for default probe length
-      iwlwifi: Kconfig: fix help texts wrt 7260 and 3160 devices
-      iwlwifi: return -ENOMEM instead of NULL when OOM in iwl_drv_start()
-
-Luis Henriques (1):
-      net: rfkill: Do not ignore errors from regulator_enable()
-
-Marcel Holtmann (2):
-      Bluetooth: Fix simple whitespace vs tab style issue
-      Bluetooth: Set different event mask for LE-only controllers
-
-Mark Schulte (1):
-      rtlwifi: sparse warnings: cast to restricted type
-
-Masami Ichikawa (1):
-      rt2800usb: Add WLI-UC-G300HP's Product ID.
-
-Matti Gottlieb (1):
-      iwlwifi: introduce external debug level
-
-Michal Kazior (11):
-      ath10k: improve tx throughput on slow machines
-      ath10k: detect the number of spatial streams supported by hw
-      ath10k: implement rx checksum offloading
-      ath10k: implement tx checksum offloading
-      ath10k: implement get_survey()
-      ath10k: prevent using invalid ringbuffer indexes
-      ath10k: make sure to use passive scan when n_ssids is 0
-      ath10k: advertise more conservative intf combinations
-      ath10k: zero arvif memory on add_interface()
-      ath10k: fix failpath in MSI-X setup
-      ath10k: fix device teardown
-
-Mikel Astiz (3):
-      Bluetooth: Add HCI authentication capabilities macros
-      Bluetooth: Use defines in in hci_get_auth_req()
-      Bluetooth: Use defines instead of integer literals
-
-Mohammed Shafi Shajakhan (1):
-      ath6kl: Fix invalid pointer access on fuzz testing with AP mode
-
-Oleksij Rempel (1):
-      ath9k_htc: do not use bulk on EP3 and EP4
-
-Olivier Guiter (3):
-      NFC: pn533: Add extended information frame decoding support
-      NFC: pn533: Split large Tx frames in chunks
-      NFC: pn533: Store the correct frame size (normal vs ext)
-
-Samuel Ortiz (12):
-      MAINTAINERS: Change the NFC subsystem status to Supported
-      NFC: Document secure element addition/removal netlink events
-      NFC: Define secure element connectivity and transaction events
-      NFC: pn533: Fix hardware busy loop when establishing the LLCP link
-      NFC: pn533: Fix the pn533 polling loop
-      NFC: pn533: Request System code from SENSF_REQ
-      NFC: pn533: Unconditionaly select the highest p2p bit rate
-      NFC: pn533: Enable AUTO RFCA
-      NFC: Fix SE discovery failure warning condition
-      NFC: Add a GET_SE netlink API
-      NFC: pn533: Add delay between each poll frame
-      NFC: pn533: Add some polling entropy
-
-Simon Wunderlich (12):
-      mac80211: fix ieee80211_sta_process_chanswitch for 5/10 MHz channels
-      mac80211: move ibss presp generation in own function
-      ath9k: always use SIFS times from OFDM for 5/10 MHz
-      ath9k: use chandef instead of channel_type
-      ath9k: report 5/10 MHz channels
-      ath9k: set 5/10 MHz supported channels and fix bitrate
-      ath9k: announce that ath9k supports 5/10 MHz
-      ath5k: report 5/10 MHz channels
-      ath5k: set 5/10 MHz supported channels and fix duration
-      ath5k: enable support for 5 MHz and 10 MHz channels
-      ath9k: enable CSA functionality in ath9k
-      mac80211: ibss: fix ignored channel parameter
-
-Solomon Peachy (2):
-      cw1200: Display the correct default reference clock.
-      cw1200: When debug is enabled, display all wakeup conditions for the =
-wait_event_interruptible_timeout() call.
-
-Stanislaw Gruszka (2):
-      iwl4965: fix rfkill set state regression
-      rt2800: fix wrong TX power compensation
-
-Sujith Manoharan (28):
-      ath9k: Use a subroutine to check for "mybeacon"
-      ath9k: Fix phy error handling for DFS
-      ath9k: Discard invalid frames early
-      ath9k: Fix RX crypto processing
-      ath9k: Fix TSF processing
-      ath9k: Reorder some functions
-      ath9k: Fix PHY error processing
-      ath9k: Fix RX debug statistics
-      ath9k: Fix RX packet counter
-      ath9k: Fix RX beacon processing
-      ath9k: Move the RX poll check to preprocess()
-      ath9k: Handle corrupt descriptors properly
-      ath9k: Fix error condition for corrupt descriptors
-      ath9k: Remove unused function argument
-      ath9k: Handle invalid RSSI
-      ath9k: Identify first subframe in an A-MPDU
-      ath9k: Optimize LNA check
-      ath9k: Use lockless variant to initialize RX fifo
-      ath9k: Enable PLL fix only for AR9340/AR9330
-      ath9k: Add support for AR9485 1.2
-      ath9k: Add antenna diversity tweak for CUS198
-      ath9k: Add one more PCI ID for CUS198
-      ath9k: Fix ASPM for AR9462
-      ath9k: Fix ASPM workaround usage
-      ath9k: Fix TX poll work locking
-      ath9k: Fix DEBUG_FS dependency for ath9k
-      ath9k: Remove unused ANI commands
-      ath9k: Enable D3/L1 ASPM fix for AR9462
-
-Thierry Escande (1):
-      NFC: Fix missing static declarations
-
-Tobias Waldekranz (1):
-      mwifiex: add missing endian conversions
-
-Vasanthakumar Thiagarajan (1):
-      ath6kl: Fix race in heart beat polling
-
-Vladimir Kondratiev (2):
-      wil6210: let IP stack re-check HW TCP/UDP csum errors
-      cfg80211: add flags to cfg80211_rx_mgmt()
-
-Wei Yongjun (2):
-      mac80211_hwsim: fix error return code in init_mac80211_hwsim()
-      zd1201: fix error return code
-
- Documentation/DocBook/80211.tmpl                   |   1 +
- MAINTAINERS                                        |   2 +-
- drivers/bcma/driver_pci.c                          |  65 ++-
- drivers/bcma/driver_pci_host.c                     |   6 +
- drivers/bluetooth/btmrvl_debugfs.c                 |   6 +-
- drivers/bluetooth/btmrvl_sdio.c                    |   4 +-
- drivers/net/wireless/ath/ath10k/ce.c               |   5 +
- drivers/net/wireless/ath/ath10k/core.h             |   8 +
- drivers/net/wireless/ath/ath10k/htt_rx.c           |  40 ++
- drivers/net/wireless/ath/ath10k/htt_tx.c           |   2 +
- drivers/net/wireless/ath/ath10k/mac.c              |  79 +++-
- drivers/net/wireless/ath/ath10k/pci.c              |  70 ++-
- drivers/net/wireless/ath/ath10k/pci.h              |  11 +-
- drivers/net/wireless/ath/ath10k/wmi.c              |  87 +++-
- drivers/net/wireless/ath/ath10k/wmi.h              |   5 +
- drivers/net/wireless/ath/ath5k/ath5k.h             |   1 +
- drivers/net/wireless/ath/ath5k/base.c              |  59 ++-
- drivers/net/wireless/ath/ath5k/base.h              |   2 +-
- drivers/net/wireless/ath/ath5k/debug.c             |  24 +-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c      |   2 +-
- drivers/net/wireless/ath/ath5k/pcu.c               |   2 +
- drivers/net/wireless/ath/ath5k/qcu.c               |  25 +-
- drivers/net/wireless/ath/ath6kl/init.c             |   3 +
- drivers/net/wireless/ath/ath6kl/main.c             |   3 +
- drivers/net/wireless/ath/ath6kl/testmode.c         |   3 +-
- drivers/net/wireless/ath/ath6kl/testmode.h         |   7 +-
- drivers/net/wireless/ath/ath6kl/wmi.c              |   7 +-
- drivers/net/wireless/ath/ath9k/Kconfig             |   2 +-
- drivers/net/wireless/ath/ath9k/ani.c               |   3 -
- drivers/net/wireless/ath/ath9k/ani.h               |  13 +-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c        |   2 -
- drivers/net/wireless/ath/ath9k/ar9002_hw.c         |  29 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |   9 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  39 +-
- drivers/net/wireless/ath/ath9k/ar9003_mac.c        |   1 +
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   8 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h        |   2 +
- drivers/net/wireless/ath/ath9k/ath9k.h             |  24 +-
- drivers/net/wireless/ath/ath9k/beacon.c            |  21 +
- drivers/net/wireless/ath/ath9k/common.c            |  67 +--
- drivers/net/wireless/ath/ath9k/common.h            |   3 +-
- drivers/net/wireless/ath/ath9k/debug.c             | 104 +----
- drivers/net/wireless/ath/ath9k/debug.h             |   4 -
- drivers/net/wireless/ath/ath9k/hif_usb.c           |  38 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   5 +-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c      |  10 +
- drivers/net/wireless/ath/ath9k/hw.c                |  19 +-
- drivers/net/wireless/ath/ath9k/hw.h                |   2 +
- drivers/net/wireless/ath/ath9k/init.c              |  39 +-
- drivers/net/wireless/ath/ath9k/link.c              |   2 +-
- drivers/net/wireless/ath/ath9k/mac.c               |   4 +-
- drivers/net/wireless/ath/ath9k/mac.h               |   2 +
- drivers/net/wireless/ath/ath9k/main.c              |  29 +-
- drivers/net/wireless/ath/ath9k/pci.c               |  67 +++
- drivers/net/wireless/ath/ath9k/rc.c                |   9 +-
- drivers/net/wireless/ath/ath9k/recv.c              | 506 ++++++++++++-----=
-----
- drivers/net/wireless/ath/ath9k/reg.h               |   6 +-
- drivers/net/wireless/ath/ath9k/xmit.c              |  32 +-
- drivers/net/wireless/ath/carl9170/main.c           |   3 +-
- drivers/net/wireless/ath/wil6210/txrx.c            |  12 +-
- drivers/net/wireless/ath/wil6210/wmi.c             |   2 +-
- drivers/net/wireless/b43/main.c                    |  14 +
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  16 +-
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   1 -
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |  31 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   8 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    | 279 ++++++++++--
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 481 ++++++++++++-----=
+Changes to PATCHv1:
+ * replace cascaded if with switch
+ * remove remote triggerable WARN_ON (and add forgotten braces ...)
+ * move function declaration from earlier patch in the series to this
+   one
+ * report used BSSID in status messages
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |   4 +
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  21 +
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 228 +++++-----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |   4 +-
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   2 +-
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   1 -
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  61 ++-
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c  |  21 -
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h  |   3 -
- drivers/net/wireless/brcm80211/brcmsmac/dma.c      |  15 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |  12 +-
- .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  | 399 ++++++++++------
- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   | 405 +++++++++--------
- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h   |   1 +
- drivers/net/wireless/cw1200/bh.c                   |   4 +-
- drivers/net/wireless/cw1200/main.c                 |   2 +-
- drivers/net/wireless/iwlegacy/4965-mac.c           |   2 +-
- drivers/net/wireless/iwlwifi/Kconfig               |  13 +-
- drivers/net/wireless/iwlwifi/dvm/tx.c              |   2 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h           |   2 +
- drivers/net/wireless/iwlwifi/iwl-devtrace.h        |   7 +-
- drivers/net/wireless/iwlwifi/iwl-drv.c             |  10 +-
- drivers/net/wireless/iwlwifi/iwl-fw.h              |   5 +
- drivers/net/wireless/iwlwifi/mvm/constants.h       |   9 +
- drivers/net/wireless/iwlwifi/mvm/d3.c              | 151 +++---
- drivers/net/wireless/iwlwifi/mvm/debugfs.c         |  17 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h    |  24 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api.h          | 228 +++++++---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c        |  29 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h             |  27 +-
- drivers/net/wireless/iwlwifi/mvm/power.c           | 199 +++++++-
- drivers/net/wireless/iwlwifi/mvm/rs.c              | 474 +++--------------=
---
- drivers/net/wireless/iwlwifi/mvm/rs.h              |  64 +--
- drivers/net/wireless/iwlwifi/mvm/rx.c              |  61 ++-
- drivers/net/wireless/iwlwifi/mvm/time-event.c      | 103 +++--
- drivers/net/wireless/iwlwifi/mvm/tx.c              |   9 +-
- drivers/net/wireless/iwlwifi/pcie/drv.c            |   6 +-
- drivers/net/wireless/iwlwifi/pcie/rx.c             |  43 +-
- drivers/net/wireless/iwlwifi/pcie/trans.c          |  31 +-
- drivers/net/wireless/iwlwifi/pcie/tx.c             |  38 +-
- drivers/net/wireless/mac80211_hwsim.c              |   5 +-
- drivers/net/wireless/mwifiex/11n.c                 |  16 +-
- drivers/net/wireless/mwifiex/11n_aggr.c            |   3 +-
- drivers/net/wireless/mwifiex/cfg80211.c            |   1 +
- drivers/net/wireless/mwifiex/decl.h                |   9 +
- drivers/net/wireless/mwifiex/fw.h                  |   2 +-
- drivers/net/wireless/mwifiex/init.c                |   1 +
- drivers/net/wireless/mwifiex/main.c                |  14 -
- drivers/net/wireless/mwifiex/main.h                |   3 +-
- drivers/net/wireless/mwifiex/sdio.c                |   6 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c         |   2 +-
- drivers/net/wireless/mwifiex/sta_rx.c              |  49 ++
- drivers/net/wireless/mwifiex/usb.c                 |  50 +-
- drivers/net/wireless/mwifiex/util.c                |   4 +-
- drivers/net/wireless/rt2x00/rt2800.h               |   5 +-
- drivers/net/wireless/rt2x00/rt2800lib.c            | 142 ++++--
- drivers/net/wireless/rt2x00/rt2800lib.h            |   4 +
- drivers/net/wireless/rt2x00/rt2800pci.c            |  19 +-
- drivers/net/wireless/rt2x00/rt2800usb.c            |  12 +-
- drivers/net/wireless/rtl818x/rtl8180/dev.c         |   6 +-
- drivers/net/wireless/rtl818x/rtl8180/grf5101.c     |   2 +-
- drivers/net/wireless/rtl818x/rtl8180/grf5101.h     |   2 +-
- drivers/net/wireless/rtl818x/rtl8180/max2820.c     |   2 +-
- drivers/net/wireless/rtl818x/rtl8180/max2820.h     |   2 +-
- drivers/net/wireless/rtl818x/rtl8180/rtl8225.c     |   4 +-
- drivers/net/wireless/rtl818x/rtl8180/sa2400.c      |   2 +-
- drivers/net/wireless/rtl818x/rtl8180/sa2400.h      |   2 +-
- drivers/net/wireless/rtl818x/rtl8187/dev.c         |   6 +-
- drivers/net/wireless/rtl818x/rtl8187/rtl8187.h     |   4 +-
- drivers/net/wireless/rtl818x/rtl8187/rtl8225.c     |   4 +-
- drivers/net/wireless/rtl818x/rtl8187/rtl8225.h     |   4 +-
- drivers/net/wireless/rtl818x/rtl818x.h             |   4 +-
- drivers/net/wireless/rtlwifi/ps.c                  |  16 +-
- drivers/net/wireless/ti/wlcore/main.c              |   3 +-
- drivers/net/wireless/ti/wlcore/testmode.c          |   3 +-
- drivers/net/wireless/ti/wlcore/testmode.h          |   3 +-
- drivers/net/wireless/zd1201.c                      |   8 +-
- drivers/nfc/nfcsim.c                               |   6 +-
- drivers/nfc/pn533.c                                | 389 ++++++++++++----
- drivers/nfc/pn544/i2c.c                            | 360 ++++++++++++++-
- drivers/nfc/pn544/mei.c                            |   2 +-
- drivers/nfc/pn544/pn544.c                          |  20 +-
- drivers/nfc/pn544/pn544.h                          |   7 +-
- drivers/staging/rtl8187se/ieee80211/ieee80211.h    |   2 +-
- drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c |   2 +-
- .../rtl8187se/ieee80211/ieee80211_softmac.c        |   2 +-
- .../rtl8187se/ieee80211/ieee80211_softmac_wx.c     |   2 +-
- drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c |   2 +-
- drivers/staging/rtl8187se/r8180.h                  |   2 +-
- drivers/staging/rtl8187se/r8180_93cx6.h            |   2 +-
- drivers/staging/rtl8187se/r8180_core.c             |   4 +-
- drivers/staging/rtl8187se/r8180_hw.h               |   2 +-
- drivers/staging/rtl8187se/r8180_rtl8225.h          |   2 +-
- drivers/staging/rtl8187se/r8180_rtl8225z2.c        |   2 +-
- drivers/staging/rtl8187se/r8180_wx.c               |   2 +-
- drivers/staging/rtl8187se/r8180_wx.h               |   2 +-
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c     |   2 +-
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.h     |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_cam.c        |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_cam.h        |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_core.c       |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_core.h       |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_eeprom.c     |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_eeprom.h     |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_ethtool.c    |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_pci.c        |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_pci.h        |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_ps.c         |   2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_ps.h         |   2 +-
- drivers/staging/rtl8192e/rtllib.h                  |   2 +-
- drivers/staging/rtl8192e/rtllib_debug.h            |   2 +-
- drivers/staging/rtl8192e/rtllib_rx.c               |   2 +-
- drivers/staging/rtl8192e/rtllib_softmac.c          |   2 +-
- drivers/staging/rtl8192e/rtllib_softmac_wx.c       |   2 +-
- drivers/staging/rtl8192e/rtllib_tx.c               |   2 +-
- drivers/staging/rtl8192u/authors                   |   2 +-
- drivers/staging/rtl8192u/ieee80211/ieee80211.h     |   2 +-
- drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c  |   2 +-
- .../staging/rtl8192u/ieee80211/ieee80211_softmac.c |   2 +-
- .../rtl8192u/ieee80211/ieee80211_softmac_wx.c      |   2 +-
- drivers/staging/rtl8192u/ieee80211/ieee80211_tx.c  |   2 +-
- drivers/staging/rtl8192u/r8180_93cx6.c             |   2 +-
- drivers/staging/rtl8192u/r8180_93cx6.h             |   2 +-
- drivers/staging/rtl8192u/r8180_pm.c                |   2 +-
- drivers/staging/rtl8192u/r8180_pm.h                |   2 +-
- drivers/staging/rtl8192u/r8190_rtl8256.h           |   2 +-
- drivers/staging/rtl8192u/r8192U.h                  |   2 +-
- drivers/staging/rtl8192u/r8192U_core.c             |   2 +-
- drivers/staging/rtl8192u/r8192U_hw.h               |   2 +-
- drivers/staging/rtl8192u/r8192U_wx.c               |   2 +-
- drivers/staging/rtl8192u/r8192U_wx.h               |   2 +-
- include/linux/bcma/bcma_driver_pci.h               |  24 +-
- include/linux/ieee80211.h                          |   4 +
- include/linux/platform_data/brcmfmac-sdio.h        |   6 +
- include/net/bluetooth/bluetooth.h                  |   8 +
- include/net/bluetooth/hci.h                        |   7 +
- include/net/bluetooth/hci_core.h                   |  10 +-
- include/net/bluetooth/sco.h                        |   1 +
- include/net/cfg80211.h                             |   8 +-
- include/net/mac80211.h                             | 110 ++++-
- include/net/nfc/nfc.h                              |   3 +
- include/uapi/linux/nfc.h                           |  20 +
- include/uapi/linux/nl80211.h                       |  16 +
- net/bluetooth/hci_conn.c                           |  62 ++-
- net/bluetooth/hci_core.c                           |  14 +-
- net/bluetooth/hci_event.c                          |  29 +-
- net/bluetooth/hidp/core.c                          |  40 +-
- net/bluetooth/l2cap_core.c                         |   3 +-
- net/bluetooth/rfcomm/tty.c                         | 271 +++++------
- net/bluetooth/sco.c                                |  85 +++-
- net/mac80211/cfg.c                                 |  15 +-
- net/mac80211/ibss.c                                | 226 +++++----
- net/mac80211/ieee80211_i.h                         |   3 -
- net/mac80211/iface.c                               |  19 +-
- net/mac80211/key.c                                 | 154 ++++++-
- net/mac80211/main.c                                |   3 -
- net/mac80211/mesh.c                                |   3 +
- net/mac80211/mlme.c                                |  20 +-
- net/mac80211/rate.c                                |  23 +-
- net/mac80211/rc80211_minstrel_ht.c                 |   5 +-
- net/mac80211/rx.c                                  | 407 +++++++++--------
- net/mac80211/tx.c                                  |  14 +-
- net/mac80211/util.c                                |   2 +-
- net/nfc/core.c                                     |  22 +-
- net/nfc/hci/core.c                                 |   2 +-
- net/nfc/netlink.c                                  |  95 +++-
- net/nfc/nfc.h                                      |   5 +-
- net/rfkill/rfkill-regulator.c                      |   8 +-
- net/wireless/mlme.c                                |   4 +-
- net/wireless/nl80211.c                             |  80 ++--
- net/wireless/nl80211.h                             |   2 +-
- net/wireless/rdev-ops.h                            |   5 +-
- net/wireless/trace.h                               |   8 +-
- 241 files changed, 5440 insertions(+), 2926 deletions(-)
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ net/mac80211/cfg.c         |   87 +++++---
+ net/mac80211/ibss.c        |  479 ++++++++++++++++++++++++++++++++++++++------
+ net/mac80211/ieee80211_i.h |    5 +
+ net/mac80211/iface.c       |    4 +
+ net/mac80211/rx.c          |   36 +++-
+ net/mac80211/tx.c          |   37 +++-
+ 6 files changed, 550 insertions(+), 98 deletions(-)
 
---W/nzBZO5zC0uMSeA
-Content-Type: application/pgp-signature
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 44449ce..701983a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2852,30 +2852,38 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+ 
+-	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_AP))
+-		return;
+-
+ 	sdata->radar_required = sdata->csa_radar_required;
+ 	err = ieee80211_vif_change_channel(sdata, &local->csa_chandef,
+ 					   &changed);
+ 	if (WARN_ON(err < 0))
+ 		return;
+ 
+-	err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
+-	if (err < 0)
++	ieee80211_bss_info_change_notify(sdata, changed);
++
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP:
++		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
++		if (err < 0)
++			return;
++		changed |= err;
++		kfree(sdata->u.ap.next_beacon);
++		sdata->u.ap.next_beacon = NULL;
++
++		ieee80211_bss_info_change_notify(sdata, err);
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		ieee80211_ibss_finish_csa(sdata);
++		break;
++	default:
++		WARN_ON(1);
+ 		return;
+-
+-	changed |= err;
+-	kfree(sdata->u.ap.next_beacon);
+-	sdata->u.ap.next_beacon = NULL;
++	}
+ 	sdata->vif.csa_active = false;
+ 
+ 	ieee80211_wake_queues_by_reason(&sdata->local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+ 					IEEE80211_QUEUE_STOP_REASON_CSA);
+ 
+-	ieee80211_bss_info_change_notify(sdata, changed);
+-
+ 	cfg80211_ch_switch_notify(sdata->dev, &local->csa_chandef);
+ }
+ 
+@@ -2923,20 +2931,56 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	if (sdata->vif.csa_active)
+ 		return -EBUSY;
+ 
+-	/* only handle AP for now. */
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
++		sdata->csa_counter_offset_beacon =
++			params->counter_offset_beacon;
++		sdata->csa_counter_offset_presp = params->counter_offset_presp;
++		sdata->u.ap.next_beacon =
++			cfg80211_beacon_dup(&params->beacon_after);
++		if (!sdata->u.ap.next_beacon)
++			return -ENOMEM;
++
++		err = ieee80211_assign_beacon(sdata, &params->beacon_csa);
++		if (err < 0) {
++			kfree(sdata->u.ap.next_beacon);
++			return err;
++		}
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		if (!sdata->vif.bss_conf.ibss_joined)
++			return -EINVAL;
++
++		if (params->chandef.width != sdata->u.ibss.chandef.width)
++			return -EINVAL;
++
++		switch (params->chandef.width) {
++		case NL80211_CHAN_WIDTH_40:
++			if (cfg80211_get_chandef_type(&params->chandef) !=
++			    cfg80211_get_chandef_type(&sdata->u.ibss.chandef))
++				return -EINVAL;
++		case NL80211_CHAN_WIDTH_5:
++		case NL80211_CHAN_WIDTH_10:
++		case NL80211_CHAN_WIDTH_20_NOHT:
++		case NL80211_CHAN_WIDTH_20:
++			break;
++		default:
++			return -EINVAL;
++		}
++
++		/* changes into another band are not supported */
++		if (sdata->u.ibss.chandef.chan->band !=
++		    params->chandef.chan->band)
++			return -EINVAL;
++
++		err = ieee80211_ibss_csa_beacon(sdata, params);
++		if (err < 0)
++			return err;
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	sdata->u.ap.next_beacon = cfg80211_beacon_dup(&params->beacon_after);
+-	if (!sdata->u.ap.next_beacon)
+-		return -ENOMEM;
+-
+-	sdata->csa_counter_offset_beacon = params->counter_offset_beacon;
+-	sdata->csa_counter_offset_presp = params->counter_offset_presp;
+ 	sdata->csa_radar_required = params->radar_required;
+ 
+ 	if (params->block_tx)
+@@ -2944,10 +2988,6 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 				IEEE80211_MAX_QUEUE_MAP,
+ 				IEEE80211_QUEUE_STOP_REASON_CSA);
+ 
+-	err = ieee80211_assign_beacon(sdata, &params->beacon_csa);
+-	if (err < 0)
+-		return err;
+-
+ 	local->csa_chandef = params->chandef;
+ 	sdata->vif.csa_active = true;
+ 
+@@ -3001,7 +3041,8 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			need_offchan = true;
+ 		if (!ieee80211_is_action(mgmt->frame_control) ||
+ 		    mgmt->u.action.category == WLAN_CATEGORY_PUBLIC ||
+-		    mgmt->u.action.category == WLAN_CATEGORY_SELF_PROTECTED)
++		    mgmt->u.action.category == WLAN_CATEGORY_SELF_PROTECTED ||
++		    mgmt->u.action.category == WLAN_CATEGORY_SPECTRUM_MGMT)
+ 			break;
+ 		rcu_read_lock();
+ 		sta = sta_info_get(sdata, mgmt->da);
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 29f1a7b..3c23522 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -34,12 +34,15 @@
+ 
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+ 
++static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata);
++
+ static struct beacon_data *
+ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
+ 			   const int beacon_int, const u32 basic_rates,
+ 			   const u16 capability, u64 tsf,
+ 			   struct cfg80211_chan_def *chandef,
+-			   bool *have_higher_than_11mbit)
++			   bool *have_higher_than_11mbit,
++			   struct cfg80211_csa_settings *csa_settings)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -59,6 +62,7 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
+ 		    2 + 8 /* max Supported Rates */ +
+ 		    3 /* max DS params */ +
+ 		    4 /* IBSS params */ +
++		    5 /* Channel Switch Announcement */ +
+ 		    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
+ 		    2 + sizeof(struct ieee80211_ht_cap) +
+ 		    2 + sizeof(struct ieee80211_ht_operation) +
+@@ -135,6 +139,16 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
+ 	*pos++ = 0;
+ 	*pos++ = 0;
+ 
++	if (csa_settings) {
++		*pos++ = WLAN_EID_CHANNEL_SWITCH;
++		*pos++ = 3;
++		*pos++ = csa_settings->block_tx ? 1 : 0;
++		*pos++ = ieee80211_frequency_to_channel(
++				csa_settings->chandef.chan->center_freq);
++		sdata->csa_counter_offset_beacon = (pos - presp->head);
++		*pos++ = csa_settings->count;
++	}
++
+ 	/* put the remaining rates in WLAN_EID_EXT_SUPP_RATES */
+ 	if (rates_n > 8) {
+ 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
+@@ -273,7 +287,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	presp = ieee80211_ibss_build_presp(sdata, beacon_int, basic_rates,
+ 					   capability, tsf, &chandef,
+-					   &have_higher_than_11mbit);
++					   &have_higher_than_11mbit, NULL);
+ 	if (!presp)
+ 		return;
+ 
+@@ -391,6 +405,110 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				  tsf, false);
+ }
+ 
++/* must hold sdata lock */
++int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
++			      struct cfg80211_csa_settings *csa_settings)
++{
++	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct beacon_data *presp, *old_presp;
++	struct cfg80211_bss *cbss;
++	const struct cfg80211_bss_ies *ies;
++	u16 capability;
++	u64 tsf;
++	int ret = 0;
++
++	sdata_assert_lock(sdata);
++
++	capability = WLAN_CAPABILITY_IBSS;
++
++	if (ifibss->privacy)
++		capability |= WLAN_CAPABILITY_PRIVACY;
++
++	cbss = cfg80211_get_bss(sdata->local->hw.wiphy, ifibss->chandef.chan,
++				ifibss->bssid, ifibss->ssid,
++				ifibss->ssid_len, WLAN_CAPABILITY_IBSS |
++				WLAN_CAPABILITY_PRIVACY,
++				capability);
++
++	if (WARN_ON(!cbss)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	rcu_read_lock();
++	ies = rcu_dereference(cbss->ies);
++	tsf = ies->tsf;
++	rcu_read_unlock();
++	cfg80211_put_bss(sdata->local->hw.wiphy, cbss);
++
++	old_presp = rcu_dereference_protected(ifibss->presp,
++					  lockdep_is_held(&sdata->wdev.mtx));
++
++	presp = ieee80211_ibss_build_presp(sdata,
++					   sdata->vif.bss_conf.beacon_int,
++					   sdata->vif.bss_conf.basic_rates,
++					   capability, tsf, &ifibss->chandef,
++					   NULL, csa_settings);
++	if (!presp) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	rcu_assign_pointer(ifibss->presp, presp);
++	if (old_presp)
++		kfree_rcu(old_presp, rcu_head);
++
++	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
++ out:
++	return ret;
++}
++
++int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct cfg80211_bss *cbss;
++	int err;
++	u16 capability;
++
++	sdata_lock(sdata);
++	/* update cfg80211 bss information with the new channel */
++	if (!is_zero_ether_addr(ifibss->bssid)) {
++		capability = WLAN_CAPABILITY_IBSS;
++
++		if (ifibss->privacy)
++			capability |= WLAN_CAPABILITY_PRIVACY;
++
++		cbss = cfg80211_get_bss(sdata->local->hw.wiphy,
++					ifibss->chandef.chan,
++					ifibss->bssid, ifibss->ssid,
++					ifibss->ssid_len, WLAN_CAPABILITY_IBSS |
++					WLAN_CAPABILITY_PRIVACY,
++					capability);
++		/* XXX: should not really modify cfg80211 data */
++		if (cbss) {
++			cbss->channel = sdata->local->csa_chandef.chan;
++			cfg80211_put_bss(sdata->local->hw.wiphy, cbss);
++		}
++	}
++
++	ifibss->chandef = sdata->local->csa_chandef;
++
++	/* generate the beacon */
++	err = ieee80211_ibss_csa_beacon(sdata, NULL);
++	sdata_unlock(sdata);
++	if (err < 0)
++		return err;
++
++	return 0;
++}
++
++void ieee80211_ibss_stop(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++
++	cancel_work_sync(&ifibss->csa_connection_drop_work);
++}
++
+ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
+ 	__acquires(RCU)
+ {
+@@ -474,6 +592,269 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata, const u8 *bssid,
+ 	return ieee80211_ibss_finish_sta(sta);
+ }
+ 
++static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct ieee80211_local *local = sdata->local;
++	struct cfg80211_bss *cbss;
++	struct beacon_data *presp;
++	struct sta_info *sta;
++	int active_ibss;
++	u16 capability;
++
++	active_ibss = ieee80211_sta_active_ibss(sdata);
++
++	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
++		capability = WLAN_CAPABILITY_IBSS;
++
++		if (ifibss->privacy)
++			capability |= WLAN_CAPABILITY_PRIVACY;
++
++		cbss = cfg80211_get_bss(local->hw.wiphy, ifibss->chandef.chan,
++					ifibss->bssid, ifibss->ssid,
++					ifibss->ssid_len, WLAN_CAPABILITY_IBSS |
++					WLAN_CAPABILITY_PRIVACY,
++					capability);
++
++		if (cbss) {
++			cfg80211_unlink_bss(local->hw.wiphy, cbss);
++			cfg80211_put_bss(sdata->local->hw.wiphy, cbss);
++		}
++	}
++
++	ifibss->state = IEEE80211_IBSS_MLME_SEARCH;
++
++	sta_info_flush(sdata);
++
++	spin_lock_bh(&ifibss->incomplete_lock);
++	while (!list_empty(&ifibss->incomplete_stations)) {
++		sta = list_first_entry(&ifibss->incomplete_stations,
++				       struct sta_info, list);
++		list_del(&sta->list);
++		spin_unlock_bh(&ifibss->incomplete_lock);
++
++		sta_info_free(local, sta);
++		spin_lock_bh(&ifibss->incomplete_lock);
++	}
++	spin_unlock_bh(&ifibss->incomplete_lock);
++
++	netif_carrier_off(sdata->dev);
++
++	sdata->vif.bss_conf.ibss_joined = false;
++	sdata->vif.bss_conf.ibss_creator = false;
++	sdata->vif.bss_conf.enable_beacon = false;
++	sdata->vif.bss_conf.ssid_len = 0;
++
++	/* remove beacon */
++	presp = rcu_dereference_protected(ifibss->presp,
++					  lockdep_is_held(&sdata->wdev.mtx));
++	RCU_INIT_POINTER(sdata->u.ibss.presp, NULL);
++	if (presp)
++		kfree_rcu(presp, rcu_head);
++
++	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
++	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
++						BSS_CHANGED_IBSS);
++}
++
++static void ieee80211_csa_connection_drop_work(struct work_struct *work)
++{
++	struct ieee80211_sub_if_data *sdata =
++		container_of(work, struct ieee80211_sub_if_data,
++			     u.ibss.csa_connection_drop_work);
++
++	ieee80211_ibss_disconnect(sdata);
++	synchronize_rcu();
++	skb_queue_purge(&sdata->skb_queue);
++
++	/* trigger a scan to find another IBSS network to join */
++	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
++}
++
++static bool
++ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
++				  struct ieee802_11_elems *elems,
++				  bool beacon)
++{
++	struct cfg80211_csa_settings params;
++	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct ieee80211_chanctx_conf *chanctx_conf;
++	struct ieee80211_chanctx *chanctx;
++	enum nl80211_channel_type ch_type;
++	int err, num_chanctx;
++	u32 sta_flags;
++	u8 mode;
++
++	if (sdata->vif.csa_active)
++		return true;
++
++	if (!sdata->vif.bss_conf.ibss_joined)
++		return false;
++
++	sta_flags = IEEE80211_STA_DISABLE_VHT;
++	switch (ifibss->chandef.width) {
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
++	case NL80211_CHAN_WIDTH_20_NOHT:
++		sta_flags |= IEEE80211_STA_DISABLE_HT;
++		/* fall through */
++	case NL80211_CHAN_WIDTH_20:
++		sta_flags |= IEEE80211_STA_DISABLE_40MHZ;
++		break;
++	default:
++		break;
++	}
++
++	memset(&params, 0, sizeof(params));
++	err = ieee80211_parse_ch_switch_ie(sdata, elems, beacon,
++					   ifibss->chandef.chan->band,
++					   sta_flags, ifibss->bssid,
++					   &params.count, &mode,
++					   &params.chandef);
++
++	/* can't switch to destination channel, fail */
++	if (err < 0)
++		goto disconnect;
++
++	/* did not contain a CSA */
++	if (err)
++		return false;
++
++	if (ifibss->chandef.chan->band != params.chandef.chan->band)
++		goto disconnect;
++
++	switch (ifibss->chandef.width) {
++	case NL80211_CHAN_WIDTH_20_NOHT:
++	case NL80211_CHAN_WIDTH_20:
++	case NL80211_CHAN_WIDTH_40:
++		/* keep our current HT mode (HT20/HT40+/HT40-), even if
++		 * another mode  has been announced. The mode is not adopted
++		 * within the beacon while doing CSA and we should therefore
++		 * keep the mode which we announce.
++		 */
++		ch_type = cfg80211_get_chandef_type(&ifibss->chandef);
++		cfg80211_chandef_create(&params.chandef, params.chandef.chan,
++					ch_type);
++		break;
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
++		if (params.chandef.width != ifibss->chandef.width) {
++			sdata_info(sdata,
++				   "IBSS %pM received channel switch from incompatible channel width (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
++				   ifibss->bssid,
++				   params.chandef.chan->center_freq,
++				   params.chandef.width,
++				   params.chandef.center_freq1,
++				   params.chandef.center_freq2);
++			goto disconnect;
++		}
++		break;
++	default:
++		/* should not happen, sta_flags should prevent VHT modes. */
++		WARN_ON(1);
++		goto disconnect;
++	}
++
++	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
++				     IEEE80211_CHAN_DISABLED)) {
++		sdata_info(sdata,
++			   "IBSS %pM switches to unsupported channel (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
++			   ifibss->bssid,
++			   params.chandef.chan->center_freq,
++			   params.chandef.width,
++			   params.chandef.center_freq1,
++			   params.chandef.center_freq2);
++		goto disconnect;
++	}
++
++	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
++					    &params.chandef);
++	if (err < 0)
++		goto disconnect;
++	if (err) {
++		params.radar_required = true;
++
++		/* TODO: IBSS-DFS not (yet) supported, disconnect. */
++		goto disconnect;
++	}
++
++	rcu_read_lock();
++	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
++	if (!chanctx_conf) {
++		rcu_read_unlock();
++		goto disconnect;
++	}
++
++	/* don't handle for multi-VIF cases */
++	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
++	if (chanctx->refcount > 1) {
++		rcu_read_unlock();
++		goto disconnect;
++	}
++	num_chanctx = 0;
++	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
++		num_chanctx++;
++
++	if (num_chanctx > 1) {
++		rcu_read_unlock();
++		goto disconnect;
++	}
++	rcu_read_unlock();
++
++	/* all checks done, now perform the channel switch. */
++	ibss_dbg(sdata,
++		 "received channel switch announcement to go to channel %d MHz\n",
++		 params.chandef.chan->center_freq);
++
++	params.block_tx = !!mode;
++
++	ieee80211_ibss_csa_beacon(sdata, &params);
++	sdata->csa_radar_required = params.radar_required;
++
++	if (params.block_tx)
++		ieee80211_stop_queues_by_reason(&sdata->local->hw,
++				IEEE80211_MAX_QUEUE_MAP,
++				IEEE80211_QUEUE_STOP_REASON_CSA);
++
++	sdata->local->csa_chandef = params.chandef;
++	sdata->vif.csa_active = true;
++
++	ieee80211_bss_info_change_notify(sdata, err);
++	drv_channel_switch_beacon(sdata, &params.chandef);
++
++	return true;
++disconnect:
++	ibss_dbg(sdata, "Can't handle channel switch, disconnect\n");
++	ieee80211_queue_work(&sdata->local->hw,
++			     &ifibss->csa_connection_drop_work);
++
++	return true;
++}
++
++static void
++ieee80211_rx_mgmt_spectrum_mgmt(struct ieee80211_sub_if_data *sdata,
++				struct ieee80211_mgmt *mgmt, size_t len,
++				struct ieee80211_rx_status *rx_status,
++				struct ieee802_11_elems *elems)
++{
++	int required_len;
++
++	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
++		return;
++
++	/* CSA is the only action we handle for now */
++	if (mgmt->u.action.u.measurement.action_code !=
++	    WLAN_ACTION_SPCT_CHL_SWITCH)
++		return;
++
++	required_len = IEEE80211_MIN_ACTION_SIZE +
++		       sizeof(mgmt->u.action.u.chan_switch);
++	if (len < required_len)
++		return;
++
++	ieee80211_ibss_process_chanswitch(sdata, elems, false);
++}
++
+ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
+ 					  struct ieee80211_mgmt *mgmt,
+ 					  size_t len)
+@@ -636,10 +1017,6 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* check if we need to merge IBSS */
+ 
+-	/* we use a fixed BSSID */
+-	if (sdata->u.ibss.fixed_bssid)
+-		goto put_bss;
+-
+ 	/* not an IBSS */
+ 	if (!(cbss->capability & WLAN_CAPABILITY_IBSS))
+ 		goto put_bss;
+@@ -655,10 +1032,18 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 				sdata->u.ibss.ssid_len))
+ 		goto put_bss;
+ 
++	/* process channel switch */
++	if (ieee80211_ibss_process_chanswitch(sdata, elems, true))
++		goto put_bss;
++
+ 	/* same BSSID */
+ 	if (ether_addr_equal(cbss->bssid, sdata->u.ibss.bssid))
+ 		goto put_bss;
+ 
++	/* we use a fixed BSSID */
++	if (sdata->u.ibss.fixed_bssid)
++		goto put_bss;
++
+ 	if (ieee80211_have_rx_timestamp(rx_status)) {
+ 		/* time when timestamp field was received */
+ 		rx_timestamp =
+@@ -1040,6 +1425,8 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_rx_status *rx_status;
+ 	struct ieee80211_mgmt *mgmt;
+ 	u16 fc;
++	struct ieee802_11_elems elems;
++	int ies_len;
+ 
+ 	rx_status = IEEE80211_SKB_RXCB(skb);
+ 	mgmt = (struct ieee80211_mgmt *) skb->data;
+@@ -1065,6 +1452,27 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	case IEEE80211_STYPE_DEAUTH:
+ 		ieee80211_rx_mgmt_deauth_ibss(sdata, mgmt, skb->len);
+ 		break;
++	case IEEE80211_STYPE_ACTION:
++		switch (mgmt->u.action.category) {
++		case WLAN_CATEGORY_SPECTRUM_MGMT:
++			ies_len = skb->len -
++				  offsetof(struct ieee80211_mgmt,
++					   u.action.u.chan_switch.variable);
++
++			if (ies_len < 0)
++				break;
++
++			ieee802_11_parse_elems(
++				mgmt->u.action.u.chan_switch.variable,
++				ies_len, true, &elems);
++
++			if (elems.parse_error)
++				break;
++
++			ieee80211_rx_mgmt_spectrum_mgmt(sdata, mgmt, skb->len,
++							rx_status, &elems);
++			break;
++		}
+ 	}
+ 
+  mgmt_out:
+@@ -1131,6 +1539,8 @@ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 		    (unsigned long) sdata);
+ 	INIT_LIST_HEAD(&ifibss->incomplete_stations);
+ 	spin_lock_init(&ifibss->incomplete_lock);
++	INIT_WORK(&ifibss->csa_connection_drop_work,
++		  ieee80211_csa_connection_drop_work);
+ }
+ 
+ /* scan finished notification */
+@@ -1229,72 +1639,19 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct ieee80211_local *local = sdata->local;
+-	struct cfg80211_bss *cbss;
+-	u16 capability;
+-	int active_ibss;
+-	struct sta_info *sta;
+-	struct beacon_data *presp;
+ 
+-	active_ibss = ieee80211_sta_active_ibss(sdata);
++	ieee80211_ibss_disconnect(sdata);
+ 
+-	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
+-		capability = WLAN_CAPABILITY_IBSS;
+-
+-		if (ifibss->privacy)
+-			capability |= WLAN_CAPABILITY_PRIVACY;
+-
+-		cbss = cfg80211_get_bss(local->hw.wiphy, ifibss->chandef.chan,
+-					ifibss->bssid, ifibss->ssid,
+-					ifibss->ssid_len, WLAN_CAPABILITY_IBSS |
+-					WLAN_CAPABILITY_PRIVACY,
+-					capability);
+-
+-		if (cbss) {
+-			cfg80211_unlink_bss(local->hw.wiphy, cbss);
+-			cfg80211_put_bss(local->hw.wiphy, cbss);
+-		}
+-	}
+-
+-	ifibss->state = IEEE80211_IBSS_MLME_SEARCH;
+-	memset(ifibss->bssid, 0, ETH_ALEN);
+ 	ifibss->ssid_len = 0;
+-
+-	sta_info_flush(sdata);
+-
+-	spin_lock_bh(&ifibss->incomplete_lock);
+-	while (!list_empty(&ifibss->incomplete_stations)) {
+-		sta = list_first_entry(&ifibss->incomplete_stations,
+-				       struct sta_info, list);
+-		list_del(&sta->list);
+-		spin_unlock_bh(&ifibss->incomplete_lock);
+-
+-		sta_info_free(local, sta);
+-		spin_lock_bh(&ifibss->incomplete_lock);
+-	}
+-	spin_unlock_bh(&ifibss->incomplete_lock);
+-
+-	netif_carrier_off(sdata->dev);
+-
++	memset(ifibss->bssid, 0, ETH_ALEN);
+ 	/* remove beacon */
+ 	kfree(sdata->u.ibss.ie);
+-	presp = rcu_dereference_protected(ifibss->presp,
+-					  lockdep_is_held(&sdata->wdev.mtx));
+-	RCU_INIT_POINTER(sdata->u.ibss.presp, NULL);
+ 
+ 	/* on the next join, re-program HT parameters */
+ 	memset(&ifibss->ht_capa, 0, sizeof(ifibss->ht_capa));
+ 	memset(&ifibss->ht_capa_mask, 0, sizeof(ifibss->ht_capa_mask));
+ 
+-	sdata->vif.bss_conf.ibss_joined = false;
+-	sdata->vif.bss_conf.ibss_creator = false;
+-	sdata->vif.bss_conf.enable_beacon = false;
+-	sdata->vif.bss_conf.ssid_len = 0;
+-	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
+-						BSS_CHANGED_IBSS);
+ 	synchronize_rcu();
+-	kfree(presp);
+ 
+ 	skb_queue_purge(&sdata->skb_queue);
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 98209eb..3d17333 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -487,6 +487,7 @@ struct ieee80211_if_managed {
+ 
+ struct ieee80211_if_ibss {
+ 	struct timer_list timer;
++	struct work_struct csa_connection_drop_work;
+ 
+ 	unsigned long last_scan_completed;
+ 
+@@ -1330,6 +1331,10 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 				   struct sk_buff *skb);
++int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
++			      struct cfg80211_csa_settings *csa_settings);
++int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata);
++void ieee80211_ibss_stop(struct ieee80211_sub_if_data *sdata);
+ 
+ /* mesh code */
+ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 7ca534b..a8bce73 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -763,6 +763,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		ieee80211_mgd_stop(sdata);
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		ieee80211_ibss_stop(sdata);
++
++
+ 	/*
+ 	 * Remove all stations associated with this interface.
+ 	 *
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 0ac7512..59595d6 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2396,7 +2396,8 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	if (!rx->sta && mgmt->u.action.category != WLAN_CATEGORY_PUBLIC &&
+-	    mgmt->u.action.category != WLAN_CATEGORY_SELF_PROTECTED)
++	    mgmt->u.action.category != WLAN_CATEGORY_SELF_PROTECTED &&
++	    mgmt->u.action.category != WLAN_CATEGORY_SPECTRUM_MGMT)
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
+@@ -2560,31 +2561,46 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 
+ 		goto queue;
+ 	case WLAN_CATEGORY_SPECTRUM_MGMT:
+-		if (status->band != IEEE80211_BAND_5GHZ)
+-			break;
+-
+-		if (sdata->vif.type != NL80211_IFTYPE_STATION)
+-			break;
+-
+ 		/* verify action_code is present */
+ 		if (len < IEEE80211_MIN_ACTION_SIZE + 1)
+ 			break;
+ 
+ 		switch (mgmt->u.action.u.measurement.action_code) {
+ 		case WLAN_ACTION_SPCT_MSR_REQ:
++			if (status->band != IEEE80211_BAND_5GHZ)
++				break;
++
+ 			if (len < (IEEE80211_MIN_ACTION_SIZE +
+ 				   sizeof(mgmt->u.action.u.measurement)))
+ 				break;
++
++			if (sdata->vif.type != NL80211_IFTYPE_STATION)
++				break;
++
+ 			ieee80211_process_measurement_req(sdata, mgmt, len);
+ 			goto handled;
+-		case WLAN_ACTION_SPCT_CHL_SWITCH:
+-			if (sdata->vif.type != NL80211_IFTYPE_STATION)
++		case WLAN_ACTION_SPCT_CHL_SWITCH: {
++			u8 *bssid;
++			if (len < (IEEE80211_MIN_ACTION_SIZE +
++				   sizeof(mgmt->u.action.u.chan_switch)))
+ 				break;
+ 
+-			if (!ether_addr_equal(mgmt->bssid, sdata->u.mgd.bssid))
++			if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++			    sdata->vif.type != NL80211_IFTYPE_ADHOC)
++				break;
++
++			if (sdata->vif.type == NL80211_IFTYPE_STATION)
++				bssid = sdata->u.mgd.bssid;
++			else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
++				bssid = sdata->u.ibss.bssid;
++			else
++				break;
++
++			if (!ether_addr_equal(mgmt->bssid, bssid))
+ 				break;
+ 
+ 			goto queue;
++			}
+ 		}
+ 		break;
+ 	case WLAN_CATEGORY_SA_QUERY:
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0e42322..82d5a6f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2353,15 +2353,31 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
+ 	struct probe_resp *resp;
+ 	int counter_offset_beacon = sdata->csa_counter_offset_beacon;
+ 	int counter_offset_presp = sdata->csa_counter_offset_presp;
++	u8 *beacon_data;
++	size_t beacon_data_len;
++
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP:
++		beacon_data = beacon->tail;
++		beacon_data_len = beacon->tail_len;
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		beacon_data = beacon->head;
++		beacon_data_len = beacon->head_len;
++		break;
++	default:
++		return;
++	}
++	if (WARN_ON(counter_offset_beacon >= beacon_data_len))
++		return;
+ 
+ 	/* warn if the driver did not check for/react to csa completeness */
+-	if (WARN_ON(((u8 *)beacon->tail)[counter_offset_beacon] == 0))
++	if (WARN_ON(beacon_data[counter_offset_beacon] == 0))
+ 		return;
+ 
+-	((u8 *)beacon->tail)[counter_offset_beacon]--;
++	beacon_data[counter_offset_beacon]--;
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP &&
+-	    counter_offset_presp) {
++	if (sdata->vif.type == NL80211_IFTYPE_AP && counter_offset_presp) {
+ 		rcu_read_lock();
+ 		resp = rcu_dereference(sdata->u.ap.probe_resp);
+ 
+@@ -2396,6 +2412,15 @@ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
+ 			goto out;
+ 		beacon_data = beacon->tail;
+ 		beacon_data_len = beacon->tail_len;
++	} else if (vif->type == NL80211_IFTYPE_ADHOC) {
++		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++
++		beacon = rcu_dereference(ifibss->presp);
++		if (!beacon)
++			goto out;
++
++		beacon_data = beacon->head;
++		beacon_data_len = beacon->head_len;
+ 	} else {
+ 		WARN_ON(1);
+ 		goto out;
+@@ -2480,6 +2505,10 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		if (!presp)
+ 			goto out;
+ 
++		if (sdata->vif.csa_active)
++			ieee80211_update_csa(sdata, presp);
++
++
+ 		skb = dev_alloc_skb(local->tx_headroom + presp->head_len);
+ 		if (!skb)
+ 			goto out;
+-- 
+1.7.10.4
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSH5jAAAoJEJctW/TcYTgGOacP/iEfcLhjEvjaqxVDZGaC6fG+
-94Ja0L1z8bwUIWm3Q2s/8Hqx6X3Q6c281/O3pCXX/htIqQBvJ7fzoOQaOg2Rbj+H
-eC+xZoiWu4LHWI53inbeX73nLJKePpNMsaYyj5r2uHCNvZfTeY1kvkc6cio4ASd6
-qwcwg11YTN0kRAg15+SwKSmjJSEyHmtd5BGATJGHWCJ6WBKyu8xsmPb2PRyXjp7y
-N9/IvcgLLChfpfnBHaRJJ6wUU4j/79y/+gD8y3ePnuH8zj0+0bSvDgxVz/pSMlwl
-9uSINPOChavyVbSTKSN7e1QWjtlKAqRp8EQjPOXkVZ8+x3bTkvNCFHu5s912mc++
-lwTaZ1sabHxeoqIl/X9iAns0ZFcZcgK6eOMrEHAR2/gpSxHV5/5V75XhYyGt/HND
-9GDvLzB9K8072FlgVKauypcXlFTh1rLJaty5ZZ5FkESAyyn9InmY/VdI1DWt8Pkj
-41JBA3LfJmuHKDajhtY5Q/lmfRqv7y6rsdv9CI4Fh6I+PmGHHd7FQXcspDiFGPxe
-iuF2p99I9IpBhs1IBPBVGYkgyelOoGL0zgHx/TyJNwEgF1JFHpZRv6U4CoCtOCLT
-Vf49i0sVkH2pTQYO+BoLif5shW2dz3NHq4RrZC8GL4vzCyyEctVPPOkHCIQ+ez5A
-5GgWdVpulSpaj4RRFANh
-=NINg
------END PGP SIGNATURE-----
-
---W/nzBZO5zC0uMSeA--
