@@ -1,146 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:43169 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754517Ab3HPWS5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 18:18:57 -0400
-Received: by mail-wg0-f48.google.com with SMTP id f12so1966169wgh.27
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2013 15:18:56 -0700 (PDT)
-Message-ID: <1376684815.8057.44.camel@canaries32-MCP7A> (sfid-20130817_001905_698515_2794B496)
-Subject: [PATCH 1/8] staging: vt6656: desc.h: Move typedef tagSRrvTime_gRTS
- to new structure in rxtx.h
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 16 Aug 2013 21:26:55 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:60112 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030506Ab3HIINl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Aug 2013 04:13:41 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: clean up HTT tx tid handling
+Date: Fri, 9 Aug 2013 10:13:32 +0200
+Message-ID: <1376036014-29707-2-git-send-email-michal.kazior@tieto.com> (sfid-20130809_101349_757669_32ADAB8D)
+In-Reply-To: <1376036014-29707-1-git-send-email-michal.kazior@tieto.com>
+References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
+ <1376036014-29707-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To new structure.
-typedef struct tagSRrvTime_gRTS -> struct vnt_rrv_time_rts
+The tids weren't mapped really properly. This
+doesn't fix any known bug but seems the right
+thing to do.
 
-This is only needed by rxtc.c so moved to rxtx.h and
-will eventually form part of the structure of
-struct vnt_tx_buffer.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6656/desc.h | 12 ------------
- drivers/staging/vt6656/rxtx.c | 30 ++++++++++++++++++------------
- drivers/staging/vt6656/rxtx.h | 10 ++++++++++
- 3 files changed, 28 insertions(+), 24 deletions(-)
+patch:
+ * use brackets {}
 
-diff --git a/drivers/staging/vt6656/desc.h b/drivers/staging/vt6656/desc.h
-index d770a78..89b580d 100644
---- a/drivers/staging/vt6656/desc.h
-+++ b/drivers/staging/vt6656/desc.h
-@@ -146,18 +146,6 @@
- /*
-  * RsvTime buffer header
-  */
--typedef struct tagSRrvTime_gRTS {
--    u16        wRTSTxRrvTime_ba;
--    u16        wRTSTxRrvTime_aa;
--    u16        wRTSTxRrvTime_bb;
--    u16        wReserved;
--    u16        wTxRrvTime_b;
--    u16        wTxRrvTime_a;
--} __attribute__ ((__packed__))
--SRrvTime_gRTS, *PSRrvTime_gRTS;
--
--typedef const SRrvTime_gRTS *PCSRrvTime_gRTS;
--
- typedef struct tagSRrvTime_gCTS {
-     u16        wCTSTxRrvTime_ba;
-     u16        wReserved;
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index d9827b3..c9dceae 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -919,7 +919,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-         if (pvRTS != NULL) { //RTS_need
-             //Fill RsvTime
-             if (pvRrvTime) {
--                PSRrvTime_gRTS pBuf = (PSRrvTime_gRTS)pvRrvTime;
-+		struct vnt_rrv_time_rts *pBuf =
-+			(struct vnt_rrv_time_rts *)pvRrvTime;
-                 pBuf->wRTSTxRrvTime_aa = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 2, byPktType, cbFrameSize, wCurrentRate));//2:RTSTxRrvTime_aa, 1:2.4GHz
-                 pBuf->wRTSTxRrvTime_ba = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 1, byPktType, cbFrameSize, wCurrentRate));//1:RTSTxRrvTime_ba, 1:2.4GHz
-                 pBuf->wRTSTxRrvTime_bb = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 0, byPktType, cbFrameSize, wCurrentRate));//0:RTSTxRrvTime_bb, 1:2.4GHz
-@@ -1149,15 +1150,17 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
-         if (byFBOption == AUTO_FB_NONE) {
-             if (bRTS == true) {//RTS_need
--                pvRrvTime = (PSRrvTime_gRTS) (pbyTxBufferAddr + wTxBufSize);
--                pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize + sizeof(SRrvTime_gRTS));
-+		pvRrvTime = (struct vnt_rrv_time_rts *)
-+					(pbyTxBufferAddr + wTxBufSize);
-+		pMICHDR = (PSMICHDRHead)(pbyTxBufferAddr + wTxBufSize +
-+					sizeof(struct vnt_rrv_time_rts));
- 		pvRTS = (struct vnt_rts_g *) (pbyTxBufferAddr + wTxBufSize +
--				sizeof(SRrvTime_gRTS) + cbMICHDR);
-+				sizeof(struct vnt_rrv_time_rts) + cbMICHDR);
-                 pvCTS = NULL;
- 		pvTxDataHd = (PSTxDataHead_g) (pbyTxBufferAddr + wTxBufSize +
--			sizeof(SRrvTime_gRTS) + cbMICHDR +
-+			sizeof(struct vnt_rrv_time_rts) + cbMICHDR +
- 						sizeof(struct vnt_rts_g));
--		cbHeaderLength = wTxBufSize + sizeof(SRrvTime_gRTS) +
-+		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
- 			cbMICHDR + sizeof(struct vnt_rts_g) +
- 				sizeof(STxDataHead_g);
-             }
-@@ -1176,16 +1179,19 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-         } else {
-             // Auto Fall Back
-             if (bRTS == true) {//RTS_need
--                pvRrvTime = (PSRrvTime_gRTS) (pbyTxBufferAddr + wTxBufSize);
--                pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize + sizeof(SRrvTime_gRTS));
-+		pvRrvTime = (struct vnt_rrv_time_rts *)(pbyTxBufferAddr +
-+								wTxBufSize);
-+		pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize +
-+					sizeof(struct vnt_rrv_time_rts));
- 		pvRTS = (struct vnt_rts_g_fb *) (pbyTxBufferAddr + wTxBufSize +
--				sizeof(SRrvTime_gRTS) + cbMICHDR);
-+				sizeof(struct vnt_rrv_time_rts) + cbMICHDR);
-                 pvCTS = NULL;
- 		pvTxDataHd = (PSTxDataHead_g_FB) (pbyTxBufferAddr + wTxBufSize +
--			sizeof(SRrvTime_gRTS) + cbMICHDR +
-+			sizeof(struct vnt_rrv_time_rts) + cbMICHDR +
- 					sizeof(struct vnt_rts_g_fb));
--		cbHeaderLength = wTxBufSize + sizeof(SRrvTime_gRTS) + cbMICHDR +
--			sizeof(struct vnt_rts_g_fb) + sizeof(STxDataHead_g_FB);
-+		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
-+			cbMICHDR + sizeof(struct vnt_rts_g_fb) +
-+				sizeof(STxDataHead_g_FB);
-             }
-             else if (bRTS == false) { //RTS_needless
-                 pvRrvTime = (PSRrvTime_gCTS) (pbyTxBufferAddr + wTxBufSize);
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 8fd5be1..8afade2 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -32,6 +32,16 @@
- #include "device.h"
- #include "wcmd.h"
+ drivers/net/wireless/ath/ath10k/htt.h |    6 ++++--
+ drivers/net/wireless/ath/ath10k/mac.c |    5 ++++-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 318be46..de45d02 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -106,8 +106,10 @@ enum htt_data_tx_desc_flags1 {
+ };
  
-+/* RsvTime buffer header */
-+struct vnt_rrv_time_rts {
-+	u16 wRTSTxRrvTime_ba;
-+	u16 wRTSTxRrvTime_aa;
-+	u16 wRTSTxRrvTime_bb;
-+	u16 wReserved;
-+	u16 wTxRrvTime_b;
-+	u16 wTxRrvTime_a;
-+} __packed;
-+
- /* RTS buffer header */
- struct vnt_rts_g {
- 	u8 bySignalField_b;
+ enum htt_data_tx_ext_tid {
+-	HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST = 16,
+-	HTT_DATA_TX_EXT_TID_MGMT                = 17,
++	HTT_DATA_TX_EXT_TID_NON_QOS_UNICAST     = 16,
++	HTT_DATA_TX_EXT_TID_UNUSED              = 17,
++	HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST = 18,
++	HTT_DATA_TX_EXT_TID_MGMT                = 19,
+ 	HTT_DATA_TX_EXT_TID_INVALID             = 31
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index cf2ba4d..cc6ad7a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1726,11 +1726,14 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 
+ 	/* we must calculate tid before we apply qos workaround
+ 	 * as we'd lose the qos control field */
+-	tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+ 	if (ieee80211_is_data_qos(hdr->frame_control) &&
+ 	    is_unicast_ether_addr(ieee80211_get_DA(hdr))) {
+ 		u8 *qc = ieee80211_get_qos_ctl(hdr);
+ 		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
++	} else if (is_unicast_ether_addr(ieee80211_get_DA(hdr))) {
++		tid = HTT_DATA_TX_EXT_TID_NON_QOS_UNICAST;
++	} else {
++		tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+ 	}
+ 
+ 	/* it makes no sense to process injected frames like that */
 -- 
-1.8.1.2
-
-
+1.7.9.5
 
