@@ -1,299 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2127 "EHLO mms1.broadcom.com"
+Received: from bues.ch ([80.190.117.144]:39692 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758973Ab3HMUEe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 16:04:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	"Jonas Gorski" <jogo@openwrt.org>,
-	"David Herrmann" <dh.herrmann@gmail.com>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
-	"David Costa" <david@zarel.net>
-Subject: [RFT V2 03/13] brcmsmac: use ARRAY_SIZE in phytbl_lcn.c
-Date: Tue, 13 Aug 2013 22:03:30 +0200
-Message-ID: <1376424220-10765-4-git-send-email-arend@broadcom.com> (sfid-20130813_220440_557813_6BFC91C7)
-In-Reply-To: <1376424220-10765-1-git-send-email-arend@broadcom.com>
-References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1758650Ab3HJRyA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Aug 2013 13:54:00 -0400
+Date: Sat, 10 Aug 2013 19:53:35 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: rt2800usb: Kernel log spammed with TX status messages
+Message-ID: <20130810195335.2903d0c2@marge> (sfid-20130810_195404_534906_8B67E28A)
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/VvpGkiCigMIho.652Q708j="; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch converts all sizeof(x)/sizeof(x[0]) instances to
-ARRAY_SIZE macro in phytbl_lcn.c. The patch was made using
-spatch with ARRAY_SIZE.cocci (see [1]).
+--Sig_/VvpGkiCigMIho.652Q708j=
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-[1] https://github.com/coccinelle/coccinelle/tree/master/demos/janitorings
+Hi,
 
-Cc: Jonas Gorski <jogo@openwrt.org>
-Cc: David Herrmann <dh.herrmann@gmail.com>
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>
-Cc: David Costa <david@zarel.net>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |  117 ++++++++------------
- 1 file changed, 44 insertions(+), 73 deletions(-)
+My kernel logs are spammed with messages like the ones below.
+I'm currently running latest debian sid kernel, which is based on 3.10.5.
+The device is
+Bus 009 Device 002: ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless A=
+dapter
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
-index 622c01c..deae3a7 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
-@@ -1507,117 +1507,103 @@ static const u32 dot11lcn_gain_tbl_5G[] = {
- 
- const struct phytbl_info dot11lcnphytbl_rx_gain_info_rev0[] = {
- 	{&dot11lcn_gain_tbl_rev0,
--	 sizeof(dot11lcn_gain_tbl_rev0) / sizeof(dot11lcn_gain_tbl_rev0[0]), 18,
-+	 ARRAY_SIZE(dot11lcn_gain_tbl_rev0), 18,
- 	 0, 32}
- 	,
- 	{&dot11lcn_aux_gain_idx_tbl_rev0,
--	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0) /
--	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0[0]), 14, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_rev0), 14, 0, 16}
- 	,
- 	{&dot11lcn_gain_idx_tbl_rev0,
--	 sizeof(dot11lcn_gain_idx_tbl_rev0) /
--	 sizeof(dot11lcn_gain_idx_tbl_rev0[0]), 13, 0, 32}
-+	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_rev0), 13, 0, 32}
- 	,
- };
- 
- static const struct phytbl_info dot11lcnphytbl_rx_gain_info_rev1[] = {
- 	{&dot11lcn_gain_tbl_rev1,
--	 sizeof(dot11lcn_gain_tbl_rev1) / sizeof(dot11lcn_gain_tbl_rev1[0]), 18,
-+	 ARRAY_SIZE(dot11lcn_gain_tbl_rev1), 18,
- 	 0, 32}
- 	,
- 	{&dot11lcn_aux_gain_idx_tbl_rev0,
--	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0) /
--	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0[0]), 14, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_rev0), 14, 0, 16}
- 	,
- 	{&dot11lcn_gain_idx_tbl_rev0,
--	 sizeof(dot11lcn_gain_idx_tbl_rev0) /
--	 sizeof(dot11lcn_gain_idx_tbl_rev0[0]), 13, 0, 32}
-+	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_rev0), 13, 0, 32}
- 	,
- };
- 
- const struct phytbl_info dot11lcnphytbl_rx_gain_info_2G_rev2[] = {
- 	{&dot11lcn_gain_tbl_2G,
--	 sizeof(dot11lcn_gain_tbl_2G) / sizeof(dot11lcn_gain_tbl_2G[0]), 18, 0,
-+	 ARRAY_SIZE(dot11lcn_gain_tbl_2G), 18, 0,
- 	 32}
- 	,
- 	{&dot11lcn_aux_gain_idx_tbl_2G,
--	 sizeof(dot11lcn_aux_gain_idx_tbl_2G) /
--	 sizeof(dot11lcn_aux_gain_idx_tbl_2G[0]), 14, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_2G), 14, 0, 16}
- 	,
- 	{&dot11lcn_gain_idx_tbl_2G,
--	 sizeof(dot11lcn_gain_idx_tbl_2G) / sizeof(dot11lcn_gain_idx_tbl_2G[0]),
-+	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_2G),
- 	 13, 0, 32}
- 	,
- 	{&dot11lcn_gain_val_tbl_2G,
--	 sizeof(dot11lcn_gain_val_tbl_2G) / sizeof(dot11lcn_gain_val_tbl_2G[0]),
-+	 ARRAY_SIZE(dot11lcn_gain_val_tbl_2G),
- 	 17, 0, 8}
- };
- 
- const struct phytbl_info dot11lcnphytbl_rx_gain_info_5G_rev2[] = {
- 	{&dot11lcn_gain_tbl_5G,
--	 sizeof(dot11lcn_gain_tbl_5G) / sizeof(dot11lcn_gain_tbl_5G[0]), 18, 0,
-+	 ARRAY_SIZE(dot11lcn_gain_tbl_5G), 18, 0,
- 	 32}
- 	,
- 	{&dot11lcn_aux_gain_idx_tbl_5G,
--	 sizeof(dot11lcn_aux_gain_idx_tbl_5G) /
--	 sizeof(dot11lcn_aux_gain_idx_tbl_5G[0]), 14, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_5G), 14, 0, 16}
- 	,
- 	{&dot11lcn_gain_idx_tbl_5G,
--	 sizeof(dot11lcn_gain_idx_tbl_5G) / sizeof(dot11lcn_gain_idx_tbl_5G[0]),
-+	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_5G),
- 	 13, 0, 32}
- 	,
- 	{&dot11lcn_gain_val_tbl_5G,
--	 sizeof(dot11lcn_gain_val_tbl_5G) / sizeof(dot11lcn_gain_val_tbl_5G[0]),
-+	 ARRAY_SIZE(dot11lcn_gain_val_tbl_5G),
- 	 17, 0, 8}
- };
- 
- const struct phytbl_info dot11lcnphytbl_rx_gain_info_extlna_2G_rev2[] = {
- 	{&dot11lcn_gain_tbl_extlna_2G,
--	 sizeof(dot11lcn_gain_tbl_extlna_2G) /
--	 sizeof(dot11lcn_gain_tbl_extlna_2G[0]), 18, 0, 32}
-+	 ARRAY_SIZE(dot11lcn_gain_tbl_extlna_2G), 18, 0, 32}
- 	,
- 	{&dot11lcn_aux_gain_idx_tbl_extlna_2G,
--	 sizeof(dot11lcn_aux_gain_idx_tbl_extlna_2G) /
--	 sizeof(dot11lcn_aux_gain_idx_tbl_extlna_2G[0]), 14, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_extlna_2G), 14, 0, 16}
- 	,
- 	{&dot11lcn_gain_idx_tbl_extlna_2G,
--	 sizeof(dot11lcn_gain_idx_tbl_extlna_2G) /
--	 sizeof(dot11lcn_gain_idx_tbl_extlna_2G[0]), 13, 0, 32}
-+	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_extlna_2G), 13, 0, 32}
- 	,
- 	{&dot11lcn_gain_val_tbl_extlna_2G,
--	 sizeof(dot11lcn_gain_val_tbl_extlna_2G) /
--	 sizeof(dot11lcn_gain_val_tbl_extlna_2G[0]), 17, 0, 8}
-+	 ARRAY_SIZE(dot11lcn_gain_val_tbl_extlna_2G), 17, 0, 8}
- };
- 
- const struct phytbl_info dot11lcnphytbl_rx_gain_info_extlna_5G_rev2[] = {
- 	{&dot11lcn_gain_tbl_5G,
--	 sizeof(dot11lcn_gain_tbl_5G) / sizeof(dot11lcn_gain_tbl_5G[0]), 18, 0,
-+	 ARRAY_SIZE(dot11lcn_gain_tbl_5G), 18, 0,
- 	 32}
- 	,
- 	{&dot11lcn_aux_gain_idx_tbl_5G,
--	 sizeof(dot11lcn_aux_gain_idx_tbl_5G) /
--	 sizeof(dot11lcn_aux_gain_idx_tbl_5G[0]), 14, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_5G), 14, 0, 16}
- 	,
- 	{&dot11lcn_gain_idx_tbl_5G,
--	 sizeof(dot11lcn_gain_idx_tbl_5G) / sizeof(dot11lcn_gain_idx_tbl_5G[0]),
-+	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_5G),
- 	 13, 0, 32}
- 	,
- 	{&dot11lcn_gain_val_tbl_5G,
--	 sizeof(dot11lcn_gain_val_tbl_5G) / sizeof(dot11lcn_gain_val_tbl_5G[0]),
-+	 ARRAY_SIZE(dot11lcn_gain_val_tbl_5G),
- 	 17, 0, 8}
- };
- 
- const u32 dot11lcnphytbl_rx_gain_info_sz_rev0 =
--	sizeof(dot11lcnphytbl_rx_gain_info_rev0) /
--	sizeof(dot11lcnphytbl_rx_gain_info_rev0[0]);
-+	ARRAY_SIZE(dot11lcnphytbl_rx_gain_info_rev0);
- 
- const u32 dot11lcnphytbl_rx_gain_info_2G_rev2_sz =
--	sizeof(dot11lcnphytbl_rx_gain_info_2G_rev2) /
--	sizeof(dot11lcnphytbl_rx_gain_info_2G_rev2[0]);
-+	ARRAY_SIZE(dot11lcnphytbl_rx_gain_info_2G_rev2);
- 
- const u32 dot11lcnphytbl_rx_gain_info_5G_rev2_sz =
--	sizeof(dot11lcnphytbl_rx_gain_info_5G_rev2) /
--	sizeof(dot11lcnphytbl_rx_gain_info_5G_rev2[0]);
-+	ARRAY_SIZE(dot11lcnphytbl_rx_gain_info_5G_rev2);
- 
- static const u16 dot11lcn_min_sig_sq_tbl_rev0[] = {
- 	0x014d,
-@@ -2771,89 +2757,74 @@ static const u32 dot11lcn_papd_compdelta_tbl_rev0[] = {
- 
- const struct phytbl_info dot11lcnphytbl_info_rev0[] = {
- 	{&dot11lcn_min_sig_sq_tbl_rev0,
--	 sizeof(dot11lcn_min_sig_sq_tbl_rev0) /
--	 sizeof(dot11lcn_min_sig_sq_tbl_rev0[0]), 2, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_min_sig_sq_tbl_rev0), 2, 0, 16}
- 	,
- 	{&dot11lcn_noise_scale_tbl_rev0,
--	 sizeof(dot11lcn_noise_scale_tbl_rev0) /
--	 sizeof(dot11lcn_noise_scale_tbl_rev0[0]), 1, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_noise_scale_tbl_rev0), 1, 0, 16}
- 	,
- 	{&dot11lcn_fltr_ctrl_tbl_rev0,
--	 sizeof(dot11lcn_fltr_ctrl_tbl_rev0) /
--	 sizeof(dot11lcn_fltr_ctrl_tbl_rev0[0]), 11, 0, 32}
-+	 ARRAY_SIZE(dot11lcn_fltr_ctrl_tbl_rev0), 11, 0, 32}
- 	,
- 	{&dot11lcn_ps_ctrl_tbl_rev0,
--	 sizeof(dot11lcn_ps_ctrl_tbl_rev0) /
--	 sizeof(dot11lcn_ps_ctrl_tbl_rev0[0]), 12, 0, 32}
-+	 ARRAY_SIZE(dot11lcn_ps_ctrl_tbl_rev0), 12, 0, 32}
- 	,
- 	{&dot11lcn_gain_idx_tbl_rev0,
--	 sizeof(dot11lcn_gain_idx_tbl_rev0) /
--	 sizeof(dot11lcn_gain_idx_tbl_rev0[0]), 13, 0, 32}
-+	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_rev0), 13, 0, 32}
- 	,
- 	{&dot11lcn_aux_gain_idx_tbl_rev0,
--	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0) /
--	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0[0]), 14, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_rev0), 14, 0, 16}
- 	,
- 	{&dot11lcn_sw_ctrl_tbl_rev0,
--	 sizeof(dot11lcn_sw_ctrl_tbl_rev0) /
--	 sizeof(dot11lcn_sw_ctrl_tbl_rev0[0]), 15, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_rev0), 15, 0, 16}
- 	,
- 	{&dot11lcn_nf_table_rev0,
--	 sizeof(dot11lcn_nf_table_rev0) / sizeof(dot11lcn_nf_table_rev0[0]), 16,
-+	 ARRAY_SIZE(dot11lcn_nf_table_rev0), 16,
- 	 0, 8}
- 	,
- 	{&dot11lcn_gain_val_tbl_rev0,
--	 sizeof(dot11lcn_gain_val_tbl_rev0) /
--	 sizeof(dot11lcn_gain_val_tbl_rev0[0]), 17, 0, 8}
-+	 ARRAY_SIZE(dot11lcn_gain_val_tbl_rev0), 17, 0, 8}
- 	,
- 	{&dot11lcn_gain_tbl_rev0,
--	 sizeof(dot11lcn_gain_tbl_rev0) / sizeof(dot11lcn_gain_tbl_rev0[0]), 18,
-+	 ARRAY_SIZE(dot11lcn_gain_tbl_rev0), 18,
- 	 0, 32}
- 	,
- 	{&dot11lcn_spur_tbl_rev0,
--	 sizeof(dot11lcn_spur_tbl_rev0) / sizeof(dot11lcn_spur_tbl_rev0[0]), 20,
-+	 ARRAY_SIZE(dot11lcn_spur_tbl_rev0), 20,
- 	 0, 8}
- 	,
- 	{&dot11lcn_unsup_mcs_tbl_rev0,
--	 sizeof(dot11lcn_unsup_mcs_tbl_rev0) /
--	 sizeof(dot11lcn_unsup_mcs_tbl_rev0[0]), 23, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_unsup_mcs_tbl_rev0), 23, 0, 16}
- 	,
- 	{&dot11lcn_iq_local_tbl_rev0,
--	 sizeof(dot11lcn_iq_local_tbl_rev0) /
--	 sizeof(dot11lcn_iq_local_tbl_rev0[0]), 0, 0, 16}
-+	 ARRAY_SIZE(dot11lcn_iq_local_tbl_rev0), 0, 0, 16}
- 	,
- 	{&dot11lcn_papd_compdelta_tbl_rev0,
--	 sizeof(dot11lcn_papd_compdelta_tbl_rev0) /
--	 sizeof(dot11lcn_papd_compdelta_tbl_rev0[0]), 24, 0, 32}
-+	 ARRAY_SIZE(dot11lcn_papd_compdelta_tbl_rev0), 24, 0, 32}
- 	,
- };
- 
- const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313 = {
- 	&dot11lcn_sw_ctrl_tbl_4313_rev0,
--	sizeof(dot11lcn_sw_ctrl_tbl_4313_rev0) /
--	sizeof(dot11lcn_sw_ctrl_tbl_4313_rev0[0]), 15, 0, 16
-+	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_rev0), 15, 0, 16
- };
- 
- const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_epa = {
- 	&dot11lcn_sw_ctrl_tbl_4313_epa_rev0,
--	sizeof(dot11lcn_sw_ctrl_tbl_4313_epa_rev0) /
--	sizeof(dot11lcn_sw_ctrl_tbl_4313_epa_rev0[0]), 15, 0, 16
-+	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_epa_rev0), 15, 0, 16
- };
- 
- const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa = {
- 	&dot11lcn_sw_ctrl_tbl_4313_epa_rev0_combo,
--	sizeof(dot11lcn_sw_ctrl_tbl_4313_epa_rev0_combo) /
--	sizeof(dot11lcn_sw_ctrl_tbl_4313_epa_rev0_combo[0]), 15, 0, 16
-+	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_epa_rev0_combo), 15, 0, 16
- };
- 
- const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa_p250 = {
- 	&dot11lcn_sw_ctrl_tbl_4313_bt_epa_p250_rev0,
--	sizeof(dot11lcn_sw_ctrl_tbl_4313_bt_epa_p250_rev0) /
--	sizeof(dot11lcn_sw_ctrl_tbl_4313_bt_epa_p250_rev0[0]), 15, 0, 16
-+	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_bt_epa_p250_rev0), 15, 0, 16
- };
- 
- const u32 dot11lcnphytbl_info_sz_rev0 =
--	sizeof(dot11lcnphytbl_info_rev0) / sizeof(dot11lcnphytbl_info_rev0[0]);
-+	ARRAY_SIZE(dot11lcnphytbl_info_rev0);
- 
- const struct lcnphy_tx_gain_tbl_entry
- dot11lcnphy_2GHz_extPA_gaintable_rev0[128] = {
--- 
-1.7.10.4
+Any idea on how to debug/fix this?
 
+Aug 10 11:27:44 marge kernel: [ 5560.310989] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 11 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.311077] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 11 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.311101] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 11 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.319229] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 12 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.319271] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 12 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.319281] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 12 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.319305] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 13 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.330987] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 14 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.331107] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 14 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.331126] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 14 in queue 2
+Aug 10 11:27:44 marge kernel: [ 5560.412247] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:44 marge kernel: [ 5560.412364] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:44 marge kernel: [ 5560.412488] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:44 marge kernel: [ 5560.412612] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5560.923400] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 0 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.923421] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 0 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.923424] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 0 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.927149] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 1 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.927166] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 1 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.927169] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 1 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.943279] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 2 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.943301] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 2 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.943310] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 2 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.943332] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 3 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.947404] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 4 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.947432] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 4 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.947436] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 4 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.947445] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 5 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.971166] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 6 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.971215] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 6 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.971224] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 6 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.971254] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 7 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.971264] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 8 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.979413] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 9 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.979448] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 9 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.979456] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 9 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.979476] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 10 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.987291] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 11 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.987339] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 11 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.987347] ieee80211 phy0: rt2800usb_entr=
+y_txstatus_timeout: Warning - TX status timeout for entry 11 in queue 2
+Aug 10 11:27:45 marge kernel: [ 5560.996550] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5560.996667] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.069806] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.069925] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.070048] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.070173] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.070298] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.070423] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.070547] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.070675] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.070798] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
+Aug 10 11:27:45 marge kernel: [ 5561.087058] ieee80211 phy0: rt2800usb_txdo=
+ne: Warning - Got TX status for an empty queue 2, dropping
 
+--Sig_/VvpGkiCigMIho.652Q708j=
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSBn4fAAoJEPUyvh2QjYsOwOgQAMuco6nlE2afv7DPWpIr/Gxj
+7EpNFN8qLsNomR5tMIydvnx/+0k5HO9wawSNCt6jNHvV0LxQQXCGpt8WBmSIE/cr
+m/sEC7HVVmyOb9EzcFXkhIUUtA7iihNuQwOjSOsa1+JhOghNudVW8FwaE937Hr29
+EzAC+bKtGHXzJFUlFFfJNh7kWV6BYjt7sy6Yjl28xeHmkMtvEPmD1OkUQfm+rMK+
+u//MV9e8lvDQgjUj8DkBSdLs1IwHSHne00OaDhGoxa88mFBbvyw+U0KXExXLe5vP
+yIiQasuRc9CK3XGXPno4LLpN6JITFinsD/sOUGRyjMP5y2bfgQrt5gRE/XreuUTs
+xnRlkK5V8CxnhqQRKY5ts+qRZgJxiQfAMz6XrZwe/qXUIsVwXtk/93OWaefJCtvq
+gOh1UXgR0B4kTeZ8S86NIuMM3zj0ETbabjB1g4akiojPu0UNaeVsuYGhk7NdCGOg
+SZ54bCVcuaoaiiEDPlJ69lE9gpyaqeKcOeESvw+uRXUYGEI/0t4Vlo1TocaBWEEM
+6To5khu4m5YJHbjbWoSrMM+o/gaqqR/qIaHMiHO+JSSGIvDRWjUTHJK/aSO4l1lt
+KvGk6OJDltkHgxJYIWMUi2FVCu1r34oweRYA+pjSklRDPvvJaQA68KCMlUistuNK
+wbQTng79Su7YVH6G17on
+=Z3k4
+-----END PGP SIGNATURE-----
+
+--Sig_/VvpGkiCigMIho.652Q708j=--
