@@ -1,99 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54458 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753196Ab3HFIuY (ORCPT
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:56997 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934153Ab3HJPTX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 04:50:24 -0400
-Message-ID: <1375779012.8219.3.camel@jlt4.sipsolutions.net> (sfid-20130806_105029_600168_0730F8FC)
-Subject: pull-request: iwlwifi-fixes 2013-08-06
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 06 Aug 2013 10:50:12 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-YWxVd9shNwKJPcdQ3hat"
-Mime-Version: 1.0
+	Sat, 10 Aug 2013 11:19:23 -0400
+Message-ID: <520659F8.1050307@lwfinger.net> (sfid-20130810_171927_845113_A4BE6F6D)
+Date: Sat, 10 Aug 2013 10:19:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH v3] brcmsmac: Fix WARNING caused by lack of calls to dma_mapping_error()
+References: <51E852DE.6000403@broadcom.com> <1376069781-22958-1-git-send-email-linville@tuxdriver.com> <520567B9.1000605@lwfinger.net> <5205F19E.6060907@broadcom.com>
+In-Reply-To: <5205F19E.6060907@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 08/10/2013 02:54 AM, Arend van Spriel wrote:
+> On 08/10/13 00:05, Larry Finger wrote:
+>> On 08/09/2013 12:36 PM, John W. Linville wrote:
+>>> From: "John W. Linville" <linville@tuxdriver.com>
+>>>
+>>> The driver fails to check the results of DMA mapping in twp places,
+>>> which results in the following warning:
+>>>
+>>> [ 28.078515] ------------[ cut here ]------------
+>>> [ 28.078529] WARNING: at lib/dma-debug.c:937 check_unmap+0x47e/0x930()
+>>> [ 28.078533] bcma-pci-bridge 0000:0e:00.0: DMA-API: device driver
+>>> failed to check map error[device address=0x00000000b5d60d6c]
+>>> [size=1876 bytes] [mapped as
+>>> single]
+>>> [ 28.078536] Modules linked in: bnep bluetooth vboxpci(O)
+>>> vboxnetadp(O) vboxnetflt(O) vboxdrv(O) ipv6 b43 brcmsmac rtl8192cu
+>>> rtl8192c_common rtlwifi mac802
+>>> 11 brcmutil cfg80211 snd_hda_codec_conexant rng_core snd_hda_intel
+>>> kvm_amd snd_hda_codec ssb kvm mmc_core snd_pcm snd_seq snd_timer
+>>> snd_seq_device snd k8temp
+>>> cordic joydev serio_raw hwmon sr_mod sg pcmcia pcmcia_core soundcore
+>>> cdrom i2c_nforce2 i2c_core forcedeth bcma snd_page_alloc autofs4 ext4
+>>> jbd2 mbcache crc1
+>>> 6 scsi_dh_alua scsi_dh_hp_sw scsi_dh_rdac scsi_dh_emc scsi_dh
+>>> ata_generic pata_amd
+>>> [ 28.078602] CPU: 1 PID: 2570 Comm: NetworkManager Tainted: G O
+>>> 3.10.0-rc7-wl+ #42
+>>> [ 28.078605] Hardware name: Hewlett-Packard HP Pavilion dv2700
+>>> Notebook PC/30D6, BIOS F.27 11/27/2008
+>>> [ 28.078607] 0000000000000009 ffff8800bbb03ad8 ffffffff8144f898
+>>> ffff8800bbb03b18
+>>> [ 28.078612] ffffffff8103e1eb 0000000000000002 ffff8800b719f480
+>>> ffff8800b7b9c010
+>>> [ 28.078617] ffffffff824204c0 ffffffff81754d57 0000000000000754
+>>> ffff8800bbb03b78
+>>> [ 28.078622] Call Trace:
+>>> [ 28.078624] <IRQ> [<ffffffff8144f898>] dump_stack+0x19/0x1b
+>>> [ 28.078634] [<ffffffff8103e1eb>] warn_slowpath_common+0x6b/0xa0
+>>> [ 28.078638] [<ffffffff8103e2c1>] warn_slowpath_fmt+0x41/0x50
+>>> [ 28.078650] [<ffffffff8122d7ae>] check_unmap+0x47e/0x930
+>>> [ 28.078655] [<ffffffff8122de4c>] debug_dma_unmap_page+0x5c/0x70
+>>> [ 28.078679] [<ffffffffa04a808c>] dma64_getnextrxp+0x10c/0x190 [brcmsmac]
+>>> [ 28.078691] [<ffffffffa04a9042>] dma_rx+0x62/0x240 [brcmsmac]
+>>> [ 28.078707] [<ffffffffa0479101>] brcms_c_dpc+0x211/0x9d0 [brcmsmac]
+>>> [ 28.078717] [<ffffffffa046d927>] ? brcms_dpc+0x27/0xf0 [brcmsmac]
+>>> [ 28.078731] [<ffffffffa046d947>] brcms_dpc+0x47/0xf0 [brcmsmac]
+>>> [ 28.078736] [<ffffffff81047dcc>] tasklet_action+0x6c/0xf0
+>>> --snip--
+>>> [ 28.078974] [<ffffffff813891bd>] SyS_sendmsg+0xd/0x20
+>>> [ 28.078979] [<ffffffff81455c24>] tracesys+0xdd/0xe2
+>>> [ 28.078982] ---[ end trace 6164d1a08148e9c8 ]---
+>>> [ 28.078984] Mapped at:
+>>> [ 28.078985] [<ffffffff8122c8fd>] debug_dma_map_page+0x9d/0x150
+>>> [ 28.078989] [<ffffffffa04a9322>] dma_rxfill+0x102/0x3d0 [brcmsmac]
+>>> [ 28.079001] [<ffffffffa047a13d>] brcms_c_init+0x87d/0x1100 [brcmsmac]
+>>> [ 28.079010] [<ffffffffa046d851>] brcms_init+0x21/0x30 [brcmsmac]
+>>> [ 28.079018] [<ffffffffa04786e0>] brcms_c_up+0x150/0x430 [brcmsmac]
+>>>
+>>> As the patch adds a new failure mechanism to dma_rxfill(). When I
+>>> changed the
+>>> comment at the start of the routine to add that information, I also
+>>> polished
+>>> the wording.
+>>>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Cc: Stable <stable@vger.kernel.org>
+>>> Cc: Brett Rudley <brudley@broadcom.com>
+>>> Cc: Arend van Spriel <arend@broadcom.com>
+>>> Cc: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>>> Cc: Hante Meuleman <meuleman@broadcom.com>
+>>> Cc: brcm80211-dev-list@broadcom.com
+>>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>> ---
+>>> Did this one get lost?
+>>>
+>>> V2 - fixed two patch errors.
+>>> V3 - address comments from Arend (linville)
+>>>
+>>
+>> For some reason, I never got the mail containing Arend's comments, and I
+>> forgot about it. If John's V3 fixes take care of them, then it should be
+>> pushed.
+>
+> Weird as I resend the comments. Do you have me on a blacklist ;-)
 
---=-YWxVd9shNwKJPcdQ3hat
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+No. As you can see, this message came through. I also checked to make sure that 
+my intermediate mailer had not put your message in its spam bucket.
 
-John,
+Larry
 
-I have a few more fixes for iwlwifi.
-
-We revert an rfkill bugfix that unfortunately caused more bugs, shuffle
-some code to avoid touching the PCIe device before it's enabled and
-disconnect if firmware fails to do our bidding. I also have Stanislaw's
-fix to not crash in some channel switch scenarios.
-
-Let me know if there's any problem.
-
-Thanks,
-johannes
-
-The following changes since commit a53ee0a308b16e392e0219c585b10f329345766b=
-:
-
-  iwlwifi: pcie: clear RFKILL interrupt in AMPG (2013-07-26 10:07:10 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
-or-john
-
-for you to fetch changes up to 057397943eee0bf3bc01a58ee52a9a6f1810258e:
-
-  iwlwifi: mvm: disconnect if time event scheduling fails (2013-08-06 10:35=
-:19 +0200)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: pcie: disable L1 Active after pci_enable_device
-
-Guy Cohen (1):
-      Revert "iwlwifi: pcie: clear RFKILL interrupt in AMPG"
-
-Johannes Berg (1):
-      iwlwifi: mvm: disconnect if time event scheduling fails
-
-Stanislaw Gruszka (1):
-      iwlwifi: dvm: fix calling ieee80211_chswitch_done() with NULL
-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c   |  5 +++-
- drivers/net/wireless/iwlwifi/iwl-prph.h       |  2 --
- drivers/net/wireless/iwlwifi/mvm/time-event.c | 33 +++++++++++++++++++----=
-----
- drivers/net/wireless/iwlwifi/pcie/rx.c        |  8 -------
- drivers/net/wireless/iwlwifi/pcie/trans.c     | 10 ++++----
- 5 files changed, 32 insertions(+), 26 deletions(-)
-
-
-
---=-YWxVd9shNwKJPcdQ3hat
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJSALjEAAoJEDBSmw7B7bqrn9YP/A/yDuI6xWuMDCV2baJVoAa9
-YjuYPx35gwA2yqXa3+PpOZluEDghjN+fJ3ej6GPz/+5eR4d8PmTpp8iC5vhEV5e4
-jtngCS1haC9utpEdV/CGlnXYhvW8LbnJyE3bG8I4P+CxKXJnIE/hx3MyOvKz5vUL
-ZFtGfygmYeeYcBBmwoQQ0x2MAINjNRG2TDTw3sX2QKDFJg6rLItt6zEBohmqqQd7
-Cr4ZYDtQS3Y1k6x5tTau4uzcaUUbDuPgWjw0m1hCAnjwt8tSmXXzEYlmq0glmNTO
-ehHpmv82IUu9nQJTz4iABwyrsmq6w5msUFP/z2ozF0wrEfU27EKU3GPEOihrsPHq
-Tj8ws5F8B9Pq8JTgxzDE05Tw9hHHjBcC4DASxGXk5JCnkNIFdn7nWGkxkb48R+sp
-YlaNHtuB6l7fag9emx91IcF0bsNnnynbqUlxENxpb+iWPLMk7lfkwuZwHTUrxiGe
-/AUQTt0f1tWoeRS9VBGvk4hnIWuSCafIREq0EgmdXKDGOrF9Xzwo9MsEgeRtFsWD
-j6qxY3f2oYXwkN0f2l1YoLaBYW2swsJy5UiZFHyT2rmtNjbJcq8ZscTOZeVky4U7
-NWh4/kdG8K52DNyCxtyA8QNOoR8q4GT/k3CGpqQ71CQgZ2KyLvlxAHX5K4XPLfsU
-EcB7Q0UzjBLmbbDI4frz
-=DCcx
------END PGP SIGNATURE-----
-
---=-YWxVd9shNwKJPcdQ3hat--
 
