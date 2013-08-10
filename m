@@ -1,96 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:48932 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757949Ab3HMS7j (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:40754 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761Ab3HJXDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 14:59:39 -0400
-Received: by mail-wg0-f52.google.com with SMTP id b13so6866841wgh.31
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2013 11:59:38 -0700 (PDT)
-Message-ID: <1376420371.6292.10.camel@canaries32-MCP7A> (sfid-20130813_205943_387504_0DA43038)
-Subject: [PATCH v2 rebased] staging: vt6656: rxtx.c s:_uGetDataDuration
- simplify structure.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Aug 2013 19:59:31 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 10 Aug 2013 19:03:44 -0400
+Date: Sun, 11 Aug 2013 02:03:21 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] iwlwifi: pcie: returning positive instead of negative
+Message-ID: <20130810230321.GA19051@elgon.mountain> (sfid-20130811_010349_606599_4F723F94)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A value is only returned when bNeedAck is true.
+There is a missing '-' character here so we return positive 'ENOMEM'
+instead of negative.  The caller doesn't care.  All non-zero returns
+are translated to '-ENOMEM' in iwl_pcie_nic_init().
 
-Only when byDurType == DATADUR_B is different.
+This is just a cleanup.
 
-Remove switch statement and simplify with if structure.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 50 ++++++++-----------------------------------
- 1 file changed, 9 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index c8e3e7e8..a701120 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -389,47 +389,15 @@ static u32 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
- {
- 	u32 uAckTime = 0;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 134f7a1..a81d227 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -829,7 +829,7 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
+ 				  sizeof(struct iwl_txq), GFP_KERNEL);
+ 	if (!trans_pcie->txq) {
+ 		IWL_ERR(trans, "Not enough memory for txq\n");
+-		ret = ENOMEM;
++		ret = -ENOMEM;
+ 		goto error;
+ 	}
  
--    switch (byDurType) {
--
--    case DATADUR_B:    //DATADUR_B
--            if (bNeedAck) {
--            	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
--                return (pDevice->uSIFS + uAckTime);
--            } else {
--                return 0;
--            }
--        break;
--
--    case DATADUR_A:    //DATADUR_A
--            if(bNeedAck){
--            	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
--                return (pDevice->uSIFS + uAckTime);
--            } else {
--                return 0;
--            }
--        break;
--
--    case DATADUR_A_F0:    //DATADUR_A_F0
--            if(bNeedAck){
--            	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
--                return (pDevice->uSIFS + uAckTime);
--            } else {
--                return 0;
--            }
--        break;
--
--    case DATADUR_A_F1:    //DATADUR_A_F1
--            if(bNeedAck){
--            	uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
--                return (pDevice->uSIFS + uAckTime);
--            } else {
--                return 0;
--            }
--        break;
--
--    default:
--        break;
--    }
-+	if (bNeedAck) {
-+		if (byDurType == DATADUR_B)
-+			uAckTime = BBuGetFrameTime(pDevice->byPreambleType,
-+				byPktType, 14, pDevice->byTopCCKBasicRate);
-+		else
-+			uAckTime = BBuGetFrameTime(pDevice->byPreambleType,
-+				byPktType, 14, pDevice->byTopOFDMBasicRate);
-+		return pDevice->uSIFS + uAckTime;
-+	}
- 
- 	return 0;
- }
--- 
-1.8.1.2
-
-
