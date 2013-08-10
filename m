@@ -1,69 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:62813 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923Ab3HTM5R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 08:57:17 -0400
-Received: by mail-we0-f175.google.com with SMTP id q58so354378wes.20
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 05:57:16 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:1672 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S968546Ab3HJK1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Aug 2013 06:27:46 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 02/12] brcmfmac: .txdata() bus callback should not call
+ brcmf_txcomplete()
+Date: Sat, 10 Aug 2013 12:27:20 +0200
+Message-ID: <1376130450-29746-3-git-send-email-arend@broadcom.com> (sfid-20130810_122815_897367_AFBFF82B)
+In-Reply-To: <1376130450-29746-1-git-send-email-arend@broadcom.com>
+References: <1376130450-29746-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <52133070.2050301@blackshift.org>
-References: <1376681980-27831-1-git-send-email-mkl@pengutronix.de>
-	<52133070.2050301@blackshift.org>
-Date: Tue, 20 Aug 2013 14:57:16 +0200
-Message-ID: <CAGXE3d--mH9vnFevDn7ZDae4ZOrM9wQvVm4Y1Cx6KObouayk6A@mail.gmail.com> (sfid-20130820_145721_244107_40CE01E6)
-Subject: Re: [PATCH v2] ath9k_htc: Restore skb headroom when returning skb to mac80211
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Marc Kleine-Budde <mkl@blackshift.org>,
-	John Linville <linville@tuxdriver.com>
-Cc: Marc Kleine-Budde <mkl@pengutronix.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John, Hi Marc,
+With firmware-signalling the packet handed to the bus specific driver
+layer should not be discarded with brcmf_txcomplete() in the failure
+path. Instead only an error is returned and the caller decides what
+to do with the packet.
 
-On Tue, Aug 20, 2013 at 11:01 AM, Marc Kleine-Budde <mkl@blackshift.org> wrote:
-> On 08/16/2013 09:39 PM, Marc Kleine-Budde wrote:
->> From: Helmut Schaa <helmut.schaa@googlemail.com>
->>
->> ath9k_htc adds padding between the 802.11 header and the payload during
->> TX by moving the header. When handing the frame back to mac80211 for TX
->> status handling the header is not moved back into its original position.
->> This can result in a too small skb headroom when entering ath9k_htc
->> again (due to a soft retransmission for example) causing an
->> skb_under_panic oops.
->>
->> Fix this by moving the 802.11 header back into its original position
->> before returning the frame to mac80211 as other drivers like rt2x00
->> or ath5k do.
->>
->> Reported-by: Marc Kleine-Budde <mkl@blackshift.org>
->> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
->> Tested-by: Marc Kleine-Budde <mkl@blackshift.org>
->> Signed-off-by: Marc Kleine-Budde <mkl@blackshift.org>
->> ---
->> Hello Helmut,
->>
->> I've change the patch a bit, I've used ieee80211_get_hdrlen_from_skb() instead
->> of open coding it.
->>
->> Tested in ARMv5 with USB device
->>   "ID 0cf3:7015 Atheros Communications, Inc. TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]"
->> for four weeks. Without that patch the kernel oopes after about one week.
->>
->> I think this is a candidate for stable, can you add stable to Cc?
->
-> ping
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 1 -
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 6 +++++-
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      | 1 -
+ 3 files changed, 5 insertions(+), 3 deletions(-)
 
-Sorry, completely forgot about this patch. You're right, this is
-indeed a stable candidate.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 5cbce1d..db31312 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2297,7 +2297,6 @@ static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 	spin_lock_irqsave(&bus->txqlock, flags);
+ 	if (!brcmf_c_prec_enq(bus->sdiodev->dev, &bus->txq, pkt, prec)) {
+ 		skb_pull(pkt, SDPCM_HDRLEN);
+-		brcmf_txcomplete(bus->sdiodev->dev, pkt, false);
+ 		brcmf_err("out of bus->txq !!!\n");
+ 		ret = -ENOSR;
+ 	} else {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 29b1f24..601b0d0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1745,6 +1745,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 	int fifo = BRCMF_FWS_FIFO_BCMC;
+ 	bool multicast = is_multicast_ether_addr(eh->h_dest);
+ 	bool pae = eh->h_proto == htons(ETH_P_PAE);
++	int ret;
+ 
+ 	/* determine the priority */
+ 	if (!skb->priority)
+@@ -1759,7 +1760,10 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		brcmf_proto_hdrpush(drvr, ifp->ifidx, 0, skb);
+ 
+ 		/* Use bus module to send data frame */
+-		return brcmf_bus_txdata(drvr->bus_if, skb);
++		ret = brcmf_bus_txdata(drvr->bus_if, skb);
++		if (ret < 0)
++			brcmf_txfinalize(drvr, skb, false);
++		return ret;
+ 	}
+ 
+ 	/* set control buffer information */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 322cadc..39e01a7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -614,7 +614,6 @@ static int brcmf_usb_tx(struct device *dev, struct sk_buff *skb)
+ 	return 0;
+ 
+ fail:
+-	brcmf_txcomplete(dev, skb, false);
+ 	return ret;
+ }
+ 
+-- 
+1.8.1.3
 
-John, could you please add  "Cc: stable@vger.kernel.org" when applying
-this to your tree?
 
-Thanks,
-Helmut
