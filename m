@@ -1,68 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:47066 "EHLO ebb06.tieto.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1675 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753187Ab3HMF7p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 01:59:45 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/4] ath10k: implement 802.3 SNAP rx decap type A-MSDU handling
-Date: Tue, 13 Aug 2013 07:59:37 +0200
-Message-ID: <1376373578-2180-4-git-send-email-michal.kazior@tieto.com> (sfid-20130813_075953_825976_D4D8150E)
-In-Reply-To: <1376373578-2180-1-git-send-email-michal.kazior@tieto.com>
-References: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
- <1376373578-2180-1-git-send-email-michal.kazior@tieto.com>
+	id S968544Ab3HJK1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Aug 2013 06:27:46 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/12] brcm80211: new functionality and some cleanup
+ fixes
+Date: Sat, 10 Aug 2013 12:27:18 +0200
+Message-ID: <1376130450-29746-1-git-send-email-arend@broadcom.com> (sfid-20130810_122814_460973_3EED3003)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This enables driver to rx another decapped a-msdu
-frames. It should possibly help with throughputs
-in some cases and reduce (or eliminate) number of
-messages like this:
+This series adds new functionality to the brcm80211 drivers listed below:
 
-  ath10k: error processing msdus -524
+AMPDU host-reordering:
+	The brcmfmac driver buffers individual A-MPDU packets
+	reducing memory requirement in the wireless device.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v2:
- * use a comment instead of a no-op if clause
+TDLS:
+	The 802.11 standards AP bypass is added to brcmfmac.
 
- drivers/net/wireless/ath/ath10k/htt_rx.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+BCM4313 iPA:
+	This adds support to brcmsmac for a new variant of the
+	BCM4313. This was already submitted but reverted due
+	to regressions for other devices.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index e784c40..9bb0ae89 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -610,8 +610,7 @@ static int ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
- 			RX_MPDU_START_INFO0_ENCRYPT_TYPE);
- 
- 	/* FIXME: No idea what assumptions are safe here. Need logs */
--	if ((fmt == RX_MSDU_DECAP_RAW && skb->next) ||
--	    (fmt == RX_MSDU_DECAP_8023_SNAP_LLC)) {
-+	if ((fmt == RX_MSDU_DECAP_RAW && skb->next)) {
- 		ath10k_htt_rx_free_msdu_chain(skb->next);
- 		skb->next = NULL;
- 		return -ENOTSUPP;
-@@ -659,6 +658,15 @@ static int ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
- 			decap_hdr += roundup(crypto_len, 4);
- 		}
- 
-+		/* When fmt == RX_MSDU_DECAP_8023_SNAP_LLC:
-+		 *
-+		 * SNAP 802.3 consists of:
-+		 * [dst:6][src:6][len:2][dsap:1][ssap:1][ctl:1][snap:5]
-+		 * [data][fcs:4].
-+		 *
-+		 * Since this overlaps with A-MSDU header (da, sa, len)
-+		 * there's nothing extra to do. */
-+
- 		if (fmt == RX_MSDU_DECAP_ETHERNET2_DIX) {
- 			/* Ethernet2 decap inserts ethernet header in place of
- 			 * A-MSDU subframe header. */
+Other changes are brcmfmac cleanup work for firmware-signalling
+feature and rework in SDIO-specific driver code.
+
+This series is intended for v3.12 and applies to the master branch
+of the wireless-next repository.
+
+Arend van Spriel (5):
+  brcmfmac: use irq safe spinlock in brcmf_sdbrcm_txdata()
+  brcmfmac: .txdata() bus callback should not call brcmf_txcomplete()
+  brcmfmac: add AMPDU reordering functionality
+  brcmfmac: ignore IF event if firmware indicates it
+  brcmfmac: add support for manual TDLS operations
+
+Franky Lin (4):
+  brcmfmac: abstract tx packet processing functions
+  brcmfmac: remove align from brcmf_bus structure
+  brcmfmac: streamline sdio bus header code
+  brcmfmac: use configurable sdio bus header length for tx packet
+
+Hante Meuleman (2):
+  brcmfmac: always use worker thread for tx data.
+  brcmfmac: no fws locking outside fws module.
+
+Piotr Haber (1):
+  brcmsmac: support 4313iPA
+
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  16 +-
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   1 -
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |  31 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   8 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    | 279 ++++++++++--
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 481 +++++++++++++--------
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |   4 +
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  21 +
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 228 +++++-----
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   1 -
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  57 ++-
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  | 399 ++++++++++-------
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   | 289 ++++++++-----
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h   |   1 +
+ include/linux/platform_data/brcmfmac-sdio.h        |   6 +
+ 16 files changed, 1228 insertions(+), 596 deletions(-)
+
 -- 
-1.7.9.5
+1.8.1.3
+
 
