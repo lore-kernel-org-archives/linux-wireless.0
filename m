@@ -1,101 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:35174 "EHLO arrakis.dune.hu"
+Received: from nbd.name ([46.4.11.11]:59972 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751680Ab3HSNL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 09:11:27 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 5/6] rt2x00: rt2800lib: don't hardcode beacon offsets
-Date: Mon, 19 Aug 2013 15:11:17 +0200
-Message-Id: <1376917878-25094-6-git-send-email-juhosg@openwrt.org> (sfid-20130819_151135_011994_85B3CCBD)
-In-Reply-To: <1376917878-25094-1-git-send-email-juhosg@openwrt.org>
-References: <1376917878-25094-1-git-send-email-juhosg@openwrt.org>
+	id S933743Ab3HJN70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Aug 2013 09:59:26 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, stable@vger.kernel.org
+Subject: [PATCH 1/2] ath9k: fix rx descriptor related race condition
+Date: Sat, 10 Aug 2013 15:59:15 +0200
+Message-Id: <1376143156-74164-1-git-send-email-nbd@openwrt.org> (sfid-20130810_155929_842845_07316F0E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The values written into the BCN_OFFSET[01] registers are
-hardcoded in the rt2800_init_register function.
+Similar to a race condition that exists in the tx path, the hardware
+might re-read the 'next' pointer of a descriptor of the last completed
+frame. This only affects non-EDMA (pre-AR93xx) devices.
 
-Add a macro and a helper function to derive these values
-directly from the base address of a given beacon, and use
-the new function instead of the hardcoded numbers.
+To deal with this race, defer clearing and re-linking a completed rx
+descriptor until the next one has been processed.
 
-The patch contains no functional changes. The programmed
-register values are the same before and after the patch.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-Changes since v1: ---
----
- drivers/net/wireless/rt2x00/rt2800.h    |    2 ++
- drivers/net/wireless/rt2x00/rt2800lib.c |   30 ++++++++++++++++++++++--------
- 2 files changed, 24 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  5 +----
+ drivers/net/wireless/ath/ath9k/recv.c  | 17 +++++++++++++----
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 426129a..48018a5 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -2024,6 +2024,8 @@ struct mac_iveiv_entry {
- 	  (((__index) < 6) ? (HW_BEACON_BASE4 + ((__index - 4) * 0x0200)) : \
- 	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))))
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 505c615..0d69b13 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -79,10 +79,6 @@ struct ath_config {
+ 		       sizeof(struct ath_buf_state));		\
+ 	} while (0)
  
-+#define BEACON_BASE_TO_OFFSET(_base)	(((_base) - 0x4000) / 64)
-+
- /*
-  * BBP registers.
-  * The wordsize of the BBP is 8 bits.
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 18a95e3..3bd0fae 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -954,6 +954,12 @@ static unsigned int rt2800_hw_beacon_base(struct rt2x00_dev *rt2x00dev,
- 	return HW_BEACON_BASE(index);
+-#define ATH_RXBUF_RESET(_bf) do {		\
+-		(_bf)->bf_stale = false;	\
+-	} while (0)
+-
+ /**
+  * enum buffer_type - Buffer type flags
+  *
+@@ -315,6 +311,7 @@ struct ath_rx {
+ 	struct ath_descdma rxdma;
+ 	struct ath_rx_edma rx_edma[ATH9K_RX_QUEUE_MAX];
+ 
++	struct ath_buf *buf_hold;
+ 	struct sk_buff *frag;
+ 
+ 	u32 ampdu_ref;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 62dff97..2dd851a 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -42,8 +42,6 @@ static void ath_rx_buf_link(struct ath_softc *sc, struct ath_buf *bf)
+ 	struct ath_desc *ds;
+ 	struct sk_buff *skb;
+ 
+-	ATH_RXBUF_RESET(bf);
+-
+ 	ds = bf->bf_desc;
+ 	ds->ds_link = 0; /* link to null */
+ 	ds->ds_data = bf->bf_buf_addr;
+@@ -70,6 +68,14 @@ static void ath_rx_buf_link(struct ath_softc *sc, struct ath_buf *bf)
+ 	sc->rx.rxlink = &ds->ds_link;
  }
  
-+static inline u8 rt2800_get_beacon_offset(struct rt2x00_dev *rt2x00dev,
-+					  unsigned int index)
++static void ath_rx_buf_relink(struct ath_softc *sc, struct ath_buf *bf)
 +{
-+	return BEACON_BASE_TO_OFFSET(rt2800_hw_beacon_base(rt2x00dev, index));
++	if (sc->rx.buf_hold)
++		ath_rx_buf_link(sc, sc->rx.buf_hold);
++
++	sc->rx.buf_hold = bf;
 +}
 +
- void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ static void ath_setdefantenna(struct ath_softc *sc, u32 antenna)
  {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-@@ -4505,17 +4511,25 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 		return ret;
+ 	/* XXX block beacon interrupts */
+@@ -117,7 +123,6 @@ static bool ath_rx_edma_buf_link(struct ath_softc *sc,
  
- 	rt2800_register_read(rt2x00dev, BCN_OFFSET0, &reg);
--	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN0, 0xe0); /* 0x3800 */
--	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN1, 0xe8); /* 0x3a00 */
--	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN2, 0xf0); /* 0x3c00 */
--	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN3, 0xf8); /* 0x3e00 */
-+	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN0,
-+			   rt2800_get_beacon_offset(rt2x00dev, 0));
-+	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN1,
-+			   rt2800_get_beacon_offset(rt2x00dev, 1));
-+	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN2,
-+			   rt2800_get_beacon_offset(rt2x00dev, 2));
-+	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN3,
-+			   rt2800_get_beacon_offset(rt2x00dev, 3));
- 	rt2800_register_write(rt2x00dev, BCN_OFFSET0, reg);
+ 	skb = bf->bf_mpdu;
  
- 	rt2800_register_read(rt2x00dev, BCN_OFFSET1, &reg);
--	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN4, 0xc8); /* 0x3200 */
--	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN5, 0xd0); /* 0x3400 */
--	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN6, 0x77); /* 0x1dc0 */
--	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN7, 0x6f); /* 0x1bc0 */
-+	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN4,
-+			   rt2800_get_beacon_offset(rt2x00dev, 4));
-+	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN5,
-+			   rt2800_get_beacon_offset(rt2x00dev, 5));
-+	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN6,
-+			   rt2800_get_beacon_offset(rt2x00dev, 6));
-+	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN7,
-+			   rt2800_get_beacon_offset(rt2x00dev, 7));
- 	rt2800_register_write(rt2x00dev, BCN_OFFSET1, reg);
+-	ATH_RXBUF_RESET(bf);
+ 	memset(skb->data, 0, ah->caps.rx_status_len);
+ 	dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+ 				ah->caps.rx_status_len, DMA_TO_DEVICE);
+@@ -432,6 +437,7 @@ int ath_startrecv(struct ath_softc *sc)
+ 	if (list_empty(&sc->rx.rxbuf))
+ 		goto start_recv;
  
- 	rt2800_register_write(rt2x00dev, LEGACY_BASIC_RATE, 0x0000013f);
++	sc->rx.buf_hold = NULL;
+ 	sc->rx.rxlink = NULL;
+ 	list_for_each_entry_safe(bf, tbf, &sc->rx.rxbuf, list) {
+ 		ath_rx_buf_link(sc, bf);
+@@ -677,6 +683,9 @@ static struct ath_buf *ath_get_next_rx_buf(struct ath_softc *sc,
+ 	}
+ 
+ 	bf = list_first_entry(&sc->rx.rxbuf, struct ath_buf, list);
++	if (bf == sc->rx.buf_hold)
++		return NULL;
++
+ 	ds = bf->bf_desc;
+ 
+ 	/*
+@@ -1387,7 +1396,7 @@ requeue:
+ 		if (edma) {
+ 			ath_rx_edma_buf_link(sc, qtype);
+ 		} else {
+-			ath_rx_buf_link(sc, bf);
++			ath_rx_buf_relink(sc, bf);
+ 			ath9k_hw_rxena(ah);
+ 		}
+ 	} while (1);
 -- 
-1.7.10
+1.8.0.2
+
