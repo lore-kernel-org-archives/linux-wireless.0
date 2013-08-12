@@ -1,172 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59976 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933743Ab3HJN71 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 09:59:27 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 2/2] ath9k: shrink a few data structures by reordering fields
-Date: Sat, 10 Aug 2013 15:59:16 +0200
-Message-Id: <1376143156-74164-2-git-send-email-nbd@openwrt.org> (sfid-20130810_155931_740241_2A85D855)
-In-Reply-To: <1376143156-74164-1-git-send-email-nbd@openwrt.org>
-References: <1376143156-74164-1-git-send-email-nbd@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:50368 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754527Ab3HLIzP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Aug 2013 04:55:15 -0400
+Message-ID: <1376297697.11514.8.camel@jlt4.sipsolutions.net> (sfid-20130812_105526_384702_D92E6BCE)
+Subject: Re: [PATCH v2 3.11] genetlink: fix family dump race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	tgraf@suug.ch, andrei.otcheretianski@intel.com,
+	ilan.peer@intel.com, stable@vger.kernel.org,
+	Pravin B Shelar <pshelar@nicira.com>
+Date: Mon, 12 Aug 2013 10:54:57 +0200
+In-Reply-To: <20130811.212942.413012801159758438.davem@davemloft.net>
+References: <1375879163-2116-1-git-send-email-johannes@sipsolutions.net>
+	 <20130811.212942.413012801159758438.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also reduce the size of a few fields where possible
+On Sun, 2013-08-11 at 21:29 -0700, David Miller wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h | 12 ++++++------
- drivers/net/wireless/ath/ath9k/xmit.c  | 16 ++++++++--------
- 2 files changed, 14 insertions(+), 14 deletions(-)
+> > BUG: unable to handle kernel paging request at f8467360
+> > IP: [<c14c56bb>] ctrl_dumpfamily+0x6b/0xe0
+> > EIP: 0060:[<c14c56bb>] EFLAGS: 00210297 CPU: 2
+> > EIP is at ctrl_dumpfamily+0x6b/0xe0
+> > EAX: f8467378 EBX: f8467340 ECX: 00000000 EDX: ec1610c4
+> > ESI: 00000001 EDI: c2077cc0 EBP: c46c3c00 ESP: c46c3bd4
+> >  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+> > CR0: 80050033 CR2: f8467360 CR3: 26e54000 CR4: 001407d0
+> > DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+> > DR6: ffff0ff0 DR7: 00000400
+> > Process wpa_supplicant (pid: 20081, ti=c46c2000 task=c44640b0 task.ti=c46c2000)
+> > Call Trace:
+> >  [<c14c20bc>] netlink_dump+0x5c/0x200
+> >  [<c14c3450>] __netlink_dump_start+0x140/0x160
+> >  [<c14c5172>] genl_rcv_msg+0x102/0x270
+> >  [<c14c4b5e>] netlink_rcv_skb+0x8e/0xb0
+> >  [<c14c505c>] genl_rcv+0x1c/0x30
+> >  [<c14c456b>] netlink_unicast+0x17b/0x1c0
+> >  [<c14c47d4>] netlink_sendmsg+0x224/0x370
+> >  [<c1485adf>] sock_sendmsg+0xff/0x120
+> 
+> I completely agree with your analysis that we need locking here, but
+> the crash OOPS backtrace doesn't make any sense to me.
+> 
+> The bug should trigger when we enter the dump continuation path, which
+> would look like:
+> 
+>         ctrl_dumpfamily()
+>         netlink_dump()
+>         netlink_recvmsg()
+>         ...
+> 
+> Since this is the only way we get into ctrl_dumpfamily() without
+> holding genl_lock().
+> 
+> But in your trace we're going through genl_rcv() which means this is
+> the first call of the dump, and genl_rcv() takes the necessary locks.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0d69b13..7b1d036 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -72,7 +72,6 @@ struct ath_config {
- /*************************/
- 
- #define ATH_TXBUF_RESET(_bf) do {				\
--		(_bf)->bf_stale = false;			\
- 		(_bf)->bf_lastbf = NULL;			\
- 		(_bf)->bf_next = NULL;				\
- 		memset(&((_bf)->bf_state), 0,			\
-@@ -192,10 +191,10 @@ struct ath_txq {
- 
- struct ath_atx_ac {
- 	struct ath_txq *txq;
--	int sched;
- 	struct list_head list;
- 	struct list_head tid_q;
- 	bool clear_ps_filter;
-+	bool sched;
- };
- 
- struct ath_frame_info {
-@@ -212,6 +211,7 @@ struct ath_buf_state {
- 	u8 bf_type;
- 	u8 bfs_paprd;
- 	u8 ndelim;
-+	bool stale;
- 	u16 seqno;
- 	unsigned long bfs_paprd_timestamp;
- };
-@@ -225,7 +225,6 @@ struct ath_buf {
- 	void *bf_desc;			/* virtual addr of desc */
- 	dma_addr_t bf_daddr;		/* physical addr of desc */
- 	dma_addr_t bf_buf_addr;	/* physical addr of data buffer, for DMA */
--	bool bf_stale;
- 	struct ieee80211_tx_rate rates[4];
- 	struct ath_buf_state bf_state;
- };
-@@ -237,13 +236,14 @@ struct ath_atx_tid {
- 	struct ath_node *an;
- 	struct ath_atx_ac *ac;
- 	unsigned long tx_buf[BITS_TO_LONGS(ATH_TID_MAX_BUFS)];
--	int bar_index;
- 	u16 seq_start;
- 	u16 seq_next;
- 	u16 baw_size;
--	int tidno;
-+	u8 tidno;
- 	int baw_head;   /* first un-acked tx buffer */
- 	int baw_tail;   /* next unused tx buffer slot */
-+
-+	s8 bar_index;
- 	bool sched;
- 	bool paused;
- 	bool active;
-@@ -255,10 +255,10 @@ struct ath_node {
- 	struct ieee80211_vif *vif; /* interface with which we're associated */
- 	struct ath_atx_tid tid[IEEE80211_NUM_TIDS];
- 	struct ath_atx_ac ac[IEEE80211_NUM_ACS];
--	int ps_key;
- 
- 	u16 maxampdu;
- 	u8 mpdudensity;
-+	s8 ps_key;
- 
- 	bool sleeping;
- 	bool no_ps_filter;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index d8dfb3e..4fc80e3 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -493,7 +493,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		while (bf) {
- 			bf_next = bf->bf_next;
- 
--			if (!bf->bf_stale || bf_next != NULL)
-+			if (!bf->bf_state.stale || bf_next != NULL)
- 				list_move_tail(&bf->list, &bf_head);
- 
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts, 0);
-@@ -586,7 +586,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		 * not a holding desc.
- 		 */
- 		INIT_LIST_HEAD(&bf_head);
--		if (bf_next != NULL || !bf_last->bf_stale)
-+		if (bf_next != NULL || !bf_last->bf_state.stale)
- 			list_move_tail(&bf->list, &bf_head);
- 
- 		if (!txpending) {
-@@ -610,7 +610,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 				ieee80211_sta_eosp(sta);
- 			}
- 			/* retry the un-acked ones */
--			if (bf->bf_next == NULL && bf_last->bf_stale) {
-+			if (bf->bf_next == NULL && bf_last->bf_state.stale) {
- 				struct ath_buf *tbf;
- 
- 				tbf = ath_clone_txbuf(sc, bf_last);
-@@ -1734,7 +1734,7 @@ static void ath_drain_txq_list(struct ath_softc *sc, struct ath_txq *txq,
- 	while (!list_empty(list)) {
- 		bf = list_first_entry(list, struct ath_buf, list);
- 
--		if (bf->bf_stale) {
-+		if (bf->bf_state.stale) {
- 			list_del(&bf->list);
- 
- 			ath_tx_return_buffer(sc, bf);
-@@ -2490,7 +2490,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		 * it with the STALE flag.
- 		 */
- 		bf_held = NULL;
--		if (bf->bf_stale) {
-+		if (bf->bf_state.stale) {
- 			bf_held = bf;
- 			if (list_is_last(&bf_held->list, &txq->axq_q))
- 				break;
-@@ -2514,7 +2514,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		 * however leave the last descriptor back as the holding
- 		 * descriptor for hw.
- 		 */
--		lastbf->bf_stale = true;
-+		lastbf->bf_state.stale = true;
- 		INIT_LIST_HEAD(&bf_head);
- 		if (!list_is_singular(&lastbf->list))
- 			list_cut_position(&bf_head,
-@@ -2585,7 +2585,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		}
- 
- 		bf = list_first_entry(fifo_list, struct ath_buf, list);
--		if (bf->bf_stale) {
-+		if (bf->bf_state.stale) {
- 			list_del(&bf->list);
- 			ath_tx_return_buffer(sc, bf);
- 			bf = list_first_entry(fifo_list, struct ath_buf, list);
-@@ -2607,7 +2607,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 				ath_tx_txqaddbuf(sc, txq, &bf_q, true);
- 			}
- 		} else {
--			lastbf->bf_stale = true;
-+			lastbf->bf_state.stale = true;
- 			if (bf != lastbf)
- 				list_cut_position(&bf_head, fifo_list,
- 						  lastbf->list.prev);
--- 
-1.8.0.2
+Huh, yes, I only looked at the crash info as far as I needed to see that
+it was crashing at accessing "rt->netnsok" with a not totally invalid
+pointer "rt" (it's in EBX) and then went from the code ...
+
+Ok, I see what's going on here. The bug was reported to me against an
+old kernel (3.4.47!) and that actually did an unlock in genl_rcv_msg()
+before calling netlink_dump_start():
+
+        if (nlh->nlmsg_flags & NLM_F_DUMP) {
+                if (ops->dumpit == NULL)
+                        return -EOPNOTSUPP;
+
+                genl_unlock();
+                {
+                        struct netlink_dump_control c = {
+                                .dump = ops->dumpit,
+                                .done = ops->done,
+                        };
+                        err = netlink_dump_start(net->genl_sock, skb,
+nlh, &c);
+                }
+                genl_lock();
+                return err;
+        }
+
+That was changed in Pravin's commit
+def3117493eafd9dfa1f809d861e0031b2cc8a07
+"genl: Allow concurrent genl callbacks." very recently - I'm not sure if
+that was intentional, it's not described in the commit log.
+
+
+I think for the current code the fix would still be correct, I can
+change the commit message if you like. For backporting, we'll have to
+check which tree has Pravin's change and which doesn't and change this
+accordingly, I suppose.
+
+johannes
 
