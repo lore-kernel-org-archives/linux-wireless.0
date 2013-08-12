@@ -1,31 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53903 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753532Ab3HAHcp (ORCPT
+Received: from numidia.opendz.org ([98.142.220.152]:47633 "EHLO
+	numidia.opendz.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754714Ab3HLMkH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 03:32:45 -0400
-Message-ID: <1375342361.8608.2.camel@jlt4.sipsolutions.net> (sfid-20130801_093250_588058_393D5CC5)
-Subject: Re: [PATCH] ieee80211: add definition for interworking support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Avinash Patil <patila@marvell.com>
-Date: Thu, 01 Aug 2013 09:32:41 +0200
-In-Reply-To: <1374883349-22912-1-git-send-email-bzhao@marvell.com>
-References: <1374883349-22912-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 12 Aug 2013 08:40:07 -0400
+Date: Mon, 12 Aug 2013 13:33:09 +0100
+From: Djalal Harouni <tixxdz@opendz.org>
+To: "Berg, Johannes" <johannes.berg@intel.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: mvm: make debugfs write() operations write up
+ to count bytes
+Message-ID: <20130812123309.GA2911@dztty> (sfid-20130812_144011_841391_D5BA1096)
+References: <1376267972-5636-1-git-send-email-tixxdz@opendz.org>
+ <1DC40B07CD6EC041A66726C271A73AE61AA5E38C@IRSMSX102.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1DC40B07CD6EC041A66726C271A73AE61AA5E38C@IRSMSX102.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-07-26 at 17:02 -0700, Bing Zhao wrote:
-> From: Avinash Patil <patila@marvell.com>
+On Mon, Aug 12, 2013 at 08:19:12AM +0000, Berg, Johannes wrote:
+> > Some debugfs write() operations of the MVM Firmware will ignore the count
+> > argument, and will copy more bytes than what was specified.
+> > Fix this by getting the right count of bytes.
+> > 
+> > This will also honor restrictions put on the number of bytes to write.
 > 
-> IEEE802.11u interworking support is advertised via extended
-> capabilities IE bit 31. This is 7th bit of 4th byte of extended
-> capabilities.
+> That makes some sense.
+And avoid strncmp() on garbage data.
 
-I've applied this, but why is this needed in the kernel? Isn't the
-supplicant managing the interworking stuff?
+> > To be consitant this patch also switches the initializer from 'char buf[x] = {}' to
+> > the explicit memset() as it is done in other places of the same file.
+> 
+> I'd rather this (a) be done in a separate patch, and (b) the other way around, switch everything to C99.
+Ok
 
-johannes
+> > Cc: stable@vger.kernel.org
+> 
+> That doesn't really make sense for the debugfs interface.
+Ok
 
+> > +	memset(buf, 0, sizeof(buf));
+> > +	if (count > sizeof(buf) - 1)
+> > +		count = sizeof(buf) - 1;
+> 
+> Why -1? And why not use min()/min_t()?
+Yes -1 to be sure that the processed string is null terminated
+
+Ok will use min_t 
+
+
+Will send a second version, Thanks!
+
+> johannes
+> -- 
+> 
+> Intel GmbH
+> Dornacher Strasse 1
+> 85622 Feldkirchen/Muenchen, Deutschland
+> Sitz der Gesellschaft: Feldkirchen bei Muenchen
+> Geschaeftsfuehrer: Christian Lamprechter, Hannes Schwaderer, Douglas Lusk
+> Registergericht: Muenchen HRB 47456
+> Ust.-IdNr./VAT Registration No.: DE129385895
+> Citibank Frankfurt a.M. (BLZ 502 109 00) 600119052
+> 
+
+-- 
+Djalal Harouni
+http://opendz.org
