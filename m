@@ -1,60 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53340 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751608Ab3HFH6t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 03:58:49 -0400
-Message-ID: <51FFD286.7040009@hauke-m.de> (sfid-20130806_095853_466310_7FF13C85)
-Date: Mon, 05 Aug 2013 18:27:50 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44577 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755746Ab3HLOOn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Aug 2013 10:14:43 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>,
+	<ath10k@lists.infradead.org>
+Subject: Pull request: ath 20130812
+Date: Mon, 12 Aug 2013 17:14:37 +0300
+Message-ID: <871u5zuhbm.fsf@kamboji.qca.qualcomm.com> (sfid-20130812_161446_723462_FE82D5A4)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: b43: DMA errors with BCM4331 on BCM4706
-References: <51FD218E.9040700@hauke-m.de> <20130803185504.022b19d2@milhouse> <51FD4274.3010108@lwfinger.net>
-In-Reply-To: <51FD4274.3010108@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/03/2013 07:48 PM, Larry Finger wrote:
-> On 08/03/2013 11:55 AM, Michael Büsch wrote:
->> On Sat, 03 Aug 2013 17:28:14 +0200
->> Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>
->>> I used wireshark to see what actually happens and the device send out
->>> beacons and answers to probe requests without problems. I see the
->>> Authentication, Association Request and Association Response frames and
->>
->> That suggests DMA works for some packets and then fails?
->>
->>> Does anybody have any thought on this topic?
->>
->> You should print out more of the DMA values.
-> 
-> Could it possibly work with short packets, but fail on longer ones?
-> 
-> Larry
-Hi,
+Hi John,
 
-Thanks for the hints, in fact it was the size and I got my BCM4331 in
-the Access Point connected to a BCM4706 working. The problem was that
-the the PCIe controller used a PCIe max request size of 128, we try to
-change it in driver_pci_host.c, see "MRRS 512", but that does not get
-applied to the hardware, when reading it back it is not set, the Max
-payload size is changed. The BCM4331 uses a max request size of 512 by
-default and that causes problems. I solved the problem by setting the
-max request size to 128 for the BCM4331, pcie_set_readrq(bus->host_pci,
-128) and then it worked.
+here's a small pull request for ath10k and ath6kl. The changes are:
 
-The patch is currently just in OpenWrt [0], I will send the patches to
-the mailing list in the next days.
+New features in ath10k are rx/tx checsumming in hw and survey scan
+implemented by Michal. Also he made fixes to different areas of the
+driver, most notable being fixing the case when using two streams and
+reducing the number of interface combinations to avoid firmware crashes.
+Bartosz did a clean related to how we handle SoC power save in PCI
+layer.
 
-@Rafał If you haven't found a BCM4331, now you can use the one in your
-Access Point. ;-)
+For ath6kl Mohammed and Vasanth sent each a patch to fix two infrequent
+crashes.
 
-Hauke
+The following changes since commit 424121c365aed6ec93bbc8b515548df79c5af61c:
 
-[0]: https://dev.openwrt.org/changeset/37709
+  ath10k: fix rts/fragmentation threshold setup (2013-07-30 18:01:21 +0300)
+
+are available in the git repository at:
+
+  git://github.com/kvalo/ath.git for-linville
+
+for you to fetch changes up to 9d0e2f0772d394060bf3b17cd1f3a35574365103:
+
+  ath6kl: Fix invalid pointer access on fuzz testing with AP mode (2013-08-07 10:58:59 +0300)
+
+----------------------------------------------------------------
+Bartosz Markowski (1):
+      ath10k: add SoC power save option to PCI features map
+
+Michal Kazior (11):
+      ath10k: improve tx throughput on slow machines
+      ath10k: detect the number of spatial streams supported by hw
+      ath10k: implement rx checksum offloading
+      ath10k: implement tx checksum offloading
+      ath10k: implement get_survey()
+      ath10k: prevent using invalid ringbuffer indexes
+      ath10k: make sure to use passive scan when n_ssids is 0
+      ath10k: advertise more conservative intf combinations
+      ath10k: zero arvif memory on add_interface()
+      ath10k: fix failpath in MSI-X setup
+      ath10k: fix device teardown
+
+Mohammed Shafi Shajakhan (1):
+      ath6kl: Fix invalid pointer access on fuzz testing with AP mode
+
+Vasanthakumar Thiagarajan (1):
+      ath6kl: Fix race in heart beat polling
+
+ drivers/net/wireless/ath/ath10k/ce.c     |    5 ++
+ drivers/net/wireless/ath/ath10k/core.h   |    8 +++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   40 ++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    2 +
+ drivers/net/wireless/ath/ath10k/mac.c    |   79 +++++++++++++++++++++------
+ drivers/net/wireless/ath/ath10k/pci.c    |   70 +++++++++++++++++-------
+ drivers/net/wireless/ath/ath10k/pci.h    |   11 ++--
+ drivers/net/wireless/ath/ath10k/wmi.c    |   87 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h    |    5 ++
+ drivers/net/wireless/ath/ath6kl/init.c   |    3 ++
+ drivers/net/wireless/ath/ath6kl/main.c   |    3 ++
+ 11 files changed, 270 insertions(+), 43 deletions(-)
