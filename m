@@ -1,76 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3011 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752547Ab3HNSQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Aug 2013 14:16:48 -0400
-Message-ID: <520BC97E.9070505@broadcom.com> (sfid-20130814_201652_163917_C232A1B0)
-Date: Wed, 14 Aug 2013 20:16:30 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "David Herrmann" <dh.herrmann@gmail.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Jonas Gorski" <jogo@openwrt.org>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
-	"David Costa" <david@zarel.net>
-Subject: Re: [RFT 00/13] brcmsmac: bcm4313 iPA related patches
-References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
- <CANq1E4TO8radaMFoLjiwhSq2JAFqcLm8UMQvaq9oJRHiWz=60w@mail.gmail.com>
- <520A9B0D.3050006@broadcom.com>
- <CANq1E4SOcT765CTFCR=xywBuMkOs5oru-NBqwHM=Jj_dfwtvkw@mail.gmail.com>
-In-Reply-To: <CANq1E4SOcT765CTFCR=xywBuMkOs5oru-NBqwHM=Jj_dfwtvkw@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from mailout3.samsung.com ([203.254.224.33]:9675 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754486Ab3HLGh1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Aug 2013 02:37:27 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MRE00A7VNPZCGN0@mailout3.samsung.com> for
+ linux-wireless@vger.kernel.org; Mon, 12 Aug 2013 15:37:14 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lauro Ramos Venancio' <lauro.venancio@openbossa.org>
+Cc: 'Aloisio Almeida Jr' <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	'Thierry Escande' <thierry.escande@linux.intel.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH 1/2] NFC: nfcsim: Staticize local symbols
+Date: Mon, 12 Aug 2013 15:37:14 +0900
+Message-id: <000101ce9726$61bd4b30$2537e190$@samsung.com> (sfid-20130812_083741_035967_9E02F2B7)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/14/2013 12:33 PM, David Herrmann wrote:
-> Hi
->
-> On Tue, Aug 13, 2013 at 10:46 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 08/13/2013 10:09 PM, David Herrmann wrote:
->>>
->>> Hi
->>>
->>> On Tue, Aug 13, 2013 at 10:03 PM, Arend van Spriel <arend@broadcom.com>
->>> wrote:
->>>>
->>>> This series replaces the patch "[PATCH 12/12] brcmsmac: support 4313iPA"
->>>> with Message-ID: <1376130450-29746-13-git-send-email-arend@broadcom.com>.
->>>>
->>>> It has been split up into individual patches. Please test this series
->>>> especially if you had issues with the original commit b6fc28a that was
->>>> reverted.
->>>>
->>>> Cc: Jonas Gorski <jogo@openwrt.org>
->>>> Cc: David Herrmann <dh.herrmann@gmail.com>
->>>> Cc: Maximilian Engelhardt <maxi@daemonizer.de>
->>>> Cc: David Costa <david@zarel.net>
->>>
->>>
->>> Is this available in a public branch that I can merge? And what should
->>> be used as base? 3.11-rc5? linux-next?
->>
->>
->> Indeed I should have mentioned. It applies on v3.11-rc5 for sure. Did not
->> try linux-next.
->
-> All 13 patches applied cleanly on top of 3.11-rc5, everything works
-> fine even after a dozen of reconnects to different networks. No
-> additional delays.
->
-> Consider this whole series:
-> Tested-by: David Herrmann <dh.herrmann@gmail.com>
->
-> card info: Broadcom Corporation BCM4313 802.11b/g/n (0a5c:219c)
-> (builtin into my old Intel Atom N450 board)
-> I tested with 802.11g networks. I have only a/g networks here. I don't
-> know whether that matters.
+These local symbols are used only in this file.
+Fix the following sparse warnings:
 
-As this series modifies the phy code, I would say no.
+drivers/nfc/nfcsim.c:63:25: warning: symbol 'wq' was not declared. Should it be static?
+drivers/nfc/nfcsim.c:484:12: warning: symbol 'nfcsim_init' was not declared. Should it be static?
+drivers/nfc/nfcsim.c:525:13: warning: symbol 'nfcsim_exit' was not declared. Should it be static?
 
-Thanks for verifying this works for you.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/nfc/nfcsim.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
+index c5c30fb..9a53f13 100644
+--- a/drivers/nfc/nfcsim.c
++++ b/drivers/nfc/nfcsim.c
+@@ -60,7 +60,7 @@ struct nfcsim {
+ static struct nfcsim *dev0;
+ static struct nfcsim *dev1;
+ 
+-struct workqueue_struct *wq;
++static struct workqueue_struct *wq;
+ 
+ static void nfcsim_cleanup_dev(struct nfcsim *dev, u8 shutdown)
+ {
+@@ -481,7 +481,7 @@ static void nfcsim_free_device(struct nfcsim *dev)
+ 	kfree(dev);
+ }
+ 
+-int __init nfcsim_init(void)
++static int __init nfcsim_init(void)
+ {
+ 	int rc;
+ 
+@@ -522,7 +522,7 @@ exit:
+ 	return rc;
+ }
+ 
+-void __exit nfcsim_exit(void)
++static void __exit nfcsim_exit(void)
+ {
+ 	nfcsim_cleanup_dev(dev0, 1);
+ 	nfcsim_cleanup_dev(dev1, 1);
+-- 
+1.7.10.4
+
 
