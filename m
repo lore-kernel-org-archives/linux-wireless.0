@@ -1,167 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38290 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893Ab3HNGBw (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:43286 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756004Ab3HLJpp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Aug 2013 02:01:52 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCH-resend 9/9] ath9k: enable CSA functionality in ath9k
-Date: Wed, 14 Aug 2013 08:01:38 +0200
-Message-Id: <1376460098-26648-10-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130814_080206_727154_9DC1EFA2)
-In-Reply-To: <1376460098-26648-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376460098-26648-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Mon, 12 Aug 2013 05:45:45 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 15/15] ath9k: Remove unused function argument
+Date: Mon, 12 Aug 2013 15:11:42 +0530
+Message-Id: <1376300502-2741-16-git-send-email-sujith@msujith.org> (sfid-20130812_120909_111146_F987944E)
+In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CSA is only enabled for one interface, but the same limitation applies
-for mac80211 too. It checks whether the beacon has been sent (different
-approaches for non-EDMA-enabled and EDMA-enabled devices), and completes
-the channel switch after that.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
-Changes to PATCHv2:
- * announce support for channel switch
+ drivers/net/wireless/ath/ath9k/recv.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Changes to PATCHv1:
- * complete channel switch after the last beacon has been sent
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |    2 ++
- drivers/net/wireless/ath/ath9k/beacon.c |   21 +++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/init.c   |    1 +
- drivers/net/wireless/ath/ath9k/main.c   |   17 +++++++++++++++++
- drivers/net/wireless/ath/ath9k/xmit.c   |    2 ++
- 5 files changed, 43 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 505c615..de050e2 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -427,6 +427,7 @@ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_set_beacon(struct ath_softc *sc);
-+bool ath9k_csa_is_finished(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index a00e1b6..49e9cce 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -885,7 +885,6 @@ static int ath9k_process_rate(struct ath_common *common,
  
- /*******************/
- /* Link Monitoring */
-@@ -763,6 +764,7 @@ struct ath_softc {
- #endif
- 
- 	struct ath_descdma txsdma;
-+	struct ieee80211_vif *csa_vif;
- 
- 	struct ath_ant_comb ant_comb;
- 	u8 ant_tx, ant_rx;
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 1a17732..b5c16b3a 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -291,6 +291,23 @@ void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
- 		(unsigned long long)tsfadjust, avp->av_bslot);
- }
- 
-+bool ath9k_csa_is_finished(struct ath_softc *sc)
-+{
-+	struct ieee80211_vif *vif;
-+
-+	vif = sc->csa_vif;
-+	if (!vif || !vif->csa_active)
-+		return false;
-+
-+	if (!ieee80211_csa_is_complete(vif))
-+		return false;
-+
-+	ieee80211_csa_finish(vif);
-+
-+	sc->csa_vif = NULL;
-+	return true;
-+}
-+
- void ath9k_beacon_tasklet(unsigned long data)
+ static void ath9k_process_rssi(struct ath_common *common,
+ 			       struct ieee80211_hw *hw,
+-			       struct ieee80211_hdr *hdr,
+ 			       struct ath_rx_status *rx_stats)
  {
- 	struct ath_softc *sc = (struct ath_softc *)data;
-@@ -336,6 +353,10 @@ void ath9k_beacon_tasklet(unsigned long data)
- 		return;
+ 	struct ath_softc *sc = hw->priv;
+@@ -1150,7 +1149,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		ath_start_rx_poll(sc, 3);
  	}
  
-+	/* EDMA devices check that in the tx completion function. */
-+	if (!edma && ath9k_csa_is_finished(sc))
-+		return;
-+
- 	slot = ath9k_beacon_choose_slot(sc);
- 	vif = sc->beacon.bslot[slot];
+-	ath9k_process_rssi(common, hw, hdr, rx_stats);
++	ath9k_process_rssi(common, hw, rx_stats);
  
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 60bb4d6..abf1eb5 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -861,6 +861,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
-+	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 
- #ifdef CONFIG_PM_SLEEP
- 	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index bddc574..016d1bc 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1032,6 +1032,9 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_remove_slot(sc, vif);
- 
-+	if (sc->csa_vif == vif)
-+		sc->csa_vif = NULL;
-+
- 	ath9k_ps_wakeup(sc);
- 	ath9k_calculate_summary_state(hw, NULL);
- 	ath9k_ps_restore(sc);
-@@ -2318,6 +2321,19 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
- 	clear_bit(SC_OP_SCANNING, &sc->sc_flags);
- }
- 
-+static void ath9k_channel_switch_beacon(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif,
-+					struct cfg80211_chan_def *chandef)
-+{
-+	struct ath_softc *sc = hw->priv;
-+
-+	/* mac80211 does not support CSA in multi-if cases (yet) */
-+	if (WARN_ON(sc->csa_vif))
-+		return;
-+
-+	sc->csa_vif = vif;
-+}
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2366,4 +2382,5 @@ struct ieee80211_ops ath9k_ops = {
- #endif
- 	.sw_scan_start	    = ath9k_sw_scan_start,
- 	.sw_scan_complete   = ath9k_sw_scan_complete,
-+	.channel_switch_beacon     = ath9k_channel_switch_beacon,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index d8dfb3e..f587c7e 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2569,6 +2569,8 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		if (ts.qid == sc->beacon.beaconq) {
- 			sc->beacon.tx_processed = true;
- 			sc->beacon.tx_last = !(ts.ts_status & ATH9K_TXERR_MASK);
-+
-+			ath9k_csa_is_finished(sc);
- 			continue;
- 		}
- 
+ 	rx_status->band = hw->conf.chandef.chan->band;
+ 	rx_status->freq = hw->conf.chandef.chan->center_freq;
 -- 
-1.7.10.4
+1.8.3.4
 
