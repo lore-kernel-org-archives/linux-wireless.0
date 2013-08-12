@@ -1,279 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3245 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751115Ab3HTOA7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 10:00:59 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 05/12] brcmsmac: update transmit gain table for lcn phy
-Date: Tue, 20 Aug 2013 16:00:39 +0200
-Message-ID: <1377007246-9957-6-git-send-email-arend@broadcom.com> (sfid-20130820_160138_217820_28BA63E5)
-In-Reply-To: <1377007246-9957-1-git-send-email-arend@broadcom.com>
-References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:34336 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755722Ab3HLWye (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Aug 2013 18:54:34 -0400
+Received: by mail-ie0-f180.google.com with SMTP id aq17so8871734iec.25
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Aug 2013 15:54:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Mon, 12 Aug 2013 15:54:33 -0700
+Message-ID: <CAN3-2D7=P=9VyV7xoANw_6B8VhOaTRC1iMw+mwUH2-g8YOmPMg@mail.gmail.com> (sfid-20130813_005437_519018_A7B90963)
+Subject: issues with RTL8188CE device and rtl8192ce driver
+From: Colleen Josephson <cjoseph@mit.edu>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the transmit gain table for bcm4313 chip family.
+I have been having consistent issues with certain networks with my
+RTL8188CE device and the rtl8192ce driver (using kernel 3.8.13). I am
+running Gentoo linux and use NetworkManager to manage connections. I
+can utilize many networks fine, but some networks enter a
+connect/reconnect cycle where the device connects (and gets an IP/DNS
+info), but as soon as I try to actually transmit anything it
+immediately disconnects.
 
-Tested-by: David Herrmann <dh.herrmann@gmail.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |  216 ++++++++++----------
- 1 file changed, 108 insertions(+), 108 deletions(-)
+When I look at /var/log/messages, I see this pattern happening a lot
+around the time the connection fails:
+wlan0: disassociated from 00:18:0a:36:83:36 (Reason: 2)
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: deauthenticating from 00:18:0a:36:83:36 by local choice (reason=3)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
-index deae3a7..efd5a58 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
-@@ -2959,134 +2959,134 @@ dot11lcnphy_2GHz_extPA_gaintable_rev0[128] = {
- };
- 
- const struct lcnphy_tx_gain_tbl_entry dot11lcnphy_2GHz_gaintable_rev0[128] = {
--	{7, 0, 31, 0, 72},
--	{7, 0, 31, 0, 70},
--	{7, 0, 31, 0, 68},
--	{7, 0, 30, 0, 67},
--	{7, 0, 29, 0, 68},
--	{7, 0, 28, 0, 68},
--	{7, 0, 27, 0, 69},
--	{7, 0, 26, 0, 70},
--	{7, 0, 25, 0, 70},
--	{7, 0, 24, 0, 71},
--	{7, 0, 23, 0, 72},
--	{7, 0, 23, 0, 70},
--	{7, 0, 22, 0, 71},
--	{7, 0, 21, 0, 72},
--	{7, 0, 21, 0, 70},
--	{7, 0, 21, 0, 68},
--	{7, 0, 21, 0, 66},
--	{7, 0, 21, 0, 64},
--	{7, 0, 21, 0, 63},
--	{7, 0, 20, 0, 64},
--	{7, 0, 19, 0, 65},
--	{7, 0, 19, 0, 64},
--	{7, 0, 18, 0, 65},
--	{7, 0, 18, 0, 64},
--	{7, 0, 17, 0, 65},
--	{7, 0, 17, 0, 64},
--	{7, 0, 16, 0, 65},
--	{7, 0, 16, 0, 64},
--	{7, 0, 16, 0, 62},
--	{7, 0, 16, 0, 60},
--	{7, 0, 16, 0, 58},
--	{7, 0, 15, 0, 61},
--	{7, 0, 15, 0, 59},
--	{7, 0, 14, 0, 61},
--	{7, 0, 14, 0, 60},
--	{7, 0, 14, 0, 58},
--	{7, 0, 13, 0, 60},
--	{7, 0, 13, 0, 59},
--	{7, 0, 12, 0, 62},
--	{7, 0, 12, 0, 60},
--	{7, 0, 12, 0, 58},
--	{7, 0, 11, 0, 62},
--	{7, 0, 11, 0, 60},
--	{7, 0, 11, 0, 59},
--	{7, 0, 11, 0, 57},
--	{7, 0, 10, 0, 61},
--	{7, 0, 10, 0, 59},
--	{7, 0, 10, 0, 57},
--	{7, 0, 9, 0, 62},
--	{7, 0, 9, 0, 60},
--	{7, 0, 9, 0, 58},
--	{7, 0, 9, 0, 57},
--	{7, 0, 8, 0, 62},
--	{7, 0, 8, 0, 60},
--	{7, 0, 8, 0, 58},
--	{7, 0, 8, 0, 57},
--	{7, 0, 8, 0, 55},
--	{7, 0, 7, 0, 61},
-+	{15, 0, 31, 0, 72},
-+	{15, 0, 31, 0, 70},
-+	{15, 0, 31, 0, 68},
-+	{15, 0, 30, 0, 68},
-+	{15, 0, 29, 0, 69},
-+	{15, 0, 28, 0, 69},
-+	{15, 0, 27, 0, 70},
-+	{15, 0, 26, 0, 70},
-+	{15, 0, 25, 0, 71},
-+	{15, 0, 24, 0, 72},
-+	{15, 0, 23, 0, 73},
-+	{15, 0, 23, 0, 71},
-+	{15, 0, 22, 0, 72},
-+	{15, 0, 21, 0, 73},
-+	{15, 0, 21, 0, 71},
-+	{15, 0, 21, 0, 69},
-+	{15, 0, 21, 0, 67},
-+	{15, 0, 21, 0, 65},
-+	{15, 0, 21, 0, 63},
-+	{15, 0, 20, 0, 65},
-+	{15, 0, 19, 0, 66},
-+	{15, 0, 19, 0, 64},
-+	{15, 0, 18, 0, 66},
-+	{15, 0, 18, 0, 64},
-+	{15, 0, 17, 0, 66},
-+	{15, 0, 17, 0, 64},
-+	{15, 0, 16, 0, 66},
-+	{15, 0, 16, 0, 64},
-+	{15, 0, 16, 0, 62},
-+	{15, 0, 16, 0, 61},
-+	{15, 0, 16, 0, 59},
-+	{15, 0, 15, 0, 61},
-+	{15, 0, 15, 0, 59},
-+	{15, 0, 14, 0, 62},
-+	{15, 0, 14, 0, 60},
-+	{15, 0, 14, 0, 58},
-+	{15, 0, 13, 0, 61},
-+	{15, 0, 13, 0, 59},
-+	{15, 0, 12, 0, 62},
-+	{15, 0, 12, 0, 61},
-+	{15, 0, 12, 0, 59},
-+	{15, 0, 11, 0, 62},
-+	{15, 0, 11, 0, 61},
-+	{15, 0, 11, 0, 59},
-+	{15, 0, 11, 0, 57},
-+	{15, 0, 10, 0, 61},
-+	{15, 0, 10, 0, 59},
-+	{15, 0, 10, 0, 58},
-+	{15, 0, 9, 0, 62},
-+	{15, 0, 9, 0, 61},
-+	{15, 0, 9, 0, 59},
-+	{15, 0, 9, 0, 57},
-+	{15, 0, 8, 0, 62},
-+	{15, 0, 8, 0, 61},
-+	{15, 0, 8, 0, 59},
-+	{15, 0, 8, 0, 57},
-+	{15, 0, 8, 0, 56},
-+	{15, 0, 8, 0, 54},
-+	{15, 0, 8, 0, 53},
-+	{15, 0, 8, 0, 51},
-+	{15, 0, 8, 0, 50},
-+	{7, 0, 7, 0, 69},
-+	{7, 0, 7, 0, 67},
-+	{7, 0, 7, 0, 65},
-+	{7, 0, 7, 0, 64},
-+	{7, 0, 7, 0, 62},
- 	{7, 0, 7, 0, 60},
- 	{7, 0, 7, 0, 58},
--	{7, 0, 7, 0, 56},
-+	{7, 0, 7, 0, 57},
- 	{7, 0, 7, 0, 55},
- 	{7, 0, 6, 0, 62},
--	{7, 0, 6, 0, 60},
--	{7, 0, 6, 0, 58},
-+	{7, 0, 6, 0, 61},
-+	{7, 0, 6, 0, 59},
- 	{7, 0, 6, 0, 57},
--	{7, 0, 6, 0, 55},
-+	{7, 0, 6, 0, 56},
- 	{7, 0, 6, 0, 54},
--	{7, 0, 6, 0, 52},
-+	{7, 0, 6, 0, 53},
- 	{7, 0, 5, 0, 61},
--	{7, 0, 5, 0, 59},
--	{7, 0, 5, 0, 57},
-+	{7, 0, 5, 0, 60},
-+	{7, 0, 5, 0, 58},
- 	{7, 0, 5, 0, 56},
--	{7, 0, 5, 0, 54},
-+	{7, 0, 5, 0, 55},
- 	{7, 0, 5, 0, 53},
--	{7, 0, 5, 0, 51},
--	{7, 0, 4, 0, 62},
--	{7, 0, 4, 0, 60},
--	{7, 0, 4, 0, 58},
-+	{7, 0, 5, 0, 52},
-+	{7, 0, 5, 0, 50},
-+	{7, 0, 5, 0, 49},
-+	{7, 0, 5, 0, 47},
- 	{7, 0, 4, 0, 57},
--	{7, 0, 4, 0, 55},
-+	{7, 0, 4, 0, 56},
- 	{7, 0, 4, 0, 54},
--	{7, 0, 4, 0, 52},
-+	{7, 0, 4, 0, 53},
- 	{7, 0, 4, 0, 51},
--	{7, 0, 4, 0, 49},
-+	{7, 0, 4, 0, 50},
- 	{7, 0, 4, 0, 48},
-+	{7, 0, 4, 0, 47},
- 	{7, 0, 4, 0, 46},
--	{7, 0, 3, 0, 60},
--	{7, 0, 3, 0, 58},
--	{7, 0, 3, 0, 57},
--	{7, 0, 3, 0, 55},
--	{7, 0, 3, 0, 54},
--	{7, 0, 3, 0, 52},
-+	{7, 0, 4, 0, 44},
-+	{7, 0, 4, 0, 43},
-+	{7, 0, 4, 0, 42},
-+	{7, 0, 4, 0, 41},
-+	{7, 0, 4, 0, 40},
- 	{7, 0, 3, 0, 51},
--	{7, 0, 3, 0, 49},
-+	{7, 0, 3, 0, 50},
- 	{7, 0, 3, 0, 48},
-+	{7, 0, 3, 0, 47},
- 	{7, 0, 3, 0, 46},
--	{7, 0, 3, 0, 45},
- 	{7, 0, 3, 0, 44},
- 	{7, 0, 3, 0, 43},
-+	{7, 0, 3, 0, 42},
- 	{7, 0, 3, 0, 41},
--	{7, 0, 2, 0, 61},
--	{7, 0, 2, 0, 59},
--	{7, 0, 2, 0, 57},
--	{7, 0, 2, 0, 56},
--	{7, 0, 2, 0, 54},
--	{7, 0, 2, 0, 53},
--	{7, 0, 2, 0, 51},
--	{7, 0, 2, 0, 50},
--	{7, 0, 2, 0, 48},
--	{7, 0, 2, 0, 47},
--	{7, 0, 2, 0, 46},
--	{7, 0, 2, 0, 44},
--	{7, 0, 2, 0, 43},
--	{7, 0, 2, 0, 42},
--	{7, 0, 2, 0, 41},
--	{7, 0, 2, 0, 39},
--	{7, 0, 2, 0, 38},
--	{7, 0, 2, 0, 37},
--	{7, 0, 2, 0, 36},
--	{7, 0, 2, 0, 35},
--	{7, 0, 2, 0, 34},
--	{7, 0, 2, 0, 33},
--	{7, 0, 2, 0, 32},
--	{7, 0, 1, 0, 63},
--	{7, 0, 1, 0, 61},
--	{7, 0, 1, 0, 59},
--	{7, 0, 1, 0, 57},
-+	{3, 0, 3, 0, 56},
-+	{3, 0, 3, 0, 54},
-+	{3, 0, 3, 0, 53},
-+	{3, 0, 3, 0, 51},
-+	{3, 0, 3, 0, 50},
-+	{3, 0, 3, 0, 48},
-+	{3, 0, 3, 0, 47},
-+	{3, 0, 3, 0, 46},
-+	{3, 0, 3, 0, 44},
-+	{3, 0, 3, 0, 43},
-+	{3, 0, 3, 0, 42},
-+	{3, 0, 3, 0, 41},
-+	{3, 0, 3, 0, 39},
-+	{3, 0, 3, 0, 38},
-+	{3, 0, 3, 0, 37},
-+	{3, 0, 3, 0, 36},
-+	{3, 0, 3, 0, 35},
-+	{3, 0, 3, 0, 34},
- };
- 
- const struct lcnphy_tx_gain_tbl_entry dot11lcnphy_5GHz_gaintable_rev0[128] = {
--- 
-1.7.10.4
+(sometimes it says "Calling CRDA for country: US" instead)
 
+lspci -v:
+03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE
+802.11b/g/n WiFi Adapter (rev 01)
+Subsystem: Realtek Semiconductor Co., Ltd. Device 8195
+Flags: bus master, fast devsel, latency 0, IRQ 17
+I/O ports at 5000 [size=256]
+Memory at f3800000 (64-bit, non-prefetchable) [size=16K]
+Capabilities: [40] Power Management version 3
+Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+Capabilities: [70] Express Endpoint, MSI 00
+Capabilities: [100] Advanced Error Reporting
+Capabilities: [140] Virtual Channel
+Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+Kernel driver in use: rtl8192ce
+Kernel modules: rtl8192ce
 
+some relevant logging:
+http://pastebin.com/4jSQAhuM
+
+Any help with resolving this issue is greatly appreciated!
