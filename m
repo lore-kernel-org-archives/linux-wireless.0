@@ -1,88 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:55749 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837Ab3HSPM1 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:54916 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755954Ab3HLJpe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 11:12:27 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 1/6] cfg80211: export cfg80211_chandef_dfs_required
-Date: Mon, 19 Aug 2013 17:12:15 +0200
-Message-Id: <1376925141-15353-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130819_171233_187141_ABF2DF21)
-In-Reply-To: <1376925141-15353-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376925141-15353-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Mon, 12 Aug 2013 05:45:34 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 09/15] ath9k: Fix RX debug statistics
+Date: Mon, 12 Aug 2013 15:11:36 +0530
+Message-Id: <1376300502-2741-10-git-send-email-sujith@msujith.org> (sfid-20130812_114539_393486_5A43E50E)
+In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It will be used later by the IBSS CSA implementation of mac80211.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+The various error bits that ath_debug_stat_rx()
+checks are valid only for the last descriptor for
+a chained packet, handle this correctly.
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
-Changes to PATCHv1:
- * remove one more newline in net/wireless/core.h
----
- include/net/cfg80211.h |    9 +++++++++
- net/wireless/chan.c    |    1 +
- net/wireless/core.h    |    9 ---------
- 3 files changed, 10 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9ab7a06..2848ee5 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -437,6 +437,15 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 			     u32 prohibited_flags);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index e18adde..2d0017c 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1084,6 +1084,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		return 0;
  
- /**
-+ * cfg80211_chandef_dfs_required - checks if radar detection is required
-+ * @wiphy: the wiphy to validate against
-+ * @chandef: the channel definition to check
-+ * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
-+ */
-+int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
-+				  const struct cfg80211_chan_def *c);
-+
-+/**
-  * ieee80211_chandef_rate_flags - returns rate flags for a channel
-  *
-  * In some channel types, not all rates may be used - for example CCK
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 50f6195..16f3c3a 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -328,6 +328,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
- 	return cfg80211_get_chans_dfs_required(wiphy, chandef->center_freq2,
- 					       width);
- }
-+EXPORT_SYMBOL(cfg80211_chandef_dfs_required);
+ 	ath9k_process_tsf(rx_stats, rx_status, tsf);
++	ath_debug_stat_rx(sc, rx_stats);
  
- static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 					u32 center_freq, u32 bandwidth,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9ad43c6..b43efac 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -382,15 +382,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				 enum cfg80211_chan_mode chanmode,
- 				 u8 radar_detect);
+ 	/*
+ 	 * Process PHY errors and return so that the packet
+@@ -1270,8 +1271,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		    !ieee80211_is_qos_nullfunc(hdr->frame_control))
+ 			sc->rx.num_pkts++;
  
--/**
-- * cfg80211_chandef_dfs_required - checks if radar detection is required
-- * @wiphy: the wiphy to validate against
-- * @chandef: the channel definition to check
-- * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
-- */
--int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
--				  const struct cfg80211_chan_def *c);
+-		ath_debug_stat_rx(sc, &rs);
 -
- void cfg80211_set_dfs_state(struct wiphy *wiphy,
- 			    const struct cfg80211_chan_def *chandef,
- 			    enum nl80211_dfs_state dfs_state);
+ 		rxs = IEEE80211_SKB_RXCB(hdr_skb);
+ 		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
+ 
 -- 
-1.7.10.4
+1.8.3.4
 
