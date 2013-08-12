@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:47584 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098Ab3HTRmA (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:46454 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755884Ab3HLJpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 13:42:00 -0400
-Received: by mail-la0-f46.google.com with SMTP id eh20so549996lab.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:59 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH 16/16] wcn36xx: Add wcn36xx to ath Makefile and Kconfig
-Date: Tue, 20 Aug 2013 19:41:19 +0200
-Message-Id: <1377020479-16935-17-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_200909_456210_1A77394A)
-In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+	Mon, 12 Aug 2013 05:45:23 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 01/15] ath9k: Add MAX_AMSDU to supported HT capabilities
+Date: Mon, 12 Aug 2013 15:11:28 +0530
+Message-Id: <1376300502-2741-2-git-send-email-sujith@msujith.org> (sfid-20130812_114526_652478_640F88DA)
+In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now wcn36xx is part of ath family.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/Kconfig  | 1 +
- drivers/net/wireless/ath/Makefile | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath9k/init.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index 1abf1d4..ba81d62 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -32,5 +32,6 @@ source "drivers/net/wireless/ath/ath6kl/Kconfig"
- source "drivers/net/wireless/ath/ar5523/Kconfig"
- source "drivers/net/wireless/ath/wil6210/Kconfig"
- source "drivers/net/wireless/ath/ath10k/Kconfig"
-+source "drivers/net/wireless/ath/wcn36xx/Kconfig"
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 3b56c2e..6c1875e 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -258,7 +258,8 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+ 		       IEEE80211_HT_CAP_SM_PS |
+ 		       IEEE80211_HT_CAP_SGI_40 |
+-		       IEEE80211_HT_CAP_DSSSCCK40;
++		       IEEE80211_HT_CAP_DSSSCCK40 |
++		       IEEE80211_HT_CAP_MAX_AMSDU;
  
- endif
-diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
-index fb05cfd..363b056 100644
---- a/drivers/net/wireless/ath/Makefile
-+++ b/drivers/net/wireless/ath/Makefile
-@@ -5,6 +5,7 @@ obj-$(CONFIG_ATH6KL)		+= ath6kl/
- obj-$(CONFIG_AR5523)		+= ar5523/
- obj-$(CONFIG_WIL6210)		+= wil6210/
- obj-$(CONFIG_ATH10K)		+= ath10k/
-+obj-$(CONFIG_WCN36XX)		+= wcn36xx/
- 
- obj-$(CONFIG_ATH_COMMON)	+= ath.o
- 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_LDPC)
+ 		ht_info->cap |= IEEE80211_HT_CAP_LDPC_CODING;
 -- 
-1.8.2.2
+1.8.3.4
 
