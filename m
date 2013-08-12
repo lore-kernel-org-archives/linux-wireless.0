@@ -1,81 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:47683 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753345Ab3HYNOc (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:42305 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755954Ab3HLJph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Aug 2013 09:14:32 -0400
-Received: by mail-pb0-f44.google.com with SMTP id xa7so2418302pbc.17
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Aug 2013 06:14:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1377266513.14021.37.camel@jlt4.sipsolutions.net>
-References: <1376395438-24788-1-git-send-email-arik@wizery.com>
- <1376568235.14084.12.camel@jlt4.sipsolutions.net> <CA+XVXffREZsiLU_Gs646-akyW9XNcZEmQnQGsp4ihT92hP7LOw@mail.gmail.com>
- <1376650616.15299.16.camel@jlt4.sipsolutions.net> <CA+XVXfeVtaxqAgWQgSsiMw8uZ6uDmEwba+T8M9-YrUNBwxvshA@mail.gmail.com>
- <1377266513.14021.37.camel@jlt4.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 25 Aug 2013 16:14:15 +0300
-Message-ID: <CA+XVXfecHzDzWi1ayiigiQ-qMiun1DK7kYnbuizjiDEYakPM+w@mail.gmail.com> (sfid-20130825_151435_725963_8AA31770)
-Subject: Re: [PATCH] mac80211: implement STA CSA for drivers using channel contexts
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 12 Aug 2013 05:45:37 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 11/15] ath9k: Fix RX beacon processing
+Date: Mon, 12 Aug 2013 15:11:38 +0530
+Message-Id: <1376300502-2741-12-git-send-email-sujith@msujith.org> (sfid-20130812_114542_633746_5CAB8E1B)
+In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 23, 2013 at 5:01 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2013-08-16 at 23:09 +0300, Arik Nemtsov wrote:
->
->> > Well, it can't. If you look carefully then the old chan_switch op
->> > behaviour is to let the driver switch, not switch in software
->> > afterwards.
->>
->> The right thing for chan_switch drivers would be not to call hw_config()..
->
-> chan_switch? or chanctx?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-both. the hw_config(channel) is meaningless for chanctx drivers. The
-legacy code for op_chan_switch drivers didn't call hw_config() as
-well, assuming they'd already get notified internally by their op.
+Make sure that chained descriptors are handled correctly
+before the packet is parsed to determine if it is a beacon.
 
->> The TI driver implements the chan_switch op and uses channel contexts.
->
-> Huh, ok, that was a combination I didn't think was going to exist, since
-> the chanswitch API doesn't really tell you what channel context etc.
-> OTOH, it does give you the vif so you have the chanctx implicitly.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 47 ++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 26 deletions(-)
 
-Yep, it's good enough. The driver gets the chandef from the vif.
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 823b411..44f5a2b 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1037,13 +1037,28 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ #endif
+ }
+ 
++static bool ath9k_is_mybeacon(struct ath_softc *sc, struct ieee80211_hdr *hdr)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (ieee80211_is_beacon(hdr->frame_control)) {
++		RX_STAT_INC(rx_beacons);
++		if (!is_zero_ether_addr(common->curbssid) &&
++		    ether_addr_equal(hdr->addr3, common->curbssid))
++			return true;
++	}
++
++	return false;
++}
++
+ /*
+  * For Decrypt or Demic errors, we only mark packet status here and always push
+  * up the frame up to let mac80211 handle the actual error case, be it no
+  * decryption key or real decryption error. This let us keep statistics there.
+  */
+ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+-				   struct ieee80211_hdr *hdr,
++				   struct sk_buff *skb,
+ 				   struct ath_rx_status *rx_stats,
+ 				   struct ieee80211_rx_status *rx_status,
+ 				   bool *decrypt_error, u64 tsf)
+@@ -1051,6 +1066,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ieee80211_hdr *hdr;
+ 	bool discard_current = sc->rx.discard_next;
+ 
+ 	/*
+@@ -1083,6 +1099,8 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	if (rx_stats->rs_more)
+ 		return 0;
+ 
++	hdr = (struct ieee80211_hdr *) (skb->data + ah->caps.rx_status_len);
++
+ 	ath9k_process_tsf(rx_stats, rx_status, tsf);
+ 	ath_debug_stat_rx(sc, rx_stats);
+ 
+@@ -1108,6 +1126,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	if (ath9k_process_rate(common, hw, rx_stats, rx_status))
+ 		return -EINVAL;
+ 
++	rx_stats->is_mybeacon = ath9k_is_mybeacon(sc, hdr);
+ 	ath9k_process_rssi(common, hw, hdr, rx_stats);
+ 
+ 	rx_status->band = hw->conf.chandef.chan->band;
+@@ -1198,24 +1217,6 @@ static void ath9k_apply_ampdu_details(struct ath_softc *sc,
+ 	}
+ }
+ 
+-static bool ath9k_is_mybeacon(struct ath_softc *sc, struct sk_buff *skb)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_hdr *hdr;
+-
+-	hdr = (struct ieee80211_hdr *) (skb->data + ah->caps.rx_status_len);
+-
+-	if (ieee80211_is_beacon(hdr->frame_control)) {
+-		RX_STAT_INC(rx_beacons);
+-		if (!is_zero_ether_addr(common->curbssid) &&
+-		    ether_addr_equal(hdr->addr3, common->curbssid))
+-			return true;
+-	}
+-
+-	return false;
+-}
+-
+ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ {
+ 	struct ath_buf *bf;
+@@ -1225,7 +1226,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_hw *hw = sc->hw;
+-	struct ieee80211_hdr *hdr;
+ 	int retval;
+ 	struct ath_rx_status rs;
+ 	enum ath9k_rx_qtype qtype;
+@@ -1269,15 +1269,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		else
+ 			hdr_skb = skb;
+ 
+-		rs.is_mybeacon = ath9k_is_mybeacon(sc, hdr_skb);
+-
+-		hdr = (struct ieee80211_hdr *) (hdr_skb->data +
+-						ah->caps.rx_status_len);
+-
+ 		rxs = IEEE80211_SKB_RXCB(hdr_skb);
+ 		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
+ 
+-		retval = ath9k_rx_skb_preprocess(sc, hdr, &rs, rxs,
++		retval = ath9k_rx_skb_preprocess(sc, hdr_skb, &rs, rxs,
+ 						 &decrypt_error, tsf);
+ 		if (retval)
+ 			goto requeue_drop_frag;
+-- 
+1.8.3.4
 
->
->> Note that with the above, the channel_contexts + software chan-switch
->> drivers will still need the kind of code that I wrote. So it would
->> just lead to replicated code. Or maybe you meant something else?
->
-> We have too many possibilities I guess ... I think for MVM I want the
-> disconnect, not the channel context change in software. You're taking
-> that possibility away, hence my suggestion of a new hardware flag for it
-> or so.
-
-I was thinking it's equivalent to to AP case - currently mac80211 is
-the dictator and simply changes the chandef once the lower drv
-completes the switch.
-
-Anyway IMHO the simplest approach to handle all the legacy stuff +
-chanctx it to keep the current patch as is, and add a mac80211 HW flag
-to support it, keeping the deauth option as default.
-That's what I think you're suggesting?
-
->
->> Also, where would you put csa_active = true (if at all) for a STA
->> interface? Unlike AP, the trigger here is mac80211 code. So putting it
->> there seemed appropriate.
->
-> Yeah, I was really just trying to say that current chanctx drivers need
-> not really expect a chanctx to change channel unless they implement CSA,
-> but that currently means AP-CSA - basically what I just said above with
-> taking away the possibility of doing the deauth instead.
-
-Let's keep the csa_active as I've used it, and just do a deauth when
-the csa-support HW flag is not given?
-
-Arik
