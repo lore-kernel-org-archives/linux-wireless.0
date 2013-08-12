@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:26119 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753605Ab3HOLv7 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:43709 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755859Ab3HLJpj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 07:51:59 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v14 0/2] P2P find phase offload
-Date: Thu, 15 Aug 2013 14:51:27 +0300
-Message-ID: <1376567489-1863-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130815_135202_099066_FE7A399C)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 12 Aug 2013 05:45:39 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 12/15] ath9k: Move the RX poll check to preprocess()
+Date: Mon, 12 Aug 2013 15:11:39 +0530
+Message-Id: <1376300502-2741-13-git-send-email-sujith@msujith.org> (sfid-20130812_120908_979974_112B931B)
+In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Addressed input collected:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-- remove NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD feature flag because
-  NL80211_RXMGMT_FLAG_REPLIED flag in cfg80211_rx_mgmt() provide needed
-  info on per-frame basis
-- validate min/max discoverable interval parameters
-- use kcalloc to allocate array
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Vladimir Kondratiev (2):
-  cfg80211: add 'flags' to cfg80211_rx_mgmt()
-  cfg80211: P2P find phase offload
-
- drivers/net/wireless/ath/ath6kl/wmi.c         |   7 +-
- drivers/net/wireless/ath/wil6210/wmi.c        |   2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c |   4 +-
- drivers/net/wireless/mwifiex/util.c           |   4 +-
- include/net/cfg80211.h                        |  79 +++++++++-
- include/uapi/linux/nl80211.h                  |  27 ++++
- net/mac80211/rx.c                             |   3 +-
- net/wireless/mlme.c                           |   4 +-
- net/wireless/nl80211.c                        | 216 +++++++++++++++++++++++++-
- net/wireless/nl80211.h                        |   2 +-
- net/wireless/rdev-ops.h                       |  19 +++
- net/wireless/trace.h                          |  44 ++++++
- 12 files changed, 394 insertions(+), 17 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 44f5a2b..7f327e9 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1127,6 +1127,11 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		return -EINVAL;
+ 
+ 	rx_stats->is_mybeacon = ath9k_is_mybeacon(sc, hdr);
++	if (rx_stats->is_mybeacon) {
++		sc->hw_busy_count = 0;
++		ath_start_rx_poll(sc, 3);
++	}
++
+ 	ath9k_process_rssi(common, hw, hdr, rx_stats);
+ 
+ 	rx_status->band = hw->conf.chandef.chan->band;
+@@ -1277,10 +1282,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if (retval)
+ 			goto requeue_drop_frag;
+ 
+-		if (rs.is_mybeacon) {
+-			sc->hw_busy_count = 0;
+-			ath_start_rx_poll(sc, 3);
+-		}
+ 		/* Ensure we always have an skb to requeue once we are done
+ 		 * processing the current buffer's skb */
+ 		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
 -- 
-1.8.1.2
+1.8.3.4
 
