@@ -1,65 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2732 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968551Ab3HJK14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 06:27:56 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 06/12] brcmfmac: ignore IF event if firmware indicates
- it
-Date: Sat, 10 Aug 2013 12:27:24 +0200
-Message-ID: <1376130450-29746-7-git-send-email-arend@broadcom.com> (sfid-20130810_123908_754531_8D6ABC8B)
-In-Reply-To: <1376130450-29746-1-git-send-email-arend@broadcom.com>
-References: <1376130450-29746-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s72.web-hosting.com ([198.187.29.21]:53160 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755990Ab3HLJpc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Aug 2013 05:45:32 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 08/15] ath9k: Fix PHY error processing
+Date: Mon, 12 Aug 2013 15:11:35 +0530
+Message-Id: <1376300502-2741-9-git-send-email-sujith@msujith.org> (sfid-20130812_114538_275929_05F22CAF)
+In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not every IF event from the firmware needs to result in a
-related interface, netdev or wdev, on the host. This is
-indicated in the event message. Handle that flag and effectively
-ignore the firmware event.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Parse the PHY error details only for the last fragment
+in case descriptors are chained.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h  | 2 ++
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c | 4 ++++
- 2 files changed, 6 insertions(+)
+ drivers/net/wireless/ath/ath9k/recv.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 1273dfd..2eb9e64 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -194,6 +194,8 @@
- #define BRCMF_E_IF_DEL				2
- #define BRCMF_E_IF_CHANGE			3
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 51e7d16..e18adde 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -803,8 +803,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
+ 			mic_error = false;
+ 		}
+-		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
+-			return false;
  
-+#define BRCMF_E_IF_FLAG_NOIF			1
+ 		if ((rx_stats->rs_status & ATH9K_RXERR_DECRYPT) ||
+ 		    (!is_mc && (rx_stats->rs_status & ATH9K_RXERR_KEYMISS))) {
+@@ -1088,6 +1086,18 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	ath9k_process_tsf(rx_stats, rx_status, tsf);
+ 
+ 	/*
++	 * Process PHY errors and return so that the packet
++	 * can be dropped.
++	 */
++	if (rx_stats->rs_status & ATH9K_RXERR_PHY) {
++		ath9k_dfs_process_phyerr(sc, hdr, rx_stats, rx_status->mactime);
++		if (ath_process_fft(sc, hdr, rx_stats, rx_status->mactime))
++			RX_STAT_INC(rx_spectral);
 +
- #define BRCMF_E_IF_ROLE_STA			0
- #define BRCMF_E_IF_ROLE_AP			1
- #define BRCMF_E_IF_ROLE_WDS			2
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-index 83ee53a..fad77dd 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-@@ -185,6 +185,10 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
- 		  ifevent->action, ifevent->ifidx, ifevent->bssidx,
- 		  ifevent->flags, ifevent->role);
- 
-+	if (ifevent->flags & BRCMF_E_IF_FLAG_NOIF) {
-+		brcmf_dbg(EVENT, "event can be ignored\n");
-+		return;
++		return -EINVAL;
 +	}
- 	if (ifevent->ifidx >= BRCMF_MAX_IFS) {
- 		brcmf_err("invalid interface index: %u\n",
- 			  ifevent->ifidx);
++
++	/*
+ 	 * everything but the rate is checked here, the rate check is done
+ 	 * separately to avoid doing two lookups for a rate for each frame.
+ 	 */
+@@ -1265,15 +1275,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		rxs = IEEE80211_SKB_RXCB(hdr_skb);
+ 		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
+ 
+-		if (rs.rs_status & ATH9K_RXERR_PHY) {
+-			ath9k_dfs_process_phyerr(sc, hdr, &rs, rxs->mactime);
+-
+-			if (ath_process_fft(sc, hdr, &rs, rxs->mactime)) {
+-				RX_STAT_INC(rx_spectral);
+-				goto requeue_drop_frag;
+-			}
+-		}
+-
+ 		retval = ath9k_rx_skb_preprocess(sc, hdr, &rs, rxs,
+ 						 &decrypt_error, tsf);
+ 		if (retval)
 -- 
-1.8.1.3
-
+1.8.3.4
 
