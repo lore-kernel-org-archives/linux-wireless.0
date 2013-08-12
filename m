@@ -1,57 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60914 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521Ab3H0T1v (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:37639 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755859Ab3HLJp0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 15:27:51 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] iw:  Print out HotSpot2 IE information.
-Date: Tue, 27 Aug 2013 12:27:41 -0700
-Message-Id: <1377631661-26997-1-git-send-email-greearb@candelatech.com> (sfid-20130827_212755_179245_B6A3989D)
+	Mon, 12 Aug 2013 05:45:26 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 05/15] ath9k: Fix RX crypto processing
+Date: Mon, 12 Aug 2013 15:11:32 +0530
+Message-Id: <1376300502-2741-6-git-send-email-sujith@msujith.org> (sfid-20130812_114533_525743_86F924D5)
+In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Example:
+The keymiss events are valid only in the last descriptor
+of a packet. Fix this by making sure that we return
+early in case of chained descriptors.
 
-	HotSpot 2.0 Indication:
-		DGAF: 0
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
-:100644 100644 1a48509... c20c386... M	scan.c
- scan.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/scan.c b/scan.c
-index 1a48509..c20c386 100644
---- a/scan.c
-+++ b/scan.c
-@@ -1388,8 +1388,21 @@ static inline void print_p2p(const uint8_t type, uint8_t len, const uint8_t *dat
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index f8cc2b3..b04a971 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -785,10 +785,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 	    !test_bit(rx_stats->rs_keyix, common->ccmp_keymap))
+ 		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
+ 
+-	/* Only use error bits from the last fragment */
+-	if (rx_stats->rs_more)
+-		return true;
+-
+ 	mic_error = is_valid_tkip && !ieee80211_is_ctl(fc) &&
+ 		!ieee80211_has_morefrags(fc) &&
+ 		!(le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG) &&
+@@ -959,6 +955,10 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		return -EINVAL;
  	}
- }
  
-+static inline void print_hs20_ind(const uint8_t type, uint8_t len, const uint8_t *data)
-+{
-+	/* I can't find the spec for this...just going off what wireshark uses. */
-+	printf("\n");
-+	if (len > 0) {
-+		printf("\t\tDGAF: %i\n", (int)(data[0] & 0x1));
-+	}
-+	else {
-+		printf("\t\tUnexpected length: %i\n", len);
-+	}
-+}
++	/* Only use status info from the last fragment */
++	if (rx_stats->rs_more)
++		return 0;
 +
- static const struct ie_print wfa_printers[] = {
- 	[9] = { "P2P", print_p2p, 2, 255, BIT(PRINT_SCAN), },
-+	[16] = { "HotSpot 2.0 Indication", print_hs20_ind, 1, 255, BIT(PRINT_SCAN), },
- };
+ 	/*
+ 	 * everything but the rate is checked here, the rate check is done
+ 	 * separately to avoid doing two lookups for a rate for each frame.
+@@ -966,10 +966,6 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	if (!ath9k_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error))
+ 		return -EINVAL;
  
- static void print_vendor(unsigned char len, unsigned char *data,
+-	/* Only use status info from the last fragment */
+-	if (rx_stats->rs_more)
+-		return 0;
+-
+ 	if (ath9k_process_rate(common, hw, rx_stats, rx_status))
+ 		return -EINVAL;
+ 
 -- 
-1.7.3.4
+1.8.3.4
 
