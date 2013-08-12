@@ -1,324 +1,357 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38900 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:50901 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754400Ab3HPLJO (ORCPT
+	with ESMTP id S1754714Ab3HLMHZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 07:09:14 -0400
+	Mon, 12 Aug 2013 08:07:25 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Subject: [PATCH 12/20] iwlwifi: mvm: Add basic uAPSD client support
-Date: Fri, 16 Aug 2013 13:07:02 +0200
-Message-Id: <1376651230-1060-12-git-send-email-johannes@sipsolutions.net> (sfid-20130816_130919_012355_49882F15)
-In-Reply-To: <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
-References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
- <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: add APIs to allow keeping connections after WoWLAN
+Date: Mon, 12 Aug 2013 14:07:20 +0200
+Message-Id: <1376309240-2485-1-git-send-email-johannes@sipsolutions.net> (sfid-20130812_140728_802101_934A3D7D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexander Bondar <alexander.bondar@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Implement basic uAPSD client support adding the following:
+In order to be able to (securely) keep connections alive after
+the system was suspended for WoWLAN, we need some additional
+APIs. We already have API (ieee80211_gtk_rekey_notify) to tell
+wpa_supplicant about the new replay counter if GTK rekeying
+was done by the device while the host was asleep, but that's
+not sufficient.
 
-- Advertise uAPSD support in HW capabilities
-- Set all ACs trigger- and delivery-enabled
-- Set max SP length to 2 buffered frames
-- Assign QNDP with the highest TID with no mandatory admission
-  control required
-- Set uAPSD related parameters in Power Table command
+If GTK rekeying wasn't done, we need to tell the host about
+sequence counters for the GTK (and PTK regardless of rekeying)
+that was used while asleep, add ieee80211_set_key_rx_seq() for
+that.
 
-Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+If GTK rekeying was done, then we need to be able to disable
+the old keys (with ieee80211_remove_key()) and allocate the
+new GTK key(s) in mac80211 (with ieee80211_gtk_rekey_add()).
+
+If protocol offload (e.g. ARP) is implemented, then also the
+TX sequence counter for the PTK must be updated, using the new
+ieee80211_set_key_tx_seq() function.
+
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/constants.h    |   6 ++
- drivers/net/wireless/iwlwifi/mvm/debugfs.c      |   2 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h |  16 +--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c     |   7 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h          |   5 +
- drivers/net/wireless/iwlwifi/mvm/power.c        | 127 ++++++++++++++++++++----
- 6 files changed, 135 insertions(+), 28 deletions(-)
+ include/net/mac80211.h |  83 ++++++++++++++++++++++++++
+ net/mac80211/key.c     | 154 ++++++++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/util.c    |   2 +-
+ 3 files changed, 231 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
-index 64656e0c..33f98fc 100644
---- a/drivers/net/wireless/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
-@@ -67,5 +67,11 @@
- #define IWL_MVM_DEFAULT_PS_RX_DATA_TIMEOUT	(100 * USEC_PER_MSEC)
- #define IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT	(10 * USEC_PER_MSEC)
- #define IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT	(10 * USEC_PER_MSEC)
-+#define IWL_MVM_UAPSD_RX_DATA_TIMEOUT		(50 * USEC_PER_MSEC)
-+#define IWL_MVM_UAPSD_TX_DATA_TIMEOUT		(50 * USEC_PER_MSEC)
-+#define IWL_MVM_PS_HEAVY_TX_THLD_PACKETS	20
-+#define IWL_MVM_PS_HEAVY_RX_THLD_PACKETS	20
-+#define IWL_MVM_PS_HEAVY_TX_THLD_PERCENT	50
-+#define IWL_MVM_PS_HEAVY_RX_THLD_PERCENT	50
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index df93c77..e3e3037 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3688,6 +3688,89 @@ void ieee80211_get_key_rx_seq(struct ieee80211_key_conf *keyconf,
+ 			      int tid, struct ieee80211_key_seq *seq);
  
- #endif /* __MVM_CONSTANTS_H */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 3cdc005..14811a5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -424,7 +424,7 @@ static ssize_t iwl_dbgfs_pm_params_read(struct file *file,
- 	struct ieee80211_vif *vif = file->private_data;
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = mvmvif->dbgfs_data;
--	char buf[256];
-+	char buf[512];
- 	int bufsz = sizeof(buf);
- 	int pos;
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-index 060e630..bb010b3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-@@ -164,10 +164,10 @@ struct iwl_powertable_cmd {
-  *			Use IEEE80211_WMM_IE_STA_QOSINFO_AC* for correct values.
-  * @uapsd_max_sp:	Use IEEE80211_WMM_IE_STA_QOSINFO_SP_* for correct
-  *			values.
-- * @heavy_traffic_thr_tx_pkts:	TX threshold measured in number of packets
-- * @heavy_traffic_thr_rx_pkts:	RX threshold measured in number of packets
-- * @heavy_traffic_thr_tx_load:	TX threshold measured in load's percentage
-- * @heavy_traffic_thr_rx_load:	RX threshold measured in load's percentage
-+ * @heavy_tx_thld_packets:	TX threshold measured in number of packets
-+ * @heavy_rx_thld_packets:	RX threshold measured in number of packets
-+ * @heavy_tx_thld_percentage:	TX threshold measured in load's percentage
-+ * @heavy_rx_thld_percentage:	RX threshold measured in load's percentage
-  * @limited_ps_threshold:
- */
- struct iwl_mac_power_cmd {
-@@ -189,10 +189,10 @@ struct iwl_mac_power_cmd {
- 	u8 qndp_tid;
- 	u8 uapsd_ac_flags;
- 	u8 uapsd_max_sp;
--	u8 heavy_traffic_threshold_tx_packets;
--	u8 heavy_traffic_threshold_rx_packets;
--	u8 heavy_traffic_threshold_tx_percentage;
--	u8 heavy_traffic_threshold_rx_percentage;
-+	u8 heavy_tx_thld_packets;
-+	u8 heavy_rx_thld_packets;
-+	u8 heavy_tx_thld_percentage;
-+	u8 heavy_rx_thld_percentage;
- 	u8 limited_ps_threshold;
- 	u8 reserved;
- } __packed;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 05daa90..66803b9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -155,7 +155,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 		    IEEE80211_HW_TIMING_BEACON_ONLY |
- 		    IEEE80211_HW_CONNECTION_MONITOR |
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
--		    IEEE80211_HW_SUPPORTS_STATIC_SMPS;
-+		    IEEE80211_HW_SUPPORTS_STATIC_SMPS |
-+		    IEEE80211_HW_SUPPORTS_UAPSD;
- 
- 	hw->queues = IWL_MVM_FIRST_AGG_QUEUE;
- 	hw->offchannel_tx_hw_queue = IWL_MVM_OFFCHANNEL_QUEUE;
-@@ -190,6 +191,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 
- 	hw->wiphy->max_remain_on_channel_duration = 10000;
- 	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
-+	hw->uapsd_queues = IWL_UAPSD_AC_INFO;
-+	hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
- 
- 	/* Extract MAC address */
- 	memcpy(mvm->addresses[0].addr, mvm->nvm_data->hw_addr, ETH_ALEN);
-@@ -812,7 +815,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 		 */
- 		iwl_mvm_remove_time_event(mvm, mvmvif,
- 					  &mvmvif->time_event_data);
--	} else if (changes & BSS_CHANGED_PS) {
-+	} else if (changes & (BSS_CHANGED_PS | BSS_CHANGED_QOS)) {
- 		ret = iwl_mvm_power_update_mode(mvm, vif);
- 		if (ret)
- 			IWL_ERR(mvm, "failed to update power mode\n");
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 76f6a1f..014d779 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -153,6 +153,11 @@ enum iwl_power_scheme {
- };
- 
- #define IWL_CONN_MAX_LISTEN_INTERVAL	70
-+#define IWL_UAPSD_AC_INFO		(IEEE80211_WMM_IE_STA_QOSINFO_AC_VO |\
-+					 IEEE80211_WMM_IE_STA_QOSINFO_AC_VI |\
-+					 IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |\
-+					 IEEE80211_WMM_IE_STA_QOSINFO_AC_BE)
-+#define IWL_UAPSD_MAX_SP		IEEE80211_WMM_IE_STA_QOSINFO_SP_2
- 
- struct iwl_mvm_power_ops {
- 	int (*power_update_mode)(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 4e7c9f2..9c9b5ba 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -140,17 +140,30 @@ static void iwl_mvm_power_log(struct iwl_mvm *mvm,
- 	IWL_DEBUG_POWER(mvm, "Keep alive = %u sec\n",
- 			le16_to_cpu(cmd->keep_alive_seconds));
- 
--	if (cmd->flags & cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK)) {
--		IWL_DEBUG_POWER(mvm, "Rx timeout = %u usec\n",
--				le32_to_cpu(cmd->rx_data_timeout));
--		IWL_DEBUG_POWER(mvm, "Tx timeout = %u usec\n",
--				le32_to_cpu(cmd->tx_data_timeout));
--		if (cmd->flags & cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK))
--			IWL_DEBUG_POWER(mvm, "DTIM periods to skip = %u\n",
--					cmd->skip_dtim_periods);
--		if (cmd->flags & cpu_to_le16(POWER_FLAGS_LPRX_ENA_MSK))
--			IWL_DEBUG_POWER(mvm, "LP RX RSSI threshold = %u\n",
--					cmd->lprx_rssi_threshold);
-+	if (!(cmd->flags & cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK))) {
-+		IWL_DEBUG_POWER(mvm, "Disable power management\n");
-+		return;
-+	}
+ /**
++ * ieee80211_set_key_tx_seq - set key TX sequence counter
++ *
++ * @keyconf: the parameter passed with the set key
++ * @seq: new sequence data
++ *
++ * This function allows a driver to set the current TX IV/PNs for the
++ * given key. This is useful when resuming from WoWLAN sleep and the
++ * device may have transmitted frames using the PTK, e.g. replies to
++ * ARP requests.
++ *
++ * Note that this function may only be called when no TX processing
++ * can be done concurrently.
++ */
++void ieee80211_set_key_tx_seq(struct ieee80211_key_conf *keyconf,
++			      struct ieee80211_key_seq *seq);
 +
-+	IWL_DEBUG_POWER(mvm, "Rx timeout = %u usec\n",
-+			le32_to_cpu(cmd->rx_data_timeout));
-+	IWL_DEBUG_POWER(mvm, "Tx timeout = %u usec\n",
-+			le32_to_cpu(cmd->tx_data_timeout));
-+	if (cmd->flags & cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK))
-+		IWL_DEBUG_POWER(mvm, "DTIM periods to skip = %u\n",
-+				cmd->skip_dtim_periods);
-+	if (cmd->flags & cpu_to_le16(POWER_FLAGS_LPRX_ENA_MSK))
-+		IWL_DEBUG_POWER(mvm, "LP RX RSSI threshold = %u\n",
-+				cmd->lprx_rssi_threshold);
-+	if (cmd->flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK)) {
-+		IWL_DEBUG_POWER(mvm, "uAPSD enabled\n");
-+		IWL_DEBUG_POWER(mvm, "Rx timeout (uAPSD) = %u usec\n",
-+				le32_to_cpu(cmd->rx_data_timeout_uapsd));
-+		IWL_DEBUG_POWER(mvm, "Tx timeout (uAPSD) = %u usec\n",
-+				le32_to_cpu(cmd->tx_data_timeout_uapsd));
-+		IWL_DEBUG_POWER(mvm, "QNDP TID = %d\n", cmd->qndp_tid);
-+		IWL_DEBUG_POWER(mvm, "ACs flags = 0x%x\n", cmd->uapsd_ac_flags);
-+		IWL_DEBUG_POWER(mvm, "Max SP = %d\n", cmd->uapsd_max_sp);
++/**
++ * ieee80211_set_key_rx_seq - set key RX sequence counter
++ *
++ * @keyconf: the parameter passed with the set key
++ * @tid: The TID, or -1 for the management frame value (CCMP only);
++ *	the value on TID 0 is also used for non-QoS frames. For
++ *	CMAC, only TID 0 is valid.
++ * @seq: new sequence data
++ *
++ * This function allows a driver to set the current RX IV/PNs for the
++ * given key. This is useful when resuming from WoWLAN sleep and GTK
++ * rekey may have been done while suspended. It should not be called
++ * if IV checking is done by the device and not by mac80211.
++ *
++ * Note that this function may only be called when no RX processing
++ * can be done concurrently.
++ */
++void ieee80211_set_key_rx_seq(struct ieee80211_key_conf *keyconf,
++			      int tid, struct ieee80211_key_seq *seq);
++
++/**
++ * ieee80211_remove_key - remove the given key
++ * @keyconf: the parameter passed with the set key
++ *
++ * Remove the given key. If the key was uploaded to the hardware at the
++ * time this function is called, it is not deleted in the hardware but
++ * instead assumed to have been removed already.
++ *
++ * Note that due to locking considerations this function can (currently)
++ * only be called during key iteration (ieee80211_iter_keys().)
++ */
++void ieee80211_remove_key(struct ieee80211_key_conf *keyconf);
++
++/**
++ * ieee80211_gtk_rekey_add - add a GTK key from rekeying during WoWLAN
++ * @vif: the virtual interface to add the key on
++ * @keyconf: new key data
++ *
++ * When GTK rekeying was done while the system was suspended, (a) new
++ * key(s) will be available. These will be needed by mac80211 for proper
++ * RX processing, so this function allows setting them.
++ *
++ * The function returns the newly allocated key structure, which will
++ * have similar contents to the passed key configuration but point to
++ * mac80211-owned memory. In case of errors, the function returns an
++ * ERR_PTR(), use IS_ERR() etc.
++ *
++ * Note that this function assumes the key isn't added to hardware
++ * acceleration, so no TX will be done with the key. Since it's a GTK
++ * on managed (station) networks, this is true anyway. If the driver
++ * calls this function from the resume callback and subsequently uses
++ * the return code 1 to reconfigure the device, this key will be part
++ * of the reconfiguration.
++ *
++ * Note that the driver should also call ieee80211_set_key_rx_seq()
++ * for the new key for each TID to set up sequence counters properly.
++ *
++ * IMPORTANT: If this replaces a key that is present in the hardware,
++ * then it will attempt to remove it during this call. In many cases
++ * this isn't what you want, so call ieee80211_remove_key() first for
++ * the key that's being replaced.
++ */
++struct ieee80211_key_conf *
++ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
++			struct ieee80211_key_conf *keyconf);
++
++/**
+  * ieee80211_gtk_rekey_notify - notify userspace supplicant of rekeying
+  * @vif: virtual interface the rekeying was done on
+  * @bssid: The BSSID of the AP, for checking association
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index e39cc91..620677e 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -93,6 +93,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 
+ 	might_sleep();
+ 
++	if (key->flags & KEY_FLAG_TAINTED)
++		return -EINVAL;
++
+ 	if (!key->local->ops->set_key)
+ 		goto out_unsupported;
+ 
+@@ -455,6 +458,7 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct sta_info *sta)
+ {
++	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_key *old_key;
+ 	int idx, ret;
+ 	bool pairwise;
+@@ -484,10 +488,13 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 
+ 	ieee80211_debugfs_key_add(key);
+ 
+-	ret = ieee80211_key_enable_hw_accel(key);
+-
+-	if (ret)
+-		ieee80211_key_free(key, true);
++	if (!local->wowlan) {
++		ret = ieee80211_key_enable_hw_accel(key);
++		if (ret)
++			ieee80211_key_free(key, true);
++	} else {
++		ret = 0;
++	}
+ 
+ 	mutex_unlock(&sdata->local->key_mtx);
+ 
+@@ -540,7 +547,7 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
+ 			 void *iter_data)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	struct ieee80211_key *key;
++	struct ieee80211_key *key, *tmp;
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+ 	ASSERT_RTNL();
+@@ -548,13 +555,14 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
+ 	mutex_lock(&local->key_mtx);
+ 	if (vif) {
+ 		sdata = vif_to_sdata(vif);
+-		list_for_each_entry(key, &sdata->key_list, list)
++		list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
+ 			iter(hw, &sdata->vif,
+ 			     key->sta ? &key->sta->sta : NULL,
+ 			     &key->conf, iter_data);
+ 	} else {
+ 		list_for_each_entry(sdata, &local->interfaces, list)
+-			list_for_each_entry(key, &sdata->key_list, list)
++			list_for_each_entry_safe(key, tmp,
++						 &sdata->key_list, list)
+ 				iter(hw, &sdata->vif,
+ 				     key->sta ? &key->sta->sta : NULL,
+ 				     &key->conf, iter_data);
+@@ -751,3 +759,135 @@ void ieee80211_get_key_rx_seq(struct ieee80211_key_conf *keyconf,
  	}
  }
- 
-@@ -166,6 +179,8 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 	bool radar_detect = false;
- 	struct iwl_mvm_vif *mvmvif __maybe_unused =
- 		iwl_mvm_vif_from_mac80211(vif);
-+	enum ieee80211_ac_numbers ac;
-+	bool tid_found = false;
- 
- 	cmd->id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
- 							    mvmvif->color));
-@@ -235,6 +250,49 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 			cpu_to_le32(IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT);
- 	}
- 
-+	for (ac = IEEE80211_AC_VO; ac <= IEEE80211_AC_BK; ac++) {
-+		if (!mvmvif->queue_params[ac].uapsd)
-+			continue;
+ EXPORT_SYMBOL(ieee80211_get_key_rx_seq);
 +
-+		cmd->flags |= cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
-+		cmd->uapsd_ac_flags |= BIT(ac);
++void ieee80211_set_key_tx_seq(struct ieee80211_key_conf *keyconf,
++			      struct ieee80211_key_seq *seq)
++{
++	struct ieee80211_key *key;
++	u64 pn64;
 +
-+		/* QNDP TID - the highest TID with no admission control */
-+		if (!tid_found && !mvmvif->queue_params[ac].acm) {
-+			tid_found = true;
-+			switch (ac) {
-+			case IEEE80211_AC_VO:
-+				cmd->qndp_tid = 6;
-+				break;
-+			case IEEE80211_AC_VI:
-+				cmd->qndp_tid = 5;
-+				break;
-+			case IEEE80211_AC_BE:
-+				cmd->qndp_tid = 0;
-+				break;
-+			case IEEE80211_AC_BK:
-+				cmd->qndp_tid = 1;
-+				break;
-+			}
-+		}
++	key = container_of(keyconf, struct ieee80211_key, conf);
++
++	switch (key->conf.cipher) {
++	case WLAN_CIPHER_SUITE_TKIP:
++		key->u.tkip.tx.iv32 = seq->tkip.iv32;
++		key->u.tkip.tx.iv16 = seq->tkip.iv16;
++		break;
++	case WLAN_CIPHER_SUITE_CCMP:
++		pn64 = (u64)seq->ccmp.pn[5] |
++		       ((u64)seq->ccmp.pn[4] << 8) |
++		       ((u64)seq->ccmp.pn[3] << 16) |
++		       ((u64)seq->ccmp.pn[2] << 24) |
++		       ((u64)seq->ccmp.pn[1] << 32) |
++		       ((u64)seq->ccmp.pn[0] << 40);
++		atomic64_set(&key->u.ccmp.tx_pn, pn64);
++		break;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++		pn64 = (u64)seq->aes_cmac.pn[5] |
++		       ((u64)seq->aes_cmac.pn[4] << 8) |
++		       ((u64)seq->aes_cmac.pn[3] << 16) |
++		       ((u64)seq->aes_cmac.pn[2] << 24) |
++		       ((u64)seq->aes_cmac.pn[1] << 32) |
++		       ((u64)seq->aes_cmac.pn[0] << 40);
++		atomic64_set(&key->u.aes_cmac.tx_pn, pn64);
++		break;
++	default:
++		WARN_ON(1);
++		break;
++	}
++}
++EXPORT_SYMBOL_GPL(ieee80211_set_key_tx_seq);
++
++void ieee80211_set_key_rx_seq(struct ieee80211_key_conf *keyconf,
++			      int tid, struct ieee80211_key_seq *seq)
++{
++	struct ieee80211_key *key;
++	u8 *pn;
++
++	key = container_of(keyconf, struct ieee80211_key, conf);
++
++	switch (key->conf.cipher) {
++	case WLAN_CIPHER_SUITE_TKIP:
++		if (WARN_ON(tid < 0 || tid >= IEEE80211_NUM_TIDS))
++			return;
++		key->u.tkip.rx[tid].iv32 = seq->tkip.iv32;
++		key->u.tkip.rx[tid].iv16 = seq->tkip.iv16;
++		break;
++	case WLAN_CIPHER_SUITE_CCMP:
++		if (WARN_ON(tid < -1 || tid >= IEEE80211_NUM_TIDS))
++			return;
++		if (tid < 0)
++			pn = key->u.ccmp.rx_pn[IEEE80211_NUM_TIDS];
++		else
++			pn = key->u.ccmp.rx_pn[tid];
++		memcpy(pn, seq->ccmp.pn, IEEE80211_CCMP_PN_LEN);
++		break;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++		if (WARN_ON(tid != 0))
++			return;
++		pn = key->u.aes_cmac.rx_pn;
++		memcpy(pn, seq->aes_cmac.pn, IEEE80211_CMAC_PN_LEN);
++		break;
++	default:
++		WARN_ON(1);
++		break;
++	}
++}
++EXPORT_SYMBOL_GPL(ieee80211_set_key_rx_seq);
++
++void ieee80211_remove_key(struct ieee80211_key_conf *keyconf)
++{
++	struct ieee80211_key *key;
++
++	key = container_of(keyconf, struct ieee80211_key, conf);
++
++	assert_key_lock(key->local);
++
++	/*
++	 * if key was uploaded, we assume the driver will/has remove(d)
++	 * it, so adjust bookkeeping accordingly
++	 */
++	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
++		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++
++		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++		      (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) ||
++		      (key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)))
++			increment_tailroom_need_count(key->sdata);
 +	}
 +
-+	if (cmd->flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK)) {
-+		cmd->rx_data_timeout_uapsd =
-+			cpu_to_le32(IWL_MVM_UAPSD_RX_DATA_TIMEOUT);
-+		cmd->tx_data_timeout_uapsd =
-+			cpu_to_le32(IWL_MVM_UAPSD_TX_DATA_TIMEOUT);
-+		cmd->uapsd_max_sp = IWL_UAPSD_MAX_SP;
-+		cmd->heavy_tx_thld_packets =
-+			IWL_MVM_PS_HEAVY_TX_THLD_PACKETS;
-+		cmd->heavy_rx_thld_packets =
-+			IWL_MVM_PS_HEAVY_RX_THLD_PACKETS;
-+		cmd->heavy_tx_thld_percentage =
-+			IWL_MVM_PS_HEAVY_TX_THLD_PERCENT;
-+		cmd->heavy_rx_thld_percentage =
-+			IWL_MVM_PS_HEAVY_RX_THLD_PERCENT;
-+	}
++	ieee80211_key_free(key, false);
++}
++EXPORT_SYMBOL_GPL(ieee80211_remove_key);
 +
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	if (mvmvif->dbgfs_pm.mask & MVM_DEBUGFS_PM_KEEP_ALIVE)
- 		cmd->keep_alive_seconds =
-@@ -342,8 +400,6 @@ static int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm,
- 			 (cmd.flags &
- 			 cpu_to_le16(POWER_FLAGS_POWER_SAVE_ENA_MSK)) ?
- 			 0 : 1);
--	pos += scnprintf(buf+pos, bufsz-pos, "skip_dtim_periods = %d\n",
--			 cmd.skip_dtim_periods);
- 	pos += scnprintf(buf+pos, bufsz-pos, "power_scheme = %d\n",
- 			 iwlmvm_mod_params.power_scheme);
- 	pos += scnprintf(buf+pos, bufsz-pos, "flags = 0x%x\n",
-@@ -356,14 +412,51 @@ static int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm,
- 				 (cmd.flags &
- 				 cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK)) ?
- 				 1 : 0);
--		pos += scnprintf(buf+pos, bufsz-pos, "rx_data_timeout = %d\n",
--				 le32_to_cpu(cmd.rx_data_timeout));
--		pos += scnprintf(buf+pos, bufsz-pos, "tx_data_timeout = %d\n",
--				 le32_to_cpu(cmd.tx_data_timeout));
-+		pos += scnprintf(buf+pos, bufsz-pos, "skip_dtim_periods = %d\n",
-+				 cmd.skip_dtim_periods);
-+		if (!(cmd.flags &
-+		      cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK))) {
-+			pos += scnprintf(buf+pos, bufsz-pos,
-+					 "rx_data_timeout = %d\n",
-+					 le32_to_cpu(cmd.rx_data_timeout));
-+			pos += scnprintf(buf+pos, bufsz-pos,
-+					 "tx_data_timeout = %d\n",
-+					 le32_to_cpu(cmd.tx_data_timeout));
-+		}
- 		if (cmd.flags & cpu_to_le16(POWER_FLAGS_LPRX_ENA_MSK))
- 			pos += scnprintf(buf+pos, bufsz-pos,
- 					 "lprx_rssi_threshold = %d\n",
- 					 cmd.lprx_rssi_threshold);
-+		if (cmd.flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK)) {
-+			pos +=
-+			scnprintf(buf+pos, bufsz-pos,
-+				  "rx_data_timeout_uapsd = %d\n",
-+				  le32_to_cpu(cmd.rx_data_timeout_uapsd));
-+			pos +=
-+			scnprintf(buf+pos, bufsz-pos,
-+				  "tx_data_timeout_uapsd = %d\n",
-+				  le32_to_cpu(cmd.tx_data_timeout_uapsd));
-+			pos += scnprintf(buf+pos, bufsz-pos, "qndp_tid = %d\n",
-+					 cmd.qndp_tid);
-+			pos += scnprintf(buf+pos, bufsz-pos,
-+					 "uapsd_ac_flags = 0x%x\n",
-+					 cmd.uapsd_ac_flags);
-+			pos += scnprintf(buf+pos, bufsz-pos,
-+					 "uapsd_max_sp = %d\n",
-+					 cmd.uapsd_max_sp);
-+			pos += scnprintf(buf+pos, bufsz-pos,
-+					 "heavy_tx_thld_packets = %d\n",
-+					 cmd.heavy_tx_thld_packets);
-+			pos += scnprintf(buf+pos, bufsz-pos,
-+					 "heavy_rx_thld_packets = %d\n",
-+					 cmd.heavy_rx_thld_packets);
-+			pos += scnprintf(buf+pos, bufsz-pos,
-+					 "heavy_tx_thld_percentage = %d\n",
-+					 cmd.heavy_tx_thld_percentage);
-+			pos += scnprintf(buf+pos, bufsz-pos,
-+					 "heavy_rx_thld_percentage = %d\n",
-+					 cmd.heavy_rx_thld_percentage);
-+		}
- 	}
- 	return pos;
- }
++struct ieee80211_key_conf *
++ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
++			struct ieee80211_key_conf *keyconf)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_key *key;
++	int err;
++
++	if (WARN_ON(!local->wowlan))
++		return ERR_PTR(-EINVAL);
++
++	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
++		return ERR_PTR(-EINVAL);
++
++	key = ieee80211_key_alloc(keyconf->cipher, keyconf->keyidx,
++				  keyconf->keylen, keyconf->key,
++				  0, NULL);
++	if (IS_ERR(key))
++		return ERR_PTR(PTR_ERR(key));
++
++	if (sdata->u.mgd.mfp != IEEE80211_MFP_DISABLED)
++		key->conf.flags |= IEEE80211_KEY_FLAG_RX_MGMT;
++
++	err = ieee80211_key_link(key, sdata, NULL);
++	if (err)
++		return ERR_PTR(err);
++
++	return &key->conf;
++}
++EXPORT_SYMBOL_GPL(ieee80211_gtk_rekey_add);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index d23c5a7..e1b34a1 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1453,8 +1453,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		local->resuming = true;
+ 
+ 	if (local->wowlan) {
+-		local->wowlan = false;
+ 		res = drv_resume(local);
++		local->wowlan = false;
+ 		if (res < 0) {
+ 			local->resuming = false;
+ 			return res;
 -- 
-1.8.4.rc2
+1.8.0
 
