@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:48442 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753615Ab3HMJpm (ORCPT
+Received: from mailout3.samsung.com ([203.254.224.33]:10247 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754486Ab3HLGkF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 05:45:42 -0400
-Received: by mail-ea0-f173.google.com with SMTP id g10so4000620eak.18
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2013 02:45:41 -0700 (PDT)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH] ath10k: fix WEP in AP and IBSS mode
-Date: Tue, 13 Aug 2013 11:45:22 +0200
-Message-Id: <1376387122-18075-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20130813_114546_336913_82DB0D2E)
+	Mon, 12 Aug 2013 02:40:05 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MRE00LWONSVNDG0@mailout3.samsung.com> for
+ linux-wireless@vger.kernel.org; Mon, 12 Aug 2013 15:40:04 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lauro Ramos Venancio' <lauro.venancio@openbossa.org>
+Cc: 'Aloisio Almeida Jr' <aloisio.almeida@openbossa.org>,
+	'Samuel Ortiz' <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	'Waldemar Rymarkiewicz' <waldemar.rymarkiewicz@tieto.com>,
+	Thierry Escande <thierry.escande@linux.intel.com>,
+	'Olivier Guiter' <olivier.guiter@linux.intel.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH 2/2] NFC: pn533: Staticize local symbols
+Date: Mon, 12 Aug 2013 15:40:02 +0900
+Message-id: <000201ce9726$c67c7640$537562c0$@samsung.com> (sfid-20130812_084011_322627_822172B9)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WEP encoding was not working properly for AP and IBSS mode.
-TX frames were encrypted with default WEP tx key index set
-always to zero, what sometimes was wrong when different
-key index should be used. This patch allows to update
-WEP key index also for AP and IBSS mode.
-Problem detected during automated WEP tests.
+These local symbols are used only in this file.
+Fix the following sparse warnings:
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+drivers/nfc/pn533.c:2576:5: warning: symbol 'pn533_dev_up' was not declared. Should it be static?
+drivers/nfc/pn533.c:2581:5: warning: symbol 'pn533_dev_down' was not declared. Should it be static?
+
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/nfc/pn533.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index cf2ba4d..bcefeb6 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1421,10 +1421,6 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
- 	struct ieee80211_key_conf *key = info->control.hw_key;
- 	int ret;
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index daf92ac..1746225 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -2573,12 +2573,12 @@ static int pn533_rf_field(struct nfc_dev *nfc_dev, u8 rf)
+ 	return rc;
+ }
  
--	/* TODO AP mode should be implemented */
--	if (vif->type != NL80211_IFTYPE_STATION)
--		return;
--
- 	if (!ieee80211_has_protected(hdr->frame_control))
- 		return;
+-int pn533_dev_up(struct nfc_dev *nfc_dev)
++static int pn533_dev_up(struct nfc_dev *nfc_dev)
+ {
+ 	return pn533_rf_field(nfc_dev, 1);
+ }
  
+-int pn533_dev_down(struct nfc_dev *nfc_dev)
++static int pn533_dev_down(struct nfc_dev *nfc_dev)
+ {
+ 	return pn533_rf_field(nfc_dev, 0);
+ }
 -- 
-1.8.1.2
+1.7.10.4
+
 
