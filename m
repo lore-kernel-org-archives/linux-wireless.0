@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:49770 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462Ab3HENbd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Aug 2013 09:31:33 -0400
-Received: by mail-bk0-f42.google.com with SMTP id jk14so988402bkc.29
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 06:31:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375430329-23352-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1375430329-23352-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Mon, 5 Aug 2013 15:31:31 +0200
-Message-ID: <CA+BoTQkD5grL_5dJDgkwo40ET1zax56oN=ZGFxnyGqboQShbgQ@mail.gmail.com> (sfid-20130805_153138_270771_2B446A97)
-Subject: Re: [PATCH v2] ath10k: add SoC power save option to PCI features map
+Received: from ebb05.tieto.com ([131.207.168.36]:65255 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752282Ab3HMF7q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 01:59:46 -0400
 From: Michal Kazior <michal.kazior@tieto.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 4/4] ath10k: plug possible memory leak in WMI
+Date: Tue, 13 Aug 2013 07:59:38 +0200
+Message-ID: <1376373578-2180-5-git-send-email-michal.kazior@tieto.com> (sfid-20130813_075950_561025_2547E8EB)
+In-Reply-To: <1376373578-2180-1-git-send-email-michal.kazior@tieto.com>
+References: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
+ <1376373578-2180-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 August 2013 09:58, Bartosz Markowski <bartosz.markowski@tieto.com> wrote:
-> Unify the PCI options location.
->
-> By default the SoC PS option is disabled to boost the
-> performance and due to poor stability on early HW revisions.
-> In future we can remove the module parameter and turn on/off
-> the PS for given hardware.
->
-> This change also makes the pci module parameter for SoC PS static.
->
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+There was a possible memory leak when WMI command
+queue reached it's limit. Command buffers were not
+freed.
 
-Hmm.. I'm worried about pci wake/sleep locking:
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |    1 +
+ 1 file changed, 1 insertion(+)
 
- (a) pci_wake() (awake count =1)
- (a) do something
- Now, if pci_sleep() and pci_wake() happen simultaneously/are
-preempted splitting primitive operations to:
- (a) pci_sleep(): decrease awake count (=0)
- (b) pci_wake(): increase awake count (=1), iowrite, wait for awake, return
- (a) pci_sleep(): iowrite(). return
- The flow in (b) now thinks the device is awake, but it's not
-guaranteed to be anymore because it has been put to sleep by (a).
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 55f90c7..775fedf 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -110,6 +110,7 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
+ 	if (atomic_add_return(1, &ar->wmi.pending_tx_count) >
+ 	    WMI_MAX_PENDING_TX_COUNT) {
+ 		/* avoid using up memory when FW hangs */
++		dev_kfree_skb(skb);
+ 		atomic_dec(&ar->wmi.pending_tx_count);
+ 		return -EBUSY;
+ 	}
+-- 
+1.7.9.5
 
-
-Pozdrawiam / Best regards,
-Michał Kazior.
