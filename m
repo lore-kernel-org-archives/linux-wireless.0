@@ -1,71 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26512 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751743Ab3HUQ06 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 12:26:58 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: Fix mutex unlock balance
-Date: Wed, 21 Aug 2013 21:56:44 +0530
-Message-ID: <1377102404-14742-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130821_182701_770739_975B5106)
+Received: from ebb06.tieto.com ([131.207.168.38]:46116 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752434Ab3HMFzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 01:55:07 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 3/4] ath10k: clean up PCI completion states
+Date: Tue, 13 Aug 2013 07:54:56 +0200
+Message-ID: <1376373297-32369-4-git-send-email-michal.kazior@tieto.com> (sfid-20130813_075514_958195_4E80089D)
+In-Reply-To: <1376373297-32369-1-git-send-email-michal.kazior@tieto.com>
+References: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
+ <1376373297-32369-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Improve code readability by using enum and a
+switch-case.
 
-ath10k_debug_read_target_stats is properly
-protected by data_lock (spinlock). Remove
-the unwanted mutex_unlock(&ar->conf_mutex)
-
-[ BUG: bad unlock balance detected! ]
--------------------------------------
-kworker/u4:0/12459 is trying to release lock
-(&ar->conf_mutex) at:
-[<c16a170d>] mutex_unlock+0xd/0x10
-but there are no more locks to release!
-
- Call Trace:
-  [<c16a170d>] ? mutex_unlock+0xd/0x10
-  [<c10b697d>] __lock_release+0x4d/0xe0
-  [<f88ca0fc>] ? ath10k_debug_read_target_stats+0xac/0x290
-
-  [<c16a170d>] ? mutex_unlock+0xd/0x10
-  [<c10b6a5b>] lock_release+0x4b/0x150
-  [<c16a1580>] __mutex_unlock_slowpath+0x70/0x150
-  [<f88ca0fc>] ? ath10k_debug_read_target_stats+0xac/0x290
-
-  [<c10b456b>] ? trace_hardirqs_on+0xb/0x10
-  [<c16a170d>] mutex_unlock+0xd/0x10
-  [<f88ca107>] ath10k_debug_read_target_stats+0xb7/0x290
-
-  [<f88d337a>] ath10k_wmi_event_process+0x3fa/0x6e0
-
-  [<c10b456b>] ? trace_hardirqs_on+0xb/0x10
-  [<f88d36e1>] ath10k_wmi_event_work+0x21/0x40
-               [ath10k_core]
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.c |    1 -
- 1 file changed, 1 deletion(-)
+v2;
+ * fix line over 80 chars
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 3d65594..fcb40cc 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -260,7 +260,6 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ drivers/net/wireless/ath/ath10k/pci.c |   22 ++++++++++++++++------
+ drivers/net/wireless/ath/ath10k/pci.h |   13 +++++++------
+ 2 files changed, 23 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 98edb31..630ba59 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -540,7 +540,7 @@ static void ath10k_pci_ce_send_done(struct ce_state *ce_state,
+ 		if (!compl)
+ 			break;
+ 
+-		compl->send_or_recv = HIF_CE_COMPLETE_SEND;
++		compl->state = ATH10K_PCI_COMPL_SEND;
+ 		compl->ce_state = ce_state;
+ 		compl->pipe_info = pipe_info;
+ 		compl->transfer_context = transfer_context;
+@@ -590,7 +590,7 @@ static void ath10k_pci_ce_recv_data(struct ce_state *ce_state,
+ 		if (!compl)
+ 			break;
+ 
+-		compl->send_or_recv = HIF_CE_COMPLETE_RECV;
++		compl->state = ATH10K_PCI_COMPL_RECV;
+ 		compl->ce_state = ce_state;
+ 		compl->pipe_info = pipe_info;
+ 		compl->transfer_context = transfer_context;
+@@ -812,7 +812,7 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
+ 				return -ENOMEM;
+ 			}
+ 
+-			compl->send_or_recv = HIF_CE_COMPLETE_FREE;
++			compl->state = ATH10K_PCI_COMPL_FREE;
+ 			list_add_tail(&compl->list, &pipe_info->compl_free);
+ 		}
  	}
+@@ -911,12 +911,14 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
+ 		list_del(&compl->list);
+ 		spin_unlock_bh(&ar_pci->compl_lock);
  
- 	spin_unlock_bh(&ar->data_lock);
--	mutex_unlock(&ar->conf_mutex);
- 	complete(&ar->debug.event_stats_compl);
- }
+-		if (compl->send_or_recv == HIF_CE_COMPLETE_SEND) {
++		switch (compl->state) {
++		case ATH10K_PCI_COMPL_SEND:
+ 			cb->tx_completion(ar,
+ 					  compl->transfer_context,
+ 					  compl->transfer_id);
+ 			send_done = 1;
+-		} else {
++			break;
++		case ATH10K_PCI_COMPL_RECV:
+ 			ret = ath10k_pci_post_rx_pipe(compl->pipe_info, 1);
+ 			if (ret) {
+ 				ath10k_warn("Unable to post recv buffer for pipe: %d\n",
+@@ -943,9 +945,17 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
+ 					    nbytes,
+ 					    skb->len + skb_tailroom(skb));
+ 			}
++			break;
++		case ATH10K_PCI_COMPL_FREE:
++			ath10k_warn("free completion cannot be processed\n");
++			break;
++		default:
++			ath10k_warn("invalid completion state (%d)\n",
++				    compl->state);
++			break;
+ 		}
  
+-		compl->send_or_recv = HIF_CE_COMPLETE_FREE;
++		compl->state = ATH10K_PCI_COMPL_FREE;
+ 
+ 		/*
+ 		 * Add completion back to the pipe's free list.
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 871bb33..3093733 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -43,9 +43,15 @@ struct bmi_xfer {
+ 	u32 resp_len;
+ };
+ 
++enum ath10k_pci_compl_state {
++	ATH10K_PCI_COMPL_FREE = 0,
++	ATH10K_PCI_COMPL_SEND,
++	ATH10K_PCI_COMPL_RECV,
++};
++
+ struct ath10k_pci_compl {
+ 	struct list_head list;
+-	int send_or_recv;
++	enum ath10k_pci_compl_state state;
+ 	struct ce_state *ce_state;
+ 	struct hif_ce_pipe_info *pipe_info;
+ 	void *transfer_context;
+@@ -54,11 +60,6 @@ struct ath10k_pci_compl {
+ 	unsigned int flags;
+ };
+ 
+-/* compl_state.send_or_recv */
+-#define HIF_CE_COMPLETE_FREE 0
+-#define HIF_CE_COMPLETE_SEND 1
+-#define HIF_CE_COMPLETE_RECV 2
+-
+ /*
+  * PCI-specific Target state
+  *
 -- 
 1.7.9.5
 
