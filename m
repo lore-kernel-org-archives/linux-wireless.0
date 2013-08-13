@@ -1,121 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56795 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753313Ab3H0QHZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 12:07:25 -0400
-From: greearb@candelatech.com
+Received: from nbd.name ([46.4.11.11]:41178 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757079Ab3HMKdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 06:33:38 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] iw:  Print Interworking IE details in scan results.
-Date: Tue, 27 Aug 2013 09:07:11 -0700
-Message-Id: <1377619631-14699-1-git-send-email-greearb@candelatech.com> (sfid-20130827_180728_764261_AD0BAEF5)
+Cc: linville@tuxdriver.com
+Subject: [PATCH 1/5] ath9k: remove ath9k_sta_remove_debugfs
+Date: Tue, 13 Aug 2013 12:33:26 +0200
+Message-Id: <1376390010-81819-1-git-send-email-nbd@openwrt.org> (sfid-20130813_123345_354968_5760E249)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+mac80211 uses debugfs_remove_recursive, so there's no need for the
+driver to do an explicit cleanup of its sta debugfs entry.
 
-Output looks like:
-
-	802.11u Interworking:
-		Network Options: 0xf1
-			Network Type: 1 (Private with Guest)
-			Internet
-			ASRA
-			ESR
-			UESA
-		Venu Group: 2 (Business)
-		Venu Type: 1
-		HESSID: 00:00:00:00:00:01
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-:100644 100644 af21cbc... 1894769... M	scan.c
- scan.c |   64 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 64 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  4 ----
+ drivers/net/wireless/ath/ath9k/debug.c | 12 +-----------
+ drivers/net/wireless/ath/ath9k/debug.h |  4 ----
+ drivers/net/wireless/ath/ath9k/main.c  |  1 -
+ 4 files changed, 1 insertion(+), 20 deletions(-)
 
-diff --git a/scan.c b/scan.c
-index af21cbc..1894769 100644
---- a/scan.c
-+++ b/scan.c
-@@ -614,6 +614,69 @@ static void print_ht_capa(const uint8_t type, uint8_t len, const uint8_t *data)
- 	print_ht_mcs(data + 3);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 7b1d036..df1c495 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -262,10 +262,6 @@ struct ath_node {
  
-+static const char* ntype_11u(uint8_t t) {
-+	switch (t) {
-+	case 0: return "Private";
-+	case 1: return "Private with Guest";
-+	case 2: return "Chargeable Public";
-+	case 3: return "Free Public";
-+	case 4: return "Personal Device";
-+	case 5: return "Emergency Services Only";
-+	case 14: return "Test or Experimental";
-+	case 15: return "Wildcard";
-+	default: return "Reserved";
-+	}
-+}
-+
-+static const char* vgroup_11u(uint8_t t) {
-+	switch (t) {
-+	case 0: return "Unspecified";
-+	case 1: return "Assembly";
-+	case 2: return "Business";
-+	case 3: return "Educational";
-+	case 4: return "Factory and Industrial";
-+	case 5: return "Institutional";
-+	case 6: return "Mercantile";
-+	case 7: return "Residential";
-+	case 8: return "Storage";
-+	case 9: return "Utility and Miscellaneous";
-+	case 10: return "Vehicular";
-+	case 11: return "Outdoor";
-+	default: return "Reserved";
-+	}
-+}
-+
-+static void print_interworking(const uint8_t type, uint8_t len, const uint8_t *data)
-+{
-+	/* See Section 7.3.2.92 in the 802.11u spec. */
-+	printf("\n");
-+	if (len >= 1) {
-+		uint8_t ano = data[0];
-+		printf("\t\tNetwork Options: 0x%hx\n", (unsigned short)(ano));
-+		printf("\t\t\tNetwork Type: %i (%s)\n",
-+		       (int)(ano & 0xf), ntype_11u(ano & 0xf));
-+		if (ano & (1<<4))
-+			printf("\t\t\tInternet\n");
-+		if (ano & (1<<5))
-+			printf("\t\t\tASRA\n");
-+		if (ano & (1<<6))
-+			printf("\t\t\tESR\n");
-+		if (ano & (1<<7))
-+			printf("\t\t\tUESA\n");
-+	}
-+	if ((len == 3) || (len == 9)) {
-+		printf("\t\tVenue Group: %i (%s)\n",
-+		       (int)(data[1]), vgroup_11u(data[1]));
-+		printf("\t\tVenue Type: %i\n", (int)(data[2]));
-+	}
-+	if (len == 9)
-+		printf("\t\tHESSID: %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\n",
-+		       data[3], data[4], data[5], data[6], data[7], data[8]);
-+	else if (len == 7)
-+		printf("\t\tHESSID: %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\n",
-+		       data[1], data[2], data[3], data[4], data[5], data[6]);
-+}
-+
- static const char *ht_secondary_offset[4] = {
- 	"no secondary",
- 	"above",
-@@ -891,6 +954,7 @@ static const struct ie_print ieprinters[] = {
- 	[113] = { "MESH Configuration", print_mesh_conf, 7, 7, BIT(PRINT_SCAN), },
- 	[114] = { "MESH ID", print_ssid, 0, 32, BIT(PRINT_SCAN) | BIT(PRINT_LINK), },
- 	[127] = { "Extended capabilities", print_capabilities, 0, 255, BIT(PRINT_SCAN), },
-+	[107] = { "802.11u Interworking", print_interworking, 0, 255, BIT(PRINT_SCAN), },
+ 	bool sleeping;
+ 	bool no_ps_filter;
+-
+-#if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_ATH9K_DEBUGFS)
+-	struct dentry *node_stat;
+-#endif
  };
  
- static void print_wifi_wpa(const uint8_t type, uint8_t len, const uint8_t *data)
+ struct ath_tx_control {
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index c10cec5..e5c8333 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1725,17 +1725,7 @@ void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
+ 			   struct dentry *dir)
+ {
+ 	struct ath_node *an = (struct ath_node *)sta->drv_priv;
+-	an->node_stat = debugfs_create_file("node_stat", S_IRUGO,
+-					    dir, an, &fops_node_stat);
+-}
+-
+-void ath9k_sta_remove_debugfs(struct ieee80211_hw *hw,
+-			      struct ieee80211_vif *vif,
+-			      struct ieee80211_sta *sta,
+-			      struct dentry *dir)
+-{
+-	struct ath_node *an = (struct ath_node *)sta->drv_priv;
+-	debugfs_remove(an->node_stat);
++	debugfs_create_file("node_stat", S_IRUGO, dir, an, &fops_node_stat);
+ }
+ 
+ /* Ethtool support for get-stats */
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 01c5c6a..6e1556f 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -292,10 +292,6 @@ void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
+ 			   struct ieee80211_vif *vif,
+ 			   struct ieee80211_sta *sta,
+ 			   struct dentry *dir);
+-void ath9k_sta_remove_debugfs(struct ieee80211_hw *hw,
+-			      struct ieee80211_vif *vif,
+-			      struct ieee80211_sta *sta,
+-			      struct dentry *dir);
+ void ath_debug_send_fft_sample(struct ath_softc *sc,
+ 			       struct fft_sample_tlv *fft_sample);
+ void ath9k_debug_stat_ant(struct ath_softc *sc,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 911744f..0bee105 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2364,7 +2364,6 @@ struct ieee80211_ops ath9k_ops = {
+ 
+ #if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_ATH9K_DEBUGFS)
+ 	.sta_add_debugfs    = ath9k_sta_add_debugfs,
+-	.sta_remove_debugfs = ath9k_sta_remove_debugfs,
+ #endif
+ 	.sw_scan_start	    = ath9k_sw_scan_start,
+ 	.sw_scan_complete   = ath9k_sw_scan_complete,
 -- 
-1.7.3.4
+1.8.0.2
 
