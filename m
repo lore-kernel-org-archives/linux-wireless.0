@@ -1,159 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:51334 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933682Ab3HGXbI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 19:31:08 -0400
-Date: Wed, 07 Aug 2013 16:36:21 -0700 (PDT)
-Message-Id: <20130807.163621.84433966934449459.davem@davemloft.net> (sfid-20130808_013134_561480_76F73CE8)
-To: phil@nwl.cc
-Cc: eric.dumazet@gmail.com, johannes@sipsolutions.net,
-	sedat.dilek@gmail.com, sfr@canb.auug.org.au,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, hannes@stressinduktion.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: linux-next: Tree for Aug 7
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130807.162748.779496444843938176.davem@davemloft.net>
-References: <20130807.104713.1615549684239408926.davem@davemloft.net>
-	<20130807183758.GB16263@orbit.nwl.cc>
-	<20130807.162748.779496444843938176.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mms3.broadcom.com ([216.31.210.19]:2884 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758921Ab3HMUEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 16:04:32 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	"David Herrmann" <dh.herrmann@gmail.com>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>
+Subject: [RFT V2 05/13] brcmsmac: add debug info message providing phy
+ and radio info
+Date: Tue, 13 Aug 2013 22:03:32 +0200
+Message-ID: <1376424220-10765-6-git-send-email-arend@broadcom.com> (sfid-20130813_220439_778402_8F0FF331)
+In-Reply-To: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Wed, 07 Aug 2013 16:27:48 -0700 (PDT)
+For debug purposes it is good to have the phy and radio information
+available in the log. Only logged when driver is build when BRCMDBG
+or BRCM_TRACING kconfig are set.
 
-> Look, I'm going to fix this myself, because I'm pretty tired of
-> waiting for the obvious fix.
+Cc: David Herrmann <dh.herrmann@gmail.com>
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>
+Cc: David Costa <david@zarel.net>Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Someone please test this:
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 7ca10bf..c3c6123 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -4652,7 +4652,9 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
+ 		wlc->band->phyrev = wlc_hw->band->phyrev;
+ 		wlc->band->radioid = wlc_hw->band->radioid;
+ 		wlc->band->radiorev = wlc_hw->band->radiorev;
+-
++		brcms_dbg_info(core, "wl%d: phy %u/%u radio %x/%u\n", unit,
++			       wlc->band->phytype, wlc->band->phyrev,
++			       wlc->band->radioid, wlc->band->radiorev);
+ 		/* default contention windows size limits */
+ 		wlc_hw->band->CWmin = APHY_CWMIN;
+ 		wlc_hw->band->CWmax = PHY_CWMAX;
+-- 
+1.7.10.4
 
-diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
-index c623861..afc02a6 100644
---- a/include/linux/etherdevice.h
-+++ b/include/linux/etherdevice.h
-@@ -29,6 +29,7 @@
- 
- #ifdef __KERNEL__
- extern __be16		eth_type_trans(struct sk_buff *skb, struct net_device *dev);
-+extern __be16		__eth_type_trans(struct sk_buff *skb, struct net_device *dev);
- extern const struct header_ops eth_header_ops;
- 
- extern int eth_header(struct sk_buff *skb, struct net_device *dev,
-diff --git a/net/ethernet/eth.c b/net/ethernet/eth.c
-index be1f64d..35dc1be 100644
---- a/net/ethernet/eth.c
-+++ b/net/ethernet/eth.c
-@@ -146,6 +146,45 @@ int eth_rebuild_header(struct sk_buff *skb)
- EXPORT_SYMBOL(eth_rebuild_header);
- 
- /**
-+ * __eth_type_trans - only determine the packet's protocol ID.
-+ * @skb: packet
-+ * @dev: device
-+ */
-+__be16 __eth_type_trans(struct sk_buff *skb, struct net_device *dev)
-+{
-+	struct ethhdr *eth = (struct ethhdr *) skb->data;
-+
-+	/*
-+	 * Some variants of DSA tagging don't have an ethertype field
-+	 * at all, so we check here whether one of those tagging
-+	 * variants has been configured on the receiving interface,
-+	 * and if so, set skb->protocol without looking at the packet.
-+	 */
-+	if (netdev_uses_dsa_tags(dev))
-+		return htons(ETH_P_DSA);
-+	if (netdev_uses_trailer_tags(dev))
-+		return htons(ETH_P_TRAILER);
-+
-+	if (ntohs(eth->h_proto) >= ETH_P_802_3_MIN)
-+		return eth->h_proto;
-+
-+	/*
-+	 *      This is a magic hack to spot IPX packets. Older Novell breaks
-+	 *      the protocol design and runs IPX over 802.3 without an 802.2 LLC
-+	 *      layer. We look for FFFF which isn't a used 802.2 SSAP/DSAP. This
-+	 *      won't work for fault tolerant netware but does for the rest.
-+	 */
-+	if (skb->len >= 2 && *(unsigned short *)(skb->data) == 0xFFFF)
-+		return htons(ETH_P_802_3);
-+
-+	/*
-+	 *      Real 802.2 LLC
-+	 */
-+	return htons(ETH_P_802_2);
-+}
-+EXPORT_SYMBOL(__eth_type_trans);
-+
-+/**
-  * eth_type_trans - determine the packet's protocol ID.
-  * @skb: received socket data
-  * @dev: receiving network device
-@@ -184,33 +223,7 @@ __be16 eth_type_trans(struct sk_buff *skb, struct net_device *dev)
- 			skb->pkt_type = PACKET_OTHERHOST;
- 	}
- 
--	/*
--	 * Some variants of DSA tagging don't have an ethertype field
--	 * at all, so we check here whether one of those tagging
--	 * variants has been configured on the receiving interface,
--	 * and if so, set skb->protocol without looking at the packet.
--	 */
--	if (netdev_uses_dsa_tags(dev))
--		return htons(ETH_P_DSA);
--	if (netdev_uses_trailer_tags(dev))
--		return htons(ETH_P_TRAILER);
--
--	if (ntohs(eth->h_proto) >= ETH_P_802_3_MIN)
--		return eth->h_proto;
--
--	/*
--	 *      This is a magic hack to spot IPX packets. Older Novell breaks
--	 *      the protocol design and runs IPX over 802.3 without an 802.2 LLC
--	 *      layer. We look for FFFF which isn't a used 802.2 SSAP/DSAP. This
--	 *      won't work for fault tolerant netware but does for the rest.
--	 */
--	if (skb->len >= 2 && *(unsigned short *)(skb->data) == 0xFFFF)
--		return htons(ETH_P_802_3);
--
--	/*
--	 *      Real 802.2 LLC
--	 */
--	return htons(ETH_P_802_2);
-+	return __eth_type_trans(skb, dev);
- }
- EXPORT_SYMBOL(eth_type_trans);
- 
-diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
-index 0c0f6c9..ec8e1c3 100644
---- a/net/packet/af_packet.c
-+++ b/net/packet/af_packet.c
-@@ -2003,7 +2003,7 @@ static int tpacket_fill_skb(struct packet_sock *po, struct sk_buff *skb,
- 			return err;
- 
- 		if (dev->type == ARPHRD_ETHER)
--			skb->protocol = eth_type_trans(skb, dev);
-+			skb->protocol = __eth_type_trans(skb, dev);
- 
- 		data += dev->hard_header_len;
- 		to_write -= dev->hard_header_len;
-@@ -2332,13 +2332,13 @@ static int packet_snd(struct socket *sock,
- 	sock_tx_timestamp(sk, &skb_shinfo(skb)->tx_flags);
- 
- 	if (dev->type == ARPHRD_ETHER) {
--		skb->protocol = eth_type_trans(skb, dev);
-+		skb->protocol = __eth_type_trans(skb, dev);
- 		if (skb->protocol == htons(ETH_P_8021Q))
- 			reserve += VLAN_HLEN;
- 	} else {
- 		skb->protocol = proto;
--		skb->dev = dev;
- 	}
-+	skb->dev = dev;
- 
- 	if (!gso_type && (len > dev->mtu + reserve + extra_len)) {
- 		err = -EMSGSIZE;
+
