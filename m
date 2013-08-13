@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51657 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750780Ab3HSPus (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 11:50:48 -0400
-Message-ID: <1376927430.14734.15.camel@jlt4.sipsolutions.net> (sfid-20130819_175051_990561_2DFFDBDB)
-Subject: Re: Wireless disassociations..
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Miller <davem@davemloft.net>,
-	John Linville <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Aug 2013 17:50:30 +0200
-In-Reply-To: <CA+55aFwSF9e5hHMQgmbmoyPm0Z-YJK43ycgnB8ZkXtsL6xSaTA@mail.gmail.com> (sfid-20130819_174540_576480_952E41DA)
-References: <CA+55aFwSF9e5hHMQgmbmoyPm0Z-YJK43ycgnB8ZkXtsL6xSaTA@mail.gmail.com>
-	 (sfid-20130819_174540_576480_952E41DA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2885 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758876Ab3HMUEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 16:04:32 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	"David Herrmann" <dh.herrmann@gmail.com>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	"David Costa" <david@zarel.net>
+Subject: [RFT V2 09/13] brcmsmac: avoid calling set_txpwr_by_index()
+ twice
+Date: Tue, 13 Aug 2013 22:03:36 +0200
+Message-ID: <1376424220-10765-10-git-send-email-arend@broadcom.com> (sfid-20130813_220452_118907_29C691B0)
+In-Reply-To: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-08-19 at 08:45 -0700, Linus Torvalds wrote:
-> Is anybody following this bugzilla?
-> 
->    https://bugzilla.kernel.org/show_bug.cgi?id=60690
-> 
-> it has a bisection in it, and a patch?
+For lcnphy revision 1 or when hardware supports i/q calibration the
+function wlc_lcnphy_set_txpwr_by_index() was called twice.
 
-It just came back to me and I commented on it - I think/hope that
-commits
-ddfe49b42d8ad4bfdf92d63d4a74f162660d878d (mac80211: continue using disabled channels while connected)
-5cdaed1e878d723d56d04ae0be1738124acf9f46 (mac80211: ignore HT primary channel while connected)
+Cc: David Herrmann <dh.herrmann@gmail.com>
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>
+Cc: David Costa <david@zarel.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-will have fixed this case as well as
-https://bugzilla.redhat.com/show_bug.cgi?id=981445
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+index 96be1ba..e02729d 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -3897,7 +3897,6 @@ static void wlc_lcnphy_txpwrtbl_iqlo_cal(struct brcms_phy *pi)
+ 	target_gains.pad_gain = 21;
+ 	target_gains.dac_gain = 0;
+ 	wlc_lcnphy_set_tx_gain(pi, &target_gains);
+-	wlc_lcnphy_set_tx_pwr_by_index(pi, 16);
+ 
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 1) || pi_lcn->lcnphy_hw_iqcal_en) {
+ 
+@@ -3908,6 +3907,7 @@ static void wlc_lcnphy_txpwrtbl_iqlo_cal(struct brcms_phy *pi)
+ 					lcnphy_recal ? LCNPHY_CAL_RECAL :
+ 					LCNPHY_CAL_FULL), false);
+ 	} else {
++		wlc_lcnphy_set_tx_pwr_by_index(pi, 16);
+ 		wlc_lcnphy_tx_iqlo_soft_cal_full(pi);
+ 	}
+ 
+-- 
+1.7.10.4
 
-> The patch is a bit odd, but quite frankly, the current values for
-> IEEE80211_HT_PARAM_CHA_SEC_xxx are (a) odd and (b) used very oddly
-> too. Is it possible that that 0x03 really should be 0x02?
-
-The patch basically removes the code, the value really should be 0x3 as
-defined by the 802.11 spec table 8-130:
-
-        Set to 1 (SCA) if the secondary channel is secondary channel
-        relative to above the primary channel the primary channel.
-        
-        Set to 3 (SCB) if the secondary channel is below the primary
-        channel
-        
-        Set to 0 (SCN) if no secondary channel is present
-        
-        The value 2 is reserved
-
-(it's a two-bit field)
-
-johannes
 
