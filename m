@@ -1,30 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39768 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753167Ab3H3OVz (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:33438 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755784Ab3HMKSC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 10:21:55 -0400
-Message-ID: <1377872511.16256.16.camel@jlt4.sipsolutions.net> (sfid-20130830_162158_019973_77E5B93D)
-Subject: Re: [PATCHv4 0/6] add IBSS channel switch announcement support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 30 Aug 2013 16:21:51 +0200
-In-Reply-To: <1377690093-27024-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1377690093-27024-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 13 Aug 2013 06:18:02 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21002.1787.16861.319684@gargle.gargle.HOWL> (sfid-20130813_121806_739507_5A6FD60A)
+Date: Tue, 13 Aug 2013 15:44:19 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 01/15] ath9k: Add MAX_AMSDU to supported HT capabilities
+In-Reply-To: <5209FFED.1040901@openwrt.org>
+References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+	<1376300502-2741-2-git-send-email-sujith@msujith.org>
+	<5209FFED.1040901@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-08-28 at 13:41 +0200, Simon Wunderlich wrote:
-> This is the third iteration of the channel switch support for IBSS mode patchset
-> (thanks Johannes for comments). CSA for IBSS will be required for IBSS-DFS support
-> later. The patchset builds on top of the previously submitted AP DFS patchset.
+Felix Fietkau wrote:
+> I think processing of fragmented rx in ath9k needs to change before we
+> can enable this. At the moment the driver only supports assembling a
+> frame from two fragments, which isn't enough to receive large A-MSDU
+> packets.
 
-Applied.
+You are right, I'll drop this patch.
 
-johannes
-
+Sujith
