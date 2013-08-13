@@ -1,92 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from claranet-outbound-smtp06.uk.clara.net ([195.8.89.39]:42781 "EHLO
-	claranet-outbound-smtp06.uk.clara.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753089Ab3HOJjU (ORCPT
+Received: from hotel311.server4you.de ([85.25.146.15]:34257 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757445Ab3HMNzQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 05:39:20 -0400
-From: Simon Farnsworth <simon.farnsworth@onelan.co.uk>
-To: Christian Gagneraud <chgans@gna.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Switching band of a dual-band WiFi device
-Date: Thu, 15 Aug 2013 10:03:14 +0100
-Message-ID: <1483073.ZnhDhG6Z68@f17simon> (sfid-20130815_113934_139739_3F3EA851)
-In-Reply-To: <520C631F.6010806@gna.org>
-References: <520C631F.6010806@gna.org>
+	Tue, 13 Aug 2013 09:55:16 -0400
+Message-ID: <520A3AC1.2030709@monom.org> (sfid-20130813_155535_882069_B8523C3F)
+Date: Tue, 13 Aug 2013 15:55:13 +0200
+From: Daniel Wagner <wagi@monom.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart5628300.acKoguF54f"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+To: Arend van Spriel <arend@broadcom.com>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: brcsmac kernel panic
+References: <5207BA00.3030709@monom.org> <5208BB2D.2000705@broadcom.com> <52094156.7010905@monom.org> <520A3784.2060108@broadcom.com>
+In-Reply-To: <520A3784.2060108@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 08/13/2013 03:41 PM, Arend van Spriel wrote:
+> On 08/12/2013 10:11 PM, Daniel Wagner wrote:
+>> On 08/12/2013 12:38 PM, Arend van Spriel wrote:
+>>> On 08/11/2013 06:21 PM, Daniel Wagner wrote:
+>>>> I just updated my laptop (MacBook Air 2012) from 3.11-rc3+ to 3.11-rc4+
+>>>> and since then brcsmac crashes short after enabling it.
+>>>> Unfortunately, I
+>>>> did also change some config flags in the area of cpufreq (enabling
+>>>> p-state driver) so the configuration is not exactly the same. Before I
+>>>> try to figure out what I have changed, I am posting the picture of the
+>>>> crash. Maybe it is something obvious.
+>>>>
+>>>> v3.11-rc4-197-gd92581f
+>>>> http://www.monom.org/misc/brcmsmac/v3.11-rc4.config
+>>>> http://www.monom.org/misc/brcmsmac/IMAG0064.jpg
+>>>
+>>> Thanks, Daniel
+>>>
+>>> I was looking at this issue two weeks ago and just got back from my
+>>> vacation. Can you apply the patch and send me a kernel log?
+>>
+>> Sure, the patch does the trick, the panic is gone.
+>
+> Unfortunately, it results in a lot of error print and phy tx errors that
+> has been reported by others. I think the two are related, but I have not
+> root caused it yet. Your laptop may be usable now, but wireless
+> performance is probably bad.
+>
+> Too bad I can not reproduce the issue over here. Are you willing to test
+> some patches when I got a better grasp on the issue?
 
---nextPart5628300.acKoguF54f
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Sure, let there be patches. :)
 
-On Thursday 15 August 2013 17:11:59 Christian Gagneraud wrote:
-> Hi there,
-> 
-> I am using a TP-Link TL-WDN3200 on a ubuntu 13.04 (kernel 
-> 3.8.0-27-generic), and I have install relevant modules with 
-> backports-3.11-rc3-1.
-> 
-> I would like to switch my WiFi stick to 5GHz, I tried iwconfig wlan0 
-> freq 5G, but I get ENOTSUPP.
-> Is the freq settings suppose to handle this 2.4 vs 5GHz band or is it 
-> only for selecting channel frequency within a given band?
-> 
-> Does linux-wireless provides a way for selecting 2.4 or 5GHz band?
-
-Linux should automatically select the right frequency band, depending on
-the frequencies in use by the device you're trying to communicate with.
-Connect to an AP in the 5GHz band, and Linux should just use 5GHz
-automatically.
-> 
-> "iw phy phy11 info" tells me that in band 2, all the frequencies are 
-> disabled except:
->                          * 5745 MHz [149] (30.0 dBm)
->                          * 5755 MHz [151] (30.0 dBm)
->                          * 5765 MHz [153] (30.0 dBm)
->                          * 5775 MHz [155] (30.0 dBm)
->                          * 5785 MHz [157] (30.0 dBm)
->                          * 5795 MHz [159] (30.0 dBm)
->                          * 5805 MHz [161] (30.0 dBm)
->                          * 5825 MHz [165] (30.0 dBm)
-> 
-That's showing you that, with Linux's understanding of the RF regulations in
-your area, it can only transmit on certain frequencies.
-
-> As well, my understanding of WiFi might be a bit limited but, does a 
-> dual-band WiFi device provides 2.4 and 5GHz services at the same time or 
-> do I need to select one or the other myself? Or maybe I can just 
-> enable/disable them manually (and separately)?
-> 
-A dual-band WiFi device can only transmit and receive on one channel at a
-time. The advantage of dual-band is that it can transmit and receive on either
-the 5GHz band (which is less crowded), or the 2.4GHz band (which is more
-commonly used). There's no need to select the band manually - it will just
-use 5GHz when the other device (e.g. the AP) is using 5GHz.
--- 
-Simon Farnsworth
-Software Engineer
-ONELAN Ltd
-http://www.onelan.com
-
---nextPart5628300.acKoguF54f
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQEcBAABAgAGBQJSDJlVAAoJELb1E1yQPsc0NLwIAKvi5lnjWJy4nwA+NNiy77JC
-wy/to2F2+lluP3Ayu4lmHh7FSZuCXJGSloBBBc/It56bCa7SMJd098GLqxg9iSjs
-i+R3Mops/x6JHZzog2xUiriH0csk0f/61bJwm481ONlPHQJ4oKVTzbf/8wcwMW+p
-ekwyuB+HaIQ+WpeGVrFo8hOnRZ/eBDP9R3GEnN2WGx5/y8GDJIFrLrBJ10UgXAXA
-lHSOuU8gdcO/RVqP1rwAw0lpiXcoYEc8sWWlO4kFjAvuoZyG9Y+9VzFi+4k3O/d1
-awHXZpl4rpSIn+psJkDZf2ogZA2P57BRDAbbPlxd+sZqC3v9rH7c+tzlVULD6f0=
-=X/jU
------END PGP SIGNATURE-----
-
---nextPart5628300.acKoguF54f--
+cheers,
+daniel
 
