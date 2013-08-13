@@ -1,111 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:50050 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758427Ab3HNPtg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Aug 2013 11:49:36 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] ath9k: Handle invalid RSSI
-Date: Wed, 14 Aug 2013 21:15:54 +0530
-Message-Id: <1376495157-18983-1-git-send-email-sujith@msujith.org> (sfid-20130814_174945_365052_941B6199)
+Received: from mms3.broadcom.com ([216.31.210.19]:2881 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758942Ab3HMUEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 16:04:32 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	"Jonas Gorski" <jogo@openwrt.org>,
+	"David Herrmann" <dh.herrmann@gmail.com>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	"David Costa" <david@zarel.net>
+Subject: [RFT 00/13] brcmsmac: bcm4313 iPA related patches
+Date: Tue, 13 Aug 2013 22:03:27 +0200
+Message-ID: <1376424220-10765-1-git-send-email-arend@broadcom.com> (sfid-20130813_220450_916368_82A05B6A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This series replaces the patch "[PATCH 12/12] brcmsmac: support 4313iPA"
+with Message-ID: <1376130450-29746-13-git-send-email-arend@broadcom.com>.
 
-The combined RSSI can be invalid which is indicated by
-the value -128. Use RX_FLAG_NO_SIGNAL_VAL for such cases.
+It has been split up into individual patches. Please test this series
+especially if you had issues with the original commit b6fc28a that was
+reverted.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 49 +++++++++++++++++++++++------------
- 1 file changed, 33 insertions(+), 16 deletions(-)
+Cc: Jonas Gorski <jogo@openwrt.org>
+Cc: David Herrmann <dh.herrmann@gmail.com>
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>
+Cc: David Costa <david@zarel.net>
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 3b47198..6ad7d61 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -885,29 +885,49 @@ static int ath9k_process_rate(struct ath_common *common,
- 
- static void ath9k_process_rssi(struct ath_common *common,
- 			       struct ieee80211_hw *hw,
--			       struct ath_rx_status *rx_stats)
-+			       struct ath_rx_status *rx_stats,
-+			       struct ieee80211_rx_status *rxs)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = common->ah;
- 	int last_rssi;
- 	int rssi = rx_stats->rs_rssi;
- 
--	if (!rx_stats->is_mybeacon ||
--	    ((ah->opmode != NL80211_IFTYPE_STATION) &&
--	     (ah->opmode != NL80211_IFTYPE_ADHOC)))
-+	/*
-+	 * RSSI is not available for subframes in an A-MPDU.
-+	 */
-+	if (rx_stats->rs_moreaggr) {
-+		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
-+		return;
-+	}
-+
-+	/*
-+	 * Check if the RSSI for the last subframe in an A-MPDU
-+	 * or an unaggregated frame is valid.
-+	 */
-+	if (rx_stats->rs_rssi == ATH9K_RSSI_BAD) {
-+		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 		return;
-+	}
- 
--	if (rx_stats->rs_rssi != ATH9K_RSSI_BAD && !rx_stats->rs_moreaggr)
-+	/*
-+	 * Update Beacon RSSI, this is used by ANI.
-+	 */
-+	if (rx_stats->is_mybeacon &&
-+	    ((ah->opmode == NL80211_IFTYPE_STATION) ||
-+	     (ah->opmode == NL80211_IFTYPE_ADHOC))) {
- 		ATH_RSSI_LPF(sc->last_rssi, rx_stats->rs_rssi);
-+		last_rssi = sc->last_rssi;
-+
-+		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
-+			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
-+		if (rssi < 0)
-+			rssi = 0;
- 
--	last_rssi = sc->last_rssi;
--	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
--		rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
--	if (rssi < 0)
--		rssi = 0;
-+		ah->stats.avgbrssi = rssi;
-+	}
- 
--	/* Update Beacon RSSI, this is used by ANI. */
--	ah->stats.avgbrssi = rssi;
-+	rxs->signal = ah->noise + rx_stats->rs_rssi;
- }
- 
- static void ath9k_process_tsf(struct ath_rx_status *rs,
-@@ -1149,15 +1169,12 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		goto exit;
- 	}
- 
--	ath9k_process_rssi(common, hw, rx_stats);
-+	ath9k_process_rssi(common, hw, rx_stats, rx_status);
- 
- 	rx_status->band = hw->conf.chandef.chan->band;
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
--	rx_status->signal = ah->noise + rx_stats->rs_rssi;
- 	rx_status->antenna = rx_stats->rs_antenna;
- 	rx_status->flag |= RX_FLAG_MACTIME_END;
--	if (rx_stats->rs_moreaggr)
--		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	if (ieee80211_is_data_present(hdr->frame_control) &&
+Arend van Spriel (13):
+  brcmsmac: cosmetic change in phy_lcn.c
+  brcmsmac: change pa_gain for bcm4313 iPA
+  brcmsmac: use ARRAY_SIZE in phytbl_lcn.c
+  brcmsmac: add switch control table for BCM4313 iPA BT-combo cards
+  brcmsmac: add debug info message providing phy and radio info
+  brcmsmac: update transmit gain table for lcn phy
+  brcmsmac: change lcnphy receive i/q calibration routine
+  brcmsmac: fix TSSI idle estimation
+  brcmsmac: avoid calling set_txpwr_by_index() twice
+  brcmsmac: rework switch control table init including iPA BT-combo
+  brcmsmac: correct phy registers for TSSI-based power control
+  brcmsmac: reinitialize TSSI power control upon channel switch
+  brcmsmac: add support for BCM4313 iPA variant
+
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |    4 +-
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |  397 +++++++++++--------
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |  405 +++++++++++---------
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h   |    1 +
+ 4 files changed, 475 insertions(+), 332 deletions(-)
+
 -- 
-1.8.3.4
+1.7.10.4
+
 
