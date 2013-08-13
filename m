@@ -1,180 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36218 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:1722 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754897Ab3HET4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Aug 2013 15:56:31 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 11/12] ath9k: improve tx scheduling fairness
-Date: Mon,  5 Aug 2013 21:56:22 +0200
-Message-Id: <1375732583-39001-11-git-send-email-nbd@openwrt.org> (sfid-20130805_215645_324044_8EF3C5E1)
-In-Reply-To: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
-References: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
+	id S1759000Ab3HMUEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 16:04:44 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	"Jonas Gorski" <jogo@openwrt.org>,
+	"David Herrmann" <dh.herrmann@gmail.com>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	"David Costa" <david@zarel.net>
+Subject: [RFT V2 13/13] brcmsmac: add support for BCM4313 iPA variant
+Date: Tue, 13 Aug 2013 22:03:40 +0200
+Message-ID: <1376424220-10765-14-git-send-email-arend@broadcom.com> (sfid-20130813_220909_300654_C2EFE269)
+In-Reply-To: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of trying to schedule the same TID multiple times in a loop,
-iterate over other TIDs/stations first.
+This patch completes the changes needed for supporting the
+iPA variant cards of the BCM4313 wireless chipset.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: Jonas Gorski <jogo@openwrt.org>
+Cc: David Herrmann <dh.herrmann@gmail.com>
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>
+Cc: David Costa <david@zarel.net>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 84 ++++++++++++++++++++---------------
- 1 file changed, 47 insertions(+), 37 deletions(-)
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   71 ++++++++++++++------
+ 1 file changed, 51 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 037cc91..274fe3f 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1345,8 +1345,8 @@ ath_tx_form_burst(struct ath_softc *sc, struct ath_txq *txq,
- 	} while (1);
- }
- 
--static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
--			      struct ath_atx_tid *tid)
-+static bool ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
-+			      struct ath_atx_tid *tid, bool *stop)
- {
- 	struct ath_buf *bf;
- 	struct ieee80211_tx_info *tx_info;
-@@ -1355,40 +1355,39 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	int aggr_len = 0;
- 	bool aggr, last = true;
- 
--	do {
--		if (!ath_tid_has_buffered(tid))
--			return;
-+	if (!ath_tid_has_buffered(tid))
-+		return false;
- 
--		INIT_LIST_HEAD(&bf_q);
-+	INIT_LIST_HEAD(&bf_q);
- 
--		bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
--		if (!bf)
--			break;
-+	bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
-+	if (!bf)
-+		return false;
- 
--		tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
--		aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
--		if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
--		    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH))
--			break;
-+	tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
-+	aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
-+	if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
-+		(!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH))
-+		return false;
- 
--		ath_set_rates(tid->an->vif, tid->an->sta, bf);
--		if (aggr)
--			last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
--						tid_q, &aggr_len);
--		else
--			ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
-+	ath_set_rates(tid->an->vif, tid->an->sta, bf);
-+	if (aggr)
-+		last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
-+					tid_q, &aggr_len);
-+	else
-+		ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
- 
--		if (list_empty(&bf_q))
--			return;
-+	if (list_empty(&bf_q))
-+		return false;
- 
--		if (tid->ac->clear_ps_filter) {
--			tid->ac->clear_ps_filter = false;
--			tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
--		}
-+	if (tid->ac->clear_ps_filter) {
-+		tid->ac->clear_ps_filter = false;
-+		tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+index 6e6bc28..4ba5d62 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -1826,6 +1826,17 @@ wlc_lcnphy_radio_2064_channel_tune_4313(struct brcms_phy *pi, u8 channel)
+ 		write_radio_reg(pi, RADIO_2064_REG038, 3);
+ 		write_radio_reg(pi, RADIO_2064_REG091, 7);
+ 	}
++
++	if (!(pi->sh->boardflags & BFL_FEM)) {
++		u8 reg038[14] = {0xd, 0xe, 0xd, 0xd, 0xd, 0xc,
++			0xa, 0xb, 0xb, 0x3, 0x3, 0x2, 0x0, 0x0};
++
++		write_radio_reg(pi, RADIO_2064_REG02A, 0xf);
++		write_radio_reg(pi, RADIO_2064_REG091, 0x3);
++		write_radio_reg(pi, RADIO_2064_REG038, 0x3);
++
++		write_radio_reg(pi, RADIO_2064_REG038, reg038[channel - 1]);
 +	}
- 
--		ath_tx_fill_desc(sc, bf, txq, aggr_len);
--		ath_tx_txqaddbuf(sc, txq, &bf_q, false);
--	} while (!last);
-+	ath_tx_fill_desc(sc, bf, txq, aggr_len);
-+	ath_tx_txqaddbuf(sc, txq, &bf_q, false);
-+	return true;
  }
  
- int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
-@@ -1824,8 +1823,9 @@ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
-  */
- void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ static int
+@@ -2123,7 +2134,16 @@ static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
  {
--	struct ath_atx_ac *ac, *ac_tmp, *last_ac;
-+	struct ath_atx_ac *ac, *last_ac;
- 	struct ath_atx_tid *tid, *last_tid;
-+	bool sent = false;
+ 	struct phytbl_info tab;
+ 	u32 rfseq, ind;
++	enum lcnphy_tssi_mode mode;
++	u8 tssi_sel;
  
- 	if (test_bit(SC_OP_HW_RESET, &sc->sc_flags) ||
- 	    list_empty(&txq->axq_acq) ||
-@@ -1834,15 +1834,17 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
++	if (pi->sh->boardflags & BFL_FEM) {
++		tssi_sel = 0x1;
++		mode = LCNPHY_TSSI_EXT;
++	} else {
++		tssi_sel = 0xe;
++		mode = LCNPHY_TSSI_POST_PA;
++	}
+ 	tab.tbl_id = LCNPHY_TBL_ID_TXPWRCTL;
+ 	tab.tbl_width = 32;
+ 	tab.tbl_ptr = &ind;
+@@ -2144,7 +2164,7 @@ static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
  
- 	rcu_read_lock();
+ 	mod_phy_reg(pi, 0x503, (0x1 << 4), (1) << 4);
  
--	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
- 	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
-+	while (!list_empty(&txq->axq_acq)) {
-+		bool stop = false;
+-	wlc_lcnphy_set_tssi_mux(pi, LCNPHY_TSSI_EXT);
++	wlc_lcnphy_set_tssi_mux(pi, mode);
+ 	mod_phy_reg(pi, 0x4a4, (0x1 << 14), (0) << 14);
  
--	list_for_each_entry_safe(ac, ac_tmp, &txq->axq_acq, list) {
-+		ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
- 		last_tid = list_entry(ac->tid_q.prev, struct ath_atx_tid, list);
- 		list_del(&ac->list);
- 		ac->sched = false;
+ 	mod_phy_reg(pi, 0x4a4, (0x1 << 15), (1) << 15);
+@@ -2180,9 +2200,10 @@ static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
+ 	mod_phy_reg(pi, 0x49a, (0x1ff << 0), (0xff) << 0);
  
- 		while (!list_empty(&ac->tid_q)) {
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 2)) {
+-		mod_radio_reg(pi, RADIO_2064_REG028, 0xf, 0xe);
++		mod_radio_reg(pi, RADIO_2064_REG028, 0xf, tssi_sel);
+ 		mod_radio_reg(pi, RADIO_2064_REG086, 0x4, 0x4);
+ 	} else {
++		mod_radio_reg(pi, RADIO_2064_REG028, 0x1e, tssi_sel << 1);
+ 		mod_radio_reg(pi, RADIO_2064_REG03A, 0x1, 1);
+ 		mod_radio_reg(pi, RADIO_2064_REG11A, 0x8, 1 << 3);
+ 	}
+@@ -4358,8 +4379,11 @@ wlc_lcnphy_load_tx_gain_table(struct brcms_phy *pi,
+ 	tab.tbl_len = 1;
+ 	tab.tbl_ptr = &val;
+ 
++	/* fixed gm_gain value for iPA */
++	gm_gain = 15;
+ 	for (j = 0; j < 128; j++) {
+-		gm_gain = gain_table[j].gm;
++		if (pi->sh->boardflags & BFL_FEM)
++			gm_gain = gain_table[j].gm;
+ 		val = (((u32) pa_gain << 24) |
+ 		       (gain_table[j].pad << 16) |
+ 		       (gain_table[j].pga << 8) | gm_gain);
+@@ -4570,7 +4594,10 @@ static void wlc_radio_2064_init(struct brcms_phy *pi)
+ 
+ 	write_phy_reg(pi, 0x4ea, 0x4688);
+ 
+-	mod_phy_reg(pi, 0x4eb, (0x7 << 0), 2 << 0);
++	if (pi->sh->boardflags & BFL_FEM)
++		mod_phy_reg(pi, 0x4eb, (0x7 << 0), 2 << 0);
++	else
++		mod_phy_reg(pi, 0x4eb, (0x7 << 0), 3 << 0);
+ 
+ 	mod_phy_reg(pi, 0x4eb, (0x7 << 6), 0 << 6);
+ 
+@@ -4581,6 +4608,13 @@ static void wlc_radio_2064_init(struct brcms_phy *pi)
+ 	wlc_lcnphy_rcal(pi);
+ 
+ 	wlc_lcnphy_rc_cal(pi);
 +
- 			tid = list_first_entry(&ac->tid_q, struct ath_atx_tid,
- 					       list);
- 			list_del(&tid->list);
-@@ -1851,7 +1853,8 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 			if (tid->paused)
- 				continue;
- 
--			ath_tx_sched_aggr(sc, txq, tid);
-+			if (ath_tx_sched_aggr(sc, txq, tid, &stop))
-+				sent = true;
- 
- 			/*
- 			 * add tid to round-robin queue if more frames
-@@ -1860,8 +1863,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 			if (ath_tid_has_buffered(tid))
- 				ath_tx_queue_tid(txq, tid);
- 
--			if (tid == last_tid ||
--			    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
-+			if (stop || tid == last_tid)
- 				break;
- 		}
- 
-@@ -1870,9 +1872,17 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 			list_add_tail(&ac->list, &txq->axq_acq);
- 		}
- 
--		if (ac == last_ac ||
--		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
-+		if (stop)
- 			break;
++	if (!(pi->sh->boardflags & BFL_FEM)) {
++		write_radio_reg(pi, RADIO_2064_REG032, 0x6f);
++		write_radio_reg(pi, RADIO_2064_REG033, 0x19);
++		write_radio_reg(pi, RADIO_2064_REG039, 0xe);
++	}
 +
-+		if (ac == last_ac) {
-+			if (!sent)
-+				break;
-+
-+			sent = false;
-+			last_ac = list_entry(txq->axq_acq.prev,
-+					     struct ath_atx_ac, list);
-+		}
+ }
+ 
+ static void wlc_lcnphy_radio_init(struct brcms_phy *pi)
+@@ -4611,22 +4645,20 @@ static void wlc_lcnphy_tbl_init(struct brcms_phy *pi)
+ 		wlc_lcnphy_write_table(pi, &tab);
  	}
  
- 	rcu_read_unlock();
+-	tab.tbl_id = LCNPHY_TBL_ID_RFSEQ;
+-	tab.tbl_width = 16;
+-	tab.tbl_ptr = &val;
+-	tab.tbl_len = 1;
+-
+-	val = 114;
+-	tab.tbl_offset = 0;
+-	wlc_lcnphy_write_table(pi, &tab);
++	if (!(pi->sh->boardflags & BFL_FEM)) {
++		tab.tbl_id = LCNPHY_TBL_ID_RFSEQ;
++		tab.tbl_width = 16;
++		tab.tbl_ptr = &val;
++		tab.tbl_len = 1;
+ 
+-	val = 130;
+-	tab.tbl_offset = 1;
+-	wlc_lcnphy_write_table(pi, &tab);
++		val = 150;
++		tab.tbl_offset = 0;
++		wlc_lcnphy_write_table(pi, &tab);
+ 
+-	val = 6;
+-	tab.tbl_offset = 8;
+-	wlc_lcnphy_write_table(pi, &tab);
++		val = 220;
++		tab.tbl_offset = 1;
++		wlc_lcnphy_write_table(pi, &tab);
++	}
+ 
+ 	if (CHSPEC_IS2G(pi->radio_chanspec)) {
+ 		if (pi->sh->boardflags & BFL_FEM)
+@@ -5059,8 +5091,7 @@ bool wlc_phy_attach_lcnphy(struct brcms_phy *pi)
+ 	if (!wlc_phy_txpwr_srom_read_lcnphy(pi))
+ 		return false;
+ 
+-	if ((pi->sh->boardflags & BFL_FEM) &&
+-	    (LCNREV_IS(pi->pubpi.phy_rev, 1))) {
++	if (LCNREV_IS(pi->pubpi.phy_rev, 1)) {
+ 		if (pi_lcn->lcnphy_tempsense_option == 3) {
+ 			pi->hwpwrctrl = true;
+ 			pi->hwpwrctrl_capable = true;
 -- 
-1.8.0.2
+1.7.10.4
+
 
