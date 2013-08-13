@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3168 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751228Ab3HTOBC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 10:01:02 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 04/12] brcmsmac: add debug info message providing phy
- and radio info
-Date: Tue, 20 Aug 2013 16:00:38 +0200
-Message-ID: <1377007246-9957-5-git-send-email-arend@broadcom.com> (sfid-20130820_160108_040507_B953D985)
-In-Reply-To: <1377007246-9957-1-git-send-email-arend@broadcom.com>
-References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:48442 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753615Ab3HMJpm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 05:45:42 -0400
+Received: by mail-ea0-f173.google.com with SMTP id g10so4000620eak.18
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2013 02:45:41 -0700 (PDT)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH] ath10k: fix WEP in AP and IBSS mode
+Date: Tue, 13 Aug 2013 11:45:22 +0200
+Message-Id: <1376387122-18075-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20130813_114546_336913_82DB0D2E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For debug purposes it is good to have the phy and radio information
-available in the log. Only logged when driver is built when BRCMDBG
-or BRCM_TRACING kconfig are set.
+WEP encoding was not working properly for AP and IBSS mode.
+TX frames were encrypted with default WEP tx key index set
+always to zero, what sometimes was wrong when different
+key index should be used. This patch allows to update
+WEP key index also for AP and IBSS mode.
+Problem detected during automated WEP tests.
 
-Tested-by: David Herrmann <dh.herrmann@gmail.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 7ca10bf..c3c6123 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -4652,7 +4652,9 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
- 		wlc->band->phyrev = wlc_hw->band->phyrev;
- 		wlc->band->radioid = wlc_hw->band->radioid;
- 		wlc->band->radiorev = wlc_hw->band->radiorev;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index cf2ba4d..bcefeb6 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1421,10 +1421,6 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ 	struct ieee80211_key_conf *key = info->control.hw_key;
+ 	int ret;
+ 
+-	/* TODO AP mode should be implemented */
+-	if (vif->type != NL80211_IFTYPE_STATION)
+-		return;
 -
-+		brcms_dbg_info(core, "wl%d: phy %u/%u radio %x/%u\n", unit,
-+			       wlc->band->phytype, wlc->band->phyrev,
-+			       wlc->band->radioid, wlc->band->radiorev);
- 		/* default contention windows size limits */
- 		wlc_hw->band->CWmin = APHY_CWMIN;
- 		wlc_hw->band->CWmax = PHY_CWMAX;
+ 	if (!ieee80211_has_protected(hdr->frame_control))
+ 		return;
+ 
 -- 
-1.7.10.4
-
+1.8.1.2
 
