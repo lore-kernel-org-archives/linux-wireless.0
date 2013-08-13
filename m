@@ -1,75 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:50898 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752831Ab3HFBxW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Aug 2013 21:53:22 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/4] mwifiex: modify mwifiex_is_pattern_supported() routine
-Date: Mon, 5 Aug 2013 18:51:58 -0700
-Message-ID: <1375753920-10100-2-git-send-email-bzhao@marvell.com> (sfid-20130806_035327_037773_29E3E33B)
-In-Reply-To: <1375753920-10100-1-git-send-email-bzhao@marvell.com>
-References: <1375753920-10100-1-git-send-email-bzhao@marvell.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2883 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758938Ab3HMUEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 16:04:32 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	"David Herrmann" <dh.herrmann@gmail.com>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	"David Costa" <david@zarel.net>
+Subject: [RFT V2 06/13] brcmsmac: update transmit gain table for lcn phy
+Date: Tue, 13 Aug 2013 22:03:33 +0200
+Message-ID: <1376424220-10765-7-git-send-email-arend@broadcom.com> (sfid-20130813_220908_796399_A71F048E)
+In-Reply-To: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Update the transmit gain table for bcm4313 chip family.
 
-It is modified so that it can be reused for coalesce feature.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Cc: David Herrmann <dh.herrmann@gmail.com>
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>
+Cc: David Costa <david@zarel.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |  216 ++++++++++----------
+ 1 file changed, 108 insertions(+), 108 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 326f4d9..62c3d98 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2309,7 +2309,8 @@ EXPORT_SYMBOL_GPL(mwifiex_del_virtual_intf);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
+index 36c41df..d7fa312 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
+@@ -3031,134 +3031,134 @@ dot11lcnphy_2GHz_extPA_gaintable_rev0[128] = {
+ };
  
- #ifdef CONFIG_PM
- static bool
--mwifiex_is_pattern_supported(struct cfg80211_pkt_pattern *pat, s8 *byte_seq)
-+mwifiex_is_pattern_supported(struct cfg80211_pkt_pattern *pat, s8 *byte_seq,
-+			     u8 max_byte_seq)
- {
- 	int j, k, valid_byte_cnt = 0;
- 	bool dont_care_byte = false;
-@@ -2327,12 +2328,12 @@ mwifiex_is_pattern_supported(struct cfg80211_pkt_pattern *pat, s8 *byte_seq)
- 					dont_care_byte = true;
- 			}
+ const struct lcnphy_tx_gain_tbl_entry dot11lcnphy_2GHz_gaintable_rev0[128] = {
+-	{7, 0, 31, 0, 72},
+-	{7, 0, 31, 0, 70},
+-	{7, 0, 31, 0, 68},
+-	{7, 0, 30, 0, 67},
+-	{7, 0, 29, 0, 68},
+-	{7, 0, 28, 0, 68},
+-	{7, 0, 27, 0, 69},
+-	{7, 0, 26, 0, 70},
+-	{7, 0, 25, 0, 70},
+-	{7, 0, 24, 0, 71},
+-	{7, 0, 23, 0, 72},
+-	{7, 0, 23, 0, 70},
+-	{7, 0, 22, 0, 71},
+-	{7, 0, 21, 0, 72},
+-	{7, 0, 21, 0, 70},
+-	{7, 0, 21, 0, 68},
+-	{7, 0, 21, 0, 66},
+-	{7, 0, 21, 0, 64},
+-	{7, 0, 21, 0, 63},
+-	{7, 0, 20, 0, 64},
+-	{7, 0, 19, 0, 65},
+-	{7, 0, 19, 0, 64},
+-	{7, 0, 18, 0, 65},
+-	{7, 0, 18, 0, 64},
+-	{7, 0, 17, 0, 65},
+-	{7, 0, 17, 0, 64},
+-	{7, 0, 16, 0, 65},
+-	{7, 0, 16, 0, 64},
+-	{7, 0, 16, 0, 62},
+-	{7, 0, 16, 0, 60},
+-	{7, 0, 16, 0, 58},
+-	{7, 0, 15, 0, 61},
+-	{7, 0, 15, 0, 59},
+-	{7, 0, 14, 0, 61},
+-	{7, 0, 14, 0, 60},
+-	{7, 0, 14, 0, 58},
+-	{7, 0, 13, 0, 60},
+-	{7, 0, 13, 0, 59},
+-	{7, 0, 12, 0, 62},
+-	{7, 0, 12, 0, 60},
+-	{7, 0, 12, 0, 58},
+-	{7, 0, 11, 0, 62},
+-	{7, 0, 11, 0, 60},
+-	{7, 0, 11, 0, 59},
+-	{7, 0, 11, 0, 57},
+-	{7, 0, 10, 0, 61},
+-	{7, 0, 10, 0, 59},
+-	{7, 0, 10, 0, 57},
+-	{7, 0, 9, 0, 62},
+-	{7, 0, 9, 0, 60},
+-	{7, 0, 9, 0, 58},
+-	{7, 0, 9, 0, 57},
+-	{7, 0, 8, 0, 62},
+-	{7, 0, 8, 0, 60},
+-	{7, 0, 8, 0, 58},
+-	{7, 0, 8, 0, 57},
+-	{7, 0, 8, 0, 55},
+-	{7, 0, 7, 0, 61},
++	{15, 0, 31, 0, 72},
++	{15, 0, 31, 0, 70},
++	{15, 0, 31, 0, 68},
++	{15, 0, 30, 0, 68},
++	{15, 0, 29, 0, 69},
++	{15, 0, 28, 0, 69},
++	{15, 0, 27, 0, 70},
++	{15, 0, 26, 0, 70},
++	{15, 0, 25, 0, 71},
++	{15, 0, 24, 0, 72},
++	{15, 0, 23, 0, 73},
++	{15, 0, 23, 0, 71},
++	{15, 0, 22, 0, 72},
++	{15, 0, 21, 0, 73},
++	{15, 0, 21, 0, 71},
++	{15, 0, 21, 0, 69},
++	{15, 0, 21, 0, 67},
++	{15, 0, 21, 0, 65},
++	{15, 0, 21, 0, 63},
++	{15, 0, 20, 0, 65},
++	{15, 0, 19, 0, 66},
++	{15, 0, 19, 0, 64},
++	{15, 0, 18, 0, 66},
++	{15, 0, 18, 0, 64},
++	{15, 0, 17, 0, 66},
++	{15, 0, 17, 0, 64},
++	{15, 0, 16, 0, 66},
++	{15, 0, 16, 0, 64},
++	{15, 0, 16, 0, 62},
++	{15, 0, 16, 0, 61},
++	{15, 0, 16, 0, 59},
++	{15, 0, 15, 0, 61},
++	{15, 0, 15, 0, 59},
++	{15, 0, 14, 0, 62},
++	{15, 0, 14, 0, 60},
++	{15, 0, 14, 0, 58},
++	{15, 0, 13, 0, 61},
++	{15, 0, 13, 0, 59},
++	{15, 0, 12, 0, 62},
++	{15, 0, 12, 0, 61},
++	{15, 0, 12, 0, 59},
++	{15, 0, 11, 0, 62},
++	{15, 0, 11, 0, 61},
++	{15, 0, 11, 0, 59},
++	{15, 0, 11, 0, 57},
++	{15, 0, 10, 0, 61},
++	{15, 0, 10, 0, 59},
++	{15, 0, 10, 0, 58},
++	{15, 0, 9, 0, 62},
++	{15, 0, 9, 0, 61},
++	{15, 0, 9, 0, 59},
++	{15, 0, 9, 0, 57},
++	{15, 0, 8, 0, 62},
++	{15, 0, 8, 0, 61},
++	{15, 0, 8, 0, 59},
++	{15, 0, 8, 0, 57},
++	{15, 0, 8, 0, 56},
++	{15, 0, 8, 0, 54},
++	{15, 0, 8, 0, 53},
++	{15, 0, 8, 0, 51},
++	{15, 0, 8, 0, 50},
++	{7, 0, 7, 0, 69},
++	{7, 0, 7, 0, 67},
++	{7, 0, 7, 0, 65},
++	{7, 0, 7, 0, 64},
++	{7, 0, 7, 0, 62},
+ 	{7, 0, 7, 0, 60},
+ 	{7, 0, 7, 0, 58},
+-	{7, 0, 7, 0, 56},
++	{7, 0, 7, 0, 57},
+ 	{7, 0, 7, 0, 55},
+ 	{7, 0, 6, 0, 62},
+-	{7, 0, 6, 0, 60},
+-	{7, 0, 6, 0, 58},
++	{7, 0, 6, 0, 61},
++	{7, 0, 6, 0, 59},
+ 	{7, 0, 6, 0, 57},
+-	{7, 0, 6, 0, 55},
++	{7, 0, 6, 0, 56},
+ 	{7, 0, 6, 0, 54},
+-	{7, 0, 6, 0, 52},
++	{7, 0, 6, 0, 53},
+ 	{7, 0, 5, 0, 61},
+-	{7, 0, 5, 0, 59},
+-	{7, 0, 5, 0, 57},
++	{7, 0, 5, 0, 60},
++	{7, 0, 5, 0, 58},
+ 	{7, 0, 5, 0, 56},
+-	{7, 0, 5, 0, 54},
++	{7, 0, 5, 0, 55},
+ 	{7, 0, 5, 0, 53},
+-	{7, 0, 5, 0, 51},
+-	{7, 0, 4, 0, 62},
+-	{7, 0, 4, 0, 60},
+-	{7, 0, 4, 0, 58},
++	{7, 0, 5, 0, 52},
++	{7, 0, 5, 0, 50},
++	{7, 0, 5, 0, 49},
++	{7, 0, 5, 0, 47},
+ 	{7, 0, 4, 0, 57},
+-	{7, 0, 4, 0, 55},
++	{7, 0, 4, 0, 56},
+ 	{7, 0, 4, 0, 54},
+-	{7, 0, 4, 0, 52},
++	{7, 0, 4, 0, 53},
+ 	{7, 0, 4, 0, 51},
+-	{7, 0, 4, 0, 49},
++	{7, 0, 4, 0, 50},
+ 	{7, 0, 4, 0, 48},
++	{7, 0, 4, 0, 47},
+ 	{7, 0, 4, 0, 46},
+-	{7, 0, 3, 0, 60},
+-	{7, 0, 3, 0, 58},
+-	{7, 0, 3, 0, 57},
+-	{7, 0, 3, 0, 55},
+-	{7, 0, 3, 0, 54},
+-	{7, 0, 3, 0, 52},
++	{7, 0, 4, 0, 44},
++	{7, 0, 4, 0, 43},
++	{7, 0, 4, 0, 42},
++	{7, 0, 4, 0, 41},
++	{7, 0, 4, 0, 40},
+ 	{7, 0, 3, 0, 51},
+-	{7, 0, 3, 0, 49},
++	{7, 0, 3, 0, 50},
+ 	{7, 0, 3, 0, 48},
++	{7, 0, 3, 0, 47},
+ 	{7, 0, 3, 0, 46},
+-	{7, 0, 3, 0, 45},
+ 	{7, 0, 3, 0, 44},
+ 	{7, 0, 3, 0, 43},
++	{7, 0, 3, 0, 42},
+ 	{7, 0, 3, 0, 41},
+-	{7, 0, 2, 0, 61},
+-	{7, 0, 2, 0, 59},
+-	{7, 0, 2, 0, 57},
+-	{7, 0, 2, 0, 56},
+-	{7, 0, 2, 0, 54},
+-	{7, 0, 2, 0, 53},
+-	{7, 0, 2, 0, 51},
+-	{7, 0, 2, 0, 50},
+-	{7, 0, 2, 0, 48},
+-	{7, 0, 2, 0, 47},
+-	{7, 0, 2, 0, 46},
+-	{7, 0, 2, 0, 44},
+-	{7, 0, 2, 0, 43},
+-	{7, 0, 2, 0, 42},
+-	{7, 0, 2, 0, 41},
+-	{7, 0, 2, 0, 39},
+-	{7, 0, 2, 0, 38},
+-	{7, 0, 2, 0, 37},
+-	{7, 0, 2, 0, 36},
+-	{7, 0, 2, 0, 35},
+-	{7, 0, 2, 0, 34},
+-	{7, 0, 2, 0, 33},
+-	{7, 0, 2, 0, 32},
+-	{7, 0, 1, 0, 63},
+-	{7, 0, 1, 0, 61},
+-	{7, 0, 1, 0, 59},
+-	{7, 0, 1, 0, 57},
++	{3, 0, 3, 0, 56},
++	{3, 0, 3, 0, 54},
++	{3, 0, 3, 0, 53},
++	{3, 0, 3, 0, 51},
++	{3, 0, 3, 0, 50},
++	{3, 0, 3, 0, 48},
++	{3, 0, 3, 0, 47},
++	{3, 0, 3, 0, 46},
++	{3, 0, 3, 0, 44},
++	{3, 0, 3, 0, 43},
++	{3, 0, 3, 0, 42},
++	{3, 0, 3, 0, 41},
++	{3, 0, 3, 0, 39},
++	{3, 0, 3, 0, 38},
++	{3, 0, 3, 0, 37},
++	{3, 0, 3, 0, 36},
++	{3, 0, 3, 0, 35},
++	{3, 0, 3, 0, 34},
+ };
  
--			if (valid_byte_cnt > MWIFIEX_MEF_MAX_BYTESEQ)
-+			if (valid_byte_cnt > max_byte_seq)
- 				return false;
- 		}
- 	}
- 
--	byte_seq[MWIFIEX_MEF_MAX_BYTESEQ] = valid_byte_cnt;
-+	byte_seq[max_byte_seq] = valid_byte_cnt;
- 
- 	return true;
- }
-@@ -2375,7 +2376,8 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
- 	for (i = 0; i < wowlan->n_patterns; i++) {
- 		memset(byte_seq, 0, sizeof(byte_seq));
- 		if (!mwifiex_is_pattern_supported(&wowlan->patterns[i],
--						  byte_seq)) {
-+						  byte_seq,
-+						  MWIFIEX_MEF_MAX_BYTESEQ)) {
- 			wiphy_err(wiphy, "Pattern not supported\n");
- 			kfree(mef_entry);
- 			return -EOPNOTSUPP;
+ const struct lcnphy_tx_gain_tbl_entry dot11lcnphy_5GHz_gaintable_rev0[128] = {
 -- 
-1.8.2.3
+1.7.10.4
+
 
