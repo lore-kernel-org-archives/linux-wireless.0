@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:40790 "EHLO canardo.mork.no"
+Received: from ebb05.tieto.com ([131.207.168.36]:64590 "EHLO ebb05.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754583Ab3HWJgL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 05:36:11 -0400
-From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
-To: netdev@vger.kernel.org
-Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH net-next 06/10] net: airo: inherit addr_assign_type along with dev_addr
-Date: Fri, 23 Aug 2013 11:35:09 +0200
-Message-Id: <1377250513-3662-7-git-send-email-bjorn@mork.no> (sfid-20130823_113621_814705_79B8FD80)
-In-Reply-To: <1377250513-3662-1-git-send-email-bjorn@mork.no>
-References: <1377250513-3662-1-git-send-email-bjorn@mork.no>
+	id S1753740Ab3HMFzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 01:55:05 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/4] ath10k: clean up monitor start code
+Date: Tue, 13 Aug 2013 07:54:54 +0200
+Message-ID: <1376373297-32369-2-git-send-email-michal.kazior@tieto.com> (sfid-20130813_075512_814741_FEBCA518)
+In-Reply-To: <1376373297-32369-1-git-send-email-michal.kazior@tieto.com>
+References: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
+ <1376373297-32369-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Bjørn Mork <bjorn@mork.no>
----
- drivers/net/wireless/airo.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Remove useless code that was causing WARN_ON when
+a 80MHz+ vif entered promiscuous mode or monitor
+interface was started.
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index d0adbaf..7fe1964 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -2693,7 +2693,7 @@ static struct net_device *init_wifidev(struct airo_info *ai,
- 	dev->base_addr = ethdev->base_addr;
- 	dev->wireless_data = ethdev->wireless_data;
- 	SET_NETDEV_DEV(dev, ethdev->dev.parent);
--	memcpy(dev->dev_addr, ethdev->dev_addr, dev->addr_len);
-+	eth_hw_addr_inherit(dev, ethdev);
- 	err = register_netdev(dev);
- 	if (err<0) {
- 		free_netdev(dev);
+The channel mode is already computed by
+chan_to_phymode().
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index cf2ba4d..05f5f76 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -503,13 +503,10 @@ static int ath10k_monitor_start(struct ath10k *ar, int vdev_id)
+ {
+ 	struct ieee80211_channel *channel = ar->hw->conf.chandef.chan;
+ 	struct wmi_vdev_start_request_arg arg = {};
+-	enum nl80211_channel_type type;
+ 	int ret = 0;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	type = cfg80211_get_chandef_type(&ar->hw->conf.chandef);
+-
+ 	arg.vdev_id = vdev_id;
+ 	arg.channel.freq = channel->center_freq;
+ 	arg.channel.band_center_freq1 = ar->hw->conf.chandef.center_freq1;
 -- 
-1.7.10.4
+1.7.9.5
 
