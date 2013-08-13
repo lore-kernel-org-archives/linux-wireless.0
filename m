@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55552 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755113Ab3HFPSX (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:45154 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756090Ab3HMW7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 11:18:23 -0400
-Message-ID: <1375802297.8219.25.camel@jlt4.sipsolutions.net> (sfid-20130806_171840_441821_3EF898D9)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: sedat.dilek@gmail.com
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 06 Aug 2013 17:18:17 +0200
-In-Reply-To: <CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com> (sfid-20130806_170953_045100_849D0912)
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	 <1375797260.8219.21.camel@jlt4.sipsolutions.net>
-	 <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
-	 <1375800617.8219.23.camel@jlt4.sipsolutions.net>
-	 <CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
-	 <1375801059.8219.24.camel@jlt4.sipsolutions.net>
-	 <CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
-	 <CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
-	 (sfid-20130806_170953_045100_849D0912)
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 13 Aug 2013 18:59:38 -0400
+Date: Tue, 13 Aug 2013 15:59:37 -0700 (PDT)
+Message-Id: <20130813.155937.1515274194337226600.davem@davemloft.net> (sfid-20130814_005946_377603_EB28582A)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2013-08-12
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130812195347.GE27408@tuxdriver.com>
+References: <20130812195347.GE27408@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 12 Aug 2013 15:53:50 -0400
 
+> This is a batch of updates intended for 3.12.  It is mostly driver
+> stuff, although Johannes Berg and Simon Wunderlich make a good
+> showing with mac80211 bits (particularly some work on 5/10 MHz
+> channel support).
+> 
+> The usual suspects are mostly represented.  There are lots of updates
+> to iwlwifi, ath9k, ath10k, mwifiex, rt2x00, wil6210, as usual.
+> The bcma bus gets some love this time, as do cw1200, iwl4965, and a
+> few other bits here and there.  I don't think there is much unusual
+> here, FWIW.
+> 
+> Please let me know if there are problems!
 
-> I have sent you a v2 of my logs (with -d and rsyslog-7.x).
-
-Hmm, that looks different? There no longer is anything about "PSK might
-be wrong", but now just disconnections by the AP, which unfortunately
-indicate no reason.
-
-When was it working last?
-
-johannes
-
+Pulled, thanks John.
