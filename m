@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:63456 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755596Ab3HLXop (ORCPT
+Received: from canardo.mork.no ([148.122.252.1]:49690 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756542Ab3HMLjl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 19:44:45 -0400
-Received: by mail-ie0-f176.google.com with SMTP id 9so1891459iec.35
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Aug 2013 16:44:45 -0700 (PDT)
+	Tue, 13 Aug 2013 07:39:41 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	wireless-regdb@lists.infradead.org
+Subject: Re: [wireless-regdb] [PATCH 00/53] wireless-regdb: latest updates
+References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
+Date: Tue, 13 Aug 2013 13:13:08 +0200
+In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com> (Luis
+	R. Rodriguez's message of "Tue, 16 Jul 2013 19:17:49 -0700")
+Message-ID: <87mwolc08r.fsf@nemi.mork.no> (sfid-20130813_133945_338190_5EF36DDF)
 MIME-Version: 1.0
-In-Reply-To: <520971BA.6040503@lwfinger.net>
-References: <CAN3-2D7=P=9VyV7xoANw_6B8VhOaTRC1iMw+mwUH2-g8YOmPMg@mail.gmail.com>
-	<520968B0.80301@lwfinger.net>
-	<CAN3-2D5rCnXYogA6s6in_e6qpyLmZ0bpbGX=REi=Cn29U40nMw@mail.gmail.com>
-	<520971BA.6040503@lwfinger.net>
-Date: Mon, 12 Aug 2013 16:44:45 -0700
-Message-ID: <CAN3-2D75TLTS-Fv3CgoBjA+RA3jv-QyLoSs+PZeKXLY_MUcSTQ@mail.gmail.com> (sfid-20130813_014448_660166_CB687A6C)
-Subject: Re: issues with RTL8188CE device and rtl8192ce driver
-From: Colleen Josephson <cjoseph@mit.edu>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> If you install the baclports drivers, they will replace the standard ones.
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
 
-Even for drivers built into my kernel (not as modules?). Just making
-sure, as I seem to have encountered a problem:
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+>
+> I saw one comment posted about the Indonesia patch, I fixed that.
+> I also then ran some sanity tests with a new reglib addition
+> wich I recently posted. This helped find two cases which
+> required disabling VHT80 for two countries on a specific band.
+> One was for US for 5690 and another for TW for 5290. In both cases
+> the reason is due to the fact that the only way to use VHT80 is
+> to combine two frequency ranges together that are contiguous and
+> apply the most restrictive band rules for that range. We don't support
+> this yet so just disable VHT80 in both cases. In the US case this
+> also seems to be the preferred ruling.
 
-After installing the backports version of rtl8192ce and rebooting,
-wlan0 is not longer showing up when I run "ifconfig".
+Hello,
 
-lsmod shows compat and rtl8192c_common, but not rtl8192ce. If I try
-'modprobe rtl8192ce' I get this error: "Unknown symbol in module, or
-unknown parameter  (see dmesg)"
+Out of personal interest I'm wondering why you excluded Norway and
+Iceland from this series?  As EEA [1] members they pretty much follow
+all relevant EU regulations, like for example the R&TTE directive.  And
+the CEPT documents should also be pretty clear wrt VHT80 support.
 
-dmesg shows "rtlwifi: Unknown symbol mac80211_ieee80211_rx (err 0)"
+
+[1] http://en.wikipedia.org/wiki/European_Economic_Area
+
+
+
+Bjørn
