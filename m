@@ -1,38 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:43300 "EHLO ebb06.tieto.com"
+Received: from nbd.name ([46.4.11.11]:39221 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756053Ab3HZLsx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 07:48:53 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 0/3] ath10k: initial per-VDEV FW statistics implementation
-Date: Mon, 26 Aug 2013 13:33:31 +0200
-Message-ID: <1377516815-12660-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20130826_134857_042488_CE92CF90)
+	id S1753619Ab3HMJo0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 05:44:26 -0400
+Message-ID: <5209FFED.1040901@openwrt.org> (sfid-20130813_114429_560200_4B763D4C)
+Date: Tue, 13 Aug 2013 11:44:13 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Sujith Manoharan <sujith@msujith.org>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 01/15] ath9k: Add MAX_AMSDU to supported HT capabilities
+References: <1376300502-2741-1-git-send-email-sujith@msujith.org> <1376300502-2741-2-git-send-email-sujith@msujith.org>
+In-Reply-To: <1376300502-2741-2-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FW 1.0.0.716 brings per-VDEV statistics. This patch-set implements
-debugfs mechanism to fetch those. There's still few more fileds we
-can read from the FW stats event, which are not covered here.
+On 2013-08-12 11:41 AM, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+I think processing of fragmented rx in ath9k needs to change before we
+can enable this. At the moment the driver only supports assembling a
+frame from two fragments, which isn't enough to receive large A-MSDU
+packets.
 
-Please note there's an ABI change in wmi_peer_stats structure, hence
-the PEER statistics will be corrupted if used with older firmware
-(e.g. 1.0.0.636)
-
-Bartosz Markowski (3):
-  ath10k: update wmi_request_stats_cmd structure
-  ath10k: update wal_dbg_tx_stats structure
-  ath10k: implement per-VDEV FW statistics
-
- drivers/net/wireless/ath/ath10k/core.h  |   18 +++++++++
- drivers/net/wireless/ath/ath10k/debug.c |   42 ++++++++++++++++---
- drivers/net/wireless/ath/ath10k/wmi.h   |   67 ++++++++++++++++++++++++++-----
- 3 files changed, 113 insertions(+), 14 deletions(-)
-
--- 
-1.7.10
+- Felix
 
