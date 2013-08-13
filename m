@@ -1,73 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:54239 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758Ab3HUE7p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 00:59:45 -0400
-Received: by mail-lb0-f178.google.com with SMTP id z5so216790lbh.23
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 21:59:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgVdMKmd6fPi7ugrWUVaSZeU54K+jyT=gLY2tnxvyBPogQ@mail.gmail.com>
-References: <1376997139-6228-1-git-send-email-emmanuel.grumbach@intel.com>
-	<CAGRGNgVdMKmd6fPi7ugrWUVaSZeU54K+jyT=gLY2tnxvyBPogQ@mail.gmail.com>
-Date: Wed, 21 Aug 2013 07:59:43 +0300
-Message-ID: <CANUX_P3X2emXmTHiDxcs9yP1VzVJ=EPgxuRa5BYGpfCeOi=Q-g@mail.gmail.com> (sfid-20130821_065956_472806_67699240)
-Subject: Re: [RFC 1/2] mac80211: allow APs to send SMPS frames
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:41184 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757098Ab3HMKdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 06:33:38 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 3/5] ath9k: avoid accessing MRC registers on single-chain devices
+Date: Tue, 13 Aug 2013 12:33:28 +0200
+Message-Id: <1376390010-81819-3-git-send-email-nbd@openwrt.org> (sfid-20130813_123344_258696_CD05E664)
+In-Reply-To: <1376390010-81819-1-git-send-email-nbd@openwrt.org>
+References: <1376390010-81819-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+They are not implemented, and accessing them might trigger errors
 
-Thanks for the review.
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> On Tue, Aug 20, 2013 at 9:12 PM, Emmanuel Grumbach
-> <emmanuel.grumbach@intel.com> wrote:
->> SMPS code checks all over the place that the vif is
->> BSS. Remove that constraint and allow SMPS for AP too.
->>
->> Provide dummy implementation that will be used for
->> further patches.
->>
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> ---
->>  net/mac80211/cfg.c            |   15 ++++++++++++---
->>  net/mac80211/debugfs_netdev.c |   24 +++++++++++++++---------
->>  net/mac80211/ht.c             |   38 ++++++++++++++++++++++++++++----------
->>  net/mac80211/ieee80211_i.h    |   13 ++++++++++---
->>  net/mac80211/iface.c          |    2 ++
->>  net/mac80211/mlme.c           |    2 +-
->>  6 files changed, 68 insertions(+), 26 deletions(-)
->>
->> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
->> index e601c9f..7609e47 100644
->> --- a/net/mac80211/debugfs_netdev.c
->> +++ b/net/mac80211/debugfs_netdev.c
->> @@ -245,12 +248,15 @@ static const char *smps_modes[IEEE80211_SMPS_NUM_MODES] = {
->>  static ssize_t ieee80211_if_fmt_smps(const struct ieee80211_sub_if_data *sdata,
->>                                      char *buf, int buflen)
->>  {
->> -       if (sdata->vif.type != NL80211_IFTYPE_STATION)
->> -               return -EOPNOTSUPP;
->> -
->> -       return snprintf(buf, buflen, "request: %s\nused: %s\n",
->> -                       smps_modes[sdata->u.mgd.req_smps],
->> -                       smps_modes[sdata->smps_mode]);
->> +       if (sdata->vif.type == NL80211_IFTYPE_STATION)
->> +               return snprintf(buf, buflen, "request: %s\nused: %s\n",
->> +                               smps_modes[sdata->u.mgd.req_smps],
->> +                               smps_modes[sdata->smps_mode]);
->> +       if (sdata->vif.type == NL80211_IFTYPE_AP)
->> +               return snprintf(buf, buflen, "request: %s\nused: %s\n",
->> +                               smps_modes[sdata->u.ap.req_smps],
->> +                               smps_modes[sdata->smps_mode]);
->> +       return -EINVAL;
->
-> Do you intend to change the return value for this function when we
-> can't do SMPS from -EOPNOTSUPP to -EINVAL?
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 39c3730..18a5aa4 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1172,6 +1172,10 @@ skip_ws_det:
+ 		 * is_on == 0 means MRC CCK is OFF (more noise imm)
+ 		 */
+ 		bool is_on = param ? 1 : 0;
++
++		if (ah->caps.rx_chainmask == 1)
++			break;
++
+ 		REG_RMW_FIELD(ah, AR_PHY_MRC_CCK_CTRL,
+ 			      AR_PHY_MRC_CCK_ENABLE, is_on);
+ 		REG_RMW_FIELD(ah, AR_PHY_MRC_CCK_CTRL,
+-- 
+1.8.0.2
 
-You are right - v2 on the way with other comments I got internally.
