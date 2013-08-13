@@ -1,39 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37417 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756108Ab3HONKX (ORCPT
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:53818 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758668Ab3HMUJq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 09:10:23 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] ath10k: add support for HTT 3.0
-References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
-	<1376036014-29707-1-git-send-email-michal.kazior@tieto.com>
-	<1376036014-29707-4-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 15 Aug 2013 16:10:04 +0300
-In-Reply-To: <1376036014-29707-4-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 9 Aug 2013 10:13:34 +0200")
-Message-ID: <878v0314nn.fsf@kamboji.qca.qualcomm.com> (sfid-20130815_151029_222864_165CC3F6)
+	Tue, 13 Aug 2013 16:09:46 -0400
+Received: by mail-ie0-f170.google.com with SMTP id e14so11382430iej.15
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2013 13:09:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+Date: Tue, 13 Aug 2013 22:09:45 +0200
+Message-ID: <CANq1E4TO8radaMFoLjiwhSq2JAFqcLm8UMQvaq9oJRHiWz=60w@mail.gmail.com> (sfid-20130813_220949_384844_DED8EC3F)
+Subject: Re: [RFT 00/13] brcmsmac: bcm4313 iPA related patches
+From: David Herrmann <dh.herrmann@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jonas Gorski <jogo@openwrt.org>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	David Costa <david@zarel.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi
 
-> New firmware comes with new HTT protocol version.
-> In 3.0 the separate mgmt tx command has been
-> removed. All traffic is to be pushed through data
-> tx (tx_frm) command with a twist - FW seems to not
-> be able (yet?) to access tx fragment table so for
-> manamgement frames frame pointer is passed
-> directly.
+On Tue, Aug 13, 2013 at 10:03 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> This series replaces the patch "[PATCH 12/12] brcmsmac: support 4313iPA"
+> with Message-ID: <1376130450-29746-13-git-send-email-arend@broadcom.com>.
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> It has been split up into individual patches. Please test this series
+> especially if you had issues with the original commit b6fc28a that was
+> reverted.
+>
+> Cc: Jonas Gorski <jogo@openwrt.org>
+> Cc: David Herrmann <dh.herrmann@gmail.com>
+> Cc: Maximilian Engelhardt <maxi@daemonizer.de>
+> Cc: David Costa <david@zarel.net>
 
-Because I dropped patch 1 this patch had conflicts. I tried to be extra
-careful, but please double check my conflict resolution.
+Is this available in a public branch that I can merge? And what should
+be used as base? 3.11-rc5? linux-next?
 
--- 
-Kalle Valo
+Cheers
+David
+
+> Arend van Spriel (13):
+>   brcmsmac: cosmetic change in phy_lcn.c
+>   brcmsmac: change pa_gain for bcm4313 iPA
+>   brcmsmac: use ARRAY_SIZE in phytbl_lcn.c
+>   brcmsmac: add switch control table for BCM4313 iPA BT-combo cards
+>   brcmsmac: add debug info message providing phy and radio info
+>   brcmsmac: update transmit gain table for lcn phy
+>   brcmsmac: change lcnphy receive i/q calibration routine
+>   brcmsmac: fix TSSI idle estimation
+>   brcmsmac: avoid calling set_txpwr_by_index() twice
+>   brcmsmac: rework switch control table init including iPA BT-combo
+>   brcmsmac: correct phy registers for TSSI-based power control
+>   brcmsmac: reinitialize TSSI power control upon channel switch
+>   brcmsmac: add support for BCM4313 iPA variant
+>
+>  drivers/net/wireless/brcm80211/brcmsmac/main.c     |    4 +-
+>  .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |  397 +++++++++++--------
+>  .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |  405 +++++++++++---------
+>  .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h   |    1 +
+>  4 files changed, 475 insertions(+), 332 deletions(-)
+>
+> --
+> 1.7.10.4
+>
+>
