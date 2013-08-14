@@ -1,178 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50180 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751686Ab3HZIxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 04:53:40 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/4] ath10k: move htt rx processing to worker
-Date: Mon, 26 Aug 2013 10:53:24 +0200
-Message-ID: <1377507205-5386-4-git-send-email-michal.kazior@tieto.com> (sfid-20130826_105347_208368_0EE4E33C)
-In-Reply-To: <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
- <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38290 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893Ab3HNGBw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Aug 2013 02:01:52 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH-resend 9/9] ath9k: enable CSA functionality in ath9k
+Date: Wed, 14 Aug 2013 08:01:38 +0200
+Message-Id: <1376460098-26648-10-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130814_080206_727154_9DC1EFA2)
+In-Reply-To: <1376460098-26648-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1376460098-26648-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This improves rx performance by a significant
-value (280mbps -> 350mbps UDP) on AP135.
+CSA is only enabled for one interface, but the same limitation applies
+for mac80211 too. It checks whether the beacon has been sent (different
+approaches for non-EDMA-enabled and EDMA-enabled devices), and completes
+the channel switch after that.
 
-Note: it is not safe to move HTT tx completion
-handling to a worker yet as it must be serialized
-against HTC tx completions.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
-v2:
- * use ieee80211_rx_ni()
+Changes to PATCHv2:
+ * announce support for channel switch
 
- drivers/net/wireless/ath/ath10k/core.h   |    4 ++-
- drivers/net/wireless/ath/ath10k/htt.h    |    3 ++
- drivers/net/wireless/ath/ath10k/htt_rx.c |   54 ++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/txrx.c   |    2 +-
- 4 files changed, 54 insertions(+), 9 deletions(-)
+Changes to PATCHv1:
+ * complete channel switch after the last beacon has been sent
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    2 ++
+ drivers/net/wireless/ath/ath9k/beacon.c |   21 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/init.c   |    1 +
+ drivers/net/wireless/ath/ath9k/main.c   |   17 +++++++++++++++++
+ drivers/net/wireless/ath/ath9k/xmit.c   |    2 ++
+ 5 files changed, 43 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 17694ec..b5f8df0 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -42,8 +42,10 @@
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 505c615..de050e2 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -427,6 +427,7 @@ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_set_beacon(struct ath_softc *sc);
++bool ath9k_csa_is_finished(struct ath_softc *sc);
  
- #define ATH10K_NUM_HTC_TX_WORKERS ATH10K_HTC_EP_COUNT
- #define ATH10K_NUM_WMI_RX_WORKERS 1
-+#define ATH10K_NUM_HTT_RX_WORKERS 1
- #define ATH10K_MAX_NUM_PARALLEL_WORKERS (ATH10K_NUM_HTC_TX_WORKERS + \
--					 ATH10K_NUM_WMI_RX_WORKERS)
-+					 ATH10K_NUM_WMI_RX_WORKERS + \
-+					 ATH10K_NUM_HTT_RX_WORKERS)
+ /*******************/
+ /* Link Monitoring */
+@@ -763,6 +764,7 @@ struct ath_softc {
+ #endif
  
- /* Antenna noise floor */
- #define ATH10K_DEFAULT_NOISE_FLOOR -95
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 26c78a9..8abbf2c 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1268,6 +1268,9 @@ struct ath10k_htt {
- 	/* set if host-fw communication goes haywire
- 	 * used to avoid further failures */
- 	bool rx_confused;
-+
-+	struct work_struct rx_work;
-+	struct sk_buff_head rx_queue;
- };
+ 	struct ath_descdma txsdma;
++	struct ieee80211_vif *csa_vif;
  
- #define RX_HTT_HDR_STATUS_LEN 64
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 9bb0ae89..6cf4d95 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -40,6 +40,10 @@
- /* when under memory pressure rx ring refill may fail and needs a retry */
- #define HTT_RX_RING_REFILL_RETRY_MS 50
+ 	struct ath_ant_comb ant_comb;
+ 	u8 ant_tx, ant_rx;
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 1a17732..b5c16b3a 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -291,6 +291,23 @@ void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 		(unsigned long long)tsfadjust, avp->av_bslot);
+ }
  
++bool ath9k_csa_is_finished(struct ath_softc *sc)
++{
++	struct ieee80211_vif *vif;
 +
-+static void ath10k_htt_rx_work(struct work_struct *work);
++	vif = sc->csa_vif;
++	if (!vif || !vif->csa_active)
++		return false;
 +
++	if (!ieee80211_csa_is_complete(vif))
++		return false;
 +
- static int ath10k_htt_rx_ring_size(struct ath10k_htt *htt)
++	ieee80211_csa_finish(vif);
++
++	sc->csa_vif = NULL;
++	return true;
++}
++
+ void ath9k_beacon_tasklet(unsigned long data)
  {
- 	int size;
-@@ -211,6 +215,8 @@ void ath10k_htt_rx_detach(struct ath10k_htt *htt)
- {
- 	int sw_rd_idx = htt->rx_ring.sw_rd_idx.msdu_payld;
- 
-+	skb_queue_purge(&htt->rx_queue);
-+	cancel_work_sync(&htt->rx_work);
- 	del_timer_sync(&htt->rx_ring.refill_retry_timer);
- 
- 	while (sw_rd_idx != __le32_to_cpu(*(htt->rx_ring.alloc_idx.vaddr))) {
-@@ -501,6 +507,9 @@ int ath10k_htt_rx_attach(struct ath10k_htt *htt)
- 	if (__ath10k_htt_rx_ring_fill_n(htt, htt->rx_ring.fill_level))
- 		goto err_fill_ring;
- 
-+	INIT_WORK(&htt->rx_work, ath10k_htt_rx_work);
-+	skb_queue_head_init(&htt->rx_queue);
-+
- 	ath10k_dbg(ATH10K_DBG_HTT, "HTT RX ring size: %d, fill_level: %d\n",
- 		   htt->rx_ring.size, htt->rx_ring.fill_level);
- 	return 0;
-@@ -1083,17 +1092,11 @@ end:
+ 	struct ath_softc *sc = (struct ath_softc *)data;
+@@ -336,6 +353,10 @@ void ath9k_beacon_tasklet(unsigned long data)
+ 		return;
  	}
- }
  
--void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
-+static void ath10k_htt_rx_process_skb(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct ath10k_htt *htt = &ar->htt;
- 	struct htt_resp *resp = (struct htt_resp *)skb->data;
- 
--	/* confirm alignment */
--	if (!IS_ALIGNED((unsigned long)skb->data, 4))
--		ath10k_warn("unaligned htt message, expect trouble\n");
--
--	ath10k_dbg(ATH10K_DBG_HTT, "HTT RX, msg_type: 0x%0X\n",
--		   resp->hdr.msg_type);
- 	switch (resp->hdr.msg_type) {
- 	case HTT_T2H_MSG_TYPE_VERSION_CONF: {
- 		htt->target_version_major = resp->ver_resp.major;
-@@ -1214,3 +1217,40 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 	/* Free the indication buffer */
- 	dev_kfree_skb_any(skb);
- }
++	/* EDMA devices check that in the tx completion function. */
++	if (!edma && ath9k_csa_is_finished(sc))
++		return;
 +
-+static void ath10k_htt_rx_work(struct work_struct *work)
+ 	slot = ath9k_beacon_choose_slot(sc);
+ 	vif = sc->beacon.bslot[slot];
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 60bb4d6..abf1eb5 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -861,6 +861,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+ 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
++	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+ 
+ #ifdef CONFIG_PM_SLEEP
+ 	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index bddc574..016d1bc 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1032,6 +1032,9 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 	if (ath9k_uses_beacons(vif->type))
+ 		ath9k_beacon_remove_slot(sc, vif);
+ 
++	if (sc->csa_vif == vif)
++		sc->csa_vif = NULL;
++
+ 	ath9k_ps_wakeup(sc);
+ 	ath9k_calculate_summary_state(hw, NULL);
+ 	ath9k_ps_restore(sc);
+@@ -2318,6 +2321,19 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
+ 	clear_bit(SC_OP_SCANNING, &sc->sc_flags);
+ }
+ 
++static void ath9k_channel_switch_beacon(struct ieee80211_hw *hw,
++					struct ieee80211_vif *vif,
++					struct cfg80211_chan_def *chandef)
 +{
-+	struct ath10k_htt *htt = container_of(work, struct ath10k_htt, rx_work);
-+	struct sk_buff *skb;
++	struct ath_softc *sc = hw->priv;
 +
-+	for (;;) {
-+		skb = skb_dequeue(&htt->rx_queue);
-+		if (!skb)
-+			break;
++	/* mac80211 does not support CSA in multi-if cases (yet) */
++	if (WARN_ON(sc->csa_vif))
++		return;
 +
-+		ath10k_htt_rx_process_skb(htt->ar, skb);
-+	}
++	sc->csa_vif = vif;
 +}
 +
-+void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	struct ath10k_htt *htt = &ar->htt;
-+	struct htt_resp *resp = (struct htt_resp *)skb->data;
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2366,4 +2382,5 @@ struct ieee80211_ops ath9k_ops = {
+ #endif
+ 	.sw_scan_start	    = ath9k_sw_scan_start,
+ 	.sw_scan_complete   = ath9k_sw_scan_complete,
++	.channel_switch_beacon     = ath9k_channel_switch_beacon,
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index d8dfb3e..f587c7e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2569,6 +2569,8 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 		if (ts.qid == sc->beacon.beaconq) {
+ 			sc->beacon.tx_processed = true;
+ 			sc->beacon.tx_last = !(ts.ts_status & ATH9K_TXERR_MASK);
 +
-+	/* confirm alignment */
-+	if (!IS_ALIGNED((unsigned long)skb->data, 4))
-+		ath10k_warn("unaligned htt message, expect trouble\n");
-+
-+	ath10k_dbg(ATH10K_DBG_HTT, "HTT RX, msg_type: 0x%0X\n",
-+		   resp->hdr.msg_type);
-+	switch (resp->hdr.msg_type) {
-+	case HTT_T2H_MSG_TYPE_RX_FRAG_IND:
-+	case HTT_T2H_MSG_TYPE_RX_IND:
-+		skb_queue_tail(&htt->rx_queue, skb);
-+		queue_work(ar->workqueue, &htt->rx_work);
-+		break;
-+	default:
-+		ath10k_htt_rx_process_skb(ar, skb);
-+		break;
-+	}
-+}
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index ce7e304..dd87e6f 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -297,7 +297,7 @@ void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 		   status->band);
- 
- 	spin_lock_bh(&ar->txrx_lock);
--	ieee80211_rx(ar->hw, info->skb);
-+	ieee80211_rx_ni(ar->hw, info->skb);
- 	spin_unlock_bh(&ar->txrx_lock);
- }
++			ath9k_csa_is_finished(sc);
+ 			continue;
+ 		}
  
 -- 
-1.7.9.5
+1.7.10.4
 
