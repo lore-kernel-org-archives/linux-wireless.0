@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37417 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756006Ab3HONKX (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:37931 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933115Ab3HNWKJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 09:10:23 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/3] ath10k: firmware-related updates
-References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
-	<1376036014-29707-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 15 Aug 2013 16:09:01 +0300
-In-Reply-To: <1376036014-29707-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 9 Aug 2013 10:13:31 +0200")
-Message-ID: <87d2pf14pe.fsf@kamboji.qca.qualcomm.com> (sfid-20130815_151026_703249_67999B17)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 14 Aug 2013 18:10:09 -0400
+From: Luis Henriques <luis.henriques@canonical.com>
+To: linux-kernel@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] net: rfkill: Do not ignore errors from regulator_enable()
+Date: Wed, 14 Aug 2013 23:10:06 +0100
+Message-Id: <1376518206-10710-1-git-send-email-luis.henriques@canonical.com> (sfid-20130815_001050_668739_3511AEC5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Function regulator_enable() may return an error that has to be checked.
+This patch changes function rfkill_regulator_set_block() so that it checks
+for the return code.  Also, rfkill_data->reg_enabled is set to 'true' only
+if there is no error.
 
-> Hi,
->
-> This patchset contains 2 firmware-related upgrades
-> and 1 fix (that I though is a good pick to include
-> here, since it's related with HTT tx).
->
-> This keeps backward compatbility with old
-> firmware.
->
-> This includes fixes for issues pointed out during
-> RFC review.
+This fixes the following compilation warning:
 
-[...]
+net/rfkill/rfkill-regulator.c:43:20: warning: ignoring return value of 'regulator_enable', declared with attribute warn_unused_result [-Wunused-result]
 
-> Michal Kazior (3):
->   ath10k: clean up HTT tx tid handling
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+---
+ net/rfkill/rfkill-regulator.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-I dropped this patch.
-
->   ath10k: add support for firmware newer than 636
->   ath10k: add support for HTT 3.0
-
-These two are applied.
-
+diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
+index d11ac79..cf5b145 100644
+--- a/net/rfkill/rfkill-regulator.c
++++ b/net/rfkill/rfkill-regulator.c
+@@ -30,6 +30,7 @@ struct rfkill_regulator_data {
+ static int rfkill_regulator_set_block(void *data, bool blocked)
+ {
+ 	struct rfkill_regulator_data *rfkill_data = data;
++	int ret = 0;
+ 
+ 	pr_debug("%s: blocked: %d\n", __func__, blocked);
+ 
+@@ -40,15 +41,16 @@ static int rfkill_regulator_set_block(void *data, bool blocked)
+ 		}
+ 	} else {
+ 		if (!rfkill_data->reg_enabled) {
+-			regulator_enable(rfkill_data->vcc);
+-			rfkill_data->reg_enabled = true;
++			ret = regulator_enable(rfkill_data->vcc);
++			if (!ret)
++				rfkill_data->reg_enabled = true;
+ 		}
+ 	}
+ 
+ 	pr_debug("%s: regulator_is_enabled after set_block: %d\n", __func__,
+ 		regulator_is_enabled(rfkill_data->vcc));
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static struct rfkill_ops rfkill_regulator_ops = {
 -- 
-Kalle Valo
+1.8.3.2
+
