@@ -1,109 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16842 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934130Ab3HHJFk (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:34354 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760336Ab3HNVjI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 05:05:40 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 3/3] ath10k: add support for HTT 3.0
-References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
-	<1375949298-7159-4-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 8 Aug 2013 12:05:32 +0300
-In-Reply-To: <1375949298-7159-4-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 8 Aug 2013 10:08:18 +0200")
-Message-ID: <87eha4363n.fsf@kamboji.qca.qualcomm.com> (sfid-20130808_110555_313430_865476CC)
+	Wed, 14 Aug 2013 17:39:08 -0400
+Received: by mail-ie0-f175.google.com with SMTP id s9so12459iec.6
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Aug 2013 14:39:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <520AF3BD.5020705@lwfinger.net>
+References: <CAN3-2D7=P=9VyV7xoANw_6B8VhOaTRC1iMw+mwUH2-g8YOmPMg@mail.gmail.com>
+	<520968B0.80301@lwfinger.net>
+	<CAN3-2D5rCnXYogA6s6in_e6qpyLmZ0bpbGX=REi=Cn29U40nMw@mail.gmail.com>
+	<520971BA.6040503@lwfinger.net>
+	<CAN3-2D75TLTS-Fv3CgoBjA+RA3jv-QyLoSs+PZeKXLY_MUcSTQ@mail.gmail.com>
+	<520975D8.8040908@lwfinger.net>
+	<CAN3-2D6KSsFXQ5QOGfp-1c69dCSrCEdcgXMfPcuEC+Hx_dX_zw@mail.gmail.com>
+	<520AF3BD.5020705@lwfinger.net>
+Date: Wed, 14 Aug 2013 14:39:08 -0700
+Message-ID: <CAN3-2D5+tvQyZKBP3vUwGWdctCcfCeBxAhPsZs+DCLDdr4dyCw@mail.gmail.com> (sfid-20130814_233914_023658_AD53C22B)
+Subject: Re: issues with RTL8188CE device and rtl8192ce driver
+From: Colleen Josephson <cjoseph@mit.edu>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+> First, what chip is in your computer. Please send me the output of the
+> command '/sbin/lspci -nnv'. Only the stanza for the RTL8188CE will be
+> needed. There are at least 4 different chips that work with driver
+> rtl8192ce.
 
-> New firmware comes with new HTT protocol version.
-> In 3.0 the separate mgmt tx command has been
-> removed. All traffic is to be pushed through data
-> tx (tx_frm) command with a twist - FW seems to not
-> be able (yet?) to access tx fragment table so for
-> manamgement frames frame pointer is passed
-> directly.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
+RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8195]
+Flags: bus master, fast devsel, latency 0, IRQ 17
+I/O ports at 5000 [size=256]
+Memory at f3800000 (64-bit, non-prefetchable) [size=16K]
+Capabilities: [40] Power Management version 3
+Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+Capabilities: [70] Express Endpoint, MSI 00
+Capabilities: [100] Advanced Error Reporting
+Capabilities: [140] Virtual Channel
+Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+Kernel driver in use: rtl8192ce
+Kernel modules: rtl8192ce
 
-[...]
 
->  static int ath10k_htt_verify_version(struct ath10k_htt *htt)
->  {
-> -	ath10k_dbg(ATH10K_DBG_HTT,
-> -		   "htt target version %d.%d; host version %d.%d\n",
-> -		    htt->target_version_major,
-> -		    htt->target_version_minor,
-> -		    HTT_CURRENT_VERSION_MAJOR,
-> -		    HTT_CURRENT_VERSION_MINOR);
-> -
-> -	if (htt->target_version_major != HTT_CURRENT_VERSION_MAJOR) {
-> +	ath10k_dbg(ATH10K_DBG_HTT, "htt target version %d.%d\n",
-> +		   htt->target_version_major, htt->target_version_minor);
+> Second, what is the make/model of the access point that you are using? Is
+> the firmware up to date?
 
-This debug print is good to have, but with the new htt version it would
-be good to print it always using the info level. For example, can we add
-it to the same line with "firmware %s booted" string?
+There are two Meraki M16 access points (with up to date firmware).
 
-(Please take into account that the info messages still need to be
-compact, by default they should not be longer than five lines or so.)
+> Third, what is the encryption method you are using, and what is the maximum
+> rate for the connection? That will tell me if you are using 802.11g or
+> 802.11n.
 
-> +	if (htt->target_version_major != 2 &&
-> +	    htt->target_version_major != 3) {
->  		ath10k_err("htt major versions are incompatible!\n");
->  		return -ENOTSUPP;
->  	}
-
-Print the htt version in the error message as well?
-
-> @@ -401,10 +401,15 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
->  		goto err;
->  	}
->  
-> -	txfrag = dev_alloc_skb(frag_len);
-> -	if (!txfrag) {
-> -		res = -ENOMEM;
-> -		goto err;
-> +	/* Since HTT 3.0 there is no separate mgmt tx command. However in case
-> +	 * of mgmt tx using TX_FRM there is not tx fragment list. Instead of tx
-> +	 * fragment list host driver specifies directly frame pointer. */
-> +	if (!(htt->target_version_major >= 3 && ieee80211_is_mgmt(hdr->frame_control))) {
-
-I think using "< 3" is more readable:
-
-if (htt->target_version_major < 3 &&
-   !ieee80211_is_mgmt(hdr->frame_control)) {
-        ...
-}
-
-And is the single line too long? Didn't count it, though.
-
-> @@ -427,23 +432,30 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
->  	if (res)
->  		goto err;
->  
-> -	/* tx fragment list must be terminated with zero-entry */
-> -	skb_put(txfrag, frag_len);
-> -	tx_frags = (struct htt_data_tx_desc_frag *)txfrag->data;
-> -	tx_frags[0].paddr = __cpu_to_le32(ATH10K_SKB_CB(msdu)->paddr);
-> -	tx_frags[0].len   = __cpu_to_le32(msdu->len);
-> -	tx_frags[1].paddr = __cpu_to_le32(0);
-> -	tx_frags[1].len   = __cpu_to_le32(0);
-> -
-> -	res = ath10k_skb_map(dev, txfrag);
-> -	if (res)
-> -		goto err;
-> +	/* Since HTT 3.0 there is no separate mgmt tx command. However in case
-> +	 * of mgmt tx using TX_FRM there is not tx fragment list. Instead of tx
-> +	 * fragment list host driver specifies directly frame pointer. */
-> +	if (!(htt->target_version_major >= 3 && ieee80211_is_mgmt(hdr->frame_control))) {
-
-Ditto.
-
--- 
-Kalle Valo
+802.11g.  The encryption is WPA & WPA2 Personal, and the maximum rate
+is 54 Mbps.
