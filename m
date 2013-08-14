@@ -1,86 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:33478 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754725Ab3HPWrB (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56573 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759305Ab3HNDpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 18:47:01 -0400
-From: Marc Kleine-Budde <mkl@pengutronix.de>
-To: linux-wireless@vger.kernel.org
-Cc: linux@rempel-privat.de, ath9k-devel@lists.ath9k.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Marc Kleine-Budde <mkl@blackshift.org>
-Subject: [PATCH v2] ath9k_htc: Restore skb headroom when returning skb to mac80211
-Date: Fri, 16 Aug 2013 21:39:40 +0200
-Message-Id: <1376681980-27831-1-git-send-email-mkl@pengutronix.de> (sfid-20130817_004708_288610_E1824103)
+	Tue, 13 Aug 2013 23:45:16 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 07/14] ath9k: Fix PHY error processing
+Date: Wed, 14 Aug 2013 09:11:15 +0530
+Message-Id: <1376451682-25862-7-git-send-email-sujith@msujith.org> (sfid-20130814_060909_605477_D01C3719)
+In-Reply-To: <1376451682-25862-1-git-send-email-sujith@msujith.org>
+References: <1376451682-25862-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-ath9k_htc adds padding between the 802.11 header and the payload during
-TX by moving the header. When handing the frame back to mac80211 for TX
-status handling the header is not moved back into its original position.
-This can result in a too small skb headroom when entering ath9k_htc
-again (due to a soft retransmission for example) causing an
-skb_under_panic oops.
+Parse the PHY error details only for the last fragment
+in case descriptors are chained.
 
-Fix this by moving the 802.11 header back into its original position
-before returning the frame to mac80211 as other drivers like rt2x00
-or ath5k do.
-
-Reported-by: Marc Kleine-Budde <mkl@blackshift.org>
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Tested-by: Marc Kleine-Budde <mkl@blackshift.org>
-Signed-off-by: Marc Kleine-Budde <mkl@blackshift.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
-Hello Helmut,
+ drivers/net/wireless/ath/ath9k/recv.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
-I've change the patch a bit, I've used ieee80211_get_hdrlen_from_skb() instead
-of open coding it.
-
-Tested in ARMv5 with USB device
-  "ID 0cf3:7015 Atheros Communications, Inc. TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]"
-for four weeks. Without that patch the kernel oopes after about one week.
-
-I think this is a candidate for stable, can you add stable to Cc?
-
-regards,
-Marc
-
-changes since v1:
-- use ieee80211_get_hdrlen_from_skb() instead of open coding it
-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index e602c95..c028df7 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -448,6 +448,7 @@ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
- 	struct ieee80211_conf *cur_conf = &priv->hw->conf;
- 	bool txok;
- 	int slot;
-+	int hdrlen, padsize;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 51e7d16..e18adde 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -803,8 +803,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
+ 			mic_error = false;
+ 		}
+-		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
+-			return false;
  
- 	slot = strip_drv_header(priv, skb);
- 	if (slot < 0) {
-@@ -504,6 +505,15 @@ send_mac80211:
+ 		if ((rx_stats->rs_status & ATH9K_RXERR_DECRYPT) ||
+ 		    (!is_mc && (rx_stats->rs_status & ATH9K_RXERR_KEYMISS))) {
+@@ -1088,6 +1086,18 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	ath9k_process_tsf(rx_stats, rx_status, tsf);
  
- 	ath9k_htc_tx_clear_slot(priv, slot);
- 
-+	/* Remove padding before handing frame back to mac80211 */
-+	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+ 	/*
++	 * Process PHY errors and return so that the packet
++	 * can be dropped.
++	 */
++	if (rx_stats->rs_status & ATH9K_RXERR_PHY) {
++		ath9k_dfs_process_phyerr(sc, hdr, rx_stats, rx_status->mactime);
++		if (ath_process_fft(sc, hdr, rx_stats, rx_status->mactime))
++			RX_STAT_INC(rx_spectral);
 +
-+	padsize = hdrlen & 3;
-+	if (padsize && skb->len > hdrlen + padsize) {
-+		memmove(skb->data + padsize, skb->data, hdrlen);
-+		skb_pull(skb, padsize);
++		return -EINVAL;
 +	}
 +
- 	/* Send status to mac80211 */
- 	ieee80211_tx_status(priv->hw, skb);
- }
++	/*
+ 	 * everything but the rate is checked here, the rate check is done
+ 	 * separately to avoid doing two lookups for a rate for each frame.
+ 	 */
+@@ -1265,15 +1275,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		rxs = IEEE80211_SKB_RXCB(hdr_skb);
+ 		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
+ 
+-		if (rs.rs_status & ATH9K_RXERR_PHY) {
+-			ath9k_dfs_process_phyerr(sc, hdr, &rs, rxs->mactime);
+-
+-			if (ath_process_fft(sc, hdr, &rs, rxs->mactime)) {
+-				RX_STAT_INC(rx_spectral);
+-				goto requeue_drop_frag;
+-			}
+-		}
+-
+ 		retval = ath9k_rx_skb_preprocess(sc, hdr, &rs, rxs,
+ 						 &decrypt_error, tsf);
+ 		if (retval)
 -- 
-1.8.3.1
+1.8.3.4
 
