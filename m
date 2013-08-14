@@ -1,50 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60505 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751997Ab3HTEjl (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:55512 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752268Ab3HNGBw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 00:39:41 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH] ath9k: Enable PLL fix only for AR9340/AR9330
-Date: Tue, 20 Aug 2013 10:05:59 +0530
-Message-Id: <1376973359-4072-1-git-send-email-sujith@msujith.org> (sfid-20130820_063946_251023_4036FE92)
+	Wed, 14 Aug 2013 02:01:52 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH-resend 8/9] ath5k: enable support for 5 MHz and 10 MHz channels
+Date: Wed, 14 Aug 2013 08:01:37 +0200
+Message-Id: <1376460098-26648-9-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130814_080214_445742_CC0E143F)
+In-Reply-To: <1376460098-26648-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1376460098-26648-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-The PLL hang workaround is required only for AR9330 and
-AR9340. This issue was first observed on an AP121 and the WAR
-is enabled for AR9340 also (DB120 etc.), since it uses a PLL
-design identical to AR9330. This is not required for AR9485 and AR9550.
-
-Various bugs have been reported regarding this:
-
-https://bugzilla.redhat.com/show_bug.cgi?id=997217
-https://bugzilla.redhat.com/show_bug.cgi?id=994648
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h        |    1 +
+ drivers/net/wireless/ath/ath5k/base.c         |   25 ++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath5k/base.h         |    2 +-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +-
+ 4 files changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ac9f18f..e4f6590 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -173,8 +173,7 @@ static void ath_restart_work(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 2d691b8..74bd54d 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -29,6 +29,7 @@
+ #include <linux/average.h>
+ #include <linux/leds.h>
+ #include <net/mac80211.h>
++#include <net/cfg80211.h>
+ 
+ /* RX/TX descriptor hw structs
+  * TODO: Driver part should only see sw structs */
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 7c298af..48161ed 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -56,6 +56,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/nl80211.h>
+ 
++#include <net/cfg80211.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+ #include <asm/unaligned.h>
+@@ -443,11 +444,27 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+  * Called with ah->lock.
+  */
+ int
+-ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
++ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef)
  {
- 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+ 	ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
+ 		  "channel set, resetting (%u -> %u MHz)\n",
+-		  ah->curchan->center_freq, chan->center_freq);
++		  ah->curchan->center_freq, chandef->chan->center_freq);
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_20:
++	case NL80211_CHAN_WIDTH_20_NOHT:
++		ah->ah_bwmode = AR5K_BWMODE_DEFAULT;
++		break;
++	case NL80211_CHAN_WIDTH_5:
++		ah->ah_bwmode = AR5K_BWMODE_5MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_10:
++		ah->ah_bwmode = AR5K_BWMODE_10MHZ;
++		break;
++	default:
++		WARN_ON(1);
++		return -EINVAL;
++	}
  
--	if (AR_SREV_9340(sc->sc_ah) || AR_SREV_9485(sc->sc_ah) ||
--	    AR_SREV_9550(sc->sc_ah))
-+	if (AR_SREV_9340(sc->sc_ah) || AR_SREV_9330(sc->sc_ah))
- 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work,
- 				     msecs_to_jiffies(ATH_PLL_WORK_INTERVAL));
+ 	/*
+ 	 * To switch channels clear any pending DMA operations;
+@@ -455,7 +472,7 @@ ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan)
+ 	 * hardware at the new frequency, and then re-enable
+ 	 * the relevant bits of the h/w.
+ 	 */
+-	return ath5k_reset(ah, chan, true);
++	return ath5k_reset(ah, chandef->chan, true);
+ }
  
+ void ath5k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+@@ -2525,6 +2542,8 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
+ 	/* SW support for IBSS_RSN is provided by mac80211 */
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 
++	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
++
+ 	/* both antennas can be configured as RX or TX */
+ 	hw->wiphy->available_antennas_tx = 0x3;
+ 	hw->wiphy->available_antennas_rx = 0x3;
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index ca9a83c..97469d0 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -101,7 +101,7 @@ void ath5k_set_beacon_filter(struct ieee80211_hw *hw, bool enable);
+ 
+ void ath5k_update_bssid_mask_and_opmode(struct ath5k_hw *ah,
+ 					struct ieee80211_vif *vif);
+-int ath5k_chan_set(struct ath5k_hw *ah, struct ieee80211_channel *chan);
++int ath5k_chan_set(struct ath5k_hw *ah, struct cfg80211_chan_def *chandef);
+ void ath5k_txbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
+ void ath5k_rxbuf_free_skb(struct ath5k_hw *ah, struct ath5k_buf *bf);
+ void ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index 40825d4..4ee01f6 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -202,7 +202,7 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_lock(&ah->lock);
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+-		ret = ath5k_chan_set(ah, conf->chandef.chan);
++		ret = ath5k_chan_set(ah, &conf->chandef);
+ 		if (ret < 0)
+ 			goto unlock;
+ 	}
 -- 
-1.8.3.4
+1.7.10.4
 
