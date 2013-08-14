@@ -1,45 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52552 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755485Ab3HFJi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 05:38:26 -0400
-Message-ID: <5200C408.4010107@openwrt.org> (sfid-20130806_113837_607796_A1E7513A)
-Date: Tue, 06 Aug 2013 11:38:16 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 10/12] ath9k: use software queues for un-aggregated data
- packets
-References: <1375732583-39001-1-git-send-email-nbd@openwrt.org> <1375732583-39001-10-git-send-email-nbd@openwrt.org> <20992.46948.427492.675142@gargle.gargle.HOWL>
-In-Reply-To: <20992.46948.427492.675142@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from s72.web-hosting.com ([198.187.29.21]:37193 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758790Ab3HNDpH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 23:45:07 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 01/14] ath9k: Use a subroutine to check for "mybeacon"
+Date: Wed, 14 Aug 2013 09:11:09 +0530
+Message-Id: <1376451682-25862-1-git-send-email-sujith@msujith.org> (sfid-20130814_054512_097737_055E079F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-08-06 10:44 AM, Sujith Manoharan wrote:
-> Felix Fietkau wrote:
->> +		aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
->> +		if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
->> +		    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH))
->> +			break;
->> +
->> +		ath_set_rates(tid->an->vif, tid->an->sta, bf);
->> +		if (aggr)
->> +			last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
->> +						tid_q, &aggr_len);
->> +		else
->> +			ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
->> +
->> +		if (list_empty(&bf_q))
->> +			return;
-> 
-> Handling non-AMPDU and AMPDU packets in the same path makes the code hard
-> to follow. Since a TID can either have aggregated or unaggregated packets,
-> why not separate the logic early, maybe in the schedule() function ?
-When aggregation is enabled on a TID, it can still hold some
-non-aggregated packets that need to be sent out first until it starts
-forming A-MPDUs. I think separating this early doesn't work.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-- Felix
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 36 ++++++++++++++++++++++-------------
+ 1 file changed, 23 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 2dd851a..0c23053 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1160,6 +1160,24 @@ static void ath9k_apply_ampdu_details(struct ath_softc *sc,
+ 	}
+ }
+ 
++static bool ath9k_is_mybeacon(struct ath_softc *sc, struct sk_buff *skb)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ieee80211_hdr *hdr;
++
++	hdr = (struct ieee80211_hdr *) (skb->data + ah->caps.rx_status_len);
++
++	if (ieee80211_is_beacon(hdr->frame_control)) {
++		RX_STAT_INC(rx_beacons);
++		if (!is_zero_ether_addr(common->curbssid) &&
++		    ether_addr_equal(hdr->addr3, common->curbssid))
++			return true;
++	}
++
++	return false;
++}
++
+ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ {
+ 	struct ath_buf *bf;
+@@ -1175,7 +1193,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	enum ath9k_rx_qtype qtype;
+ 	bool edma = !!(ah->caps.hw_caps & ATH9K_HW_CAP_EDMA);
+ 	int dma_type;
+-	u8 rx_status_len = ah->caps.rx_status_len;
+ 	u64 tsf = 0;
+ 	u32 tsf_lower = 0;
+ 	unsigned long flags;
+@@ -1216,18 +1233,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		else
+ 			hdr_skb = skb;
+ 
+-		hdr = (struct ieee80211_hdr *) (hdr_skb->data + rx_status_len);
+-		rxs = IEEE80211_SKB_RXCB(hdr_skb);
+-		if (ieee80211_is_beacon(hdr->frame_control)) {
+-			RX_STAT_INC(rx_beacons);
+-			if (!is_zero_ether_addr(common->curbssid) &&
+-			    ether_addr_equal(hdr->addr3, common->curbssid))
+-				rs.is_mybeacon = true;
+-			else
+-				rs.is_mybeacon = false;
+-		}
+-		else
+-			rs.is_mybeacon = false;
++		rs.is_mybeacon = ath9k_is_mybeacon(sc, hdr_skb);
++
++		hdr = (struct ieee80211_hdr *) (hdr_skb->data +
++						ah->caps.rx_status_len);
+ 
+ 		if (ieee80211_is_data_present(hdr->frame_control) &&
+ 		    !ieee80211_is_qos_nullfunc(hdr->frame_control))
+@@ -1235,6 +1244,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 
+ 		ath_debug_stat_rx(sc, &rs);
+ 
++		rxs = IEEE80211_SKB_RXCB(hdr_skb);
+ 		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
+ 
+ 		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
+-- 
+1.8.3.4
 
