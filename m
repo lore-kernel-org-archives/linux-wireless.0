@@ -1,95 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:62703 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752017Ab3HUGEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 02:04:32 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.10 1/8] iwlwifi: mvm: correctly configure MCAST in AP mode
-Date: Wed, 21 Aug 2013 09:04:19 +0300
-Message-Id: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130821_080435_765866_3BBC7EC1)
+Received: from s72.web-hosting.com ([198.187.29.21]:39915 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758973Ab3HNPti (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Aug 2013 11:49:38 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] ath9k: Optimize LNA check
+Date: Wed, 14 Aug 2013 21:15:56 +0530
+Message-Id: <1376495157-18983-3-git-send-email-sujith@msujith.org> (sfid-20130814_174946_597380_52B6AC70)
+In-Reply-To: <1376495157-18983-1-git-send-email-sujith@msujith.org>
+References: <1376495157-18983-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 86a91ec757338edbce51de5dabd7afb0366f485c upstream.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The AP mode needs to use the MCAST fifo for the MCAST
-frames sent after the DTIM. This fifo needs to be
-configured with the same parameters as the VOICE FIFO.
+The documentation for antenna diversity says:
 
-A separate SCD queue is mapped to this fifo - the cab_queue
-(cab stands for Content After Beacon). This queue isn't
-connected to any station, but rather to the MAC context.
-This queue should (and is already) be set as the MCAST
-queue - this is part of the of MAC context command.
+"The decision of diversity is done at 802.11 preamble. So, for
+11G/11B, for every MAC packet hardware will do a decision. But in
+11N with aggregation, the decision is made only at the preamble and
+all other MPDUs will use the same LNA as the first MPDU."
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Make use of rs_firstaggr to avoid needlessly scanning for LNA
+changes.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h |    8 +++++++-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c   |    6 +++++-
- drivers/net/wireless/iwlwifi/mvm/mvm.h        |    1 +
- 3 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c | 77 +++++++++++++++++++++--------------
+ 1 file changed, 47 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h
-index d68640e..98b1feb 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h
-@@ -71,7 +71,13 @@
- #define MAC_INDEX_MIN_DRIVER	0
- #define NUM_MAC_INDEX_DRIVER	MAC_INDEX_AUX
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 6ad7d61..6161d14 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1238,6 +1238,52 @@ static void ath9k_rx_skb_postprocess(struct ath_common *common,
+ 		rxs->flag &= ~RX_FLAG_DECRYPTED;
+ }
  
--#define AC_NUM	4 /* Number of access categories */
-+enum iwl_ac {
-+	AC_BK,
-+	AC_BE,
-+	AC_VI,
-+	AC_VO,
-+	AC_NUM,
-+};
- 
- /**
-  * enum iwl_mac_protection_flags - MAC context flags
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index b2cc3d9..3b69045 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -362,7 +362,7 @@ int iwl_mvm_mac_ctxt_init(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		break;
- 	case NL80211_IFTYPE_AP:
- 		iwl_trans_ac_txq_enable(mvm->trans, vif->cab_queue,
--					IWL_MVM_TX_FIFO_VO);
-+					IWL_MVM_TX_FIFO_MCAST);
- 		/* fall through */
- 	default:
- 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
-@@ -550,6 +550,10 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
- 		cmd->ac[i].fifos_mask = BIT(iwl_mvm_ac_to_tx_fifo[i]);
- 	}
- 
-+	/* in AP mode, the MCAST FIFO takes the EDCA params from VO */
-+	if (vif->type == NL80211_IFTYPE_AP)
-+		cmd->ac[AC_VO].fifos_mask |= BIT(IWL_MVM_TX_FIFO_MCAST);
++/*
++ * Run the LNA combining algorithm only in these cases:
++ *
++ * Standalone WLAN cards with both LNA/Antenna diversity
++ * enabled in the EEPROM.
++ *
++ * WLAN+BT cards which are in the supported card list
++ * in ath_pci_id_table and the user has loaded the
++ * driver with "bt_ant_diversity" set to true.
++ */
++static void ath9k_antenna_check(struct ath_softc *sc,
++				struct ath_rx_status *rs)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath9k_hw_capabilities *pCap = &ah->caps;
++	struct ath_common *common = ath9k_hw_common(ah);
 +
- 	if (vif->bss_conf.qos)
- 		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
++	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB))
++		return;
++
++	/*
++	 * All MPDUs in an aggregate will use the same LNA
++	 * as the first MPDU.
++	 */
++	if (rs->rs_isaggr && !rs->rs_firstaggr)
++		return;
++
++	/*
++	 * Change the default rx antenna if rx diversity
++	 * chooses the other antenna 3 times in a row.
++	 */
++	if (sc->rx.defant != rs->rs_antenna) {
++		if (++sc->rx.rxotherant >= 3)
++			ath_setdefantenna(sc, rs->rs_antenna);
++	} else {
++		sc->rx.rxotherant = 0;
++	}
++
++	if (pCap->hw_caps & ATH9K_HW_CAP_BT_ANT_DIV) {
++		if (common->bt_ant_diversity)
++			ath_ant_comb_scan(sc, rs);
++	} else {
++		ath_ant_comb_scan(sc, rs);
++	}
++}
++
+ static void ath9k_apply_ampdu_details(struct ath_softc *sc,
+ 	struct ath_rx_status *rs, struct ieee80211_rx_status *rxs)
+ {
+@@ -1262,7 +1308,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	struct sk_buff *skb = NULL, *requeue_skb, *hdr_skb;
+ 	struct ieee80211_rx_status *rxs;
+ 	struct ath_hw *ah = sc->sc_ah;
+-	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	int retval;
+@@ -1398,35 +1443,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			ath_rx_ps(sc, skb, rs.is_mybeacon);
+ 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
  
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 9f46b23..8086231 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -88,6 +88,7 @@ enum iwl_mvm_tx_fifo {
- 	IWL_MVM_TX_FIFO_BE,
- 	IWL_MVM_TX_FIFO_VI,
- 	IWL_MVM_TX_FIFO_VO,
-+	IWL_MVM_TX_FIFO_MCAST = 5,
- };
+-		/*
+-		 * Run the LNA combining algorithm only in these cases:
+-		 *
+-		 * Standalone WLAN cards with both LNA/Antenna diversity
+-		 * enabled in the EEPROM.
+-		 *
+-		 * WLAN+BT cards which are in the supported card list
+-		 * in ath_pci_id_table and the user has loaded the
+-		 * driver with "bt_ant_diversity" set to true.
+-		 */
+-		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
+-			/*
+-			 * Change the default rx antenna if rx diversity
+-			 * chooses the other antenna 3 times in a row.
+-			 */
+-			if (sc->rx.defant != rs.rs_antenna) {
+-				if (++sc->rx.rxotherant >= 3)
+-					ath_setdefantenna(sc, rs.rs_antenna);
+-			} else {
+-				sc->rx.rxotherant = 0;
+-			}
+-
+-			if (pCap->hw_caps & ATH9K_HW_CAP_BT_ANT_DIV) {
+-				if (common->bt_ant_diversity)
+-					ath_ant_comb_scan(sc, &rs);
+-			} else {
+-				ath_ant_comb_scan(sc, &rs);
+-			}
+-		}
++		ath9k_antenna_check(sc, &rs);
  
- extern struct ieee80211_ops iwl_mvm_hw_ops;
+ 		ath9k_apply_ampdu_details(sc, &rs, rxs);
+ 
 -- 
-1.7.10.4
+1.8.3.4
 
