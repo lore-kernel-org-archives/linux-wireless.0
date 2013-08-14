@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56488 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751849Ab3H0JI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 05:08:57 -0400
-Date: Tue, 27 Aug 2013 11:07:08 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Paul Menzel <paulepanter@users.sourceforge.net>
-Cc: Fabien ADAM <id2ndr@crocobox.org>, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 3.11] rt2800: fix wrong TX power
- compensation
-Message-ID: <20130827090707.GB5548@redhat.com> (sfid-20130827_110900_476613_5C5C3914)
-References: <20130826131851.GB10525@redhat.com>
- <1377548398.4408.4.camel@mattotaupa>
- <20130827080001.GA2609@redhat.com>
- <1377591765.5019.23.camel@mattotaupa>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1377591765.5019.23.camel@mattotaupa>
+Received: from s72.web-hosting.com ([198.187.29.21]:55877 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759379Ab3HNDp1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Aug 2013 23:45:27 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/14] ath9k: Handle corrupt descriptors properly
+Date: Wed, 14 Aug 2013 09:11:20 +0530
+Message-Id: <1376451682-25862-12-git-send-email-sujith@msujith.org> (sfid-20130814_060909_370195_0ABB0B3B)
+In-Reply-To: <1376451682-25862-1-git-send-email-sujith@msujith.org>
+References: <1376451682-25862-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 27, 2013 at 10:22:45AM +0200, Paul Menzel wrote:
-> > I checked 2 devices (3071 & 3070) but they have EXTERNAL_TX_ALC bit set.
-> > I assume the fix is correct based on vendor driver and it fixes devices
-> > which have no EXTERNAL_TX_ACL, but I can not tell what chipset that are.
-> > Is possible that the same chipset can be configured with and without
-> > EXTERNAL_TX_ALC.
-> 
-> I have the following device.
-> 
->         $ lsusb -s 004
->         Bus 002 Device 004: ID 148f:2870 Ralink Technology, Corp. RT2870 Wireless Adapter
-> 
-> How do I check if the bit is set? Sometimes the device disconnects when
-> being 10 meters away from the access point. The connection is also
-> slower than with an ath5k device right next to it.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-If you compiled kernel with DEBUGFS support, you can check that by:
+The MIC/PHYERR/CRC error bits are valid only for
+the last desc. for chained packets. Check this early
+in the preprocess() routine and bail out.
 
-mount -t debugfs debugfs /sys/kernel/debug/
-cd /sys/kernel/debug/ieee80211/phy0/rt2800usb/register/
-echo "0x001b" > eeprom_offset
-cat eeprom_value
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-Second less significant bit is EXTERNAL_TX_ALC .
-
-I think your device has EXTERNAL_TX_ACL since it's older chip, but who
-knows ...
-
-Stanislaw
-
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 5b84ce4..30cb726 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1099,6 +1099,16 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	if (rx_stats->rs_more)
+ 		return 0;
+ 
++	/*
++	 * Return immediately if the RX descriptor has been marked
++	 * as corrupt based on the various error bits.
++	 *
++	 * This is different from the other corrupt descriptor
++	 * condition handled above.
++	 */
++	if (rx_stats->rs_status & ATH9K_RXERR_CORRUPT_DESC)
++		return -EINVAL;
++
+ 	hdr = (struct ieee80211_hdr *) (skb->data + ah->caps.rx_status_len);
+ 
+ 	ath9k_process_tsf(rx_stats, rx_status, tsf);
+@@ -1335,8 +1345,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			sc->rx.frag = skb;
+ 			goto requeue;
+ 		}
+-		if (rs.rs_status & ATH9K_RXERR_CORRUPT_DESC)
+-			goto requeue_drop_frag;
+ 
+ 		if (sc->rx.frag) {
+ 			int space = skb->len - skb_tailroom(hdr_skb);
+-- 
+1.8.3.4
 
