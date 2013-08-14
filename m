@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:37837 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966455Ab3HHXS2 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:17741 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932715Ab3HNPCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 19:18:28 -0400
-Received: by mail-qa0-f54.google.com with SMTP id bv4so623882qab.13
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Aug 2013 16:18:27 -0700 (PDT)
+	Wed, 14 Aug 2013 11:02:36 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/4] ath10k: fixes
+References: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
+	<1376373578-2180-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 14 Aug 2013 18:02:30 +0300
+In-Reply-To: <1376373578-2180-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 13 Aug 2013 07:59:34 +0200")
+Message-ID: <87a9kk48op.fsf@kamboji.qca.qualcomm.com> (sfid-20130814_170238_635167_2C1BFF0B)
 MIME-Version: 1.0
-In-Reply-To: <1376003573-1243-1-git-send-email-ordex@autistici.org>
-References: <1376003573-1243-1-git-send-email-ordex@autistici.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 9 Aug 2013 09:18:07 +1000
-Message-ID: <CAGRGNgV0n-nE9UFUiNyYqvgKNzrOE9zMuiRwxJvE5PZ1f6-EFA@mail.gmail.com> (sfid-20130809_011841_993338_5A3B91B4)
-Subject: Re: [PATCH] cfg/nl80211: send CMD_INTERFACE event on NETDEV_UNREGISTER
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Antonio,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-On Fri, Aug 9, 2013 at 9:12 AM, Antonio Quartulli <ordex@autistici.org> wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
+> Hi,
 >
-> Userspace applications may be listening for events (e.g.
-> matching mgmt frame) on a given interface. If such interface
-> is deleted they would keep hanging because no event will be
-> delivered anymore.
+> This patchset contains some bugfixes and
+> improvements.
 >
-> Send a CMD_INTERFACE event on NETDEV_UNREGISTER to notify
-> userspace that the interface does not exist anymore.
+> v2:
+>  * fix indentation
+>  * use a comment instead of a no-op if clause
 >
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> ---
->  net/wireless/Module.symvers | 118 ++++++++++++++++++++++++++++++++++++++++++++
 
-I'm pretty sure you didn't mean to include this file =)
+Thanks, these three patches applied:
 
-Thanks,
+>   ath10k: fix HTT service setup
+>   ath10k: implement 802.3 SNAP rx decap type A-MSDU handling
+>   ath10k: plug possible memory leak in WMI
+
+This patch dropped per your request:
+
+>   ath10k: fix HTC endpoint worker starvation
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Kalle Valo
