@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38887 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:58886 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754221Ab3HPLIA (ORCPT
+	with ESMTP id S1759587Ab3HNL4f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 07:08:00 -0400
+	Wed, 14 Aug 2013 07:56:35 -0400
+Message-ID: <1376481381.14574.0.camel@jlt4.sipsolutions.net> (sfid-20130814_135640_189367_018C0D64)
+Subject: Re: [patch] nl80211: nl80211hdr_put() doesn't return an ERR_PTR
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>
-Subject: [PATCH 11/20] iwlwifi: mvm: don't clear tbl->win mistakenly
-Date: Fri, 16 Aug 2013 13:07:01 +0200
-Message-Id: <1376651230-1060-11-git-send-email-johannes@sipsolutions.net> (sfid-20130816_130805_400344_348B7709)
-In-Reply-To: <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
-References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
- <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Date: Wed, 14 Aug 2013 13:56:21 +0200
+In-Reply-To: <20130814115001.GB8044@elgon.mountain>
+References: <20130814115001.GB8044@elgon.mountain>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Wed, 2013-08-14 at 14:50 +0300, Dan Carpenter wrote:
+> There are a few places which check nl80211hdr_put() for an ERR_PTR
+> but actually it returns NULL on error and never error values.  In
+> nl80211_testmode_dump() the return wasn't checked at all so I have added
+> one.
 
-rs_get_tbl_info_from_mcs() mistakenly clears
-the rate histories window, overriding its initialization
-values (i.e. filling it with 0, instead of -1).
+Err, wow. How did we do this?!
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> This is static checker stuff and I don't know the code well.  I was
+> especially not sure if I got the check right in nl80211_testmode_dump().
+> Please review that bit carefully.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index a69bd4c..a587b21 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -492,7 +492,7 @@ static int rs_get_tbl_info_from_mcs(const u32 rate_n_flags,
- 	u8 num_of_ant = get_num_of_ant_from_rate(rate_n_flags);
- 	u8 mcs;
- 
--	memset(tbl, 0, sizeof(struct iwl_scale_tbl_info));
-+	memset(tbl, 0, offsetof(struct iwl_scale_tbl_info, win));
- 	*rate_idx = iwl_hwrate_to_plcp_idx(rate_n_flags);
- 
- 	if (*rate_idx  == IWL_RATE_INVALID) {
--- 
-1.8.4.rc2
+Yes, looks fine. I'll apply this for 3.11, thanks.
+
+johannes
 
