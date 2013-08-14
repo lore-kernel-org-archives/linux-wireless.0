@@ -1,74 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:55128 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758300Ab3HBJdZ (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:44270 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758061Ab3HNPMA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 05:33:25 -0400
-Message-ID: <1375435965.24371.27.camel@deadeye.wl.decadent.org.uk> (sfid-20130802_113329_034396_ACF9C309)
-Subject: Re: [PATCH 3.11] nl80211: fix another nl80211_fam.attrbuf race
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Fri, 02 Aug 2013 11:32:45 +0200
-In-Reply-To: <1375216722-31194-1-git-send-email-johannes@sipsolutions.net>
-References: <1375211931.2664.21.camel@deadeye.wl.decadent.org.uk>
-	 <1375216722-31194-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-HfBjoBw5FMSD6hYHgPx6"
-Mime-Version: 1.0
+	Wed, 14 Aug 2013 11:12:00 -0400
+From: "Bondar, Alexander" <alexander.bondar@intel.com>
+To: Arik Nemtsov <arik@wizery.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 28/30] iwlwifi: mvm: Change beacon abort escape time
+ value
+Date: Wed, 14 Aug 2013 15:11:53 +0000
+Message-ID: <60035555E48905429C8B264861CA6BB401913ED7@HASMSX103.ger.corp.intel.com> (sfid-20130814_171204_788224_E41F4E94)
+References: <1374827327-3464-1-git-send-email-johannes@sipsolutions.net>
+ <1374827327-3464-29-git-send-email-johannes@sipsolutions.net>
+ <CA+XVXfeoHkOwrj76MwSC9ad5igffng8QueT6cKu9ytsLu=C+Cw@mail.gmail.com>
+In-Reply-To: <CA+XVXfeoHkOwrj76MwSC9ad5igffng8QueT6cKu9ytsLu=C+Cw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Yes, it's a bug. Intention was 9.
+Thanks.
 
---=-HfBjoBw5FMSD6hYHgPx6
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> -----Original Message-----
+> From: anamtsov@gmail.com [mailto:anamtsov@gmail.com] On Behalf Of
+> Arik Nemtsov
+> Sent: Monday, August 12, 2013 3:21 PM
+> To: Johannes Berg
+> Cc: linux-wireless@vger.kernel.org; Bondar, Alexander
+> Subject: Re: [PATCH 28/30] iwlwifi: mvm: Change beacon abort escape time
+> value
+> 
+> On Fri, Jul 26, 2013 at 11:28 AM, Johannes Berg <johannes@sipsolutions.net>
+> wrote:
+> > From: Alexander Bondar <alexander.bondar@intel.com>
+> >
+> > Set beacon abort escape timer values - 6 beacons in D0 state,
+> > 9 beacons in D3 and D0i3.
+> >
+> > Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+> > Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > ---
+> >  drivers/net/wireless/iwlwifi/mvm/fw-api-power.h | 3 ++-
+> >  drivers/net/wireless/iwlwifi/mvm/power.c        | 3 +++
+> >  2 files changed, 5 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
+> > b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
+> > index 149347d..060e630 100644
+> > --- a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
+> > +++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
+> > @@ -285,7 +285,8 @@ struct iwl_beacon_filter_cmd {  #define
+> > IWL_BF_ESCAPE_TIMER_MAX 1024  #define IWL_BF_ESCAPE_TIMER_MIN
+> 0
+> >
+> > -#define IWL_BA_ESCAPE_TIMER_DEFAULT 3
+> > +#define IWL_BA_ESCAPE_TIMER_DEFAULT 6 #define
+> IWL_BA_ESCAPE_TIMER_D3
+> > +6
+> 
+> Did you mean 9 here?
+> (Sorry for the late review)
+---------------------------------------------------------------------
+A member of the Intel Corporation group of companies
 
-On Tue, 2013-07-30 at 22:38 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->=20
-> This is similar to the race Linus had reported, but in this case
-> it's an older bug: nl80211_prepare_wdev_dump() uses the wiphy
-> index in cb->args[0] as it is and thus parses the message over
-> and over again instead of just once because 0 is the first valid
-> wiphy index. Similar code in nl80211_testmode_dump() correctly
-> offsets the wiphy_index by 1, do that here as well.
->=20
-> Cc: stable@vger.kernel.org
-> Reported-by: Ben Hutchings <ben@decadent.org.uk>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-[...]
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
-With this patch applied, I haven't seen another crash after another day
-and a bit in the same wifi environment.
-
-Ben.
-
---=20
-Ben Hutchings
-This sentence contradicts itself - no actually it doesn't.
-
---=-HfBjoBw5FMSD6hYHgPx6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUft8vee/yOyVhhEJAQp89g//S7C4rf+MW5TLWHOpocGLXQTRRgi0P8LR
-INYWqMXGkruLXZq2vLLiCPA0APaSEZSALitcXg8LKGj4hnbQBfoP1j4mfsP6I3EQ
-Ynlz4anwWgM+mrwS6tzkFYCmyeJ4SuRr6p8VCgB/efx66X8OYVBKsbXeCSFAPRb2
-6VrUrpLu+ud0hGe7BJCedrcyKUJtK3sanNezvkfNbpF+rYTQhs/HOXykZ+uwFwT3
-LM01P+oS71F8tp2UtjbYyj7b10yT8N88cYJmBkQaPuDIKQaUS6lq9EJjTKrYuGul
-AlAe8TNxO1lnDdi9yRQ8o+sH0PUBxu0bfo564mwTudZK6txFjF2GeCo0CA+hjHJ3
-7betY6z/Hq28UQuLMmEAuzz/M+qcOqQ3tHag4a/fmJbzTkFzs5146QQ56+3OlJIR
-IcOJTG7Dn51u9HSSONoz6TXwiwoqOOPLK+YUdBzTgiaiHj47ncwU6C+Ol/Mtvlkk
-xz1WHzD5vWbHrl+JLXD7vUy6LiHGBtQz0YT1MF81tmdlCA1wYMnKXe3lixDmlAhj
-EpZxq8RZ07qCrQOF6oZ6eKNVwPtoHwqmq0qReaa1Y9fuV5+MdlB1jHcxq7pysRtw
-NO65xRbypi9hKj+VuHrAX/3C2n64zqqj4eyAoYI1+ihelM6/uGWhqc4f6xN2wMwD
-utbvMxvs5Eo=
-=vk3f
------END PGP SIGNATURE-----
-
---=-HfBjoBw5FMSD6hYHgPx6--
