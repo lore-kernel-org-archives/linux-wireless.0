@@ -1,58 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49335 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752512Ab3HVPpO (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:37634 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759083Ab3HNDpI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Aug 2013 11:45:14 -0400
-Date: Thu, 22 Aug 2013 11:39:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 13 Aug 2013 23:45:08 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2013-08-21
-Message-ID: <20130822153943.GD1967@tuxdriver.com> (sfid-20130822_174519_338863_5E1A764F)
-References: <1377092661.15268.13.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1377092661.15268.13.camel@jlt4.sipsolutions.net>
+Subject: [PATCH 03/14] ath9k: Discard invalid frames early
+Date: Wed, 14 Aug 2013 09:11:11 +0530
+Message-Id: <1376451682-25862-3-git-send-email-sujith@msujith.org> (sfid-20130814_054516_657248_566EC036)
+In-Reply-To: <1376451682-25862-1-git-send-email-sujith@msujith.org>
+References: <1376451682-25862-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 21, 2013 at 03:44:21PM +0200, Johannes Berg wrote:
-> John,
-> 
-> I have three more patches for the 3.11 stream: Felix's fix for the
-> fairly visible brcmsmac crash, a fix from Simon for an IBSS join bug I
-> found and a fix for a channel context bug in IBSS I'd introduced.
-> 
-> Let me know if there's any problem.
-> 
-> Thanks,
-> johannes
-> 
-> The following changes since commit dee8a9732e713480075adbbca8eb220c5b8d1216:
-> 
->   cfg80211: don't request disconnect if not connected (2013-08-14 14:00:19 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to 75a423f493ffdf741acae27bf179cd560f7813d7:
-> 
->   mac80211: ibss: fix ignored channel parameter (2013-08-21 15:33:08 +0200)
-> 
-> ----------------------------------------------------------------
-> Felix Fietkau (1):
->       mac80211: add a flag to indicate CCK support for HT clients
-> 
-> Johannes Berg (1):
->       mac80211: add missing channel context release
-> 
-> Simon Wunderlich (1):
->       mac80211: ibss: fix ignored channel parameter
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Pulling now...
+Frames with invalid or zero length can be discarded
+early, there is no need to check the crypto bits.
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 38 ++++++++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 83b3fc5..f8cc2b3 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -764,7 +764,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 	bool is_mc, is_valid_tkip, strip_mic, mic_error;
+ 	struct ath_hw *ah = common->ah;
+ 	__le16 fc;
+-	u8 rx_status_len = ah->caps.rx_status_len;
+ 
+ 	fc = hdr->frame_control;
+ 
+@@ -786,21 +785,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 	    !test_bit(rx_stats->rs_keyix, common->ccmp_keymap))
+ 		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
+ 
+-	if (!rx_stats->rs_datalen) {
+-		RX_STAT_INC(rx_len_err);
+-		return false;
+-	}
+-
+-        /*
+-         * rs_status follows rs_datalen so if rs_datalen is too large
+-         * we can take a hint that hardware corrupted it, so ignore
+-         * those frames.
+-         */
+-	if (rx_stats->rs_datalen > (common->rx_bufsize - rx_status_len)) {
+-		RX_STAT_INC(rx_len_err);
+-		return false;
+-	}
+-
+ 	/* Only use error bits from the last fragment */
+ 	if (rx_stats->rs_more)
+ 		return true;
+@@ -949,11 +933,33 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	bool discard_current = sc->rx.discard_next;
+ 
++	/*
++	 * Discard corrupt descriptors which are marked in
++	 * ath_get_next_rx_buf().
++	 */
+ 	sc->rx.discard_next = rx_stats->rs_more;
+ 	if (discard_current)
+ 		return -EINVAL;
+ 
+ 	/*
++	 * Discard zero-length packets.
++	 */
++	if (!rx_stats->rs_datalen) {
++		RX_STAT_INC(rx_len_err);
++		return -EINVAL;
++	}
++
++        /*
++         * rs_status follows rs_datalen so if rs_datalen is too large
++         * we can take a hint that hardware corrupted it, so ignore
++         * those frames.
++         */
++	if (rx_stats->rs_datalen > (common->rx_bufsize - ah->caps.rx_status_len)) {
++		RX_STAT_INC(rx_len_err);
++		return -EINVAL;
++	}
++
++	/*
+ 	 * everything but the rate is checked here, the rate check is done
+ 	 * separately to avoid doing two lookups for a rate for each frame.
+ 	 */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.3.4
+
