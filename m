@@ -1,71 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55572 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:35265 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755045Ab3HFP36 (ORCPT
+	with ESMTP id S1756256Ab3HOPq4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 11:29:58 -0400
-Message-ID: <1375802993.8219.26.camel@jlt4.sipsolutions.net> (sfid-20130806_173020_961999_51966281)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+	Thu, 15 Aug 2013 11:46:56 -0400
+Message-ID: <1376581601.14084.14.camel@jlt4.sipsolutions.net> (sfid-20130815_174706_983718_F445FE8B)
+Subject: pull-request: mac802111 2013-08-15
 From: Johannes Berg <johannes@sipsolutions.net>
-To: sedat.dilek@gmail.com
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 06 Aug 2013 17:29:53 +0200
-In-Reply-To: <CA+icZUVuOqdZUGy2ALAF1CehOqYdr7rtEsXhqNvDtYEns2BuRQ@mail.gmail.com> (sfid-20130806_172725_033196_729FC01D)
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	 <1375797260.8219.21.camel@jlt4.sipsolutions.net>
-	 <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
-	 <1375800617.8219.23.camel@jlt4.sipsolutions.net>
-	 <CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
-	 <1375801059.8219.24.camel@jlt4.sipsolutions.net>
-	 <CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
-	 <CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
-	 <1375802297.8219.25.camel@jlt4.sipsolutions.net>
-	 <CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com>
-	 <CA+icZUVuOqdZUGy2ALAF1CehOqYdr7rtEsXhqNvDtYEns2BuRQ@mail.gmail.com>
-	 (sfid-20130806_172725_033196_729FC01D)
-Content-Type: text/plain; charset="UTF-8"
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 15 Aug 2013 17:46:41 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-tzXf47qFs0hXbmwoJIeq"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-08-06 at 17:27 +0200, Sedat Dilek wrote:
-> On Tue, Aug 6, 2013 at 5:20 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
-> > On Tue, Aug 6, 2013 at 5:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >>
-> >>
-> >>> I have sent you a v2 of my logs (with -d and rsyslog-7.x).
-> >>
-> >> Hmm, that looks different? There no longer is anything about "PSK might
-> >> be wrong", but now just disconnections by the AP, which unfortunately
-> >> indicate no reason.
-> >>
-> >> When was it working last?
-> >>
-> >
-> > next-20130801 was OK here.
-> >
-> 
-> What about these lines?
-> 
-> Aug  6 17:03:37 fambox kernel: [  134.575120] wlan0: deauthenticated
-> from 00:04:0e:e4:00:3d (Reason: 1)
-> Aug  6 17:03:37 fambox wpa_supplicant[2424]: wlan0: Event DEAUTH (12) received
-> Aug  6 17:03:37 fambox wpa_supplicant[2424]: wlan0: Deauthentication
-> notification
-> Aug  6 17:03:37 fambox wpa_supplicant[2424]: Deauthentication frame
-> IE(s) - hexdump(len=0): [NULL]
-> Aug  6 17:03:37 fambox wpa_supplicant[2424]: wlan0: WPA: 4-Way
-> Handshake failed - pre-shared key may be incorrect
-> Aug  6 17:03:37 fambox NetworkManager[2431]: <info> (wlan0):
-> supplicant interface state: 4-way handshake -> disconnected
 
-Yeah but before you had a local deauth request, this time it's the AP
-kicking you off.
+--=-tzXf47qFs0hXbmwoJIeq
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I really don't know. Can you try something like wireless-testing maybe?
--next could have any kind of breakage I guess ...
+John,
+
+I have two more fixes ...
+
+This time, I have one fix from Dan Carpenter for users of
+nl80211hdr_put(), and one fix from myself fixing a regression with the
+libertas driver.
+
+Please let me know if there's any problem.
 
 johannes
+
+The following changes since commit ddfe49b42d8ad4bfdf92d63d4a74f162660d878d=
+:
+
+  mac80211: continue using disabled channels while connected (2013-07-31 21=
+:18:17 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to dee8a9732e713480075adbbca8eb220c5b8d1216:
+
+  cfg80211: don't request disconnect if not connected (2013-08-14 14:00:19 =
++0200)
+
+----------------------------------------------------------------
+Dan Carpenter (1):
+      nl80211: nl80211hdr_put() doesn't return an ERR_PTR
+
+Johannes Berg (1):
+      cfg80211: don't request disconnect if not connected
+
+ net/wireless/nl80211.c | 22 +++++++++++-----------
+ net/wireless/sme.c     | 10 ++++------
+ 2 files changed, 15 insertions(+), 17 deletions(-)
+
+
+--=-tzXf47qFs0hXbmwoJIeq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJSDPfhAAoJEDBSmw7B7bqrI1kP/2Y/3cgfCNPmhCari9+rOL2Z
+ZjZnOWvgYbJSBGJLV7UWWIPVg7wPIO5WVsGW84+1YxT9vS1DcUrfTNjgJ159QgsR
+V7g6ZkpwuYVV5CyX1r+Djgur2EfAzjyCacGabkI5mnWCieC1cWKMlAh4h1jGevLK
+sDYkCZOzFCLSEOpC07J3IBMVK6XQA7uUd3FdNGLu+K9AbN/9HEA67LAuWsGytrIT
+yPxH7TMZlGoHbM9fhVm02yV6m322Qr3mq2hf6OULcHcSdj9xNPfS8oXWyhWUYBxE
+fGK9iauwYwdIo4vLddqHmahFQmz9PCbelIKQjLm2Dw7vgMod7VlogwZ3pUXzjf4l
+Grfb9TVWKdeqClb+LA7TXHO52Hs2T1cUrFY9phk7MybD/wBdRlv8GwHH5CiY/0it
+6tj+1STsKWRfmihF+a5lHXX+Jy60afI4YX406HpUvk3XbRmW78dCn4Vt/0NcmTr5
+IG2SBS6vRcm/2I6gPrfrSWefKiJGA5pmJUsAJqhZxhVcZZ9kpFzJOILroJhRMKyh
+EpsDIvAa2j8CZrw1DtD3A9xOmOt/YidktjuVj1jUT+hAwM4qUgOnzCStjR/7nTQB
+w0841h9+0ZDlDsIYliC/ff+wo3kJEYaXP2HNVRke4rXZsG/mil2YeNiCwNSw268R
+onsWli8pYvKSUeXVtvGD
+=nW/G
+-----END PGP SIGNATURE-----
+
+--=-tzXf47qFs0hXbmwoJIeq--
 
