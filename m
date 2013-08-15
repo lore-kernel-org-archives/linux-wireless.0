@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2885 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758876Ab3HMUEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 16:04:32 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	"David Herrmann" <dh.herrmann@gmail.com>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
-	"David Costa" <david@zarel.net>
-Subject: [RFT V2 09/13] brcmsmac: avoid calling set_txpwr_by_index()
- twice
-Date: Tue, 13 Aug 2013 22:03:36 +0200
-Message-ID: <1376424220-10765-10-git-send-email-arend@broadcom.com> (sfid-20130813_220452_118907_29C691B0)
-In-Reply-To: <1376424220-10765-1-git-send-email-arend@broadcom.com>
-References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48914 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755331Ab3HOTpK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Aug 2013 15:45:10 -0400
+Date: Thu, 15 Aug 2013 15:41:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac802111 2013-08-15
+Message-ID: <20130815194121.GE2133@tuxdriver.com> (sfid-20130815_214515_047808_9FBFCFFD)
+References: <1376581601.14084.14.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1376581601.14084.14.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For lcnphy revision 1 or when hardware supports i/q calibration the
-function wlc_lcnphy_set_txpwr_by_index() was called twice.
+On Thu, Aug 15, 2013 at 05:46:41PM +0200, Johannes Berg wrote:
+> John,
+> 
+> I have two more fixes ...
+> 
+> This time, I have one fix from Dan Carpenter for users of
+> nl80211hdr_put(), and one fix from myself fixing a regression with the
+> libertas driver.
+> 
+> Please let me know if there's any problem.
+> 
+> johannes
+> 
+> The following changes since commit ddfe49b42d8ad4bfdf92d63d4a74f162660d878d:
+> 
+>   mac80211: continue using disabled channels while connected (2013-07-31 21:18:17 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to dee8a9732e713480075adbbca8eb220c5b8d1216:
+> 
+>   cfg80211: don't request disconnect if not connected (2013-08-14 14:00:19 +0200)
 
-Cc: David Herrmann <dh.herrmann@gmail.com>
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>
-Cc: David Costa <david@zarel.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Pulling now...
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-index 96be1ba..e02729d 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -3897,7 +3897,6 @@ static void wlc_lcnphy_txpwrtbl_iqlo_cal(struct brcms_phy *pi)
- 	target_gains.pad_gain = 21;
- 	target_gains.dac_gain = 0;
- 	wlc_lcnphy_set_tx_gain(pi, &target_gains);
--	wlc_lcnphy_set_tx_pwr_by_index(pi, 16);
- 
- 	if (LCNREV_IS(pi->pubpi.phy_rev, 1) || pi_lcn->lcnphy_hw_iqcal_en) {
- 
-@@ -3908,6 +3907,7 @@ static void wlc_lcnphy_txpwrtbl_iqlo_cal(struct brcms_phy *pi)
- 					lcnphy_recal ? LCNPHY_CAL_RECAL :
- 					LCNPHY_CAL_FULL), false);
- 	} else {
-+		wlc_lcnphy_set_tx_pwr_by_index(pi, 16);
- 		wlc_lcnphy_tx_iqlo_soft_cal_full(pi);
- 	}
- 
 -- 
-1.7.10.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
