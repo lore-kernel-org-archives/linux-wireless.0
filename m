@@ -1,67 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38366 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752663Ab3HWJXC (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:37386 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133Ab3HOXMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 05:23:02 -0400
-Message-ID: <1377249774.14021.15.camel@jlt4.sipsolutions.net> (sfid-20130823_112307_174018_ECB748AD)
-Subject: Re: [PATCH v2 01/16] wcn36xx: Add main.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
-Date: Fri, 23 Aug 2013 11:22:54 +0200
-In-Reply-To: <1377248299-21007-2-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_105928_264143_4BF93F2F)
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-	 <1377248299-21007-2-git-send-email-k.eugene.e@gmail.com>
-	 (sfid-20130823_105928_264143_4BF93F2F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 15 Aug 2013 19:12:31 -0400
+Received: by mail-pb0-f41.google.com with SMTP id rp2so1345557pbb.14
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Aug 2013 16:12:30 -0700 (PDT)
+Received: from [0.0.0.0] ([210.48.94.225])
+        by mx.google.com with ESMTPSA id s6sm2018942pan.12.2013.08.15.16.12.28
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Thu, 15 Aug 2013 16:12:30 -0700 (PDT)
+Message-ID: <520D6058.7040405@gna.org> (sfid-20130816_011234_395319_57CE4E35)
+Date: Fri, 16 Aug 2013 11:12:24 +1200
+From: Christian Gagneraud <chgans@gna.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [TL-WN721N] No disconnect notification when AP is gone
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-08-23 at 10:58 +0200, Eugene Krasnikov wrote:
+Hi there,
 
-> +static const struct ieee80211_iface_limit if_limits[] = {
-> +	{ .max = 2, .types = BIT(NL80211_IFTYPE_STATION) },
-> +	{ .max = 1, .types = BIT(NL80211_IFTYPE_AP) },
-> +};
-> +
-> +static const struct ieee80211_iface_combination if_comb = {
-> +	.limits = if_limits,
-> +	.n_limits = ARRAY_SIZE(if_limits),
-> +	.max_interfaces = 2,
-> +	.num_different_channels = 1,
-> +};
+I'm using a TP-LINK TL-WN721N, and experience a strange behaviour, I'm 
+running Ubuntu 13.04 (3.8.0-27-generic + backports-3.11-rc3-1).
 
-> +static int wcn36xx_add_interface(struct ieee80211_hw *hw,
-> +				 struct ieee80211_vif *vif)
-> +{
-> +	struct wcn36xx *wcn = hw->priv;
-> +
-> +	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d\n",
-> +		    vif, vif->type);
-> +
-> +	wcn->current_vif = (struct wcn36xx_vif *)vif->drv_priv;
+The problem is that if I am connected to my AP and then power it off, I 
+never receive a disconnect notification.
 
-If you actually support two interfaces (and that looks more likely now)
-I don't think this "current_vif" makes any sense at all, it'll be
-randomly pointing to one or the other depending on which one was added
-last.
+I first reported the bug to the connman mailing list [1], but it was 
+suggested there that it could be a bug in the device driver.
 
-> +static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-> +			   struct ieee80211_sta *sta)
-> +{
-> +	struct wcn36xx *wcn = hw->priv;
-> +
-> +	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
-> +		    vif, sta->addr);
-> +
-> +	wcn->sta = (struct wcn36xx_sta *)sta->drv_priv;
-> +	wcn->aid = sta->aid;
+At first I was using the Ubuntu kernel modules, but before reporting any 
+bugs, I switched to backports-3.11-rc3-1, and I still have the problem.
 
-You support more than one interface and AP, but there's no way this code
-can then be correct. It seems to me that you're really only supporting a
-single client interface correctly right now.
+Any thoughts?
 
-johannes
+Regards,
+Chris
 
+[1] Latest messages haven't been archived  yet, but:
+  https://lists.connman.net/pipermail/connman/2013-August/015401.html
