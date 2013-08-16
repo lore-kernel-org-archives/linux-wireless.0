@@ -1,78 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:61231 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754313Ab3HXL4T (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:43169 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754517Ab3HPWS5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Aug 2013 07:56:19 -0400
-Received: by mail-wi0-f179.google.com with SMTP id hr7so1431260wib.6
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Aug 2013 04:56:18 -0700 (PDT)
-Message-ID: <1377345371.23229.12.camel@canaries32-MCP7A> (sfid-20130824_135622_549145_CCEFFD74)
-Subject: [PATCH 3/5] staging: vt6656: rxtx.c s_vFillCTSHead remove dead code
- bDisCRC
+	Fri, 16 Aug 2013 18:18:57 -0400
+Received: by mail-wg0-f48.google.com with SMTP id f12so1966169wgh.27
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2013 15:18:56 -0700 (PDT)
+Message-ID: <1376684815.8057.44.camel@canaries32-MCP7A> (sfid-20130817_001905_698515_2794B496)
+Subject: [PATCH 1/8] staging: vt6656: desc.h: Move typedef tagSRrvTime_gRTS
+ to new structure in rxtx.h
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Sat, 24 Aug 2013 12:56:11 +0100
+Date: Fri, 16 Aug 2013 21:26:55 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As result of patch
-vt6656: device.h Remove dead code bSoftwareGenCrcErr.
+To new structure.
+typedef struct tagSRrvTime_gRTS -> struct vnt_rrv_time_rts
 
-dDiscCRC is unused.
+This is only needed by rxtc.c so moved to rxtx.h and
+will eventually form part of the structure of
+struct vnt_tx_buffer.
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/rxtx.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+ drivers/staging/vt6656/desc.h | 12 ------------
+ drivers/staging/vt6656/rxtx.c | 30 ++++++++++++++++++------------
+ drivers/staging/vt6656/rxtx.h | 10 ++++++++++
+ 3 files changed, 28 insertions(+), 24 deletions(-)
 
+diff --git a/drivers/staging/vt6656/desc.h b/drivers/staging/vt6656/desc.h
+index d770a78..89b580d 100644
+--- a/drivers/staging/vt6656/desc.h
++++ b/drivers/staging/vt6656/desc.h
+@@ -146,18 +146,6 @@
+ /*
+  * RsvTime buffer header
+  */
+-typedef struct tagSRrvTime_gRTS {
+-    u16        wRTSTxRrvTime_ba;
+-    u16        wRTSTxRrvTime_aa;
+-    u16        wRTSTxRrvTime_bb;
+-    u16        wReserved;
+-    u16        wTxRrvTime_b;
+-    u16        wTxRrvTime_a;
+-} __attribute__ ((__packed__))
+-SRrvTime_gRTS, *PSRrvTime_gRTS;
+-
+-typedef const SRrvTime_gRTS *PCSRrvTime_gRTS;
+-
+ typedef struct tagSRrvTime_gCTS {
+     u16        wCTSTxRrvTime_ba;
+     u16        wReserved;
 diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 1b2effc..7b94a77 100644
+index d9827b3..c9dceae 100644
 --- a/drivers/staging/vt6656/rxtx.c
 +++ b/drivers/staging/vt6656/rxtx.c
-@@ -126,7 +126,7 @@ static u16 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice, u8 byRTSRsvType,
- 
- static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 	u8 byPktType, void *pvCTS, u32 cbFrameLength, int bNeedAck,
--	int bDisCRC, u16 wCurrentRate, u8 byFBOption);
-+	u16 wCurrentRate, u8 byFBOption);
- 
- static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
- 	void *pvRTS, u32 cbFrameLength, int bNeedAck,
-@@ -769,7 +769,7 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
- 
- static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 	u8 byPktType, void *pvCTS, u32 cbFrameLength, int bNeedAck,
--	int bDisCRC, u16 wCurrentRate, u8 byFBOption)
-+	u16 wCurrentRate, u8 byFBOption)
- {
- 	u32 uCTSFrameLen = 14;
- 
-@@ -777,12 +777,6 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
-         return;
-     }
- 
--    if (bDisCRC) {
--        // When CRCDIS bit is on, H/W forgot to generate FCS for CTS frame,
--        // in this case we need to decrease its length by 4.
--        uCTSFrameLen -= 4;
--    }
--
-     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
- 	if (byFBOption != AUTO_FB_NONE) {
- 		/* Auto Fall back */
-@@ -912,7 +906,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 				byPktType, cbFrameSize, wCurrentRate);
+@@ -919,7 +919,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         if (pvRTS != NULL) { //RTS_need
+             //Fill RsvTime
+             if (pvRrvTime) {
+-                PSRrvTime_gRTS pBuf = (PSRrvTime_gRTS)pvRrvTime;
++		struct vnt_rrv_time_rts *pBuf =
++			(struct vnt_rrv_time_rts *)pvRrvTime;
+                 pBuf->wRTSTxRrvTime_aa = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 2, byPktType, cbFrameSize, wCurrentRate));//2:RTSTxRrvTime_aa, 1:2.4GHz
+                 pBuf->wRTSTxRrvTime_ba = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 1, byPktType, cbFrameSize, wCurrentRate));//1:RTSTxRrvTime_ba, 1:2.4GHz
+                 pBuf->wRTSTxRrvTime_bb = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 0, byPktType, cbFrameSize, wCurrentRate));//0:RTSTxRrvTime_bb, 1:2.4GHz
+@@ -1149,15 +1150,17 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
+         if (byFBOption == AUTO_FB_NONE) {
+             if (bRTS == true) {//RTS_need
+-                pvRrvTime = (PSRrvTime_gRTS) (pbyTxBufferAddr + wTxBufSize);
+-                pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize + sizeof(SRrvTime_gRTS));
++		pvRrvTime = (struct vnt_rrv_time_rts *)
++					(pbyTxBufferAddr + wTxBufSize);
++		pMICHDR = (PSMICHDRHead)(pbyTxBufferAddr + wTxBufSize +
++					sizeof(struct vnt_rrv_time_rts));
+ 		pvRTS = (struct vnt_rts_g *) (pbyTxBufferAddr + wTxBufSize +
+-				sizeof(SRrvTime_gRTS) + cbMICHDR);
++				sizeof(struct vnt_rrv_time_rts) + cbMICHDR);
+                 pvCTS = NULL;
+ 		pvTxDataHd = (PSTxDataHead_g) (pbyTxBufferAddr + wTxBufSize +
+-			sizeof(SRrvTime_gRTS) + cbMICHDR +
++			sizeof(struct vnt_rrv_time_rts) + cbMICHDR +
+ 						sizeof(struct vnt_rts_g));
+-		cbHeaderLength = wTxBufSize + sizeof(SRrvTime_gRTS) +
++		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
+ 			cbMICHDR + sizeof(struct vnt_rts_g) +
+ 				sizeof(STxDataHead_g);
              }
-             //Fill CTS
--            s_vFillCTSHead(pDevice, uDMAIdx, byPktType, pvCTS, cbFrameSize, bNeedACK, bDisCRC, wCurrentRate, byFBOption);
-+	    s_vFillCTSHead(pDevice, uDMAIdx, byPktType, pvCTS, cbFrameSize,
-+			bNeedACK, wCurrentRate, byFBOption);
-         }
-     }
-     else if (byPktType == PK_TYPE_11A) {
+@@ -1176,16 +1179,19 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+         } else {
+             // Auto Fall Back
+             if (bRTS == true) {//RTS_need
+-                pvRrvTime = (PSRrvTime_gRTS) (pbyTxBufferAddr + wTxBufSize);
+-                pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize + sizeof(SRrvTime_gRTS));
++		pvRrvTime = (struct vnt_rrv_time_rts *)(pbyTxBufferAddr +
++								wTxBufSize);
++		pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize +
++					sizeof(struct vnt_rrv_time_rts));
+ 		pvRTS = (struct vnt_rts_g_fb *) (pbyTxBufferAddr + wTxBufSize +
+-				sizeof(SRrvTime_gRTS) + cbMICHDR);
++				sizeof(struct vnt_rrv_time_rts) + cbMICHDR);
+                 pvCTS = NULL;
+ 		pvTxDataHd = (PSTxDataHead_g_FB) (pbyTxBufferAddr + wTxBufSize +
+-			sizeof(SRrvTime_gRTS) + cbMICHDR +
++			sizeof(struct vnt_rrv_time_rts) + cbMICHDR +
+ 					sizeof(struct vnt_rts_g_fb));
+-		cbHeaderLength = wTxBufSize + sizeof(SRrvTime_gRTS) + cbMICHDR +
+-			sizeof(struct vnt_rts_g_fb) + sizeof(STxDataHead_g_FB);
++		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
++			cbMICHDR + sizeof(struct vnt_rts_g_fb) +
++				sizeof(STxDataHead_g_FB);
+             }
+             else if (bRTS == false) { //RTS_needless
+                 pvRrvTime = (PSRrvTime_gCTS) (pbyTxBufferAddr + wTxBufSize);
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index 8fd5be1..8afade2 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -32,6 +32,16 @@
+ #include "device.h"
+ #include "wcmd.h"
+ 
++/* RsvTime buffer header */
++struct vnt_rrv_time_rts {
++	u16 wRTSTxRrvTime_ba;
++	u16 wRTSTxRrvTime_aa;
++	u16 wRTSTxRrvTime_bb;
++	u16 wReserved;
++	u16 wTxRrvTime_b;
++	u16 wTxRrvTime_a;
++} __packed;
++
+ /* RTS buffer header */
+ struct vnt_rts_g {
+ 	u8 bySignalField_b;
 -- 
 1.8.1.2
+
+
 
