@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55468 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:38742 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753088Ab3HFOuX (ORCPT
+	with ESMTP id S1754220Ab3HPK0u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 10:50:23 -0400
-Message-ID: <1375800617.8219.23.camel@jlt4.sipsolutions.net> (sfid-20130806_165045_832345_B832970D)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+	Fri, 16 Aug 2013 06:26:50 -0400
+Message-ID: <1376648807.15299.6.camel@jlt4.sipsolutions.net> (sfid-20130816_122716_026248_3E81BD43)
+Subject: Re: [PATCHv2 3/6] mac80211: move ibss presp generation in own
+ function
 From: Johannes Berg <johannes@sipsolutions.net>
-To: sedat.dilek@gmail.com
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 06 Aug 2013 16:50:17 +0200
-In-Reply-To: <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com> (sfid-20130806_164606_692527_0D2AF4DB)
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	 <1375797260.8219.21.camel@jlt4.sipsolutions.net>
-	 <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
-	 (sfid-20130806_164606_692527_0D2AF4DB)
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 16 Aug 2013 12:26:47 +0200
+In-Reply-To: <1376058920-17779-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1376058920-17779-4-git-send-email-siwu@hrz.tu-chemnitz.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-08-06 at 16:46 +0200, Sedat Dilek wrote:
+On Fri, 2013-08-09 at 16:35 +0200, Simon Wunderlich wrote:
+> Channel Switch will later require to generate beacons without setting
+> them immediately. Therefore split the presp generation in an own
+> function. Splitting the original very long function might be a good idea
+> anyway.
 
-Heh, the interesting messages are always cut out of the log:
-
-Aug  6 16:30:34 fambox wpa_supplicant[2533]: wlan0: WPA: RX message 1 of 4-Way Handshake from 00:04:0e:e4:00:3d (ver=2)
-Aug  6 16:30:34 fambox wpa_supplicant[2533]: RSN: msg 1/4 key data - hexdump(len=0):
-Aug  6 16:30:34 fambox wpa_supplicant[2533]: Get randomness: len=32 entropy=4
-Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from os_get_random - hexdump(len=32): [REMOVED]
-Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
-Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from internal pool - hexdump(len=16): [REMOVED]
-Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
-Aug  6 16:30:34 fambox rsyslogd-2177: imuxsock begins to drop messages from pid 2533 due to rate-limiting
-[...]
+Applied.
 
 johannes
 
