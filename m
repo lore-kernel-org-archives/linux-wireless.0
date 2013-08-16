@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38035 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754671Ab3H1TpO (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753087Ab3HPLHT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 15:45:14 -0400
-Date: Wed, 28 Aug 2013 15:32:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2013-08-27
-Message-ID: <20130828193207.GE1966@tuxdriver.com> (sfid-20130828_214519_137707_E23A96B7)
-References: <1377593792.20012.4.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1377593792.20012.4.camel@jlt4.sipsolutions.net>
+	Fri, 16 Aug 2013 07:07:19 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH 09/20] iwlwifi: pcie: returning positive instead of negative
+Date: Fri, 16 Aug 2013 13:06:59 +0200
+Message-Id: <1376651230-1060-9-git-send-email-johannes@sipsolutions.net> (sfid-20130816_130736_483733_E5BDF76C)
+In-Reply-To: <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
+References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
+ <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 27, 2013 at 10:56:32AM +0200, Johannes Berg wrote:
-> John,
-> 
-> And I also have some more changes for -next, just a few small fixes and
-> improvements, nothing really stands out.
-> 
-> johannes
-> 
-> 
-> 
-> The following changes since commit 27b3eb9c06a7193bdc9800cd00764a130343bc8a:
-> 
->   mac80211: add APIs to allow keeping connections after WoWLAN (2013-08-16 12:58:43 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to a98655387762394371b88cdfb8215884757978ab:
-> 
->   mac80211: fix change_interface queue assignments (2013-08-26 09:52:58 +0200)
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Pulling now...
+There is a missing '-' character here so we return positive 'ENOMEM'
+instead of negative.  The caller doesn't care.  All non-zero returns
+are translated to '-ENOMEM' in iwl_pcie_nic_init().
 
+This is just a cleanup.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 12c9c00..f45eb29 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -838,7 +838,7 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
+ 				  sizeof(struct iwl_txq), GFP_KERNEL);
+ 	if (!trans_pcie->txq) {
+ 		IWL_ERR(trans, "Not enough memory for txq\n");
+-		ret = ENOMEM;
++		ret = -ENOMEM;
+ 		goto error;
+ 	}
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.4.rc2
+
