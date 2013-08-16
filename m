@@ -1,71 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38808 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752702Ab3H3It1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 04:49:27 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>
-Subject: [PATCH 2/3] ieee80211: fix vht cap definitions
-Date: Fri, 30 Aug 2013 10:49:20 +0200
-Message-Id: <1377852561-16754-2-git-send-email-johannes@sipsolutions.net> (sfid-20130830_104933_745876_8986D88D)
-In-Reply-To: <1377852561-16754-1-git-send-email-johannes@sipsolutions.net>
-References: <1377852561-16754-1-git-send-email-johannes@sipsolutions.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:55332 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754547Ab3HPWeD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Aug 2013 18:34:03 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/5] rt2x00: rt2800lib: fix frequency offset boundary calculation
+Date: Fri, 16 Aug 2013 22:38:14 +0200
+Message-Id: <1376685498-5167-2-git-send-email-juhosg@openwrt.org> (sfid-20130817_003409_176606_43E986E4)
+In-Reply-To: <1376685498-5167-1-git-send-email-juhosg@openwrt.org>
+References: <1376685498-5167-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+The current code in the 'rt2800_adjust_freq_offset'
+function limits the device specific frequency offset
+value to FREQ_BOUND but ignores the fact that the
+uppermost bit is not part of the frequency offset
+value. As the result, the driver always uses the
+FREQ_BOUND value if the uppermost bit is set.
 
-VHT_CAP_BEAMFORMER_ANTENNAS cap is actually defined in the draft as
-VHT_CAP_BEAMFORMEE_STS_MAX, and its size is 3 bits long.
+Update the code to use the correct source value
+for calculating the boundary.
 
-VHT_CAP_SOUNDING_DIMENSIONS is also 3 bits long.
+Based on the DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-Fix the definitions and change the cap masking accordingly.
+Reference:
+  RTMPAdjustFrequencyOffset function in common/rt_rf.c
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- include/linux/ieee80211.h | 4 ++--
- net/mac80211/vht.c        | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 23a8877..57b699e 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1390,8 +1390,8 @@ struct ieee80211_vht_operation {
- #define IEEE80211_VHT_CAP_RXSTBC_MASK				0x00000700
- #define IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE			0x00000800
- #define IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE			0x00001000
--#define IEEE80211_VHT_CAP_BEAMFORMER_ANTENNAS_MAX		0x00006000
--#define IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MAX		0x00030000
-+#define IEEE80211_VHT_CAP_BEAMFORMEE_STS_MAX			0x0000e000
-+#define IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MAX		0x00070000
- #define IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE			0x00080000
- #define IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE			0x00100000
- #define IEEE80211_VHT_CAP_VHT_TXOP_PS				0x00200000
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 97c28941..de01127 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -185,13 +185,13 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	if (own_cap.cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE) {
- 		vht_cap->cap |= cap_info &
- 				(IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
--				 IEEE80211_VHT_CAP_BEAMFORMER_ANTENNAS_MAX |
- 				 IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MAX);
- 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 313da6a..d4e6dea 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2494,13 +2494,14 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
  
- 	if (own_cap.cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)
- 		vht_cap->cap |= cap_info &
--				IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE;
-+				(IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
-+				 IEEE80211_VHT_CAP_BEAMFORMEE_STS_MAX);
+ static void rt2800_adjust_freq_offset(struct rt2x00_dev *rt2x00dev)
+ {
++	u8 freq_offset;
+ 	u8 rfcsr;
  
- 	if (own_cap.cap & IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE)
- 		vht_cap->cap |= cap_info &
++	freq_offset = rt2x00_get_field8(rt2x00dev->freq_offset, RFCSR17_CODE);
++	freq_offset = min_t(u8, freq_offset, FREQ_OFFSET_BOUND);
++
+ 	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
+-	if (rt2x00dev->freq_offset > FREQ_OFFSET_BOUND)
+-		rt2x00_set_field8(&rfcsr, RFCSR17_CODE, FREQ_OFFSET_BOUND);
+-	else
+-		rt2x00_set_field8(&rfcsr, RFCSR17_CODE, rt2x00dev->freq_offset);
++	rt2x00_set_field8(&rfcsr, RFCSR17_CODE, freq_offset);
+ 	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
+ }
+ 
 -- 
-1.8.4.rc3
-
+1.7.10
