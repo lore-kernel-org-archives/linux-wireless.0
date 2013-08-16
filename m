@@ -1,101 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:40920 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755701Ab3H3MaY (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:52151 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758011Ab3HPWtY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 08:30:24 -0400
-Subject: [PATCH 3/7] ath10k: remove void pointer from struct ath10k_pci_compl
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Fri, 16 Aug 2013 18:49:24 -0400
+Received: by mail-we0-f181.google.com with SMTP id q57so1342827wes.40
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2013 15:49:23 -0700 (PDT)
+Message-ID: <1376693355.18777.6.camel@canaries32-MCP7A> (sfid-20130817_004939_739761_920A295A)
+Subject: [PATCH 6/8] staging: vt6656: desc.h remove typedef
+ tagSTxDataHead_g_FB  to new structure in rxtx.h
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Fri, 30 Aug 2013 15:30:21 +0300
-Message-ID: <20130830123021.31164.8374.stgit@localhost6.localdomain6> (sfid-20130830_143029_188773_0605933E)
-In-Reply-To: <20130830122905.31164.50662.stgit@localhost6.localdomain6>
-References: <20130830122905.31164.50662.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Date: Fri, 16 Aug 2013 23:49:15 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Void pointers are bad, mmkay.
+To new structure.
+typedef struct tagSTxDataHead_g_FB -> struct vnt_tx_datahead_g_fb
 
-No functional changes.
+This is only needed by rxtc.c so moved to rxtx.h visible to
+vnt_rts*/vnt_cts* structures which it will eventually form part of
+their structure.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c |   12 ++++++------
- drivers/net/wireless/ath/ath10k/pci.h |    2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/staging/vt6656/desc.h | 17 -----------------
+ drivers/staging/vt6656/rxtx.c | 15 ++++++++-------
+ drivers/staging/vt6656/rxtx.h | 15 +++++++++++++++
+ 3 files changed, 23 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 304bd4f..76426bf 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -643,7 +643,7 @@ static void ath10k_pci_ce_send_done(struct ath10k_ce_pipe *ce_state,
- 		compl->state = ATH10K_PCI_COMPL_SEND;
- 		compl->ce_state = ce_state;
- 		compl->pipe_info = pipe_info;
--		compl->transfer_context = transfer_context;
-+		compl->skb = transfer_context;
- 		compl->nbytes = nbytes;
- 		compl->transfer_id = transfer_id;
- 		compl->flags = 0;
-@@ -693,7 +693,7 @@ static void ath10k_pci_ce_recv_data(struct ath10k_ce_pipe *ce_state,
- 		compl->state = ATH10K_PCI_COMPL_RECV;
- 		compl->ce_state = ce_state;
- 		compl->pipe_info = pipe_info;
--		compl->transfer_context = transfer_context;
-+		compl->skb = transfer_context;
- 		compl->nbytes = nbytes;
- 		compl->transfer_id = transfer_id;
- 		compl->flags = flags;
-@@ -939,7 +939,7 @@ static void ath10k_pci_stop_ce(struct ath10k *ar)
- 	 * their associated resources */
- 	spin_lock_bh(&ar_pci->compl_lock);
- 	list_for_each_entry(compl, &ar_pci->compl_process, list) {
--		skb = (struct sk_buff *)compl->transfer_context;
-+		skb = compl->skb;
- 		ATH10K_SKB_CB(skb)->is_aborted = true;
- 	}
- 	spin_unlock_bh(&ar_pci->compl_lock);
-@@ -960,7 +960,7 @@ static void ath10k_pci_cleanup_ce(struct ath10k *ar)
+diff --git a/drivers/staging/vt6656/desc.h b/drivers/staging/vt6656/desc.h
+index b0cb8c4..1ee0331 100644
+--- a/drivers/staging/vt6656/desc.h
++++ b/drivers/staging/vt6656/desc.h
+@@ -166,23 +166,6 @@ typedef const STxShortBufHead *PCSTxShortBufHead;
+ /*
+  * TX data header
+  */
+-typedef struct tagSTxDataHead_g_FB {
+-    u8    bySignalField_b;
+-    u8    byServiceField_b;
+-    u16    wTransmitLength_b;
+-    u8    bySignalField_a;
+-    u8    byServiceField_a;
+-    u16    wTransmitLength_a;
+-    u16    wDuration_b;
+-    u16    wDuration_a;
+-    u16    wDuration_a_f0;
+-    u16    wDuration_a_f1;
+-    u16    wTimeStampOff_b;
+-    u16    wTimeStampOff_a;
+-} __attribute__ ((__packed__))
+-STxDataHead_g_FB, *PSTxDataHead_g_FB;
+-typedef const STxDataHead_g_FB *PCSTxDataHead_g_FB;
+-
+ typedef struct tagSTxDataHead_ab {
+     u8    bySignalField;
+     u8    byServiceField;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 585a2e3..20c4656 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -535,7 +535,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+                 return (pBuf->wDuration_a);
+              } else {
+                 // Auto Fallback
+-                PSTxDataHead_g_FB pBuf = (PSTxDataHead_g_FB)pTxDataHead;
++		struct vnt_tx_datahead_g_fb *pBuf =
++			(struct vnt_tx_datahead_g_fb *)pTxDataHead;
+                 //Get SignalField,ServiceField,Length
+                 BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate, byPktType,
+                     (u16 *)&(pBuf->wTransmitLength_a), (u8 *)&(pBuf->byServiceField_a), (u8 *)&(pBuf->bySignalField_a)
+@@ -1195,12 +1196,12 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 		pvRTS = (struct vnt_rts_g_fb *) (pbyTxBufferAddr + wTxBufSize +
+ 				sizeof(struct vnt_rrv_time_rts) + cbMICHDR);
+                 pvCTS = NULL;
+-		pvTxDataHd = (PSTxDataHead_g_FB) (pbyTxBufferAddr + wTxBufSize +
+-			sizeof(struct vnt_rrv_time_rts) + cbMICHDR +
+-					sizeof(struct vnt_rts_g_fb));
++		pvTxDataHd = (struct vnt_tx_datahead_g_fb *) (pbyTxBufferAddr +
++			wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
++				cbMICHDR + sizeof(struct vnt_rts_g_fb));
+ 		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
+ 			cbMICHDR + sizeof(struct vnt_rts_g_fb) +
+-				sizeof(STxDataHead_g_FB);
++				sizeof(struct vnt_tx_datahead_g_fb);
+             }
+             else if (bRTS == false) { //RTS_needless
+ 		pvRrvTime = (struct vnt_rrv_time_cts *)
+@@ -1210,12 +1211,12 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+                 pvRTS = NULL;
+ 		pvCTS = (struct vnt_cts_fb *) (pbyTxBufferAddr + wTxBufSize +
+ 			sizeof(struct vnt_rrv_time_cts) + cbMICHDR);
+-		pvTxDataHd = (PSTxDataHead_g_FB) (pbyTxBufferAddr +
++		pvTxDataHd = (struct vnt_tx_datahead_g_fb *) (pbyTxBufferAddr +
+ 			wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
+ 				cbMICHDR + sizeof(struct vnt_cts_fb));
+ 		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
+ 				cbMICHDR + sizeof(struct vnt_cts_fb) +
+-					sizeof(STxDataHead_g_FB);
++					sizeof(struct vnt_tx_datahead_g_fb);
+             }
+         } // Auto Fall Back
+     }
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index 3c82623..ba80271 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -68,6 +68,21 @@ struct vnt_tx_datahead_g {
+ 	u16 wTimeStampOff_a;
+ } __packed;
  
- 	list_for_each_entry_safe(compl, tmp, &ar_pci->compl_process, list) {
- 		list_del(&compl->list);
--		netbuf = (struct sk_buff *)compl->transfer_context;
-+		netbuf = compl->skb;
- 		dev_kfree_skb_any(netbuf);
- 		kfree(compl);
- 	}
-@@ -1014,7 +1014,7 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
- 		switch (compl->state) {
- 		case ATH10K_PCI_COMPL_SEND:
- 			cb->tx_completion(ar,
--					  compl->transfer_context,
-+					  compl->skb,
- 					  compl->transfer_id);
- 			send_done = 1;
- 			break;
-@@ -1026,7 +1026,7 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
- 				break;
- 			}
- 
--			skb = (struct sk_buff *)compl->transfer_context;
-+			skb = (struct sk_buff *)compl->skb;
- 			nbytes = compl->nbytes;
- 
- 			ath10k_dbg(ATH10K_DBG_PCI,
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index c65fe1b..2e1f422 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -54,7 +54,7 @@ struct ath10k_pci_compl {
- 	enum ath10k_pci_compl_state state;
- 	struct ath10k_ce_pipe *ce_state;
- 	struct ath10k_pci_pipe *pipe_info;
--	void *transfer_context;
-+	struct sk_buff *skb;
- 	unsigned int nbytes;
- 	unsigned int transfer_id;
- 	unsigned int flags;
++struct vnt_tx_datahead_g_fb {
++	u8 bySignalField_b;
++	u8 byServiceField_b;
++	u16 wTransmitLength_b;
++	u8 bySignalField_a;
++	u8 byServiceField_a;
++	u16 wTransmitLength_a;
++	u16 wDuration_b;
++	u16 wDuration_a;
++	u16 wDuration_a_f0;
++	u16 wDuration_a_f1;
++	u16 wTimeStampOff_b;
++	u16 wTimeStampOff_a;
++} __packed;
++
+ /* RTS buffer header */
+ struct vnt_rts_g {
+ 	u8 bySignalField_b;
+-- 
+1.8.1.2
 
