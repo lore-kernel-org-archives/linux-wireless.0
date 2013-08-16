@@ -1,123 +1,260 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46619 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753051Ab3HQMJo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Aug 2013 08:09:44 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 5/6] rt2x00: rt2800lib: move rt2800_adjust_freq_offset function
-Date: Sat, 17 Aug 2013 14:09:32 +0200
-Message-Id: <1376741373-10032-6-git-send-email-juhosg@openwrt.org> (sfid-20130817_140949_796892_5A767CF5)
-In-Reply-To: <1376741373-10032-1-git-send-email-juhosg@openwrt.org>
-References: <1376741373-10032-1-git-send-email-juhosg@openwrt.org>
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:52094 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856Ab3HPIqR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Aug 2013 04:46:17 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH-resend-v2 2/9] ath9k: use chandef instead of channel_type
+Date: Fri, 16 Aug 2013 10:46:04 +0200
+Message-Id: <1376642764-9167-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130816_104623_619563_4F2871D8)
+In-Reply-To: <1376460098-26648-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1376460098-26648-3-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the rt2800_adjust_freq_offset function before
-the channel configuration functions to make it usable
-from those without a forward declaration.
+To enable support for 5/10 MHz, some internal functions must be
+converted from using the (old) channel_type to chandef. This is a good
+chance to change all remaining occurences.
 
-The patch contains no functional changes.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
-Changes since v1: ---
+Changes to PATCH-resend:
+ * fixed compile error in rc.c
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   73 ++++++++++++++++---------------
- 1 file changed, 37 insertions(+), 36 deletions(-)
+ drivers/net/wireless/ath/ath9k/common.c       |   67 +++++++++++++++----------
+ drivers/net/wireless/ath/ath9k/common.h       |    3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    5 +-
+ drivers/net/wireless/ath/ath9k/init.c         |    4 +-
+ drivers/net/wireless/ath/ath9k/main.c         |    8 ++-
+ drivers/net/wireless/ath/ath9k/rc.c           |    4 +-
+ 6 files changed, 51 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 623ad9d..1b81fc9 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1875,6 +1875,43 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
- 	rt2x00dev->lna_gain = lna_gain;
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 344fdde..d3063c2 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -49,37 +49,40 @@ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(ath9k_cmn_get_hw_crypto_keytype);
+ 
+-static u32 ath9k_get_extchanmode(struct ieee80211_channel *chan,
+-				 enum nl80211_channel_type channel_type)
++static u32 ath9k_get_extchanmode(struct cfg80211_chan_def *chandef)
+ {
+ 	u32 chanmode = 0;
+ 
+-	switch (chan->band) {
++	switch (chandef->chan->band) {
+ 	case IEEE80211_BAND_2GHZ:
+-		switch (channel_type) {
+-		case NL80211_CHAN_NO_HT:
+-		case NL80211_CHAN_HT20:
++		switch (chandef->width) {
++		case NL80211_CHAN_WIDTH_20_NOHT:
++		case NL80211_CHAN_WIDTH_20:
+ 			chanmode = CHANNEL_G_HT20;
+ 			break;
+-		case NL80211_CHAN_HT40PLUS:
+-			chanmode = CHANNEL_G_HT40PLUS;
++		case NL80211_CHAN_WIDTH_40:
++			if (chandef->center_freq1 > chandef->chan->center_freq)
++				chanmode = CHANNEL_G_HT40PLUS;
++			else
++				chanmode = CHANNEL_G_HT40MINUS;
+ 			break;
+-		case NL80211_CHAN_HT40MINUS:
+-			chanmode = CHANNEL_G_HT40MINUS;
++		default:
+ 			break;
+ 		}
+ 		break;
+ 	case IEEE80211_BAND_5GHZ:
+-		switch (channel_type) {
+-		case NL80211_CHAN_NO_HT:
+-		case NL80211_CHAN_HT20:
++		switch (chandef->width) {
++		case NL80211_CHAN_WIDTH_20_NOHT:
++		case NL80211_CHAN_WIDTH_20:
+ 			chanmode = CHANNEL_A_HT20;
+ 			break;
+-		case NL80211_CHAN_HT40PLUS:
+-			chanmode = CHANNEL_A_HT40PLUS;
++		case NL80211_CHAN_WIDTH_40:
++			if (chandef->center_freq1 > chandef->chan->center_freq)
++				chanmode = CHANNEL_A_HT40PLUS;
++			else
++				chanmode = CHANNEL_A_HT40MINUS;
+ 			break;
+-		case NL80211_CHAN_HT40MINUS:
+-			chanmode = CHANNEL_A_HT40MINUS;
++		default:
+ 			break;
+ 		}
+ 		break;
+@@ -94,13 +97,12 @@ static u32 ath9k_get_extchanmode(struct ieee80211_channel *chan,
+  * Update internal channel flags.
+  */
+ void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
+-			       struct ieee80211_channel *chan,
+-			       enum nl80211_channel_type channel_type)
++			       struct cfg80211_chan_def *chandef)
+ {
+-	ichan->channel = chan->center_freq;
+-	ichan->chan = chan;
++	ichan->channel = chandef->chan->center_freq;
++	ichan->chan = chandef->chan;
+ 
+-	if (chan->band == IEEE80211_BAND_2GHZ) {
++	if (chandef->chan->band == IEEE80211_BAND_2GHZ) {
+ 		ichan->chanmode = CHANNEL_G;
+ 		ichan->channelFlags = CHANNEL_2GHZ | CHANNEL_OFDM;
+ 	} else {
+@@ -108,8 +110,22 @@ void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
+ 		ichan->channelFlags = CHANNEL_5GHZ | CHANNEL_OFDM;
+ 	}
+ 
+-	if (channel_type != NL80211_CHAN_NO_HT)
+-		ichan->chanmode = ath9k_get_extchanmode(chan, channel_type);
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_5:
++		ichan->channelFlags |= CHANNEL_QUARTER;
++		break;
++	case NL80211_CHAN_WIDTH_10:
++		ichan->channelFlags |= CHANNEL_HALF;
++		break;
++	case NL80211_CHAN_WIDTH_20_NOHT:
++		break;
++	case NL80211_CHAN_WIDTH_20:
++	case NL80211_CHAN_WIDTH_40:
++		ichan->chanmode = ath9k_get_extchanmode(chandef);
++		break;
++	default:
++		WARN_ON(1);
++	}
+ }
+ EXPORT_SYMBOL(ath9k_cmn_update_ichannel);
+ 
+@@ -125,8 +141,7 @@ struct ath9k_channel *ath9k_cmn_get_curchannel(struct ieee80211_hw *hw,
+ 
+ 	chan_idx = curchan->hw_value;
+ 	channel = &ah->channels[chan_idx];
+-	ath9k_cmn_update_ichannel(channel, curchan,
+-				  cfg80211_get_chandef_type(&hw->conf.chandef));
++	ath9k_cmn_update_ichannel(channel, &hw->conf.chandef);
+ 
+ 	return channel;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 207d069..e039bcb 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -44,8 +44,7 @@
+ 
+ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
+ void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
+-			       struct ieee80211_channel *chan,
+-			       enum nl80211_channel_type channel_type);
++			       struct cfg80211_chan_def *chandef);
+ struct ath9k_channel *ath9k_cmn_get_curchannel(struct ieee80211_hw *hw,
+ 					       struct ath_hw *ah);
+ int ath9k_cmn_count_streams(unsigned int chainmask, int max);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 5c1bec1..d442581 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1203,16 +1203,13 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || chip_reset) {
+ 		struct ieee80211_channel *curchan = hw->conf.chandef.chan;
+-		enum nl80211_channel_type channel_type =
+-			cfg80211_get_chandef_type(&hw->conf.chandef);
+ 		int pos = curchan->hw_value;
+ 
+ 		ath_dbg(common, CONFIG, "Set channel: %d MHz\n",
+ 			curchan->center_freq);
+ 
+ 		ath9k_cmn_update_ichannel(&priv->ah->channels[pos],
+-					  hw->conf.chandef.chan,
+-					  channel_type);
++					  &hw->conf.chandef);
+ 
+ 		if (ath9k_htc_set_channel(priv, hw, &priv->ah->channels[pos]) < 0) {
+ 			ath_err(common, "Unable to set channel\n");
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 3b56c2e..85015bf 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -726,13 +726,15 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_channel *chan;
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct cfg80211_chan_def chandef;
+ 	int i;
+ 
+ 	sband = &sc->sbands[band];
+ 	for (i = 0; i < sband->n_channels; i++) {
+ 		chan = &sband->channels[i];
+ 		ah->curchan = &ah->channels[chan->hw_value];
+-		ath9k_cmn_update_ichannel(ah->curchan, chan, NL80211_CHAN_HT20);
++		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
++		ath9k_cmn_update_ichannel(ah->curchan, &chandef);
+ 		ath9k_hw_set_txpowerlimit(ah, MAX_RATE_POWER, true);
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 0bee105..ba382a8 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1201,8 +1201,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || reset_channel) {
+ 		struct ieee80211_channel *curchan = hw->conf.chandef.chan;
+-		enum nl80211_channel_type channel_type =
+-			cfg80211_get_chandef_type(&conf->chandef);
+ 		int pos = curchan->hw_value;
+ 		int old_pos = -1;
+ 		unsigned long flags;
+@@ -1210,8 +1208,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		if (ah->curchan)
+ 			old_pos = ah->curchan - &ah->channels[0];
+ 
+-		ath_dbg(common, CONFIG, "Set channel: %d MHz type: %d\n",
+-			curchan->center_freq, channel_type);
++		ath_dbg(common, CONFIG, "Set channel: %d MHz width: %d\n",
++			curchan->center_freq, hw->conf.chandef.width);
+ 
+ 		/* update survey stats for the old channel before switching */
+ 		spin_lock_irqsave(&common->cc_lock, flags);
+@@ -1219,7 +1217,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		spin_unlock_irqrestore(&common->cc_lock, flags);
+ 
+ 		ath9k_cmn_update_ichannel(&sc->sc_ah->channels[pos],
+-					  curchan, channel_type);
++					  &conf->chandef);
+ 
+ 		/*
+ 		 * If the operating channel changes, change the survey in-use flags
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index a3c4ca0..7e86abb 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1326,8 +1326,8 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
+ 		ath_rc_init(sc, priv_sta);
+ 
+ 		ath_dbg(ath9k_hw_common(sc->sc_ah), CONFIG,
+-			"Operating HT Bandwidth changed to: %d\n",
+-			cfg80211_get_chandef_type(&sc->hw->conf.chandef));
++			"Operating Bandwidth changed to: %d\n",
++			sc->hw->conf.chandef.width);
+ 	}
  }
  
-+#define FREQ_OFFSET_BOUND	0x5f
-+
-+static void rt2800_adjust_freq_offset(struct rt2x00_dev *rt2x00dev)
-+{
-+	u8 freq_offset, prev_freq_offset;
-+	u8 rfcsr, prev_rfcsr;
-+
-+	freq_offset = rt2x00_get_field8(rt2x00dev->freq_offset, RFCSR17_CODE);
-+	freq_offset = min_t(u8, freq_offset, FREQ_OFFSET_BOUND);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
-+	prev_rfcsr = rfcsr;
-+
-+	rt2x00_set_field8(&rfcsr, RFCSR17_CODE, freq_offset);
-+	if (rfcsr == prev_rfcsr)
-+		return;
-+
-+	if (rt2x00_is_usb(rt2x00dev)) {
-+		rt2800_mcu_request(rt2x00dev, MCU_FREQ_OFFSET, 0xff,
-+				   freq_offset, prev_rfcsr);
-+		return;
-+	}
-+
-+	prev_freq_offset = rt2x00_get_field8(prev_rfcsr, RFCSR17_CODE);
-+	while (prev_freq_offset != freq_offset) {
-+		if (prev_freq_offset < freq_offset)
-+			prev_freq_offset++;
-+		else
-+			prev_freq_offset--;
-+
-+		rt2x00_set_field8(&rfcsr, RFCSR17_CODE, prev_freq_offset);
-+		rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
-+
-+		usleep_range(1000, 1500);
-+	}
-+}
-+
- static void rt2800_config_channel_rf2xxx(struct rt2x00_dev *rt2x00dev,
- 					 struct ieee80211_conf *conf,
- 					 struct rf_channel *rf,
-@@ -2492,42 +2529,6 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 
- #define POWER_BOUND		0x27
- #define POWER_BOUND_5G		0x2b
--#define FREQ_OFFSET_BOUND	0x5f
--
--static void rt2800_adjust_freq_offset(struct rt2x00_dev *rt2x00dev)
--{
--	u8 freq_offset, prev_freq_offset;
--	u8 rfcsr, prev_rfcsr;
--
--	freq_offset = rt2x00_get_field8(rt2x00dev->freq_offset, RFCSR17_CODE);
--	freq_offset = min_t(u8, freq_offset, FREQ_OFFSET_BOUND);
--
--	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
--	prev_rfcsr = rfcsr;
--
--	rt2x00_set_field8(&rfcsr, RFCSR17_CODE, freq_offset);
--	if (rfcsr == prev_rfcsr)
--		return;
--
--	if (rt2x00_is_usb(rt2x00dev)) {
--		rt2800_mcu_request(rt2x00dev, MCU_FREQ_OFFSET, 0xff,
--				   freq_offset, prev_rfcsr);
--		return;
--	}
--
--	prev_freq_offset = rt2x00_get_field8(prev_rfcsr, RFCSR17_CODE);
--	while (prev_freq_offset != freq_offset) {
--		if (prev_freq_offset < freq_offset)
--			prev_freq_offset++;
--		else
--			prev_freq_offset--;
--
--		rt2x00_set_field8(&rfcsr, RFCSR17_CODE, prev_freq_offset);
--		rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
--
--		usleep_range(1000, 1500);
--	}
--}
- 
- static void rt2800_config_channel_rf3290(struct rt2x00_dev *rt2x00dev,
- 					 struct ieee80211_conf *conf,
 -- 
-1.7.10
+1.7.10.4
+
