@@ -1,115 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51202 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754230Ab3HWWco (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 18:32:44 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 2/5] brcmsmac: use bcma PCIe up and down functions
-Date: Sat, 24 Aug 2013 00:32:31 +0200
-Message-Id: <1377297154-14525-2-git-send-email-hauke@hauke-m.de> (sfid-20130824_003250_579214_5977CF6D)
-In-Reply-To: <1377297154-14525-1-git-send-email-hauke@hauke-m.de>
-References: <1377297154-14525-1-git-send-email-hauke@hauke-m.de>
+Received: from arrakis.dune.hu ([78.24.191.176]:51248 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753912Ab3HPWPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Aug 2013 18:15:54 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/2] rt2x00: rt2800: rename HW_BEACON_OFFSET macro
+Date: Sat, 17 Aug 2013 00:15:49 +0200
+Message-Id: <1376691350-19851-1-git-send-email-juhosg@openwrt.org> (sfid-20130817_001601_126322_BA47CAEA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-replace the calls to bcma_core_pci_extend_L1timer() by calls to the
-newly introduced bcma_core_pci_ip() and bcma_core_pci_down()
+The name of the HW_BEACON_OFFSET macro is a
+bit confusing. It returns with one of the
+HW_BEACON_BASE* values, so rename the macro
+to HW_BEACON_BASE to reflect that.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Arend van Spriel <arend@broadcom.com>
+The patch contains no functional changes.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   21 ---------------------
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    3 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c    |    8 ++++----
- 3 files changed, 4 insertions(+), 28 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800.h    |    2 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index e4fd1ee..5336597 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -679,27 +679,6 @@ bool ai_clkctl_cc(struct si_pub *sih, enum bcma_clkmode mode)
- 	return mode == BCMA_CLKMODE_FAST;
- }
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index a313241..6e69b96 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2019,7 +2019,7 @@ struct mac_iveiv_entry {
+ #define HW_BEACON_BASE6			0x5dc0
+ #define HW_BEACON_BASE7			0x5bc0
  
--void ai_pci_up(struct si_pub *sih)
--{
--	struct si_info *sii;
--
--	sii = container_of(sih, struct si_info, pub);
--
--	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI)
--		bcma_core_pci_extend_L1timer(&sii->icbus->drv_pci[0], true);
--}
--
--/* Unconfigure and/or apply various WARs when going down */
--void ai_pci_down(struct si_pub *sih)
--{
--	struct si_info *sii;
--
--	sii = container_of(sih, struct si_info, pub);
--
--	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI)
--		bcma_core_pci_extend_L1timer(&sii->icbus->drv_pci[0], false);
--}
--
- /* Enable BT-COEX & Ex-PA for 4313 */
- void ai_epa_4313war(struct si_pub *sih)
- {
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index 89562c1..a8a267b 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -183,9 +183,6 @@ extern u16 ai_clkctl_fast_pwrup_delay(struct si_pub *sih);
- extern bool ai_clkctl_cc(struct si_pub *sih, enum bcma_clkmode mode);
- extern bool ai_deviceremoved(struct si_pub *sih);
+-#define HW_BEACON_OFFSET(__index) \
++#define HW_BEACON_BASE(__index) \
+ 	(((__index) < 4) ? (HW_BEACON_BASE0 + (__index * 0x0200)) : \
+ 	  (((__index) < 6) ? (HW_BEACON_BASE4 + ((__index - 4) * 0x0200)) : \
+ 	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))))
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index fb71ed6..a25862a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -992,7 +992,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 		return;
+ 	}
  
--extern void ai_pci_down(struct si_pub *sih);
--extern void ai_pci_up(struct si_pub *sih);
--
- /* Enable Ex-PA for 4313 */
- extern void ai_epa_4313war(struct si_pub *sih);
+-	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
++	beacon_base = HW_BEACON_BASE(entry->entry_idx);
+ 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+ 				   entry->skb->len + padding_len);
  
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index c3c6123..4608e0e 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -4669,7 +4669,7 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
- 	brcms_c_coredisable(wlc_hw);
- 
- 	/* Match driver "down" state */
--	ai_pci_down(wlc_hw->sih);
-+	bcma_core_pci_down(wlc_hw->d11core->bus);
- 
- 	/* turn off pll and xtal to match driver "down" state */
- 	brcms_b_xtal(wlc_hw, OFF);
-@@ -5012,12 +5012,12 @@ static int brcms_b_up_prep(struct brcms_hardware *wlc_hw)
+@@ -1042,7 +1042,7 @@ void rt2800_clear_beacon(struct queue_entry *entry)
+ 	 * Clear beacon.
  	 */
- 	if (brcms_b_radio_read_hwdisabled(wlc_hw)) {
- 		/* put SB PCI in down state again */
--		ai_pci_down(wlc_hw->sih);
-+		bcma_core_pci_down(wlc_hw->d11core->bus);
- 		brcms_b_xtal(wlc_hw, OFF);
- 		return -ENOMEDIUM;
- 	}
+ 	rt2800_clear_beacon_register(rt2x00dev,
+-				     HW_BEACON_OFFSET(entry->entry_idx));
++				     HW_BEACON_BASE(entry->entry_idx));
  
--	ai_pci_up(wlc_hw->sih);
-+	bcma_core_pci_up(wlc_hw->d11core->bus);
- 
- 	/* reset the d11 core */
- 	brcms_b_corereset(wlc_hw, BRCMS_USE_COREFLAGS);
-@@ -5214,7 +5214,7 @@ static int brcms_b_down_finish(struct brcms_hardware *wlc_hw)
- 
- 		/* turn off primary xtal and pll */
- 		if (!wlc_hw->noreset) {
--			ai_pci_down(wlc_hw->sih);
-+			bcma_core_pci_down(wlc_hw->d11core->bus);
- 			brcms_b_xtal(wlc_hw, OFF);
- 		}
- 	}
+ 	/*
+ 	 * Enabled beaconing again.
 -- 
-1.7.10.4
-
+1.7.10
