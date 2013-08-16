@@ -1,139 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38860 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753087Ab3HPLGI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 07:06:08 -0400
-Message-ID: <1376651161.15299.24.camel@jlt4.sipsolutions.net> (sfid-20130816_130613_284163_62C69448)
-Subject: pull-request: iwlwifi-next 2013-08-16
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 16 Aug 2013 13:06:01 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-gMSd7Li3mSBK71NGJCYt"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:4296 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751965Ab3HPWUD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Aug 2013 18:20:03 -0400
+Message-ID: <520E8FE0.6070505@broadcom.com> (sfid-20130817_002010_456140_E16FD4DE)
+Date: Fri, 16 Aug 2013 22:47:28 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Felix Fietkau" <nbd@openwrt.org>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@redhat.com>,
+	"John Greene" <jogreene@redhat.com>
+Subject: Re: Fwd: [Bug 989269] Connecting to WLAN causes kernel panic
+References: <bug-989269-351310-C5h8dsuOxB@bugzilla.redhat.com>
+ <51F8CD45.6060108@broadcom.com> <51F8D438.7020304@openwrt.org>
+In-Reply-To: <51F8D438.7020304@openwrt.org>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 07/31/2013 11:09 AM, Felix Fietkau wrote:
+> On 2013-07-31 10:39 AM, Arend van Spriel wrote:
+>> Hi Felix,
+>>
+>> How are things in OpenWRT. I wanted to ask you something regarding a
+>> defect I am looking at. Since kernel 3.9 several reports have been made
+>> about a kernel panic in brcmsmac, ie. a divide-by-zero error.
+> 3.9 was the first kernel to support CCK rates in minstrel_ht as
+> fallback (in case the link gets very bad). Not sure if that triggers
+> anything weird in brcmsmac.
+>
+>> Debugging the issue shows we end up with a rate with MCS index 110,
+>> which is, well, impossible.
+> Did you verify that it comes directly from minstrel_ht, or does it show
+> up somewhere further down the chain in brcmsmac?
+>
+>> As brcmsmac gets the rate info from
+>> minstrel_ht I was wondering if we have an intergration issue here. I saw
+>> around April patches about new API which may have been in the 3.9 time
+>> frame and something subtly changed things for brcmsmac.
+> The new rate API was added in 3.10, not 3.9. It did add bug that caused
+> bogus MCS rates. I've sent a patch for this a while back (shortly
+> before 3.10 was released), but it was too late to make it into the
+> release. I guess we have to wait for it to be applied through stable -
+> no idea why that hasn't happened yet.
 
---=-gMSd7Li3mSBK71NGJCYt
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Reportedly the problem still exists in 3.10.6 and 3.11-rc4. So I started 
+digging some more. So can you have a look at the rate table below that 
+we setup in the wiphy structure:
 
-John,
+static struct ieee80211_rate legacy_ratetable[] = {
+	RATE(10, 0),
+	RATE(20, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(55, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(110, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(60, 0),
+	RATE(90, 0),
+	RATE(120, 0),
+	RATE(180, 0),
+	RATE(240, 0),
+	RATE(360, 0),
+	RATE(480, 0),
+	RATE(540, 0),
+};
 
-For iwlwifi-next I also have some new code...
+where RATE() is defined as:
 
-This time I have some powersave work (notably uAPSD support), CQM
-offloads, support for a new firmware API and various code cleanups.
+#define RATE(rate100m, _flags) { \
+	.bitrate = (rate100m), \
+	.flags = (_flags), \
+	.hw_value = (rate100m / 5), \
+}
 
-Let me know if there's any problem.
+Do you see anything obviously wrong here from minstrel_ht perspective?
 
-johannes
+Regards,
+Arend
 
+> Here is the fix:
+>
+> commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Fri Jun 28 21:04:35 2013 +0200
+>
+>      mac80211/minstrel_ht: fix cck rate sampling
+>
+>      The CCK group needs special treatment to set the right flags and rate
+>      index. Add this missing check to prevent setting broken rates for tx
+>      packets.
+>
+>      Cc: stable@vger.kernel.org # 3.10
+>      Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>      Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>
+> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> index 5b2d301..f5aed96 100644
+> --- a/net/mac80211/rc80211_minstrel_ht.c
+> +++ b/net/mac80211/rc80211_minstrel_ht.c
+> @@ -804,10 +804,18 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+>
+>   	sample_group = &minstrel_mcs_groups[sample_idx / MCS_GROUP_RATES];
+>   	info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+> +	rate->count = 1;
+> +
+> +	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
+> +		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
+> +		rate->idx = mp->cck_rates[idx];
+> +		rate->flags = 0;
+> +		return;
+> +	}
+> +
+>   	rate->idx = sample_idx % MCS_GROUP_RATES +
+>   		    (sample_group->streams - 1) * MCS_GROUP_RATES;
+>   	rate->flags = IEEE80211_TX_RC_MCS | sample_group->flags;
+> -	rate->count = 1;
+>   }
+>
+>   static void
+>
+>
 
-The following changes since commit ef4394b9477f9078d78ae3e8359eae094c9b19d8=
-:
-
-  iwlwifi: mvm: use designated initialization for some arrays (2013-08-06 1=
-0:35:04 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
-r-john
-
-for you to fetch changes up to 89716344806bd49d213ad5960661e8c2d38c4982:
-
-  iwlwifi: mvm: Add PBW snoozing enablement (2013-08-16 12:13:28 +0200)
-
-----------------------------------------------------------------
-Alexander Bondar (3):
-      iwlwifi: mvm: Fix beacon filtering enablement via debugfs
-      iwlwifi: mvm: Add basic uAPSD client support
-      iwlwifi: mvm: Add PBW snoozing enablement
-
-Andrei Otcheretianski (1):
-      iwlwifi: mvm: Implement CQM offloading
-
-Dan Carpenter (1):
-      iwlwifi: pcie: returning positive instead of negative
-
-Eliad Peller (1):
-      iwlwifi: mvm: don't clear tbl->win mistakenly
-
-Eyal Shapira (4):
-      iwlwifi: mvm: remove rate_scale_data debugfs entry
-      iwlwifi: mvm: remove unused fields of iwl_rs_rate_info
-      iwlwifi: mvm: remove MIMO3 from rate scale code
-      iwlwifi: mvm: remove unused param of rs_dbgfs_set_mcs
-
-Eytan Lifshitz (1):
-      iwlwifi: mvm: add support to the new FW time event API
-
-Ido Yariv (3):
-      iwlwifi: pcie: Refactor iwl_queue_space
-      iwlwifi: pcie: Refactor iwl_rxq_space
-      iwlwifi: pcie: Remove duplicate code from pcie irq handlers
-
-Johannes Berg (1):
-      iwlwifi: mvm: refactor resume from WoWLAN code
-
-Luciano Coelho (4):
-      iwlwifi: pcie: don't swallow error codes in iwl_trans_pcie_alloc()
-      iwlwifi: use a macro for default probe length
-      iwlwifi: Kconfig: fix help texts wrt 7260 and 3160 devices
-      iwlwifi: return -ENOMEM instead of NULL when OOM in iwl_drv_start()
-
-Matti Gottlieb (1):
-      iwlwifi: introduce external debug level
-
- drivers/net/wireless/iwlwifi/Kconfig            |  13 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h        |   2 +
- drivers/net/wireless/iwlwifi/iwl-drv.c          |  10 +-
- drivers/net/wireless/iwlwifi/iwl-fw.h           |   5 +
- drivers/net/wireless/iwlwifi/mvm/constants.h    |   9 +
- drivers/net/wireless/iwlwifi/mvm/d3.c           | 151 ++++----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c      |  17 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h |  24 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api.h       | 228 +++++++++---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c     |  29 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h          |  27 +-
- drivers/net/wireless/iwlwifi/mvm/power.c        | 199 +++++++++-
- drivers/net/wireless/iwlwifi/mvm/rs.c           | 474 ++++----------------=
-----
- drivers/net/wireless/iwlwifi/mvm/rs.h           |  64 +---
- drivers/net/wireless/iwlwifi/mvm/rx.c           |  61 ++-
- drivers/net/wireless/iwlwifi/mvm/time-event.c   |  96 +++--
- drivers/net/wireless/iwlwifi/pcie/drv.c         |   6 +-
- drivers/net/wireless/iwlwifi/pcie/rx.c          |  43 +--
- drivers/net/wireless/iwlwifi/pcie/trans.c       |  26 +-
- drivers/net/wireless/iwlwifi/pcie/tx.c          |  38 +-
- 20 files changed, 809 insertions(+), 713 deletions(-)
-
-
---=-gMSd7Li3mSBK71NGJCYt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJSDgeZAAoJEDBSmw7B7bqrYjYP/iIppOsX/s9Rt1/nxnlKeFgN
-T6IrJtzi5haYVRbSb6PlmtmSs7lEp2QWQ8m40qH6EDzhhCs6cIFIbXrjoM2i/nY6
-CmCQjOHzw9leTrHFZneEjBgSJ7p6GzorCHM37zaCO/LnxU7iuRKpaeuLNYy+eLSD
-qAo/O7LbIqG0PIkJHgp7t/rIJBqADvOWencDoAIaS6vOV6mRiCd+vSJuMkgkU0D5
-0eDaU6sysF9g95EArf1qL/vSFRlE02KJjv6HGtnjckS1vOXuwLWrC6updizWdnas
-qk3nhRKh47QRYHVB7UUSM/zRpFdD/fJDpYtQz+amCGakyGnCmIz5+cQDJEGv6gAN
-jDnp/1ivzmlTG/DDVS3Pe1gD0UBrGEzNYj9WlB/L9j6UNqRQ9KUU7/nwC9PbHg6/
-FUYXd9T29Xi092rQ0haRTDCPKodtb1fQ6311w+jzNKG4mR9Vf73KcxEhWe5vUwhl
-Kk5JgOIaTqiRILMI4NpkmRsA59+IxwI0fs3hl5bOZ+59VWCXilmLhjccoBJ5f/My
-iE4c5gk+vwhj57tyl5qlQ8nFM1NLCMbPN6ga/dKQZpdbmwruWMNw5En45oAjUrsJ
-nRB2d1uFAT+Yr1iH5pI78rfONentzfezHibEgHZJd2PpJTRsSw2QA7ZwUOUzWiB5
-FPCcYcKJFLe2ecUioca5
-=hSii
------END PGP SIGNATURE-----
-
---=-gMSd7Li3mSBK71NGJCYt--
 
