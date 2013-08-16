@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:56025 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933977Ab3HHIIb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 04:08:31 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 2/3] ath10k: clean up HTT tx tid handling
-Date: Thu, 8 Aug 2013 10:08:17 +0200
-Message-ID: <1375949298-7159-3-git-send-email-michal.kazior@tieto.com> (sfid-20130808_100842_382226_CB2504BE)
-In-Reply-To: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
-References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:38891 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754307Ab3HPLIE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Aug 2013 07:08:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>
+Subject: [PATCH 18/20] iwlwifi: return -ENOMEM instead of NULL when OOM in iwl_drv_start()
+Date: Fri, 16 Aug 2013 13:07:08 +0200
+Message-Id: <1376651230-1060-18-git-send-email-johannes@sipsolutions.net> (sfid-20130816_130809_532400_0134D373)
+In-Reply-To: <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
+References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
+ <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tids weren't mapped really properly. This
-doesn't fix any known bug but seems the right
-thing to do.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+The callers of iwl_drv_start() are probe functions.  If a probe
+function returns 0, it means it succeeded.  So if NULL was returned by
+iwl_drv_start(), it would be considered as a success.
+
+Fix this by returning -ENOMEM if the driver struct allocation fails in
+iwl_drv_start().
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h |    6 ++++--
- drivers/net/wireless/ath/ath10k/mac.c |    6 ++++--
- 2 files changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-drv.c  | 8 +++++---
+ drivers/net/wireless/iwlwifi/pcie/drv.c | 2 +-
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 318be46..de45d02 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -106,8 +106,10 @@ enum htt_data_tx_desc_flags1 {
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index e88397b..99e1da3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1032,8 +1032,10 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
+ 	int ret;
  
- enum htt_data_tx_ext_tid {
--	HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST = 16,
--	HTT_DATA_TX_EXT_TID_MGMT                = 17,
-+	HTT_DATA_TX_EXT_TID_NON_QOS_UNICAST     = 16,
-+	HTT_DATA_TX_EXT_TID_UNUSED              = 17,
-+	HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST = 18,
-+	HTT_DATA_TX_EXT_TID_MGMT                = 19,
- 	HTT_DATA_TX_EXT_TID_INVALID             = 31
- };
+ 	drv = kzalloc(sizeof(*drv), GFP_KERNEL);
+-	if (!drv)
+-		return NULL;
++	if (!drv) {
++		ret = -ENOMEM;
++		goto err;
++	}
  
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index cf2ba4d..fb1f24f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1726,12 +1726,14 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	drv->trans = trans;
+ 	drv->dev = trans->dev;
+@@ -1078,7 +1080,7 @@ err_free_dbgfs:
+ err_free_drv:
+ #endif
+ 	kfree(drv);
+-
++err:
+ 	return ERR_PTR(ret);
+ }
  
- 	/* we must calculate tid before we apply qos workaround
- 	 * as we'd lose the qos control field */
--	tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
- 	if (ieee80211_is_data_qos(hdr->frame_control) &&
- 	    is_unicast_ether_addr(ieee80211_get_DA(hdr))) {
- 		u8 *qc = ieee80211_get_qos_ctl(hdr);
- 		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
--	}
-+	} else if (is_unicast_ether_addr(ieee80211_get_DA(hdr)))
-+		tid = HTT_DATA_TX_EXT_TID_NON_QOS_UNICAST;
-+	else
-+		tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index e179efe..567ef01 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -332,7 +332,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(iwl_trans);
+ 	trans_pcie->drv = iwl_drv_start(iwl_trans, cfg);
  
- 	/* it makes no sense to process injected frames like that */
- 	if (info->control.vif &&
+-	if (IS_ERR_OR_NULL(trans_pcie->drv)) {
++	if (IS_ERR(trans_pcie->drv)) {
+ 		ret = PTR_ERR(trans_pcie->drv);
+ 		goto out_free_trans;
+ 	}
 -- 
-1.7.9.5
+1.8.4.rc2
 
