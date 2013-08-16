@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:39002 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751746Ab3HZT1K convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 15:27:10 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Tobias Waldekranz <tobias@waldekranz.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 26 Aug 2013 12:27:06 -0700
-Subject: RE: [PATCH] mwifiex: add missing endian conversions
-Message-ID: <477F20668A386D41ADCC57781B1F70430EAF1FEDA3@SC-VEXCH1.marvell.com> (sfid-20130826_212713_762805_351CBBD8)
-References: <20130826071806.GA3035@gmail.com>
-In-Reply-To: <20130826071806.GA3035@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35951 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752306Ab3HPWaP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Aug 2013 18:30:15 -0400
+Date: Fri, 16 Aug 2013 14:49:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-next 2013-08-16
+Message-ID: <20130816184917.GQ2133@tuxdriver.com> (sfid-20130817_003024_202613_D7A7CFD7)
+References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tobias,
-
-> Fixes multiple locations where a little endian host is assumed during
-> ser/des of messages sent to/received from the chip.
-
-Thanks for your patch.
-It doesn't apply to wireless or wireless-next trees.
-
-Which git tree are you using?
-
+On Fri, Aug 16, 2013 at 01:06:01PM +0200, Johannes Berg wrote:
+> John,
 > 
-> Signed-off-by: Tobias Waldekranz <tobias@waldekranz.com>
-> ---
->  drivers/net/wireless/mwifiex/11n_aggr.c    | 2 +-
->  drivers/net/wireless/mwifiex/main.h        | 2 +-
->  drivers/net/wireless/mwifiex/sdio.c        | 6 +++---
->  drivers/net/wireless/mwifiex/sta_cmdresp.c | 2 +-
->  4 files changed, 6 insertions(+), 6 deletions(-)
+> For iwlwifi-next I also have some new code...
 > 
-> diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-> index a78e065..b53c73c 100644
-> --- a/drivers/net/wireless/mwifiex/11n_aggr.c
-> +++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-> @@ -69,7 +69,7 @@ mwifiex_11n_form_amsdu_pkt(struct sk_buff *skb_aggr,
->  	memcpy(&tx_header->eth803_hdr, skb_src->data, dt_offset);
+> This time I have some powersave work (notably uAPSD support), CQM
+> offloads, support for a new firmware API and various code cleanups.
 > 
->  	/* Copy SNAP header */
-> -	snap.snap_type = *(u16 *) ((u8 *)skb_src->data + dt_offset);
-> +	snap.snap_type = le16_to_cpu(*(__le16 *) ((u8 *)skb_src->data + dt_offset));
+> Let me know if there's any problem.
+> 
+> johannes
+> 
+> 
+> The following changes since commit ef4394b9477f9078d78ae3e8359eae094c9b19d8:
+> 
+>   iwlwifi: mvm: use designated initialization for some arrays (2013-08-06 10:35:04 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+> 
+> for you to fetch changes up to 89716344806bd49d213ad5960661e8c2d38c4982:
+> 
+>   iwlwifi: mvm: Add PBW snoozing enablement (2013-08-16 12:13:28 +0200)
 
-This line exceeds 80 characters. Please break it to two lines.
+Pulling now...
 
-Thanks,
-Bing
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
