@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38472 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754276Ab3HWKCY (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:34871 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753008Ab3HPDFs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 06:02:24 -0400
-Message-ID: <1377252141.14021.19.camel@jlt4.sipsolutions.net> (sfid-20130823_120227_919167_369971C8)
-Subject: Re: [PATCH] mac80211: move setting WIPHY_FLAG_SUPPORTS_SCHED_SCAN
- into drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luca@coelho.fi>
-Date: Fri, 23 Aug 2013 12:02:21 +0200
-In-Reply-To: <1377077275-19429-1-git-send-email-johannes@sipsolutions.net> (sfid-20130821_112808_609524_25DD4221)
-References: <1377077275-19429-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130821_112808_609524_25DD4221)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 15 Aug 2013 23:05:48 -0400
+Date: Thu, 15 Aug 2013 20:14:52 -0700
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Arik Nemtsov <arik@wizery.com>, backports@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
+Subject: Re: [PATCH] backports: rename some mem functions to not break custom
+ kernels
+Message-ID: <20130816031450.GC9574@garbanzo.do-not-panic.com> (sfid-20130816_050558_486551_184CBB67)
+References: <1376466485-25796-1-git-send-email-arik@wizery.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1376466485-25796-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-08-21 at 11:27 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Aug 14, 2013 at 10:48:05AM +0300, Arik Nemtsov wrote:
+> When custom patches are cherry-picked to a kernel, some symbols exported
+> by backports may clash with the built-in ones. Rename the backports
+> symbols using the standard backport_ prefix to prevent that.
 > 
-> mac80211 currently sets WIPHY_FLAG_SUPPORTS_SCHED_SCAN based on whether
-> the start_sched_scan operation is supported or not, but that will not
-> be correct for all drivers, we're adding scheduled scan to the iwlmvm
-> driver but it depends on firmware support.
+> The offending symbols were exported by the patch below:
 > 
-> Therefore, move setting WIPHY_FLAG_SUPPORTS_SCHED_SCAN into the drivers
-> so that they can control it regardless of implementing the operation.
+> commit 2ce5c22448bb45998318267c00b5d6ef9cff3170
+> Author: Hauke Mehrtens <hauke@hauke-m.de>
+> Date:   Thu Jun 6 13:48:04 2013 +0200
 > 
-> This currently only affects the TI drivers since they're the only ones
-> implementing scheduled scan (in a mac80211 driver.)
+>     backports: backport some memory functions
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
 
-Applied.
+Thanks, applied and pushed. Next time please add
+the backports@vger.kernel.org list.
 
-johannes
-
+  Luis
