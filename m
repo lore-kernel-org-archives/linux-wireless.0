@@ -1,27 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39143 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:38864 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758074Ab3HINRm (ORCPT
+	with ESMTP id S1752540Ab3HPLHP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 09:17:42 -0400
-Message-ID: <1376054257.8355.8.camel@jlt4.sipsolutions.net> (sfid-20130809_151745_466446_9805B825)
-Subject: Re: [PATCH 2/7] mac80211: fix ieee80211_sta_process_chanswitch for
- 5/10 MHz channels
+	Fri, 16 Aug 2013 07:07:15 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 09 Aug 2013 15:17:37 +0200
-In-Reply-To: <1375457886-7275-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1375457886-7275-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Subject: [PATCH 01/20] iwlwifi: mvm: Fix beacon filtering enablement via debugfs
+Date: Fri, 16 Aug 2013 13:06:51 +0200
+Message-Id: <1376651230-1060-1-git-send-email-johannes@sipsolutions.net> (sfid-20130816_130721_151699_34109652)
+In-Reply-To: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
+References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied.
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-johannes
+The code was only enabling it when already enabled, which
+obviously can't work.
+
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index 2ee256d..3cdc005 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -895,10 +895,7 @@ static ssize_t iwl_dbgfs_bf_params_write(struct file *file,
+ 	if (param == MVM_DEBUGFS_BF_ENABLE_BEACON_FILTER && !value) {
+ 		ret = iwl_mvm_disable_beacon_filter(mvm, vif);
+ 	} else {
+-		if (mvmvif->bf_enabled)
+-			ret = iwl_mvm_enable_beacon_filter(mvm, vif);
+-		else
+-			ret = iwl_mvm_disable_beacon_filter(mvm, vif);
++		ret = iwl_mvm_enable_beacon_filter(mvm, vif);
+ 	}
+ 	mutex_unlock(&mvm->mutex);
+ 
+-- 
+1.8.4.rc2
 
