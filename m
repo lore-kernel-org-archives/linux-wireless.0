@@ -1,46 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56256 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753498Ab3HITco (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38877 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754001Ab3HPLHS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 15:32:44 -0400
-Date: Fri, 9 Aug 2013 15:32:43 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Oleksij Rempel <linux@rempel-privat.de>
-cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: FUSB200 xhci issue
-In-Reply-To: <52053AC4.3090509@rempel-privat.de>
-Message-ID: <Pine.LNX.4.44L0.1308091529080.1405-100000@iolanthe.rowland.org> (sfid-20130809_213248_163913_854F8761)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Fri, 16 Aug 2013 07:07:18 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>
+Subject: [PATCH 08/20] iwlwifi: mvm: remove rate_scale_data debugfs entry
+Date: Fri, 16 Aug 2013 13:06:58 +0200
+Message-Id: <1376651230-1060-8-git-send-email-johannes@sipsolutions.net> (sfid-20130816_130733_714166_B637D231)
+In-Reply-To: <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
+References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
+ <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 9 Aug 2013, Oleksij Rempel wrote:
+From: Eyal Shapira <eyal@wizery.com>
 
-> > Is there any way to prevent the device from losing its firmware during
-> > a USB reset or suspend?
-> 
-> For suspend - yes. It is possible to ignore suspend command or put the 
-> SoC in low power mode - but is it probably not so easy to bring it back. 
-> I would need to read more code and create some doc as side effect untill 
-> i understand how it works.
-> I'm not sure how about reset command. I would need more testing and some 
-> ones help. If i see it correctly, usb reset should affect only usb core 
-> and usb pll.
-> 
-> How can i trigger usb reset?
+This isn't very informative and can be deduced from rate_scale_table.
+Remove as a preparation for dropping iwl_rs_rate_info.ieee.
 
-http://marc.info/?l=linux-usb&m=121459435621262&w=2
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 30 ------------------------------
+ drivers/net/wireless/iwlwifi/mvm/rs.h |  1 -
+ 2 files changed, 31 deletions(-)
 
-Give the program the pathname for the USB device node.  For example:
-
-	usbreset /dev/bus/usb/001/004
-
-Alan Stern
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index d680c89..199f0cf 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -3009,32 +3009,6 @@ static const struct file_operations rs_sta_dbgfs_stats_table_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
+-static ssize_t rs_sta_dbgfs_rate_scale_data_read(struct file *file,
+-			char __user *user_buf, size_t count, loff_t *ppos)
+-{
+-	struct iwl_lq_sta *lq_sta = file->private_data;
+-	struct iwl_scale_tbl_info *tbl = &lq_sta->lq_info[lq_sta->active_tbl];
+-	char buff[120];
+-	int desc = 0;
+-
+-	if (is_Ht(tbl->lq_type))
+-		desc += sprintf(buff+desc,
+-				"Bit Rate= %d Mb/s\n",
+-				tbl->expected_tpt[lq_sta->last_txrate_idx]);
+-	else
+-		desc += sprintf(buff+desc,
+-				"Bit Rate= %d Mb/s\n",
+-				iwl_rates[lq_sta->last_txrate_idx].ieee >> 1);
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buff, desc);
+-}
+-
+-static const struct file_operations rs_sta_dbgfs_rate_scale_data_ops = {
+-	.read = rs_sta_dbgfs_rate_scale_data_read,
+-	.open = simple_open,
+-	.llseek = default_llseek,
+-};
+-
+ static void rs_add_debugfs(void *mvm, void *mvm_sta, struct dentry *dir)
+ {
+ 	struct iwl_lq_sta *lq_sta = mvm_sta;
+@@ -3044,9 +3018,6 @@ static void rs_add_debugfs(void *mvm, void *mvm_sta, struct dentry *dir)
+ 	lq_sta->rs_sta_dbgfs_stats_table_file =
+ 		debugfs_create_file("rate_stats_table", S_IRUSR, dir,
+ 				    lq_sta, &rs_sta_dbgfs_stats_table_ops);
+-	lq_sta->rs_sta_dbgfs_rate_scale_data_file =
+-		debugfs_create_file("rate_scale_data", S_IRUSR, dir,
+-				    lq_sta, &rs_sta_dbgfs_rate_scale_data_ops);
+ 	lq_sta->rs_sta_dbgfs_tx_agg_tid_en_file =
+ 		debugfs_create_u8("tx_agg_tid_enable", S_IRUSR | S_IWUSR, dir,
+ 				  &lq_sta->tx_agg_tid_en);
+@@ -3057,7 +3028,6 @@ static void rs_remove_debugfs(void *mvm, void *mvm_sta)
+ 	struct iwl_lq_sta *lq_sta = mvm_sta;
+ 	debugfs_remove(lq_sta->rs_sta_dbgfs_scale_table_file);
+ 	debugfs_remove(lq_sta->rs_sta_dbgfs_stats_table_file);
+-	debugfs_remove(lq_sta->rs_sta_dbgfs_rate_scale_data_file);
+ 	debugfs_remove(lq_sta->rs_sta_dbgfs_tx_agg_tid_en_file);
+ }
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
+index 4a99a4d..917a48f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
+@@ -330,7 +330,6 @@ struct iwl_lq_sta {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct dentry *rs_sta_dbgfs_scale_table_file;
+ 	struct dentry *rs_sta_dbgfs_stats_table_file;
+-	struct dentry *rs_sta_dbgfs_rate_scale_data_file;
+ 	struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
+ 	u32 dbg_fixed_rate;
+ #endif
+-- 
+1.8.4.rc2
 
