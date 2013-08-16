@@ -1,101 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:58187 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966738Ab3HHWGR (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:53530 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754627Ab3HPWuh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 18:06:17 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: FUSB200 xhci issue
-Date: Fri, 9 Aug 2013 00:06:06 +0200
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"ath9k_htc_fw" <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-References: <Pine.LNX.4.44L0.1308081617010.1120-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1308081617010.1120-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201308090006.07690.chunkeey@googlemail.com> (sfid-20130809_000623_690921_A1762F7C)
+	Fri, 16 Aug 2013 18:50:37 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hj13so1362747wib.5
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2013 15:50:36 -0700 (PDT)
+Message-ID: <1376693432.18777.7.camel@canaries32-MCP7A> (sfid-20130817_005058_781001_F7F271B1)
+Subject: [PATCH 7/8] staging: vt6656: desc.h remove typedef
+ tagSTxDataHead_ab  to new structure in rxtx.h
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 16 Aug 2013 23:50:32 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 August 2013 22:19:32 Alan Stern wrote:
-> On Thu, 8 Aug 2013, Christian Lamparter wrote:
-> 
-> > Anyway, I do have a question about something else too.
-> > 
-> > in ath9k_htc's hif_usb:
-> > 
-> > > struct usb_host_interface *alt = &hif_dev->interface->altsetting[0];
-> > > struct usb_endpoint_descriptor *endp;
-> > > ...
-> > > /* On downloading the firmware to the target, the USB descriptor of EP4
-> > >  * is 'patched' to change the type of the endpoint to Bulk. This will
-> > >  * bring down CPU usage during the scan period. */
-> > >
-> > > for (idx = 0; idx < alt->desc.bNumEndpoints; idx++) {
-> > >   endp = &alt->endpoint[idx].desc;
-> > >   if ((endp->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_INT) {
-> > >     endp->bmAttributes &= ~USB_ENDPOINT_XFERTYPE_MASK;
-> > >     endp->bmAttributes |= USB_ENDPOINT_XFER_BULK;
-> > >//     endp->bInterval = 0;
-> > >   }
-> > > }
-> > 
-> > Alan, can you please tell us, if it is really safe to
-> > override the bmAttributes this way? After all (according to
-> > the comment) the device has "morphed" (EP4 has changed).
-> 
-> This does not look like a good idea.  Why does the driver do it?
+To new structure.
+typedef struct tagSTxDataHead_ab -> struct vnt_tx_datahead_ab
 
-Probably because people use ath9k_htc devices with everything that
-has some sort of usb port (devkits and embedded systems: Dockstar,
-Rasberry Pi, ...) to get "wifi connectivity". ...
+This is only needed by rxtc.c so moved to rxtx.h visible to
+vnt_rts* structures which it will eventually form part of
+their structure.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/desc.h | 10 --------
+ drivers/staging/vt6656/rxtx.c | 55 ++++++++++++++++++++++++-------------------
+ drivers/staging/vt6656/rxtx.h |  8 +++++++
+ 3 files changed, 39 insertions(+), 34 deletions(-)
 
-Yeah. I think we better ask "Rajkumar Manoharan" 
-(before I write more text out of thin air :-D )
-
-commit 4a0e8ecca4eeed38d4b3b7a317a3aaab4dd3cacd
-Author: Rajkumar Manoharan <rmanoharan@atheros.com>
-Date:   Tue Sep 14 14:35:55 2010 +0530
-
-    ath9k_htc: Fix CPU usage issue during scan period
-
-Does anyone know his Qualcomm Atheros address?
+diff --git a/drivers/staging/vt6656/desc.h b/drivers/staging/vt6656/desc.h
+index 1ee0331..d350fd3 100644
+--- a/drivers/staging/vt6656/desc.h
++++ b/drivers/staging/vt6656/desc.h
+@@ -166,16 +166,6 @@ typedef const STxShortBufHead *PCSTxShortBufHead;
+ /*
+  * TX data header
+  */
+-typedef struct tagSTxDataHead_ab {
+-    u8    bySignalField;
+-    u8    byServiceField;
+-    u16    wTransmitLength;
+-    u16    wDuration;
+-    u16    wTimeStampOff;
+-} __attribute__ ((__packed__))
+-STxDataHead_ab, *PSTxDataHead_ab;
+-typedef const STxDataHead_ab *PCSTxDataHead_ab;
+-
+ typedef struct tagSTxDataHead_a_FB {
+     u8    bySignalField;
+     u8    byServiceField;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 20c4656..a4d3728 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -500,7 +500,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
  
-> > Or, is it necessary for the driver call "usb_reset_device"
-> > or (usb_reset_configuration) in this case? 
-> 
-> After loading firmware, a reset generally is necessary.  Some devices 
-> will do it themselves; others require you to call usb_reset_device().
+     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+ 	if ((uDMAIdx == TYPE_ATIMDMA) || (uDMAIdx == TYPE_BEACONDMA)) {
+-		PSTxDataHead_ab pBuf = (PSTxDataHead_ab) pTxDataHead;
++		struct vnt_tx_datahead_ab *pBuf =
++			(struct vnt_tx_datahead_ab *)pTxDataHead;
+             //Get SignalField,ServiceField,Length
+             BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate, byPktType,
+                 (u16 *)&(pBuf->wTransmitLength), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+@@ -579,7 +580,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+             }
+             return (pBuf->wDuration);
+         } else {
+-            PSTxDataHead_ab pBuf = (PSTxDataHead_ab)pTxDataHead;
++		struct vnt_tx_datahead_ab *pBuf =
++			(struct vnt_tx_datahead_ab *)pTxDataHead;
+             //Get SignalField,ServiceField,Length
+             BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate, byPktType,
+                 (u16 *)&(pBuf->wTransmitLength), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+@@ -595,7 +597,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+         }
+     }
+     else if (byPktType == PK_TYPE_11B) {
+-            PSTxDataHead_ab pBuf = (PSTxDataHead_ab)pTxDataHead;
++		struct vnt_tx_datahead_ab *pBuf =
++			(struct vnt_tx_datahead_ab *)pTxDataHead;
+             //Get SignalField,ServiceField,Length
+             BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate, byPktType,
+                 (u16 *)&(pBuf->wTransmitLength), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+@@ -1230,12 +1233,12 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 		pvRTS = (struct vnt_rts_ab *) (pbyTxBufferAddr + wTxBufSize +
+ 				sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
+                 pvCTS = NULL;
+-		pvTxDataHd = (PSTxDataHead_ab) (pbyTxBufferAddr + wTxBufSize +
+-			sizeof(struct vnt_rrv_time_ab) + cbMICHDR +
++		pvTxDataHd = (struct vnt_tx_datahead_ab *)(pbyTxBufferAddr +
++			wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR +
+ 						sizeof(struct vnt_rts_ab));
+ 		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+ 			cbMICHDR + sizeof(struct vnt_rts_ab) +
+-				sizeof(STxDataHead_ab);
++				sizeof(struct vnt_tx_datahead_ab);
+             }
+             else if (bRTS == false) { //RTS_needless, no MICHDR
+ 		pvRrvTime = (struct vnt_rrv_time_ab *)(pbyTxBufferAddr +
+@@ -1244,10 +1247,10 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 						sizeof(struct vnt_rrv_time_ab));
+                 pvRTS = NULL;
+                 pvCTS = NULL;
+-		pvTxDataHd = (PSTxDataHead_ab) (pbyTxBufferAddr + wTxBufSize +
+-				sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
++		pvTxDataHd = (struct vnt_tx_datahead_ab *)(pbyTxBufferAddr +
++			wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
+ 		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+-					cbMICHDR + sizeof(STxDataHead_ab);
++				cbMICHDR + sizeof(struct vnt_tx_datahead_ab);
+             }
+         } else {
+             // Auto Fall Back
+@@ -1700,10 +1703,10 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+         pMICHDR = NULL;
+         pvRTS = NULL;
+         pCTS = NULL;
+-	pvTxDataHd = (PSTxDataHead_ab) (pbyTxBufferAddr + wTxBufSize +
+-					sizeof(struct vnt_rrv_time_ab));
++	pvTxDataHd = (struct vnt_tx_datahead_ab *) (pbyTxBufferAddr +
++		wTxBufSize + sizeof(struct vnt_rrv_time_ab));
+ 	cbHeaderSize = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+-		sizeof(STxDataHead_ab);
++		sizeof(struct vnt_tx_datahead_ab);
+     }
+ 
+     memcpy(&(sEthHeader.h_dest[0]),
+@@ -1792,8 +1795,9 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+ 		((struct vnt_tx_datahead_g *)pvTxDataHd)->wDuration_b =
+ 			cpu_to_le16(pPacket->p80211Header->sA2.wDurationID);
+ 	} else {
+-            ((PSTxDataHead_ab)pvTxDataHd)->wDuration = cpu_to_le16(pPacket->p80211Header->sA2.wDurationID);
+-        }
++		((struct vnt_tx_datahead_ab *)pvTxDataHd)->wDuration =
++			cpu_to_le16(pPacket->p80211Header->sA2.wDurationID);
++	}
+     }
+ 
+     pTX_Buffer->wTxByteCount = cpu_to_le16((u16)(cbReqCount));
+@@ -1824,7 +1828,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+ 	u16 wTxBufSize = sizeof(STxShortBufHead);
+ 	PSTxShortBufHead pTxBufHead;
+ 	struct ieee80211_hdr *pMACHeader;
+-	PSTxDataHead_ab pTxDataHead;
++	struct vnt_tx_datahead_ab *pTxDataHead;
+ 	u16 wCurrentRate;
+ 	u32 cbFrameBodySize;
+ 	u32 cbReqCount;
+@@ -1849,7 +1853,8 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+ 
+     if (pDevice->byBBType == BB_TYPE_11A) {
+         wCurrentRate = RATE_6M;
+-        pTxDataHead = (PSTxDataHead_ab) (pbyTxBufferAddr + wTxBufSize);
++	pTxDataHead = (struct vnt_tx_datahead_ab *)
++			(pbyTxBufferAddr + wTxBufSize);
+         //Get SignalField,ServiceField,Length
+         BBvCalculateParameter(pDevice, cbFrameSize, wCurrentRate, PK_TYPE_11A,
+             (u16 *)&(pTxDataHead->wTransmitLength), (u8 *)&(pTxDataHead->byServiceField), (u8 *)&(pTxDataHead->bySignalField)
+@@ -1858,11 +1863,12 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+ 	pTxDataHead->wDuration = cpu_to_le16((u16)s_uGetDataDuration(pDevice,
+ 				DATADUR_A, PK_TYPE_11A, false));
+         pTxDataHead->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+-        cbHeaderSize = wTxBufSize + sizeof(STxDataHead_ab);
++	cbHeaderSize = wTxBufSize + sizeof(struct vnt_tx_datahead_ab);
+     } else {
+         wCurrentRate = RATE_1M;
+         pTxBufHead->wFIFOCtl |= FIFOCTL_11B;
+-        pTxDataHead = (PSTxDataHead_ab) (pbyTxBufferAddr + wTxBufSize);
++	pTxDataHead = (struct vnt_tx_datahead_ab *)
++				(pbyTxBufferAddr + wTxBufSize);
+         //Get SignalField,ServiceField,Length
+         BBvCalculateParameter(pDevice, cbFrameSize, wCurrentRate, PK_TYPE_11B,
+             (u16 *)&(pTxDataHead->wTransmitLength), (u8 *)&(pTxDataHead->byServiceField), (u8 *)&(pTxDataHead->bySignalField)
+@@ -1871,7 +1877,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+ 	pTxDataHead->wDuration = cpu_to_le16((u16)s_uGetDataDuration(pDevice,
+ 				DATADUR_B, PK_TYPE_11B, false));
+         pTxDataHead->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+-        cbHeaderSize = wTxBufSize + sizeof(STxDataHead_ab);
++	cbHeaderSize = wTxBufSize + sizeof(struct vnt_tx_datahead_ab);
+     }
+ 
+     //Generate Beacon Header
+@@ -2111,10 +2117,10 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+ 		sizeof(struct vnt_rrv_time_ab));
+         pvRTS = NULL;
+         pvCTS = NULL;
+-	pvTxDataHd = (PSTxDataHead_ab) (pbyTxBufferAddr + wTxBufSize +
+-		sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
++	pvTxDataHd = (struct vnt_tx_datahead_ab *)(pbyTxBufferAddr +
++		wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
+ 	cbHeaderSize = wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR +
+-							sizeof(STxDataHead_ab);
++					sizeof(struct vnt_tx_datahead_ab);
+     }
+     memcpy(&(sEthHeader.h_dest[0]),
+ 	   &(p80211Header->sA3.abyAddr1[0]),
+@@ -2248,8 +2254,9 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+ 		((struct vnt_tx_datahead_g *)pvTxDataHd)->wDuration_b =
+ 			cpu_to_le16(p80211Header->sA2.wDurationID);
+ 	} else {
+-            ((PSTxDataHead_ab)pvTxDataHd)->wDuration = cpu_to_le16(p80211Header->sA2.wDurationID);
+-        }
++		((struct vnt_tx_datahead_ab *)pvTxDataHd)->wDuration =
++			cpu_to_le16(p80211Header->sA2.wDurationID);
++	}
+     }
+ 
+     pTX_Buffer->wTxByteCount = cpu_to_le16((u16)(cbReqCount));
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index ba80271..d66d71d 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -83,6 +83,14 @@ struct vnt_tx_datahead_g_fb {
+ 	u16 wTimeStampOff_a;
+ } __packed;
+ 
++struct vnt_tx_datahead_ab {
++	u8 bySignalField;
++	u8 byServiceField;
++	u16 wTransmitLength;
++	u16 wDuration;
++	u16 wTimeStampOff;
++} __packed;
++
+ /* RTS buffer header */
+ struct vnt_rts_g {
+ 	u8 bySignalField_b;
+-- 
+1.8.1.2
 
-This makes things complicated. Because, as far as I remember,
-usb_reset_device() will cause the current driver to be unbound
-unless its called during .probe, right?
-
-You see, ath9k_htc loads its firmware asynchronously in ".probe"
-(ath9k_htc's .probe routine finishes before the firmware is
-retrieved via the firmware loader helper... so part of the
-firmware download is done in a firmware_complete callback
-on a workqueue). 
-
-So, if we call usb_reset_device there and the driver is unbound
-and later rebound. the next ath9k_htc .probe will start again and
-again and again not knowing that it is already initialized 
-(and we have a loop).
-
-
-This could be solved, if the devices changes the usb-id again 
-when a proper "wifi" ath9k_htc firmware was downloaded. So, the
-driver would know that it doesn't have to download and reset
-the device... But we need a "free" USB-ID for that.
-
-Alan, Oleksij: What do you think?
-
-Regards,
-	Chr
