@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:55525 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756060Ab3H3QLB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 12:11:01 -0400
-From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
-To: netdev@vger.kernel.org
-Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Patrick McHardy <kaber@trash.net>,
-	Jiri Pirko <jiri@resnulli.us>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	libertas-dev@lists.infradead.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	devel@driverdev.osuosl.org,
-	Forest Bond <forest@alittletooquiet.net>
-Subject: [PATCH v2 net-next 1/9] net: etherdevice: add address inherit helper
-Date: Fri, 30 Aug 2013 18:08:44 +0200
-Message-Id: <1377878932-26881-2-git-send-email-bjorn@mork.no> (sfid-20130830_181111_156550_A8F2BA1B)
-In-Reply-To: <1377878932-26881-1-git-send-email-bjorn@mork.no>
-References: <1377878932-26881-1-git-send-email-bjorn@mork.no>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:53178 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab3HPOk4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Aug 2013 10:40:56 -0400
+Received: by mail-ob0-f179.google.com with SMTP id fb19so2097213obc.24
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2013 07:40:55 -0700 (PDT)
+Message-ID: <520E39F5.6070106@lwfinger.net> (sfid-20130816_164102_633386_826F0B58)
+Date: Fri, 16 Aug 2013 09:40:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: poma <pomidorabelisima@gmail.com>
+CC: Phillip Moss <phillipmoss12@yahoo.es>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Signal loss rtl8723ae wifi driver
+References: <1376411031.31841.YahooMailBasic@web171406.mail.ir2.yahoo.com> <520AF842.8030403@lwfinger.net> <520E36E1.1030704@gmail.com>
+In-Reply-To: <520E36E1.1030704@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some etherdevices inherit their address from a parent or
-master device. The addr_assign_type should be updated along
-with the address in these cases.  Adding a helper function
-to simplify this.
+On 08/16/2013 09:27 AM, poma wrote:
+> On 14.08.2013 05:23, Larry Finger wrote:
+> …
+>>
+>> Why is your device name "wlp3s0", rather than the usual "wlanX"? What is
+>> controlling your connection. If it is wicd, note that I do not support
+>> that piece of software. I use NetworkManager.
+>>
+> …
+> Probably systemd-udevd, not quite to control, but renames it.
+> http://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
+> http://cgit.freedesktop.org/systemd/systemd/tree/src/udev/udev-builtin-net_id.c#n72
+> Literally a textbook example, at least on Fedora. ;)
+> You really did not know about this?
 
-Signed-off-by: Bjørn Mork <bjorn@mork.no>
----
- include/linux/etherdevice.h |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Nope. I am not a Fedora user, and openSUSE only renames to wlanX.
 
-diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
-index c623861..d8b5124 100644
---- a/include/linux/etherdevice.h
-+++ b/include/linux/etherdevice.h
-@@ -199,6 +199,21 @@ static inline void eth_hw_addr_random(struct net_device *dev)
- }
- 
- /**
-+ * eth_hw_addr_inherit - Copy dev_addr from another net_device
-+ * @dst: pointer to net_device to copy dev_addr to
-+ * @src: pointer to net_device to copy dev_addr from
-+ *
-+ * Copy the Ethernet address from one net_device to another along with
-+ * the address attributes (addr_assign_type).
-+ */
-+static inline void eth_hw_addr_inherit(struct net_device *dst,
-+				       struct net_device *src)
-+{
-+	dst->addr_assign_type = src->addr_assign_type;
-+	memcpy(dst->dev_addr, src->dev_addr, ETH_ALEN);
-+}
-+
-+/**
-  * compare_ether_addr - Compare two Ethernet addresses
-  * @addr1: Pointer to a six-byte array containing the Ethernet address
-  * @addr2: Pointer other six-byte array containing the Ethernet address
--- 
-1.7.10.4
+Larry
+
 
