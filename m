@@ -1,54 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:43709 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755859Ab3HLJpj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38756 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790Ab3HPKdS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 05:45:39 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 12/15] ath9k: Move the RX poll check to preprocess()
-Date: Mon, 12 Aug 2013 15:11:39 +0530
-Message-Id: <1376300502-2741-13-git-send-email-sujith@msujith.org> (sfid-20130812_120908_979974_112B931B)
-In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
-References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+	Fri, 16 Aug 2013 06:33:18 -0400
+Message-ID: <1376649188.15299.11.camel@jlt4.sipsolutions.net> (sfid-20130816_123337_020685_0D000277)
+Subject: Re: [PATCHv2 4/6] mac80211: add support for CSA in IBSS mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 16 Aug 2013 12:33:08 +0200
+In-Reply-To: <1376058920-17779-5-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1376058920-17779-5-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Fri, 2013-08-09 at 16:35 +0200, Simon Wunderlich wrote:
+> Ths
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+This ;-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 44f5a2b..7f327e9 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1127,6 +1127,11 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		return -EINVAL;
- 
- 	rx_stats->is_mybeacon = ath9k_is_mybeacon(sc, hdr);
-+	if (rx_stats->is_mybeacon) {
-+		sc->hw_busy_count = 0;
-+		ath_start_rx_poll(sc, 3);
-+	}
-+
- 	ath9k_process_rssi(common, hw, hdr, rx_stats);
- 
- 	rx_status->band = hw->conf.chandef.chan->band;
-@@ -1277,10 +1282,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if (retval)
- 			goto requeue_drop_frag;
- 
--		if (rs.is_mybeacon) {
--			sc->hw_busy_count = 0;
--			ath_start_rx_poll(sc, 3);
--		}
- 		/* Ensure we always have an skb to requeue once we are done
- 		 * processing the current buffer's skb */
- 		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
--- 
-1.8.3.4
+
+> +	case NL80211_IFTYPE_ADHOC:
+> +		if (!sdata->vif.bss_conf.ibss_joined)
+> +			return -EINVAL;
+> +
+> +		if (params->chandef.width != sdata->u.ibss.chandef.width)
+> +			return -EINVAL;
+> +
+> +		switch (params->chandef.width) {
+> +		case NL80211_CHAN_WIDTH_40:
+> +			if (cfg80211_get_chandef_type(&params->chandef) !=
+> +			    cfg80211_get_chandef_type(&sdata->u.ibss.chandef))
+> +				return -EINVAL;
+
+Is that really correct? It seems that you should be able to switch from
+HT40- to HT40+ and vice versa when switching the channel?
+
+And why disallow switching bandwidth (was above this code)? That doesn't
+seem right either?
+
+> +/* must hold sdata lock */
+
+pretty useless comment if you have the assert in the function :)
+
+> +	rcu_read_lock();
+> +	ies = rcu_dereference(cbss->ies);
+> +	tsf = ies->tsf;
+> +	rcu_read_unlock();
+> +	cfg80211_put_bss(sdata->local->hw.wiphy, cbss);
+> +
+> +	old_presp = rcu_dereference_protected(ifibss->presp,
+> +					  lockdep_is_held(&sdata->wdev.mtx));
+> +
+> +	presp = ieee80211_ibss_build_presp(sdata,
+> +					   sdata->vif.bss_conf.beacon_int,
+> +					   sdata->vif.bss_conf.basic_rates,
+> +					   capability, tsf, &ifibss->chandef,
+> +					   NULL, csa_settings);
+
+This is pretty odd - why does the TSF have to go here? It needs to be
+set by the device when transmitting anyway, no?
+
+> +static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
+> +{
+
+Is this some refactoring that should be separate? I don't see how it's
+really related to CSA? Maybe I'm missing something?
+
+johannes
 
