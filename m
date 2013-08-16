@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:59291 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750747Ab3HJEJX (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:53919 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755008Ab3HQAXx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 00:09:23 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Fengguang Wu <fengguang.wu@intel.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: fix build error when CONFIG_PM is not set
-Date: Fri, 9 Aug 2013 21:09:06 -0700
-Message-ID: <1376107746-17000-1-git-send-email-bzhao@marvell.com> (sfid-20130810_060931_900651_F3A141B0)
+	Fri, 16 Aug 2013 20:23:53 -0400
+Received: by mail-pd0-f169.google.com with SMTP id r10so2866535pdi.0
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2013 17:23:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1376650616.15299.16.camel@jlt4.sipsolutions.net>
+References: <1376395438-24788-1-git-send-email-arik@wizery.com>
+ <1376568235.14084.12.camel@jlt4.sipsolutions.net> <CA+XVXffREZsiLU_Gs646-akyW9XNcZEmQnQGsp4ihT92hP7LOw@mail.gmail.com>
+ <1376650616.15299.16.camel@jlt4.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Fri, 16 Aug 2013 23:09:37 +0300
+Message-ID: <CA+XVXfeVtaxqAgWQgSsiMw8uZ6uDmEwba+T8M9-YrUNBwxvshA@mail.gmail.com> (sfid-20130817_022410_726939_3F0F4A63)
+Subject: Re: [PATCH] mac80211: implement STA CSA for drivers using channel contexts
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-config: make ARCH=m68k allmodconfig
+On Fri, Aug 16, 2013 at 1:56 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>> Well right now ieee80211_chswitch_work() takes care of it, and does
+>> something a bit different there to accommodate the legacy behavior -
+>> if the chan_switch op is defined, ieee80211_hw_config is not called.
+>> Would you prefer that ieee80211_vif_change_channel() handle all this,
+>> checking interface type to do the right thing?
+>
+> Well, it can't. If you look carefully then the old chan_switch op
+> behaviour is to let the driver switch, not switch in software
+> afterwards.
 
-All error/warnings:
+The right thing for chan_switch drivers would be not to call hw_config()..
 
-   drivers/net/wireless/mwifiex/cfg80211.c: In function
-       'mwifiex_fill_coalesce_rule_info':
->> drivers/net/wireless/mwifiex/cfg80211.c:2493:3: error: implicit
-       declaration of function 'mwifiex_is_pattern_supported'
-       [-Werror=implicit-function-declaration]
-   drivers/net/wireless/mwifiex/cfg80211.c: At top level:
-   drivers/net/wireless/mwifiex/cfg80211.c:2537:12: warning:
-       'mwifiex_cfg80211_set_coalesce' defined but not used
-       [-Wunused-function]
-   cc1: some warnings being treated as errors
+>
+>> I only added it since the current implementation of
+>> ieee80211_vif_change_channel() bails if it's false. That said, I'm not
+>> sure what's wrong here. This setting is per-vif.
+>
+> Yeah but it's (currently) meant for interfaces controlling the CSA (i.e.
+> AP only right now) ... so I really think we need to make this
+> controllable, I think that when we want to implement it for Intel MVM
+> firmware then we'll let the firmware control the switch timing, etc.
+> None of this can even be done today or with your patch.
 
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The TI driver implements the chan_switch op and uses channel contexts.
+If I catch your drift you would rather these kind of drivers (which
+include MVM) use a new API exposed by mac80211 to complete the channel
+switch. This API would basically be ieee80211_vif_change_channel(). Do
+we still need to touch the cfg80211 chandef definition in ifmgd?
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 0943e7e..fbad00a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2308,7 +2308,6 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- }
- EXPORT_SYMBOL_GPL(mwifiex_del_virtual_intf);
- 
--#ifdef CONFIG_PM
- static bool
- mwifiex_is_pattern_supported(struct cfg80211_pkt_pattern *pat, s8 *byte_seq,
- 			     u8 max_byte_seq)
-@@ -2339,6 +2338,7 @@ mwifiex_is_pattern_supported(struct cfg80211_pkt_pattern *pat, s8 *byte_seq,
- 	return true;
- }
- 
-+#ifdef CONFIG_PM
- static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
- 				    struct cfg80211_wowlan *wowlan)
- {
-@@ -2602,8 +2602,8 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.suspend = mwifiex_cfg80211_suspend,
- 	.resume = mwifiex_cfg80211_resume,
- 	.set_wakeup = mwifiex_cfg80211_set_wakeup,
--	.set_coalesce = mwifiex_cfg80211_set_coalesce,
- #endif
-+	.set_coalesce = mwifiex_cfg80211_set_coalesce,
- };
- 
- #ifdef CONFIG_PM
--- 
-1.8.2.3
+The above is maybe cleaner, but it's functionally equivalent to the
+solution today - the low level driver decides when the channel switch
+is completed, and ieee80211_chswitch_work() is called, which does the
+right thing for all cases.
+Note that with the above, the channel_contexts + software chan-switch
+drivers will still need the kind of code that I wrote. So it would
+just lead to replicated code. Or maybe you meant something else?
 
+Also, where would you put csa_active = true (if at all) for a STA
+interface? Unlike AP, the trigger here is mac80211 code. So putting it
+there seemed appropriate.
+
+Arik
