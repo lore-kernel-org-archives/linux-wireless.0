@@ -1,120 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:62010 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754366Ab3HQQam (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Aug 2013 12:30:42 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Ming Lei <ming.lei@canonical.com>,
-	Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v1 33/49] wireless: zd1211rw: prepare for enabling irq in complete()
-Date: Sun, 18 Aug 2013 00:24:58 +0800
-Message-Id: <1376756714-25479-34-git-send-email-ming.lei@canonical.com> (sfid-20130817_183049_638798_9B40B04B)
-In-Reply-To: <1376756714-25479-1-git-send-email-ming.lei@canonical.com>
-References: <1376756714-25479-1-git-send-email-ming.lei@canonical.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:53161 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754018Ab3HQR41 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Aug 2013 13:56:27 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 5/6] rt2x00: rt2800lib: don't hardcode beacon offsets
+Date: Sat, 17 Aug 2013 19:56:06 +0200
+Message-Id: <1376762167-24583-6-git-send-email-juhosg@openwrt.org> (sfid-20130817_195629_980189_38CB8FC3)
+In-Reply-To: <1376762167-24583-1-git-send-email-juhosg@openwrt.org>
+References: <1376762167-24583-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+The values written into the BCN_OFFSET[01] registers are
+hardcoded in the rt2800_init_register function.
 
-Cc: Daniel Drake <dsd@gentoo.org>
-Cc: Ulrich Kunitz <kune@deine-taler.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+Add a macro and a helper function to derive these values
+directly from the base address of a given beacon, and use
+the new function instead of the hardcoded numbers.
+
+The patch contains no functional changes. The programmed
+register values are the same before and after the patch.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/zd1211rw/zd_usb.c |   21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800.h    |    2 ++
+ drivers/net/wireless/rt2x00/rt2800lib.c |   30 ++++++++++++++++++++++--------
+ 2 files changed, 24 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 7ef0b4a..8169ee0 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -372,14 +372,15 @@ static inline void handle_regs_int_override(struct urb *urb)
- {
- 	struct zd_usb *usb = urb->context;
- 	struct zd_usb_interrupt *intr = &usb->intr;
-+	unsigned long flags;
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 426129a..48018a5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2024,6 +2024,8 @@ struct mac_iveiv_entry {
+ 	  (((__index) < 6) ? (HW_BEACON_BASE4 + ((__index - 4) * 0x0200)) : \
+ 	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))))
  
--	spin_lock(&intr->lock);
-+	spin_lock_irqsave(&intr->lock, flags);
- 	if (atomic_read(&intr->read_regs_enabled)) {
- 		atomic_set(&intr->read_regs_enabled, 0);
- 		intr->read_regs_int_overridden = 1;
- 		complete(&intr->read_regs.completion);
- 	}
--	spin_unlock(&intr->lock);
-+	spin_unlock_irqrestore(&intr->lock, flags);
++#define BEACON_BASE_TO_OFFSET(_base)	(((_base) - 0x4000) / 64)
++
+ /*
+  * BBP registers.
+  * The wordsize of the BBP is 8 bits.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index b44eccf..d223308 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -954,6 +954,12 @@ static unsigned int rt2800_hw_beacon_base(struct rt2x00_dev *rt2x00dev,
+ 	return HW_BEACON_BASE(index);
  }
  
- static inline void handle_regs_int(struct urb *urb)
-@@ -388,9 +389,10 @@ static inline void handle_regs_int(struct urb *urb)
- 	struct zd_usb_interrupt *intr = &usb->intr;
- 	int len;
- 	u16 int_num;
-+	unsigned long flags;
++static inline u8 rt2800_get_beacon_offset(struct rt2x00_dev *rt2x00dev,
++					  unsigned int index)
++{
++	return BEACON_BASE_TO_OFFSET(rt2800_hw_beacon_base(rt2x00dev, index));
++}
++
+ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+@@ -4505,17 +4511,25 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		return ret;
  
- 	ZD_ASSERT(in_interrupt());
--	spin_lock(&intr->lock);
-+	spin_lock_irqsave(&intr->lock, flags);
+ 	rt2800_register_read(rt2x00dev, BCN_OFFSET0, &reg);
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN0, 0xe0); /* 0x3800 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN1, 0xe8); /* 0x3a00 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN2, 0xf0); /* 0x3c00 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN3, 0xf8); /* 0x3e00 */
++	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN0,
++			   rt2800_get_beacon_offset(rt2x00dev, 0));
++	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN1,
++			   rt2800_get_beacon_offset(rt2x00dev, 1));
++	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN2,
++			   rt2800_get_beacon_offset(rt2x00dev, 2));
++	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN3,
++			   rt2800_get_beacon_offset(rt2x00dev, 3));
+ 	rt2800_register_write(rt2x00dev, BCN_OFFSET0, reg);
  
- 	int_num = le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
- 	if (int_num == CR_INTERRUPT) {
-@@ -426,7 +428,7 @@ static inline void handle_regs_int(struct urb *urb)
- 	}
+ 	rt2800_register_read(rt2x00dev, BCN_OFFSET1, &reg);
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN4, 0xc8); /* 0x3200 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN5, 0xd0); /* 0x3400 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN6, 0x77); /* 0x1dc0 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN7, 0x6f); /* 0x1bc0 */
++	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN4,
++			   rt2800_get_beacon_offset(rt2x00dev, 4));
++	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN5,
++			   rt2800_get_beacon_offset(rt2x00dev, 5));
++	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN6,
++			   rt2800_get_beacon_offset(rt2x00dev, 6));
++	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN7,
++			   rt2800_get_beacon_offset(rt2x00dev, 7));
+ 	rt2800_register_write(rt2x00dev, BCN_OFFSET1, reg);
  
- out:
--	spin_unlock(&intr->lock);
-+	spin_unlock_irqrestore(&intr->lock, flags);
- 
- 	/* CR_INTERRUPT might override read_reg too. */
- 	if (int_num == CR_INTERRUPT && atomic_read(&intr->read_regs_enabled))
-@@ -666,6 +668,7 @@ static void rx_urb_complete(struct urb *urb)
- 	struct zd_usb_rx *rx;
- 	const u8 *buffer;
- 	unsigned int length;
-+	unsigned long flags;
- 
- 	switch (urb->status) {
- 	case 0:
-@@ -694,14 +697,14 @@ static void rx_urb_complete(struct urb *urb)
- 		/* If there is an old first fragment, we don't care. */
- 		dev_dbg_f(urb_dev(urb), "*** first fragment ***\n");
- 		ZD_ASSERT(length <= ARRAY_SIZE(rx->fragment));
--		spin_lock(&rx->lock);
-+		spin_lock_irqsave(&rx->lock, flags);
- 		memcpy(rx->fragment, buffer, length);
- 		rx->fragment_length = length;
--		spin_unlock(&rx->lock);
-+		spin_unlock_irqrestore(&rx->lock, flags);
- 		goto resubmit;
- 	}
- 
--	spin_lock(&rx->lock);
-+	spin_lock_irqsave(&rx->lock, flags);
- 	if (rx->fragment_length > 0) {
- 		/* We are on a second fragment, we believe */
- 		ZD_ASSERT(length + rx->fragment_length <=
-@@ -711,9 +714,9 @@ static void rx_urb_complete(struct urb *urb)
- 		handle_rx_packet(usb, rx->fragment,
- 			         rx->fragment_length + length);
- 		rx->fragment_length = 0;
--		spin_unlock(&rx->lock);
-+		spin_unlock_irqrestore(&rx->lock, flags);
- 	} else {
--		spin_unlock(&rx->lock);
-+		spin_unlock_irqrestore(&rx->lock, flags);
- 		handle_rx_packet(usb, buffer, length);
- 	}
- 
+ 	rt2800_register_write(rt2x00dev, LEGACY_BASIC_RATE, 0x0000013f);
 -- 
-1.7.9.5
-
+1.7.10
