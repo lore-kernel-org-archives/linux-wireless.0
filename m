@@ -1,32 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:58834 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754896Ab3HFI5N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 04:57:13 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20992.43399.220167.743676@gargle.gargle.HOWL> (sfid-20130806_105718_665178_984BA793)
-Date: Tue, 6 Aug 2013 13:15:11 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 07/12] ath9k: prepare queueing code for handling unaggregated traffic
-In-Reply-To: <1375732583-39001-7-git-send-email-nbd@openwrt.org>
-References: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
-	<1375732583-39001-7-git-send-email-nbd@openwrt.org>
+Received: from arrakis.dune.hu ([78.24.191.176]:53081 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754018Ab3HQR4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Aug 2013 13:56:18 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 0/6] rt2x00: fix beaconing on RT3593
+Date: Sat, 17 Aug 2013 19:56:01 +0200
+Message-Id: <1376762167-24583-1-git-send-email-juhosg@openwrt.org> (sfid-20130817_195621_695275_A1F58F79)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> +		tx_info = IEEE80211_SKB_CB(skb);
-> +		tx_info->flags &= ~IEEE80211_TX_CTL_CLEAR_PS_FILT;
+Gabor Juhos (6):
+  rt2x00: rt2800lib: move rt2800_drv_data declaration into rt2800lib.h
+  rt2x00: rt2800lib: introduce RT2800_HAS_HIGH_SHARED_MEM flag
+  rt2x00: rt2800: serialize shared memory access
+  rt2x00: rt2800lib: add rt2800_hw_beacon_base helper
+  rt2x00: rt2800lib: don't hardcode beacon offsets
+  rt2x00: rt2800lib: fix beacon generation on RT3593
 
-Why is the PS filter flag cleared here ?
+ drivers/net/wireless/rt2x00/rt2800.h    |   18 ++--
+ drivers/net/wireless/rt2x00/rt2800lib.c |  146 ++++++++++++++++++++++++++++---
+ drivers/net/wireless/rt2x00/rt2800lib.h |   42 +++++++++
+ drivers/net/wireless/rt2x00/rt2800pci.c |   10 +++
+ drivers/net/wireless/rt2x00/rt2800usb.c |    5 ++
+ 5 files changed, 198 insertions(+), 23 deletions(-)
 
-> -	txtid->paused = true;
-> +	txtid->paused = false;
-
-Why change this ?
-
-Sujith
+--
+1.7.10
