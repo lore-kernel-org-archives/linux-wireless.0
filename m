@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:43851 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751381Ab3H0LJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 07:09:49 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/6] ath10k: CE cleanups
-Date: Tue, 27 Aug 2013 13:07:57 +0200
-Message-ID: <1377601683-12072-1-git-send-email-michal.kazior@tieto.com> (sfid-20130827_130953_789080_07395AD3)
-In-Reply-To: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
-References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-yh0-f53.google.com ([209.85.213.53]:34947 "EHLO
+	mail-yh0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754427Ab3HQVgd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Aug 2013 17:36:33 -0400
+Received: by mail-yh0-f53.google.com with SMTP id b6so514117yha.40
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Aug 2013 14:36:32 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH] net: rfkill: Check the return value of regulator_enable()
+Date: Sat, 17 Aug 2013 18:36:07 -0300
+Message-Id: <1376775367-17068-1-git-send-email-festevam@gmail.com> (sfid-20130817_233637_078502_E8973748)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-This patchset contains non-functional changes
-except patch #1 which changes memory allocation
-from dynamic to static.
+Fix the following build warning:
 
-There is still some more to clean up in PCI/CE
-but it's probably better to keep patchsets compact
-and more frequent.
+net/rfkill/rfkill-regulator.c:43:20: warning: ignoring return value of 'regulator_enable', declared with attribute warn_unused_result [-Wunused-result]
 
-v2:
- * fix checkpatch warning (Kalle)
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+ net/rfkill/rfkill-regulator.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-
-Michal.
-
-
-Michal Kazior (6):
-  ath10k: use inline ce_state structure
-  ath10k: remove ce_op_state
-  ath10k: remove unused ce_attr parameters
-  ath10k: rename hif_ce_pipe_info to ath10k_pci_pipe
-  ath10k: rename ce_state to ath10k_ce_pipe
-  ath10k: rename ce_ring_state to ath10k_ce_ring
-
- drivers/net/wireless/ath/ath10k/ce.c  |  125 +++++++++++++++------------------
- drivers/net/wireless/ath/ath10k/ce.h  |   74 ++++++++-----------
- drivers/net/wireless/ath/ath10k/pci.c |   80 +++++++++++----------
- drivers/net/wireless/ath/ath10k/pci.h |   17 +++--
- 4 files changed, 136 insertions(+), 160 deletions(-)
-
+diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
+index d11ac79..0aa922c 100644
+--- a/net/rfkill/rfkill-regulator.c
++++ b/net/rfkill/rfkill-regulator.c
+@@ -30,6 +30,7 @@ struct rfkill_regulator_data {
+ static int rfkill_regulator_set_block(void *data, bool blocked)
+ {
+ 	struct rfkill_regulator_data *rfkill_data = data;
++	int ret;
+ 
+ 	pr_debug("%s: blocked: %d\n", __func__, blocked);
+ 
+@@ -40,7 +41,9 @@ static int rfkill_regulator_set_block(void *data, bool blocked)
+ 		}
+ 	} else {
+ 		if (!rfkill_data->reg_enabled) {
+-			regulator_enable(rfkill_data->vcc);
++			ret = regulator_enable(rfkill_data->vcc);
++			if (ret)
++				return ret;
+ 			rfkill_data->reg_enabled = true;
+ 		}
+ 	}
 -- 
-1.7.9.5
+1.8.1.2
 
