@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:58055 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941Ab3HAQot (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:46501 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754459Ab3HQQbC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 12:44:49 -0400
-Message-ID: <1375375486.10515.170.camel@edumazet-glaptop> (sfid-20130801_184512_768594_01FBFF7D)
-Subject: Re: [PATCH 0/8] include/net: next set of extern removals
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: David Howells <dhowells@redhat.com>, netdev@vger.kernel.org,
-	linux-hams@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org
-Date: Thu, 01 Aug 2013 09:44:46 -0700
-In-Reply-To: <1375374560.2034.52.camel@joe-AO722>
-References: <cover.1375316912.git.joe@perches.com>
-	 <24958.1375358650@warthog.procyon.org.uk>
-	 <1375374560.2034.52.camel@joe-AO722>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 17 Aug 2013 12:31:02 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Ming Lei <ming.lei@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH v1 35/49] wireless: libertas: prepare for enabling irq in complete()
+Date: Sun, 18 Aug 2013 00:25:00 +0800
+Message-Id: <1376756714-25479-36-git-send-email-ming.lei@canonical.com> (sfid-20130817_183111_744094_A403BFEB)
+In-Reply-To: <1376756714-25479-1-git-send-email-ming.lei@canonical.com>
+References: <1376756714-25479-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-08-01 at 09:29 -0700, Joe Perches wrote:
-> On Thu, 2013-08-01 at 13:04 +0100, David Howells wrote:
-> > Joe Perches <joe@perches.com> wrote:
-> > > Standardize on no extern use on function prototypes
-> > Can we please standardise on _having_ externs on function prototypes?
-> 
-> Why?
-> 
-> What value is there in using extern for function prototypes?
-> 
-> Your argument for "picking out at a glance"
-> https://lkml.org/lkml/2013/8/1/237
-> really doesn't make sense to me.
-> 
-> Basically, anything with parentheses that's not a #define
-> is an extern.
-> 
-> Exceptions exist for extern function pointers, but those
-> are fairly unusual anyway.  Outside of netfilter,
-> extern function pointers are only used about a dozen times
-> total in the kernel tree.
-> 
-> So, please provide some examples supporting your view.
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-My main concern about these changes is they are a huge pain for us
-doing bug tracking, rebases and backports. "git blame" and friends will
-show lot of noise.
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/net/wireless/libertas/if_usb.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-'extern' in include files are an easy way to have a grep friendly
-marker, and otherwise are harmless.
-
-_You_ believe they are useless, other people think otherwise.
-
-I really don't see any value doing all these changes on existing code,
-apart from adding noise to netdev and adding more work for us.
-
-Using rules for new code is fine, but changing 10 years old code is
-really not worth the pain.
-
-I learned C 30 years ago, and using 'extern' is quite natural for me.
-
-It's crazy the time we have to spend on these issues, while we have so
-many bugs to fix in the kernel.
-
-
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 2798077..f6a8396 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -626,6 +626,7 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
+ 				      struct lbs_private *priv)
+ {
+ 	u8 i;
++	unsigned long flags;
+ 
+ 	if (recvlength > LBS_CMD_BUFFER_SIZE) {
+ 		lbs_deb_usbd(&cardp->udev->dev,
+@@ -636,7 +637,7 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
+ 
+ 	BUG_ON(!in_interrupt());
+ 
+-	spin_lock(&priv->driver_lock);
++	spin_lock_irqsave(&priv->driver_lock, flags);
+ 
+ 	i = (priv->resp_idx == 0) ? 1 : 0;
+ 	BUG_ON(priv->resp_len[i]);
+@@ -646,7 +647,7 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
+ 	kfree_skb(skb);
+ 	lbs_notify_command_response(priv, i);
+ 
+-	spin_unlock(&priv->driver_lock);
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 
+ 	lbs_deb_usbd(&cardp->udev->dev,
+ 		    "Wake up main thread to handle cmd response\n");
+-- 
+1.7.9.5
 
