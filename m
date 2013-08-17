@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:39676 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751936Ab3H1LXO (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:64528 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753987Ab3HQQbN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 07:23:14 -0400
-Received: by mail-wi0-f181.google.com with SMTP id ex4so3302313wid.2
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 04:23:10 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <F690310232FDDF4AB457E8B3EF90DDE08D3216F7@MARCM-SBS2011.marcmltd.local>
-References: <F690310232FDDF4AB457E8B3EF90DDE08D3216F7@MARCM-SBS2011.marcmltd.local>
-Date: Wed, 28 Aug 2013 13:23:10 +0200
-Message-ID: <CA+icZUXOtSECeP9DqfN1AAP4+BDv5zL8KZfpDzGk2ca9iJyHJQ@mail.gmail.com> (sfid-20130828_132317_953608_4A2911B5)
-Subject: Re:
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Marc Murphy <marcmltd@marcm.co.uk>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 17 Aug 2013 12:31:13 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Ming Lei <ming.lei@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH v1 36/49] wireless: libertas_tf: prepare for enabling irq in complete()
+Date: Sun, 18 Aug 2013 00:25:01 +0800
+Message-Id: <1376756714-25479-37-git-send-email-ming.lei@canonical.com> (sfid-20130817_183121_479343_744B2B22)
+In-Reply-To: <1376756714-25479-1-git-send-email-ming.lei@canonical.com>
+References: <1376756714-25479-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 28, 2013 at 1:07 PM, Marc Murphy <marcmltd@marcm.co.uk> wrote:
-> Hello,
-> I have been trawling the mailings and lots of people are asking about 802.11p and I have not managed to find a definitive push back to the mainline kernel.
->
+Complete() will be run with interrupt enabled, so change to
+spin_lock_irqsave().
 
-Hi,
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/net/wireless/libertas_tf/if_usb.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-first of all, you should set a "subject" to your email request :-).
+diff --git a/drivers/net/wireless/libertas_tf/if_usb.c b/drivers/net/wireless/libertas_tf/if_usb.c
+index d576dd6..0e9e972 100644
+--- a/drivers/net/wireless/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/libertas_tf/if_usb.c
+@@ -610,6 +610,8 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
+ 				      struct if_usb_card *cardp,
+ 				      struct lbtf_private *priv)
+ {
++	unsigned long flags;
++
+ 	if (recvlength > LBS_CMD_BUFFER_SIZE) {
+ 		lbtf_deb_usbd(&cardp->udev->dev,
+ 			     "The receive buffer is too large\n");
+@@ -619,12 +621,12 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
+ 
+ 	BUG_ON(!in_interrupt());
+ 
+-	spin_lock(&priv->driver_lock);
++	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	memcpy(priv->cmd_resp_buff, recvbuff + MESSAGE_HEADER_LEN,
+ 	       recvlength - MESSAGE_HEADER_LEN);
+ 	kfree_skb(skb);
+ 	lbtf_cmd_response_rx(priv);
+-	spin_unlock(&priv->driver_lock);
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ }
+ 
+ /**
+-- 
+1.7.9.5
 
-I cannot say much about 802.11p, but for first informations I
-recommend the wiki at <http://wireless.kernel.org> and have a look
-into docs section.
-
-For faster replies you can join #linux-wireless IRC channel (Freenode).
-
-- Sedat -
-
-> Is there anywhere in particular that I need to be looking to be able to get the patches so I can have a play ?
->
-> Thanks
-> Marc--
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
