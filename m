@@ -1,54 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:33559 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754756Ab3H1H6G (ORCPT
+Received: from forward19.mail.yandex.net ([95.108.253.144]:46735 "EHLO
+	forward19.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752963Ab3HQMVq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 03:58:06 -0400
-Received: by mail-lb0-f171.google.com with SMTP id u14so3411914lbd.2
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 00:58:04 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
+	Sat, 17 Aug 2013 08:21:46 -0400
+Received: from smtp17.mail.yandex.net (smtp17.mail.yandex.net [95.108.252.17])
+	by forward19.mail.yandex.net (Yandex) with ESMTP id BEC9D11213C1
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Aug 2013 16:16:39 +0400 (MSK)
+From: Sergey K <perplexus@ya.ru>
 To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v3 16/16] wcn36xx: Add wcn36xx to ath Makefile and Kconfig
-Date: Wed, 28 Aug 2013 09:56:46 +0200
-Message-Id: <1377676606-23033-17-git-send-email-k.eugene.e@gmail.com> (sfid-20130828_100909_700461_A7BF2E1A)
-In-Reply-To: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
+Cc: Sergey K <perplexus@ya.ru>
+Subject: [PATCH 0/1] *** mac80211: delete duplicate code ***
+Date: Sat, 17 Aug 2013 16:16:36 +0400
+Message-Id: <1376741797-25505-1-git-send-email-perplexus@ya.ru> (sfid-20130817_142154_365600_90061418)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now wcn36xx is part of ath family.
+*** BLURB HERE ***
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
----
- drivers/net/wireless/ath/Kconfig  | 1 +
- drivers/net/wireless/ath/Makefile | 1 +
- 2 files changed, 2 insertions(+)
+Sergey K (1):
+  Delete duplicate code. Use of the variable instead call a function
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index 1abf1d4..ba81d62 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -32,5 +32,6 @@ source "drivers/net/wireless/ath/ath6kl/Kconfig"
- source "drivers/net/wireless/ath/ar5523/Kconfig"
- source "drivers/net/wireless/ath/wil6210/Kconfig"
- source "drivers/net/wireless/ath/ath10k/Kconfig"
-+source "drivers/net/wireless/ath/wcn36xx/Kconfig"
- 
- endif
-diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
-index fb05cfd..363b056 100644
---- a/drivers/net/wireless/ath/Makefile
-+++ b/drivers/net/wireless/ath/Makefile
-@@ -5,6 +5,7 @@ obj-$(CONFIG_ATH6KL)		+= ath6kl/
- obj-$(CONFIG_AR5523)		+= ar5523/
- obj-$(CONFIG_WIL6210)		+= wil6210/
- obj-$(CONFIG_ATH10K)		+= ath10k/
-+obj-$(CONFIG_WCN36XX)		+= wcn36xx/
- 
- obj-$(CONFIG_ATH_COMMON)	+= ath.o
- 
+ net/mac80211/tx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
 -- 
-1.8.2.2
+1.8.1.5
 
