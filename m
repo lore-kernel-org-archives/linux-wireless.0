@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:63511 "EHLO ebb06.tieto.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:46651 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933958Ab3HHIQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 04:16:58 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/4] ath10k: fixes
-Date: Thu, 8 Aug 2013 10:16:49 +0200
-Message-ID: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com> (sfid-20130808_101703_530643_BCF3BC96)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752957Ab3HQMJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Aug 2013 08:09:45 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 6/6] rt2x00: rt2800lib: adjust frequency offset for RF3053
+Date: Sat, 17 Aug 2013 14:09:33 +0200
+Message-Id: <1376741373-10032-7-git-send-email-juhosg@openwrt.org> (sfid-20130817_140950_448711_E37B86DE)
+In-Reply-To: <1376741373-10032-1-git-send-email-juhosg@openwrt.org>
+References: <1376741373-10032-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Along with other chipsets, the Ralink driver uses the
+frequency adjustment code for RF3053 as well. Remove
+the bogus place-holder comment from the RF3053 specific
+channel configuration function and call the frequency
+adjustment function instead
 
-This patchset contains some bugfixes and
-improvements.
+Based on the DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
-Michal Kazior (4):
-  ath10k: fix HTT service setup
-  ath10k: fix HTC endpoint worker starvation
-  ath10k: implement 802.3 SNAP rx decap type A-MSDU handling
-  ath10k: plug possible memory leak in WMI
+Reference:
+  RT3593_ChipSwitchChannel function in chips/rt3593.c
 
- drivers/net/wireless/ath/ath10k/htc.c    |   25 +++++++++++++------------
- drivers/net/wireless/ath/ath10k/htc.h    |    3 ++-
- drivers/net/wireless/ath/ath10k/htt_rx.c |   12 ++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.c    |    1 +
- 4 files changed, 26 insertions(+), 15 deletions(-)
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+Changes since v1: ---
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 1b81fc9..aa6b6b0 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2360,7 +2360,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
+ 
+-	/* TODO: frequency calibration? */
++	rt2800_adjust_freq_offset(rt2x00dev);
+ 
+ 	if (conf_is_ht40(conf)) {
+ 		txrx_agc_fc = rt2x00_get_field8(drv_data->calibration_bw40,
 -- 
-1.7.9.5
-
+1.7.10
