@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:53792 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932120Ab3HGQkN (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:33158 "EHLO
+	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752283Ab3HQJ5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 12:40:13 -0400
-Message-ID: <1375893609.4004.33.camel@edumazet-glaptop> (sfid-20130807_184036_842876_525A0746)
-Subject: Re: linux-next: Tree for Aug 7
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Phil Sutter <phil@nwl.cc>, Sedat Dilek <sedat.dilek@gmail.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, David Miller <davem@davemloft.net>,
-	Hannes Frederic Sowa <hannes@stressinduktion.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Date: Wed, 07 Aug 2013 09:40:09 -0700
-In-Reply-To: <1375892522.8154.3.camel@jlt4.sipsolutions.net>
-References: <20130807155443.a0355d0429f3e0b4ccbed261@canb.auug.org.au>
-	 <CA+icZUW+uxCsvPYcY2RRvMxRVzaBLuH9u8M4ziQNWXv=nk4b2w@mail.gmail.com>
-	 <20130807155918.GA16263@orbit.nwl.cc>
-	 <1375891974.8154.1.camel@jlt4.sipsolutions.net>
-	 <1375892245.4004.31.camel@edumazet-glaptop>
-	 (sfid-20130807_181729_176093_C3201A13) <1375892522.8154.3.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 17 Aug 2013 05:57:06 -0400
+Message-ID: <520F476D.7040809@openwrt.org> (sfid-20130817_115712_488440_6F8CECF5)
+Date: Sat, 17 Aug 2013 11:50:37 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
+MIME-Version: 1.0
+To: Gabor Juhos <juhosg@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 0/5] rt2x00: rt2800lib: frequency offset adjustment fixes
+References: <1376685498-5167-1-git-send-email-juhosg@openwrt.org>
+In-Reply-To: <1376685498-5167-1-git-send-email-juhosg@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-08-07 at 18:22 +0200, Johannes Berg wrote:
+2013.08.16. 22:38 keltezéssel, Gabor Juhos írta:
+> The patch-set contain small fixes for the frequency adjustment 
+> code of the rt2800 driver.
+> 
+> Gabor Juhos (5):
+>   rt2x00: rt2800lib: fix frequency offset boundary calculation
+>   rt2x00: rt2800lib: optimize frequency offset adjustment
+>   rt2x00: rt2800lib: use a MCU command for frequency adjustment on USB
+>     devices
+>   rt2x00: rt2800lib: move rt2800_adjust_freq_offset function
+>   rt2x00: rt2800lib: adjust frequency offset for RF3053
+> 
+>  drivers/net/wireless/rt2x00/rt2800lib.c |   38 +++++++++++++++++++------------
+>  1 file changed, 24 insertions(+), 14 deletions(-)
+> 
 
-> Maybe. I haven't tested it, but I'm thinking that skb->data doesn't
-> point to the start of the data frame in this case, since we now call
-> eth_type_trans() which pulls the ethernet header. So if the device just
-> transmits skb->len starting from skb->data, it'll be wrong, no? That
-> seems a basic assumption though.
+John,
 
-Yes, it seems calling eth_type_trans() is not right here, and even could
-crash.
+Please ignore this set. I will send a slightly improved version.
 
-Sorry, for being vague, I am a bit busy this morning.
-
-
-
-
+-Gabor
