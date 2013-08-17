@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f169.google.com ([209.85.128.169]:45900 "EHLO
-	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754276Ab3HWKGG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 06:06:06 -0400
-Received: by mail-ve0-f169.google.com with SMTP id db10so308319veb.28
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 03:06:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1377251223.14021.16.camel@jlt4.sipsolutions.net>
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-	<1377248299-21007-2-git-send-email-k.eugene.e@gmail.com>
-	<1377249774.14021.15.camel@jlt4.sipsolutions.net>
-	<CAFSJ42YsC2qO1iqocfOujZ5TUkKKAQMCiwLxjGZKZW7xy=J=pA@mail.gmail.com>
-	<1377251223.14021.16.camel@jlt4.sipsolutions.net>
-Date: Fri, 23 Aug 2013 12:06:05 +0200
-Message-ID: <CAFSJ42Zc8ZwO3VUSkEhg7sQGJzTrpgBez4g6BrV-fn4DowapCA@mail.gmail.com> (sfid-20130823_120618_471891_3C37768D)
-Subject: Re: [PATCH v2 01/16] wcn36xx: Add main.c
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from arrakis.dune.hu ([78.24.191.176]:46460 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752943Ab3HQMJk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Aug 2013 08:09:40 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 2/6] rt2x00: rt2800lib: optimize frequency offset adjustment
+Date: Sat, 17 Aug 2013 14:09:29 +0200
+Message-Id: <1376741373-10032-3-git-send-email-juhosg@openwrt.org> (sfid-20130817_140946_633999_416913A9)
+In-Reply-To: <1376741373-10032-1-git-send-email-juhosg@openwrt.org>
+References: <1376741373-10032-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My bad. Did not clean up it completely.  if_comb is a dead code and is
-not used anywhere. Will fix it.
+Don't write the new value into the register if it is
+the same as the old value to avoid unncessary USB bus
+traffic with USB devices. The change also saves a few
+cycle on MMIO based devices.
 
-2013/8/23 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2013-08-23 at 11:42 +0200, Eugene Krasnikov wrote:
->> >> +static const struct ieee80211_iface_limit if_limits[] = {
->> >> +     { .max = 2, .types = BIT(NL80211_IFTYPE_STATION) },
->> >> +     { .max = 1, .types = BIT(NL80211_IFTYPE_AP) },
->> >> +};
->> >> +
->> >> +static const struct ieee80211_iface_combination if_comb = {
->> >> +     .limits = if_limits,
->> >> +     .n_limits = ARRAY_SIZE(if_limits),
->> >> +     .max_interfaces = 2,
->> >> +     .num_different_channels = 1,
->> >> +};
->
->> Exactly. So far wcn36xx supports only one interface.
->
-> But you're still advertising two.
->
-> johannes
->
->
+Based on the DPO_RT5572_LinuxSTA_2.6.0.1_20120629
+driver.
 
+Reference:
+  RTMPAdjustFrequencyOffset function in common/rt_rf.c
 
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+Changes since v1: ---
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index de27277..3407ac9 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2497,13 +2497,18 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
+ static void rt2800_adjust_freq_offset(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u8 freq_offset;
+-	u8 rfcsr;
++	u8 rfcsr, prev_rfcsr;
+ 
+ 	freq_offset = rt2x00_get_field8(rt2x00dev->freq_offset, RFCSR17_CODE);
+ 	freq_offset = min_t(u8, freq_offset, FREQ_OFFSET_BOUND);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
++	prev_rfcsr = rfcsr;
++
+ 	rt2x00_set_field8(&rfcsr, RFCSR17_CODE, freq_offset);
++	if (rfcsr == prev_rfcsr)
++		return;
++
+ 	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
+ }
+ 
 -- 
-Best regards,
-Eugene
+1.7.10
