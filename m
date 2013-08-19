@@ -1,67 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:54744 "EHLO mout.gmx.net"
+Received: from arrakis.dune.hu ([78.24.191.176]:35174 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750714Ab3HSFnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 01:43:41 -0400
-Received: from [192.168.2.102] ([93.218.73.165]) by mail.gmx.com (mrgmx103)
- with ESMTPSA (Nemesis) id 0Lx8ZJ-1W8Itv43rt-016geH for
- <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2013 07:43:40 +0200
-Message-ID: <5211B089.1090806@rempel-privat.de> (sfid-20130819_074353_937826_4D28FB3C)
-Date: Mon, 19 Aug 2013 07:43:37 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Christian Gagneraud <chgans@gna.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [TL-WN721N] No disconnect notification when AP is gone
-References: <520D6058.7040405@gna.org> <520DCF1E.7040808@rempel-privat.de> <52115ACE.9070801@gna.org>
-In-Reply-To: <52115ACE.9070801@gna.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1751680Ab3HSNL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Aug 2013 09:11:27 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 5/6] rt2x00: rt2800lib: don't hardcode beacon offsets
+Date: Mon, 19 Aug 2013 15:11:17 +0200
+Message-Id: <1376917878-25094-6-git-send-email-juhosg@openwrt.org> (sfid-20130819_151135_011994_85B3CCBD)
+In-Reply-To: <1376917878-25094-1-git-send-email-juhosg@openwrt.org>
+References: <1376917878-25094-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 19.08.2013 01:37, schrieb Christian Gagneraud:
-> On 16/08/13 19:05, Oleksij Rempel wrote:
->> Am 16.08.2013 01:12, schrieb Christian Gagneraud:
->>> Hi there,
->>>
->>> I'm using a TP-LINK TL-WN721N, and experience a strange behaviour, I'm
->>> running Ubuntu 13.04 (3.8.0-27-generic + backports-3.11-rc3-1).
->>>
->>> The problem is that if I am connected to my AP and then power it off, I
->>> never receive a disconnect notification.
->>>
->>> I first reported the bug to the connman mailing list [1], but it was
->>> suggested there that it could be a bug in the device driver.
->>>
->>> At first I was using the Ubuntu kernel modules, but before reporting any
->>> bugs, I switched to backports-3.11-rc3-1, and I still have the problem.
->>>
->>> Any thoughts?
->>>
->>> Regards,
->>> Chris
->>>
->>> [1] Latest messages haven't been archived  yet, but:
->>>   https://lists.connman.net/pipermail/connman/2013-August/015401.html
->>
->> I assume it is Atheros ar9271 based adapter. Did you tried to use latest
->> firmware?
->> https://github.com/qca/open-ath9k-htc-firmware
->
-> Yes, it is.
->
-> I have just tried latest firmware from git, it is still not working as
-> expected. Ubuntu 13.04 comes by default with FW v1.3, I can confirm that
-> I really used the new one, as now the kernel tells me it is FW v1.4
-> (before it was 1.3).
->
-> Should I open an issue ticket on open-ath9k-htc-firmware? How can I make
-> sure where the problem comes from?
+The values written into the BCN_OFFSET[01] registers are
+hardcoded in the rt2800_init_register function.
 
-I assume it is firmware issue - no idea right now. You can open ticket 
-on open-ath9k-htc-firmware but do not expect it to be fixed soon :(
+Add a macro and a helper function to derive these values
+directly from the base address of a given beacon, and use
+the new function instead of the hardcoded numbers.
 
+The patch contains no functional changes. The programmed
+register values are the same before and after the patch.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+Changes since v1: ---
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |    2 ++
+ drivers/net/wireless/rt2x00/rt2800lib.c |   30 ++++++++++++++++++++++--------
+ 2 files changed, 24 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 426129a..48018a5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2024,6 +2024,8 @@ struct mac_iveiv_entry {
+ 	  (((__index) < 6) ? (HW_BEACON_BASE4 + ((__index - 4) * 0x0200)) : \
+ 	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))))
+ 
++#define BEACON_BASE_TO_OFFSET(_base)	(((_base) - 0x4000) / 64)
++
+ /*
+  * BBP registers.
+  * The wordsize of the BBP is 8 bits.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 18a95e3..3bd0fae 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -954,6 +954,12 @@ static unsigned int rt2800_hw_beacon_base(struct rt2x00_dev *rt2x00dev,
+ 	return HW_BEACON_BASE(index);
+ }
+ 
++static inline u8 rt2800_get_beacon_offset(struct rt2x00_dev *rt2x00dev,
++					  unsigned int index)
++{
++	return BEACON_BASE_TO_OFFSET(rt2800_hw_beacon_base(rt2x00dev, index));
++}
++
+ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+@@ -4505,17 +4511,25 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		return ret;
+ 
+ 	rt2800_register_read(rt2x00dev, BCN_OFFSET0, &reg);
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN0, 0xe0); /* 0x3800 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN1, 0xe8); /* 0x3a00 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN2, 0xf0); /* 0x3c00 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN3, 0xf8); /* 0x3e00 */
++	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN0,
++			   rt2800_get_beacon_offset(rt2x00dev, 0));
++	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN1,
++			   rt2800_get_beacon_offset(rt2x00dev, 1));
++	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN2,
++			   rt2800_get_beacon_offset(rt2x00dev, 2));
++	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN3,
++			   rt2800_get_beacon_offset(rt2x00dev, 3));
+ 	rt2800_register_write(rt2x00dev, BCN_OFFSET0, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, BCN_OFFSET1, &reg);
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN4, 0xc8); /* 0x3200 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN5, 0xd0); /* 0x3400 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN6, 0x77); /* 0x1dc0 */
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN7, 0x6f); /* 0x1bc0 */
++	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN4,
++			   rt2800_get_beacon_offset(rt2x00dev, 4));
++	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN5,
++			   rt2800_get_beacon_offset(rt2x00dev, 5));
++	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN6,
++			   rt2800_get_beacon_offset(rt2x00dev, 6));
++	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN7,
++			   rt2800_get_beacon_offset(rt2x00dev, 7));
+ 	rt2800_register_write(rt2x00dev, BCN_OFFSET1, reg);
+ 
+ 	rt2800_register_write(rt2x00dev, LEGACY_BASIC_RATE, 0x0000013f);
 -- 
-Regards,
-Oleksij
+1.7.10
