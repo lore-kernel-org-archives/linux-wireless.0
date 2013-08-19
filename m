@@ -1,48 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:51759 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.21]:60676 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759079Ab3HNDpI (ORCPT
+	with ESMTP id S1750792Ab3HSFhj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 23:45:08 -0400
+	Mon, 19 Aug 2013 01:37:39 -0400
 From: Sujith Manoharan <sujith@msujith.org>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 02/14] ath9k: Fix phy error handling for DFS
-Date: Wed, 14 Aug 2013 09:11:10 +0530
-Message-Id: <1376451682-25862-2-git-send-email-sujith@msujith.org> (sfid-20130814_054513_718510_2CDC7F71)
-In-Reply-To: <1376451682-25862-1-git-send-email-sujith@msujith.org>
-References: <1376451682-25862-1-git-send-email-sujith@msujith.org>
+Subject: [PATCH] ath9k: Add antenna diversity tweak for CUS198
+Date: Mon, 19 Aug 2013 11:04:01 +0530
+Message-Id: <1376890441-13070-1-git-send-email-sujith@msujith.org> (sfid-20130819_073747_125077_F1C27B1C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Since the DFS code appears to process the phy errors
-ATH9K_PHYERR_RADAR and ATH9K_PHYERR_FALSE_RADAR_EXT,
-check for the correct phyerr status in the main RX
-tasklet routine.
+This improves RX diversity and performance for AR9485.
 
 Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 5 +++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 2 ++
+ drivers/net/wireless/ath/ath9k/hw.h            | 1 +
+ drivers/net/wireless/ath/ath9k/init.c          | 1 +
+ 4 files changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 0c23053..83b3fc5 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1256,10 +1256,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
- 			rxs->mactime += 0x100000000ULL;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index abdc7ee..a6846ab 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3825,6 +3825,11 @@ static void ar9003_hw_atten_apply(struct ath_hw *ah, struct ath9k_channel *chan)
+ 			else
+ 				value = ar9003_hw_atten_chain_get_margin(ah, i, chan);
  
--		if (rs.rs_phyerr == ATH9K_PHYERR_RADAR)
-+		if (rs.rs_status & ATH9K_RXERR_PHY) {
- 			ath9k_dfs_process_phyerr(sc, hdr, &rs, rxs->mactime);
++			if (ah->config.alt_mingainidx)
++				REG_RMW_FIELD(ah, AR_PHY_EXT_ATTEN_CTL_0,
++					      AR_PHY_EXT_ATTEN_CTL_XATTEN1_MARGIN,
++					      value);
++
+ 			REG_RMW_FIELD(ah, ext_atten_reg[i],
+ 				      AR_PHY_EXT_ATTEN_CTL_XATTEN1_MARGIN,
+ 				      value);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 23c019d..6fd7523 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -148,6 +148,8 @@
+ #define AR_PHY_SFCORR_SPUR_SUBCHNL_SD_S   28
+ #define AR_PHY_EXT_CCA_THRESH62 0x007F0000
+ #define AR_PHY_EXT_CCA_THRESH62_S       16
++#define AR_PHY_EXTCHN_PWRTHR1_ANT_DIV_ALT_ANT_MINGAINIDX    0x0000FF00
++#define AR_PHY_EXTCHN_PWRTHR1_ANT_DIV_ALT_ANT_MINGAINIDX_S  8
+ #define AR_PHY_EXT_MINCCA_PWR   0x01FF0000
+ #define AR_PHY_EXT_MINCCA_PWR_S 16
+ #define AR_PHY_EXT_CYCPWR_THR1 0x0000FE00L
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 64ff8e6..fa543a6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -314,6 +314,7 @@ struct ath9k_ops_config {
+ 	u32 xlna_gpio;
+ 	u32 ant_ctrl_comm2g_switch_enable;
+ 	bool xatten_margin_cfg;
++	bool alt_mingainidx;
+ };
  
--		if (rs.rs_status & ATH9K_RXERR_PHY) {
- 			if (ath_process_fft(sc, hdr, &rs, rxs->mactime)) {
- 				RX_STAT_INC(rx_spectral);
- 				goto requeue_drop_frag;
+ enum ath9k_int {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index abf1eb5..19b46c7 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -534,6 +534,7 @@ static void ath9k_init_platform(struct ath_softc *sc)
+ 			       ATH9K_PCI_CUS230)) {
+ 		ah->config.xlna_gpio = 9;
+ 		ah->config.xatten_margin_cfg = true;
++		ah->config.alt_mingainidx = true;
+ 		ah->config.ant_ctrl_comm2g_switch_enable = 0x000BBB88;
+ 		sc->ant_comb.low_rssi_thresh = 20;
+ 		sc->ant_comb.fast_div_bias = 3;
 -- 
 1.8.3.4
 
