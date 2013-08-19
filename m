@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:42900 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754322Ab3HXMB7 (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:52942 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750705Ab3HSNUk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Aug 2013 08:01:59 -0400
-Received: by mail-wi0-f170.google.com with SMTP id ex4so2538wid.3
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Aug 2013 05:01:58 -0700 (PDT)
-Message-ID: <1377345708.23229.16.camel@canaries32-MCP7A> (sfid-20130824_140202_645189_5CD43435)
-Subject: [PATCH 4/5] staging: vt6656: s_vGenerateTxParameter dead code
- bDisCRC
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 24 Aug 2013 13:01:48 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 19 Aug 2013 09:20:40 -0400
+Received: by mail-wi0-f173.google.com with SMTP id en1so1833006wid.6
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2013 06:20:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1376917878-25094-4-git-send-email-juhosg@openwrt.org>
+References: <1376917878-25094-1-git-send-email-juhosg@openwrt.org>
+	<1376917878-25094-4-git-send-email-juhosg@openwrt.org>
+Date: Mon, 19 Aug 2013 15:20:39 +0200
+Message-ID: <CAGXE3d-q3-HNtdp5jq94nCcLzCW1-oO+HTt+=yOFEE+fL8kbtA@mail.gmail.com> (sfid-20130819_152043_750655_7F8CCB04)
+Subject: Re: [PATCH v2 3/6] rt2x00: rt2800: serialize shared memory access
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As result of patch
-vt6656: rxtx.c s_vFillCTSHead remove dead code bDisCRC
+Hi Gabor,
 
-bDisCRC is unused.
+On Mon, Aug 19, 2013 at 3:11 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> The shared memory of the rt2800 devices is accessible
+> through the register offset range between 0x4000 and
+> 0x8000. The size of this range is 16KB only and on
+> devices which have more than 16KB of shared memory either
+> the low or the high part of the memory is accessible at a
+> time.
+>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 5 -----
- 1 file changed, 5 deletions(-)
+> Serialize all accesses to the shared memory by a mutex,
+> in order to avoid concurrent use of that.
+>
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> ---
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 7b94a77..64ce7f0 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -846,7 +846,6 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- {
- 	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
- 	u16 wFifoCtl;
--	int bDisCRC = false;
- 	u8 byFBOption = AUTO_FB_NONE;
- 
-     //DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"s_vGenerateTxParameter...\n");
-@@ -854,10 +853,6 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-     pFifoHead->wReserved = wCurrentRate;
-     wFifoCtl = pFifoHead->wFIFOCtl;
- 
--    if (wFifoCtl & FIFOCTL_CRCDIS) {
--        bDisCRC = true;
--    }
--
-     if (wFifoCtl & FIFOCTL_AUTO_FB_0) {
-         byFBOption = AUTO_FB_0;
-     }
--- 
-1.8.1.2
+[...]
 
+
+> @@ -993,8 +1001,11 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+>         }
+>
+>         beacon_base = HW_BEACON_BASE(entry->entry_idx);
+> +
+> +       rt2800_shared_mem_lock(rt2x00dev);
+>         rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+>                                    entry->skb->len + padding_len);
+> +       rt2800_shared_mem_unlock(rt2x00dev);
+>
+>         /*
+>          * Enable beaconing again.
+
+Beacons on PCI devices are updated from pre_tbtt or beacon_done tasklet.
+Looks like this will fail for pci then ...
+
+Helmut
