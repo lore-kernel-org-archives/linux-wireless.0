@@ -1,153 +1,285 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3809 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161017Ab3HJK2H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 06:28:07 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 07/12] brcmfmac: add support for manual TDLS operations
-Date: Sat, 10 Aug 2013 12:27:25 +0200
-Message-ID: <1376130450-29746-8-git-send-email-arend@broadcom.com> (sfid-20130810_122826_698876_12FC1634)
-In-Reply-To: <1376130450-29746-1-git-send-email-arend@broadcom.com>
-References: <1376130450-29746-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:42512 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750833Ab3HSTLK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Aug 2013 15:11:10 -0400
+Received: from potku.qualcomm.com (a91-155-131-35.elisa-laajakaista.fi [91.155.131.35])
+	by emh02.mail.saunalahti.fi (Postfix) with ESMTP id C6572817E8
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2013 22:11:07 +0300 (EEST)
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] qca-swiss-army-knife: add ath6kl trace-cmd plugin
+Date: Mon, 19 Aug 2013 22:11:05 +0300
+Message-Id: <1376939466-8282-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20130819_211117_222876_F645F632)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement the .tdls_oper() callback and indicate TDLS support
-in the wiphy flags.
+Just a skeleton for now.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   | 21 ++++++++
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 57 +++++++++++++++++++++-
- 2 files changed, 77 insertions(+), 1 deletion(-)
+ tracing/plugins/ath6kl.py |  251 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 251 insertions(+)
+ create mode 100644 tracing/plugins/ath6kl.py
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-index 665ef69..ecabb04 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-@@ -69,4 +69,25 @@ struct brcmf_fil_bss_enable_le {
- 	__le32 enable;
- };
- 
-+/**
-+ * struct tdls_iovar - common structure for tdls iovars.
-+ *
-+ * @ea: ether address of peer station.
-+ * @mode: mode value depending on specific tdls iovar.
-+ * @chanspec: channel specification.
-+ * @pad: unused (for future use).
-+ */
-+struct brcmf_tdls_iovar_le {
-+	u8 ea[ETH_ALEN];		/* Station address */
-+	u8 mode;			/* mode: depends on iovar */
-+	__le16 chanspec;
-+	__le32 pad;			/* future */
-+};
+diff --git a/tracing/plugins/ath6kl.py b/tracing/plugins/ath6kl.py
+new file mode 100644
+index 0000000..228c736
+--- /dev/null
++++ b/tracing/plugins/ath6kl.py
+@@ -0,0 +1,251 @@
++#
++# Copyright (c) 2012 Qualcomm Atheros, Inc.
++#
++# Permission to use, copy, modify, and/or distribute this software for any
++# purpose with or without fee is hereby granted, provided that the above
++# copyright notice and this permission notice appear in all copies.
++#
++# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++#
++# To install the plugin:
++#
++# cp ath6kl.py ~/.trace-cmd/plugins/
++#
++# When making changes to the plugin use -V to see all python errors/warnings:
++#
++# trace-cmd report -V trace.dat
 +
-+enum brcmf_tdls_manual_ep_ops {
-+	BRCMF_TDLS_MANUAL_EP_CREATE = 1,
-+	BRCMF_TDLS_MANUAL_EP_DELETE = 3,
-+	BRCMF_TDLS_MANUAL_EP_DISCOVERY = 6
-+};
++import tracecmd
++import struct
++import binascii
 +
- #endif /* FWIL_TYPES_H_ */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index c3dfea3..0370e44 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4126,6 +4126,53 @@ static void brcmf_cfg80211_crit_proto_stop(struct wiphy *wiphy,
- 	clear_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
- }
- 
-+static int brcmf_convert_nl80211_tdls_oper(enum nl80211_tdls_operation oper)
-+{
-+	int ret;
++def hexdump(buf, prefix=None):
++    s = binascii.b2a_hex(buf)
++    s_len = len(s)
++    result = ""
 +
-+	switch (oper) {
-+	case NL80211_TDLS_DISCOVERY_REQ:
-+		ret = BRCMF_TDLS_MANUAL_EP_DISCOVERY;
-+		break;
-+	case NL80211_TDLS_SETUP:
-+		ret = BRCMF_TDLS_MANUAL_EP_CREATE;
-+		break;
-+	case NL80211_TDLS_TEARDOWN:
-+		ret = BRCMF_TDLS_MANUAL_EP_DELETE;
-+		break;
-+	default:
-+		brcmf_err("unsupported operation: %d\n", oper);
-+		ret = -EOPNOTSUPP;
-+	}
-+	return ret;
-+}
++    if prefix == None:
++        prefix = ""
 +
-+static int brcmf_cfg80211_tdls_oper(struct wiphy *wiphy,
-+				    struct net_device *ndev, u8 *peer,
-+				    enum nl80211_tdls_operation oper)
-+{
-+	struct brcmf_if *ifp;
-+	struct brcmf_tdls_iovar_le info;
-+	int ret = 0;
++    for i in range(s_len / 2):
++        if i % 16 == 0:
++            result = result + ("%s%04x: " % (prefix, i))
 +
-+	ret = brcmf_convert_nl80211_tdls_oper(oper);
-+	if (ret < 0)
-+		return ret;
++        result = result + (s[2*i] + s[2*i+1] + " ")
 +
-+	ifp = netdev_priv(ndev);
-+	memset(&info, 0, sizeof(info));
-+	info.mode = (u8)ret;
-+	if (peer)
-+		memcpy(info.ea, peer, ETH_ALEN);
++        if (i + 1) % 16 == 0:
++            result = result + "\n"
 +
-+	ret = brcmf_fil_iovar_data_set(ifp, "tdls_endpoint",
-+				       &info, sizeof(info));
-+	if (ret < 0)
-+		brcmf_err("tdls_endpoint iovar failed: ret=%d\n", ret);
++    # FIXME: if len(s) % 16 == 0 there's an extra \n in the end
 +
-+	return ret;
-+}
++    return result
 +
- static struct cfg80211_ops wl_cfg80211_ops = {
- 	.add_virtual_intf = brcmf_cfg80211_add_iface,
- 	.del_virtual_intf = brcmf_cfg80211_del_iface,
-@@ -4164,6 +4211,7 @@ static struct cfg80211_ops wl_cfg80211_ops = {
- 	.stop_p2p_device = brcmf_p2p_stop_device,
- 	.crit_proto_start = brcmf_cfg80211_crit_proto_start,
- 	.crit_proto_stop = brcmf_cfg80211_crit_proto_stop,
-+	.tdls_oper = brcmf_cfg80211_tdls_oper,
- 	CFG80211_TESTMODE_CMD(brcmf_cfg80211_testmode)
- };
- 
-@@ -4285,7 +4333,8 @@ static struct wiphy *brcmf_setup_wiphy(struct device *phydev)
- 	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
- 	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
- 			WIPHY_FLAG_OFFCHAN_TX |
--			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-+			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
-+			WIPHY_FLAG_SUPPORTS_TDLS;
- 	wiphy->mgmt_stypes = brcmf_txrx_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
- 	brcmf_wiphy_pno_params(wiphy);
-@@ -4906,6 +4955,12 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 		goto cfg80211_p2p_attach_out;
- 	}
- 
-+	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
-+	if (err) {
-+		brcmf_dbg(INFO, "TDLS not enabled (%d)\n", err);
-+		wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_TDLS;
-+	}
++def wmi_event_bssinfo(pevent, trace_seq, event, buf):
++    hdr = struct.unpack("<HBB6BH", buf[0:12])
++    channel = hdr[0]
++    frame_type = hdr[1]
++    snr = hdr[2]
++    bssid = hdr[3]
++    ie_mask = hdr[4]
 +
- 	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION,
- 				    &io_type);
- 	if (err) {
++    trace_seq.puts("\t\t\tWMI_BSSINFO_EVENTID channel %d frame_type 0x%x snr %d ie_mask 0x%x\n" %
++                   (channel, frame_type, snr, ie_mask))
++
++wmi_event_handlers = [
++    [0x1004, wmi_event_bssinfo ],
++    ]
++
++def wmi_cmd_set_bss_filter_handler(pevent, trace_seq, event, buf):
++    hdr = struct.unpack("<BBHI", buf[0:8])
++    bss_filter = hdr[0]
++    ie_mask = hdr[3]
++
++    trace_seq.puts("\t\t\tWMI_SET_BSS_FILTER_CMDID bss_filter 0x%x ie_mask 0x%08x\n" %
++                   (bss_filter, ie_mask))
++
++def wmi_cmd_set_probed_ssid_handler(pevent, trace_seq, event, buf):
++    hdr = struct.unpack("<BBB", buf[0:3])
++    entry_index = hdr[0]
++    flag = hdr[1]
++    ssid_len = hdr[2]
++
++    # fmt = "<" + ssid_len + "s"
++    # hdr = struct.unpack(fmt, buf[3:3 + ssid_len])
++
++    trace_seq.puts("\t\t\tWMI_SET_PROBED_SSID_CMDID entry_index 0x%x flag 0x%08x ssid_len %d\n" %
++                   (entry_index, flag, ssid_len))
++
++    # FIXME: print SSID
++    # for c in hdr[0]:
++    #     print ascii(c)
++
++wmi_cmd_handlers = [
++    [9, wmi_cmd_set_bss_filter_handler ],
++    [10, wmi_cmd_set_probed_ssid_handler ],
++    ]
++
++WMI_CMD_HDR_IF_ID_MASK = 0xf
++
++def ath6kl_wmi_cmd_handler(pevent, trace_seq, event):
++    buf_len = long(event['buf_len'])
++    buf = event['buf'].data
++
++    hdr = struct.unpack("<HHH", buf[0:6])
++    cmd_id = hdr[0]
++    if_idx = hdr[1] & WMI_CMD_HDR_IF_ID_MASK
++
++    trace_seq.puts("id 0x%x len %d if_idx %d\n" % (cmd_id, buf_len, if_idx))
++                   
++    for (wmi_id, handler) in wmi_cmd_handlers:
++        if wmi_id == cmd_id:
++            handler(pevent, trace_seq, event, buf[6:])
++            break
++
++def ath6kl_wmi_event_handler(pevent, trace_seq, event):
++    buf_len = long(event['buf_len'])
++    buf = event['buf'].data
++
++    hdr = struct.unpack("<HHH", buf[0:6])
++    cmd_id = hdr[0]
++    if_idx = hdr[1] & WMI_CMD_HDR_IF_ID_MASK
++
++    trace_seq.puts("id 0x%x len %d if_idx %d\n" % (cmd_id, buf_len, if_idx))
++                   
++    for (wmi_id, handler) in wmi_event_handlers:
++        if wmi_id == cmd_id:
++            handler(pevent, trace_seq, event, buf[6:])
++            break
++
++def ath6kl_htc_tx_handler(pevent, trace_seq, event):
++    buf_len = long(event['buf_len'])
++    buf = event['buf'].data
++
++    hdr = struct.unpack("<BBHBB", buf[0:6])
++    endpoint = hdr[0]
++    flags = hdr[1]
++    payload_len = hdr[2]
++    ctrl0 = hdr[3]
++    ctrl1 = hdr[4]
++
++    seqno = ctrl1
++
++    trace_seq.puts("seqno %d endpoint %d payload_len %d flags 0x%x\n" %
++                   (seqno, endpoint, payload_len, flags))
++
++    if flags != 0:
++        trace_seq.puts("\t\t\t\t\t\t")
++
++    if flags & 0x1:
++        trace_seq.puts(" NEED_CREDIT_UPDATE")
++
++    if flags & 0x2:
++        trace_seq.puts(" SEND_BUNDLE")
++
++    if flags & 0x4:
++        trace_seq.puts(" FIXUP_NETBUF")
++
++    if flags != 0:
++        trace_seq.puts("\n")
++
++def ath6kl_htc_rx_handler(pevent, trace_seq, event):
++    buf_len = long(event['buf_len'])
++    buf = event['buf'].data
++
++    hdr = struct.unpack("<BBHBB", buf[0:6])
++    endpoint = hdr[0]
++    flags = hdr[1]
++    payload_len = hdr[2]
++    ctrl0 = hdr[3]
++    ctrl1 = hdr[4]
++
++    seqno = ctrl1
++    bundle_count = (flags & 0xf0) >> 4
++
++    trace_seq.puts("seqno %d endpoint %d payload_len %d flags 0x%x bundle_count %d\n" %
++                   (seqno, endpoint, payload_len, flags, bundle_count))
++
++    if (flags & 0xf) != 0:
++        trace_seq.puts("\t\t\t\t\t\t")
++
++    if flags & 0x1:
++        trace_seq.puts(" UNUSED")
++
++    if flags & 0x2:
++        trace_seq.puts(" TRAILER")
++
++    if (flags & 0xf) != 0:
++        trace_seq.puts("\n")
++
++def ath6kl_sdio_handler(pevent, trace_seq, event):
++    tx = long(event['tx'])
++    addr = event['addr']
++    flags = event['flags']
++
++    buf_len = long(event['buf_len'])
++    buf = event['buf'].data
++
++    if tx == 1:
++        direction = "tx"
++    else:
++        direction = "rx"
++
++    trace_seq.puts("%s addr 0x%x flags 0x%x buf_len %d\n" %
++                   (direction, addr, flags, buf_len))
++    trace_seq.puts("%s\n" % hexdump(buf))
++
++def ath6kl_sdio_scat_handler(pevent, trace_seq, event):
++    tx = long(event['tx'])
++    addr = long(event['addr'])
++    flags = long(event['flags'])
++    entries = long(event['entries'])
++    total_len = long(event['total_len'])
++
++    len_array_data = event['len_array'].data
++    data = event['data'].data
++
++    if tx == 1:
++        direction = "tx"
++    else:
++        direction = "rx"
++
++    trace_seq.puts("%s addr 0x%x flags 0x%x entries %d total_len %d\n" %
++                   (direction, addr, flags, entries, total_len))
++
++    offset = 0
++
++    len_array = struct.unpack("<%dI" % entries, len_array_data[0:8])
++
++    for i in range(entries):
++        length = len_array[i]
++        start = offset
++        end = start + length
++
++        trace_seq.puts("%s\n" % hexdump(data[start:end]))
++
++        offset = offset + length
++
++def register(pevent):
++    pevent.register_event_handler("ath6kl", "ath6kl_wmi_cmd",
++                                  lambda *args:
++                                      ath6kl_wmi_cmd_handler(pevent, *args))
++    pevent.register_event_handler("ath6kl", "ath6kl_wmi_event",
++                                  lambda *args:
++                                      ath6kl_wmi_event_handler(pevent, *args))
++    pevent.register_event_handler("ath6kl", "ath6kl_htc_tx",
++                                  lambda *args:
++                                      ath6kl_htc_tx_handler(pevent, *args))
++    pevent.register_event_handler("ath6kl", "ath6kl_htc_rx",
++                                  lambda *args:
++                                      ath6kl_htc_rx_handler(pevent, *args))
++    pevent.register_event_handler("ath6kl", "ath6kl_sdio",
++                                  lambda *args:
++                                      ath6kl_sdio_handler(pevent, *args))
++    pevent.register_event_handler("ath6kl", "ath6kl_sdio_scat",
++                                  lambda *args:
++                                      ath6kl_sdio_scat_handler(pevent, *args))
 -- 
-1.8.1.3
-
+1.7.9.5
 
