@@ -1,38 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46809 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752784Ab3H1EJS (ORCPT
+Received: from forward3h.mail.yandex.net ([84.201.187.148]:42823 "EHLO
+	forward3h.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751215Ab3HSWgh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 00:09:18 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Fix mutex unlock balance
-References: <1377102404-14742-1-git-send-email-mohammed@qca.qualcomm.com>
-Date: Wed, 28 Aug 2013 07:09:12 +0300
-In-Reply-To: <1377102404-14742-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Wed, 21 Aug 2013 21:56:44
-	+0530")
-Message-ID: <8738pulamv.fsf@kamboji.qca.qualcomm.com> (sfid-20130828_060921_767579_4715D7A9)
+	Mon, 19 Aug 2013 18:36:37 -0400
+Received: from web21h.yandex.ru (web21h.yandex.ru [84.201.187.155])
+	by forward3h.mail.yandex.net (Yandex) with ESMTP id 7D1E0136101D
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 02:26:27 +0400 (MSK)
+From: Yuri Pin <frt43@ya.ru>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Atheros 9280/AR9227 driver for kernel 2.6.21.7
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Message-Id: <77051376951186@web21h.yandex.ru> (sfid-20130820_003640_286936_EFE8D217)
+Date: Tue, 20 Aug 2013 02:26:26 +0400
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
-
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
->
-> ath10k_debug_read_target_stats is properly
-> protected by data_lock (spinlock). Remove
-> the unwanted mutex_unlock(&ar->conf_mutex)
-
-[...]
-
->
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-
-Thanks, applied.
-
--- 
-Kalle Valo
+Hello,
+I have huawei wireless ONT modem with Atheros 9280 madwifi+carrier driver (found this in binnaries) and kernel 2.6.21.7. I can’t make it to connect to wireless networks as client. I guess that is because it doesn’t have wlan_scan_sta.ko kernel module (sta mode is available for wlanconfig but iwlist can scan only in ap mode). I tried also adhoc networking without success. There is no way I can compile wlan_scan_sta.ko module myself because it is necessary madwifi  with carrier SDK. I tried to compile compat-wireless-2.6.35-1 with enable-older-kernels patch but failed because a lot of symbols are missing in 2.6.21.7 (Huawei posted kernel sources, for example, there is no “ieee80211_ptr” symbol there).
+1. Is there workaround to make Atheros working as wireless client without proper driver? Is there software that can do this (smth similar to aircrack?)
+2. Any tips how compile driver for 2.6.21.7 kernel?
+Thank you.
