@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:53936 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756700Ab3HZLsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 07:48:54 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 2/3] ath10k: update wal_dbg_tx_stats structure
-Date: Mon, 26 Aug 2013 13:33:33 +0200
-Message-ID: <1377516815-12660-3-git-send-email-bartosz.markowski@tieto.com> (sfid-20130826_134858_016474_A3963260)
-In-Reply-To: <1377516815-12660-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1377516815-12660-1-git-send-email-bartosz.markowski@tieto.com>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:43368 "EHLO
+	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151Ab3HSLTk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Aug 2013 07:19:40 -0400
+Message-ID: <5211FF4D.8080601@openwrt.org> (sfid-20130819_131943_939617_6F95F50F)
+Date: Mon, 19 Aug 2013 13:19:41 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Gabor Juhos <juhosg@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 2/6] rt2x00: rt2800lib: introduce RT2800_HAS_HIGH_SHARED_MEM
+ flag
+References: <1376762167-24583-1-git-send-email-juhosg@openwrt.org> <1376762167-24583-3-git-send-email-juhosg@openwrt.org>
+In-Reply-To: <1376762167-24583-3-git-send-email-juhosg@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add missing parameters. It's very imporatant to keep
-these structs up to date with FW abi, due to the arithmetic we
-use while read the fw_stats.
+2013.08.17. 19:56 keltezéssel, Gabor Juhos írta:
+> Some chipsets have more than 16KB of shared memory.
+> Introduce a new rt2800 specific flag to indicate that
+> and add a helper function which helps to check the
+> presence of the new flag.
+> 
+> Also enable the new flag for the RT3593 chipset which
+> has 24KB of shared memory. The flag can also be used
+> for other chipsets, but none of those has been tested
+> yet.
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    9 +++++++++
+>  drivers/net/wireless/rt2x00/rt2800lib.h |   13 +++++++++++++
+>  2 files changed, 22 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index aa6b6b0..2d409e0 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -7697,6 +7697,7 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
+>  
+>  int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
+>  {
+> +	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
+>  	int retval;
+>  	u32 reg;
+>  
+> @@ -7704,6 +7705,14 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
+>  	if (retval)
+>  		return retval;
+>  
+> +	switch (rt2x00dev->chip.rt) {
+> +	case RT3071:
+> +	case RT3593:
+> +	case RT5592:
+> +		__set_bit(RT2800_HAS_HIGH_SHARED_MEM, &drv_data->rt2800_flags);
+> +		break;
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.h |    3 +++
- 1 file changed, 3 insertions(+)
+Erm, this contradicts with the changelog. I will remove 3071 and 5592 and will
+send an updated set.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 1747631..6366600 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -1767,6 +1767,9 @@ struct wal_dbg_tx_stats {
- 	/* wal pdev resets  */
- 	__le32 pdev_resets;
- 
-+	/* frames dropped due to non-availability of stateless TIDs */
-+	__le32 stateless_tid_alloc_failure;
-+
- 	__le32 phy_underrun;
- 
- 	/* MPDU is more than txop limit */
--- 
-1.7.10
-
+-Gabor
