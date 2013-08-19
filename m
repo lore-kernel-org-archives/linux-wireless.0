@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:49362 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541Ab3HAGSs (ORCPT
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:65425 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790Ab3HSFYP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 02:18:48 -0400
-Received: by mail-pd0-f172.google.com with SMTP id z11so888924pdj.3
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 23:18:48 -0700 (PDT)
-From: Fred Zhou <fred.zy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Fred Zhou <fred.zy@gmail.com>
-Subject: [PATCH] ieee80211: add definition for 802.11ac information elements
-Date: Thu,  1 Aug 2013 14:16:28 +0800
-Message-Id: <1375337788-6822-1-git-send-email-fred.zy@gmail.com> (sfid-20130801_081851_982870_92A81D55)
+	Mon, 19 Aug 2013 01:24:15 -0400
+Received: by mail-bk0-f49.google.com with SMTP id r7so1224361bkg.36
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Aug 2013 22:24:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <878v0314nn.fsf@kamboji.qca.qualcomm.com>
+References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
+	<1376036014-29707-1-git-send-email-michal.kazior@tieto.com>
+	<1376036014-29707-4-git-send-email-michal.kazior@tieto.com>
+	<878v0314nn.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 19 Aug 2013 07:24:13 +0200
+Message-ID: <CA+BoTQmpcm65-5WDkih3oi-+MHDAy7gCzUrmmPzgmgCrVAKj8A@mail.gmail.com> (sfid-20130819_072424_704607_4D23464D)
+Subject: Re: [PATCH 3/3] ath10k: add support for HTT 3.0
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added element IDs for Extended BSS Load, VHT TX Power Envelope, AID, and Quiet Channel
+On 15 August 2013 15:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> New firmware comes with new HTT protocol version.
+>> In 3.0 the separate mgmt tx command has been
+>> removed. All traffic is to be pushed through data
+>> tx (tx_frm) command with a twist - FW seems to not
+>> be able (yet?) to access tx fragment table so for
+>> manamgement frames frame pointer is passed
+>> directly.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> Because I dropped patch 1 this patch had conflicts. I tried to be extra
+> careful, but please double check my conflict resolution.
 
-Signed-off-by: Fred Zhou <fred.zy@gmail.com>
----
- include/linux/ieee80211.h |    4 ++++
- 1 file changed, 4 insertions(+)
+Looks good, thanks!
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b0dc87a..6b9e663 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1709,6 +1709,10 @@ enum ieee80211_eid {
- 	WLAN_EID_OPMODE_NOTIF = 199,
- 	WLAN_EID_WIDE_BW_CHANNEL_SWITCH = 194,
- 	WLAN_EID_CHANNEL_SWITCH_WRAPPER = 196,
-+	WLAN_EID_EXTENDED_BSS_LOAD = 193,
-+	WLAN_EID_VHT_TX_POWER_ENVELOPE = 195,
-+	WLAN_EID_AID = 197,
-+	WLAN_EID_QUIET_CHANNEL = 198,
- 
- 	/* 802.11ad */
- 	WLAN_EID_NON_TX_BSSID_CAP =  83,
--- 
-1.7.9.5
 
+Pozdrawiam / Best regards,
+Michał Kazior.
