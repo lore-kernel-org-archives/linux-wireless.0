@@ -1,53 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:22170 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752218Ab3HUGEr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 02:04:47 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.10 8/8] iwlwifi: mvm: adjust firmware D3 configuration API
-Date: Wed, 21 Aug 2013 09:04:26 +0300
-Message-Id: <1377065066-13030-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130821_080450_207152_0880B024)
-In-Reply-To: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:47345 "EHLO
+	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751685Ab3HSXL7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Aug 2013 19:11:59 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: do not create AP and P2P interfaces upon driver loading
+Date: Mon, 19 Aug 2013 16:10:21 -0700
+Message-ID: <1376953821-32188-1-git-send-email-bzhao@marvell.com> (sfid-20130820_011203_826050_581A0D96)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Bug 60747 - 1286:2044 [Microsoft Surface Pro]
+    Marvell 88W8797 wifi show 3 interface under network
+https://bugzilla.kernel.org/show_bug.cgi?id=60747
 
-commit dfcb4c3aacedee6838e436fb575b31e138505203 upstream.
+This issue was also reported previously by OLPC and some folks from
+the community.
 
-The D3 firmware API changed to include a new field, adjust
-the driver to it to avoid getting an NMI when configuring.
+There are 3 network interfaces with different types being created
+when mwifiex driver is loaded:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+1. mlan0 (infra. STA)
+2. uap0 (AP)
+3. p2p0 (P2P_CLIENT)
+
+The Network Manager attempts to use all 3 interfaces above without
+filtering the managed interface type. As the result, 3 identical
+interfaces are displayed under network manager. If user happens to
+click on an entry under which its interface is uap0 or p2p0, the
+association will fail.
+
+Work around it by removing the creation of AP and P2P interfaces
+at driver loading time. These interfaces can be added with 'iw' or
+other applications manually when they are needed.
+
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/main.c | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-index 51e015d..6f8b2c1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-@@ -75,13 +75,15 @@ enum iwl_d3_wakeup_flags {
-  * struct iwl_d3_manager_config - D3 manager configuration command
-  * @min_sleep_time: minimum sleep time (in usec)
-  * @wakeup_flags: wakeup flags, see &enum iwl_d3_wakeup_flags
-+ * @wakeup_host_timer: force wakeup after this many seconds
-  *
-  * The structure is used for the D3_CONFIG_CMD command.
-  */
- struct iwl_d3_manager_config {
- 	__le32 min_sleep_time;
- 	__le32 wakeup_flags;
--} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_3 */
-+	__le32 wakeup_host_timer;
-+} __packed; /* D3_MANAGER_CONFIG_CMD_S_VER_4 */
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 3402bff..fd77833 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -477,20 +477,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 		dev_err(adapter->dev, "cannot create default STA interface\n");
+ 		goto err_add_intf;
+ 	}
+-
+-	/* Create AP interface by default */
+-	if (!mwifiex_add_virtual_intf(adapter->wiphy, "uap%d",
+-				      NL80211_IFTYPE_AP, NULL, NULL)) {
+-		dev_err(adapter->dev, "cannot create default AP interface\n");
+-		goto err_add_intf;
+-	}
+-
+-	/* Create P2P interface by default */
+-	if (!mwifiex_add_virtual_intf(adapter->wiphy, "p2p%d",
+-				      NL80211_IFTYPE_P2P_CLIENT, NULL, NULL)) {
+-		dev_err(adapter->dev, "cannot create default P2P interface\n");
+-		goto err_add_intf;
+-	}
+ 	rtnl_unlock();
  
- 
- /* TODO: OFFLOADS_QUERY_API_S_VER_1 */
+ 	mwifiex_drv_get_driver_version(adapter, fmt, sizeof(fmt) - 1);
 -- 
-1.7.10.4
+1.8.2.3
 
