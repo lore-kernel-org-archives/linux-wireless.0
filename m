@@ -1,125 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54502 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755341Ab3HFJMd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 05:12:33 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>
-Subject: [PATCH 2/2] mac80211: add vif to testmode cmd
-Date: Tue,  6 Aug 2013 11:12:27 +0200
-Message-Id: <1375780347-1062-2-git-send-email-johannes@sipsolutions.net> (sfid-20130806_111237_866621_2EBA177E)
-In-Reply-To: <1375780347-1062-1-git-send-email-johannes@sipsolutions.net>
-References: <1375780347-1062-1-git-send-email-johannes@sipsolutions.net>
+Received: from mout.gmx.net ([212.227.17.20]:54744 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750714Ab3HSFnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Aug 2013 01:43:41 -0400
+Received: from [192.168.2.102] ([93.218.73.165]) by mail.gmx.com (mrgmx103)
+ with ESMTPSA (Nemesis) id 0Lx8ZJ-1W8Itv43rt-016geH for
+ <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2013 07:43:40 +0200
+Message-ID: <5211B089.1090806@rempel-privat.de> (sfid-20130819_074353_937826_4D28FB3C)
+Date: Mon, 19 Aug 2013 07:43:37 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Christian Gagneraud <chgans@gna.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [TL-WN721N] No disconnect notification when AP is gone
+References: <520D6058.7040405@gna.org> <520DCF1E.7040808@rempel-privat.de> <52115ACE.9070801@gna.org>
+In-Reply-To: <52115ACE.9070801@gna.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Am 19.08.2013 01:37, schrieb Christian Gagneraud:
+> On 16/08/13 19:05, Oleksij Rempel wrote:
+>> Am 16.08.2013 01:12, schrieb Christian Gagneraud:
+>>> Hi there,
+>>>
+>>> I'm using a TP-LINK TL-WN721N, and experience a strange behaviour, I'm
+>>> running Ubuntu 13.04 (3.8.0-27-generic + backports-3.11-rc3-1).
+>>>
+>>> The problem is that if I am connected to my AP and then power it off, I
+>>> never receive a disconnect notification.
+>>>
+>>> I first reported the bug to the connman mailing list [1], but it was
+>>> suggested there that it could be a bug in the device driver.
+>>>
+>>> At first I was using the Ubuntu kernel modules, but before reporting any
+>>> bugs, I switched to backports-3.11-rc3-1, and I still have the problem.
+>>>
+>>> Any thoughts?
+>>>
+>>> Regards,
+>>> Chris
+>>>
+>>> [1] Latest messages haven't been archived  yet, but:
+>>>   https://lists.connman.net/pipermail/connman/2013-August/015401.html
+>>
+>> I assume it is Atheros ar9271 based adapter. Did you tried to use latest
+>> firmware?
+>> https://github.com/qca/open-ath9k-htc-firmware
+>
+> Yes, it is.
+>
+> I have just tried latest firmware from git, it is still not working as
+> expected. Ubuntu 13.04 comes by default with FW v1.3, I can confirm that
+> I really used the new one, as now the kernel tells me it is FW v1.4
+> (before it was 1.3).
+>
+> Should I open an issue ticket on open-ath9k-htc-firmware? How can I make
+> sure where the problem comes from?
 
-Pass the wdev from cfg80211 on to the driver as the vif
-if given and it's valid for the driver.
+I assume it is firmware issue - no idea right now. You can open ticket 
+on open-ath9k-htc-firmware but do not expect it to be fixed soon :(
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c     |  1 +
- drivers/net/wireless/ti/wlcore/testmode.c |  3 ++-
- drivers/net/wireless/ti/wlcore/testmode.h |  3 ++-
- include/net/mac80211.h                    |  7 ++++---
- net/mac80211/cfg.c                        | 11 ++++++++++-
- 5 files changed, 19 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 7b2a622..a0d2aac 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1364,6 +1364,7 @@ static const struct nla_policy hwsim_testmode_policy[HWSIM_TM_ATTR_MAX + 1] = {
- static int hwsim_fops_ps_write(void *dat, u64 val);
- 
- static int mac80211_hwsim_testmode_cmd(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif,
- 				       void *data, int len)
- {
- 	struct mac80211_hwsim_data *hwsim = hw->priv;
-diff --git a/drivers/net/wireless/ti/wlcore/testmode.c b/drivers/net/wireless/ti/wlcore/testmode.c
-index f344276..527590f 100644
---- a/drivers/net/wireless/ti/wlcore/testmode.c
-+++ b/drivers/net/wireless/ti/wlcore/testmode.c
-@@ -356,7 +356,8 @@ out:
- 	return ret;
- }
- 
--int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len)
-+int wl1271_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		  void *data, int len)
- {
- 	struct wl1271 *wl = hw->priv;
- 	struct nlattr *tb[WL1271_TM_ATTR_MAX + 1];
-diff --git a/drivers/net/wireless/ti/wlcore/testmode.h b/drivers/net/wireless/ti/wlcore/testmode.h
-index 8071654..61d8434 100644
---- a/drivers/net/wireless/ti/wlcore/testmode.h
-+++ b/drivers/net/wireless/ti/wlcore/testmode.h
-@@ -26,6 +26,7 @@
- 
- #include <net/mac80211.h>
- 
--int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len);
-+int wl1271_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		  void *data, int len);
- 
- #endif /* __WL1271_TESTMODE_H__ */
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9cda372..839991a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2503,8 +2503,8 @@ enum ieee80211_roc_type {
-  *	in IEEE 802.11-2007 section 17.3.8.6 and modify ACK timeout
-  *	accordingly. This callback is not required and may sleep.
-  *
-- * @testmode_cmd: Implement a cfg80211 test mode command.
-- *	The callback can sleep.
-+ * @testmode_cmd: Implement a cfg80211 test mode command. The passed @vif may
-+ *	be %NULL. The callback can sleep.
-  * @testmode_dump: Implement a cfg80211 test mode dump. The callback can sleep.
-  *
-  * @flush: Flush all pending frames from the hardware queue, making sure
-@@ -2765,7 +2765,8 @@ struct ieee80211_ops {
- 	void (*rfkill_poll)(struct ieee80211_hw *hw);
- 	void (*set_coverage_class)(struct ieee80211_hw *hw, u8 coverage_class);
- #ifdef CONFIG_NL80211_TESTMODE
--	int (*testmode_cmd)(struct ieee80211_hw *hw, void *data, int len);
-+	int (*testmode_cmd)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			    void *data, int len);
- 	int (*testmode_dump)(struct ieee80211_hw *hw, struct sk_buff *skb,
- 			     struct netlink_callback *cb,
- 			     void *data, int len);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c77916f..7aa38ce 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2305,11 +2305,20 @@ static int ieee80211_testmode_cmd(struct wiphy *wiphy,
- 				  void *data, int len)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_vif *vif = NULL;
- 
- 	if (!local->ops->testmode_cmd)
- 		return -EOPNOTSUPP;
- 
--	return local->ops->testmode_cmd(&local->hw, data, len);
-+	if (wdev) {
-+		struct ieee80211_sub_if_data *sdata;
-+
-+		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+		if (sdata->flags & IEEE80211_SDATA_IN_DRIVER)
-+			vif = &sdata->vif;
-+	}
-+
-+	return local->ops->testmode_cmd(&local->hw, vif, data, len);
- }
- 
- static int ieee80211_testmode_dump(struct wiphy *wiphy,
 -- 
-1.8.0
-
+Regards,
+Oleksij
