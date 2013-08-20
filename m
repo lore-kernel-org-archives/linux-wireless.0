@@ -1,90 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:42304 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756840Ab3HOSkP (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:46559 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752094Ab3HTRlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 14:40:15 -0400
-Received: by mail-wg0-f43.google.com with SMTP id z12so846475wgg.22
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Aug 2013 11:40:14 -0700 (PDT)
-Message-ID: <1376592008.5404.22.camel@canaries32-MCP7A> (sfid-20130815_204022_967603_13FA069C)
-Subject: [PATCH 3/3] staging: vt6656: rxtx.h : remove typedef struct
- tagSBEACON_BUFFER
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 15 Aug 2013 19:40:08 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 20 Aug 2013 13:41:51 -0400
+Received: by mail-lb0-f169.google.com with SMTP id u10so717612lbi.14
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:49 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH 10/16] wcn36xx: Add smd.h
+Date: Tue, 20 Aug 2013 19:41:13 +0200
+Message-Id: <1377020479-16935-11-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_200909_562437_CE964E2D)
+In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace with struct vnt_beacon_buffer.
+Adding smd.h
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
 ---
- drivers/staging/vt6656/rxtx.c |  5 +++--
- drivers/staging/vt6656/rxtx.h | 16 +++++++---------
- 2 files changed, 10 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.h | 121 +++++++++++++++++++++++++++++++++
+ 1 file changed, 121 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index e37e82c..7a4ebbc 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -1753,6 +1753,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
- CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
- 	struct vnt_tx_mgmt *pPacket)
- {
-+	struct vnt_beacon_buffer *pTX_Buffer;
- 	u32 cbFrameSize = pPacket->cbMPDULen + WLAN_FCS_LEN;
- 	u32 cbHeaderSize = 0;
- 	u16 wTxBufSize = sizeof(STxShortBufHead);
-@@ -1762,7 +1763,6 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
- 	u16 wCurrentRate;
- 	u32 cbFrameBodySize;
- 	u32 cbReqCount;
--	PBEACON_BUFFER pTX_Buffer;
- 	u8 *pbyTxBufferAddr;
- 	PUSB_SEND_CONTEXT pContext;
- 	CMD_STATUS status;
-@@ -1773,7 +1773,8 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ManagementSend TX...NO CONTEXT!\n");
-         return status ;
-     }
--    pTX_Buffer = (PBEACON_BUFFER) (&pContext->Data[0]);
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+new file mode 100644
+index 0000000..28d5826
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -0,0 +1,121 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+	pTX_Buffer = (struct vnt_beacon_buffer *)&pContext->Data[0];
-     pbyTxBufferAddr = (u8 *)&(pTX_Buffer->wFIFOCtl);
- 
-     cbFrameBodySize = pPacket->cbPayloadLen;
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index bd1f9e2..3e347a9 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -43,15 +43,13 @@ struct vnt_tx_buffer {
- 	u16 wReserved;
- } __packed;
- 
--typedef struct tagSBEACON_BUFFER
--{
--    u8                            byType;
--    u8                            byPKTNO;
--    u16                            wTxByteCount;
--
--    u16                            wFIFOCtl;
--    u16                            wTimeStamp;
--} __packed BEACON_BUFFER, *PBEACON_BUFFER;
-+struct vnt_beacon_buffer {
-+	u8 byType;
-+	u8 byPKTNO;
-+	u16 wTxByteCount;
-+	u16 wFIFOCtl;
-+	u16 wTimeStamp;
++#ifndef _SMD_H_
++#define _SMD_H_
++
++#include "wcn36xx.h"
++
++/* Max shared size is 4k but we take less.*/
++#define WCN36XX_NV_FRAGMENT_SIZE			3072
++
++#define WCN36XX_SMD_BUF_SIZE				4096
++
++#define SMD_MSG_TIMEOUT 200
++#define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
++#define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
++/* The PNO version info be contained in the rsp msg */
++#define WCN36XX_FW_MSG_PNO_VERSION_MASK			0x8000
++
++enum wcn36xx_fw_msg_result {
++	WCN36XX_FW_MSG_RESULT_SUCCESS			= 0,
++	WCN36XX_FW_MSG_RESULT_SUCCESS_SYNC		= 1,
++
++	WCN36XX_FW_MSG_RESULT_MEM_FAIL			= 5,
++};
++
++/******************************/
++/* SMD requests and responses */
++/******************************/
++struct wcn36xx_fw_msg_status_rsp {
++	u32	status;
 +} __packed;
- 
- void vDMA0_tx_80211(struct vnt_private *, struct sk_buff *skb);
- int nsDMA_tx_packet(struct vnt_private *, u32 uDMAIdx, struct sk_buff *skb);
++
++struct wcn36xx;
++
++int wcn36xx_smd_open(struct wcn36xx *wcn);
++void wcn36xx_smd_close(struct wcn36xx *wcn);
++
++int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
++int wcn36xx_smd_start(struct wcn36xx *wcn);
++int wcn36xx_smd_stop(struct wcn36xx *wcn);
++int wcn36xx_smd_init_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_start_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_end_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_finish_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
++int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status);
++int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
++int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
++int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch);
++int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
++			    const u8 *sta_mac,
++			    enum wcn36xx_hal_link_state state);
++int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta, const u8 *bssid,
++			   bool update);
++int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
++int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta);
++int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
++			    u16 tim_off, u16 p2p_off);
++int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch);
++int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb);
++int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
++			   enum ani_ed_type enc_type,
++			   u8 keyidx,
++			   u8 keylen,
++			   u8 *key,
++			   u8 sta_index);
++int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
++			   enum ani_ed_type enc_type,
++			   u8 keyidx,
++			   u8 keylen,
++			   u8 *key);
++int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
++			      enum ani_ed_type enc_type,
++			      u8 keyidx,
++			      u8 sta_index);
++int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
++			      enum ani_ed_type enc_type,
++			      u8 keyidx);
++int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt);
++int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn);
++int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type);
++int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
++			     u32 arg3, u32 arg4, u32 arg5);
++int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);
++
++int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
++		struct ieee80211_sta *sta,
++		u16 tid,
++		u16 *ssn,
++		u8 direction,
++		u8 sta_index);
++int wcn36xx_smd_add_ba(struct wcn36xx *wcn);
++int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
++int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
++
++int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
++/* WCN36XX configuration parameters */
++struct wcn36xx_fw_cfg {
++	u16		id;
++	u16		len;
++	u16		pad_bytes;
++	u16		reserved;
++	u8		*val;
++};
++#endif	/* _SMD_H_ */
 -- 
-1.8.1.2
-
-
+1.8.2.2
 
