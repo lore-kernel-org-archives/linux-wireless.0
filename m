@@ -1,136 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38881 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754057Ab3HPLHT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 07:07:19 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mga09.intel.com ([134.134.136.24]:52305 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750875Ab3HTLM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 07:12:27 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>
-Subject: [PATCH 10/20] iwlwifi: mvm: remove unused fields of iwl_rs_rate_info
-Date: Fri, 16 Aug 2013 13:07:00 +0200
-Message-Id: <1376651230-1060-10-git-send-email-johannes@sipsolutions.net> (sfid-20130816_130729_718780_697FBE74)
-In-Reply-To: <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
-References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
- <1376651230-1060-1-git-send-email-johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC 1/2] mac80211: allow APs to send SMPS frames
+Date: Tue, 20 Aug 2013 14:12:18 +0300
+Message-Id: <1376997139-6228-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130820_131231_376323_EDF32474)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+SMPS code checks all over the place that the vif is
+BSS. Remove that constraint and allow SMPS for AP too.
 
-Some more cleanups of unused fields and their initializations.
+Provide dummy implementation that will be used for
+further patches.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c | 37 +++++++++++++++--------------------
- drivers/net/wireless/iwlwifi/mvm/rs.h | 22 ---------------------
- 2 files changed, 16 insertions(+), 43 deletions(-)
+ net/mac80211/cfg.c            |   15 ++++++++++++---
+ net/mac80211/debugfs_netdev.c |   24 +++++++++++++++---------
+ net/mac80211/ht.c             |   38 ++++++++++++++++++++++++++++----------
+ net/mac80211/ieee80211_i.h    |   13 ++++++++++---
+ net/mac80211/iface.c          |    2 ++
+ net/mac80211/mlme.c           |    2 +-
+ 6 files changed, 68 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 199f0cf..a69bd4c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -82,41 +82,36 @@ static const u8 ant_toggle_lookup[] = {
- 	[ANT_ABC] = ANT_ABC,
- };
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 4cc81c3..bd6b38c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2337,8 +2337,14 @@ static int ieee80211_testmode_dump(struct wiphy *wiphy,
+ }
+ #endif
  
--#define IWL_DECLARE_RATE_INFO(r, s, ip, in, rp, rn, pp, np)    \
-+#define IWL_DECLARE_RATE_INFO(r, s, rp, rn)		       \
- 	[IWL_RATE_##r##M_INDEX] = { IWL_RATE_##r##M_PLCP,      \
- 				    IWL_RATE_SISO_##s##M_PLCP, \
- 				    IWL_RATE_MIMO2_##s##M_PLCP,\
- 				    IWL_RATE_MIMO3_##s##M_PLCP,\
--				    IWL_RATE_##r##M_IEEE,      \
--				    IWL_RATE_##ip##M_INDEX,    \
--				    IWL_RATE_##in##M_INDEX,    \
- 				    IWL_RATE_##rp##M_INDEX,    \
--				    IWL_RATE_##rn##M_INDEX,    \
--				    IWL_RATE_##pp##M_INDEX,    \
--				    IWL_RATE_##np##M_INDEX }
-+				    IWL_RATE_##rn##M_INDEX }
+-int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
+-			     enum ieee80211_smps_mode smps_mode)
++int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
++				enum ieee80211_smps_mode smps_mode)
++{
++	return 0;
++}
++
++int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
++				 enum ieee80211_smps_mode smps_mode)
+ {
+ 	const u8 *ap;
+ 	enum ieee80211_smps_mode old_req;
+@@ -2346,6 +2352,9 @@ int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
  
- /*
-  * Parameter order:
-- *   rate, ht rate, prev rate, next rate, prev tgg rate, next tgg rate
-+ *   rate, ht rate, prev rate, next rate
-  *
-  * If there isn't a valid next or previous rate then INV is used which
-  * maps to IWL_RATE_INVALID
-  *
-  */
- static const struct iwl_rs_rate_info iwl_rates[IWL_RATE_COUNT] = {
--	IWL_DECLARE_RATE_INFO(1, INV, INV, 2, INV, 2, INV, 2),    /*  1mbps */
--	IWL_DECLARE_RATE_INFO(2, INV, 1, 5, 1, 5, 1, 5),          /*  2mbps */
--	IWL_DECLARE_RATE_INFO(5, INV, 2, 6, 2, 11, 2, 11),        /*5.5mbps */
--	IWL_DECLARE_RATE_INFO(11, INV, 9, 12, 9, 12, 5, 18),      /* 11mbps */
--	IWL_DECLARE_RATE_INFO(6, 6, 5, 9, 5, 11, 5, 11),        /*  6mbps */
--	IWL_DECLARE_RATE_INFO(9, 6, 6, 11, 6, 11, 5, 11),       /*  9mbps */
--	IWL_DECLARE_RATE_INFO(12, 12, 11, 18, 11, 18, 11, 18),   /* 12mbps */
--	IWL_DECLARE_RATE_INFO(18, 18, 12, 24, 12, 24, 11, 24),   /* 18mbps */
--	IWL_DECLARE_RATE_INFO(24, 24, 18, 36, 18, 36, 18, 36),   /* 24mbps */
--	IWL_DECLARE_RATE_INFO(36, 36, 24, 48, 24, 48, 24, 48),   /* 36mbps */
--	IWL_DECLARE_RATE_INFO(48, 48, 36, 54, 36, 54, 36, 54),   /* 48mbps */
--	IWL_DECLARE_RATE_INFO(54, 54, 48, INV, 48, INV, 48, INV),/* 54mbps */
--	IWL_DECLARE_RATE_INFO(60, 60, 48, INV, 48, INV, 48, INV),/* 60mbps */
-+	IWL_DECLARE_RATE_INFO(1, INV, INV, 2),   /*  1mbps */
-+	IWL_DECLARE_RATE_INFO(2, INV, 1, 5),     /*  2mbps */
-+	IWL_DECLARE_RATE_INFO(5, INV, 2, 11),    /*5.5mbps */
-+	IWL_DECLARE_RATE_INFO(11, INV, 9, 12),   /* 11mbps */
-+	IWL_DECLARE_RATE_INFO(6, 6, 5, 11),      /*  6mbps */
-+	IWL_DECLARE_RATE_INFO(9, 6, 6, 11),      /*  9mbps */
-+	IWL_DECLARE_RATE_INFO(12, 12, 11, 18),   /* 12mbps */
-+	IWL_DECLARE_RATE_INFO(18, 18, 12, 24),   /* 18mbps */
-+	IWL_DECLARE_RATE_INFO(24, 24, 18, 36),   /* 24mbps */
-+	IWL_DECLARE_RATE_INFO(36, 36, 24, 48),   /* 36mbps */
-+	IWL_DECLARE_RATE_INFO(48, 48, 36, 54),   /* 48mbps */
-+	IWL_DECLARE_RATE_INFO(54, 54, 48, INV),  /* 54mbps */
-+	IWL_DECLARE_RATE_INFO(60, 60, 48, INV),  /* 60mbps */
- 	/* FIXME:RS:          ^^    should be INV (legacy) */
- };
+ 	lockdep_assert_held(&sdata->wdev.mtx);
  
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
-index 917a48f..9ac7c0b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
-@@ -39,13 +39,8 @@ struct iwl_rs_rate_info {
- 	u8 plcp_siso;	/* uCode API:  IWL_RATE_SISO_6M_PLCP, etc. */
- 	u8 plcp_mimo2;	/* uCode API:  IWL_RATE_MIMO2_6M_PLCP, etc. */
- 	u8 plcp_mimo3;  /* uCode API:  IWL_RATE_MIMO3_6M_PLCP, etc. */
--	u8 ieee;	/* MAC header:  IWL_RATE_6M_IEEE, etc. */
--	u8 prev_ieee;    /* previous rate in IEEE speeds */
--	u8 next_ieee;    /* next rate in IEEE speeds */
- 	u8 prev_rs;      /* previous rate used in rs algo */
- 	u8 next_rs;      /* next rate used in rs algo */
--	u8 prev_rs_tgg;  /* previous rate used in TGG rs algo */
--	u8 next_rs_tgg;  /* next rate used in TGG rs algo */
- };
++	if (WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION))
++		return -EINVAL;
++
+ 	old_req = sdata->u.mgd.req_smps;
+ 	sdata->u.mgd.req_smps = smps_mode;
  
- #define IWL_RATE_60M_PLCP 3
-@@ -120,23 +115,6 @@ enum {
- 	IWL_RATE_MIMO3_INVM_PLCP = IWL_RATE_SISO_INVM_PLCP,
- };
+@@ -2402,7 +2411,7 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
  
--/* MAC header values for bit rates */
--enum {
--	IWL_RATE_6M_IEEE  = 12,
--	IWL_RATE_9M_IEEE  = 18,
--	IWL_RATE_12M_IEEE = 24,
--	IWL_RATE_18M_IEEE = 36,
--	IWL_RATE_24M_IEEE = 48,
--	IWL_RATE_36M_IEEE = 72,
--	IWL_RATE_48M_IEEE = 96,
--	IWL_RATE_54M_IEEE = 108,
--	IWL_RATE_60M_IEEE = 120,
--	IWL_RATE_1M_IEEE  = 2,
--	IWL_RATE_2M_IEEE  = 4,
--	IWL_RATE_5M_IEEE  = 11,
--	IWL_RATE_11M_IEEE = 22,
--};
+ 	/* no change, but if automatic follow powersave */
+ 	sdata_lock(sdata);
+-	__ieee80211_request_smps(sdata, sdata->u.mgd.req_smps);
++	__ieee80211_request_smps_mgd(sdata, sdata->u.mgd.req_smps);
+ 	sdata_unlock(sdata);
+ 
+ 	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index e601c9f..7609e47 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -224,12 +224,15 @@ static int ieee80211_set_smps(struct ieee80211_sub_if_data *sdata,
+ 	     smps_mode == IEEE80211_SMPS_AUTOMATIC))
+ 		return -EINVAL;
+ 
+-	/* supported only on managed interfaces for now */
+-	if (sdata->vif.type != NL80211_IFTYPE_STATION)
++	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++	    sdata->vif.type != NL80211_IFTYPE_AP)
+ 		return -EOPNOTSUPP;
+ 
+ 	sdata_lock(sdata);
+-	err = __ieee80211_request_smps(sdata, smps_mode);
++	if (sdata->vif.type == NL80211_IFTYPE_STATION)
++		err = __ieee80211_request_smps_mgd(sdata, smps_mode);
++	else
++		err = __ieee80211_request_smps_ap(sdata, smps_mode);
+ 	sdata_unlock(sdata);
+ 
+ 	return err;
+@@ -245,12 +248,15 @@ static const char *smps_modes[IEEE80211_SMPS_NUM_MODES] = {
+ static ssize_t ieee80211_if_fmt_smps(const struct ieee80211_sub_if_data *sdata,
+ 				     char *buf, int buflen)
+ {
+-	if (sdata->vif.type != NL80211_IFTYPE_STATION)
+-		return -EOPNOTSUPP;
 -
- #define IWL_RATES_MASK ((1 << IWL_RATE_COUNT) - 1)
+-	return snprintf(buf, buflen, "request: %s\nused: %s\n",
+-			smps_modes[sdata->u.mgd.req_smps],
+-			smps_modes[sdata->smps_mode]);
++	if (sdata->vif.type == NL80211_IFTYPE_STATION)
++		return snprintf(buf, buflen, "request: %s\nused: %s\n",
++				smps_modes[sdata->u.mgd.req_smps],
++				smps_modes[sdata->smps_mode]);
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		return snprintf(buf, buflen, "request: %s\nused: %s\n",
++				smps_modes[sdata->u.ap.req_smps],
++				smps_modes[sdata->smps_mode]);
++	return -EINVAL;
+ }
  
- #define IWL_INVALID_VALUE    -1
+ static ssize_t ieee80211_if_parse_smps(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 529bf58..2c85b96 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -448,14 +448,25 @@ int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-void ieee80211_request_smps_work(struct work_struct *work)
++void ieee80211_request_smps_mgd_work(struct work_struct *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+ 		container_of(work, struct ieee80211_sub_if_data,
+ 			     u.mgd.request_smps_work);
+ 
+ 	sdata_lock(sdata);
+-	__ieee80211_request_smps(sdata, sdata->u.mgd.driver_smps_mode);
++	__ieee80211_request_smps_mgd(sdata, sdata->u.mgd.driver_smps_mode);
++	sdata_unlock(sdata);
++}
++
++void ieee80211_request_smps_ap_work(struct work_struct *work)
++{
++	struct ieee80211_sub_if_data *sdata =
++		container_of(work, struct ieee80211_sub_if_data,
++			     u.ap.request_smps_work);
++
++	sdata_lock(sdata);
++	__ieee80211_request_smps_ap(sdata, sdata->u.ap.driver_smps_mode);
+ 	sdata_unlock(sdata);
+ }
+ 
+@@ -464,19 +475,26 @@ void ieee80211_request_smps(struct ieee80211_vif *vif,
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
+-	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
++	if (WARN_ON_ONCE(vif->type != NL80211_IFTYPE_STATION &&
++			 vif->type != NL80211_IFTYPE_AP))
+ 		return;
+ 
+ 	if (WARN_ON(smps_mode == IEEE80211_SMPS_OFF))
+ 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
+ 
+-	if (sdata->u.mgd.driver_smps_mode == smps_mode)
+-		return;
+-
+-	sdata->u.mgd.driver_smps_mode = smps_mode;
+-
+-	ieee80211_queue_work(&sdata->local->hw,
+-			     &sdata->u.mgd.request_smps_work);
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		if (sdata->u.mgd.driver_smps_mode == smps_mode)
++			return;
++		sdata->u.mgd.driver_smps_mode = smps_mode;
++		ieee80211_queue_work(&sdata->local->hw,
++				     &sdata->u.mgd.request_smps_work);
++	} else {
++		if (sdata->u.ap.driver_smps_mode == smps_mode)
++			return;
++		sdata->u.ap.driver_smps_mode = smps_mode;
++		ieee80211_queue_work(&sdata->local->hw,
++				     &sdata->u.ap.request_smps_work);
++	}
+ }
+ /* this might change ... don't want non-open drivers using it */
+ EXPORT_SYMBOL_GPL(ieee80211_request_smps);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 47cf62e..7c68eac 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -265,6 +265,10 @@ struct ieee80211_if_ap {
+ 
+ 	struct ps_data ps;
+ 	atomic_t num_mcast_sta; /* number of stations receiving multicast */
++	enum ieee80211_smps_mode req_smps, /* requested smps mode */
++			 driver_smps_mode; /* smps mode request */
++
++	struct work_struct request_smps_work;
+ };
+ 
+ struct ieee80211_if_wds {
+@@ -1439,7 +1443,8 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
+ 			       enum ieee80211_smps_mode smps, const u8 *da,
+ 			       const u8 *bssid);
+-void ieee80211_request_smps_work(struct work_struct *work);
++void ieee80211_request_smps_ap_work(struct work_struct *work);
++void ieee80211_request_smps_mgd_work(struct work_struct *work);
+ 
+ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 				     u16 initiator, u16 reason, bool stop);
+@@ -1634,8 +1639,10 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
+ 			    struct ieee802_11_elems *elems,
+ 			    enum ieee80211_band band, u32 *basic_rates);
+-int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
+-			     enum ieee80211_smps_mode smps_mode);
++int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
++				 enum ieee80211_smps_mode smps_mode);
++int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
++				enum ieee80211_smps_mode smps_mode);
+ void ieee80211_recalc_smps(struct ieee80211_sub_if_data *sdata);
+ 
+ size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index cc0c4be..913ef15 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1301,6 +1301,8 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	case NL80211_IFTYPE_AP:
+ 		skb_queue_head_init(&sdata->u.ap.ps.bc_buf);
+ 		INIT_LIST_HEAD(&sdata->u.ap.vlans);
++		INIT_WORK(&sdata->u.ap.request_smps_work,
++			  ieee80211_request_smps_ap_work);
+ 		sdata->vif.bss_conf.bssid = sdata->vif.addr;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 21bccd8..89e6f28 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3693,7 +3693,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 		  ieee80211_beacon_connection_loss_work);
+ 	INIT_WORK(&ifmgd->csa_connection_drop_work,
+ 		  ieee80211_csa_connection_drop_work);
+-	INIT_WORK(&ifmgd->request_smps_work, ieee80211_request_smps_work);
++	INIT_WORK(&ifmgd->request_smps_work, ieee80211_request_smps_mgd_work);
+ 	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
+ 		    (unsigned long) sdata);
+ 	setup_timer(&ifmgd->bcn_mon_timer, ieee80211_sta_bcn_mon_timer,
 -- 
-1.8.4.rc2
+1.7.10.4
 
