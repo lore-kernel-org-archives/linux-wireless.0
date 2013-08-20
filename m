@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:40757 "EHLO canardo.mork.no"
+Received: from mms1.broadcom.com ([216.31.210.17]:3237 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754346Ab3HWJf6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 05:35:58 -0400
-From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
-To: netdev@vger.kernel.org
-Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [PATCH net-next 07/10] net: hostap: inherit addr_assign_type along with dev_addr
-Date: Fri, 23 Aug 2013 11:35:10 +0200
-Message-Id: <1377250513-3662-8-git-send-email-bjorn@mork.no> (sfid-20130823_113625_441898_BA7FF58F)
-In-Reply-To: <1377250513-3662-1-git-send-email-bjorn@mork.no>
-References: <1377250513-3662-1-git-send-email-bjorn@mork.no>
+	id S1751049Ab3HTOA7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 10:00:59 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Jonas Gorski" <jogo@openwrt.org>
+Subject: [PATCH 02/12] brcmsmac: change pa_gain for bcm4313 iPA
+Date: Tue, 20 Aug 2013 16:00:36 +0200
+Message-ID: <1377007246-9957-3-git-send-email-arend@broadcom.com> (sfid-20130820_160104_266803_975DDB16)
+In-Reply-To: <1377007246-9957-1-git-send-email-arend@broadcom.com>
+References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Jouni Malinen <j@w1.fi>
-Signed-off-by: Bjørn Mork <bjorn@mork.no>
----
- drivers/net/wireless/hostap/hostap_hw.c   |    2 +-
- drivers/net/wireless/hostap/hostap_main.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+The function wlc_lcnphy_load_tx_gain_table() has a target PA
+gain specified for the iPA variant of the bcm4313. This gain
+value is reduced to avoid PA distortion. The if-statement is
+removed because it was rather redundant in the first place.
+Please note that this patch does not provide full iPA support.
 
-diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
-index 6307a4e..c275dc1 100644
---- a/drivers/net/wireless/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/hostap/hostap_hw.c
-@@ -1425,7 +1425,7 @@ static int prism2_hw_init2(struct net_device *dev, int initial)
- 		}
- 		list_for_each(ptr, &local->hostap_interfaces) {
- 			iface = list_entry(ptr, struct hostap_interface, list);
--			memcpy(iface->dev->dev_addr, dev->dev_addr, ETH_ALEN);
-+			eth_hw_addr_inherit(iface->dev, dev);
- 		}
- 	} else if (local->fw_ap)
- 		prism2_check_sta_fw_version(local);
-diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
-index e4f56ad..a1257c9 100644
---- a/drivers/net/wireless/hostap/hostap_main.c
-+++ b/drivers/net/wireless/hostap/hostap_main.c
-@@ -66,7 +66,7 @@ struct net_device * hostap_add_interface(struct local_info *local,
- 	list_add(&iface->list, &local->hostap_interfaces);
+Cc: Jonas Gorski <jogo@openwrt.org>
+Tested-by: David Herrmann <dh.herrmann@gmail.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+index e646ba0..8dc5d0f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -4282,13 +4282,10 @@ wlc_lcnphy_load_tx_gain_table(struct brcms_phy *pi,
+ 	u16 pa_gain;
+ 	u16 gm_gain;
  
- 	mdev = local->dev;
--	memcpy(dev->dev_addr, mdev->dev_addr, ETH_ALEN);
-+	eth_hw_addr_inherit(dev, mdev);
- 	dev->base_addr = mdev->base_addr;
- 	dev->irq = mdev->irq;
- 	dev->mem_start = mdev->mem_start;
+-	if (CHSPEC_IS5G(pi->radio_chanspec))
+-		pa_gain = 0x70;
+-	else
+-		pa_gain = 0x70;
+-
+ 	if (pi->sh->boardflags & BFL_FEM)
+ 		pa_gain = 0x10;
++	else
++		pa_gain = 0x60;
+ 	tab.tbl_id = LCNPHY_TBL_ID_TXPWRCTL;
+ 	tab.tbl_width = 32;
+ 	tab.tbl_len = 1;
 -- 
 1.7.10.4
+
 
