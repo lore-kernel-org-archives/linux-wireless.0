@@ -1,47 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36160 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966588Ab3HHVHc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 17:07:32 -0400
-Date: Thu, 08 Aug 2013 14:12:41 -0700 (PDT)
-Message-Id: <20130808.141241.2150105195238423513.davem@davemloft.net> (sfid-20130808_230752_488050_725625DA)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-08-08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130808172940.GC30925@tuxdriver.com>
-References: <20130808172940.GC30925@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:57103 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751912Ab3HTE4O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 00:56:14 -0400
+Message-ID: <5212F6E8.3090107@openwrt.org> (sfid-20130820_065655_487619_CBA854B8)
+Date: Tue, 20 Aug 2013 06:56:08 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Tom Gundersen <teg@jklm.no>
+CC: stable@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
+References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com> <20130820000336.GA15548@kroah.com> <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com> <20130820002822.GA18023@kroah.com>
+In-Reply-To: <20130820002822.GA18023@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 8 Aug 2013 13:29:40 -0400
+On 2013-08-20 2:28 AM, Greg Kroah-Hartman wrote:
+> On Tue, Aug 20, 2013 at 08:26:11AM +0800, Tom Gundersen wrote:
+>> On Tue, Aug 20, 2013 at 8:03 AM, Greg Kroah-Hartman
+>> <gregkh@linuxfoundation.org> wrote:
+>> > On Tue, Aug 20, 2013 at 07:59:47AM +0800, Tom Gundersen wrote:
+>> >> Hi guys,
+>> >>
+>> >> Starting with 3.10.6 (and still present in .7) I get an oops on
+>> >> connecting to the network.
+>> >>
+>> >> The attached picture shows the oops. In case it does not reach the ML,
+>> >> the top of the call trace reads:
+>> >>
+>> >> brcms_c_compute_rtscts_dur
+>> >> brcms_c_ampdu_finalize
+>> >> ampdu_finalize
+>> >> dma_txfast
+>> >> brcms_c_txfifo
+>> >> brcms_c_sendpkt_mac80211
+>> >> brcms_ops_tx
+>> >> __ieee80211_tx
+>> >>
+>> >> I bisected the problem and the first bad commit is
+>> >>
+>> >> commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
+>> >> Author: Felix Fietkau <nbd@openwrt.org>
+>> >> Date:   Fri Jun 28 21:04:35 2013 +0200
+>> >>
+>> >>     mac80211/minstrel_ht: fix cck rate sampling
+>> >>
+>> >>     commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5 upstream.
+>> >>
+>> >> Reverting it on top of .7 fixes the problem.
+>> >>
+>> >> I had the same (I suppose) problem on mainline some time ago, but I
+>> >> have not bisected it, verified that the problem still occurs there, or
+>> >> checked if reverting the upstream patch fixes it. I'd be happy to do
+>> >> that if it would help though.
+>> >>
+>> >> Let me know if you need any more information.
+>> >
+>> > Do you have this same problem with 3.11-rc6 as well?
+>> 
+>> Yes, I just confirmed. I also confirmed that reverting the mainline
+>> commit on top of -rc6 fixes the problem.
+> 
+> Great, thanks.
+> 
+> Felix and Johannes, any chance we can get this reverted in Linus tree
+> soon, and push that revert back to the 3.10 stable tree as well?
+I'd like to avoid a revert, since that will simply replace one set of
+issues with another. Let's limit the use of the feature that brcmsmac
+can't handle to drivers that are known to work with it. Tom, Please
+test this patch to see if it fixes your issue.
 
-> This is a batch of fixes intended for the 3.11 queue...
-> 
-> Regarding the mac80211 (and related) bits, Johannes says:
-> 
-> "I have a fix from Chris for an infinite loop along with fixes from
-> myself to prevent it entering the loop to start with (continue using
-> disabled channels, many thanks to Chris for his debug/test help) and a
-> workaround for broken APs that advertise a bad HT primary channel in
-> their beacons. Additionally, a fix for another attrbuf race in mac80211
-> and a fix to clean up properly while P2P GO interfaces go down."
-> 
-> Along with that...
-> 
-> Solomon Peachy corrects a range check in cw1200 that would lead to
-> a BUG_ON when starting AP mode.
-> 
-> Stanislaw Gruszka provides an iwl4965 patch to power-up the device
-> earlier (avoiding microcode errors), and another iwl4965 fix that
-> resets the firmware after turning rfkill off (resolving a bug in the
-> Red Hat Bugzilla).
-> 
-> Please let me know if there are problems!
+- Felix
+---
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1501,6 +1501,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_RC_TABLE			= 1<<24,
+ 	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
+ 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
++	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
+ };
+ 
+ /**
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -828,6 +828,9 @@ minstrel_ht_update_cck(struct minstrel_p
+ 	if (sband->band != IEEE80211_BAND_2GHZ)
+ 		return;
+ 
++	if (!(mp->hw->flags & IEEE80211_HW_SUPPORTS_HT_CCK_RATES))
++		return;
++
+ 	mi->cck_supported = 0;
+ 	mi->cck_supported_short = 0;
+ 	for (i = 0; i < 4; i++) {
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -807,7 +807,8 @@ void ath9k_set_hw_capab(struct ath_softc
+ 		IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		IEEE80211_HW_SPECTRUM_MGMT |
+ 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+-		IEEE80211_HW_SUPPORTS_RC_TABLE;
++		IEEE80211_HW_SUPPORTS_RC_TABLE |
++		IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
+ 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+ 		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1878,7 +1878,8 @@ void *carl9170_alloc(size_t priv_size)
+ 		     IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		     IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC |
+ 		     IEEE80211_HW_SUPPORTS_RC_TABLE |
+-		     IEEE80211_HW_SIGNAL_DBM;
++		     IEEE80211_HW_SIGNAL_DBM |
++		     IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
+ 
+ 	if (!modparam_noht) {
+ 		/*
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6327,7 +6327,8 @@ static int rt2800_probe_hw_mode(struct r
+ 	    IEEE80211_HW_SUPPORTS_PS |
+ 	    IEEE80211_HW_PS_NULLFUNC_STACK |
+ 	    IEEE80211_HW_AMPDU_AGGREGATION |
+-	    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
++	    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
++	    IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
+ 
+ 	/*
+ 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
 
-Pulled, thanks John.
