@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:40826 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753088Ab3HFTOl (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:47584 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098Ab3HTRmA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 15:14:41 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1375816128.8219.28.camel@jlt4.sipsolutions.net>
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
-	<CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
-	<1375800617.8219.23.camel@jlt4.sipsolutions.net>
-	<CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
-	<1375801059.8219.24.camel@jlt4.sipsolutions.net>
-	<CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
-	<CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
-	<1375802297.8219.25.camel@jlt4.sipsolutions.net>
-	<CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com>
-	<CA+icZUVuOqdZUGy2ALAF1CehOqYdr7rtEsXhqNvDtYEns2BuRQ@mail.gmail.com>
-	<1375802993.8219.26.camel@jlt4.sipsolutions.net>
-	<CA+icZUW6P9Z_7z+o+z=qBWSFzyU8tgtY0ou+rmLcEzWbn94OXA@mail.gmail.com>
-	<CA+icZUW7LVzg7sM3O-w5oQpeaj=CT6MS6Q7cRZ1qK0h-Z4wZuw@mail.gmail.com>
-	<1375804998.8219.27.camel@jlt4.sipsolutions.net>
-	<CA+icZUVRgVfXUdJ1xoaN=nciqZDhV-f6EbH+6DS7HAh+My65oQ@mail.gmail.com>
-	<CA+icZUUmQbovkwXcdEp6eu=WJkiuiyO8nDVwCHFUuPDbJqU7Kg@mail.gmail.com>
-	<CA+icZUV++2+OG=P1SVbNrpHPLyzrfFX0eu8NHrd0nPjkPDUOtQ@mail.gmail.com>
-	<CA+icZUXpZaHu-FjR6FGnbkG0XEkiukEgYYbDmrSjdqNz4rWCNg@mail.gmail.com>
-	<1375816128.8219.28.camel@jlt4.sipsolutions.net>
-Date: Tue, 6 Aug 2013 21:14:39 +0200
-Message-ID: <CA+icZUXaTYVc_iv3hny6Je9mVdX8KCVpFSNBeukS+Fh-347Wvw@mail.gmail.com> (sfid-20130806_211448_848613_F00BC3C3)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	wireless <linux-wireless@vger.kernel.org>, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 Aug 2013 13:42:00 -0400
+Received: by mail-la0-f46.google.com with SMTP id eh20so549996lab.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:59 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH 16/16] wcn36xx: Add wcn36xx to ath Makefile and Kconfig
+Date: Tue, 20 Aug 2013 19:41:19 +0200
+Message-Id: <1377020479-16935-17-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_200909_456210_1A77394A)
+In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 9:08 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-08-06 at 20:35 +0200, Sedat Dilek wrote:
->
->> Attached is a diff comparing all new commits in next-20130805.
->> If one of the commits smells bad to you, please let me know.
->
-> Out of that list, only the af_packet changes would seem to have any
-> impact on wireless at all.
->
+Now wcn36xx is part of ath family.
 
-git-bisecting... 2 steps to go...
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/Kconfig  | 1 +
+ drivers/net/wireless/ath/Makefile | 1 +
+ 2 files changed, 2 insertions(+)
 
-This one is bad... "af_packet: simplify VLAN frame check in packet_snd"
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index 1abf1d4..ba81d62 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -32,5 +32,6 @@ source "drivers/net/wireless/ath/ath6kl/Kconfig"
+ source "drivers/net/wireless/ath/ar5523/Kconfig"
+ source "drivers/net/wireless/ath/wil6210/Kconfig"
+ source "drivers/net/wireless/ath/ath10k/Kconfig"
++source "drivers/net/wireless/ath/wcn36xx/Kconfig"
+ 
+ endif
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index fb05cfd..363b056 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -5,6 +5,7 @@ obj-$(CONFIG_ATH6KL)		+= ath6kl/
+ obj-$(CONFIG_AR5523)		+= ar5523/
+ obj-$(CONFIG_WIL6210)		+= wil6210/
+ obj-$(CONFIG_ATH10K)		+= ath10k/
++obj-$(CONFIG_WCN36XX)		+= wcn36xx/
+ 
+ obj-$(CONFIG_ATH_COMMON)	+= ath.o
+ 
+-- 
+1.8.2.2
 
-http://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/commit/?id=c483e02614551e44ced3fe6eedda8e36d3277ccc
-
-- Sedat -
