@@ -1,53 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:53787 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756045Ab3HGI3U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 04:29:20 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20130807155443.a0355d0429f3e0b4ccbed261@canb.auug.org.au>
-References: <20130807155443.a0355d0429f3e0b4ccbed261@canb.auug.org.au>
-Date: Wed, 7 Aug 2013 10:29:18 +0200
-Message-ID: <CA+icZUW+uxCsvPYcY2RRvMxRVzaBLuH9u8M4ziQNWXv=nk4b2w@mail.gmail.com> (sfid-20130807_102948_778279_333E65F0)
-Subject: Re: linux-next: Tree for Aug 7
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, David Miller <davem@davemloft.net>,
-	Phil Sutter <phil@nwl.cc>,
-	Hannes Frederic Sowa <hannes@stressinduktion.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:60925 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751339Ab3HTRn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 13:43:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, teg@jklm.no
+Subject: [PATCH 3.11] mac80211: add a flag to indicate CCK support for HT clients
+Date: Tue, 20 Aug 2013 19:43:54 +0200
+Message-Id: <1377020634-27064-1-git-send-email-nbd@openwrt.org> (sfid-20130820_200909_246669_FB6B2520)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 7, 2013 at 7:54 AM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> Hi all,
->
-> Changes since 20130806:
->
-> The ext4 tree lost its build failure.
->
-> The mvebu tree gained a build failure so I used the version from
-> next-20130806.
->
-> The akpm tree gained conflicts against the ext4 tree.
->
-> ----------------------------------------------------------------------------
->
+brcm80211 cannot handle sending frames with CCK rates as part of an
+A-MPDU session. Other drivers may have issues too. Set the flag in all
+drivers that have been tested with CCK rates.
 
-[ CC some netdev and wireless folks ]
+This fixes a reported brcmsmac regression introduced in
+commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
+"mac80211/minstrel_ht: fix cck rate sampling"
 
-Yesterday, I discovered an issue with net-next.
-The patch in [1] fixed the problems in my network/wifi environment.
-Hannes confirmed that virtio_net are solved, too.
-Today's next-20130807 still needs it for affected people.
+Cc: stable@vger.kernel.org # 3.10
+Reported-by: Tom Gundersen <teg@jklm.no>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/init.c    | 3 ++-
+ drivers/net/wireless/ath/carl9170/main.c | 3 ++-
+ drivers/net/wireless/rt2x00/rt2800lib.c  | 3 ++-
+ include/net/mac80211.h                   | 1 +
+ net/mac80211/rc80211_minstrel_ht.c       | 3 +++
+ 5 files changed, 10 insertions(+), 3 deletions(-)
 
-- Sedat -
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 16f8b20..026a2a0 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -802,7 +802,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		IEEE80211_HW_SPECTRUM_MGMT |
+ 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+-		IEEE80211_HW_SUPPORTS_RC_TABLE;
++		IEEE80211_HW_SUPPORTS_RC_TABLE |
++		IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
+ 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+ 		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 4a33c6e..349fa22 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1860,7 +1860,8 @@ void *carl9170_alloc(size_t priv_size)
+ 		     IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		     IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC |
+ 		     IEEE80211_HW_SUPPORTS_RC_TABLE |
+-		     IEEE80211_HW_SIGNAL_DBM;
++		     IEEE80211_HW_SIGNAL_DBM |
++		     IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
+ 
+ 	if (!modparam_noht) {
+ 		/*
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 1f80ea5..1b41c8e 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6133,7 +6133,8 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	    IEEE80211_HW_SUPPORTS_PS |
+ 	    IEEE80211_HW_PS_NULLFUNC_STACK |
+ 	    IEEE80211_HW_AMPDU_AGGREGATION |
+-	    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
++	    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
++	    IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
+ 
+ 	/*
+ 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5b7a3da..551ba6a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1499,6 +1499,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_RC_TABLE			= 1<<24,
+ 	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
+ 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
++	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
+ };
+ 
+ /**
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index f5aed96..f3bbea1 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -828,6 +828,9 @@ minstrel_ht_update_cck(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	if (sband->band != IEEE80211_BAND_2GHZ)
+ 		return;
+ 
++	if (!(mp->hw->flags & IEEE80211_HW_SUPPORTS_HT_CCK_RATES))
++		return;
++
+ 	mi->cck_supported = 0;
+ 	mi->cck_supported_short = 0;
+ 	for (i = 0; i < 4; i++) {
+-- 
+1.8.0.2
 
-[1] http://marc.info/?l=linux-netdev&m=137582524017840&w=2
-[2] http://marc.info/?l=linux-netdev&m=137583048219416&w=2
-[3] http://marc.info/?t=137579712800008&r=1&w=2
