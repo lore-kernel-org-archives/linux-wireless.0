@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:53867 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479Ab3HAIEN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 04:04:13 -0400
-Received: by mail-wi0-f179.google.com with SMTP id hr7so1512085wib.12
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Aug 2013 01:04:11 -0700 (PDT)
-Date: Thu, 1 Aug 2013 09:56:49 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH v2] mac80211: report some VHT radiotap infos for tx status
-Message-ID: <20130801075649.GA30476@magnum.frso.rivierawaves.com> (sfid-20130801_100421_250651_7B8A29E9)
-References: <1374918424-1305-1-git-send-email-karl.beldan@gmail.com>
- <1375342554.8608.4.camel@jlt4.sipsolutions.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:3238 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751065Ab3HTOA7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 10:00:59 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 08/12] brcmsmac: avoid calling set_txpwr_by_index()
+ twice
+Date: Tue, 20 Aug 2013 16:00:42 +0200
+Message-ID: <1377007246-9957-9-git-send-email-arend@broadcom.com> (sfid-20130820_160105_921257_C0BD656F)
+In-Reply-To: <1377007246-9957-1-git-send-email-arend@broadcom.com>
+References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1375342554.8608.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 01, 2013 at 09:35:54AM +0200, Johannes Berg wrote:
-> On Sat, 2013-07-27 at 11:47 +0200, Karl Beldan wrote:
-> 
-> > +		/* required alignment from rthdr */
-> > +		pos = (u8 *)rthdr + ALIGN(pos - (u8 *)rthdr, 2);
-> 
-> This is bad, it potentially leaks a byte of kernel data, please
-> explicitly clear the padding, like
-> 
-> if ((pos - (u8 *)rthdr) & 1)
->   *pos++ = 0;
-> 
-I don't see what's wrong.
-The whole radiotap space is already zeroed, as for the 'leaks' I don't
-see how it could leak either.
-Though, if you prefer, I can replace
-	pos = (u8 *)rthdr + ALIGN(pos - (u8 *)rthdr, 2);
-with:
-	if ((pos - (u8 *)rthdr) & 1)
-		pos++;
+For lcnphy revision 1 or when hardware supports i/q calibration the
+function wlc_lcnphy_set_txpwr_by_index() was called twice.
 
+Tested-by: David Herrmann <dh.herrmann@gmail.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+index e08b73a..caced82 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -3897,7 +3897,6 @@ static void wlc_lcnphy_txpwrtbl_iqlo_cal(struct brcms_phy *pi)
+ 	target_gains.pad_gain = 21;
+ 	target_gains.dac_gain = 0;
+ 	wlc_lcnphy_set_tx_gain(pi, &target_gains);
+-	wlc_lcnphy_set_tx_pwr_by_index(pi, 16);
+ 
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 1) || pi_lcn->lcnphy_hw_iqcal_en) {
+ 
+@@ -3908,6 +3907,7 @@ static void wlc_lcnphy_txpwrtbl_iqlo_cal(struct brcms_phy *pi)
+ 					lcnphy_recal ? LCNPHY_CAL_RECAL :
+ 					LCNPHY_CAL_FULL), false);
+ 	} else {
++		wlc_lcnphy_set_tx_pwr_by_index(pi, 16);
+ 		wlc_lcnphy_tx_iqlo_soft_cal_full(pi);
+ 	}
+ 
 -- 
-Karl
+1.7.10.4
+
+
