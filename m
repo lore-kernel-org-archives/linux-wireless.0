@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58535 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751867Ab3HUJft (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:41526 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751178Ab3HTUWX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 05:35:49 -0400
-Message-ID: <1377077745.15268.8.camel@jlt4.sipsolutions.net> (sfid-20130821_113552_219103_8470D665)
-Subject: Re: [PATCHv3 09/18] mac80211: change IBSS channel state to chandef
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Wed, 21 Aug 2013 11:35:45 +0200
-In-Reply-To: <1368702045-27598-10-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130516_130223_680292_101CF04D)
-References: <1368702045-27598-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1368702045-27598-10-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 (sfid-20130516_130223_680292_101CF04D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 20 Aug 2013 16:22:23 -0400
+MIME-Version: 1.0
+In-Reply-To: <20130806134218.GB525@kroah.com>
+References: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
+	<20130802090234.GA20470@kroah.com>
+	<1375792779.8219.16.camel@jlt4.sipsolutions.net>
+	<20130806134218.GB525@kroah.com>
+Date: Tue, 20 Aug 2013 23:22:21 +0300
+Message-ID: <CANUX_P0BxGr9coDjOmHJm+8kVJVsM9XiTDTVsb_kysuRmcmpNw@mail.gmail.com> (sfid-20130820_222227_803270_2556204D)
+Subject: Re: [PATCH 3.10 0/3] Enable 7000 device family on 3.10
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Greg KH <greg@kroah.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-16 at 13:00 +0200, Simon Wunderlich wrote:
+On Tue, Aug 6, 2013 at 4:42 PM, Greg KH <greg@kroah.com> wrote:
+> On Tue, Aug 06, 2013 at 02:39:39PM +0200, Johannes Berg wrote:
+>> [Emmanuel is on vacation, I'll cover for him]
+>>
+>> On Fri, 2013-08-02 at 17:02 +0800, Greg KH wrote:
+>> > On Mon, Jul 15, 2013 at 02:44:57PM +0300, Emmanuel Grumbach wrote:
+>> > > This small patch series enables 7260 and 3160 devices on 3.10
+>> > > kernel. Three patches are already in linux.git (3.11-rc1).
+>> > > One patch is 3.10 specific and disables configuration that is not
+>> > > supported in 3.10.
+>> >
+>> > I need the git commit id of these patches in Linus's tree before I can
+>> > apply them.  Please resend them with that information.
+>>
+>> The second and third patch does have it, and the first patch is only
+>> relevant for 3.10 since 3.11 will have more device types enabled, we
+>> just didn't get all the code in. This seems to be described in the
+>> commit log, do you want more details?
+>
+> Yes, please resend them with those details.  For me to take a patch that
+> is not in Linus's tree is a big deal, I need a whole lot of
+> justification for it.
+>
 
-> -	cfg80211_chandef_create(&chandef, chan, ifibss->channel_type);
-> +	chandef = ifibss->chandef;
+Just got back. Sorry for the delay.
+I guess I will just drop that patch that is not in Linus's tree.
+This patch disables a feature that is not likely to be used but we
+*know* it is buggy.
+So people who want more than just associating to their router will see
+a bug in 3.10.
+I guess we can leave with that since I was suggesting to disable the
+feature anyway.
 
-This part is obviously wrong - it ignores the given channel. Please post
-a fix as soon as you can, with the code as it is now we never join an
-existing IBSS correctly but always use the channel the user gave.
-
-johannes
-
+So - do you want to resend, or you can apply the 2 patches I sent as is?
