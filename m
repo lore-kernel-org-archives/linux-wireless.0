@@ -1,140 +1,298 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f181.google.com ([209.85.128.181]:61770 "EHLO
-	mail-ve0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410Ab3HUIgW (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:34485 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751918Ab3HTRlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 04:36:22 -0400
-Received: by mail-ve0-f181.google.com with SMTP id jz10so84755veb.26
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Aug 2013 01:36:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1377032397.13829.40.camel@jlt4.sipsolutions.net>
-References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
-	<1377020479-16935-2-git-send-email-k.eugene.e@gmail.com>
-	<1377032397.13829.40.camel@jlt4.sipsolutions.net>
-Date: Wed, 21 Aug 2013 10:36:21 +0200
-Message-ID: <CAFSJ42ZH3ZJ+-+6wUbqQvaM8D2t6oWqyqkGiGRRx4o2NA60EjA@mail.gmail.com> (sfid-20130821_103630_316599_5548F88F)
-Subject: Re: [PATCH 01/16] wcn36xx: Add main.c
+	Tue, 20 Aug 2013 13:41:52 -0400
+Received: by mail-lb0-f171.google.com with SMTP id t13so724012lbd.16
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:51 -0700 (PDT)
 From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH 11/16] wcn36xx: Add txrx.c
+Date: Tue, 20 Aug 2013 19:41:14 +0200
+Message-Id: <1377020479-16935-12-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_194157_436842_7EF6BDFF)
+In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Just a cursory review ...
->
+Adding txrx.c
 
-Any review is very welcome;)
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/txrx.c | 261 ++++++++++++++++++++++++++++++++
+ 1 file changed, 261 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.c
 
->
->> +             .cap = IEEE80211_HT_CAP_GRN_FLD
->> +                     | IEEE80211_HT_CAP_SGI_20
->
-> wouldn't that usually be written as
->
-> GRN_FLD |
-> SGI_20 |
-> ...
->
-> (multiple similar places)
-
-Will be fixed in the next round.
-
-
->> +#ifdef CONFIG_PM
->> +
->> +static const struct wiphy_wowlan_support wowlan_support = {
->> +     .flags = WIPHY_WOWLAN_ANY,
->> +     .n_patterns = 0,
->
-> that n_patterns is pretty useless.
->
-
-Will be removed in the next patch set.
-
->> +#define WCN36XX_SUPPORTED_FILTERS (0)
->> +
->> +static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
->> +                                    unsigned int changed,
->> +                                    unsigned int *total, u64 multicast)
->> +{
->> +     wcn36xx_dbg(WCN36XX_DBG_MAC, "mac configure filter");
->> +
->> +     changed &= WCN36XX_SUPPORTED_FILTERS;
->
-> That's pointless
-
-Yes, it is better to remove wcn36xx_configure_filter completely for now.
-
->> +             if (IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags) {
->> +                     sta_priv->is_data_encrypted = true;
->> +                     /* Reconfigure bss with encrypt_type */
->> +                     if (NL80211_IFTYPE_STATION == vif->type)
->> +                             wcn36xx_smd_config_bss(wcn,
->> +                                                    vif,
->> +                                                    sta,
->> +                                                    sta->addr,
->> +                                                    true);
->
-> It seems to me this should not be here but you should have mac80211 set
-> something in e.g. bss_conf that indicates encryption?
->
-
-It's a good idea and I tried to find anything encryption related in
-bss_conf but without luck. I do not like this line myself so I would
-really appreciate if you can point where exactly in
-bss_conf/bss_info_changed information about encryption is located.
-
->> +     /* Not supported so far*/
->> +     case IEEE80211_AMPDU_TX_STOP_CONT:
->> +             ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
->> +             break;
->> +     case IEEE80211_AMPDU_TX_STOP_FLUSH:
->> +     case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
->> +             break;
->
-> You can't just "not support" them - you have to at least stop the
-> aggregation session, see the commit that introduced this.
->
-
-Good point. Will fix this in the next round.
-
->> +     static const u32 cipher_suites[] = {
->> +             WLAN_CIPHER_SUITE_TKIP,
->> +             WLAN_CIPHER_SUITE_CCMP,
->> +     };
->
-> You actually don't want to support WEP, not even in software? Otherwise
-> just leave this out and mac80211 will add it.
-
-WEP is supported by HW but wcn36xx does not configure it yet. Is that
-ok to add HW WEP encryption in nearest future after wcn36xx is pushed
-to upstream?
-
->> +     wcn->hw->wiphy->iface_combinations = &if_comb;
->> +     wcn->hw->wiphy->n_iface_combinations = 1;
->
-> Your code with "wcn->current_vif = " etc. *really* doesn't look like you
-> support combinations. Are you positive this is OK?
-
-So far wcn36xx supports only one interface at once. But in the nearest
-future it will definitely support more than one. So how about keeping
-this for future?;)
-
->> +     wcn->hw->wiphy->max_scan_ssids = 1;
->
-> Really? You don't even have hardware scan, so why?
->
-
-Good catch. wcn36xx used to have hw scan but now it is moved to sw
-scan. Will remove this completely.
-
-> johannes
->
-
-
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+new file mode 100644
+index 0000000..54fb86e
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -0,0 +1,261 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "txrx.h"
++
++static inline int get_rssi0(struct wcn36xx_rx_bd *bd)
++{
++	return 100 - ((bd->phy_stat0 >> 24) & 0xff);
++}
++
++int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
++{
++	struct ieee80211_rx_status status;
++	struct ieee80211_hdr *hdr;
++	struct wcn36xx_rx_bd *bd;
++	u16 fc, sn;
++
++	/*
++	 * All fields must be 0, otherwise it can lead to
++	 * unexpected consequences.
++	 */
++	memset(&status, 0, sizeof(status));
++
++	bd = (struct wcn36xx_rx_bd *)skb->data;
++	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
++	wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP,
++			 "BD   <<< ", (char *)bd,
++			 sizeof(struct wcn36xx_rx_bd));
++
++	skb_put(skb, bd->pdu.mpdu_header_off + bd->pdu.mpdu_len);
++	skb_pull(skb, bd->pdu.mpdu_header_off);
++
++	status.mactime = 10;
++	status.freq = WCN36XX_CENTER_FREQ(wcn);
++	status.band = WCN36XX_BAND(wcn);
++	status.signal = -get_rssi0(bd);
++	status.antenna = 1;
++	status.rate_idx = 1;
++	status.flag = 0;
++	status.rx_flags = 0;
++	status.flag |= RX_FLAG_IV_STRIPPED |
++		       RX_FLAG_MMIC_STRIPPED |
++		       RX_FLAG_DECRYPTED;
++
++	wcn36xx_dbg(WCN36XX_DBG_RX, "status.flags=%x status->vendor_radiotap_len=%x",
++		    status.flag,  status.vendor_radiotap_len);
++
++	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
++
++	hdr = (struct ieee80211_hdr *) skb->data;
++	fc = __le16_to_cpu(hdr->frame_control);
++	sn = IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl));
++
++	if (ieee80211_is_beacon(hdr->frame_control)) {
++		wcn36xx_dbg(WCN36XX_DBG_BEACON, "beacon skb %p len %d fc %04x sn %d",
++			    skb, skb->len, fc, sn);
++		wcn36xx_dbg_dump(WCN36XX_DBG_BEACON_DUMP, "SKB <<< ",
++				 (char *)skb->data, skb->len);
++	} else {
++		wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %04x sn %d",
++			    skb, skb->len, fc, sn);
++		wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP, "SKB <<< ",
++				 (char *)skb->data, skb->len);
++	}
++
++	ieee80211_rx_irqsafe(wcn->hw, skb);
++
++	return 0;
++}
++
++static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
++			       u32 mpdu_header_len,
++			       u32 len,
++			       u16 tid)
++{
++	bd->pdu.mpdu_header_len = mpdu_header_len;
++	bd->pdu.mpdu_header_off = sizeof(*bd);
++	bd->pdu.mpdu_data_off = bd->pdu.mpdu_header_len +
++		bd->pdu.mpdu_header_off;
++	bd->pdu.mpdu_len = len;
++	bd->pdu.tid = tid;
++}
++
++static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
++				struct wcn36xx *wcn,
++				struct wcn36xx_sta *sta_priv,
++				struct ieee80211_hdr *hdr,
++				bool bcast)
++{
++	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
++						 struct ieee80211_vif,
++						 drv_priv);
++	bd->bd_rate = WCN36XX_BD_RATE_DATA;
++	bd->dpu_sign = wcn->current_vif->ucast_dpu_signature;
++
++	/*
++	 * For not unicast frames mac80211 will not set sta pointer so use
++	 * self_sta_index instead.
++	 */
++	if (sta_priv) {
++		if (vif->type == NL80211_IFTYPE_STATION) {
++			bd->sta_index = sta_priv->bss_sta_index;
++			bd->dpu_desc_idx = sta_priv->bss_dpu_desc_index;
++		} else if (vif->type == NL80211_IFTYPE_AP ||
++			   vif->type == NL80211_IFTYPE_ADHOC ||
++			   vif->type == NL80211_IFTYPE_MESH_POINT) {
++			bd->sta_index = sta_priv->sta_index;
++			bd->dpu_desc_idx = sta_priv->dpu_desc_index;
++		}
++	} else {
++		bd->sta_index = wcn->current_vif->self_sta_index;
++		bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
++	}
++
++	if (ieee80211_is_nullfunc(hdr->frame_control) ||
++	   (sta_priv && !sta_priv->is_data_encrypted))
++		bd->dpu_ne = 1;
++
++	if (bcast) {
++		bd->ub = 1;
++		bd->ack_policy = 1;
++	}
++}
++
++static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
++				struct wcn36xx *wcn,
++				struct ieee80211_hdr *hdr,
++				bool bcast)
++{
++	bd->sta_index = wcn->current_vif->self_sta_index;
++	bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
++	bd->dpu_ne = 1;
++
++	/* default rate for unicast */
++	if (ieee80211_is_mgmt(hdr->frame_control))
++		bd->bd_rate = (WCN36XX_BAND(wcn) == IEEE80211_BAND_5GHZ) ?
++			WCN36XX_BD_RATE_CTRL :
++			WCN36XX_BD_RATE_MGMT;
++	else if (ieee80211_is_ctl(hdr->frame_control))
++		bd->bd_rate = WCN36XX_BD_RATE_CTRL;
++	else
++		wcn36xx_warn("frame control type unknown");
++
++	/*
++	 * In joining state trick hardware that probe is sent as
++	 * unicast even if address is broadcast.
++	 */
++	if (wcn->is_joining &&
++	    ieee80211_is_probe_req(hdr->frame_control))
++		bcast = false;
++
++	if (bcast) {
++		/* broadcast */
++		bd->ub = 1;
++		/* No ack needed not unicast */
++		bd->ack_policy = 1;
++		bd->queue_id = WCN36XX_TX_B_WQ_ID;
++	} else
++		bd->queue_id = WCN36XX_TX_U_WQ_ID;
++}
++
++int wcn36xx_start_tx(struct wcn36xx *wcn,
++		     struct wcn36xx_sta *sta_priv,
++		     struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	unsigned long flags;
++	bool is_low = ieee80211_is_data(hdr->frame_control);
++	bool bcast = is_broadcast_ether_addr(hdr->addr1) ||
++		is_multicast_ether_addr(hdr->addr1);
++	struct wcn36xx_tx_bd *bd = wcn36xx_dxe_get_next_bd(wcn, is_low);
++
++	if (!bd) {
++		/*
++		 * TX DXE are used in pairs. One for the BD and one for the
++		 * actual frame. The BD DXE's has a preallocated buffer while
++		 * the skb ones does not. If this isn't true something is really
++		 * wierd. TODO: Recover from this situation
++		 */
++
++		wcn36xx_error("bd address may not be NULL for BD DXE");
++		return -EINVAL;
++	}
++
++	memset(bd, 0, sizeof(*bd));
++
++	wcn36xx_dbg(WCN36XX_DBG_TX,
++		    "tx skb %p len %d fc %04x sn %d %s %s",
++		    skb, skb->len, __le16_to_cpu(hdr->frame_control),
++		    IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl)),
++		    is_low ? "low" : "high", bcast ? "bcast" : "ucast");
++
++	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
++
++	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
++
++	bd->tx_comp = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
++	if (bd->tx_comp) {
++		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested");
++		spin_lock_irqsave(&wcn->dxe_lock, flags);
++		if (wcn->tx_ack_skb) {
++			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
++			wcn36xx_warn("tx_ack_skb already set");
++			ieee80211_free_txskb(wcn->hw, skb);
++			return -EINVAL;
++		}
++
++		wcn->tx_ack_skb = skb;
++		spin_unlock_irqrestore(&wcn->dxe_lock, flags);
++
++		/* Only one at a time is supported by fw. Stop the TX queues
++		 * until the ack status gets back.
++		 *
++		 * TODO: Add watchdog in case FW does not answer
++		 */
++		ieee80211_stop_queues(wcn->hw);
++	}
++
++	/* Data frames served first*/
++	if (is_low) {
++		/*
++		 * Sometimes in AP mode mac80211 is trying to send data
++		 * frame to nobody. Why?
++		 */
++		if (!sta_priv)
++			wcn36xx_warn("Sending data packet to nobody");
++		wcn36xx_set_tx_data(bd, wcn, sta_priv, hdr, bcast);
++		wcn36xx_set_tx_pdu(bd,
++			   ieee80211_is_data_qos(hdr->frame_control) ?
++			   sizeof(struct ieee80211_qos_hdr) :
++			   sizeof(struct ieee80211_hdr_3addr),
++			   skb->len, sta_priv ? sta_priv->tid : 0);
++	} else {
++		/* MGMT and CTRL frames are handeld here*/
++		wcn36xx_set_tx_mgmt(bd, wcn, hdr, bcast);
++		wcn36xx_set_tx_pdu(bd,
++			   ieee80211_is_data_qos(hdr->frame_control) ?
++			   sizeof(struct ieee80211_qos_hdr) :
++			   sizeof(struct ieee80211_hdr_3addr),
++			   skb->len, WCN36XX_TID);
++	}
++
++	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
++	bd->tx_bd_sign = 0xbdbdbdbd;
++
++	return wcn36xx_dxe_tx_frame(wcn, skb, is_low);
++}
 -- 
-Best regards,
-Eugene
+1.8.2.2
+
