@@ -1,63 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:52229 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755315Ab3HJGTx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 02:19:53 -0400
-Received: from [192.168.2.102] ([93.218.87.66]) by mail.gmx.com (mrgmx101)
- with ESMTPSA (Nemesis) id 0Lfolq-1Vx3Tp27uU-00pMNl for
- <linux-wireless@vger.kernel.org>; Sat, 10 Aug 2013 08:19:51 +0200
-Message-ID: <5205DB86.2050905@rempel-privat.de> (sfid-20130810_081958_180431_B5F20FF1)
-Date: Sat, 10 Aug 2013 08:19:50 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Alan Stern <stern@rowland.harvard.edu>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: FUSB200 xhci issue
-References: <Pine.LNX.4.44L0.1308091529080.1405-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1308091529080.1405-100000@iolanthe.rowland.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail-la0-f51.google.com ([209.85.215.51]:41565 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781Ab3HTRli (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 13:41:38 -0400
+Received: by mail-la0-f51.google.com with SMTP id es20so485147lab.38
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:35 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH 02/16] wcn36xx: Add debug.c
+Date: Tue, 20 Aug 2013 19:41:05 +0200
+Message-Id: <1377020479-16935-3-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_194140_584682_FB0948ED)
+In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 09.08.2013 21:32, schrieb Alan Stern:
-> On Fri, 9 Aug 2013, Oleksij Rempel wrote:
->
->>> Is there any way to prevent the device from losing its firmware during
->>> a USB reset or suspend?
->>
->> For suspend - yes. It is possible to ignore suspend command or put the
->> SoC in low power mode - but is it probably not so easy to bring it back.
->> I would need to read more code and create some doc as side effect untill
->> i understand how it works.
->> I'm not sure how about reset command. I would need more testing and some
->> ones help. If i see it correctly, usb reset should affect only usb core
->> and usb pll.
->>
->> How can i trigger usb reset?
->
-> http://marc.info/?l=linux-usb&m=121459435621262&w=2
->
-> Give the program the pathname for the USB device node.  For example:
->
-> 	usbreset /dev/bus/usb/001/004
+adding debug.c file.
 
-Great! thx!
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/debug.c | 164 +++++++++++++++++++++++++++++++
+ 1 file changed, 164 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.c
 
-usb reset do not affect behaviour of firmware. At least after i remove 
-all attempts to reboot FW from driver.
-If adapter will got reset signal, FW will be notified about it. Then FW 
-will remove reset flag and will just continue to work. After usb reset, 
-lsusb show correct, update information - EP3 and EP4 was updated from 
-INT to BULK.
-
-I assume, no i need to add to the driver some kind of firmware check. 
-What is the proper way to do it?
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/debug.c b/drivers/net/wireless/ath/wcn36xx/debug.c
+new file mode 100644
+index 0000000..9fa9957
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/debug.c
+@@ -0,0 +1,164 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/debugfs.h>
++#include <linux/uaccess.h>
++#include "wcn36xx.h"
++#include "debug.h"
++#include "pmc.h"
++
++#ifdef CONFIG_WCN36XX_DEBUGFS
++
++static int wcn36xx_debugfs_open(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++
++	return 0;
++}
++
++static ssize_t read_file_bool_bmps(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct wcn36xx *wcn = file->private_data;
++	char buf[3];
++
++	if (wcn->pw_state == WCN36XX_BMPS)
++		buf[0] = '1';
++	else
++		buf[0] = '0';
++
++	buf[1] = '\n';
++	buf[2] = 0x00;
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, 2);
++}
++
++static ssize_t write_file_bool_bmps(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wcn36xx *wcn = file->private_data;
++	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
++						 struct ieee80211_vif,
++						 drv_priv);
++	char buf[32];
++	int buf_size;
++
++	buf_size = min(count, (sizeof(buf)-1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	switch (buf[0]) {
++	case 'y':
++	case 'Y':
++	case '1':
++		wcn36xx_enable_keep_alive_null_packet(wcn);
++		wcn36xx_pmc_enter_bmps_state(wcn, vif->bss_conf.sync_tsf);
++		break;
++	case 'n':
++	case 'N':
++	case '0':
++		wcn36xx_pmc_exit_bmps_state(wcn);
++		break;
++	}
++
++	return count;
++}
++
++static const struct file_operations fops_wcn36xx_bmps = {
++	.open  =       wcn36xx_debugfs_open,
++	.read  =       read_file_bool_bmps,
++	.write =       write_file_bool_bmps,
++};
++
++static ssize_t write_file_dump(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wcn36xx *wcn = file->private_data;
++	char buf[255], *tmp;
++	int buf_size;
++	u32 arg[WCN36xx_MAX_DUMP_ARGS];
++	int i;
++
++	memset(buf, 0, sizeof(buf));
++	memset(arg, 0, sizeof(arg));
++
++	buf_size = min(count, (sizeof(buf) - 1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	tmp = buf;
++
++	for (i = 0; i < WCN36xx_MAX_DUMP_ARGS; i++) {
++		char *begin;
++		begin = strsep(&tmp, " ");
++		if (begin == NULL)
++			break;
++
++		if (kstrtoul(begin, 0, (unsigned long *)(arg + i)) != 0)
++			break;
++	}
++
++	wcn36xx_info("DUMP args is %d %d %d %d %d\n", arg[0], arg[1], arg[2],
++		     arg[3], arg[4]);
++	wcn36xx_smd_dump_cmd_req(wcn, arg[0], arg[1], arg[2], arg[3], arg[4]);
++
++	return count;
++}
++
++static const struct file_operations fops_wcn36xx_dump = {
++	.open  =       wcn36xx_debugfs_open,
++	.write =       write_file_dump,
++};
++
++#define ADD_FILE(name, mode, fop, priv_data)		\
++	do {							\
++		struct dentry *d;				\
++		d = debugfs_create_file(__stringify(name),	\
++					mode, dfs->rootdir,	\
++					priv_data, fop);	\
++		dfs->file_##name.dentry = d;			\
++		if (IS_ERR(d)) {				\
++			wcn36xx_warn("Create the debugfs entry failed");\
++			dfs->file_##name.dentry = NULL;		\
++		}						\
++	} while (0)
++
++
++void wcn36xx_debugfs_init(struct wcn36xx *wcn)
++{
++	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
++
++	dfs->rootdir = debugfs_create_dir(KBUILD_MODNAME,
++					  wcn->hw->wiphy->debugfsdir);
++	if (IS_ERR(dfs->rootdir)) {
++		wcn36xx_warn("Create the debugfs failed");
++		dfs->rootdir = NULL;
++	}
++
++	ADD_FILE(bmps_switcher, S_IRUSR | S_IWUSR,
++		 &fops_wcn36xx_bmps, wcn);
++	ADD_FILE(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
++}
++
++void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
++{
++	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
++	debugfs_remove_recursive(dfs->rootdir);
++}
++
++#endif /* CONFIG_WCN36XX_DEBUGFS */
 -- 
-Regards,
-Oleksij
+1.8.2.2
+
