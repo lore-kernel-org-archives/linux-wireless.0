@@ -1,40 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f179.google.com ([209.85.128.179]:32953 "EHLO
-	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752871Ab3HBFOq (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56471 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823Ab3HTVAE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 01:14:46 -0400
-Received: by mail-ve0-f179.google.com with SMTP id c13so210037vea.24
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Aug 2013 22:14:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375343068.8608.11.camel@jlt4.sipsolutions.net>
-References: <1375148892-18121-1-git-send-email-yeohchunyeow@cozybit.com>
-	<1375343068.8608.11.camel@jlt4.sipsolutions.net>
-Date: Fri, 2 Aug 2013 13:14:45 +0800
-Message-ID: <CAEFj987LHjuhm0Makzju2QE7o8w=Xm_Az7ejo_KfL0PZRjWVsw@mail.gmail.com> (sfid-20130802_071449_460319_31D57944)
-Subject: Re: [PATCH] mac80211: allow lowest basic rate for unicast management
- frame in mesh
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: "devel@lists.open80211s.org" <devel@lists.open80211s.org>
-Cc: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 20 Aug 2013 17:00:04 -0400
+Message-ID: <1377032397.13829.40.camel@jlt4.sipsolutions.net> (sfid-20130820_230013_318188_D7B2AFAE)
+Subject: Re: [PATCH 01/16] wcn36xx: Add main.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
+Date: Tue, 20 Aug 2013 22:59:57 +0200
+In-Reply-To: <1377020479-16935-2-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_194139_161691_2D6AE83A)
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+	 <1377020479-16935-2-git-send-email-k.eugene.e@gmail.com>
+	 (sfid-20130820_194139_161691_2D6AE83A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> That doesn't seem like a good idea - IMHO you shouldn't use container_of
-> on NULL even if it still works in the end.
->
-> Also it might be a good idea to use more regular names: struct
-> ieee80211_sta *pubsta, struct sta_info *sta.
+Just a cursory review ...
 
-Ok.
 
-> I don't get this - that just duplicates the code above, no chance to
-> refactor it a bit instead of duplicating the call?
+> +		.cap = IEEE80211_HT_CAP_GRN_FLD
+> +			| IEEE80211_HT_CAP_SGI_20
 
-I will take a look on this first.
+wouldn't that usually be written as
 
----
-Chun-Yeow
+GRN_FLD |
+SGI_20 |
+...
+
+(multiple similar places)
+
+> +#ifdef CONFIG_PM
+> +
+> +static const struct wiphy_wowlan_support wowlan_support = {
+> +	.flags = WIPHY_WOWLAN_ANY,
+> +	.n_patterns = 0,
+
+that n_patterns is pretty useless.
+
+
+> +#define WCN36XX_SUPPORTED_FILTERS (0)
+> +
+> +static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
+> +				       unsigned int changed,
+> +				       unsigned int *total, u64 multicast)
+> +{
+> +	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac configure filter");
+> +
+> +	changed &= WCN36XX_SUPPORTED_FILTERS;
+
+That's pointless
+
+> +		if (IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags) {
+> +			sta_priv->is_data_encrypted = true;
+> +			/* Reconfigure bss with encrypt_type */
+> +			if (NL80211_IFTYPE_STATION == vif->type)
+> +				wcn36xx_smd_config_bss(wcn,
+> +						       vif,
+> +						       sta,
+> +						       sta->addr,
+> +						       true);
+
+It seems to me this should not be here but you should have mac80211 set
+something in e.g. bss_conf that indicates encryption?
+
+
+> +	/* Not supported so far*/
+> +	case IEEE80211_AMPDU_TX_STOP_CONT:
+> +		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+> +		break;
+> +	case IEEE80211_AMPDU_TX_STOP_FLUSH:
+> +	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+> +		break;
+
+You can't just "not support" them - you have to at least stop the
+aggregation session, see the commit that introduced this.
+
+> +	static const u32 cipher_suites[] = {
+> +		WLAN_CIPHER_SUITE_TKIP,
+> +		WLAN_CIPHER_SUITE_CCMP,
+> +	};
+
+You actually don't want to support WEP, not even in software? Otherwise
+just leave this out and mac80211 will add it.
+
+> +	wcn->hw->wiphy->iface_combinations = &if_comb;
+> +	wcn->hw->wiphy->n_iface_combinations = 1;
+
+Your code with "wcn->current_vif = " etc. *really* doesn't look like you
+support combinations. Are you positive this is OK?
+
+> +	wcn->hw->wiphy->max_scan_ssids = 1;
+
+Really? You don't even have hardware scan, so why?
+
+johannes
+
