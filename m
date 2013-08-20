@@ -1,61 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34381 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751681Ab3HZUAW (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:64642 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211Ab3HTVth (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 16:00:22 -0400
-Date: Mon, 26 Aug 2013 15:56:55 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Tobias Waldekranz <tobias@waldekranz.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mwifiex: add missing endian conversions
-Message-ID: <20130826195655.GD1923@tuxdriver.com> (sfid-20130826_220025_893086_4444025F)
-References: <20130826071806.GA3035@gmail.com>
- <477F20668A386D41ADCC57781B1F70430EAF1FEDA3@SC-VEXCH1.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430EAF1FEDA3@SC-VEXCH1.marvell.com>
+	Tue, 20 Aug 2013 17:49:37 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hr7so2949wib.4
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 14:49:36 -0700 (PDT)
+Message-ID: <1377035366.8885.44.camel@canaries32-MCP7A> (sfid-20130820_234947_401513_E3B88966)
+Subject: [PATCH 1/2] staging: vt6656: baseband.c  BBvCalculateParameter
+ pwPhyLen return endian corrected.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 20 Aug 2013 22:49:26 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 26, 2013 at 12:27:06PM -0700, Bing Zhao wrote:
-> Hi Tobias,
-> 
-> > Fixes multiple locations where a little endian host is assumed during
-> > ser/des of messages sent to/received from the chip.
-> 
-> Thanks for your patch.
-> It doesn't apply to wireless or wireless-next trees.
-> 
-> Which git tree are you using?
+In rxtx.c many calls to BBvCaculateParameter are not endian
+corrected all calls here need to be endian corrected.
 
-I got it to apply with a little trying.
+Correct the endian in BBvCaculateParameter.
 
-> > 
-> > Signed-off-by: Tobias Waldekranz <tobias@waldekranz.com>
-> > ---
-> >  drivers/net/wireless/mwifiex/11n_aggr.c    | 2 +-
-> >  drivers/net/wireless/mwifiex/main.h        | 2 +-
-> >  drivers/net/wireless/mwifiex/sdio.c        | 6 +++---
-> >  drivers/net/wireless/mwifiex/sta_cmdresp.c | 2 +-
-> >  4 files changed, 6 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-> > index a78e065..b53c73c 100644
-> > --- a/drivers/net/wireless/mwifiex/11n_aggr.c
-> > +++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-> > @@ -69,7 +69,7 @@ mwifiex_11n_form_amsdu_pkt(struct sk_buff *skb_aggr,
-> >  	memcpy(&tx_header->eth803_hdr, skb_src->data, dt_offset);
-> > 
-> >  	/* Copy SNAP header */
-> > -	snap.snap_type = *(u16 *) ((u8 *)skb_src->data + dt_offset);
-> > +	snap.snap_type = le16_to_cpu(*(__le16 *) ((u8 *)skb_src->data + dt_offset));
-> 
-> This line exceeds 80 characters. Please break it to two lines.
+In card.c: CARDvSetRSPINF pwPhyLen points to awLen and is
+manually applied to abyData.  Because it is now endian
+corrected put_unaligned is needed to correct it.
 
-Please submit a new patch to fix this.
+In rxtx.c remove were endian is corrected.
 
+This allows to merge  BBvCalculateParameter *pwPhyLen,*pbyPhySrv
+and *pbyPhySgn to singles structure for tx buffers.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/baseband.c | 19 +++++++++----------
+ drivers/staging/vt6656/card.c     | 12 ++++--------
+ drivers/staging/vt6656/rxtx.c     |  9 ---------
+ 3 files changed, 13 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index a14a6a0..7d34403 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -870,16 +870,15 @@ void BBvCalculateParameter(struct vnt_private *pDevice, u32 cbFrameLength,
+         break;
+     }
+ 
+-    if (byPacketType == PK_TYPE_11B) {
+-        *pbyPhySrv = 0x00;
+-        if (bExtBit)
+-            *pbyPhySrv = *pbyPhySrv | 0x80;
+-        *pwPhyLen = (u16) cbUsCount;
+-    }
+-    else {
+-        *pbyPhySrv = 0x00;
+-        *pwPhyLen = (u16)cbFrameLength;
+-    }
++	if (byPacketType == PK_TYPE_11B) {
++		*pbyPhySrv = 0x00;
++		if (bExtBit)
++			*pbyPhySrv = *pbyPhySrv | 0x80;
++		*pwPhyLen = cpu_to_le16((u16)cbUsCount);
++	} else {
++		*pbyPhySrv = 0x00;
++		*pwPhyLen = cpu_to_le16((u16)cbFrameLength);
++	}
+ }
+ 
+ /*
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 24291ae..c0815d8 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -421,23 +421,19 @@ void CARDvSetRSPINF(struct vnt_private *pDevice, u8 byBBType)
+                                  &abyTxRate[8],
+                                  &abyRsvTime[8]);
+ 
+-    abyData[0] = (u8)(awLen[0]&0xFF);
+-    abyData[1] = (u8)(awLen[0]>>8);
++	put_unaligned(awLen[0], (u16 *)&abyData[0]);
+     abyData[2] = abySignal[0];
+     abyData[3] = abyServ[0];
+ 
+-    abyData[4] = (u8)(awLen[1]&0xFF);
+-    abyData[5] = (u8)(awLen[1]>>8);
++	put_unaligned(awLen[1], (u16 *)&abyData[4]);
+     abyData[6] = abySignal[1];
+     abyData[7] = abyServ[1];
+ 
+-    abyData[8] = (u8)(awLen[2]&0xFF);
+-    abyData[9] = (u8)(awLen[2]>>8);
++	put_unaligned(awLen[2], (u16 *)&abyData[8]);
+     abyData[10] = abySignal[2];
+     abyData[11] = abyServ[2];
+ 
+-    abyData[12] = (u8)(awLen[3]&0xFF);
+-    abyData[13] = (u8)(awLen[3]>>8);
++	put_unaligned(awLen[3], (u16 *)&abyData[12]);
+     abyData[14] = abySignal[3];
+     abyData[15] = abyServ[3];
+ 
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 06950c4..8c42781 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -617,11 +617,9 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+             BBvCalculateParameter(pDevice, uRTSFrameLen, pDevice->byTopCCKBasicRate, PK_TYPE_11B,
+                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField_b), (u8 *)&(pBuf->bySignalField_b)
+             );
+-            pBuf->wTransmitLength_b = cpu_to_le16(wLen);
+             BBvCalculateParameter(pDevice, uRTSFrameLen, pDevice->byTopOFDMBasicRate, byPktType,
+                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField_a), (u8 *)&(pBuf->bySignalField_a)
+             );
+-            pBuf->wTransmitLength_a = cpu_to_le16(wLen);
+             //Get Duration
+ 		pBuf->wDuration_bb = s_uGetRTSCTSDuration(pDevice, RTSDUR_BB,
+ 			cbFrameLength, PK_TYPE_11B,
+@@ -653,11 +651,9 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+             BBvCalculateParameter(pDevice, uRTSFrameLen, pDevice->byTopCCKBasicRate, PK_TYPE_11B,
+                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField_b), (u8 *)&(pBuf->bySignalField_b)
+             );
+-            pBuf->wTransmitLength_b = cpu_to_le16(wLen);
+             BBvCalculateParameter(pDevice, uRTSFrameLen, pDevice->byTopOFDMBasicRate, byPktType,
+                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField_a), (u8 *)&(pBuf->bySignalField_a)
+             );
+-            pBuf->wTransmitLength_a = cpu_to_le16(wLen);
+             //Get Duration
+ 		pBuf->wDuration_bb = s_uGetRTSCTSDuration(pDevice, RTSDUR_BB,
+ 			cbFrameLength, PK_TYPE_11B,
+@@ -703,7 +699,6 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+             BBvCalculateParameter(pDevice, uRTSFrameLen, pDevice->byTopOFDMBasicRate, byPktType,
+                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+             );
+-            pBuf->wTransmitLength = cpu_to_le16(wLen);
+             //Get Duration
+ 		pBuf->wDuration = s_uGetRTSCTSDuration(pDevice, RTSDUR_AA,
+ 			cbFrameLength, byPktType, wCurrentRate,
+@@ -729,7 +724,6 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+             BBvCalculateParameter(pDevice, uRTSFrameLen, pDevice->byTopOFDMBasicRate, byPktType,
+                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+             );
+-            pBuf->wTransmitLength = cpu_to_le16(wLen);
+             //Get Duration
+ 		pBuf->wDuration = s_uGetRTSCTSDuration(pDevice, RTSDUR_AA,
+ 			cbFrameLength, byPktType, wCurrentRate,
+@@ -762,7 +756,6 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+         BBvCalculateParameter(pDevice, uRTSFrameLen, pDevice->byTopCCKBasicRate, PK_TYPE_11B,
+             (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField), (u8 *)&(pBuf->bySignalField)
+         );
+-        pBuf->wTransmitLength = cpu_to_le16(wLen);
+         //Get Duration
+ 	pBuf->wDuration = s_uGetRTSCTSDuration(pDevice, RTSDUR_BB,
+ 		cbFrameLength, byPktType, wCurrentRate,
+@@ -810,7 +803,6 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+             BBvCalculateParameter(pDevice, uCTSFrameLen, pDevice->byTopCCKBasicRate, PK_TYPE_11B,
+                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField_b), (u8 *)&(pBuf->bySignalField_b)
+             );
+-            pBuf->wTransmitLength_b = cpu_to_le16(wLen);
+ 		pBuf->wDuration_ba = s_uGetRTSCTSDuration(pDevice, CTSDUR_BA,
+ 			cbFrameLength, byPktType,
+ 			wCurrentRate, bNeedAck, byFBOption);
+@@ -832,7 +824,6 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+             BBvCalculateParameter(pDevice, uCTSFrameLen, pDevice->byTopCCKBasicRate, PK_TYPE_11B,
+                 (u16 *)&(wLen), (u8 *)&(pBuf->byServiceField_b), (u8 *)&(pBuf->bySignalField_b)
+             );
+-            pBuf->wTransmitLength_b = cpu_to_le16(wLen);
+ 		/* Get CTSDuration_ba */
+ 		pBuf->wDuration_ba = s_uGetRTSCTSDuration(pDevice,
+ 			CTSDUR_BA, cbFrameLength, byPktType,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.1.2
+
+
+
+
