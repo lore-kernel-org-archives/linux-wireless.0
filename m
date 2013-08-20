@@ -1,87 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59249 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757407Ab3HGMeX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 08:34:23 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Thomas Graf <tgraf@suug.ch>
-Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.11] genetlink: fix family dump race
-Date: Wed,  7 Aug 2013 14:34:14 +0200
-Message-Id: <1375878854-29997-1-git-send-email-johannes@sipsolutions.net> (sfid-20130807_143431_202253_42E326A6)
+Received: from mail-out5.uio.no ([129.240.10.17]:55390 "EHLO mail-out5.uio.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750821Ab3HTK0f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 06:26:35 -0400
+Message-ID: <1376993427.2576.17.camel@localhost> (sfid-20130820_122652_218773_D51A1B09)
+Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
+From: Georgios Magklaras <georgios@biotek.uio.no>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Tom Gundersen <teg@jklm.no>, Felix Fietkau <nbd@openwrt.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 20 Aug 2013 12:10:27 +0200
+In-Reply-To: <52133DD9.8010902@broadcom.com>
+References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
+	 <20130820000336.GA15548@kroah.com>
+	 <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
+	 <20130820002822.GA18023@kroah.com> <5212F6E8.3090107@openwrt.org>
+	 <52132589.5000306@broadcom.com>
+	 <CAG-2HqVo+Jn4QsmErCVcqgS6LcxvXESVWHHCp5BGapcv0A_+Ww@mail.gmail.com>
+	 <52133DD9.8010902@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+I verify the same issue on a Latitude E6520 running both the
+vanilla/clean and the Fedora 19 specific kernels. I thought it was the
+NVIDIA/nouveau driver and I reproduce by switching to non graphical mode
+and performing scp transfers.
 
-When dumping generic netlink families, only the first dump call
-is locked with genl_lock(), which protects the list of families,
-and thus subsequent calls can access the data without locking,
-racing against family addition/removal. This can cause a crash.
-Fix it - the locking needs to be conditional because the first
-time around it's already locked.
+GM
 
-BUG: unable to handle kernel paging request at f8467360
-IP: [<c14c56bb>] ctrl_dumpfamily+0x6b/0xe0
-EIP: 0060:[<c14c56bb>] EFLAGS: 00210297 CPU: 2
-EIP is at ctrl_dumpfamily+0x6b/0xe0
-EAX: f8467378 EBX: f8467340 ECX: 00000000 EDX: ec1610c4
-ESI: 00000001 EDI: c2077cc0 EBP: c46c3c00 ESP: c46c3bd4
- DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-CR0: 80050033 CR2: f8467360 CR3: 26e54000 CR4: 001407d0
-DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-DR6: ffff0ff0 DR7: 00000400
-Process wpa_supplicant (pid: 20081, ti=c46c2000 task=c44640b0 task.ti=c46c2000)
-Call Trace:
- [<c14c20bc>] netlink_dump+0x5c/0x200
- [<c14c3450>] __netlink_dump_start+0x140/0x160
- [<c14c5172>] genl_rcv_msg+0x102/0x270
- [<c14c4b5e>] netlink_rcv_skb+0x8e/0xb0
- [<c14c505c>] genl_rcv+0x1c/0x30
- [<c14c456b>] netlink_unicast+0x17b/0x1c0
- [<c14c47d4>] netlink_sendmsg+0x224/0x370
- [<c1485adf>] sock_sendmsg+0xff/0x120
- [<c1486b0a>] __sys_sendmsg+0x24a/0x260
- [<c1487fdb>] sys_sendmsg+0x3b/0x60
- [<c1488683>] sys_socketcall+0x283/0x2e0
- [<c15b7c1f>] sysenter_do_call+0x12/0x38
-Code: 8d 3c c5 c0 7c 07 c2 8b 04 c5 c0 7c 07 c2 39 c7 8d 58 c8 75 16 eb 71 90 81 7d ec 00 1f 86 c1 74 10 8b 43 38 39 c7 8d 58 c8 74 5d <80> 7b 20 00 74 e7 83 c6 01 3b 75 f0 7c e8 8b 55 e8 8b 42 04 8b
 
-Cc: stable@vger.kernel.org
-Reported-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/netlink/genetlink.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+On Tue, 2013-08-20 at 11:58 +0200, Arend van Spriel wrote:
+> On 08/20/2013 10:36 AM, Tom Gundersen wrote:
+> > On Tue, Aug 20, 2013 at 4:15 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> >> On 08/20/2013 06:56 AM, Felix Fietkau wrote:
+> >>>
+> >>> On 2013-08-20 2:28 AM, Greg Kroah-Hartman wrote:
+> >>>>
+> >>>> On Tue, Aug 20, 2013 at 08:26:11AM +0800, Tom Gundersen wrote:
+> >>>>>
+> >>>>> On Tue, Aug 20, 2013 at 8:03 AM, Greg Kroah-Hartman
+> >>>>> <gregkh@linuxfoundation.org> wrote:
+> >>>>>>
+> >>>>>> On Tue, Aug 20, 2013 at 07:59:47AM +0800, Tom Gundersen wrote:
+> >>>>>>>
+> >>>>>>> Hi guys,
+> >>>>>>>
+> >>>>>>> Starting with 3.10.6 (and still present in .7) I get an oops on
+> >>>>>>> connecting to the network.
+> >>>>>>>
+> >>>>>>> The attached picture shows the oops. In case it does not reach the ML,
+> >>>>>>> the top of the call trace reads:
+> >>>>>>>
+> >>>>>>> brcms_c_compute_rtscts_dur
+> >>>>>>> brcms_c_ampdu_finalize
+> >>>>>>> ampdu_finalize
+> >>>>>>> dma_txfast
+> >>>>>>> brcms_c_txfifo
+> >>>>>>> brcms_c_sendpkt_mac80211
+> >>>>>>> brcms_ops_tx
+> >>>>>>> __ieee80211_tx
+> >>>>>>>
+> >>>>>>> I bisected the problem and the first bad commit is
+> >>>>>>>
+> >>>>>>> commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
+> >>>>>>> Author: Felix Fietkau <nbd@openwrt.org>
+> >>>>>>> Date:   Fri Jun 28 21:04:35 2013 +0200
+> >>>>>>>
+> >>>>>>>       mac80211/minstrel_ht: fix cck rate sampling
+> >>>>>>>
+> >>>>>>>       commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5 upstream.
+> >>>>>>>
+> >>>>>>> Reverting it on top of .7 fixes the problem.
+> >>>>>>>
+> >>>>>>> I had the same (I suppose) problem on mainline some time ago, but I
+> >>>>>>> have not bisected it, verified that the problem still occurs there, or
+> >>>>>>> checked if reverting the upstream patch fixes it. I'd be happy to do
+> >>>>>>> that if it would help though.
+> >>>>>>>
+> >>>>>>> Let me know if you need any more information.
+> >>>>>>
+> >>>>>>
+> >>>>>> Do you have this same problem with 3.11-rc6 as well?
+> >>>>>
+> >>>>>
+> >>>>> Yes, I just confirmed. I also confirmed that reverting the mainline
+> >>>>> commit on top of -rc6 fixes the problem.
+> >>>>
+> >>>>
+> >>>> Great, thanks.
+> >>>>
+> >>>> Felix and Johannes, any chance we can get this reverted in Linus tree
+> >>>> soon, and push that revert back to the 3.10 stable tree as well?
+> >>>
+> >>> I'd like to avoid a revert, since that will simply replace one set of
+> >>> issues with another. Let's limit the use of the feature that brcmsmac
+> >>> can't handle to drivers that are known to work with it. Tom, Please
+> >>> test this patch to see if it fixes your issue.
+> >>
+> >>
+> >> Hi Felix,
+> >>
+> >> I have been diving into root causing why brcmsmac can not handle cck
+> >> fallback rates, because it should. Maybe it is better to flag no cck support
+> >> and only change brcmsmac.
+> >
+> > Hi Arend,
+> >
+> > In case you cannot reproduce, let me know if I can help with testing patches.
+> 
+> So far I have not been able to reproduce it. I have a patch to avoid the 
+> oops, but the transmit of the related frames will fail in the device so 
+> it is not a real fix. I will let you you know.
+> 
+> Regards,
+> Arend
+> 
+> > Cheers,
+> >
+> > Tom
+> >
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
-index 2fd6dbe..07a0b18 100644
---- a/net/netlink/genetlink.c
-+++ b/net/netlink/genetlink.c
-@@ -790,6 +790,9 @@ static int ctrl_dumpfamily(struct sk_buff *skb, struct netlink_callback *cb)
- 	int chains_to_skip = cb->args[0];
- 	int fams_to_skip = cb->args[1];
- 
-+	if (chains_to_skip)
-+		genl_lock();
-+
- 	for (i = chains_to_skip; i < GENL_FAM_TAB_SIZE; i++) {
- 		n = 0;
- 		list_for_each_entry(rt, genl_family_chain(i), family_list) {
-@@ -810,6 +813,9 @@ errout:
- 	cb->args[0] = i;
- 	cb->args[1] = n;
- 
-+	if (chains_to_skip)
-+		genl_unlock();
-+
- 	return skb->len;
- }
- 
--- 
-1.8.0
 
