@@ -1,64 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43641 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751984Ab3HCP21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Aug 2013 11:28:27 -0400
-Message-ID: <51FD218E.9040700@hauke-m.de> (sfid-20130803_172830_581274_F6C8890B)
-Date: Sat, 03 Aug 2013 17:28:14 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from moutng.kundenserver.de ([212.227.17.10]:62260 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304Ab3HTJBq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 05:01:46 -0400
+Message-ID: <52133070.2050301@blackshift.org> (sfid-20130820_110150_178066_94A39D97)
+Date: Tue, 20 Aug 2013 11:01:36 +0200
+From: Marc Kleine-Budde <mkl@blackshift.org>
 MIME-Version: 1.0
-To: b43-dev <b43-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: b43: DMA errors with BCM4331 on BCM4706
-Content-Type: text/plain; charset=UTF-8
+To: Marc Kleine-Budde <mkl@pengutronix.de>
+CC: linux-wireless@vger.kernel.org, linux@rempel-privat.de,
+	ath9k-devel@lists.ath9k.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH v2] ath9k_htc: Restore skb headroom when returning skb
+ to mac80211
+References: <1376681980-27831-1-git-send-email-mkl@pengutronix.de>
+In-Reply-To: <1376681980-27831-1-git-send-email-mkl@pengutronix.de>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="6pWaPnNq6wlUIPmR6MwUuvAuOfwSlauvK"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--6pWaPnNq6wlUIPmR6MwUuvAuOfwSlauvK
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I am trying to get the BCM4331 working on the BCM4706 (Mips SoC), on a
-x86 this is working. Currently the bcma bus gets initialized without any
-problems and b43 starts and send beacons like excepted.
+On 08/16/2013 09:39 PM, Marc Kleine-Budde wrote:
+> From: Helmut Schaa <helmut.schaa@googlemail.com>
+>=20
+> ath9k_htc adds padding between the 802.11 header and the payload during=
 
-When a client wants to connect to the Access point the whole system
-breaks. On the DMA core 1, which is used to send the packages I get a
-Fatal DMA error:
-b43-phy0 ERROR: Fatal DMA error: 0x00000000, 0x00000800, 0x00000000,
-0x00000000, 0x00000000, 0x00000000
+> TX by moving the header. When handing the frame back to mac80211 for TX=
 
-After this error the driver tries to recover, by reseting the DMA
-controller, but that fails:
-b43-phy0: Controller RESET (DMA error) ...
-bcma: bus1: Timeout waiting for register 0x0804!
-Data bus error, epc == 801ac888, ra == 801ac890
+> status handling the header is not moved back into its original position=
+=2E
+> This can result in a too small skb headroom when entering ath9k_htc
+> again (due to a soft retransmission for example) causing an
+> skb_under_panic oops.
+>=20
+> Fix this by moving the 802.11 header back into its original position
+> before returning the frame to mac80211 as other drivers like rt2x00
+> or ath5k do.
+>=20
+> Reported-by: Marc Kleine-Budde <mkl@blackshift.org>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> Tested-by: Marc Kleine-Budde <mkl@blackshift.org>
+> Signed-off-by: Marc Kleine-Budde <mkl@blackshift.org>
+> ---
+> Hello Helmut,
+>=20
+> I've change the patch a bit, I've used ieee80211_get_hdrlen_from_skb() =
+instead
+> of open coding it.
+>=20
+> Tested in ARMv5 with USB device
+>   "ID 0cf3:7015 Atheros Communications, Inc. TP-Link TL-WN821N v3 802.1=
+1n [Atheros AR7010+AR9287]"
+> for four weeks. Without that patch the kernel oopes after about one wee=
+k.
+>=20
+> I think this is a candidate for stable, can you add stable to Cc?
 
-This is descried in [0] as PCIData (PD)
+ping
 
-PCI Data Error
-This field is set to 1 when a PCI bus error occurs while transferring
-data to or from host memory. The PCI status register (see “Status
-Register (Status, offset 0x06)” on page 184) can be read to determine
-the cause  of the error. This field is cleared to 0 by resetting the
-channel that caused the error.
+Marc
 
-I can not find the description of the PCI status register.
 
-I used wireshark to see what actually happens and the device send out
-beacons and answers to probe requests without problems. I see the
-Authentication, Association Request and Association Response frames and
-then only Beacon frames and probe responses. When I do not try to
-connect to this access Point there is no problem and the device stays up
-for a long time, the problem is caused by the frames send or received.
+--6pWaPnNq6wlUIPmR6MwUuvAuOfwSlauvK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-I think this is a problem in the DMA controller or in the PCIe host
-controller, sadly I do not have a BCM4706 SoC with a pluggable PCIe slot
-to verify which part causes the problems (the card, or the PCIe controller).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Icedove - http://www.enigmail.net/
 
-Does anybody have any thought on this topic?
+iQIbBAEBAgAGBQJSEzBwAAoJECte4hHFiupUPBcP+Pl+8x4OwEXPh20MbZhNdldE
+9AHXLGRhPPpDl9BxBi1bVazxnhX89OCKEnWdzuicpP/M3YV7D4AJKBILl64xD3rb
+zVKDRjfQ5Yo5yDXbB162tvGDSvgW451oEwkUoH7LQlYtcPMZ4qE6+aWqoxALpGCR
+VK94L0LPWrpZ+EdSRbf8ylccyzBEc3SxcTyYZUxhzRUpfkejT7I/DCeW1YAlbKMi
+EHou5RoIVZ3ViQp2krtz+C+4e4JEa9J+1+7fs4eV3RluCROJOtOd+fmT8DutK6S2
+z9s6ga2/BCHKhi7jkrLKUt39wsglY4Fi7IBHBojTmPtOHP1jX3F4PPod+x1+h7fE
+HLLfA/zGHYruTKGYzyh89S8Sp7uxp/gAHcaTRU4eBT536ZxjbarhUlQzUMhHQpzX
+PMuzdWZRrX3oM0oxEfKaqtHyE4xatMoflJes7FjPn+nlrX26kk+tevLDZt0XABru
+wp3Jr5VLNZ8i97a5bTTl7Aey2Q8RcVl6O2VdNe0CMbWv8uW0Q7/g2OIsXdg36Bjt
+NbKqDh128O8toy84Dz2qLM+gXh15CcEmPQJCaeUvkmgSgmR4o+h/VgsFwtY5XfX+
+JMHAHlCuqUl134DvahE8SQ4dJrNCeLLVCHm3pD2dS4Sjb+ORUfVelIfEaUYv0Y3P
+/nyxOB3fGbEku6gEsCo=
+=HZQn
+-----END PGP SIGNATURE-----
 
-Hauke
-
-[0]: http://www.broadcom.com/collateral/pg/440X-PG02-R.pdf
+--6pWaPnNq6wlUIPmR6MwUuvAuOfwSlauvK--
