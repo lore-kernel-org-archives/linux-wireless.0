@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51529 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753090Ab3HLQBV (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:34123 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab3HTQ3m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 12:01:21 -0400
-Message-ID: <1376323275.11514.26.camel@jlt4.sipsolutions.net> (sfid-20130812_180124_940216_495C2266)
-Subject: Re: [RFC] mac80211: add support for split-MAC implementations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Johan Almbladh <ja@anyfi.net>,
-	Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 12 Aug 2013 18:01:15 +0200
-In-Reply-To: <CAJWpbEjdHR0HJjPBwSPN0m4kabLWbfV5pWec+9cwbvyWD+AOgg@mail.gmail.com> (sfid-20130811_221953_352873_432329DF)
-References: <1375968116-24331-1-git-send-email-ja@anyfi.net>
-	 <1376053671.8355.4.camel@jlt4.sipsolutions.net>
-	 <CAJWpbEg74C7DYbDkWCpNJRte7X7+40UHgNAL7uWLFHJ64CApKw@mail.gmail.com>
-	 <CAJWpbEjdHR0HJjPBwSPN0m4kabLWbfV5pWec+9cwbvyWD+AOgg@mail.gmail.com>
-	 (sfid-20130811_221953_352873_432329DF)
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 20 Aug 2013 12:29:42 -0400
+Received: by mail-pd0-f174.google.com with SMTP id y13so597834pdi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 09:29:42 -0700 (PDT)
+Date: Tue, 20 Aug 2013 09:29:39 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: changing dev->needed_headroom/needed_tailroom?
+Message-ID: <20130820092939.7d4cad35@nehalam.linuxnetplumber.net> (sfid-20130820_182949_890908_8CE83FD8)
+In-Reply-To: <1377015897.13829.16.camel@jlt4.sipsolutions.net>
+References: <1374850210.8248.59.camel@jlt4.sipsolutions.net>
+	<1375433758.24371.20.camel@deadeye.wl.decadent.org.uk>
+	<1375449082.3927.5.camel@edumazet-glaptop>
+	<1375711240.8120.11.camel@jlt4.sipsolutions.net>
+	<CAGVrzcaGV6AqLTAxpM6zMv7_C-LNxp-WNg+J47d7a9S+Ca1bDw@mail.gmail.com>
+	<20130820092013.6ca909e2@nehalam.linuxnetplumber.net>
+	<1377015897.13829.16.camel@jlt4.sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-08-11 at 22:19 +0200, Johan Almbladh wrote:
-> I would prefer my original solution that puts the decryption handler
-> after the sta_process handler. The code is cleaner since we avoid the
-> extra flag and the coupling between decrypt and sta_process. My
-> conclusion is that the change is correct, see below.
+On Tue, 20 Aug 2013 18:24:57 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-I actually agree and think that it makes our implementation of 802.11
-more robust, but I think that should be said in the changelog and be
-carefully analysed (as I guess you've done below)
-
-> ieee80211_rx_h_check_more_data, ieee80211_rx_h_uapsd_and_pspoll:
-> The MOREDATA and PM bits are not protected by the encryption MIC. It
-> should be valid to process those bits regardless of the decryption
-> outcome.
-
-Agree, those seem pretty clear.
-
-> ieee80211_rx_h_sta_process:
-> The updating of last_rx for an IBSS STA is conditional on the STA
-> being AUTHORIZED. That state is the same regardless of whether the
-> updating is done before or after decryption.
-
-That's true, but my concern here was about the reboot problem:
- * two stations join a secure mesh and communicate
- * one of them reboots, but quickly rejoins the mesh
-In this case sometimes it gets hard to detect the situation and keeping
-the other station alive. OTOH, it already happens for beacon frames
-which aren't encrypted anyway, so I think it shouldn't matter. Antonio?
-
-> The main argument that the MOREDATA and PM bits are not protected by
-> the encryption and are therefore independent. You can always send a
-> spoofed NULLFUNC frame to an RSN AP or STA and have the PM and
-> MOREDATA bits processed accordingly. My change allows data frames that
-> could not be decrypted to be processed similar to NULLFUNC frames.
-
-Right, of course.
-
-> I have run mac80211 in STA and AP mode with this change for quite some
-> time now without any problems. I will run it in IBSS mode also as you
-> suggest.
+> On Tue, 2013-08-20 at 09:20 -0700, Stephen Hemminger wrote:
 > 
-> Provided that my IBSS tests pass, should I send you a final patch that
-> changes the RX handler order and their locations in the file?
+> > All code must check for needed headroom first, and copy packet
+> > if space is not available. Since excess headroom is always safe,
+> > most devices just always use the same worst case headroom.
+> > 
+> > Even with your changes this will still be necessary since packets will
+> > be still in flight while features change.
+> 
+> I agree, it will always be necessary. I guess the question boils down to
+> whether/what N bytes headroom more or less actually make a difference.
+> 
+> The wireless stack currently sets needed_headroom to 34 or so I think,
+> but I will need to increase by 8 which was why I had this question to
+> start with. However, those 34 are an absolute worst case - in most cases
+> it's much less...
+> 
+> So I suppose the other question we should ask is will increasing from
+> ~34 to ~42 make a significant different that it's worth thinking about
+> avoiding it in the common cases at all?
+> 
+> johannes
+> 
 
-I think the IBSS test would be rather difficult, but yes, I think you've
-convinced me that the patch is fine - please do resend it.
-
-johannes
-
+The only thing that might matter is alignment. but +/- 8 bytes isn't going
+to change that.
