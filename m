@@ -1,38 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:43460 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756232Ab3HFUPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 16:15:11 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: add control port protocol TX control flag
-References: <1375783056-2665-1-git-send-email-johannes@sipsolutions.net>
-Date: Tue, 06 Aug 2013 23:15:09 +0300
-In-Reply-To: <1375783056-2665-1-git-send-email-johannes@sipsolutions.net>
-	(Johannes Berg's message of "Tue, 6 Aug 2013 11:57:36 +0200")
-Message-ID: <87haf2wp82.fsf@purkki.adurom.net> (sfid-20130806_221516_293351_3C88C59C)
+Received: from mail-we0-f170.google.com ([74.125.82.170]:49243 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145Ab3HTM7O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 08:59:14 -0400
+Received: by mail-we0-f170.google.com with SMTP id w62so368810wes.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 05:59:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1376681980-27831-1-git-send-email-mkl@pengutronix.de>
+References: <1376681980-27831-1-git-send-email-mkl@pengutronix.de>
+Date: Tue, 20 Aug 2013 14:59:13 +0200
+Message-ID: <CAGXE3d94GvvGev2Y0o36LzRj2ztSgVFsx0LqYD2sD7Shq1-e3A@mail.gmail.com> (sfid-20130820_145917_166192_EF095A51)
+Subject: Re: [PATCH v2] ath9k_htc: Restore skb headroom when returning skb to mac80211
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Marc Kleine-Budde <mkl@pengutronix.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	ath9k-devel@lists.ath9k.org, Marc Kleine-Budde <mkl@blackshift.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Fri, Aug 16, 2013 at 9:39 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
+> Tested in ARMv5 with USB device
+>   "ID 0cf3:7015 Atheros Communications, Inc. TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]"
+> for four weeks. Without that patch the kernel oopes after about one week.
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> A lot of drivers check the frame protocol for ETH_P_PAE,
-> for various reasons (like making those more reliable).
-> Add a new flags bitmap to the TX control info and a new
-> flag indicating the control port protocol is in use to
-> let all drivers also apply such logic to other control
-> port protocols, should they be configured.
->
-> Change-Id: I292ba4865694142670f005856b6320f7f3fa05c8
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-
-I'm sure you noticed, but there's a Change-Id tag.
-
--- 
-Kalle Valo
+Thanks for testing by the way!
+Helmut
