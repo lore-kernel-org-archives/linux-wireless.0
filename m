@@ -1,60 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34590 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759369Ab3HNDpU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 23:45:20 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/14] ath9k: Fix RX packet counter
-Date: Wed, 14 Aug 2013 09:11:17 +0530
-Message-Id: <1376451682-25862-9-git-send-email-sujith@msujith.org> (sfid-20130814_054527_296782_3DD41CC3)
-In-Reply-To: <1376451682-25862-1-git-send-email-sujith@msujith.org>
-References: <1376451682-25862-1-git-send-email-sujith@msujith.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:1385 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751129Ab3HTOBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 10:01:00 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Jonas Gorski" <jogo@openwrt.org>
+Subject: [PATCH 03/12] brcmsmac: use ARRAY_SIZE in phytbl_lcn.c
+Date: Tue, 20 Aug 2013 16:00:37 +0200
+Message-ID: <1377007246-9957-4-git-send-email-arend@broadcom.com> (sfid-20130820_160141_119857_77272901)
+In-Reply-To: <1377007246-9957-1-git-send-email-arend@broadcom.com>
+References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This patch converts all sizeof(x)/sizeof(x[0]) instances to
+ARRAY_SIZE macro in phytbl_lcn.c. The patch was made using
+spatch with ARRAY_SIZE.cocci (see [1]).
 
-Handle chained descriptors and increment the RX counter
-only for valid packets. Since this is used only by MCI,
-use CONFIG_ATH9K_BTCOEX_SUPPORT.
+[1] https://github.com/coccinelle/coccinelle/tree/master/demos/janitorings
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: Jonas Gorski <jogo@openwrt.org>
+Tested-by: David Herrmann <dh.herrmann@gmail.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |  117 ++++++++------------
+ 1 file changed, 44 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 2d0017c..823b411 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1119,6 +1119,13 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
+index 622c01c..deae3a7 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
+@@ -1507,117 +1507,103 @@ static const u32 dot11lcn_gain_tbl_5G[] = {
  
- 	sc->rx.discard_next = false;
-+
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+	if (ieee80211_is_data_present(hdr->frame_control) &&
-+	    !ieee80211_is_qos_nullfunc(hdr->frame_control))
-+		sc->rx.num_pkts++;
-+#endif
-+
- 	return 0;
- }
+ const struct phytbl_info dot11lcnphytbl_rx_gain_info_rev0[] = {
+ 	{&dot11lcn_gain_tbl_rev0,
+-	 sizeof(dot11lcn_gain_tbl_rev0) / sizeof(dot11lcn_gain_tbl_rev0[0]), 18,
++	 ARRAY_SIZE(dot11lcn_gain_tbl_rev0), 18,
+ 	 0, 32}
+ 	,
+ 	{&dot11lcn_aux_gain_idx_tbl_rev0,
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0) /
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0[0]), 14, 0, 16}
++	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_rev0), 14, 0, 16}
+ 	,
+ 	{&dot11lcn_gain_idx_tbl_rev0,
+-	 sizeof(dot11lcn_gain_idx_tbl_rev0) /
+-	 sizeof(dot11lcn_gain_idx_tbl_rev0[0]), 13, 0, 32}
++	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_rev0), 13, 0, 32}
+ 	,
+ };
  
-@@ -1267,10 +1274,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		hdr = (struct ieee80211_hdr *) (hdr_skb->data +
- 						ah->caps.rx_status_len);
+ static const struct phytbl_info dot11lcnphytbl_rx_gain_info_rev1[] = {
+ 	{&dot11lcn_gain_tbl_rev1,
+-	 sizeof(dot11lcn_gain_tbl_rev1) / sizeof(dot11lcn_gain_tbl_rev1[0]), 18,
++	 ARRAY_SIZE(dot11lcn_gain_tbl_rev1), 18,
+ 	 0, 32}
+ 	,
+ 	{&dot11lcn_aux_gain_idx_tbl_rev0,
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0) /
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0[0]), 14, 0, 16}
++	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_rev0), 14, 0, 16}
+ 	,
+ 	{&dot11lcn_gain_idx_tbl_rev0,
+-	 sizeof(dot11lcn_gain_idx_tbl_rev0) /
+-	 sizeof(dot11lcn_gain_idx_tbl_rev0[0]), 13, 0, 32}
++	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_rev0), 13, 0, 32}
+ 	,
+ };
  
--		if (ieee80211_is_data_present(hdr->frame_control) &&
--		    !ieee80211_is_qos_nullfunc(hdr->frame_control))
--			sc->rx.num_pkts++;
--
- 		rxs = IEEE80211_SKB_RXCB(hdr_skb);
- 		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
+ const struct phytbl_info dot11lcnphytbl_rx_gain_info_2G_rev2[] = {
+ 	{&dot11lcn_gain_tbl_2G,
+-	 sizeof(dot11lcn_gain_tbl_2G) / sizeof(dot11lcn_gain_tbl_2G[0]), 18, 0,
++	 ARRAY_SIZE(dot11lcn_gain_tbl_2G), 18, 0,
+ 	 32}
+ 	,
+ 	{&dot11lcn_aux_gain_idx_tbl_2G,
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_2G) /
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_2G[0]), 14, 0, 16}
++	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_2G), 14, 0, 16}
+ 	,
+ 	{&dot11lcn_gain_idx_tbl_2G,
+-	 sizeof(dot11lcn_gain_idx_tbl_2G) / sizeof(dot11lcn_gain_idx_tbl_2G[0]),
++	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_2G),
+ 	 13, 0, 32}
+ 	,
+ 	{&dot11lcn_gain_val_tbl_2G,
+-	 sizeof(dot11lcn_gain_val_tbl_2G) / sizeof(dot11lcn_gain_val_tbl_2G[0]),
++	 ARRAY_SIZE(dot11lcn_gain_val_tbl_2G),
+ 	 17, 0, 8}
+ };
  
+ const struct phytbl_info dot11lcnphytbl_rx_gain_info_5G_rev2[] = {
+ 	{&dot11lcn_gain_tbl_5G,
+-	 sizeof(dot11lcn_gain_tbl_5G) / sizeof(dot11lcn_gain_tbl_5G[0]), 18, 0,
++	 ARRAY_SIZE(dot11lcn_gain_tbl_5G), 18, 0,
+ 	 32}
+ 	,
+ 	{&dot11lcn_aux_gain_idx_tbl_5G,
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_5G) /
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_5G[0]), 14, 0, 16}
++	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_5G), 14, 0, 16}
+ 	,
+ 	{&dot11lcn_gain_idx_tbl_5G,
+-	 sizeof(dot11lcn_gain_idx_tbl_5G) / sizeof(dot11lcn_gain_idx_tbl_5G[0]),
++	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_5G),
+ 	 13, 0, 32}
+ 	,
+ 	{&dot11lcn_gain_val_tbl_5G,
+-	 sizeof(dot11lcn_gain_val_tbl_5G) / sizeof(dot11lcn_gain_val_tbl_5G[0]),
++	 ARRAY_SIZE(dot11lcn_gain_val_tbl_5G),
+ 	 17, 0, 8}
+ };
+ 
+ const struct phytbl_info dot11lcnphytbl_rx_gain_info_extlna_2G_rev2[] = {
+ 	{&dot11lcn_gain_tbl_extlna_2G,
+-	 sizeof(dot11lcn_gain_tbl_extlna_2G) /
+-	 sizeof(dot11lcn_gain_tbl_extlna_2G[0]), 18, 0, 32}
++	 ARRAY_SIZE(dot11lcn_gain_tbl_extlna_2G), 18, 0, 32}
+ 	,
+ 	{&dot11lcn_aux_gain_idx_tbl_extlna_2G,
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_extlna_2G) /
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_extlna_2G[0]), 14, 0, 16}
++	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_extlna_2G), 14, 0, 16}
+ 	,
+ 	{&dot11lcn_gain_idx_tbl_extlna_2G,
+-	 sizeof(dot11lcn_gain_idx_tbl_extlna_2G) /
+-	 sizeof(dot11lcn_gain_idx_tbl_extlna_2G[0]), 13, 0, 32}
++	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_extlna_2G), 13, 0, 32}
+ 	,
+ 	{&dot11lcn_gain_val_tbl_extlna_2G,
+-	 sizeof(dot11lcn_gain_val_tbl_extlna_2G) /
+-	 sizeof(dot11lcn_gain_val_tbl_extlna_2G[0]), 17, 0, 8}
++	 ARRAY_SIZE(dot11lcn_gain_val_tbl_extlna_2G), 17, 0, 8}
+ };
+ 
+ const struct phytbl_info dot11lcnphytbl_rx_gain_info_extlna_5G_rev2[] = {
+ 	{&dot11lcn_gain_tbl_5G,
+-	 sizeof(dot11lcn_gain_tbl_5G) / sizeof(dot11lcn_gain_tbl_5G[0]), 18, 0,
++	 ARRAY_SIZE(dot11lcn_gain_tbl_5G), 18, 0,
+ 	 32}
+ 	,
+ 	{&dot11lcn_aux_gain_idx_tbl_5G,
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_5G) /
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_5G[0]), 14, 0, 16}
++	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_5G), 14, 0, 16}
+ 	,
+ 	{&dot11lcn_gain_idx_tbl_5G,
+-	 sizeof(dot11lcn_gain_idx_tbl_5G) / sizeof(dot11lcn_gain_idx_tbl_5G[0]),
++	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_5G),
+ 	 13, 0, 32}
+ 	,
+ 	{&dot11lcn_gain_val_tbl_5G,
+-	 sizeof(dot11lcn_gain_val_tbl_5G) / sizeof(dot11lcn_gain_val_tbl_5G[0]),
++	 ARRAY_SIZE(dot11lcn_gain_val_tbl_5G),
+ 	 17, 0, 8}
+ };
+ 
+ const u32 dot11lcnphytbl_rx_gain_info_sz_rev0 =
+-	sizeof(dot11lcnphytbl_rx_gain_info_rev0) /
+-	sizeof(dot11lcnphytbl_rx_gain_info_rev0[0]);
++	ARRAY_SIZE(dot11lcnphytbl_rx_gain_info_rev0);
+ 
+ const u32 dot11lcnphytbl_rx_gain_info_2G_rev2_sz =
+-	sizeof(dot11lcnphytbl_rx_gain_info_2G_rev2) /
+-	sizeof(dot11lcnphytbl_rx_gain_info_2G_rev2[0]);
++	ARRAY_SIZE(dot11lcnphytbl_rx_gain_info_2G_rev2);
+ 
+ const u32 dot11lcnphytbl_rx_gain_info_5G_rev2_sz =
+-	sizeof(dot11lcnphytbl_rx_gain_info_5G_rev2) /
+-	sizeof(dot11lcnphytbl_rx_gain_info_5G_rev2[0]);
++	ARRAY_SIZE(dot11lcnphytbl_rx_gain_info_5G_rev2);
+ 
+ static const u16 dot11lcn_min_sig_sq_tbl_rev0[] = {
+ 	0x014d,
+@@ -2771,89 +2757,74 @@ static const u32 dot11lcn_papd_compdelta_tbl_rev0[] = {
+ 
+ const struct phytbl_info dot11lcnphytbl_info_rev0[] = {
+ 	{&dot11lcn_min_sig_sq_tbl_rev0,
+-	 sizeof(dot11lcn_min_sig_sq_tbl_rev0) /
+-	 sizeof(dot11lcn_min_sig_sq_tbl_rev0[0]), 2, 0, 16}
++	 ARRAY_SIZE(dot11lcn_min_sig_sq_tbl_rev0), 2, 0, 16}
+ 	,
+ 	{&dot11lcn_noise_scale_tbl_rev0,
+-	 sizeof(dot11lcn_noise_scale_tbl_rev0) /
+-	 sizeof(dot11lcn_noise_scale_tbl_rev0[0]), 1, 0, 16}
++	 ARRAY_SIZE(dot11lcn_noise_scale_tbl_rev0), 1, 0, 16}
+ 	,
+ 	{&dot11lcn_fltr_ctrl_tbl_rev0,
+-	 sizeof(dot11lcn_fltr_ctrl_tbl_rev0) /
+-	 sizeof(dot11lcn_fltr_ctrl_tbl_rev0[0]), 11, 0, 32}
++	 ARRAY_SIZE(dot11lcn_fltr_ctrl_tbl_rev0), 11, 0, 32}
+ 	,
+ 	{&dot11lcn_ps_ctrl_tbl_rev0,
+-	 sizeof(dot11lcn_ps_ctrl_tbl_rev0) /
+-	 sizeof(dot11lcn_ps_ctrl_tbl_rev0[0]), 12, 0, 32}
++	 ARRAY_SIZE(dot11lcn_ps_ctrl_tbl_rev0), 12, 0, 32}
+ 	,
+ 	{&dot11lcn_gain_idx_tbl_rev0,
+-	 sizeof(dot11lcn_gain_idx_tbl_rev0) /
+-	 sizeof(dot11lcn_gain_idx_tbl_rev0[0]), 13, 0, 32}
++	 ARRAY_SIZE(dot11lcn_gain_idx_tbl_rev0), 13, 0, 32}
+ 	,
+ 	{&dot11lcn_aux_gain_idx_tbl_rev0,
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0) /
+-	 sizeof(dot11lcn_aux_gain_idx_tbl_rev0[0]), 14, 0, 16}
++	 ARRAY_SIZE(dot11lcn_aux_gain_idx_tbl_rev0), 14, 0, 16}
+ 	,
+ 	{&dot11lcn_sw_ctrl_tbl_rev0,
+-	 sizeof(dot11lcn_sw_ctrl_tbl_rev0) /
+-	 sizeof(dot11lcn_sw_ctrl_tbl_rev0[0]), 15, 0, 16}
++	 ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_rev0), 15, 0, 16}
+ 	,
+ 	{&dot11lcn_nf_table_rev0,
+-	 sizeof(dot11lcn_nf_table_rev0) / sizeof(dot11lcn_nf_table_rev0[0]), 16,
++	 ARRAY_SIZE(dot11lcn_nf_table_rev0), 16,
+ 	 0, 8}
+ 	,
+ 	{&dot11lcn_gain_val_tbl_rev0,
+-	 sizeof(dot11lcn_gain_val_tbl_rev0) /
+-	 sizeof(dot11lcn_gain_val_tbl_rev0[0]), 17, 0, 8}
++	 ARRAY_SIZE(dot11lcn_gain_val_tbl_rev0), 17, 0, 8}
+ 	,
+ 	{&dot11lcn_gain_tbl_rev0,
+-	 sizeof(dot11lcn_gain_tbl_rev0) / sizeof(dot11lcn_gain_tbl_rev0[0]), 18,
++	 ARRAY_SIZE(dot11lcn_gain_tbl_rev0), 18,
+ 	 0, 32}
+ 	,
+ 	{&dot11lcn_spur_tbl_rev0,
+-	 sizeof(dot11lcn_spur_tbl_rev0) / sizeof(dot11lcn_spur_tbl_rev0[0]), 20,
++	 ARRAY_SIZE(dot11lcn_spur_tbl_rev0), 20,
+ 	 0, 8}
+ 	,
+ 	{&dot11lcn_unsup_mcs_tbl_rev0,
+-	 sizeof(dot11lcn_unsup_mcs_tbl_rev0) /
+-	 sizeof(dot11lcn_unsup_mcs_tbl_rev0[0]), 23, 0, 16}
++	 ARRAY_SIZE(dot11lcn_unsup_mcs_tbl_rev0), 23, 0, 16}
+ 	,
+ 	{&dot11lcn_iq_local_tbl_rev0,
+-	 sizeof(dot11lcn_iq_local_tbl_rev0) /
+-	 sizeof(dot11lcn_iq_local_tbl_rev0[0]), 0, 0, 16}
++	 ARRAY_SIZE(dot11lcn_iq_local_tbl_rev0), 0, 0, 16}
+ 	,
+ 	{&dot11lcn_papd_compdelta_tbl_rev0,
+-	 sizeof(dot11lcn_papd_compdelta_tbl_rev0) /
+-	 sizeof(dot11lcn_papd_compdelta_tbl_rev0[0]), 24, 0, 32}
++	 ARRAY_SIZE(dot11lcn_papd_compdelta_tbl_rev0), 24, 0, 32}
+ 	,
+ };
+ 
+ const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313 = {
+ 	&dot11lcn_sw_ctrl_tbl_4313_rev0,
+-	sizeof(dot11lcn_sw_ctrl_tbl_4313_rev0) /
+-	sizeof(dot11lcn_sw_ctrl_tbl_4313_rev0[0]), 15, 0, 16
++	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_rev0), 15, 0, 16
+ };
+ 
+ const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_epa = {
+ 	&dot11lcn_sw_ctrl_tbl_4313_epa_rev0,
+-	sizeof(dot11lcn_sw_ctrl_tbl_4313_epa_rev0) /
+-	sizeof(dot11lcn_sw_ctrl_tbl_4313_epa_rev0[0]), 15, 0, 16
++	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_epa_rev0), 15, 0, 16
+ };
+ 
+ const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa = {
+ 	&dot11lcn_sw_ctrl_tbl_4313_epa_rev0_combo,
+-	sizeof(dot11lcn_sw_ctrl_tbl_4313_epa_rev0_combo) /
+-	sizeof(dot11lcn_sw_ctrl_tbl_4313_epa_rev0_combo[0]), 15, 0, 16
++	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_epa_rev0_combo), 15, 0, 16
+ };
+ 
+ const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa_p250 = {
+ 	&dot11lcn_sw_ctrl_tbl_4313_bt_epa_p250_rev0,
+-	sizeof(dot11lcn_sw_ctrl_tbl_4313_bt_epa_p250_rev0) /
+-	sizeof(dot11lcn_sw_ctrl_tbl_4313_bt_epa_p250_rev0[0]), 15, 0, 16
++	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_bt_epa_p250_rev0), 15, 0, 16
+ };
+ 
+ const u32 dot11lcnphytbl_info_sz_rev0 =
+-	sizeof(dot11lcnphytbl_info_rev0) / sizeof(dot11lcnphytbl_info_rev0[0]);
++	ARRAY_SIZE(dot11lcnphytbl_info_rev0);
+ 
+ const struct lcnphy_tx_gain_tbl_entry
+ dot11lcnphy_2GHz_extPA_gaintable_rev0[128] = {
 -- 
-1.8.3.4
+1.7.10.4
+
 
