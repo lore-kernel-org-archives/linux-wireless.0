@@ -1,73 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:42372 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934118Ab3HHJ3R convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 05:29:17 -0400
-Received: by mail-bk0-f46.google.com with SMTP id 6so905397bkj.5
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Aug 2013 02:29:15 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:1399 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751213Ab3HTOBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 10:01:00 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Jonas Gorski" <jogo@openwrt.org>
+Subject: [PATCH 06/12] brcmsmac: change lcnphy receive i/q calibration
+ routine
+Date: Tue, 20 Aug 2013 16:00:40 +0200
+Message-ID: <1377007246-9957-7-git-send-email-arend@broadcom.com> (sfid-20130820_160203_615676_185B9662)
+In-Reply-To: <1377007246-9957-1-git-send-email-arend@broadcom.com>
+References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <871u6435c6.fsf@kamboji.qca.qualcomm.com>
-References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
-	<1375949298-7159-4-git-send-email-michal.kazior@tieto.com>
-	<87eha4363n.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnoVmQcMnajTx3vsKwct5PLCNOt6w2qo17fyigm=gO5-w@mail.gmail.com>
-	<871u6435c6.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 8 Aug 2013 11:29:15 +0200
-Message-ID: <CA+BoTQnsH6XxpgoBh0tTNCjXvNz-fL6OaCp=LP-Eap_4tqYNkw@mail.gmail.com> (sfid-20130808_112924_566419_F38247FA)
-Subject: Re: [RFC 3/3] ath10k: add support for HTT 3.0
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 August 2013 11:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> On 8 August 2013 11:05, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->
->>> This debug print is good to have, but with the new htt version it would
->>> be good to print it always using the info level. For example, can we add
->>> it to the same line with "firmware %s booted" string?
->>
->> HTT target version is not known when firmware boots up. It's not known
->> until everything other (HTC, WMI) is set up. We then send a version
->> request command and we get a response.
->
-> Oh, missed that.
->
->> We need to print it in a separate line.
->
-> Or could we print the "firmware booted" message later?
+The gain level control for the test tone has been changed. This
+calbration test tone is used to determine the i/q compensation.
+The i/q calibration routine has been reworked to accomodate this.
 
-I'm worried it may be error-prone in case of firmware loading failure
-in-between (i.e. firmware is booted, but WMI init fails). We'd need to
-print the firmware version in the error path then.
+Cc: Jonas Gorski <jogo@openwrt.org>
+Tested-by: David Herrmann <dh.herrmann@gmail.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   78 +++++++++++++++-----
+ 1 file changed, 58 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+index 8dc5d0f..236e8d9 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -1329,6 +1329,43 @@ static u32 wlc_lcnphy_measure_digital_power(struct brcms_phy *pi, u16 nsamples)
+ 	return (iq_est.i_pwr + iq_est.q_pwr) / nsamples;
+ }
+ 
++static bool wlc_lcnphy_rx_iq_cal_gain(struct brcms_phy *pi, u16 biq1_gain,
++				      u16 tia_gain, u16 lna2_gain)
++{
++	u32 i_thresh_l, q_thresh_l;
++	u32 i_thresh_h, q_thresh_h;
++	struct lcnphy_iq_est iq_est_h, iq_est_l;
++
++	wlc_lcnphy_set_rx_gain_by_distribution(pi, 0, 0, 0, biq1_gain, tia_gain,
++					       lna2_gain, 0);
++
++	wlc_lcnphy_rx_gain_override_enable(pi, true);
++	wlc_lcnphy_start_tx_tone(pi, 2000, (40 >> 1), 0);
++	udelay(500);
++	write_radio_reg(pi, RADIO_2064_REG112, 0);
++	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_l))
++		return false;
++
++	wlc_lcnphy_start_tx_tone(pi, 2000, 40, 0);
++	udelay(500);
++	write_radio_reg(pi, RADIO_2064_REG112, 0);
++	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_h))
++		return false;
++
++	i_thresh_l = (iq_est_l.i_pwr << 1);
++	i_thresh_h = (iq_est_l.i_pwr << 2) + iq_est_l.i_pwr;
++
++	q_thresh_l = (iq_est_l.q_pwr << 1);
++	q_thresh_h = (iq_est_l.q_pwr << 2) + iq_est_l.q_pwr;
++	if ((iq_est_h.i_pwr > i_thresh_l) &&
++	    (iq_est_h.i_pwr < i_thresh_h) &&
++	    (iq_est_h.q_pwr > q_thresh_l) &&
++	    (iq_est_h.q_pwr < q_thresh_h))
++		return true;
++
++	return false;
++}
++
+ static bool
+ wlc_lcnphy_rx_iq_cal(struct brcms_phy *pi,
+ 		     const struct lcnphy_rx_iqcomp *iqcomp,
+@@ -1343,8 +1380,8 @@ wlc_lcnphy_rx_iq_cal(struct brcms_phy *pi,
+ 	    RFOverrideVal0_old, rfoverride2_old, rfoverride2val_old,
+ 	    rfoverride3_old, rfoverride3val_old, rfoverride4_old,
+ 	    rfoverride4val_old, afectrlovr_old, afectrlovrval_old;
+-	int tia_gain;
+-	u32 received_power, rx_pwr_threshold;
++	int tia_gain, lna2_gain, biq1_gain;
++	bool set_gain;
+ 	u16 old_sslpnCalibClkEnCtrl, old_sslpnRxFeClkEnCtrl;
+ 	u16 values_to_save[11];
+ 	s16 *ptr;
+@@ -1432,29 +1469,30 @@ wlc_lcnphy_rx_iq_cal(struct brcms_phy *pi,
+ 	mod_phy_reg(pi, 0x43b, (0x1 << 0), 1 << 0);
+ 	mod_phy_reg(pi, 0x43c, (0x1 << 0), 0 << 0);
+ 
+-	wlc_lcnphy_start_tx_tone(pi, 2000, 120, 0);
+ 	write_phy_reg(pi, 0x6da, 0xffff);
+ 	or_phy_reg(pi, 0x6db, 0x3);
+-	wlc_lcnphy_set_trsw_override(pi, tx_switch, rx_switch);
+-	wlc_lcnphy_rx_gain_override_enable(pi, true);
+-
+-	tia_gain = 8;
+-	rx_pwr_threshold = 950;
+-	while (tia_gain > 0) {
+-		tia_gain -= 1;
+-		wlc_lcnphy_set_rx_gain_by_distribution(pi,
+-						       0, 0, 2, 2,
+-						       (u16)
+-						       tia_gain, 1, 0);
+-		udelay(500);
+ 
+-		received_power =
+-			wlc_lcnphy_measure_digital_power(pi, 2000);
+-		if (received_power < rx_pwr_threshold)
+-			break;
++	wlc_lcnphy_set_trsw_override(pi, tx_switch, rx_switch);
++	for (lna2_gain = 3; lna2_gain >= 0; lna2_gain--) {
++		for (tia_gain = 4; tia_gain >= 0; tia_gain--) {
++			for (biq1_gain = 6; biq1_gain >= 0; biq1_gain--) {
++				set_gain = wlc_lcnphy_rx_iq_cal_gain(pi,
++								     (u16)
++								     biq1_gain,
++								     (u16)
++								     tia_gain,
++								     (u16)
++								     lna2_gain);
++				if (!set_gain)
++					continue;
++
++				result = wlc_lcnphy_calc_rx_iq_comp(pi, 1024);
++				goto stop_tone;
++			}
++		}
+ 	}
+-	result = wlc_lcnphy_calc_rx_iq_comp(pi, 0xffff);
+ 
++stop_tone:
+ 	wlc_lcnphy_stop_tx_tone(pi);
+ 
+ 	write_phy_reg(pi, 0x631, Core1TxControl_old);
+-- 
+1.7.10.4
 
 
->
->>> (Please take into account that the info messages still need to be
->>> compact, by default they should not be longer than five lines or so.)
->>>
->>>> +     if (htt->target_version_major != 2 &&
->>>> +         htt->target_version_major != 3) {
->>>>               ath10k_err("htt major versions are incompatible!\n");
->>>>               return -ENOTSUPP;
->>>>       }
->>>
->>> Print the htt version in the error message as well?
->>
->> Target version is printed in ath10k_dbg() now. If we change that to
->> ath10k_info() I don't see any reason to print the version again on
->> error.
->
-> Frequently users just copy the error message, that's why it's better to
-> have the firmware's htt version in the error message as well.
-
-Good point.
-
-
-Pozdrawiam / Best regards,
-Michał Kazior.
