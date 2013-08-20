@@ -1,49 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:49690 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756542Ab3HMLjl convert rfc822-to-8bit (ORCPT
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:35571 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422Ab3HTIgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 07:39:41 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	wireless-regdb@lists.infradead.org
-Subject: Re: [wireless-regdb] [PATCH 00/53] wireless-regdb: latest updates
-References: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com>
-Date: Tue, 13 Aug 2013 13:13:08 +0200
-In-Reply-To: <1374027522-18488-1-git-send-email-mcgrof@do-not-panic.com> (Luis
-	R. Rodriguez's message of "Tue, 16 Jul 2013 19:17:49 -0700")
-Message-ID: <87mwolc08r.fsf@nemi.mork.no> (sfid-20130813_133945_338190_5EF36DDF)
+	Tue, 20 Aug 2013 04:36:24 -0400
+Received: by mail-bk0-f47.google.com with SMTP id mx12so43322bkb.20
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 01:36:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <52132589.5000306@broadcom.com>
+References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
+ <20130820000336.GA15548@kroah.com> <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
+ <20130820002822.GA18023@kroah.com> <5212F6E8.3090107@openwrt.org> <52132589.5000306@broadcom.com>
+From: Tom Gundersen <teg@jklm.no>
+Date: Tue, 20 Aug 2013 16:36:03 +0800
+Message-ID: <CAG-2HqVo+Jn4QsmErCVcqgS6LcxvXESVWHHCp5BGapcv0A_+Ww@mail.gmail.com> (sfid-20130820_103630_019344_FC50C117)
+Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
-
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Tue, Aug 20, 2013 at 4:15 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 08/20/2013 06:56 AM, Felix Fietkau wrote:
+>>
+>> On 2013-08-20 2:28 AM, Greg Kroah-Hartman wrote:
+>>>
+>>> On Tue, Aug 20, 2013 at 08:26:11AM +0800, Tom Gundersen wrote:
+>>>>
+>>>> On Tue, Aug 20, 2013 at 8:03 AM, Greg Kroah-Hartman
+>>>> <gregkh@linuxfoundation.org> wrote:
+>>>>>
+>>>>> On Tue, Aug 20, 2013 at 07:59:47AM +0800, Tom Gundersen wrote:
+>>>>>>
+>>>>>> Hi guys,
+>>>>>>
+>>>>>> Starting with 3.10.6 (and still present in .7) I get an oops on
+>>>>>> connecting to the network.
+>>>>>>
+>>>>>> The attached picture shows the oops. In case it does not reach the ML,
+>>>>>> the top of the call trace reads:
+>>>>>>
+>>>>>> brcms_c_compute_rtscts_dur
+>>>>>> brcms_c_ampdu_finalize
+>>>>>> ampdu_finalize
+>>>>>> dma_txfast
+>>>>>> brcms_c_txfifo
+>>>>>> brcms_c_sendpkt_mac80211
+>>>>>> brcms_ops_tx
+>>>>>> __ieee80211_tx
+>>>>>>
+>>>>>> I bisected the problem and the first bad commit is
+>>>>>>
+>>>>>> commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
+>>>>>> Author: Felix Fietkau <nbd@openwrt.org>
+>>>>>> Date:   Fri Jun 28 21:04:35 2013 +0200
+>>>>>>
+>>>>>>      mac80211/minstrel_ht: fix cck rate sampling
+>>>>>>
+>>>>>>      commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5 upstream.
+>>>>>>
+>>>>>> Reverting it on top of .7 fixes the problem.
+>>>>>>
+>>>>>> I had the same (I suppose) problem on mainline some time ago, but I
+>>>>>> have not bisected it, verified that the problem still occurs there, or
+>>>>>> checked if reverting the upstream patch fixes it. I'd be happy to do
+>>>>>> that if it would help though.
+>>>>>>
+>>>>>> Let me know if you need any more information.
+>>>>>
+>>>>>
+>>>>> Do you have this same problem with 3.11-rc6 as well?
+>>>>
+>>>>
+>>>> Yes, I just confirmed. I also confirmed that reverting the mainline
+>>>> commit on top of -rc6 fixes the problem.
+>>>
+>>>
+>>> Great, thanks.
+>>>
+>>> Felix and Johannes, any chance we can get this reverted in Linus tree
+>>> soon, and push that revert back to the 3.10 stable tree as well?
+>>
+>> I'd like to avoid a revert, since that will simply replace one set of
+>> issues with another. Let's limit the use of the feature that brcmsmac
+>> can't handle to drivers that are known to work with it. Tom, Please
+>> test this patch to see if it fixes your issue.
 >
-> I saw one comment posted about the Indonesia patch, I fixed that.
-> I also then ran some sanity tests with a new reglib addition
-> wich I recently posted. This helped find two cases which
-> required disabling VHT80 for two countries on a specific band.
-> One was for US for 5690 and another for TW for 5290. In both cases
-> the reason is due to the fact that the only way to use VHT80 is
-> to combine two frequency ranges together that are contiguous and
-> apply the most restrictive band rules for that range. We don't support
-> this yet so just disable VHT80 in both cases. In the US case this
-> also seems to be the preferred ruling.
+>
+> Hi Felix,
+>
+> I have been diving into root causing why brcmsmac can not handle cck
+> fallback rates, because it should. Maybe it is better to flag no cck support
+> and only change brcmsmac.
 
-Hello,
+Hi Arend,
 
-Out of personal interest I'm wondering why you excluded Norway and
-Iceland from this series?  As EEA [1] members they pretty much follow
-all relevant EU regulations, like for example the R&TTE directive.  And
-the CEPT documents should also be pretty clear wrt VHT80 support.
+In case you cannot reproduce, let me know if I can help with testing patches.
 
+Cheers,
 
-[1] http://en.wikipedia.org/wiki/European_Economic_Area
-
-
-
-Bjørn
+Tom
