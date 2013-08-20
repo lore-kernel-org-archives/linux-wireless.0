@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39247 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755658Ab3H3L3x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 07:29:53 -0400
-Message-ID: <1377862182.16256.5.camel@jlt4.sipsolutions.net> (sfid-20130830_132957_667874_8896B16F)
-Subject: Re: [PATCH 0/2] mac80211: fix minstrel fixed_rate management
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Fri, 30 Aug 2013 13:29:42 +0200
-In-Reply-To: <52207CC4.50702@openwrt.org>
-References: <1377615587-6015-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <52207CC4.50702@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4541 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750827Ab3HTTFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Aug 2013 15:05:05 -0400
+Message-ID: <5213BDD5.60308@broadcom.com> (sfid-20130820_210509_863169_28D803E0)
+Date: Tue, 20 Aug 2013 21:04:53 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Felix Fietkau" <nbd@openwrt.org>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>
+Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
+References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
+ <20130820000336.GA15548@kroah.com>
+ <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
+ <20130820002822.GA18023@kroah.com> <5212F6E8.3090107@openwrt.org>
+ <52132589.5000306@broadcom.com> <5213A926.8060306@openwrt.org>
+In-Reply-To: <5213A926.8060306@openwrt.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-08-30 at 13:06 +0200, Felix Fietkau wrote:
-> On 2013-08-27 4:59 PM, Lorenzo Bianconi wrote:
-> > This couple of patches add/fix fixed_rate management of minstrel/minstrel_ht
-> > rate controller. In particular:
-> > *[PATCH 1/2]: add the capability to use a particular rate to minstrel rate
-> >  controller
-> > *[PATCH 2/2]: restore the mcs index configured according to fixed_rate value
-> >  since it has been overridden in minstrel_ht_update_stats throughput computation
-> > 
-> > Regards,
-> > Lorenzo
-> > 
-> > Lorenzo Bianconi (2):
-> >   mac80211: add fixed_rate management to minstrel rc
-> >   mac80211: do not override fixed_rate_idx in minstrel_ht_update_stats
-> > 
-> >  net/mac80211/rc80211_minstrel.c    | 14 ++++++++++++++
-> >  net/mac80211/rc80211_minstrel_ht.c | 23 +++++++++++++----------
-> >  2 files changed, 27 insertions(+), 10 deletions(-)
-> Acked-by: Felix Fietkau <nbd@openwrt.org>
+On 08/20/2013 07:36 PM, Felix Fietkau wrote:
+> On 2013-08-20 10:15 AM, Arend van Spriel wrote:
+>> Hi Felix,
+>>
+>> I have been diving into root causing why brcmsmac can not handle cck
+>> fallback rates, because it should. Maybe it is better to flag no cck
+>> support and only change brcmsmac.
+> I prefer having a flag to enable it over one to disable it, because it
+> fits better with the existing flags. Also, future drivers may not always
+> be properly prepared to handle CCK in A-MPDU sessions either.
 
-Applied.
+Ok. It just looked a bit strange that a problem in brcmsmac results in 
+changing other drivers.
 
-johannes
+> By the way, I took a short look at brcmsmac and found more issues that
+> you should look into if you want to fix this.
+>
+> First of all, you should probably make sure that the hardware does not
+> try to send an A-MPDU using a CCK rate (prepare it as a single frame in
+> brcms_c_ampdu_add_frame). It also does not seem to have any checks to
+> ensure that rate control probing frames are not aggregated.
+
+Thanks, Felix. I also noticed that our proprietary driver has code in 
+place for these scenarios.
+
+Gr. AvS
 
