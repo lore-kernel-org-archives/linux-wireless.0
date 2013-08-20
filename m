@@ -1,59 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:36786 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755255Ab3HEWHw (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:53760 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098Ab3HTRly (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Aug 2013 18:07:52 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Bing Zhao <bzhao@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] iw: correction in coalesce condition display message
-Date: Mon, 5 Aug 2013 15:06:06 -0700
-Message-ID: <1375740366-8986-1-git-send-email-bzhao@marvell.com> (sfid-20130806_000802_517293_A02C58FB)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Aug 2013 13:41:54 -0400
+Received: by mail-lb0-f179.google.com with SMTP id v1so728910lbd.10
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:53 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH 12/16] wcn36xx: Add txrx.h
+Date: Tue, 20 Aug 2013 19:41:15 +0200
+Message-Id: <1377020479-16935-13-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_200908_886667_B8179E5A)
+In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Adding txrx.h
 
-NL80211_COALESCE_CONDITION_MATCH is 0 and
-NL80211_COALESCE_CONDITION_NO_MATCH is 1.
-Hence this change is required
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
 ---
- coalesce.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/txrx.h | 160 ++++++++++++++++++++++++++++++++
+ 1 file changed, 160 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.h
 
-diff --git a/coalesce.c b/coalesce.c
-index 22d1534..0239915 100644
---- a/coalesce.c
-+++ b/coalesce.c
-@@ -175,7 +175,7 @@ COMMAND(coalesce, enable, "<config-file>",
- 	"  patterns=<[offset1+]<pattern1>,<[offset2+]<pattern2>,...>\n"
- 	"  ...\n"
- 	"delay: maximum coalescing delay in msec.\n"
--	"condition: 0/1 i.e. 'not match'/'match' the patterns\n"
-+	"condition: 1/0 i.e. 'not match'/'match' the patterns\n"
- 	"patterns: each pattern is given as a bytestring with '-' in\n"
- 	"places where any byte may be present, e.g. 00:11:22:-:44 will\n"
- 	"match 00:11:22:33:44 and 00:11:22:33:ff:44 etc. Offset and\n"
-@@ -224,9 +224,9 @@ static int print_coalesce_handler(struct nl_msg *msg, void *arg)
- 
- 		printf("Rule - max coalescing delay: %dmsec condition:", delay);
- 		if (condition)
--			printf("match\n");
--		else
- 			printf("not match\n");
-+		else
-+			printf("match\n");
- 
- 		if (ruleattr[NL80211_ATTR_COALESCE_RULE_PKT_PATTERN]) {
- 			nla_for_each_nested(pattern,
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.h b/drivers/net/wireless/ath/wcn36xx/txrx.h
+new file mode 100644
+index 0000000..bbfbcf8
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.h
+@@ -0,0 +1,160 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _TXRX_H_
++#define _TXRX_H_
++
++#include <linux/etherdevice.h>
++#include "wcn36xx.h"
++
++/* TODO describe all properties */
++#define WCN36XX_802_11_HEADER_LEN	24
++#define WCN36XX_BMU_WQ_TX		25
++#define WCN36XX_TID			7
++/* broadcast wq ID */
++#define WCN36XX_TX_B_WQ_ID		0xA
++#define WCN36XX_TX_U_WQ_ID		0x9
++/* bd_rate */
++#define WCN36XX_BD_RATE_DATA 0
++#define WCN36XX_BD_RATE_MGMT 2
++#define WCN36XX_BD_RATE_CTRL 3
++
++struct wcn36xx_pdu {
++	u32	dpu_fb:8;
++	u32	adu_fb:8;
++	u32	pdu_id:16;
++
++	/* 0x04*/
++	u32	tail_pdu_idx:16;
++	u32	head_pdu_idx:16;
++
++	/* 0x08*/
++	u32	pdu_count:7;
++	u32	mpdu_data_off:9;
++	u32	mpdu_header_off:8;
++	u32	mpdu_header_len:8;
++
++	/* 0x0c*/
++	u32	reserved4:8;
++	u32	tid:4;
++	u32	reserved3:4;
++	u32	mpdu_len:16;
++};
++
++struct wcn36xx_rx_bd {
++	u32	bdt:2;
++	u32	ft:1;
++	u32	dpu_ne:1;
++	u32	rx_key_id:3;
++	u32	ub:1;
++	u32	rmf:1;
++	u32	uma_bypass:1;
++	u32	csr11:1;
++	u32	reserved0:1;
++	u32	scan_learn:1;
++	u32	rx_ch:4;
++	u32	rtsf:1;
++	u32	bsf:1;
++	u32	a2hf:1;
++	u32	st_auf:1;
++	u32	dpu_sign:3;
++	u32	dpu_rf:8;
++
++	struct wcn36xx_pdu pdu;
++
++	/* 0x14*/
++	u32	addr3:8;
++	u32	addr2:8;
++	u32	addr1:8;
++	u32	dpu_desc_idx:8;
++
++	/* 0x18*/
++	u32	rxp_flags:23;
++	u32	rate_id:9;
++
++	u32	phy_stat0;
++	u32	phy_stat1;
++
++	/* 0x24 */
++	u32	rx_times;
++
++	u32	pmi_cmd[6];
++
++	/* 0x40 */
++	u32	reserved7:4;
++	u32	reorder_slot_id:6;
++	u32	reorder_fwd_id:6;
++	u32	reserved6:12;
++	u32	reorder_code:4;
++
++	/* 0x44 */
++	u32	exp_seq_num:12;
++	u32	cur_seq_num:12;
++	u32	fr_type_subtype:8;
++
++	/* 0x48 */
++	u32	msdu_size:16;
++	u32	sub_fr_id:4;
++	u32	proc_order:4;
++	u32	reserved9:4;
++	u32	aef:1;
++	u32	lsf:1;
++	u32	esf:1;
++	u32	asf:1;
++};
++
++struct wcn36xx_tx_bd {
++	u32	bdt:2;
++	u32	ft:1;
++	u32	dpu_ne:1;
++	u32	fw_tx_comp:1;
++	u32	tx_comp:1;
++	u32	reserved1:1;
++	u32	ub:1;
++	u32	rmf:1;
++	u32	reserved0:12;
++	u32	dpu_sign:3;
++	u32	dpu_rf:8;
++
++	struct wcn36xx_pdu pdu;
++
++	/* 0x14*/
++	u32	reserved5:7;
++	u32	queue_id:5;
++	u32	bd_rate:2;
++	u32	ack_policy:2;
++	u32	sta_index:8;
++	u32	dpu_desc_idx:8;
++
++	u32	tx_bd_sign;
++	u32	reserved6;
++	u32	dxe_start_time;
++	u32	dxe_end_time;
++
++	/*u32	tcp_udp_start_off:10;
++	u32	header_cks:16;
++	u32	reserved7:6;*/
++};
++
++struct wcn36xx_sta;
++struct wcn36xx;
++
++int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb);
++int wcn36xx_start_tx(struct wcn36xx *wcn,
++		     struct wcn36xx_sta *sta_priv,
++		     struct sk_buff *skb);
++
++#endif	/* _TXRX_H_ */
 -- 
-1.8.0
+1.8.2.2
 
