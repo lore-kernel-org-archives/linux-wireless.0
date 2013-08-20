@@ -1,83 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f179.google.com ([209.85.128.179]:53134 "EHLO
-	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755917Ab3HFQIu (ORCPT
+Received: from mail-la0-f43.google.com ([209.85.215.43]:63942 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752096Ab3HTRl7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 12:08:50 -0400
-Received: by mail-ve0-f179.google.com with SMTP id c13so621895vea.38
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Aug 2013 09:08:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAG-2HqVvoQK8ggErGGinO9i8Pbu-O-X=eYFW445ce24dpt7HyA@mail.gmail.com>
-References: <CALCETrXSnFPFVPkXHwz+FFA3=+pmz9V=cMHWwtN+jG1QJALWSQ@mail.gmail.com>
- <325b19bb936d7ebae11edad86aac8f0931e8abd9.1375719828.git.luto@amacapital.net>
- <5200B1BD.7030307@gmail.com> <CAG-2HqXEj06JbUOWee=NfuRXxL75uRf=55FZcXRLHroDzYUthQ@mail.gmail.com>
- <CAG-2HqVvoQK8ggErGGinO9i8Pbu-O-X=eYFW445ce24dpt7HyA@mail.gmail.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Tue, 6 Aug 2013 09:08:29 -0700
-Message-ID: <CALCETrX7aGpLAferwTbS3wQWwyw_v_DHh6se6c76fpfi6tJu=A@mail.gmail.com> (sfid-20130806_180907_653470_E46B9008)
-Subject: Re: [systemd-devel] [PATCH] Change CONFIG_FW_LOADER_USER_HELPER to
- default n and don't select it
-To: Tom Gundersen <teg@jklm.no>
-Cc: Maarten Lankhorst <m.b.lankhorst@gmail.com>,
-	systemd-devel@lists.freedesktop.org, linux-hotplug@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Kay Sievers <kay@vrfy.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 20 Aug 2013 13:41:59 -0400
+Received: by mail-la0-f43.google.com with SMTP id ep20so557785lab.16
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:58 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH 15/16] wcn36xx: Add Kconfig
+Date: Tue, 20 Aug 2013 19:41:18 +0200
+Message-Id: <1377020479-16935-16-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_200909_154600_B4A93EB8)
+In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 2:17 AM, Tom Gundersen <teg@jklm.no> wrote:
-> On Tue, Aug 6, 2013 at 11:11 AM, Tom Gundersen <teg@jklm.no> wrote:
->> On Tue, Aug 6, 2013 at 10:20 AM, Maarten Lankhorst
->> <m.b.lankhorst@gmail.com> wrote:
->>> Op 05-08-13 18:29, Andy Lutomirski schreef:
->>>> The systemd commit below can delay firmware loading by multiple
->>>> minutes if CONFIG_FW_LOADER_USER_HELPER=y.  Unfortunately no one
->>>> noticed that the systemd-udev change would break new kernels as well
->>>> as old kernels.
->>>>
->>>> Since the kernel apparently can't count on reasonable userspace
->>>> support, turn this thing off by default.
->>>>
->>>> commit a3bd8447be4ea2ce230eb8ae0e815c04d85fa15a
->>>> Author: Tom Gundersen <teg@jklm.no>
->>>> Date:   Mon Mar 18 15:12:18 2013 +0100
->>>>
->>>>     udev: make firmware loading optional and disable by default
->>>>
->>>>     Distros that whish to support old kernels should set
->>>>       --with-firmware-dirs="/usr/lib/firmware/updates:/usr/lib/firmware"
->>>>     to retain the old behaviour.
->>>>
->>> methinks this patch should be reverted then,
->>
->> Well, all the code is still there, so it can be enabled if anyone wants it.
->>
->>> or a stub should be added to udev to always fail firmware loading so timeouts don't occur.
->>
->> I think the only use (if any) of a userspace firmware loader would be
->> for anyone who wants a custom one (i.e., not udev), so we shouldn't
->> just fail the loading from udev unconditionally.
->>
->> How about we just improve the udev documentation a bit, similar to
->> Andy's kernel patch?
->
-> Sorry, I should first have checked. We already document this in the README:
->
->>        Userspace firmware loading is deprecated, will go away, and
->>        sometimes causes problems:
->>          CONFIG_FW_LOADER_USER_HELPER=n
+Adding Kconfig
 
-TBH, the udev README is the last thing I'm going to check to figure
-out why I don't have wifi for a couple minutes after boot.  Also, the
-message is missing the point.  It's not that it's deprecated and
-sometimes causes problems -- it's that udev *changed behavior* and
-breaks your system if you have CONFIG_FW_LOADER_USER_HELPER=y.
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/Kconfig | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
 
-If udev logged something (for a couple of years), that would be a
-different story.
+diff --git a/drivers/net/wireless/ath/wcn36xx/Kconfig b/drivers/net/wireless/ath/wcn36xx/Kconfig
+new file mode 100644
+index 0000000..591ebae
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
+@@ -0,0 +1,16 @@
++config WCN36XX
++	tristate "Qualcomm Atheros WCN3660/3680 support"
++	depends on MAC80211 && HAS_DMA
++	---help---
++	  This module adds support for wireless adapters based on
++	  Qualcomm Atheros WCN3660 and WCN3680 mobile chipsets.
++
++	  If you choose to build a module, it'll be called wcn36xx.
++
++config WCN36XX_DEBUGFS
++	bool "WCN36XX debugfs support"
++	depends on WCN36XX
++	---help---
++	  Enabled debugfs support
++
++	  If unsure, say Y to make it easier to debug problems.
+-- 
+1.8.2.2
 
---Andy
