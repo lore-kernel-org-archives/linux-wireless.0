@@ -1,79 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm1.bt.bullet.mail.ird.yahoo.com ([212.82.108.232]:38029 "EHLO
-	nm1.bt.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752677Ab3H1QFE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 12:05:04 -0400
-From: Marc Murphy <marcmltd@marcm.co.uk>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: 802.11p
-Date: Wed, 28 Aug 2013 15:57:59 +0000
-Message-ID: <F690310232FDDF4AB457E8B3EF90DDE08D321AF2@MARCM-SBS2011.marcmltd.local> (sfid-20130828_180509_542956_F0C2F8A7)
-References: <F690310232FDDF4AB457E8B3EF90DDE08D32184E@MARCM-SBS2011.marcmltd.local>,<CA+icZUW4vbCfEq9-1ewe=O=fADq42y60T2P7YV4cgNBSntQ9gA@mail.gmail.com>
-In-Reply-To: <CA+icZUW4vbCfEq9-1ewe=O=fADq42y60T2P7YV4cgNBSntQ9gA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mms1.broadcom.com ([216.31.210.17]:4793 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752437Ab3HUTBH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 15:01:07 -0400
+Message-ID: <52150E66.4090507@broadcom.com> (sfid-20130821_210111_014628_A9AE9FDB)
+Date: Wed, 21 Aug 2013 21:00:54 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Maximilian Engelhardt" <maxi@daemonizer.de>
+cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFT 00/13] brcmsmac: bcm4313 iPA related patches
+References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+ <7288564.kdgq91zD8T@eisbaer>
+In-Reply-To: <7288564.kdgq91zD8T@eisbaer>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes I saw that post but no response, it was 6 weeks ago.
-I have had more success finding the source used for the GCDC and looking to see how different it is from the mainline kernel drivers.
-
-Next is to find an Atheros USB 802.11a stick to do some tests with.
-
-Thanks
-Marc
-
-________________________________________
-From: Sedat Dilek [sedat.dilek@gmail.com]
-Sent: 28 August 2013 15:20
-To: Marc Murphy
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: 802.11p
-
-On Wed, Aug 28, 2013 at 2:15 PM, Marc Murphy <marcmltd@marcm.co.uk> wrote:
-> Doh ! updated now.
->
-> I have had a read through the docs but there is no direct reference to 802.11p.  I initially want to have a play with a couple of embedded units that I have to see if I cant send a message from one to the other but struggling to find any updated ath5 driver.
->
-
-A few weeks ago someone asked about that constellation, check for
-"802.11p and ath5k v3.10-rc1" thread on linux-wireless ML.
-
-- Sedat -
-
-> Thanks
-> Marc
->
-> ________________________________________
-> From: Sedat Dilek [sedat.dilek@gmail.com]
-> Sent: 28 August 2013 12:23
-> To: Marc Murphy
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re:
->
-> On Wed, Aug 28, 2013 at 1:07 PM, Marc Murphy <marcmltd@marcm.co.uk> wrote:
->> Hello,
->> I have been trawling the mailings and lots of people are asking about 802.11p and I have not managed to find a definitive push back to the mainline kernel.
+On 08/21/13 18:17, Maximilian Engelhardt wrote:
+> On Tuesday 13 August 2013 22:03:27 Arend van Spriel wrote:
+>> This series replaces the patch "[PATCH 12/12] brcmsmac: support 4313iPA"
+>> with Message-ID:<1376130450-29746-13-git-send-email-arend@broadcom.com>.
 >>
->
-> Hi,
->
-> first of all, you should set a "subject" to your email request :-).
->
-> I cannot say much about 802.11p, but for first informations I
-> recommend the wiki at <http://wireless.kernel.org> and have a look
-> into docs section.
->
-> For faster replies you can join #linux-wireless IRC channel (Freenode).
->
-> - Sedat -
->
->> Is there anywhere in particular that I need to be looking to be able to get the patches so I can have a play ?
+>> It has been split up into individual patches. Please test this series
+>> especially if you had issues with the original commit b6fc28a that was
+>> reverted.
 >>
->> Thanks
->> Marc--
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Cc: Jonas Gorski<jogo@openwrt.org>
+>> Cc: David Herrmann<dh.herrmann@gmail.com>
+>> Cc: Maximilian Engelhardt<maxi@daemonizer.de>
+>> Cc: David Costa<david@zarel.net>
+>>
+>> Arend van Spriel (13):
+>>    brcmsmac: cosmetic change in phy_lcn.c
+>>    brcmsmac: change pa_gain for bcm4313 iPA
+>>    brcmsmac: use ARRAY_SIZE in phytbl_lcn.c
+>>    brcmsmac: add switch control table for BCM4313 iPA BT-combo cards
+>>    brcmsmac: add debug info message providing phy and radio info
+>>    brcmsmac: update transmit gain table for lcn phy
+>>    brcmsmac: change lcnphy receive i/q calibration routine
+>>    brcmsmac: fix TSSI idle estimation
+>>    brcmsmac: avoid calling set_txpwr_by_index() twice
+>>    brcmsmac: rework switch control table init including iPA BT-combo
+>>    brcmsmac: correct phy registers for TSSI-based power control
+>>    brcmsmac: reinitialize TSSI power control upon channel switch
+>>    brcmsmac: add support for BCM4313 iPA variant
+>>
+>>   drivers/net/wireless/brcm80211/brcmsmac/main.c     |    4 +-
+>>   .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |  397
+>> +++++++++++-------- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |
+>> 405 +++++++++++--------- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h
+>> |    1 +
+>>   4 files changed, 475 insertions(+), 332 deletions(-)
+>
+> Hello Arend,
+>
+> I finally had some time to test your patches.
+>
+> On my hardware I couldn't find any regressions with these patches. I also
+> verified that the reception problems I had with my card are fixed by these
+> patches.
+>
+> I did test the patches on top of 3.10.5 as they did apply without any
+> problems.
+
+Appreciated. I did send the patches for wireless-next already, ie. for 
+v3.12 kernel. Good to know that they apply to 3.10 as is.
+
+Regards,
+Arend
+
