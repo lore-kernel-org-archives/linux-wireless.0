@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35951 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752306Ab3HPWaP (ORCPT
+Received: from mail-ve0-f171.google.com ([209.85.128.171]:38105 "EHLO
+	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463Ab3HUIjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 18:30:15 -0400
-Date: Fri, 16 Aug 2013 14:49:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-next 2013-08-16
-Message-ID: <20130816184917.GQ2133@tuxdriver.com> (sfid-20130817_003024_202613_D7A7CFD7)
-References: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
+	Wed, 21 Aug 2013 04:39:51 -0400
+Received: by mail-ve0-f171.google.com with SMTP id pa12so92325veb.30
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Aug 2013 01:39:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1376651161.15299.24.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1377032500.13829.41.camel@jlt4.sipsolutions.net>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+	<1377020479-16935-12-git-send-email-k.eugene.e@gmail.com>
+	<1377032500.13829.41.camel@jlt4.sipsolutions.net>
+Date: Wed, 21 Aug 2013 10:39:50 +0200
+Message-ID: <CAFSJ42YWHkMr-qvTxJbCF3=+fJYYpEgp1uxPw=aY78cjk2ieew@mail.gmail.com> (sfid-20130821_103955_291589_12377F9E)
+Subject: Re: [PATCH 11/16] wcn36xx: Add txrx.c
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 16, 2013 at 01:06:01PM +0200, Johannes Berg wrote:
-> John,
-> 
-> For iwlwifi-next I also have some new code...
-> 
-> This time I have some powersave work (notably uAPSD support), CQM
-> offloads, support for a new firmware API and various code cleanups.
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> 
-> The following changes since commit ef4394b9477f9078d78ae3e8359eae094c9b19d8:
-> 
->   iwlwifi: mvm: use designated initialization for some arrays (2013-08-06 10:35:04 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> 
-> for you to fetch changes up to 89716344806bd49d213ad5960661e8c2d38c4982:
-> 
->   iwlwifi: mvm: Add PBW snoozing enablement (2013-08-16 12:13:28 +0200)
+>> +     /* Data frames served first*/
+>> +     if (is_low) {
+>> +             /*
+>> +              * Sometimes in AP mode mac80211 is trying to send data
+>> +              * frame to nobody. Why?
+>> +              */
+>> +             if (!sta_priv)
+>> +                     wcn36xx_warn("Sending data packet to nobody");
+>
+> Umm, really? Have you heard of something called multicast? ;-)
+>
 
-Pulling now...
+Do not know who wrote this code but this comment definitely must be removed!
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Best regards,
+Eugene
