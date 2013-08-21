@@ -1,61 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:55877 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759379Ab3HNDp1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 23:45:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 12/14] ath9k: Handle corrupt descriptors properly
-Date: Wed, 14 Aug 2013 09:11:20 +0530
-Message-Id: <1376451682-25862-12-git-send-email-sujith@msujith.org> (sfid-20130814_060909_370195_0ABB0B3B)
-In-Reply-To: <1376451682-25862-1-git-send-email-sujith@msujith.org>
-References: <1376451682-25862-1-git-send-email-sujith@msujith.org>
+Received: from ebb06.tieto.com ([131.207.168.38]:57354 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752216Ab3HUG5g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 02:57:36 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/6] ath10k: remove unused ce_attr parameters
+Date: Wed, 21 Aug 2013 08:57:26 +0200
+Message-ID: <1377068249-26025-4-git-send-email-michal.kazior@tieto.com> (sfid-20130821_085741_521631_4B2DCE3E)
+In-Reply-To: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
+References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Some parameters were unused and are not required.
+They have no representation in firmware. Clean
+them up.
 
-The MIC/PHYERR/CRC error bits are valid only for
-the last desc. for chained packets. Check this early
-in the preprocess() routine and bail out.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.h  |    6 ------
+ drivers/net/wireless/ath/ath10k/pci.c |   18 +++++++++---------
+ 2 files changed, 9 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 5b84ce4..30cb726 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1099,6 +1099,16 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	if (rx_stats->rs_more)
- 		return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 6f6bca0..ce4cbbf 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -314,9 +314,6 @@ struct ce_attr {
+ 	/* CE_ATTR_* values */
+ 	unsigned int flags;
  
-+	/*
-+	 * Return immediately if the RX descriptor has been marked
-+	 * as corrupt based on the various error bits.
-+	 *
-+	 * This is different from the other corrupt descriptor
-+	 * condition handled above.
-+	 */
-+	if (rx_stats->rs_status & ATH9K_RXERR_CORRUPT_DESC)
-+		return -EINVAL;
-+
- 	hdr = (struct ieee80211_hdr *) (skb->data + ah->caps.rx_status_len);
+-	/* currently not in use */
+-	unsigned int priority;
+-
+ 	/* #entries in source ring - Must be a power of 2 */
+ 	unsigned int src_nentries;
  
- 	ath9k_process_tsf(rx_stats, rx_status, tsf);
-@@ -1335,8 +1345,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			sc->rx.frag = skb;
- 			goto requeue;
- 		}
--		if (rs.rs_status & ATH9K_RXERR_CORRUPT_DESC)
--			goto requeue_drop_frag;
+@@ -328,9 +325,6 @@ struct ce_attr {
  
- 		if (sc->rx.frag) {
- 			int space = skb->len - skb_tailroom(hdr_skb);
+ 	/* #entries in destination ring - Must be a power of 2 */
+ 	unsigned int dest_nentries;
+-
+-	/* Future use */
+-	void *reserved;
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 996efdd..80cc7fd 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -59,23 +59,23 @@ static void ath10k_pci_stop_intr(struct ath10k *ar);
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* host->target HTC control and raw streams */
+-	{ /* CE0 */ CE_ATTR_FLAGS, 0, 16, 256, 0, NULL,},
++	{ /* CE0 */ CE_ATTR_FLAGS, 16, 256, 0 },
+ 	/* could be moved to share CE3 */
+ 	/* target->host HTT + HTC control */
+-	{ /* CE1 */ CE_ATTR_FLAGS, 0, 0, 512, 512, NULL,},
++	{ /* CE1 */ CE_ATTR_FLAGS, 0, 512, 512 },
+ 	/* target->host WMI */
+-	{ /* CE2 */ CE_ATTR_FLAGS, 0, 0, 2048, 32, NULL,},
++	{ /* CE2 */ CE_ATTR_FLAGS, 0, 2048, 32 },
+ 	/* host->target WMI */
+-	{ /* CE3 */ CE_ATTR_FLAGS, 0, 32, 2048, 0, NULL,},
++	{ /* CE3 */ CE_ATTR_FLAGS, 32, 2048, 0 },
+ 	/* host->target HTT */
+-	{ /* CE4 */ CE_ATTR_FLAGS | CE_ATTR_DIS_INTR, 0,
+-		    CE_HTT_H2T_MSG_SRC_NENTRIES, 256, 0, NULL,},
++	{ /* CE4 */ CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
++		    CE_HTT_H2T_MSG_SRC_NENTRIES, 256, 0 },
+ 	/* unused */
+-	{ /* CE5 */ CE_ATTR_FLAGS, 0, 0, 0, 0, NULL,},
++	{ /* CE5 */ CE_ATTR_FLAGS, 0, 0, 0 },
+ 	/* Target autonomous hif_memcpy */
+-	{ /* CE6 */ CE_ATTR_FLAGS, 0, 0, 0, 0, NULL,},
++	{ /* CE6 */ CE_ATTR_FLAGS, 0, 0, 0 },
+ 	/* ce_diag, the Diagnostic Window */
+-	{ /* CE7 */ CE_ATTR_FLAGS, 0, 2, DIAG_TRANSFER_LIMIT, 2, NULL,},
++	{ /* CE7 */ CE_ATTR_FLAGS, 2, DIAG_TRANSFER_LIMIT, 2 },
+ };
+ 
+ /* Target firmware's Copy Engine configuration. */
 -- 
-1.8.3.4
+1.7.9.5
 
