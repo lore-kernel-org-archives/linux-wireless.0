@@ -1,216 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57813 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756395Ab3HFMSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 08:18:25 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:60441 "EHLO
+	sipsolutions.net" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752542Ab3HUUgH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 16:36:07 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, sujith@msujith.org
-Subject: [PATCH v2 01/12] ath9k: add utility functions for accessing tid queues
-Date: Tue,  6 Aug 2013 14:18:02 +0200
-Message-Id: <1375791493-83971-1-git-send-email-nbd@openwrt.org> (sfid-20130806_141833_933254_6D095057)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] mac80211: fix locking with ieee80211_resume_disconnect()
+Date: Wed, 21 Aug 2013 22:35:41 +0200
+Message-Id: <1377117341-9327-1-git-send-email-johannes@sipsolutions.net> (sfid-20130821_223611_796711_D6CA0ED5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Useful for further fixes / cleanups
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+If it is needed to disconnect multiple virtual interfaces after
+(WoWLAN-) suspend, the most obvious approach would be to iterate
+all interfaces by calling ieee80211_iterate_active_interfaces()
+and then call ieee80211_resume_disconnect() for each one. This
+is what the iwlmvm driver does.
+
+Unfortunately, this causes a locking dependency from mac80211's
+iflist_mtx to the key_mtx. This is problematic as the former is
+intentionally never held while calling any driver operation to
+allow drivers to iterate with their own locks held. The key_mtx
+is held while installing a key into the driver though, so this
+new lock dependency means drivers implementing the logic above
+can no longer hold their own lock while iterating.
+
+To fix this, modify the ieee80211_resume_disconnect() API to do
+the iteration in there (using RCU) while holding the key_mtx so
+there's no new lock dependency, and let the driver device which
+interface should be disconnected by passing a decision function
+that returns true/false.
+
+This also adjusts users accordingly, the iwldvm one introduces
+a behavioural change (previously only a single interface would
+have been disconnected) but this is acceptable since it only
+supports a single one for WoWLAN, so the other one would have
+been disconnected by the AP while sleeping anyway. For iwlmvm
+this fixes the bug described above.
+
+The decision-making callback would therefore not be necessary
+right now, but I'm working on a future patch to keep a single
+connection in iwlmvm open, at which point that one should not
+be disconnected, though all other ones should, so the API is
+prepared for that change already.
+
+Change-Id: I9b578c7dacefbb818b4113da12770aec9d0b06c4
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 51 ++++++++++++++++++++++-------------
- 1 file changed, 32 insertions(+), 19 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/d3.c       | 12 +----------
+ include/net/mac80211.h                      | 24 ++++++++++++++--------
+ net/mac80211/util.c                         | 31 ++++++++++++++++-------------
+ 4 files changed, 35 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 52cd521..eaa9eaf 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -168,6 +168,16 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index 4bd2ca9..1810b23 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -571,7 +571,7 @@ static int iwlagn_mac_resume(struct ieee80211_hw *hw)
+ 	mutex_unlock(&priv->mutex);
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 
+-	ieee80211_resume_disconnect(vif);
++	ieee80211_resume_disconnect(priv->hw, NULL, NULL);
+ 
+ 	return 1;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 5585538..29a7192 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1362,13 +1362,6 @@ static void iwl_mvm_read_d3_sram(struct iwl_mvm *mvm)
+ #endif
  }
  
-+static bool ath_tid_has_buffered(struct ath_atx_tid *tid)
-+{
-+	return !skb_queue_empty(&tid->buf_q);
-+}
-+
-+static struct sk_buff *ath_tid_dequeue(struct ath_atx_tid *tid)
-+{
-+	return __skb_dequeue(&tid->buf_q);
-+}
-+
- static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+-static void iwl_mvm_d3_disconnect_iter(void *data, u8 *mac,
+-				       struct ieee80211_vif *vif)
+-{
+-	if (vif->type == NL80211_IFTYPE_STATION)
+-		ieee80211_resume_disconnect(vif);
+-}
+-
+ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
  {
- 	struct ath_txq *txq = tid->ac->txq;
-@@ -182,7 +192,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 	struct iwl_d3_iter_data resume_iter_data = {
+@@ -1411,10 +1404,7 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
  
- 	memset(&ts, 0, sizeof(ts));
+  out:
+ 	if (!test)
+-		ieee80211_iterate_active_interfaces(mvm->hw,
+-						    IEEE80211_IFACE_ITER_NORMAL,
+-						    iwl_mvm_d3_disconnect_iter,
+-						    NULL);
++		ieee80211_resume_disconnect(mvm->hw, NULL, NULL);
  
--	while ((skb = __skb_dequeue(&tid->buf_q))) {
-+	while ((skb = ath_tid_dequeue(tid))) {
- 		fi = get_frame_info(skb);
- 		bf = fi->bf;
+ 	/* return 1 to reconfigure the device */
+ 	set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cb5eba8..194efe7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4104,13 +4104,18 @@ void ieee80211_connection_loss(struct ieee80211_vif *vif);
+ /**
+  * ieee80211_resume_disconnect - disconnect from AP after resume
+  *
+- * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+- *
+- * Instructs mac80211 to disconnect from the AP after resume.
+- * Drivers can use this after WoWLAN if they know that the
+- * connection cannot be kept up, for example because keys were
+- * used while the device was asleep but the replay counters or
+- * similar cannot be retrieved from the device during resume.
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @decision: decision function, return %true if the interface should be
++ *	disconnected, only interfaces of type %NL80211_IFTYPE_STATION
++ *	(P2P and non-P2P) will be passed for decision-making. May be %NULL
++ *	which is equivalent to always returning %true.
++ *
++ * Instructs mac80211 to disconnect from the AP after resume for those
++ * interfaces where the decision-making function returned %true. Drivers
++ * can use this after WoWLAN if they know that the connection cannot be
++ * kept up, for example because keys were used while the device was asleep
++ * but the replay counters or similar cannot be retrieved from the device
++ * during resume.
+  *
+  * Note that due to implementation issues, if the driver uses
+  * the reconfiguration functionality during resume the interface
+@@ -4122,7 +4127,10 @@ void ieee80211_connection_loss(struct ieee80211_vif *vif);
+  * calls this function, or at least not any locks it needs in the
+  * key configuration paths (if it supports HW crypto).
+  */
+-void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
++void ieee80211_resume_disconnect(struct ieee80211_hw *hw,
++				 bool (*decision)(struct ieee80211_vif *vif,
++						  void *data),
++				 void *decision_data);
  
-@@ -266,7 +276,7 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
- 	memset(&ts, 0, sizeof(ts));
- 	INIT_LIST_HEAD(&bf_head);
+ /**
+  * ieee80211_cqm_rssi_notify - inform a configured connection quality monitoring
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index d23c5a7..ba85533 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1753,29 +1753,32 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	return 0;
+ }
  
--	while ((skb = __skb_dequeue(&tid->buf_q))) {
-+	while ((skb = ath_tid_dequeue(tid))) {
- 		fi = get_frame_info(skb);
- 		bf = fi->bf;
- 
-@@ -815,7 +825,7 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
- 
- static struct ath_buf *
- ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
--			struct ath_atx_tid *tid)
-+			struct ath_atx_tid *tid, struct sk_buff_head **q)
+-void ieee80211_resume_disconnect(struct ieee80211_vif *vif)
++void ieee80211_resume_disconnect(struct ieee80211_hw *hw,
++				 bool (*decision)(struct ieee80211_vif *vif,
++						  void *data),
++				 void *decision_data)
  {
- 	struct ath_frame_info *fi;
- 	struct sk_buff *skb;
-@@ -823,7 +833,8 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 	u16 seqno;
++	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+-	struct ieee80211_local *local;
+ 	struct ieee80211_key *key;
  
- 	while (1) {
--		skb = skb_peek(&tid->buf_q);
-+		*q = &tid->buf_q;
-+		skb = skb_peek(*q);
- 		if (!skb)
- 			break;
+-	if (WARN_ON(!vif))
+-		return;
+-
+-	sdata = vif_to_sdata(vif);
+-	local = sdata->local;
+-
+ 	if (WARN_ON(!local->resuming))
+ 		return;
  
-@@ -833,7 +844,7 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 			bf = ath_tx_setup_buffer(sc, txq, tid, skb);
+-	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
+-		return;
++	mutex_lock(&local->key_mtx);
++	rcu_read_lock();
  
- 		if (!bf) {
--			__skb_unlink(skb, &tid->buf_q);
-+			__skb_unlink(skb, *q);
- 			ath_txq_skb_done(sc, txq, skb);
- 			ieee80211_free_txskb(sc->hw, skb);
- 			continue;
-@@ -852,7 +863,7 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
+-	sdata->flags |= IEEE80211_SDATA_DISCONNECT_RESUME;
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (sdata->vif.type != NL80211_IFTYPE_STATION)
++			continue;
++		if (decision && !decision(&sdata->vif, decision_data))
++			continue;
++		sdata->flags |= IEEE80211_SDATA_DISCONNECT_RESUME;
++		list_for_each_entry(key, &sdata->key_list, list)
++			key->flags |= KEY_FLAG_TAINTED;
++	}
  
- 			INIT_LIST_HEAD(&bf_head);
- 			list_add(&bf->list, &bf_head);
--			__skb_unlink(skb, &tid->buf_q);
-+			__skb_unlink(skb, *q);
- 			ath_tx_update_baw(sc, tid, seqno);
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
- 			continue;
-@@ -881,9 +892,10 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 	struct ieee80211_tx_info *tx_info;
- 	struct ath_frame_info *fi;
- 	struct sk_buff *skb;
-+	struct sk_buff_head *tid_q;
- 
- 	do {
--		bf = ath_tx_get_tid_subframe(sc, txq, tid);
-+		bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
- 		if (!bf) {
- 			status = ATH_AGGR_BAW_CLOSED;
- 			break;
-@@ -940,14 +952,14 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 			ath_tx_addto_baw(sc, tid, bf->bf_state.seqno);
- 		bf->bf_state.ndelim = ndelim;
- 
--		__skb_unlink(skb, &tid->buf_q);
-+		__skb_unlink(skb, tid_q);
- 		list_add_tail(&bf->list, bf_q);
- 		if (bf_prev)
- 			bf_prev->bf_next = bf;
- 
- 		bf_prev = bf;
- 
--	} while (!skb_queue_empty(&tid->buf_q));
-+	} while (ath_tid_has_buffered(tid));
- 
- 	*aggr_len = al;
- 
-@@ -1250,7 +1262,7 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	int aggr_len;
- 
- 	do {
--		if (skb_queue_empty(&tid->buf_q))
-+		if (!ath_tid_has_buffered(tid))
- 			return;
- 
- 		INIT_LIST_HEAD(&bf_q);
-@@ -1354,7 +1366,7 @@ void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
- 
- 		ath_txq_lock(sc, txq);
- 
--		buffered = !skb_queue_empty(&tid->buf_q);
-+		buffered = ath_tid_has_buffered(tid);
- 
- 		tid->sched = false;
- 		list_del(&tid->list);
-@@ -1386,7 +1398,7 @@ void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
- 		ath_txq_lock(sc, txq);
- 		ac->clear_ps_filter = true;
- 
--		if (!skb_queue_empty(&tid->buf_q) && !tid->paused) {
-+		if (!tid->paused && ath_tid_has_buffered(tid)) {
- 			ath_tx_queue_tid(txq, tid);
- 			ath_txq_schedule(sc, txq);
- 		}
-@@ -1411,7 +1423,7 @@ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	tid->baw_size = IEEE80211_MIN_AMPDU_BUF << sta->ht_cap.ampdu_factor;
- 	tid->paused = false;
- 
--	if (!skb_queue_empty(&tid->buf_q)) {
-+	if (ath_tid_has_buffered(tid)) {
- 		ath_tx_queue_tid(txq, tid);
- 		ath_txq_schedule(sc, txq);
- 	}
-@@ -1431,6 +1443,7 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *info;
- 	struct list_head bf_q;
- 	struct ath_buf *bf_tail = NULL, *bf;
-+	struct sk_buff_head *tid_q;
- 	int sent = 0;
- 	int i;
- 
-@@ -1446,12 +1459,12 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 			continue;
- 
- 		ath_txq_lock(sc, tid->ac->txq);
--		while (!skb_queue_empty(&tid->buf_q) && nframes > 0) {
--			bf = ath_tx_get_tid_subframe(sc, sc->tx.uapsdq, tid);
-+		while (nframes > 0) {
-+			bf = ath_tx_get_tid_subframe(sc, sc->tx.uapsdq, tid, &tid_q);
- 			if (!bf)
- 				break;
- 
--			__skb_unlink(bf->bf_mpdu, &tid->buf_q);
-+			__skb_unlink(bf->bf_mpdu, tid_q);
- 			list_add_tail(&bf->list, &bf_q);
- 			ath_set_rates(tid->an->vif, tid->an->sta, bf);
- 			ath_tx_addto_baw(sc, tid, bf->bf_state.seqno);
-@@ -1464,7 +1477,7 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 			sent++;
- 			TX_STAT_INC(txq->axq_qnum, a_queued_hw);
- 
--			if (skb_queue_empty(&tid->buf_q))
-+			if (!ath_tid_has_buffered(tid))
- 				ieee80211_sta_set_buffered(an->sta, i, false);
- 		}
- 		ath_txq_unlock_complete(sc, tid->ac->txq);
-@@ -1750,7 +1763,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 			 * add tid to round-robin queue if more frames
- 			 * are pending for the tid
- 			 */
--			if (!skb_queue_empty(&tid->buf_q))
-+			if (ath_tid_has_buffered(tid))
- 				ath_tx_queue_tid(txq, tid);
- 
- 			if (tid == last_tid ||
-@@ -1859,7 +1872,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_txq *txq,
- 	 * - seqno is not within block-ack window
- 	 * - h/w queue depth exceeds low water mark
- 	 */
--	if ((!skb_queue_empty(&tid->buf_q) || tid->paused ||
-+	if ((ath_tid_has_buffered(tid) || tid->paused ||
- 	     !BAW_WITHIN(tid->seq_start, tid->baw_size, tid->seq_next) ||
- 	     txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) &&
- 	    txq != sc->tx.uapsdq) {
+-	mutex_lock(&local->key_mtx);
+-	list_for_each_entry(key, &sdata->key_list, list)
+-		key->flags |= KEY_FLAG_TAINTED;
++	rcu_read_unlock();
+ 	mutex_unlock(&local->key_mtx);
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_resume_disconnect);
 -- 
-1.8.0.2
+1.8.4.rc2
 
