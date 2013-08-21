@@ -1,126 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:39268 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954Ab3HSPM3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58606 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752158Ab3HUJ7a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 11:12:29 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Wed, 21 Aug 2013 05:59:30 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1VC5CL-0008B8-T4
+	for linux-wireless@vger.kernel.org; Wed, 21 Aug 2013 11:59:30 +0200
+Message-ID: <1377079167.15268.9.camel@jlt4.sipsolutions.net> (sfid-20130821_115934_443205_93898B8B)
+Subject: Re: [PATCH] mac80211: add missing channel context release
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3 6/6] nl80211: enable IBSS support for channel switch announcements
-Date: Mon, 19 Aug 2013 17:12:20 +0200
-Message-Id: <1376925141-15353-7-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130819_171236_838546_19DEAE3A)
-In-Reply-To: <1376925141-15353-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376925141-15353-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Date: Wed, 21 Aug 2013 11:59:27 +0200
+In-Reply-To: <1377079129-23481-1-git-send-email-johannes@sipsolutions.net> (sfid-20130821_115901_139061_26DC7F82)
+References: <1377079129-23481-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130821_115901_139061_26DC7F82)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/wireless/nl80211.c |   49 +++++++++++++++++++++++++++++++++---------------
- 1 file changed, 34 insertions(+), 15 deletions(-)
+On Wed, 2013-08-21 at 11:58 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> IBSS needs to release the channel context when leaving
+> but I evidently missed that. Fix it.
+> 
+> Change-Id: Iaa87fdd143d5a1a7eac5b0bb63d11dca372a6bb3
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 334697d..85ff8cc 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5632,15 +5632,26 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	static struct nlattr *csa_attrs[NL80211_ATTR_MAX+1];
- 	u8 radar_detect_width = 0;
- 	int err;
-+	bool need_new_beacon = false;
- 
- 	if (!rdev->ops->channel_switch ||
- 	    !(rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH))
- 		return -EOPNOTSUPP;
- 
--	/* may add IBSS support later */
--	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
--	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-+	switch (dev->ieee80211_ptr->iftype) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+		need_new_beacon = true;
-+
-+		/* useless if AP is not running */
-+		if (!wdev->beacon_interval)
-+			return -EINVAL;
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		break;
-+	default:
- 		return -EOPNOTSUPP;
-+	}
- 
- 	memset(&params, 0, sizeof(params));
- 
-@@ -5649,15 +5660,16 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 
- 	/* only important for AP, IBSS and mesh create IEs internally */
--	if (!info->attrs[NL80211_ATTR_CSA_IES])
--		return -EINVAL;
--
--	/* useless if AP is not running */
--	if (!wdev->beacon_interval)
-+	if (need_new_beacon &&
-+	    (!info->attrs[NL80211_ATTR_CSA_IES] ||
-+	     !info->attrs[NL80211_ATTR_CSA_C_OFF_BEACON]))
- 		return -EINVAL;
- 
- 	params.count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
- 
-+	if (!need_new_beacon)
-+		goto skip_beacons;
-+
- 	err = nl80211_parse_beacon(info->attrs, &params.beacon_after);
- 	if (err)
- 		return err;
-@@ -5697,6 +5709,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+skip_beacons:
- 	err = nl80211_parse_chandef(rdev, info, &params.chandef);
- 	if (err)
- 		return err;
-@@ -5704,12 +5717,17 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
- 		return -EINVAL;
- 
--	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
--	if (err < 0) {
--		return err;
--	} else if (err) {
--		radar_detect_width = BIT(params.chandef.width);
--		params.radar_required = true;
-+	/* DFS channels are only supported for AP/P2P GO ... for now. */
-+	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
-+	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO) {
-+		err = cfg80211_chandef_dfs_required(wdev->wiphy,
-+						    &params.chandef);
-+		if (err < 0) {
-+			return err;
-+		} else if (err) {
-+			radar_detect_width = BIT(params.chandef.width);
-+			params.radar_required = true;
-+		}
- 	}
- 
- 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
-@@ -10733,7 +10751,8 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
- 	wdev_lock(wdev);
- 
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
--		    wdev->iftype != NL80211_IFTYPE_P2P_GO))
-+		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
-+		    wdev->iftype != NL80211_IFTYPE_ADHOC))
- 		goto out;
- 
- 	wdev->channel = chandef->chan;
--- 
-1.7.10.4
+Umm, I'll remove that :)
+
+johannes
 
