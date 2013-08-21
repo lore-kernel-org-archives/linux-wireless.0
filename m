@@ -1,79 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:35157 "EHLO arrakis.dune.hu"
+Received: from mx1.redhat.com ([209.132.183.28]:49217 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751652Ab3HSNLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 09:11:25 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
+	id S1751159Ab3HUISD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 04:18:03 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 1/6] rt2x00: rt2800lib: move rt2800_drv_data declaration into rt2800lib.h
-Date: Mon, 19 Aug 2013 15:11:13 +0200
-Message-Id: <1376917878-25094-2-git-send-email-juhosg@openwrt.org> (sfid-20130819_151135_643495_2845AD7A)
-In-Reply-To: <1376917878-25094-1-git-send-email-juhosg@openwrt.org>
-References: <1376917878-25094-1-git-send-email-juhosg@openwrt.org>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3.11] iwl4965: fix rfkill set state regression
+Date: Wed, 21 Aug 2013 10:18:19 +0200
+Message-Id: <1377073099-16515-1-git-send-email-sgruszka@redhat.com> (sfid-20130821_101818_647579_1B6D1AED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rt2800_drv_data structure contains driver specific
-information. Move the declaration into the rt2800lib.h
-header which is a more logical place for it. Also fix
-the comment style to avoid checkpatch warning.
+My current 3.11 fix:
 
-The patch contains no functional changes, it is in
-preparation for the next patch.
+commit 788f7a56fce1bcb2067b62b851a086fca48a0056
+Author: Stanislaw Gruszka <sgruszka@redhat.com>
+Date:   Thu Aug 1 12:07:55 2013 +0200
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+    iwl4965: reset firmware after rfkill off 
+
+broke rfkill notification to user-space . I missed that bug, because
+I compiled without CONFIG_RFKILL, sorry about that.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-Changes since v1: ---
----
- drivers/net/wireless/rt2x00/rt2800.h    |   13 -------------
- drivers/net/wireless/rt2x00/rt2800lib.h |   11 +++++++++++
- 2 files changed, 11 insertions(+), 13 deletions(-)
+ drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index e25e5bf..426129a 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -2956,17 +2956,4 @@ enum rt2800_eeprom_word {
-  */
- #define BCN_TBTT_OFFSET 64
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index f2ed62e..7acf5ee 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -4464,9 +4464,9 @@ il4965_irq_tasklet(struct il_priv *il)
+ 			set_bit(S_RFKILL, &il->status);
+ 		} else {
+ 			clear_bit(S_RFKILL, &il->status);
+-			wiphy_rfkill_set_hw_state(il->hw->wiphy, hw_rf_kill);
+ 			il_force_reset(il, true);
+ 		}
++		wiphy_rfkill_set_hw_state(il->hw->wiphy, hw_rf_kill);
  
--/*
-- * RT2800 driver data structure
-- */
--struct rt2800_drv_data {
--	u8 calibration_bw20;
--	u8 calibration_bw40;
--	u8 bbp25;
--	u8 bbp26;
--	u8 txmixer_gain_24g;
--	u8 txmixer_gain_5g;
--	unsigned int tbtt_tick;
--};
--
- #endif /* RT2800_H */
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index a94ba44..9b3e8ef 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -22,6 +22,17 @@
- #ifndef RT2800LIB_H
- #define RT2800LIB_H
- 
-+/* RT2800 driver data structure */
-+struct rt2800_drv_data {
-+	u8 calibration_bw20;
-+	u8 calibration_bw40;
-+	u8 bbp25;
-+	u8 bbp26;
-+	u8 txmixer_gain_24g;
-+	u8 txmixer_gain_5g;
-+	unsigned int tbtt_tick;
-+};
-+
- struct rt2800_ops {
- 	void (*register_read)(struct rt2x00_dev *rt2x00dev,
- 			      const unsigned int offset, u32 *value);
+ 		handled |= CSR_INT_BIT_RF_KILL;
+ 	}
 -- 
-1.7.10
+1.7.11.7
+
