@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:35351 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752825Ab3H1Rr2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 13:47:28 -0400
-Date: Wed, 28 Aug 2013 19:47:23 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Marc Murphy <marcmltd@marcm.co.uk>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 802.11p
-Message-ID: <20130828174723.GA28214@pandem0nium> (sfid-20130828_194732_088154_93C59605)
-References: <F690310232FDDF4AB457E8B3EF90DDE08D32184E@MARCM-SBS2011.marcmltd.local>
- <CA+icZUW4vbCfEq9-1ewe=O=fADq42y60T2P7YV4cgNBSntQ9gA@mail.gmail.com>
- <F690310232FDDF4AB457E8B3EF90DDE08D321AF2@MARCM-SBS2011.marcmltd.local>
+Received: from ebb06.tieto.com ([131.207.168.38]:44164 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752237Ab3HUGeW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 02:34:22 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: make the workqueue multithreaded
+Date: Wed, 21 Aug 2013 08:34:12 +0200
+Message-ID: <1377066854-13981-2-git-send-email-michal.kazior@tieto.com> (sfid-20130821_083426_655241_9F57D572)
+In-Reply-To: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
+References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="u3/rZRmxL6MmkK24"
-In-Reply-To: <F690310232FDDF4AB457E8B3EF90DDE08D321AF2@MARCM-SBS2011.marcmltd.local>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+TX work for a HTC endpoint can run for long
+periods of time, especially on slower host
+machines when under heavy load.
 
---u3/rZRmxL6MmkK24
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch prevents one endpoint starving another
+one by allowing each endpoint worker to be
+processed in parallel.
 
-On Wed, Aug 28, 2013 at 03:57:59PM +0000, Marc Murphy wrote:
-> Yes I saw that post but no response, it was 6 weeks ago.
-> I have had more success finding the source used for the GCDC and looking =
-to see how different it is from the mainline kernel drivers.
->=20
-> Next is to find an Atheros USB 802.11a stick to do some tests with.
+This is safe since none of ar->workqueue users
+depend on sequential execution.
 
-If you want to use the GCDC patchset, use some Atheros Mini-PCI hardware. I=
-'d doubt that these patches
-will work with anything different from ath5k. :)
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    4 +++-
+ drivers/net/wireless/ath/ath10k/core.h |    5 +++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-Cheers,
-	Simon
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 04c132e..a828584 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -520,7 +520,9 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+ 
+ 	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
+ 
+-	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
++	ar->workqueue = alloc_workqueue("ath10k_wq",
++					WQ_UNBOUND | WQ_MEM_RECLAIM,
++					ATH10K_MAX_NUM_PARALLEL_WORKERS);
+ 	if (!ar->workqueue)
+ 		goto err_wq;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index ab05c4c..e196833 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -40,6 +40,11 @@
+ #define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
+ #define ATH10K_NUM_CHANS 38
+ 
++#define ATH10K_NUM_HTC_TX_WORKERS ATH10K_HTC_EP_COUNT
++#define ATH10K_NUM_WMI_RX_WORKERS 1
++#define ATH10K_MAX_NUM_PARALLEL_WORKERS (ATH10K_NUM_HTC_TX_WORKERS + \
++					 ATH10K_NUM_WMI_RX_WORKERS)
++
+ /* Antenna noise floor */
+ #define ATH10K_DEFAULT_NOISE_FLOOR -95
+ 
+-- 
+1.7.9.5
 
---u3/rZRmxL6MmkK24
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlIeN6sACgkQrzg/fFk7axbO9gCfRiLYo7TL/6Ft45vVKZqyjij+
-KEkAniZEJDhjQ1JmskAiw0hqLxXCaL2t
-=XWl5
------END PGP SIGNATURE-----
-
---u3/rZRmxL6MmkK24--
