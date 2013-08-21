@@ -1,83 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:39952 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754170Ab3HBPiU (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:59859 "EHLO
+	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621Ab3HUQmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 11:38:20 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 1/7] cfg80211: export cfg80211_chandef_dfs_required
-Date: Fri,  2 Aug 2013 17:38:00 +0200
-Message-Id: <1375457886-7275-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130802_173833_262894_6264CE28)
-In-Reply-To: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1375457886-7275-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 21 Aug 2013 12:42:38 -0400
+Message-ID: <5214EE0E.20602@openwrt.org> (sfid-20130821_184241_815604_9FE94D8C)
+Date: Wed, 21 Aug 2013 18:42:54 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH v2 3/6] rt2x00: rt2800: serialize shared memory access
+References: <1376917878-25094-1-git-send-email-juhosg@openwrt.org> <1376917878-25094-4-git-send-email-juhosg@openwrt.org> <CAGXE3d-q3-HNtdp5jq94nCcLzCW1-oO+HTt+=yOFEE+fL8kbtA@mail.gmail.com>
+In-Reply-To: <CAGXE3d-q3-HNtdp5jq94nCcLzCW1-oO+HTt+=yOFEE+fL8kbtA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It will be used later by the IBSS CSA implementation of mac80211.
+Hi Helmut,
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- include/net/cfg80211.h |    9 +++++++++
- net/wireless/chan.c    |    1 +
- net/wireless/core.h    |    8 --------
- 3 files changed, 10 insertions(+), 8 deletions(-)
+> On Mon, Aug 19, 2013 at 3:11 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+>> The shared memory of the rt2800 devices is accessible
+>> through the register offset range between 0x4000 and
+>> 0x8000. The size of this range is 16KB only and on
+>> devices which have more than 16KB of shared memory either
+>> the low or the high part of the memory is accessible at a
+>> time.
+>>
+> 
+>> Serialize all accesses to the shared memory by a mutex,
+>> in order to avoid concurrent use of that.
+>>
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+>> ---
+> 
+> [...]
+> 
+> 
+>> @@ -993,8 +1001,11 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+>>         }
+>>
+>>         beacon_base = HW_BEACON_BASE(entry->entry_idx);
+>> +
+>> +       rt2800_shared_mem_lock(rt2x00dev);
+>>         rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+>>                                    entry->skb->len + padding_len);
+>> +       rt2800_shared_mem_unlock(rt2x00dev);
+>>
+>>         /*
+>>          * Enable beaconing again.
+> 
+> Beacons on PCI devices are updated from pre_tbtt or beacon_done tasklet.
+> Looks like this will fail for pci then ...
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6da5a6b..14c914f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -437,6 +437,15 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 			     u32 prohibited_flags);
- 
- /**
-+ * cfg80211_chandef_dfs_required - checks if radar detection is required
-+ * @wiphy: the wiphy to validate against
-+ * @chandef: the channel definition to check
-+ * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
-+ */
-+int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
-+				  const struct cfg80211_chan_def *c);
-+
-+/**
-  * ieee80211_chandef_rate_flags - returns rate flags for a channel
-  *
-  * In some channel types, not all rates may be used - for example CCK
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 50f6195..16f3c3a 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -328,6 +328,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
- 	return cfg80211_get_chans_dfs_required(wiphy, chandef->center_freq2,
- 					       width);
- }
-+EXPORT_SYMBOL(cfg80211_chandef_dfs_required);
- 
- static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 					u32 center_freq, u32 bandwidth,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9ad43c6..8ed2094 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -382,14 +382,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				 enum cfg80211_chan_mode chanmode,
- 				 u8 radar_detect);
- 
--/**
-- * cfg80211_chandef_dfs_required - checks if radar detection is required
-- * @wiphy: the wiphy to validate against
-- * @chandef: the channel definition to check
-- * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
-- */
--int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
--				  const struct cfg80211_chan_def *c);
- 
- void cfg80211_set_dfs_state(struct wiphy *wiphy,
- 			    const struct cfg80211_chan_def *chandef,
--- 
-1.7.10.4
+Hm, you are right:
 
+BUG: sleeping function called from invalid context at kernel/mutex.c:619
+in_atomic(): 1, irqs_disabled(): 0, pid: 0, name: swapper
+INFO: lockdep is turned off.
+CPU: 0 PID: 0 Comm: swapper Tainted: G           O 3.11.0-rc6-wl #627
+Stack : 00000000 00000000 80745dbe 00000045 00000000 80439ca0 803f097c 80723a50
+        8043da78 8043d7c7 001f0640 80439ca0 83dfee20 803f0000 00000006 8035c3dc
+        00000000 80031558 80745dbc 00000000 803f42b8 80439b9c 80439b9c 803f097c
+        c01ba400 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+        00000000 00000000 00000000 00000000 00000000 00000000 00000000 80439b30
+          ...
+Call Trace:
+[<8000d328>] show_stack+0x64/0x7c
+[<80361ca0>] mutex_lock_nested+0x4c/0x484
+[<c01ba458>] rt2800_write_beacon+0x300/0x460 [rt2800lib]
+[<c016dc24>] rt2x00queue_update_beacon_locked+0xc0/0xe4 [rt2x00lib]
+[<8033fa30>] ieee80211_iterate_active_interfaces_atomic+0x180/0x188
+[<c01cbb18>] 0xc01cbb18
+
+
+In an early version of the patch, I have used a spinlock but that was not
+suitable for USB devices. I have to rethink that how can I resolve this.
+
+Thank you for the review!
+
+-Gabor
