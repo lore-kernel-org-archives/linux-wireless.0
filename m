@@ -1,55 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:59618 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753485Ab3HVRBi (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:54239 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758Ab3HUE7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Aug 2013 13:01:38 -0400
-Received: by mail-pb0-f50.google.com with SMTP id uo5so2068742pbc.9
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 10:01:38 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH v2] mac80211: only respond to probe request with mesh ID
-Date: Thu, 22 Aug 2013 10:01:32 -0700
-Message-Id: <1377190892-5328-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130822_190141_886964_C16C492B)
+	Wed, 21 Aug 2013 00:59:45 -0400
+Received: by mail-lb0-f178.google.com with SMTP id z5so216790lbh.23
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 21:59:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgVdMKmd6fPi7ugrWUVaSZeU54K+jyT=gLY2tnxvyBPogQ@mail.gmail.com>
+References: <1376997139-6228-1-git-send-email-emmanuel.grumbach@intel.com>
+	<CAGRGNgVdMKmd6fPi7ugrWUVaSZeU54K+jyT=gLY2tnxvyBPogQ@mail.gmail.com>
+Date: Wed, 21 Aug 2013 07:59:43 +0300
+Message-ID: <CANUX_P3X2emXmTHiDxcs9yP1VzVJ=EPgxuRa5BYGpfCeOi=Q-g@mail.gmail.com> (sfid-20130821_065956_472806_67699240)
+Subject: Re: [RFC 1/2] mac80211: allow APs to send SMPS frames
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Hi Julian,
 
-Previously, the mesh STA responds to probe request from legacy STA
-but now it will only respond to legacy STA if the legacy STA does include 
-the specific mesh ID or wildcard mesh ID in the probe request.
+Thanks for the review.
 
-The iw patch "iw: scan using meshid" can be used either by legacy STA
-or by mesh STA to do active scanning by inserting the mesh ID in the 
-probe request frame.
+> On Tue, Aug 20, 2013 at 9:12 PM, Emmanuel Grumbach
+> <emmanuel.grumbach@intel.com> wrote:
+>> SMPS code checks all over the place that the vif is
+>> BSS. Remove that constraint and allow SMPS for AP too.
+>>
+>> Provide dummy implementation that will be used for
+>> further patches.
+>>
+>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> ---
+>>  net/mac80211/cfg.c            |   15 ++++++++++++---
+>>  net/mac80211/debugfs_netdev.c |   24 +++++++++++++++---------
+>>  net/mac80211/ht.c             |   38 ++++++++++++++++++++++++++++----------
+>>  net/mac80211/ieee80211_i.h    |   13 ++++++++++---
+>>  net/mac80211/iface.c          |    2 ++
+>>  net/mac80211/mlme.c           |    2 +-
+>>  6 files changed, 68 insertions(+), 26 deletions(-)
+>>
+>> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+>> index e601c9f..7609e47 100644
+>> --- a/net/mac80211/debugfs_netdev.c
+>> +++ b/net/mac80211/debugfs_netdev.c
+>> @@ -245,12 +248,15 @@ static const char *smps_modes[IEEE80211_SMPS_NUM_MODES] = {
+>>  static ssize_t ieee80211_if_fmt_smps(const struct ieee80211_sub_if_data *sdata,
+>>                                      char *buf, int buflen)
+>>  {
+>> -       if (sdata->vif.type != NL80211_IFTYPE_STATION)
+>> -               return -EOPNOTSUPP;
+>> -
+>> -       return snprintf(buf, buflen, "request: %s\nused: %s\n",
+>> -                       smps_modes[sdata->u.mgd.req_smps],
+>> -                       smps_modes[sdata->smps_mode]);
+>> +       if (sdata->vif.type == NL80211_IFTYPE_STATION)
+>> +               return snprintf(buf, buflen, "request: %s\nused: %s\n",
+>> +                               smps_modes[sdata->u.mgd.req_smps],
+>> +                               smps_modes[sdata->smps_mode]);
+>> +       if (sdata->vif.type == NL80211_IFTYPE_AP)
+>> +               return snprintf(buf, buflen, "request: %s\nused: %s\n",
+>> +                               smps_modes[sdata->u.ap.req_smps],
+>> +                               smps_modes[sdata->smps_mode]);
+>> +       return -EINVAL;
+>
+> Do you intend to change the return value for this function when we
+> can't do SMPS from -EOPNOTSUPP to -EINVAL?
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Acked-by: Thomas Pedersen <thomas@cozybit.com>
-Acked-by: Javier Cardona <javier@cozybit.com>
----
-v2: modify comments (Thomas)
-
- net/mac80211/mesh.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 885a5f6..a660fb8 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -832,6 +832,9 @@ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee802_11_parse_elems(pos, len - baselen, false, &elems);
- 
-+	if(!elems.mesh_id)
-+		return;
-+
- 	/* 802.11-2012 10.1.4.3.2 */
- 	if ((!ether_addr_equal(mgmt->da, sdata->vif.addr) &&
- 	     !is_broadcast_ether_addr(mgmt->da)) ||
--- 
-1.7.9.5
-
+You are right - v2 on the way with other comments I got internally.
