@@ -1,129 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60443 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758510Ab3HIRpM (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:33413 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752159Ab3HUVQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 13:45:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH v3] brcmsmac: Fix WARNING caused by lack of calls to dma_mapping_error()
-Date: Fri,  9 Aug 2013 13:36:21 -0400
-Message-Id: <1376069781-22958-1-git-send-email-linville@tuxdriver.com> (sfid-20130809_194521_739623_6BD45C6A)
-In-Reply-To: <51E852DE.6000403@broadcom.com>
-References: <51E852DE.6000403@broadcom.com>
+	Wed, 21 Aug 2013 17:16:11 -0400
+Received: by mail-we0-f169.google.com with SMTP id t61so925561wes.28
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Aug 2013 14:16:10 -0700 (PDT)
+Message-ID: <1377119764.7253.16.camel@canaries32-MCP7A> (sfid-20130821_231614_992175_AE058044)
+Subject: [PATCH 2/2] staging: vt6656: rxtx.c: s_uGetDataDuration  Drop
+ argument byDurType.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 21 Aug 2013 22:16:04 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
+When byDurType == DATADUR_B then byPktType == PK_TYPE_11B
 
-The driver fails to check the results of DMA mapping in twp places,
-which results in the following warning:
+Drop argument byDurType and filter on byPktType == PK_TYPE_11B.
 
-[   28.078515] ------------[ cut here ]------------
-[   28.078529] WARNING: at lib/dma-debug.c:937 check_unmap+0x47e/0x930()
-[   28.078533] bcma-pci-bridge 0000:0e:00.0: DMA-API: device driver failed to check map error[device address=0x00000000b5d60d6c] [size=1876 bytes] [mapped as
- single]
-[   28.078536] Modules linked in: bnep bluetooth vboxpci(O) vboxnetadp(O) vboxnetflt(O) vboxdrv(O) ipv6 b43 brcmsmac rtl8192cu rtl8192c_common rtlwifi mac802
-11 brcmutil cfg80211 snd_hda_codec_conexant rng_core snd_hda_intel kvm_amd snd_hda_codec ssb kvm mmc_core snd_pcm snd_seq snd_timer snd_seq_device snd k8temp
- cordic joydev serio_raw hwmon sr_mod sg pcmcia pcmcia_core soundcore cdrom i2c_nforce2 i2c_core forcedeth bcma snd_page_alloc autofs4 ext4 jbd2 mbcache crc1
-6 scsi_dh_alua scsi_dh_hp_sw scsi_dh_rdac scsi_dh_emc scsi_dh ata_generic pata_amd
-[   28.078602] CPU: 1 PID: 2570 Comm: NetworkManager Tainted: G           O 3.10.0-rc7-wl+ #42
-[   28.078605] Hardware name: Hewlett-Packard HP Pavilion dv2700 Notebook PC/30D6, BIOS F.27 11/27/2008
-[   28.078607]  0000000000000009 ffff8800bbb03ad8 ffffffff8144f898 ffff8800bbb03b18
-[   28.078612]  ffffffff8103e1eb 0000000000000002 ffff8800b719f480 ffff8800b7b9c010
-[   28.078617]  ffffffff824204c0 ffffffff81754d57 0000000000000754 ffff8800bbb03b78
-[   28.078622] Call Trace:
-[   28.078624]  <IRQ>  [<ffffffff8144f898>] dump_stack+0x19/0x1b
-[   28.078634]  [<ffffffff8103e1eb>] warn_slowpath_common+0x6b/0xa0
-[   28.078638]  [<ffffffff8103e2c1>] warn_slowpath_fmt+0x41/0x50
-[   28.078650]  [<ffffffff8122d7ae>] check_unmap+0x47e/0x930
-[   28.078655]  [<ffffffff8122de4c>] debug_dma_unmap_page+0x5c/0x70
-[   28.078679]  [<ffffffffa04a808c>] dma64_getnextrxp+0x10c/0x190 [brcmsmac]
-[   28.078691]  [<ffffffffa04a9042>] dma_rx+0x62/0x240 [brcmsmac]
-[   28.078707]  [<ffffffffa0479101>] brcms_c_dpc+0x211/0x9d0 [brcmsmac]
-[   28.078717]  [<ffffffffa046d927>] ? brcms_dpc+0x27/0xf0 [brcmsmac]
-[   28.078731]  [<ffffffffa046d947>] brcms_dpc+0x47/0xf0 [brcmsmac]
-[   28.078736]  [<ffffffff81047dcc>] tasklet_action+0x6c/0xf0
---snip--
-[   28.078974]  [<ffffffff813891bd>] SyS_sendmsg+0xd/0x20
-[   28.078979]  [<ffffffff81455c24>] tracesys+0xdd/0xe2
-[   28.078982] ---[ end trace 6164d1a08148e9c8 ]---
-[   28.078984] Mapped at:
-[   28.078985]  [<ffffffff8122c8fd>] debug_dma_map_page+0x9d/0x150
-[   28.078989]  [<ffffffffa04a9322>] dma_rxfill+0x102/0x3d0 [brcmsmac]
-[   28.079001]  [<ffffffffa047a13d>] brcms_c_init+0x87d/0x1100 [brcmsmac]
-[   28.079010]  [<ffffffffa046d851>] brcms_init+0x21/0x30 [brcmsmac]
-[   28.079018]  [<ffffffffa04786e0>] brcms_c_up+0x150/0x430 [brcmsmac]
-
-As the patch adds a new failure mechanism to dma_rxfill(). When I changed the
-comment at the start of the routine to add that information, I also polished
-the wording.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Cc: Hante Meuleman <meuleman@broadcom.com>
-Cc: brcm80211-dev-list@broadcom.com
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
-Did this one get lost?
+ drivers/staging/vt6656/rxtx.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-V2 - fixed two patch errors.
-V3 - address comments from Arend (linville)
-
- drivers/net/wireless/brcm80211/brcmsmac/dma.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index 1860c57..4fb9635 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -1015,9 +1015,10 @@ static bool dma64_txidle(struct dma_info *di)
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 1d0611e..d4b9b60 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -132,7 +132,7 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+ 	void *pvRTS, u32 cbFrameLength, int bNeedAck, int bDisCRC,
+ 	struct ethhdr *psEthHeader, u16 wCurrentRate, u8 byFBOption);
  
- /*
-  * post receive buffers
-- *  return false is refill failed completely and ring is empty this will stall
-- *  the rx dma and user might want to call rxfill again asap. This unlikely
-- *  happens on memory-rich NIC, but often on memory-constrained dongle
-+ *  Return false if refill failed completely or dma mapping failed. The ring
-+ *  is empty, which will stall the rx dma and user might want to call rxfill
-+ *  again asap. This is unlikely to happen on a memory-rich NIC, but often on
-+ *  memory-constrained dongle.
-  */
- bool dma_rxfill(struct dma_pub *pub)
+-static u16 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
++static u16 s_uGetDataDuration(struct vnt_private *pDevice,
+ 	u8 byPktType, int bNeedAck);
+ 
+ static u16 s_uGetRTSCTSDuration(struct vnt_private *pDevice,
+@@ -383,13 +383,13 @@ static u32 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice,
+ }
+ 
+ //byFreqType 0: 5GHz, 1:2.4Ghz
+-static u16 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
+-	u8 byPktType, int bNeedAck)
++static u16 s_uGetDataDuration(struct vnt_private *pDevice,
++					u8 byPktType, int bNeedAck)
  {
-@@ -1078,6 +1079,8 @@ bool dma_rxfill(struct dma_pub *pub)
+ 	u32 uAckTime = 0;
  
- 		pa = dma_map_single(di->dmadev, p->data, di->rxbufsize,
- 				    DMA_FROM_DEVICE);
-+		if (dma_mapping_error(di->dmadev, pa))
-+			return false;
+ 	if (bNeedAck) {
+-		if (byDurType == DATADUR_B)
++		if (byPktType == PK_TYPE_11B)
+ 			uAckTime = BBuGetFrameTime(pDevice->byPreambleType,
+ 				byPktType, 14, pDevice->byTopCCKBasicRate);
+ 		else
+@@ -507,9 +507,9 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 		BBvCalculateParameter(pDevice, cbFrameLength,
+ 			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
+                 //Get Duration and TimeStamp
+-		pBuf->wDuration_a = s_uGetDataDuration(pDevice, DATADUR_A,
++		pBuf->wDuration_a = s_uGetDataDuration(pDevice,
+ 							byPktType, bNeedAck);
+-		pBuf->wDuration_b = s_uGetDataDuration(pDevice, DATADUR_B,
++		pBuf->wDuration_b = s_uGetDataDuration(pDevice,
+ 							PK_TYPE_11B, bNeedAck);
  
- 		/* save the free packet pointer */
- 		di->rxp[rxout] = p;
-@@ -1284,7 +1287,11 @@ static void dma_txenq(struct dma_info *di, struct sk_buff *p)
+                 pBuf->wTimeStampOff_a = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+@@ -525,14 +525,14 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 		BBvCalculateParameter(pDevice, cbFrameLength,
+ 			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
+                 //Get Duration and TimeStamp
+-		pBuf->wDuration_a = s_uGetDataDuration(pDevice, DATADUR_A,
++		pBuf->wDuration_a = s_uGetDataDuration(pDevice,
+ 							byPktType, bNeedAck);
+-		pBuf->wDuration_b = s_uGetDataDuration(pDevice, DATADUR_B,
++		pBuf->wDuration_b = s_uGetDataDuration(pDevice,
+ 							PK_TYPE_11B, bNeedAck);
+ 		pBuf->wDuration_a_f0 = s_uGetDataDuration(pDevice,
+-					DATADUR_A_F0, byPktType, bNeedAck);
++							byPktType, bNeedAck);
+ 		pBuf->wDuration_a_f1 = s_uGetDataDuration(pDevice,
+-					DATADUR_A_F1, byPktType, bNeedAck);
++							byPktType, bNeedAck);
+                 pBuf->wTimeStampOff_a = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+                 pBuf->wTimeStampOff_b = wTimeStampOff[pDevice->byPreambleType%2][pDevice->byTopCCKBasicRate%MAX_RATE];
+                 return (pBuf->wDuration_a);
+@@ -546,12 +546,12 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 		BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate,
+ 			byPktType, &pBuf->a);
+             //Get Duration and TimeStampOff
+-		pBuf->wDuration = s_uGetDataDuration(pDevice, DATADUR_A,
++		pBuf->wDuration = s_uGetDataDuration(pDevice,
+ 					byPktType, bNeedAck);
+ 		pBuf->wDuration_f0 = s_uGetDataDuration(pDevice,
+-				DATADUR_A_F0, byPktType, bNeedAck);
++					byPktType, bNeedAck);
+ 		pBuf->wDuration_f1 = s_uGetDataDuration(pDevice,
+-				DATADUR_A_F1, byPktType, bNeedAck);
++							byPktType, bNeedAck);
+                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+             return (pBuf->wDuration);
+         } else {
+@@ -561,7 +561,7 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 		BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate,
+ 			byPktType, &pBuf->ab);
+             //Get Duration and TimeStampOff
+-		pBuf->wDuration = s_uGetDataDuration(pDevice, DATADUR_A,
++		pBuf->wDuration = s_uGetDataDuration(pDevice,
+ 				byPktType, bNeedAck);
+                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
  
- 	/* get physical address of buffer start */
- 	pa = dma_map_single(di->dmadev, data, len, DMA_TO_DEVICE);
--
-+	/* if mapping failed, free skb */
-+	if (dma_mapping_error(di->dmadev, pa)) {
-+		brcmu_pkt_buf_free_skb(p);
-+		return;
-+	}
- 	/* With a DMA segment list, Descriptor table is filled
- 	 * using the segment list instead of looping over
- 	 * buffers in multi-chain DMA. Therefore, EOF for SGLIST
+@@ -575,7 +575,7 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 		BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate,
+ 			byPktType, &pBuf->ab);
+             //Get Duration and TimeStampOff
+-		pBuf->wDuration = s_uGetDataDuration(pDevice, DATADUR_B,
++		pBuf->wDuration = s_uGetDataDuration(pDevice,
+ 				byPktType, bNeedAck);
+                 pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+ 
+@@ -1806,7 +1806,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+ 							&pTxDataHead->ab);
+         //Get Duration and TimeStampOff
+ 	pTxDataHead->wDuration = s_uGetDataDuration(pDevice,
+-					DATADUR_A, PK_TYPE_11A, false);
++						PK_TYPE_11A, false);
+         pTxDataHead->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+ 	cbHeaderSize = wTxBufSize + sizeof(struct vnt_tx_datahead_ab);
+     } else {
+@@ -1819,7 +1819,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+ 							&pTxDataHead->ab);
+         //Get Duration and TimeStampOff
+ 	pTxDataHead->wDuration = s_uGetDataDuration(pDevice,
+-					DATADUR_B, PK_TYPE_11B, false);
++						PK_TYPE_11B, false);
+         pTxDataHead->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+ 	cbHeaderSize = wTxBufSize + sizeof(struct vnt_tx_datahead_ab);
+     }
 -- 
-1.8.1.4
+1.8.1.2
+
 
