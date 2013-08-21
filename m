@@ -1,29 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward19.mail.yandex.net ([95.108.253.144]:46735 "EHLO
-	forward19.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752963Ab3HQMVq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Aug 2013 08:21:46 -0400
-Received: from smtp17.mail.yandex.net (smtp17.mail.yandex.net [95.108.252.17])
-	by forward19.mail.yandex.net (Yandex) with ESMTP id BEC9D11213C1
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Aug 2013 16:16:39 +0400 (MSK)
-From: Sergey K <perplexus@ya.ru>
-To: linux-wireless@vger.kernel.org
-Cc: Sergey K <perplexus@ya.ru>
-Subject: [PATCH 0/1] *** mac80211: delete duplicate code ***
-Date: Sat, 17 Aug 2013 16:16:36 +0400
-Message-Id: <1376741797-25505-1-git-send-email-perplexus@ya.ru> (sfid-20130817_142154_365600_90061418)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48175 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751921Ab3HUTS6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 15:18:58 -0400
+Message-ID: <52151297.5010706@hauke-m.de> (sfid-20130821_211901_186226_AFA907D3)
+Date: Wed, 21 Aug 2013 21:18:47 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jonas Gorski <jogo@openwrt.org>,
+	David Herrmann <dh.herrmann@gmail.com>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	David Costa <david@zarel.net>
+Subject: Re: [RFT V2 02/13] brcmsmac: change pa_gain for bcm4313 iPA
+References: <1376424220-10765-1-git-send-email-arend@broadcom.com> <1376424220-10765-3-git-send-email-arend@broadcom.com>
+In-Reply-To: <1376424220-10765-3-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-*** BLURB HERE ***
+Hi Arend,
 
-Sergey K (1):
-  Delete duplicate code. Use of the variable instead call a function
+when you send a new patch please fix this typo.
 
- net/mac80211/tx.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Hauke
 
--- 
-1.8.1.5
+On 08/13/2013 10:03 PM, Arend van Spriel wrote:
+> The function wlc_lcnphy_load_tx_gain_table() has a target PA
+> gain specified for the iPA variant of the bcm4313. This gain
+> value is reduced to avoid PA distortion. The if-statement is
+> removed because it was rather redundant in the first place.
+> Please not that this patch does not provide full iPA support.
+         ^^^
+         note
+
 
