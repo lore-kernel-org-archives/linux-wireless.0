@@ -1,63 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:38655 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253Ab3HFG5m convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59252 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751963Ab3HUNod (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 02:57:42 -0400
-Received: by mail-bk0-f50.google.com with SMTP id ik8so4534bkc.37
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 23:57:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87iozkf5w0.fsf@kamboji.qca.qualcomm.com>
-References: <1375430329-23352-1-git-send-email-bartosz.markowski@tieto.com>
-	<CA+BoTQkD5grL_5dJDgkwo40ET1zax56oN=ZGFxnyGqboQShbgQ@mail.gmail.com>
-	<87iozkf5w0.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 6 Aug 2013 08:57:40 +0200
-Message-ID: <CA+BoTQkCQMZaicJpcrJGk+vz7kwMgcQcLS6PUn_4c65PJ4gRTA@mail.gmail.com> (sfid-20130806_085745_942393_3DEC7432)
-Subject: Re: [PATCH v2] ath10k: add SoC power save option to PCI features map
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Bartosz Markowski <bartosz.markowski@tieto.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 21 Aug 2013 09:44:33 -0400
+Message-ID: <1377092661.15268.13.camel@jlt4.sipsolutions.net> (sfid-20130821_154449_261497_45B7E261)
+Subject: pull-request: mac80211 2013-08-21
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 21 Aug 2013 15:44:21 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-j60f5tLzX2bIHVg2FjQx"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 August 2013 18:40, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> On 2 August 2013 09:58, Bartosz Markowski <bartosz.markowski@tieto.com> wrote:
->>> Unify the PCI options location.
->>>
->>> By default the SoC PS option is disabled to boost the
->>> performance and due to poor stability on early HW revisions.
->>> In future we can remove the module parameter and turn on/off
->>> the PS for given hardware.
->>>
->>> This change also makes the pci module parameter for SoC PS static.
->>>
->>> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
->>
->> Hmm.. I'm worried about pci wake/sleep locking:
->>
->>  (a) pci_wake() (awake count =1)
->>  (a) do something
->>  Now, if pci_sleep() and pci_wake() happen simultaneously/are
->> preempted splitting primitive operations to:
->>  (a) pci_sleep(): decrease awake count (=0)
->>  (b) pci_wake(): increase awake count (=1), iowrite, wait for awake, return
->>  (a) pci_sleep(): iowrite(). return
->>  The flow in (b) now thinks the device is awake, but it's not
->> guaranteed to be anymore because it has been put to sleep by (a).
->
-> Yeah, there's a race alright. I wonder if I have ever seen a proper use
-> of a atomic variable in a wireless driver :)
->
-> But this doesn't prevent taking this patch as the race has existed since
-> the beginning, right?
 
-I don't have anything against it. I just noticed the race and thought
-it's good to point out the issue.
+--=-j60f5tLzX2bIHVg2FjQx
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+John,
+
+I have three more patches for the 3.11 stream: Felix's fix for the
+fairly visible brcmsmac crash, a fix from Simon for an IBSS join bug I
+found and a fix for a channel context bug in IBSS I'd introduced.
+
+Let me know if there's any problem.
+
+Thanks,
+johannes
+
+The following changes since commit dee8a9732e713480075adbbca8eb220c5b8d1216=
+:
+
+  cfg80211: don't request disconnect if not connected (2013-08-14 14:00:19 =
++0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to 75a423f493ffdf741acae27bf179cd560f7813d7:
+
+  mac80211: ibss: fix ignored channel parameter (2013-08-21 15:33:08 +0200)
+
+----------------------------------------------------------------
+Felix Fietkau (1):
+      mac80211: add a flag to indicate CCK support for HT clients
+
+Johannes Berg (1):
+      mac80211: add missing channel context release
+
+Simon Wunderlich (1):
+      mac80211: ibss: fix ignored channel parameter
+
+ drivers/net/wireless/ath/ath9k/init.c    |  3 ++-
+ drivers/net/wireless/ath/carl9170/main.c |  3 ++-
+ drivers/net/wireless/rt2x00/rt2800lib.c  |  3 ++-
+ include/net/mac80211.h                   |  1 +
+ net/mac80211/ibss.c                      | 34 ++++++++++++++++++++++++++++=
+----
+ net/mac80211/rc80211_minstrel_ht.c       |  3 +++
+ 6 files changed, 40 insertions(+), 7 deletions(-)
 
 
-Pozdrawiam / Best regards,
-Michał Kazior.
+--=-j60f5tLzX2bIHVg2FjQx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJSFMQ1AAoJEDBSmw7B7bqrn+MP/R2jsPoiqSqAOowG7fGov5uB
+4anRzCMfShTAFvtrNn/o5V93nhpB9wI44pomT9Ep0FeT+4IKb9GobS8L/vNtCgIz
+ixKkh8LWUwBIK1IDuQSO9E3F/8n4shOlPrayIC7DTLA/vwpBGJtsJ/Z97OsfGo2/
+yAJDPr14cOLm/OOPqOPH3jPt3hkf/NbV0L95DxT3mzAYU3VD0mxnaeTDIxvK3Gi1
+wd0opGPhthUjGTYBreAdeM4CAPdExqCHKy6goRJQtqA0jTwr9vB8j/VeERX/B7EQ
+GzVMa4Mgxd1NFKfLfNqJhl5wu/25uKzBFAn4rzdGLwB5vTfJsiIawHKM9RMmswBU
+QQQ04rVeVzXboEyzHWpl1kdftFvWnWd0qrN8DF1P1Wb0ImE9CgjGaVDckxpb8omU
+rqajKQhVG8fowtUdWBNHGxupepzs4nDMZqw9exLQfjvM+0QJ4KJtMlx2WHzg3JeI
+baOyiET9NbTeokm0tgXj/WG9jEN6suuwz2zDLluvESyFeQg5XBC0cb3WOIoNOelH
+L7ZZsvfgVNsWTKRYlubUs2fqUJX0zHBeYU8Bx1XvRbCdbIXGfjfPnEdMfrlGNEqD
+J/KcfocYcEhGTEkGaOkPqf6p1z3HtW2bXSPsglxiis3iU61z1Jgi+Qb31oCxmhak
+HtRd8NoXQ4J14NwvcE3T
+=E82+
+-----END PGP SIGNATURE-----
+
+--=-j60f5tLzX2bIHVg2FjQx--
+
