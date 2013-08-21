@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:33158 "EHLO
-	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752283Ab3HQJ5G (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59134 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689Ab3HUNEO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Aug 2013 05:57:06 -0400
-Message-ID: <520F476D.7040809@openwrt.org> (sfid-20130817_115712_488440_6F8CECF5)
-Date: Sat, 17 Aug 2013 11:50:37 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 0/5] rt2x00: rt2800lib: frequency offset adjustment fixes
-References: <1376685498-5167-1-git-send-email-juhosg@openwrt.org>
-In-Reply-To: <1376685498-5167-1-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-2
+	Wed, 21 Aug 2013 09:04:14 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1VC856-0002zK-8b
+	for linux-wireless@vger.kernel.org; Wed, 21 Aug 2013 15:04:12 +0200
+Message-ID: <1377090249.15268.10.camel@jlt4.sipsolutions.net> (sfid-20130821_150419_139271_1E51E685)
+Subject: Re: [PATCH v2 3.11] mac80211: add missing channel context release
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 21 Aug 2013 15:04:09 +0200
+In-Reply-To: <1377079496-27797-1-git-send-email-johannes@sipsolutions.net> (sfid-20130821_120502_794203_50AA32F4)
+References: <1377079496-27797-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130821_120502_794203_50AA32F4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013.08.16. 22:38 keltezéssel, Gabor Juhos írta:
-> The patch-set contain small fixes for the frequency adjustment 
-> code of the rt2800 driver.
+On Wed, 2013-08-21 at 12:04 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Gabor Juhos (5):
->   rt2x00: rt2800lib: fix frequency offset boundary calculation
->   rt2x00: rt2800lib: optimize frequency offset adjustment
->   rt2x00: rt2800lib: use a MCU command for frequency adjustment on USB
->     devices
->   rt2x00: rt2800lib: move rt2800_adjust_freq_offset function
->   rt2x00: rt2800lib: adjust frequency offset for RF3053
-> 
->  drivers/net/wireless/rt2x00/rt2800lib.c |   38 +++++++++++++++++++------------
->  1 file changed, 24 insertions(+), 14 deletions(-)
-> 
+> IBSS needs to release the channel context when leaving
+> but I evidently missed that. Fix it.
 
-John,
+Tested & applied.
 
-Please ignore this set. I will send a slightly improved version.
+johannes
 
--Gabor
