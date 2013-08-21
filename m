@@ -1,48 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33158 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755382Ab3HLJpW (ORCPT
+Received: from mail-ve0-f181.google.com ([209.85.128.181]:61770 "EHLO
+	mail-ve0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410Ab3HUIgW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 05:45:22 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 03/15] ath9k: Fix phy error handling for DFS
-Date: Mon, 12 Aug 2013 15:11:30 +0530
-Message-Id: <1376300502-2741-4-git-send-email-sujith@msujith.org> (sfid-20130812_114531_475966_D9EC0B0C)
-In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
-References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+	Wed, 21 Aug 2013 04:36:22 -0400
+Received: by mail-ve0-f181.google.com with SMTP id jz10so84755veb.26
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Aug 2013 01:36:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1377032397.13829.40.camel@jlt4.sipsolutions.net>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+	<1377020479-16935-2-git-send-email-k.eugene.e@gmail.com>
+	<1377032397.13829.40.camel@jlt4.sipsolutions.net>
+Date: Wed, 21 Aug 2013 10:36:21 +0200
+Message-ID: <CAFSJ42ZH3ZJ+-+6wUbqQvaM8D2t6oWqyqkGiGRRx4o2NA60EjA@mail.gmail.com> (sfid-20130821_103630_316599_5548F88F)
+Subject: Re: [PATCH 01/16] wcn36xx: Add main.c
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> Just a cursory review ...
+>
 
-Since the DFS code appears to process the phy errors
-ATH9K_PHYERR_RADAR and ATH9K_PHYERR_FALSE_RADAR_EXT,
-check for the correct phyerr status in the main RX
-tasklet routine.
+Any review is very welcome;)
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+>
+>> +             .cap = IEEE80211_HT_CAP_GRN_FLD
+>> +                     | IEEE80211_HT_CAP_SGI_20
+>
+> wouldn't that usually be written as
+>
+> GRN_FLD |
+> SGI_20 |
+> ...
+>
+> (multiple similar places)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 0c23053..83b3fc5 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1256,10 +1256,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
- 			rxs->mactime += 0x100000000ULL;
- 
--		if (rs.rs_phyerr == ATH9K_PHYERR_RADAR)
-+		if (rs.rs_status & ATH9K_RXERR_PHY) {
- 			ath9k_dfs_process_phyerr(sc, hdr, &rs, rxs->mactime);
- 
--		if (rs.rs_status & ATH9K_RXERR_PHY) {
- 			if (ath_process_fft(sc, hdr, &rs, rxs->mactime)) {
- 				RX_STAT_INC(rx_spectral);
- 				goto requeue_drop_frag;
+Will be fixed in the next round.
+
+
+>> +#ifdef CONFIG_PM
+>> +
+>> +static const struct wiphy_wowlan_support wowlan_support = {
+>> +     .flags = WIPHY_WOWLAN_ANY,
+>> +     .n_patterns = 0,
+>
+> that n_patterns is pretty useless.
+>
+
+Will be removed in the next patch set.
+
+>> +#define WCN36XX_SUPPORTED_FILTERS (0)
+>> +
+>> +static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
+>> +                                    unsigned int changed,
+>> +                                    unsigned int *total, u64 multicast)
+>> +{
+>> +     wcn36xx_dbg(WCN36XX_DBG_MAC, "mac configure filter");
+>> +
+>> +     changed &= WCN36XX_SUPPORTED_FILTERS;
+>
+> That's pointless
+
+Yes, it is better to remove wcn36xx_configure_filter completely for now.
+
+>> +             if (IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags) {
+>> +                     sta_priv->is_data_encrypted = true;
+>> +                     /* Reconfigure bss with encrypt_type */
+>> +                     if (NL80211_IFTYPE_STATION == vif->type)
+>> +                             wcn36xx_smd_config_bss(wcn,
+>> +                                                    vif,
+>> +                                                    sta,
+>> +                                                    sta->addr,
+>> +                                                    true);
+>
+> It seems to me this should not be here but you should have mac80211 set
+> something in e.g. bss_conf that indicates encryption?
+>
+
+It's a good idea and I tried to find anything encryption related in
+bss_conf but without luck. I do not like this line myself so I would
+really appreciate if you can point where exactly in
+bss_conf/bss_info_changed information about encryption is located.
+
+>> +     /* Not supported so far*/
+>> +     case IEEE80211_AMPDU_TX_STOP_CONT:
+>> +             ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+>> +             break;
+>> +     case IEEE80211_AMPDU_TX_STOP_FLUSH:
+>> +     case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+>> +             break;
+>
+> You can't just "not support" them - you have to at least stop the
+> aggregation session, see the commit that introduced this.
+>
+
+Good point. Will fix this in the next round.
+
+>> +     static const u32 cipher_suites[] = {
+>> +             WLAN_CIPHER_SUITE_TKIP,
+>> +             WLAN_CIPHER_SUITE_CCMP,
+>> +     };
+>
+> You actually don't want to support WEP, not even in software? Otherwise
+> just leave this out and mac80211 will add it.
+
+WEP is supported by HW but wcn36xx does not configure it yet. Is that
+ok to add HW WEP encryption in nearest future after wcn36xx is pushed
+to upstream?
+
+>> +     wcn->hw->wiphy->iface_combinations = &if_comb;
+>> +     wcn->hw->wiphy->n_iface_combinations = 1;
+>
+> Your code with "wcn->current_vif = " etc. *really* doesn't look like you
+> support combinations. Are you positive this is OK?
+
+So far wcn36xx supports only one interface at once. But in the nearest
+future it will definitely support more than one. So how about keeping
+this for future?;)
+
+>> +     wcn->hw->wiphy->max_scan_ssids = 1;
+>
+> Really? You don't even have hardware scan, so why?
+>
+
+Good catch. wcn36xx used to have hw scan but now it is moved to sw
+scan. Will remove this completely.
+
+> johannes
+>
+
+
+
 -- 
-1.8.3.4
-
+Best regards,
+Eugene
