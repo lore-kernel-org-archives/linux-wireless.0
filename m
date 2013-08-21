@@ -1,139 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:42305 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755954Ab3HLJph (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:48860 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751457Ab3HULkY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 05:45:37 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 11/15] ath9k: Fix RX beacon processing
-Date: Mon, 12 Aug 2013 15:11:38 +0530
-Message-Id: <1376300502-2741-12-git-send-email-sujith@msujith.org> (sfid-20130812_114542_633746_5CAB8E1B)
-In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
-References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+	Wed, 21 Aug 2013 07:40:24 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH] mac80211: fix ignored channel parameter
+Date: Wed, 21 Aug 2013 13:40:13 +0200
+Message-Id: <1377085213-29695-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130821_134027_990130_672F5020)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+my earlier patch "mac80211: change IBSS channel state to chandef"
+created a regression by ignoring the channel parameter in
+__ieee80211_sta_join_ibss, which breaks IBSS channel selection. This
+patch fixes this situation by using the right channel and adopting the
+selected bandwidth mode.
 
-Make sure that chained descriptors are handled correctly
-before the packet is parsed to determine if it is a beacon.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 ---
- drivers/net/wireless/ath/ath9k/recv.c | 47 ++++++++++++++++-------------------
- 1 file changed, 21 insertions(+), 26 deletions(-)
+ net/mac80211/ibss.c |   19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 823b411..44f5a2b 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1037,13 +1037,28 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- #endif
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 74de0f1..2669595 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -201,7 +201,7 @@ error:
+ 
+ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				      const u8 *bssid, const int beacon_int,
+-				      struct ieee80211_channel *chan,
++				      struct cfg80211_chan_def *req_chandef,
+ 				      const u32 basic_rates,
+ 				      const u16 capability, u64 tsf,
+ 				      bool creator)
+@@ -213,6 +213,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_bss *bss;
+ 	u32 bss_change;
+ 	struct cfg80211_chan_def chandef;
++	struct ieee80211_channel *chan;
+ 	struct beacon_data *presp;
+ 	enum nl80211_bss_scan_width scan_width;
+ 	bool have_higher_than_11mbit;
+@@ -244,7 +245,9 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
+ 
+-	chandef = ifibss->chandef;
++	/* make a copy of the chandef, it could be modified below. */
++	chandef = *req_chandef;
++	chan = chandef.chan;
+ 	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef)) {
+ 		if (chandef.width == NL80211_CHAN_WIDTH_5 ||
+ 		    chandef.width == NL80211_CHAN_WIDTH_10 ||
+@@ -339,6 +342,7 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_bss *cbss =
+ 		container_of((void *)bss, struct cfg80211_bss, priv);
+ 	struct ieee80211_supported_band *sband;
++	struct cfg80211_chan_def chandef;
+ 	u32 basic_rates;
+ 	int i, j;
+ 	u16 beacon_int = cbss->beacon_interval;
+@@ -352,6 +356,13 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	if (beacon_int < 10)
+ 		beacon_int = 10;
+ 
++	chandef.chan = cbss->channel;
++	chandef.width = sdata->u.ibss.chandef.width;
++	chandef.center_freq1 = chandef.chan->center_freq +
++			       sdata->u.ibss.chandef.center_freq1 -
++			       sdata->u.ibss.chandef.chan->center_freq;
++	chandef.center_freq2 = 0;
++
+ 	sband = sdata->local->hw.wiphy->bands[cbss->channel->band];
+ 	rate_flags = ieee80211_chandef_rate_flags(&sdata->u.ibss.chandef);
+ 	shift = ieee80211_vif_get_shift(&sdata->vif);
+@@ -385,7 +396,7 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	__ieee80211_sta_join_ibss(sdata, cbss->bssid,
+ 				  beacon_int,
+-				  cbss->channel,
++				  &chandef,
+ 				  basic_rates,
+ 				  cbss->capability,
+ 				  tsf, false);
+@@ -867,7 +878,7 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 		sdata->drop_unencrypted = 0;
+ 
+ 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+-				  ifibss->chandef.chan, ifibss->basic_rates,
++				  &ifibss->chandef, ifibss->basic_rates,
+ 				  capability, 0, true);
  }
  
-+static bool ath9k_is_mybeacon(struct ath_softc *sc, struct ieee80211_hdr *hdr)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if (ieee80211_is_beacon(hdr->frame_control)) {
-+		RX_STAT_INC(rx_beacons);
-+		if (!is_zero_ether_addr(common->curbssid) &&
-+		    ether_addr_equal(hdr->addr3, common->curbssid))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- /*
-  * For Decrypt or Demic errors, we only mark packet status here and always push
-  * up the frame up to let mac80211 handle the actual error case, be it no
-  * decryption key or real decryption error. This let us keep statistics there.
-  */
- static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
--				   struct ieee80211_hdr *hdr,
-+				   struct sk_buff *skb,
- 				   struct ath_rx_status *rx_stats,
- 				   struct ieee80211_rx_status *rx_status,
- 				   bool *decrypt_error, u64 tsf)
-@@ -1051,6 +1066,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	struct ieee80211_hw *hw = sc->hw;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ieee80211_hdr *hdr;
- 	bool discard_current = sc->rx.discard_next;
- 
- 	/*
-@@ -1083,6 +1099,8 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	if (rx_stats->rs_more)
- 		return 0;
- 
-+	hdr = (struct ieee80211_hdr *) (skb->data + ah->caps.rx_status_len);
-+
- 	ath9k_process_tsf(rx_stats, rx_status, tsf);
- 	ath_debug_stat_rx(sc, rx_stats);
- 
-@@ -1108,6 +1126,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	if (ath9k_process_rate(common, hw, rx_stats, rx_status))
- 		return -EINVAL;
- 
-+	rx_stats->is_mybeacon = ath9k_is_mybeacon(sc, hdr);
- 	ath9k_process_rssi(common, hw, hdr, rx_stats);
- 
- 	rx_status->band = hw->conf.chandef.chan->band;
-@@ -1198,24 +1217,6 @@ static void ath9k_apply_ampdu_details(struct ath_softc *sc,
- 	}
- }
- 
--static bool ath9k_is_mybeacon(struct ath_softc *sc, struct sk_buff *skb)
--{
--	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	struct ieee80211_hdr *hdr;
--
--	hdr = (struct ieee80211_hdr *) (skb->data + ah->caps.rx_status_len);
--
--	if (ieee80211_is_beacon(hdr->frame_control)) {
--		RX_STAT_INC(rx_beacons);
--		if (!is_zero_ether_addr(common->curbssid) &&
--		    ether_addr_equal(hdr->addr3, common->curbssid))
--			return true;
--	}
--
--	return false;
--}
--
- int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- {
- 	struct ath_buf *bf;
-@@ -1225,7 +1226,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_hw *hw = sc->hw;
--	struct ieee80211_hdr *hdr;
- 	int retval;
- 	struct ath_rx_status rs;
- 	enum ath9k_rx_qtype qtype;
-@@ -1269,15 +1269,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		else
- 			hdr_skb = skb;
- 
--		rs.is_mybeacon = ath9k_is_mybeacon(sc, hdr_skb);
--
--		hdr = (struct ieee80211_hdr *) (hdr_skb->data +
--						ah->caps.rx_status_len);
--
- 		rxs = IEEE80211_SKB_RXCB(hdr_skb);
- 		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
- 
--		retval = ath9k_rx_skb_preprocess(sc, hdr, &rs, rxs,
-+		retval = ath9k_rx_skb_preprocess(sc, hdr_skb, &rs, rxs,
- 						 &decrypt_error, tsf);
- 		if (retval)
- 			goto requeue_drop_frag;
 -- 
-1.8.3.4
+1.7.10.4
 
