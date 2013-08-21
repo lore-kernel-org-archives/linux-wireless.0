@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58614 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:58329 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752417Ab3HUKEQ (ORCPT
+	with ESMTP id S1751205Ab3HUIPe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 06:04:16 -0400
+	Wed, 21 Aug 2013 04:15:34 -0400
+Message-ID: <1377072922.15268.4.camel@jlt4.sipsolutions.net> (sfid-20130821_101540_318952_978D2551)
+Subject: Re: [PATCH 09/16] wcn36xx: Add smd.c
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.11] mac80211: add missing channel context release
-Date: Wed, 21 Aug 2013 12:04:12 +0200
-Message-Id: <1377079452-27729-1-git-send-email-johannes@sipsolutions.net> (sfid-20130821_120421_002867_FF105704)
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: Joe Perches <joe@perches.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx@lists.infradead.org
+Date: Wed, 21 Aug 2013 10:15:22 +0200
+In-Reply-To: <CAFSJ42ZMk6sN6povWHkSodk0J7pBvyak8sH-MqNXVhi_iSmq9Q@mail.gmail.com> (sfid-20130821_095852_398872_A90920C7)
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+	 <1377020479-16935-10-git-send-email-k.eugene.e@gmail.com>
+	 <1377022333.2016.59.camel@joe-AO722>
+	 <CAFSJ42ZMk6sN6povWHkSodk0J7pBvyak8sH-MqNXVhi_iSmq9Q@mail.gmail.com>
+	 (sfid-20130821_095852_398872_A90920C7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2013-08-21 at 09:58 +0200, Eugene Krasnikov wrote:
+> 2013/8/20 Joe Perches <joe@perches.com>:
+> > On Tue, 2013-08-20 at 19:41 +0200, Eugene Krasnikov wrote:
+> >
+> >> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> > []
+> >> +int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
+> >> +{
+> > []
+> >> +             /* Add NV body itself */
+> >> +             /* Rework me */
+> >> +             memcpy(wcn->smd_buf + sizeof(msg_body),
+> >> +                    (void *)(&nv_d->table) + fm_offset,
+> >> +                    msg_body.nv_img_buffer_size);
+> >
+> > Does this really do what you want?
+> >
+> > Perhaps it should be:
+> >
+> >                 memcpy(wcn->smd_buf + sizeof(msg_body),
+> >                        ((void *)&nv_d->table) + fm_offset,
+> >                        msg_body.nv_img_buffer_size);
+> >
+> 
+> Yes, this line is working. Tested it for ARM. Do you see any potential
+> problems with this pointer operation?
 
-IBSS needs to release the channel context when leaving
-but I evidently missed that. Fix it.
+It should really be u8* instead of void*, since void* pointer arithmetic
+isn't really defined I think?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c | 1 +
- 1 file changed, 1 insertion(+)
+Other than that, this was just about precedence rules, and casts have a
+higher precedence.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index ea7b9c2..5e8bb3b 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1138,6 +1138,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
- 						BSS_CHANGED_IBSS);
-+	ieee80211_vif_release_channel(sdata);
- 	synchronize_rcu();
- 	kfree(presp);
- 
--- 
-1.8.4.rc2
+johannes
 
