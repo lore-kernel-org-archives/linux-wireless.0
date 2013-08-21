@@ -1,78 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56106 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385Ab3HTA2Y (ORCPT
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:51508 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466Ab3HUHzL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 20:28:24 -0400
-Date: Mon, 19 Aug 2013 17:28:22 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Tom Gundersen <teg@jklm.no>
-Cc: stable@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
-Message-ID: <20130820002822.GA18023@kroah.com> (sfid-20130820_022842_921349_2DD7FE81)
-References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
- <20130820000336.GA15548@kroah.com>
- <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
+	Wed, 21 Aug 2013 03:55:11 -0400
+Received: by mail-vc0-f180.google.com with SMTP id gf11so56108vcb.25
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Aug 2013 00:55:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
+In-Reply-To: <1377021890.2016.55.camel@joe-AO722>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+	<1377020479-16935-14-git-send-email-k.eugene.e@gmail.com>
+	<1377021890.2016.55.camel@joe-AO722>
+Date: Wed, 21 Aug 2013 09:55:10 +0200
+Message-ID: <CAFSJ42YMogHrFBzn1mVQf86GV8kzZ0iVPXWaHMUsU-CAA6AwWw@mail.gmail.com> (sfid-20130821_095516_636348_87FF8837)
+Subject: Re: [PATCH 13/16] wcn36xx: Add wcn36xx.h
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 20, 2013 at 08:26:11AM +0800, Tom Gundersen wrote:
-> On Tue, Aug 20, 2013 at 8:03 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Tue, Aug 20, 2013 at 07:59:47AM +0800, Tom Gundersen wrote:
-> >> Hi guys,
-> >>
-> >> Starting with 3.10.6 (and still present in .7) I get an oops on
-> >> connecting to the network.
-> >>
-> >> The attached picture shows the oops. In case it does not reach the ML,
-> >> the top of the call trace reads:
-> >>
-> >> brcms_c_compute_rtscts_dur
-> >> brcms_c_ampdu_finalize
-> >> ampdu_finalize
-> >> dma_txfast
-> >> brcms_c_txfifo
-> >> brcms_c_sendpkt_mac80211
-> >> brcms_ops_tx
-> >> __ieee80211_tx
-> >>
-> >> I bisected the problem and the first bad commit is
-> >>
-> >> commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
-> >> Author: Felix Fietkau <nbd@openwrt.org>
-> >> Date:   Fri Jun 28 21:04:35 2013 +0200
-> >>
-> >>     mac80211/minstrel_ht: fix cck rate sampling
-> >>
-> >>     commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5 upstream.
-> >>
-> >> Reverting it on top of .7 fixes the problem.
-> >>
-> >> I had the same (I suppose) problem on mainline some time ago, but I
-> >> have not bisected it, verified that the problem still occurs there, or
-> >> checked if reverting the upstream patch fixes it. I'd be happy to do
-> >> that if it would help though.
-> >>
-> >> Let me know if you need any more information.
-> >
-> > Do you have this same problem with 3.11-rc6 as well?
-> 
-> Yes, I just confirmed. I also confirmed that reverting the mainline
-> commit on top of -rc6 fixes the problem.
+Hi Joe,
 
-Great, thanks.
+Thank you very much for your comments.
 
-Felix and Johannes, any chance we can get this reverted in Linus tree
-soon, and push that revert back to the 3.10 stable tree as well?
+Please find my comments bellow:
 
-thanks,
+>> Adding wcn36xx.h
+> []
+>> +#define DRIVER_PREFIX "wcn36xx: "
+> []
+>
+> I think you should use pr_fmt and/or netdev_<level>
 
-greg k-h
+Thanx, will add pr_fmt in the next round.
+
+>> +#define wcn36xx_error(fmt, arg...) do {                      \
+>> +     pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg); \
+>> +     __WARN();                                       \
+>> +} while (0)
+>
+> What value is there in this __WARN?
+
+This warn is there just to scream louder every time when error happens:)
+
+> Please use _err rather than _error
+
+Thanx, will fix in the next patch set.
+
+>> +#define wcn36xx_warn(fmt, arg...)                            \
+>> +     pr_warn(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
+>> +
+>> +#define wcn36xx_info(fmt, arg...)            \
+>> +     pr_info(DRIVER_PREFIX fmt "\n", ##arg)
+>> +
+>> +#define wcn36xx_dbg(mask, fmt, arg...) do {                  \
+>> +     if (debug_mask & mask)                                  \
+>> +             pr_debug(DRIVER_PREFIX fmt "\n", ##arg);        \
+>> +} while (0)
+>> +
+>> +#define wcn36xx_dbg_dump(mask, prefix_str, buf, len) do {    \
+>> +     if (debug_mask & mask)                                  \
+>> +             print_hex_dump(KERN_DEBUG, prefix_str,          \
+>> +                            DUMP_PREFIX_OFFSET, 32, 1,       \
+>> +                            buf, len, false);                \
+>> +} while (0)
+>> +
+>
+> Please move the "\n" to the uses instead of the macro.
+> This would be consistent with all the other ath macros.
+
+Thanx, will fix in the next patch set.
+
+-- 
+Best regards,
+Eugene
