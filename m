@@ -1,80 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4667 "EHLO mms2.broadcom.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:57354 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758926Ab3HMUqx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 16:46:53 -0400
-Message-ID: <520A9B0D.3050006@broadcom.com> (sfid-20130813_224657_287077_4048FCE5)
-Date: Tue, 13 Aug 2013 22:46:05 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1752238Ab3HUG5i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 02:57:38 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/6] ath10k: remove ce_op_state
+Date: Wed, 21 Aug 2013 08:57:25 +0200
+Message-ID: <1377068249-26025-3-git-send-email-michal.kazior@tieto.com> (sfid-20130821_085748_857855_6E94C285)
+In-Reply-To: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
+References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: "David Herrmann" <dh.herrmann@gmail.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Jonas Gorski" <jogo@openwrt.org>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
-	"David Costa" <david@zarel.net>
-Subject: Re: [RFT 00/13] brcmsmac: bcm4313 iPA related patches
-References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
- <CANq1E4TO8radaMFoLjiwhSq2JAFqcLm8UMQvaq9oJRHiWz=60w@mail.gmail.com>
-In-Reply-To: <CANq1E4TO8radaMFoLjiwhSq2JAFqcLm8UMQvaq9oJRHiWz=60w@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/13/2013 10:09 PM, David Herrmann wrote:
-> Hi
->
-> On Tue, Aug 13, 2013 at 10:03 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> This series replaces the patch "[PATCH 12/12] brcmsmac: support 4313iPA"
->> with Message-ID: <1376130450-29746-13-git-send-email-arend@broadcom.com>.
->>
->> It has been split up into individual patches. Please test this series
->> especially if you had issues with the original commit b6fc28a that was
->> reverted.
->>
->> Cc: Jonas Gorski <jogo@openwrt.org>
->> Cc: David Herrmann <dh.herrmann@gmail.com>
->> Cc: Maximilian Engelhardt <maxi@daemonizer.de>
->> Cc: David Costa <david@zarel.net>
->
-> Is this available in a public branch that I can merge? And what should
-> be used as base? 3.11-rc5? linux-next?
+It was only written to and never read back. No use
+to keep it around.
 
-Indeed I should have mentioned. It applies on v3.11-rc5 for sure. Did 
-not try linux-next.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c |    2 --
+ drivers/net/wireless/ath/ath10k/ce.h |    8 --------
+ 2 files changed, 10 deletions(-)
 
-Regards,
-Arend
-
-> Cheers
-> David
->
->> Arend van Spriel (13):
->>    brcmsmac: cosmetic change in phy_lcn.c
->>    brcmsmac: change pa_gain for bcm4313 iPA
->>    brcmsmac: use ARRAY_SIZE in phytbl_lcn.c
->>    brcmsmac: add switch control table for BCM4313 iPA BT-combo cards
->>    brcmsmac: add debug info message providing phy and radio info
->>    brcmsmac: update transmit gain table for lcn phy
->>    brcmsmac: change lcnphy receive i/q calibration routine
->>    brcmsmac: fix TSSI idle estimation
->>    brcmsmac: avoid calling set_txpwr_by_index() twice
->>    brcmsmac: rework switch control table init including iPA BT-combo
->>    brcmsmac: correct phy registers for TSSI-based power control
->>    brcmsmac: reinitialize TSSI power control upon channel switch
->>    brcmsmac: add support for BCM4313 iPA variant
->>
->>   drivers/net/wireless/brcm80211/brcmsmac/main.c     |    4 +-
->>   .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |  397 +++++++++++--------
->>   .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |  405 +++++++++++---------
->>   .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h   |    1 +
->>   4 files changed, 475 insertions(+), 332 deletions(-)
->>
->> --
->> 1.7.10.4
->>
->>
->
-
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index c8b7d21..c391f46 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -1089,7 +1089,6 @@ static struct ce_state *ath10k_ce_init_state(struct ath10k *ar,
+ 	ce_state->ar = ar;
+ 	ce_state->id = ce_id;
+ 	ce_state->ctrl_addr = ctrl_addr;
+-	ce_state->state = CE_RUNNING;
+ 	ce_state->attr_flags = attr->flags;
+ 	ce_state->src_sz_max = attr->src_sz_max;
+ 
+@@ -1173,7 +1172,6 @@ void ath10k_ce_deinit(struct ce_state *ce_state)
+ 		kfree(ce_state->dest_ring);
+ 	}
+ 
+-	ce_state->state = CE_UNUSED;
+ 	ce_state->src_ring = NULL;
+ 	ce_state->dest_ring = NULL;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index c17f07c..6f6bca0 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -39,13 +39,6 @@
+ struct ce_state;
+ 
+ 
+-/* Copy Engine operational state */
+-enum ce_op_state {
+-	CE_UNUSED,
+-	CE_PAUSED,
+-	CE_RUNNING,
+-};
+-
+ #define CE_DESC_FLAGS_GATHER         (1 << 0)
+ #define CE_DESC_FLAGS_BYTE_SWAP      (1 << 1)
+ #define CE_DESC_FLAGS_META_DATA_MASK 0xFFFC
+@@ -124,7 +117,6 @@ struct ce_state {
+ 	unsigned int attr_flags;
+ 
+ 	u32 ctrl_addr;
+-	enum ce_op_state state;
+ 
+ 	void (*send_cb) (struct ce_state *ce_state,
+ 			 void *per_transfer_send_context,
+-- 
+1.7.9.5
 
