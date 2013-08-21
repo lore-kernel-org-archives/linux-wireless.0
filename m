@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:60646 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752424Ab3HVRNq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Aug 2013 13:13:46 -0400
-Received: by mail-qa0-f52.google.com with SMTP id bq6so466055qab.18
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 10:13:46 -0700 (PDT)
-Date: Thu, 22 Aug 2013 13:13:13 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	distro11s@cozybit.com
-Subject: Re: [PATCH v2] mac80211: only respond to probe request with mesh ID
-Message-ID: <20130822171312.GE23629@localhost> (sfid-20130822_191349_661922_923F2E9F)
-References: <1377190892-5328-1-git-send-email-yeohchunyeow@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1377190892-5328-1-git-send-email-yeohchunyeow@gmail.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:51046 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751392Ab3HULUT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 07:20:19 -0400
+Message-ID: <1377084018.1936.16.camel@joe-AO722> (sfid-20130821_132031_416933_1C2A22E4)
+Subject: Re: [PATCH 09/16] wcn36xx: Add smd.c
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx@lists.infradead.org
+Date: Wed, 21 Aug 2013 04:20:18 -0700
+In-Reply-To: <1377072922.15268.4.camel@jlt4.sipsolutions.net>
+References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+	 <1377020479-16935-10-git-send-email-k.eugene.e@gmail.com>
+	 <1377022333.2016.59.camel@joe-AO722>
+	 <CAFSJ42ZMk6sN6povWHkSodk0J7pBvyak8sH-MqNXVhi_iSmq9Q@mail.gmail.com>
+	 (sfid-20130821_095852_398872_A90920C7) <1377072922.15268.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 22, 2013 at 10:01:32AM -0700, Chun-Yeow Yeoh wrote:
-> +	if(!elems.mesh_id)
-> +		return;
-> +
+On Wed, 2013-08-21 at 10:15 +0200, Johannes Berg wrote:
+> It should really be u8* instead of void*, since void* pointer arithmetic
+> isn't really defined I think?
 
-if (!elems.mesh_id)
+Well, it is for gcc and void * arithmetic is
+widely used throughout the kernel.
 
-(checkpatch will warn about that)
 
--- 
-Bob Copeland %% www.bobcopeland.com
