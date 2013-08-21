@@ -1,80 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2638 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751534Ab3HUO14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 10:27:56 -0400
-Message-ID: <5214CE5F.5010009@broadcom.com> (sfid-20130821_162817_557673_533101E4)
-Date: Wed, 21 Aug 2013 16:27:43 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26512 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743Ab3HUQ06 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 12:26:58 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath10k: Fix mutex unlock balance
+Date: Wed, 21 Aug 2013 21:56:44 +0530
+Message-ID: <1377102404-14742-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130821_182701_770739_975B5106)
 MIME-Version: 1.0
-To: "Josh Boyer" <jwboyer@fedoraproject.org>
-cc: "Felix Fietkau" <nbd@openwrt.org>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	"Tom Gundersen" <teg@jklm.no>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
-References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
- <20130820000336.GA15548@kroah.com>
- <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
- <20130820002822.GA18023@kroah.com> <5212F6E8.3090107@openwrt.org>
- <52132589.5000306@broadcom.com>
- <CA+5PVA7gvnfX2vnpxEGCgaAYXRvA=SME4SYZpTESqLsMkgSu=g@mail.gmail.com>
- <52147FD2.9020401@broadcom.com>
- <CA+5PVA5Wi=Xjrsb_Rh53A4NkWHe3h-gfs89dO6Zfb+6uh+G=dQ@mail.gmail.com>
-In-Reply-To: <CA+5PVA5Wi=Xjrsb_Rh53A4NkWHe3h-gfs89dO6Zfb+6uh+G=dQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/21/13 14:38, Josh Boyer wrote:
-> On Wed, Aug 21, 2013 at 4:52 AM, Arend van Spriel<arend@broadcom.com>  wrote:
->>>> Hi Felix,
->>>>
->>>> I have been diving into root causing why brcmsmac can not handle cck
->>>> fallback rates, because it should. Maybe it is better to flag no cck
->>>> support
->>>> and only change brcmsmac.
->>>
->>>
->>> We have a number of users hitting this in Fedora 18 and 19 now.  We're
->>> tracking it with https://bugzilla.redhat.com/show_bug.cgi?id=998080
->>> and I'm sure we can find people to test easily.
->>
->>
->> There is already another one (possibly) dealing with the same issue:
->>
->> https://bugzilla.redhat.com/show_bug.cgi?id=989269
->>
->> One of them should probably be flagged as duplicate.
->>
->>
->>> If you have a patch disabling cck in brcmsmac, I'd be happy to build a
->>> kernel for people.  If that's going to be some time coming, perhaps
->>> it's better to grab Felix's patch on a temporary basis?
->>
->>
->> I think it is better to grab Felix's patch because as we both observed there
->> is stuff missing in brcmsmac to deal with CCK rates and A-MPDU packet
->> aggregation.
->
-> OK, thanks.
->
-> Felix, are you going to send that upstream?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-It already has been sent: 
-http://mid.gmane.org/1377020634-27064-1-git-send-email-nbd@openwrt.org
+ath10k_debug_read_target_stats is properly
+protected by data_lock (spinlock). Remove
+the unwanted mutex_unlock(&ar->conf_mutex)
 
-Johannes has submitted it to John so it is getting there soon(ish).
+[ BUG: bad unlock balance detected! ]
+-------------------------------------
+kworker/u4:0/12459 is trying to release lock
+(&ar->conf_mutex) at:
+[<c16a170d>] mutex_unlock+0xd/0x10
+but there are no more locks to release!
 
-> josh
+ Call Trace:
+  [<c16a170d>] ? mutex_unlock+0xd/0x10
+  [<c10b697d>] __lock_release+0x4d/0xe0
+  [<f88ca0fc>] ? ath10k_debug_read_target_stats+0xac/0x290
 
-Regards,
-Arend
+  [<c16a170d>] ? mutex_unlock+0xd/0x10
+  [<c10b6a5b>] lock_release+0x4b/0x150
+  [<c16a1580>] __mutex_unlock_slowpath+0x70/0x150
+  [<f88ca0fc>] ? ath10k_debug_read_target_stats+0xac/0x290
 
+  [<c10b456b>] ? trace_hardirqs_on+0xb/0x10
+  [<c16a170d>] mutex_unlock+0xd/0x10
+  [<f88ca107>] ath10k_debug_read_target_stats+0xb7/0x290
 
+  [<f88d337a>] ath10k_wmi_event_process+0x3fa/0x6e0
+
+  [<c10b456b>] ? trace_hardirqs_on+0xb/0x10
+  [<f88d36e1>] ath10k_wmi_event_work+0x21/0x40
+               [ath10k_core]
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 3d65594..fcb40cc 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -260,7 +260,6 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 	}
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+-	mutex_unlock(&ar->conf_mutex);
+ 	complete(&ar->debug.event_stats_compl);
+ }
+ 
+-- 
+1.7.9.5
 
