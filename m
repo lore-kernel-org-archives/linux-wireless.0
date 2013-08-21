@@ -1,141 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2116 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758959Ab3HMUEe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 16:04:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	"David Herrmann" <dh.herrmann@gmail.com>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
-	"David Costa" <david@zarel.net>
-Subject: [RFT V2 04/13] brcmsmac: add switch control table for BCM4313
- iPA BT-combo cards
-Date: Tue, 13 Aug 2013 22:03:31 +0200
-Message-ID: <1376424220-10765-5-git-send-email-arend@broadcom.com> (sfid-20130813_220441_166609_CA9BA232)
-In-Reply-To: <1376424220-10765-1-git-send-email-arend@broadcom.com>
-References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:45246 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624Ab3HUVIW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 17:08:22 -0400
+Message-ID: <1377118665.3006.1.camel@porter.Elisa> (sfid-20130821_230826_194769_D63F52F6)
+Subject: Re: [PATCH] mac80211: move setting WIPHY_FLAG_SUPPORTS_SCHED_SCAN
+ into drivers
+From: Luciano Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Wed, 21 Aug 2013 23:57:45 +0300
+In-Reply-To: <1377077275-19429-1-git-send-email-johannes@sipsolutions.net>
+References: <1377077275-19429-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The bcm4313 iPA BT-WLAN combo cards need to be initialized with
-a different switch control table. This patch adds that table.
+On Wed, 2013-08-21 at 11:27 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> mac80211 currently sets WIPHY_FLAG_SUPPORTS_SCHED_SCAN based on whether
+> the start_sched_scan operation is supported or not, but that will not
+> be correct for all drivers, we're adding scheduled scan to the iwlmvm
+> driver but it depends on firmware support.
+> 
+> Therefore, move setting WIPHY_FLAG_SUPPORTS_SCHED_SCAN into the drivers
+> so that they can control it regardless of implementing the operation.
+> 
+> This currently only affects the TI drivers since they're the only ones
+> implementing scheduled scan (in a mac80211 driver.)
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
 
-Cc: David Herrmann <dh.herrmann@gmail.com>
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>
-Cc: David Costa <david@zarel.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |   72 ++++++++++++++++++++
- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h   |    1 +
- 2 files changed, 73 insertions(+)
+For the wlcore part:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
-index deae3a7..36c41df 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
-@@ -2044,6 +2044,73 @@ static const u16 dot11lcn_sw_ctrl_tbl_4313_rev0[] = {
- 	0x0005,
- };
- 
-+static const u16 dot11lcn_sw_ctrl_tbl_4313_ipa_rev0_combo[] = {
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+	0x0005,
-+	0x0006,
-+	0x0009,
-+	0x000a,
-+};
-+
- static const u16 dot11lcn_sw_ctrl_tbl_rev0[] = {
- 	0x0004,
- 	0x0004,
-@@ -2808,6 +2875,11 @@ const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313 = {
- 	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_rev0), 15, 0, 16
- };
- 
-+const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_ipa = {
-+	&dot11lcn_sw_ctrl_tbl_4313_ipa_rev0_combo,
-+	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_ipa_rev0_combo), 15, 0, 16
-+};
-+
- const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_epa = {
- 	&dot11lcn_sw_ctrl_tbl_4313_epa_rev0,
- 	ARRAY_SIZE(dot11lcn_sw_ctrl_tbl_4313_epa_rev0), 15, 0, 16
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h
-index 5f75e16..489422a 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h
-@@ -20,6 +20,7 @@
- extern const struct phytbl_info dot11lcnphytbl_rx_gain_info_rev0[];
- extern const u32 dot11lcnphytbl_rx_gain_info_sz_rev0;
- extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313;
-+extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_ipa;
- extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_epa;
- extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_epa_combo;
- extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa;
--- 
-1.7.10.4
-
+Acked-by: Luciano Coelho <luca@coelho.fi>
 
