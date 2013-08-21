@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35528 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112Ab3HABQy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 21:16:54 -0400
-Received: by mail-pa0-f45.google.com with SMTP id bg4so1511254pad.18
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 18:16:53 -0700 (PDT)
-From: Mark Schulte <schultetwin@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	Mark Schulte <schultetwin@gmail.com>
-Subject: [PATCH v2] rtlwifi: rtl8192cu: fix function declaration header
-Date: Wed, 31 Jul 2013 18:16:50 -0700
-Message-Id: <1375319810-20392-1-git-send-email-schultetwin@gmail.com> (sfid-20130801_031657_641511_5213497D)
+Received: from mga03.intel.com ([143.182.124.21]:62703 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752193Ab3HUGEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 02:04:37 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.10 4/8] iwlwifi: mvm: don't set the MCAST queue in STA's queue list
+Date: Wed, 21 Aug 2013 09:04:22 +0300
+Message-Id: <1377065066-13030-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130821_080442_752616_632567AB)
+In-Reply-To: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move rtl92cu_update_hal_rate_tbl declartion to hw.h to correspond with function
-definition in hw.c.
-Fixes sparse warning in hw.c warning: symbol 'rtl92cu_update_hal_rate_tbl' was
-not declared.
+commit 837fb69f10588caafc883c4473a864660e1403ce upstream.
 
-Signed-off-by: Mark Schulte <schultetwin@gmail.com>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+The MCAST queue should be enabled after DTIM only.
+According to fw API, the MCAST must not be attached to any
+station, but should appear in the mcast_qid of the AP's
+mac context only.
+
+This bug induces packet loss on MCAST frames since the
+firmware was sending them while the peer is asleep.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.h | 3 +++
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.h | 3 ---
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |    5 +----
+ drivers/net/wireless/iwlwifi/mvm/sta.c      |    3 ---
+ 2 files changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-index 8e3ec1e..0f7812e 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-@@ -109,5 +109,8 @@ void rtl92c_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
- void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw,
- 			 u8 element_id, u32 cmd_len, u8 *p_cmdbuffer);
- bool rtl92cu_phy_mac_config(struct ieee80211_hw *hw);
-+void rtl92cu_update_hal_rate_tbl(struct ieee80211_hw *hw,
-+				 struct ieee80211_sta *sta,
-+				 u8 rssi_level);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 3b69045..d8e858c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -193,14 +193,11 @@ static void iwl_mvm_mac_iface_iterator(void *_data, u8 *mac,
+ u32 iwl_mvm_mac_get_queues_mask(struct iwl_mvm *mvm,
+ 				struct ieee80211_vif *vif)
+ {
+-	u32 qmask, ac;
++	u32 qmask = 0, ac;
  
- #endif
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
-index 262e1e4..a1310ab 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
-@@ -49,8 +49,5 @@ bool rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
- u32 rtl92cu_phy_query_rf_reg(struct ieee80211_hw *hw,
- 			    enum radio_path rfpath, u32 regaddr, u32 bitmask);
- void rtl92cu_phy_set_bw_mode_callback(struct ieee80211_hw *hw);
--void rtl92cu_update_hal_rate_tbl(struct ieee80211_hw *hw,
--				 struct ieee80211_sta *sta,
--				 u8 rssi_level);
+ 	if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
+ 		return BIT(IWL_MVM_OFFCHANNEL_QUEUE);
  
- #endif
+-	qmask = (vif->cab_queue != IEEE80211_INVAL_HW_QUEUE) ?
+-		BIT(vif->cab_queue) : 0;
+-
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+ 		if (vif->hw_queue[ac] != IEEE80211_INVAL_HW_QUEUE)
+ 			qmask |= BIT(vif->hw_queue[ac]);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index 35c8ed5..68f0bbe 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -226,9 +226,6 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 		if (vif->hw_queue[i] != IEEE80211_INVAL_HW_QUEUE)
+ 			mvm_sta->tfd_queue_msk |= BIT(vif->hw_queue[i]);
+ 
+-	if (vif->cab_queue != IEEE80211_INVAL_HW_QUEUE)
+-		mvm_sta->tfd_queue_msk |= BIT(vif->cab_queue);
+-
+ 	/* for HW restart - need to reset the seq_number etc... */
+ 	memset(mvm_sta->tid_data, 0, sizeof(mvm_sta->tid_data));
+ 
 -- 
-1.8.3.3
+1.7.10.4
 
