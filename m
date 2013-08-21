@@ -1,135 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:46116 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752434Ab3HMFzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 01:55:07 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/4] ath10k: clean up PCI completion states
-Date: Tue, 13 Aug 2013 07:54:56 +0200
-Message-ID: <1376373297-32369-4-git-send-email-michal.kazior@tieto.com> (sfid-20130813_075514_958195_4E80089D)
-In-Reply-To: <1376373297-32369-1-git-send-email-michal.kazior@tieto.com>
-References: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
- <1376373297-32369-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:54121 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751486Ab3HUMiV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 08:38:21 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <52147FD2.9020401@broadcom.com>
+References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
+	<20130820000336.GA15548@kroah.com>
+	<CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
+	<20130820002822.GA18023@kroah.com>
+	<5212F6E8.3090107@openwrt.org>
+	<52132589.5000306@broadcom.com>
+	<CA+5PVA7gvnfX2vnpxEGCgaAYXRvA=SME4SYZpTESqLsMkgSu=g@mail.gmail.com>
+	<52147FD2.9020401@broadcom.com>
+Date: Wed, 21 Aug 2013 08:38:20 -0400
+Message-ID: <CA+5PVA5Wi=Xjrsb_Rh53A4NkWHe3h-gfs89dO6Zfb+6uh+G=dQ@mail.gmail.com> (sfid-20130821_143835_648025_2240FE4E)
+Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
+From: Josh Boyer <jwboyer@fedoraproject.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Tom Gundersen <teg@jklm.no>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Improve code readability by using enum and a
-switch-case.
+On Wed, Aug 21, 2013 at 4:52 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>>> Hi Felix,
+>>>
+>>> I have been diving into root causing why brcmsmac can not handle cck
+>>> fallback rates, because it should. Maybe it is better to flag no cck
+>>> support
+>>> and only change brcmsmac.
+>>
+>>
+>> We have a number of users hitting this in Fedora 18 and 19 now.  We're
+>> tracking it with https://bugzilla.redhat.com/show_bug.cgi?id=998080
+>> and I'm sure we can find people to test easily.
+>
+>
+> There is already another one (possibly) dealing with the same issue:
+>
+> https://bugzilla.redhat.com/show_bug.cgi?id=989269
+>
+> One of them should probably be flagged as duplicate.
+>
+>
+>> If you have a patch disabling cck in brcmsmac, I'd be happy to build a
+>> kernel for people.  If that's going to be some time coming, perhaps
+>> it's better to grab Felix's patch on a temporary basis?
+>
+>
+> I think it is better to grab Felix's patch because as we both observed there
+> is stuff missing in brcmsmac to deal with CCK rates and A-MPDU packet
+> aggregation.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v2;
- * fix line over 80 chars
+OK, thanks.
 
- drivers/net/wireless/ath/ath10k/pci.c |   22 ++++++++++++++++------
- drivers/net/wireless/ath/ath10k/pci.h |   13 +++++++------
- 2 files changed, 23 insertions(+), 12 deletions(-)
+Felix, are you going to send that upstream?
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 98edb31..630ba59 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -540,7 +540,7 @@ static void ath10k_pci_ce_send_done(struct ce_state *ce_state,
- 		if (!compl)
- 			break;
- 
--		compl->send_or_recv = HIF_CE_COMPLETE_SEND;
-+		compl->state = ATH10K_PCI_COMPL_SEND;
- 		compl->ce_state = ce_state;
- 		compl->pipe_info = pipe_info;
- 		compl->transfer_context = transfer_context;
-@@ -590,7 +590,7 @@ static void ath10k_pci_ce_recv_data(struct ce_state *ce_state,
- 		if (!compl)
- 			break;
- 
--		compl->send_or_recv = HIF_CE_COMPLETE_RECV;
-+		compl->state = ATH10K_PCI_COMPL_RECV;
- 		compl->ce_state = ce_state;
- 		compl->pipe_info = pipe_info;
- 		compl->transfer_context = transfer_context;
-@@ -812,7 +812,7 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
- 				return -ENOMEM;
- 			}
- 
--			compl->send_or_recv = HIF_CE_COMPLETE_FREE;
-+			compl->state = ATH10K_PCI_COMPL_FREE;
- 			list_add_tail(&compl->list, &pipe_info->compl_free);
- 		}
- 	}
-@@ -911,12 +911,14 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
- 		list_del(&compl->list);
- 		spin_unlock_bh(&ar_pci->compl_lock);
- 
--		if (compl->send_or_recv == HIF_CE_COMPLETE_SEND) {
-+		switch (compl->state) {
-+		case ATH10K_PCI_COMPL_SEND:
- 			cb->tx_completion(ar,
- 					  compl->transfer_context,
- 					  compl->transfer_id);
- 			send_done = 1;
--		} else {
-+			break;
-+		case ATH10K_PCI_COMPL_RECV:
- 			ret = ath10k_pci_post_rx_pipe(compl->pipe_info, 1);
- 			if (ret) {
- 				ath10k_warn("Unable to post recv buffer for pipe: %d\n",
-@@ -943,9 +945,17 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
- 					    nbytes,
- 					    skb->len + skb_tailroom(skb));
- 			}
-+			break;
-+		case ATH10K_PCI_COMPL_FREE:
-+			ath10k_warn("free completion cannot be processed\n");
-+			break;
-+		default:
-+			ath10k_warn("invalid completion state (%d)\n",
-+				    compl->state);
-+			break;
- 		}
- 
--		compl->send_or_recv = HIF_CE_COMPLETE_FREE;
-+		compl->state = ATH10K_PCI_COMPL_FREE;
- 
- 		/*
- 		 * Add completion back to the pipe's free list.
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index 871bb33..3093733 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -43,9 +43,15 @@ struct bmi_xfer {
- 	u32 resp_len;
- };
- 
-+enum ath10k_pci_compl_state {
-+	ATH10K_PCI_COMPL_FREE = 0,
-+	ATH10K_PCI_COMPL_SEND,
-+	ATH10K_PCI_COMPL_RECV,
-+};
-+
- struct ath10k_pci_compl {
- 	struct list_head list;
--	int send_or_recv;
-+	enum ath10k_pci_compl_state state;
- 	struct ce_state *ce_state;
- 	struct hif_ce_pipe_info *pipe_info;
- 	void *transfer_context;
-@@ -54,11 +60,6 @@ struct ath10k_pci_compl {
- 	unsigned int flags;
- };
- 
--/* compl_state.send_or_recv */
--#define HIF_CE_COMPLETE_FREE 0
--#define HIF_CE_COMPLETE_SEND 1
--#define HIF_CE_COMPLETE_RECV 2
--
- /*
-  * PCI-specific Target state
-  *
--- 
-1.7.9.5
-
+josh
