@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56169 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:58616 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756165Ab3HFTI6 (ORCPT
+	with ESMTP id S1751640Ab3HUKFA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 15:08:58 -0400
-Message-ID: <1375816128.8219.28.camel@jlt4.sipsolutions.net> (sfid-20130806_210905_574457_A9D2D0A0)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
+	Wed, 21 Aug 2013 06:05:00 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: sedat.dilek@gmail.com
-Cc: David Miller <davem@davemloft.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	wireless <linux-wireless@vger.kernel.org>, netdev@vger.kernel.org
-Date: Tue, 06 Aug 2013 21:08:48 +0200
-In-Reply-To: <CA+icZUXpZaHu-FjR6FGnbkG0XEkiukEgYYbDmrSjdqNz4rWCNg@mail.gmail.com> (sfid-20130806_203509_940812_0A82B457)
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	 <1375797260.8219.21.camel@jlt4.sipsolutions.net>
-	 <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
-	 <1375800617.8219.23.camel@jlt4.sipsolutions.net>
-	 <CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
-	 <1375801059.8219.24.camel@jlt4.sipsolutions.net>
-	 <CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
-	 <CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
-	 <1375802297.8219.25.camel@jlt4.sipsolutions.net>
-	 <CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com>
-	 <CA+icZUVuOqdZUGy2ALAF1CehOqYdr7rtEsXhqNvDtYEns2BuRQ@mail.gmail.com>
-	 <1375802993.8219.26.camel@jlt4.sipsolutions.net>
-	 <CA+icZUW6P9Z_7z+o+z=qBWSFzyU8tgtY0ou+rmLcEzWbn94OXA@mail.gmail.com>
-	 <CA+icZUW7LVzg7sM3O-w5oQpeaj=CT6MS6Q7cRZ1qK0h-Z4wZuw@mail.gmail.com>
-	 <1375804998.8219.27.camel@jlt4.sipsolutions.net>
-	 <CA+icZUVRgVfXUdJ1xoaN=nciqZDhV-f6EbH+6DS7HAh+My65oQ@mail.gmail.com>
-	 <CA+icZUUmQbovkwXcdEp6eu=WJkiuiyO8nDVwCHFUuPDbJqU7Kg@mail.gmail.com>
-	 <CA+icZUV++2+OG=P1SVbNrpHPLyzrfFX0eu8NHrd0nPjkPDUOtQ@mail.gmail.com>
-	 <CA+icZUXpZaHu-FjR6FGnbkG0XEkiukEgYYbDmrSjdqNz4rWCNg@mail.gmail.com>
-	 (sfid-20130806_203509_940812_0A82B457)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 3.11] mac80211: add missing channel context release
+Date: Wed, 21 Aug 2013 12:04:56 +0200
+Message-Id: <1377079496-27797-1-git-send-email-johannes@sipsolutions.net> (sfid-20130821_120502_794203_50AA32F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-08-06 at 20:35 +0200, Sedat Dilek wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Attached is a diff comparing all new commits in next-20130805.
-> If one of the commits smells bad to you, please let me know.
+IBSS needs to release the channel context when leaving
+but I evidently missed that. Fix it.
 
-Out of that list, only the af_packet changes would seem to have any
-impact on wireless at all.
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ibss.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-johannes
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index ea7b9c2..5e8bb3b 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -1138,6 +1138,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
+ 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
+ 						BSS_CHANGED_IBSS);
++	ieee80211_vif_release_channel(sdata);
+ 	synchronize_rcu();
+ 	kfree(presp);
+ 
+-- 
+1.8.4.rc2
 
