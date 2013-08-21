@@ -1,158 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:46559 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752094Ab3HTRlv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 13:41:51 -0400
-Received: by mail-lb0-f169.google.com with SMTP id u10so717612lbi.14
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 10:41:49 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH 10/16] wcn36xx: Add smd.h
-Date: Tue, 20 Aug 2013 19:41:13 +0200
-Message-Id: <1377020479-16935-11-git-send-email-k.eugene.e@gmail.com> (sfid-20130820_200909_562437_CE964E2D)
-In-Reply-To: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:62703 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752188Ab3HUGEf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 02:04:35 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.10 3/8] iwlwifi: mvm: properly tell the fw that a STA is awake
+Date: Wed, 21 Aug 2013 09:04:21 +0300
+Message-Id: <1377065066-13030-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130821_080439_963755_480ACFEE)
+In-Reply-To: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding smd.h
+commit 5af01772ee1d6e96849adf728ff837bd71b119c0 upstream.
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+The firmware API wasn't being used correctly, fix that.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.h | 121 +++++++++++++++++++++++++++++++++
- 1 file changed, 121 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
+ drivers/net/wireless/iwlwifi/mvm/sta.c |    8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-new file mode 100644
-index 0000000..28d5826
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -0,0 +1,121 @@
-+/*
-+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _SMD_H_
-+#define _SMD_H_
-+
-+#include "wcn36xx.h"
-+
-+/* Max shared size is 4k but we take less.*/
-+#define WCN36XX_NV_FRAGMENT_SIZE			3072
-+
-+#define WCN36XX_SMD_BUF_SIZE				4096
-+
-+#define SMD_MSG_TIMEOUT 200
-+#define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
-+#define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
-+/* The PNO version info be contained in the rsp msg */
-+#define WCN36XX_FW_MSG_PNO_VERSION_MASK			0x8000
-+
-+enum wcn36xx_fw_msg_result {
-+	WCN36XX_FW_MSG_RESULT_SUCCESS			= 0,
-+	WCN36XX_FW_MSG_RESULT_SUCCESS_SYNC		= 1,
-+
-+	WCN36XX_FW_MSG_RESULT_MEM_FAIL			= 5,
-+};
-+
-+/******************************/
-+/* SMD requests and responses */
-+/******************************/
-+struct wcn36xx_fw_msg_status_rsp {
-+	u32	status;
-+} __packed;
-+
-+struct wcn36xx;
-+
-+int wcn36xx_smd_open(struct wcn36xx *wcn);
-+void wcn36xx_smd_close(struct wcn36xx *wcn);
-+
-+int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
-+int wcn36xx_smd_start(struct wcn36xx *wcn);
-+int wcn36xx_smd_stop(struct wcn36xx *wcn);
-+int wcn36xx_smd_init_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_start_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_end_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_finish_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
-+int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status);
-+int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
-+int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
-+int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch);
-+int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
-+			    const u8 *sta_mac,
-+			    enum wcn36xx_hal_link_state state);
-+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta, const u8 *bssid,
-+			   bool update);
-+int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
-+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta);
-+int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
-+			    u16 tim_off, u16 p2p_off);
-+int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch);
-+int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb);
-+int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
-+			   enum ani_ed_type enc_type,
-+			   u8 keyidx,
-+			   u8 keylen,
-+			   u8 *key,
-+			   u8 sta_index);
-+int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
-+			   enum ani_ed_type enc_type,
-+			   u8 keyidx,
-+			   u8 keylen,
-+			   u8 *key);
-+int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
-+			      enum ani_ed_type enc_type,
-+			      u8 keyidx,
-+			      u8 sta_index);
-+int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
-+			      enum ani_ed_type enc_type,
-+			      u8 keyidx);
-+int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt);
-+int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn);
-+int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type);
-+int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
-+			     u32 arg3, u32 arg4, u32 arg5);
-+int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);
-+
-+int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
-+		struct ieee80211_sta *sta,
-+		u16 tid,
-+		u16 *ssn,
-+		u8 direction,
-+		u8 sta_index);
-+int wcn36xx_smd_add_ba(struct wcn36xx *wcn);
-+int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
-+int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
-+
-+int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
-+/* WCN36XX configuration parameters */
-+struct wcn36xx_fw_cfg {
-+	u16		id;
-+	u16		len;
-+	u16		pad_bytes;
-+	u16		reserved;
-+	u8		*val;
-+};
-+#endif	/* _SMD_H_ */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index 736b50b..35c8ed5 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -1296,17 +1296,11 @@ void iwl_mvm_sta_modify_ps_wake(struct iwl_mvm *mvm,
+ 	struct iwl_mvm_add_sta_cmd cmd = {
+ 		.add_modify = STA_MODE_MODIFY,
+ 		.sta_id = mvmsta->sta_id,
+-		.modify_mask = STA_MODIFY_SLEEPING_STA_TX_COUNT,
+-		.sleep_state_flags = cpu_to_le16(STA_SLEEP_STATE_AWAKE),
++		.station_flags_msk = cpu_to_le32(STA_FLG_PS),
+ 		.mac_id_n_color = cpu_to_le32(mvmsta->mac_id_n_color),
+ 	};
+ 	int ret;
+ 
+-	/*
+-	 * Same modify mask for sleep_tx_count and sleep_state_flags but this
+-	 * should be fine since if we set the STA as "awake", then
+-	 * sleep_tx_count is not relevant.
+-	 */
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, ADD_STA, CMD_ASYNC, sizeof(cmd), &cmd);
+ 	if (ret)
+ 		IWL_ERR(mvm, "Failed to send ADD_STA command (%d)\n", ret);
 -- 
-1.8.2.2
+1.7.10.4
 
