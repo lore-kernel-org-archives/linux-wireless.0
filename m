@@ -1,86 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1397 "EHLO mms3.broadcom.com"
+Received: from mga03.intel.com ([143.182.124.21]:62703 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751214Ab3HTOBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 10:01:00 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/12] brcmsmac: correct phy registers for TSSI-based
- power control
-Date: Tue, 20 Aug 2013 16:00:44 +0200
-Message-ID: <1377007246-9957-11-git-send-email-arend@broadcom.com> (sfid-20130820_160147_628653_5D9AC6E6)
-In-Reply-To: <1377007246-9957-1-git-send-email-arend@broadcom.com>
-References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752017Ab3HUGEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Aug 2013 02:04:33 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.10 2/8] iwlwifi: mvm: fix MCAST in AP mode
+Date: Wed, 21 Aug 2013 09:04:20 +0300
+Message-Id: <1377065066-13030-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130821_080437_072014_07E90DA2)
+In-Reply-To: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A number of additional phy registers needs to be programmed when
-using TSSI-based power control.
+commit 9116a3683902583a302ac5dcb283416d504d9bb4 upstream.
 
-Tested-by: David Herrmann <dh.herrmann@gmail.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+In multicast, there is no retries nor RTS since there is no
+specific recipient that can ACK or send CTS. This means
+that we must not use the rate scale table for multicast
+frames.
+This true for any frame that doesn't have a valid
+ieee80211_sta pointer.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/tx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-index 08bcae4..2917f5c 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -2020,6 +2020,16 @@ wlc_lcnphy_set_tssi_mux(struct brcms_phy *pi, enum lcnphy_tssi_mode pos)
- 		} else {
- 			mod_radio_reg(pi, RADIO_2064_REG03A, 1, 0x1);
- 			mod_radio_reg(pi, RADIO_2064_REG11A, 0x8, 0x8);
-+			mod_radio_reg(pi, RADIO_2064_REG028, 0x1, 0x0);
-+			mod_radio_reg(pi, RADIO_2064_REG11A, 0x4, 1<<2);
-+			mod_radio_reg(pi, RADIO_2064_REG036, 0x10, 0x0);
-+			mod_radio_reg(pi, RADIO_2064_REG11A, 0x10, 1<<4);
-+			mod_radio_reg(pi, RADIO_2064_REG036, 0x3, 0x0);
-+			mod_radio_reg(pi, RADIO_2064_REG035, 0xff, 0x77);
-+			mod_radio_reg(pi, RADIO_2064_REG028, 0x1e, 0xe<<1);
-+			mod_radio_reg(pi, RADIO_2064_REG112, 0x80, 1<<7);
-+			mod_radio_reg(pi, RADIO_2064_REG005, 0x7, 1<<1);
-+			mod_radio_reg(pi, RADIO_2064_REG029, 0xf0, 0<<4);
- 		}
- 	} else {
- 		mod_phy_reg(pi, 0x4d9, (0x1 << 2), (0x1) << 2);
-@@ -2106,6 +2116,7 @@ static void wlc_lcnphy_pwrctrl_rssiparams(struct brcms_phy *pi)
- 		    (auxpga_vmid_temp << 0) | (auxpga_gain_temp << 12));
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index 48c1891..b9ba4e7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -175,7 +175,7 @@ static void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm,
+ 	 * table is controlled by LINK_QUALITY commands
+ 	 */
  
- 	mod_radio_reg(pi, RADIO_2064_REG082, (1 << 5), (1 << 5));
-+	mod_radio_reg(pi, RADIO_2064_REG07C, (1 << 0), (1 << 0));
- }
- 
- static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
-@@ -2218,6 +2229,10 @@ static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
- 
- 	mod_phy_reg(pi, 0x4d7, (0xf << 8), (0) << 8);
- 
-+	mod_radio_reg(pi, RADIO_2064_REG035, 0xff, 0x0);
-+	mod_radio_reg(pi, RADIO_2064_REG036, 0x3, 0x0);
-+	mod_radio_reg(pi, RADIO_2064_REG11A, 0x8, 0x8);
-+
- 	wlc_lcnphy_pwrctrl_rssiparams(pi);
- }
- 
-@@ -3096,6 +3111,11 @@ static void wlc_lcnphy_tx_pwr_ctrl_init(struct brcms_phy_pub *ppi)
- 			wlc_lcnphy_write_table(pi, &tab);
- 			tab.tbl_offset++;
- 		}
-+		mod_phy_reg(pi, 0x4d0, (0x1 << 0), (0) << 0);
-+		mod_phy_reg(pi, 0x4d3, (0xff << 0), (0) << 0);
-+		mod_phy_reg(pi, 0x4d3, (0xff << 8), (0) << 8);
-+		mod_phy_reg(pi, 0x4d0, (0x1 << 4), (0) << 4);
-+		mod_phy_reg(pi, 0x4d0, (0x1 << 2), (0) << 2);
- 
- 		mod_phy_reg(pi, 0x410, (0x1 << 7), (0) << 7);
- 
+-	if (ieee80211_is_data(fc)) {
++	if (ieee80211_is_data(fc) && sta) {
+ 		tx_cmd->initial_rate_index = 0;
+ 		tx_cmd->tx_flags |= cpu_to_le32(TX_CMD_FLG_STA_RATE);
+ 		return;
 -- 
 1.7.10.4
-
 
