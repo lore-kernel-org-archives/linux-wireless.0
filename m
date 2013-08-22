@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:52464 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753034Ab3H1Ll2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 07:41:28 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v2 0/2] add per-VDEV FW statistics
-Date: Wed, 28 Aug 2013 13:41:17 +0200
-Message-ID: <1377690079-18645-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20130828_134131_833874_A0BA420B)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:56551 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753685Ab3HVR3H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Aug 2013 13:29:07 -0400
+Received: by mail-pb0-f52.google.com with SMTP id wz12so2068562pbc.39
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 10:29:07 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH v3] mac80211: only respond to probe request with mesh ID
+Date: Thu, 22 Aug 2013 10:28:58 -0700
+Message-Id: <1377192538-5563-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130822_192914_239037_EBB98F47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FW 1.0.0.716 brings per-VDEV statistics. This patch-set implements
-debugfs mechanism to fetch those. There's still few more fileds we
-can read from the FW stats event, which are not covered here.
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
 
-Changes:
+Previously, the mesh STA responds to probe request from legacy STA
+but now it will only respond to legacy STA if the legacy STA does include 
+the specific mesh ID or wildcard mesh ID in the probe request.
 
-V2:
-* introduce wmi_peer_stats_common struct
-* fetch and print peer RX rates
-* break up wmi_peer_stats_common update into separate patch
+The iw patch "iw: scan using meshid" can be used either by legacy STA
+or by mesh STA to do active scanning by inserting the mesh ID in the 
+probe request frame.
 
-Bartosz Markowski (2):
-  ath10k: update wal_dbg_tx_stats structure with missing parameter.
-  ath10k: implement per-VDEV FW statistics
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Acked-by: Thomas Pedersen <thomas@cozybit.com>
+Acked-by: Javier Cardona <javier@cozybit.com>
+---
+v2: modify comments (Thomas)
+v3: style problem (Bob)
 
- drivers/net/wireless/ath/ath10k/core.h  |   22 ++++++++
- drivers/net/wireless/ath/ath10k/debug.c |   81 +++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/wmi.c   |    4 +-
- drivers/net/wireless/ath/ath10k/wmi.h   |   90 ++++++++++++++++++++++++++-----
- 4 files changed, 170 insertions(+), 27 deletions(-)
+ net/mac80211/mesh.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 885a5f6..a660fb8 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -832,6 +832,9 @@ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee802_11_parse_elems(pos, len - baselen, false, &elems);
+ 
++	if (!elems.mesh_id)
++		return;
++
+ 	/* 802.11-2012 10.1.4.3.2 */
+ 	if ((!ether_addr_equal(mgmt->da, sdata->vif.addr) &&
+ 	     !is_broadcast_ether_addr(mgmt->da)) ||
 -- 
-1.7.10
+1.7.9.5
 
