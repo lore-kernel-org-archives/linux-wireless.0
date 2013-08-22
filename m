@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:40052 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751745Ab3HZTuA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 15:50:00 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Tobias Waldekranz <tobias@waldekranz.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 26 Aug 2013 12:49:57 -0700
-Subject: RE: [PATCH] mwifiex: add missing endian conversions
-Message-ID: <477F20668A386D41ADCC57781B1F70430EAF1FEDB2@SC-VEXCH1.marvell.com> (sfid-20130826_215023_192089_75FA2FBB)
-References: <20130826071806.GA3035@gmail.com>
- <477F20668A386D41ADCC57781B1F70430EAF1FEDA3@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430EAF1FEDA3@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:60646 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752424Ab3HVRNq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Aug 2013 13:13:46 -0400
+Received: by mail-qa0-f52.google.com with SMTP id bq6so466055qab.18
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 10:13:46 -0700 (PDT)
+Date: Thu, 22 Aug 2013 13:13:13 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	distro11s@cozybit.com
+Subject: Re: [PATCH v2] mac80211: only respond to probe request with mesh ID
+Message-ID: <20130822171312.GE23629@localhost> (sfid-20130822_191349_661922_923F2E9F)
+References: <1377190892-5328-1-git-send-email-yeohchunyeow@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1377190892-5328-1-git-send-email-yeohchunyeow@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tobias,
+On Thu, Aug 22, 2013 at 10:01:32AM -0700, Chun-Yeow Yeoh wrote:
+> +	if(!elems.mesh_id)
+> +		return;
+> +
 
-> Thanks for your patch.
-> It doesn't apply to wireless or wireless-next trees.
-> 
-> Which git tree are you using?
+if (!elems.mesh_id)
 
-Never mind. John has merged the patch already.
+(checkpatch will warn about that)
 
-Regards,
-Bing
+-- 
+Bob Copeland %% www.bobcopeland.com
