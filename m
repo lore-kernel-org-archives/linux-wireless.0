@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54509 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755313Ab3HFJNY (ORCPT
+Received: from mail-vc0-f181.google.com ([209.85.220.181]:57081 "EHLO
+	mail-vc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753787Ab3HVRaD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 05:13:24 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] brcmfmac: use CFG80211_TESTMODE_CMD
-Date: Tue,  6 Aug 2013 11:13:19 +0200
-Message-Id: <1375780399-1120-1-git-send-email-johannes@sipsolutions.net> (sfid-20130806_111326_956917_F4D949F8)
+	Thu, 22 Aug 2013 13:30:03 -0400
+Received: by mail-vc0-f181.google.com with SMTP id hz10so1267255vcb.12
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 10:30:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+7kRpWhLEKZYzGN-Eu4dPDM2+JQRkmJYWP1CJf0jzWSN=KVJA@mail.gmail.com>
+References: <CA+7kRpWhLEKZYzGN-Eu4dPDM2+JQRkmJYWP1CJf0jzWSN=KVJA@mail.gmail.com>
+Date: Thu, 22 Aug 2013 21:30:02 +0400
+Message-ID: <CA++WF2OrE0Hc-TMxk4=NDzKpKZo1xsnP0hZK8i7SaT9HYZ08_Q@mail.gmail.com> (sfid-20130822_193008_067604_E58A0053)
+Subject: Re: Intel PRO/Wireless 2100 Driver Firmware
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Marcus Laitala <marcus.vitsar@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Marcus,
 
-This is essentially the same, but written shorter.
+On 20 August 2013 17:44, Marcus Laitala <marcus.vitsar@gmail.com> wrote:
+> I tried to download the Intel PRO/Wireless 2100 Driver Firmware
+> from: http://ipw2100.sourceforge.net/firmware.php
+>
+> I only get the following error:
+> This webpage is not available"
+>
+> As if the files/webpage is no longer there/online. I just wanted to
+> tell who ever is in charge of those that those files are no longer
+> downloadable.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Thank you for the information. The firmware can be downloaded from the
+Fedora repository:
+http://pkgs.fedoraproject.org/repo/pkgs/ipw2100-firmware/
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index b7d8850..f393828 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4163,9 +4163,7 @@ static struct cfg80211_ops wl_cfg80211_ops = {
- 	.stop_p2p_device = brcmf_p2p_stop_device,
- 	.crit_proto_start = brcmf_cfg80211_crit_proto_start,
- 	.crit_proto_stop = brcmf_cfg80211_crit_proto_stop,
--#ifdef CONFIG_NL80211_TESTMODE
--	.testmode_cmd = brcmf_cfg80211_testmode
--#endif
-+	CFG80211_TESTMODE_CMD(brcmf_cfg80211_testmode)
- };
- 
- static s32 brcmf_nl80211_iftype_to_mode(enum nl80211_iftype type)
--- 
-1.8.0
-
+Stanislav.
