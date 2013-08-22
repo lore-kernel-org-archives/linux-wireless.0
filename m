@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:57909 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754680Ab3HFO4K (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:48064 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753326Ab3HVOKP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 10:56:10 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1375800617.8219.23.camel@jlt4.sipsolutions.net>
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
-	<CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
-	<1375800617.8219.23.camel@jlt4.sipsolutions.net>
-Date: Tue, 6 Aug 2013 16:56:08 +0200
-Message-ID: <CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com> (sfid-20130806_165628_156808_EA3953A0)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-From: Sedat Dilek <sedat.dilek@gmail.com>
+	Thu, 22 Aug 2013 10:10:15 -0400
+Received: by mail-ob0-f178.google.com with SMTP id ef5so3753925obb.9
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 07:10:13 -0700 (PDT)
+Date: Thu, 22 Aug 2013 09:10:11 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: ignore obviously bogus ECSAs in probe response
+ frames
+Message-ID: <20130822141011.GA24445@thinkpad-t410> (sfid-20130822_161025_980422_7E4EE525)
+References: <1377179613-26591-1-git-send-email-seth.forshee@canonical.com>
+ <1377180063.14110.23.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1377180063.14110.23.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 4:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-08-06 at 16:46 +0200, Sedat Dilek wrote:
->
-> Heh, the interesting messages are always cut out of the log:
->
-> Aug  6 16:30:34 fambox wpa_supplicant[2533]: wlan0: WPA: RX message 1 of 4-Way Handshake from 00:04:0e:e4:00:3d (ver=2)
-> Aug  6 16:30:34 fambox wpa_supplicant[2533]: RSN: msg 1/4 key data - hexdump(len=0):
-> Aug  6 16:30:34 fambox wpa_supplicant[2533]: Get randomness: len=32 entropy=4
-> Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from os_get_random - hexdump(len=32): [REMOVED]
-> Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
-> Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from internal pool - hexdump(len=16): [REMOVED]
-> Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
-> Aug  6 16:30:34 fambox rsyslogd-2177: imuxsock begins to drop messages from pid 2533 due to rate-limiting
-> [...]
->
+On Thu, Aug 22, 2013 at 04:01:03PM +0200, Johannes Berg wrote:
+> On Thu, 2013-08-22 at 08:53 -0500, Seth Forshee wrote:
+> > The Netgear WNDAP360 sends invalid ECSA IEs in probe response
+> > frames
+> 
+> I think we shouldn't be checking probe response frames at all. That
+> seems like a mistake. Can you try this?
 
-Do you know how I can workaround the rsyslogd rate-limiting?
+I had considered this, but the spec says that it's at least valid for
+the AP to be sending ECSAs in probe responses. IEEE 802.11-2012 section
+10.3.3.2:
 
-- Sedat -
+  ...an AP shall inform associated STAs that the AP is moving to a new
+  channel and/or operating class and maintain the association by
+  advertising the switch using Extended Channel Switch Announcement
+  elements in any transmitted Beacon frames, Probe Response frames, and
+  Extended Channel Switch Announcement frames until the intended channel
+  switch time.
 
-> johannes
->
+Perhaps we can still ignore them though? I suppose we'd expect to
+receive some other frame with the ECSA before it actually happens.
+
+Seth
