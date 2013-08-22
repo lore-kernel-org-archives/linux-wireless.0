@@ -1,93 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41178 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757079Ab3HMKdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 06:33:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 1/5] ath9k: remove ath9k_sta_remove_debugfs
-Date: Tue, 13 Aug 2013 12:33:26 +0200
-Message-Id: <1376390010-81819-1-git-send-email-nbd@openwrt.org> (sfid-20130813_123345_354968_5760E249)
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:41537 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752251Ab3HVNxg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Aug 2013 09:53:36 -0400
+Received: by mail-oa0-f46.google.com with SMTP id j10so3401032oah.5
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 06:53:35 -0700 (PDT)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: ignore obviously bogus ECSAs in probe response frames
+Date: Thu, 22 Aug 2013 08:53:33 -0500
+Message-Id: <1377179613-26591-1-git-send-email-seth.forshee@canonical.com> (sfid-20130822_155339_483780_E02FA567)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 uses debugfs_remove_recursive, so there's no need for the
-driver to do an explicit cleanup of its sta debugfs entry.
+The Netgear WNDAP360 sends invalid ECSA IEs in probe response
+frames which have the operating class and channel number fields
+set to 0, even when no channel switch is pending. mac80211
+responds to invalid ECSAs by disconnecting. The result is that
+every scan when associated to one of these APs triggers a
+disconnect.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Since these ECSAs are obviously bogus, ignore them in probe
+response and beacon frames. Do not disconnect.
+
+Cc: <stable@vger.kernel.org> # 3.10+
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  4 ----
- drivers/net/wireless/ath/ath9k/debug.c | 12 +-----------
- drivers/net/wireless/ath/ath9k/debug.h |  4 ----
- drivers/net/wireless/ath/ath9k/main.c  |  1 -
- 4 files changed, 1 insertion(+), 20 deletions(-)
+ net/mac80211/mlme.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 7b1d036..df1c495 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -262,10 +262,6 @@ struct ath_node {
- 
- 	bool sleeping;
- 	bool no_ps_filter;
--
--#if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_ATH9K_DEBUGFS)
--	struct dentry *node_stat;
--#endif
- };
- 
- struct ath_tx_control {
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index c10cec5..e5c8333 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1725,17 +1725,7 @@ void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
- 			   struct dentry *dir)
- {
- 	struct ath_node *an = (struct ath_node *)sta->drv_priv;
--	an->node_stat = debugfs_create_file("node_stat", S_IRUGO,
--					    dir, an, &fops_node_stat);
--}
--
--void ath9k_sta_remove_debugfs(struct ieee80211_hw *hw,
--			      struct ieee80211_vif *vif,
--			      struct ieee80211_sta *sta,
--			      struct dentry *dir)
--{
--	struct ath_node *an = (struct ath_node *)sta->drv_priv;
--	debugfs_remove(an->node_stat);
-+	debugfs_create_file("node_stat", S_IRUGO, dir, an, &fops_node_stat);
- }
- 
- /* Ethtool support for get-stats */
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index 01c5c6a..6e1556f 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -292,10 +292,6 @@ void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
- 			   struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta,
- 			   struct dentry *dir);
--void ath9k_sta_remove_debugfs(struct ieee80211_hw *hw,
--			      struct ieee80211_vif *vif,
--			      struct ieee80211_sta *sta,
--			      struct dentry *dir);
- void ath_debug_send_fft_sample(struct ath_softc *sc,
- 			       struct fft_sample_tlv *fft_sample);
- void ath9k_debug_stat_ant(struct ath_softc *sc,
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 911744f..0bee105 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2364,7 +2364,6 @@ struct ieee80211_ops ath9k_ops = {
- 
- #if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_ATH9K_DEBUGFS)
- 	.sta_add_debugfs    = ath9k_sta_add_debugfs,
--	.sta_remove_debugfs = ath9k_sta_remove_debugfs,
- #endif
- 	.sw_scan_start	    = ath9k_sw_scan_start,
- 	.sw_scan_complete   = ath9k_sw_scan_complete,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index cc9e02d..f921b67 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1054,6 +1054,13 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		if (!ieee80211_operating_class_to_band(
+ 				elems->ext_chansw_ie->new_operating_class,
+ 				&new_band)) {
++			/*
++			 * Some APs send invalid ECSA IEs in probe response
++			 * frames, so check for these and ignore them.
++			 */
++			if (beacon && elems->ext_chansw_ie->new_ch_num == 0 &&
++			    elems->ext_chansw_ie->new_operating_class == 0)
++				return;
+ 			sdata_info(sdata,
+ 				   "cannot understand ECSA IE operating class %d, disconnecting\n",
+ 				   elems->ext_chansw_ie->new_operating_class);
 -- 
-1.8.0.2
+1.8.1.2
 
