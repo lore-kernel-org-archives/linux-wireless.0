@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38738 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239Ab3HPKZV (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:64146 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753342Ab3HVPJw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 06:25:21 -0400
-Message-ID: <1376648716.15299.5.camel@jlt4.sipsolutions.net> (sfid-20130816_122528_762276_DBFB66C7)
-Subject: Re: [PATCHv2 2/6] mac80211: split off channel switch parsing
- function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Thu, 22 Aug 2013 11:09:52 -0400
+Received: by mail-ob0-f169.google.com with SMTP id wc20so3912711obb.28
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 08:09:51 -0700 (PDT)
+Date: Thu, 22 Aug 2013 10:09:50 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 16 Aug 2013 12:25:16 +0200
-In-Reply-To: <1376058920-17779-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1376058920-17779-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: ignore obviously bogus ECSAs in probe response
+ frames
+Message-ID: <20130822150950.GD24445@thinkpad-t410> (sfid-20130822_170955_581484_C5E13799)
+References: <1377179613-26591-1-git-send-email-seth.forshee@canonical.com>
+ <1377180063.14110.23.camel@jlt4.sipsolutions.net>
+ <20130822141011.GA24445@thinkpad-t410>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130822141011.GA24445@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-08-09 at 16:35 +0200, Simon Wunderlich wrote:
+On Thu, Aug 22, 2013 at 09:10:11AM -0500, Seth Forshee wrote:
+> On Thu, Aug 22, 2013 at 04:01:03PM +0200, Johannes Berg wrote:
+> > On Thu, 2013-08-22 at 08:53 -0500, Seth Forshee wrote:
+> > > The Netgear WNDAP360 sends invalid ECSA IEs in probe response
+> > > frames
+> > 
+> > I think we shouldn't be checking probe response frames at all. That
+> > seems like a mistake. Can you try this?
+> 
+> I had considered this, but the spec says that it's at least valid for
+> the AP to be sending ECSAs in probe responses. IEEE 802.11-2012 section
+> 10.3.3.2:
+> 
+>   ...an AP shall inform associated STAs that the AP is moving to a new
+>   channel and/or operating class and maintain the association by
+>   advertising the switch using Extended Channel Switch Announcement
+>   elements in any transmitted Beacon frames, Probe Response frames, and
+>   Extended Channel Switch Announcement frames until the intended channel
+>   switch time.
+> 
+> Perhaps we can still ignore them though? I suppose we'd expect to
+> receive some other frame with the ECSA before it actually happens.
 
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -981,54 +981,35 @@ static void ieee80211_chswitch_timer(unsigned long data)
->  	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.chswitch_work);
->  }
->  
-> -static void
-> -ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-> -				 u64 timestamp, struct ieee802_11_elems *elems,
-> -				 bool beacon)
-> +int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+Anyway, your fix also eliminates the disconnects, so whichever solution
+you think best is fine. There is a build failure though.
 
-I think you should also move this function out of mlme.c, maybe the
-(almost empty) spectmgmt.c file?
++       ieee80211_sta_process_chanswitch(sdata, rx_status->mactime,
++                                        elems, true);
 
-> +				 struct ieee802_11_elems *elems, bool beacon,
-> +				 enum ieee80211_band current_band,
-> +				 u32 sta_flags,
+Needs to be &elems here.
 
-Passing sta_flags seems a bit odd - I understand the motivation but I
-think it would be worthwhile to document (maybe in the kernel-doc in the
-header file) which flags are used.
-
-johannes
-
+Thanks,
+Seth
