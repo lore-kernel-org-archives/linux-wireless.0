@@ -1,48 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:43286 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756004Ab3HLJpp (ORCPT
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:48270 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752667Ab3HVLBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 05:45:45 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 15/15] ath9k: Remove unused function argument
-Date: Mon, 12 Aug 2013 15:11:42 +0530
-Message-Id: <1376300502-2741-16-git-send-email-sujith@msujith.org> (sfid-20130812_120909_111146_F987944E)
-In-Reply-To: <1376300502-2741-1-git-send-email-sujith@msujith.org>
-References: <1376300502-2741-1-git-send-email-sujith@msujith.org>
+	Thu, 22 Aug 2013 07:01:10 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAOMQbqHRkF4_gK=GA587LDghkYtd1hRQhLObV+Tbe9zEDbS5-Q@mail.gmail.com>
+References: <CAOMQbqHRkF4_gK=GA587LDghkYtd1hRQhLObV+Tbe9zEDbS5-Q@mail.gmail.com>
+From: Stan G <stangoesagain@gmail.com>
+Date: Thu, 22 Aug 2013 18:00:48 +0700
+Message-ID: <CAOMQbqEZKytz42CcjXwBiyiKotU0Wh1_9_TX2NP+qSjpP71+og@mail.gmail.com> (sfid-20130822_130114_503563_57821332)
+Subject: Fwd: ipw2200: Fix race condition in the command completion acknowledge
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---------- Forwarded message ----------
+From: Stan G <stangoesagain@gmail.com>
+Date: Wed, Aug 21, 2013 at 3:16 PM
+Subject: ipw2200: Fix race condition in the command completion acknowledge
+To: stas.yakovlev@gmail.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index a00e1b6..49e9cce 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -885,7 +885,6 @@ static int ath9k_process_rate(struct ath_common *common,
- 
- static void ath9k_process_rssi(struct ath_common *common,
- 			       struct ieee80211_hw *hw,
--			       struct ieee80211_hdr *hdr,
- 			       struct ath_rx_status *rx_stats)
- {
- 	struct ath_softc *sc = hw->priv;
-@@ -1150,7 +1149,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		ath_start_rx_poll(sc, 3);
- 	}
- 
--	ath9k_process_rssi(common, hw, hdr, rx_stats);
-+	ath9k_process_rssi(common, hw, rx_stats);
- 
- 	rx_status->band = hw->conf.chandef.chan->band;
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
--- 
-1.8.3.4
+Hi,
 
+This is regarding kernel patch history:
+
+>>>>
+
+commit dd447319895d0c0af423e483d9b63f84f3f8869a
+Author: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Date: Thu Apr 19 15:55:09 2012 -0400
+ipw2200: Fix race condition in the command completion acknowledge
+
+Driver incorrectly validates command completion: instead of waiting
+for a command to be acknowledged it continues execution. Most of the
+time driver gets acknowledge of the command completion in a tasklet
+before it executes the next one. But sometimes it sends the next
+command before it gets acknowledge for the previous one. In such a
+case one of the following error messages appear in the log:
+
+Failed to send SYSTEM_CONFIG: Already sending a command.
+Failed to send ASSOCIATE: Already sending a command.
+Failed to send TX_POWER: Already sending a command.
+
+After that you need to reload the driver to get it working again.
+
+This bug occurs during roaming (reported by Sam Varshavchik)
+https://bugzilla.redhat.com/show_bug.cgi?id=738508
+and machine booting (reported by Tom Gundersen and Mads Kiilerich)
+https://bugs.archlinux.org/task/28097
+https://bugzilla.redhat.com/show_bug.cgi?id=802106
+
+This patch doesn't fix the delay issue during firmware load.
+But at least device now works as usual after boot.
+
+Cc: stable@kernel.org
+Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+>>>>
+
+I am having intermittent problems with dropping wifi network while the
+ AP is still visible and dmesg produces this:
+
+      [26617.864791] ipw2200: Failed to send ASSOCIATE: Already
+sending a command.
+
+
+I'm on OpenSuse 12.3 with 3.7.10-1.16
+
+The whole story of this problem can be viewed here:
+
+https://forums.opensuse.org/english/get-technical-help-here/network-internet/489371-wifi-up-access-point-visible-but-network-goes-down.html
+
+where at the end I was advised to contact you, guys.
+
+Reloading driver restores network as expected.
+
+Can anything be done regarding this issue or is the driver too old to be fixed?
+
+Would updating to the latest kernel solve the problem?
+
+Stan
