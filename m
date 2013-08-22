@@ -1,59 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:24379 "EHLO mga03.intel.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:37610 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751819Ab3HLITT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 04:19:19 -0400
-From: "Berg, Johannes" <johannes.berg@intel.com>
-To: Djalal Harouni <tixxdz@opendz.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] iwlwifi: mvm: make debugfs write() operations write up
- to count bytes
-Date: Mon, 12 Aug 2013 08:19:12 +0000
-Message-ID: <1DC40B07CD6EC041A66726C271A73AE61AA5E38C@IRSMSX102.ger.corp.intel.com> (sfid-20130812_101937_584687_F735D50C)
-References: <1376267972-5636-1-git-send-email-tixxdz@opendz.org>
-In-Reply-To: <1376267972-5636-1-git-send-email-tixxdz@opendz.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1753528Ab3HVSxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Aug 2013 14:53:33 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 1/2] rt2x00: rt2800lib: add rt2800_hw_beacon_base helper
+Date: Thu, 22 Aug 2013 20:53:21 +0200
+Message-Id: <1377197602-5567-1-git-send-email-juhosg@openwrt.org> (sfid-20130822_205345_713550_09680645)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Some debugfs write() operations of the MVM Firmware will ignore the count
-> argument, and will copy more bytes than what was specified.
-> Fix this by getting the right count of bytes.
-> 
-> This will also honor restrictions put on the number of bytes to write.
+The HW_BEACON_BASE() macro returns the base address
+of a given beacon, however the returned values are
+not usable on all chipsets. On devices which have
+selectable shared memory parts, some beacon may be
+located in the high part of the shared memory.
 
-That makes some sense.
+Instead of extending the already complicated macro,
+add a new helper function and use that to get the
+base address of a given beacon.
 
-> To be consitant this patch also switches the initializer from 'char buf[x] = {}' to
-> the explicit memset() as it is done in other places of the same file.
+The actual patch contains no functional changes, the
+helper function will be extended in a further patch
+to handle different chipsets' requirements.
 
-I'd rather this (a) be done in a separate patch, and (b) the other way around, switch everything to C99.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+Changes since v2:
+  - separated from the 'rt2x00: fix beaconing on RT3593' patch-set
+  - update commit log
 
-> Cc: stable@vger.kernel.org
+Changes since v1: ---
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-That doesn't really make sense for the debugfs interface.
-
-> +	memset(buf, 0, sizeof(buf));
-> +	if (count > sizeof(buf) - 1)
-> +		count = sizeof(buf) - 1;
-
-Why -1? And why not use min()/min_t()?
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index aa6b6b0..38606e2 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -940,6 +940,12 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
+ }
+ EXPORT_SYMBOL_GPL(rt2800_txdone_entry);
+ 
++static unsigned int rt2800_hw_beacon_base(struct rt2x00_dev *rt2x00dev,
++					  unsigned int index)
++{
++	return HW_BEACON_BASE(index);
++}
++
+ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+@@ -992,7 +998,8 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 		return;
+ 	}
+ 
+-	beacon_base = HW_BEACON_BASE(entry->entry_idx);
++	beacon_base = rt2800_hw_beacon_base(rt2x00dev, entry->entry_idx);
++
+ 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+ 				   entry->skb->len + padding_len);
+ 
+@@ -1017,7 +1024,7 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
+ 	const int txwi_desc_size = rt2x00dev->bcn->winfo_size;
+ 	unsigned int beacon_base;
+ 
+-	beacon_base = HW_BEACON_BASE(index);
++	beacon_base = rt2800_hw_beacon_base(rt2x00dev, index);
+ 
+ 	/*
+ 	 * For the Beacon base registers we only need to clear
 -- 
-
-Intel GmbH
-Dornacher Strasse 1
-85622 Feldkirchen/Muenchen, Deutschland
-Sitz der Gesellschaft: Feldkirchen bei Muenchen
-Geschaeftsfuehrer: Christian Lamprechter, Hannes Schwaderer, Douglas Lusk
-Registergericht: Muenchen HRB 47456
-Ust.-IdNr./VAT Registration No.: DE129385895
-Citibank Frankfurt a.M. (BLZ 502 109 00) 600119052
-
+1.7.10
