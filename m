@@ -1,53 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:55425 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754792Ab3H1H6E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 03:58:04 -0400
-Received: by mail-lb0-f181.google.com with SMTP id u14so3447090lbd.40
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 00:58:03 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v3 15/16] wcn36xx: add Kconfig
-Date: Wed, 28 Aug 2013 09:56:45 +0200
-Message-Id: <1377676606-23033-16-git-send-email-k.eugene.e@gmail.com> (sfid-20130828_100909_301641_0F14783B)
-In-Reply-To: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51199 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754083Ab3HWWco (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Aug 2013 18:32:44 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/5] bcma: add method to power up and down the PCIe core by wifi driver
+Date: Sat, 24 Aug 2013 00:32:30 +0200
+Message-Id: <1377297154-14525-1-git-send-email-hauke@hauke-m.de> (sfid-20130824_003249_648938_0418C486)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding Kconfig
+The wifi driver should tell the PCIe core that it is now in operation
+so that some workarounds can be applied and the power state is changed.
+This should replace the call to bcma_core_pci_extend_L1timer by the
+brcmsmac driver.
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/wcn36xx/Kconfig | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
+ drivers/bcma/driver_pci.c            |   26 ++++++++++++++++++++++++++
+ include/linux/bcma/bcma_driver_pci.h |    3 +++
+ 2 files changed, 29 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/Kconfig b/drivers/net/wireless/ath/wcn36xx/Kconfig
-new file mode 100644
-index 0000000..591ebae
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
-@@ -0,0 +1,16 @@
-+config WCN36XX
-+	tristate "Qualcomm Atheros WCN3660/3680 support"
-+	depends on MAC80211 && HAS_DMA
-+	---help---
-+	  This module adds support for wireless adapters based on
-+	  Qualcomm Atheros WCN3660 and WCN3680 mobile chipsets.
+diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+index cf7a476..6ea817f 100644
+--- a/drivers/bcma/driver_pci.c
++++ b/drivers/bcma/driver_pci.c
+@@ -275,3 +275,29 @@ void bcma_core_pci_extend_L1timer(struct bcma_drv_pci *pc, bool extend)
+ 	bcma_pcie_read(pc, BCMA_CORE_PCI_DLLP_PMTHRESHREG);
+ }
+ EXPORT_SYMBOL_GPL(bcma_core_pci_extend_L1timer);
 +
-+	  If you choose to build a module, it'll be called wcn36xx.
++void bcma_core_pci_up(struct bcma_bus *bus)
++{
++	struct bcma_drv_pci *pc;
 +
-+config WCN36XX_DEBUGFS
-+	bool "WCN36XX debugfs support"
-+	depends on WCN36XX
-+	---help---
-+	  Enabled debugfs support
++	if (bus->hosttype != BCMA_HOSTTYPE_PCI)
++		return;
 +
-+	  If unsure, say Y to make it easier to debug problems.
++	pc = &bus->drv_pci[0];
++
++	bcma_core_pci_extend_L1timer(pc, true);
++}
++EXPORT_SYMBOL_GPL(bcma_core_pci_up);
++
++void bcma_core_pci_down(struct bcma_bus *bus)
++{
++	struct bcma_drv_pci *pc;
++
++	if (bus->hosttype != BCMA_HOSTTYPE_PCI)
++		return;
++
++	pc = &bus->drv_pci[0];
++
++	bcma_core_pci_extend_L1timer(pc, false);
++}
++EXPORT_SYMBOL_GPL(bcma_core_pci_down);
+diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
+index 424760f..27f9ceb 100644
+--- a/include/linux/bcma/bcma_driver_pci.h
++++ b/include/linux/bcma/bcma_driver_pci.h
+@@ -185,6 +185,7 @@ struct pci_dev;
+ #define BCMA_CORE_PCI_RC_CRS_VISIBILITY		0x0001
+ 
+ struct bcma_drv_pci;
++struct bcma_bus;
+ 
+ #ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
+ struct bcma_drv_pci_host {
+@@ -220,6 +221,8 @@ extern void bcma_core_pci_init(struct bcma_drv_pci *pc);
+ extern int bcma_core_pci_irq_ctl(struct bcma_drv_pci *pc,
+ 				 struct bcma_device *core, bool enable);
+ extern void bcma_core_pci_extend_L1timer(struct bcma_drv_pci *pc, bool extend);
++extern void bcma_core_pci_up(struct bcma_bus *bus);
++extern void bcma_core_pci_down(struct bcma_bus *bus);
+ 
+ extern int bcma_core_pci_pcibios_map_irq(const struct pci_dev *dev);
+ extern int bcma_core_pci_plat_dev_init(struct pci_dev *dev);
 -- 
-1.8.2.2
+1.7.10.4
 
