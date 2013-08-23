@@ -1,66 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54122 "EHLO mga09.intel.com"
+Received: from canardo.mork.no ([148.122.252.1]:40757 "EHLO canardo.mork.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756351Ab3HYIVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Aug 2013 04:21:47 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Luca Coelho <luca@coelho.fi>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Re: iwlwifi micorcode errors and hardware resets problems
-Date: Sun, 25 Aug 2013 08:21:43 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301A3EB03@HASMSX103.ger.corp.intel.com> (sfid-20130825_102156_362823_341A10F2)
-References: <20130823090821.GB2632@redhat.com>
- <1377345177.5589.3.camel@porter.coelho.fi>
-In-Reply-To: <1377345177.5589.3.camel@porter.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
+	id S1754346Ab3HWJf6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Aug 2013 05:35:58 -0400
+From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: netdev@vger.kernel.org
+Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [PATCH net-next 07/10] net: hostap: inherit addr_assign_type along with dev_addr
+Date: Fri, 23 Aug 2013 11:35:10 +0200
+Message-Id: <1377250513-3662-8-git-send-email-bjorn@mork.no> (sfid-20130823_113625_441898_BA7FF58F)
+In-Reply-To: <1377250513-3662-1-git-send-email-bjorn@mork.no>
+References: <1377250513-3662-1-git-send-email-bjorn@mork.no>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiBGcmksIDIwMTMtMDgtMjMgYXQgMTE6MDggKzAyMDAsIFN0YW5pc2xhdyBHcnVzemthIHdy
-b3RlOg0KPiA+IFdlIGhhdmUgdGhvc2UgYnVnIHJlcG9ydHMgb24gUkggYnVnemlsbGEsIGFuZCB2
-YXJpb3VzIG90aGVyIGl3bHdpZmkNCj4gPiBwcm9ibGVtcywgYnV0IHRob3NlIGhhdmUgc29tZSBj
-b21tb24gc2NlbmFyaW86DQo+ID4NCj4gPiBodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20vc2hv
-d19idWcuY2dpP2lkPTk3OTg3Mw0KPiA+IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9zaG93
-X2J1Zy5jZ2k/aWQ9OTkwNTM2DQo+ID4gaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL3Nob3df
-YnVnLmNnaT9pZD05OTQzMjINCj4gPiBodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20vc2hvd19i
-dWcuY2dpP2lkPTk5NjUwMg0KPiA+IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9zaG93X2J1
-Zy5jZ2k/aWQ9OTY5NjEwDQo+ID4gaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL3Nob3dfYnVn
-LmNnaT9pZD05OTkwNTMNCj4gPg0KPiA+IEZpcnN0IHRoZXJlIGlzIE1pY3JvY29kZSBlcnJvciBv
-ciBvdGhlciBmaXJtd2FyZSBwcm9ibGVtLCB3aGF0IG1ha2Ugd2UNCj4gPiBkbyBpd2xfdHJhbnNf
-c3RvcF9kZXZpY2UoKSB3aGljaCBzZXQgdHJhbnMtPnN0YXRlIHRvIElXTF9UUkFOU19OT19GVy4N
-Cj4gPiBJZiBtYWM4MDIxMSBoYXMgc29tZSBwZW5kaW5nIHdvcmtzL3RpbWVycyBpLmUuIGllZWU4
-MDIxMV9zdGFfd29yaygpLA0KPiA+IGl0IGNhbGxzIGRydiBhbmQgd2UgdHJpZ2dlciBvbiBvZiB0
-aG9zZSB3YXJuaW5ncw0KPiA+DQo+ID4gICAgICAgICBXQVJOX09OQ0UodHJhbnMtPnN0YXRlICE9
-IElXTF9UUkFOU19GV19BTElWRSwNCj4gPiAgICAgICAgICAgICAgICAgICAiJXMgYmFkIHN0YXRl
-ID0gJWQiLCBfX2Z1bmNfXywgdHJhbnMtPnN0YXRlKTsNCj4gPg0KPiA+IG9uIHNvbWUgdHJhbnMg
-b3BlcmF0aW9uLg0KPiA+DQo+ID4gSSB0aGluayB0aGlzIGNhbiBiZSBmaXhlZCBieSBmaXJzdCBk
-byBxdWllc2NlIG9uIG1hYzgwMjExIChmb3IgZXhhbXBsZQ0KPiA+IGJ5IGllZWU4MDIxMV9zdGFf
-cXVpZXNjZSgpIHByb2NlZHVyZSwgd2hpY2ggSSByZW1vdmVkIGJ1dCBjYW4gYmUgYWRkZWQNCj4g
-PiBiYWNrKSBhbmQgdGhlbiBkbyBpd2xhZ25fcHJlcGFyZV9yZXN0YXJ0KCkgJiBpZWVlODAyMTFf
-cmVzdGFydF9odygpLg0KPiA+DQo+ID4gVGhvdWdoIEknbSBub3Qgc3VyZSBpZiBpdCdzIHdvcnRo
-IHRvIGRvIHRoaXMgc2luY2UgdGhvc2Ugd2FybmluZ3MgYXJlDQo+ID4gaW5kaWNhdG9yIGZvciBt
-YWxmdW5jdGlvbmluZyBpd2x3aWZpIGZpcm13YXJlIChvciBkcml2ZXIgbm90IGNvcnJlY3RseQ0K
-PiA+IGNvbW11bmljYXRpbmcgd2l0aCBmaXJtd2FyZSksIHdoaWNoIHdpbGwgYmUgdW5ub3RpY2Vk
-IGlmIG5vdCByZXBvcnRlZA0KPiA+IGF1dG9tYXRpY2FsbHkgYnkgdG9vbCBsaWtlIEFCUlQuIEJ1
-dCBwZXJoYXBzIHdlIGNvdWxkIGFkZCBXQVJOX09OQ0Ugb24NCj4gPiBNaWNyb2NvZGUgZXJyb3Ig
-Y29uZGl0aW9uID8NCj4gDQo+IEkgdGhpbmsgdGhhdCwgaWYgdGhlIHF1aWVzY2UgcmVhbGx5IGhl
-bHBzIHdpdGggdGhpcywgd2Ugc2hvdWxkIGRvIGl0Lg0KPiBUaGlzIFdBUk4gaXMgYSBzaWRlLWVm
-ZmVjdCBvZiB0aGUgcHJvYmxlbSBhbmQgbm90IHRoZSBwcm9ibGVtIGl0c2VsZi4NCj4gSWYgeW91
-IHdhbnQgdG8gY2F0Y2ggdGhlIEZXIHByb2JsZW0sIHRoZXJlIHNob3VsZCBiZSBhIFdBUk4gZWxz
-ZXdoZXJlLg0KPiANCj4gSSdtIG5vdCBzYXlpbmcgdGhhdCB0aGlzIFdBUk4gc2hvdWxkIGJlIHJl
-bW92ZWQgYW5kIEkgYWxzbyB0aGluayBpdCdzIGEgZ29vZA0KPiBpZGVhIHRvIGNoYW5nZSBpdCB0
-byBXQVJOX09OX09OQ0UoKS4gIEkganVzdCB0aGluayB0aGF0LCBpZiB0aGVyZSdzIGFueXRoaW5n
-DQo+IHRoZSBkcml2ZXIgY2FuIGRvIHRvIGtlZXAgdGhpbmdzIHJ1bm5pbmcgbmljZWx5LCB3ZSBz
-aG91bGQgZG8gaXQuDQo+IA0KPiBJbiBhbnkgY2FzZSwgSSdsbCBsZWF2ZSB0aGlzIGZvciBKb2hh
-bm5lcywgRW1tYW51ZWwgb3Igc29tZSBvZiB0aGUgb3RoZXIgZ3V5cw0KPiB3aXRoIG1vcmUgZXhw
-ZXJpZW5jZSBpbiBpd2x3aWZpIHRvIGNvbW1lbnQuIDspDQoNCllvdSBnb3QgbXkgQUNLIGhlcmUu
-IFdlIGhhdmUgc29tZSBpc3N1ZXMgd2l0aCBmaXJtd2FyZS4gT2J2aW91c2x5LiBCdXQgbW9zdCBv
-ZiB0aGUgaXNzdWVzIGFyZSB2ZXJ5IGhhcmQgdG8gZGVidWcuIE1vc3Qgb2YgdGhlbSBJIGFtIHNl
-ZWluZyBhcmUgbW9yZSBsaWtlIHRoZSBmaXJtd2FyZSBnZXR0aW5nIHN0dWNrIGV0Yy4uLiAgQWZ0
-ZXIgYWxsIHRoaXMgaXMgd2h5IHdlIGhhdmUgYSByZXN0YXJ0IGZsb3csIGZvciB0aGVzZSBpc3N1
-ZXMgdGhhdCBkb24ndCBoYXBwZW4gZnJlcXVlbnRseSBidXQgYXJlIHNvbHZhYmxlIGJ5IGEgcmVz
-ZXQuIFNpbmNlIHdlIHN0aWxsIHdhbnQgdG8ga25vdyB3aGVuIHRoaXMga2luZCBvZiB0aGluZ3Mg
-aGFwcGVuLCBhZGRpbmcgYSBXQVJOX09OX09OQ0Ugc291bmRzIGdvb2QuDQo=
+Cc: Jouni Malinen <j@w1.fi>
+Signed-off-by: Bjørn Mork <bjorn@mork.no>
+---
+ drivers/net/wireless/hostap/hostap_hw.c   |    2 +-
+ drivers/net/wireless/hostap/hostap_main.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
+index 6307a4e..c275dc1 100644
+--- a/drivers/net/wireless/hostap/hostap_hw.c
++++ b/drivers/net/wireless/hostap/hostap_hw.c
+@@ -1425,7 +1425,7 @@ static int prism2_hw_init2(struct net_device *dev, int initial)
+ 		}
+ 		list_for_each(ptr, &local->hostap_interfaces) {
+ 			iface = list_entry(ptr, struct hostap_interface, list);
+-			memcpy(iface->dev->dev_addr, dev->dev_addr, ETH_ALEN);
++			eth_hw_addr_inherit(iface->dev, dev);
+ 		}
+ 	} else if (local->fw_ap)
+ 		prism2_check_sta_fw_version(local);
+diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
+index e4f56ad..a1257c9 100644
+--- a/drivers/net/wireless/hostap/hostap_main.c
++++ b/drivers/net/wireless/hostap/hostap_main.c
+@@ -66,7 +66,7 @@ struct net_device * hostap_add_interface(struct local_info *local,
+ 	list_add(&iface->list, &local->hostap_interfaces);
+ 
+ 	mdev = local->dev;
+-	memcpy(dev->dev_addr, mdev->dev_addr, ETH_ALEN);
++	eth_hw_addr_inherit(dev, mdev);
+ 	dev->base_addr = mdev->base_addr;
+ 	dev->irq = mdev->irq;
+ 	dev->mem_start = mdev->mem_start;
+-- 
+1.7.10.4
+
