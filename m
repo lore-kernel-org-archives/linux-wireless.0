@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:34757 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754562Ab3HXQAP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Aug 2013 12:00:15 -0400
-Date: Sat, 24 Aug 2013 19:00:03 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: mac80211 kernel panic due to invalid cab_queue value with hwsim
-Message-ID: <20130824160003.GA15926@w1.fi> (sfid-20130824_180422_855739_01A185FA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51210 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754881Ab3HWWcq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Aug 2013 18:32:46 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/5] bcma: do not export bcma_core_pci_extend_L1timer()
+Date: Sat, 24 Aug 2013 00:32:32 +0200
+Message-Id: <1377297154-14525-3-git-send-email-hauke@hauke-m.de> (sfid-20130824_003252_151217_8B5FBB67)
+In-Reply-To: <1377297154-14525-1-git-send-email-hauke@hauke-m.de>
+References: <1377297154-14525-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Something is cab_queue handling is broken (and has been broken for a
-while) in mac80211. At least mac80211_hwsim shows this, but I guess it
-could happen with some other drivers, too. The error shows up as
-group-addressed Data frames from a P2P GO not being transmitted if
-CONFIG_MAC80211_VERBOSE_DEBUG is defined and kernel panic if that is not
-defined. ieee80211_tx_h_multicast_ps_buf() can assign
-IEEE80211_INVAL_HW_QUEUE (0xff) into info->hw_queue in some cases and
-that results in the issues in ieee80211_tx_frags where q >=
-local->hw.queues check is done only with verbose debugging enabled. If
-that check is not there, kernel panic shows up at least in
-skb_queue_splice_tail_init() when that invalid hw_queue 0xff value is
-used to index the local->pending array.
+This is not called any more, do not export it.
 
-I'm not sure where cab_queue should be cleared to avoid this, but for
-now, I'm using following workaround to avoid the symptoms:
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_pci.c            |    3 +--
+ include/linux/bcma/bcma_driver_pci.h |    1 -
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 098ae85..41655a4 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -413,8 +413,13 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
- 	if (ieee80211_has_order(hdr->frame_control))
- 		return TX_CONTINUE;
+diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+index 6ea817f..d51d194 100644
+--- a/drivers/bcma/driver_pci.c
++++ b/drivers/bcma/driver_pci.c
+@@ -262,7 +262,7 @@ out:
+ }
+ EXPORT_SYMBOL_GPL(bcma_core_pci_irq_ctl);
  
--	if (tx->local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
--		info->hw_queue = tx->sdata->vif.cab_queue;
-+	if (tx->local->hw.flags & IEEE80211_HW_QUEUE_CONTROL) {
-+		if (tx->sdata->vif.cab_queue == IEEE80211_INVAL_HW_QUEUE) {
-+			printk(KERN_DEBUG "%s:trying to assign invalid cab_queue for skb %p vif.type=%d\n",
-+			       __func__, tx->skb, tx->sdata->vif.type);
-+		} else
-+			info->hw_queue = tx->sdata->vif.cab_queue;
-+	}
+-void bcma_core_pci_extend_L1timer(struct bcma_drv_pci *pc, bool extend)
++static void bcma_core_pci_extend_L1timer(struct bcma_drv_pci *pc, bool extend)
+ {
+ 	u32 w;
  
- 	/* no stations in PS mode */
- 	if (!atomic_read(&ps->num_sta_ps))
-
+@@ -274,7 +274,6 @@ void bcma_core_pci_extend_L1timer(struct bcma_drv_pci *pc, bool extend)
+ 	bcma_pcie_write(pc, BCMA_CORE_PCI_DLLP_PMTHRESHREG, w);
+ 	bcma_pcie_read(pc, BCMA_CORE_PCI_DLLP_PMTHRESHREG);
+ }
+-EXPORT_SYMBOL_GPL(bcma_core_pci_extend_L1timer);
+ 
+ void bcma_core_pci_up(struct bcma_bus *bus)
+ {
+diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
+index 27f9ceb..0234955 100644
+--- a/include/linux/bcma/bcma_driver_pci.h
++++ b/include/linux/bcma/bcma_driver_pci.h
+@@ -220,7 +220,6 @@ struct bcma_drv_pci {
+ extern void bcma_core_pci_init(struct bcma_drv_pci *pc);
+ extern int bcma_core_pci_irq_ctl(struct bcma_drv_pci *pc,
+ 				 struct bcma_device *core, bool enable);
+-extern void bcma_core_pci_extend_L1timer(struct bcma_drv_pci *pc, bool extend);
+ extern void bcma_core_pci_up(struct bcma_bus *bus);
+ extern void bcma_core_pci_down(struct bcma_bus *bus);
+ 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.10.4
+
