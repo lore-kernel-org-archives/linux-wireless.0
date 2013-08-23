@@ -1,92 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3496 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934009Ab3HHIq4 (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:55473 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754164Ab3HWKtG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 04:46:56 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 1/3] ath10k: add support for firmware newer than 636
-References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
-	<1375949298-7159-2-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 8 Aug 2013 11:46:46 +0300
-In-Reply-To: <1375949298-7159-2-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 8 Aug 2013 10:08:16 +0200")
-Message-ID: <87iozg36yx.fsf@kamboji.qca.qualcomm.com> (sfid-20130808_104706_078005_685C3223)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 23 Aug 2013 06:49:06 -0400
+Received: by mail-ea0-f177.google.com with SMTP id f15so218173eak.36
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 03:49:03 -0700 (PDT)
+Message-ID: <1377254926.8002.20.camel@canaries32-MCP7A> (sfid-20130823_124914_825557_E54C7EC6)
+Subject: [PATCH] staging: vt6656: rxtx.c endian correct wTimeStampOff
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Aug 2013 11:48:46 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+wTimeStampOff needs to be endian corrected
 
-> The mgmt_rx event structure has been expanded.
-> Since the structure header is expanded the payload
-> (i.e. mgmt frame) is shifted by a few bytes. This
-> needs to be taken into account in order to support
-> both old and new firmware.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Create new function vnt_time_stamp_off to return little endian u16 value.
 
-[...]
+Private variable byPreambleType is common to all calling functions is included.
 
-> @@ -325,13 +327,24 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
->  	u32 rate;
->  	u32 buf_len;
->  	u16 fc;
-> +	int pull_len;
-> +
-> +	if (ar->fw_version_build > 636) {
-> +		ev_abi2 = (struct wmi_mgmt_rx_event_abi2 *)skb->data;
-> +		ev_hdr = &ev_abi2->hdr.abi1;
-> +		pull_len = sizeof(*ev_abi2);
-> +	} else {
-> +		ev_abi1 = (struct wmi_mgmt_rx_event_abi1 *)skb->data;
-> +		ev_hdr = &ev_abi1->hdr;
-> +		pull_len = sizeof(*ev_abi1);
-> +	}
+variable rate to set the desired rate.
 
-I would prefer to have ar->fw_features (or similar) bitmap for handling
-this. That way we can group all firmware version tests into one place
-and not sprinkle them around. I suspect there will be more tests like
-this.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 33 ++++++++++++++++++++++-----------
+ 1 file changed, 22 insertions(+), 11 deletions(-)
 
-[...]
-
-> --- a/drivers/net/wireless/ath/ath10k/wmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-> @@ -1268,7 +1268,7 @@ struct wmi_scan_event {
->   * good idea to pass all the fields in the RX status
->   * descriptor up to the host.
->   */
-> -struct wmi_mgmt_rx_hdr {
-> +struct wmi_mgmt_rx_hdr_abi1 {
->  	__le32 channel;
->  	__le32 snr;
->  	__le32 rate;
-> @@ -1277,8 +1277,18 @@ struct wmi_mgmt_rx_hdr {
->  	__le32 status; /* %WMI_RX_STATUS_ */
->  } __packed;
->  
-> -struct wmi_mgmt_rx_event {
-> -	struct wmi_mgmt_rx_hdr hdr;
-> +struct wmi_mgmt_rx_hdr_abi2 {
-> +	struct wmi_mgmt_rx_hdr_abi1 abi1;
-> +	__le32 rssi_ctl[4];
-> +} __packed;
-> +
-> +struct wmi_mgmt_rx_event_abi1 {
-> +	struct wmi_mgmt_rx_hdr_abi1 hdr;
-> +	u8 buf[0];
-> +} __packed;
-> +
-> +struct wmi_mgmt_rx_event_abi2 {
-> +	struct wmi_mgmt_rx_hdr_abi2 hdr;
->  	u8 buf[0];
->  } __packed;
-
-I would prefer to use v1 and v2 instead on abi1 and abi2.
-
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index f1eec60..ed3fdf4 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -323,6 +323,12 @@ static void s_vSWencryption(struct vnt_private *pDevice,
+     }
+ }
+ 
++static u16 vnt_time_stamp_off(struct vnt_private *priv, u16 rate)
++{
++	return cpu_to_le16(wTimeStampOff[priv->byPreambleType % 2]
++							[rate % MAX_RATE]);
++}
++
+ /*byPktType : PK_TYPE_11A     0
+              PK_TYPE_11B     1
+              PK_TYPE_11GB    2
+@@ -519,8 +525,10 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 		pBuf->wDuration_b = s_uGetDataDuration(pDevice,
+ 							PK_TYPE_11B, bNeedAck);
+ 
+-                pBuf->wTimeStampOff_a = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+-                pBuf->wTimeStampOff_b = wTimeStampOff[pDevice->byPreambleType%2][pDevice->byTopCCKBasicRate%MAX_RATE];
++		pBuf->wTimeStampOff_a =	vnt_time_stamp_off(pDevice,
++								wCurrentRate);
++		pBuf->wTimeStampOff_b = vnt_time_stamp_off(pDevice,
++						pDevice->byTopCCKBasicRate);
+                 return (pBuf->wDuration_a);
+              } else {
+                 // Auto Fallback
+@@ -540,8 +548,10 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 							byPktType, bNeedAck);
+ 		pBuf->wDuration_a_f1 = s_uGetDataDuration(pDevice,
+ 							byPktType, bNeedAck);
+-                pBuf->wTimeStampOff_a = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+-                pBuf->wTimeStampOff_b = wTimeStampOff[pDevice->byPreambleType%2][pDevice->byTopCCKBasicRate%MAX_RATE];
++		pBuf->wTimeStampOff_a = vnt_time_stamp_off(pDevice,
++								wCurrentRate);
++		pBuf->wTimeStampOff_b = vnt_time_stamp_off(pDevice,
++						pDevice->byTopCCKBasicRate);
+                 return (pBuf->wDuration_a);
+             } //if (byFBOption == AUTO_FB_NONE)
+     }
+@@ -559,7 +569,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 					byPktType, bNeedAck);
+ 		pBuf->wDuration_f1 = s_uGetDataDuration(pDevice,
+ 							byPktType, bNeedAck);
+-                pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
++		pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice,
++								wCurrentRate);
+             return (pBuf->wDuration);
+         } else {
+ 		struct vnt_tx_datahead_ab *pBuf =
+@@ -570,8 +581,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+             //Get Duration and TimeStampOff
+ 		pBuf->wDuration = s_uGetDataDuration(pDevice,
+ 				byPktType, bNeedAck);
+-                pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+-
++		pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice,
++								wCurrentRate);
+             return (pBuf->wDuration);
+         }
+     }
+@@ -584,8 +595,8 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+             //Get Duration and TimeStampOff
+ 		pBuf->wDuration = s_uGetDataDuration(pDevice,
+ 				byPktType, bNeedAck);
+-                pBuf->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
+-
++		pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice,
++								wCurrentRate);
+             return (pBuf->wDuration);
+     }
+     return 0;
+@@ -1830,7 +1841,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+         //Get Duration and TimeStampOff
+ 	pTxDataHead->wDuration = s_uGetDataDuration(pDevice,
+ 						PK_TYPE_11A, false);
+-        pTxDataHead->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
++	pTxDataHead->wTimeStampOff = vnt_time_stamp_off(pDevice, wCurrentRate);
+ 	cbHeaderSize = wTxBufSize + sizeof(struct vnt_tx_datahead_ab);
+     } else {
+         wCurrentRate = RATE_1M;
+@@ -1843,7 +1854,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
+         //Get Duration and TimeStampOff
+ 	pTxDataHead->wDuration = s_uGetDataDuration(pDevice,
+ 						PK_TYPE_11B, false);
+-        pTxDataHead->wTimeStampOff = wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE];
++	pTxDataHead->wTimeStampOff = vnt_time_stamp_off(pDevice, wCurrentRate);
+ 	cbHeaderSize = wTxBufSize + sizeof(struct vnt_tx_datahead_ab);
+     }
+ 
 -- 
-Kalle Valo
+1.8.1.2
+
