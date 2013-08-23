@@ -1,276 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:60656 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932073Ab3HGHwH (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:32871 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755201Ab3HWI7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 03:52:07 -0400
-Message-ID: <5201FCA4.30804@gmail.com> (sfid-20130807_095228_268652_313E2CCA)
-Date: Wed, 07 Aug 2013 09:52:04 +0200
-From: Maarten Lankhorst <m.b.lankhorst@gmail.com>
-MIME-Version: 1.0
-To: Andy Lutomirski <luto@amacapital.net>
-CC: Tom Gundersen <teg@jklm.no>,
-	Bryan Kadzban <bryan@kadzban.is-a-geek.net>,
-	systemd Mailing List <systemd-devel@lists.freedesktop.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-hotplug@vger.kernel.org, Kay Sievers <kay@vrfy.org>,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] udev: fail firmware loading immediately if no search path
- is defined
-References: <CALCETrXSnFPFVPkXHwz+FFA3=+pmz9V=cMHWwtN+jG1QJALWSQ@mail.gmail.com> <325b19bb936d7ebae11edad86aac8f0931e8abd9.1375719828.git.luto@amacapital.net> <5200B1BD.7030307@gmail.com> <CAG-2HqXEj06JbUOWee=NfuRXxL75uRf=55FZcXRLHroDzYUthQ@mail.gmail.com> <CAG-2HqVvoQK8ggErGGinO9i8Pbu-O-X=eYFW445ce24dpt7HyA@mail.gmail.com> <20130806163158.GA23093@kadzban.is-a-geek.net> <CAG-2HqU=yyxomNTg9-2+bxMKP=e5_pdVT7bhB_CHhFzB-ac_mQ@mail.gmail.com> <CALCETrU-CWuefE5XUpC=xFuCXaL56Cox95nL35Bm9jMi_B+6_A@mail.gmail.com>
-In-Reply-To: <CALCETrU-CWuefE5XUpC=xFuCXaL56Cox95nL35Bm9jMi_B+6_A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 23 Aug 2013 04:59:41 -0400
+Received: by mail-lb0-f176.google.com with SMTP id w10so267660lbi.35
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:40 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v2 12/16] wcn36xx: add txrx.h
+Date: Fri, 23 Aug 2013 10:58:15 +0200
+Message-Id: <1377248299-21007-13-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_110011_692006_DDFC29BC)
+In-Reply-To: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Op 07-08-13 02:26, Andy Lutomirski schreef:
-> On Tue, Aug 6, 2013 at 5:24 PM, Tom Gundersen <teg@jklm.no> wrote:
->> On 6 Aug 2013 18:32, "Bryan Kadzban" <bryan@kadzban.is-a-geek.net> wrote:
->>> On Tue, Aug 06, 2013 at 11:17:17AM +0200, Tom Gundersen wrote:
->>>> On Tue, Aug 6, 2013 at 11:11 AM, Tom Gundersen <teg@jklm.no> wrote:
->>>>> On Tue, Aug 6, 2013 at 10:20 AM, Maarten Lankhorst
->>>>> <m.b.lankhorst@gmail.com> wrote:
->>>>>> Op 05-08-13 18:29, Andy Lutomirski schreef:
->>>>>>> The systemd commit below can delay firmware loading by multiple
->>>>>>> minutes if CONFIG_FW_LOADER_USER_HELPER=y.  Unfortunately no one
->>>>>>> noticed that the systemd-udev change would break new kernels as well
->>>>>>> as old kernels.
->>>>>>>
->>>>>>> Since the kernel apparently can't count on reasonable userspace
->>>>>>> support, turn this thing off by default.
->>>>>>>
->>>>>>> commit a3bd8447be4ea2ce230eb8ae0e815c04d85fa15a
->>>>>>> Author: Tom Gundersen <teg@jklm.no>
->>>>>>> Date:   Mon Mar 18 15:12:18 2013 +0100
->>>>>>>
->>>>>>>     udev: make firmware loading optional and disable by default
->>>>>>>
->>>>>>>     Distros that whish to support old kernels should set
->>>>>>>
->>>>>>> --with-firmware-dirs="/usr/lib/firmware/updates:/usr/lib/firmware"
->>>>>>>     to retain the old behaviour.
->>>>>>>
->>>>>> methinks this patch should be reverted then,
->>>>> Well, all the code is still there, so it can be enabled if anyone
->>>>> wants it.
->>>>>
->>>>>> or a stub should be added to udev to always fail firmware loading so
->>>>>> timeouts don't occur.
->>>>> I think the only use (if any) of a userspace firmware loader would be
->>>>> for anyone who wants a custom one (i.e., not udev), so we shouldn't
->>>>> just fail the loading from udev unconditionally.
->>>>>
->>>>> How about we just improve the udev documentation a bit, similar to
->>>>> Andy's kernel patch?
->>>> Sorry, I should first have checked. We already document this in the
->>>> README:
->>>>
->>>>>        Userspace firmware loading is deprecated, will go away, and
->>>>>        sometimes causes problems:
->>>>>          CONFIG_FW_LOADER_USER_HELPER=n
->>> ...And this patch is making the kernel default to the correct behavior,
->>> instead of the now-broken-by-udev behavior.
->>>
->>> I'm not sure I see the issue with it?  :-)
->> Oh yeah this patch is totally the right thing to do, I was just arguing that
->> there is nothing to be done on the udev side.
->>
->>> (Add me to the list of people that think udev is broken too, fwiw.  But
->>> let's at least not leave *both* sides in a broken-by-default state.)
->> Well I don't think it is too much to ask that the kernel and udev should be
->> configured in a consistent way. Especially as thing still work even if you
->> get it wrong, albeit with a delay.
-> Except that the current defaults are inconsistent and there is no
-> explanation anywhere in the logs when this is screwed up.
->
-So what is wrong with my 'fail in udev immediately if not configured' idea? In that case it
-doesn't matter whether CONFIG_FW_LOADER_USER_HELPER is set or not.
+Adding txrx.h
 
-You could even print a useful message for the user in udev to the log, so they have an idea of what
-happened. Breaking udev on older still supported kernels by default without printing any debug info
-is silly, and the only cost is a small increase in disk space when unused. I did so in below patch.
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/txrx.h | 160 ++++++++++++++++++++++++++++++++
+ 1 file changed, 160 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.h
 
-~Maarten
-
-I converted < ELEMENTSOF to != ELEMENTSOF in the loop to work correctly when the array is empty.
-Most code in udev-builtin-firmware is eliminated at -O2 optimization level when FIRMWARE_PATH
-is not explicitly set.
-
-8<----
-diff --git a/Makefile.am b/Makefile.am
-index b8b8d06..2097629 100644
---- a/Makefile.am
-+++ b/Makefile.am
-@@ -2235,6 +2235,7 @@ libudev_core_la_SOURCES = \
- 	src/udev/udev-ctrl.c \
- 	src/udev/udev-builtin.c \
- 	src/udev/udev-builtin-btrfs.c \
-+	src/udev/udev-builtin-firmware.c \
- 	src/udev/udev-builtin-hwdb.c \
- 	src/udev/udev-builtin-input_id.c \
- 	src/udev/udev-builtin-keyboard.c \
-@@ -2271,14 +2272,6 @@ libudev_core_la_CPPFLAGS = \
- 	$(AM_CPPFLAGS) \
- 	-DFIRMWARE_PATH="$(FIRMWARE_PATH)"
- 
--if ENABLE_FIRMWARE
--libudev_core_la_SOURCES += \
--	src/udev/udev-builtin-firmware.c
--
--dist_udevrules_DATA += \
--	rules/50-firmware.rules
--endif
--
- if HAVE_KMOD
- libudev_core_la_SOURCES += \
- 	src/udev/udev-builtin-kmod.c
-diff --git a/configure.ac b/configure.ac
-index 0ecc716..dc7a3e3 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -823,8 +823,6 @@ for i in $with_firmware_path; do
- done
- IFS=$OLD_IFS
- AC_SUBST(FIRMWARE_PATH)
--AS_IF([test "x${FIRMWARE_PATH}" != "x"], [ AC_DEFINE(HAVE_FIRMWARE, 1, [Define if FIRMWARE is available]) ])
--AM_CONDITIONAL(ENABLE_FIRMWARE, [test "x${FIRMWARE_PATH}" != "x"])
- 
- # ------------------------------------------------------------------------------
- AC_ARG_ENABLE([gudev],
-diff --git a/rules/50-firmware.rules b/rules/50-firmware.rules
-deleted file mode 100644
-index f0ae684..0000000
---- a/rules/50-firmware.rules
-+++ /dev/null
-@@ -1,3 +0,0 @@
--# do not edit this file, it will be overwritten on update
--
--SUBSYSTEM=="firmware", ACTION=="add", RUN{builtin}="firmware"
-diff --git a/rules/50-udev-default.rules b/rules/50-udev-default.rules
-index f764789..645830e 100644
---- a/rules/50-udev-default.rules
-+++ b/rules/50-udev-default.rules
-@@ -8,6 +8,7 @@ SUBSYSTEM=="rtc", KERNEL=="rtc0", SYMLINK+="rtc", OPTIONS+="link_priority=-100"
- 
- SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", IMPORT{builtin}="usb_id", IMPORT{builtin}="hwdb --subsystem=usb"
- SUBSYSTEM=="input", ENV{ID_INPUT}=="", IMPORT{builtin}="input_id"
-+SUBSYSTEM=="firmware", ACTION=="add", IMPORT{builtin}="firmware"
- ENV{MODALIAS}!="", IMPORT{builtin}="hwdb --subsystem=$env{SUBSYSTEM}"
- 
- ACTION!="add", GOTO="default_permissions_end"
-diff --git a/shell-completion/bash/udevadm b/shell-completion/bash/udevadm
-index 8ad8550..c22a3e2 100644
---- a/shell-completion/bash/udevadm
-+++ b/shell-completion/bash/udevadm
-@@ -83,7 +83,7 @@ _udevadm() {
-                         fi
-                         ;;
-                 'test-builtin')
--                        comps='blkid btrfs hwdb input_id keyboard kmod net_id path_id usb_id uaccess'
-+                        comps='blkid btrfs firmware hwdb input_id keyboard kmod net_id path_id usb_id uaccess'
-                         ;;
-                 *)
-                         comps=${VERBS[*]}
-diff --git a/src/udev/udev-builtin-firmware.c b/src/udev/udev-builtin-firmware.c
-index b80940b..e678545 100644
---- a/src/udev/udev-builtin-firmware.c
-+++ b/src/udev/udev-builtin-firmware.c
-@@ -97,7 +97,7 @@ static int builtin_firmware(struct udev_device *dev, int argc, char *argv[], boo
- 
-         /* lookup firmware file */
-         uname(&kernel);
--        for (i = 0; i < ELEMENTSOF(searchpath); i++) {
-+        for (i = 0; i != ELEMENTSOF(searchpath); i++) {
-                 strscpyl(fwpath, sizeof(fwpath), searchpath[i], kernel.release, "/", firmware, NULL);
-                 fwfile = fopen(fwpath, "re");
-                 if (fwfile != NULL)
-@@ -112,7 +112,10 @@ static int builtin_firmware(struct udev_device *dev, int argc, char *argv[], boo
-         strscpyl(loadpath, sizeof(loadpath), udev_device_get_syspath(dev), "/loading", NULL);
- 
-         if (fwfile == NULL) {
--                log_debug("did not find firmware file '%s'\n", firmware);
-+                if (ELEMENTSOF(searchpath))
-+                    log_debug("did not find firmware file '%s'\n", firmware);
-+                else
-+                    log_error("could not load firmware file '%s', firmware loading not enabled\n", firmware);
-                 rc = EXIT_FAILURE;
-                 /*
-                  * Do not cancel the request in the initrd, the real root might have
-diff --git a/src/udev/udev-builtin.c b/src/udev/udev-builtin.c
-index 6b3a518..5a5cb30 100644
---- a/src/udev/udev-builtin.c
-+++ b/src/udev/udev-builtin.c
-@@ -34,9 +34,7 @@ static const struct udev_builtin *builtins[] = {
-         [UDEV_BUILTIN_BLKID] = &udev_builtin_blkid,
- #endif
-         [UDEV_BUILTIN_BTRFS] = &udev_builtin_btrfs,
--#ifdef HAVE_FIRMWARE
-         [UDEV_BUILTIN_FIRMWARE] = &udev_builtin_firmware,
--#endif
-         [UDEV_BUILTIN_HWDB] = &udev_builtin_hwdb,
-         [UDEV_BUILTIN_INPUT_ID] = &udev_builtin_input_id,
-         [UDEV_BUILTIN_KEYBOARD] = &udev_builtin_keyboard,
-diff --git a/src/udev/udev.h b/src/udev/udev.h
-index 8395926..31fa606 100644
---- a/src/udev/udev.h
-+++ b/src/udev/udev.h
-@@ -140,9 +140,7 @@ enum udev_builtin_cmd {
-         UDEV_BUILTIN_BLKID,
- #endif
-         UDEV_BUILTIN_BTRFS,
--#ifdef HAVE_FIRMWARE
-         UDEV_BUILTIN_FIRMWARE,
--#endif
-         UDEV_BUILTIN_HWDB,
-         UDEV_BUILTIN_INPUT_ID,
-         UDEV_BUILTIN_KEYBOARD,
-@@ -170,9 +168,7 @@ struct udev_builtin {
- extern const struct udev_builtin udev_builtin_blkid;
- #endif
- extern const struct udev_builtin udev_builtin_btrfs;
--#ifdef HAVE_FIRMWARE
- extern const struct udev_builtin udev_builtin_firmware;
--#endif
- extern const struct udev_builtin udev_builtin_hwdb;
- extern const struct udev_builtin udev_builtin_input_id;
- extern const struct udev_builtin udev_builtin_keyboard;
-diff --git a/src/udev/udevd.c b/src/udev/udevd.c
-index 45ec3d6..e27a33a 100644
---- a/src/udev/udevd.c
-+++ b/src/udev/udevd.c
-@@ -98,9 +98,7 @@ struct event {
-         dev_t devnum;
-         int ifindex;
-         bool is_block;
--#ifdef HAVE_FIRMWARE
-         bool nodelay;
--#endif
- };
- 
- static inline struct event *node_to_event(struct udev_list_node *node)
-@@ -444,10 +442,8 @@ static int event_queue_insert(struct udev_device *dev)
-         event->devnum = udev_device_get_devnum(dev);
-         event->is_block = streq("block", udev_device_get_subsystem(dev));
-         event->ifindex = udev_device_get_ifindex(dev);
--#ifdef HAVE_FIRMWARE
-         if (streq(udev_device_get_subsystem(dev), "firmware"))
-                 event->nodelay = true;
--#endif
- 
-         udev_queue_export_device_queued(udev_queue_export, dev);
-         log_debug("seq %llu queued, '%s' '%s'\n", udev_device_get_seqnum(dev),
-@@ -527,11 +523,9 @@ static bool is_devpath_busy(struct event *event)
-                         return true;
-                 }
- 
--#ifdef HAVE_FIRMWARE
-                 /* allow to bypass the dependency tracking */
-                 if (event->nodelay)
-                         continue;
--#endif
- 
-                 /* parent device event found */
-                 if (event->devpath[common] == '/') {
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.h b/drivers/net/wireless/ath/wcn36xx/txrx.h
+new file mode 100644
+index 0000000..bbfbcf8
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.h
+@@ -0,0 +1,160 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _TXRX_H_
++#define _TXRX_H_
++
++#include <linux/etherdevice.h>
++#include "wcn36xx.h"
++
++/* TODO describe all properties */
++#define WCN36XX_802_11_HEADER_LEN	24
++#define WCN36XX_BMU_WQ_TX		25
++#define WCN36XX_TID			7
++/* broadcast wq ID */
++#define WCN36XX_TX_B_WQ_ID		0xA
++#define WCN36XX_TX_U_WQ_ID		0x9
++/* bd_rate */
++#define WCN36XX_BD_RATE_DATA 0
++#define WCN36XX_BD_RATE_MGMT 2
++#define WCN36XX_BD_RATE_CTRL 3
++
++struct wcn36xx_pdu {
++	u32	dpu_fb:8;
++	u32	adu_fb:8;
++	u32	pdu_id:16;
++
++	/* 0x04*/
++	u32	tail_pdu_idx:16;
++	u32	head_pdu_idx:16;
++
++	/* 0x08*/
++	u32	pdu_count:7;
++	u32	mpdu_data_off:9;
++	u32	mpdu_header_off:8;
++	u32	mpdu_header_len:8;
++
++	/* 0x0c*/
++	u32	reserved4:8;
++	u32	tid:4;
++	u32	reserved3:4;
++	u32	mpdu_len:16;
++};
++
++struct wcn36xx_rx_bd {
++	u32	bdt:2;
++	u32	ft:1;
++	u32	dpu_ne:1;
++	u32	rx_key_id:3;
++	u32	ub:1;
++	u32	rmf:1;
++	u32	uma_bypass:1;
++	u32	csr11:1;
++	u32	reserved0:1;
++	u32	scan_learn:1;
++	u32	rx_ch:4;
++	u32	rtsf:1;
++	u32	bsf:1;
++	u32	a2hf:1;
++	u32	st_auf:1;
++	u32	dpu_sign:3;
++	u32	dpu_rf:8;
++
++	struct wcn36xx_pdu pdu;
++
++	/* 0x14*/
++	u32	addr3:8;
++	u32	addr2:8;
++	u32	addr1:8;
++	u32	dpu_desc_idx:8;
++
++	/* 0x18*/
++	u32	rxp_flags:23;
++	u32	rate_id:9;
++
++	u32	phy_stat0;
++	u32	phy_stat1;
++
++	/* 0x24 */
++	u32	rx_times;
++
++	u32	pmi_cmd[6];
++
++	/* 0x40 */
++	u32	reserved7:4;
++	u32	reorder_slot_id:6;
++	u32	reorder_fwd_id:6;
++	u32	reserved6:12;
++	u32	reorder_code:4;
++
++	/* 0x44 */
++	u32	exp_seq_num:12;
++	u32	cur_seq_num:12;
++	u32	fr_type_subtype:8;
++
++	/* 0x48 */
++	u32	msdu_size:16;
++	u32	sub_fr_id:4;
++	u32	proc_order:4;
++	u32	reserved9:4;
++	u32	aef:1;
++	u32	lsf:1;
++	u32	esf:1;
++	u32	asf:1;
++};
++
++struct wcn36xx_tx_bd {
++	u32	bdt:2;
++	u32	ft:1;
++	u32	dpu_ne:1;
++	u32	fw_tx_comp:1;
++	u32	tx_comp:1;
++	u32	reserved1:1;
++	u32	ub:1;
++	u32	rmf:1;
++	u32	reserved0:12;
++	u32	dpu_sign:3;
++	u32	dpu_rf:8;
++
++	struct wcn36xx_pdu pdu;
++
++	/* 0x14*/
++	u32	reserved5:7;
++	u32	queue_id:5;
++	u32	bd_rate:2;
++	u32	ack_policy:2;
++	u32	sta_index:8;
++	u32	dpu_desc_idx:8;
++
++	u32	tx_bd_sign;
++	u32	reserved6;
++	u32	dxe_start_time;
++	u32	dxe_end_time;
++
++	/*u32	tcp_udp_start_off:10;
++	u32	header_cks:16;
++	u32	reserved7:6;*/
++};
++
++struct wcn36xx_sta;
++struct wcn36xx;
++
++int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb);
++int wcn36xx_start_tx(struct wcn36xx *wcn,
++		     struct wcn36xx_sta *sta_priv,
++		     struct sk_buff *skb);
++
++#endif	/* _TXRX_H_ */
+-- 
+1.8.2.2
 
