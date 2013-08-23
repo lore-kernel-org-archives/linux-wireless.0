@@ -1,116 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54459 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754299Ab3HFIwx (ORCPT
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:64965 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754201Ab3HWNeG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 04:52:53 -0400
-Message-ID: <1375779167.8219.5.camel@jlt4.sipsolutions.net> (sfid-20130806_105258_138359_BA270203)
-Subject: pull-request: iwlwifi-next 2013-08-06
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Fri, 23 Aug 2013 09:34:06 -0400
+Received: by mail-ea0-f172.google.com with SMTP id r16so300753ead.17
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 06:34:04 -0700 (PDT)
+Message-ID: <1377264835.13953.35.camel@canaries32-MCP7A> (sfid-20130823_153411_544596_6C3EB170)
+Subject: [PATCH 1/2] staging: vt6656: desc.h Remove typedef struct
+ tagSMICHDRHead to new structure in rxtx.h
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 06 Aug 2013 10:52:47 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-63RAk7hz28cngASXZW6a"
+Date: Fri, 23 Aug 2013 14:33:55 +0100
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+To new structure.
+typedef struct tagSMICHDRHead -> struct vnt_mic_hdr
 
---=-63RAk7hz28cngASXZW6a
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This is only needed by rxtc.c so moved to rxtx.h
 
-Hi John,
+The new structure is the same size as the old but
+contains the members as pointer referenced in
+rxtx.c s_vFillTxKey
+u8 id
+	*pMICHDR = 0x59;
+u8 tx_priority;
+	*((u8 *)(pMICHDR+1)) = 0; // TxPriority
+u8 mic_addr2[6];
+	memcpy(pMICHDR+2, &(pMACHeader->addr2[0]), 6);
+__be32 tsc_47_16;
+	pMICHDR+8 = HIBYTE(HIWORD(pTransmitKey->dwTSC47_16));
+	pMICHDR+9 = LOBYTE(HIWORD(pTransmitKey->dwTSC47_16));
+	pMICHDR+10 = HIBYTE(LOWORD(pTransmitKey->dwTSC47_16));
+	pMICHDR+11 = LOBYTE(LOWORD(pTransmitKey->dwTSC47_16));
+__be16 tsc_15_0;
+	pMICHDR+12 = HIBYTE(pTransmitKey->wTSC15_0);
+	pMICHDR+13 = LOBYTE(pTransmitKey->wTSC15_0);
+__be16 payload_len;
+	pMICHDR+14 = HIBYTE(wPayloadLen);
+	pMICHDR+15 = LOBYTE(wPayloadLen);
+__be16 hlen;
+	pMICHDR+16 = 0; // HLEN[15:8]
+	pMICHDR+17 = 28; // HLEN[7:0]
+__le16 frame_control;
+	memcpy(pMICHDR+18, (u8 *)&wValue, 2); // MSKFRACTL
+u8 addr1[6];
+	memcpy(pMICHDR+20, &(pMACHeader->addr1[0]), 6);
+u8 addr2[6];
+	memcpy(pMICHDR+26, &(pMACHeader->addr2[0]), 6);
+u8 addr3[6];
+	memcpy(pMICHDR+32, &(pMACHeader->addr3[0]), 6);
+__le16 seq_ctrl;
+	memcpy(pMICHDR+38, (u8 *)&wValue, 2); // MSKSEQCTL
+u8 addr4[6];
+	memcpy(pMICHDR+40, &(pMACHeader->addr4[0]), 6);
+u16 packing; /* packing to 48 bytes */
 
-And a few more things for the -next stream for iwlwifi. The signal
-strength reporting fix is the reason I'd originally tried to ask you to
-not pull before :-)
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/desc.h | 12 ------------
+ drivers/staging/vt6656/rxtx.c | 26 +++++++++++++-------------
+ drivers/staging/vt6656/rxtx.h | 18 ++++++++++++++++++
+ 3 files changed, 31 insertions(+), 25 deletions(-)
 
-This time I have a signal strength reporting fix from Avri, some
-cleanups from Eliad, Eyal and myself and a new debugfs file from Matti.
+diff --git a/drivers/staging/vt6656/desc.h b/drivers/staging/vt6656/desc.h
+index b3e8cc1..4675135 100644
+--- a/drivers/staging/vt6656/desc.h
++++ b/drivers/staging/vt6656/desc.h
+@@ -163,18 +163,6 @@ typedef struct tagSTxShortBufHead {
+ STxShortBufHead, *PSTxShortBufHead;
+ typedef const STxShortBufHead *PCSTxShortBufHead;
+ 
+-/*
+- * MICHDR data header
+- */
+-typedef struct tagSMICHDRHead {
+-	u32 adwHDR0[4];
+-	u32 adwHDR1[4];
+-	u32 adwHDR2[4];
+-} __attribute__ ((__packed__))
+-SMICHDRHead, *PSMICHDRHead;
+-
+-typedef const SMICHDRHead *PCSMICHDRHead;
+-
+ typedef struct tagSBEACONCtl {
+ 	u32 BufReady:1;
+ 	u32 TSF:15;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index ed3fdf4..c055c76 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -1004,7 +1004,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 	u32 uDuration;
+ 	u32 cbHeaderLength = 0, uPadding = 0;
+ 	void *pvRrvTime;
+-	PSMICHDRHead pMICHDR;
++	struct vnt_mic_hdr *pMICHDR;
+ 	void *pvRTS;
+ 	void *pvCTS;
+ 	void *pvTxDataHd;
+@@ -1121,7 +1121,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+         if (pTransmitKey->byCipherSuite == KEY_CTL_CCMP) {
+             cbIVlen = 8;//RSN Header
+             cbICVlen = 8;//MIC
+-            cbMICHDR = sizeof(SMICHDRHead);
++	    cbMICHDR = sizeof(struct vnt_mic_hdr);
+         }
+         if (bSoftWEP == false) {
+             //MAC Header should be padding 0 to DW alignment.
+@@ -1146,7 +1146,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+             if (bRTS == true) {//RTS_need
+ 		pvRrvTime = (struct vnt_rrv_time_rts *)
+ 					(pbyTxBufferAddr + wTxBufSize);
+-		pMICHDR = (PSMICHDRHead)(pbyTxBufferAddr + wTxBufSize +
++		pMICHDR = (struct vnt_mic_hdr *)(pbyTxBufferAddr + wTxBufSize +
+ 					sizeof(struct vnt_rrv_time_rts));
+ 		pvRTS = (struct vnt_rts_g *) (pbyTxBufferAddr + wTxBufSize +
+ 				sizeof(struct vnt_rrv_time_rts) + cbMICHDR);
+@@ -1161,7 +1161,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+             else { //RTS_needless
+ 		pvRrvTime = (struct vnt_rrv_time_cts *)
+ 				(pbyTxBufferAddr + wTxBufSize);
+-		pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize +
++		pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize +
+ 			sizeof(struct vnt_rrv_time_cts));
+                 pvRTS = NULL;
+ 		pvCTS = (struct vnt_cts *) (pbyTxBufferAddr + wTxBufSize +
+@@ -1178,7 +1178,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+             if (bRTS == true) {//RTS_need
+ 		pvRrvTime = (struct vnt_rrv_time_rts *)(pbyTxBufferAddr +
+ 								wTxBufSize);
+-		pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize +
++		pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize +
+ 					sizeof(struct vnt_rrv_time_rts));
+ 		pvRTS = (struct vnt_rts_g_fb *) (pbyTxBufferAddr + wTxBufSize +
+ 				sizeof(struct vnt_rrv_time_rts) + cbMICHDR);
+@@ -1193,7 +1193,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+             else if (bRTS == false) { //RTS_needless
+ 		pvRrvTime = (struct vnt_rrv_time_cts *)
+ 				(pbyTxBufferAddr + wTxBufSize);
+-		pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize +
++		pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize +
+ 				sizeof(struct vnt_rrv_time_cts));
+                 pvRTS = NULL;
+ 		pvCTS = (struct vnt_cts_fb *) (pbyTxBufferAddr + wTxBufSize +
+@@ -1212,7 +1212,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+             if (bRTS == true) {//RTS_need
+ 		pvRrvTime = (struct vnt_rrv_time_ab *) (pbyTxBufferAddr +
+ 								wTxBufSize);
+-		pMICHDR = (PSMICHDRHead)(pbyTxBufferAddr + wTxBufSize +
++		pMICHDR = (struct vnt_mic_hdr *)(pbyTxBufferAddr + wTxBufSize +
+ 						sizeof(struct vnt_rrv_time_ab));
+ 		pvRTS = (struct vnt_rts_ab *) (pbyTxBufferAddr + wTxBufSize +
+ 				sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
+@@ -1227,7 +1227,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+             else if (bRTS == false) { //RTS_needless, no MICHDR
+ 		pvRrvTime = (struct vnt_rrv_time_ab *)(pbyTxBufferAddr +
+ 								wTxBufSize);
+-		pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize +
++		pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize +
+ 						sizeof(struct vnt_rrv_time_ab));
+                 pvRTS = NULL;
+                 pvCTS = NULL;
+@@ -1241,7 +1241,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+             if (bRTS == true) {//RTS_need
+ 		pvRrvTime = (struct vnt_rrv_time_ab *)(pbyTxBufferAddr +
+ 						wTxBufSize);
+-		pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize +
++		pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize +
+ 			sizeof(struct vnt_rrv_time_ab));
+ 		pvRTS = (struct vnt_rts_a_fb *) (pbyTxBufferAddr + wTxBufSize +
+ 				sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
+@@ -1256,7 +1256,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+             else if (bRTS == false) { //RTS_needless
+ 		pvRrvTime = (struct vnt_rrv_time_ab *)(pbyTxBufferAddr +
+ 								wTxBufSize);
+-		pMICHDR = (PSMICHDRHead)(pbyTxBufferAddr + wTxBufSize +
++		pMICHDR = (struct vnt_mic_hdr *)(pbyTxBufferAddr + wTxBufSize +
+ 						sizeof(struct vnt_rrv_time_ab));
+                 pvRTS = NULL;
+                 pvCTS = NULL;
+@@ -2057,7 +2057,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+         else if (pDevice->eEncryptionStatus == Ndis802_11Encryption3Enabled) {
+             cbIVlen = 8;//RSN Header
+             cbICVlen = 8;//MIC
+-            cbMICHDR = sizeof(SMICHDRHead);
++	    cbMICHDR = sizeof(struct vnt_mic_hdr);
+             pTxBufHead->wFragCtl |= FRAGCTL_AES;
+             pDevice->bAES = true;
+         }
+@@ -2076,7 +2076,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+ 
+     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
+ 	pvRrvTime = (struct vnt_rrv_time_cts *) (pbyTxBufferAddr + wTxBufSize);
+-	pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize +
++	pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize +
+ 					sizeof(struct vnt_rrv_time_cts));
+         pvRTS = NULL;
+ 	pvCTS = (struct vnt_cts *) (pbyTxBufferAddr + wTxBufSize +
+@@ -2091,7 +2091,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+     else {//802.11a/b packet
+ 
+ 	pvRrvTime = (struct vnt_rrv_time_ab *) (pbyTxBufferAddr + wTxBufSize);
+-	pMICHDR = (PSMICHDRHead) (pbyTxBufferAddr + wTxBufSize +
++	pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize +
+ 		sizeof(struct vnt_rrv_time_ab));
+         pvRTS = NULL;
+         pvCTS = NULL;
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index 3484f2b..ad62052 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -33,6 +33,24 @@
+ #include "wcmd.h"
+ #include "baseband.h"
+ 
++/* MIC HDR data header */
++struct vnt_mic_hdr {
++	u8 id;
++	u8 tx_priority;
++	u8 mic_addr2[6];
++	__be32 tsc_47_16;
++	__be16 tsc_15_0;
++	__be16 payload_len;
++	__be16 hlen;
++	__le16 frame_control;
++	u8 addr1[6];
++	u8 addr2[6];
++	u8 addr3[6];
++	__le16 seq_ctrl;
++	u8 addr4[6];
++	u16 packing; /* packing to 48 bytes */
++} __packed;
++
+ /* RsvTime buffer header */
+ struct vnt_rrv_time_rts {
+ 	u16 wRTSTxRrvTime_ba;
+-- 
+1.8.1.2
 
-Please let me know if there's any problem.
 
-Thanks,
-johannes
-
-The following changes since commit 147fc9be81d10e6e863323c0b54e140b42fd1ed6=
-:
-
-  iwlwifi: mvm: advertise support for DYNAMIC / STATIC SMPS (2013-07-31 11:=
-05:08 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
-r-john
-
-for you to fetch changes up to ef4394b9477f9078d78ae3e8359eae094c9b19d8:
-
-  iwlwifi: mvm: use designated initialization for some arrays (2013-08-06 1=
-0:35:04 +0200)
-
-----------------------------------------------------------------
-Avri Altman (1):
-      iwlwifi: mvm: fix signal reporting for < 3 antennas
-
-Eliad Peller (4):
-      iwlwifi: fix some documentation typos
-      iwlwifi: pcie: some little cleanups
-      iwlwifi: mvm: add some missing cleanups in iwl_mvm_mac_add_interface
-      iwlwifi: mvm: use designated initialization for some arrays
-
-Eyal Shapira (1):
-      iwlwifi: mvm: remove traffic load monitoring in rs
-
-Johannes Berg (3):
-      iwlwifi: pcie: fix resume when no opmode is present
-      iwlwifi: mvm: small cleanups in quota management code
-      iwlwifi: remove transport suspend/resume indirection
-
-Matti Gottlieb (1):
-      iwlwifi: mvm: Add RX statistics debugfs entry
-
- drivers/net/wireless/iwlwifi/iwl-op-mode.h  |   4 +-
- drivers/net/wireless/iwlwifi/iwl-trans.h    |  25 +----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c  | 138 +++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  17 ++-
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |   2 +
- drivers/net/wireless/iwlwifi/mvm/ops.c      |   2 +
- drivers/net/wireless/iwlwifi/mvm/quota.c    |  11 +-
- drivers/net/wireless/iwlwifi/mvm/rs.c       | 164 +++++++-----------------=
-----
- drivers/net/wireless/iwlwifi/mvm/rs.h       |  12 --
- drivers/net/wireless/iwlwifi/mvm/rx.c       |  31 +++++-
- drivers/net/wireless/iwlwifi/mvm/tx.c       |   2 +-
- drivers/net/wireless/iwlwifi/pcie/drv.c     |  18 ++-
- drivers/net/wireless/iwlwifi/pcie/trans.c   |  23 ----
- drivers/net/wireless/iwlwifi/pcie/tx.c      |  17 ++-
- 14 files changed, 247 insertions(+), 219 deletions(-)
-
-
---=-63RAk7hz28cngASXZW6a
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJSALlfAAoJEDBSmw7B7bqrh8oQAJ8xAgOb0BFJfEVvwBtmJmdv
-r0pll92FzLZUtTHgWXP+5MwKaUrKH0Tjky0vLNOHR2DlX+AJE4+ns6XaHGGDYL9U
-f0Iem1bUCrTDW369MXcSlWLaPWTVHVQnNzG/o8/JN+5wp9GWIItZCj1tNkJlwNjx
-PnVHQCA+Oumaab1AvJDUeuBMVxLSunNk3ebTErViUKo3nOnmrGV7A/WTy/oJq4B6
-z3Bddf0yfbSAMytOT1640JmibZrNz/Tq5R4JN1x7qvYFduKyj1y3gkIuIXwk+nmZ
-9CMat0WcF0kKE37Fp6yLgW6OBmEnxzAI9vfbDLO5r4Q7yt/02M23fKyTWyUFyNjX
-m/MrXiSDtF2qiCV6KZtJAjrG68v7Z+56u/tHHIQ4gZhEETGwcIoTgnUjlmgV9lM2
-4L3+Vzin8Q8E1pRVBYT/mD8LgMKoB+/oA5uV5OCngKH1VNPqCZt7W+ckg/HehzP3
-c0zr4xLqsz7vkHhPdBd2Fjn78UATDLRv++BkcQO5LEWnmMGaq+Md6CLzJByNDKSa
-2+7UPQOCQjo8ZNBAafrSyKwodcuEHNleaytljs/Tz0HXo/+hnk1OD0ZnyKUqnBXY
-3C4HzqyI6dFJ3FGtpUm7OpC/V1gNBIyqJYZeubjr4OLqS6DVw097sMgNgk4ioXxk
-nZCf4SH+MoHC718jjcOR
-=EKgz
------END PGP SIGNATURE-----
-
---=-63RAk7hz28cngASXZW6a--
 
