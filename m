@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53972 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752691Ab3HMHEN (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:51857 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755325Ab3HWI7s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 03:04:13 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.11 v3] genetlink: fix family dump race
-Date: Tue, 13 Aug 2013 09:04:05 +0200
-Message-Id: <1376377445-8937-1-git-send-email-johannes@sipsolutions.net> (sfid-20130813_090421_063905_2D730102)
+	Fri, 23 Aug 2013 04:59:48 -0400
+Received: by mail-lb0-f174.google.com with SMTP id w20so271062lbh.5
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:47 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v2 16/16] wcn36xx: Add wcn36xx to ath Makefile and Kconfig
+Date: Fri, 23 Aug 2013 10:58:19 +0200
+Message-Id: <1377248299-21007-17-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_105954_793527_CA6D8AA9)
+In-Reply-To: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Now wcn36xx is part of ath family.
 
-When dumping generic netlink families, only the first dump call
-is locked with genl_lock(), which protects the list of families,
-and thus subsequent calls can access the data without locking,
-racing against family addition/removal. This can cause a crash.
-Fix it - the locking needs to be conditional because the first
-time around it's already locked.
-
-A similar bug was reported to me on an old kernel (3.4.47) but
-the exact scenario that happened there is no longer possible,
-on those kernels the first round wasn't locked either. Looking
-at the current code I found the race described above, which had
-also existed on the old kernel.
-
-Cc: stable@vger.kernel.org
-Reported-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
 ---
- net/netlink/genetlink.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/ath/Kconfig  | 1 +
+ drivers/net/wireless/ath/Makefile | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
-index 2fd6dbe..6b6a03a 100644
---- a/net/netlink/genetlink.c
-+++ b/net/netlink/genetlink.c
-@@ -789,6 +789,10 @@ static int ctrl_dumpfamily(struct sk_buff *skb, struct netlink_callback *cb)
- 	struct net *net = sock_net(skb->sk);
- 	int chains_to_skip = cb->args[0];
- 	int fams_to_skip = cb->args[1];
-+	bool need_locking = chains_to_skip || fams_to_skip;
-+
-+	if (need_locking)
-+		genl_lock();
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index 1abf1d4..ba81d62 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -32,5 +32,6 @@ source "drivers/net/wireless/ath/ath6kl/Kconfig"
+ source "drivers/net/wireless/ath/ar5523/Kconfig"
+ source "drivers/net/wireless/ath/wil6210/Kconfig"
+ source "drivers/net/wireless/ath/ath10k/Kconfig"
++source "drivers/net/wireless/ath/wcn36xx/Kconfig"
  
- 	for (i = chains_to_skip; i < GENL_FAM_TAB_SIZE; i++) {
- 		n = 0;
-@@ -810,6 +814,9 @@ errout:
- 	cb->args[0] = i;
- 	cb->args[1] = n;
+ endif
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index fb05cfd..363b056 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -5,6 +5,7 @@ obj-$(CONFIG_ATH6KL)		+= ath6kl/
+ obj-$(CONFIG_AR5523)		+= ar5523/
+ obj-$(CONFIG_WIL6210)		+= wil6210/
+ obj-$(CONFIG_ATH10K)		+= ath10k/
++obj-$(CONFIG_WCN36XX)		+= wcn36xx/
  
-+	if (need_locking)
-+		genl_unlock();
-+
- 	return skb->len;
- }
+ obj-$(CONFIG_ATH_COMMON)	+= ath.o
  
 -- 
-1.8.0
+1.8.2.2
 
