@@ -1,39 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34871 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753008Ab3HPDFs (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:50376 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755127Ab3HWI7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 23:05:48 -0400
-Date: Thu, 15 Aug 2013 20:14:52 -0700
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Arik Nemtsov <arik@wizery.com>, backports@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
-Subject: Re: [PATCH] backports: rename some mem functions to not break custom
- kernels
-Message-ID: <20130816031450.GC9574@garbanzo.do-not-panic.com> (sfid-20130816_050558_486551_184CBB67)
-References: <1376466485-25796-1-git-send-email-arik@wizery.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1376466485-25796-1-git-send-email-arik@wizery.com>
+	Fri, 23 Aug 2013 04:59:38 -0400
+Received: by mail-lb0-f174.google.com with SMTP id w20so270942lbh.5
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:37 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v2 10/16] wcn36xx: add smd.h
+Date: Fri, 23 Aug 2013 10:58:13 +0200
+Message-Id: <1377248299-21007-11-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_110010_021412_0833E86D)
+In-Reply-To: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 14, 2013 at 10:48:05AM +0300, Arik Nemtsov wrote:
-> When custom patches are cherry-picked to a kernel, some symbols exported
-> by backports may clash with the built-in ones. Rename the backports
-> symbols using the standard backport_ prefix to prevent that.
-> 
-> The offending symbols were exported by the patch below:
-> 
-> commit 2ce5c22448bb45998318267c00b5d6ef9cff3170
-> Author: Hauke Mehrtens <hauke@hauke-m.de>
-> Date:   Thu Jun 6 13:48:04 2013 +0200
-> 
->     backports: backport some memory functions
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Adding smd.h
 
-Thanks, applied and pushed. Next time please add
-the backports@vger.kernel.org list.
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.h | 121 +++++++++++++++++++++++++++++++++
+ 1 file changed, 121 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
 
-  Luis
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+new file mode 100644
+index 0000000..28d5826
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -0,0 +1,121 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _SMD_H_
++#define _SMD_H_
++
++#include "wcn36xx.h"
++
++/* Max shared size is 4k but we take less.*/
++#define WCN36XX_NV_FRAGMENT_SIZE			3072
++
++#define WCN36XX_SMD_BUF_SIZE				4096
++
++#define SMD_MSG_TIMEOUT 200
++#define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
++#define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
++/* The PNO version info be contained in the rsp msg */
++#define WCN36XX_FW_MSG_PNO_VERSION_MASK			0x8000
++
++enum wcn36xx_fw_msg_result {
++	WCN36XX_FW_MSG_RESULT_SUCCESS			= 0,
++	WCN36XX_FW_MSG_RESULT_SUCCESS_SYNC		= 1,
++
++	WCN36XX_FW_MSG_RESULT_MEM_FAIL			= 5,
++};
++
++/******************************/
++/* SMD requests and responses */
++/******************************/
++struct wcn36xx_fw_msg_status_rsp {
++	u32	status;
++} __packed;
++
++struct wcn36xx;
++
++int wcn36xx_smd_open(struct wcn36xx *wcn);
++void wcn36xx_smd_close(struct wcn36xx *wcn);
++
++int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
++int wcn36xx_smd_start(struct wcn36xx *wcn);
++int wcn36xx_smd_stop(struct wcn36xx *wcn);
++int wcn36xx_smd_init_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_start_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_end_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_finish_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
++int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status);
++int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
++int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
++int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch);
++int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
++			    const u8 *sta_mac,
++			    enum wcn36xx_hal_link_state state);
++int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta, const u8 *bssid,
++			   bool update);
++int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
++int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta);
++int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
++			    u16 tim_off, u16 p2p_off);
++int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch);
++int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb);
++int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
++			   enum ani_ed_type enc_type,
++			   u8 keyidx,
++			   u8 keylen,
++			   u8 *key,
++			   u8 sta_index);
++int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
++			   enum ani_ed_type enc_type,
++			   u8 keyidx,
++			   u8 keylen,
++			   u8 *key);
++int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
++			      enum ani_ed_type enc_type,
++			      u8 keyidx,
++			      u8 sta_index);
++int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
++			      enum ani_ed_type enc_type,
++			      u8 keyidx);
++int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt);
++int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn);
++int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type);
++int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
++			     u32 arg3, u32 arg4, u32 arg5);
++int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);
++
++int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
++		struct ieee80211_sta *sta,
++		u16 tid,
++		u16 *ssn,
++		u8 direction,
++		u8 sta_index);
++int wcn36xx_smd_add_ba(struct wcn36xx *wcn);
++int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
++int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
++
++int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
++/* WCN36XX configuration parameters */
++struct wcn36xx_fw_cfg {
++	u16		id;
++	u16		len;
++	u16		pad_bytes;
++	u16		reserved;
++	u8		*val;
++};
++#endif	/* _SMD_H_ */
+-- 
+1.8.2.2
+
