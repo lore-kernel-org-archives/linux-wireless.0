@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:42319 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853Ab3HBI4D (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:55318 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753361Ab3HWJsB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 04:56:03 -0400
-Message-ID: <1375433758.24371.20.camel@deadeye.wl.decadent.org.uk> (sfid-20130802_105614_638017_845D5EF8)
-Subject: Re: changing dev->needed_headroom/needed_tailroom?
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Date: Fri, 2 Aug 2013 10:55:58 +0200
-In-Reply-To: <1374850210.8248.59.camel@jlt4.sipsolutions.net>
-References: <1374850210.8248.59.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+	Fri, 23 Aug 2013 05:48:01 -0400
+From: "Rymarkiewicz, WaldemarX" <waldemarx.rymarkiewicz@intel.com>
+To: Lars Poeschel <poeschel@lemonage.de>
+CC: Lars Poeschel <larsi@wh2.tu-dresden.de>,
+	"sameo@linux.intel.com" <sameo@linux.intel.com>,
+	"jslaby@suse.cz" <jslaby@suse.cz>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-nfc@lists.01.org" <linux-nfc@lists.01.org>
+Subject: RE: [linux-nfc] [PATCH RFC] nfc: add a driver for pn532 connected
+ on uart
+Date: Fri, 23 Aug 2013 09:47:57 +0000
+Message-ID: <A4DEEF93D8D14A418311321B77DB71E9C9E299@IRSMSX104.ger.corp.intel.com> (sfid-20130823_114825_358235_B720103B)
+References: <1377181699-1668-1-git-send-email-larsi@wh2.tu-dresden.de>
+ <A4DEEF93D8D14A418311321B77DB71E9C9D773@IRSMSX104.ger.corp.intel.com>
+ <201308231128.47731.poeschel@lemonage.de>
+In-Reply-To: <201308231128.47731.poeschel@lemonage.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-07-26 at 16:50 +0200, Johannes Berg wrote:
-> Does it seem reasonable to change dev->needed_headroom and
-> dev->needed_tailroom on the fly?
-> 
-> We currently set needed_headroom to the max of what we need, but we
-> could do better like making it depend on the interface type (e.g. only
-> asking for mesh space on mesh interfaces). This would be done only when
-> the interface isn't connected, I can't promise it would be down but the
-> carrier would be off.
-[...]
+Hi,
 
-I don't think this is safe when the interface is running (even if
-carrier is off).  Some functions may read dev->needed_headroom twice and
-rely on getting the same value each time.
+>Yes, I know that and I explicitly mentioned that. I had to get this chip working
+>somehow and I had to begin somewhere. The pn533 driver is really very hard 
+>to understand with it's massive use of nested callbacks, workqueues and
+>usb urbs. So I took the approach to try to understand what happens while modifying
+>and would then later factor out what both drivers have in common.
+>The other way is understanding the code first and then decide what would be needed for
+> both chips, factor that out and then write the pn532 uart specific stuff. And this uart stuff
+>is a pain itself in linux. This way seemed much harder to me,
+> especially as I have no pn533 device to test which things will break.
 
-Also, stacked devices would need to adjust their own needed_headroom
-accordingly.
+I understand. It took me some time to understand this too. Now, it's even harder after adding  protocol ops, but still is pretty well layered. 
 
-Ben.
+> I suggest to separate transport layer from the core in pn533 and add 
+> support for uart and usb separately. This is exactly what I've planned 
+> while changing pn533 to support acr122 device.
+>> Yes, I agree with you this should be done. I'll expect it to be challenging
+>> but based on my previous work this could be doable. 
 
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+Be sure there will be pitfalls separating transport.  I've already experienced some of them adding support for acr122. 
 
+>> I'll look into that in my next free timeslot. I'll not be able to do that in the next two months. 
+>>Sorry.
+
+No worries. I know this pain :) 
+
+Thanks,
+/Waldek
