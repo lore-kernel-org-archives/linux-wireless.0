@@ -1,88 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35725 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030622Ab3HIOgE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 10:36:04 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2 1/6] cfg80211: export cfg80211_chandef_dfs_required
-Date: Fri,  9 Aug 2013 16:35:15 +0200
-Message-Id: <1376058920-17779-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130809_163616_340978_DE479A85)
-In-Reply-To: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from canardo.mork.no ([148.122.252.1]:40799 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754215Ab3HWJg0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Aug 2013 05:36:26 -0400
+From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: netdev@vger.kernel.org
+Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH net-next 08/10] net: libertas: inherit addr_assign_type along with dev_addr
+Date: Fri, 23 Aug 2013 11:35:11 +0200
+Message-Id: <1377250513-3662-9-git-send-email-bjorn@mork.no> (sfid-20130823_113633_754674_5DD1A2F2)
+In-Reply-To: <1377250513-3662-1-git-send-email-bjorn@mork.no>
+References: <1377250513-3662-1-git-send-email-bjorn@mork.no>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It will be used later by the IBSS CSA implementation of mac80211.
-
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Bjørn Mork <bjorn@mork.no>
 ---
-Changes to PATCHv1:
- * remove one more newline in net/wireless/core.h
----
- include/net/cfg80211.h |    9 +++++++++
- net/wireless/chan.c    |    1 +
- net/wireless/core.h    |    9 ---------
- 3 files changed, 10 insertions(+), 9 deletions(-)
+ drivers/net/wireless/libertas/mesh.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b7495c7..3dd8fa3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -437,6 +437,15 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 			     u32 prohibited_flags);
+diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
+index efae07e..6fef746 100644
+--- a/drivers/net/wireless/libertas/mesh.c
++++ b/drivers/net/wireless/libertas/mesh.c
+@@ -1017,7 +1017,7 @@ static int lbs_add_mesh(struct lbs_private *priv)
  
- /**
-+ * cfg80211_chandef_dfs_required - checks if radar detection is required
-+ * @wiphy: the wiphy to validate against
-+ * @chandef: the channel definition to check
-+ * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
-+ */
-+int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
-+				  const struct cfg80211_chan_def *c);
-+
-+/**
-  * ieee80211_chandef_rate_flags - returns rate flags for a channel
-  *
-  * In some channel types, not all rates may be used - for example CCK
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 50f6195..16f3c3a 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -328,6 +328,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
- 	return cfg80211_get_chans_dfs_required(wiphy, chandef->center_freq2,
- 					       width);
- }
-+EXPORT_SYMBOL(cfg80211_chandef_dfs_required);
+ 	mesh_dev->netdev_ops = &mesh_netdev_ops;
+ 	mesh_dev->ethtool_ops = &lbs_ethtool_ops;
+-	memcpy(mesh_dev->dev_addr, priv->dev->dev_addr, ETH_ALEN);
++	eth_hw_addr_inherit(mesh_dev, priv->dev);
  
- static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 					u32 center_freq, u32 bandwidth,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9ad43c6..b43efac 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -382,15 +382,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				 enum cfg80211_chan_mode chanmode,
- 				 u8 radar_detect);
+ 	SET_NETDEV_DEV(priv->mesh_dev, priv->dev->dev.parent);
  
--/**
-- * cfg80211_chandef_dfs_required - checks if radar detection is required
-- * @wiphy: the wiphy to validate against
-- * @chandef: the channel definition to check
-- * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
-- */
--int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
--				  const struct cfg80211_chan_def *c);
--
- void cfg80211_set_dfs_state(struct wiphy *wiphy,
- 			    const struct cfg80211_chan_def *chandef,
- 			    enum nl80211_dfs_state dfs_state);
 -- 
 1.7.10.4
 
