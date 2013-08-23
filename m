@@ -1,87 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:45386 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753610Ab3HWXsa (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39177 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755226Ab3HWNrS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 19:48:30 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/3] mwifiex: fix ext_capab IE structure definition
-Date: Fri, 23 Aug 2013 16:48:22 -0700
-Message-ID: <1377301703-8853-2-git-send-email-bzhao@marvell.com> (sfid-20130824_014835_546836_1CEB57CB)
-In-Reply-To: <1377301703-8853-1-git-send-email-bzhao@marvell.com>
-References: <1377301703-8853-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 23 Aug 2013 09:47:18 -0400
+Message-ID: <1377265633.14021.32.camel@jlt4.sipsolutions.net> (sfid-20130823_154720_839271_68759B95)
+Subject: Re: [PATCH] mac80211: ignore obviously bogus ECSAs in probe
+ response frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 23 Aug 2013 15:47:13 +0200
+In-Reply-To: <20130822141011.GA24445@thinkpad-t410> (sfid-20130822_161016_818408_C83E5982)
+References: <1377179613-26591-1-git-send-email-seth.forshee@canonical.com>
+	 <1377180063.14110.23.camel@jlt4.sipsolutions.net>
+	 <20130822141011.GA24445@thinkpad-t410>
+	 (sfid-20130822_161016_818408_C83E5982)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Thu, 2013-08-22 at 09:10 -0500, Seth Forshee wrote:
+> On Thu, Aug 22, 2013 at 04:01:03PM +0200, Johannes Berg wrote:
+> > On Thu, 2013-08-22 at 08:53 -0500, Seth Forshee wrote:
+> > > The Netgear WNDAP360 sends invalid ECSA IEs in probe response
+> > > frames
+> > 
+> > I think we shouldn't be checking probe response frames at all. That
+> > seems like a mistake. Can you try this?
+> 
+> I had considered this, but the spec says that it's at least valid for
+> the AP to be sending ECSAs in probe responses. IEEE 802.11-2012 section
+> 10.3.3.2:
+> 
+>   ...an AP shall inform associated STAs that the AP is moving to a new
+>   channel and/or operating class and maintain the association by
+>   advertising the switch using Extended Channel Switch Announcement
+>   elements in any transmitted Beacon frames, Probe Response frames, and
+>   Extended Channel Switch Announcement frames until the intended channel
+>   switch time.
+> 
+> Perhaps we can still ignore them though? I suppose we'd expect to
+> receive some other frame with the ECSA before it actually happens.
 
-EXT_CAPAB_IE format involves IEEE header followed by bytestream of
-capabilities. Current structure has incorrect member u8 for data;
-fix it by defining it as u8[0].
+I suppose that's to avoid clients connecting to it when they find the
+AP, I don't see any reason to actually react to that in our code - we
+should have picked up a beacon already anyway.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.c | 10 ++++++----
- drivers/net/wireless/mwifiex/fw.h  |  2 +-
- 2 files changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 41e9d25..b579a2e 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -292,6 +292,7 @@ mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
- 	struct mwifiex_ie_types_extcap *ext_cap;
- 	int ret_len = 0;
- 	struct ieee80211_supported_band *sband;
-+	struct ieee_types_header *hdr;
- 	u8 radio_type;
- 
- 	if (!buffer || !*buffer)
-@@ -388,17 +389,18 @@ mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
- 	}
- 
- 	if (bss_desc->bcn_ext_cap) {
-+		hdr = (void *)bss_desc->bcn_ext_cap;
- 		ext_cap = (struct mwifiex_ie_types_extcap *) *buffer;
- 		memset(ext_cap, 0, sizeof(struct mwifiex_ie_types_extcap));
- 		ext_cap->header.type = cpu_to_le16(WLAN_EID_EXT_CAPABILITY);
--		ext_cap->header.len = cpu_to_le16(sizeof(ext_cap->ext_cap));
-+		ext_cap->header.len = cpu_to_le16(hdr->len);
- 
--		memcpy((u8 *)ext_cap + sizeof(struct mwifiex_ie_types_header),
-+		memcpy((u8 *)ext_cap->ext_capab,
- 		       bss_desc->bcn_ext_cap + sizeof(struct ieee_types_header),
- 		       le16_to_cpu(ext_cap->header.len));
- 
--		*buffer += sizeof(struct mwifiex_ie_types_extcap);
--		ret_len += sizeof(struct mwifiex_ie_types_extcap);
-+		*buffer += sizeof(struct mwifiex_ie_types_extcap) + hdr->len;
-+		ret_len += sizeof(struct mwifiex_ie_types_extcap) + hdr->len;
- 	}
- 
- 	return ret_len;
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index c9ad1c0..f80f30b 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -1330,7 +1330,7 @@ struct mwifiex_ie_types_2040bssco {
- 
- struct mwifiex_ie_types_extcap {
- 	struct mwifiex_ie_types_header header;
--	u8 ext_cap;
-+	u8 ext_capab[0];
- } __packed;
- 
- struct host_cmd_ds_mac_reg_access {
--- 
-1.8.2.3
+johannes
 
