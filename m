@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:35321 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753591Ab3HFIgF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34796 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754625Ab3HWPA0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 04:36:05 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'David S. Miller'" <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	'Ivo van Doorn' <IvDoorn@gmail.com>,
-	'Gertjan van Wingerde' <gwingerde@gmail.com>,
-	'Helmut Schaa' <helmut.schaa@googlemail.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH 3/3] net: wireless: rt2x00: Staticize
- rt2x00queue_pause_queue_nocheck()
-Date: Tue, 06 Aug 2013 17:36:03 +0900
-Message-id: <000801ce927f$fc7549d0$f55fdd70$@samsung.com> (sfid-20130806_103615_186180_D4FEB79E)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Fri, 23 Aug 2013 11:00:26 -0400
+Date: Fri, 23 Aug 2013 10:52:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: netdev@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next 08/10] net: libertas: inherit addr_assign_type
+ along with dev_addr
+Message-ID: <20130823145255.GB15114@tuxdriver.com> (sfid-20130823_170034_509464_B2EE3ADA)
+References: <1377250513-3662-1-git-send-email-bjorn@mork.no>
+ <1377250513-3662-9-git-send-email-bjorn@mork.no>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1377250513-3662-9-git-send-email-bjorn@mork.no>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2x00queue_pause_queue_nocheck()is used only in this file.
-Fix the following sparse warning:
+On Fri, Aug 23, 2013 at 11:35:11AM +0200, Bjørn Mork wrote:
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Signed-off-by: Bjørn Mork <bjorn@mork.no>
+> ---
+>  drivers/net/wireless/libertas/mesh.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
+> index efae07e..6fef746 100644
+> --- a/drivers/net/wireless/libertas/mesh.c
+> +++ b/drivers/net/wireless/libertas/mesh.c
+> @@ -1017,7 +1017,7 @@ static int lbs_add_mesh(struct lbs_private *priv)
+>  
+>  	mesh_dev->netdev_ops = &mesh_netdev_ops;
+>  	mesh_dev->ethtool_ops = &lbs_ethtool_ops;
+> -	memcpy(mesh_dev->dev_addr, priv->dev->dev_addr, ETH_ALEN);
+> +	eth_hw_addr_inherit(mesh_dev, priv->dev);
+>  
+>  	SET_NETDEV_DEV(priv->mesh_dev, priv->dev->dev.parent);
+>  
+> -- 
+> 1.7.10.4
+> 
+> 
+Acked-by: "John W. Linville" <linville@tuxdriver.com>
 
-drivers/net/wireless/rt2x00/rt2x00queue.c:939:6: warning: symbol 'rt2x00queue_pause_queue_nocheck' was not declared. Should it be
-static?
-
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index aa95c6c..6c8a33b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -936,7 +936,7 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
- 	spin_unlock_irqrestore(&queue->index_lock, irqflags);
- }
- 
--void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
-+static void rt2x00queue_pause_queue_nocheck(struct data_queue *queue)
- {
- 	switch (queue->qid) {
- 	case QID_AC_VO:
 -- 
-1.7.10.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
