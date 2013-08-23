@@ -1,126 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1038 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751498Ab3HUIws (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 04:52:48 -0400
-Message-ID: <52147FD2.9020401@broadcom.com> (sfid-20130821_105254_440664_58D1E9EF)
-Date: Wed, 21 Aug 2013 10:52:34 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Josh Boyer" <jwboyer@fedoraproject.org>
-cc: "Felix Fietkau" <nbd@openwrt.org>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	"Tom Gundersen" <teg@jklm.no>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
-References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
- <20130820000336.GA15548@kroah.com>
- <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
- <20130820002822.GA18023@kroah.com> <5212F6E8.3090107@openwrt.org>
- <52132589.5000306@broadcom.com>
- <CA+5PVA7gvnfX2vnpxEGCgaAYXRvA=SME4SYZpTESqLsMkgSu=g@mail.gmail.com>
-In-Reply-To: <CA+5PVA7gvnfX2vnpxEGCgaAYXRvA=SME4SYZpTESqLsMkgSu=g@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:39211 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754866Ab3HWOB5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Aug 2013 10:01:57 -0400
+Message-ID: <1377266513.14021.37.camel@jlt4.sipsolutions.net> (sfid-20130823_160200_256654_BB9E536A)
+Subject: Re: [PATCH] mac80211: implement STA CSA for drivers using channel
+ contexts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 23 Aug 2013 16:01:53 +0200
+In-Reply-To: <CA+XVXfeVtaxqAgWQgSsiMw8uZ6uDmEwba+T8M9-YrUNBwxvshA@mail.gmail.com> (sfid-20130816_220955_402953_03B9C8BB)
+References: <1376395438-24788-1-git-send-email-arik@wizery.com>
+	 <1376568235.14084.12.camel@jlt4.sipsolutions.net>
+	 <CA+XVXffREZsiLU_Gs646-akyW9XNcZEmQnQGsp4ihT92hP7LOw@mail.gmail.com>
+	 <1376650616.15299.16.camel@jlt4.sipsolutions.net>
+	 <CA+XVXfeVtaxqAgWQgSsiMw8uZ6uDmEwba+T8M9-YrUNBwxvshA@mail.gmail.com>
+	 (sfid-20130816_220955_402953_03B9C8BB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/21/2013 02:11 AM, Josh Boyer wrote:
-> On Tue, Aug 20, 2013 at 4:15 AM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 08/20/2013 06:56 AM, Felix Fietkau wrote:
->>>
->>> On 2013-08-20 2:28 AM, Greg Kroah-Hartman wrote:
->>>>
->>>> On Tue, Aug 20, 2013 at 08:26:11AM +0800, Tom Gundersen wrote:
->>>>>
->>>>> On Tue, Aug 20, 2013 at 8:03 AM, Greg Kroah-Hartman
->>>>> <gregkh@linuxfoundation.org> wrote:
->>>>>>
->>>>>> On Tue, Aug 20, 2013 at 07:59:47AM +0800, Tom Gundersen wrote:
->>>>>>>
->>>>>>> Hi guys,
->>>>>>>
->>>>>>> Starting with 3.10.6 (and still present in .7) I get an oops on
->>>>>>> connecting to the network.
->>>>>>>
->>>>>>> The attached picture shows the oops. In case it does not reach the ML,
->>>>>>> the top of the call trace reads:
->>>>>>>
->>>>>>> brcms_c_compute_rtscts_dur
->>>>>>> brcms_c_ampdu_finalize
->>>>>>> ampdu_finalize
->>>>>>> dma_txfast
->>>>>>> brcms_c_txfifo
->>>>>>> brcms_c_sendpkt_mac80211
->>>>>>> brcms_ops_tx
->>>>>>> __ieee80211_tx
->>>>>>>
->>>>>>> I bisected the problem and the first bad commit is
->>>>>>>
->>>>>>> commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
->>>>>>> Author: Felix Fietkau <nbd@openwrt.org>
->>>>>>> Date:   Fri Jun 28 21:04:35 2013 +0200
->>>>>>>
->>>>>>>       mac80211/minstrel_ht: fix cck rate sampling
->>>>>>>
->>>>>>>       commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5 upstream.
->>>>>>>
->>>>>>> Reverting it on top of .7 fixes the problem.
->>>>>>>
->>>>>>> I had the same (I suppose) problem on mainline some time ago, but I
->>>>>>> have not bisected it, verified that the problem still occurs there, or
->>>>>>> checked if reverting the upstream patch fixes it. I'd be happy to do
->>>>>>> that if it would help though.
->>>>>>>
->>>>>>> Let me know if you need any more information.
->>>>>>
->>>>>>
->>>>>> Do you have this same problem with 3.11-rc6 as well?
->>>>>
->>>>>
->>>>> Yes, I just confirmed. I also confirmed that reverting the mainline
->>>>> commit on top of -rc6 fixes the problem.
->>>>
->>>>
->>>> Great, thanks.
->>>>
->>>> Felix and Johannes, any chance we can get this reverted in Linus tree
->>>> soon, and push that revert back to the 3.10 stable tree as well?
->>>
->>> I'd like to avoid a revert, since that will simply replace one set of
->>> issues with another. Let's limit the use of the feature that brcmsmac
->>> can't handle to drivers that are known to work with it. Tom, Please
->>> test this patch to see if it fixes your issue.
->>
->>
->> Hi Felix,
->>
->> I have been diving into root causing why brcmsmac can not handle cck
->> fallback rates, because it should. Maybe it is better to flag no cck support
->> and only change brcmsmac.
->
-> We have a number of users hitting this in Fedora 18 and 19 now.  We're
-> tracking it with https://bugzilla.redhat.com/show_bug.cgi?id=998080
-> and I'm sure we can find people to test easily.
+On Fri, 2013-08-16 at 23:09 +0300, Arik Nemtsov wrote:
 
-There is already another one (possibly) dealing with the same issue:
+> > Well, it can't. If you look carefully then the old chan_switch op
+> > behaviour is to let the driver switch, not switch in software
+> > afterwards.
+> 
+> The right thing for chan_switch drivers would be not to call hw_config()..
 
-https://bugzilla.redhat.com/show_bug.cgi?id=989269
+chan_switch? or chanctx?
 
-One of them should probably be flagged as duplicate.
+> > Yeah but it's (currently) meant for interfaces controlling the CSA (i.e.
+> > AP only right now) ... so I really think we need to make this
+> > controllable, I think that when we want to implement it for Intel MVM
+> > firmware then we'll let the firmware control the switch timing, etc.
+> > None of this can even be done today or with your patch.
+> 
+> The TI driver implements the chan_switch op and uses channel contexts.
 
-> If you have a patch disabling cck in brcmsmac, I'd be happy to build a
-> kernel for people.  If that's going to be some time coming, perhaps
-> it's better to grab Felix's patch on a temporary basis?
+Huh, ok, that was a combination I didn't think was going to exist, since
+the chanswitch API doesn't really tell you what channel context etc.
+OTOH, it does give you the vif so you have the chanctx implicitly.
 
-I think it is better to grab Felix's patch because as we both observed 
-there is stuff missing in brcmsmac to deal with CCK rates and A-MPDU 
-packet aggregation.
+> If I catch your drift you would rather these kind of drivers (which
+> include MVM) use a new API exposed by mac80211 to complete the channel
+> switch. This API would basically be ieee80211_vif_change_channel(). Do
+> we still need to touch the cfg80211 chandef definition in ifmgd?
 
-Regards,
-Arend
+That's what I was thinking, yes.
+
+> The above is maybe cleaner, but it's functionally equivalent to the
+> solution today - the low level driver decides when the channel switch
+> is completed, and ieee80211_chswitch_work() is called, which does the
+> right thing for all cases.
+
+Right ... I guess that works.
+
+> Note that with the above, the channel_contexts + software chan-switch
+> drivers will still need the kind of code that I wrote. So it would
+> just lead to replicated code. Or maybe you meant something else?
+
+We have too many possibilities I guess ... I think for MVM I want the
+disconnect, not the channel context change in software. You're taking
+that possibility away, hence my suggestion of a new hardware flag for it
+or so.
+
+> Also, where would you put csa_active = true (if at all) for a STA
+> interface? Unlike AP, the trigger here is mac80211 code. So putting it
+> there seemed appropriate.
+
+Yeah, I was really just trying to say that current chanctx drivers need
+not really expect a chanctx to change channel unless they implement CSA,
+but that currently means AP-CSA - basically what I just said above with
+taking away the possibility of doing the deauth instead.
+
+johannes
 
