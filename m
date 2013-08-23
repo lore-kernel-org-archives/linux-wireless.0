@@ -1,153 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:47277
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752297Ab3H1A3w (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:54008 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755161Ab3HWI7Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 20:29:52 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
+	Fri, 23 Aug 2013 04:59:24 -0400
+Received: by mail-lb0-f180.google.com with SMTP id a16so278323lbj.11
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:22 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 1/2] cw1200:  Don't perform SPI transfers in interrupt context
-Date: Tue, 27 Aug 2013 20:29:46 -0400
-Message-Id: <1377649787-2817-1-git-send-email-pizza@shaftnet.org> (sfid-20130828_023000_285477_B504F4D0)
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v2 02/16] wcn36xx: add debug.c
+Date: Fri, 23 Aug 2013 10:58:05 +0200
+Message-Id: <1377248299-21007-3-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_105928_962628_C09945C4)
+In-Reply-To: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we get an interrupt from the hardware, the first thing the driver does
-is tell the device to mask off the interrupt line.  Unfortunately this
-involves a SPI transaction in interrupt context.  Some (most?) SPI
-controllers perform the transfer asynchronously and try to sleep.
-This is bad, and triggers a BUG().
+adding debug.c file
 
-So, work around this by using adding a hwbus hook for the cw1200 driver 
-core to call.  The cw1200_spi driver translates this into 
-irq_disable()/irq_enable() calls instead, which can safely be called in 
-interrupt context.
-
-Apparently the platforms I used to develop the cw1200_spi driver used 
-synchronous spi_sync() implementations, which is why this didn't surface 
-until now.
-
-Many thanks to Dave Sizeburns for the inital bug report and his services 
-as a tester.
-
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
 ---
-Please consider this for 3.11-rc; without this patch many SPI users
-will immediately trigger a BUG().
+ drivers/net/wireless/ath/wcn36xx/debug.c | 166 +++++++++++++++++++++++++++++++
+ 1 file changed, 166 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.c
 
- drivers/net/wireless/cw1200/cw1200_spi.c | 19 ++++++++++++++++---
- drivers/net/wireless/cw1200/fwio.c       |  2 +-
- drivers/net/wireless/cw1200/hwbus.h      |  1 +
- drivers/net/wireless/cw1200/hwio.c       | 15 +++++++++++++++
- 4 files changed, 33 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
-index d063760..c31580b 100644
---- a/drivers/net/wireless/cw1200/cw1200_spi.c
-+++ b/drivers/net/wireless/cw1200/cw1200_spi.c
-@@ -41,6 +41,7 @@ struct hwbus_priv {
- 	const struct cw1200_platform_data_spi *pdata;
- 	spinlock_t		lock; /* Serialize all bus operations */
- 	int claimed;
-+	int irq_disabled;
- };
- 
- #define SDIO_TO_SPI_ADDR(addr) ((addr & 0x1f)>>2)
-@@ -230,6 +231,8 @@ static irqreturn_t cw1200_spi_irq_handler(int irq, void *dev_id)
- 	struct hwbus_priv *self = dev_id;
- 
- 	if (self->core) {
-+		disable_irq_nosync(self->func->irq);
-+		self->irq_disabled = 1;
- 		cw1200_irq_handler(self->core);
- 		return IRQ_HANDLED;
- 	} else {
-@@ -263,13 +266,22 @@ exit:
- 
- static int cw1200_spi_irq_unsubscribe(struct hwbus_priv *self)
- {
--	int ret = 0;
--
- 	pr_debug("SW IRQ unsubscribe\n");
- 	disable_irq_wake(self->func->irq);
- 	free_irq(self->func->irq, self);
- 
--	return ret;
+diff --git a/drivers/net/wireless/ath/wcn36xx/debug.c b/drivers/net/wireless/ath/wcn36xx/debug.c
+new file mode 100644
+index 0000000..91508f3
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/debug.c
+@@ -0,0 +1,166 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
++#include <linux/debugfs.h>
++#include <linux/uaccess.h>
++#include "wcn36xx.h"
++#include "debug.h"
++#include "pmc.h"
++
++#ifdef CONFIG_WCN36XX_DEBUGFS
++
++static int wcn36xx_debugfs_open(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++
 +	return 0;
 +}
 +
-+static int cw1200_spi_irq_enable(struct hwbus_priv *self, int enable)
++static ssize_t read_file_bool_bmps(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
 +{
-+	/* Disables are handled by the interrupt handler */
-+	if (enable && self->irq_disabled) {
-+		enable_irq(self->func->irq);
-+		self->irq_disabled = 0;
++	struct wcn36xx *wcn = file->private_data;
++	char buf[3];
++
++	if (wcn->pw_state == WCN36XX_BMPS)
++		buf[0] = '1';
++	else
++		buf[0] = '0';
++
++	buf[1] = '\n';
++	buf[2] = 0x00;
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, 2);
++}
++
++static ssize_t write_file_bool_bmps(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wcn36xx *wcn = file->private_data;
++	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
++						 struct ieee80211_vif,
++						 drv_priv);
++	char buf[32];
++	int buf_size;
++
++	buf_size = min(count, (sizeof(buf)-1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	switch (buf[0]) {
++	case 'y':
++	case 'Y':
++	case '1':
++		wcn36xx_enable_keep_alive_null_packet(wcn);
++		wcn36xx_pmc_enter_bmps_state(wcn, vif->bss_conf.sync_tsf);
++		break;
++	case 'n':
++	case 'N':
++	case '0':
++		wcn36xx_pmc_exit_bmps_state(wcn);
++		break;
 +	}
 +
-+	return 0;
- }
- 
- static int cw1200_spi_off(const struct cw1200_platform_data_spi *pdata)
-@@ -349,6 +361,7 @@ static struct hwbus_ops cw1200_spi_hwbus_ops = {
- 	.unlock			= cw1200_spi_unlock,
- 	.align_size		= cw1200_spi_align_size,
- 	.power_mgmt		= cw1200_spi_pm,
-+	.irq_enable             = cw1200_spi_irq_enable,
- };
- 
- /* Probe Function to be called by SPI stack when device is discovered */
-diff --git a/drivers/net/wireless/cw1200/fwio.c b/drivers/net/wireless/cw1200/fwio.c
-index acdff0f..0b2061b 100644
---- a/drivers/net/wireless/cw1200/fwio.c
-+++ b/drivers/net/wireless/cw1200/fwio.c
-@@ -485,7 +485,7 @@ int cw1200_load_firmware(struct cw1200_common *priv)
- 
- 	/* Enable interrupt signalling */
- 	priv->hwbus_ops->lock(priv->hwbus_priv);
--	ret = __cw1200_irq_enable(priv, 1);
-+	ret = __cw1200_irq_enable(priv, 2);
- 	priv->hwbus_ops->unlock(priv->hwbus_priv);
- 	if (ret < 0)
- 		goto unsubscribe;
-diff --git a/drivers/net/wireless/cw1200/hwbus.h b/drivers/net/wireless/cw1200/hwbus.h
-index 8b2fc83..51dfb3a 100644
---- a/drivers/net/wireless/cw1200/hwbus.h
-+++ b/drivers/net/wireless/cw1200/hwbus.h
-@@ -28,6 +28,7 @@ struct hwbus_ops {
- 	void (*unlock)(struct hwbus_priv *self);
- 	size_t (*align_size)(struct hwbus_priv *self, size_t size);
- 	int (*power_mgmt)(struct hwbus_priv *self, bool suspend);
-+	int (*irq_enable)(struct hwbus_priv *self, int enable);
- };
- 
- #endif /* CW1200_HWBUS_H */
-diff --git a/drivers/net/wireless/cw1200/hwio.c b/drivers/net/wireless/cw1200/hwio.c
-index ff230b7..41bd761 100644
---- a/drivers/net/wireless/cw1200/hwio.c
-+++ b/drivers/net/wireless/cw1200/hwio.c
-@@ -273,6 +273,21 @@ int __cw1200_irq_enable(struct cw1200_common *priv, int enable)
- 	u16 val16;
- 	int ret;
- 
-+	/* We need to do this hack because the SPI layer can sleep on I/O
-+	   and the general path involves I/O to the device in interrupt
-+	   context.
++	return count;
++}
 +
-+	   However, the initial enable call needs to go to the hardware.
++static const struct file_operations fops_wcn36xx_bmps = {
++	.open  =       wcn36xx_debugfs_open,
++	.read  =       read_file_bool_bmps,
++	.write =       write_file_bool_bmps,
++};
 +
-+	   We don't worry about shutdown because we do a full reset which
-+	   clears the interrupt enabled bits.
-+	*/
-+	if (priv->hwbus_ops->irq_enable) {
-+		ret = priv->hwbus_ops->irq_enable(priv->hwbus_priv, enable);
-+		if (ret || enable < 2)
-+			return ret;
++static ssize_t write_file_dump(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wcn36xx *wcn = file->private_data;
++	char buf[255], *tmp;
++	int buf_size;
++	u32 arg[WCN36xx_MAX_DUMP_ARGS];
++	int i;
++
++	memset(buf, 0, sizeof(buf));
++	memset(arg, 0, sizeof(arg));
++
++	buf_size = min(count, (sizeof(buf) - 1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	tmp = buf;
++
++	for (i = 0; i < WCN36xx_MAX_DUMP_ARGS; i++) {
++		char *begin;
++		begin = strsep(&tmp, " ");
++		if (begin == NULL)
++			break;
++
++		if (kstrtoul(begin, 0, (unsigned long *)(arg + i)) != 0)
++			break;
 +	}
 +
- 	if (HIF_8601_SILICON == priv->hw_type) {
- 		ret = __cw1200_reg_read_32(priv, ST90TDS_CONFIG_REG_ID, &val32);
- 		if (ret < 0) {
++	wcn36xx_info("DUMP args is %d %d %d %d %d\n", arg[0], arg[1], arg[2],
++		     arg[3], arg[4]);
++	wcn36xx_smd_dump_cmd_req(wcn, arg[0], arg[1], arg[2], arg[3], arg[4]);
++
++	return count;
++}
++
++static const struct file_operations fops_wcn36xx_dump = {
++	.open  =       wcn36xx_debugfs_open,
++	.write =       write_file_dump,
++};
++
++#define ADD_FILE(name, mode, fop, priv_data)		\
++	do {							\
++		struct dentry *d;				\
++		d = debugfs_create_file(__stringify(name),	\
++					mode, dfs->rootdir,	\
++					priv_data, fop);	\
++		dfs->file_##name.dentry = d;			\
++		if (IS_ERR(d)) {				\
++			wcn36xx_warn("Create the debugfs entry failed");\
++			dfs->file_##name.dentry = NULL;		\
++		}						\
++	} while (0)
++
++
++void wcn36xx_debugfs_init(struct wcn36xx *wcn)
++{
++	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
++
++	dfs->rootdir = debugfs_create_dir(KBUILD_MODNAME,
++					  wcn->hw->wiphy->debugfsdir);
++	if (IS_ERR(dfs->rootdir)) {
++		wcn36xx_warn("Create the debugfs failed\n");
++		dfs->rootdir = NULL;
++	}
++
++	ADD_FILE(bmps_switcher, S_IRUSR | S_IWUSR,
++		 &fops_wcn36xx_bmps, wcn);
++	ADD_FILE(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
++}
++
++void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
++{
++	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
++	debugfs_remove_recursive(dfs->rootdir);
++}
++
++#endif /* CONFIG_WCN36XX_DEBUGFS */
 -- 
-1.8.3.1
+1.8.2.2
 
