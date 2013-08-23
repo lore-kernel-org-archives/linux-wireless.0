@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:58313 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231Ab3HMA0E (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34792 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754132Ab3HWPAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 20:26:04 -0400
-Date: Mon, 12 Aug 2013 17:26:03 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] staging: vt6656: rxtx.h always pack
- BEACON_BUFFER/TX_BUFFER
-Message-ID: <20130813002603.GB32683@kroah.com> (sfid-20130813_022611_965028_15835DF2)
-References: <1375733094.7004.23.camel@canaries64>
- <20130812215959.GA1473@kroah.com>
- <1376348835.12399.15.camel@canaries32-MCP7A>
- <20130812230936.GA31302@kroah.com>
- <1376350516.13046.6.camel@canaries32-MCP7A>
+	Fri, 23 Aug 2013 11:00:21 -0400
+Date: Fri, 23 Aug 2013 10:53:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next 06/10] net: airo: inherit addr_assign_type along
+ with dev_addr
+Message-ID: <20130823145306.GC15114@tuxdriver.com> (sfid-20130823_170029_632534_05A50A37)
+References: <1377250513-3662-1-git-send-email-bjorn@mork.no>
+ <1377250513-3662-7-git-send-email-bjorn@mork.no>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1376350516.13046.6.camel@canaries32-MCP7A>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1377250513-3662-7-git-send-email-bjorn@mork.no>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 13, 2013 at 12:35:16AM +0100, Malcolm Priestley wrote:
-> On Mon, 2013-08-12 at 16:09 -0700, Greg KH wrote:
-> > On Tue, Aug 13, 2013 at 12:07:15AM +0100, Malcolm Priestley wrote:
-> > > On Mon, 2013-08-12 at 14:59 -0700, Greg KH wrote:
-> > > > On Mon, Aug 05, 2013 at 09:04:54PM +0100, Malcolm Priestley wrote:
-> > > > > All structure members of BEACON_BUFFER/TX_BUFFER should be packed.
-> > > > 
-> > > > Why?
-> > > 
-> > > Only the first 4 members of these structures are live.
-> > > 
-> > > The forth member is referenced at run-time by packed structures.
-> > > typedef struct tagSTxBufHead
-> > > typedef struct tagSTxShortBufHead
-> > > in desc.h
-> > > 
-> > > If these structures are not packed the alignment of these members
-> > > will be wrong.
-> > 
-> > Then say all of this in the patch please :)
-> > 
-> > > > 
-> > > > What happens if they are not?
-> > > The driver does not work.
-> > 
-> > How is it working today without this change?
-> Well for *me* it works.
+On Fri, Aug 23, 2013 at 11:35:09AM +0200, Bjørn Mork wrote:
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Signed-off-by: Bjørn Mork <bjorn@mork.no>
+> ---
+>  drivers/net/wireless/airo.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> It appears the structure is packed anyway.
-> 
-> But is this guaranteed?
-> 
-> Anyway, do you want me to resend the patch.
-> 
+> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+> index d0adbaf..7fe1964 100644
+> --- a/drivers/net/wireless/airo.c
+> +++ b/drivers/net/wireless/airo.c
+> @@ -2693,7 +2693,7 @@ static struct net_device *init_wifidev(struct airo_info *ai,
+>  	dev->base_addr = ethdev->base_addr;
+>  	dev->wireless_data = ethdev->wireless_data;
+>  	SET_NETDEV_DEV(dev, ethdev->dev.parent);
+> -	memcpy(dev->dev_addr, ethdev->dev_addr, dev->addr_len);
+> +	eth_hw_addr_inherit(dev, ethdev);
+>  	err = register_netdev(dev);
+>  	if (err<0) {
+>  		free_netdev(dev);
+> -- 
+> 1.7.10.4
 
-Yes, please do, with this added information, and all other patches from
-you that I did not apply, due to me not accepting this one.
+Acked-by: "John W. Linville" <linville@tuxdriver.com>
 
-thanks,
-
-greg k-h
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
