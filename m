@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:41360 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941Ab3H3CJ2 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38257 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754132Ab3HWIqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Aug 2013 22:09:28 -0400
-Date: Thu, 29 Aug 2013 22:09:26 -0400 (EDT)
-Message-Id: <20130829.220926.226210132086755040.davem@davemloft.net> (sfid-20130830_040948_391858_3E239DFF)
-To: joe@perches.com
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	e1000-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH net-next] drivers:net: Convert
- dma_alloc_coherent(...__GFP_ZERO) to dma_zalloc_coherent
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1377582323.2658.10.camel@joe-AO722>
-References: <dbbfc5e66dba7d2b63549d218407fb0c4031f2ed.1363367992.git.joe@perches.com>
-	<1377582323.2658.10.camel@joe-AO722>
+	Fri, 23 Aug 2013 04:46:14 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1VCn0X-0005J1-KX
+	for linux-wireless@vger.kernel.org; Fri, 23 Aug 2013 10:46:13 +0200
+Message-ID: <1377247571.14021.12.camel@jlt4.sipsolutions.net> (sfid-20130823_104619_089963_D4B4BCD5)
+Subject: Re: [RFC] mac80211: add ieee80211_iterate_active_interfaces_rtnl()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 23 Aug 2013 10:46:11 +0200
+In-Reply-To: <1377247432-22145-1-git-send-email-johannes@sipsolutions.net> (sfid-20130823_104406_776950_214C4DE3)
+References: <1377247432-22145-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130823_104406_776950_214C4DE3)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
-Date: Mon, 26 Aug 2013 22:45:23 -0700
+On Fri, 2013-08-23 at 10:43 +0200, Johannes Berg wrote:
 
-> __GFP_ZERO is an uncommon flag and perhaps is better
-> not used.  static inline dma_zalloc_coherent exists
-> so convert the uses of dma_alloc_coherent with __GFP_ZERO
-> to the more common kernel style with zalloc.
-> 
-> Remove memset from the static inline dma_zalloc_coherent
-> and add just one use of __GFP_ZERO instead.
-> 
-> Trivially reduces the size of the existing uses of
-> dma_zalloc_coherent.
-> 
-> Realign arguments as appropriate.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+> Change-Id: I9b578c7dacefbb818b4113da12770aec9d0b06c4
 
-Applied, thanks a lot Joe.
+will remove ...
+
+> +void __iterate_active_interfaces(struct ieee80211_local *local,
+> +				 u32 iter_flags,
+> +				 void (*iterator)(void *data, u8 *mac,
+> +						  struct ieee80211_vif *vif),
+> +				 void *data)
+
+should be static.
+
+johannes
+
