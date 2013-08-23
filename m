@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:51508 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466Ab3HUHzL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 03:55:11 -0400
-Received: by mail-vc0-f180.google.com with SMTP id gf11so56108vcb.25
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Aug 2013 00:55:10 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:49342 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753699Ab3HWJJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Aug 2013 05:09:55 -0400
+Date: Fri, 23 Aug 2013 11:08:22 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: ilw@linux.intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: iwlwifi micorcode errors and hardware resets problems
+Message-ID: <20130823090821.GB2632@redhat.com> (sfid-20130823_110958_788937_7994E2DF)
 MIME-Version: 1.0
-In-Reply-To: <1377021890.2016.55.camel@joe-AO722>
-References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
-	<1377020479-16935-14-git-send-email-k.eugene.e@gmail.com>
-	<1377021890.2016.55.camel@joe-AO722>
-Date: Wed, 21 Aug 2013 09:55:10 +0200
-Message-ID: <CAFSJ42YMogHrFBzn1mVQf86GV8kzZ0iVPXWaHMUsU-CAA6AwWw@mail.gmail.com> (sfid-20130821_095516_636348_87FF8837)
-Subject: Re: [PATCH 13/16] wcn36xx: Add wcn36xx.h
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+We have those bug reports on RH bugzilla, and various other iwlwifi
+problems, but those have some common scenario:
 
-Thank you very much for your comments.
+https://bugzilla.redhat.com/show_bug.cgi?id=979873
+https://bugzilla.redhat.com/show_bug.cgi?id=990536
+https://bugzilla.redhat.com/show_bug.cgi?id=994322
+https://bugzilla.redhat.com/show_bug.cgi?id=996502
+https://bugzilla.redhat.com/show_bug.cgi?id=969610
+https://bugzilla.redhat.com/show_bug.cgi?id=999053
 
-Please find my comments bellow:
+First there is Microcode error or other firmware problem, what make we
+do iwl_trans_stop_device() which set trans->state to IWL_TRANS_NO_FW.
+If mac80211 has some pending works/timers i.e. ieee80211_sta_work(),
+it calls drv and we trigger on of those warnings
 
->> Adding wcn36xx.h
-> []
->> +#define DRIVER_PREFIX "wcn36xx: "
-> []
->
-> I think you should use pr_fmt and/or netdev_<level>
+        WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
+                  "%s bad state = %d", __func__, trans->state);
 
-Thanx, will add pr_fmt in the next round.
+on some trans operation.
 
->> +#define wcn36xx_error(fmt, arg...) do {                      \
->> +     pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg); \
->> +     __WARN();                                       \
->> +} while (0)
->
-> What value is there in this __WARN?
+I think this can be fixed by first do quiesce on mac80211 (for example
+by ieee80211_sta_quiesce() procedure, which I removed but can be added
+back) and then do iwlagn_prepare_restart() & ieee80211_restart_hw().
 
-This warn is there just to scream louder every time when error happens:)
+Though I'm not sure if it's worth to do this since those warnings are
+indicator for malfunctioning iwlwifi firmware (or driver not correctly
+communicating with firmware), which will be unnoticed if not reported
+automatically by tool like ABRT. But perhaps we could add WARN_ONCE on
+Microcode error condition ?
 
-> Please use _err rather than _error
+Additionally I wonder if there is good way to debug those microcode
+problems (I mean root of the problem), since most of them happen at
+random after hours or days uptime?
 
-Thanx, will fix in the next patch set.
+Thoughts?
 
->> +#define wcn36xx_warn(fmt, arg...)                            \
->> +     pr_warn(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
->> +
->> +#define wcn36xx_info(fmt, arg...)            \
->> +     pr_info(DRIVER_PREFIX fmt "\n", ##arg)
->> +
->> +#define wcn36xx_dbg(mask, fmt, arg...) do {                  \
->> +     if (debug_mask & mask)                                  \
->> +             pr_debug(DRIVER_PREFIX fmt "\n", ##arg);        \
->> +} while (0)
->> +
->> +#define wcn36xx_dbg_dump(mask, prefix_str, buf, len) do {    \
->> +     if (debug_mask & mask)                                  \
->> +             print_hex_dump(KERN_DEBUG, prefix_str,          \
->> +                            DUMP_PREFIX_OFFSET, 32, 1,       \
->> +                            buf, len, false);                \
->> +} while (0)
->> +
->
-> Please move the "\n" to the uses instead of the macro.
-> This would be consistent with all the other ath macros.
+Stanislaw
 
-Thanx, will fix in the next patch set.
-
--- 
-Best regards,
-Eugene
