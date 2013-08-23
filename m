@@ -1,90 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:62733 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344Ab3HCKf4 (ORCPT
+Received: from mail-vb0-f48.google.com ([209.85.212.48]:62614 "EHLO
+	mail-vb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753526Ab3HWJm5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Aug 2013 06:35:56 -0400
-Received: by mail-pd0-f177.google.com with SMTP id u10so1512947pdi.8
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Aug 2013 03:35:53 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH] mac80211: allow lowest basic rate for unicast management for mesh
-Date: Sat,  3 Aug 2013 03:35:43 -0700
-Message-Id: <1375526143-23534-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130803_123611_626134_83557C9E)
+	Fri, 23 Aug 2013 05:42:57 -0400
+Received: by mail-vb0-f48.google.com with SMTP id w16so270806vbf.35
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 02:42:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1377249774.14021.15.camel@jlt4.sipsolutions.net>
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+	<1377248299-21007-2-git-send-email-k.eugene.e@gmail.com>
+	<1377249774.14021.15.camel@jlt4.sipsolutions.net>
+Date: Fri, 23 Aug 2013 11:42:56 +0200
+Message-ID: <CAFSJ42YsC2qO1iqocfOujZ5TUkKKAQMCiwLxjGZKZW7xy=J=pA@mail.gmail.com> (sfid-20130823_114300_937764_45C47A06)
+Subject: Re: [PATCH v2 01/16] wcn36xx: Add main.c
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow lowest basic rate to be used for unicast management frame in
-mesh. Otherwise, the lowest supported rate is used for unicast
-management frame, such as 1Mbps for 2.4GHz and 6Mbps for 5GHz. Rename
-the rc_send_low_broadcast to re_send_low_basicrate since now it is
-also applied to unicast management frame in mesh.
+>> +static const struct ieee80211_iface_limit if_limits[] = {
+>> +     { .max = 2, .types = BIT(NL80211_IFTYPE_STATION) },
+>> +     { .max = 1, .types = BIT(NL80211_IFTYPE_AP) },
+>> +};
+>> +
+>> +static const struct ieee80211_iface_combination if_comb = {
+>> +     .limits = if_limits,
+>> +     .n_limits = ARRAY_SIZE(if_limits),
+>> +     .max_interfaces = 2,
+>> +     .num_different_channels = 1,
+>> +};
+>
+>> +static int wcn36xx_add_interface(struct ieee80211_hw *hw,
+>> +                              struct ieee80211_vif *vif)
+>> +{
+>> +     struct wcn36xx *wcn = hw->priv;
+>> +
+>> +     wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d\n",
+>> +                 vif, vif->type);
+>> +
+>> +     wcn->current_vif = (struct wcn36xx_vif *)vif->drv_priv;
+>
+> If you actually support two interfaces (and that looks more likely now)
+> I don't think this "current_vif" makes any sense at all, it'll be
+> randomly pointing to one or the other depending on which one was added
+> last.
+>
+>> +static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>> +                        struct ieee80211_sta *sta)
+>> +{
+>> +     struct wcn36xx *wcn = hw->priv;
+>> +
+>> +     wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
+>> +                 vif, sta->addr);
+>> +
+>> +     wcn->sta = (struct wcn36xx_sta *)sta->drv_priv;
+>> +     wcn->aid = sta->aid;
+>
+> You support more than one interface and AP, but there's no way this code
+> can then be correct. It seems to me that you're really only supporting a
+> single client interface correctly right now.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
----
- net/mac80211/rate.c |   23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+Exactly. So far wcn36xx supports only one interface.
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index ba63ac8..4aa7bb6 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -210,7 +210,7 @@ static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
- 		!ieee80211_is_data(fc);
- }
- 
--static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
-+static void rc_send_low_basicrate(s8 *idx, u32 basic_rates,
- 				  struct ieee80211_supported_band *sband)
- {
- 	u8 i;
-@@ -263,28 +263,37 @@ static void __rate_control_send_low(struct ieee80211_hw *hw,
- }
- 
- 
--bool rate_control_send_low(struct ieee80211_sta *sta,
-+bool rate_control_send_low(struct ieee80211_sta *pubsta,
- 			   void *priv_sta,
- 			   struct ieee80211_tx_rate_control *txrc)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
- 	struct ieee80211_supported_band *sband = txrc->sband;
-+	struct sta_info *sta;
- 	int mcast_rate;
-+	bool use_basicrate = false;
- 
--	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
--		__rate_control_send_low(txrc->hw, sband, sta, info);
-+	if (!pubsta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
-+		__rate_control_send_low(txrc->hw, sband, pubsta, info);
- 
--		if (!sta && txrc->bss) {
-+		if (!pubsta && txrc->bss) {
- 			mcast_rate = txrc->bss_conf->mcast_rate[sband->band];
- 			if (mcast_rate > 0) {
- 				info->control.rates[0].idx = mcast_rate - 1;
- 				return true;
- 			}
-+			use_basicrate = true;
-+		} else {
-+			sta = container_of(pubsta, struct sta_info, sta);
-+			if (ieee80211_vif_is_mesh(&sta->sdata->vif))
-+				use_basicrate = true;
-+		}
- 
--			rc_send_low_broadcast(&info->control.rates[0].idx,
-+		if (use_basicrate)
-+			rc_send_low_basicrate(&info->control.rates[0].idx,
- 					      txrc->bss_conf->basic_rates,
- 					      sband);
--		}
-+
- 		return true;
- 	}
- 	return false;
 -- 
-1.7.9.5
-
+Best regards,
+Eugene
