@@ -1,71 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50180 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756589Ab3HZIxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 04:53:39 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/4] ath10k: make the workqueue multithreaded
-Date: Mon, 26 Aug 2013 10:53:23 +0200
-Message-ID: <1377507205-5386-3-git-send-email-michal.kazior@tieto.com> (sfid-20130826_105342_499317_4CD7F25E)
-In-Reply-To: <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
- <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:54607 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754768Ab3HWKce (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Aug 2013 06:32:34 -0400
+Received: by mail-ee0-f44.google.com with SMTP id b47so209071eek.17
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 03:32:33 -0700 (PDT)
+Message-ID: <1377253946.8002.12.camel@canaries32-MCP7A> (sfid-20130823_123253_889050_E5A2A85D)
+Subject: [PATCH] staging: vt6656: rxtx.c s_create new function to endian
+ correct uGetTxRsvTime.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Aug 2013 11:32:26 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TX work for a HTC endpoint can run for long
-periods of time, especially on slower host
-machines when under heavy load.
+We can't endian correct uGetTxRsvTime because it is called by other functions.
 
-This patch prevents one endpoint starving another
-one by allowing each endpoint worker to be
-processed in parallel.
+Create new function to vnt_rxtx_rsvtime_le16 to return little endian u16
+value.
 
-This is safe since none of ar->workqueue users
-depend on sequential execution.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c |    4 +++-
- drivers/net/wireless/ath/ath10k/core.h |    5 +++++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/staging/vt6656/rxtx.c | 33 +++++++++++++++++++++++++--------
+ 1 file changed, 25 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index b43e8ad..348a0fd 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -520,7 +520,9 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 4f36ec8..f1eec60 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -348,6 +348,13 @@ static u32 s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
+     }
+ }
  
- 	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
- 
--	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
-+	ar->workqueue = alloc_workqueue("ath10k_wq",
-+					WQ_UNBOUND | WQ_MEM_RECLAIM,
-+					ATH10K_MAX_NUM_PARALLEL_WORKERS);
- 	if (!ar->workqueue)
- 		goto err_wq;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 0469a2e..17694ec 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -40,6 +40,11 @@
- #define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
- #define ATH10K_NUM_CHANS 38
- 
-+#define ATH10K_NUM_HTC_TX_WORKERS ATH10K_HTC_EP_COUNT
-+#define ATH10K_NUM_WMI_RX_WORKERS 1
-+#define ATH10K_MAX_NUM_PARALLEL_WORKERS (ATH10K_NUM_HTC_TX_WORKERS + \
-+					 ATH10K_NUM_WMI_RX_WORKERS)
++static u16 vnt_rxtx_rsvtime_le16(struct vnt_private *priv, u8 pkt_type,
++	u32 frame_length, u16 rate, int need_ack)
++{
++	return cpu_to_le16((u16)s_uGetTxRsvTime(priv, pkt_type,
++		frame_length, rate, need_ack));
++}
 +
- /* Antenna noise floor */
- #define ATH10K_DEFAULT_NOISE_FLOOR -95
- 
+ //byFreqType: 0=>5GHZ 1=>2.4GHZ
+ static u16 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice,
+ 	u8 byRTSRsvType, u8 byPktType, u32 cbFrameLength, u16 wCurrentRate)
+@@ -882,8 +889,11 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 				byPktType, cbFrameSize, wCurrentRate);
+ 		pBuf->wRTSTxRrvTime_bb = s_uGetRTSCTSRsvTime(pDevice, 0,
+ 				byPktType, cbFrameSize, wCurrentRate);
+-                pBuf->wTxRrvTime_a = cpu_to_le16((u16) s_uGetTxRsvTime(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK));//2.4G OFDM
+-                pBuf->wTxRrvTime_b = cpu_to_le16((u16) s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate, bNeedACK));//1:CCK
++		pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice,
++			byPktType, cbFrameSize, wCurrentRate, bNeedACK);
++		pBuf->wTxRrvTime_b = vnt_rxtx_rsvtime_le16(pDevice,
++			PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate,
++				bNeedACK);
+             }
+             //Fill RTS
+             s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK, bDisCRC, psEthHeader, wCurrentRate, byFBOption);
+@@ -894,8 +904,11 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+             if (pvRrvTime) {
+ 		struct vnt_rrv_time_cts *pBuf =
+ 				(struct vnt_rrv_time_cts *)pvRrvTime;
+-                pBuf->wTxRrvTime_a = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK));//2.4G OFDM
+-                pBuf->wTxRrvTime_b = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate, bNeedACK));//1:CCK
++		pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice, byPktType,
++			cbFrameSize, wCurrentRate, bNeedACK);
++		pBuf->wTxRrvTime_b = vnt_rxtx_rsvtime_le16(pDevice,
++			PK_TYPE_11B, cbFrameSize,
++			pDevice->byTopCCKBasicRate, bNeedACK);
+ 		pBuf->wCTSTxRrvTime_ba = s_uGetRTSCTSRsvTime(pDevice, 3,
+ 				byPktType, cbFrameSize, wCurrentRate);
+             }
+@@ -912,7 +925,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+ 		pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 2,
+ 				byPktType, cbFrameSize, wCurrentRate);
+-                pBuf->wTxRrvTime = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK));//0:OFDM
++		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, byPktType,
++				cbFrameSize, wCurrentRate, bNeedACK);
+             }
+             //Fill RTS
+             s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK, bDisCRC, psEthHeader, wCurrentRate, byFBOption);
+@@ -922,7 +936,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+             if (pvRrvTime) {
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+-                pBuf->wTxRrvTime = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11A, cbFrameSize, wCurrentRate, bNeedACK)); //0:OFDM
++		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11A,
++			cbFrameSize, wCurrentRate, bNeedACK);
+             }
+         }
+     }
+@@ -935,7 +950,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+ 		pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 0,
+ 				byPktType, cbFrameSize, wCurrentRate);
+-                pBuf->wTxRrvTime = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, wCurrentRate, bNeedACK));//1:CCK
++		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B,
++				cbFrameSize, wCurrentRate, bNeedACK);
+             }
+             //Fill RTS
+             s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK, bDisCRC, psEthHeader, wCurrentRate, byFBOption);
+@@ -945,7 +961,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+             if (pvRrvTime) {
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+-                pBuf->wTxRrvTime = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, wCurrentRate, bNeedACK)); //1:CCK
++		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B,
++			cbFrameSize, wCurrentRate, bNeedACK);
+             }
+         }
+     }
 -- 
-1.7.9.5
+1.8.1.2
 
