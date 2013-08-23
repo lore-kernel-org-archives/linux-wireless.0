@@ -1,66 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:60848 "EHLO
-	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791Ab3H3UqL (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:43576 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754335Ab3HWI7f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 16:46:11 -0400
-Message-ID: <522104B1.2070004@openwrt.org> (sfid-20130830_224614_779631_CFC3E664)
-Date: Fri, 30 Aug 2013 22:46:41 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/7] ath10k: remove void pointer from struct ath10k_pci_compl
-References: <20130830122905.31164.50662.stgit@localhost6.localdomain6> <20130830123021.31164.8374.stgit@localhost6.localdomain6>
-In-Reply-To: <20130830123021.31164.8374.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 23 Aug 2013 04:59:35 -0400
+Received: by mail-lb0-f169.google.com with SMTP id u10so270615lbi.14
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:34 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v2 08/16] wcn36xx: add pmc.h
+Date: Fri, 23 Aug 2013 10:58:11 +0200
+Message-Id: <1377248299-21007-9-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_110001_655488_6CB8FB41)
+In-Reply-To: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013.08.30. 14:30 keltezéssel, Kalle Valo írta:
-> Void pointers are bad, mmkay.
-> 
-> No functional changes.
-> 
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/pci.c |   12 ++++++------
->  drivers/net/wireless/ath/ath10k/pci.h |    2 +-
->  2 files changed, 7 insertions(+), 7 deletions(-)
-> 
+Adding pmc.h
 
-<snip>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/pmc.h | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
 
-> @@ -1026,7 +1026,7 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
->  				break;
->  			}
->  
-> -			skb = (struct sk_buff *)compl->transfer_context;
-> +			skb = (struct sk_buff *)compl->skb;
-
-The cast can be removed from here as well.
-
->  			nbytes = compl->nbytes;
->  
->  			ath10k_dbg(ATH10K_DBG_PCI,
-> diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-> index c65fe1b..2e1f422 100644
-> --- a/drivers/net/wireless/ath/ath10k/pci.h
-> +++ b/drivers/net/wireless/ath/ath10k/pci.h
-> @@ -54,7 +54,7 @@ struct ath10k_pci_compl {
->  	enum ath10k_pci_compl_state state;
->  	struct ath10k_ce_pipe *ce_state;
->  	struct ath10k_pci_pipe *pipe_info;
-> -	void *transfer_context;
-> +	struct sk_buff *skb;
->  	unsigned int nbytes;
->  	unsigned int transfer_id;
->  	unsigned int flags;
-> 
-> 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
-> 
+diff --git a/drivers/net/wireless/ath/wcn36xx/pmc.h b/drivers/net/wireless/ath/wcn36xx/pmc.h
+new file mode 100644
+index 0000000..b00d425
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/pmc.h
+@@ -0,0 +1,32 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _WCN36XX_PMC_H_
++#define _WCN36XX_PMC_H_
++
++struct wcn36xx;
++
++enum wcn36xx_power_state {
++	WCN36XX_FULL_POWER,
++	WCN36XX_BMPS
++};
++
++int wcn36xx_pmc_init(struct wcn36xx *wcn);
++int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn, u64 tbtt);
++int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn);
++int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn);
++int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn);
++#endif	/* _WCN36XX_PMC_H_ */
+-- 
+1.8.2.2
 
