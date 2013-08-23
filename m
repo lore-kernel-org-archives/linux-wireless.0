@@ -1,38 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8050 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753779Ab3HBInz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 04:43:55 -0400
-Date: Fri, 2 Aug 2013 10:42:36 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: ilw@linux.intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Question about iwl_pcie_rxq_inc_wr_ptr
-Message-ID: <20130802084235.GD8566@redhat.com> (sfid-20130802_104401_808056_8047380D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51225 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754881Ab3HWWcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Aug 2013 18:32:50 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 5/5] b43: call PCIe up and down functions
+Date: Sat, 24 Aug 2013 00:32:34 +0200
+Message-Id: <1377297154-14525-5-git-send-email-hauke@hauke-m.de> (sfid-20130824_003255_401804_5BC2B9B6)
+In-Reply-To: <1377297154-14525-1-git-send-email-hauke@hauke-m.de>
+References: <1377297154-14525-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I would like to ask if below change is safe (I'm considering to do
-that change on iwlegacy):
+Tell the PCIe host core when the wifi is activated.
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 567e67a..1ebdb83 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -183,7 +183,7 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans, struct iwl_rxq *q)
- 		} else {
- 			/* Device expects a multiple of 8 */
- 			q->write_actual = (q->write & ~0x7);
--			iwl_write_direct32(trans, FH_RSCSR_CHNL0_WPTR,
-+			iwl_write32(trans, FH_RSCSR_CHNL0_WPTR,
- 				q->write_actual);
- 		}
- 	}
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/b43/main.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-This register seems to be only read by firmware, so maybe we can modify
-it without grab nic access. We are doing that on
-iwl_pcie_txq_inc_wr_ptr().
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 0e933bb..ccd24f0a 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4645,6 +4645,19 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
+ 	b43_maskset32(dev, B43_MMIO_MACCTL, ~B43_MACCTL_PSM_RUN,
+ 		      B43_MACCTL_PSM_JMP0);
+ 
++	switch (dev->dev->bus_type) {
++#ifdef CONFIG_B43_BCMA
++	case B43_BUS_BCMA:
++		bcma_core_pci_down(dev->dev->bdev->bus);
++		break;
++#endif
++#ifdef CONFIG_B43_SSB
++	case B43_BUS_SSB:
++		/* TODO */
++		break;
++#endif
++	}
++
+ 	b43_dma_free(dev);
+ 	b43_pio_free(dev);
+ 	b43_chip_exit(dev);
+@@ -4684,6 +4697,7 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+ 	case B43_BUS_BCMA:
+ 		bcma_core_pci_irq_ctl(&dev->dev->bdev->bus->drv_pci[0],
+ 				      dev->dev->bdev, true);
++		bcma_core_pci_up(dev->dev->bdev->bus);
+ 		break;
+ #endif
+ #ifdef CONFIG_B43_SSB
+-- 
+1.7.10.4
 
-Stanislaw 
