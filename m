@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:40566 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246Ab3HAC0m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Jul 2013 22:26:42 -0400
-Received: by mail-ob0-f175.google.com with SMTP id xn12so2791075obc.20
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jul 2013 19:26:41 -0700 (PDT)
-Message-ID: <51F9C75F.50502@lwfinger.net> (sfid-20130801_042645_129923_FC882954)
-Date: Wed, 31 Jul 2013 21:26:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from canardo.mork.no ([148.122.252.1]:40790 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754583Ab3HWJgL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Aug 2013 05:36:11 -0400
+From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: netdev@vger.kernel.org
+Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH net-next 06/10] net: airo: inherit addr_assign_type along with dev_addr
+Date: Fri, 23 Aug 2013 11:35:09 +0200
+Message-Id: <1377250513-3662-7-git-send-email-bjorn@mork.no> (sfid-20130823_113621_814705_79B8FD80)
+In-Reply-To: <1377250513-3662-1-git-send-email-bjorn@mork.no>
+References: <1377250513-3662-1-git-send-email-bjorn@mork.no>
 MIME-Version: 1.0
-To: Mark Schulte <schultetwin@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] rtlwifi: rtl8192cu: fix function declaration header
-References: <1375319810-20392-1-git-send-email-schultetwin@gmail.com>
-In-Reply-To: <1375319810-20392-1-git-send-email-schultetwin@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/31/2013 08:16 PM, Mark Schulte wrote:
-> Move rtl92cu_update_hal_rate_tbl declartion to hw.h to correspond with function
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Bjørn Mork <bjorn@mork.no>
+---
+ drivers/net/wireless/airo.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The spelling is "declaration"!.
-
-Larry
-
-> definition in hw.c.
-> Fixes sparse warning in hw.c warning: symbol 'rtl92cu_update_hal_rate_tbl' was
-> not declared.
->
-> Signed-off-by: Mark Schulte <schultetwin@gmail.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192cu/hw.h | 3 +++
->   drivers/net/wireless/rtlwifi/rtl8192cu/sw.h | 3 ---
->   2 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-> index 8e3ec1e..0f7812e 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-> @@ -109,5 +109,8 @@ void rtl92c_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
->   void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw,
->   			 u8 element_id, u32 cmd_len, u8 *p_cmdbuffer);
->   bool rtl92cu_phy_mac_config(struct ieee80211_hw *hw);
-> +void rtl92cu_update_hal_rate_tbl(struct ieee80211_hw *hw,
-> +				 struct ieee80211_sta *sta,
-> +				 u8 rssi_level);
->
->   #endif
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
-> index 262e1e4..a1310ab 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
-> @@ -49,8 +49,5 @@ bool rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
->   u32 rtl92cu_phy_query_rf_reg(struct ieee80211_hw *hw,
->   			    enum radio_path rfpath, u32 regaddr, u32 bitmask);
->   void rtl92cu_phy_set_bw_mode_callback(struct ieee80211_hw *hw);
-> -void rtl92cu_update_hal_rate_tbl(struct ieee80211_hw *hw,
-> -				 struct ieee80211_sta *sta,
-> -				 u8 rssi_level);
->
->   #endif
->
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index d0adbaf..7fe1964 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -2693,7 +2693,7 @@ static struct net_device *init_wifidev(struct airo_info *ai,
+ 	dev->base_addr = ethdev->base_addr;
+ 	dev->wireless_data = ethdev->wireless_data;
+ 	SET_NETDEV_DEV(dev, ethdev->dev.parent);
+-	memcpy(dev->dev_addr, ethdev->dev_addr, dev->addr_len);
++	eth_hw_addr_inherit(dev, ethdev);
+ 	err = register_netdev(dev);
+ 	if (err<0) {
+ 		free_netdev(dev);
+-- 
+1.7.10.4
 
