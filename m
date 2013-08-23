@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58515 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:39070 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407Ab3HUJ2E (ORCPT
+	with ESMTP id S1754595Ab3HWNYq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 05:28:04 -0400
+	Fri, 23 Aug 2013 09:24:46 -0400
+Message-ID: <1377264280.14021.29.camel@jlt4.sipsolutions.net> (sfid-20130823_152449_696438_6ED28364)
+Subject: Re: [PATCH] mac80211: remove IEEE80211_STA_BEACON_POLL
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luca@coelho.fi>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: move setting WIPHY_FLAG_SUPPORTS_SCHED_SCAN into drivers
-Date: Wed, 21 Aug 2013 11:27:55 +0200
-Message-Id: <1377077275-19429-1-git-send-email-johannes@sipsolutions.net> (sfid-20130821_112808_609524_25DD4221)
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Aug 2013 15:24:40 +0200
+In-Reply-To: <20130823065200.GA3835@redhat.com>
+References: <20130823065200.GA3835@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2013-08-23 at 08:52 +0200, Stanislaw Gruszka wrote:
 
-mac80211 currently sets WIPHY_FLAG_SUPPORTS_SCHED_SCAN based on whether
-the start_sched_scan operation is supported or not, but that will not
-be correct for all drivers, we're adding scheduled scan to the iwlmvm
-driver but it depends on firmware support.
+> -	if (ifmgd->flags & IEEE80211_STA_BEACON_POLL) {
+> +	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
+>  		mlme_dbg_ratelimited(sdata,
+>  				     "cancelling AP probe due to a received beacon\n");
+> -		mutex_lock(&local->mtx);
+> -		ifmgd->flags &= ~IEEE80211_STA_BEACON_POLL;
+> -		ieee80211_run_deferred_scan(local);
+> -		mutex_unlock(&local->mtx);
+> -
+> -		mutex_lock(&local->iflist_mtx);
+> -		ieee80211_recalc_ps(local, -1);
+> -		mutex_unlock(&local->iflist_mtx);
+> +		ieee80211_reset_ap_probe(sdata);
+>  	}
 
-Therefore, move setting WIPHY_FLAG_SUPPORTS_SCHED_SCAN into the drivers
-so that they can control it regardless of implementing the operation.
+This is actually a behavioural change for drivers that implement beacon
+filtering/monitoring. It means that when the driver reports beacon loss
+and we poll, we'd make a received beacon later abort the poll.
 
-This currently only affects the TI drivers since they're the only ones
-implementing scheduled scan (in a mac80211 driver.)
+That seems like a reasonable change, but you should probably note it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ti/wlcore/main.c | 3 ++-
- net/mac80211/main.c                   | 3 ---
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index d1b19c3..38995f9 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5623,7 +5623,8 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->wiphy->max_remain_on_channel_duration = 5000;
- 
- 	wl->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD |
--				WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-+				WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
-+				WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
- 
- 	/* make sure all our channels fit in the scanned_ch bitmask */
- 	BUILD_BUG_ON(ARRAY_SIZE(wl1271_channels) +
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 25eb35b..21d5d44 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -892,9 +892,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (!local->ops->remain_on_channel)
- 		local->hw.wiphy->max_remain_on_channel_duration = 5000;
- 
--	if (local->ops->sched_scan_start)
--		local->hw.wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
--
- 	/* mac80211 based drivers don't support internal TDLS setup */
- 	if (local->hw.wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS)
- 		local->hw.wiphy->flags |= WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
--- 
-1.8.4.rc2
+johannes
 
