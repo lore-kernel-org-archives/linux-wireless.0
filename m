@@ -1,31 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:52717 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280Ab3HEF2k (ORCPT
+Received: from mail-la0-f47.google.com ([209.85.215.47]:47061 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753947Ab3HWI7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Aug 2013 01:28:40 -0400
-Cc: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>,
-	Hariharan Bojan <hariharan.bojan@gmail.com>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: narain vadivelu <narain.vel@gmail.com>
-Subject: Re: Ath6kl - Information required on FCC/R&TTE regulatory testing code
-References: <CA+sSWSnSm6oEoqhX8AGCn8Y_8LvpYVO-4nadic_2_RcT3k+aNQ@mail.gmail.com>
-Date: Mon, 5 Aug 2013 08:28:32 +0300
-In-Reply-To: <CA+sSWSnSm6oEoqhX8AGCn8Y_8LvpYVO-4nadic_2_RcT3k+aNQ@mail.gmail.com>
-	(narain vadivelu's message of "Fri, 26 Jul 2013 20:27:28 +0530")
-Message-ID: <87haf4ln9b.fsf@kamboji.qca.qualcomm.com> (sfid-20130805_072845_720386_3540182B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 23 Aug 2013 04:59:45 -0400
+Received: by mail-la0-f47.google.com with SMTP id eo20so268247lab.20
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:43 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v2 14/16] wcn36xx: add Makefile
+Date: Fri, 23 Aug 2013 10:58:17 +0200
+Message-Id: <1377248299-21007-15-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_105952_341477_0D21D7C7)
+In-Reply-To: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-narain vadivelu <narain.vel@gmail.com> writes:
+Adding Makefile
 
->   We want to know, does Ath6kl Linux driver supports or has "FCC/R&TTE
-> regulatory" testing code?.
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/Makefile | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/Makefile
 
-Please contact official QCA support for factory testing related
-questions.
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/Makefile b/drivers/net/wireless/ath/wcn36xx/Makefile
+new file mode 100644
+index 0000000..3351185
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/Makefile
+@@ -0,0 +1,9 @@
++obj-$(CONFIG_WCN36XX) := wcn36xx.o
++wcn36xx-y += 	main.o \
++		dxe.o \
++		txrx.o \
++		smd.o \
++		pmc.o \
++		debug.o
++
++
 -- 
-Kalle Valo
+1.8.2.2
+
