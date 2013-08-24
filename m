@@ -1,49 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:54397 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753779Ab3HVQoO (ORCPT
+Received: from numidia.opendz.org ([98.142.220.152]:47948 "EHLO
+	numidia.opendz.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754109Ab3HXNhU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Aug 2013 12:44:14 -0400
-Received: by mail-pb0-f50.google.com with SMTP id uo5so2036175pbc.37
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Aug 2013 09:44:14 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH] mac80211: only respond to probe request with mesh ID
-Date: Thu, 22 Aug 2013 09:44:05 -0700
-Message-Id: <1377189845-4843-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130822_184418_275774_242C2E6D)
+	Sat, 24 Aug 2013 09:37:20 -0400
+From: Djalal Harouni <tixxdz@opendz.org>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Djalal Harouni <tixxdz@opendz.org>
+Subject: [PATCH v2] iwlwifi: mvm: make debugfs write() operations write up to count bytes
+Date: Sat, 24 Aug 2013 14:35:53 +0100
+Message-Id: <1377351353-18588-1-git-send-email-tixxdz@opendz.org> (sfid-20130824_153759_866417_83543693)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Some debugfs write() operations of the MVM Firmware will ignore the
+count argument, and will copy more bytes than what was specified.
+Fix this by getting the right count of bytes.
 
-Previously, the mesh STA responds to probe request from legacy STA
-but now it will respond to legacy STA only if the legacy STA has
-included the specific mesh ID or wildcard mesh ID in the probe request.
+This will honor restrictions put on the number of bytes to write and
+avoid strcmp() calls on garbage data.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Acked-by: Thomas Pedersen <thomas@cozybit.com>
-Acked-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Djalal Harouni <tixxdz@opendz.org>
+Cc: "Berg, Johannes" <johannes.berg@intel.com>
 ---
- net/mac80211/mesh.c |    3 +++
- 1 file changed, 3 insertions(+)
+Patch compile tested only.
+v2 Clean patch and use min_t() as noted by Berg Johannes
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 885a5f6..a660fb8 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -832,6 +832,9 @@ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index aac81b8..299966a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -257,7 +257,8 @@ static ssize_t iwl_dbgfs_power_down_allow_write(struct file *file,
+ 	if (!mvm->ucode_loaded)
+ 		return -EIO;
  
- 	ieee802_11_parse_elems(pos, len - baselen, false, &elems);
+-	if (copy_from_user(buf, user_buf, sizeof(buf)))
++	count = min_t(size_t, count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, count))
+ 		return -EFAULT;
  
-+	if(!elems.mesh_id)
-+		return;
-+
- 	/* 802.11-2012 10.1.4.3.2 */
- 	if ((!ether_addr_equal(mgmt->da, sdata->vif.addr) &&
- 	     !is_broadcast_ether_addr(mgmt->da)) ||
+ 	if (sscanf(buf, "%d", &allow) != 1)
+@@ -281,7 +282,8 @@ static ssize_t iwl_dbgfs_power_down_d3_allow_write(struct file *file,
+ 	char buf[8] = {};
+ 	int allow;
+ 
+-	if (copy_from_user(buf, user_buf, sizeof(buf)))
++	count = min_t(size_t, count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, count))
+ 		return -EFAULT;
+ 
+ 	if (sscanf(buf, "%d", &allow) != 1)
+@@ -371,7 +373,8 @@ static ssize_t iwl_dbgfs_pm_params_write(struct file *file,
+ 	int val;
+ 	int ret;
+ 
+-	if (copy_from_user(buf, user_buf, sizeof(buf)))
++	count = min_t(size_t, count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, count))
+ 		return -EFAULT;
+ 
+ 	if (!strncmp("keep_alive=", buf, 11)) {
+@@ -968,7 +971,8 @@ static ssize_t iwl_dbgfs_d3_sram_write(struct file *file,
+ 	char buf[8] = {};
+ 	int store;
+ 
+-	if (copy_from_user(buf, user_buf, sizeof(buf)))
++	count = min_t(size_t, count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, count))
+ 		return -EFAULT;
+ 
+ 	if (sscanf(buf, "%d", &store) != 1)
 -- 
-1.7.9.5
+1.7.11.7
 
