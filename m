@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:50863 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753445Ab3HELdk (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:42900 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754322Ab3HXMB7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Aug 2013 07:33:40 -0400
-Received: by mail-ob0-f169.google.com with SMTP id wc20so5337029obb.14
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 04:33:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375371582-31004-1-git-send-email-sylvain.roger.rieunier@gmail.com>
-References: <1375371582-31004-1-git-send-email-sylvain.roger.rieunier@gmail.com>
-Date: Mon, 5 Aug 2013 13:33:40 +0200
-Message-ID: <CAGXE3d9syXY6cZjsBs0vLi72zZAeo-xM+e0Zw2jhy+ZzdjhsOA@mail.gmail.com> (sfid-20130805_133344_124137_A5ECAA8F)
-Subject: Re: [[PATCHv2]rt2800usb: ampdu len] rt2800usb: update aggregation len
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Sylvain ROGER RIEUNIER <sylvain.roger.rieunier@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 24 Aug 2013 08:01:59 -0400
+Received: by mail-wi0-f170.google.com with SMTP id ex4so2538wid.3
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Aug 2013 05:01:58 -0700 (PDT)
+Message-ID: <1377345708.23229.16.camel@canaries32-MCP7A> (sfid-20130824_140202_645189_5CD43435)
+Subject: [PATCH 4/5] staging: vt6656: s_vGenerateTxParameter dead code
+ bDisCRC
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 24 Aug 2013 13:01:48 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 1, 2013 at 5:39 PM, Sylvain ROGER RIEUNIER
-<sylvain.roger.rieunier@gmail.com> wrote:
-> From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
->
-> I tried to read periodically TX_AGG_CNT registers on the rt2800usb driver.
-> I'had made USB synchronous and asynchronous read. But it's only reduces the
-> bandwidth.
-> Does anyone have an idea?
->
->
-> Signed-off-by: Sylvain ROGER RIEUNIER <sylvain.roger.rieunier@gmail.com>
+As result of patch
+vt6656: rxtx.c s_vFillCTSHead remove dead code bDisCRC
 
-Instead of updating the statistics from within a timer can't you just
-update them when reading the sysfs file?
-Helmut
+bDisCRC is unused.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 7b94a77..64ce7f0 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -846,7 +846,6 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ {
+ 	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
+ 	u16 wFifoCtl;
+-	int bDisCRC = false;
+ 	u8 byFBOption = AUTO_FB_NONE;
+ 
+     //DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"s_vGenerateTxParameter...\n");
+@@ -854,10 +853,6 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+     pFifoHead->wReserved = wCurrentRate;
+     wFifoCtl = pFifoHead->wFIFOCtl;
+ 
+-    if (wFifoCtl & FIFOCTL_CRCDIS) {
+-        bDisCRC = true;
+-    }
+-
+     if (wFifoCtl & FIFOCTL_AUTO_FB_0) {
+         byFBOption = AUTO_FB_0;
+     }
+-- 
+1.8.1.2
+
