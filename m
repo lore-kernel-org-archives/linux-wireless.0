@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55846 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801Ab3HTADh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 20:03:37 -0400
-Date: Mon, 19 Aug 2013 17:03:36 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Tom Gundersen <teg@jklm.no>
-Cc: stable@kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
-Message-ID: <20130820000336.GA15548@kroah.com> (sfid-20130820_020341_672634_5AFB6CAA)
-References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:54122 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756351Ab3HYIVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Aug 2013 04:21:47 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Luca Coelho <luca@coelho.fi>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Re: iwlwifi micorcode errors and hardware resets problems
+Date: Sun, 25 Aug 2013 08:21:43 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301A3EB03@HASMSX103.ger.corp.intel.com> (sfid-20130825_102156_362823_341A10F2)
+References: <20130823090821.GB2632@redhat.com>
+ <1377345177.5589.3.camel@porter.coelho.fi>
+In-Reply-To: <1377345177.5589.3.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 20, 2013 at 07:59:47AM +0800, Tom Gundersen wrote:
-> Hi guys,
-> 
-> Starting with 3.10.6 (and still present in .7) I get an oops on
-> connecting to the network.
-> 
-> The attached picture shows the oops. In case it does not reach the ML,
-> the top of the call trace reads:
-> 
-> brcms_c_compute_rtscts_dur
-> brcms_c_ampdu_finalize
-> ampdu_finalize
-> dma_txfast
-> brcms_c_txfifo
-> brcms_c_sendpkt_mac80211
-> brcms_ops_tx
-> __ieee80211_tx
-> 
-> I bisected the problem and the first bad commit is
-> 
-> commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
-> Author: Felix Fietkau <nbd@openwrt.org>
-> Date:   Fri Jun 28 21:04:35 2013 +0200
-> 
->     mac80211/minstrel_ht: fix cck rate sampling
-> 
->     commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5 upstream.
-> 
-> Reverting it on top of .7 fixes the problem.
-> 
-> I had the same (I suppose) problem on mainline some time ago, but I
-> have not bisected it, verified that the problem still occurs there, or
-> checked if reverting the upstream patch fixes it. I'd be happy to do
-> that if it would help though.
-> 
-> Let me know if you need any more information.
-
-Do you have this same problem with 3.11-rc6 as well?
-
-thanks,
-
-greg k-h
+PiBPbiBGcmksIDIwMTMtMDgtMjMgYXQgMTE6MDggKzAyMDAsIFN0YW5pc2xhdyBHcnVzemthIHdy
+b3RlOg0KPiA+IFdlIGhhdmUgdGhvc2UgYnVnIHJlcG9ydHMgb24gUkggYnVnemlsbGEsIGFuZCB2
+YXJpb3VzIG90aGVyIGl3bHdpZmkNCj4gPiBwcm9ibGVtcywgYnV0IHRob3NlIGhhdmUgc29tZSBj
+b21tb24gc2NlbmFyaW86DQo+ID4NCj4gPiBodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20vc2hv
+d19idWcuY2dpP2lkPTk3OTg3Mw0KPiA+IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9zaG93
+X2J1Zy5jZ2k/aWQ9OTkwNTM2DQo+ID4gaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL3Nob3df
+YnVnLmNnaT9pZD05OTQzMjINCj4gPiBodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20vc2hvd19i
+dWcuY2dpP2lkPTk5NjUwMg0KPiA+IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9zaG93X2J1
+Zy5jZ2k/aWQ9OTY5NjEwDQo+ID4gaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL3Nob3dfYnVn
+LmNnaT9pZD05OTkwNTMNCj4gPg0KPiA+IEZpcnN0IHRoZXJlIGlzIE1pY3JvY29kZSBlcnJvciBv
+ciBvdGhlciBmaXJtd2FyZSBwcm9ibGVtLCB3aGF0IG1ha2Ugd2UNCj4gPiBkbyBpd2xfdHJhbnNf
+c3RvcF9kZXZpY2UoKSB3aGljaCBzZXQgdHJhbnMtPnN0YXRlIHRvIElXTF9UUkFOU19OT19GVy4N
+Cj4gPiBJZiBtYWM4MDIxMSBoYXMgc29tZSBwZW5kaW5nIHdvcmtzL3RpbWVycyBpLmUuIGllZWU4
+MDIxMV9zdGFfd29yaygpLA0KPiA+IGl0IGNhbGxzIGRydiBhbmQgd2UgdHJpZ2dlciBvbiBvZiB0
+aG9zZSB3YXJuaW5ncw0KPiA+DQo+ID4gICAgICAgICBXQVJOX09OQ0UodHJhbnMtPnN0YXRlICE9
+IElXTF9UUkFOU19GV19BTElWRSwNCj4gPiAgICAgICAgICAgICAgICAgICAiJXMgYmFkIHN0YXRl
+ID0gJWQiLCBfX2Z1bmNfXywgdHJhbnMtPnN0YXRlKTsNCj4gPg0KPiA+IG9uIHNvbWUgdHJhbnMg
+b3BlcmF0aW9uLg0KPiA+DQo+ID4gSSB0aGluayB0aGlzIGNhbiBiZSBmaXhlZCBieSBmaXJzdCBk
+byBxdWllc2NlIG9uIG1hYzgwMjExIChmb3IgZXhhbXBsZQ0KPiA+IGJ5IGllZWU4MDIxMV9zdGFf
+cXVpZXNjZSgpIHByb2NlZHVyZSwgd2hpY2ggSSByZW1vdmVkIGJ1dCBjYW4gYmUgYWRkZWQNCj4g
+PiBiYWNrKSBhbmQgdGhlbiBkbyBpd2xhZ25fcHJlcGFyZV9yZXN0YXJ0KCkgJiBpZWVlODAyMTFf
+cmVzdGFydF9odygpLg0KPiA+DQo+ID4gVGhvdWdoIEknbSBub3Qgc3VyZSBpZiBpdCdzIHdvcnRo
+IHRvIGRvIHRoaXMgc2luY2UgdGhvc2Ugd2FybmluZ3MgYXJlDQo+ID4gaW5kaWNhdG9yIGZvciBt
+YWxmdW5jdGlvbmluZyBpd2x3aWZpIGZpcm13YXJlIChvciBkcml2ZXIgbm90IGNvcnJlY3RseQ0K
+PiA+IGNvbW11bmljYXRpbmcgd2l0aCBmaXJtd2FyZSksIHdoaWNoIHdpbGwgYmUgdW5ub3RpY2Vk
+IGlmIG5vdCByZXBvcnRlZA0KPiA+IGF1dG9tYXRpY2FsbHkgYnkgdG9vbCBsaWtlIEFCUlQuIEJ1
+dCBwZXJoYXBzIHdlIGNvdWxkIGFkZCBXQVJOX09OQ0Ugb24NCj4gPiBNaWNyb2NvZGUgZXJyb3Ig
+Y29uZGl0aW9uID8NCj4gDQo+IEkgdGhpbmsgdGhhdCwgaWYgdGhlIHF1aWVzY2UgcmVhbGx5IGhl
+bHBzIHdpdGggdGhpcywgd2Ugc2hvdWxkIGRvIGl0Lg0KPiBUaGlzIFdBUk4gaXMgYSBzaWRlLWVm
+ZmVjdCBvZiB0aGUgcHJvYmxlbSBhbmQgbm90IHRoZSBwcm9ibGVtIGl0c2VsZi4NCj4gSWYgeW91
+IHdhbnQgdG8gY2F0Y2ggdGhlIEZXIHByb2JsZW0sIHRoZXJlIHNob3VsZCBiZSBhIFdBUk4gZWxz
+ZXdoZXJlLg0KPiANCj4gSSdtIG5vdCBzYXlpbmcgdGhhdCB0aGlzIFdBUk4gc2hvdWxkIGJlIHJl
+bW92ZWQgYW5kIEkgYWxzbyB0aGluayBpdCdzIGEgZ29vZA0KPiBpZGVhIHRvIGNoYW5nZSBpdCB0
+byBXQVJOX09OX09OQ0UoKS4gIEkganVzdCB0aGluayB0aGF0LCBpZiB0aGVyZSdzIGFueXRoaW5n
+DQo+IHRoZSBkcml2ZXIgY2FuIGRvIHRvIGtlZXAgdGhpbmdzIHJ1bm5pbmcgbmljZWx5LCB3ZSBz
+aG91bGQgZG8gaXQuDQo+IA0KPiBJbiBhbnkgY2FzZSwgSSdsbCBsZWF2ZSB0aGlzIGZvciBKb2hh
+bm5lcywgRW1tYW51ZWwgb3Igc29tZSBvZiB0aGUgb3RoZXIgZ3V5cw0KPiB3aXRoIG1vcmUgZXhw
+ZXJpZW5jZSBpbiBpd2x3aWZpIHRvIGNvbW1lbnQuIDspDQoNCllvdSBnb3QgbXkgQUNLIGhlcmUu
+IFdlIGhhdmUgc29tZSBpc3N1ZXMgd2l0aCBmaXJtd2FyZS4gT2J2aW91c2x5LiBCdXQgbW9zdCBv
+ZiB0aGUgaXNzdWVzIGFyZSB2ZXJ5IGhhcmQgdG8gZGVidWcuIE1vc3Qgb2YgdGhlbSBJIGFtIHNl
+ZWluZyBhcmUgbW9yZSBsaWtlIHRoZSBmaXJtd2FyZSBnZXR0aW5nIHN0dWNrIGV0Yy4uLiAgQWZ0
+ZXIgYWxsIHRoaXMgaXMgd2h5IHdlIGhhdmUgYSByZXN0YXJ0IGZsb3csIGZvciB0aGVzZSBpc3N1
+ZXMgdGhhdCBkb24ndCBoYXBwZW4gZnJlcXVlbnRseSBidXQgYXJlIHNvbHZhYmxlIGJ5IGEgcmVz
+ZXQuIFNpbmNlIHdlIHN0aWxsIHdhbnQgdG8ga25vdyB3aGVuIHRoaXMga2luZCBvZiB0aGluZ3Mg
+aGFwcGVuLCBhZGRpbmcgYSBXQVJOX09OX09OQ0Ugc291bmRzIGdvb2QuDQo=
