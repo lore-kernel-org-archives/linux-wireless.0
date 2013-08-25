@@ -1,60 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58329 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205Ab3HUIPe (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:48777 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754545Ab3HYJQ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 04:15:34 -0400
-Message-ID: <1377072922.15268.4.camel@jlt4.sipsolutions.net> (sfid-20130821_101540_318952_978D2551)
-Subject: Re: [PATCH 09/16] wcn36xx: Add smd.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: Joe Perches <joe@perches.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
-Date: Wed, 21 Aug 2013 10:15:22 +0200
-In-Reply-To: <CAFSJ42ZMk6sN6povWHkSodk0J7pBvyak8sH-MqNXVhi_iSmq9Q@mail.gmail.com> (sfid-20130821_095852_398872_A90920C7)
-References: <1377020479-16935-1-git-send-email-k.eugene.e@gmail.com>
-	 <1377020479-16935-10-git-send-email-k.eugene.e@gmail.com>
-	 <1377022333.2016.59.camel@joe-AO722>
-	 <CAFSJ42ZMk6sN6povWHkSodk0J7pBvyak8sH-MqNXVhi_iSmq9Q@mail.gmail.com>
-	 (sfid-20130821_095852_398872_A90920C7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 25 Aug 2013 05:16:59 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Fix ASPM for AR9462
+Date: Sun, 25 Aug 2013 14:43:09 +0530
+Message-Id: <1377421989-21240-1-git-send-email-sujith@msujith.org> (sfid-20130825_111702_777578_06B9461D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-08-21 at 09:58 +0200, Eugene Krasnikov wrote:
-> 2013/8/20 Joe Perches <joe@perches.com>:
-> > On Tue, 2013-08-20 at 19:41 +0200, Eugene Krasnikov wrote:
-> >
-> >> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> > []
-> >> +int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
-> >> +{
-> > []
-> >> +             /* Add NV body itself */
-> >> +             /* Rework me */
-> >> +             memcpy(wcn->smd_buf + sizeof(msg_body),
-> >> +                    (void *)(&nv_d->table) + fm_offset,
-> >> +                    msg_body.nv_img_buffer_size);
-> >
-> > Does this really do what you want?
-> >
-> > Perhaps it should be:
-> >
-> >                 memcpy(wcn->smd_buf + sizeof(msg_body),
-> >                        ((void *)&nv_d->table) + fm_offset,
-> >                        msg_body.nv_img_buffer_size);
-> >
-> 
-> Yes, this line is working. Tested it for ARM. Do you see any potential
-> problems with this pointer operation?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-It should really be u8* instead of void*, since void* pointer arithmetic
-isn't really defined I think?
+If the L1 entrance latency is not calibrated properly
+in the EEPROM in WB222 boards, there could be problems
+in connectivity. Check and correct the calibrated value
+if it doesn't match the optimal value for WB222, 4us.
 
-Other than that, this was just about precedence rules, and casts have a
-higher precedence.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 14 ++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h        |  1 +
+ drivers/net/wireless/ath/ath9k/pci.c       | 16 ++++++++++++++++
+ 3 files changed, 31 insertions(+)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 738aa7e..582cddd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -745,6 +745,20 @@ static void ar9003_hw_init_mode_gain_regs(struct ath_hw *ah)
+ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
+ 					 bool power_off)
+ {
++	/*
++	 * Increase L1 Entry Latency. Some WB222 boards don't have
++	 * this change in eeprom/OTP.
++	 *
++	 */
++	if (AR_SREV_9462(ah)) {
++		u32 val = ah->config.aspm_l1_fix;
++		if ((val & 0xff000000) == 0x17000000) {
++			val &= 0x00ffffff;
++			val |= 0x27000000;
++			REG_WRITE(ah, 0x570c, val);
++		}
++	}
++
+ 	/* Nothing to do on restore for 11N */
+ 	if (!power_off /* !restore */) {
+ 		/* set bit 19 to allow forcing of pcie core into L1 state */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index fa543a6..69a907b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -311,6 +311,7 @@ struct ath9k_ops_config {
+ 	u16 ani_poll_interval; /* ANI poll interval in ms */
+ 
+ 	/* Platform specific config */
++	u32 aspm_l1_fix;
+ 	u32 xlna_gpio;
+ 	u32 ant_ctrl_comm2g_switch_enable;
+ 	bool xatten_margin_cfg;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 3280798..e7996a6 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -314,6 +314,22 @@ static void ath_pci_aspm_init(struct ath_common *common)
+ 		return;
+ 	}
+ 
++	/*
++	 * 0x70c - Ack Frequency Register.
++	 *
++	 * Bits 27:29 - DEFAULT_L1_ENTRANCE_LATENCY.
++	 *
++	 * 000 : 1 us
++	 * 001 : 2 us
++	 * 010 : 4 us
++	 * 011 : 8 us
++	 * 100 : 16 us
++	 * 101 : 32 us
++	 * 110/111 : 64 us
++	 */
++	if (AR_SREV_9462(ah))
++		pci_read_config_dword(pdev, 0x70c, &ah->config.aspm_l1_fix);
++
+ 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &aspm);
+ 	if (aspm & (PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1)) {
+ 		ah->aspm_enabled = true;
+-- 
+1.8.3.4
 
