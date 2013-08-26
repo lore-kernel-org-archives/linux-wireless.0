@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34543 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752589Ab3H1BoD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 21:44:03 -0400
-Message-ID: <1377654240.2005.32.camel@jtkirshe-mobl> (sfid-20130828_034406_757904_B01A1044)
-Subject: Re: [E1000-devel] [PATCH net-next] drivers:net: Convert
- dma_alloc_coherent(...__GFP_ZERO) to dma_zalloc_coherent
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: Joe Perches <joe@perches.com>
-Cc: netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, b43-dev@lists.infradead.org
-Date: Tue, 27 Aug 2013 18:44:00 -0700
-In-Reply-To: <1377582323.2658.10.camel@joe-AO722>
-References: <dbbfc5e66dba7d2b63549d218407fb0c4031f2ed.1363367992.git.joe@perches.com>
-	 <1377582323.2658.10.camel@joe-AO722>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-jPSgA1IDszhL35Gx/tNY"
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34381 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751681Ab3HZUAW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Aug 2013 16:00:22 -0400
+Date: Mon, 26 Aug 2013 15:56:55 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: Tobias Waldekranz <tobias@waldekranz.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mwifiex: add missing endian conversions
+Message-ID: <20130826195655.GD1923@tuxdriver.com> (sfid-20130826_220025_893086_4444025F)
+References: <20130826071806.GA3035@gmail.com>
+ <477F20668A386D41ADCC57781B1F70430EAF1FEDA3@SC-VEXCH1.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430EAF1FEDA3@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Aug 26, 2013 at 12:27:06PM -0700, Bing Zhao wrote:
+> Hi Tobias,
+> 
+> > Fixes multiple locations where a little endian host is assumed during
+> > ser/des of messages sent to/received from the chip.
+> 
+> Thanks for your patch.
+> It doesn't apply to wireless or wireless-next trees.
+> 
+> Which git tree are you using?
 
---=-jPSgA1IDszhL35Gx/tNY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I got it to apply with a little trying.
 
-On Mon, 2013-08-26 at 22:45 -0700, Joe Perches wrote:
-> __GFP_ZERO is an uncommon flag and perhaps is better
-> not used.  static inline dma_zalloc_coherent exists
-> so convert the uses of dma_alloc_coherent with __GFP_ZERO
-> to the more common kernel style with zalloc.
->=20
-> Remove memset from the static inline dma_zalloc_coherent
-> and add just one use of __GFP_ZERO instead.
->=20
-> Trivially reduces the size of the existing uses of
-> dma_zalloc_coherent.
->=20
-> Realign arguments as appropriate.
->=20
-> Signed-off-by: Joe Perches <joe@perches.com>
+> > 
+> > Signed-off-by: Tobias Waldekranz <tobias@waldekranz.com>
+> > ---
+> >  drivers/net/wireless/mwifiex/11n_aggr.c    | 2 +-
+> >  drivers/net/wireless/mwifiex/main.h        | 2 +-
+> >  drivers/net/wireless/mwifiex/sdio.c        | 6 +++---
+> >  drivers/net/wireless/mwifiex/sta_cmdresp.c | 2 +-
+> >  4 files changed, 6 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+> > index a78e065..b53c73c 100644
+> > --- a/drivers/net/wireless/mwifiex/11n_aggr.c
+> > +++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+> > @@ -69,7 +69,7 @@ mwifiex_11n_form_amsdu_pkt(struct sk_buff *skb_aggr,
+> >  	memcpy(&tx_header->eth803_hdr, skb_src->data, dt_offset);
+> > 
+> >  	/* Copy SNAP header */
+> > -	snap.snap_type = *(u16 *) ((u8 *)skb_src->data + dt_offset);
+> > +	snap.snap_type = le16_to_cpu(*(__le16 *) ((u8 *)skb_src->data + dt_offset));
+> 
+> This line exceeds 80 characters. Please break it to two lines.
 
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Please submit a new patch to fix this.
 
---=-jPSgA1IDszhL35Gx/tNY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIcBAABCgAGBQJSHVXgAAoJEOVv75VaS+3OJX0P/2XAG1De7Ww5ZdnAr8htbWL3
-hPZVRHb0WU2/dIVZsKkm7Hv60WekXyn4J6RKRCIC5bV4fGKGVKgmDLZdfZd6vdO5
-s25OKARj1PSyrAJafCAIs6o5h1wUgNcKokA4RVmyrRzNXE2ZoHB7mqSm7JTpGxoa
-EDB62VdrxjynOuGqX/HvgU9+t2g/vwwIUuKEB0UxN2aC/IgqE7dHmlffCCNChkI4
-i/Njhvk/VzBA0qFuzmTEey3o/q0SZ6akiotZpnPJ2IN2UA1r2o5AATOZ7cJ9sVfZ
-VJvPAUKN3tBu0xvA+YxeTtW7W8ujtKM2wCW5a8Bf9vB1sRBIOe7db8LL2EO7AJoY
-4EMpxMJVlPoBkKdpzRIkiQlMWn6Anf2eyzfFOajSxozZgNLs6aqXCjEeHWouhFMP
-oczQT/lUhqmgN+U5T+8QutXRkATThJ8UzlInG6zoafU04+oLmAVoXXVmE54XFjtl
-K0vrzn0xGONYUZdjhpUsEGjrwMAiNf9VMd3pQjy6hyQsXnKrRedLLFKPbeQJSc3G
-fYK53VkFrPKvf4k0UYzQdxq4/EHEkeQWDCqYBNYQXylWhH589bGBvPTnmsCEC4Yo
-gIeeSQBfC6E7J/XY0YPCU+81wJCeaUPU9ziukUhyUrk081ycaZNbnJI6mztLi2L6
-ZXKsBvT1fq6r+TOlV+LK
-=UcmZ
------END PGP SIGNATURE-----
-
---=-jPSgA1IDszhL35Gx/tNY--
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
