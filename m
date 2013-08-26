@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48914 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755331Ab3HOTpK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 15:45:10 -0400
-Date: Thu, 15 Aug 2013 15:41:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac802111 2013-08-15
-Message-ID: <20130815194121.GE2133@tuxdriver.com> (sfid-20130815_214515_047808_9FBFCFFD)
-References: <1376581601.14084.14.camel@jlt4.sipsolutions.net>
+Received: from ebb05.tieto.com ([131.207.168.36]:53936 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756700Ab3HZLsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Aug 2013 07:48:54 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH 2/3] ath10k: update wal_dbg_tx_stats structure
+Date: Mon, 26 Aug 2013 13:33:33 +0200
+Message-ID: <1377516815-12660-3-git-send-email-bartosz.markowski@tieto.com> (sfid-20130826_134858_016474_A3963260)
+In-Reply-To: <1377516815-12660-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1377516815-12660-1-git-send-email-bartosz.markowski@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1376581601.14084.14.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 15, 2013 at 05:46:41PM +0200, Johannes Berg wrote:
-> John,
-> 
-> I have two more fixes ...
-> 
-> This time, I have one fix from Dan Carpenter for users of
-> nl80211hdr_put(), and one fix from myself fixing a regression with the
-> libertas driver.
-> 
-> Please let me know if there's any problem.
-> 
-> johannes
-> 
-> The following changes since commit ddfe49b42d8ad4bfdf92d63d4a74f162660d878d:
-> 
->   mac80211: continue using disabled channels while connected (2013-07-31 21:18:17 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to dee8a9732e713480075adbbca8eb220c5b8d1216:
-> 
->   cfg80211: don't request disconnect if not connected (2013-08-14 14:00:19 +0200)
+Add missing parameters. It's very imporatant to keep
+these structs up to date with FW abi, due to the arithmetic we
+use while read the fw_stats.
 
-Pulling now...
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.h |    3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 1747631..6366600 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1767,6 +1767,9 @@ struct wal_dbg_tx_stats {
+ 	/* wal pdev resets  */
+ 	__le32 pdev_resets;
+ 
++	/* frames dropped due to non-availability of stateless TIDs */
++	__le32 stateless_tid_alloc_failure;
++
+ 	__le32 phy_underrun;
+ 
+ 	/* MPDU is more than txop limit */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10
+
