@@ -1,160 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2734 "EHLO mms3.broadcom.com"
+Received: from ebb05.tieto.com ([131.207.168.36]:50180 "EHLO ebb05.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968545Ab3HJK14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 06:27:56 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/12] brcmfmac: use configurable sdio bus header length
- for tx packet
-Date: Sat, 10 Aug 2013 12:27:29 +0200
-Message-ID: <1376130450-29746-12-git-send-email-arend@broadcom.com> (sfid-20130810_122820_463876_3A3EC740)
-In-Reply-To: <1376130450-29746-1-git-send-email-arend@broadcom.com>
-References: <1376130450-29746-1-git-send-email-arend@broadcom.com>
+	id S1751686Ab3HZIxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Aug 2013 04:53:40 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 3/4] ath10k: move htt rx processing to worker
+Date: Mon, 26 Aug 2013 10:53:24 +0200
+Message-ID: <1377507205-5386-4-git-send-email-michal.kazior@tieto.com> (sfid-20130826_105347_208368_0EE4E33C)
+In-Reply-To: <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
+References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
+ <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+This improves rx performance by a significant
+value (280mbps -> 350mbps UDP) on AP135.
 
-Host tx glomming require an extended hardware sdio bus header to store
-information for dongle. Introduce a variable in struct brcmf_sdio to replace
-macro SDPCM_HDRLEN
+Note: it is not safe to move HTT tx completion
+handling to a worker yet as it must be serialized
+against HTC tx completions.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 30 ++++++++++++----------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+v2:
+ * use ieee80211_rx_ni()
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 02ab5cd..1aa75d5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -461,6 +461,8 @@ struct brcmf_sdio {
- 	struct brcmf_sdio_count sdcnt;
- 	bool sr_enabled; /* SaveRestore enabled */
- 	bool sleeping; /* SDIO bus sleeping */
+ drivers/net/wireless/ath/ath10k/core.h   |    4 ++-
+ drivers/net/wireless/ath/ath10k/htt.h    |    3 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   54 ++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/txrx.c   |    2 +-
+ 4 files changed, 54 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 17694ec..b5f8df0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -42,8 +42,10 @@
+ 
+ #define ATH10K_NUM_HTC_TX_WORKERS ATH10K_HTC_EP_COUNT
+ #define ATH10K_NUM_WMI_RX_WORKERS 1
++#define ATH10K_NUM_HTT_RX_WORKERS 1
+ #define ATH10K_MAX_NUM_PARALLEL_WORKERS (ATH10K_NUM_HTC_TX_WORKERS + \
+-					 ATH10K_NUM_WMI_RX_WORKERS)
++					 ATH10K_NUM_WMI_RX_WORKERS + \
++					 ATH10K_NUM_HTT_RX_WORKERS)
+ 
+ /* Antenna noise floor */
+ #define ATH10K_DEFAULT_NOISE_FLOOR -95
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 26c78a9..8abbf2c 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1268,6 +1268,9 @@ struct ath10k_htt {
+ 	/* set if host-fw communication goes haywire
+ 	 * used to avoid further failures */
+ 	bool rx_confused;
 +
-+	u8 tx_hdrlen;		/* sdio bus header length for tx packet */
++	struct work_struct rx_work;
++	struct sk_buff_head rx_queue;
  };
  
- /* clkstate */
-@@ -1025,7 +1027,6 @@ static void brcmf_sdbrcm_free_glom(struct brcmf_sdio *bus)
- #define SDPCM_HWHDR_LEN			4
- #define SDPCM_SWHDR_LEN			8
- #define SDPCM_HDRLEN			(SDPCM_HWHDR_LEN + SDPCM_SWHDR_LEN)
--#define SDPCM_RESERVE			(SDPCM_HDRLEN + BRCMF_SDALIGN)
- /* software header */
- #define SDPCM_SEQ_MASK			0x000000ff
- #define SDPCM_SEQ_WRAP			256
-@@ -1838,7 +1839,7 @@ brcmf_sdio_txpkt_prep(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
- 		}
- 		skb_push(pkt_next, head_pad);
- 		dat_buf = (u8 *)(pkt_next->data);
--		memset(dat_buf, 0, head_pad + SDPCM_HDRLEN);
-+		memset(dat_buf, 0, head_pad + bus->tx_hdrlen);
- 	}
+ #define RX_HTT_HDR_STATUS_LEN 64
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 9bb0ae89..6cf4d95 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -40,6 +40,10 @@
+ /* when under memory pressure rx ring refill may fail and needs a retry */
+ #define HTT_RX_RING_REFILL_RETRY_MS 50
  
- 	/* Check tail padding */
-@@ -1874,7 +1875,7 @@ brcmf_sdio_txpkt_prep(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
- 	else
- 		hd_info.len = pkt_next->len - tail_pad;
- 	hd_info.channel = chan;
--	hd_info.dat_offset = head_pad + SDPCM_HDRLEN;
-+	hd_info.dat_offset = head_pad + bus->tx_hdrlen;
- 	brcmf_sdio_hdpack(bus, dat_buf, &hd_info);
- 
- 	if (BRCMF_BYTES_ON() &&
-@@ -1882,7 +1883,7 @@ brcmf_sdio_txpkt_prep(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
- 	     (BRCMF_DATA_ON() && chan != SDPCM_CONTROL_CHANNEL)))
- 		brcmf_dbg_hex_dump(true, pkt_next, hd_info.len, "Tx Frame:\n");
- 	else if (BRCMF_HDRS_ON())
--		brcmf_dbg_hex_dump(true, pkt_next, head_pad + SDPCM_HDRLEN,
-+		brcmf_dbg_hex_dump(true, pkt_next, head_pad + bus->tx_hdrlen,
- 				   "Tx Header:\n");
- 
- 	return 0;
-@@ -1989,7 +1990,6 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 	u32 intstatus = 0;
- 	int ret = 0, prec_out;
- 	uint cnt = 0;
--	uint datalen;
- 	u8 tx_prec_map;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
-@@ -2005,7 +2005,6 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 			break;
- 		}
- 		spin_unlock_bh(&bus->txqlock);
--		datalen = pkt->len - SDPCM_HDRLEN;
- 
- 		ret = brcmf_sdbrcm_txpkt(bus, pkt, SDPCM_DATA_CHANNEL);
- 
-@@ -2392,7 +2391,7 @@ static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 	datalen = pkt->len;
- 
- 	/* Add space for the header */
--	skb_push(pkt, SDPCM_HDRLEN);
-+	skb_push(pkt, bus->tx_hdrlen);
- 	/* precondition: IS_ALIGNED((unsigned long)(pkt->data), 2) */
- 
- 	prec = prio2prec((pkt->priority & PRIOMASK));
-@@ -2405,7 +2404,7 @@ static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 	/* Priority based enq */
- 	spin_lock_irqsave(&bus->txqlock, flags);
- 	if (!brcmf_c_prec_enq(bus->sdiodev->dev, &bus->txq, pkt, prec)) {
--		skb_pull(pkt, SDPCM_HDRLEN);
-+		skb_pull(pkt, bus->tx_hdrlen);
- 		brcmf_err("out of bus->txq !!!\n");
- 		ret = -ENOSR;
- 	} else {
-@@ -2566,8 +2565,8 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	/* Back the pointer to make a room for bus header */
--	frame = msg - SDPCM_HDRLEN;
--	len = (msglen += SDPCM_HDRLEN);
-+	frame = msg - bus->tx_hdrlen;
-+	len = (msglen += bus->tx_hdrlen);
- 
- 	/* Add alignment padding (optional for ctl frames) */
- 	doff = ((unsigned long)frame % BRCMF_SDALIGN);
-@@ -2575,10 +2574,10 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 		frame -= doff;
- 		len += doff;
- 		msglen += doff;
--		memset(frame, 0, doff + SDPCM_HDRLEN);
-+		memset(frame, 0, doff + bus->tx_hdrlen);
- 	}
- 	/* precondition: doff < BRCMF_SDALIGN */
--	doff += SDPCM_HDRLEN;
-+	doff += bus->tx_hdrlen;
- 
- 	/* Round send length to next SDIO block */
- 	if (bus->roundup && bus->blocksize && (len > bus->blocksize)) {
-@@ -3895,8 +3894,11 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- 	bus->sdiodev->bus_if->chip = bus->ci->chip;
- 	bus->sdiodev->bus_if->chiprev = bus->ci->chiprev;
- 
--	/* Attach to the brcmf/OS/network interface */
--	ret = brcmf_attach(SDPCM_RESERVE, bus->sdiodev->dev);
-+	/* default sdio bus header length for tx packet */
-+	bus->tx_hdrlen = SDPCM_HWHDR_LEN + SDPCM_SWHDR_LEN;
 +
-+	/* Attach to the common layer, reserve hdr space */
-+	ret = brcmf_attach(bus->tx_hdrlen, bus->sdiodev->dev);
- 	if (ret != 0) {
- 		brcmf_err("brcmf_attach failed\n");
- 		goto fail;
++static void ath10k_htt_rx_work(struct work_struct *work);
++
++
+ static int ath10k_htt_rx_ring_size(struct ath10k_htt *htt)
+ {
+ 	int size;
+@@ -211,6 +215,8 @@ void ath10k_htt_rx_detach(struct ath10k_htt *htt)
+ {
+ 	int sw_rd_idx = htt->rx_ring.sw_rd_idx.msdu_payld;
+ 
++	skb_queue_purge(&htt->rx_queue);
++	cancel_work_sync(&htt->rx_work);
+ 	del_timer_sync(&htt->rx_ring.refill_retry_timer);
+ 
+ 	while (sw_rd_idx != __le32_to_cpu(*(htt->rx_ring.alloc_idx.vaddr))) {
+@@ -501,6 +507,9 @@ int ath10k_htt_rx_attach(struct ath10k_htt *htt)
+ 	if (__ath10k_htt_rx_ring_fill_n(htt, htt->rx_ring.fill_level))
+ 		goto err_fill_ring;
+ 
++	INIT_WORK(&htt->rx_work, ath10k_htt_rx_work);
++	skb_queue_head_init(&htt->rx_queue);
++
+ 	ath10k_dbg(ATH10K_DBG_HTT, "HTT RX ring size: %d, fill_level: %d\n",
+ 		   htt->rx_ring.size, htt->rx_ring.fill_level);
+ 	return 0;
+@@ -1083,17 +1092,11 @@ end:
+ 	}
+ }
+ 
+-void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
++static void ath10k_htt_rx_process_skb(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+ 	struct htt_resp *resp = (struct htt_resp *)skb->data;
+ 
+-	/* confirm alignment */
+-	if (!IS_ALIGNED((unsigned long)skb->data, 4))
+-		ath10k_warn("unaligned htt message, expect trouble\n");
+-
+-	ath10k_dbg(ATH10K_DBG_HTT, "HTT RX, msg_type: 0x%0X\n",
+-		   resp->hdr.msg_type);
+ 	switch (resp->hdr.msg_type) {
+ 	case HTT_T2H_MSG_TYPE_VERSION_CONF: {
+ 		htt->target_version_major = resp->ver_resp.major;
+@@ -1214,3 +1217,40 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 	/* Free the indication buffer */
+ 	dev_kfree_skb_any(skb);
+ }
++
++static void ath10k_htt_rx_work(struct work_struct *work)
++{
++	struct ath10k_htt *htt = container_of(work, struct ath10k_htt, rx_work);
++	struct sk_buff *skb;
++
++	for (;;) {
++		skb = skb_dequeue(&htt->rx_queue);
++		if (!skb)
++			break;
++
++		ath10k_htt_rx_process_skb(htt->ar, skb);
++	}
++}
++
++void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
++{
++	struct ath10k_htt *htt = &ar->htt;
++	struct htt_resp *resp = (struct htt_resp *)skb->data;
++
++	/* confirm alignment */
++	if (!IS_ALIGNED((unsigned long)skb->data, 4))
++		ath10k_warn("unaligned htt message, expect trouble\n");
++
++	ath10k_dbg(ATH10K_DBG_HTT, "HTT RX, msg_type: 0x%0X\n",
++		   resp->hdr.msg_type);
++	switch (resp->hdr.msg_type) {
++	case HTT_T2H_MSG_TYPE_RX_FRAG_IND:
++	case HTT_T2H_MSG_TYPE_RX_IND:
++		skb_queue_tail(&htt->rx_queue, skb);
++		queue_work(ar->workqueue, &htt->rx_work);
++		break;
++	default:
++		ath10k_htt_rx_process_skb(ar, skb);
++		break;
++	}
++}
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index ce7e304..dd87e6f 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -297,7 +297,7 @@ void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ 		   status->band);
+ 
+ 	spin_lock_bh(&ar->txrx_lock);
+-	ieee80211_rx(ar->hw, info->skb);
++	ieee80211_rx_ni(ar->hw, info->skb);
+ 	spin_unlock_bh(&ar->txrx_lock);
+ }
+ 
 -- 
-1.8.1.3
-
+1.7.9.5
 
