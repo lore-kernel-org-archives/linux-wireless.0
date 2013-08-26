@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:52291 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101Ab3HSI0a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 04:26:30 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hj13so2779961wib.5
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2013 01:26:29 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:9070 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751669Ab3HZNSn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Aug 2013 09:18:43 -0400
+Date: Mon, 26 Aug 2013 15:18:53 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: users@rt2x00.serialmonkey.com, Fabien ADAM <id2ndr@crocobox.org>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 3.11] rt2800: fix wrong TX power compensation
+Message-ID: <20130826131851.GB10525@redhat.com> (sfid-20130826_151846_980974_625E9CB3)
 MIME-Version: 1.0
-In-Reply-To: <5211996B.4060800@gmail.com>
-References: <5211996B.4060800@gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Mon, 19 Aug 2013 13:56:08 +0530
-Message-ID: <CABPxzYK_q9VXcXnGLb=8aFzD1ZJdLStyhBz-LRpvwg4oVaBTDw@mail.gmail.com> (sfid-20130819_102633_169996_D4433D51)
-Subject: Re: WiFi roaming question
-To: chris <chgans@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It turned out that, as a client, I don't have to bother with roaming stuff, it simply works out of the box.
+We should not do temperature compensation on devices without
+EXTERNAL_TX_ALC bit set (called DynamicTxAgcControl on vendor driver).
+Such devices can have totally bogus TSSI parameters on the EEPROM,
+but still threaded by us as valid and result doing wrong TX power
+calculations.
 
-Roaming has 2 types:
+This fix inability to connect to AP on slightly longer distance on
+some Ralink chips/devices.
 
-1) based on the disconnection (beacon loss)
-2) based on the RSSI
+Reported-and-tested-by: Fabien ADAM <id2ndr@crocobox.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Is it really roaming doing background scanning and preauth #2 (or) a
-connect and disconnect (assuming same ssid and security) #1?
+John,
 
-> Though, I have a couple of questions regarding this OOBX (new buzz word seen here and there for "out of the box experience" :) ).
-> - At which level the roaming is done? Is it at the WiFi kernel stack (cfg/mac 80211), at driver level, or at chipset/firmware level or a mix of them?
-> - Can I change my setup, so that I have control over the roaming?
-> - Is it a good idea to try to manage that myself from userspace?
+If possible this should go to 3.11, -next & cc -stable is also fine as
+ususal.
 
-wpa_supplicant (userspace) takes care of the roaming for you, i belive
-it has support for both types #1 and #2 (along with background scan)
+Note that in -next version of the patch rt2x00_eeprom_read() should
+be changed to rt2800_eeprom_read() do to commit
+3e38d3daf881a78ac13e93504a8ac5777040797e
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 1f80ea5..a0119d3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2790,6 +2790,13 @@ static int rt2800_get_gain_calibration_delta(struct rt2x00_dev *rt2x00dev)
+ 	int i;
+ 
+ 	/*
++	 * First check if temperature compensation is supported.
++	 */
++	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
++	if (!rt2x00_get_field16(eeprom, EEPROM_NIC_CONF1_EXTERNAL_TX_ALC))
++		return 0;
++
++	/*
+ 	 * Read TSSI boundaries for temperature compensation from
+ 	 * the EEPROM.
+ 	 *
+-- 
+1.7.11.7
 
-Some proprietary version which implement at driver/fw level, this
-reduces the roam delay as it need not involve any context switches.
