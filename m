@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:51212 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933773Ab3HGXWh (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50442 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756474Ab3HZI6A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 19:22:37 -0400
-Date: Wed, 07 Aug 2013 16:27:48 -0700 (PDT)
-Message-Id: <20130807.162748.779496444843938176.davem@davemloft.net> (sfid-20130808_012313_730844_B29F2C3E)
-To: phil@nwl.cc
-Cc: eric.dumazet@gmail.com, johannes@sipsolutions.net,
-	sedat.dilek@gmail.com, sfr@canb.auug.org.au,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, hannes@stressinduktion.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: linux-next: Tree for Aug 7
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130807183758.GB16263@orbit.nwl.cc>
-References: <1375893609.4004.33.camel@edumazet-glaptop>
-	<20130807.104713.1615549684239408926.davem@davemloft.net>
-	<20130807183758.GB16263@orbit.nwl.cc>
+	Mon, 26 Aug 2013 04:58:00 -0400
+Message-ID: <1377507467.13247.3.camel@jlt4.sipsolutions.net> (sfid-20130826_105804_012090_A2050A40)
+Subject: Re: [PATCH v2] iwlwifi: mvm: make debugfs write() operations write
+ up to count bytes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Djalal Harouni <tixxdz@opendz.org>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 26 Aug 2013 10:57:47 +0200
+In-Reply-To: <1377351353-18588-1-git-send-email-tixxdz@opendz.org> (sfid-20130824_153759_866417_83543693)
+References: <1377351353-18588-1-git-send-email-tixxdz@opendz.org>
+	 (sfid-20130824_153759_866417_83543693)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Phil Sutter <phil@nwl.cc>
-Date: Wed, 7 Aug 2013 20:37:58 +0200
+On Sat, 2013-08-24 at 14:35 +0100, Djalal Harouni wrote:
+> Some debugfs write() operations of the MVM Firmware will ignore the
+> count argument, and will copy more bytes than what was specified.
+> Fix this by getting the right count of bytes.
+> 
+> This will honor restrictions put on the number of bytes to write and
+> avoid strcmp() calls on garbage data.
 
-> One could simply call skb_push(skb, ETH_HLEN) right after calling
-> eth_type_trans(skb, dev) in order to undo the 'data' and 'len'
-> adjustment. Not sure if this kind of hack is the right way to go here,
-> or if the whole af_packet parses ethernet header discussion should be
-> opened again instead.
+Applied, thanks.
 
-That's completely pointless work.
+johannes
 
-Without that header pull, the only two things left that
-eth_type_trans() does is set the skb->protocol field and
-set skb->dev.
-
-And even the latter has to be done already in an else
-branch in the suspect AF_PACKET code.
-
-So this eth_type_trans() call is 2/3 duplicate or unnecessary work,
-it's the completely the wrong thing to do.
-
-Look, I'm going to fix this myself, because I'm pretty tired of
-waiting for the obvious fix.
