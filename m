@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:51248 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753912Ab3HPWPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 18:15:54 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/2] rt2x00: rt2800: rename HW_BEACON_OFFSET macro
-Date: Sat, 17 Aug 2013 00:15:49 +0200
-Message-Id: <1376691350-19851-1-git-send-email-juhosg@openwrt.org> (sfid-20130817_001601_126322_BA47CAEA)
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:41226 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755496Ab3HZHc7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Aug 2013 03:32:59 -0400
+Received: by mail-bk0-f42.google.com with SMTP id my10so961536bkb.15
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2013 00:32:58 -0700 (PDT)
+MIME-Version: 1.0
+Date: Mon, 26 Aug 2013 15:32:58 +0800
+Message-ID: <CAPgLHd-GQuhYuKXBj6FVjtpGYWZYVwuGR-Sj3w19JSMcTm1JLg@mail.gmail.com> (sfid-20130826_093303_664307_FE807DDA)
+Subject: [PATCH] mac80211_hwsim: fix error return code in init_mac80211_hwsim()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The name of the HW_BEACON_OFFSET macro is a
-bit confusing. It returns with one of the
-HW_BEACON_BASE* values, so rename the macro
-to HW_BEACON_BASE to reflect that.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-The patch contains no functional changes.
+Fix to return -ENOMEM in the netdev alloc error handling
+case instead of 0, as done elsewhere in this function.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- drivers/net/wireless/rt2x00/rt2800.h    |    2 +-
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index a313241..6e69b96 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -2019,7 +2019,7 @@ struct mac_iveiv_entry {
- #define HW_BEACON_BASE6			0x5dc0
- #define HW_BEACON_BASE7			0x5bc0
- 
--#define HW_BEACON_OFFSET(__index) \
-+#define HW_BEACON_BASE(__index) \
- 	(((__index) < 4) ? (HW_BEACON_BASE0 + (__index * 0x0200)) : \
- 	  (((__index) < 6) ? (HW_BEACON_BASE4 + ((__index - 4) * 0x0200)) : \
- 	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))))
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index fb71ed6..a25862a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -992,7 +992,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- 		return;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index cb34c78..9e0ebee 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2525,8 +2525,10 @@ static int __init init_mac80211_hwsim(void)
  	}
  
--	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
-+	beacon_base = HW_BEACON_BASE(entry->entry_idx);
- 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
- 				   entry->skb->len + padding_len);
+ 	hwsim_mon = alloc_netdev(0, "hwsim%d", hwsim_mon_setup);
+-	if (hwsim_mon == NULL)
++	if (hwsim_mon == NULL) {
++		err = -ENOMEM;
+ 		goto failed;
++	}
  
-@@ -1042,7 +1042,7 @@ void rt2800_clear_beacon(struct queue_entry *entry)
- 	 * Clear beacon.
- 	 */
- 	rt2800_clear_beacon_register(rt2x00dev,
--				     HW_BEACON_OFFSET(entry->entry_idx));
-+				     HW_BEACON_BASE(entry->entry_idx));
+ 	rtnl_lock();
  
- 	/*
- 	 * Enabled beaconing again.
--- 
-1.7.10
+
