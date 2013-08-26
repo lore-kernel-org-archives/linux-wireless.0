@@ -1,38 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:59272 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752667Ab3HARFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 13:05:53 -0400
-Message-ID: <1375376752.2034.60.camel@joe-AO722> (sfid-20130801_190614_586795_7D59A530)
-Subject: Re: [PATCH 0/8] include/net: next set of extern removals
-From: Joe Perches <joe@perches.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: David Howells <dhowells@redhat.com>, netdev@vger.kernel.org,
-	linux-hams@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org
-Date: Thu, 01 Aug 2013 10:05:52 -0700
-In-Reply-To: <1375375486.10515.170.camel@edumazet-glaptop>
-References: <cover.1375316912.git.joe@perches.com>
-	 <24958.1375358650@warthog.procyon.org.uk>
-	 <1375374560.2034.52.camel@joe-AO722>
-	 <1375375486.10515.170.camel@edumazet-glaptop>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:64039 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751767Ab3HZIxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Aug 2013 04:53:39 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/4] ath10k: synchronize tx/rx reporting to mac80211
+Date: Mon, 26 Aug 2013 10:53:22 +0200
+Message-ID: <1377507205-5386-2-git-send-email-michal.kazior@tieto.com> (sfid-20130826_105344_149927_A9046CF3)
+In-Reply-To: <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
+References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
+ <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-08-01 at 09:44 -0700, Eric Dumazet wrote:
-> 'extern' in include files are an easy way to have a grep friendly
-> marker, and otherwise are harmless.
-> 
-> _You_ believe they are useless, other people think otherwise.
+According to mac80211 docs tx and rx reporting
+routines must not run concurrently unless they are
+_irqsafe variants.
 
-I believe I wrote superfluous.
+This doesn't fix any visible bug but is apparently
+the right thing to do as per the documentation.
 
-> I learned C 30 years ago, and using 'extern' is quite natural for me.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    1 +
+ drivers/net/wireless/ath/ath10k/core.h |    3 +++
+ drivers/net/wireless/ath/ath10k/txrx.c |    4 ++++
+ 3 files changed, 8 insertions(+)
 
-I think I've got a few years headstart on you.
-All that means is we're both relatively old...
-
-cheers, Joe
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 04c132e..b43e8ad 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -526,6 +526,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+ 
+ 	mutex_init(&ar->conf_mutex);
+ 	spin_lock_init(&ar->data_lock);
++	spin_lock_init(&ar->txrx_lock);
+ 
+ 	INIT_LIST_HEAD(&ar->peers);
+ 	init_waitqueue_head(&ar->peer_mapping_wq);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index ab05c4c..0469a2e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -392,6 +392,9 @@ struct ath10k {
+ 	u32 survey_last_cycle_count;
+ 	struct survey_info survey[ATH10K_NUM_CHANS];
+ 
++	/* synchronized tx/rx reporting to mac80211 */
++	spinlock_t txrx_lock;
++
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ 	struct ath10k_debug debug;
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 68b6fae..ce7e304 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -88,7 +88,9 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt, struct sk_buff *txdesc)
+ 	if (ATH10K_SKB_CB(txdesc)->htt.no_ack)
+ 		info->flags &= ~IEEE80211_TX_STAT_ACK;
+ 
++	spin_lock_bh(&htt->ar->txrx_lock);
+ 	ieee80211_tx_status(htt->ar->hw, msdu);
++	spin_unlock_bh(&htt->ar->txrx_lock);
+ 	/* we do not own the msdu anymore */
+ 
+ exit:
+@@ -294,7 +296,9 @@ void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ 		   status->freq,
+ 		   status->band);
+ 
++	spin_lock_bh(&ar->txrx_lock);
+ 	ieee80211_rx(ar->hw, info->skb);
++	spin_unlock_bh(&ar->txrx_lock);
+ }
+ 
+ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
+-- 
+1.7.9.5
 
