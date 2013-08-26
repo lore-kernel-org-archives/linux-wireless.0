@@ -1,63 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56221 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752653Ab3HFTSr (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:48502 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755268Ab3HZK22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 15:18:47 -0400
-Message-ID: <1375816715.8219.29.camel@jlt4.sipsolutions.net> (sfid-20130806_211853_651078_622E1127)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: sedat.dilek@gmail.com
-Cc: David Miller <davem@davemloft.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	wireless <linux-wireless@vger.kernel.org>, netdev@vger.kernel.org
-Date: Tue, 06 Aug 2013 21:18:35 +0200
-In-Reply-To: <CA+icZUXaTYVc_iv3hny6Je9mVdX8KCVpFSNBeukS+Fh-347Wvw@mail.gmail.com> (sfid-20130806_211440_311168_A2CCF549)
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	 <1375797260.8219.21.camel@jlt4.sipsolutions.net>
-	 <CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
-	 <1375800617.8219.23.camel@jlt4.sipsolutions.net>
-	 <CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
-	 <1375801059.8219.24.camel@jlt4.sipsolutions.net>
-	 <CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com>
-	 <CA+icZUWijPJmNoqE22Msqcn7tRot3SB3e=KujMM7JNd-Om-oOw@mail.gmail.com>
-	 <1375802297.8219.25.camel@jlt4.sipsolutions.net>
-	 <CA+icZUVCFOS6SHonEqzaJyWCGCU4nqqGjBN0VbmV-=OoM+deZg@mail.gmail.com>
-	 <CA+icZUVuOqdZUGy2ALAF1CehOqYdr7rtEsXhqNvDtYEns2BuRQ@mail.gmail.com>
-	 <1375802993.8219.26.camel@jlt4.sipsolutions.net>
-	 <CA+icZUW6P9Z_7z+o+z=qBWSFzyU8tgtY0ou+rmLcEzWbn94OXA@mail.gmail.com>
-	 <CA+icZUW7LVzg7sM3O-w5oQpeaj=CT6MS6Q7cRZ1qK0h-Z4wZuw@mail.gmail.com>
-	 <1375804998.8219.27.camel@jlt4.sipsolutions.net>
-	 <CA+icZUVRgVfXUdJ1xoaN=nciqZDhV-f6EbH+6DS7HAh+My65oQ@mail.gmail.com>
-	 <CA+icZUUmQbovkwXcdEp6eu=WJkiuiyO8nDVwCHFUuPDbJqU7Kg@mail.gmail.com>
-	 <CA+icZUV++2+OG=P1SVbNrpHPLyzrfFX0eu8NHrd0nPjkPDUOtQ@mail.gmail.com>
-	 <CA+icZUXpZaHu-FjR6FGnbkG0XEkiukEgYYbDmrSjdqNz4rWCNg@mail.gmail.com>
-	 <1375816128.8219.28.camel@jlt4.sipsolutions.net>
-	 <CA+icZUXaTYVc_iv3hny6Je9mVdX8KCVpFSNBeukS+Fh-347Wvw@mail.gmail.com>
-	 (sfid-20130806_211440_311168_A2CCF549)
+	Mon, 26 Aug 2013 06:28:28 -0400
+Received: by mail-ee0-f50.google.com with SMTP id d51so1507973eek.37
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2013 03:28:26 -0700 (PDT)
+Message-ID: <1377512899.4452.0.camel@canaries32-MCP7A> (sfid-20130826_122830_290334_BAD75E4B)
+Subject: [PATCH 6/6 resend] staging: vt6656: rxtx.c s_vFillRTSHead white
+ space and formating clean up
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 26 Aug 2013 11:28:19 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-08-06 at 21:14 +0200, Sedat Dilek wrote:
-> On Tue, Aug 6, 2013 at 9:08 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Tue, 2013-08-06 at 20:35 +0200, Sedat Dilek wrote:
-> >
-> >> Attached is a diff comparing all new commits in next-20130805.
-> >> If one of the commits smells bad to you, please let me know.
-> >
-> > Out of that list, only the af_packet changes would seem to have any
-> > impact on wireless at all.
-> >
-> 
-> git-bisecting... 2 steps to go...
-> 
-> This one is bad... "af_packet: simplify VLAN frame check in packet_snd"
-> 
-> http://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/commit/?id=c483e02614551e44ced3fe6eedda8e36d3277ccc
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 39 ++++++++++++++++++---------------------
+ 1 file changed, 18 insertions(+), 21 deletions(-)
 
-That seems weird, does reverting it fix it?
-
-johannes
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 0785431..e97bc40 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -725,37 +725,34 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+ 	if (!head)
+ 		return;
+ 
+-    // Note: So far RTSHead doesn't appear in ATIM & Beacom DMA, so we don't need to take them into account.
+-    //       Otherwise, we need to modified codes for them.
+-    if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+-        if (byFBOption == AUTO_FB_NONE) {
+-		vnt_rxtx_rts_g_head(pDevice, &head->rts_g,
++	/* Note: So far RTSHead doesn't appear in ATIM
++	*	& Beacom DMA, so we don't need to take them
++	*	into account.
++	*	Otherwise, we need to modified codes for them.
++	*/
++	if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
++		if (byFBOption == AUTO_FB_NONE)
++			vnt_rxtx_rts_g_head(pDevice, &head->rts_g,
+ 				psEthHeader, byPktType, cbFrameLength,
+ 				bNeedAck, wCurrentRate, byFBOption);
+-        }
+-        else {
+-		vnt_rxtx_rts_g_fb_head(pDevice, &head->rts_g_fb,
++		else
++			vnt_rxtx_rts_g_fb_head(pDevice, &head->rts_g_fb,
+ 				psEthHeader, byPktType, cbFrameLength,
+ 				bNeedAck, wCurrentRate, byFBOption);
+-        } // if (byFBOption == AUTO_FB_NONE)
+-    }
+-    else if (byPktType == PK_TYPE_11A) {
+-        if (byFBOption == AUTO_FB_NONE) {
+-		vnt_rxtx_rts_ab_head(pDevice, &head->rts_ab,
++	} else if (byPktType == PK_TYPE_11A) {
++		if (byFBOption == AUTO_FB_NONE)
++			vnt_rxtx_rts_ab_head(pDevice, &head->rts_ab,
+ 				psEthHeader, byPktType, cbFrameLength,
+ 				bNeedAck, wCurrentRate, byFBOption);
+-        }
+-        else {
+-		vnt_rxtx_rts_a_fb_head(pDevice, &head->rts_a_fb,
++		else
++			vnt_rxtx_rts_a_fb_head(pDevice, &head->rts_a_fb,
+ 				psEthHeader, byPktType, cbFrameLength,
+ 				bNeedAck, wCurrentRate, byFBOption);
+-        }
+-    }
+-    else if (byPktType == PK_TYPE_11B) {
+-	vnt_rxtx_rts_ab_head(pDevice, &head->rts_ab,
++	} else if (byPktType == PK_TYPE_11B) {
++		vnt_rxtx_rts_ab_head(pDevice, &head->rts_ab,
+ 			psEthHeader, byPktType, cbFrameLength,
+ 			bNeedAck, wCurrentRate, byFBOption);
+-    }
++	}
+ }
+ 
+ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+-- 
+1.8.1.2
 
