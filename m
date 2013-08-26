@@ -1,79 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44577 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755746Ab3HLOOn (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:48238 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756161Ab3HZHS1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 10:14:43 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>,
-	<ath10k@lists.infradead.org>
-Subject: Pull request: ath 20130812
-Date: Mon, 12 Aug 2013 17:14:37 +0300
-Message-ID: <871u5zuhbm.fsf@kamboji.qca.qualcomm.com> (sfid-20130812_161446_723462_FE82D5A4)
+	Mon, 26 Aug 2013 03:18:27 -0400
+Received: by mail-la0-f41.google.com with SMTP id ec20so2149136lab.28
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2013 00:18:26 -0700 (PDT)
+Date: Mon, 26 Aug 2013 09:18:06 +0200
+From: Tobias Waldekranz <tobias@waldekranz.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mwifiex: add missing endian conversions
+Message-ID: <20130826071806.GA3035@gmail.com> (sfid-20130826_091830_961968_C1173675)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Fixes multiple locations where a little endian host is assumed during
+ser/des of messages sent to/received from the chip.
 
-here's a small pull request for ath10k and ath6kl. The changes are:
+Signed-off-by: Tobias Waldekranz <tobias@waldekranz.com>
+---
+ drivers/net/wireless/mwifiex/11n_aggr.c    | 2 +-
+ drivers/net/wireless/mwifiex/main.h        | 2 +-
+ drivers/net/wireless/mwifiex/sdio.c        | 6 +++---
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-New features in ath10k are rx/tx checsumming in hw and survey scan
-implemented by Michal. Also he made fixes to different areas of the
-driver, most notable being fixing the case when using two streams and
-reducing the number of interface combinations to avoid firmware crashes.
-Bartosz did a clean related to how we handle SoC power save in PCI
-layer.
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index a78e065..b53c73c 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -69,7 +69,7 @@ mwifiex_11n_form_amsdu_pkt(struct sk_buff *skb_aggr,
+ 	memcpy(&tx_header->eth803_hdr, skb_src->data, dt_offset);
+ 
+ 	/* Copy SNAP header */
+-	snap.snap_type = *(u16 *) ((u8 *)skb_src->data + dt_offset);
++	snap.snap_type = le16_to_cpu(*(__le16 *) ((u8 *)skb_src->data + dt_offset));
+ 	dt_offset += sizeof(u16);
+ 
+ 	memcpy(&tx_header->rfc1042_hdr, &snap, sizeof(struct rfc_1042_hdr));
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 4ef67fc..7797512 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1014,7 +1014,7 @@ mwifiex_netdev_get_priv(struct net_device *dev)
+  */
+ static inline bool mwifiex_is_skb_mgmt_frame(struct sk_buff *skb)
+ {
+-	return (*(u32 *)skb->data == PKT_TYPE_MGMT);
++	return (le32_to_cpu(*(__le32 *)skb->data) == PKT_TYPE_MGMT);
+ }
+ 
+ int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 139c958..27fdbe2 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -963,7 +963,7 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+ 
+ 	case MWIFIEX_TYPE_EVENT:
+ 		dev_dbg(adapter->dev, "info: --- Rx: Event ---\n");
+-		adapter->event_cause = *(u32 *) skb->data;
++		adapter->event_cause = le32_to_cpu(*(__le32 *) skb->data);
+ 
+ 		if ((skb->len > 0) && (skb->len  < MAX_EVENT_SIZE))
+ 			memcpy(adapter->event_body,
+@@ -1088,8 +1088,8 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 		for (pind = 0; pind < card->mpa_rx.pkt_cnt; pind++) {
+ 
+ 			/* get curr PKT len & type */
+-			pkt_len = *(u16 *) &curr_ptr[0];
+-			pkt_type = *(u16 *) &curr_ptr[2];
++			pkt_len = le16_to_cpu(*(__le16 *) &curr_ptr[0]);
++			pkt_type = le16_to_cpu(*(__le16 *) &curr_ptr[2]);
+ 
+ 			/* copy pkt to deaggr buf */
+ 			skb_deaggr = card->mpa_rx.skb_arr[pind];
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 9f990e1..f12468a8 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -280,7 +280,7 @@ static int mwifiex_ret_tx_rate_cfg(struct mwifiex_private *priv,
+ 
+ 	tlv_buf = ((u8 *)rate_cfg) +
+ 			sizeof(struct host_cmd_ds_tx_rate_cfg);
+-	tlv_buf_len = *(u16 *) (tlv_buf + sizeof(u16));
++	tlv_buf_len = le16_to_cpu(*(__le16 *) (tlv_buf + sizeof(u16)));
+ 
+ 	while (tlv_buf && tlv_buf_len > 0) {
+ 		tlv = (*tlv_buf);
+-- 
+1.8.3
 
-For ath6kl Mohammed and Vasanth sent each a patch to fix two infrequent
-crashes.
-
-The following changes since commit 424121c365aed6ec93bbc8b515548df79c5af61c:
-
-  ath10k: fix rts/fragmentation threshold setup (2013-07-30 18:01:21 +0300)
-
-are available in the git repository at:
-
-  git://github.com/kvalo/ath.git for-linville
-
-for you to fetch changes up to 9d0e2f0772d394060bf3b17cd1f3a35574365103:
-
-  ath6kl: Fix invalid pointer access on fuzz testing with AP mode (2013-08-07 10:58:59 +0300)
-
-----------------------------------------------------------------
-Bartosz Markowski (1):
-      ath10k: add SoC power save option to PCI features map
-
-Michal Kazior (11):
-      ath10k: improve tx throughput on slow machines
-      ath10k: detect the number of spatial streams supported by hw
-      ath10k: implement rx checksum offloading
-      ath10k: implement tx checksum offloading
-      ath10k: implement get_survey()
-      ath10k: prevent using invalid ringbuffer indexes
-      ath10k: make sure to use passive scan when n_ssids is 0
-      ath10k: advertise more conservative intf combinations
-      ath10k: zero arvif memory on add_interface()
-      ath10k: fix failpath in MSI-X setup
-      ath10k: fix device teardown
-
-Mohammed Shafi Shajakhan (1):
-      ath6kl: Fix invalid pointer access on fuzz testing with AP mode
-
-Vasanthakumar Thiagarajan (1):
-      ath6kl: Fix race in heart beat polling
-
- drivers/net/wireless/ath/ath10k/ce.c     |    5 ++
- drivers/net/wireless/ath/ath10k/core.h   |    8 +++
- drivers/net/wireless/ath/ath10k/htt_rx.c |   40 ++++++++++++++
- drivers/net/wireless/ath/ath10k/htt_tx.c |    2 +
- drivers/net/wireless/ath/ath10k/mac.c    |   79 +++++++++++++++++++++------
- drivers/net/wireless/ath/ath10k/pci.c    |   70 +++++++++++++++++-------
- drivers/net/wireless/ath/ath10k/pci.h    |   11 ++--
- drivers/net/wireless/ath/ath10k/wmi.c    |   87 ++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.h    |    5 ++
- drivers/net/wireless/ath/ath6kl/init.c   |    3 ++
- drivers/net/wireless/ath/ath6kl/main.c   |    3 ++
- 11 files changed, 270 insertions(+), 43 deletions(-)
