@@ -1,89 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:59829 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031224Ab3HIVmu (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:36884 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755827Ab3HZGVK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 17:42:50 -0400
-Received: by mail-ob0-f172.google.com with SMTP id er7so5892094obc.31
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Aug 2013 14:42:49 -0700 (PDT)
-Message-ID: <52056258.5070009@lwfinger.net> (sfid-20130809_234253_983072_16F6A037)
-Date: Fri, 09 Aug 2013 16:42:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ronald <ronald645@gmail.com>
-CC: linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: Re: [v3.9] [regression] [b43] : mac80211/minstrel: use the new rate
- control API
-References: <CAF1_xX2j6evCrjK-XXm7y2ayOtjHEPJWva-OZJdL5SsVAif=Ew@mail.gmail.com>
-In-Reply-To: <CAF1_xX2j6evCrjK-XXm7y2ayOtjHEPJWva-OZJdL5SsVAif=Ew@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 26 Aug 2013 02:21:10 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Fix TX poll work locking
+Date: Mon, 26 Aug 2013 11:47:22 +0530
+Message-Id: <1377497842-14742-1-git-send-email-sujith@msujith.org> (sfid-20130826_082114_179434_EAAFC4E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/09/2013 04:25 PM, Ronald wrote:
-> [ Please cc me as I'm not subscribed ]
->
-> Mentioned commit causes a regression on my box. It oopses after
-> NetworkManager comes up and tries to use the card (I think).
->
-> The card is:
->
-> [    1.220907] b43-phy0: Broadcom 4311 WLAN found (core revision 10)
-> [    1.230206] ata1.00: configured for UDMA/100
-> [    1.320018] b43-phy0: Found PHY: Analog 4, Type 2 (G), Revision 8
-> [    1.380120] Broadcom 43xx driver loaded [ Features: P ]
->
-> I typed over the oops (first lines fell off, sorry):
->
-> Workqueue: phy0 ieee80211_scan_work
-> task: ffff880000211c20 ti: ffff880034c0c000 task.ti: ffff880034c0c000
-> RIP: 0010:[<ffffffff81580382>] [<ffffffff81580382>] minstrel_get_rate+0x22/0x250
-> RSP: 0018:ffff880034c0da88 EFLAGS: 00010286
-> RAX: ffffffff81870ac0 RBX: 0000000000000000 RCX: ffff880034c0db58
-> RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff880034c67a00
-> RBP: ffff880034c0dac8 R08: ffff8800000863a0 R09: 0000000000000fff
-> R10: ffffffff81856020 R11: 0000000000000000 R12: ffff880034c67a00
-> R13: ffff880034da2740 R14: ffff880034c0db58 R15: ffff88000039f940
-> FS:  00007fd6da002700(0000) GS:ffffffff8181e000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 000000000005003b
-> CR2: 0000000000000048 CR3: 000000003517e000 CR4: 00000000000007f0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Stack:
->   0000000000000000 ffff880034c0db28 ffff880034c0daf8 ffff88003517c330
->   0000000000000000 ffff880034da2740 ffff880034c0db58 ffff88000039f940
->   ffff880034c0daf8 ffffffff815653e1 ffff880034c0dbe0 ffff88003517c300
-> Call Trace:
->   [<ffffffff815653e1>] rate_control_get_rate+0xa1/0xe0
->   [<ffffffff815709e9>] invoke_tx_handlers+0x729/0x1360
->   [<ffffffff8104bc3d>] ? sched_clock_local.constprop.1+0x1d/0x90
->   [<ffffffff8104ce6e>] ? check_preempt_wakeup+0x11e/0x240
->   [<ffffffff8157169d>] ieee80211_tx+0x7d/0x100
->   [<ffffffff815717b1>] ieee80211_xmit+0x91/0xc0
->   [<ffffffff8157307e>] __ieee80211_tx_skb_tid_band+0x6e/0x80
->   [<ffffffff81577643>] ieee80211_send_probe_req+0x73/0xc0
->   [<ffffffff8155a10f>] ieee80211_scan_state_send_probe+0x9f/0xe0
->   [<ffffffff8155ad9c>] ieee80211_scan_work+0x1fc/0x440
->   [<ffffffff8103c9ba>] process_one_work+0x13a/0x3b0
->   [<ffffffff8103cfcb>] worker_thread+0x10b/0x350
->   [<ffffffff8103cec0>] ? rescuer_thread+0x250/0x250
->   [<ffffffff81042afa>] kthread+0xba/0xc0
->   [<ffffffff81042a40>] ? __kthread_parkme+0x80/0x80
->   [<ffffffff8158c32a>] ret_from_fork+0x7a/0xb0
->   [<ffffffff81042a40>] ? __kthread_parkme+0x80/0x80
-> Code: 00 00 00 00 00 0f 1f 40 00 55 48 89 e5 48 83 ec 40 48 89 5d d8
-> 4c 89 65 e0 48 89 d3 4c 89 6d e8 4c 89 7d f8 49 89 fc 4c 89 75 f0 <44>
-> 0f b6 f7 4c 8b 71 18 48 89 ca 48 89 de 49 89 cd
-> RIP  [<ffffffff81580382>] minstrel_get_rate+0x22/0x250
->   RSP <ffff880034c0da88>
-> CR2: 0000000000000048
-> ---[ end trace 071727ab6dc6fcf3 ]---
-> Kernel panic - not syncing: Fatal exception in interrupt
-> drm_kms_helper: panic occurred, switching back to text console
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-What kernel are you using? In addition, are you using NetworkManager and what 
-desktop and/or distro release. I thought this problem was fixed some time ago.
+There is no need to call ath_txq_unlock_complete() in the
+TX poll routine - frame completion is not done here,
+so use ath_txq_unlock().
 
-Larry
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/link.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index fff5d3c..2f831db 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -41,7 +41,7 @@ void ath_tx_complete_poll_work(struct work_struct *work)
+ 				txq->axq_tx_inprogress = true;
+ 			}
+ 		}
+-		ath_txq_unlock_complete(sc, txq);
++		ath_txq_unlock(sc, txq);
+ 	}
+ 
+ 	if (needreset) {
+-- 
+1.8.3.4
 
