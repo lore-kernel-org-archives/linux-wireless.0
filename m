@@ -1,63 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:34009 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756085Ab3HATDc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Aug 2013 15:03:32 -0400
+Received: from ebb05.tieto.com ([131.207.168.36]:64039 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756243Ab3HZIxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Aug 2013 04:53:40 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 4/4] ath10k: fix issues on non-preemptible systems
+Date: Mon, 26 Aug 2013 10:53:25 +0200
+Message-ID: <1377507205-5386-5-git-send-email-michal.kazior@tieto.com> (sfid-20130826_105346_077751_3359D244)
+In-Reply-To: <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
+References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
+ <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <20130801174749.GC10904@shaftnet.org>
-References: <1375338204-2021-8-git-send-email-sujith@msujith.org>
- <1375370826-1387-1-git-send-email-sujith@msujith.org> <51FA8ECD.7070401@lenbrook.com>
- <20130801174749.GC10904@shaftnet.org>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 1 Aug 2013 12:03:08 -0700
-Message-ID: <CAB=NE6XqfKeddOSu=my3JOZDvg7nQtacZU6o4VeZXTZSLAAEnQ@mail.gmail.com> (sfid-20130801_210336_031550_4C99A999)
-Subject: Re: cross compile backports?
-To: Solomon Peachy <pizza@shaftnet.org>
-Cc: Jonathan Bagg <jbagg@lenbrook.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"backports@vger.kernel.org" <backports@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 1, 2013 at 10:47 AM, Solomon Peachy <pizza@shaftnet.org> wrote:
-> On Thu, Aug 01, 2013 at 12:37:33PM -0400, Jonathan Bagg wrote:
->> I've been cross compiling compat-wireless and now I'm trying
->> backports.  It looks like conf.c and zconf.tab.c are being compiled
->> as arm and then the build process is trying to run conf on my x86
->> host.  Results using the below make parameters I was using for
->> compat-wireless......
->
-> Howdy.  :)
->
-> (btw, I'm CC'ing the backports mailing list, which is a better place to
->  ask these sorts of questions)
->
-> I found that the backports cross-compile process worked much the same
-> way as building compat-wireless.  This is what I'm doing currently in my
-> build script:  (This is using a backports package generated last night
-> using the backports git HEAD code with the cw1200 driver integrated)
->
->  set -a
->  CROSS_COMPILE=${CROSS_COMPILE}
->  ARCH=${TARGET_CPU}
->  KLIB_BUILD=${DEV_PATH}/${LINUX_DIR}
->  KLIB=${TARGET_ROOT_ON_HOST}
->  set +a
->  make oldconfig  # menuconfig worked here too
->  make
->  make install
->
-> That said, the 'make install' target isn't currently sane for
-> cross-builds due to the bacport_firmware_install script not respecting
-> prefixes.  I just commented that script (and a few others like initrd
-> updates) out of the Makefiles, and I had a successful build/install.
+Workers may not call into a sleepable function
+(e.g. mutex_lock). Since ath10k workers can run
+for a very long time it is necessary to explicitly
+allow process rescheduling in case there's no
+preemption.
 
-Thanks, now:
+This fixes some issues with system freezes, hangs,
+watchdogs being triggered, userspace being
+unresponsive on slow host machines under heavy
+load.
 
-https://backports.wiki.kernel.org/index.php/Documentation#Cross_compiling
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c    |    4 ++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    4 ++++
+ drivers/net/wireless/ath/ath10k/wmi.c    |    4 ++++
+ 3 files changed, 12 insertions(+)
 
-Patches welcome to help improve the cross compile install target.
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 7d445d3..99f1dbd 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -237,6 +237,10 @@ static void ath10k_htc_send_work(struct work_struct *work)
+ 		ret = ath10k_htc_issue_skb(htc, ep, skb, credits);
+ 		if (ret == -ENOSR)
+ 			break;
++
++#ifndef CONFIG_PREEMPT
++		cond_resched();
++#endif
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6cf4d95..80ea398 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1229,6 +1229,10 @@ static void ath10k_htt_rx_work(struct work_struct *work)
+ 			break;
+ 
+ 		ath10k_htt_rx_process_skb(htt->ar, skb);
++
++#ifndef CONFIG_PREEMPT
++		cond_resched();
++#endif
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 32fd5e7..f36f0be 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1155,6 +1155,10 @@ static void ath10k_wmi_event_work(struct work_struct *work)
+ 			break;
+ 
+ 		ath10k_wmi_event_process(ar, skb);
++
++#ifndef CONFIG_PREEMPT
++		cond_resched();
++#endif
+ 	}
+ }
+ 
+-- 
+1.7.9.5
 
-  Luis
