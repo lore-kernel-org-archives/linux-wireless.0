@@ -1,147 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:49639 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503Ab3HTIeu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 04:34:50 -0400
-Received: by mail-bk0-f41.google.com with SMTP id na10so44708bkb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2013 01:34:49 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:56488 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751849Ab3H0JI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 05:08:57 -0400
+Date: Tue, 27 Aug 2013 11:07:08 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Paul Menzel <paulepanter@users.sourceforge.net>
+Cc: Fabien ADAM <id2ndr@crocobox.org>, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 3.11] rt2800: fix wrong TX power
+ compensation
+Message-ID: <20130827090707.GB5548@redhat.com> (sfid-20130827_110900_476613_5C5C3914)
+References: <20130826131851.GB10525@redhat.com>
+ <1377548398.4408.4.camel@mattotaupa>
+ <20130827080001.GA2609@redhat.com>
+ <1377591765.5019.23.camel@mattotaupa>
 MIME-Version: 1.0
-In-Reply-To: <5212F6E8.3090107@openwrt.org>
-References: <CAG-2HqUXQeq=30EpGWmn6tkC=CP1W+=UZCVPTYhhE0WyU_C4nw@mail.gmail.com>
- <20130820000336.GA15548@kroah.com> <CAG-2HqUkxvtJNGx0UbZVfaBNvSY-OU+=anSSnroS3AfSR9H0SA@mail.gmail.com>
- <20130820002822.GA18023@kroah.com> <5212F6E8.3090107@openwrt.org>
-From: Tom Gundersen <teg@jklm.no>
-Date: Tue, 20 Aug 2013 16:34:28 +0800
-Message-ID: <CAG-2HqVFn9CWnVQ+_=OUWj3nM7UH=_O2s=ckB5FLHeC6MThwwg@mail.gmail.com> (sfid-20130820_103456_808363_55A1FB3B)
-Subject: Re: [REGRESSION] 3.10.{6,7} crashes on network activity
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1377591765.5019.23.camel@mattotaupa>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 20, 2013 at 12:56 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2013-08-20 2:28 AM, Greg Kroah-Hartman wrote:
->> On Tue, Aug 20, 2013 at 08:26:11AM +0800, Tom Gundersen wrote:
->>> On Tue, Aug 20, 2013 at 8:03 AM, Greg Kroah-Hartman
->>> <gregkh@linuxfoundation.org> wrote:
->>> > On Tue, Aug 20, 2013 at 07:59:47AM +0800, Tom Gundersen wrote:
->>> >> Hi guys,
->>> >>
->>> >> Starting with 3.10.6 (and still present in .7) I get an oops on
->>> >> connecting to the network.
->>> >>
->>> >> The attached picture shows the oops. In case it does not reach the ML,
->>> >> the top of the call trace reads:
->>> >>
->>> >> brcms_c_compute_rtscts_dur
->>> >> brcms_c_ampdu_finalize
->>> >> ampdu_finalize
->>> >> dma_txfast
->>> >> brcms_c_txfifo
->>> >> brcms_c_sendpkt_mac80211
->>> >> brcms_ops_tx
->>> >> __ieee80211_tx
->>> >>
->>> >> I bisected the problem and the first bad commit is
->>> >>
->>> >> commit ef47a5e4f1aaf1d0e2e6875e34b2c9595897bef6
->>> >> Author: Felix Fietkau <nbd@openwrt.org>
->>> >> Date:   Fri Jun 28 21:04:35 2013 +0200
->>> >>
->>> >>     mac80211/minstrel_ht: fix cck rate sampling
->>> >>
->>> >>     commit 1cd158573951f737fbc878a35cb5eb47bf9af3d5 upstream.
->>> >>
->>> >> Reverting it on top of .7 fixes the problem.
->>> >>
->>> >> I had the same (I suppose) problem on mainline some time ago, but I
->>> >> have not bisected it, verified that the problem still occurs there, or
->>> >> checked if reverting the upstream patch fixes it. I'd be happy to do
->>> >> that if it would help though.
->>> >>
->>> >> Let me know if you need any more information.
->>> >
->>> > Do you have this same problem with 3.11-rc6 as well?
->>>
->>> Yes, I just confirmed. I also confirmed that reverting the mainline
->>> commit on top of -rc6 fixes the problem.
->>
->> Great, thanks.
->>
->> Felix and Johannes, any chance we can get this reverted in Linus tree
->> soon, and push that revert back to the 3.10 stable tree as well?
-> I'd like to avoid a revert, since that will simply replace one set of
-> issues with another. Let's limit the use of the feature that brcmsmac
-> can't handle to drivers that are known to work with it. Tom, Please
-> test this patch to see if it fixes your issue.
+On Tue, Aug 27, 2013 at 10:22:45AM +0200, Paul Menzel wrote:
+> > I checked 2 devices (3071 & 3070) but they have EXTERNAL_TX_ALC bit set.
+> > I assume the fix is correct based on vendor driver and it fixes devices
+> > which have no EXTERNAL_TX_ACL, but I can not tell what chipset that are.
+> > Is possible that the same chipset can be configured with and without
+> > EXTERNAL_TX_ALC.
+> 
+> I have the following device.
+> 
+>         $ lsusb -s 004
+>         Bus 002 Device 004: ID 148f:2870 Ralink Technology, Corp. RT2870 Wireless Adapter
+> 
+> How do I check if the bit is set? Sometimes the device disconnects when
+> being 10 meters away from the access point. The connection is also
+> slower than with an ath5k device right next to it.
 
-The patch (on top of -rc6) fixes it for me. Thanks.
+If you compiled kernel with DEBUGFS support, you can check that by:
 
--t
+mount -t debugfs debugfs /sys/kernel/debug/
+cd /sys/kernel/debug/ieee80211/phy0/rt2800usb/register/
+echo "0x001b" > eeprom_offset
+cat eeprom_value
 
-> ---
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1501,6 +1501,7 @@ enum ieee80211_hw_flags {
->         IEEE80211_HW_SUPPORTS_RC_TABLE                  = 1<<24,
->         IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF              = 1<<25,
->         IEEE80211_HW_TIMING_BEACON_ONLY                 = 1<<26,
-> +       IEEE80211_HW_SUPPORTS_HT_CCK_RATES              = 1<<27,
->  };
->
->  /**
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -828,6 +828,9 @@ minstrel_ht_update_cck(struct minstrel_p
->         if (sband->band != IEEE80211_BAND_2GHZ)
->                 return;
->
-> +       if (!(mp->hw->flags & IEEE80211_HW_SUPPORTS_HT_CCK_RATES))
-> +               return;
-> +
->         mi->cck_supported = 0;
->         mi->cck_supported_short = 0;
->         for (i = 0; i < 4; i++) {
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -807,7 +807,8 @@ void ath9k_set_hw_capab(struct ath_softc
->                 IEEE80211_HW_PS_NULLFUNC_STACK |
->                 IEEE80211_HW_SPECTRUM_MGMT |
->                 IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-> -               IEEE80211_HW_SUPPORTS_RC_TABLE;
-> +               IEEE80211_HW_SUPPORTS_RC_TABLE |
-> +               IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
->
->         if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
->                 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
-> --- a/drivers/net/wireless/ath/carl9170/main.c
-> +++ b/drivers/net/wireless/ath/carl9170/main.c
-> @@ -1878,7 +1878,8 @@ void *carl9170_alloc(size_t priv_size)
->                      IEEE80211_HW_PS_NULLFUNC_STACK |
->                      IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC |
->                      IEEE80211_HW_SUPPORTS_RC_TABLE |
-> -                    IEEE80211_HW_SIGNAL_DBM;
-> +                    IEEE80211_HW_SIGNAL_DBM |
-> +                    IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
->
->         if (!modparam_noht) {
->                 /*
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -6327,7 +6327,8 @@ static int rt2800_probe_hw_mode(struct r
->             IEEE80211_HW_SUPPORTS_PS |
->             IEEE80211_HW_PS_NULLFUNC_STACK |
->             IEEE80211_HW_AMPDU_AGGREGATION |
-> -           IEEE80211_HW_REPORTS_TX_ACK_STATUS;
-> +           IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-> +           IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
->
->         /*
->          * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
->
+Second less significant bit is EXTERNAL_TX_ALC .
+
+I think your device has EXTERNAL_TX_ACL since it's older chip, but who
+knows ...
+
+Stanislaw
+
+
