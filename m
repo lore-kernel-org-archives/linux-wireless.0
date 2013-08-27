@@ -1,184 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57815 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756277Ab3HFMSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 08:18:25 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:60914 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751521Ab3H0T1v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 15:27:51 -0400
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, sujith@msujith.org
-Subject: [PATCH v2 11/12] ath9k: improve tx scheduling fairness
-Date: Tue,  6 Aug 2013 14:18:12 +0200
-Message-Id: <1375791493-83971-11-git-send-email-nbd@openwrt.org> (sfid-20130806_141835_532833_C14B8DB4)
-In-Reply-To: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
-References: <1375791493-83971-1-git-send-email-nbd@openwrt.org>
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] iw:  Print out HotSpot2 IE information.
+Date: Tue, 27 Aug 2013 12:27:41 -0700
+Message-Id: <1377631661-26997-1-git-send-email-greearb@candelatech.com> (sfid-20130827_212755_179245_B6A3989D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of trying to schedule the same TID multiple times in a loop,
-iterate over other TIDs/stations first.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Example:
+
+	HotSpot 2.0 Indication:
+		DGAF: 0
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 89 ++++++++++++++++++++---------------
- 1 file changed, 50 insertions(+), 39 deletions(-)
+:100644 100644 1a48509... c20c386... M	scan.c
+ scan.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3b66f2b..f9e6eb2 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1345,8 +1345,8 @@ ath_tx_form_burst(struct ath_softc *sc, struct ath_txq *txq,
- 	} while (1);
- }
- 
--static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
--			      struct ath_atx_tid *tid)
-+static bool ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
-+			      struct ath_atx_tid *tid, bool *stop)
- {
- 	struct ath_buf *bf;
- 	struct ieee80211_tx_info *tx_info;
-@@ -1355,40 +1355,41 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	int aggr_len = 0;
- 	bool aggr, last = true;
- 
--	do {
--		if (!ath_tid_has_buffered(tid))
--			return;
-+	if (!ath_tid_has_buffered(tid))
-+		return false;
- 
--		INIT_LIST_HEAD(&bf_q);
-+	INIT_LIST_HEAD(&bf_q);
- 
--		bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
--		if (!bf)
--			break;
-+	bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
-+	if (!bf)
-+		return false;
- 
--		tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
--		aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
--		if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
--		    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH))
--			break;
-+	tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
-+	aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
-+	if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
-+		(!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH)) {
-+		*stop = true;
-+		return false;
-+	}
- 
--		ath_set_rates(tid->an->vif, tid->an->sta, bf);
--		if (aggr)
--			last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
--						tid_q, &aggr_len);
--		else
--			ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
-+	ath_set_rates(tid->an->vif, tid->an->sta, bf);
-+	if (aggr)
-+		last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
-+					tid_q, &aggr_len);
-+	else
-+		ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
- 
--		if (list_empty(&bf_q))
--			return;
-+	if (list_empty(&bf_q))
-+		return false;
- 
--		if (tid->ac->clear_ps_filter) {
--			tid->ac->clear_ps_filter = false;
--			tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
--		}
-+	if (tid->ac->clear_ps_filter) {
-+		tid->ac->clear_ps_filter = false;
-+		tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
-+	}
- 
--		ath_tx_fill_desc(sc, bf, txq, aggr_len);
--		ath_tx_txqaddbuf(sc, txq, &bf_q, false);
--	} while (!last);
-+	ath_tx_fill_desc(sc, bf, txq, aggr_len);
-+	ath_tx_txqaddbuf(sc, txq, &bf_q, false);
-+	return true;
- }
- 
- int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
-@@ -1824,25 +1825,27 @@ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
-  */
- void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- {
--	struct ath_atx_ac *ac, *ac_tmp, *last_ac;
-+	struct ath_atx_ac *ac, *last_ac;
- 	struct ath_atx_tid *tid, *last_tid;
-+	bool sent = false;
- 
- 	if (test_bit(SC_OP_HW_RESET, &sc->sc_flags) ||
--	    list_empty(&txq->axq_acq) ||
--	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
-+	    list_empty(&txq->axq_acq))
- 		return;
- 
- 	rcu_read_lock();
- 
--	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
- 	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
-+	while (!list_empty(&txq->axq_acq)) {
-+		bool stop = false;
- 
--	list_for_each_entry_safe(ac, ac_tmp, &txq->axq_acq, list) {
-+		ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
- 		last_tid = list_entry(ac->tid_q.prev, struct ath_atx_tid, list);
- 		list_del(&ac->list);
- 		ac->sched = false;
- 
- 		while (!list_empty(&ac->tid_q)) {
-+
- 			tid = list_first_entry(&ac->tid_q, struct ath_atx_tid,
- 					       list);
- 			list_del(&tid->list);
-@@ -1851,7 +1854,8 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 			if (tid->paused)
- 				continue;
- 
--			ath_tx_sched_aggr(sc, txq, tid);
-+			if (ath_tx_sched_aggr(sc, txq, tid, &stop))
-+				sent = true;
- 
- 			/*
- 			 * add tid to round-robin queue if more frames
-@@ -1860,8 +1864,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 			if (ath_tid_has_buffered(tid))
- 				ath_tx_queue_tid(txq, tid);
- 
--			if (tid == last_tid ||
--			    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
-+			if (stop || tid == last_tid)
- 				break;
- 		}
- 
-@@ -1870,9 +1873,17 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 			list_add_tail(&ac->list, &txq->axq_acq);
- 		}
- 
--		if (ac == last_ac ||
--		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
-+		if (stop)
- 			break;
-+
-+		if (ac == last_ac) {
-+			if (!sent)
-+				break;
-+
-+			sent = false;
-+			last_ac = list_entry(txq->axq_acq.prev,
-+					     struct ath_atx_ac, list);
-+		}
+diff --git a/scan.c b/scan.c
+index 1a48509..c20c386 100644
+--- a/scan.c
++++ b/scan.c
+@@ -1388,8 +1388,21 @@ static inline void print_p2p(const uint8_t type, uint8_t len, const uint8_t *dat
  	}
+ }
  
- 	rcu_read_unlock();
++static inline void print_hs20_ind(const uint8_t type, uint8_t len, const uint8_t *data)
++{
++	/* I can't find the spec for this...just going off what wireshark uses. */
++	printf("\n");
++	if (len > 0) {
++		printf("\t\tDGAF: %i\n", (int)(data[0] & 0x1));
++	}
++	else {
++		printf("\t\tUnexpected length: %i\n", len);
++	}
++}
++
+ static const struct ie_print wfa_printers[] = {
+ 	[9] = { "P2P", print_p2p, 2, 255, BIT(PRINT_SCAN), },
++	[16] = { "HotSpot 2.0 Indication", print_hs20_ind, 1, 255, BIT(PRINT_SCAN), },
+ };
+ 
+ static void print_vendor(unsigned char len, unsigned char *data,
 -- 
-1.8.0.2
+1.7.3.4
 
