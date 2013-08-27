@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:50020 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754201Ab3HKQab (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:8391 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057Ab3H0G52 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Aug 2013 12:30:31 -0400
-Message-ID: <5207BA00.3030709@monom.org> (sfid-20130811_183053_805279_0CF718BF)
-Date: Sun, 11 Aug 2013 18:21:20 +0200
-From: Daniel Wagner <wagi@monom.org>
+	Tue, 27 Aug 2013 02:57:28 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 0/4] ath10k: fixes
+References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
+	<1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
+	<CAB=NE6X=P2hTnOC8xqFwb=-32-hBgx=ndq3KHoUG83KptKv0vA@mail.gmail.com>
+Date: Tue, 27 Aug 2013 09:57:22 +0300
+Message-ID: <87mwo3mxil.fsf@kamboji.qca.qualcomm.com> (sfid-20130827_085730_778087_05A539E6)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: linux-kernel@vger.kernel.org, Arend van Spriel <arend@broadcom.com>
-Subject: brcsmac kernel panic
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
 
-I just updated my laptop (MacBook Air 2012) from 3.11-rc3+ to 3.11-rc4+ 
-and since then brcsmac crashes short after enabling it. Unfortunately, I 
-did also change some config flags in the area of cpufreq (enabling 
-p-state driver) so the configuration is not exactly the same. Before I 
-try to figure out what I have changed, I am posting the picture of the 
-crash. Maybe it is something obvious.
+> On Mon, Aug 26, 2013 at 1:53 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>   ath10k: fix issues on non-preemptible systems
+>
+> This patch looks like a stable candidate fix. Please annotate as such
+> if you confirm. Also, I reviewed other ath10k "fixes" and I see no
+> practice of propagating any patches to stable yet. Can you please
+> start doing that? If there were patches which are already merged
+> upstream that should be propagated to stable then they can be
+> submitted as stable candidate patches.
 
-v3.11-rc4-197-gd92581f
-http://www.monom.org/misc/brcmsmac/v3.11-rc4.config
-http://www.monom.org/misc/brcmsmac/IMAG0064.jpg
+I disagree. The point of linux-stable is _not_ that we send all possible
+fixes to stable. Instead we should send fixes only which really matter
+to users and for which we have received bug reports. I haven't yet seen
+any fix for ath10k which should be a candidate for stable releases.
 
-hth,
-daniel
+If we start sending all ath10k fixes to stable it's just extra churn for
+both Greg and people working on ath10k.
+
+-- 
+Kalle Valo
