@@ -1,115 +1,367 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:56997 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934153Ab3HJPTX (ORCPT
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:45471 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752776Ab3H0KvG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 11:19:23 -0400
-Message-ID: <520659F8.1050307@lwfinger.net> (sfid-20130810_171927_845113_A4BE6F6D)
-Date: Sat, 10 Aug 2013 10:19:20 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH v3] brcmsmac: Fix WARNING caused by lack of calls to dma_mapping_error()
-References: <51E852DE.6000403@broadcom.com> <1376069781-22958-1-git-send-email-linville@tuxdriver.com> <520567B9.1000605@lwfinger.net> <5205F19E.6060907@broadcom.com>
-In-Reply-To: <5205F19E.6060907@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 27 Aug 2013 06:51:06 -0400
+Received: by mail-bk0-f47.google.com with SMTP id mx12so1535934bkb.34
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 03:51:04 -0700 (PDT)
+Message-ID: <1377600658.3320.63.camel@canaries32-MCP7A> (sfid-20130827_125113_041290_962B3896)
+Subject: [PATCH 3/5] staging: vt6656: rxtx.c s_vGenerateTxParameter create
+ argument bool need rts
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Aug 2013 11:50:58 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/10/2013 02:54 AM, Arend van Spriel wrote:
-> On 08/10/13 00:05, Larry Finger wrote:
->> On 08/09/2013 12:36 PM, John W. Linville wrote:
->>> From: "John W. Linville" <linville@tuxdriver.com>
->>>
->>> The driver fails to check the results of DMA mapping in twp places,
->>> which results in the following warning:
->>>
->>> [ 28.078515] ------------[ cut here ]------------
->>> [ 28.078529] WARNING: at lib/dma-debug.c:937 check_unmap+0x47e/0x930()
->>> [ 28.078533] bcma-pci-bridge 0000:0e:00.0: DMA-API: device driver
->>> failed to check map error[device address=0x00000000b5d60d6c]
->>> [size=1876 bytes] [mapped as
->>> single]
->>> [ 28.078536] Modules linked in: bnep bluetooth vboxpci(O)
->>> vboxnetadp(O) vboxnetflt(O) vboxdrv(O) ipv6 b43 brcmsmac rtl8192cu
->>> rtl8192c_common rtlwifi mac802
->>> 11 brcmutil cfg80211 snd_hda_codec_conexant rng_core snd_hda_intel
->>> kvm_amd snd_hda_codec ssb kvm mmc_core snd_pcm snd_seq snd_timer
->>> snd_seq_device snd k8temp
->>> cordic joydev serio_raw hwmon sr_mod sg pcmcia pcmcia_core soundcore
->>> cdrom i2c_nforce2 i2c_core forcedeth bcma snd_page_alloc autofs4 ext4
->>> jbd2 mbcache crc1
->>> 6 scsi_dh_alua scsi_dh_hp_sw scsi_dh_rdac scsi_dh_emc scsi_dh
->>> ata_generic pata_amd
->>> [ 28.078602] CPU: 1 PID: 2570 Comm: NetworkManager Tainted: G O
->>> 3.10.0-rc7-wl+ #42
->>> [ 28.078605] Hardware name: Hewlett-Packard HP Pavilion dv2700
->>> Notebook PC/30D6, BIOS F.27 11/27/2008
->>> [ 28.078607] 0000000000000009 ffff8800bbb03ad8 ffffffff8144f898
->>> ffff8800bbb03b18
->>> [ 28.078612] ffffffff8103e1eb 0000000000000002 ffff8800b719f480
->>> ffff8800b7b9c010
->>> [ 28.078617] ffffffff824204c0 ffffffff81754d57 0000000000000754
->>> ffff8800bbb03b78
->>> [ 28.078622] Call Trace:
->>> [ 28.078624] <IRQ> [<ffffffff8144f898>] dump_stack+0x19/0x1b
->>> [ 28.078634] [<ffffffff8103e1eb>] warn_slowpath_common+0x6b/0xa0
->>> [ 28.078638] [<ffffffff8103e2c1>] warn_slowpath_fmt+0x41/0x50
->>> [ 28.078650] [<ffffffff8122d7ae>] check_unmap+0x47e/0x930
->>> [ 28.078655] [<ffffffff8122de4c>] debug_dma_unmap_page+0x5c/0x70
->>> [ 28.078679] [<ffffffffa04a808c>] dma64_getnextrxp+0x10c/0x190 [brcmsmac]
->>> [ 28.078691] [<ffffffffa04a9042>] dma_rx+0x62/0x240 [brcmsmac]
->>> [ 28.078707] [<ffffffffa0479101>] brcms_c_dpc+0x211/0x9d0 [brcmsmac]
->>> [ 28.078717] [<ffffffffa046d927>] ? brcms_dpc+0x27/0xf0 [brcmsmac]
->>> [ 28.078731] [<ffffffffa046d947>] brcms_dpc+0x47/0xf0 [brcmsmac]
->>> [ 28.078736] [<ffffffff81047dcc>] tasklet_action+0x6c/0xf0
->>> --snip--
->>> [ 28.078974] [<ffffffff813891bd>] SyS_sendmsg+0xd/0x20
->>> [ 28.078979] [<ffffffff81455c24>] tracesys+0xdd/0xe2
->>> [ 28.078982] ---[ end trace 6164d1a08148e9c8 ]---
->>> [ 28.078984] Mapped at:
->>> [ 28.078985] [<ffffffff8122c8fd>] debug_dma_map_page+0x9d/0x150
->>> [ 28.078989] [<ffffffffa04a9322>] dma_rxfill+0x102/0x3d0 [brcmsmac]
->>> [ 28.079001] [<ffffffffa047a13d>] brcms_c_init+0x87d/0x1100 [brcmsmac]
->>> [ 28.079010] [<ffffffffa046d851>] brcms_init+0x21/0x30 [brcmsmac]
->>> [ 28.079018] [<ffffffffa04786e0>] brcms_c_up+0x150/0x430 [brcmsmac]
->>>
->>> As the patch adds a new failure mechanism to dma_rxfill(). When I
->>> changed the
->>> comment at the start of the routine to add that information, I also
->>> polished
->>> the wording.
->>>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> Cc: Stable <stable@vger.kernel.org>
->>> Cc: Brett Rudley <brudley@broadcom.com>
->>> Cc: Arend van Spriel <arend@broadcom.com>
->>> Cc: Franky (Zhenhui) Lin <frankyl@broadcom.com>
->>> Cc: Hante Meuleman <meuleman@broadcom.com>
->>> Cc: brcm80211-dev-list@broadcom.com
->>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->>> ---
->>> Did this one get lost?
->>>
->>> V2 - fixed two patch errors.
->>> V3 - address comments from Arend (linville)
->>>
->>
->> For some reason, I never got the mail containing Arend's comments, and I
->> forgot about it. If John's V3 fixes take care of them, then it should be
->> pushed.
->
-> Weird as I resend the comments. Do you have me on a blacklist ;-)
 
-No. As you can see, this message came through. I also checked to make sure that 
-my intermediate mailer had not put your message in its spam bucket.
+Allow conditional statements to be based on true/false instead of
+NULL or not pointer pvRTS.
 
-Larry
+Harmonise all call functions will bool type.
+
+If need_rts is true then rts is needed.
+
+If need_rts is false then
+	cts is needed only when byPktType == PK_TYPE_11GB || PK_TYPE_11GA.
+	none no rts/cts other byPktTypes.
+
+This allow the joining of pointers pvRTS/pvCTS in to single pointer.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 25 +++++++++++--------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index fd3c598..2fd71c3 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -101,7 +101,7 @@ static void *s_vGetFreeContext(struct vnt_private *pDevice);
+ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
+ 	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
+-	struct ethhdr *psEthHeader);
++	struct ethhdr *psEthHeader, bool need_rts);
+ 
+ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate, void *pTxDataHead, u32 cbFrameLength,
+@@ -829,7 +829,7 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
+ 	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
+-	struct ethhdr *psEthHeader)
++	struct ethhdr *psEthHeader, bool need_rts)
+ {
+ 	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
+ 	u16 wFifoCtl;
+@@ -854,8 +854,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         cbMACHdLen = WLAN_HDR_ADDR3_LEN + 6;
+ 
+     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+-
+-        if (pvRTS != NULL) { //RTS_need
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_rts *pBuf =
+ 			(struct vnt_rrv_time_rts *)pvRrvTime;
+@@ -891,8 +890,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+     }
+     else if (byPktType == PK_TYPE_11A) {
+-
+-        if (pvRTS != NULL) {//RTS_need, non PCF mode
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -903,8 +901,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+             //Fill RTS
+ 	    s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK,
+ 			psEthHeader, wCurrentRate, byFBOption);
+-        }
+-        else if (pvRTS == NULL) {//RTS_needless, non PCF mode
++	} else {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -913,8 +910,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+     }
+     else if (byPktType == PK_TYPE_11B) {
+-
+-        if ((pvRTS != NULL)) {//RTS_need, non PCF mode
++	if (need_rts) {From 48dc74774174065ae9d0c1bbfe46178fbd2f4c6d Mon Sep 17 00:00:00 2001
+From: Malcolm Priestley <tvboxspy@gmail.com>
+Date: Sun, 25 Aug 2013 10:37:35 +0100
+Subject: [PATCH 05/13] staging: vt6656: rxtx.c s_vGenerateTxParameter create
+ need rts
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 25 +++++++++++--------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index fd3c598..2fd71c3 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -101,7 +101,7 @@ static void *s_vGetFreeContext(struct vnt_private *pDevice);
+ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
+ 	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
+-	struct ethhdr *psEthHeader);
++	struct ethhdr *psEthHeader, bool need_rts);
+ 
+ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate, void *pTxDataHead, u32 cbFrameLength,
+@@ -829,7 +829,7 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
+ 	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
+-	struct ethhdr *psEthHeader)
++	struct ethhdr *psEthHeader, bool need_rts)
+ {
+ 	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
+ 	u16 wFifoCtl;
+@@ -854,8 +854,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         cbMACHdLen = WLAN_HDR_ADDR3_LEN + 6;
+ 
+     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+-
+-        if (pvRTS != NULL) { //RTS_need
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_rts *pBuf =
+ 			(struct vnt_rrv_time_rts *)pvRrvTime;
+@@ -891,8 +890,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+     }
+     else if (byPktType == PK_TYPE_11A) {
+-
+-        if (pvRTS != NULL) {//RTS_need, non PCF mode
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -903,8 +901,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+             //Fill RTS
+ 	    s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK,
+ 			psEthHeader, wCurrentRate, byFBOption);
+-        }
+-        else if (pvRTS == NULL) {//RTS_needless, non PCF mode
++	} else {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =From 48dc74774174065ae9d0c1bbfe46178fbd2f4c6d Mon Sep 17 00:00:00 2001
+From: Malcolm Priestley <tvboxspy@gmail.com>
+Date: Sun, 25 Aug 2013 10:37:35 +0100
+Subject: [PATCH 05/13] staging: vt6656: rxtx.c s_vGenerateTxParameter create
+ need rts
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 25 +++++++++++--------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index fd3c598..2fd71c3 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -101,7 +101,7 @@ static void *s_vGetFreeContext(struct vnt_private *pDevice);
+ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
+ 	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
+-	struct ethhdr *psEthHeader);
++	struct ethhdr *psEthHeader, bool need_rts);
+ 
+ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate, void *pTxDataHead, u32 cbFrameLength,
+@@ -829,7 +829,7 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
+ 	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
+-	struct ethhdr *psEthHeader)
++	struct ethhdr *psEthHeader, bool need_rts)
+ {
+ 	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
+ 	u16 wFifoCtl;
+@@ -854,8 +854,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         cbMACHdLen = WLAN_HDR_ADDR3_LEN + 6;
+ 
+     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+-
+-        if (pvRTS != NULL) { //RTS_need
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_rts *pBuf =
+ 			(struct vnt_rrv_time_rts *)pvRrvTime;
+@@ -891,8 +890,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+     }
+     else if (byPktType == PK_TYPE_11A) {
+-
+-        if (pvRTS != NULL) {//RTS_need, non PCF mode
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -903,8 +901,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+             //Fill RTS
+ 	    s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK,
+ 			psEthHeader, wCurrentRate, byFBOption);
+-        }
+-        else if (pvRTS == NULL) {//RTS_needless, non PCF mode
++	} else {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -913,8 +910,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+     }
+     else if (byPktType == PK_TYPE_11B) {
+-
+-        if ((pvRTS != NULL)) {//RTS_need, non PCF mode
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -953,7 +949,8 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 	u32 cb802_1_H_len;
+ 	u32 cbIVlen = 0, cbICVlen = 0, cbMIClen = 0, cbMACHdLen = 0;
+ 	u32 cbFCSlen = 4, cbMICHDR = 0;
+-	int bNeedACK, bRTS;
++	int bNeedACK;
++	bool bRTS = false;
+ 	u8 *pbyType, *pbyMacHdr, *pbyIVHead, *pbyPayloadHead, *pbyTxBufferAddr;
+ 	u8 abySNAP_RFC1042[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00};
+ 	u8 abySNAP_Bridgetunnel[ETH_ALEN]
+@@ -1236,7 +1233,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,
+ 			   (void *)pbyTxBufferAddr, pvRrvTime, pvRTS, pvCTS,
+-                               cbFrameSize, bNeedACK, uDMAIdx, psEthHeader);
++		cbFrameSize, bNeedACK, uDMAIdx, psEthHeader, bRTS);
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, uDMAIdx, bNeedACK,
+ 				byFBOption);
+@@ -1640,7 +1637,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+ 
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,  pbyTxBufferAddr, pvRrvTime, pvRTS, pCTS,
+-                           cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader);
++		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
+ 
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
+@@ -2051,7 +2048,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+ 
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate, pbyTxBufferAddr, pvRrvTime, pvRTS, pvCTS,
+-                           cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader);
++		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
+ 
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
+-- 
+1.8.1.2
+
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -913,8 +910,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+     }
+     else if (byPktType == PK_TYPE_11B) {
+-
+-        if ((pvRTS != NULL)) {//RTS_need, non PCF mode
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -953,7 +949,8 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 	u32 cb802_1_H_len;
+ 	u32 cbIVlen = 0, cbICVlen = 0, cbMIClen = 0, cbMACHdLen = 0;
+ 	u32 cbFCSlen = 4, cbMICHDR = 0;
+-	int bNeedACK, bRTS;
++	int bNeedACK;
++	bool bRTS = false;
+ 	u8 *pbyType, *pbyMacHdr, *pbyIVHead, *pbyPayloadHead, *pbyTxBufferAddr;
+ 	u8 abySNAP_RFC1042[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00};
+ 	u8 abySNAP_Bridgetunnel[ETH_ALEN]
+@@ -1236,7 +1233,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,
+ 			   (void *)pbyTxBufferAddr, pvRrvTime, pvRTS, pvCTS,
+-                               cbFrameSize, bNeedACK, uDMAIdx, psEthHeader);
++		cbFrameSize, bNeedACK, uDMAIdx, psEthHeader, bRTS);
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, uDMAIdx, bNeedACK,
+ 				byFBOption);
+@@ -1640,7 +1637,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+ 
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,  pbyTxBufferAddr, pvRrvTime, pvRTS, pCTS,
+-                           cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader);
++		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
+ 
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
+@@ -2051,7 +2048,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+ 
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate, pbyTxBufferAddr, pvRrvTime, pvRTS, pvCTS,
+-                           cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader);
++		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
+ 
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
+-- 
+1.8.1.2
+
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -953,7 +949,8 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 	u32 cb802_1_H_len;
+ 	u32 cbIVlen = 0, cbICVlen = 0, cbMIClen = 0, cbMACHdLen = 0;
+ 	u32 cbFCSlen = 4, cbMICHDR = 0;
+-	int bNeedACK, bRTS;
++	int bNeedACK;
++	bool bRTS = false;
+ 	u8 *pbyType, *pbyMacHdr, *pbyIVHead, *pbyPayloadHead, *pbyTxBufferAddr;
+ 	u8 abySNAP_RFC1042[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00};
+ 	u8 abySNAP_Bridgetunnel[ETH_ALEN]
+@@ -1236,7 +1233,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,
+ 			   (void *)pbyTxBufferAddr, pvRrvTime, pvRTS, pvCTS,
+-                               cbFrameSize, bNeedACK, uDMAIdx, psEthHeader);
++		cbFrameSize, bNeedACK, uDMAIdx, psEthHeader, bRTS);
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, uDMAIdx, bNeedACK,
+ 				byFBOption);
+@@ -1640,7 +1637,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+ 
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,  pbyTxBufferAddr, pvRrvTime, pvRTS, pCTS,
+-                           cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader);
++		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
+ 
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
+@@ -2051,7 +2048,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+ 
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate, pbyTxBufferAddr, pvRrvTime, pvRTS, pvCTS,
+-                           cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader);
++		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
+ 
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
+-- 
+1.8.1.2
+
 
 
