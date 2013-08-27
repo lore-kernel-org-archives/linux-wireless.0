@@ -1,137 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41180 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757075Ab3HMKdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 06:33:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 2/5] ath9k: simplify debugfs chainmask handling
-Date: Tue, 13 Aug 2013 12:33:27 +0200
-Message-Id: <1376390010-81819-2-git-send-email-nbd@openwrt.org> (sfid-20130813_123347_207011_F4339761)
-In-Reply-To: <1376390010-81819-1-git-send-email-nbd@openwrt.org>
-References: <1376390010-81819-1-git-send-email-nbd@openwrt.org>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:53880 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753408Ab3H0O7y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 10:59:54 -0400
+Received: by mail-wg0-f49.google.com with SMTP id a12so2102080wgh.28
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 07:59:53 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	johannes@sipsolutions.net
+Subject: [PATCH 2/2] mac80211: do not override fixed_rate_idx in minstrel_ht_update_stats
+Date: Tue, 27 Aug 2013 16:59:47 +0200
+Message-Id: <1377615587-6015-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20130827_165958_271584_010D32A2)
+In-Reply-To: <1377615587-6015-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1377615587-6015-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Writing to that file is unnecessary and quirky, the antenna API should
-be used instead. Use debugfs_create_u8 to allow reading the values.
+Do not override max_tp_rate, max_tp_rate2 and max_prob_rate configured
+according to fixed_rate in minstrel_ht_update_stats throughput computation
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c | 92 ++--------------------------------
- 1 file changed, 4 insertions(+), 88 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index e5c8333..c088744 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -88,90 +88,6 @@ static const struct file_operations fops_debug = {
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 339a6b8..597e09a 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -365,6 +365,14 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 		}
+ 	}
  
- #define DMA_BUF_LEN 1024
++#ifdef CONFIG_MAC80211_DEBUGFS
++	/* use fixed index if set */
++	if (mp->fixed_rate_idx != -1) {
++		mi->max_tp_rate = mp->fixed_rate_idx;
++		mi->max_tp_rate2 = mp->fixed_rate_idx;
++		mi->max_prob_rate = mp->fixed_rate_idx;
++	}
++#endif
  
--static ssize_t read_file_tx_chainmask(struct file *file, char __user *user_buf,
--			     size_t count, loff_t *ppos)
--{
--	struct ath_softc *sc = file->private_data;
--	struct ath_hw *ah = sc->sc_ah;
--	char buf[32];
--	unsigned int len;
--
--	len = sprintf(buf, "0x%08x\n", ah->txchainmask);
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--}
--
--static ssize_t write_file_tx_chainmask(struct file *file, const char __user *user_buf,
--			     size_t count, loff_t *ppos)
--{
--	struct ath_softc *sc = file->private_data;
--	struct ath_hw *ah = sc->sc_ah;
--	unsigned long mask;
--	char buf[32];
--	ssize_t len;
--
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--
--	buf[len] = '\0';
--	if (kstrtoul(buf, 0, &mask))
--		return -EINVAL;
--
--	ah->txchainmask = mask;
--	ah->caps.tx_chainmask = mask;
--	return count;
--}
--
--static const struct file_operations fops_tx_chainmask = {
--	.read = read_file_tx_chainmask,
--	.write = write_file_tx_chainmask,
--	.open = simple_open,
--	.owner = THIS_MODULE,
--	.llseek = default_llseek,
--};
--
--
--static ssize_t read_file_rx_chainmask(struct file *file, char __user *user_buf,
--			     size_t count, loff_t *ppos)
--{
--	struct ath_softc *sc = file->private_data;
--	struct ath_hw *ah = sc->sc_ah;
--	char buf[32];
--	unsigned int len;
--
--	len = sprintf(buf, "0x%08x\n", ah->rxchainmask);
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--}
--
--static ssize_t write_file_rx_chainmask(struct file *file, const char __user *user_buf,
--			     size_t count, loff_t *ppos)
--{
--	struct ath_softc *sc = file->private_data;
--	struct ath_hw *ah = sc->sc_ah;
--	unsigned long mask;
--	char buf[32];
--	ssize_t len;
--
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--
--	buf[len] = '\0';
--	if (kstrtoul(buf, 0, &mask))
--		return -EINVAL;
--
--	ah->rxchainmask = mask;
--	ah->caps.rx_chainmask = mask;
--	return count;
--}
--
--static const struct file_operations fops_rx_chainmask = {
--	.read = read_file_rx_chainmask,
--	.write = write_file_rx_chainmask,
--	.open = simple_open,
--	.owner = THIS_MODULE,
--	.llseek = default_llseek,
--};
+ 	mi->stats_update = jiffies;
+ }
+@@ -775,6 +783,11 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	info->flags |= mi->tx_flags;
+ 	minstrel_ht_check_cck_shortpreamble(mp, mi, txrc->short_preamble);
  
- static ssize_t read_file_ani(struct file *file, char __user *user_buf,
- 			     size_t count, loff_t *ppos)
-@@ -1896,10 +1812,10 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			    &fops_reset);
- 	debugfs_create_file("recv", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_recv);
--	debugfs_create_file("rx_chainmask", S_IRUSR | S_IWUSR,
--			    sc->debug.debugfs_phy, sc, &fops_rx_chainmask);
--	debugfs_create_file("tx_chainmask", S_IRUSR | S_IWUSR,
--			    sc->debug.debugfs_phy, sc, &fops_tx_chainmask);
-+	debugfs_create_u8("rx_chainmask", S_IRUSR, sc->debug.debugfs_phy,
-+			  &ah->rxchainmask);
-+	debugfs_create_u8("tx_chainmask", S_IRUSR, sc->debug.debugfs_phy,
-+			  &ah->txchainmask);
- 	debugfs_create_file("ani", S_IRUSR | S_IWUSR,
- 			    sc->debug.debugfs_phy, sc, &fops_ani);
- 	debugfs_create_bool("paprd", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
++#ifdef CONFIG_MAC80211_DEBUGFS
++	if (mp->fixed_rate_idx != -1)
++		return;
++#endif
++
+ 	/* Don't use EAPOL frames for sampling on non-mrr hw */
+ 	if (mp->hw->max_rates == 1 &&
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO))
+@@ -782,16 +795,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	else
+ 		sample_idx = minstrel_get_sample_rate(mp, mi);
+ 
+-#ifdef CONFIG_MAC80211_DEBUGFS
+-	/* use fixed index if set */
+-	if (mp->fixed_rate_idx != -1) {
+-		mi->max_tp_rate = mp->fixed_rate_idx;
+-		mi->max_tp_rate2 = mp->fixed_rate_idx;
+-		mi->max_prob_rate = mp->fixed_rate_idx;
+-		sample_idx = -1;
+-	}
+-#endif
+-
+ 	mi->total_packets++;
+ 
+ 	/* wraparound */
 -- 
-1.8.0.2
+1.8.1.2
 
