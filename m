@@ -1,81 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2835 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753237Ab3HaSV1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Aug 2013 14:21:27 -0400
-Message-ID: <5222341B.4070205@broadcom.com> (sfid-20130831_202148_270788_88583D8E)
-Date: Sat, 31 Aug 2013 20:21:15 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Geert Uytterhoeven" <geert@linux-m68k.org>
-cc: "Randy Dunlap" <rdunlap@infradead.org>,
-	"Stephen Rothwell" <sfr@canb.auug.org.au>,
-	Linux-Next <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	linux-kbuild <linux-kbuild@vger.kernel.org>
-Subject: Re: linux-next: Tree for Aug 30 (brcmfmac)
-References: <20130829200013.d9dde1eb64686a32c661b5d3@canb.auug.org.au>
- <52210AB9.2090104@infradead.org>
- <CAMuHMdXFmWyiUJF+4HbD=6oGPVXHBAVx=rOC7u=motTQFCKn7g@mail.gmail.com>
-In-Reply-To: <CAMuHMdXFmWyiUJF+4HbD=6oGPVXHBAVx=rOC7u=motTQFCKn7g@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:37279 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751381Ab3H0LEd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 07:04:33 -0400
+Received: by mail-bk0-f50.google.com with SMTP id mz11so1602106bkb.9
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 04:04:32 -0700 (PDT)
+Message-ID: <1377601466.3320.70.camel@canaries32-MCP7A> (sfid-20130827_130436_224178_29BEFD11)
+Subject: Re: [PATCH 3/5] staging: vt6656: rxtx.c s_vGenerateTxParameter
+ create argument bool need rts
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Aug 2013 12:04:26 +0100
+In-Reply-To: <1377600658.3320.63.camel@canaries32-MCP7A>
+References: <1377600658.3320.63.camel@canaries32-MCP7A>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/31/13 19:37, Geert Uytterhoeven wrote:
-> On Fri, Aug 30, 2013 at 11:12 PM, Randy Dunlap<rdunlap@infradead.org>  wrote:
->> This bool kconfig symbol:
->>
->> config BRCMFMAC_SDIO
->>          bool "SDIO bus interface support for FullMAC driver"
->>          depends on MMC
->>
->> allows BRCMFMAC_SDIO to be y even when MMC=m.
->>
->> Is there a reasonable solution to this?
+On Tue, 2013-08-27 at 11:50 +0100, Malcolm Priestley wrote:
+> Allow conditional statements to be based on true/false instead of
+> NULL or not pointer pvRTS.
 
-Actually, BRCMFMAC should be built in same form as the MMC and/or USB, 
-but only when BRCMFMAC_SDIO or BRCMFMAC_USB are selected.
-
-So valid combinations are:
-MMC=m, USB=m, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y => BRCMFMAC=m
-MMC=m, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y => BRCMFMAC=m
-MMC=y, USB=m, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y => BRCMFMAC=m
-MMC=m, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=n => BRCMFMAC=m
-MMC=m, USB=y, BRCMFMAC_SDIO=n, BRCMFMAC_USB=y => BRCMFMAC=m|y
-MMC=y, USB=m, BRCMFMAC_SDIO=y, BRCMFMAC_USB=n => BRCMFMAC=m|y
-MMC=y, USB=m, BRCMFMAC_SDIO=n, BRCMFMAC_USB=y => BRCMFMAC=m
-MMC=y, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y => BRCMFMAC=m|y
-MMC=y, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=n => BRCMFMAC=m|y
-MMC=y, USB=y, BRCMFMAC_SDIO=n, BRCMFMAC_USB=y => BRCMFMAC=m|y
-
-Not sure how to express the above.
-
-Gr. AvS
-
-> In order of preference:
-> 1. Make it tristate
-> 2. depends on MMC=y
->
-> However, the first solution cannot be used as there are several
-> "#ifdef CONFIG_BRCMFMAC_SDIO" in the code itself.
->
-> Note that there's a similar issue with BRCMFMAC_USB and USB.
->
-> Gr{oetje,eeting}s,
->
->                          Geert
->
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
->
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                  -- Linus Torvalds
->
-
+This patch is corrupt resent
 
