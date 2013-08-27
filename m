@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm7-vm3.bt.bullet.mail.ir2.yahoo.com ([212.82.99.198]:25921
-	"EHLO nm7-vm3.bt.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754455Ab3H1MWI convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 08:22:08 -0400
-From: Marc Murphy <marcmltd@marcm.co.uk>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: 802.11p
-Date: Wed, 28 Aug 2013 12:15:59 +0000
-Message-ID: <F690310232FDDF4AB457E8B3EF90DDE08D32184E@MARCM-SBS2011.marcmltd.local> (sfid-20130828_142222_046028_5A8B0F8C)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:34750 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961Ab3H0Ksm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 06:48:42 -0400
+Received: by mail-bk0-f50.google.com with SMTP id mz11so1594258bkb.9
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 03:48:41 -0700 (PDT)
+Message-ID: <1377600514.3320.61.camel@canaries32-MCP7A> (sfid-20130827_124845_469356_51066486)
+Subject: [PATCH 2/5] staging: vt6656: s_vFillCTSHead join structures of
+ vnt_cts* to union vnt_tx_data_head
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Aug 2013 11:48:34 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Doh ! updated now.
+Only one of vnt_rts*/vnt_cts* structures are accessed at any one time.
 
-I have had a read through the docs but there is no direct reference to 802.11p.  I initially want to have a play with a couple of embedded units that I have to see if I cant send a message from one to the other but struggling to find any updated ath5 driver.
+structures vnt_cts and vnt_cts_fb are members of union vnt_tx_data_head.
 
-Thanks
-Marc
+Create pointer union head and point structures to the correct member.
 
-________________________________________
-From: Sedat Dilek [sedat.dilek@gmail.com]
-Sent: 28 August 2013 12:23
-To: Marc Murphy
-Cc: linux-wireless@vger.kernel.org
-Subject: Re:
+Point the union to pvCTS.
 
-On Wed, Aug 28, 2013 at 1:07 PM, Marc Murphy <marcmltd@marcm.co.uk> wrote:
-> Hello,
-> I have been trawling the mailings and lots of people are asking about 802.11p and I have not managed to find a definitive push back to the mainline kernel.
->
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 10 +++++-----From 3deb77d380b80ff3cf719efc96f33ca27c8ad29c Mon Sep 17 00:00:00 2001
+From: Malcolm Priestley <tvboxspy@gmail.com>
+Date: Sun, 25 Aug 2013 10:08:13 +0100
+Subject: [PATCH 04/13] staging: vt6656: s_vFillCTSHead add union
+ vnt_tx_data_head
 
-Hi,
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-first of all, you should set a "subject" to your email request :-).
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 98224bc..fd3c598 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -760,15 +760,15 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+ 	u8 byPktType, void *pvCTS, u32 cbFrameLength, int bNeedAck,
+ 	u16 wCurrentRate, u8 byFBOption)
+ {
++	union vnt_tx_data_head *head = pvCTS;
+ 	u32 uCTSFrameLen = 14;
+ 
+-    if (pvCTS == NULL) {
+-        return;
+-    }
++	if (!head)
++		return;
+ 
+ 	if (byFBOption != AUTO_FB_NONE) {
+ 		/* Auto Fall back */
+-		struct vnt_cts_fb *pBuf = (struct vnt_cts_fb *)pvCTS;
++		struct vnt_cts_fb *pBuf = &head->cts_g_fb;
+ 		/* Get SignalField,ServiceField,Length */
+ 		BBvCalculateParameter(pDevice, uCTSFrameLen,
+ 			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
+@@ -788,7 +788,7 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+ 		pBuf->data.frame_control = TYPE_CTL_CTS;
+ 		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
+ 	} else {
+-		struct vnt_cts *pBuf = (struct vnt_cts *)pvCTS;
++		struct vnt_cts *pBuf = &head->cts_g;
+ 		/* Get SignalField,ServiceField,Length */
+ 		BBvCalculateParameter(pDevice, uCTSFrameLen,
+ 			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
+-- 
+1.8.1.2
 
-I cannot say much about 802.11p, but for first informations I
-recommend the wiki at <http://wireless.kernel.org> and have a look
-into docs section.
-
-For faster replies you can join #linux-wireless IRC channel (Freenode).
-
-- Sedat -
-
-> Is there anywhere in particular that I need to be looking to be able to get the patches so I can have a play ?
->
-> Thanks
-> Marc--
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
