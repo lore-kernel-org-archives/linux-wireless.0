@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:62703 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752017Ab3HUGEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 02:04:33 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.10 2/8] iwlwifi: mvm: fix MCAST in AP mode
-Date: Wed, 21 Aug 2013 09:04:20 +0300
-Message-Id: <1377065066-13030-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130821_080437_072014_07E90DA2)
-In-Reply-To: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1377065066-13030-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:48784 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752858Ab3H0Kq0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 06:46:26 -0400
+Received: by mail-bk0-f54.google.com with SMTP id mz12so1524221bkb.41
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 03:46:25 -0700 (PDT)
+Message-ID: <1377600377.3320.59.camel@canaries32-MCP7A> (sfid-20130827_124629_766310_3ED906AB)
+Subject: [PATCH 1/5] staging: vt6656: rxtx.c s_vFillCTSHead Remove byPktType
+ if
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Aug 2013 11:46:17 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 9116a3683902583a302ac5dcb283416d504d9bb4 upstream.
+s_vFillCTSHead is only called when byPktType == PK_TYPE_11GB ||
+byPktType == PK_TYPE_11GA so remove unnecessary if on byPktType.
 
-In multicast, there is no retries nor RTS since there is no
-specific recipient that can ACK or send CTS. This means
-that we must not use the rate scale table for multicast
-frames.
-This true for any frame that doesn't have a valid
-ieee80211_sta pointer.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/tx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/vt6656/rxtx.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index 48c1891..b9ba4e7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -175,7 +175,7 @@ static void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm,
- 	 * table is controlled by LINK_QUALITY commands
- 	 */
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 463a8d5..98224bc 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -766,7 +766,6 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+         return;
+     }
  
--	if (ieee80211_is_data(fc)) {
-+	if (ieee80211_is_data(fc) && sta) {
- 		tx_cmd->initial_rate_index = 0;
- 		tx_cmd->tx_flags |= cpu_to_le32(TX_CMD_FLG_STA_RATE);
- 		return;
+-    if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+ 	if (byFBOption != AUTO_FB_NONE) {
+ 		/* Auto Fall back */
+ 		struct vnt_cts_fb *pBuf = (struct vnt_cts_fb *)pvCTS;
+@@ -802,7 +801,6 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+ 		pBuf->data.frame_control = TYPE_CTL_CTS;
+ 		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
+         }
+-    }
+ }
+ 
+ /*+
 -- 
-1.7.10.4
+1.8.1.2
 
