@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34792 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754132Ab3HWPAV (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40012 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466Ab3H0HGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 11:00:21 -0400
-Date: Fri, 23 Aug 2013 10:53:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH net-next 06/10] net: airo: inherit addr_assign_type along
- with dev_addr
-Message-ID: <20130823145306.GC15114@tuxdriver.com> (sfid-20130823_170029_632534_05A50A37)
-References: <1377250513-3662-1-git-send-email-bjorn@mork.no>
- <1377250513-3662-7-git-send-email-bjorn@mork.no>
+	Tue, 27 Aug 2013 03:06:19 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 4/4] ath10k: fix issues on non-preemptible systems
+References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
+	<1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
+	<1377507205-5386-5-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 27 Aug 2013 10:06:13 +0300
+In-Reply-To: <1377507205-5386-5-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 26 Aug 2013 10:53:25 +0200")
+Message-ID: <87ioyrmx3u.fsf@kamboji.qca.qualcomm.com> (sfid-20130827_090621_901388_747C4ED1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1377250513-3662-7-git-send-email-bjorn@mork.no>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 23, 2013 at 11:35:09AM +0200, Bjørn Mork wrote:
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Signed-off-by: Bjørn Mork <bjorn@mork.no>
-> ---
->  drivers/net/wireless/airo.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-> index d0adbaf..7fe1964 100644
-> --- a/drivers/net/wireless/airo.c
-> +++ b/drivers/net/wireless/airo.c
-> @@ -2693,7 +2693,7 @@ static struct net_device *init_wifidev(struct airo_info *ai,
->  	dev->base_addr = ethdev->base_addr;
->  	dev->wireless_data = ethdev->wireless_data;
->  	SET_NETDEV_DEV(dev, ethdev->dev.parent);
-> -	memcpy(dev->dev_addr, ethdev->dev_addr, dev->addr_len);
-> +	eth_hw_addr_inherit(dev, ethdev);
->  	err = register_netdev(dev);
->  	if (err<0) {
->  		free_netdev(dev);
-> -- 
-> 1.7.10.4
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Acked-by: "John W. Linville" <linville@tuxdriver.com>
+> Workers may not call into a sleepable function
+> (e.g. mutex_lock). Since ath10k workers can run
+> for a very long time it is necessary to explicitly
+> allow process rescheduling in case there's no
+> preemption.
+>
+> This fixes some issues with system freezes, hangs,
+> watchdogs being triggered, userspace being
+> unresponsive on slow host machines under heavy
+> load.
+
+I consider this more as a workaround as a real fix. Would NAPI be a
+proper fix for issues like this?
+
+NAPI support was removed from mac80211 six months ago, but I guess we
+could try to get it back if we have a good reason:
+
+http://marc.info/?l=linux-wireless&m=136204135907491
+
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -1229,6 +1229,10 @@ static void ath10k_htt_rx_work(struct work_struct *work)
+>  			break;
+>  
+>  		ath10k_htt_rx_process_skb(htt->ar, skb);
+> +
+> +#ifndef CONFIG_PREEMPT
+> +		cond_resched();
+> +#endif
+
+Why the #ifndef? Why should we not call cond_resched() when PREEMPT is
+enabled? Does something negative happen then?
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
