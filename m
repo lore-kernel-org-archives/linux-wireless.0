@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6839 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755582Ab3HLOrj (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:7539 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057Ab3H0G4h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Aug 2013 10:47:39 -0400
+	Tue, 27 Aug 2013 02:56:37 -0400
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
 CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/4] ath10k: cleanups
-References: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
-	<87haevt20x.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 12 Aug 2013 17:47:33 +0300
-In-Reply-To: <87haevt20x.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Mon, 12 Aug 2013 17:30:22 +0300")
-Message-ID: <87d2pjt18a.fsf@kamboji.qca.qualcomm.com> (sfid-20130812_164744_056542_FEA560E5)
+Subject: Re: [PATCH 0/3] ath10k: initial per-VDEV FW statistics implementation
+References: <1377516815-12660-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Tue, 27 Aug 2013 09:56:31 +0300
+Message-ID: <87txibmxk0.fsf@kamboji.qca.qualcomm.com> (sfid-20130827_085640_511822_FDC61B9F)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-> Michal Kazior <michal.kazior@tieto.com> writes:
+> FW 1.0.0.716 brings per-VDEV statistics. This patch-set implements
+> debugfs mechanism to fetch those. There's still few more fileds we
+> can read from the FW stats event, which are not covered here.
 >
->> This patchset contains a few non-functional clean
->> ups.
->>
->> Michal Kazior (4):
->>   ath10k: clean up monitor start code
->>   ath10k: use sizeof(*var) in kmalloc
->>   ath10k: clean up PCI completion states
->>   ath10k: print errcode when CE ring setup fails
->
-> Thanks, all four applied.
+> Please note there's an ABI change in wmi_peer_stats structure, hence
+> the PEER statistics will be corrupted if used with older firmware
+> (e.g. 1.0.0.636)
 
-Sorry, I was too fast and need to take that back. I now see this
-warning:
+We need to support the older firmware, so please add a feature flag VDEV
+statistics so that we can detect which version of the struct needs to be
+used.
 
-drivers/net/wireless/ath/ath10k/pci.c:951: WARNING: line over 80 characters
-
-I dropped the patches, please send v2.
+Also I think you can fold patches 1 and 2.
 
 -- 
 Kalle Valo
