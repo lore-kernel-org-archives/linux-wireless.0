@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:47134 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752384Ab3H0LJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 07:09:51 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/6] ath10k: remove ce_op_state
-Date: Tue, 27 Aug 2013 13:07:59 +0200
-Message-ID: <1377601683-12072-3-git-send-email-michal.kazior@tieto.com> (sfid-20130827_131001_384493_C7B36390)
-In-Reply-To: <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
-References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
- <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:52339 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752920Ab3H0O7w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 10:59:52 -0400
+Received: by mail-wg0-f51.google.com with SMTP id b12so2101658wgh.6
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 07:59:51 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	johannes@sipsolutions.net
+Subject: [PATCH 1/2] mac80211: add fixed_rate management to minstrel rc
+Date: Tue, 27 Aug 2013 16:59:46 +0200
+Message-Id: <1377615587-6015-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20130827_165956_124424_9CBA2F61)
+In-Reply-To: <1377615587-6015-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1377615587-6015-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was only written to and never read back. No use
-to keep it around.
+Add the capability to use a fixed modulation rate to minstrel rate controller
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c |    2 --
- drivers/net/wireless/ath/ath10k/ce.h |    8 --------
- 2 files changed, 10 deletions(-)
+ net/mac80211/rc80211_minstrel.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index c8b7d21..c391f46 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -1089,7 +1089,6 @@ static struct ce_state *ath10k_ce_init_state(struct ath10k *ar,
- 	ce_state->ar = ar;
- 	ce_state->id = ce_id;
- 	ce_state->ctrl_addr = ctrl_addr;
--	ce_state->state = CE_RUNNING;
- 	ce_state->attr_flags = attr->flags;
- 	ce_state->src_sz_max = attr->src_sz_max;
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 8b5f7ef..7fa1b36 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -203,6 +203,15 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 	memcpy(mi->max_tp_rate, tmp_tp_rate, sizeof(mi->max_tp_rate));
+ 	mi->max_prob_rate = tmp_prob_rate;
  
-@@ -1173,7 +1172,6 @@ void ath10k_ce_deinit(struct ce_state *ce_state)
- 		kfree(ce_state->dest_ring);
- 	}
++#ifdef CONFIG_MAC80211_DEBUGFS
++	/* use fixed index if set */
++	if (mp->fixed_rate_idx != -1) {
++		mi->max_tp_rate[0] = mp->fixed_rate_idx;
++		mi->max_tp_rate[1] = mp->fixed_rate_idx;
++		mi->max_prob_rate = mp->fixed_rate_idx;
++	}
++#endif
++
+ 	/* Reset update timer */
+ 	mi->stats_update = jiffies;
  
--	ce_state->state = CE_UNUSED;
- 	ce_state->src_ring = NULL;
- 	ce_state->dest_ring = NULL;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index c17f07c..6f6bca0 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -39,13 +39,6 @@
- struct ce_state;
+@@ -310,6 +319,11 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	/* increase sum packet counter */
+ 	mi->packet_count++;
  
++#ifdef CONFIG_MAC80211_DEBUGFS
++	if (mp->fixed_rate_idx != -1)
++		return;
++#endif
++
+ 	delta = (mi->packet_count * sampling_ratio / 100) -
+ 			(mi->sample_count + mi->sample_deferred / 2);
  
--/* Copy Engine operational state */
--enum ce_op_state {
--	CE_UNUSED,
--	CE_PAUSED,
--	CE_RUNNING,
--};
--
- #define CE_DESC_FLAGS_GATHER         (1 << 0)
- #define CE_DESC_FLAGS_BYTE_SWAP      (1 << 1)
- #define CE_DESC_FLAGS_META_DATA_MASK 0xFFFC
-@@ -124,7 +117,6 @@ struct ce_state {
- 	unsigned int attr_flags;
- 
- 	u32 ctrl_addr;
--	enum ce_op_state state;
- 
- 	void (*send_cb) (struct ce_state *ce_state,
- 			 void *per_transfer_send_context,
 -- 
-1.7.9.5
+1.8.1.2
 
