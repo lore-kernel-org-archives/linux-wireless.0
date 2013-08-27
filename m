@@ -1,167 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([176.31.251.142]:41767 "EHLO mail.nwl.cc"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752568Ab3HIN7S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 09:59:18 -0400
-Date: Fri, 9 Aug 2013 15:58:49 +0200
-From: Phil Sutter <phil@nwl.cc>
-To: David Miller <davem@davemloft.net>
-Cc: eric.dumazet@gmail.com, johannes@sipsolutions.net,
-	sedat.dilek@gmail.com, sfr@canb.auug.org.au,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, hannes@stressinduktion.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: linux-next: Tree for Aug 7
-Message-ID: <20130809135849.GA8870@orbit.nwl.cc> (sfid-20130809_155941_982890_0CEF7771)
-References: <20130807.104713.1615549684239408926.davem@davemloft.net>
- <20130807183758.GB16263@orbit.nwl.cc>
- <20130807.162748.779496444843938176.davem@davemloft.net>
- <20130807.163621.84433966934449459.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130807.163621.84433966934449459.davem@davemloft.net>
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:62270 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752004Ab3H0L3W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 07:29:22 -0400
+Received: by mail-ee0-f48.google.com with SMTP id l10so2183848eei.21
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 04:29:21 -0700 (PDT)
+Message-ID: <1377602950.3320.82.camel@canaries32-MCP7A> (sfid-20130827_132925_815740_2DF8660E)
+Subject: [PATCH 1/2] staging: vt6656: rxtx.c s_vFillTxKey  clean up format
+ and white space.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Aug 2013 12:29:10 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 07, 2013 at 04:36:21PM -0700, David Miller wrote:
-> From: David Miller <davem@davemloft.net>
-> Date: Wed, 07 Aug 2013 16:27:48 -0700 (PDT)
-> 
-> > Look, I'm going to fix this myself, because I'm pretty tired of
-> > waiting for the obvious fix.
-> 
-> Someone please test this:
-> 
-> diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
-> index c623861..afc02a6 100644
-> --- a/include/linux/etherdevice.h
-> +++ b/include/linux/etherdevice.h
-> @@ -29,6 +29,7 @@
->  
->  #ifdef __KERNEL__
->  extern __be16		eth_type_trans(struct sk_buff *skb, struct net_device *dev);
-> +extern __be16		__eth_type_trans(struct sk_buff *skb, struct net_device *dev);
->  extern const struct header_ops eth_header_ops;
->  
->  extern int eth_header(struct sk_buff *skb, struct net_device *dev,
-> diff --git a/net/ethernet/eth.c b/net/ethernet/eth.c
-> index be1f64d..35dc1be 100644
-> --- a/net/ethernet/eth.c
-> +++ b/net/ethernet/eth.c
-> @@ -146,6 +146,45 @@ int eth_rebuild_header(struct sk_buff *skb)
->  EXPORT_SYMBOL(eth_rebuild_header);
->  
->  /**
-> + * __eth_type_trans - only determine the packet's protocol ID.
-> + * @skb: packet
-> + * @dev: device
-> + */
-> +__be16 __eth_type_trans(struct sk_buff *skb, struct net_device *dev)
-> +{
-> +	struct ethhdr *eth = (struct ethhdr *) skb->data;
-> +
-> +	/*
-> +	 * Some variants of DSA tagging don't have an ethertype field
-> +	 * at all, so we check here whether one of those tagging
-> +	 * variants has been configured on the receiving interface,
-> +	 * and if so, set skb->protocol without looking at the packet.
-> +	 */
-> +	if (netdev_uses_dsa_tags(dev))
-> +		return htons(ETH_P_DSA);
-> +	if (netdev_uses_trailer_tags(dev))
-> +		return htons(ETH_P_TRAILER);
-> +
-> +	if (ntohs(eth->h_proto) >= ETH_P_802_3_MIN)
-> +		return eth->h_proto;
-> +
-> +	/*
-> +	 *      This is a magic hack to spot IPX packets. Older Novell breaks
-> +	 *      the protocol design and runs IPX over 802.3 without an 802.2 LLC
-> +	 *      layer. We look for FFFF which isn't a used 802.2 SSAP/DSAP. This
-> +	 *      won't work for fault tolerant netware but does for the rest.
-> +	 */
-> +	if (skb->len >= 2 && *(unsigned short *)(skb->data) == 0xFFFF)
-> +		return htons(ETH_P_802_3);
-> +
-> +	/*
-> +	 *      Real 802.2 LLC
-> +	 */
-> +	return htons(ETH_P_802_2);
-> +}
-> +EXPORT_SYMBOL(__eth_type_trans);
-> +
-> +/**
->   * eth_type_trans - determine the packet's protocol ID.
->   * @skb: received socket data
->   * @dev: receiving network device
-> @@ -184,33 +223,7 @@ __be16 eth_type_trans(struct sk_buff *skb, struct net_device *dev)
->  			skb->pkt_type = PACKET_OTHERHOST;
->  	}
->  
-> -	/*
-> -	 * Some variants of DSA tagging don't have an ethertype field
-> -	 * at all, so we check here whether one of those tagging
-> -	 * variants has been configured on the receiving interface,
-> -	 * and if so, set skb->protocol without looking at the packet.
-> -	 */
-> -	if (netdev_uses_dsa_tags(dev))
-> -		return htons(ETH_P_DSA);
-> -	if (netdev_uses_trailer_tags(dev))
-> -		return htons(ETH_P_TRAILER);
-> -
-> -	if (ntohs(eth->h_proto) >= ETH_P_802_3_MIN)
-> -		return eth->h_proto;
-> -
-> -	/*
-> -	 *      This is a magic hack to spot IPX packets. Older Novell breaks
-> -	 *      the protocol design and runs IPX over 802.3 without an 802.2 LLC
-> -	 *      layer. We look for FFFF which isn't a used 802.2 SSAP/DSAP. This
-> -	 *      won't work for fault tolerant netware but does for the rest.
-> -	 */
-> -	if (skb->len >= 2 && *(unsigned short *)(skb->data) == 0xFFFF)
-> -		return htons(ETH_P_802_3);
-> -
-> -	/*
-> -	 *      Real 802.2 LLC
-> -	 */
-> -	return htons(ETH_P_802_2);
-> +	return __eth_type_trans(skb, dev);
->  }
->  EXPORT_SYMBOL(eth_type_trans);
->  
-> diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
-> index 0c0f6c9..ec8e1c3 100644
-> --- a/net/packet/af_packet.c
-> +++ b/net/packet/af_packet.c
-> @@ -2003,7 +2003,7 @@ static int tpacket_fill_skb(struct packet_sock *po, struct sk_buff *skb,
->  			return err;
->  
->  		if (dev->type == ARPHRD_ETHER)
-> -			skb->protocol = eth_type_trans(skb, dev);
-> +			skb->protocol = __eth_type_trans(skb, dev);
->  
->  		data += dev->hard_header_len;
->  		to_write -= dev->hard_header_len;
-> @@ -2332,13 +2332,13 @@ static int packet_snd(struct socket *sock,
->  	sock_tx_timestamp(sk, &skb_shinfo(skb)->tx_flags);
->  
->  	if (dev->type == ARPHRD_ETHER) {
-> -		skb->protocol = eth_type_trans(skb, dev);
-> +		skb->protocol = __eth_type_trans(skb, dev);
->  		if (skb->protocol == htons(ETH_P_8021Q))
->  			reserve += VLAN_HLEN;
->  	} else {
->  		skb->protocol = proto;
-> -		skb->dev = dev;
->  	}
-> +	skb->dev = dev;
->  
->  	if (!gso_type && (len > dev->mtu + reserve + extra_len)) {
->  		err = -EMSGSIZE;
 
-The problem with this patch is __eth_type_trans() assuming the MAC
-header at skb->data which might be correct in the most cases, but not
-when called from eth_type_trans() as the later sets skb->data to after
-the ethernet header (which was the problem from the beginning).
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 175 ++++++++++++++++++++++--------------------
+ 1 file changed, 93 insertions(+), 82 deletions(-)
 
-Best wishes, Phil
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 69fcafe..b5a9c3a 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -190,95 +190,106 @@ static void s_vFillTxKey(struct vnt_private *pDevice, u8 *pbyBuf,
+ 	struct ieee80211_hdr *pMACHeader = (struct ieee80211_hdr *)pbyHdrBuf;
+ 	u32 dwRevIVCounter;
+ 
+-    //Fill TXKEY
+-    if (pTransmitKey == NULL)
+-        return;
+-
+-    dwRevIVCounter = cpu_to_le32(pDevice->dwIVCounter);
+-    *pdwIV = pDevice->dwIVCounter;
+-    pDevice->byKeyIndex = pTransmitKey->dwKeyIndex & 0xf;
+-
+-    if (pTransmitKey->byCipherSuite == KEY_CTL_WEP) {
+-        if (pTransmitKey->uKeyLength == WLAN_WEP232_KEYLEN ){
+-            memcpy(pDevice->abyPRNG, (u8 *)&(dwRevIVCounter), 3);
+-            memcpy(pDevice->abyPRNG+3, pTransmitKey->abyKey, pTransmitKey->uKeyLength);
+-        } else {
+-            memcpy(pbyBuf, (u8 *)&(dwRevIVCounter), 3);
+-            memcpy(pbyBuf+3, pTransmitKey->abyKey, pTransmitKey->uKeyLength);
+-            if(pTransmitKey->uKeyLength == WLAN_WEP40_KEYLEN) {
+-                memcpy(pbyBuf+8, (u8 *)&(dwRevIVCounter), 3);
+-                memcpy(pbyBuf+11, pTransmitKey->abyKey, pTransmitKey->uKeyLength);
+-            }
+-            memcpy(pDevice->abyPRNG, pbyBuf, 16);
+-        }
+-        // Append IV after Mac Header
+-        *pdwIV &= WEP_IV_MASK;//00000000 11111111 11111111 11111111
+-	*pdwIV |= (u32)pDevice->byKeyIndex << 30;
+-        *pdwIV = cpu_to_le32(*pdwIV);
+-        pDevice->dwIVCounter++;
+-        if (pDevice->dwIVCounter > WEP_IV_MASK) {
+-            pDevice->dwIVCounter = 0;
+-        }
+-    } else if (pTransmitKey->byCipherSuite == KEY_CTL_TKIP) {
+-        pTransmitKey->wTSC15_0++;
+-        if (pTransmitKey->wTSC15_0 == 0) {
+-            pTransmitKey->dwTSC47_16++;
+-        }
+-        TKIPvMixKey(pTransmitKey->abyKey, pDevice->abyCurrentNetAddr,
+-                    pTransmitKey->wTSC15_0, pTransmitKey->dwTSC47_16, pDevice->abyPRNG);
+-        memcpy(pbyBuf, pDevice->abyPRNG, 16);
+-        // Make IV
+-        memcpy(pdwIV, pDevice->abyPRNG, 3);
+-
+-        *(pbyIVHead+3) = (u8)(((pDevice->byKeyIndex << 6) & 0xc0) | 0x20); // 0x20 is ExtIV
+-        // Append IV&ExtIV after Mac Header
+-        *pdwExtIV = cpu_to_le32(pTransmitKey->dwTSC47_16);
+-	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"vFillTxKey()---- pdwExtIV: %x\n",
+-		*pdwExtIV);
+-
+-    } else if (pTransmitKey->byCipherSuite == KEY_CTL_CCMP) {
+-        pTransmitKey->wTSC15_0++;
+-        if (pTransmitKey->wTSC15_0 == 0) {
+-            pTransmitKey->dwTSC47_16++;
+-        }
+-        memcpy(pbyBuf, pTransmitKey->abyKey, 16);
+-
+-        // Make IV
+-        *pdwIV = 0;
+-        *(pbyIVHead+3) = (u8)(((pDevice->byKeyIndex << 6) & 0xc0) | 0x20); // 0x20 is ExtIV
+-        *pdwIV |= cpu_to_le16((u16)(pTransmitKey->wTSC15_0));
+-        //Append IV&ExtIV after Mac Header
+-        *pdwExtIV = cpu_to_le32(pTransmitKey->dwTSC47_16);
+-
+-	if (!mic_hdr)
++	/* Fill TXKEY */
++	if (pTransmitKey == NULL)
+ 		return;
+ 
+-	/* MICHDR0 */
+-	mic_hdr->id = 0x59;
+-	mic_hdr->payload_len = cpu_to_be16(wPayloadLen);
+-	memcpy(mic_hdr->mic_addr2, pMACHeader->addr2, ETH_ALEN);
++	dwRevIVCounter = cpu_to_le32(pDevice->dwIVCounter);
++	*pdwIV = pDevice->dwIVCounter;
++	pDevice->byKeyIndex = pTransmitKey->dwKeyIndex & 0xf;
+ 
+-	mic_hdr->tsc_47_16 = cpu_to_be32(pTransmitKey->dwTSC47_16);
+-	mic_hdr->tsc_15_0 = cpu_to_be16(pTransmitKey->wTSC15_0);
+-
+-	/* MICHDR1 */
+-	if (pDevice->bLongHeader)
+-		mic_hdr->hlen = cpu_to_be16(28);
+-	else
+-		mic_hdr->hlen = cpu_to_be16(22);
++	if (pTransmitKey->byCipherSuite == KEY_CTL_WEP) {
++		if (pTransmitKey->uKeyLength == WLAN_WEP232_KEYLEN) {
++			memcpy(pDevice->abyPRNG, (u8 *)&dwRevIVCounter, 3);
++			memcpy(pDevice->abyPRNG + 3, pTransmitKey->abyKey,
++						pTransmitKey->uKeyLength);
++		} else {
++			memcpy(pbyBuf, (u8 *)&dwRevIVCounter, 3);
++			memcpy(pbyBuf + 3, pTransmitKey->abyKey,
++						pTransmitKey->uKeyLength);
++			if (pTransmitKey->uKeyLength == WLAN_WEP40_KEYLEN) {
++				memcpy(pbyBuf+8, (u8 *)&dwRevIVCounter, 3);
++			memcpy(pbyBuf+11, pTransmitKey->abyKey,
++						pTransmitKey->uKeyLength);
++			}
++
++			memcpy(pDevice->abyPRNG, pbyBuf, 16);
++		}
++		/* Append IV after Mac Header */
++		*pdwIV &= WEP_IV_MASK;
++		*pdwIV |= (u32)pDevice->byKeyIndex << 30;
++		*pdwIV = cpu_to_le32(*pdwIV);
++
++		pDevice->dwIVCounter++;
++		if (pDevice->dwIVCounter > WEP_IV_MASK)
++			pDevice->dwIVCounter = 0;
++	} else if (pTransmitKey->byCipherSuite == KEY_CTL_TKIP) {
++		pTransmitKey->wTSC15_0++;
++		if (pTransmitKey->wTSC15_0 == 0)
++			pTransmitKey->dwTSC47_16++;
++
++		TKIPvMixKey(pTransmitKey->abyKey, pDevice->abyCurrentNetAddr,
++			pTransmitKey->wTSC15_0, pTransmitKey->dwTSC47_16,
++							pDevice->abyPRNG);
++		memcpy(pbyBuf, pDevice->abyPRNG, 16);
++
++		/* Make IV */
++		memcpy(pdwIV, pDevice->abyPRNG, 3);
++
++		*(pbyIVHead+3) = (u8)(((pDevice->byKeyIndex << 6) &
++							0xc0) | 0x20);
++		/*  Append IV&ExtIV after Mac Header */
++		*pdwExtIV = cpu_to_le32(pTransmitKey->dwTSC47_16);
++
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++			"vFillTxKey()---- pdwExtIV: %x\n", *pdwExtIV);
++
++	} else if (pTransmitKey->byCipherSuite == KEY_CTL_CCMP) {
++		pTransmitKey->wTSC15_0++;
++		if (pTransmitKey->wTSC15_0 == 0)
++			pTransmitKey->dwTSC47_16++;
++
++		memcpy(pbyBuf, pTransmitKey->abyKey, 16);
++
++		/* Make IV */
++		*pdwIV = 0;
++		*(pbyIVHead+3) = (u8)(((pDevice->byKeyIndex << 6) &
++							0xc0) | 0x20);
++
++		*pdwIV |= cpu_to_le16((u16)(pTransmitKey->wTSC15_0));
++
++		/* Append IV&ExtIV after Mac Header */
++		*pdwExtIV = cpu_to_le32(pTransmitKey->dwTSC47_16);
++
++		if (!mic_hdr)
++			return;
++
++		/* MICHDR0 */
++		mic_hdr->id = 0x59;
++		mic_hdr->payload_len = cpu_to_be16(wPayloadLen);
++		memcpy(mic_hdr->mic_addr2, pMACHeader->addr2, ETH_ALEN);
++
++		mic_hdr->tsc_47_16 = cpu_to_be32(pTransmitKey->dwTSC47_16);
++		mic_hdr->tsc_15_0 = cpu_to_be16(pTransmitKey->wTSC15_0);
++
++		/* MICHDR1 */
++		if (pDevice->bLongHeader)
++			mic_hdr->hlen = cpu_to_be16(28);
++		else
++			mic_hdr->hlen = cpu_to_be16(22);
+ 
+-	memcpy(mic_hdr->addr1, pMACHeader->addr1, ETH_ALEN);
+-	memcpy(mic_hdr->addr2, pMACHeader->addr2, ETH_ALEN);
++		memcpy(mic_hdr->addr1, pMACHeader->addr1, ETH_ALEN);
++		memcpy(mic_hdr->addr2, pMACHeader->addr2, ETH_ALEN);
+ 
+-	/* MICHDR2 */
+-	memcpy(mic_hdr->addr3, pMACHeader->addr3, ETH_ALEN);
+-	mic_hdr->frame_control = cpu_to_le16(pMACHeader->frame_control
++		/* MICHDR2 */
++		memcpy(mic_hdr->addr3, pMACHeader->addr3, ETH_ALEN);
++		mic_hdr->frame_control = cpu_to_le16(pMACHeader->frame_control
+ 								& 0xc78f);
+-	mic_hdr->seq_ctrl = cpu_to_le16(pMACHeader->seq_ctrl & 0xf);
++		mic_hdr->seq_ctrl = cpu_to_le16(pMACHeader->seq_ctrl & 0xf);
+ 
+-	if (pDevice->bLongHeader)
+-		memcpy(mic_hdr->addr4, pMACHeader->addr4, ETH_ALEN);
+-    }
++		if (pDevice->bLongHeader)
++			memcpy(mic_hdr->addr4, pMACHeader->addr4, ETH_ALEN);
++	}
+ }
+ 
+ static void s_vSWencryption(struct vnt_private *pDevice,
+-- 
+1.8.1.2
+
