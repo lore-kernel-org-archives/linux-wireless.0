@@ -1,78 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm17-vm1.bullet.mail.ird.yahoo.com ([77.238.189.206]:36668 "HELO
-	nm17-vm1.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751105Ab3HTUuP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 16:50:15 -0400
-Message-ID: <1377031813.65033.YahooMailBasic@web171402.mail.ir2.yahoo.com> (sfid-20130820_225020_851069_89314DE1)
-Date: Tue, 20 Aug 2013 21:50:13 +0100 (BST)
-From: Phillip Moss <phillipmoss12@yahoo.es>
-Subject: Re: Signal loss rtl8723ae wifi driver
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <520AFD5C.3010905@lwfinger.net>
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:33007 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752711Ab3H0Hab convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 03:30:31 -0400
+Received: by mail-bk0-f54.google.com with SMTP id mz12so1501141bkb.13
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 00:30:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87ioyrmx3u.fsf@kamboji.qca.qualcomm.com>
+References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
+	<1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
+	<1377507205-5386-5-git-send-email-michal.kazior@tieto.com>
+	<87ioyrmx3u.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 27 Aug 2013 09:30:29 +0200
+Message-ID: <CA+BoTQ=ycKd0Z60wHTWHoq7hBz1W2iW+ahjVmc_nFLQmU7-1Bg@mail.gmail.com> (sfid-20130827_093035_063579_CDACC005)
+Subject: Re: [PATCH v2 4/4] ath10k: fix issues on non-preemptible systems
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
-Sorry for taking so long to reply.
-I am using Arch Linux  3.10.7-1-ARCH  x86_64 with KDE and Network-Manager.
-wlp3s0 is the name of my wireless interface: https://wiki.archlinux.org/index.php/Network_Configuration#Network_Interfaces
-I have renamed the interface to the default wlan0 we all know and love with: ln -s /dev/null /etc/udev/rules.d/80-net-name-slot.rules
+On 27 August 2013 09:06, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Workers may not call into a sleepable function
+>> (e.g. mutex_lock). Since ath10k workers can run
+>> for a very long time it is necessary to explicitly
+>> allow process rescheduling in case there's no
+>> preemption.
+>>
+>> This fixes some issues with system freezes, hangs,
+>> watchdogs being triggered, userspace being
+>> unresponsive on slow host machines under heavy
+>> load.
+>
+> I consider this more as a workaround as a real fix. Would NAPI be a
+> proper fix for issues like this?
+>
+> NAPI support was removed from mac80211 six months ago, but I guess we
+> could try to get it back if we have a good reason:
+>
+> http://marc.info/?l=linux-wireless&m=136204135907491
 
-To measure signal strength I am using "Link Quality", "Signal Level" from iwconfig and signal strength from network manager.
+Hmm. From what I understand NAPI is used for RX polling. My patch
+addresses mainly WMI/HTT TX starvation.
 
-When I am right next to my router I get between: -36  and -42dbm.
-Link quality is between 68/70 and 70/70.
-Network Manager reports signal at 84%.
+There's another solution that I had in mind. Instead of:
 
-When a signal loss period ocurrs Link quality drops to 14/70 (In some cases 12-13) and then quickly jumps back up to 40 then up to 68-70.
-While this happens Signal level bounces up to between +2 and +10dbm then backdown to around -90dbm and then stabalizes again at -36 -42.
-Network Manager reports signal around 32%
+  for (;;) { dequeue(z); process; }
 
-If I step a few meters away signal level is stable around -52 and -64 dbm. Link Quality is around 56/70.
-During a Signal loss period Link Quality jumps down to about 12-13/70 and Signal Level to around 14dbm with occasional spikes up to 99.
-These spikes only sometimes result in the interface dropping the connection to the AP when at this distance, but never when I am very close to the router.
+I did:
 
-I am not sure if this is pure paranoia but it seems that the card gets “stuck” and then keeps on receiving/transmitting. To see if this was true I tried airodump and it does seem as if the card stops receiving beacons at irregular intervals.
+  q = dequeue_all(z); for (;;) { dequeue(q); process; }
 
-I have recompiled backports with the proposed patch and I am still experiencing the same problem.
-Thank you very much for all your help,
-Phillip
+I.e. move all queued stuff at the worker entry and move it out of the
+global queue, that can, and will be, having more stuff queued while
+the worker does its job).
 
---------------------------------------------
-El mié, 14/8/13, Larry Finger <Larry.Finger@lwfinger.net> escribió:
+This way workers would exit/restart more often, but from what I tested
+it didn't really solve the problem. Given enough traffic HTC worker
+responsible for HTT TX gets overwhelmed eventually. You could try
+limit how many frames a worker can process during one execution, but
+how do you guess that? This starvation depends on how fast your CPU
+is.
 
- Asunto: Re: Signal loss rtl8723ae wifi driver
- Para: "Phillip Moss" <phillipmoss12@yahoo.es>
- CC: linux-wireless@vger.kernel.org
- Fecha: miércoles, 14 de agosto, 2013 05:45
- 
- On 08/13/2013 11:23 AM, Phillip Moss
- wrote:
- > Hi all,
- > I have a rtl8723ae wifi card on my laptop. When
- connecting to any wifi Access Point
- > the wifi signal fluctuates from full strength to very
- low.  In order to connect and
- > stay connected I must be no farther than two meters
- from my router otherwise I get
- > disconnected. I have tried the kernel driver on
- multiple distros as well as the
- > vendor drivers for older kernel versions. All seem to
- have the same problem. The card
- > works ok on Windows 7 with vendor drivers. I have also
- tried compiling
- > backports-3.10-rc1-2 with no luck. During a signal loss
- period I get no logs but if I
- > take the laptop too far from the AP dmesg reports:
- 
- Philip,
- 
- Could you try the attached patch?
- 
- Larry
- 
- 
+Thus I opted for sole cond_resched().
+
+
+>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> @@ -1229,6 +1229,10 @@ static void ath10k_htt_rx_work(struct work_struct *work)
+>>                       break;
+>>
+>>               ath10k_htt_rx_process_skb(htt->ar, skb);
+>> +
+>> +#ifndef CONFIG_PREEMPT
+>> +             cond_resched();
+>> +#endif
+>
+> Why the #ifndef? Why should we not call cond_resched() when PREEMPT is
+> enabled? Does something negative happen then?
+
+I think it should be okay. I saw the #ifndef thing in b43legacy and
+thought it simply makes sense (although it's unsightly).
+
+
+Michał.
