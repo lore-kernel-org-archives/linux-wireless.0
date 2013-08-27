@@ -1,67 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:40872 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752943Ab3HWJkG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 05:40:06 -0400
-From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
-To: netdev@vger.kernel.org
-Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
-	Patrick McHardy <kaber@trash.net>,
-	Jiri Pirko <jiri@resnulli.us>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	libertas-dev@lists.infradead.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	devel@driverdev.osuosl.org,
-	Forest Bond <forest@alittletooquiet.net>
-Subject: [PATCH net-next 00/10] set addr_assign_type when inheriting a dev_addr
-Date: Fri, 23 Aug 2013 11:35:03 +0200
-Message-Id: <1377250513-3662-1-git-send-email-bjorn@mork.no> (sfid-20130823_114016_834622_E532A0B9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:62146 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194Ab3H0K4p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 06:56:45 -0400
+Received: by mail-bk0-f41.google.com with SMTP id na10so1624875bkb.28
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 03:56:44 -0700 (PDT)
+Message-ID: <1377600993.3320.66.camel@canaries32-MCP7A> (sfid-20130827_125654_413060_E169853F)
+Subject: [PATCH 3/5 resend] staging: vt6656: rxtx.c s_vGenerateTxParameter
+ create argument bool need rts
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Aug 2013 11:56:33 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Copying the dev_addr from a parent device is an operation
-common to a number of drivers. The addr_assign_type should
-be updated accordingly, either by reusing the value from
-the source device or explicitly indicating that the address
-is stolen by setting addr_assign_type to NET_ADDR_STOLEN.
+Allow conditional statements to be based on true/false instead of
+NULL or not pointer pvRTS.
 
-This patch set adds a helper copying both the dev_addr and
-the addr_assign_type, and use this helper in drivers which
-don't currently set the addr_assign_type. Using NET_ADDR_STOLEN
-might be more appropriate in some of these cases.  Please
-let me know, and I'll update the patch accordingly.
+Harmonise all call functions will bool type.
 
+If need_rts is true then rts is needed.
 
-Bjørn Mork (10):
-  net: etherdevice: add address inherit helper
-  net: vlan: inherit addr_assign_type along with dev_addr
-  net: dsa: inherit addr_assign_type along with dev_addr
-  net: macvlan: inherit addr_assign_type along with dev_addr
-  net: team: inherit addr_assign_type along with dev_addr
-  net: airo: inherit addr_assign_type along with dev_addr
-  net: hostap: inherit addr_assign_type along with dev_addr
-  net: libertas: inherit addr_assign_type along with dev_addr
-  staging: vt6655: inherit addr_assign_type along with dev_addr
-  staging: vt6656: inherit addr_assign_type along with dev_addr
+If need_rts is false then
+	cts is needed only when byPktType == PK_TYPE_11GB || PK_TYPE_11GA.
+	none no rts/cts other byPktTypes.
 
- drivers/net/macvlan.c                     |    2 +-
- drivers/net/team/team.c                   |    2 +-
- drivers/net/wireless/airo.c               |    2 +-
- drivers/net/wireless/hostap/hostap_hw.c   |    2 +-
- drivers/net/wireless/hostap/hostap_main.c |    2 +-
- drivers/net/wireless/libertas/mesh.c      |    2 +-
- drivers/staging/vt6655/hostap.c           |    2 +-
- drivers/staging/vt6655/ioctl.c            |    2 +-
- drivers/staging/vt6655/wpactl.c           |    2 +-
- drivers/staging/vt6656/hostap.c           |    2 +-
- include/linux/etherdevice.h               |   19 +++++++++++++++++++
- net/8021q/vlan_dev.c                      |    2 +-
- net/dsa/slave.c                           |    2 +-
- 13 files changed, 31 insertions(+), 12 deletions(-)
+This allow the joining of pointers pvRTS/pvCTS in to single pointer.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 25 +++++++++++--------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index fd3c598..2fd71c3 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -101,7 +101,7 @@ static void *s_vGetFreeContext(struct vnt_private *pDevice);
+ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
+ 	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
+-	struct ethhdr *psEthHeader);
++	struct ethhdr *psEthHeader, bool need_rts);
+ 
+ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate, void *pTxDataHead, u32 cbFrameLength,
+@@ -829,7 +829,7 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
+ 	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
+-	struct ethhdr *psEthHeader)
++	struct ethhdr *psEthHeader, bool need_rts)
+ {
+ 	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
+ 	u16 wFifoCtl;
+@@ -854,8 +854,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         cbMACHdLen = WLAN_HDR_ADDR3_LEN + 6;
+ 
+     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+-
+-        if (pvRTS != NULL) { //RTS_need
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_rts *pBuf =
+ 			(struct vnt_rrv_time_rts *)pvRrvTime;
+@@ -891,8 +890,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+     }
+     else if (byPktType == PK_TYPE_11A) {
+-
+-        if (pvRTS != NULL) {//RTS_need, non PCF mode
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -903,8 +901,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+             //Fill RTS
+ 	    s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK,
+ 			psEthHeader, wCurrentRate, byFBOption);
+-        }
+-        else if (pvRTS == NULL) {//RTS_needless, non PCF mode
++	} else {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -913,8 +910,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+     }
+     else if (byPktType == PK_TYPE_11B) {
+-
+-        if ((pvRTS != NULL)) {//RTS_need, non PCF mode
++	if (need_rts) {
+             //Fill RsvTime
+ 		struct vnt_rrv_time_ab *pBuf =
+ 				(struct vnt_rrv_time_ab *)pvRrvTime;
+@@ -953,7 +949,8 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 	u32 cb802_1_H_len;
+ 	u32 cbIVlen = 0, cbICVlen = 0, cbMIClen = 0, cbMACHdLen = 0;
+ 	u32 cbFCSlen = 4, cbMICHDR = 0;
+-	int bNeedACK, bRTS;
++	int bNeedACK;
++	bool bRTS = false;
+ 	u8 *pbyType, *pbyMacHdr, *pbyIVHead, *pbyPayloadHead, *pbyTxBufferAddr;
+ 	u8 abySNAP_RFC1042[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00};
+ 	u8 abySNAP_Bridgetunnel[ETH_ALEN]
+@@ -1236,7 +1233,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,
+ 			   (void *)pbyTxBufferAddr, pvRrvTime, pvRTS, pvCTS,
+-                               cbFrameSize, bNeedACK, uDMAIdx, psEthHeader);
++		cbFrameSize, bNeedACK, uDMAIdx, psEthHeader, bRTS);
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, uDMAIdx, bNeedACK,
+ 				byFBOption);
+@@ -1640,7 +1637,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+ 
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,  pbyTxBufferAddr, pvRrvTime, pvRTS, pCTS,
+-                           cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader);
++		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
+ 
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
+@@ -2051,7 +2048,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+ 
+     //Fill FIFO,RrvTime,RTS,and CTS
+     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate, pbyTxBufferAddr, pvRrvTime, pvRTS, pvCTS,
+-                           cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader);
++		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
+ 
+     //Fill DataHead
+     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
 -- 
-1.7.10.4
+1.8.1.2
 
