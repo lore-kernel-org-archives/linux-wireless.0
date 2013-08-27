@@ -1,80 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1675 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968544Ab3HJK1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Aug 2013 06:27:46 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/12] brcm80211: new functionality and some cleanup
- fixes
-Date: Sat, 10 Aug 2013 12:27:18 +0200
-Message-ID: <1376130450-29746-1-git-send-email-arend@broadcom.com> (sfid-20130810_122814_460973_3EED3003)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.candelatech.com ([208.74.158.172]:56795 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753313Ab3H0QHZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 12:07:25 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] iw:  Print Interworking IE details in scan results.
+Date: Tue, 27 Aug 2013 09:07:11 -0700
+Message-Id: <1377619631-14699-1-git-send-email-greearb@candelatech.com> (sfid-20130827_180728_764261_AD0BAEF5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds new functionality to the brcm80211 drivers listed below:
+From: Ben Greear <greearb@candelatech.com>
 
-AMPDU host-reordering:
-	The brcmfmac driver buffers individual A-MPDU packets
-	reducing memory requirement in the wireless device.
+Output looks like:
 
-TDLS:
-	The 802.11 standards AP bypass is added to brcmfmac.
+	802.11u Interworking:
+		Network Options: 0xf1
+			Network Type: 1 (Private with Guest)
+			Internet
+			ASRA
+			ESR
+			UESA
+		Venu Group: 2 (Business)
+		Venu Type: 1
+		HESSID: 00:00:00:00:00:01
 
-BCM4313 iPA:
-	This adds support to brcmsmac for a new variant of the
-	BCM4313. This was already submitted but reverted due
-	to regressions for other devices.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 af21cbc... 1894769... M	scan.c
+ scan.c |   64 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 64 insertions(+), 0 deletions(-)
 
-Other changes are brcmfmac cleanup work for firmware-signalling
-feature and rework in SDIO-specific driver code.
-
-This series is intended for v3.12 and applies to the master branch
-of the wireless-next repository.
-
-Arend van Spriel (5):
-  brcmfmac: use irq safe spinlock in brcmf_sdbrcm_txdata()
-  brcmfmac: .txdata() bus callback should not call brcmf_txcomplete()
-  brcmfmac: add AMPDU reordering functionality
-  brcmfmac: ignore IF event if firmware indicates it
-  brcmfmac: add support for manual TDLS operations
-
-Franky Lin (4):
-  brcmfmac: abstract tx packet processing functions
-  brcmfmac: remove align from brcmf_bus structure
-  brcmfmac: streamline sdio bus header code
-  brcmfmac: use configurable sdio bus header length for tx packet
-
-Hante Meuleman (2):
-  brcmfmac: always use worker thread for tx data.
-  brcmfmac: no fws locking outside fws module.
-
-Piotr Haber (1):
-  brcmsmac: support 4313iPA
-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  16 +-
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   1 -
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |  31 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   8 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    | 279 ++++++++++--
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 481 +++++++++++++--------
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |   4 +
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  21 +
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 228 +++++-----
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   2 +-
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   1 -
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  57 ++-
- .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  | 399 ++++++++++-------
- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   | 289 ++++++++-----
- .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h   |   1 +
- include/linux/platform_data/brcmfmac-sdio.h        |   6 +
- 16 files changed, 1228 insertions(+), 596 deletions(-)
-
+diff --git a/scan.c b/scan.c
+index af21cbc..1894769 100644
+--- a/scan.c
++++ b/scan.c
+@@ -614,6 +614,69 @@ static void print_ht_capa(const uint8_t type, uint8_t len, const uint8_t *data)
+ 	print_ht_mcs(data + 3);
+ }
+ 
++static const char* ntype_11u(uint8_t t) {
++	switch (t) {
++	case 0: return "Private";
++	case 1: return "Private with Guest";
++	case 2: return "Chargeable Public";
++	case 3: return "Free Public";
++	case 4: return "Personal Device";
++	case 5: return "Emergency Services Only";
++	case 14: return "Test or Experimental";
++	case 15: return "Wildcard";
++	default: return "Reserved";
++	}
++}
++
++static const char* vgroup_11u(uint8_t t) {
++	switch (t) {
++	case 0: return "Unspecified";
++	case 1: return "Assembly";
++	case 2: return "Business";
++	case 3: return "Educational";
++	case 4: return "Factory and Industrial";
++	case 5: return "Institutional";
++	case 6: return "Mercantile";
++	case 7: return "Residential";
++	case 8: return "Storage";
++	case 9: return "Utility and Miscellaneous";
++	case 10: return "Vehicular";
++	case 11: return "Outdoor";
++	default: return "Reserved";
++	}
++}
++
++static void print_interworking(const uint8_t type, uint8_t len, const uint8_t *data)
++{
++	/* See Section 7.3.2.92 in the 802.11u spec. */
++	printf("\n");
++	if (len >= 1) {
++		uint8_t ano = data[0];
++		printf("\t\tNetwork Options: 0x%hx\n", (unsigned short)(ano));
++		printf("\t\t\tNetwork Type: %i (%s)\n",
++		       (int)(ano & 0xf), ntype_11u(ano & 0xf));
++		if (ano & (1<<4))
++			printf("\t\t\tInternet\n");
++		if (ano & (1<<5))
++			printf("\t\t\tASRA\n");
++		if (ano & (1<<6))
++			printf("\t\t\tESR\n");
++		if (ano & (1<<7))
++			printf("\t\t\tUESA\n");
++	}
++	if ((len == 3) || (len == 9)) {
++		printf("\t\tVenue Group: %i (%s)\n",
++		       (int)(data[1]), vgroup_11u(data[1]));
++		printf("\t\tVenue Type: %i\n", (int)(data[2]));
++	}
++	if (len == 9)
++		printf("\t\tHESSID: %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\n",
++		       data[3], data[4], data[5], data[6], data[7], data[8]);
++	else if (len == 7)
++		printf("\t\tHESSID: %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\n",
++		       data[1], data[2], data[3], data[4], data[5], data[6]);
++}
++
+ static const char *ht_secondary_offset[4] = {
+ 	"no secondary",
+ 	"above",
+@@ -891,6 +954,7 @@ static const struct ie_print ieprinters[] = {
+ 	[113] = { "MESH Configuration", print_mesh_conf, 7, 7, BIT(PRINT_SCAN), },
+ 	[114] = { "MESH ID", print_ssid, 0, 32, BIT(PRINT_SCAN) | BIT(PRINT_LINK), },
+ 	[127] = { "Extended capabilities", print_capabilities, 0, 255, BIT(PRINT_SCAN), },
++	[107] = { "802.11u Interworking", print_interworking, 0, 255, BIT(PRINT_SCAN), },
+ };
+ 
+ static void print_wifi_wpa(const uint8_t type, uint8_t len, const uint8_t *data)
 -- 
-1.8.1.3
-
+1.7.3.4
 
