@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1389 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751221Ab3HTOBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 10:01:00 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/12] brcmsmac: reinitialize TSSI power control upon
- channel switch
-Date: Tue, 20 Aug 2013 16:00:45 +0200
-Message-ID: <1377007246-9957-12-git-send-email-arend@broadcom.com> (sfid-20130820_160138_838659_C4D0B22E)
-In-Reply-To: <1377007246-9957-1-git-send-email-arend@broadcom.com>
-References: <1377007246-9957-1-git-send-email-arend@broadcom.com>
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:51722 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976Ab3H0Fml convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 01:42:41 -0400
+Received: by mail-bk0-f51.google.com with SMTP id mx10so1408256bkb.24
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2013 22:42:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAB=NE6X=P2hTnOC8xqFwb=-32-hBgx=ndq3KHoUG83KptKv0vA@mail.gmail.com>
+References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
+	<1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
+	<CAB=NE6X=P2hTnOC8xqFwb=-32-hBgx=ndq3KHoUG83KptKv0vA@mail.gmail.com>
+Date: Tue, 27 Aug 2013 07:42:39 +0200
+Message-ID: <CA+BoTQ=zVAab8KV2TwYJ=+wG0N7M4-oo-TgaE2qpxJO33d3oZQ@mail.gmail.com> (sfid-20130827_074244_470372_67AF0A21)
+Subject: Re: [PATCH v2 0/4] ath10k: fixes
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When changing channels the TSSI based power control needs to be
-reinitialized.
+On 26 August 2013 22:20, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+> On Mon, Aug 26, 2013 at 1:53 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>   ath10k: fix issues on non-preemptible systems
+>
+> This patch looks like a stable candidate fix. Please annotate as such
+> if you confirm. Also, I reviewed other ath10k "fixes" and I see no
+> practice of propagating any patches to stable yet. Can you please
+> start doing that? If there were patches which are already merged
+> upstream that should be propagated to stable then they can be
+> submitted as stable candidate patches.
 
-Tested-by: David Herrmann <dh.herrmann@gmail.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c |    2 ++
- 1 file changed, 2 insertions(+)
+Good point.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-index 2917f5c..8fb1048 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -5019,6 +5019,8 @@ void wlc_phy_chanspec_set_lcnphy(struct brcms_phy *pi, u16 chanspec)
- 		wlc_lcnphy_load_tx_iir_filter(pi, true, 3);
- 
- 	mod_phy_reg(pi, 0x4eb, (0x7 << 3), (1) << 3);
-+	if (wlc_lcnphy_tssi_based_pwr_ctrl_enabled(pi))
-+		wlc_lcnphy_tssi_setup(pi);
- }
- 
- void wlc_phy_detach_lcnphy(struct brcms_phy *pi)
--- 
-1.7.10.4
+If this patch is to be propagated to stable the patch(set) needs some
+adjustments to avoid conflicts. Right now the patch touches a place
+that was introduced with "ath10k: move htt rx processing to worker" so
+the offending patch hunk should be moved to that patch.
+
+Actually the "ath10k: make the workqueue multithreaded" could also be
+a candidate for stable as it fixes AP beaconing during heavy TX
+traffic. I should've mentioned that in the commit log.
+
+I'll resend an updated patchset later today.
 
 
+Michał.
