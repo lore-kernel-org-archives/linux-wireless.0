@@ -1,159 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:50333 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752321Ab3HDIzk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Aug 2013 04:55:40 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38873 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752640Ab3H0JiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 05:38:12 -0400
+Date: Tue, 27 Aug 2013 11:36:35 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/11] ath9k: Add a HW capability for WLAN/BT RX diversity
-Date: Sun,  4 Aug 2013 14:21:56 +0530
-Message-Id: <1375606322-9983-5-git-send-email-sujith@msujith.org> (sfid-20130804_105614_977411_821A9EF4)
-In-Reply-To: <1375606322-9983-1-git-send-email-sujith@msujith.org>
-References: <1375606322-9983-1-git-send-email-sujith@msujith.org>
+Subject: [PATCH v2] mac80211: change beacon/connection polling
+Message-ID: <20130827093635.GD5548@redhat.com> (sfid-20130827_113816_452565_F9C7378E)
+References: <20130823065200.GA3835@redhat.com>
+ <1377264280.14021.29.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1377264280.14021.29.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Since when we detect baecon lost we do active AP probing (using nullfunc
+frame or probe request) there is no need to have beacon polling. Flags
+IEEE80211_STA_BEACON_POLL seems to be used just for historical reasons.
 
-Make use of this capability to restrict the usage of the
-debugfs file and modparam using which this feature can
-be enabled.
+Change also make that after we start connection poll due to beacon loss,
+next received beacon will abort the poll.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  9 +++++----
- drivers/net/wireless/ath/ath9k/debug.c |  6 +++++-
- drivers/net/wireless/ath/ath9k/hw.h    |  1 +
- drivers/net/wireless/ath/ath9k/init.c  | 21 +++++++++++++++++----
- 4 files changed, 28 insertions(+), 9 deletions(-)
+v1 -> v2 correct subject and changelog
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 74009f1..18898ab 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -634,10 +634,11 @@ void ath_ant_comb_update(struct ath_softc *sc);
- /* Main driver core */
- /********************/
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/mlme.c        |   38 +++++++++-----------------------------
+ net/mac80211/scan.c        |    3 +--
+ 3 files changed, 10 insertions(+), 32 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b618651..d353c64 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -322,7 +322,6 @@ struct ieee80211_roc_work {
  
--#define ATH9K_PCI_CUS198 0x0001
--#define ATH9K_PCI_CUS230 0x0002
--#define ATH9K_PCI_CUS217 0x0004
--#define ATH9K_PCI_WOW    0x0008
-+#define ATH9K_PCI_CUS198     0x0001
-+#define ATH9K_PCI_CUS230     0x0002
-+#define ATH9K_PCI_CUS217     0x0004
-+#define ATH9K_PCI_WOW        0x0008
-+#define ATH9K_PCI_BT_ANT_DIV 0x0010
+ /* flags used in struct ieee80211_if_managed.flags */
+ enum ieee80211_sta_flags {
+-	IEEE80211_STA_BEACON_POLL	= BIT(0),
+ 	IEEE80211_STA_CONNECTION_POLL	= BIT(1),
+ 	IEEE80211_STA_CONTROL_PORT	= BIT(2),
+ 	IEEE80211_STA_DISABLE_HT	= BIT(4),
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2aab130..23694b7 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -893,8 +893,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
+ 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
  
- /*
-  * Default cache line size, in bytes.
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 881ca6c..daa316b 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -289,6 +289,7 @@ static ssize_t write_file_bt_ant_diversity(struct file *file,
+-	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+-			    IEEE80211_STA_CONNECTION_POLL))
++	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL)
+ 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_USE_MINRATE;
+ 
+ 	ieee80211_tx_skb(sdata, skb);
+@@ -1374,8 +1373,7 @@ static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
+ 	if (!mgd->associated)
+ 		return false;
+ 
+-	if (mgd->flags & (IEEE80211_STA_BEACON_POLL |
+-			  IEEE80211_STA_CONNECTION_POLL))
++	if (mgd->flags & IEEE80211_STA_CONNECTION_POLL)
+ 		return false;
+ 
+ 	if (!mgd->have_beacon)
+@@ -1691,8 +1689,7 @@ static void __ieee80211_stop_poll(struct ieee80211_sub_if_data *sdata)
  {
- 	struct ath_softc *sc = file->private_data;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath9k_hw_capabilities *pCap = &sc->sc_ah->caps;
- 	unsigned long bt_ant_diversity;
- 	char buf[32];
- 	ssize_t len;
-@@ -297,6 +298,9 @@ static ssize_t write_file_bt_ant_diversity(struct file *file,
- 	if (copy_from_user(buf, user_buf, len))
- 		return -EFAULT;
+ 	lockdep_assert_held(&sdata->local->mtx);
  
-+	if (!(pCap->hw_caps & ATH9K_HW_CAP_BT_ANT_DIV))
-+		goto exit;
-+
- 	buf[len] = '\0';
- 	if (kstrtoul(buf, 0, &bt_ant_diversity))
- 		return -EINVAL;
-@@ -307,7 +311,7 @@ static ssize_t write_file_bt_ant_diversity(struct file *file,
- 	ath_dbg(common, CONFIG, "Enable WLAN/BT RX Antenna diversity: %d\n",
- 		common->bt_ant_diversity);
- 	ath9k_ps_restore(sc);
+-	sdata->u.mgd.flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+-				IEEE80211_STA_BEACON_POLL);
++	sdata->u.mgd.flags &= ~IEEE80211_STA_CONNECTION_POLL;
+ 	ieee80211_run_deferred_scan(sdata->local);
+ }
+ 
+@@ -1954,11 +1951,8 @@ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_local *local = sdata->local;
+ 
+ 	mutex_lock(&local->mtx);
+-	if (!(ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+-			      IEEE80211_STA_CONNECTION_POLL))) {
+-		mutex_unlock(&local->mtx);
+-		return;
+-	}
++	if (!(ifmgd->flags & IEEE80211_STA_CONNECTION_POLL))
++		goto out;
+ 
+ 	__ieee80211_stop_poll(sdata);
+ 
+@@ -2094,15 +2088,9 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	 * because otherwise we would reset the timer every time and
+ 	 * never check whether we received a probe response!
+ 	 */
+-	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+-			    IEEE80211_STA_CONNECTION_POLL))
++	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL)
+ 		already = true;
+ 
+-	if (beacon)
+-		ifmgd->flags |= IEEE80211_STA_BEACON_POLL;
+-	else
+-		ifmgd->flags |= IEEE80211_STA_CONNECTION_POLL;
 -
-+exit:
- 	return count;
- }
+ 	mutex_unlock(&sdata->local->mtx);
  
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index fd009e5..4ab8f58 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -248,6 +248,7 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
- 	ATH9K_HW_CAP_PAPRD			= BIT(18),
- 	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(19),
-+	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(20),
- };
- 
- /*
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 5e81b2c..b678add 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -516,6 +516,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
- static void ath9k_init_platform(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	if (common->bus_ops->ath_bus_type != ATH_PCI)
-@@ -531,8 +532,14 @@ static void ath9k_init_platform(struct ath_softc *sc)
- 		ath_info(common, "Set parameters for %s\n",
- 			 (sc->driver_data & ATH9K_PCI_CUS198) ?
- 			 "CUS198" : "CUS230");
--	} else if (sc->driver_data & ATH9K_PCI_CUS217) {
-+	}
-+
-+	if (sc->driver_data & ATH9K_PCI_CUS217)
- 		ath_info(common, "CUS217 card detected\n");
-+
-+	if (sc->driver_data & ATH9K_PCI_BT_ANT_DIV) {
-+		pCap->hw_caps |= ATH9K_HW_CAP_BT_ANT_DIV;
-+		ath_info(common, "Set BT/WLAN RX diversity capability\n");
+ 	if (already)
+@@ -3069,17 +3057,10 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		}
  	}
- }
  
-@@ -586,6 +593,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- {
- 	struct ath9k_platform_data *pdata = sc->dev->platform_data;
- 	struct ath_hw *ah = NULL;
-+	struct ath9k_hw_capabilities *pCap;
- 	struct ath_common *common;
- 	int ret = 0, i;
- 	int csz = 0;
-@@ -602,6 +610,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	ah->reg_ops.rmw = ath9k_reg_rmw;
- 	atomic_set(&ah->intr_ref_cnt, -1);
- 	sc->sc_ah = ah;
-+	pCap = &ah->caps;
- 
- 	sc->dfs_detector = dfs_pattern_detector_init(ah, NL80211_DFS_UNSET);
- 
-@@ -633,10 +642,14 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	ath9k_init_platform(sc);
+-	if (ifmgd->flags & IEEE80211_STA_BEACON_POLL) {
++	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
+ 		mlme_dbg_ratelimited(sdata,
+ 				     "cancelling AP probe due to a received beacon\n");
+-		mutex_lock(&local->mtx);
+-		ifmgd->flags &= ~IEEE80211_STA_BEACON_POLL;
+-		ieee80211_run_deferred_scan(local);
+-		mutex_unlock(&local->mtx);
+-
+-		mutex_lock(&local->iflist_mtx);
+-		ieee80211_recalc_ps(local, -1);
+-		mutex_unlock(&local->iflist_mtx);
++		ieee80211_reset_ap_probe(sdata);
+ 	}
  
  	/*
--	 * Enable WLAN/BT RX Antenna diversity only when BTCOEX is enabled
--	 * and the user manually requests the feature.
-+	 * Enable WLAN/BT RX Antenna diversity only when:
-+	 *
-+	 * - BTCOEX is enabled
-+	 * - the user manually requests the feature.
-+	 * - the HW cap is set using the platform data.
- 	 */
--	if (common->btcoex_enabled && ath9k_bt_ant_diversity)
-+	if (common->btcoex_enabled && ath9k_bt_ant_diversity &&
-+	    (pCap->hw_caps & ATH9K_HW_CAP_BT_ANT_DIV))
- 		common->bt_ant_diversity = 1;
+@@ -3548,8 +3529,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 	} else if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started)
+ 		run_again(sdata, ifmgd->assoc_data->timeout);
  
- 	spin_lock_init(&common->cc_lock);
+-	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+-			    IEEE80211_STA_CONNECTION_POLL) &&
++	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL &&
+ 	    ifmgd->associated) {
+ 		u8 bssid[ETH_ALEN];
+ 		int max_tries;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 08afe74..ecb57b0 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -391,8 +391,7 @@ static bool ieee80211_can_scan(struct ieee80211_local *local,
+ 		return false;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+-	    sdata->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
+-				  IEEE80211_STA_CONNECTION_POLL))
++	    sdata->u.mgd.flags & IEEE80211_STA_CONNECTION_POLL)
+ 		return false;
+ 
+ 	return true;
 -- 
-1.8.3.4
+1.7.1
 
