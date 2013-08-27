@@ -1,90 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:57572 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174Ab3HOFkm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 01:40:42 -0400
-Received: by mail-pa0-f47.google.com with SMTP id kl13so421024pab.34
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Aug 2013 22:40:42 -0700 (PDT)
-Message-ID: <520C69D5.2010502@gna.org> (sfid-20130815_074056_376073_4F42A422)
-Date: Thu, 15 Aug 2013 17:40:37 +1200
-From: Christian Gagneraud <chgans@gna.org>
+Received: from ebb06.tieto.com ([131.207.168.38]:43851 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752925Ab3H0LJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 07:09:55 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 6/6] ath10k: rename ce_ring_state to ath10k_ce_ring
+Date: Tue, 27 Aug 2013 13:08:03 +0200
+Message-ID: <1377601683-12072-7-git-send-email-michal.kazior@tieto.com> (sfid-20130827_130959_949245_9E80373D)
+In-Reply-To: <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
+References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
+ <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Siyu Qiu <ppqq2356@gmail.com>
-Subject: Re: Switching band of a dual-band WiFi device
-References: <520C631F.6010806@gna.org> <CA+J2US3uKD9xr9FOg5=tkwjx2ETQY9qmH305supcjGcVYHmRPQ@mail.gmail.com>
-In-Reply-To: <CA+J2US3uKD9xr9FOg5=tkwjx2ETQY9qmH305supcjGcVYHmRPQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15/08/13 17:30, Siyu Qiu wrote:
-> hi, do you mean that you take the wireless card from tplink and embed it
-> into your pc ? Does it work ? Coz i want to put qca 9889 into pc but the
-> info about network controller is :!!! unknown type 7f
+The new naming makes more sense.
 
-Hi Siyu Qio,
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c |   30 +++++++++++++++---------------
+ drivers/net/wireless/ath/ath10k/ce.h |    7 +++----
+ 2 files changed, 18 insertions(+), 19 deletions(-)
 
-I'm not sure to understand your question, but this is what I did
-- went to the shop to buy this USB stick
-- plugged it in a USB slot of my PC
-
-And now I'm trying to understand if I can switch/enable/disable these 2 
-bands, and more importantly, do I really need to?
-Right now, my feeling is that "it just works out of the box", I 
-shouldn't try to do this kind of things. I just try to understand this 
-dual-band thing.
-
-Chris
-
-PS: Can you reply on the mailing list instead of sending private email 
-please?
-
-
->
-> On Aug 14, 2013 10:12 PM, "Christian Gagneraud" <chgans@gna.org
-> <mailto:chgans@gna.org>> wrote:
->
->     Hi there,
->
->     I am using a TP-Link TL-WDN3200 on a ubuntu 13.04 (kernel
->     3.8.0-27-generic), and I have install relevant modules with
->     backports-3.11-rc3-1.
->
->     I would like to switch my WiFi stick to 5GHz, I tried iwconfig wlan0
->     freq 5G, but I get ENOTSUPP.
->     Is the freq settings suppose to handle this 2.4 vs 5GHz band or is
->     it only for selecting channel frequency within a given band?
->
->     Does linux-wireless provides a way for selecting 2.4 or 5GHz band?
->
->     "iw phy phy11 info" tells me that in band 2, all the frequencies are
->     disabled except:
->                              * 5745 MHz [149] (30.0 dBm)
->                              * 5755 MHz [151] (30.0 dBm)
->                              * 5765 MHz [153] (30.0 dBm)
->                              * 5775 MHz [155] (30.0 dBm)
->                              * 5785 MHz [157] (30.0 dBm)
->                              * 5795 MHz [159] (30.0 dBm)
->                              * 5805 MHz [161] (30.0 dBm)
->                              * 5825 MHz [165] (30.0 dBm)
->
->     As well, my understanding of WiFi might be a bit limited but, does a
->     dual-band WiFi device provides 2.4 and 5GHz services at the same
->     time or do I need to select one or the other myself? Or maybe I can
->     just enable/disable them manually (and separately)?
->
->     Hope someone can shed some light at this.
->
->     Regards,
->     Chris
->     --
->     To unsubscribe from this list: send the line "unsubscribe
->     linux-wireless" in
->     the body of a message to majordomo@vger.kernel.org
->     <mailto:majordomo@vger.kernel.org>
->     More majordomo info at http://vger.kernel.org/__majordomo-info.html
->     <http://vger.kernel.org/majordomo-info.html>
->
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 15679d9..dd80c24 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -264,7 +264,7 @@ static int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
+ 				 unsigned int flags)
+ {
+ 	struct ath10k *ar = ce_state->ar;
+-	struct ce_ring_state *src_ring = ce_state->src_ring;
++	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
+ 	struct ce_desc *desc, *sdesc;
+ 	unsigned int nentries_mask = src_ring->nentries_mask;
+ 	unsigned int sw_index = src_ring->sw_index;
+@@ -354,7 +354,7 @@ int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
+ 			    struct ce_sendlist *sendlist,
+ 			    unsigned int transfer_id)
+ {
+-	struct ce_ring_state *src_ring = ce_state->src_ring;
++	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
+ 	struct ce_sendlist_item *item;
+ 	struct ath10k *ar = ce_state->ar;
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+@@ -406,7 +406,7 @@ int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
+ 			       void *per_recv_context,
+ 			       u32 buffer)
+ {
+-	struct ce_ring_state *dest_ring = ce_state->dest_ring;
++	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
+ 	u32 ctrl_addr = ce_state->ctrl_addr;
+ 	struct ath10k *ar = ce_state->ar;
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+@@ -457,7 +457,7 @@ static int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
+ 						unsigned int *transfer_idp,
+ 						unsigned int *flagsp)
+ {
+-	struct ce_ring_state *dest_ring = ce_state->dest_ring;
++	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
+ 	unsigned int nentries_mask = dest_ring->nentries_mask;
+ 	unsigned int sw_index = dest_ring->sw_index;
+ 
+@@ -531,7 +531,7 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
+ 			       void **per_transfer_contextp,
+ 			       u32 *bufferp)
+ {
+-	struct ce_ring_state *dest_ring;
++	struct ath10k_ce_ring *dest_ring;
+ 	unsigned int nentries_mask;
+ 	unsigned int sw_index;
+ 	unsigned int write_index;
+@@ -589,7 +589,7 @@ static int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
+ 						unsigned int *nbytesp,
+ 						unsigned int *transfer_idp)
+ {
+-	struct ce_ring_state *src_ring = ce_state->src_ring;
++	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
+ 	u32 ctrl_addr = ce_state->ctrl_addr;
+ 	struct ath10k *ar = ce_state->ar;
+ 	unsigned int nentries_mask = src_ring->nentries_mask;
+@@ -646,7 +646,7 @@ int ath10k_ce_cancel_send_next(struct ath10k_ce_pipe *ce_state,
+ 			       unsigned int *nbytesp,
+ 			       unsigned int *transfer_idp)
+ {
+-	struct ce_ring_state *src_ring;
++	struct ath10k_ce_ring *src_ring;
+ 	unsigned int nentries_mask;
+ 	unsigned int sw_index;
+ 	unsigned int write_index;
+@@ -894,7 +894,7 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 				   const struct ce_attr *attr)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	struct ce_ring_state *src_ring;
++	struct ath10k_ce_ring *src_ring;
+ 	unsigned int nentries = attr->src_nentries;
+ 	unsigned int ce_nbytes;
+ 	u32 ctrl_addr = ath10k_ce_base_address(ce_id);
+@@ -908,15 +908,15 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 		return 0;
+ 	}
+ 
+-	ce_nbytes = sizeof(struct ce_ring_state) + (nentries * sizeof(void *));
++	ce_nbytes = sizeof(struct ath10k_ce_ring) + (nentries * sizeof(void *));
+ 	ptr = kzalloc(ce_nbytes, GFP_KERNEL);
+ 	if (ptr == NULL)
+ 		return -ENOMEM;
+ 
+-	ce_state->src_ring = (struct ce_ring_state *)ptr;
++	ce_state->src_ring = (struct ath10k_ce_ring *)ptr;
+ 	src_ring = ce_state->src_ring;
+ 
+-	ptr += sizeof(struct ce_ring_state);
++	ptr += sizeof(struct ath10k_ce_ring);
+ 	src_ring->nentries = nentries;
+ 	src_ring->nentries_mask = nentries - 1;
+ 
+@@ -997,7 +997,7 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 				    const struct ce_attr *attr)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	struct ce_ring_state *dest_ring;
++	struct ath10k_ce_ring *dest_ring;
+ 	unsigned int nentries = attr->dest_nentries;
+ 	unsigned int ce_nbytes;
+ 	u32 ctrl_addr = ath10k_ce_base_address(ce_id);
+@@ -1011,15 +1011,15 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 		return 0;
+ 	}
+ 
+-	ce_nbytes = sizeof(struct ce_ring_state) + (nentries * sizeof(void *));
++	ce_nbytes = sizeof(struct ath10k_ce_ring) + (nentries * sizeof(void *));
+ 	ptr = kzalloc(ce_nbytes, GFP_KERNEL);
+ 	if (ptr == NULL)
+ 		return -ENOMEM;
+ 
+-	ce_state->dest_ring = (struct ce_ring_state *)ptr;
++	ce_state->dest_ring = (struct ath10k_ce_ring *)ptr;
+ 	dest_ring = ce_state->dest_ring;
+ 
+-	ptr += sizeof(struct ce_ring_state);
++	ptr += sizeof(struct ath10k_ce_ring);
+ 	dest_ring->nentries = nentries;
+ 	dest_ring->nentries_mask = nentries - 1;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index ac850c0..cfef7d0 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -50,8 +50,7 @@ struct ce_desc {
+ 	__le16 flags; /* %CE_DESC_FLAGS_ */
+ };
+ 
+-/* Copy Engine Ring internal state */
+-struct ce_ring_state {
++struct ath10k_ce_ring {
+ 	/* Number of entries in this ring; must be power of 2 */
+ 	unsigned int nentries;
+ 	unsigned int nentries_mask;
+@@ -130,8 +129,8 @@ struct ath10k_ce_pipe {
+ 			 unsigned int flags);
+ 
+ 	unsigned int src_sz_max;
+-	struct ce_ring_state *src_ring;
+-	struct ce_ring_state *dest_ring;
++	struct ath10k_ce_ring *src_ring;
++	struct ath10k_ce_ring *dest_ring;
+ };
+ 
+ struct ce_sendlist_item {
+-- 
+1.7.9.5
 
