@@ -1,71 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:55526 "EHLO canardo.mork.no"
+Received: from mail.allnet.de ([212.18.29.59]:19499 "EHLO mail.allnet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756915Ab3H3QLE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 12:11:04 -0400
-From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
-To: netdev@vger.kernel.org
-Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
-	Patrick McHardy <kaber@trash.net>,
-	Jiri Pirko <jiri@resnulli.us>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	libertas-dev@lists.infradead.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	devel@driverdev.osuosl.org,
-	Forest Bond <forest@alittletooquiet.net>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH v2 net-next 0/9] set addr_assign_type when inheriting a dev_addr
-Date: Fri, 30 Aug 2013 18:08:43 +0200
-Message-Id: <1377878932-26881-1-git-send-email-bjorn@mork.no> (sfid-20130830_181113_975000_BDCA2EDA)
+	id S1752551Ab3H0I2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 04:28:22 -0400
+Message-ID: <521C61AC.9020508@allnet.de> (sfid-20130827_102843_657450_018A31EA)
+Date: Tue, 27 Aug 2013 10:22:04 +0200
+From: Daniel Golle <dgolle@allnet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Paul Menzel <paulepanter@users.sourceforge.net>,
+	Fabien ADAM <id2ndr@crocobox.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [rt2x00-users] [PATCH 3.11] rt2800: fix wrong TX power compensation
+References: <20130826131851.GB10525@redhat.com> <1377548398.4408.4.camel@mattotaupa> <20130827080001.GA2609@redhat.com>
+In-Reply-To: <20130827080001.GA2609@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Copying the dev_addr from a parent device is an operation
-common to a number of drivers. The addr_assign_type should
-be updated accordingly, either by reusing the value from
-the source device or explicitly indicating that the address
-is stolen by setting addr_assign_type to NET_ADDR_STOLEN.
+On 08/27/2013 10:00 AM, Stanislaw Gruszka wrote:
+> On Mon, Aug 26, 2013 at 10:19:58PM +0200, Paul Menzel wrote:
+>> Could you please add which ones you have tested?
+> 
+> I checked 2 devices (3071 & 3070) but they have EXTERNAL_TX_ALC bit set.
+> I assume the fix is correct based on vendor driver and it fixes devices
+> which have no EXTERNAL_TX_ACL, but I can not tell what chipset that are.
+> Is possible that the same chipset can be configured with and without
+> EXTERNAL_TX_ALC.
 
-This patch set adds a helper copying both the dev_addr and
-the addr_assign_type, and use this helper in drivers which
-don't currently set the addr_assign_type. Using NET_ADDR_STOLEN
-might be more appropriate in some of these cases.  Please
-let me know, and I'll update the patch accordingly.
-
-Changes in v2:
- - assuming addr_len == ETH_ALEN to allow optimized memcpy
- - dropped the vt6656 patch due to addr_len being unset in that driver
-
-
-Bjørn Mork (9):
-  net: etherdevice: add address inherit helper
-  net: vlan: inherit addr_assign_type along with dev_addr
-  net: dsa: inherit addr_assign_type along with dev_addr
-  net: macvlan: inherit addr_assign_type along with dev_addr
-  net: team: inherit addr_assign_type along with dev_addr
-  net: airo: inherit addr_assign_type along with dev_addr
-  net: hostap: inherit addr_assign_type along with dev_addr
-  net: libertas: inherit addr_assign_type along with dev_addr
-  staging: vt6655: inherit addr_assign_type along with dev_addr
-
- drivers/net/macvlan.c                     |    2 +-
- drivers/net/team/team.c                   |    2 +-
- drivers/net/wireless/airo.c               |    2 +-
- drivers/net/wireless/hostap/hostap_hw.c   |    2 +-
- drivers/net/wireless/hostap/hostap_main.c |    2 +-
- drivers/net/wireless/libertas/mesh.c      |    2 +-
- drivers/staging/vt6655/hostap.c           |    2 +-
- drivers/staging/vt6655/ioctl.c            |    2 +-
- drivers/staging/vt6655/wpactl.c           |    2 +-
- include/linux/etherdevice.h               |   15 +++++++++++++++
- net/8021q/vlan_dev.c                      |    2 +-
- net/dsa/slave.c                           |    2 +-
- 12 files changed, 26 insertions(+), 11 deletions(-)
-
--- 
-1.7.10.4
+At least for SoC (3352 and 5350) I know that there are devices with (e.g.
+DIR-615 rev.H1) and without EXTERNAL_TX_ALC (e.g. ALL5002). I guess the same
+applies for PCI modules.
 
