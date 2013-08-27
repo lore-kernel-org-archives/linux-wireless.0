@@ -1,179 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:43851 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752925Ab3H0LJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 07:09:55 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 6/6] ath10k: rename ce_ring_state to ath10k_ce_ring
-Date: Tue, 27 Aug 2013 13:08:03 +0200
-Message-ID: <1377601683-12072-7-git-send-email-michal.kazior@tieto.com> (sfid-20130827_130959_949245_9E80373D)
-In-Reply-To: <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
-References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
- <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
+Received: from p15195424.pureserver.info ([82.165.34.74]:35988 "EHLO
+	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752789Ab3H0UlE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 16:41:04 -0400
+Message-ID: <521D0EA2.2070105@ilande.co.uk> (sfid-20130827_224119_452117_E8944634)
+Date: Tue, 27 Aug 2013 21:40:02 +0100
+From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org
+References: <5217B01D.4000609@ilande.co.uk> <521B9A74.60603@ilande.co.uk> <521CD266.5010801@lwfinger.net>
+In-Reply-To: <521CD266.5010801@lwfinger.net>
+Subject: Re: Problems associating to AP with rtl8192cu driver
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new naming makes more sense.
+On 27/08/13 17:23, Larry Finger wrote:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/ce.c |   30 +++++++++++++++---------------
- drivers/net/wireless/ath/ath10k/ce.h |    7 +++----
- 2 files changed, 18 insertions(+), 19 deletions(-)
+Hi Larry,
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 15679d9..dd80c24 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -264,7 +264,7 @@ static int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
- 				 unsigned int flags)
- {
- 	struct ath10k *ar = ce_state->ar;
--	struct ce_ring_state *src_ring = ce_state->src_ring;
-+	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
- 	struct ce_desc *desc, *sdesc;
- 	unsigned int nentries_mask = src_ring->nentries_mask;
- 	unsigned int sw_index = src_ring->sw_index;
-@@ -354,7 +354,7 @@ int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
- 			    struct ce_sendlist *sendlist,
- 			    unsigned int transfer_id)
- {
--	struct ce_ring_state *src_ring = ce_state->src_ring;
-+	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
- 	struct ce_sendlist_item *item;
- 	struct ath10k *ar = ce_state->ar;
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-@@ -406,7 +406,7 @@ int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
- 			       void *per_recv_context,
- 			       u32 buffer)
- {
--	struct ce_ring_state *dest_ring = ce_state->dest_ring;
-+	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
- 	u32 ctrl_addr = ce_state->ctrl_addr;
- 	struct ath10k *ar = ce_state->ar;
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-@@ -457,7 +457,7 @@ static int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
- 						unsigned int *transfer_idp,
- 						unsigned int *flagsp)
- {
--	struct ce_ring_state *dest_ring = ce_state->dest_ring;
-+	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
- 	unsigned int nentries_mask = dest_ring->nentries_mask;
- 	unsigned int sw_index = dest_ring->sw_index;
- 
-@@ -531,7 +531,7 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
- 			       void **per_transfer_contextp,
- 			       u32 *bufferp)
- {
--	struct ce_ring_state *dest_ring;
-+	struct ath10k_ce_ring *dest_ring;
- 	unsigned int nentries_mask;
- 	unsigned int sw_index;
- 	unsigned int write_index;
-@@ -589,7 +589,7 @@ static int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
- 						unsigned int *nbytesp,
- 						unsigned int *transfer_idp)
- {
--	struct ce_ring_state *src_ring = ce_state->src_ring;
-+	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
- 	u32 ctrl_addr = ce_state->ctrl_addr;
- 	struct ath10k *ar = ce_state->ar;
- 	unsigned int nentries_mask = src_ring->nentries_mask;
-@@ -646,7 +646,7 @@ int ath10k_ce_cancel_send_next(struct ath10k_ce_pipe *ce_state,
- 			       unsigned int *nbytesp,
- 			       unsigned int *transfer_idp)
- {
--	struct ce_ring_state *src_ring;
-+	struct ath10k_ce_ring *src_ring;
- 	unsigned int nentries_mask;
- 	unsigned int sw_index;
- 	unsigned int write_index;
-@@ -894,7 +894,7 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
- 				   const struct ce_attr *attr)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	struct ce_ring_state *src_ring;
-+	struct ath10k_ce_ring *src_ring;
- 	unsigned int nentries = attr->src_nentries;
- 	unsigned int ce_nbytes;
- 	u32 ctrl_addr = ath10k_ce_base_address(ce_id);
-@@ -908,15 +908,15 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
- 		return 0;
- 	}
- 
--	ce_nbytes = sizeof(struct ce_ring_state) + (nentries * sizeof(void *));
-+	ce_nbytes = sizeof(struct ath10k_ce_ring) + (nentries * sizeof(void *));
- 	ptr = kzalloc(ce_nbytes, GFP_KERNEL);
- 	if (ptr == NULL)
- 		return -ENOMEM;
- 
--	ce_state->src_ring = (struct ce_ring_state *)ptr;
-+	ce_state->src_ring = (struct ath10k_ce_ring *)ptr;
- 	src_ring = ce_state->src_ring;
- 
--	ptr += sizeof(struct ce_ring_state);
-+	ptr += sizeof(struct ath10k_ce_ring);
- 	src_ring->nentries = nentries;
- 	src_ring->nentries_mask = nentries - 1;
- 
-@@ -997,7 +997,7 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
- 				    const struct ce_attr *attr)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	struct ce_ring_state *dest_ring;
-+	struct ath10k_ce_ring *dest_ring;
- 	unsigned int nentries = attr->dest_nentries;
- 	unsigned int ce_nbytes;
- 	u32 ctrl_addr = ath10k_ce_base_address(ce_id);
-@@ -1011,15 +1011,15 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
- 		return 0;
- 	}
- 
--	ce_nbytes = sizeof(struct ce_ring_state) + (nentries * sizeof(void *));
-+	ce_nbytes = sizeof(struct ath10k_ce_ring) + (nentries * sizeof(void *));
- 	ptr = kzalloc(ce_nbytes, GFP_KERNEL);
- 	if (ptr == NULL)
- 		return -ENOMEM;
- 
--	ce_state->dest_ring = (struct ce_ring_state *)ptr;
-+	ce_state->dest_ring = (struct ath10k_ce_ring *)ptr;
- 	dest_ring = ce_state->dest_ring;
- 
--	ptr += sizeof(struct ce_ring_state);
-+	ptr += sizeof(struct ath10k_ce_ring);
- 	dest_ring->nentries = nentries;
- 	dest_ring->nentries_mask = nentries - 1;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index ac850c0..cfef7d0 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -50,8 +50,7 @@ struct ce_desc {
- 	__le16 flags; /* %CE_DESC_FLAGS_ */
- };
- 
--/* Copy Engine Ring internal state */
--struct ce_ring_state {
-+struct ath10k_ce_ring {
- 	/* Number of entries in this ring; must be power of 2 */
- 	unsigned int nentries;
- 	unsigned int nentries_mask;
-@@ -130,8 +129,8 @@ struct ath10k_ce_pipe {
- 			 unsigned int flags);
- 
- 	unsigned int src_sz_max;
--	struct ce_ring_state *src_ring;
--	struct ce_ring_state *dest_ring;
-+	struct ath10k_ce_ring *src_ring;
-+	struct ath10k_ce_ring *dest_ring;
- };
- 
- struct ce_sendlist_item {
--- 
-1.7.9.5
+> I just retested and this message was posted from what lsusb says is a
+> "Bus 001 Device 007: ID 7392:7811 Edimax Technology Co., Ltd EW-7811Un
+> 802.11n Wireless Adapter [Realtek RTL8188CUS]" connected to an AP using
+> WPA(1).
 
+I'm actually testing a dongle from a Raspberry Pi that I've been 
+experiencing issues with under load with the Realtek-written 8192cu 
+driver. My understanding is that it is an OEM RTL8188CUS adapter from 
+here: http://thepihut.com/products/usb-wifi-adapter-for-the-raspberry-pi.
+
+> My kernel is 3.11.0-rc6-wl+ from the wireless-testing tree. I have built
+> 3.11-rc7-wl+, but not yet rebooted. Before I boot into that kernel, I
+> will build and test the mainline kernel, but it should not make a
+> difference as the only code differences between wireless-testing and the
+> mainline trees deal with cleaning up some sparse endian issues.
+>
+> What is the make/model of the AP that fails? Is its firmware the latest
+> available? Just to confirm, you are running WPA1 encryption.
+
+It seems to be all of the ones I'm testing :/  Currently that's an old 
+Netgear DG834G, a desktop PC running Debian Wheezy/hostapd using a 
+zd1211rw-based WiFi dongle, and an O2 Wireless box (rebadged Thomson). 
+The problem seems to be that association is difficult, and even when it 
+does associate then the AP appears to drop out every minute or so.
+
+The rtl8192cu firmware is that supplied with Debian Wheezy, while the AP 
+firmware should also be reasonably up-to-date. Access to all APs is fine 
+using an Android phone, the zd1211rw desktop PC and a laptop with an 
+iwlwifi driver. The APs are set to advertise both WPA and WPA2 encryption.
+
+> Do you still have the wireshark file from the failed attempt? If so,
+> could you filter out the traffic from APs and stations other than the
+> units trying to make the connection, and send me (privately) the trimmed
+> file?
+
+Yes - I'm not sure if it's exactly that attempt, but I do have a 
+representative wireshark trace of this which I will send to you privately.
+
+> For completeness, I have tested WPA2 with Netgear WNDR3300 and WNDR3400
+> running standard firmware, WPA1 with a Linksys WRT54GL running openWRT
+> Kamikaze fw, and WEP with a Linksys WRT54G V5 running standard fw.
+
+Okay. So perhaps there is something slightly different about this 
+particular WiFi dongle...
+
+
+Many thanks,
+
+Mark.
