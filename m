@@ -1,87 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:44969 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753950Ab3HaVTd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Aug 2013 17:19:33 -0400
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] rtl8187: fix use after free on failure path in rtl8187_init_urbs()
-Date: Sun,  1 Sep 2013 00:18:48 +0300
-Message-Id: <1377983928-2440-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130831_231955_202307_6D855419)
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:36363 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752913Ab3H0I6d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 04:58:33 -0400
+Received: by mail-bk0-f53.google.com with SMTP id d7so1461025bkh.40
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 01:58:32 -0700 (PDT)
+Message-ID: <1377593901.3320.12.camel@canaries32-MCP7A> (sfid-20130827_105837_536305_7C84CD12)
+Subject: [PATCH 2/2] staging: vt6656: rxtx.c s_vFillRTSHead PK_TYPE_11A
+ allow fall through AUTO_FB_NONE
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Aug 2013 09:58:21 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of __dev_alloc_skb() failure rtl8187_init_urbs()
-calls usb_free_urb(entry) where 'entry' can points to urb
-allocated at the previous iteration. That means refcnt will be
-decremented incorrectly and the urb can be used after memory
-deallocation.
+byFBOption == AUTO_FB_NONE (0) is the same as PK_TYPE_11B
 
-The patch fixes the issue and implements error handling of init_urbs
-in rtl8187_start().
+Reverse if condition to break and allow fall through.
 
-Found by Linux Driver Verification project (linuxtesting.org).
-
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/rtl818x/rtl8187/dev.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ drivers/staging/vt6656/rxtx.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-index f49220e..e83d53c 100644
---- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-@@ -438,17 +438,16 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
- 		skb_queue_tail(&priv->rx_queue, skb);
- 		usb_anchor_urb(entry, &priv->anchored);
- 		ret = usb_submit_urb(entry, GFP_KERNEL);
-+		usb_free_urb(entry);
- 		if (ret) {
- 			skb_unlink(skb, &priv->rx_queue);
- 			usb_unanchor_urb(entry);
- 			goto err;
- 		}
--		usb_free_urb(entry);
- 	}
- 	return ret;
- 
- err:
--	usb_free_urb(entry);
- 	kfree_skb(skb);
- 	usb_kill_anchored_urbs(&priv->anchored);
- 	return ret;
-@@ -956,8 +955,12 @@ static int rtl8187_start(struct ieee80211_hw *dev)
- 				  (RETRY_COUNT << 8  /* short retry limit */) |
- 				  (RETRY_COUNT << 0  /* long retry limit */) |
- 				  (7 << 21 /* MAX TX DMA */));
--		rtl8187_init_urbs(dev);
--		rtl8187b_init_status_urb(dev);
-+		ret = rtl8187_init_urbs(dev);
-+		if (ret)
-+			goto rtl8187_start_exit;
-+		ret = rtl8187b_init_status_urb(dev);
-+		if (ret)
-+			usb_kill_anchored_urbs(&priv->anchored);
- 		goto rtl8187_start_exit;
- 	}
- 
-@@ -966,7 +969,9 @@ static int rtl8187_start(struct ieee80211_hw *dev)
- 	rtl818x_iowrite32(priv, &priv->map->MAR[0], ~0);
- 	rtl818x_iowrite32(priv, &priv->map->MAR[1], ~0);
- 
--	rtl8187_init_urbs(dev);
-+	ret = rtl8187_init_urbs(dev);
-+	if (ret)
-+		goto rtl8187_start_exit;
- 
- 	reg = RTL818X_RX_CONF_ONLYERLPKT |
- 	      RTL818X_RX_CONF_RX_AUTORESETPHY |
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index e049a34..463a8d5 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -743,15 +743,12 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+ 				bNeedAck, wCurrentRate, byFBOption);
+ 		break;
+ 	case PK_TYPE_11A:
+-		if (byFBOption == AUTO_FB_NONE)
+-			vnt_rxtx_rts_ab_head(pDevice, &head->rts_ab,
+-				psEthHeader, byPktType, cbFrameLength,
+-				bNeedAck, wCurrentRate, byFBOption);
+-		else
++		if (byFBOption) {
+ 			vnt_rxtx_rts_a_fb_head(pDevice, &head->rts_a_fb,
+ 				psEthHeader, byPktType, cbFrameLength,
+ 				bNeedAck, wCurrentRate, byFBOption);
+-		break;
++			break;
++		}
+ 	case PK_TYPE_11B:
+ 		vnt_rxtx_rts_ab_head(pDevice, &head->rts_ab,
+ 			psEthHeader, byPktType, cbFrameLength,
 -- 
 1.8.1.2
 
