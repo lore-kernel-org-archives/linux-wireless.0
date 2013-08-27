@@ -1,47 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50469 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750771Ab3HSJdM convert rfc822-to-8bit (ORCPT
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:36065 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753580Ab3H0XJz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Aug 2013 05:33:12 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Question about iwl_pcie_rxq_inc_wr_ptr
-Date: Mon, 19 Aug 2013 09:32:58 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301A2954B@HASMSX103.ger.corp.intel.com> (sfid-20130819_113316_690706_FC9A5DFE)
-References: <20130802084235.GD8566@redhat.com>
-In-Reply-To: <20130802084235.GD8566@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 27 Aug 2013 19:09:55 -0400
+Received: by mail-oa0-f53.google.com with SMTP id k18so6604091oag.40
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 16:09:55 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAN3-2D5+tvQyZKBP3vUwGWdctCcfCeBxAhPsZs+DCLDdr4dyCw@mail.gmail.com>
+References: <CAN3-2D7=P=9VyV7xoANw_6B8VhOaTRC1iMw+mwUH2-g8YOmPMg@mail.gmail.com>
+	<520968B0.80301@lwfinger.net>
+	<CAN3-2D5rCnXYogA6s6in_e6qpyLmZ0bpbGX=REi=Cn29U40nMw@mail.gmail.com>
+	<520971BA.6040503@lwfinger.net>
+	<CAN3-2D75TLTS-Fv3CgoBjA+RA3jv-QyLoSs+PZeKXLY_MUcSTQ@mail.gmail.com>
+	<520975D8.8040908@lwfinger.net>
+	<CAN3-2D6KSsFXQ5QOGfp-1c69dCSrCEdcgXMfPcuEC+Hx_dX_zw@mail.gmail.com>
+	<520AF3BD.5020705@lwfinger.net>
+	<CAN3-2D5+tvQyZKBP3vUwGWdctCcfCeBxAhPsZs+DCLDdr4dyCw@mail.gmail.com>
+Date: Tue, 27 Aug 2013 16:09:54 -0700
+Message-ID: <CAN3-2D6Cf6Ew2Ar5ZD5ZCamhKF92wnKjgP=dEk15UF1YDXJS5g@mail.gmail.com> (sfid-20130828_010958_524517_646D97D1)
+Subject: Re: issues with RTL8188CE device and rtl8192ce driver
+From: Colleen Josephson <cjoseph@mit.edu>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> I would like to ask if below change is safe (I'm considering to do that change
-> on iwlegacy):
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c
-> b/drivers/net/wireless/iwlwifi/pcie/rx.c
-> index 567e67a..1ebdb83 100644
-> --- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-> +++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-> @@ -183,7 +183,7 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans
-> *trans, struct iwl_rxq *q)
->  		} else {
->  			/* Device expects a multiple of 8 */
->  			q->write_actual = (q->write & ~0x7);
-> -			iwl_write_direct32(trans, FH_RSCSR_CHNL0_WPTR,
-> +			iwl_write32(trans, FH_RSCSR_CHNL0_WPTR,
->  				q->write_actual);
->  		}
->  	}
-> 
-> This register seems to be only read by firmware, so maybe we can modify it
-> without grab nic access. We are doing that on iwl_pcie_txq_inc_wr_ptr().
-> 
-
-I am not sure...
-I am not sure what would be the behavior: not updating the value at all, or having the HW use an old value for a while.
-Does this cost you so much CPU that it justifies such a change?
+Any updates? Or addition information that would be useful? I will be
+relocating to the other side of the US next week, so I will be unable
+to collect more information or traces on this specific network after
+then.
