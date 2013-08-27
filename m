@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:49992 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S966329Ab3HHUTd (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:48624 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753599Ab3H0Php (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 16:19:33 -0400
-Date: Thu, 8 Aug 2013 16:19:32 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Christian Lamparter <chunkeey@googlemail.com>
-cc: Oleksij Rempel <linux@rempel-privat.de>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: FUSB200 xhci issue
-In-Reply-To: <201308082109.04485.chunkeey@googlemail.com>
-Message-ID: <Pine.LNX.4.44L0.1308081617010.1120-100000@iolanthe.rowland.org> (sfid-20130808_221939_004119_B0E01125)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Tue, 27 Aug 2013 11:37:45 -0400
+From: Masami Ichikawa <masami256@gmail.com>
+To: IvDoorn@gmail.com, gwingerde@gmail.com,
+	helmut.schaa@googlemail.com, linville@tuxdriver.com
+Cc: Masami Ichikawa <masami256@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] Add WLI-UC-G300HP's Product ID.
+Date: Wed, 28 Aug 2013 00:37:23 +0900
+Message-Id: <1377617843-28835-1-git-send-email-masami256@gmail.com> (sfid-20130827_173813_674231_9E61291B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 8 Aug 2013, Christian Lamparter wrote:
+Support Bufallo WLI-UC-G300HP.
 
-> Anyway, I do have a question about something else too.
-> 
-> in ath9k_htc's hif_usb:
-> 
-> > struct usb_host_interface *alt = &hif_dev->interface->altsetting[0];
-> > struct usb_endpoint_descriptor *endp;
-> > ...
-> > /* On downloading the firmware to the target, the USB descriptor of EP4
-> >  * is 'patched' to change the type of the endpoint to Bulk. This will
-> >  * bring down CPU usage during the scan period. */
-> >
-> > for (idx = 0; idx < alt->desc.bNumEndpoints; idx++) {
-> >   endp = &alt->endpoint[idx].desc;
-> >   if ((endp->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_INT) {
-> >     endp->bmAttributes &= ~USB_ENDPOINT_XFERTYPE_MASK;
-> >     endp->bmAttributes |= USB_ENDPOINT_XFER_BULK;
-> >//     endp->bInterval = 0;
-> >   }
-> > }
-> 
-> Alan, can you please tell us, if it is really safe to
-> override the bmAttributes this way? After all (according to
-> the comment) the device has "morphed" (EP4 has changed).
+Signed-off-by: Masami Ichikawa <masami256@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-This does not look like a good idea.  Why does the driver do it?
-
-> Or, is it necessary for the driver call "usb_reset_device"
-> or (usb_reset_configuration) in this case? 
-
-After loading firmware, a reset generally is necessary.  Some devices 
-will do it themselves; others require you to call usb_reset_device().
-
-Alan Stern
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 840833b..518277d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -977,6 +977,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0411, 0x016f) },
+ 	{ USB_DEVICE(0x0411, 0x01a2) },
+ 	{ USB_DEVICE(0x0411, 0x01ee) },
++	{ USB_DEVICE(0x0411, 0x01a8) },
+ 	/* Corega */
+ 	{ USB_DEVICE(0x07aa, 0x002f) },
+ 	{ USB_DEVICE(0x07aa, 0x003c) },
+-- 
+1.8.3.1
 
