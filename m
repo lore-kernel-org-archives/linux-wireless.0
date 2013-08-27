@@ -1,70 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:44164 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752237Ab3HUGeW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 02:34:22 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/3] ath10k: make the workqueue multithreaded
-Date: Wed, 21 Aug 2013 08:34:12 +0200
-Message-ID: <1377066854-13981-2-git-send-email-michal.kazior@tieto.com> (sfid-20130821_083426_655241_9F57D572)
-In-Reply-To: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
-References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:61242 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752701Ab3H0LcH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 07:32:07 -0400
+Received: by mail-bk0-f51.google.com with SMTP id mx10so1610078bkb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 04:32:05 -0700 (PDT)
+Message-ID: <1377603121.3320.84.camel@canaries32-MCP7A> (sfid-20130827_133211_422602_A05BD57A)
+Subject: [PATCH 2/2] staging: vt6656: rxtx.c s_vFillTxKey use switch for
+ pTransmitKey->byCipherSuite
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Aug 2013 12:32:01 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TX work for a HTC endpoint can run for long
-periods of time, especially on slower host
-machines when under heavy load.
 
-This patch prevents one endpoint starving another
-one by allowing each endpoint worker to be
-processed in parallel.
-
-This is safe since none of ar->workqueue users
-depend on sequential execution.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c |    4 +++-
- drivers/net/wireless/ath/ath10k/core.h |    5 +++++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/staging/vt6656/rxtx.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 04c132e..a828584 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -520,7 +520,9 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index b5a9c3a..411189d 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -198,7 +198,8 @@ static void s_vFillTxKey(struct vnt_private *pDevice, u8 *pbyBuf,
+ 	*pdwIV = pDevice->dwIVCounter;
+ 	pDevice->byKeyIndex = pTransmitKey->dwKeyIndex & 0xf;
  
- 	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
- 
--	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
-+	ar->workqueue = alloc_workqueue("ath10k_wq",
-+					WQ_UNBOUND | WQ_MEM_RECLAIM,
-+					ATH10K_MAX_NUM_PARALLEL_WORKERS);
- 	if (!ar->workqueue)
- 		goto err_wq;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index ab05c4c..e196833 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -40,6 +40,11 @@
- #define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
- #define ATH10K_NUM_CHANS 38
- 
-+#define ATH10K_NUM_HTC_TX_WORKERS ATH10K_HTC_EP_COUNT
-+#define ATH10K_NUM_WMI_RX_WORKERS 1
-+#define ATH10K_MAX_NUM_PARALLEL_WORKERS (ATH10K_NUM_HTC_TX_WORKERS + \
-+					 ATH10K_NUM_WMI_RX_WORKERS)
+-	if (pTransmitKey->byCipherSuite == KEY_CTL_WEP) {
++	switch (pTransmitKey->byCipherSuite) {
++	case KEY_CTL_WEP:
+ 		if (pTransmitKey->uKeyLength == WLAN_WEP232_KEYLEN) {
+ 			memcpy(pDevice->abyPRNG, (u8 *)&dwRevIVCounter, 3);
+ 			memcpy(pDevice->abyPRNG + 3, pTransmitKey->abyKey,
+@@ -223,7 +224,9 @@ static void s_vFillTxKey(struct vnt_private *pDevice, u8 *pbyBuf,
+ 		pDevice->dwIVCounter++;
+ 		if (pDevice->dwIVCounter > WEP_IV_MASK)
+ 			pDevice->dwIVCounter = 0;
+-	} else if (pTransmitKey->byCipherSuite == KEY_CTL_TKIP) {
 +
- /* Antenna noise floor */
- #define ATH10K_DEFAULT_NOISE_FLOOR -95
++		break;
++	case KEY_CTL_TKIP:
+ 		pTransmitKey->wTSC15_0++;
+ 		if (pTransmitKey->wTSC15_0 == 0)
+ 			pTransmitKey->dwTSC47_16++;
+@@ -244,7 +247,8 @@ static void s_vFillTxKey(struct vnt_private *pDevice, u8 *pbyBuf,
+ 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+ 			"vFillTxKey()---- pdwExtIV: %x\n", *pdwExtIV);
  
+-	} else if (pTransmitKey->byCipherSuite == KEY_CTL_CCMP) {
++		break;
++	case KEY_CTL_CCMP:
+ 		pTransmitKey->wTSC15_0++;
+ 		if (pTransmitKey->wTSC15_0 == 0)
+ 			pTransmitKey->dwTSC47_16++;
 -- 
-1.7.9.5
+1.8.1.2
 
