@@ -1,56 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:52380 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754385Ab3HFO7O (ORCPT
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:40148 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753942Ab3H0XRp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Aug 2013 10:59:14 -0400
+	Tue, 27 Aug 2013 19:17:45 -0400
+Received: by mail-oa0-f50.google.com with SMTP id i4so6694692oah.37
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 16:17:45 -0700 (PDT)
+Message-ID: <521D3397.2000805@lwfinger.net> (sfid-20130828_011748_880312_0260FD6B)
+Date: Tue, 27 Aug 2013 18:17:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1375801059.8219.24.camel@jlt4.sipsolutions.net>
-References: <CA+icZUX8OcTSOABO6Nbz5R6_5-m39rsYOpDqYBA7hf8LFvJLLA@mail.gmail.com>
-	<1375797260.8219.21.camel@jlt4.sipsolutions.net>
-	<CA+icZUUAJ25QybqHvxz7eubSLH6YuNjcc5zyU2O5Xi9vevMGkw@mail.gmail.com>
-	<1375800617.8219.23.camel@jlt4.sipsolutions.net>
-	<CA+icZUVbKpyuke6PRg3-60gOggsTb=3cNRz3Sy0RmvcZSuPaNw@mail.gmail.com>
-	<1375801059.8219.24.camel@jlt4.sipsolutions.net>
-Date: Tue, 6 Aug 2013 16:59:12 +0200
-Message-ID: <CA+icZUXrRsXfeW9hqxTMkKW4TdNSBH-zE8-zX2Rd7HTAx5MvqQ@mail.gmail.com> (sfid-20130806_165929_640797_C0D6471D)
-Subject: Re: linux-next: Tree for Aug 6 [ wireless | iwlwifi | mac80211 ? ]
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Colleen Josephson <cjoseph@mit.edu>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: issues with RTL8188CE device and rtl8192ce driver
+References: <CAN3-2D7=P=9VyV7xoANw_6B8VhOaTRC1iMw+mwUH2-g8YOmPMg@mail.gmail.com> <520968B0.80301@lwfinger.net> <CAN3-2D5rCnXYogA6s6in_e6qpyLmZ0bpbGX=REi=Cn29U40nMw@mail.gmail.com> <520971BA.6040503@lwfinger.net> <CAN3-2D75TLTS-Fv3CgoBjA+RA3jv-QyLoSs+PZeKXLY_MUcSTQ@mail.gmail.com> <520975D8.8040908@lwfinger.net> <CAN3-2D6KSsFXQ5QOGfp-1c69dCSrCEdcgXMfPcuEC+Hx_dX_zw@mail.gmail.com> <520AF3BD.5020705@lwfinger.net> <CAN3-2D5+tvQyZKBP3vUwGWdctCcfCeBxAhPsZs+DCLDdr4dyCw@mail.gmail.com> <CAN3-2D6Cf6Ew2Ar5ZD5ZCamhKF92wnKjgP=dEk15UF1YDXJS5g@mail.gmail.com>
+In-Reply-To: <CAN3-2D6Cf6Ew2Ar5ZD5ZCamhKF92wnKjgP=dEk15UF1YDXJS5g@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 4:57 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-08-06 at 16:56 +0200, Sedat Dilek wrote:
->> On Tue, Aug 6, 2013 at 4:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Tue, 2013-08-06 at 16:46 +0200, Sedat Dilek wrote:
->> >
->> > Heh, the interesting messages are always cut out of the log:
->> >
->> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: wlan0: WPA: RX message 1 of 4-Way Handshake from 00:04:0e:e4:00:3d (ver=2)
->> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: RSN: msg 1/4 key data - hexdump(len=0):
->> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: Get randomness: len=32 entropy=4
->> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from os_get_random - hexdump(len=32): [REMOVED]
->> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
->> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random from internal pool - hexdump(len=16): [REMOVED]
->> > Aug  6 16:30:34 fambox wpa_supplicant[2533]: random_mix_pool - hexdump(len=20): [REMOVED]
->> > Aug  6 16:30:34 fambox rsyslogd-2177: imuxsock begins to drop messages from pid 2533 due to rate-limiting
->> > [...]
->> >
->>
->> Do you know how I can workaround the rsyslogd rate-limiting?
->
-> Me? no.
->
+On 08/27/2013 06:09 PM, Colleen Josephson wrote:
+> Any updates? Or addition information that would be useful? I will be
+> relocating to the other side of the US next week, so I will be unable
+> to collect more information or traces on this specific network after
+> then.
 
-Hmmm, I thought about reducing from -ddd to -d or install a newer rsyslog.
+I have been busy getting a new driver into the kernel before 3.12 comes out. I 
+am now looking into both rtl8192ce and rtl8192cu. I think I have what I need 
+from you.
 
-- Sedat -
+Larry
 
-> johannes
->
+
