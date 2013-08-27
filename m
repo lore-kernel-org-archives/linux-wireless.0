@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:39980 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752019Ab3HPIXt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 04:23:49 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/2] rt2x00: rt2800pci: fix AUX_CTRL register setup for RT3090/3390/3593/5592
-Date: Fri, 16 Aug 2013 10:23:30 +0200
-Message-Id: <1376641410-20798-2-git-send-email-juhosg@openwrt.org> (sfid-20130816_102356_721347_EDBCF5B6)
-In-Reply-To: <1376641410-20798-1-git-send-email-juhosg@openwrt.org>
-References: <1376641410-20798-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:46231 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751722Ab3H0Qug (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 12:50:36 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] iw:  Print 802.11u Advertisement IE info in scan results.
+Date: Tue, 27 Aug 2013 09:50:19 -0700
+Message-Id: <1377622219-25786-1-git-send-email-greearb@candelatech.com> (sfid-20130827_185039_273210_9A95F74B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 2011_1007_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO
-driver enables PCIe wakeup for these chips as well.
-Do the same in rt2x00.
+From: Ben Greear <greearb@candelatech.com>
 
-References:
-  rt28xx_init in common/rtmp_init_intf.c
-  RTMPInitPCIeLinkCtrlValue in os/linux/rt_rbus_pci_drv.c
+Sample output looks like:
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+	802.11u Advertisement:
+		Query Response Info: 0x7f
+			Query Response Length Limit: 127
+			ANQP
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+:100644 100644 1894769... b1917b0... M	scan.c
+ scan.c |   33 +++++++++++++++++++++++++++++++++
+ 1 files changed, 33 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index e470fdb..182205b 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -537,9 +537,13 @@ static int rt2800pci_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00mmio_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e00);
+diff --git a/scan.c b/scan.c
+index 1894769..b1917b0 100644
+--- a/scan.c
++++ b/scan.c
+@@ -677,6 +677,38 @@ static void print_interworking(const uint8_t type, uint8_t len, const uint8_t *d
+ 		       data[1], data[2], data[3], data[4], data[5], data[6]);
+ }
  
- 	if (rt2x00_is_pcie(rt2x00dev) &&
--	    (rt2x00_rt(rt2x00dev, RT3572) ||
-+	    (rt2x00_rt(rt2x00dev, RT3090) ||
-+	     rt2x00_rt(rt2x00dev, RT3390) ||
-+	     rt2x00_rt(rt2x00dev, RT3572) ||
-+	     rt2x00_rt(rt2x00dev, RT3593) ||
- 	     rt2x00_rt(rt2x00dev, RT5390) ||
--	     rt2x00_rt(rt2x00dev, RT5392))) {
-+	     rt2x00_rt(rt2x00dev, RT5392) ||
-+	     rt2x00_rt(rt2x00dev, RT5592))) {
- 		rt2x00mmio_register_read(rt2x00dev, AUX_CTRL, &reg);
- 		rt2x00_set_field32(&reg, AUX_CTRL_FORCE_PCIE_CLK, 1);
- 		rt2x00_set_field32(&reg, AUX_CTRL_WAKE_PCIE_EN, 1);
++static void print_11u_advert(const uint8_t type, uint8_t len, const uint8_t *data)
++{
++	/* See Section 7.3.2.93 in the 802.11u spec. */
++	/* TODO: This code below does not decode private protocol IDs */
++	int idx = 0;
++	printf("\n");
++	while (idx < (len - 1)) {
++		uint8_t qri = data[idx];
++		uint8_t proto_id = data[idx + 1];
++		printf("\t\tQuery Response Info: 0x%hx\n", (unsigned short)(qri));
++		printf("\t\t\tQuery Response Length Limit: %i\n",
++		       (qri & 0x7f));
++		if (qri & (1<<7))
++			printf("\t\t\tPAME-BI\n");
++		switch(proto_id) {
++		case 0:
++			printf("\t\t\tANQP\n"); break;
++		case 1:
++			printf("\t\t\tMIH Information Service\n"); break;
++		case 2:
++			printf("\t\t\tMIH Command and Event Services Capability Discovery\n"); break;
++		case 3:
++			printf("\t\t\tEmergency Alert System (EAS)\n"); break;
++		case 221:
++			printf("\t\t\tVendor Specific\n"); break;
++		default:
++			printf("\t\t\tReserved: %i\n", proto_id); break;
++		}
++		idx += 2;
++	}
++}
++
+ static const char *ht_secondary_offset[4] = {
+ 	"no secondary",
+ 	"above",
+@@ -955,6 +987,7 @@ static const struct ie_print ieprinters[] = {
+ 	[114] = { "MESH ID", print_ssid, 0, 32, BIT(PRINT_SCAN) | BIT(PRINT_LINK), },
+ 	[127] = { "Extended capabilities", print_capabilities, 0, 255, BIT(PRINT_SCAN), },
+ 	[107] = { "802.11u Interworking", print_interworking, 0, 255, BIT(PRINT_SCAN), },
++	[108] = { "802.11u Advertisement", print_11u_advert, 0, 255, BIT(PRINT_SCAN), },
+ };
+ 
+ static void print_wifi_wpa(const uint8_t type, uint8_t len, const uint8_t *data)
 -- 
-1.7.10
+1.7.3.4
+
