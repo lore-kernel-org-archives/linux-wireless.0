@@ -1,108 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:41767 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757206Ab3HGHDH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38990 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753018Ab3H1KPu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Aug 2013 03:03:07 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 2/2] ath9k: Run the LNA combining algorithm properly
-Date: Wed,  7 Aug 2013 12:29:28 +0530
-Message-Id: <1375858768-24655-3-git-send-email-sujith@msujith.org> (sfid-20130807_090315_166597_BDDC66DB)
-In-Reply-To: <1375858768-24655-1-git-send-email-sujith@msujith.org>
-References: <1375858768-24655-1-git-send-email-sujith@msujith.org>
+	Wed, 28 Aug 2013 06:15:50 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: implement per-VDEV FW statistics
+References: <1377592996-21934-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Wed, 28 Aug 2013 13:15:45 +0300
+In-Reply-To: <1377592996-21934-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Tue, 27 Aug 2013 10:43:16 +0200")
+Message-ID: <87k3j6glym.fsf@kamboji.qca.qualcomm.com> (sfid-20130828_121554_406199_4EAEA7D2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-The LNA combining algorithm has to be run for cards
-that support the required diversity features, make
-sure that that correct conditions are met before
-enabing this algorithm.
+> The WMI_REQUEST_PEER_STAT command with latst (1.0.0.716) FW
+> can return per-VDEV statistics. Using debugfs we can fetch this info now.
+>
+> This is a backward compatible change. In case of older FW the VDEV
+> statistics are simply not returned.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 46 ++++++++++++++++++++++-------------
- 1 file changed, 29 insertions(+), 17 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 865e043..e359557 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1156,7 +1156,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	struct ath_buf *bf;
- 	struct sk_buff *skb = NULL, *requeue_skb, *hdr_skb;
- 	struct ieee80211_rx_status *rxs;
--	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_hw *ah = sc->sc_ah
-+;	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_hw *hw = sc->hw;
- 	struct ieee80211_hdr *hdr;
-@@ -1328,11 +1329,30 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			skb = hdr_skb;
- 		}
- 
-+		if (rxs->flag & RX_FLAG_MMIC_STRIPPED)
-+			skb_trim(skb, skb->len - 8);
- 
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
-+		spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+		if ((sc->ps_flags & (PS_WAIT_FOR_BEACON |
-+				     PS_WAIT_FOR_CAB |
-+				     PS_WAIT_FOR_PSPOLL_DATA)) ||
-+		    ath9k_check_auto_sleep(sc))
-+			ath_rx_ps(sc, skb, rs.is_mybeacon);
-+		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
-+		/*
-+		 * Run the LNA combining algorithm only in these cases:
-+		 *
-+		 * Standalone WLAN cards with both LNA/Antenna diversity
-+		 * enabled in the EEPROM.
-+		 *
-+		 * WLAN+BT cards which are in the supported card list
-+		 * in ath_pci_id_table and the user has loaded the
-+		 * driver with "bt_ant_diversity" set to true.
-+		 */
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
- 			/*
--			 * change the default rx antenna if rx diversity
-+			 * Change the default rx antenna if rx diversity
- 			 * chooses the other antenna 3 times in a row.
- 			 */
- 			if (sc->rx.defant != rs.rs_antenna) {
-@@ -1342,22 +1362,14 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 				sc->rx.rxotherant = 0;
- 			}
- 
-+			if (pCap->hw_caps & ATH9K_HW_CAP_BT_ANT_DIV) {
-+				if (common->bt_ant_diversity)
-+					ath_ant_comb_scan(sc, &rs);
-+			} else {
-+				ath_ant_comb_scan(sc, &rs);
-+			}
- 		}
- 
--		if (rxs->flag & RX_FLAG_MMIC_STRIPPED)
--			skb_trim(skb, skb->len - 8);
--
--		spin_lock_irqsave(&sc->sc_pm_lock, flags);
--		if ((sc->ps_flags & (PS_WAIT_FOR_BEACON |
--				     PS_WAIT_FOR_CAB |
--				     PS_WAIT_FOR_PSPOLL_DATA)) ||
--		    ath9k_check_auto_sleep(sc))
--			ath_rx_ps(sc, skb, rs.is_mybeacon);
--		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
--
--		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
--			ath_ant_comb_scan(sc, &rs);
--
- 		ath9k_apply_ampdu_details(sc, &rs, rxs);
- 
- 		ieee80211_rx(hw, skb);
+>  		for (i = 0; i < num_peer_stats; i++) {
+> -			peer_stats = (struct wmi_peer_stats *)tmp;
+> +			peer_stats = (struct wmi_peer_stats_1 *)tmp;
+
+Oh yeah, you assume here that _v2 struct starts with _v1. That's a bit
+dangerous, at least add a comment here saying that.
+
 -- 
-1.8.3.4
-
+Kalle Valo
