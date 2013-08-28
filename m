@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56104 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757707Ab3HIOwC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 10:52:02 -0400
-Date: Fri, 9 Aug 2013 10:52:01 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Oleksij Rempel <linux@rempel-privat.de>
-cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: FUSB200 xhci issue
-In-Reply-To: <5204FDEF.5010108@rempel-privat.de>
-Message-ID: <Pine.LNX.4.44L0.1308091043220.1405-100000@iolanthe.rowland.org> (sfid-20130809_165207_414573_C3FCB582)
+Received: from ebb06.tieto.com ([131.207.168.38]:52464 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753034Ab3H1Ll2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Aug 2013 07:41:28 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v2 0/2] add per-VDEV FW statistics
+Date: Wed, 28 Aug 2013 13:41:17 +0200
+Message-ID: <1377690079-18645-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20130828_134131_833874_A0BA420B)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 9 Aug 2013, Oleksij Rempel wrote:
+FW 1.0.0.716 brings per-VDEV statistics. This patch-set implements
+debugfs mechanism to fetch those. There's still few more fileds we
+can read from the FW stats event, which are not covered here.
 
-> > What about a "get firmware version" sort of thing?  There really should
-> > be a way for the driver to tell whether the firmware has already been
-> > updated.
-> 
-> I was not able to find good direct way to check firmware version. If i 
-> would add some new command then i will get option like: if responding FW 
-> is updated; if not, then dead or old.
-> How about overwriting iProduct field? Let say, if iProduct == ath9k_htc, 
-> then firmware is updated? Is it more or less acceptable method? I need 
-> to ask this because it is really new for me.
+Changes:
 
-Changing the iProduct string descriptor would work, because the 
-descriptors_changed() routine doesn't compare the old value of that 
-string with the new value.  (On the other hand, it does compare the 
-iSerialNumber strings.)
+V2:
+* introduce wmi_peer_stats_common struct
+* fetch and print peer RX rates
+* break up wmi_peer_stats_common update into separate patch
 
-Is there any way to read the firmware back from the device?  Then you 
-could check directly.
+Bartosz Markowski (2):
+  ath10k: update wal_dbg_tx_stats structure with missing parameter.
+  ath10k: implement per-VDEV FW statistics
 
-Alan Stern
+ drivers/net/wireless/ath/ath10k/core.h  |   22 ++++++++
+ drivers/net/wireless/ath/ath10k/debug.c |   81 +++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/wmi.c   |    4 +-
+ drivers/net/wireless/ath/ath10k/wmi.h   |   90 ++++++++++++++++++++++++++-----
+ 4 files changed, 170 insertions(+), 27 deletions(-)
+
+-- 
+1.7.10
 
