@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:51623 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752338Ab3HPBVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Aug 2013 21:21:49 -0400
-Message-ID: <1376616107.1947.0.camel@joe-AO722> (sfid-20130816_032152_469654_28E3325F)
-Subject: Re: [PATCH 1/2] staging: vt6656: desc.h Remove typedef struct
- tagSRTS_* to new strutures in rxtx.h
-From: Joe Perches <joe@perches.com>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
-Date: Thu, 15 Aug 2013 18:21:47 -0700
-In-Reply-To: <1376598205.8200.27.camel@canaries32-MCP7A>
-References: <1376598205.8200.27.camel@canaries32-MCP7A>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:59143 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754150Ab3H1Lla (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Aug 2013 07:41:30 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v2 1/2] ath10k: update wal_dbg_tx_stats structure with missing parameter.
+Date: Wed, 28 Aug 2013 13:41:18 +0200
+Message-ID: <1377690079-18645-2-git-send-email-bartosz.markowski@tieto.com> (sfid-20130828_134133_683095_BEF4D17E)
+In-Reply-To: <1377690079-18645-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1377690079-18645-1-git-send-email-bartosz.markowski@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-08-15 at 21:23 +0100, Malcolm Priestley wrote:
-> The new structures being
-> typedef struct tagSRTS_g -> struct vnt_rts_g
-> typedef struct tagSRTS_g_FB -> struct vnt_rts_g_fb
-> typedef struct tagSRTS_ab -> struct vnt_rts_ab
-> typedef struct tagSRTS_a_FB -> struct vnt_rts_a_fb
-> 
-> These are only needed by rxtc.c so moved to rxtx.h and
-> will eventually form part of the structure of
-> struct vnt_tx_buffer.
+It's very imporatant to keep these structs up to date with FW abi,
+due to the arithmetic we use while read the fw_stats.
 
-It would be simpler to verify these changes
-if you did not do any whitespace modifications
-like changing line wrapping at the same time.
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.h |    3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 08860c4..5b94707 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1767,6 +1767,9 @@ struct wal_dbg_tx_stats {
+ 	/* wal pdev resets  */
+ 	__le32 pdev_resets;
+ 
++	/* frames dropped due to non-availability of stateless TIDs */
++	__le32 stateless_tid_alloc_failure;
++
+ 	__le32 phy_underrun;
+ 
+ 	/* MPDU is more than txop limit */
+-- 
+1.7.10
 
