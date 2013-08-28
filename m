@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28310 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934200Ab3HHJmy (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:33559 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754756Ab3H1H6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 05:42:54 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [RFC 3/3] ath10k: add support for HTT 3.0
-References: <1375949298-7159-1-git-send-email-michal.kazior@tieto.com>
-	<1375949298-7159-4-git-send-email-michal.kazior@tieto.com>
-	<87eha4363n.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnoVmQcMnajTx3vsKwct5PLCNOt6w2qo17fyigm=gO5-w@mail.gmail.com>
-	<871u6435c6.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnsH6XxpgoBh0tTNCjXvNz-fL6OaCp=LP-Eap_4tqYNkw@mail.gmail.com>
-Date: Thu, 8 Aug 2013 12:42:46 +0300
-In-Reply-To: <CA+BoTQnsH6XxpgoBh0tTNCjXvNz-fL6OaCp=LP-Eap_4tqYNkw@mail.gmail.com>
-	(Michal Kazior's message of "Thu, 8 Aug 2013 11:29:15 +0200")
-Message-ID: <87ppto1pt5.fsf@kamboji.qca.qualcomm.com> (sfid-20130808_114258_743350_E2ACD66A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 28 Aug 2013 03:58:06 -0400
+Received: by mail-lb0-f171.google.com with SMTP id u14so3411914lbd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 00:58:04 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v3 16/16] wcn36xx: Add wcn36xx to ath Makefile and Kconfig
+Date: Wed, 28 Aug 2013 09:56:46 +0200
+Message-Id: <1377676606-23033-17-git-send-email-k.eugene.e@gmail.com> (sfid-20130828_100909_700461_A7BF2E1A)
+In-Reply-To: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Now wcn36xx is part of ath family.
 
-> On 8 August 2013 11:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> On 8 August 2013 11:05, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>
->>>> This debug print is good to have, but with the new htt version it would
->>>> be good to print it always using the info level. For example, can we add
->>>> it to the same line with "firmware %s booted" string?
->>>
->>> HTT target version is not known when firmware boots up. It's not known
->>> until everything other (HTC, WMI) is set up. We then send a version
->>> request command and we get a response.
->>
->> Oh, missed that.
->>
->>> We need to print it in a separate line.
->>
->> Or could we print the "firmware booted" message later?
->
-> I'm worried it may be error-prone in case of firmware loading failure
-> in-between (i.e. firmware is booted, but WMI init fails). We'd need to
-> print the firmware version in the error path then.
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/Kconfig  | 1 +
+ drivers/net/wireless/ath/Makefile | 1 +
+ 2 files changed, 2 insertions(+)
 
-True, let's just print in a separate line. We can worry about compacting
-it later.
-
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index 1abf1d4..ba81d62 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -32,5 +32,6 @@ source "drivers/net/wireless/ath/ath6kl/Kconfig"
+ source "drivers/net/wireless/ath/ar5523/Kconfig"
+ source "drivers/net/wireless/ath/wil6210/Kconfig"
+ source "drivers/net/wireless/ath/ath10k/Kconfig"
++source "drivers/net/wireless/ath/wcn36xx/Kconfig"
+ 
+ endif
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index fb05cfd..363b056 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -5,6 +5,7 @@ obj-$(CONFIG_ATH6KL)		+= ath6kl/
+ obj-$(CONFIG_AR5523)		+= ar5523/
+ obj-$(CONFIG_WIL6210)		+= wil6210/
+ obj-$(CONFIG_ATH10K)		+= ath10k/
++obj-$(CONFIG_WCN36XX)		+= wcn36xx/
+ 
+ obj-$(CONFIG_ATH_COMMON)	+= ath.o
+ 
 -- 
-Kalle Valo
+1.8.2.2
+
