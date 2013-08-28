@@ -1,34 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39106 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758018Ab3HINO4 (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:51095 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753584Ab3H1TWb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Aug 2013 09:14:56 -0400
-Message-ID: <1376054092.8355.6.camel@jlt4.sipsolutions.net> (sfid-20130809_151458_774743_3818D6D4)
-Subject: Re: [PATCH] iw: correction in coalesce condition display message
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Fri, 09 Aug 2013 15:14:52 +0200
-In-Reply-To: <1375740366-8986-1-git-send-email-bzhao@marvell.com>
-References: <1375740366-8986-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 28 Aug 2013 15:22:31 -0400
+Received: by mail-wg0-f47.google.com with SMTP id f11so1473492wgh.26
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 12:22:30 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 28 Aug 2013 21:22:30 +0200
+Message-ID: <CAE=W-e2DbwJV0=bSK2etEg-CAe63k_GMPNeazyP_1WhOs_+UNA@mail.gmail.com> (sfid-20130828_212235_251325_93D780A5)
+Subject: Looking for ath6kl device
+From: Lorenzo Nava <lorenx4@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-08-05 at 15:06 -0700, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> NL80211_COALESCE_CONDITION_MATCH is 0 and
-> NL80211_COALESCE_CONDITION_NO_MATCH is 1.
-> Hence this change is required
+Hi everybody,
 
-Pretty weird, but ok. Maybe asking to give "match" or "no-match" in the
-file would have been better.
+I'm looking for a device which uses ath6kl driver. Anybody knows any
+available devices with compatible chipset?
 
-Applied.
+Thank you.
+Cheers.
 
-johannes
-
+Lorenzo
