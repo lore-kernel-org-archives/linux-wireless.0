@@ -1,146 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:49655 "EHLO mout.gmx.net"
+Received: from mga01.intel.com ([192.55.52.88]:34543 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757039Ab3HMTKe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 15:10:34 -0400
-Received: from zwerg.Speedport_W_723V_1_28_000 ([79.218.111.223]) by
- mail.gmx.com (mrgmx102) with ESMTPSA (Nemesis) id 0Lv8hi-1W8Kp00ojq-010NPT
- for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2013 21:10:32 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH] ath9k_htc: do not use bulk on EP3 and EP4
-Date: Tue, 13 Aug 2013 21:10:19 +0200
-Message-Id: <1376421020-11858-1-git-send-email-linux@rempel-privat.de> (sfid-20130813_211037_409024_D85798F6)
+	id S1752589Ab3H1BoD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Aug 2013 21:44:03 -0400
+Message-ID: <1377654240.2005.32.camel@jtkirshe-mobl> (sfid-20130828_034406_757904_B01A1044)
+Subject: Re: [E1000-devel] [PATCH net-next] drivers:net: Convert
+ dma_alloc_coherent(...__GFP_ZERO) to dma_zalloc_coherent
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, b43-dev@lists.infradead.org
+Date: Tue, 27 Aug 2013 18:44:00 -0700
+In-Reply-To: <1377582323.2658.10.camel@joe-AO722>
+References: <dbbfc5e66dba7d2b63549d218407fb0c4031f2ed.1363367992.git.joe@perches.com>
+	 <1377582323.2658.10.camel@joe-AO722>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-jPSgA1IDszhL35Gx/tNY"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If usb auto suspend is enabled or system run in to suspend/resume
-cycle, ath9k-htc adapter will stop to response. It is reproducible on xhci HCs.
 
-Host part of problem:
-XHCI do timing calculation based on Transfer Type and bInterval,
-immediately after device was detected. Ath9k-htc try to overwrite
-this parameters on module probe and some changes in FW,
-since we do not initiate usb reset from the driver this changes
-are not took to account. So, before any kind of suspend or reset,
-host controller will operate with old parameters. Only after suspend/resume
-and if interface id stay unchanged, new parameters will by applied. Host
-will send bulk data with no intervals (?), which will cause
-overflow on FIFO of EP4.
+--=-jPSgA1IDszhL35Gx/tNY
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Firmware part of problem:
-By default, ath9k-htc adapters configured with EP3 and EP4
-as interrupt endpoints. Current firmware will try to overwrite
-ConfigDescriptor to make EP3 and EP4 bulk. FIFO for this endpoints
-stay not reconfigured, so under the hood it is still Int EP.
+On Mon, 2013-08-26 at 22:45 -0700, Joe Perches wrote:
+> __GFP_ZERO is an uncommon flag and perhaps is better
+> not used.  static inline dma_zalloc_coherent exists
+> so convert the uses of dma_alloc_coherent with __GFP_ZERO
+> to the more common kernel style with zalloc.
+>=20
+> Remove memset from the static inline dma_zalloc_coherent
+> and add just one use of __GFP_ZERO instead.
+>=20
+> Trivially reduces the size of the existing uses of
+> dma_zalloc_coherent.
+>=20
+> Realign arguments as appropriate.
+>=20
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-This patch is revert of 4a0e8ecca4ee commit which trying to
-reduce CPU usage on some systems. Since it will produce more bug
-as fixes, we will need to find other way to fix it.
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 
-here is comment from kernel source which has some more explanation:
-* Some buggy high speed devices have bulk endpoints using
-* maxpacket sizes other than 512.  High speed HCDs may not
-* be able to handle that particular bug, so let's warn...
+--=-jPSgA1IDszhL35Gx/tNY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-in our case EP3 and EP4 have maxpacket sizes = 64!!!
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c | 38 +++++++++-----------------------
- 1 file changed, 11 insertions(+), 27 deletions(-)
+iQIcBAABCgAGBQJSHVXgAAoJEOVv75VaS+3OJX0P/2XAG1De7Ww5ZdnAr8htbWL3
+hPZVRHb0WU2/dIVZsKkm7Hv60WekXyn4J6RKRCIC5bV4fGKGVKgmDLZdfZd6vdO5
+s25OKARj1PSyrAJafCAIs6o5h1wUgNcKokA4RVmyrRzNXE2ZoHB7mqSm7JTpGxoa
+EDB62VdrxjynOuGqX/HvgU9+t2g/vwwIUuKEB0UxN2aC/IgqE7dHmlffCCNChkI4
+i/Njhvk/VzBA0qFuzmTEey3o/q0SZ6akiotZpnPJ2IN2UA1r2o5AATOZ7cJ9sVfZ
+VJvPAUKN3tBu0xvA+YxeTtW7W8ujtKM2wCW5a8Bf9vB1sRBIOe7db8LL2EO7AJoY
+4EMpxMJVlPoBkKdpzRIkiQlMWn6Anf2eyzfFOajSxozZgNLs6aqXCjEeHWouhFMP
+oczQT/lUhqmgN+U5T+8QutXRkATThJ8UzlInG6zoafU04+oLmAVoXXVmE54XFjtl
+K0vrzn0xGONYUZdjhpUsEGjrwMAiNf9VMd3pQjy6hyQsXnKrRedLLFKPbeQJSc3G
+fYK53VkFrPKvf4k0UYzQdxq4/EHEkeQWDCqYBNYQXylWhH589bGBvPTnmsCEC4Yo
+gIeeSQBfC6E7J/XY0YPCU+81wJCeaUPU9ziukUhyUrk081ycaZNbnJI6mztLi2L6
+ZXKsBvT1fq6r+TOlV+LK
+=UcmZ
+-----END PGP SIGNATURE-----
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 5205a36..6d5d716 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -115,10 +115,10 @@ static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
- 	cmd->skb = skb;
- 	cmd->hif_dev = hif_dev;
- 
--	usb_fill_bulk_urb(urb, hif_dev->udev,
--			 usb_sndbulkpipe(hif_dev->udev, USB_REG_OUT_PIPE),
-+	usb_fill_int_urb(urb, hif_dev->udev,
-+			 usb_sndintpipe(hif_dev->udev, USB_REG_OUT_PIPE),
- 			 skb->data, skb->len,
--			 hif_usb_regout_cb, cmd);
-+			 hif_usb_regout_cb, cmd, 1);
- 
- 	usb_anchor_urb(urb, &hif_dev->regout_submitted);
- 	ret = usb_submit_urb(urb, GFP_KERNEL);
-@@ -723,11 +723,11 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- 			return;
- 		}
- 
--		usb_fill_bulk_urb(urb, hif_dev->udev,
--				 usb_rcvbulkpipe(hif_dev->udev,
-+		usb_fill_int_urb(urb, hif_dev->udev,
-+				 usb_rcvintpipe(hif_dev->udev,
- 						 USB_REG_IN_PIPE),
- 				 nskb->data, MAX_REG_IN_BUF_SIZE,
--				 ath9k_hif_usb_reg_in_cb, nskb);
-+				 ath9k_hif_usb_reg_in_cb, nskb, 1);
- 	}
- 
- resubmit:
-@@ -909,11 +909,11 @@ static int ath9k_hif_usb_alloc_reg_in_urbs(struct hif_device_usb *hif_dev)
- 			goto err_skb;
- 		}
- 
--		usb_fill_bulk_urb(urb, hif_dev->udev,
--				  usb_rcvbulkpipe(hif_dev->udev,
-+		usb_fill_int_urb(urb, hif_dev->udev,
-+				  usb_rcvintpipe(hif_dev->udev,
- 						  USB_REG_IN_PIPE),
- 				  skb->data, MAX_REG_IN_BUF_SIZE,
--				  ath9k_hif_usb_reg_in_cb, skb);
-+				  ath9k_hif_usb_reg_in_cb, skb, 1);
- 
- 		/* Anchor URB */
- 		usb_anchor_urb(urb, &hif_dev->reg_in_submitted);
-@@ -1031,9 +1031,7 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
- 
- static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev)
- {
--	struct usb_host_interface *alt = &hif_dev->interface->altsetting[0];
--	struct usb_endpoint_descriptor *endp;
--	int ret, idx;
-+	int ret;
- 
- 	ret = ath9k_hif_usb_download_fw(hif_dev);
- 	if (ret) {
-@@ -1043,20 +1041,6 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev)
- 		return ret;
- 	}
- 
--	/* On downloading the firmware to the target, the USB descriptor of EP4
--	 * is 'patched' to change the type of the endpoint to Bulk. This will
--	 * bring down CPU usage during the scan period.
--	 */
--	for (idx = 0; idx < alt->desc.bNumEndpoints; idx++) {
--		endp = &alt->endpoint[idx].desc;
--		if ((endp->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
--				== USB_ENDPOINT_XFER_INT) {
--			endp->bmAttributes &= ~USB_ENDPOINT_XFERTYPE_MASK;
--			endp->bmAttributes |= USB_ENDPOINT_XFER_BULK;
--			endp->bInterval = 0;
--		}
--	}
--
- 	/* Alloc URBs */
- 	ret = ath9k_hif_usb_alloc_urbs(hif_dev);
- 	if (ret) {
-@@ -1268,7 +1252,7 @@ static void ath9k_hif_usb_reboot(struct usb_device *udev)
- 	if (!buf)
- 		return;
- 
--	ret = usb_bulk_msg(udev, usb_sndbulkpipe(udev, USB_REG_OUT_PIPE),
-+	ret = usb_interrupt_msg(udev, usb_sndintpipe(udev, USB_REG_OUT_PIPE),
- 			   buf, 4, NULL, HZ);
- 	if (ret)
- 		dev_err(&udev->dev, "ath9k_htc: USB reboot failed\n");
--- 
-1.8.1.2
+--=-jPSgA1IDszhL35Gx/tNY--
 
