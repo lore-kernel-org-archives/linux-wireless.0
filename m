@@ -1,130 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:55679 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932352Ab3HNOnQ (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:38890 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754756Ab3H1H5w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Aug 2013 10:43:16 -0400
-Received: by mail-we0-f170.google.com with SMTP id w60so7973467wes.29
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Aug 2013 07:43:15 -0700 (PDT)
-Message-ID: <520B9780.5000007@baylibre.com> (sfid-20130814_164324_144136_FB2FD0EE)
-Date: Wed, 14 Aug 2013 16:43:12 +0200
-From: Benoit Cousson <bcousson@baylibre.com>
-MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	mturquette@linaro.org, mark.rutland@arm.com, balbi@ti.com,
-	grant.likely@linaro.org, rob.herring@calxeda.com,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, tony@atomide.com, nm@ti.com,
-	laurent.pinchart@ideasonboard.com
-Subject: Re: [PATCH v3] Documentation: dt: bindings: TI WiLink modules
-References: <1375215668-29171-1-git-send-email-coelho@ti.com>
-In-Reply-To: <1375215668-29171-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 28 Aug 2013 03:57:52 -0400
+Received: by mail-la0-f52.google.com with SMTP id ev20so4382316lab.39
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 00:57:51 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v3 08/16] wcn36xx: add pmc.h
+Date: Wed, 28 Aug 2013 09:56:38 +0200
+Message-Id: <1377676606-23033-9-git-send-email-k.eugene.e@gmail.com> (sfid-20130828_095800_777764_F6E83D27)
+In-Reply-To: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
+add pmc.h
 
-On 30/07/2013 22:21, Luciano Coelho wrote:
-> Add device tree bindings documentation for the TI WiLink modules.
-> Currently only the WLAN part of the WiLink6, WiLink7 and WiLink8
-> modules is supported.
->
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->
-> In v3, use IRQ_TYPE_LEVEL_HIGH in the example, as suggested by Laurent.
->
->   .../devicetree/bindings/net/wireless/ti-wilink.txt | 68 ++++++++++++++++++++++
->   1 file changed, 68 insertions(+)
->   create mode 100644 Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
->
-> diff --git a/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> new file mode 100644
-> index 0000000..aafebb1
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/ti-wilink.txt
-> @@ -0,0 +1,68 @@
-> +TI WiLink Wireless Modules Device Tree Bindings
-> +===============================================
-> +
-> +The WiLink modules provide wireless connectivity, such as WLAN,
-> +Bluetooth, FM and NFC.
-> +
-> +There are several different modules available, which can be grouped by
-> +their generation: WiLink6, WiLink7 and WiLink8.  WiLink4 is not
-> +currently supported with device tree.
-> +
-> +Currently, only the WLAN portion of the modules is supported with
-> +device tree.
-> +
-> +Required properties:
-> +--------------------
-> +
-> +- compatible: should be "ti,wilink6", "ti,wilink7" or "ti,wilink8"
-> +- interrupt-parent: the interrupt controller
-> +- interrupts: out-of-band WLAN interrupt
-> +	See the interrupt controller's bindings documentation for
-> +	detailed definition.
-> +
-> +Optional properties:
-> +--------------------
-> +
-> +- clocks: list of clocks needed by the chip as follows:
-> +
-> +  refclock: the internal WLAN reference clock frequency (required for
-> +	WiLink6 and WiLink7; not used for WiLink8).
-> +
-> +  tcxoclock: the internal WLAN TCXO clock frequency (required for
-> +	WiLink7 not used for WiLink6 and WiLink8).
-> +
-> +  The clocks must be defined and named accordingly.  For example:
-> +
-> +  clocks = <&refclock>
-> +  clock-names = "refclock";
-> +
-> +  refclock: refclock {
-> +		     compatible = "ti,wilink-clock";
-> +		     #clock-cells = <0>;
-> +		     clock-frequency = <38400000>;
-> +	};
-> +
-> +  Some modules that contain the WiLink chip provide clocks in the
-> +  module itself.  In this case, we define a "ti,wilink-clock" as shown
-> +  above.  But any other clock could in theory be used, so the proper
-> +  clock definition should be used.
-> +
-> +
-> +Example:
-> +--------
-> +
-> +Example definition that can be used in OMAP4 Panda:
-> +
-> +wlan {
-> +	compatible = "ti,wilink6";
-> +	interrupt-parent = <&gpio2>;
-> +	interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;	/* gpio line 53 */
-> +	clocks = <&refclock>;
-> +	clock-names = "refclock";
-> +
-> +	refclock: refclock {
-> +		compatible = "ti,wilink-clock";
-> +		#clock-cells = <0>;
-> +		clock-frequency = <38400000>;
-> +	};
-> +};
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/pmc.h | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
 
-Everything looks good beside the location of the wlan node...
-
-It should not float at the root of the device tree. It is physically 
-attached to a SDIO bus and thus must be a child of the MMC controller 
-for a proper HW representation. That's moreover the best way to handle 
-properly the dependency between the MMC controller and the wilink driver.
-
-Please note that this is easier do say than to do :-)
-
-Regards,
-Benoit
+diff --git a/drivers/net/wireless/ath/wcn36xx/pmc.h b/drivers/net/wireless/ath/wcn36xx/pmc.h
+new file mode 100644
+index 0000000..b00d425
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/pmc.h
+@@ -0,0 +1,32 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _WCN36XX_PMC_H_
++#define _WCN36XX_PMC_H_
++
++struct wcn36xx;
++
++enum wcn36xx_power_state {
++	WCN36XX_FULL_POWER,
++	WCN36XX_BMPS
++};
++
++int wcn36xx_pmc_init(struct wcn36xx *wcn);
++int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn, u64 tbtt);
++int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn);
++int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn);
++int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn);
++#endif	/* _WCN36XX_PMC_H_ */
+-- 
+1.8.2.2
 
