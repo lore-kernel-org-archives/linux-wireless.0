@@ -1,70 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:54448 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933986Ab3HHIOX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Aug 2013 04:14:23 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/4] ath10k: print errcode when CE ring setup fails
-Date: Thu, 8 Aug 2013 10:14:10 +0200
-Message-ID: <1375949650-9699-5-git-send-email-michal.kazior@tieto.com> (sfid-20130808_101431_002271_4F6B2769)
-In-Reply-To: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
-References: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:44927 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753857Ab3H1FCm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Aug 2013 01:02:42 -0400
+Date: Tue, 27 Aug 2013 22:05:01 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Andrea Merello <andrea.merello@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Update e-mail address for Andrea Merello
+Message-ID: <20130828050501.GA10154@kroah.com> (sfid-20130828_070301_100126_A93FEE03)
+References: <1377518010-14767-1-git-send-email-andrea.merello@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1377518010-14767-1-git-send-email-andrea.merello@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it possible to see the reason why the
-setup fails. It also adheres to code style of
-error checking in ath drivers.
+On Mon, Aug 26, 2013 at 01:53:30PM +0200, Andrea Merello wrote:
+> A lot of files contain reference to my old e-mail address.
+> Now I'm going not to read mail from it anymore, so update it
+> with my current address everywhere.
+> 
+> Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/ce.c |   15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+I stripped out and took only the drivers/staging/* changes in this
+patch.  I'd recommend resending all the drivers/net/wireless/ changes to
+the linux-wireless@ group again, so they can apply just those changes.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index f8b969f..50d2ea2 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -1128,6 +1128,7 @@ struct ce_state *ath10k_ce_init(struct ath10k *ar,
- {
- 	struct ce_state *ce_state;
- 	u32 ctrl_addr = ath10k_ce_base_address(ce_id);
-+	int ret;
- 
- 	ce_state = ath10k_ce_init_state(ar, ce_id, attr);
- 	if (!ce_state) {
-@@ -1136,18 +1137,20 @@ struct ce_state *ath10k_ce_init(struct ath10k *ar,
- 	}
- 
- 	if (attr->src_nentries) {
--		if (ath10k_ce_init_src_ring(ar, ce_id, ce_state, attr)) {
--			ath10k_err("Failed to initialize CE src ring for ID: %d\n",
--				   ce_id);
-+		ret = ath10k_ce_init_src_ring(ar, ce_id, ce_state, attr);
-+		if (ret) {
-+			ath10k_err("Failed to initialize CE src ring for ID: %d (%d)\n",
-+				   ce_id, ret);
- 			ath10k_ce_deinit(ce_state);
- 			return NULL;
- 		}
- 	}
- 
- 	if (attr->dest_nentries) {
--		if (ath10k_ce_init_dest_ring(ar, ce_id, ce_state, attr)) {
--			ath10k_err("Failed to initialize CE dest ring for ID: %d\n",
--				   ce_id);
-+		ret = ath10k_ce_init_dest_ring(ar, ce_id, ce_state, attr);
-+		if (ret) {
-+			ath10k_err("Failed to initialize CE dest ring for ID: %d (%d)\n",
-+				   ce_id, ret);
- 			ath10k_ce_deinit(ce_state);
- 			return NULL;
- 		}
--- 
-1.7.9.5
+thanks,
 
+greg k-h
