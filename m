@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:30764 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754448Ab3HBGfv (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38035 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754671Ab3H1TpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Aug 2013 02:35:51 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: implement get_survey()
-References: <1375081712-9697-1-git-send-email-michal.kazior@tieto.com>
-	<1375259560-8784-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 2 Aug 2013 09:35:41 +0300
-In-Reply-To: <1375259560-8784-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 31 Jul 2013 10:32:40 +0200")
-Message-ID: <87ob9gppky.fsf@kamboji.qca.qualcomm.com> (sfid-20130802_083605_935007_9E6A7E9D)
+	Wed, 28 Aug 2013 15:45:14 -0400
+Date: Wed, 28 Aug 2013 15:32:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2013-08-27
+Message-ID: <20130828193207.GE1966@tuxdriver.com> (sfid-20130828_214519_137707_E23A96B7)
+References: <1377593792.20012.4.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1377593792.20012.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Tue, Aug 27, 2013 at 10:56:32AM +0200, Johannes Berg wrote:
+> John,
+> 
+> And I also have some more changes for -next, just a few small fixes and
+> improvements, nothing really stands out.
+> 
+> johannes
+> 
+> 
+> 
+> The following changes since commit 27b3eb9c06a7193bdc9800cd00764a130343bc8a:
+> 
+>   mac80211: add APIs to allow keeping connections after WoWLAN (2013-08-16 12:58:43 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to a98655387762394371b88cdfb8215884757978ab:
+> 
+>   mac80211: fix change_interface queue assignments (2013-08-26 09:52:58 +0200)
 
-> This implements a limited subset of what can be
-> reported in the survey dump.
->
-> This can be used for assessing approximate channel
-> load, e.g. for automatic channel selection.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-
-Thanks, applied.
+Pulling now...
 
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
