@@ -1,31 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:43610 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752699Ab3H3EOd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 00:14:33 -0400
-Message-ID: <1377836072.1928.137.camel@joe-AO722> (sfid-20130830_061452_526505_1A136300)
-Subject: Re: [PATCH net-next] drivers:net: Convert
- dma_alloc_coherent(...__GFP_ZERO) to dma_zalloc_coherent
-From: Joe Perches <joe@perches.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	e1000-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
-Date: Thu, 29 Aug 2013 21:14:32 -0700
-In-Reply-To: <20130829.220926.226210132086755040.davem@davemloft.net>
-References: <dbbfc5e66dba7d2b63549d218407fb0c4031f2ed.1363367992.git.joe@perches.com>
-	 <1377582323.2658.10.camel@joe-AO722>
-	 <20130829.220926.226210132086755040.davem@davemloft.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from TYO200.gate.nec.co.jp ([202.32.8.215]:48380 "EHLO
+	tyo200.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754433Ab3H1Hhq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Aug 2013 03:37:46 -0400
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id r7S7biHu023104
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 16:37:44 +0900 (JST)
+From: Yoshihisa Nakagawa <nakagawa@bu.jp.nec.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "ath6kl-devel@qualcomm.com" <ath6kl-devel@qualcomm.com>
+Subject: ath6kl p2p_find problem
+Date: Wed, 28 Aug 2013 07:30:01 +0000
+Message-ID: <43550814D799064E884CBF490F4D3F521D7D8730@BPXM03GP.gisp.nec.co.jp> (sfid-20130828_093752_680574_53CDCFBC)
+Content-Type: text/plain; charset="iso-2022-jp"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-08-29 at 22:09 -0400, David Miller wrote:
-> Applied, thanks a lot Joe.
+Hello,
 
-Too bad I didn't know there was a dma_zalloc_coherent
-the first time...
+I'm using ath6kl with Ubuntu 13.04, kernel version is 3.8.0-23-generic.
 
-cheers, Joe
+In many cases, ath6kl can't find the other terminals in p2p_find.
 
+I capture Probe Request packet with wireshark. ath6kl's SSID is Broadcast,
+another machine's SSID is "DIRECT-".
+
+On Wi-Fi Direct spec says, Each SSID shall begin with the ASCII characters "DIRECT-".
+
+It's a firmware or driver problem ?
+
+dmesg is here:
+
+[    7.979257] ath6kl: Failed to get board file ath6k/AR6003/hw2.1.1/bdata.bin (-2), trying to find default board file.
+[    7.980508] ath6kl: WARNING! No proper board file was not found, instead using a default board file.
+[    7.980521] ath6kl: Most likely your hardware won't work as specified. Install correct board file!
+[    8.485200] ath6kl: temporary war to avoid sdio crc error
+[    9.260521] ath6kl: ar6003 hw 2.1.1 sdio fw 3.2.0.144\x01 api 3
+[    9.260554] ath6kl: firmware supports: sched-scan,sta-p2pdev-duplex,rsn-cap-override
+
+Thanks,
+Yoshihisa NAKAGAWA
