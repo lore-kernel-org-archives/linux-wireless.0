@@ -1,90 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2880 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758837Ab3HMUEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 16:04:32 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	"David Herrmann" <dh.herrmann@gmail.com>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
-	"David Costa" <david@zarel.net>
-Subject: [RFT V2 11/13] brcmsmac: correct phy registers for TSSI-based
- power control
-Date: Tue, 13 Aug 2013 22:03:38 +0200
-Message-ID: <1376424220-10765-12-git-send-email-arend@broadcom.com> (sfid-20130813_220438_447441_F6E0CE81)
-In-Reply-To: <1376424220-10765-1-git-send-email-arend@broadcom.com>
-References: <1376424220-10765-1-git-send-email-arend@broadcom.com>
+Received: from nm1.bt.bullet.mail.ird.yahoo.com ([212.82.108.232]:38029 "EHLO
+	nm1.bt.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752677Ab3H1QFE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Aug 2013 12:05:04 -0400
+From: Marc Murphy <marcmltd@marcm.co.uk>
+To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: 802.11p
+Date: Wed, 28 Aug 2013 15:57:59 +0000
+Message-ID: <F690310232FDDF4AB457E8B3EF90DDE08D321AF2@MARCM-SBS2011.marcmltd.local> (sfid-20130828_180509_542956_F0C2F8A7)
+References: <F690310232FDDF4AB457E8B3EF90DDE08D32184E@MARCM-SBS2011.marcmltd.local>,<CA+icZUW4vbCfEq9-1ewe=O=fADq42y60T2P7YV4cgNBSntQ9gA@mail.gmail.com>
+In-Reply-To: <CA+icZUW4vbCfEq9-1ewe=O=fADq42y60T2P7YV4cgNBSntQ9gA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A number of additional phy registers needs to be programmed when
-using TSSI-based power control.
+Yes I saw that post but no response, it was 6 weeks ago.
+I have had more success finding the source used for the GCDC and looking to see how different it is from the mainline kernel drivers.
 
-Cc: David Herrmann <dh.herrmann@gmail.com>
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>
-Cc: David Costa <david@zarel.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+Next is to find an Atheros USB 802.11a stick to do some tests with.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-index 732371c..a0a268d 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -2020,6 +2020,16 @@ wlc_lcnphy_set_tssi_mux(struct brcms_phy *pi, enum lcnphy_tssi_mode pos)
- 		} else {
- 			mod_radio_reg(pi, RADIO_2064_REG03A, 1, 0x1);
- 			mod_radio_reg(pi, RADIO_2064_REG11A, 0x8, 0x8);
-+			mod_radio_reg(pi, RADIO_2064_REG028, 0x1, 0x0);
-+			mod_radio_reg(pi, RADIO_2064_REG11A, 0x4, 1<<2);
-+			mod_radio_reg(pi, RADIO_2064_REG036, 0x10, 0x0);
-+			mod_radio_reg(pi, RADIO_2064_REG11A, 0x10, 1<<4);
-+			mod_radio_reg(pi, RADIO_2064_REG036, 0x3, 0x0);
-+			mod_radio_reg(pi, RADIO_2064_REG035, 0xff, 0x77);
-+			mod_radio_reg(pi, RADIO_2064_REG028, 0x1e, 0xe<<1);
-+			mod_radio_reg(pi, RADIO_2064_REG112, 0x80, 1<<7);
-+			mod_radio_reg(pi, RADIO_2064_REG005, 0x7, 1<<1);
-+			mod_radio_reg(pi, RADIO_2064_REG029, 0xf0, 0<<4);
- 		}
- 	} else {
- 		mod_phy_reg(pi, 0x4d9, (0x1 << 2), (0x1) << 2);
-@@ -2106,6 +2116,7 @@ static void wlc_lcnphy_pwrctrl_rssiparams(struct brcms_phy *pi)
- 		    (auxpga_vmid_temp << 0) | (auxpga_gain_temp << 12));
- 
- 	mod_radio_reg(pi, RADIO_2064_REG082, (1 << 5), (1 << 5));
-+	mod_radio_reg(pi, RADIO_2064_REG07C, (1 << 0), (1 << 0));
- }
- 
- static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
-@@ -2218,6 +2229,10 @@ static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
- 
- 	mod_phy_reg(pi, 0x4d7, (0xf << 8), (0) << 8);
- 
-+	mod_radio_reg(pi, RADIO_2064_REG035, 0xff, 0x0);
-+	mod_radio_reg(pi, RADIO_2064_REG036, 0x3, 0x0);
-+	mod_radio_reg(pi, RADIO_2064_REG11A, 0x8, 0x8);
-+
- 	wlc_lcnphy_pwrctrl_rssiparams(pi);
- }
- 
-@@ -3096,6 +3111,11 @@ static void wlc_lcnphy_tx_pwr_ctrl_init(struct brcms_phy_pub *ppi)
- 			wlc_lcnphy_write_table(pi, &tab);
- 			tab.tbl_offset++;
- 		}
-+		mod_phy_reg(pi, 0x4d0, (0x1 << 0), (0) << 0);
-+		mod_phy_reg(pi, 0x4d3, (0xff << 0), (0) << 0);
-+		mod_phy_reg(pi, 0x4d3, (0xff << 8), (0) << 8);
-+		mod_phy_reg(pi, 0x4d0, (0x1 << 4), (0) << 4);
-+		mod_phy_reg(pi, 0x4d0, (0x1 << 2), (0) << 2);
- 
- 		mod_phy_reg(pi, 0x410, (0x1 << 7), (0) << 7);
- 
--- 
-1.7.10.4
+Thanks
+Marc
 
+________________________________________
+From: Sedat Dilek [sedat.dilek@gmail.com]
+Sent: 28 August 2013 15:20
+To: Marc Murphy
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 802.11p
 
+On Wed, Aug 28, 2013 at 2:15 PM, Marc Murphy <marcmltd@marcm.co.uk> wrote:
+> Doh ! updated now.
+>
+> I have had a read through the docs but there is no direct reference to 802.11p.  I initially want to have a play with a couple of embedded units that I have to see if I cant send a message from one to the other but struggling to find any updated ath5 driver.
+>
+
+A few weeks ago someone asked about that constellation, check for
+"802.11p and ath5k v3.10-rc1" thread on linux-wireless ML.
+
+- Sedat -
+
+> Thanks
+> Marc
+>
+> ________________________________________
+> From: Sedat Dilek [sedat.dilek@gmail.com]
+> Sent: 28 August 2013 12:23
+> To: Marc Murphy
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re:
+>
+> On Wed, Aug 28, 2013 at 1:07 PM, Marc Murphy <marcmltd@marcm.co.uk> wrote:
+>> Hello,
+>> I have been trawling the mailings and lots of people are asking about 802.11p and I have not managed to find a definitive push back to the mainline kernel.
+>>
+>
+> Hi,
+>
+> first of all, you should set a "subject" to your email request :-).
+>
+> I cannot say much about 802.11p, but for first informations I
+> recommend the wiki at <http://wireless.kernel.org> and have a look
+> into docs section.
+>
+> For faster replies you can join #linux-wireless IRC channel (Freenode).
+>
+> - Sedat -
+>
+>> Is there anywhere in particular that I need to be looking to be able to get the patches so I can have a play ?
+>>
+>> Thanks
+>> Marc--
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
