@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:64528 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753987Ab3HQQbN (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:45967
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753220Ab3H1ARS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Aug 2013 12:31:13 -0400
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Ming Lei <ming.lei@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH v1 36/49] wireless: libertas_tf: prepare for enabling irq in complete()
-Date: Sun, 18 Aug 2013 00:25:01 +0800
-Message-Id: <1376756714-25479-37-git-send-email-ming.lei@canonical.com> (sfid-20130817_183121_479343_744B2B22)
-In-Reply-To: <1376756714-25479-1-git-send-email-ming.lei@canonical.com>
-References: <1376756714-25479-1-git-send-email-ming.lei@canonical.com>
+	Tue, 27 Aug 2013 20:17:18 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 1/2] cw1200: Display the correct default reference clock.
+Date: Tue, 27 Aug 2013 20:17:12 -0400
+Message-Id: <1377649033-2091-1-git-send-email-pizza@shaftnet.org> (sfid-20130828_021721_292728_6A66EAEF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Complete() will be run with interrupt enabled, so change to
-spin_lock_irqsave().
+This is purely a cosmetic bug.
 
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 ---
- drivers/net/wireless/libertas_tf/if_usb.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/cw1200/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/libertas_tf/if_usb.c b/drivers/net/wireless/libertas_tf/if_usb.c
-index d576dd6..0e9e972 100644
---- a/drivers/net/wireless/libertas_tf/if_usb.c
-+++ b/drivers/net/wireless/libertas_tf/if_usb.c
-@@ -610,6 +610,8 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
- 				      struct if_usb_card *cardp,
- 				      struct lbtf_private *priv)
- {
-+	unsigned long flags;
-+
- 	if (recvlength > LBS_CMD_BUFFER_SIZE) {
- 		lbtf_deb_usbd(&cardp->udev->dev,
- 			     "The receive buffer is too large\n");
-@@ -619,12 +621,12 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
- 
- 	BUG_ON(!in_interrupt());
- 
--	spin_lock(&priv->driver_lock);
-+	spin_lock_irqsave(&priv->driver_lock, flags);
- 	memcpy(priv->cmd_resp_buff, recvbuff + MESSAGE_HEADER_LEN,
- 	       recvlength - MESSAGE_HEADER_LEN);
- 	kfree_skb(skb);
- 	lbtf_cmd_response_rx(priv);
--	spin_unlock(&priv->driver_lock);
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
- }
- 
- /**
+diff --git a/drivers/net/wireless/cw1200/main.c b/drivers/net/wireless/cw1200/main.c
+index 3724e73..090f015 100644
+--- a/drivers/net/wireless/cw1200/main.c
++++ b/drivers/net/wireless/cw1200/main.c
+@@ -507,7 +507,7 @@ u32 cw1200_dpll_from_clk(u16 clk_khz)
+ 	case 0xCB20: /* 52000 KHz */
+ 		return 0x07627091;
+ 	default:
+-		pr_err("Unknown Refclk freq (0x%04x), using 2600KHz\n",
++		pr_err("Unknown Refclk freq (0x%04x), using 26000KHz\n",
+ 		       clk_khz);
+ 		return 0x0EC4F121;
+ 	}
 -- 
-1.7.9.5
+1.8.3.1
 
