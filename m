@@ -1,103 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:48467 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057Ab3H3HRI (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:57400 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752971Ab3H1OUL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Aug 2013 03:17:08 -0400
-Subject: [PATCH] ath10k: check chip id from the soc register during probe
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 30 Aug 2013 10:17:03 +0300
-Message-ID: <20130830071703.14206.21974.stgit@localhost6.localdomain6> (sfid-20130830_091712_222761_515D5918)
+	Wed, 28 Aug 2013 10:20:11 -0400
+Received: by mail-wg0-f46.google.com with SMTP id k13so5445459wgh.25
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 07:20:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <F690310232FDDF4AB457E8B3EF90DDE08D32184E@MARCM-SBS2011.marcmltd.local>
+References: <F690310232FDDF4AB457E8B3EF90DDE08D32184E@MARCM-SBS2011.marcmltd.local>
+Date: Wed, 28 Aug 2013 16:20:09 +0200
+Message-ID: <CA+icZUW4vbCfEq9-1ewe=O=fADq42y60T2P7YV4cgNBSntQ9gA@mail.gmail.com> (sfid-20130828_162015_608168_B9B7A2E9)
+Subject: Re: 802.11p
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Marc Murphy <marcmltd@marcm.co.uk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath10k doesn't support qca988x hw1.0 boards anymore. Unfortunately
-the PCI id is the same in hw1.0 and hw2.0 so ath10k tries to use
-hw1.0 boards anyway. But without hw1.0 workarounds in place
-ath10k just crashes horribly.
+On Wed, Aug 28, 2013 at 2:15 PM, Marc Murphy <marcmltd@marcm.co.uk> wrote:
+> Doh ! updated now.
+>
+> I have had a read through the docs but there is no direct reference to 802.11p.  I initially want to have a play with a couple of embedded units that I have to see if I cant send a message from one to the other but struggling to find any updated ath5 driver.
+>
 
-To avoid using hw1.0 boards at all add a chip id detection
-to ath10k_pci_probe() and fail the probe if hw1.0 id is found.
-Also add a warning if there's an unknown chip id but continue
-the boot process normally anyway.
+A few weeks ago someone asked about that constellation, check for
+"802.11p and ath5k v3.10-rc1" thread on linux-wireless ML.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/hw.h  |    5 +++++
- drivers/net/wireless/ath/ath10k/pci.c |   26 +++++++++++++++++++++++++-
- 2 files changed, 30 insertions(+), 1 deletion(-)
+- Sedat -
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 5708888..933d05d 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -26,8 +26,12 @@
- #define SUPPORTED_FW_RELEASE	0
- #define SUPPORTED_FW_BUILD	636
- 
-+/* QCA988X 1.0 definitions (unsupported) */
-+#define QCA988X_HW_1_0_CHIP_ID		0x043000ff
-+
- /* QCA988X 2.0 definitions */
- #define QCA988X_HW_2_0_VERSION		0x4100016c
-+#define QCA988X_HW_2_0_CHIP_ID		0x043002ff
- #define QCA988X_HW_2_0_FW_DIR		"ath10k/QCA988X/hw2.0"
- #define QCA988X_HW_2_0_FW_FILE		"firmware.bin"
- #define QCA988X_HW_2_0_OTP_FILE		"otp.bin"
-@@ -163,6 +167,7 @@ enum ath10k_mcast2ucast_mode {
- #define SOC_LPO_CAL_OFFSET			0x000000e0
- #define SOC_LPO_CAL_ENABLE_LSB			20
- #define SOC_LPO_CAL_ENABLE_MASK			0x00100000
-+#define SOC_CHIP_ID_ADDRESS			0x000000ec
- 
- #define WLAN_RESET_CONTROL_COLD_RST_MASK	0x00000008
- #define WLAN_RESET_CONTROL_WARM_RST_MASK	0x00000004
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 996efdd..c9e5741a 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2290,7 +2290,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 	int ret = 0;
- 	struct ath10k *ar;
- 	struct ath10k_pci *ar_pci;
--	u32 lcr_val;
-+	u32 lcr_val, chip_id;
- 
- 	ath10k_dbg(ATH10K_DBG_PCI, "%s\n", __func__);
- 
-@@ -2394,6 +2394,30 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 
- 	ar_pci->cacheline_sz = dma_get_cache_alignment();
- 
-+	ath10k_do_pci_wake(ar);
-+	chip_id = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS + SOC_CHIP_ID_ADDRESS);
-+	ath10k_do_pci_sleep(ar);
-+
-+	/* Check that we are not using hw1.0 (some of them have same pci id
-+	 * as hw2.0) before doing anything else as ath10k crashes horribly
-+	 * due to missing hw1.0 workarounds. */
-+	switch (chip_id) {
-+	case QCA988X_HW_1_0_CHIP_ID:
-+		ath10k_err("ERROR: qca988x hw1.0 (0x%08x) is not supported\n",
-+			   chip_id);
-+		ret = -EOPNOTSUPP;
-+		goto err_iomap;
-+
-+	case QCA988X_HW_2_0_CHIP_ID:
-+		/* known chip id, continue normally */
-+		break;
-+
-+	default:
-+		ath10k_warn("Warning: chip id 0x%08x is not known, expect problems\n",
-+			   chip_id);
-+		break;
-+	}
-+	
- 	ret = ath10k_core_register(ar);
- 	if (ret) {
- 		ath10k_err("could not register driver core (%d)\n", ret);
-
+> Thanks
+> Marc
+>
+> ________________________________________
+> From: Sedat Dilek [sedat.dilek@gmail.com]
+> Sent: 28 August 2013 12:23
+> To: Marc Murphy
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re:
+>
+> On Wed, Aug 28, 2013 at 1:07 PM, Marc Murphy <marcmltd@marcm.co.uk> wrote:
+>> Hello,
+>> I have been trawling the mailings and lots of people are asking about 802.11p and I have not managed to find a definitive push back to the mainline kernel.
+>>
+>
+> Hi,
+>
+> first of all, you should set a "subject" to your email request :-).
+>
+> I cannot say much about 802.11p, but for first informations I
+> recommend the wiki at <http://wireless.kernel.org> and have a look
+> into docs section.
+>
+> For faster replies you can join #linux-wireless IRC channel (Freenode).
+>
+> - Sedat -
+>
+>> Is there anywhere in particular that I need to be looking to be able to get the patches so I can have a play ?
+>>
+>> Thanks
+>> Marc--
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
