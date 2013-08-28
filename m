@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:48624 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753599Ab3H0Php (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:55425 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754792Ab3H1H6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 11:37:45 -0400
-From: Masami Ichikawa <masami256@gmail.com>
-To: IvDoorn@gmail.com, gwingerde@gmail.com,
-	helmut.schaa@googlemail.com, linville@tuxdriver.com
-Cc: Masami Ichikawa <masami256@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] Add WLI-UC-G300HP's Product ID.
-Date: Wed, 28 Aug 2013 00:37:23 +0900
-Message-Id: <1377617843-28835-1-git-send-email-masami256@gmail.com> (sfid-20130827_173813_674231_9E61291B)
+	Wed, 28 Aug 2013 03:58:04 -0400
+Received: by mail-lb0-f181.google.com with SMTP id u14so3447090lbd.40
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 00:58:03 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v3 15/16] wcn36xx: add Kconfig
+Date: Wed, 28 Aug 2013 09:56:45 +0200
+Message-Id: <1377676606-23033-16-git-send-email-k.eugene.e@gmail.com> (sfid-20130828_100909_301641_0F14783B)
+In-Reply-To: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support Bufallo WLI-UC-G300HP.
+Adding Kconfig
 
-Signed-off-by: Masami Ichikawa <masami256@gmail.com>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2800usb.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/wcn36xx/Kconfig | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 840833b..518277d 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -977,6 +977,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x0411, 0x016f) },
- 	{ USB_DEVICE(0x0411, 0x01a2) },
- 	{ USB_DEVICE(0x0411, 0x01ee) },
-+	{ USB_DEVICE(0x0411, 0x01a8) },
- 	/* Corega */
- 	{ USB_DEVICE(0x07aa, 0x002f) },
- 	{ USB_DEVICE(0x07aa, 0x003c) },
+diff --git a/drivers/net/wireless/ath/wcn36xx/Kconfig b/drivers/net/wireless/ath/wcn36xx/Kconfig
+new file mode 100644
+index 0000000..591ebae
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
+@@ -0,0 +1,16 @@
++config WCN36XX
++	tristate "Qualcomm Atheros WCN3660/3680 support"
++	depends on MAC80211 && HAS_DMA
++	---help---
++	  This module adds support for wireless adapters based on
++	  Qualcomm Atheros WCN3660 and WCN3680 mobile chipsets.
++
++	  If you choose to build a module, it'll be called wcn36xx.
++
++config WCN36XX_DEBUGFS
++	bool "WCN36XX debugfs support"
++	depends on WCN36XX
++	---help---
++	  Enabled debugfs support
++
++	  If unsure, say Y to make it easier to debug problems.
 -- 
-1.8.3.1
+1.8.2.2
 
