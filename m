@@ -1,151 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24262 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754874Ab3HWGxr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 02:53:47 -0400
-Date: Fri, 23 Aug 2013 08:52:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: remove IEEE80211_STA_BEACON_POLL
-Message-ID: <20130823065200.GA3835@redhat.com> (sfid-20130823_085354_308543_18954D7D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-la0-f43.google.com ([209.85.215.43]:34281 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753728Ab3H1H5u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Aug 2013 03:57:50 -0400
+Received: by mail-la0-f43.google.com with SMTP id ep20so4527921lab.30
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 00:57:49 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v3 07/16] wcn36xx: add pmc.c
+Date: Wed, 28 Aug 2013 09:56:37 +0200
+Message-Id: <1377676606-23033-8-git-send-email-k.eugene.e@gmail.com> (sfid-20130828_095758_350079_F8AA6CC1)
+In-Reply-To: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
+References: <1377676606-23033-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we detect beacon lost we do active AP probing (using nullfunc
-frame or probe request), there is no need to have beacon polling. Flag
-IEEE80211_STA_BEACON_POLL seems to be used just for historical reasons.
+add pmc.c
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
 ---
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |   38 +++++++++-----------------------------
- net/mac80211/scan.c        |    3 +--
- 3 files changed, 10 insertions(+), 32 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/pmc.c | 46 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.c
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b618651..d353c64 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -322,7 +322,6 @@ struct ieee80211_roc_work {
- 
- /* flags used in struct ieee80211_if_managed.flags */
- enum ieee80211_sta_flags {
--	IEEE80211_STA_BEACON_POLL	= BIT(0),
- 	IEEE80211_STA_CONNECTION_POLL	= BIT(1),
- 	IEEE80211_STA_CONTROL_PORT	= BIT(2),
- 	IEEE80211_STA_DISABLE_HT	= BIT(4),
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2aab130..23694b7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -893,8 +893,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
- 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
--	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
--			    IEEE80211_STA_CONNECTION_POLL))
-+	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL)
- 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_USE_MINRATE;
- 
- 	ieee80211_tx_skb(sdata, skb);
-@@ -1374,8 +1373,7 @@ static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
- 	if (!mgd->associated)
- 		return false;
- 
--	if (mgd->flags & (IEEE80211_STA_BEACON_POLL |
--			  IEEE80211_STA_CONNECTION_POLL))
-+	if (mgd->flags & IEEE80211_STA_CONNECTION_POLL)
- 		return false;
- 
- 	if (!mgd->have_beacon)
-@@ -1691,8 +1689,7 @@ static void __ieee80211_stop_poll(struct ieee80211_sub_if_data *sdata)
- {
- 	lockdep_assert_held(&sdata->local->mtx);
- 
--	sdata->u.mgd.flags &= ~(IEEE80211_STA_CONNECTION_POLL |
--				IEEE80211_STA_BEACON_POLL);
-+	sdata->u.mgd.flags &= ~IEEE80211_STA_CONNECTION_POLL;
- 	ieee80211_run_deferred_scan(sdata->local);
- }
- 
-@@ -1954,11 +1951,8 @@ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_local *local = sdata->local;
- 
- 	mutex_lock(&local->mtx);
--	if (!(ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
--			      IEEE80211_STA_CONNECTION_POLL))) {
--		mutex_unlock(&local->mtx);
--		return;
--	}
-+	if (!(ifmgd->flags & IEEE80211_STA_CONNECTION_POLL))
-+		goto out;
- 
- 	__ieee80211_stop_poll(sdata);
- 
-@@ -2094,15 +2088,9 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	 * because otherwise we would reset the timer every time and
- 	 * never check whether we received a probe response!
- 	 */
--	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
--			    IEEE80211_STA_CONNECTION_POLL))
-+	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL)
- 		already = true;
- 
--	if (beacon)
--		ifmgd->flags |= IEEE80211_STA_BEACON_POLL;
--	else
--		ifmgd->flags |= IEEE80211_STA_CONNECTION_POLL;
--
- 	mutex_unlock(&sdata->local->mtx);
- 
- 	if (already)
-@@ -3069,17 +3057,10 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
--	if (ifmgd->flags & IEEE80211_STA_BEACON_POLL) {
-+	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
- 		mlme_dbg_ratelimited(sdata,
- 				     "cancelling AP probe due to a received beacon\n");
--		mutex_lock(&local->mtx);
--		ifmgd->flags &= ~IEEE80211_STA_BEACON_POLL;
--		ieee80211_run_deferred_scan(local);
--		mutex_unlock(&local->mtx);
--
--		mutex_lock(&local->iflist_mtx);
--		ieee80211_recalc_ps(local, -1);
--		mutex_unlock(&local->iflist_mtx);
-+		ieee80211_reset_ap_probe(sdata);
- 	}
- 
- 	/*
-@@ -3548,8 +3529,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 	} else if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started)
- 		run_again(sdata, ifmgd->assoc_data->timeout);
- 
--	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
--			    IEEE80211_STA_CONNECTION_POLL) &&
-+	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL &&
- 	    ifmgd->associated) {
- 		u8 bssid[ETH_ALEN];
- 		int max_tries;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 08afe74..ecb57b0 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -391,8 +391,7 @@ static bool ieee80211_can_scan(struct ieee80211_local *local,
- 		return false;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
--	    sdata->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
--				  IEEE80211_STA_CONNECTION_POLL))
-+	    sdata->u.mgd.flags & IEEE80211_STA_CONNECTION_POLL)
- 		return false;
- 
- 	return true;
+diff --git a/drivers/net/wireless/ath/wcn36xx/pmc.c b/drivers/net/wireless/ath/wcn36xx/pmc.c
+new file mode 100644
+index 0000000..f72096e
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/pmc.c
+@@ -0,0 +1,46 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
++#include "wcn36xx.h"
++
++int wcn36xx_pmc_init(struct wcn36xx *wcn)
++{
++	wcn->pw_state = WCN36XX_FULL_POWER;
++	return 0;
++}
++
++int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn, u64 tsf)
++{
++	/* TODO: Make sure the TX chain clean */
++	wcn36xx_smd_enter_bmps(wcn, tsf);
++	wcn->pw_state = WCN36XX_BMPS;
++	return 0;
++}
++
++int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn)
++{
++	wcn36xx_smd_exit_bmps(wcn);
++	wcn->pw_state = WCN36XX_FULL_POWER;
++	return 0;
++}
++
++int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn)
++{
++	wcn36xx_dbg(WCN36XX_DBG_PMC, "%s\n", __func__);
++	return wcn36xx_smd_keep_alive_req(wcn, WCN36XX_HAL_KEEP_ALIVE_NULL_PKT);
++}
 -- 
-1.7.1
+1.8.2.2
 
