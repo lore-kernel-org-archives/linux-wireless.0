@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50935 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753968Ab3HWVXS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 17:23:18 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] bcma: change max PCI read request size to 128
-Date: Fri, 23 Aug 2013 23:22:29 +0200
-Message-Id: <1377292949-7033-1-git-send-email-hauke@hauke-m.de> (sfid-20130823_232322_263408_F37FDE02)
+Received: from ns.iliad.fr ([212.27.33.1]:54857 "EHLO ns.iliad.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755718Ab3H1T6p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Aug 2013 15:58:45 -0400
+Message-ID: <1377719389.559.9.camel@sakura.staff.proxad.net> (sfid-20130828_215850_359772_53C64946)
+Subject: Re: [PATCH] cfg80211: fix potential deadlock regression
+From: Maxime Bizon <mbizon@freebox.fr>
+Reply-To: mbizon@freebox.fr
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Wed, 28 Aug 2013 21:49:49 +0200
+In-Reply-To: <1370377370-23055-1-git-send-email-johannes@sipsolutions.net>
+References: <1370377370-23055-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="ANSI_X3.4-1968"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This PCIe controller does not support a max read request size above 128
-bytes. The sold card I tested this controller with used 128 as default
-value, but some new routers are sold with BCM4331 chips, which have a
-default max read request size of 512. This device fails at the first
-DMA reqeust whch is bigger than 126 bytes.
 
-This patch changes the max read request size to 128 for every device on
-the PCIe link.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_pci_host.c |    6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index 30629a3..c3d7b03 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -581,6 +581,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, bcma_core_pci_fixup_addresses);
- int bcma_core_pci_plat_dev_init(struct pci_dev *dev)
- {
- 	struct bcma_drv_pci_host *pc_host;
-+	int readrq;
+On Tue, 2013-06-04 at 22:22 +0200, Johannes Berg wrote:
  
- 	if (dev->bus->ops->read != bcma_core_pci_hostmode_read_config) {
- 		/* This is not a device on the PCI-core bridge. */
-@@ -595,6 +596,11 @@ int bcma_core_pci_plat_dev_init(struct pci_dev *dev)
- 	dev->irq = bcma_core_irq(pc_host->pdev->core);
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
- 
-+	readrq = pcie_get_readrq(dev);
-+	if (readrq > 128) {
-+		pr_info("change PCIe max read request size from %i to 128\n", readrq);
-+		pcie_set_readrq(dev, 128);
-+	}
- 	return 0;
- }
- EXPORT_SYMBOL(bcma_core_pci_plat_dev_init);
+> -	rtnl_lock();
+>  
+>  	res = device_add(&rdev->wiphy.dev);
+> +	if (res)
+> +		return res;
+
+I just ran across a regression caused by this commit
+
+I'm again getting uevent notifications for wireless devices that are not
+yet properly registered (ENODEV on NL80211 when using sysfs phy id)
+
+I originally  fixed the bug by taking the cfg80211 mutex across the
+whole registration:
+
+commit 5a652052fedbd7869572c757dd2ffc2ed420c69d
+Author: Maxime Bizon <mbizon@freebox.fr>
+Date:   Wed Jul 21 17:21:38 2010 +0200
+
+    cfg80211: fix race between sysfs and cfg80211
+    
+    device_add() is called before adding the phy to the cfg80211 device
+    list.
+    
+    So if a userspace program uses sysfs uevents to detect new phy
+    devices, and queries nl80211 to get phy info, it can get ENODEV even
+    though the phy exists in sysfs.
+    
+    An easy workaround is to hold the cfg80211 mutex until the phy is
+    present in sysfs/cfg80211/debugfs.
+
+
+It does not seem we can reverse the rfkill_register() and device_add()
+because wiphy dev is a parent of rfkill dev.
+
+any idea to fix this ?
+
+Thanks,
+
 -- 
-1.7.10.4
+Maxime
+
 
