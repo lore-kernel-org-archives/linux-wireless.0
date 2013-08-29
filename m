@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:65255 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752282Ab3HMF7q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 01:59:46 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 4/4] ath10k: plug possible memory leak in WMI
-Date: Tue, 13 Aug 2013 07:59:38 +0200
-Message-ID: <1376373578-2180-5-git-send-email-michal.kazior@tieto.com> (sfid-20130813_075950_561025_2547E8EB)
-In-Reply-To: <1376373578-2180-1-git-send-email-michal.kazior@tieto.com>
-References: <1375949813-10969-1-git-send-email-michal.kazior@tieto.com>
- <1376373578-2180-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-qa0-f43.google.com ([209.85.216.43]:55972 "EHLO
+	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753041Ab3H2EiX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Aug 2013 00:38:23 -0400
+Received: by mail-qa0-f43.google.com with SMTP id bv4so948152qab.9
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 21:38:22 -0700 (PDT)
+From: adam.gradzki@gmail.com
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [BUG] iwlwifi Microcode SW error (firmware version: 18.168.6.1)
+Date: Thu, 29 Aug 2013 00:38:20 -0400
+Message-ID: <2449090.W0ZgYRKzHN@nuclearreactor> (sfid-20130829_063827_186030_D24FF204)
+In-Reply-To: <1377750599.4418.3.camel@porter.coelho.fi>
+References: <7144869.jC5clVvrrO@nuclearreactor> <1377750599.4418.3.camel@porter.coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There was a possible memory leak when WMI command
-queue reached it's limit. Command buffers were not
-freed.
+Hi Luca,
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |    1 +
- 1 file changed, 1 insertion(+)
+I was browsing the web while in a large hall with many connected wireless 
+clients. There were also several routers sharing a common SSID. I remember 
+playing with various RTS and fragmentation thresholds so this may have been 
+the trigger. The connection itself involved WPA2 Enterprise PEAP w/ MSCHAPv2 
+authentication. I wish I could go into more detail but I was browsing the 
+system log long after the fact so I'm having trouble remembering things off the 
+top of my head.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 55f90c7..775fedf 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -110,6 +110,7 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
- 	if (atomic_add_return(1, &ar->wmi.pending_tx_count) >
- 	    WMI_MAX_PENDING_TX_COUNT) {
- 		/* avoid using up memory when FW hangs */
-+		dev_kfree_skb(skb);
- 		atomic_dec(&ar->wmi.pending_tx_count);
- 		return -EBUSY;
- 	}
--- 
-1.7.9.5
+Linux laptop 3.10.9-1-ARCH #1 SMP PREEMPT Wed Aug 21 13:49:35 CEST 2013 x86_64 
+GNU/Linux
+
+Regards,
+Adam
+
+
+On Thursday, August 29, 2013 07:29:59 AM you wrote:
+> Hi Adam,
+> 
+> On Thu, 2013-08-29 at 00:17 -0400, adam.gradzki@gmail.com wrote:
+> > I would like to report a problem with the Intel iwlwifi driver
+> > Here is what I found in my system log:
+> > 
+> > http://pastebin.com/j5cVsqzz
+> 
+> Thanks for reporting! Could you please give a bit more details on what
+> you were doing when this happened? Just a simple connection to an AP?
+> Heavy traffic?
+> 
+> --
+> Cheers,
+> Luca.
 
