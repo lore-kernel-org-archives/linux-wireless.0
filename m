@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:43576 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754335Ab3HWI7f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 04:59:35 -0400
-Received: by mail-lb0-f169.google.com with SMTP id u10so270615lbi.14
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Aug 2013 01:59:34 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v2 08/16] wcn36xx: add pmc.h
-Date: Fri, 23 Aug 2013 10:58:11 +0200
-Message-Id: <1377248299-21007-9-git-send-email-k.eugene.e@gmail.com> (sfid-20130823_110001_655488_6CB8FB41)
-In-Reply-To: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:44981 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752272Ab3H2MH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Aug 2013 08:07:57 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v3 0/2] add per-VDEV FW statistics
+Date: Thu, 29 Aug 2013 14:07:38 +0200
+Message-ID: <1377778061-22331-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20130829_140800_712011_A64BA2FA)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding pmc.h
+FW 1.0.0.716 brings per-VDEV statistics. This patch-set implements
+debugfs mechanism to fetch those. There's still few more fileds we
+can read from the FW stats event, which are not covered here.
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
----
- drivers/net/wireless/ath/wcn36xx/pmc.h | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
+Changes:
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/pmc.h b/drivers/net/wireless/ath/wcn36xx/pmc.h
-new file mode 100644
-index 0000000..b00d425
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/pmc.h
-@@ -0,0 +1,32 @@
-+/*
-+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _WCN36XX_PMC_H_
-+#define _WCN36XX_PMC_H_
-+
-+struct wcn36xx;
-+
-+enum wcn36xx_power_state {
-+	WCN36XX_FULL_POWER,
-+	WCN36XX_BMPS
-+};
-+
-+int wcn36xx_pmc_init(struct wcn36xx *wcn);
-+int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn, u64 tbtt);
-+int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn);
-+int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn);
-+int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn);
-+#endif	/* _WCN36XX_PMC_H_ */
+V2:
+* introduce wmi_peer_stats_common struct
+* fetch and print peer RX rates
+* break up wmi_peer_stats_common update into separate patch
+
+V3:
+* rebase
+* fix sparse endianness warnings
+
+Bartosz Markowski (2):
+  ath10k: update wal_dbg_tx_stats structure with missing parameter.
+  ath10k: implement per-VDEV FW statistics
+
+ drivers/net/wireless/ath/ath10k/core.h  |   27 ++++++++++
+ drivers/net/wireless/ath/ath10k/debug.c |   78 ++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/wmi.c   |    4 +-
+ drivers/net/wireless/ath/ath10k/wmi.h   |   90 ++++++++++++++++++++++++++-----
+ 4 files changed, 173 insertions(+), 26 deletions(-)
+
 -- 
-1.8.2.2
+1.7.10
 
