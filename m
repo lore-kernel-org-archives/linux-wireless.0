@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:46116 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754064Ab3HMFzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Aug 2013 01:55:06 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/4] ath10k: use sizeof(*var) in kmalloc
-Date: Tue, 13 Aug 2013 07:54:55 +0200
-Message-ID: <1376373297-32369-3-git-send-email-michal.kazior@tieto.com> (sfid-20130813_075521_236566_A2B28760)
-In-Reply-To: <1376373297-32369-1-git-send-email-michal.kazior@tieto.com>
-References: <1375949650-9699-1-git-send-email-michal.kazior@tieto.com>
- <1376373297-32369-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:34331 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751755Ab3H2VfK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Aug 2013 17:35:10 -0400
+Received: by mail-lb0-f176.google.com with SMTP id y6so1194602lbh.21
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Aug 2013 14:35:08 -0700 (PDT)
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Subject: [PATCH] mac80211: Remove superfluous is_multicast_ether_addr() call
+Date: Fri, 30 Aug 2013 01:35:09 +0400
+Message-Id: <1377812109-22889-1-git-send-email-ryazanov.s.a@gmail.com> (sfid-20130829_233515_689438_B96D6E19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes checkpatch warning from the latest
-3.11-rc kernel tree.
+Remove superfluous call and use locally stored previous result.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ net/mac80211/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e2f9ef5..98edb31 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -805,8 +805,7 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
- 			continue;
- 
- 		for (i = 0; i < completions; i++) {
--			compl = kmalloc(sizeof(struct ath10k_pci_compl),
--					GFP_KERNEL);
-+			compl = kmalloc(sizeof(*compl), GFP_KERNEL);
- 			if (!compl) {
- 				ath10k_warn("No memory for completion state\n");
- 				ath10k_pci_stop_ce(ar);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3456c04..102ce8a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1981,7 +1981,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	 * EAPOL frames from the local station.
+ 	 */
+ 	if (unlikely(!ieee80211_vif_is_mesh(&sdata->vif) &&
+-		     !is_multicast_ether_addr(hdr.addr1) && !authorized &&
++		     !multicast && !authorized &&
+ 		     (cpu_to_be16(ethertype) != sdata->control_port_protocol ||
+ 		      !ether_addr_equal(sdata->vif.addr, skb->data + ETH_ALEN)))) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
 -- 
-1.7.9.5
+1.8.1.5
 
