@@ -1,109 +1,370 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36214 "EHLO nbd.name"
+Received: from ebb05.tieto.com ([131.207.168.36]:49895 "EHLO ebb05.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754877Ab3HET4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Aug 2013 15:56:31 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 07/12] ath9k: prepare queueing code for handling unaggregated traffic
-Date: Mon,  5 Aug 2013 21:56:18 +0200
-Message-Id: <1375732583-39001-7-git-send-email-nbd@openwrt.org> (sfid-20130805_215651_010014_1C55F37C)
-In-Reply-To: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
-References: <1375732583-39001-1-git-send-email-nbd@openwrt.org>
+	id S1752541Ab3H2MH6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Aug 2013 08:07:58 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v3 2/2] ath10k: implement per-VDEV FW statistics
+Date: Thu, 29 Aug 2013 14:07:40 +0200
+Message-ID: <1377778061-22331-3-git-send-email-bartosz.markowski@tieto.com> (sfid-20130829_140804_850930_61A7F83C)
+In-Reply-To: <1377778061-22331-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1377778061-22331-1-git-send-email-bartosz.markowski@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- Allow ath_tx_get_tid_subframe to return non-AMPDU subframes.
-- Reset the tid paused state on aggregation stop
-- Initialize software queues even when HT is not supported
+The WMI_REQUEST_PEER_STAT command with latst (1.0.0.716) FW
+can return per-VDEV statistics. Using debugfs we can fetch this info now.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+This is a backward compatible change. In case of older FW the VDEV
+statistics are simply not returned.
+
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |  3 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 20 ++++++++++++++------
- 2 files changed, 14 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h  |   27 ++++++++++
+ drivers/net/wireless/ath/ath10k/debug.c |   78 ++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/wmi.c   |    4 +-
+ drivers/net/wireless/ath/ath10k/wmi.h   |   87 ++++++++++++++++++++++++++-----
+ 4 files changed, 170 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1adb803..4da9864 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1374,9 +1374,6 @@ static void ath9k_sta_notify(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_node *an = (struct ath_node *) sta->drv_priv;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index ab05c4c..523c79d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -119,10 +119,32 @@ struct ath10k_wmi {
+ 	struct work_struct wmi_event_work;
+ };
  
--	if (!sta->ht_cap.ht_supported)
--		return;
--
- 	switch (cmd) {
- 	case STA_NOTIFY_SLEEP:
- 		an->sleeping = true;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 6c50249..e4d3723 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -672,7 +672,7 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
- 	} else
- 		ath_tx_complete_aggr(sc, txq, bf, bf_head, ts, txok);
- 
--	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) && !flush)
-+	if (!flush)
- 		ath_txq_schedule(sc, txq);
- }
- 
-@@ -848,6 +848,7 @@ static struct ath_buf *
- ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 			struct ath_atx_tid *tid, struct sk_buff_head **q)
- {
-+	struct ieee80211_tx_info *tx_info;
- 	struct ath_frame_info *fi;
- 	struct sk_buff *skb;
- 	struct ath_buf *bf;
-@@ -874,6 +875,16 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 			continue;
- 		}
- 
-+		bf->bf_next = NULL;
-+		bf->bf_lastbf = bf;
++struct ath10k_snr_info {
++	s32 beacon_snr;
++	s32 data_snr;
++};
 +
-+		tx_info = IEEE80211_SKB_CB(skb);
-+		tx_info->flags &= ~IEEE80211_TX_CTL_CLEAR_PS_FILT;
-+		if (!(tx_info->flags & IEEE80211_TX_CTL_AMPDU)) {
-+			bf->bf_state.bf_type = 0;
-+			return bf;
-+		}
++struct ath10k_vdev_stat {
++	u32 vdev_id;
++	struct ath10k_snr_info vdev_snr;
++	u32 tx_frames_count[MAX_AC];
++	u32 rx_frames_count;
++	u32 multiple_retry_cnt[MAX_AC];
++	u32 fail_count[MAX_AC];
++	u32 rts_fail_count;
++	u32 rts_success_count;
++	u32 rts_err_count;
++	u32 rx_discard_count;
++	u32 ack_fail_count;
++	u32 tx_rate_history[MAX_TX_RATE_VALUES];
++	u32 bcn_rssi_history[MAX_RSSI_VALUES];
++};
 +
- 		bf->bf_state.bf_type = BUF_AMPDU | BUF_AGGR;
- 		seqno = bf->bf_state.seqno;
+ struct ath10k_peer_stat {
+ 	u8 peer_macaddr[ETH_ALEN];
+ 	u32 peer_rssi;
+ 	u32 peer_tx_rate;
++	u32 peer_rx_rate;
+ };
  
-@@ -893,8 +904,6 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 			continue;
- 		}
+ struct ath10k_target_stats {
+@@ -176,6 +198,8 @@ struct ath10k_target_stats {
+ 	s32 mpdu_errs;
  
--		bf->bf_next = NULL;
--		bf->bf_lastbf = bf;
- 		return bf;
+ 	/* VDEV STATS */
++	struct ath10k_vdev_stat vdev_stat[TARGET_NUM_VDEVS];
++	u8 vdevs;
+ 
+ 	/* PEER STATS */
+ 	u8 peers;
+@@ -274,6 +298,9 @@ enum ath10k_fw_features {
+ 	/* wmi_mgmt_rx_hdr contains extra RSSI information */
+ 	ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX = 0,
+ 
++	/* firmware support per-VEDV statistics */
++	ATH10K_FW_FEATURE_VDEV_STATS = 1,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index fcb40cc..0f2b169 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -228,34 +228,59 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 		tmp += sizeof(struct wmi_pdev_stats);
  	}
  
-@@ -1356,7 +1365,7 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+-	/* 0 or max vdevs */
+-	/* Currently firmware does not support VDEV stats */
+ 	if (num_vdev_stats) {
+ 		struct wmi_vdev_stats *vdev_stats;
++		struct ath10k_vdev_stat *s;
++
++		stats->vdevs = num_vdev_stats;
  
- 	ath_txq_lock(sc, txq);
- 	txtid->active = false;
--	txtid->paused = true;
-+	txtid->paused = false;
- 	ath_tx_flush_tid(sc, txtid);
- 	ath_txq_unlock_complete(sc, txq);
- }
-@@ -2425,8 +2434,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 
- 		if (list_empty(&txq->axq_q)) {
- 			txq->axq_link = NULL;
--			if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
--				ath_txq_schedule(sc, txq);
-+			ath_txq_schedule(sc, txq);
- 			break;
+ 		for (i = 0; i < num_vdev_stats; i++) {
+ 			vdev_stats = (struct wmi_vdev_stats *)tmp;
++			s = &stats->vdev_stat[i];
++
++			s->vdev_id = __le32_to_cpu(vdev_stats->vdev_id);
++			s->vdev_snr.beacon_snr =
++				__le32_to_cpu(vdev_stats->vdev_snr.beacon_snr);
++			s->vdev_snr.data_snr =
++				__le32_to_cpu(vdev_stats->vdev_snr.data_snr);
++
++			/* TODO:read remaining vdev stats */
++
+ 			tmp += sizeof(struct wmi_vdev_stats);
  		}
- 		bf = list_first_entry(&txq->axq_q, struct ath_buf, list);
+ 	}
+ 
+ 	if (num_peer_stats) {
+-		struct wmi_peer_stats *peer_stats;
+ 		struct ath10k_peer_stat *s;
++		struct wmi_peer_stats_1 *peer_stats_1;
++		struct wmi_peer_stats_2 *peer_stats_2;
+ 
+ 		stats->peers = num_peer_stats;
+ 
+ 		for (i = 0; i < num_peer_stats; i++) {
+-			peer_stats = (struct wmi_peer_stats *)tmp;
++			peer_stats_1 = (struct wmi_peer_stats_1 *)tmp;
++
+ 			s = &stats->peer_stat[i];
+ 
+-			WMI_MAC_ADDR_TO_CHAR_ARRAY(&peer_stats->peer_macaddr,
+-						   s->peer_macaddr);
+-			s->peer_rssi = __le32_to_cpu(peer_stats->peer_rssi);
++			WMI_MAC_ADDR_TO_CHAR_ARRAY(
++				&peer_stats_1->common.peer_macaddr,
++				s->peer_macaddr);
++			s->peer_rssi =
++				__le32_to_cpu(peer_stats_1->common.peer_rssi);
+ 			s->peer_tx_rate =
+-				__le32_to_cpu(peer_stats->peer_tx_rate);
+-
+-			tmp += sizeof(struct wmi_peer_stats);
++				__le32_to_cpu(peer_stats_1->common.peer_tx_rate);
++
++			if (test_bit(ATH10K_FW_FEATURE_VDEV_STATS,
++				     ar->fw_features)) {
++				peer_stats_2 = (struct wmi_peer_stats_2 *)tmp;
++				s->peer_rx_rate =
++				    __le32_to_cpu(peer_stats_2->peer_rx_rate);
++
++				tmp += sizeof(struct wmi_peer_stats_2);
++			}
++			else {
++				tmp += sizeof(struct wmi_peer_stats_1);
++			}
+ 		}
+ 	}
+ 
+@@ -269,7 +294,7 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 	struct ath10k *ar = file->private_data;
+ 	struct ath10k_target_stats *fw_stats;
+ 	char *buf = NULL;
+-	unsigned int len = 0, buf_len = 2500;
++	unsigned int len = 0, buf_len = 3000;
+ 	ssize_t ret_cnt = 0;
+ 	long left;
+ 	int i;
+@@ -407,6 +432,27 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
+ 			 "MPDU errors (FCS, MIC, ENC)", fw_stats->mpdu_errs);
+ 
++	if (fw_stats->vdevs) {
++		len += scnprintf(buf + len, buf_len - len, "\n");
++		len += scnprintf(buf + len, buf_len - len, "%30s\n",
++				 "ath10k VDEV stats");
++		len += scnprintf(buf + len, buf_len - len, "%30s\n\n",
++				 "=================");
++	}
++
++	for (i = 0; i < fw_stats->vdevs; i++) {
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++				 "VDEV ID", fw_stats->vdev_stat[i].vdev_id);
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++				 "Beacon SNR",
++				 fw_stats->vdev_stat[i].vdev_snr.beacon_snr);
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++				 "Data SNR",
++				 fw_stats->vdev_stat[i].vdev_snr.data_snr);
++		len += scnprintf(buf + len, buf_len - len, "\n");
++	}
++
++
+ 	len += scnprintf(buf + len, buf_len - len, "\n");
+ 	len += scnprintf(buf + len, buf_len - len, "%30s\n",
+ 			 "ath10k PEER stats");
+@@ -417,11 +463,17 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 		len += scnprintf(buf + len, buf_len - len, "%30s %pM\n",
+ 				 "Peer MAC address",
+ 				 fw_stats->peer_stat[i].peer_macaddr);
+-		len += scnprintf(buf + len, buf_len - len, "%30s %u\n",
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
+ 				 "Peer RSSI", fw_stats->peer_stat[i].peer_rssi);
+-		len += scnprintf(buf + len, buf_len - len, "%30s %u\n",
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
+ 				 "Peer TX rate",
+ 				 fw_stats->peer_stat[i].peer_tx_rate);
++
++		if (test_bit(ATH10K_FW_FEATURE_VDEV_STATS, ar->fw_features))
++			len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++					 "Peer RX rate",
++					 fw_stats->peer_stat[i].peer_rx_rate);
++
+ 		len += scnprintf(buf + len, buf_len - len, "\n");
+ 	}
+ 	spin_unlock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 32fd5e7..3ebab3d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -957,8 +957,10 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
+ 	ar->phy_capability = __le32_to_cpu(ev->phy_capability);
+ 	ar->num_rf_chains = __le32_to_cpu(ev->num_rf_chains);
+ 
+-	if (ar->fw_version_build > 636)
++	if (ar->fw_version_build > 636) {
+ 		set_bit(ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX, ar->fw_features);
++		set_bit(ATH10K_FW_FEATURE_VDEV_STATS, ar->fw_features);
++	}
+ 
+ 	if (ar->num_rf_chains > WMI_MAX_SPATIAL_STREAM) {
+ 		ath10k_warn("hardware advertises support for more spatial streams than it should (%d > %d)\n",
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 5b94707..99c7ba1 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -60,6 +60,11 @@
+  *
+  */
+ 
++#define MAX_AC 4 /* Maximum value of access category */
++
++#define MAX_TX_RATE_VALUES      10 /* Max Tx rates */
++#define MAX_RSSI_VALUES         10 /* Max RSSI values */
++
+ /* Control Path */
+ struct wmi_cmd_hdr {
+ 	__le32 cmd_id;
+@@ -1828,11 +1833,10 @@ enum wmi_stats_id {
+ 
+ struct wmi_request_stats_cmd {
+ 	__le32 stats_id;
+-
+-	/*
+-	 * Space to add parameters like
+-	 * peer mac addr
+-	 */
++	/* unique id identifying the VDEV, generated by the caller */
++	__le32 vdev_id;
++	/* peer MAC address */
++	struct wmi_mac_addr peer_macaddr;
+ } __packed;
+ 
+ /* Suspend option */
+@@ -1881,7 +1885,6 @@ struct wmi_stats_event {
+ 
+ /*
+  * PDEV statistics
+- * TODO: add all PDEV stats here
+  */
+ struct wmi_pdev_stats {
+ 	__le32 chan_nf;        /* Channel noise floor */
+@@ -1894,24 +1897,84 @@ struct wmi_pdev_stats {
+ 	struct wal_dbg_stats wal; /* WAL dbg stats */
+ } __packed;
+ 
+-/*
+- * VDEV statistics
+- * TODO: add all VDEV stats here
+- */
++struct wmi_snr_info {
++	__le32 beacon_snr;
++	__le32 data_snr;
++} __packed;
++
+ struct wmi_vdev_stats {
++	/* unique id identifying the VDEV, generated by the caller */
+ 	__le32 vdev_id;
++	struct wmi_snr_info vdev_snr;
++	/*
++	 * Total number of packets(per AC) that were successfully transmitted
++	 * (with and without retries, including multi-cast, broadcast)
++	 */
++	__le32 tx_frm_cnt[MAX_AC];
++	/*
++	 * Total number of packets that were successfully received
++	 * (after appropriate filter rules including multi-cast, broadcast)
++	 */
++	__le32 rx_frm_cnt;
++	/*
++	 * The number of MSDU packets and MMPDU frames per AC that the 802.11
++	 * station successfully transmitted after more than one retransmission
++	 * attempt
++	 */
++	__le32 multiple_retry_cnt[MAX_AC];
++	/* Total number packets(per AC) failed to transmit */
++	__le32 fail_cnt[MAX_AC];
++	/*
++	 * Total number of RTS/CTS sequence failures for transmission of a
++	 * packet
++	 */
++	__le32 rts_fail_cnt;
++	/*
++	 * Total number of RTS/CTS sequence success for transmission of a
++	 * packet
++	 */
++	__le32 rts_succ_cnt;
++	/*
++	 * The receive error count.
++	 * HAL will provide the RxP FCS error global
++	 */
++	__le32 rx_err_cnt;
++	/*
++	 * The sum of the receive error count and dropped-receive-buffer
++	 * error count. (FCS error)
++	 */
++	__le32 rx_discard_cnt;
++	/*
++	 * Total number packets failed transmit because of no ACK
++	 * from the remote entity
++	 */
++	__le32 ack_fail_cnt;
++	/* History of last ten transmit rate, in units of 500 kbit/sec */
++	__le32 tx_rate_history[MAX_TX_RATE_VALUES];
++	/* History of last ten Beacon rssi of the connected Bss */
++	__le32 bcn_rssi_history[MAX_RSSI_VALUES];
+ } __packed;
+ 
+ /*
+  * peer statistics.
+- * TODO: add more stats
+  */
+-struct wmi_peer_stats {
++struct wmi_peer_stats_common {
+ 	struct wmi_mac_addr peer_macaddr;
+ 	__le32 peer_rssi;
+ 	__le32 peer_tx_rate;
+ } __packed;
+ 
++struct wmi_peer_stats_1 {
++	struct wmi_peer_stats_common common;
++} __packed;
++
++
++struct wmi_peer_stats_2 {
++	struct wmi_peer_stats_common common;
++	__le32 peer_rx_rate;
++} __packed;
++
++
+ struct wmi_vdev_create_cmd {
+ 	__le32 vdev_id;
+ 	__le32 vdev_type;
 -- 
-1.8.0.2
+1.7.10
 
