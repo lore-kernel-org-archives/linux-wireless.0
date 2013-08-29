@@ -1,58 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:57295 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754347Ab3HEDSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Aug 2013 23:18:12 -0400
-Message-ID: <51FF1973.7080807@ispras.ru> (sfid-20130805_051832_733095_B35624A8)
-Date: Mon, 05 Aug 2013 07:18:11 +0400
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Received: from mail-ye0-f182.google.com ([209.85.213.182]:35967 "EHLO
+	mail-ye0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753261Ab3H2ERK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Aug 2013 00:17:10 -0400
+Received: by mail-ye0-f182.google.com with SMTP id q14so1818830yen.27
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 21:17:09 -0700 (PDT)
+From: adam.gradzki@gmail.com
+To: linux-wireless@vger.kernel.org
+Subject: [BUG] iwlwifi Microcode SW error (firmware version: 18.168.6.1)
+Date: Thu, 29 Aug 2013 00:17:08 -0400
+Message-ID: <7144869.jC5clVvrrO@nuclearreactor> (sfid-20130829_061713_693752_BEA71514)
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: Re: [PATCH] hostap: do not return positive number on failure path
- in prism2_open()
-References: <1375671750-2835-1-git-send-email-khoroshilov@ispras.ru>
-In-Reply-To: <1375671750-2835-1-git-send-email-khoroshilov@ispras.ru>
-Content-Type: text/plain; charset=windows-1251
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please ignore this mail, there is a misprint in signed-off line.
-I will resend the patch.
+I would like to report a problem with the Intel iwlwifi driver
+Here is what I found in my system log:
 
-On 08/05/2013 07:02 AM, Alexey Khoroshilov wrote:
-> prism2_open() as an .ndo_open handler should not return positive numbers
-> in case of failure, but it does return 1 in a couple of places.
->
-> Found by Linux Driver Verification project (linuxtesting.org).
->
-> Signed-off-by: Alexey Khoroshilov <khoroshilorv@ispras.ru>
-> ---
->  drivers/net/wireless/hostap/hostap_main.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
-> index 15f0fad..e4f56ad 100644
-> --- a/drivers/net/wireless/hostap/hostap_main.c
-> +++ b/drivers/net/wireless/hostap/hostap_main.c
-> @@ -667,7 +667,7 @@ static int prism2_open(struct net_device *dev)
->  	if (local->no_pri) {
->  		printk(KERN_DEBUG "%s: could not set interface UP - no PRI "
->  		       "f/w\n", dev->name);
-> -		return 1;
-> +		return -ENODEV;
->  	}
->  
->  	if ((local->func->card_present && !local->func->card_present(local)) ||
-> @@ -682,7 +682,7 @@ static int prism2_open(struct net_device *dev)
->  		printk(KERN_WARNING "%s: could not enable MAC port\n",
->  		       dev->name);
->  		prism2_close(dev);
-> -		return 1;
-> +		return -ENODEV;
->  	}
->  	if (!local->dev_enabled)
->  		prism2_callback(local, PRISM2_CALLBACK_ENABLE);
-
+http://pastebin.com/j5cVsqzz
