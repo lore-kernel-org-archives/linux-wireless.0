@@ -1,59 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:41526 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178Ab3HTUWX (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:39026 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751917Ab3H2AB7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 16:22:23 -0400
+	Wed, 28 Aug 2013 20:01:59 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Tobias Waldekranz <tobias@waldekranz.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 28 Aug 2013 17:00:57 -0700
+Subject: RE: sd8787 (mwifiex) on big endian system
+Message-ID: <477F20668A386D41ADCC57781B1F70430EAF1FF5DE@SC-VEXCH1.marvell.com> (sfid-20130829_020203_607255_CC410856)
+References: <20130826102759.GA14350@gmail.com>
+ <477F20668A386D41ADCC57781B1F70430EAF1FEDA0@SC-VEXCH1.marvell.com>
+ <20130827061745.GA19431@gmail.com>
+ <477F20668A386D41ADCC57781B1F70430EAF1FF23F@SC-VEXCH1.marvell.com>
+ <20130828115251.GA3504@gmail.com>
+In-Reply-To: <20130828115251.GA3504@gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_002_477F20668A386D41ADCC57781B1F70430EAF1FF5DESCVEXCH1marve_"
 MIME-Version: 1.0
-In-Reply-To: <20130806134218.GB525@kroah.com>
-References: <1373888700-3040-1-git-send-email-emmanuel.grumbach@intel.com>
-	<20130802090234.GA20470@kroah.com>
-	<1375792779.8219.16.camel@jlt4.sipsolutions.net>
-	<20130806134218.GB525@kroah.com>
-Date: Tue, 20 Aug 2013 23:22:21 +0300
-Message-ID: <CANUX_P0BxGr9coDjOmHJm+8kVJVsM9XiTDTVsb_kysuRmcmpNw@mail.gmail.com> (sfid-20130820_222227_803270_2556204D)
-Subject: Re: [PATCH 3.10 0/3] Enable 7000 device family on 3.10
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Greg KH <greg@kroah.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 6, 2013 at 4:42 PM, Greg KH <greg@kroah.com> wrote:
-> On Tue, Aug 06, 2013 at 02:39:39PM +0200, Johannes Berg wrote:
->> [Emmanuel is on vacation, I'll cover for him]
->>
->> On Fri, 2013-08-02 at 17:02 +0800, Greg KH wrote:
->> > On Mon, Jul 15, 2013 at 02:44:57PM +0300, Emmanuel Grumbach wrote:
->> > > This small patch series enables 7260 and 3160 devices on 3.10
->> > > kernel. Three patches are already in linux.git (3.11-rc1).
->> > > One patch is 3.10 specific and disables configuration that is not
->> > > supported in 3.10.
->> >
->> > I need the git commit id of these patches in Linus's tree before I can
->> > apply them.  Please resend them with that information.
->>
->> The second and third patch does have it, and the first patch is only
->> relevant for 3.10 since 3.11 will have more device types enabled, we
->> just didn't get all the code in. This seems to be described in the
->> commit log, do you want more details?
->
-> Yes, please resend them with those details.  For me to take a patch that
-> is not in Linus's tree is a big deal, I need a whole lot of
-> justification for it.
->
+--_002_477F20668A386D41ADCC57781B1F70430EAF1FF5DESCVEXCH1marve_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Just got back. Sorry for the delay.
-I guess I will just drop that patch that is not in Linus's tree.
-This patch disables a feature that is not likely to be used but we
-*know* it is buggy.
-So people who want more than just associating to their router will see
-a bug in 3.10.
-I guess we can leave with that since I was suggesting to disable the
-feature anyway.
+Hi Tobias,
 
-So - do you want to resend, or you can apply the 2 patches I sent as is?
+> mwifiex_sdio mmc0:0001:1: event: 1142011.264553: cause: 0x2e
+> mwifiex_sdio mmc0:0001:1: AP EVENT: event id: 0x2e
+> mwifiex_sdio mmc0:0001:1: cmd_wait_q terminated: -512
+> mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id (11420=
+21.275294) =3D 0xb1, act =3D 0x0
+
+The SDIO_INT of the command response might have been missing for some reaso=
+n.
+Could you please apply the debug patch attached for checking the read_bitma=
+p after a timeout?
+
+Thanks,
+Bing
+
+
+
+--_002_477F20668A386D41ADCC57781B1F70430EAF1FF5DESCVEXCH1marve_
+Content-Type: application/octet-stream; name="int_missing.diff"
+Content-Description: int_missing.diff
+Content-Disposition: attachment; filename="int_missing.diff"; size=2772;
+	creation-date="Thu, 29 Aug 2013 00:03:44 GMT";
+	modification-date="Thu, 29 Aug 2013 00:03:44 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NtZGV2dC5jCmluZGV4IDJkNzYxNDcuLjg4ZmQ0MWYg
+MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMKKysrIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jbWRldnQuYwpAQCAtMjUsNiArMjUsNyBAQAog
+I2luY2x1ZGUgIndtbS5oIgogI2luY2x1ZGUgIjExbi5oIgogI2luY2x1ZGUgIjExYWMuaCIKKyNp
+bmNsdWRlICJzZGlvLmgiCiAKIC8qCiAgKiBUaGlzIGZ1bmN0aW9uIGluaXRpYWxpemVzIGEgY29t
+bWFuZCBub2RlLgpAQCAtOTAyLDggKzkwMywxMSBAQCBtd2lmaWV4X2NtZF90aW1lb3V0X2Z1bmMo
+dW5zaWduZWQgbG9uZyBmdW5jdGlvbl9jb250ZXh0KQogewogCXN0cnVjdCBtd2lmaWV4X2FkYXB0
+ZXIgKmFkYXB0ZXIgPQogCQkoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqKSBmdW5jdGlvbl9jb250
+ZXh0OworCXN0cnVjdCBzZGlvX21tY19jYXJkICpjYXJkID0gYWRhcHRlci0+Y2FyZDsKKwljb25z
+dCBzdHJ1Y3QgbXdpZmlleF9zZGlvX2NhcmRfcmVnICpyZWcgPSBjYXJkLT5yZWc7CiAJc3RydWN0
+IGNtZF9jdHJsX25vZGUgKmNtZF9ub2RlOwogCXN0cnVjdCB0aW1ldmFsIHRzdGFtcDsKKwl1MzIg
+Yml0bWFwOwogCiAJYWRhcHRlci0+bnVtX2NtZF90aW1lb3V0Kys7CiAJYWRhcHRlci0+ZGJnLm51
+bV9jbWRfdGltZW91dCsrOwpAQCAtOTYxLDYgKzk2NSwyMSBAQCBtd2lmaWV4X2NtZF90aW1lb3V0
+X2Z1bmModW5zaWduZWQgbG9uZyBmdW5jdGlvbl9jb250ZXh0KQogCQlkZXZfZXJyKGFkYXB0ZXIt
+PmRldiwgInBzX21vZGU9JWQgcHNfc3RhdGU9JWRcbiIsCiAJCQlhZGFwdGVyLT5wc19tb2RlLCBh
+ZGFwdGVyLT5wc19zdGF0ZSk7CiAKKwkJYml0bWFwID0gKHUzMikgY2FyZC0+bXBfcmVnc1tyZWct
+PnJkX2JpdG1hcF9sXTsKKwkJYml0bWFwIHw9ICgodTMyKSBjYXJkLT5tcF9yZWdzW3JlZy0+cmRf
+Yml0bWFwX3VdKSA8PCA4OworCQlkZXZfZXJyKGFkYXB0ZXItPmRldiwgIkRCRzogb2xkOiByZF9i
+aXRtYXA9MHgleCAgMHgleFxuIiwKKwkJCWNhcmQtPm1wX3JkX2JpdG1hcCwgYml0bWFwKTsKKwkJ
+aWYgKGFkYXB0ZXItPmlmX29wcy5yZWFkX2RhdGFfc3luYykgeworCQkJaWYgKGFkYXB0ZXItPmlm
+X29wcy5yZWFkX2RhdGFfc3luYyhhZGFwdGVyLCBjYXJkLT5tcF9yZWdzLAorCQkJCSAgIGNhcmQt
+PnJlZy0+bWF4X21wX3JlZ3MsCisJCQkJICAgUkVHX1BPUlQgfCBNV0lGSUVYX1NESU9fQllURV9N
+T0RFX01BU0ssIDApKQorCQkJCWRldl9lcnIoYWRhcHRlci0+ZGV2LCAiREJHOiByZWFkIG1wX3Jl
+Z3MgZmFpbGVkXG4iKTsKKwkJfQorCQliaXRtYXAgPSAodTMyKSBjYXJkLT5tcF9yZWdzW3JlZy0+
+cmRfYml0bWFwX2xdOworCQliaXRtYXAgfD0gKCh1MzIpIGNhcmQtPm1wX3JlZ3NbcmVnLT5yZF9i
+aXRtYXBfdV0pIDw8IDg7CisJCWRldl9lcnIoYWRhcHRlci0+ZGV2LCAiREJHOiBuZXc6IHJkX2Jp
+dG1hcD0weCV4ICBpbnQ9MHgleFxuIiwKKwkJCWJpdG1hcCwgY2FyZC0+bXBfcmVnc1tIT1NUX0lO
+VFNUQVRVU19SRUddKTsKKwogCQlpZiAoY21kX25vZGUtPndhaXRfcV9lbmFibGVkKSB7CiAJCQlh
+ZGFwdGVyLT5jbWRfd2FpdF9xLnN0YXR1cyA9IC1FVElNRURPVVQ7CiAJCQl3YWtlX3VwX2ludGVy
+cnVwdGlibGUoJmFkYXB0ZXItPmNtZF93YWl0X3Eud2FpdCk7CmRpZmYgLS1naXQgYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZp
+ZXgvbWFpbi5oCmluZGV4IDFkNzJmMTMuLmE1NWQyZmIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL213aWZpZXgvbWFpbi5oCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZp
+ZXgvbWFpbi5oCkBAIC02MjAsNiArNjIwLDggQEAgc3RydWN0IG13aWZpZXhfaWZfb3BzIHsKIAlp
+bnQgKCpkbmxkX2Z3KSAoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqLCBzdHJ1Y3QgbXdpZmlleF9m
+d19pbWFnZSAqKTsKIAl2b2lkICgqY2FyZF9yZXNldCkgKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIg
+Kik7CiAJaW50ICgqY2xlYW5fcGNpZV9yaW5nKSAoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRh
+cHRlcik7CisJaW50ICgqcmVhZF9kYXRhX3N5bmMpIChzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICph
+ZGFwdGVyLCB1OCAqYnVmZmVyLAorCQkJCSAgdTMyIGxlbiwgdTMyIHBvcnQsIHU4IGNsYWltKTsK
+IH07CiAKIHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgewpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvbXdpZmlleC9zZGlvLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3Nk
+aW8uYwppbmRleCAxNTc2MTA0Li41OGMwNjQxIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJl
+bGVzcy9td2lmaWV4L3NkaW8uYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3Nk
+aW8uYwpAQCAtMTk1OCw2ICsxOTU4LDcgQEAgc3RhdGljIHN0cnVjdCBtd2lmaWV4X2lmX29wcyBz
+ZGlvX29wcyA9IHsKIAkuY21kcnNwX2NvbXBsZXRlID0gbXdpZmlleF9zZGlvX2NtZHJzcF9jb21w
+bGV0ZSwKIAkuZXZlbnRfY29tcGxldGUgPSBtd2lmaWV4X3NkaW9fZXZlbnRfY29tcGxldGUsCiAJ
+LmNhcmRfcmVzZXQgPSBtd2lmaWV4X3NkaW9fY2FyZF9yZXNldCwKKwkucmVhZF9kYXRhX3N5bmMg
+PSBtd2lmaWV4X3JlYWRfZGF0YV9zeW5jLAogfTsKIAogLyoK
+
+--_002_477F20668A386D41ADCC57781B1F70430EAF1FF5DESCVEXCH1marve_--
