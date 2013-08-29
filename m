@@ -1,50 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from soto.provo.novell.com ([137.65.250.214]:48508 "EHLO
-	soto.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753Ab3H1JFM convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:2:1>);
-	Wed, 28 Aug 2013 05:05:12 -0400
-Message-Id: <521E49E30200009200026772@soto.provo.novell.com> (sfid-20130828_110520_134155_07E02F44)
-Date: Wed, 28 Aug 2013 03:05:07 -0600
-From: "Matt Chen" <machen@suse.com>
-To: <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: NGFF based WLAN module
-References: <521E16F50200009200026750@soto.provo.novell.com>
- (sfid-20130828_072756_206141_92BC02A8)
- <1377672233.13797.4.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1377672233.13797.4.camel@jlt4.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.candelatech.com ([208.74.158.172]:46044 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754106Ab3H2WYU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Aug 2013 18:24:20 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 2/4] iw:  Print 802.11u Advertisement IE info in scan results.
+Date: Thu, 29 Aug 2013 15:23:45 -0700
+Message-Id: <1377815027-3736-2-git-send-email-greearb@candelatech.com> (sfid-20130830_002422_798946_B1F858F1)
+In-Reply-To: <1377815027-3736-1-git-send-email-greearb@candelatech.com>
+References: <1377815027-3736-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Ben Greear <greearb@candelatech.com>
 
->>> Johannes Berg  08/28/13 2:44 PM >>>
-On Tue, 2013-08-27 at 23:27 -0600, Matt Chen wrote:
->> Hi,
->> 
->> 
->> 
->> I have a NGFF WLAN module, Intel Wilkins Peak 2, I am wondering how to =
-> >
->> enable it. I found there is nothing from the lspci result. Is there any =
->> 
->> way to enable it in Linux ?
+Sample output looks like:
 
->It should just be a regular PCIe device afaik, so maybe there's
->something wrong with your system?
+	802.11u Advertisement:
+		Query Response Info: 0x7f
+			Query Response Length Limit: 127
+			ANQP
 
->johannes
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 e8957d1... 53cef39... M	scan.c
+ scan.c |   33 +++++++++++++++++++++++++++++++++
+ 1 files changed, 33 insertions(+), 0 deletions(-)
 
-As document described,  it is SDIO. No idea how to enable it. 
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/scan.c b/scan.c
+index e8957d1..53cef39 100644
+--- a/scan.c
++++ b/scan.c
+@@ -679,6 +679,38 @@ static void print_interworking(const uint8_t type, uint8_t len, const uint8_t *d
+ 		       data[1], data[2], data[3], data[4], data[5], data[6]);
+ }
+ 
++static void print_11u_advert(const uint8_t type, uint8_t len, const uint8_t *data)
++{
++	/* See Section 7.3.2.93 in the 802.11u spec. */
++	/* TODO: This code below does not decode private protocol IDs */
++	int idx = 0;
++	printf("\n");
++	while (idx < (len - 1)) {
++		uint8_t qri = data[idx];
++		uint8_t proto_id = data[idx + 1];
++		printf("\t\tQuery Response Info: 0x%hx\n", (unsigned short)(qri));
++		printf("\t\t\tQuery Response Length Limit: %i\n",
++		       (qri & 0x7f));
++		if (qri & (1<<7))
++			printf("\t\t\tPAME-BI\n");
++		switch(proto_id) {
++		case 0:
++			printf("\t\t\tANQP\n"); break;
++		case 1:
++			printf("\t\t\tMIH Information Service\n"); break;
++		case 2:
++			printf("\t\t\tMIH Command and Event Services Capability Discovery\n"); break;
++		case 3:
++			printf("\t\t\tEmergency Alert System (EAS)\n"); break;
++		case 221:
++			printf("\t\t\tVendor Specific\n"); break;
++		default:
++			printf("\t\t\tReserved: %i\n", proto_id); break;
++		}
++		idx += 2;
++	}
++}
++
+ static const char *ht_secondary_offset[4] = {
+ 	"no secondary",
+ 	"above",
+@@ -957,6 +989,7 @@ static const struct ie_print ieprinters[] = {
+ 	[114] = { "MESH ID", print_ssid, 0, 32, BIT(PRINT_SCAN) | BIT(PRINT_LINK), },
+ 	[127] = { "Extended capabilities", print_capabilities, 0, 255, BIT(PRINT_SCAN), },
+ 	[107] = { "802.11u Interworking", print_interworking, 0, 255, BIT(PRINT_SCAN), },
++	[108] = { "802.11u Advertisement", print_11u_advert, 0, 255, BIT(PRINT_SCAN), },
+ };
+ 
+ static void print_wifi_wpa(const uint8_t type, uint8_t len, const uint8_t *data)
+-- 
+1.7.3.4
 
