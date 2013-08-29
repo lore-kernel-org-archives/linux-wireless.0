@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:57067 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754723Ab3HNHsS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Aug 2013 03:48:18 -0400
-Received: by mail-ee0-f46.google.com with SMTP id c13so4654907eek.5
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Aug 2013 00:48:17 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>, mcgrof@kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] backports: rename some mem functions to not break custom kernels
-Date: Wed, 14 Aug 2013 10:48:05 +0300
-Message-Id: <1376466485-25796-1-git-send-email-arik@wizery.com> (sfid-20130814_094826_146710_A7E5ABFB)
+Received: from mga03.intel.com ([143.182.124.21]:39433 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753779Ab3H2Ewk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Aug 2013 00:52:40 -0400
+Message-ID: <1377751965.4418.4.camel@porter.coelho.fi> (sfid-20130829_065244_410483_5741F9F8)
+Subject: Re: [BUG] iwlwifi Microcode SW error (firmware version: 18.168.6.1)
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: adam.gradzki@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 29 Aug 2013 07:52:45 +0300
+In-Reply-To: <2449090.W0ZgYRKzHN@nuclearreactor>
+References: <7144869.jC5clVvrrO@nuclearreactor>
+	 <1377750599.4418.3.camel@porter.coelho.fi>
+	 <2449090.W0ZgYRKzHN@nuclearreactor>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When custom patches are cherry-picked to a kernel, some symbols exported
-by backports may clash with the built-in ones. Rename the backports
-symbols using the standard backport_ prefix to prevent that.
+On Thu, 2013-08-29 at 00:38 -0400, adam.gradzki@gmail.com wrote:
+> Hi Luca,
+> 
+> I was browsing the web while in a large hall with many connected wireless 
+> clients. There were also several routers sharing a common SSID. I remember 
+> playing with various RTS and fragmentation thresholds so this may have been 
+> the trigger. The connection itself involved WPA2 Enterprise PEAP w/ MSCHAPv2 
+> authentication. I wish I could go into more detail but I was browsing the 
+> system log long after the fact so I'm having trouble remembering things off the 
+> top of my head.
+> 
+> Linux laptop 3.10.9-1-ARCH #1 SMP PREEMPT Wed Aug 21 13:49:35 CEST 2013 x86_64 
+> GNU/Linux
 
-The offending symbols were exported by the patch below:
+Thanks again! I'll follow this up internally.
 
-commit 2ce5c22448bb45998318267c00b5d6ef9cff3170
-Author: Hauke Mehrtens <hauke@hauke-m.de>
-Date:   Thu Jun 6 13:48:04 2013 +0200
-
-    backports: backport some memory functions
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- backport/backport-include/asm/mtrr.h | 1 +
- backport/backport-include/linux/io.h | 3 +++
- 2 files changed, 4 insertions(+)
-
-diff --git a/backport/backport-include/asm/mtrr.h b/backport/backport-include/asm/mtrr.h
-index cf0f6fd..861438a 100644
---- a/backport/backport-include/asm/mtrr.h
-+++ b/backport/backport-include/asm/mtrr.h
-@@ -7,6 +7,7 @@
-  * The following functions are for use by other drivers that cannot use
-  * arch_phys_wc_add and arch_phys_wc_del.
-  */
-+#define phys_wc_to_mtrr_index LINUX_BACKPORT(phys_wc_to_mtrr_index)
- #ifdef CONFIG_MTRR
- extern int phys_wc_to_mtrr_index(int handle);
- #else
-diff --git a/backport/backport-include/linux/io.h b/backport/backport-include/linux/io.h
-index 9a5b308..5447df8 100644
---- a/backport/backport-include/linux/io.h
-+++ b/backport/backport-include/linux/io.h
-@@ -13,6 +13,9 @@
-  * arch_phys_del_wc(0) or arch_phys_del_wc(any error code) is guaranteed
-  * to have no effect.
-  */
-+#define arch_phys_wc_add LINUX_BACKPORT(arch_phys_wc_add)
-+#define arch_phys_wc_del LINUX_BACKPORT(arch_phys_wc_del)
-+
- #ifndef arch_phys_wc_add
- #ifdef CONFIG_MTRR
- extern int __must_check arch_phys_wc_add(unsigned long base,
--- 
-1.8.1.2
+--
+Cheers,
+Luca.
 
