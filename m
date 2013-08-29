@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39186 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755012Ab3HWNwK (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:51479 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755966Ab3H2KfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Aug 2013 09:52:10 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: seth.forshee@canonical.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.11] mac80211: ignore (E)CSA in probe response frames
-Date: Fri, 23 Aug 2013 15:52:04 +0200
-Message-Id: <1377265924-19012-1-git-send-email-johannes@sipsolutions.net> (sfid-20130823_155213_919860_4494E140)
+	Thu, 29 Aug 2013 06:35:04 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: use the correct macro to check for active monitor support
+Date: Thu, 29 Aug 2013 13:26:57 +0300
+Message-Id: <1377772017-24764-1-git-send-email-luciano.coelho@intel.com> (sfid-20130829_123509_300315_529A334C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Use MONITOR_FLAG_ACTIVE, which is a flag mask, instead of
+NL80211_MNTR_FLAG_ACTIVE, which is a flag index, when checking if the
+hardware supports active monitoring.
 
-Seth reports that some APs, notably the Netgear WNDAP360, send
-invalid ECSA IEs in probe response frames with the operating
-class and channel number both set to zero, even when no channel
-switch is being done. As a result, any scan while connected to
-such an AP results in the connection being dropped.
-
-Fix this by ignoring any channel switch announcment in probe
-response frames entirely, since we're connected to the AP we
-will be receiving a beacon (and maybe even an action frame) if
-a channel switch is done, which is sufficient.
-
-Cc: stable@vger.kernel.org # 3.10
-Reported-by: Seth Forshee <seth.forshee@canonical.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/mlme.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ net/wireless/nl80211.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cc9e02d..7a98d52 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2851,14 +2851,6 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_rx_bss_put(local, bss);
- 		sdata->vif.bss_conf.beacon_rate = bss->beacon_rate;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index af8d84a..626dc3b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2421,7 +2421,7 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 		change = true;
  	}
--
--	if (!sdata->u.mgd.associated ||
--	    !ether_addr_equal(mgmt->bssid, sdata->u.mgd.associated->bssid))
--		return;
--
--	ieee80211_sta_process_chanswitch(sdata, rx_status->mactime,
--					 elems, true);
--
- }
  
+-	if (flags && (*flags & NL80211_MNTR_FLAG_ACTIVE) &&
++	if (flags && (*flags & MONITOR_FLAG_ACTIVE) &&
+ 	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
+ 		return -EOPNOTSUPP;
  
-@@ -3147,6 +3139,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+@@ -2483,7 +2483,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 				  info->attrs[NL80211_ATTR_MNTR_FLAGS] : NULL,
+ 				  &flags);
  
- 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
+-	if (!err && (flags & NL80211_MNTR_FLAG_ACTIVE) &&
++	if (!err && (flags & MONITOR_FLAG_ACTIVE) &&
+ 	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
+ 		return -EOPNOTSUPP;
  
-+	ieee80211_sta_process_chanswitch(sdata, rx_status->mactime,
-+					 &elems, true);
-+
- 	if (ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
- 				     elems.wmm_param_len))
- 		changed |= BSS_CHANGED_QOS;
 -- 
-1.8.4.rc3
+1.7.10.4
 
