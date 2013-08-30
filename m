@@ -1,89 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59191 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896Ab3H1NQa convert rfc822-to-8bit (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:48464 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753Ab3H3VMu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Aug 2013 09:16:30 -0400
-Received: by mail-bk0-f46.google.com with SMTP id 6so2127551bkj.5
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2013 06:16:29 -0700 (PDT)
+	Fri, 30 Aug 2013 17:12:50 -0400
+Message-ID: <52210AB9.2090104@infradead.org> (sfid-20130830_231310_450833_088B4477)
+Date: Fri, 30 Aug 2013 14:12:25 -0700
+From: Randy Dunlap <rdunlap@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <877gf6lay7.fsf@kamboji.qca.qualcomm.com>
-References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
-	<1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-	<1377507205-5386-5-git-send-email-michal.kazior@tieto.com>
-	<87ioyrmx3u.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQ=ycKd0Z60wHTWHoq7hBz1W2iW+ahjVmc_nFLQmU7-1Bg@mail.gmail.com>
-	<877gf6lay7.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 28 Aug 2013 15:16:29 +0200
-Message-ID: <CA+BoTQnkMqL+wOm2R_NjPSFFyb8Y0BdA0hUF6KdGgBiBt9hpfQ@mail.gmail.com> (sfid-20130828_151634_173095_7C519CF6)
-Subject: Re: [PATCH v2 4/4] ath10k: fix issues on non-preemptible systems
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+CC: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com, linux-kbuild@vger.kernel.org
+Subject: Re: linux-next: Tree for Aug 30 (brcmfmac)
+References: <20130829200013.d9dde1eb64686a32c661b5d3@canb.auug.org.au>
+In-Reply-To: <20130829200013.d9dde1eb64686a32c661b5d3@canb.auug.org.au>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 August 2013 06:02, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->> There's another solution that I had in mind. Instead of:
->>
->>   for (;;) { dequeue(z); process; }
->>
->> I did:
->>
->>   q = dequeue_all(z); for (;;) { dequeue(q); process; }
->>
->> I.e. move all queued stuff at the worker entry and move it out of the
->> global queue, that can, and will be, having more stuff queued while
->> the worker does its job).
->>
->> This way workers would exit/restart more often, but from what I tested
->> it didn't really solve the problem. Given enough traffic HTC worker
->> responsible for HTT TX gets overwhelmed eventually. You could try
->> limit how many frames a worker can process during one execution, but
->> how do you guess that? This starvation depends on how fast your CPU
->> is.
->
-> I think we should come up with better ways to handle this. To have a
-> quota (like you mention above) would be one option. Other option would
-> be to have multiple queues and some sort of priorisation or fair
-> queueing.
+On 08/29/13 03:00, Stephen Rothwell wrote:
+> Hi all,
+> 
 
-Having quota will not help here in any way. You can re-queue a worker
-after each single frame and avoid WMI starvation, however you can
-still starve the rest of the system (and that can lead to system reset
-via watchdog). I'm also unsure about the overhead queueing a work may
-have (on a uP system without preemption in might be negligible, but
-what about other systems?), so you'd have to guess the quota size or
-else you'd get increased latency/overhead and perhaps slower
-performance.
+on x86_64:
 
-I believe cond_resched is a solution, not a workaround. Slow systems
-without preemption need this. I wonder how other drivers got around
-it? Or perhaps none of the other drivers had to deal with really
-insufficient number of CPU cycles versus lots of work.
-
-We could perhaps move workers out of HTC and have a single TX worker
-in core.c for both WMI and HTT that would prioritize WMI, before
-trying HTT. This could help guarantee that all beacons (which go
-through WMI) are sent in a timely fashion in response to SWBA event.
-But that won't fix the overall system starvation.
+when
+CONFIG_MMC=m
+CONFIG_BRCMUTIL=y
+CONFIG_BRCMFMAC=y
+CONFIG_BRCMFMAC_SDIO=y
 
 
-> And most importantly of all, we should minimise the lenght of queue we
-> have inside ath10k. I'm worried that we queue way too many packets
-> within ath10k right now.
+This bool kconfig symbol:
 
-Felix pointed that out quite some time ago. I would agree but I'm
-affraid you'll hurt performance if you decrease the queue depth. There
-seems to be some kind of latency thing going on (either on host, or on
-firmware/hardware, or both combined). I tried decreasing HTT TX ring
-buffer from 2048 to 256. In result on AP135 UDP TX got trimmed at
-~330mbps max. Stuffing more throughput even left some idle CPU cycles.
-If you consider 3x3 devices that are supposed to get you 1.3gbps, then
-you apparently need that 2048 depth.
+config BRCMFMAC_SDIO
+	bool "SDIO bus interface support for FullMAC driver"
+	depends on MMC
+
+allows BRCMFMAC_SDIO to be y even when MMC=m.
+
+Is there a reasonable solution to this?
 
 
-Michał.
+This causes many build errors:
+
+drivers/built-in.o: In function `brcmf_sdio_assert_info':
+dhd_sdio.c:(.text+0x39609b): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x3960d9): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_readframes':
+dhd_sdio.c:(.text+0x396a62): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x396a9b): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x396ae6): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x396b1b): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x396bd9): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x396c03): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x396f76): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x396fcc): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x397115): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x3972d0): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x397632): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x397699): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x39770b): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x397731): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x397796): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x3977b6): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x3977ff): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x3978b6): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x397940): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x397963): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x3979c1): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x397a90): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x397ab7): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_txpkt.constprop.16':
+dhd_sdio.c:(.text+0x3981d7): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x398213): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x3985d6): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_release':
+dhd_sdio.c:(.text+0x398a5e): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x398a85): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_probe':
+(.text+0x398d04): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_probe':
+(.text+0x398d3c): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_probe':
+(.text+0x398e91): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_probe':
+(.text+0x399087): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_probe':
+(.text+0x3990d0): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_readshared':
+dhd_sdio.c:(.text+0x39953c): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39956e): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_bus_txctl':
+dhd_sdio.c:(.text+0x399c14): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x399c2d): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x399cac): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x399cf0): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x399ec8): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x399efe): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x399ff4): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_bus_stop':
+dhd_sdio.c:(.text+0x39a0cb): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39a179): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_dataworker':
+dhd_sdio.c:(.text+0x39a281): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39a2f1): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x39a852): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39a86d): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x39aa08): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39aa4a): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x39aaa1): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39aac1): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_bus_init':
+dhd_sdio.c:(.text+0x39acdb): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39ad05): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x39ad29): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39b086): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x39b2c7): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdbrcm_watchdog_thread':
+dhd_sdio.c:(.text+0x39b6dc): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39b6f7): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x39b735): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39b75b): undefined reference to `sdio_release_host'
+dhd_sdio.c:(.text+0x39b790): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x39b7ae): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_buffrw':
+bcmsdh.c:(.text+0x39bf67): undefined reference to `mmc_set_data_timeout'
+bcmsdh.c:(.text+0x39bf76): undefined reference to `mmc_wait_for_req'
+bcmsdh.c:(.text+0x39c180): undefined reference to `sdio_readsb'
+bcmsdh.c:(.text+0x39c19d): undefined reference to `sdio_memcpy_fromio'
+bcmsdh.c:(.text+0x39c211): undefined reference to `sdio_memcpy_toio'
+drivers/built-in.o: In function `brcmf_sdio_intr_unregister':
+(.text+0x39c6fd): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdio_intr_unregister':
+(.text+0x39c706): undefined reference to `sdio_release_irq'
+drivers/built-in.o: In function `brcmf_sdio_intr_unregister':
+(.text+0x39c70f): undefined reference to `sdio_release_irq'
+drivers/built-in.o: In function `brcmf_sdio_intr_unregister':
+(.text+0x39c718): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_intr_unregister':
+(.text+0x39c72d): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdio_intr_unregister':
+(.text+0x39c758): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_intr_register':
+(.text+0x39c809): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdio_intr_register':
+(.text+0x39c819): undefined reference to `sdio_claim_irq'
+drivers/built-in.o: In function `brcmf_sdio_intr_register':
+(.text+0x39c829): undefined reference to `sdio_claim_irq'
+drivers/built-in.o: In function `brcmf_sdio_intr_register':
+(.text+0x39c832): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_intr_register':
+(.text+0x39c906): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdio_intr_register':
+(.text+0x39c962): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_ramrw':
+(.text+0x39ce75): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdio_ramrw':
+(.text+0x39cfc1): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_pd_probe':
+bcmsdh_sdmmc.c:(.text+0x39d177): undefined reference to `sdio_register_driver'
+drivers/built-in.o: In function `brcmf_sdio_suspend':
+bcmsdh_sdmmc.c:(.text+0x39d1f5): undefined reference to `sdio_get_host_pm_caps'
+bcmsdh_sdmmc.c:(.text+0x39d207): undefined reference to `sdio_set_host_pm_flags'
+drivers/built-in.o: In function `brcmf_sdio_pd_remove':
+bcmsdh_sdmmc.c:(.text+0x39d268): undefined reference to `sdio_unregister_driver'
+drivers/built-in.o: In function `brcmf_sdioh_request_byte':
+(.text+0x39d78e): undefined reference to `sdio_f0_readb'
+drivers/built-in.o: In function `brcmf_sdioh_request_byte':
+(.text+0x39d7c4): undefined reference to `sdio_writeb'
+drivers/built-in.o: In function `brcmf_sdioh_request_byte':
+(.text+0x39d7fd): undefined reference to `sdio_f0_writeb'
+drivers/built-in.o: In function `brcmf_sdioh_request_byte':
+(.text+0x39d81c): undefined reference to `sdio_readb'
+drivers/built-in.o: In function `brcmf_sdioh_request_byte':
+(.text+0x39d844): undefined reference to `sdio_enable_func'
+drivers/built-in.o: In function `brcmf_sdioh_request_byte':
+(.text+0x39d889): undefined reference to `sdio_writeb'
+drivers/built-in.o: In function `brcmf_sdioh_request_byte':
+(.text+0x39d8a1): undefined reference to `sdio_disable_func'
+drivers/built-in.o: In function `brcmf_sdioh_request_word':
+(.text+0x39d96c): undefined reference to `sdio_readw'
+drivers/built-in.o: In function `brcmf_sdioh_request_word':
+(.text+0x39d9b7): undefined reference to `sdio_writew'
+drivers/built-in.o: In function `brcmf_sdioh_request_word':
+(.text+0x39d9cc): undefined reference to `sdio_readl'
+drivers/built-in.o: In function `brcmf_sdioh_request_word':
+(.text+0x39d9f2): undefined reference to `sdio_writel'
+drivers/built-in.o: In function `brcmf_sdioh_attach':
+(.text+0x39da5a): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdioh_attach':
+(.text+0x39da69): undefined reference to `sdio_set_block_size'
+drivers/built-in.o: In function `brcmf_sdioh_attach':
+(.text+0x39da83): undefined reference to `sdio_set_block_size'
+drivers/built-in.o: In function `brcmf_sdioh_attach':
+(.text+0x39db3e): undefined reference to `sdio_enable_func'
+drivers/built-in.o: In function `brcmf_sdioh_attach':
+(.text+0x39db48): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdioh_detach':
+(.text+0x39dbab): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdioh_detach':
+(.text+0x39dbb4): undefined reference to `sdio_disable_func'
+drivers/built-in.o: In function `brcmf_sdioh_detach':
+(.text+0x39dbbd): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdioh_detach':
+(.text+0x39dbc6): undefined reference to `sdio_claim_host'
+drivers/built-in.o: In function `brcmf_sdioh_detach':
+(.text+0x39dbcf): undefined reference to `sdio_disable_func'
+drivers/built-in.o: In function `brcmf_sdioh_detach':
+(.text+0x39dbd8): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_exit':
+(.text+0x39dc38): undefined reference to `sdio_unregister_driver'
+drivers/built-in.o: In function `brcmf_sdio_init':
+(.text+0x39dca2): undefined reference to `sdio_register_driver'
+
+
+-- 
+~Randy
