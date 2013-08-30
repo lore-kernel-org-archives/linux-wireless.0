@@ -1,74 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:34750 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751961Ab3H0Ksm (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:60848 "EHLO
+	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751791Ab3H3UqL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 06:48:42 -0400
-Received: by mail-bk0-f50.google.com with SMTP id mz11so1594258bkb.9
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2013 03:48:41 -0700 (PDT)
-Message-ID: <1377600514.3320.61.camel@canaries32-MCP7A> (sfid-20130827_124845_469356_51066486)
-Subject: [PATCH 2/5] staging: vt6656: s_vFillCTSHead join structures of
- vnt_cts* to union vnt_tx_data_head
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Aug 2013 11:48:34 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 30 Aug 2013 16:46:11 -0400
+Message-ID: <522104B1.2070004@openwrt.org> (sfid-20130830_224614_779631_CFC3E664)
+Date: Fri, 30 Aug 2013 22:46:41 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/7] ath10k: remove void pointer from struct ath10k_pci_compl
+References: <20130830122905.31164.50662.stgit@localhost6.localdomain6> <20130830123021.31164.8374.stgit@localhost6.localdomain6>
+In-Reply-To: <20130830123021.31164.8374.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only one of vnt_rts*/vnt_cts* structures are accessed at any one time.
+2013.08.30. 14:30 keltezéssel, Kalle Valo írta:
+> Void pointers are bad, mmkay.
+> 
+> No functional changes.
+> 
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/pci.c |   12 ++++++------
+>  drivers/net/wireless/ath/ath10k/pci.h |    2 +-
+>  2 files changed, 7 insertions(+), 7 deletions(-)
+> 
 
-structures vnt_cts and vnt_cts_fb are members of union vnt_tx_data_head.
+<snip>
 
-Create pointer union head and point structures to the correct member.
+> @@ -1026,7 +1026,7 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
+>  				break;
+>  			}
+>  
+> -			skb = (struct sk_buff *)compl->transfer_context;
+> +			skb = (struct sk_buff *)compl->skb;
 
-Point the union to pvCTS.
+The cast can be removed from here as well.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 10 +++++-----From 3deb77d380b80ff3cf719efc96f33ca27c8ad29c Mon Sep 17 00:00:00 2001
-From: Malcolm Priestley <tvboxspy@gmail.com>
-Date: Sun, 25 Aug 2013 10:08:13 +0100
-Subject: [PATCH 04/13] staging: vt6656: s_vFillCTSHead add union
- vnt_tx_data_head
-
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 98224bc..fd3c598 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -760,15 +760,15 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 	u8 byPktType, void *pvCTS, u32 cbFrameLength, int bNeedAck,
- 	u16 wCurrentRate, u8 byFBOption)
- {
-+	union vnt_tx_data_head *head = pvCTS;
- 	u32 uCTSFrameLen = 14;
- 
--    if (pvCTS == NULL) {
--        return;
--    }
-+	if (!head)
-+		return;
- 
- 	if (byFBOption != AUTO_FB_NONE) {
- 		/* Auto Fall back */
--		struct vnt_cts_fb *pBuf = (struct vnt_cts_fb *)pvCTS;
-+		struct vnt_cts_fb *pBuf = &head->cts_g_fb;
- 		/* Get SignalField,ServiceField,Length */
- 		BBvCalculateParameter(pDevice, uCTSFrameLen,
- 			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
-@@ -788,7 +788,7 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 		pBuf->data.frame_control = TYPE_CTL_CTS;
- 		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
- 	} else {
--		struct vnt_cts *pBuf = (struct vnt_cts *)pvCTS;
-+		struct vnt_cts *pBuf = &head->cts_g;
- 		/* Get SignalField,ServiceField,Length */
- 		BBvCalculateParameter(pDevice, uCTSFrameLen,
- 			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
--- 
-1.8.1.2
+>  			nbytes = compl->nbytes;
+>  
+>  			ath10k_dbg(ATH10K_DBG_PCI,
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+> index c65fe1b..2e1f422 100644
+> --- a/drivers/net/wireless/ath/ath10k/pci.h
+> +++ b/drivers/net/wireless/ath/ath10k/pci.h
+> @@ -54,7 +54,7 @@ struct ath10k_pci_compl {
+>  	enum ath10k_pci_compl_state state;
+>  	struct ath10k_ce_pipe *ce_state;
+>  	struct ath10k_pci_pipe *pipe_info;
+> -	void *transfer_context;
+> +	struct sk_buff *skb;
+>  	unsigned int nbytes;
+>  	unsigned int transfer_id;
+>  	unsigned int flags;
+> 
+> 
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
+> 
 
