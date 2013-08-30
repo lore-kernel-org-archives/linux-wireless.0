@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58526 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab3HUJbe (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:56087 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755627Ab3H3MaE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Aug 2013 05:31:34 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: add missing channel context release
-Date: Wed, 21 Aug 2013 11:31:29 +0200
-Message-Id: <1377077489-20435-1-git-send-email-johannes@sipsolutions.net> (sfid-20130821_113137_460282_CF607D33)
+	Fri, 30 Aug 2013 08:30:04 -0400
+Subject: [PATCH 0/7] ath10k: pci cleanup
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 30 Aug 2013 15:29:59 +0300
+Message-ID: <20130830122905.31164.50662.stgit@localhost6.localdomain6> (sfid-20130830_143008_360080_319B8283)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Small PCI related code cleanup. Depends on Michal's CE
+clean patchset.
 
-IBSS needs to release the channel context when leaving
-but I evidently missed that. Fix it.
-
-Change-Id: Iaa87fdd143d5a1a7eac5b0bb63d11dca372a6bb3
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ibss.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 74de0f1..5fb1b14 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1304,6 +1304,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
- 						BSS_CHANGED_IBSS);
-+	ieee80211_vif_release_channel(sdata);
- 	synchronize_rcu();
- 	kfree(presp);
- 
--- 
-1.8.4.rc2
+Kalle Valo (7):
+      ath10k: pci: make host_ce_config_wlan[] more readable
+      ath10k: make target_ce_config_wlan more readable
+      ath10k: remove void pointer from struct ath10k_pci_compl
+      ath10k: convert ath10k_pci_reg_read/write32() to take struct ath10k
+      ath10k: clean up ath10k_ce_completed_send_next_nolock()
+      ath10k: convert ath10k_pci_wake() to return
+      ath10k: simplify ath10k_ce_init() wake up handling
+
+
+ drivers/net/wireless/ath/ath10k/ce.c  |   98 ++++++++++------
+ drivers/net/wireless/ath/ath10k/pci.c |  208 ++++++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/pci.h |   22 ++-
+ 3 files changed, 227 insertions(+), 101 deletions(-)
 
