@@ -1,50 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:51722 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976Ab3H0Fml convert rfc822-to-8bit (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:35219 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755750Ab3H3Mac (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Aug 2013 01:42:41 -0400
-Received: by mail-bk0-f51.google.com with SMTP id mx10so1408256bkb.24
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2013 22:42:39 -0700 (PDT)
+	Fri, 30 Aug 2013 08:30:32 -0400
+Subject: [PATCH 4/7] ath10k: convert ath10k_pci_reg_read/write32() to take
+ struct ath10k
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 30 Aug 2013 15:30:28 +0300
+Message-ID: <20130830123028.31164.53880.stgit@localhost6.localdomain6> (sfid-20130830_143034_633560_42DEF0B8)
+In-Reply-To: <20130830122905.31164.50662.stgit@localhost6.localdomain6>
+References: <20130830122905.31164.50662.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6X=P2hTnOC8xqFwb=-32-hBgx=ndq3KHoUG83KptKv0vA@mail.gmail.com>
-References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
-	<1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-	<CAB=NE6X=P2hTnOC8xqFwb=-32-hBgx=ndq3KHoUG83KptKv0vA@mail.gmail.com>
-Date: Tue, 27 Aug 2013 07:42:39 +0200
-Message-ID: <CA+BoTQ=zVAab8KV2TwYJ=+wG0N7M4-oo-TgaE2qpxJO33d3oZQ@mail.gmail.com> (sfid-20130827_074244_470372_67AF0A21)
-Subject: Re: [PATCH v2 0/4] ath10k: fixes
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 August 2013 22:20, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
-> On Mon, Aug 26, 2013 at 1:53 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>   ath10k: fix issues on non-preemptible systems
->
-> This patch looks like a stable candidate fix. Please annotate as such
-> if you confirm. Also, I reviewed other ath10k "fixes" and I see no
-> practice of propagating any patches to stable yet. Can you please
-> start doing that? If there were patches which are already merged
-> upstream that should be propagated to stable then they can be
-> submitted as stable candidate patches.
+This is consistent with all other functions.
 
-Good point.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |   19 +++++++------------
+ drivers/net/wireless/ath/ath10k/pci.h |   12 ++++++++----
+ 2 files changed, 15 insertions(+), 16 deletions(-)
 
-If this patch is to be propagated to stable the patch(set) needs some
-adjustments to avoid conflicts. Right now the patch touches a place
-that was introduced with "ath10k: move htt rx processing to worker" so
-the offending patch hunk should be moved to that patch.
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 76426bf..61f4086 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2321,18 +2321,13 @@ static int ath10k_pci_reset_target(struct ath10k *ar)
+ 
+ static void ath10k_pci_device_reset(struct ath10k *ar)
+ {
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	void __iomem *mem = ar_pci->mem;
+ 	int i;
+ 	u32 val;
+ 
+ 	if (!SOC_GLOBAL_RESET_ADDRESS)
+ 		return;
+ 
+-	if (!mem)
+-		return;
+-
+-	ath10k_pci_reg_write32(mem, PCIE_SOC_WAKE_ADDRESS,
++	ath10k_pci_reg_write32(ar, PCIE_SOC_WAKE_ADDRESS,
+ 			       PCIE_SOC_WAKE_V_MASK);
+ 	for (i = 0; i < ATH_PCI_RESET_WAIT_MAX; i++) {
+ 		if (ath10k_pci_target_is_awake(ar))
+@@ -2341,12 +2336,12 @@ static void ath10k_pci_device_reset(struct ath10k *ar)
+ 	}
+ 
+ 	/* Put Target, including PCIe, into RESET. */
+-	val = ath10k_pci_reg_read32(mem, SOC_GLOBAL_RESET_ADDRESS);
++	val = ath10k_pci_reg_read32(ar, SOC_GLOBAL_RESET_ADDRESS);
+ 	val |= 1;
+-	ath10k_pci_reg_write32(mem, SOC_GLOBAL_RESET_ADDRESS, val);
++	ath10k_pci_reg_write32(ar, SOC_GLOBAL_RESET_ADDRESS, val);
+ 
+ 	for (i = 0; i < ATH_PCI_RESET_WAIT_MAX; i++) {
+-		if (ath10k_pci_reg_read32(mem, RTC_STATE_ADDRESS) &
++		if (ath10k_pci_reg_read32(ar, RTC_STATE_ADDRESS) &
+ 					  RTC_STATE_COLD_RESET_MASK)
+ 			break;
+ 		msleep(1);
+@@ -2354,16 +2349,16 @@ static void ath10k_pci_device_reset(struct ath10k *ar)
+ 
+ 	/* Pull Target, including PCIe, out of RESET. */
+ 	val &= ~1;
+-	ath10k_pci_reg_write32(mem, SOC_GLOBAL_RESET_ADDRESS, val);
++	ath10k_pci_reg_write32(ar, SOC_GLOBAL_RESET_ADDRESS, val);
+ 
+ 	for (i = 0; i < ATH_PCI_RESET_WAIT_MAX; i++) {
+-		if (!(ath10k_pci_reg_read32(mem, RTC_STATE_ADDRESS) &
++		if (!(ath10k_pci_reg_read32(ar, RTC_STATE_ADDRESS) &
+ 					    RTC_STATE_COLD_RESET_MASK))
+ 			break;
+ 		msleep(1);
+ 	}
+ 
+-	ath10k_pci_reg_write32(mem, PCIE_SOC_WAKE_ADDRESS, PCIE_SOC_WAKE_RESET);
++	ath10k_pci_reg_write32(ar, PCIE_SOC_WAKE_ADDRESS, PCIE_SOC_WAKE_RESET);
+ }
+ 
+ static void ath10k_pci_dump_features(struct ath10k_pci *ar_pci)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 2e1f422..5c0f9aa 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -244,14 +244,18 @@ static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
+ 	return ar->hif.priv;
+ }
+ 
+-static inline u32 ath10k_pci_reg_read32(void __iomem *mem, u32 addr)
++static inline u32 ath10k_pci_reg_read32(struct ath10k *ar, u32 addr)
+ {
+-	return ioread32(mem + PCIE_LOCAL_BASE_ADDRESS + addr);
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
++	return ioread32(ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS + addr);
+ }
+ 
+-static inline void ath10k_pci_reg_write32(void __iomem *mem, u32 addr, u32 val)
++static inline void ath10k_pci_reg_write32(struct ath10k *ar, u32 addr, u32 val)
+ {
+-	iowrite32(val, mem + PCIE_LOCAL_BASE_ADDRESS + addr);
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
++	iowrite32(val, ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS + addr);
+ }
+ 
+ #define ATH_PCI_RESET_WAIT_MAX 10 /* ms */
 
-Actually the "ath10k: make the workqueue multithreaded" could also be
-a candidate for stable as it fixes AP beaconing during heavy TX
-traffic. I should've mentioned that in the commit log.
-
-I'll resend an updated patchset later today.
-
-
-Michał.
