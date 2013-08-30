@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:54213 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529Ab3HTKBD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Aug 2013 06:01:03 -0400
+Received: from canardo.mork.no ([148.122.252.1]:55508 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754339Ab3H3QKo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Aug 2013 12:10:44 -0400
+From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: netdev@vger.kernel.org
+Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 net-next 8/9] net: libertas: inherit addr_assign_type along with dev_addr
+Date: Fri, 30 Aug 2013 18:08:51 +0200
+Message-Id: <1377878932-26881-9-git-send-email-bjorn@mork.no> (sfid-20130830_181049_940550_68DEAABA)
+In-Reply-To: <1377878932-26881-1-git-send-email-bjorn@mork.no>
+References: <1377878932-26881-1-git-send-email-bjorn@mork.no>
 MIME-Version: 1.0
-In-Reply-To: <1375711240.8120.11.camel@jlt4.sipsolutions.net>
-References: <1374850210.8248.59.camel@jlt4.sipsolutions.net>
- <1375433758.24371.20.camel@deadeye.wl.decadent.org.uk> <1375449082.3927.5.camel@edumazet-glaptop>
- <1375711240.8120.11.camel@jlt4.sipsolutions.net>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Date: Tue, 20 Aug 2013 11:00:18 +0100
-Message-ID: <CAGVrzcaGV6AqLTAxpM6zMv7_C-LNxp-WNg+J47d7a9S+Ca1bDw@mail.gmail.com> (sfid-20130820_120115_128923_0D0A9DD8)
-Subject: Re: changing dev->needed_headroom/needed_tailroom?
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/8/5 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2013-08-02 at 06:11 -0700, Eric Dumazet wrote:
->> On Fri, 2013-08-02 at 10:55 +0200, Ben Hutchings wrote:
->>
->> > I don't think this is safe when the interface is running (even if
->> > carrier is off).  Some functions may read dev->needed_headroom twice and
->> > rely on getting the same value each time.
->>
->> It should be no problem. Remaining unsafe places should be fixed.
->
-> Most interesting would be stack devs, which I hadn't even considered. In
-> any case, since I can't completely _rely_ on it, it's an optimisation,
-> the only bugs would be around the double-access and then running
-> over/under the SKB or so?
+A device inheriting a random or set address should reflect this in
+its addr_assign_type.
 
-As far as I could test this with an Ethernet driver which adjusted its
-needed_headroom by 64 bytes whenever some hardware feature was
-enabled/disabled, this expectedly broke bridge and vlans at least.
-Bridge code does not use the slave ports needed_headroom values, and
-VLAN devices get the parent device needed_headroom only when creating
-the vlan device. The good thing is since the needed_headroom space you
-need is most likely fixed for a given configuration type, you should
-see a pretty "stable" corruption of your SKB head.
+Acked-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Bjørn Mork <bjorn@mork.no>
+---
+ drivers/net/wireless/libertas/mesh.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
->> We already had this discussion in the past, and some patches were
->> issued. Check commit ae641949df01b85117845bec45328eab6d6fada1
->> ("net: Remove all uses of LL_ALLOCATED_SPACE")
->
-> That would have addressed some of that, I guess.
->
->
-> I'm asking because some of the crypto stuff we do has fairly large
-> head/tailroom requirements and it seems I may need to add more. But if
-> you don't have crypto, it would be much smaller, so I figured we could
-> switch it.
-
-We could probably do it via a pair of new NETDEV_* notify event to
-signal new needed_headroom/tailroom values to stacked devices. Would
-that be acceptable?
+diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
+index efae07e..6fef746 100644
+--- a/drivers/net/wireless/libertas/mesh.c
++++ b/drivers/net/wireless/libertas/mesh.c
+@@ -1017,7 +1017,7 @@ static int lbs_add_mesh(struct lbs_private *priv)
+ 
+ 	mesh_dev->netdev_ops = &mesh_netdev_ops;
+ 	mesh_dev->ethtool_ops = &lbs_ethtool_ops;
+-	memcpy(mesh_dev->dev_addr, priv->dev->dev_addr, ETH_ALEN);
++	eth_hw_addr_inherit(mesh_dev, priv->dev);
+ 
+ 	SET_NETDEV_DEV(priv->mesh_dev, priv->dev->dev.parent);
+ 
 -- 
-Florian
+1.7.10.4
+
