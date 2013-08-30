@@ -1,80 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f44.google.com ([209.85.212.44]:48740 "EHLO
-	mail-vb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570Ab3HEQKN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Aug 2013 12:10:13 -0400
-Received: by mail-vb0-f44.google.com with SMTP id e13so3033797vbg.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Aug 2013 09:10:12 -0700 (PDT)
+Received: from canardo.mork.no ([148.122.252.1]:55526 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756915Ab3H3QLE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Aug 2013 12:11:04 -0400
+From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: netdev@vger.kernel.org
+Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
+	Patrick McHardy <kaber@trash.net>,
+	Jiri Pirko <jiri@resnulli.us>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	libertas-dev@lists.infradead.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	devel@driverdev.osuosl.org,
+	Forest Bond <forest@alittletooquiet.net>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH v2 net-next 0/9] set addr_assign_type when inheriting a dev_addr
+Date: Fri, 30 Aug 2013 18:08:43 +0200
+Message-Id: <1377878932-26881-1-git-send-email-bjorn@mork.no> (sfid-20130830_181113_975000_BDCA2EDA)
 MIME-Version: 1.0
-In-Reply-To: <CAPXgP13_WRX-asL=MwCM9ERDDMq_7PLkXLr9hwTG-xCg7cm6_A@mail.gmail.com>
-References: <CALCETrU+C+sO8tJ0X5G4RDVLV=kHQQHurOnEQCoqbAouh60dng@mail.gmail.com>
- <20130802162850.GL32474@in.waw.pl> <CAPXgP13_WRX-asL=MwCM9ERDDMq_7PLkXLr9hwTG-xCg7cm6_A@mail.gmail.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Mon, 5 Aug 2013 09:09:52 -0700
-Message-ID: <CALCETrXSnFPFVPkXHwz+FFA3=+pmz9V=cMHWwtN+jG1QJALWSQ@mail.gmail.com> (sfid-20130805_181048_679566_49AE52EC)
-Subject: Re: [systemd-devel] Slow firmware timeouts again (Re: [3.11
- regression?] iwlwifi firmware takes two minutes to load)
-To: Kay Sievers <kay@vrfy.org>
-Cc: =?ISO-8859-2?Q?Zbigniew_J=EAdrzejewski=2DSzmek?=
-	<zbyszek@in.waw.pl>, systemd-devel@lists.freedesktop.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 5, 2013 at 4:18 AM, Kay Sievers <kay@vrfy.org> wrote:
-> On Fri, Aug 2, 2013 at 6:28 PM, Zbigniew JÍdrzejewski-Szmek
-> <zbyszek@in.waw.pl> wrote:
->> On Fri, Aug 02, 2013 at 09:04:44AM -0700, Andy Lutomirski wrote:
->>> CONFIG_FW_LOADER_USER_HELPER=y
->> Do you need this? Unsetting this should help.
->>
->> """This option enables / disables the invocation of user-helper
->> (e.g. udev) for loading firmware files as a fallback after the
->> direct file loading in kernel fails. The user-mode helper is
->> no longer required unless you have a special firmware file that
->> resides in a non-standard path."""
->
-> On recent systems, if the kernel configures
-> CONFIG_FW_LOADER_USER_HELPER=y and a firmware is not found by the
-> kernel, the kernel will issue a request which is ignored by userspace
-> and will block in that for 60 seconds.
->
-> Udev is no longer in the game of firmware loading, not even as a
-> fallback, it will just completely ignore all kernel firmware class
-> events.
->
-> The source code in udev to handle firmware requests is disabled by
-> default, currently still kept around for old kernels without the
-> in-kernel firmware loader, but it will be deleted in the near future.
+Copying the dev_addr from a parent device is an operation
+common to a number of drivers. The addr_assign_type should
+be updated accordingly, either by reusing the value from
+the source device or explicitly indicating that the address
+is stolen by setting addr_assign_type to NET_ADDR_STOLEN.
 
-Any chance you'd consider a less regression-inducing path to getting
-rid of this feature?  For example, have udev warn and immediate fail
-firmware loading requests for a few releases, then just warn, then
-drop support?
+This patch set adds a helper copying both the dev_addr and
+the addr_assign_type, and use this helper in drivers which
+don't currently set the addr_assign_type. Using NET_ADDR_STOLEN
+might be more appropriate in some of these cases.  Please
+let me know, and I'll update the patch accordingly.
 
-Meanwhile, CONFIG_FW_LOADER_USER_HELPER is still default y (!), so
-udev has introduced massive bootup delays into the default
-configuration with no warning.  It might be nice to change it to
-default n, get rid of everything that selects it, and possible even
-rename it to something with LEGACY or OBSOLETE in the name so that
-make oldconfig will prompt.
-
---Andy
-
->
-> Any issues with firmware timeouts should be addressed in the kernel by
-> disabling CONFIG_FW_LOADER_USER_HELPER or by removing the fallback
-> code from the in-kernel loader.
->
-> Kay
+Changes in v2:
+ - assuming addr_len == ETH_ALEN to allow optimized memcpy
+ - dropped the vt6656 patch due to addr_len being unset in that driver
 
 
+Bj√∏rn Mork (9):
+  net: etherdevice: add address inherit helper
+  net: vlan: inherit addr_assign_type along with dev_addr
+  net: dsa: inherit addr_assign_type along with dev_addr
+  net: macvlan: inherit addr_assign_type along with dev_addr
+  net: team: inherit addr_assign_type along with dev_addr
+  net: airo: inherit addr_assign_type along with dev_addr
+  net: hostap: inherit addr_assign_type along with dev_addr
+  net: libertas: inherit addr_assign_type along with dev_addr
+  staging: vt6655: inherit addr_assign_type along with dev_addr
+
+ drivers/net/macvlan.c                     |    2 +-
+ drivers/net/team/team.c                   |    2 +-
+ drivers/net/wireless/airo.c               |    2 +-
+ drivers/net/wireless/hostap/hostap_hw.c   |    2 +-
+ drivers/net/wireless/hostap/hostap_main.c |    2 +-
+ drivers/net/wireless/libertas/mesh.c      |    2 +-
+ drivers/staging/vt6655/hostap.c           |    2 +-
+ drivers/staging/vt6655/ioctl.c            |    2 +-
+ drivers/staging/vt6655/wpactl.c           |    2 +-
+ include/linux/etherdevice.h               |   15 +++++++++++++++
+ net/8021q/vlan_dev.c                      |    2 +-
+ net/dsa/slave.c                           |    2 +-
+ 12 files changed, 26 insertions(+), 11 deletions(-)
 
 -- 
-Andy Lutomirski
-AMA Capital Management, LLC
+1.7.10.4
+
