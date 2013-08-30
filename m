@@ -1,87 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:64039 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751767Ab3HZIxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 04:53:39 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/4] ath10k: synchronize tx/rx reporting to mac80211
-Date: Mon, 26 Aug 2013 10:53:22 +0200
-Message-ID: <1377507205-5386-2-git-send-email-michal.kazior@tieto.com> (sfid-20130826_105344_149927_A9046CF3)
-In-Reply-To: <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-References: <1377066854-13981-1-git-send-email-michal.kazior@tieto.com>
- <1377507205-5386-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:38806 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752562Ab3H3It0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Aug 2013 04:49:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 1/3] mac80211: fix some snprintf misuses
+Date: Fri, 30 Aug 2013 10:49:19 +0200
+Message-Id: <1377852561-16754-1-git-send-email-johannes@sipsolutions.net> (sfid-20130830_104931_636456_970396D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to mac80211 docs tx and rx reporting
-routines must not run concurrently unless they are
-_irqsafe variants.
+From: Eliad Peller <eliad@wizery.com>
 
-This doesn't fix any visible bug but is apparently
-the right thing to do as per the documentation.
+In some debugfs related functions snprintf was used
+while scnprintf should have been used instead.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+(blindly adding the return value of snprintf and supplying
+it to the next snprintf might result in buffer overflow when
+the input is too big)
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c |    1 +
- drivers/net/wireless/ath/ath10k/core.h |    3 +++
- drivers/net/wireless/ath/ath10k/txrx.c |    4 ++++
- 3 files changed, 8 insertions(+)
+ net/mac80211/debugfs.c             | 55 ++++++++++++++++++++------------------
+ net/mac80211/rc80211_pid_debugfs.c | 26 +++++++++---------
+ net/wireless/debugfs.c             | 24 +++++++++--------
+ 3 files changed, 55 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 04c132e..b43e8ad 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -526,6 +526,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index b0e32d6..5c090e4 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -103,54 +103,57 @@ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
+ 	if (!buf)
+ 		return 0;
  
- 	mutex_init(&ar->conf_mutex);
- 	spin_lock_init(&ar->data_lock);
-+	spin_lock_init(&ar->txrx_lock);
+-	sf += snprintf(buf, mxln - sf, "0x%x\n", local->hw.flags);
++	sf += scnprintf(buf, mxln - sf, "0x%x\n", local->hw.flags);
+ 	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+-		sf += snprintf(buf + sf, mxln - sf, "HAS_RATE_CONTROL\n");
++		sf += scnprintf(buf + sf, mxln - sf, "HAS_RATE_CONTROL\n");
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
+-		sf += snprintf(buf + sf, mxln - sf, "RX_INCLUDES_FCS\n");
++		sf += scnprintf(buf + sf, mxln - sf, "RX_INCLUDES_FCS\n");
+ 	if (local->hw.flags & IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING)
+-		sf += snprintf(buf + sf, mxln - sf,
+-			       "HOST_BCAST_PS_BUFFERING\n");
++		sf += scnprintf(buf + sf, mxln - sf,
++				"HOST_BCAST_PS_BUFFERING\n");
+ 	if (local->hw.flags & IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE)
+-		sf += snprintf(buf + sf, mxln - sf,
+-			       "2GHZ_SHORT_SLOT_INCAPABLE\n");
++		sf += scnprintf(buf + sf, mxln - sf,
++				"2GHZ_SHORT_SLOT_INCAPABLE\n");
+ 	if (local->hw.flags & IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE)
+-		sf += snprintf(buf + sf, mxln - sf,
+-			       "2GHZ_SHORT_PREAMBLE_INCAPABLE\n");
++		sf += scnprintf(buf + sf, mxln - sf,
++				"2GHZ_SHORT_PREAMBLE_INCAPABLE\n");
+ 	if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
+-		sf += snprintf(buf + sf, mxln - sf, "SIGNAL_UNSPEC\n");
++		sf += scnprintf(buf + sf, mxln - sf, "SIGNAL_UNSPEC\n");
+ 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+-		sf += snprintf(buf + sf, mxln - sf, "SIGNAL_DBM\n");
++		sf += scnprintf(buf + sf, mxln - sf, "SIGNAL_DBM\n");
+ 	if (local->hw.flags & IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC)
+-		sf += snprintf(buf + sf, mxln - sf, "NEED_DTIM_BEFORE_ASSOC\n");
++		sf += scnprintf(buf + sf, mxln - sf,
++				"NEED_DTIM_BEFORE_ASSOC\n");
+ 	if (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT)
+-		sf += snprintf(buf + sf, mxln - sf, "SPECTRUM_MGMT\n");
++		sf += scnprintf(buf + sf, mxln - sf, "SPECTRUM_MGMT\n");
+ 	if (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)
+-		sf += snprintf(buf + sf, mxln - sf, "AMPDU_AGGREGATION\n");
++		sf += scnprintf(buf + sf, mxln - sf, "AMPDU_AGGREGATION\n");
+ 	if (local->hw.flags & IEEE80211_HW_SUPPORTS_PS)
+-		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_PS\n");
++		sf += scnprintf(buf + sf, mxln - sf, "SUPPORTS_PS\n");
+ 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
+-		sf += snprintf(buf + sf, mxln - sf, "PS_NULLFUNC_STACK\n");
++		sf += scnprintf(buf + sf, mxln - sf, "PS_NULLFUNC_STACK\n");
+ 	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
+-		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_DYNAMIC_PS\n");
++		sf += scnprintf(buf + sf, mxln - sf, "SUPPORTS_DYNAMIC_PS\n");
+ 	if (local->hw.flags & IEEE80211_HW_MFP_CAPABLE)
+-		sf += snprintf(buf + sf, mxln - sf, "MFP_CAPABLE\n");
++		sf += scnprintf(buf + sf, mxln - sf, "MFP_CAPABLE\n");
+ 	if (local->hw.flags & IEEE80211_HW_SUPPORTS_STATIC_SMPS)
+-		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_STATIC_SMPS\n");
++		sf += scnprintf(buf + sf, mxln - sf, "SUPPORTS_STATIC_SMPS\n");
+ 	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS)
+-		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_DYNAMIC_SMPS\n");
++		sf += scnprintf(buf + sf, mxln - sf,
++				"SUPPORTS_DYNAMIC_SMPS\n");
+ 	if (local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)
+-		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_UAPSD\n");
++		sf += scnprintf(buf + sf, mxln - sf, "SUPPORTS_UAPSD\n");
+ 	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
+-		sf += snprintf(buf + sf, mxln - sf, "REPORTS_TX_ACK_STATUS\n");
++		sf += scnprintf(buf + sf, mxln - sf,
++				"REPORTS_TX_ACK_STATUS\n");
+ 	if (local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+-		sf += snprintf(buf + sf, mxln - sf, "CONNECTION_MONITOR\n");
++		sf += scnprintf(buf + sf, mxln - sf, "CONNECTION_MONITOR\n");
+ 	if (local->hw.flags & IEEE80211_HW_SUPPORTS_PER_STA_GTK)
+-		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_PER_STA_GTK\n");
++		sf += scnprintf(buf + sf, mxln - sf, "SUPPORTS_PER_STA_GTK\n");
+ 	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
+-		sf += snprintf(buf + sf, mxln - sf, "AP_LINK_PS\n");
++		sf += scnprintf(buf + sf, mxln - sf, "AP_LINK_PS\n");
+ 	if (local->hw.flags & IEEE80211_HW_TX_AMPDU_SETUP_IN_HW)
+-		sf += snprintf(buf + sf, mxln - sf, "TX_AMPDU_SETUP_IN_HW\n");
++		sf += scnprintf(buf + sf, mxln - sf, "TX_AMPDU_SETUP_IN_HW\n");
  
- 	INIT_LIST_HEAD(&ar->peers);
- 	init_waitqueue_head(&ar->peer_mapping_wq);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index ab05c4c..0469a2e 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -392,6 +392,9 @@ struct ath10k {
- 	u32 survey_last_cycle_count;
- 	struct survey_info survey[ATH10K_NUM_CHANS];
+ 	rv = simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
+ 	kfree(buf);
+diff --git a/net/mac80211/rc80211_pid_debugfs.c b/net/mac80211/rc80211_pid_debugfs.c
+index c97a065..6ff1346 100644
+--- a/net/mac80211/rc80211_pid_debugfs.c
++++ b/net/mac80211/rc80211_pid_debugfs.c
+@@ -167,29 +167,29 @@ static ssize_t rate_control_pid_events_read(struct file *file, char __user *buf,
+ 	 * provide large enough buffers. */
+ 	length = length < RC_PID_PRINT_BUF_SIZE ?
+ 		 length : RC_PID_PRINT_BUF_SIZE;
+-	p = snprintf(pb, length, "%u %lu ", ev->id, ev->timestamp);
++	p = scnprintf(pb, length, "%u %lu ", ev->id, ev->timestamp);
+ 	switch (ev->type) {
+ 	case RC_PID_EVENT_TYPE_TX_STATUS:
+-		p += snprintf(pb + p, length - p, "tx_status %u %u",
+-			      !(ev->data.flags & IEEE80211_TX_STAT_ACK),
+-			      ev->data.tx_status.status.rates[0].idx);
++		p += scnprintf(pb + p, length - p, "tx_status %u %u",
++			       !(ev->data.flags & IEEE80211_TX_STAT_ACK),
++			       ev->data.tx_status.status.rates[0].idx);
+ 		break;
+ 	case RC_PID_EVENT_TYPE_RATE_CHANGE:
+-		p += snprintf(pb + p, length - p, "rate_change %d %d",
+-			      ev->data.index, ev->data.rate);
++		p += scnprintf(pb + p, length - p, "rate_change %d %d",
++			       ev->data.index, ev->data.rate);
+ 		break;
+ 	case RC_PID_EVENT_TYPE_TX_RATE:
+-		p += snprintf(pb + p, length - p, "tx_rate %d %d",
+-			      ev->data.index, ev->data.rate);
++		p += scnprintf(pb + p, length - p, "tx_rate %d %d",
++			       ev->data.index, ev->data.rate);
+ 		break;
+ 	case RC_PID_EVENT_TYPE_PF_SAMPLE:
+-		p += snprintf(pb + p, length - p,
+-			      "pf_sample %d %d %d %d",
+-			      ev->data.pf_sample, ev->data.prop_err,
+-			      ev->data.int_err, ev->data.der_err);
++		p += scnprintf(pb + p, length - p,
++			       "pf_sample %d %d %d %d",
++			       ev->data.pf_sample, ev->data.prop_err,
++			       ev->data.int_err, ev->data.der_err);
+ 		break;
+ 	}
+-	p += snprintf(pb + p, length - p, "\n");
++	p += scnprintf(pb + p, length - p, "\n");
  
-+	/* synchronized tx/rx reporting to mac80211 */
-+	spinlock_t txrx_lock;
+ 	spin_unlock_irqrestore(&events->lock, status);
+ 
+diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
+index 90d0500..4541577 100644
+--- a/net/wireless/debugfs.c
++++ b/net/wireless/debugfs.c
+@@ -47,17 +47,19 @@ static int ht_print_chan(struct ieee80211_channel *chan,
+ 		return 0;
+ 
+ 	if (chan->flags & IEEE80211_CHAN_DISABLED)
+-		return snprintf(buf + offset,
+-				buf_size - offset,
+-				"%d Disabled\n",
+-				chan->center_freq);
+-
+-	return snprintf(buf + offset,
+-			buf_size - offset,
+-			"%d HT40 %c%c\n",
+-			chan->center_freq,
+-			(chan->flags & IEEE80211_CHAN_NO_HT40MINUS) ? ' ' : '-',
+-			(chan->flags & IEEE80211_CHAN_NO_HT40PLUS)  ? ' ' : '+');
++		return scnprintf(buf + offset,
++				 buf_size - offset,
++				 "%d Disabled\n",
++				 chan->center_freq);
 +
- #ifdef CONFIG_ATH10K_DEBUGFS
- 	struct ath10k_debug debug;
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 68b6fae..ce7e304 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -88,7 +88,9 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt, struct sk_buff *txdesc)
- 	if (ATH10K_SKB_CB(txdesc)->htt.no_ack)
- 		info->flags &= ~IEEE80211_TX_STAT_ACK;
- 
-+	spin_lock_bh(&htt->ar->txrx_lock);
- 	ieee80211_tx_status(htt->ar->hw, msdu);
-+	spin_unlock_bh(&htt->ar->txrx_lock);
- 	/* we do not own the msdu anymore */
- 
- exit:
-@@ -294,7 +296,9 @@ void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 		   status->freq,
- 		   status->band);
- 
-+	spin_lock_bh(&ar->txrx_lock);
- 	ieee80211_rx(ar->hw, info->skb);
-+	spin_unlock_bh(&ar->txrx_lock);
++	return scnprintf(buf + offset,
++			 buf_size - offset,
++			 "%d HT40 %c%c\n",
++			 chan->center_freq,
++			 (chan->flags & IEEE80211_CHAN_NO_HT40MINUS) ?
++				' ' : '-',
++			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS) ?
++				' ' : '+');
  }
  
- struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
+ static ssize_t ht40allow_map_read(struct file *file,
 -- 
-1.7.9.5
+1.8.4.rc3
 
