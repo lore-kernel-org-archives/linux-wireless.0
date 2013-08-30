@@ -1,150 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:53175 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754018Ab3HQR4a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Aug 2013 13:56:30 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 6/6] rt2x00: rt2800lib: fix beacon generation on RT3593
-Date: Sat, 17 Aug 2013 19:56:07 +0200
-Message-Id: <1376762167-24583-7-git-send-email-juhosg@openwrt.org> (sfid-20130817_195645_590486_A79FBAC4)
-In-Reply-To: <1376762167-24583-1-git-send-email-juhosg@openwrt.org>
-References: <1376762167-24583-1-git-send-email-juhosg@openwrt.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:41360 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941Ab3H3CJ2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Aug 2013 22:09:28 -0400
+Date: Thu, 29 Aug 2013 22:09:26 -0400 (EDT)
+Message-Id: <20130829.220926.226210132086755040.davem@davemloft.net> (sfid-20130830_040948_391858_3E239DFF)
+To: joe@perches.com
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	e1000-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH net-next] drivers:net: Convert
+ dma_alloc_coherent(...__GFP_ZERO) to dma_zalloc_coherent
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1377582323.2658.10.camel@joe-AO722>
+References: <dbbfc5e66dba7d2b63549d218407fb0c4031f2ed.1363367992.git.joe@perches.com>
+	<1377582323.2658.10.camel@joe-AO722>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the RT3593 chipset, the beacon registers are located
-in the high 8KB part of the shared memory.
+From: Joe Perches <joe@perches.com>
+Date: Mon, 26 Aug 2013 22:45:23 -0700
 
-The high part of the shared memory is only accessible
-if it is explicitly selected. Add a helper function
-in order to be able to control the SHR_MSEL bit in
-the PBF_SYS_CTRL register. Also add a few more helper
-functions and use those to select the correct part of
-the shared memory before and after accessing the beacon
-registers.
+> __GFP_ZERO is an uncommon flag and perhaps is better
+> not used.  static inline dma_zalloc_coherent exists
+> so convert the uses of dma_alloc_coherent with __GFP_ZERO
+> to the more common kernel style with zalloc.
+> 
+> Remove memset from the static inline dma_zalloc_coherent
+> and add just one use of __GFP_ZERO instead.
+> 
+> Trivially reduces the size of the existing uses of
+> dma_zalloc_coherent.
+> 
+> Realign arguments as appropriate.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-The base addresses of the beacon registers are also
-different from the actually used values, so fix the
-'rt2800_hw_beacon_base' function to return the correct
-values.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800.h    |    3 ++
- drivers/net/wireless/rt2x00/rt2800lib.c |   47 +++++++++++++++++++++++++++++++
- 2 files changed, 50 insertions(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 48018a5..67498b0 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -572,6 +572,7 @@
- #define PBF_SYS_CTRL			0x0400
- #define PBF_SYS_CTRL_READY		FIELD32(0x00000080)
- #define PBF_SYS_CTRL_HOST_RAM_WRITE	FIELD32(0x00010000)
-+#define PBF_SYS_CTRL_SHR_MSEL		FIELD32(0x00080000)
- 
- /*
-  * HOST-MCU shared memory
-@@ -2024,6 +2025,8 @@ struct mac_iveiv_entry {
- 	  (((__index) < 6) ? (HW_BEACON_BASE4 + ((__index - 4) * 0x0200)) : \
- 	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))))
- 
-+#define HW_BEACON_BASE_HIGH(__index)	(0x4000 + (__index) * 512)
-+
- #define BEACON_BASE_TO_OFFSET(_base)	(((_base) - 0x4000) / 64)
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index d223308..3c2843b 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -84,6 +84,42 @@ static inline bool rt2800_is_305x_soc(struct rt2x00_dev *rt2x00dev)
- 	return false;
- }
- 
-+static inline void rt2800_shared_mem_select(struct rt2x00_dev *rt2x00dev,
-+					    bool high)
-+{
-+	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-+	u32 reg;
-+
-+	lockdep_assert_held(&drv_data->shared_mem_mutex);
-+
-+	if (WARN_ON_ONCE(!rt2800_has_high_shared_mem(rt2x00dev)))
-+		return;
-+
-+	rt2800_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
-+	rt2x00_set_field32(&reg, PBF_SYS_CTRL_SHR_MSEL, high);
-+	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, reg);
-+}
-+
-+static inline bool rt2800_beacon_uses_high_mem(struct rt2x00_dev *rt2x00dev)
-+{
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		return true;
-+
-+	return false;
-+}
-+
-+static inline void rt2800_select_beacon_mem(struct rt2x00_dev *rt2x00dev)
-+{
-+	if (rt2800_beacon_uses_high_mem(rt2x00dev))
-+		rt2800_shared_mem_select(rt2x00dev, true);
-+}
-+
-+static inline void rt2800_deselect_beacon_mem(struct rt2x00_dev *rt2x00dev)
-+{
-+	if (rt2800_beacon_uses_high_mem(rt2x00dev))
-+		rt2800_shared_mem_select(rt2x00dev, false);
-+}
-+
- static void rt2800_bbp_write(struct rt2x00_dev *rt2x00dev,
- 			     const unsigned int word, const u8 value)
- {
-@@ -951,6 +987,9 @@ EXPORT_SYMBOL_GPL(rt2800_txdone_entry);
- static unsigned int rt2800_hw_beacon_base(struct rt2x00_dev *rt2x00dev,
- 					  unsigned int index)
- {
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		return HW_BEACON_BASE_HIGH(index);
-+
- 	return HW_BEACON_BASE(index);
- }
- 
-@@ -1015,8 +1054,12 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- 	beacon_base = rt2800_hw_beacon_base(rt2x00dev, entry->entry_idx);
- 
- 	rt2800_shared_mem_lock(rt2x00dev);
-+
-+	rt2800_select_beacon_mem(rt2x00dev);
- 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
- 				   entry->skb->len + padding_len);
-+	rt2800_deselect_beacon_mem(rt2x00dev);
-+
- 	rt2800_shared_mem_unlock(rt2x00dev);
- 
- 	/*
-@@ -1044,6 +1087,8 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2800_shared_mem_lock(rt2x00dev);
- 
-+	rt2800_select_beacon_mem(rt2x00dev);
-+
- 	/*
- 	 * For the Beacon base registers we only need to clear
- 	 * the whole TXWI which (when set to 0) will invalidate
-@@ -1052,6 +1097,8 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
- 	for (i = 0; i < txwi_desc_size; i += sizeof(__le32))
- 		rt2800_register_write(rt2x00dev, beacon_base + i, 0);
- 
-+	rt2800_deselect_beacon_mem(rt2x00dev);
-+
- 	rt2800_shared_mem_unlock(rt2x00dev);
- }
- 
--- 
-1.7.10
+Applied, thanks a lot Joe.
