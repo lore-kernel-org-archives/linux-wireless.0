@@ -1,233 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:63949 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756700Ab3HZLtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 07:49:10 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 3/3] ath10k: implement per-VDEV FW statistics
-Date: Mon, 26 Aug 2013 13:33:34 +0200
-Message-ID: <1377516815-12660-4-git-send-email-bartosz.markowski@tieto.com> (sfid-20130826_134914_696747_10164392)
-In-Reply-To: <1377516815-12660-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1377516815-12660-1-git-send-email-bartosz.markowski@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:38810 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753577Ab3H3It1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Aug 2013 04:49:27 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 3/3] mac80211: allow configuring smps_mode_in_ps
+Date: Fri, 30 Aug 2013 10:49:21 +0200
+Message-Id: <1377852561-16754-3-git-send-email-johannes@sipsolutions.net> (sfid-20130830_104935_274969_0AC9B6AF)
+In-Reply-To: <1377852561-16754-1-git-send-email-johannes@sipsolutions.net>
+References: <1377852561-16754-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The WMI_REQUEST_PEER_STAT command with latst (1.0.0.716) FW
-can return per-VDEV statistics. Using debugfs we can fetch this info now.
+From: Eliad Peller <eliad@wizery.com>
 
-This is NOT a backward compatible change, due to ABI changes in
-wmi_peer_stats stats (new peer_rx_rate) field.
+When in automatic smps mode (default for station mode),
+mac80211 configures dynamic smps when the station enters
+powersave.
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+However, drivers might prefer using different modes in this
+case (e.g. due to major throughput degradation).
+
+Add a new hw->smps_mode_in_ps field that can be configured
+by the driver in order to override the default smps dynamic mode.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h  |   18 ++++++++++
- drivers/net/wireless/ath/ath10k/debug.c |   42 ++++++++++++++++++++---
- drivers/net/wireless/ath/ath10k/wmi.h   |   55 ++++++++++++++++++++++++++++---
- 3 files changed, 106 insertions(+), 9 deletions(-)
+ include/net/mac80211.h        |  5 +++++
+ net/mac80211/cfg.c            |  2 +-
+ net/mac80211/debugfs_netdev.c | 11 +++++++----
+ net/mac80211/main.c           |  1 +
+ net/mac80211/mlme.c           |  7 ++++++-
+ 5 files changed, 20 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index ab05c4c..8e4e33e 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -119,6 +119,22 @@ struct ath10k_wmi {
- 	struct work_struct wmi_event_work;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3ecf635..637b797 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1615,6 +1615,10 @@ enum ieee80211_hw_flags {
+  * @uapsd_max_sp_len: maximum number of total buffered frames the WMM AP may
+  *	deliver to a WMM STA during any Service Period triggered by the WMM STA.
+  *	Use IEEE80211_WMM_IE_STA_QOSINFO_SP_* for correct values.
++ *
++ * @smps_mode_in_ps: smps mode to use when automatic smps mode is configured.
++ *	The default is _DYNAMIC.
++ *	Use the %IEEE80211_SMPS_* values.
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -1642,6 +1646,7 @@ struct ieee80211_hw {
+ 	netdev_features_t netdev_features;
+ 	u8 uapsd_queues;
+ 	u8 uapsd_max_sp_len;
++	enum ieee80211_smps_mode smps_mode_in_ps;
  };
  
-+struct ath10k_vdev_stat {
-+	u32 vdev_id;
-+	struct wmi_snr_info vdev_snr;
-+	u32 tx_frames_count[MAX_AC];
-+	u32 rx_frames_count;
-+	u32 multiple_retry_cnt[MAX_AC];
-+	u32 fail_count[MAX_AC];
-+	u32 rts_fail_count;
-+	u32 rts_success_count;
-+	u32 rts_err_count;
-+	u32 rx_discard_count;
-+	u32 ack_fail_count;
-+	u32 tx_rate_history[MAX_TX_RATE_VALUES];
-+	u32 bcn_rssi_history[MAX_RSSI_VALUES];
-+};
-+
- struct ath10k_peer_stat {
- 	u8 peer_macaddr[ETH_ALEN];
- 	u32 peer_rssi;
-@@ -176,6 +192,8 @@ struct ath10k_target_stats {
- 	s32 mpdu_errs;
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7aa38ce..1932126 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2364,7 +2364,7 @@ int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
  
- 	/* VDEV STATS */
-+	struct ath10k_vdev_stat vdev_stat[TARGET_NUM_VDEVS];
-+	u8 vdevs;
- 
- 	/* PEER STATS */
- 	u8 peers;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 3d65594..2bf1897 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -228,13 +228,24 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
- 		tmp += sizeof(struct wmi_pdev_stats);
+ 	if (smps_mode == IEEE80211_SMPS_AUTOMATIC) {
+ 		if (sdata->u.mgd.powersave)
+-			smps_mode = IEEE80211_SMPS_DYNAMIC;
++			smps_mode = sdata->local->hw.smps_mode_in_ps;
+ 		else
+ 			smps_mode = IEEE80211_SMPS_OFF;
  	}
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index cafe614..66dff46 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -212,16 +212,19 @@ static int ieee80211_set_smps(struct ieee80211_sub_if_data *sdata,
+ 			      enum ieee80211_smps_mode smps_mode)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	enum ieee80211_smps_mode target_mode = smps_mode;
+ 	int err;
  
--	/* 0 or max vdevs */
--	/* Currently firmware does not support VDEV stats */
- 	if (num_vdev_stats) {
- 		struct wmi_vdev_stats *vdev_stats;
-+		struct ath10k_vdev_stat *s;
++	/* in case of auto, hw.smps_mode_in_ps will be configured when in psm */
++	if (smps_mode == IEEE80211_SMPS_AUTOMATIC)
++		target_mode = local->hw.smps_mode_in_ps;
 +
-+		stats->vdevs = num_vdev_stats;
+ 	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_STATIC_SMPS) &&
+-	    smps_mode == IEEE80211_SMPS_STATIC)
++	    target_mode == IEEE80211_SMPS_STATIC)
+ 		return -EINVAL;
  
- 		for (i = 0; i < num_vdev_stats; i++) {
- 			vdev_stats = (struct wmi_vdev_stats *)tmp;
-+			s = &stats->vdev_stat[i];
-+
-+			s->vdev_id = __le32_to_cpu(vdev_stats->vdev_id);
-+			s->vdev_snr.beacon_snr =
-+				__le32_to_cpu(vdev_stats->vdev_snr.beacon_snr);
-+			s->vdev_snr.data_snr =
-+				__le32_to_cpu(vdev_stats->vdev_snr.data_snr);
-+
-+			/* TODO:read remaining vdev stats */
-+
- 			tmp += sizeof(struct wmi_vdev_stats);
- 		}
- 	}
-@@ -270,7 +281,7 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
- 	struct ath10k *ar = file->private_data;
- 	struct ath10k_target_stats *fw_stats;
- 	char *buf = NULL;
--	unsigned int len = 0, buf_len = 2500;
-+	unsigned int len = 0, buf_len = 3000;
- 	ssize_t ret_cnt = 0;
- 	long left;
- 	int i;
-@@ -408,6 +419,27 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
- 	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
- 			 "MPDU errors (FCS, MIC, ENC)", fw_stats->mpdu_errs);
+-	/* auto should be dynamic if in PS mode */
+ 	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS) &&
+-	    (smps_mode == IEEE80211_SMPS_DYNAMIC ||
+-	     smps_mode == IEEE80211_SMPS_AUTOMATIC))
++	    target_mode == IEEE80211_SMPS_DYNAMIC)
+ 		return -EINVAL;
  
-+	if (fw_stats->vdevs) {
-+		len += scnprintf(buf + len, buf_len - len, "\n");
-+		len += scnprintf(buf + len, buf_len - len, "%30s\n",
-+				 "ath10k VDEV stats");
-+		len += scnprintf(buf + len, buf_len - len, "%30s\n\n",
-+				 "=================");
-+	}
-+
-+	for (i = 0; i < fw_stats->vdevs; i++) {
-+		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
-+				 "VDEV ID", fw_stats->vdev_stat[i].vdev_id);
-+		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
-+				 "Beacon SNR",
-+				 fw_stats->vdev_stat[i].vdev_snr.beacon_snr);
-+		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
-+				 "Data SNR",
-+				 fw_stats->vdev_stat[i].vdev_snr.data_snr);
-+		len += scnprintf(buf + len, buf_len - len, "\n");
-+	}
-+
-+
- 	len += scnprintf(buf + len, buf_len - len, "\n");
- 	len += scnprintf(buf + len, buf_len - len, "%30s\n",
- 			 "ath10k PEER stats");
-@@ -418,9 +450,9 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
- 		len += scnprintf(buf + len, buf_len - len, "%30s %pM\n",
- 				 "Peer MAC address",
- 				 fw_stats->peer_stat[i].peer_macaddr);
--		len += scnprintf(buf + len, buf_len - len, "%30s %u\n",
-+		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
- 				 "Peer RSSI", fw_stats->peer_stat[i].peer_rssi);
--		len += scnprintf(buf + len, buf_len - len, "%30s %u\n",
-+		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
- 				 "Peer TX rate",
- 				 fw_stats->peer_stat[i].peer_tx_rate);
- 		len += scnprintf(buf + len, buf_len - len, "\n");
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 6366600..efed5d0 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -60,6 +60,11 @@
-  *
-  */
+ 	/* supported only on managed interfaces for now */
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 21d5d44..885c8e3 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -585,6 +585,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					 IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
+ 	local->hw.uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
+ 	local->hw.uapsd_max_sp_len = IEEE80211_DEFAULT_MAX_SP_LEN;
++	local->hw.smps_mode_in_ps = IEEE80211_SMPS_DYNAMIC;
+ 	local->user_power_level = IEEE80211_UNSET_POWER_LEVEL;
+ 	wiphy->ht_capa_mod_mask = &mac80211_ht_capa_mod_mask;
+ 	wiphy->vht_capa_mod_mask = &mac80211_vht_capa_mod_mask;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 45a87ee..007cc4d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3700,7 +3700,12 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 	ifmgd->uapsd_max_sp_len = sdata->local->hw.uapsd_max_sp_len;
+ 	ifmgd->p2p_noa_index = -1;
  
-+#define MAX_AC 4 /* Maximum value of access category */
-+
-+#define MAX_TX_RATE_VALUES      10 /* Max Tx rates */
-+#define MAX_RSSI_VALUES         10 /* Max RSSI values */
-+
- /* Control Path */
- struct wmi_cmd_hdr {
- 	__le32 cmd_id;
-@@ -1893,12 +1898,53 @@ struct wmi_pdev_stats {
- 	struct wal_dbg_stats wal; /* WAL dbg stats */
- } __packed;
- 
--/*
-- * VDEV statistics
-- * TODO: add all VDEV stats here
-- */
-+struct wmi_snr_info {
-+	__le32 beacon_snr;
-+	__le32 data_snr;
-+} __packed;
-+
- struct wmi_vdev_stats {
-+	/* unique id identifying the VDEV, generated by the caller */
- 	__le32 vdev_id;
-+	struct wmi_snr_info vdev_snr;
-+	/*
-+	 * Total number of packets(per AC) that were successfully transmitted
-+	 * (with and without retries, including multi-cast, broadcast)
-+	 */
-+	__le32 tx_frm_cnt[MAX_AC];
-+	/*
-+	 * Total number of packets that were successfully received
-+	 * (after appropriate filter rules including multi-cast, broadcast)
-+	 */
-+	__le32 rx_frm_cnt;
-+	/*
-+	 * The number of MSDU packets and MMPDU frames per AC that the 802.11
-+	 * station successfully transmitted after more than one retransmission
-+	 * attempt
-+	 */
-+	__le32 multiple_retry_cnt[MAX_AC];
-+	/* Total number packets(per AC) failed to transmit */
-+	__le32 fail_cnt[MAX_AC];
-+	/* Total number of RTS/CTS sequence failures for transmission of a packet */
-+	__le32 rts_fail_cnt;
-+	/* Total number of RTS/CTS sequence success for transmission of a packet */
-+	__le32 rts_succ_cnt;
-+	/* The receive error count. HAL will provide the RxP FCS error global */
-+	__le32 rx_err_cnt;
-+	/*
-+	 * The sum of the receive error count and dropped-receive-buffer
-+	 * error count. (FCS error)
-+	 */
-+	__le32 rx_discard_cnt;
-+	/*
-+	 * Total number packets failed transmit because of no ACK
-+	 * from the remote entity
-+	 */
-+	__le32 ack_fail_cnt;
-+	/* History of last ten transmit rate, in units of 500 kbit/sec */
-+	__le32 tx_rate_history[MAX_TX_RATE_VALUES];
-+	/* History of last ten Beacon rssi of the connected Bss */
-+	__le32 bcn_rssi_history[MAX_RSSI_VALUES];
- } __packed;
- 
- /*
-@@ -1909,6 +1955,7 @@ struct wmi_peer_stats {
- 	struct wmi_mac_addr peer_macaddr;
- 	__le32 peer_rssi;
- 	__le32 peer_tx_rate;
-+	__le32 peer_rx_rate;
- } __packed;
- 
- struct wmi_vdev_create_cmd {
+-	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS)
++	/* set automatic smps by default, if hw.smps_mode_in_ps is supported */
++	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS &&
++	    sdata->local->hw.smps_mode_in_ps == IEEE80211_SMPS_DYNAMIC)
++		ifmgd->req_smps = IEEE80211_SMPS_AUTOMATIC;
++	else if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_STATIC_SMPS &&
++		 sdata->local->hw.smps_mode_in_ps == IEEE80211_SMPS_STATIC)
+ 		ifmgd->req_smps = IEEE80211_SMPS_AUTOMATIC;
+ 	else
+ 		ifmgd->req_smps = IEEE80211_SMPS_OFF;
 -- 
-1.7.10
+1.8.4.rc3
 
