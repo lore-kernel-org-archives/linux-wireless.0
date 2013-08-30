@@ -1,88 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:55695 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752120Ab3HDIze (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39413 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616Ab3H3MXM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Aug 2013 04:55:34 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
+	Fri, 30 Aug 2013 08:23:12 -0400
+Message-ID: <1377865387.16256.15.camel@jlt4.sipsolutions.net> (sfid-20130830_142315_831568_B0D31E57)
+Subject: Re: [PATCH] cfg80211: fix potential deadlock regression
+From: Johannes Berg <johannes@sipsolutions.net>
+To: mbizon@freebox.fr
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/11] ath9k: Add information about antenna diversity
-Date: Sun,  4 Aug 2013 14:21:52 +0530
-Message-Id: <1375606322-9983-1-git-send-email-sujith@msujith.org> (sfid-20130804_105557_468480_A1F5D238)
+Date: Fri, 30 Aug 2013 14:23:07 +0200
+In-Reply-To: <1377719389.559.9.camel@sakura.staff.proxad.net>
+References: <1370377370-23055-1-git-send-email-johannes@sipsolutions.net>
+	 <1377719389.559.9.camel@sakura.staff.proxad.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Wed, 2013-08-28 at 21:49 +0200, Maxime Bizon wrote:
+> On Tue, 2013-06-04 at 22:22 +0200, Johannes Berg wrote:
+>  
+> > -	rtnl_lock();
+> >  
+> >  	res = device_add(&rdev->wiphy.dev);
+> > +	if (res)
+> > +		return res;
+> 
+> I just ran across a regression caused by this commit
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/antenna.c | 52 ++++++++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
+Sorry, yeah ... this was the locking cleanups, we did get this right
+before ...
 
-diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
-index 291ca01..4cd2bce 100644
---- a/drivers/net/wireless/ath/ath9k/antenna.c
-+++ b/drivers/net/wireless/ath/ath9k/antenna.c
-@@ -16,6 +16,58 @@
- 
- #include "ath9k.h"
- 
-+/*
-+ * AR9285
-+ * ======
-+ *
-+ * EEPROM has 2 4-bit fields containing the card configuration.
-+ *
-+ * antdiv_ctl1:
-+ * ------------
-+ * bb_enable_ant_div_lnadiv : 1
-+ * bb_ant_div_alt_gaintb    : 1
-+ * bb_ant_div_main_gaintb   : 1
-+ * bb_enable_ant_fast_div   : 1
-+ *
-+ * antdiv_ctl2:
-+ * -----------
-+ * bb_ant_div_alt_lnaconf  : 2
-+ * bb_ant_div_main_lnaconf : 2
-+ *
-+ * The EEPROM bits are used as follows:
-+ * ------------------------------------
-+ *
-+ * bb_enable_ant_div_lnadiv      - Enable LNA path rx antenna diversity/combining.
-+ *                                 Set in AR_PHY_MULTICHAIN_GAIN_CTL.
-+ *
-+ * bb_ant_div_[alt/main]_gaintb  - 0 -> Antenna config Alt/Main uses gaintable 0
-+ *                                 1 -> Antenna config Alt/Main uses gaintable 1
-+ *                                 Set in AR_PHY_MULTICHAIN_GAIN_CTL.
-+ *
-+ * bb_enable_ant_fast_div        - Enable fast antenna diversity.
-+ *                                 Set in AR_PHY_CCK_DETECT.
-+ *
-+ * bb_ant_div_[alt/main]_lnaconf - Alt/Main LNA diversity/combining input config.
-+ *                                 Set in AR_PHY_MULTICHAIN_GAIN_CTL.
-+ *                                 10=LNA1
-+ *                                 01=LNA2
-+ *                                 11=LNA1+LNA2
-+ *                                 00=LNA1-LNA2
-+ *
-+ * AR9485 / AR9565 / AR9331
-+ * ========================
-+ *
-+ * The same bits are present in the EEPROM, but the location in the
-+ * EEPROM is different (ant_div_control in ar9300_BaseExtension_1).
-+ *
-+ * ant_div_alt_lnaconf      ==> bit 0~1
-+ * ant_div_main_lnaconf     ==> bit 2~3
-+ * ant_div_alt_gaintb       ==> bit 4
-+ * ant_div_main_gaintb      ==> bit 5
-+ * enable_ant_div_lnadiv    ==> bit 6
-+ * enable_ant_fast_div      ==> bit 7
-+ */
-+
- static inline bool ath_is_alt_ant_ratio_better(int alt_ratio, int maxdelta,
- 					       int mindelta, int main_rssi_avg,
- 					       int alt_rssi_avg, int pkt_count)
--- 
-1.8.3.4
+> I'm again getting uevent notifications for wireless devices that are not
+> yet properly registered (ENODEV on NL80211 when using sysfs phy id)
+> 
+> I originally  fixed the bug by taking the cfg80211 mutex across the
+> whole registration:
+
+[...]
+
+Yeah, but then I got rid of the cfg80211_mutex :)
+
+> It does not seem we can reverse the rfkill_register() and device_add()
+> because wiphy dev is a parent of rfkill dev.
+> 
+> any idea to fix this ?
+
+I think this should be OK:
+http://p.sipsolutions.net/28cf9ed446845440.txt, can you try?
+
+johannes
 
