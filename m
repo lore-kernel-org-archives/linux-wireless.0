@@ -1,33 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38742 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220Ab3HPK0u (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:45899 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755512Ab3H3MaS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 06:26:50 -0400
-Message-ID: <1376648807.15299.6.camel@jlt4.sipsolutions.net> (sfid-20130816_122716_026248_3E81BD43)
-Subject: Re: [PATCHv2 3/6] mac80211: move ibss presp generation in own
- function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 16 Aug 2013 12:26:47 +0200
-In-Reply-To: <1376058920-17779-4-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376058920-17779-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1376058920-17779-4-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 30 Aug 2013 08:30:18 -0400
+Subject: [PATCH 2/7] ath10k: make target_ce_config_wlan more readable
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 30 Aug 2013 15:30:14 +0300
+Message-ID: <20130830123014.31164.32755.stgit@localhost6.localdomain6> (sfid-20130830_143022_236895_F502E6D9)
+In-Reply-To: <20130830122905.31164.50662.stgit@localhost6.localdomain6>
+References: <20130830122905.31164.50662.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-08-09 at 16:35 +0200, Simon Wunderlich wrote:
-> Channel Switch will later require to generate beacons without setting
-> them immediately. Therefore split the presp generation in an own
-> function. Splitting the original very long function might be a good idea
-> anyway.
+It's easier to read t if the field names are visible.
 
-Applied.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |   85 ++++++++++++++++++++++++++++-----
+ 1 file changed, 71 insertions(+), 14 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index cf7a3e4..304bd4f 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -125,21 +125,78 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ 
+ /* Target firmware's Copy Engine configuration. */
+ static const struct ce_pipe_config target_ce_config_wlan[] = {
+-	/* host->target HTC control and raw streams */
+-	{ /* CE0 */ 0, PIPEDIR_OUT, 32, 256, CE_ATTR_FLAGS, 0,},
+-	/* target->host HTT + HTC control */
+-	{ /* CE1 */ 1, PIPEDIR_IN, 32, 512, CE_ATTR_FLAGS, 0,},
+-	/* target->host WMI */
+-	{ /* CE2 */ 2, PIPEDIR_IN, 32, 2048, CE_ATTR_FLAGS, 0,},
+-	/* host->target WMI */
+-	{ /* CE3 */ 3, PIPEDIR_OUT, 32, 2048, CE_ATTR_FLAGS, 0,},
+-	/* host->target HTT */
+-	{ /* CE4 */ 4, PIPEDIR_OUT, 256, 256, CE_ATTR_FLAGS, 0,},
++	/* CE0: host->target HTC control and raw streams */
++	{
++		.pipenum = 0,
++		.pipedir = PIPEDIR_OUT,
++		.nentries = 32,
++		.nbytes_max = 256,
++		.flags = CE_ATTR_FLAGS,
++		.reserved = 0,
++	},
++
++	/* CE1: target->host HTT + HTC control */
++	{
++		.pipenum = 1,
++		.pipedir = PIPEDIR_IN,
++		.nentries = 32,
++		.nbytes_max = 512,
++		.flags = CE_ATTR_FLAGS,
++		.reserved = 0,
++	},
++
++	/* CE2: target->host WMI */
++	{
++		.pipenum = 2,
++		.pipedir = PIPEDIR_IN,
++		.nentries = 32,
++		.nbytes_max = 2048,
++		.flags = CE_ATTR_FLAGS,
++		.reserved = 0,
++	},
++
++	/* CE3: host->target WMI */
++	{
++		.pipenum = 3,
++		.pipedir = PIPEDIR_OUT,
++		.nentries = 32,
++		.nbytes_max = 2048,
++		.flags = CE_ATTR_FLAGS,
++		.reserved = 0,
++	},
++
++	/* CE4: host->target HTT */
++	{
++		.pipenum = 4,
++		.pipedir = PIPEDIR_OUT,
++		.nentries = 256,
++		.nbytes_max = 256,
++		.flags = CE_ATTR_FLAGS,
++		.reserved = 0,
++	},
++
+ 	/* NB: 50% of src nentries, since tx has 2 frags */
+-	/* unused */
+-	{ /* CE5 */ 5, PIPEDIR_OUT, 32, 2048, CE_ATTR_FLAGS, 0,},
+-	/* Reserved for target autonomous hif_memcpy */
+-	{ /* CE6 */ 6, PIPEDIR_INOUT, 32, 4096, CE_ATTR_FLAGS, 0,},
++
++	/* CE5: unused */
++	{
++		.pipenum = 5,
++		.pipedir = PIPEDIR_OUT,
++		.nentries = 32,
++		.nbytes_max = 2048,
++		.flags = CE_ATTR_FLAGS,
++		.reserved = 0,
++	},
++
++	/* CE6: Reserved for target autonomous hif_memcpy */
++	{
++		.pipenum = 6,
++		.pipedir = PIPEDIR_INOUT,
++		.nentries = 32,
++		.nbytes_max = 4096,
++		.flags = CE_ATTR_FLAGS,
++		.reserved = 0,
++	},
++
+ 	/* CE7 used only by Host */
+ };
+ 
 
