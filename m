@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:36884 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755827Ab3HZGVK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Aug 2013 02:21:10 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Fix TX poll work locking
-Date: Mon, 26 Aug 2013 11:47:22 +0530
-Message-Id: <1377497842-14742-1-git-send-email-sujith@msujith.org> (sfid-20130826_082114_179434_EAAFC4E9)
+Received: from canardo.mork.no ([148.122.252.1]:55525 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756060Ab3H3QLB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Aug 2013 12:11:01 -0400
+From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: netdev@vger.kernel.org
+Cc: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Patrick McHardy <kaber@trash.net>,
+	Jiri Pirko <jiri@resnulli.us>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	libertas-dev@lists.infradead.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	devel@driverdev.osuosl.org,
+	Forest Bond <forest@alittletooquiet.net>
+Subject: [PATCH v2 net-next 1/9] net: etherdevice: add address inherit helper
+Date: Fri, 30 Aug 2013 18:08:44 +0200
+Message-Id: <1377878932-26881-2-git-send-email-bjorn@mork.no> (sfid-20130830_181111_156550_A8F2BA1B)
+In-Reply-To: <1377878932-26881-1-git-send-email-bjorn@mork.no>
+References: <1377878932-26881-1-git-send-email-bjorn@mork.no>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Some etherdevices inherit their address from a parent or
+master device. The addr_assign_type should be updated along
+with the address in these cases.  Adding a helper function
+to simplify this.
 
-There is no need to call ath_txq_unlock_complete() in the
-TX poll routine - frame completion is not done here,
-so use ath_txq_unlock().
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Bjørn Mork <bjorn@mork.no>
 ---
- drivers/net/wireless/ath/ath9k/link.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/etherdevice.h |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index fff5d3c..2f831db 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -41,7 +41,7 @@ void ath_tx_complete_poll_work(struct work_struct *work)
- 				txq->axq_tx_inprogress = true;
- 			}
- 		}
--		ath_txq_unlock_complete(sc, txq);
-+		ath_txq_unlock(sc, txq);
- 	}
+diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
+index c623861..d8b5124 100644
+--- a/include/linux/etherdevice.h
++++ b/include/linux/etherdevice.h
+@@ -199,6 +199,21 @@ static inline void eth_hw_addr_random(struct net_device *dev)
+ }
  
- 	if (needreset) {
+ /**
++ * eth_hw_addr_inherit - Copy dev_addr from another net_device
++ * @dst: pointer to net_device to copy dev_addr to
++ * @src: pointer to net_device to copy dev_addr from
++ *
++ * Copy the Ethernet address from one net_device to another along with
++ * the address attributes (addr_assign_type).
++ */
++static inline void eth_hw_addr_inherit(struct net_device *dst,
++				       struct net_device *src)
++{
++	dst->addr_assign_type = src->addr_assign_type;
++	memcpy(dst->dev_addr, src->dev_addr, ETH_ALEN);
++}
++
++/**
+  * compare_ether_addr - Compare two Ethernet addresses
+  * @addr1: Pointer to a six-byte array containing the Ethernet address
+  * @addr2: Pointer other six-byte array containing the Ethernet address
 -- 
-1.8.3.4
+1.7.10.4
 
