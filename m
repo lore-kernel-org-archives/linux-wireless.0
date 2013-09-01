@@ -1,80 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39246 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754352Ab3ITLMC (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:43084 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753128Ab3IAHCS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 07:12:02 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Subject: [PATCH 43/51] DMA-API: dma: edma.c: no need to explicitly initialize
- DMA masks
-Message-Id: <E1VMnRj-0007sg-1Z@rmk-PC.arm.linux.org.uk> (sfid-20130920_131213_439366_939D7707)
-Date: Fri, 20 Sep 2013 00:15:39 +0100
+	Sun, 1 Sep 2013 03:02:18 -0400
+Subject: [PATCH v2 7/7] ath10k: simplify ath10k_ce_init() wake up handling
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 01 Sep 2013 10:02:15 +0300
+Message-ID: <20130901070215.14695.22473.stgit@localhost6.localdomain6> (sfid-20130901_090220_261894_E96EA779)
+In-Reply-To: <20130901070020.14695.16694.stgit@localhost6.localdomain6>
+References: <20130901070020.14695.16694.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-register_platform_device_full() can setup the DMA mask provided the
-appropriate member is set in struct platform_device_info.  So lets
-make that be the case.  This avoids a direct reference to the DMA
-masks by this driver.
+ath10k_ce_init() and the functions it calls wakeup
+the chip multiple times. Simplify that to call
+ath10k_pci_wake() only once. This also makes it
+easier to add error handling when wakeup fails.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/dma/edma.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c |   14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/dma/edma.c b/drivers/dma/edma.c
-index ff50ff4..7f9fe30 100644
---- a/drivers/dma/edma.c
-+++ b/drivers/dma/edma.c
-@@ -702,11 +702,13 @@ static struct platform_device *pdev0, *pdev1;
- static const struct platform_device_info edma_dev_info0 = {
- 	.name = "edma-dma-engine",
- 	.id = 0,
-+	.dma_mask = DMA_BIT_MASK(32),
- };
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 19f23a2..afe5df4 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -946,7 +946,6 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 	src_ring->nentries = nentries;
+ 	src_ring->nentries_mask = nentries - 1;
  
- static const struct platform_device_info edma_dev_info1 = {
- 	.name = "edma-dma-engine",
- 	.id = 1,
-+	.dma_mask = DMA_BIT_MASK(32),
- };
+-	ath10k_pci_wake(ar);
+ 	src_ring->sw_index = ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
+ 	src_ring->sw_index &= src_ring->nentries_mask;
+ 	src_ring->hw_index = src_ring->sw_index;
+@@ -954,7 +953,6 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 	src_ring->write_index =
+ 		ath10k_ce_src_ring_write_index_get(ar, ctrl_addr);
+ 	src_ring->write_index &= src_ring->nentries_mask;
+-	ath10k_pci_sleep(ar);
  
- static int edma_init(void)
-@@ -720,8 +722,6 @@ static int edma_init(void)
- 			ret = PTR_ERR(pdev0);
- 			goto out;
- 		}
--		pdev0->dev.dma_mask = &pdev0->dev.coherent_dma_mask;
--		pdev0->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+ 	src_ring->per_transfer_context = (void **)ptr;
+ 
+@@ -1004,7 +1002,6 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 			src_ring->shadow_base_unaligned,
+ 			CE_DESC_RING_ALIGN);
+ 
+-	ath10k_pci_wake(ar);
+ 	ath10k_ce_src_ring_base_addr_set(ar, ctrl_addr,
+ 					 src_ring->base_addr_ce_space);
+ 	ath10k_ce_src_ring_size_set(ar, ctrl_addr, nentries);
+@@ -1012,7 +1009,6 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 	ath10k_ce_src_ring_byte_swap_set(ar, ctrl_addr, 0);
+ 	ath10k_ce_src_ring_lowmark_set(ar, ctrl_addr, 0);
+ 	ath10k_ce_src_ring_highmark_set(ar, ctrl_addr, nentries);
+-	ath10k_pci_sleep(ar);
+ 
+ 	return 0;
+ }
+@@ -1049,13 +1045,11 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 	dest_ring->nentries = nentries;
+ 	dest_ring->nentries_mask = nentries - 1;
+ 
+-	ath10k_pci_wake(ar);
+ 	dest_ring->sw_index = ath10k_ce_dest_ring_read_index_get(ar, ctrl_addr);
+ 	dest_ring->sw_index &= dest_ring->nentries_mask;
+ 	dest_ring->write_index =
+ 		ath10k_ce_dest_ring_write_index_get(ar, ctrl_addr);
+ 	dest_ring->write_index &= dest_ring->nentries_mask;
+-	ath10k_pci_sleep(ar);
+ 
+ 	dest_ring->per_transfer_context = (void **)ptr;
+ 
+@@ -1090,14 +1084,12 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 			dest_ring->base_addr_ce_space_unaligned,
+ 			CE_DESC_RING_ALIGN);
+ 
+-	ath10k_pci_wake(ar);
+ 	ath10k_ce_dest_ring_base_addr_set(ar, ctrl_addr,
+ 					  dest_ring->base_addr_ce_space);
+ 	ath10k_ce_dest_ring_size_set(ar, ctrl_addr, nentries);
+ 	ath10k_ce_dest_ring_byte_swap_set(ar, ctrl_addr, 0);
+ 	ath10k_ce_dest_ring_lowmark_set(ar, ctrl_addr, 0);
+ 	ath10k_ce_dest_ring_highmark_set(ar, ctrl_addr, nentries);
+-	ath10k_pci_sleep(ar);
+ 
+ 	return 0;
+ }
+@@ -1138,6 +1130,10 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
+ 	u32 ctrl_addr = ath10k_ce_base_address(ce_id);
+ 	int ret;
+ 
++	ret = ath10k_pci_wake(ar);
++	if (ret)
++		return NULL;
++
+ 	ce_state = ath10k_ce_init_state(ar, ce_id, attr);
+ 	if (!ce_state) {
+ 		ath10k_err("Failed to initialize CE state for ID: %d\n", ce_id);
+@@ -1165,8 +1161,8 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
  	}
  
- 	if (EDMA_CTLRS == 2) {
-@@ -731,8 +731,6 @@ static int edma_init(void)
- 			platform_device_unregister(pdev0);
- 			ret = PTR_ERR(pdev1);
- 		}
--		pdev1->dev.dma_mask = &pdev1->dev.coherent_dma_mask;
--		pdev1->dev.coherent_dma_mask = DMA_BIT_MASK(32);
- 	}
+ 	/* Enable CE error interrupts */
+-	ath10k_pci_wake(ar);
+ 	ath10k_ce_error_intr_enable(ar, ctrl_addr);
++
+ 	ath10k_pci_sleep(ar);
  
- out:
--- 
-1.7.4.4
+ 	return ce_state;
 
