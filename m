@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.slscorp.com ([198.245.63.119]:60957 "EHLO
-	ns4000790.ip-198-245-63.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752480Ab3INFtS (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:46042 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754831Ab3IACvA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Sep 2013 01:49:18 -0400
-Message-ID: <5233F8D7.3060609@slscorp.com> (sfid-20130914_074943_746583_86FEE99D)
-Date: Sat, 14 Sep 2013 11:19:11 +0530
-From: Abbas Chunawala <abbas.chunawala@slscorp.com>
-Reply-To: abbas.chunawala@slscorp.com
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: How to change my current WiFi Driver to ath9k.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 31 Aug 2013 22:51:00 -0400
+Date: Sat, 31 Aug 2013 22:50:57 -0400 (EDT)
+Message-Id: <20130831.225057.1874268263797742541.davem@davemloft.net> (sfid-20130901_045111_714519_F9B700A5)
+To: bjorn@mork.no
+Cc: netdev@vger.kernel.org, kaber@trash.net, jiri@resnulli.us,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org, j@w1.fi,
+	libertas-dev@lists.infradead.org, gregkh@linuxfoundation.org,
+	devel@driverdev.osuosl.org, forest@alittletooquiet.net,
+	stephen@networkplumber.org, dan.carpenter@oracle.com
+Subject: Re: [PATCH v2 net-next 0/9] set addr_assign_type when inheriting a
+ dev_addr
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1377878932-26881-1-git-send-email-bjorn@mork.no>
+References: <1377878932-26881-1-git-send-email-bjorn@mork.no>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi List,
-Greetings.
+From: Bjørn Mork <bjorn@mork.no>
+Date: Fri, 30 Aug 2013 18:08:43 +0200
 
-I have a madWiFi Driver
-I would like to replace it with ath9k driver.
-Which files will i need to remove from the host stack and which will i 
-have to add.
-Particularly there are also files like art.ko ath_hal.ko etc. etc.
-By the way i have cross compiled the ath9k driver but the problem lies 
-that i am not able to figure out the dependencies.
+> Copying the dev_addr from a parent device is an operation
+> common to a number of drivers. The addr_assign_type should
+> be updated accordingly, either by reusing the value from
+> the source device or explicitly indicating that the address
+> is stolen by setting addr_assign_type to NET_ADDR_STOLEN.
+> 
+> This patch set adds a helper copying both the dev_addr and
+> the addr_assign_type, and use this helper in drivers which
+> don't currently set the addr_assign_type. Using NET_ADDR_STOLEN
+> might be more appropriate in some of these cases.  Please
+> let me know, and I'll update the patch accordingly.
+> 
+> Changes in v2:
+>  - assuming addr_len == ETH_ALEN to allow optimized memcpy
+>  - dropped the vt6656 patch due to addr_len being unset in that driver
 
-Thanks
-Regards
-Abbas Chunawala
-(System Level Solutions (I) Pvt. Ltd. )
-
-
+Looks good, series applied, thanks.
