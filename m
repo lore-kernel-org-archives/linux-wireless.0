@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:46192 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751639Ab3IRMnb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 08:43:31 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/5] ath10k: use num_pending_tx instead of msdu id bitmap
-Date: Wed, 18 Sep 2013 14:43:18 +0200
-Message-ID: <1379508202-9660-2-git-send-email-michal.kazior@tieto.com> (sfid-20130918_144336_461601_FE044E72)
-In-Reply-To: <1379508202-9660-1-git-send-email-michal.kazior@tieto.com>
-References: <1379508202-9660-1-git-send-email-michal.kazior@tieto.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33919 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753199Ab3IAGQT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Sep 2013 02:16:19 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/7] ath10k: remove void pointer from struct ath10k_pci_compl
+References: <20130830122905.31164.50662.stgit@localhost6.localdomain6>
+	<20130830123021.31164.8374.stgit@localhost6.localdomain6>
+	<522104B1.2070004@openwrt.org>
+Date: Sun, 1 Sep 2013 09:16:14 +0300
+In-Reply-To: <522104B1.2070004@openwrt.org> (Gabor Juhos's message of "Fri, 30
+	Aug 2013 22:46:41 +0200")
+Message-ID: <878uzh83td.fsf@kamboji.qca.qualcomm.com> (sfid-20130901_081623_714591_1BCEF9CA)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's more efficient to simply check num_pending_tx
-value instead of traversing whole bitmap of
-msdu ids.
+Gabor Juhos <juhosg@openwrt.org> writes:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c  |    3 +--
- drivers/net/wireless/ath/ath10k/txrx.c |    2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+> 2013.08.30. 14:30 keltezéssel, Kalle Valo írta:
+>> Void pointers are bad, mmkay.
+>> 
+>> No functional changes.
+>> 
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/pci.c |   12 ++++++------
+>>  drivers/net/wireless/ath/ath10k/pci.h |    2 +-
+>>  2 files changed, 7 insertions(+), 7 deletions(-)
+>> 
+>
+> <snip>
+>
+>> @@ -1026,7 +1026,7 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
+>>  				break;
+>>  			}
+>>  
+>> -			skb = (struct sk_buff *)compl->transfer_context;
+>> +			skb = (struct sk_buff *)compl->skb;
+>
+> The cast can be removed from here as well.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 11aa13e..5a56833 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2853,8 +2853,7 @@ static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 			bool empty;
- 
- 			spin_lock_bh(&ar->htt.tx_lock);
--			empty = bitmap_empty(ar->htt.used_msdu_ids,
--					     ar->htt.max_num_pending_tx);
-+			empty = (ar->htt.num_pending_tx == 0);
- 			spin_unlock_bh(&ar->htt.tx_lock);
- 
- 			skip = (ar->state == ATH10K_STATE_WEDGED);
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 68b6fae..37b8196 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -96,7 +96,7 @@ exit:
- 	htt->pending_tx[ATH10K_SKB_CB(txdesc)->htt.msdu_id] = NULL;
- 	ath10k_htt_tx_free_msdu_id(htt, ATH10K_SKB_CB(txdesc)->htt.msdu_id);
- 	__ath10k_htt_tx_dec_pending(htt);
--	if (bitmap_empty(htt->used_msdu_ids, htt->max_num_pending_tx))
-+	if (htt->num_pending_tx == 0)
- 		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
+Oh, I had missed that. I'll send v2 to fix that.
+
+Thank you for the review.
+
 -- 
-1.7.9.5
-
+Kalle Valo
