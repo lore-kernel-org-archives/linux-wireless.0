@@ -1,78 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:58140 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753496Ab3IRT7i (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64271 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626Ab3IAGgf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 15:59:38 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 8/8 V3] rtlwifi: Remove all remaining references to variable 'noise' in rtl_stats struct
-Date: Wed, 18 Sep 2013 14:58:59 -0500
-Message-Id: <1379534339-14895-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130918_220009_153209_C842377A)
-In-Reply-To: <1379534339-14895-5-git-send-email-Larry.Finger@lwfinger.net>
-References: <1379534339-14895-5-git-send-email-Larry.Finger@lwfinger.net>
+	Sun, 1 Sep 2013 02:36:35 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/6] ath10k: CE cleanups
+References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
+	<1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
+Date: Sun, 1 Sep 2013 09:36:30 +0300
+In-Reply-To: <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 27 Aug 2013 13:07:57 +0200")
+Message-ID: <87zjrx6ob5.fsf@kamboji.qca.qualcomm.com> (sfid-20130901_083640_331823_5A0F8E3D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This completes removal of all places that reference variable 'noise'
-in the rtl_stats struct. The definition of the struct is unchanged.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c | 1 -
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 1 -
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c | 1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c | 1 -
- 4 files changed, 4 deletions(-)
+> This patchset contains non-functional changes
+> except patch #1 which changes memory allocation
+> from dynamic to static.
+>
+> There is still some more to clean up in PCI/CE
+> but it's probably better to keep patchsets compact
+> and more frequent.
+>
+> v2:
+>  * fix checkpatch warning (Kalle)
+>
+>
+> Michal.
+>
+>
+> Michal Kazior (6):
+>   ath10k: use inline ce_state structure
+>   ath10k: remove ce_op_state
+>   ath10k: remove unused ce_attr parameters
+>   ath10k: rename hif_ce_pipe_info to ath10k_pci_pipe
+>   ath10k: rename ce_state to ath10k_ce_pipe
+>   ath10k: rename ce_ring_state to ath10k_ce_ring
 
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-@@ -477,7 +477,6 @@ bool rtl88ee_rx_query_desc(struct ieee80
- 
- 	/*rx_status->qual = status->signal; */
- 	rx_status->signal = status->recvsignalpower + 10;
--	/*rx_status->noise = -status->noise; */
- 	if (status->packet_report_type == TX_REPORT2) {
- 		status->macid_valid_entry[0] =
- 			 GET_RX_RPT2_DESC_MACID_VALID_1(pdesc);
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -420,7 +420,6 @@ bool rtl92ce_rx_query_desc(struct ieee80
- 
- 	/*rx_status->qual = stats->signal; */
- 	rx_status->signal = stats->recvsignalpower + 10;
--	/*rx_status->noise = -stats->noise; */
- 
- 	return true;
- }
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -330,7 +330,6 @@ bool rtl92se_rx_query_desc(struct ieee80
- 
- 	/*rx_status->qual = stats->signal; */
- 	rx_status->signal = stats->rssi + 10;
--	/*rx_status->noise = -stats->noise; */
- 
- 	return true;
- }
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-@@ -359,7 +359,6 @@ bool rtl8723ae_rx_query_desc(struct ieee
- 
- 	/*rx_status->qual = status->signal; */
- 	rx_status->signal = status->recvsignalpower + 10;
--	/*rx_status->noise = -status->noise; */
- 
- 	return true;
- }
+Applied all six, thanks.
+
+I dropped the lock addition from patch 1 and patch 5 had a conflict due
+to that change. Please double check that I didn't break anything.
+
+-- 
+Kalle Valo
