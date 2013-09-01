@@ -1,35 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:45158 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752571Ab3IIUBC convert rfc822-to-8bit (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:43249 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753365Ab3IAIWY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 16:01:02 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: regulatory will stuck when cfg80211 is built-in
-References: <CAFSJ42bTQkQO+yugN7BBjygQd7LY9H0bPBoPfoH7yyfyMzuGqA@mail.gmail.com>
-Date: Mon, 09 Sep 2013 23:01:00 +0300
-In-Reply-To: <CAFSJ42bTQkQO+yugN7BBjygQd7LY9H0bPBoPfoH7yyfyMzuGqA@mail.gmail.com>
-	(Eugene Krasnikov's message of "Mon, 9 Sep 2013 08:16:47 +0200")
-Message-ID: <87ppshu5mr.fsf@purkki.adurom.net> (sfid-20130909_220105_685476_1F91499F)
+	Sun, 1 Sep 2013 04:22:24 -0400
+Subject: [PATCH v2 2/2] ath10k: add chip_id file to debugfs
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 01 Sep 2013 11:22:21 +0300
+Message-ID: <20130901082221.1930.55810.stgit@localhost6.localdomain6> (sfid-20130901_102238_834866_4B548790)
+In-Reply-To: <20130901082007.1930.79088.stgit@localhost6.localdomain6>
+References: <20130901082007.1930.79088.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eugene Krasnikov <k.eugene.e@gmail.com> writes:
+So that's it's possible to query chip id from ath10k anytime.
 
-> There is a problem with regulatory part of cfg80211 when cfg80211 is
-> built-in the kernel. On regulatory init cfg80211 will try to notify
-> user space about changing current domain to world regulatory but at
-> that time user space is not up and running yet and uevent message will
-> be lost. So what will happen is that cfg80211 will wait for the
-> response from user space and all requests to set current regulatory
-> will be dropped with the following error: “Pending regulatory request,
-> waiting for it to be processed...”.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |   22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-Does CONFIG_CFG80211_INTERNAL_REGDB help?
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index fcb40cc..09f535a 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -498,6 +498,25 @@ static const struct file_operations fops_simulate_fw_crash = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t ath10k_read_chip_id(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	unsigned int len;
++	char buf[50];
++
++	len = scnprintf(buf, sizeof(buf), "0x%08x\n", ar->chip_id);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_chip_id = {
++	.read = ath10k_read_chip_id,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath10k_debug_create(struct ath10k *ar)
+ {
+ 	ar->debug.debugfs_phy = debugfs_create_dir("ath10k",
+@@ -517,6 +536,9 @@ int ath10k_debug_create(struct ath10k *ar)
+ 	debugfs_create_file("simulate_fw_crash", S_IRUSR, ar->debug.debugfs_phy,
+ 			    ar, &fops_simulate_fw_crash);
+ 
++	debugfs_create_file("chip_id", S_IRUSR, ar->debug.debugfs_phy,
++			    ar, &fops_chip_id);
++
+ 	return 0;
+ }
+ #endif /* CONFIG_ATH10K_DEBUGFS */
 
--- 
-Kalle Valo
