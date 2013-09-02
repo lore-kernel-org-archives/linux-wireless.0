@@ -1,67 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58507 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751227Ab3I2MsG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Sep 2013 08:48:06 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 3.12] mac80211: fix a tx power handling regression
-Date: Sun, 29 Sep 2013 14:48:03 +0200
-Message-Id: <1380458883-19862-1-git-send-email-nbd@openwrt.org> (sfid-20130929_144824_118345_F20376DE)
+Received: from s72.web-hosting.com ([198.187.29.21]:37525 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755465Ab3IBFr7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Sep 2013 01:47:59 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/6] ath9k: Use correct RX gain table for AR9565
+Date: Mon,  2 Sep 2013 11:14:03 +0530
+Message-Id: <1378100645-29868-4-git-send-email-sujith@msujith.org> (sfid-20130902_074804_120786_6B9F3AB5)
+In-Reply-To: <1378100645-29868-1-git-send-email-sujith@msujith.org>
+References: <1378100645-29868-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 1ea6f9c0d48b11b6ec3ec4b5579ec74fc3951cf8
-"mac80211: handle TX power per virtual interface"
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This commit added support for tracking tx power configuration for
-multiple interfaces, however instead of using the maximum value of all
-virtual interfaces, it uses the minimum.
-
-This causes the configured tx power to be reset to the absolute minimum
-for all virtual interfaces, whenever an interface is created and destroyed
-immediately afterwards.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/mac80211/main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 21d5d44..87c5509 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -97,7 +97,7 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
- 	struct ieee80211_sub_if_data *sdata;
- 	struct cfg80211_chan_def chandef = {};
- 	u32 changed = 0;
--	int power;
-+	int power = 0;
- 	u32 offchannel_flag;
- 
- 	offchannel_flag = local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL;
-@@ -142,16 +142,16 @@ static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
- 		changed |= IEEE80211_CONF_CHANGE_SMPS;
- 	}
- 
--	power = ieee80211_chandef_max_power(&chandef);
--
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		if (!rcu_access_pointer(sdata->vif.chanctx_conf))
- 			continue;
--		power = min(power, sdata->vif.bss_conf.txpower);
-+		power = max(power, sdata->vif.bss_conf.txpower);
- 	}
- 	rcu_read_unlock();
- 
-+	power = min(power, ieee80211_chandef_max_power(&chandef));
-+
- 	if (local->hw.conf.power_level != power) {
- 		changed |= IEEE80211_CONF_CHANGE_POWER;
- 		local->hw.conf.power_level = power;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 608bb48..d40bdd2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -628,6 +628,9 @@ static void ar9003_rx_gain_table_mode0(struct ath_hw *ah)
+ 	else if (AR_SREV_9462_20(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 				ar9462_common_rx_gain_table_2p0);
++	else if (AR_SREV_9565(ah))
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			       ar9565_1p0_Common_rx_gain_table);
+ 	else
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 				ar9300Common_rx_gain_table_2p2);
 -- 
-1.8.0.2
+1.8.4
 
