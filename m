@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:64931 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848Ab3IMQSN (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:53224 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757408Ab3IBIcz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 12:18:13 -0400
-Message-ID: <201309131617.r8DGHu7H000791@farm-0013.internal.tilera.com> (sfid-20130913_181835_065845_EF5B15D0)
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Fri, 13 Sep 2013 12:14:09 -0400
-Subject: [PATCH] ath9k: mark wmi_event_swba as __packed
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
-	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 2 Sep 2013 04:32:55 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 2/8] ath9k: Bypass EEPROM for diversity cap for AR9565
+Date: Mon,  2 Sep 2013 13:59:00 +0530
+Message-Id: <1378110546-22305-2-git-send-email-sujith@msujith.org> (sfid-20130902_103313_464891_AFC8C8F2)
+In-Reply-To: <1378110546-22305-1-git-send-email-sujith@msujith.org>
+References: <21028.19411.335796.192256@gargle.gargle.HOWL>
+ <1378110546-22305-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The other structures in wmi.h are already marked this way.
-Without this marking, we get an unaliged access panic in the tilegx kernel:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Starting stack dump of tid 0, pid 0 (swapper) on cpu 35 at cycle 198675113844
-  frame 0: 0xfffffff7103ada90 ath9k_htc_swba+0x120/0x618 [ath9k_htc]
-  frame 1: 0xfffffff7103a4b10 ath9k_wmi_event_tasklet+0x1b0/0x270 [ath9k_htc]
-  frame 2: 0xfffffff700326570 tasklet_action+0x148/0x298
-  [...]
+Use a default antenna diversity value for AR9565 instead
+of relying on the EEPROM/OTP programmed value.
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/wmi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 5 ++++-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 2 ++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index fde6da6..0db37f2 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -39,7 +39,7 @@ struct wmi_fw_version {
- struct wmi_event_swba {
- 	__be64 tsf;
- 	u8 beacon_pending;
--};
-+} __packed;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index f486480..6af2d73 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2991,7 +2991,10 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 	case EEP_CHAIN_MASK_REDUCE:
+ 		return (pBase->miscConfiguration >> 0x3) & 0x1;
+ 	case EEP_ANT_DIV_CTL1:
+-		return eep->base_ext1.ant_div_control;
++		if (AR_SREV_9565(ah))
++			return AR9300_EEP_ANTDIV_CONTROL_DEFAULT_VALUE;
++		else
++			return eep->base_ext1.ant_div_control;
+ 	case EEP_ANTENNA_GAIN_5G:
+ 		return eep->modalHeader5G.antennaGain;
+ 	case EEP_ANTENNA_GAIN_2G:
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 75d4fb4..0e5daa5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -52,6 +52,8 @@
+ #define AR9300_PAPRD_SCALE_2		0x70000000
+ #define AR9300_PAPRD_SCALE_2_S		28
  
- /*
-  * 64 - HTC header - WMI header - 1 / txstatus
++#define AR9300_EEP_ANTDIV_CONTROL_DEFAULT_VALUE 0xc9
++
+ /* Delta from which to start power to pdadc table */
+ /* This offset is used in both open loop and closed loop power control
+  * schemes. In open loop power control, it is not really needed, but for
 -- 
-1.8.3.1
+1.8.4
 
