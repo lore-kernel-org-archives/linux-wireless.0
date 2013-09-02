@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:60693 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965Ab3ITBVs (ORCPT
+Received: from mail-vc0-f175.google.com ([209.85.220.175]:63194 "EHLO
+	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758718Ab3IBSyY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Sep 2013 21:21:48 -0400
-Message-ID: <1379640097.2500.4.camel@bwh-desktop.uk.level5networks.com> (sfid-20130920_032238_800718_606270B5)
-Subject: Re: [PATCH 01/51] DMA-API: provide a helper to set both DMA and
- coherent DMA masks
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-CC: <alsa-devel@alsa-project.org>, <b43-dev@lists.infradead.org>,
-	<devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
-	<dri-devel@lists.freedesktop.org>,
-	<e1000-devel@lists.sourceforge.net>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-crypto@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-fbdev@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-	<linux-media@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-nvme@lists.infradead.org>, <linux-omap@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	<linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	"Solarflare linux maintainers" <linux-net-drivers@solarflare.com>,
-	<uclinux-dist-devel@blackfin.uclinux.org>,
-	Rob Landley <rob@landley.net>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 20 Sep 2013 02:21:37 +0100
-In-Reply-To: <E1VMlja-0007fA-HU@rmk-PC.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-	 <E1VMlja-0007fA-HU@rmk-PC.arm.linux.org.uk>
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 2 Sep 2013 14:54:24 -0400
+Received: by mail-vc0-f175.google.com with SMTP id ia10so3175036vcb.20
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Sep 2013 11:54:23 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <5224A1F9.3030907@hauke-m.de>
+References: <1378118306-7890-1-git-send-email-k.eugene.e@gmail.com>
+	<5224A1F9.3030907@hauke-m.de>
+Date: Mon, 2 Sep 2013 20:54:23 +0200
+Message-ID: <CAFSJ42YUgJ-Bnx_DW_oJn6bk4BRVtyeD=b+G5oenefb3S7ZLNQ@mail.gmail.com> (sfid-20130902_205427_656569_B866932B)
+Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-09-19 at 22:25 +0100, Russell King wrote:
-> Provide a helper to set both the DMA and coherent DMA masks to the
-> same value - this avoids duplicated code in a number of drivers,
-> sometimes with buggy error handling, and also allows us identify
-> which drivers do things differently.
-> 
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-> ---
->  Documentation/DMA-API-HOWTO.txt |   37 ++++++++++++++++++++++---------------
->  Documentation/DMA-API.txt       |    8 ++++++++
->  include/linux/dma-mapping.h     |   14 ++++++++++++++
->  3 files changed, 44 insertions(+), 15 deletions(-)
-> 
-> diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
-> index 14129f1..5e98303 100644
-> --- a/Documentation/DMA-API-HOWTO.txt
-> +++ b/Documentation/DMA-API-HOWTO.txt
-[...]
-> -dma_set_coherent_mask() will always be able to set the same or a
-> -smaller mask as dma_set_mask(). However for the rare case that a
-> +The coherent coherent mask will always be able to set the same or a
-> +smaller mask as the streaming mask. However for the rare case that a
-[...]
+Will check with legal department if licenses are compliant and come back to you.
+But I guess for driver contribution it's not mandatory.
 
-The new wording doesn't make sense; a mask doesn't set itself.  I would
-suggest:
+2013/9/2 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 09/02/2013 12:38 PM, Eugene Krasnikov wrote:
+>> This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
+>> far WCN3660/WCN3680 is available only on MSM platform.
+>>
+>> Firmware can be found here:
+>> https://github.com/AOKP/vendor_sony/find/jb-mr1
+>
+> Will you send the firmware for inclusion to linux-fimware?
+> I am also missing the firmware for ath10k there.
+>
+>> Wiki page is available here:
+>> http://wireless.kernel.org/en/users/Drivers/wcn36xx
+>>
+>
+> Hauke
+>
 
-"The coherent mask can always be set to the same or a smaller mask than
-the streaming mask."
 
-Ben.
 
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+Best regards,
+Eugene
