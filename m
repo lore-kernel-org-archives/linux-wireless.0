@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2098 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754834Ab3I3OVC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 10:21:02 -0400
-Message-ID: <524988C7.1080903@broadcom.com> (sfid-20130930_162106_280526_3886495E)
-Date: Mon, 30 Sep 2013 16:20:55 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from nm3-vm0.bullet.mail.ird.yahoo.com ([77.238.189.213]:46489 "HELO
+	nm3-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754388Ab3IBGer convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Sep 2013 02:34:47 -0400
+Message-ID: <1378103685.43571.YahooMailBasic@web172301.mail.ir2.yahoo.com> (sfid-20130902_083451_662195_B6A0B9E7)
+Date: Mon, 2 Sep 2013 07:34:45 +0100 (BST)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl8187: fix use after free on failure path in rtl8187_init_urbs()
+To: khoroshilov@ispras.ru
+Cc: larry.finger@lwfinger.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org,
+	gregkh@linuxfoundation.org
 MIME-Version: 1.0
-To: "Dan Williams" <dcbw@redhat.com>
-cc: "Arend van Spriel" <aspriel@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: NetworkManager not connecting anymore
-References: <CAJ65rDzRUZcZG5+iz2TeQLW7YS+T5xD+M-BxpJp23N=W4dn1+g@mail.gmail.com>
- <1380549653.6136.4.camel@dcbw.foobar.com>
-In-Reply-To: <1380549653.6136.4.camel@dcbw.foobar.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/30/13 16:00, Dan Williams wrote:
-> On Sun, 2013-09-29 at 11:11 +0200, Arend van Spriel wrote:
->> With a recent update on my Ubuntu 12.10 laptop, wireless connection is no
->> longer working with NetworkManager. It is working when using wpa_supplicant
->> directly. The nm-applet indicates 'device not ready' for the Wireless
->> Networks. Attached is the syslog upon inserting the wireless driver module,
->> which is brcmsmac. Not sure if the state change below correlates to the
->> nm-applet status.
+------------------------------
+On Mon, Sep 2, 2013 05:06 BST Alexey Khoroshilov wrote:
+
+>On 01.09.2013 10:51, Hin-Tak Leung wrote:
+>> ------------------------------
+>> On Sat, Aug 31, 2013 22:18 BST Alexey Khoroshilov wrote:
 >>
->> NetworkManager[1121]:<info>  (wlan0): device state change: unmanaged ->
->> unavailable (reason 'managed') [10 20 2]
->
-> 'unavailable' could mean a couple things:
->
-> 1) supplicant isn't running or can't be contacted via D-Bus
+>> In case of __dev_alloc_skb() failure rtl8187_init_urbs()
+>> calls usb_free_urb(entry) where 'entry' can points to urb
+>> allocated at the previous iteration. That means refcnt will be
+>> decremented incorrectly and the urb can be used after memory
+>> deallocation.
+>>
+>> The patch fixes the issue and implements error handling of init_urbs
+>> in rtl8187_start().
+>>
+>> Found by Linux Driver Verification project (linuxtesting.org).
+>>
+>> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+>> ---
+>> drivers/net/wireless/rtl818x/rtl8187/dev.c | 15 ++++++++++-----
+>> 1 file changed, 10 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> index f49220e..e83d53c 100644
+>> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> @@ -438,17 +438,16 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
+>>          skb_queue_tail(&priv->rx_queue, skb);
+>>          usb_anchor_urb(entry, &priv->anchored);
+>>          ret = usb_submit_urb(entry, GFP_KERNEL);
+>> +        usb_free_urb(entry);
+>>          if (ret) {
+>>              skb_unlink(skb, &priv->rx_queue);
+>>              usb_unanchor_urb(entry);
+>>              goto err;
+>>          }
+>> -        usb_free_urb(entry);
+>>      }
+>>      return ret;
+>>
+>> err:
+>> -    usb_free_urb(entry);
+>>      kfree_skb(skb);
+>>      usb_kill_anchored_urbs(&priv->anchored);
+>>      return ret;
+>> This part looks wrong - you free_urb(entry) then unanchor_urb(entry).
+>I do not see any problems here.
+>usb_free_urb() just decrements refcnt of the urb.
+>While usb_anchor_urb() and usb_unanchor_urb() increment and decrement it 
+>as well.
+>So actual memory deallocation will happen in usb_unanchor_urb().
 
-Hi Dan,
+If the routines work as you say, they probably are misnamed, and/or prototyped wrongly?
+Also, you are making assumptions about how they are implemented, and relying
+on the implementation details to be fixed for eternity.
 
-Thanks for explaining. 1) seems to be the issue. 'ps -ae | grep wpa' did 
-not return anything. I decided to remove and install wpa_supplicant. 
-Sometimes the helpdesk approach works ;-)
+I am just saying,
 
-Regards,
-Arend
+XXX_free(some_entity);
+if(condtion)
+     do_stuff(some_entity);
+
+looks wrong, and if that's intentional, those routines really shouldn't be named as such.
+
+Hin-Tak
+
+
 
