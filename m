@@ -1,89 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48635 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751489Ab3IMRV5 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:54867 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755298Ab3IBFr6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 13:21:57 -0400
-Message-ID: <523349B1.8010306@candelatech.com> (sfid-20130913_192203_945554_623FB6BF)
-Date: Fri, 13 Sep 2013 10:21:53 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Albert Lo <alo@airpatrolcorp.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: problems setting the channel
-References: <bd4dc3b2edbb45789121bddb33960aa2@CO1PR05MB345.namprd05.prod.outlook.com>
-In-Reply-To: <bd4dc3b2edbb45789121bddb33960aa2@CO1PR05MB345.namprd05.prod.outlook.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 2 Sep 2013 01:47:58 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/6] ath9k: Fix antenna diversity init for AR9565
+Date: Mon,  2 Sep 2013 11:14:02 +0530
+Message-Id: <1378100645-29868-3-git-send-email-sujith@msujith.org> (sfid-20130902_074806_335273_6FDD6192)
+In-Reply-To: <1378100645-29868-1-git-send-email-sujith@msujith.org>
+References: <1378100645-29868-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/2013 10:11 AM, Albert Lo wrote:
->
-> Hello,
->
-> Forgive the newbie question, but I'm having a hard time setting the channel.  Here is my output:
->
-> ======================================
-> root@OpenWrt:~# iw dev wlan0 info
-> Interface wlan0
->      ifindex 7
->      wdev 0x2
->      addr 04:f0:21:01:1b:91
->      type AP
->      wiphy 0
->      channel 11 (2462 MHz) NO HT
-> root@OpenWrt:~# iw reg get
-> country US:
->      (2402 - 2472 @ 40), (3, 27)
->      (5170 - 5250 @ 40), (3, 17)
->      (5250 - 5330 @ 40), (3, 20), DFS
->      (5490 - 5600 @ 40), (3, 20), DFS
->      (5650 - 5710 @ 40), (3, 20), DFS
->      (5735 - 5835 @ 40), (3, 30)
-> root@OpenWrt:/# iw dev wlan0 set channel 10
-> root@OpenWrt:/# iw dev wlan0 set channel 19
-> command failed: Invalid argument (-22)
-> ==================================================
->
->
-> Any ideas why setting channel to 10 is ok, but setting channel to 19 fails?
-> I do notice that my phy is split into two parts, Band1 and Band2.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-There is no channel 19.  Band2 starts at channel 36.
+Program the HW registers (AR_PHY_CCK_DETECT, AR_PHY_MC_GAIN_CTRL)
+with the correct values for AR9565 to allow LNA combining.
 
-> 		Frequencies:
-> 			* 5180 MHz [36] (17.0 dBm)
-> 			* 5200 MHz [40] (17.0 dBm)
-> 			* 5220 MHz [44] (17.0 dBm)
-> 			* 5240 MHz [48] (17.0 dBm)
-> 			* 5260 MHz [52] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5280 MHz [56] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5300 MHz [60] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5320 MHz [64] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5500 MHz [100] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5520 MHz [104] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5540 MHz [108] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5560 MHz [112] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5580 MHz [116] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5600 MHz [120] (disabled)
-> 			* 5620 MHz [124] (disabled)
-> 			* 5640 MHz [128] (disabled)
-> 			* 5660 MHz [132] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5680 MHz [136] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5700 MHz [140] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-> 			* 5745 MHz [149] (30.0 dBm)
-> 			* 5765 MHz [153] (30.0 dBm)
-> 			* 5785 MHz [157] (30.0 dBm)
-> 			* 5805 MHz [161] (30.0 dBm)
-> 			* 5825 MHz [165] (30.0 dBm)
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 17 ++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 17 ++++++++++++-----
+ 2 files changed, 28 insertions(+), 6 deletions(-)
 
-
-For normal use, you usually don't need to specify the channel anyway, by the way.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 6af2d73..5982256 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3659,9 +3659,23 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		if (AR_SREV_9565(ah)) {
+ 			if (common->bt_ant_diversity) {
+ 				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
++
++				REG_SET_BIT(ah, AR_PHY_RESTART,
++					    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
++
++				/* Force WLAN LNA diversity ON */
++				REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
++					    AR_BTCOEX_WL_LNADIV_FORCE_ON);
+ 			} else {
+ 				regval &= ~(1 << AR_PHY_ANT_DIV_LNADIV_S);
+ 				regval &= ~(1 << AR_PHY_ANT_SW_RX_PROT_S);
++
++				REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
++					    (1 << AR_PHY_ANT_SW_RX_PROT_S));
++
++				/* Force WLAN LNA diversity OFF */
++				REG_CLR_BIT(ah, AR_BTCOEX_WL_LNADIV,
++					    AR_BTCOEX_WL_LNADIV_FORCE_ON);
+ 			}
+ 		}
+ 
+@@ -3672,7 +3686,8 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		regval &= (~AR_FAST_DIV_ENABLE);
+ 		regval |= ((value >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
+ 
+-		if (AR_SREV_9485(ah) && common->bt_ant_diversity)
++		if ((AR_SREV_9485(ah) || AR_SREV_9565(ah))
++		    && common->bt_ant_diversity)
+ 			regval |= AR_FAST_DIV_ENABLE;
+ 
+ 		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index e897648..9ca9b2c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1489,17 +1489,24 @@ static void ar9003_hw_set_bt_ant_diversity(struct ath_hw *ah, bool enable)
+ 	} else if (AR_SREV_9565(ah)) {
+ 		if (enable) {
+ 			REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
++				    AR_ANT_DIV_ENABLE);
++			REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
+ 				    (1 << AR_PHY_ANT_SW_RX_PROT_S));
+-			if (ah->curchan && IS_CHAN_2GHZ(ah->curchan))
+-				REG_SET_BIT(ah, AR_PHY_RESTART,
+-					    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
++			REG_SET_BIT(ah, AR_PHY_CCK_DETECT,
++				    AR_FAST_DIV_ENABLE);
++			REG_SET_BIT(ah, AR_PHY_RESTART,
++				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
+ 			REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
+ 				    AR_BTCOEX_WL_LNADIV_FORCE_ON);
+ 		} else {
+-			REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE);
++			REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
++				    AR_ANT_DIV_ENABLE);
+ 			REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
+ 				    (1 << AR_PHY_ANT_SW_RX_PROT_S));
+-			REG_CLR_BIT(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE);
++			REG_CLR_BIT(ah, AR_PHY_CCK_DETECT,
++				    AR_FAST_DIV_ENABLE);
++			REG_CLR_BIT(ah, AR_PHY_RESTART,
++				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
+ 			REG_CLR_BIT(ah, AR_BTCOEX_WL_LNADIV,
+ 				    AR_BTCOEX_WL_LNADIV_FORCE_ON);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.4
 
