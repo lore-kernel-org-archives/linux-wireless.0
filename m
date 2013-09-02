@@ -1,27 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54286 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753269Ab3I3JbP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 05:31:15 -0400
-Message-ID: <1380533468.14467.5.camel@jlt4.sipsolutions.net> (sfid-20130930_113122_253725_B82B0720)
-Subject: Re: [PATCH 3.12 1/2] mac80211: use sta_info_get_bss() for nl80211
- tx and client probing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 30 Sep 2013 11:31:08 +0200
-In-Reply-To: <1380483574-88667-1-git-send-email-nbd@openwrt.org>
-References: <1380483574-88667-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.ispras.ru ([83.149.199.45]:35092 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752097Ab3IBEGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Sep 2013 00:06:04 -0400
+Message-ID: <52240EA9.7010207@ispras.ru> (sfid-20130902_060628_272441_36F3B0DA)
+Date: Mon, 02 Sep 2013 07:06:01 +0300
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+MIME-Version: 1.0
+To: htl10@users.sourceforge.net
+CC: larry.finger@lwfinger.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] rtl8187: fix use after free on failure path in rtl8187_init_urbs()
+References: <1378021881.73447.YahooMailBasic@web172302.mail.ir2.yahoo.com>
+In-Reply-To: <1378021881.73447.YahooMailBasic@web172302.mail.ir2.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-09-29 at 21:39 +0200, Felix Fietkau wrote:
-> This allows calls for clients in AP_VLANs (e.g. for 4-addr) to succeed
+On 01.09.2013 10:51, Hin-Tak Leung wrote:
+> ------------------------------
+> On Sat, Aug 31, 2013 22:18 BST Alexey Khoroshilov wrote:
+>
+>> In case of __dev_alloc_skb() failure rtl8187_init_urbs()
+>> calls usb_free_urb(entry) where 'entry' can points to urb
+>> allocated at the previous iteration. That means refcnt will be
+>> decremented incorrectly and the urb can be used after memory
+>> deallocation.
+>>
+>> The patch fixes the issue and implements error handling of init_urbs
+>> in rtl8187_start().
+>>
+>> Found by Linux Driver Verification project (linuxtesting.org).
+>>
+>> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+>> ---
+>> drivers/net/wireless/rtl818x/rtl8187/dev.c | 15 ++++++++++-----
+>> 1 file changed, 10 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> index f49220e..e83d53c 100644
+>> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> @@ -438,17 +438,16 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
+>>          skb_queue_tail(&priv->rx_queue, skb);
+>>          usb_anchor_urb(entry, &priv->anchored);
+>>          ret = usb_submit_urb(entry, GFP_KERNEL);
+>> +        usb_free_urb(entry);
+>>          if (ret) {
+>>              skb_unlink(skb, &priv->rx_queue);
+>>              usb_unanchor_urb(entry);
+>>              goto err;
+>>          }
+>> -        usb_free_urb(entry);
+>>      }
+>>      return ret;
+>>
+>> err:
+>> -    usb_free_urb(entry);
+>>      kfree_skb(skb);
+>>      usb_kill_anchored_urbs(&priv->anchored);
+>>      return ret;
+> This part looks wrong - you free_urb(entry) then unanchor_urb(entry).
+I do not see any problems here.
+usb_free_urb() just decrements refcnt of the urb.
+While usb_anchor_urb() and usb_unanchor_urb() increment and decrement it 
+as well.
+So actual memory deallocation will happen in usb_unanchor_urb().
 
-Applied.
-
-johannes
+>
+>> @@ -956,8 +955,12 @@ static int rtl8187_start(struct ieee80211_hw *dev)
+>>                    (RETRY_COUNT < 8  /* short retry limit */) |
+>>                    (RETRY_COUNT < 0  /* long retry limit */) |
+>>                    (7 < 21 /* MAX TX DMA */));
+>> -        rtl8187_init_urbs(dev);
+>> -        rtl8187b_init_status_urb(dev);
+>> +        ret = rtl8187_init_urbs(dev);
+>> +        if (ret)
+>> +            goto rtl8187_start_exit;
+>> +        ret = rtl8187b_init_status_urb(dev);
+>> +        if (ret)
+>> +            usb_kill_anchored_urbs(&priv->anchored);
+>>          goto rtl8187_start_exit;
+>>      }
+>>
+>> @@ -966,7 +969,9 @@ static int rtl8187_start(struct ieee80211_hw *dev)
+>>      rtl818x_iowrite32(priv, &priv->map->MAR[0], ~0);
+>>      rtl818x_iowrite32(priv, &priv->map->MAR[1], ~0);
+>>
+>> -    rtl8187_init_urbs(dev);
+>> +    ret = rtl8187_init_urbs(dev);
+>> +    if (ret)
+>> +        goto rtl8187_start_exit;
+>>
+>>      reg = RTL818X_RX_CONF_ONLYERLPKT |
+>>            RTL818X_RX_CONF_RX_AUTORESETPHY |
+>> -- 
+>> 1.8.1.2
+>>
+>
+>
 
