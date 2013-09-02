@@ -1,36 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34204 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753778Ab3IBOel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 10:34:41 -0400
-Message-ID: <5224A1F9.3030907@hauke-m.de> (sfid-20130902_163444_295818_3687C3D1)
-Date: Mon, 02 Sep 2013 16:34:33 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org
-Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680
- hardware
-References: <1378118306-7890-1-git-send-email-k.eugene.e@gmail.com>
-In-Reply-To: <1378118306-7890-1-git-send-email-k.eugene.e@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from s72.web-hosting.com ([198.187.29.21]:36456 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756597Ab3IBIcx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Sep 2013 04:32:53 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 1/8] ath9k: Update initvals for AR9565 1.0
+Date: Mon,  2 Sep 2013 13:58:59 +0530
+Message-Id: <1378110546-22305-1-git-send-email-sujith@msujith.org> (sfid-20130902_103305_573023_9F28FEC4)
+In-Reply-To: <21028.19411.335796.192256@gargle.gargle.HOWL>
+References: <21028.19411.335796.192256@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/02/2013 12:38 PM, Eugene Krasnikov wrote:
-> This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
-> far WCN3660/WCN3680 is available only on MSM platform.
-> 
-> Firmware can be found here:
-> https://github.com/AOKP/vendor_sony/find/jb-mr1
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Will you send the firmware for inclusion to linux-fimware?
-I am also missing the firmware for ath10k there.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-> Wiki page is available here:
-> http://wireless.kernel.org/en/users/Drivers/wcn36xx
-> 
-
-Hauke
+diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+index e85a8b0..03ecc07 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+@@ -272,9 +272,9 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
+ 	{0x0000a398, 0x001f0e0f},
+ 	{0x0000a39c, 0x0075393f},
+ 	{0x0000a3a0, 0xb79f6427},
+-	{0x0000a3a4, 0x00000000},
+-	{0x0000a3a8, 0xaaaaaaaa},
+-	{0x0000a3ac, 0x3c466478},
++	{0x0000a3a4, 0x00000011},
++	{0x0000a3a8, 0xaaaaaa6e},
++	{0x0000a3ac, 0x3c466455},
+ 	{0x0000a3c0, 0x20202020},
+ 	{0x0000a3c4, 0x22222220},
+ 	{0x0000a3c8, 0x20200020},
+@@ -295,11 +295,11 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
+ 	{0x0000a404, 0x00000000},
+ 	{0x0000a408, 0x0e79e5c6},
+ 	{0x0000a40c, 0x00820820},
+-	{0x0000a414, 0x1ce739ce},
++	{0x0000a414, 0x1ce739c5},
+ 	{0x0000a418, 0x2d001dce},
+-	{0x0000a41c, 0x1ce739ce},
++	{0x0000a41c, 0x1ce739c5},
+ 	{0x0000a420, 0x000001ce},
+-	{0x0000a424, 0x1ce739ce},
++	{0x0000a424, 0x1ce739c5},
+ 	{0x0000a428, 0x000001ce},
+ 	{0x0000a42c, 0x1ce739ce},
+ 	{0x0000a430, 0x1ce739ce},
+@@ -351,9 +351,9 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
+ 	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3379605e, 0x33795d5e},
+ 	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+-	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
++	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003a4, 0x000003a4},
+ 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
+-	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcf946222, 0xcf946222},
++	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcf946220, 0xcf946220},
+ 	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+@@ -452,6 +452,7 @@ static const u32 ar9565_1p0_Common_rx_gain_table[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00004050, 0x00300300},
+ 	{0x0000406c, 0x00100000},
++	{0x00009e20, 0x000003b6},
+ 	{0x0000a000, 0x00010000},
+ 	{0x0000a004, 0x00030002},
+ 	{0x0000a008, 0x00050004},
+-- 
+1.8.4
 
