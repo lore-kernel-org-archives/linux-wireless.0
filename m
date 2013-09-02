@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p15195424.pureserver.info ([82.165.34.74]:53667 "EHLO
-	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752846Ab3IKRMo (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:50889 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755465Ab3IBFsE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 13:12:44 -0400
-Message-ID: <5230A440.5050709@ilande.co.uk> (sfid-20130911_191248_873282_86FE86BA)
-Date: Wed, 11 Sep 2013 18:11:28 +0100
-From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Dan Williams <dcbw@redhat.com>,
-	Vincent Thiele <vincentthiele@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>  <522E4315.4040806@lwfinger.net> <1378764913.31180.9.camel@dcbw.foobar.com>  <CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com> <1378916091.1693.21.camel@dcbw.foobar.com> <52309B75.3010408@lwfinger.net>
-In-Reply-To: <52309B75.3010408@lwfinger.net>
-Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 2 Sep 2013 01:48:04 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 6/6] ath9k: Enable antenna diversity for WB335
+Date: Mon,  2 Sep 2013 11:14:05 +0530
+Message-Id: <1378100645-29868-6-git-send-email-sujith@msujith.org> (sfid-20130902_074810_942154_F5271C63)
+In-Reply-To: <1378100645-29868-1-git-send-email-sujith@msujith.org>
+References: <1378100645-29868-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/09/13 17:33, Larry Finger wrote:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
->> So the AP is disconnecting the device a couple seconds with reason 4,
->> which is "Disassociated due to inactivity". My thought is that this
->> points to a driver bug (Larry?).
->
-> Possibly, but for reference, my Edimax EW-7811Un has been running for 37
-> hours. During that time, I have had no deauthentications and only 2
-> instances of the "AP lost" reconnections. The latter is what I am
-> currently trying to fix, but at that error rate, it is difficult. I am
-> running the latest 3.11 kernel from wireless testing.
->
-> The only thing I am doing that is unusual is that I am pinging my router
-> at a 5 second interval using the command
->
-> ping -i5 192.168.1.1
->
-> It is possible that I am preventing a power save operation, which is
-> making a difference.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/pci.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Hi Larry,
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index d089a7c..b43a2ec 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -269,7 +269,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 
+ 	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0037) }, /* PCI-E  AR1111/AR9485 */
+-	{ PCI_VDEVICE(ATHEROS, 0x0036) }, /* PCI-E  AR9565 */
++
++	/* PCI-E AR9565 (WB335) */
++	{ PCI_VDEVICE(ATHEROS, 0x0036),
++	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++
+ 	{ 0 }
+ };
+ 
+-- 
+1.8.4
 
-For comparison, what does your device report when plugged in? My device 
-reports this:
-
-Sep 10 00:28:41 kentang kernel: [90532.399226] usb 4-1.2: new high-speed 
-USB device number 26 using ehci-pci
-Sep 10 00:28:41 kentang kernel: [90532.492624] usb 4-1.2: New USB device 
-found, idVendor=0bda, idProduct=8176
-Sep 10 00:28:41 kentang kernel: [90532.492627] usb 4-1.2: New USB device 
-strings: Mfr=1, Product=2, SerialNumber=3
-Sep 10 00:28:41 kentang kernel: [90532.492629] usb 4-1.2: Manufacturer: 
-Realtek
-Sep 10 00:28:41 kentang kernel: [90532.492630] usb 4-1.2: SerialNumber: 
-00e04c000001
-Sep 10 00:28:41 kentang kernel: [90532.502454] rtl8192cu: Chip version 0x10
-Sep 10 00:28:42 kentang kernel: [90532.581772] rtl8192cu: MAC address: 
-00:0b:81:89:81:b8
-Sep 10 00:28:42 kentang kernel: [90532.581776] rtl8192cu: Board Type 0
-
-Also what type of USB port are you using? I'm plugged direct (no hub) 
-into a ehci-pci port on a laptop if that makes a difference to power?
-
-
-ATB,
-
-Mark.
