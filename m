@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:37374 "EHLO
+Received: from perches-mx.perches.com ([206.117.179.246]:42911 "EHLO
 	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753224Ab3IEE5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Sep 2013 00:57:08 -0400
-Message-ID: <1378357025.1787.79.camel@joe-AO722> (sfid-20130905_065712_803088_96994CD1)
-Subject: Re: [PATCH 2/2] qca-swiss-army-knife: add ath10k trace-cmd plugin
+	id S1757123Ab3IBRty (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Sep 2013 13:49:54 -0400
+Message-ID: <1378144193.1953.88.camel@joe-AO722> (sfid-20130902_194957_650656_BF029B63)
+Subject: Re: [PATCH v2 13/16] wcn36xx: add wcn36xx.h
 From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 04 Sep 2013 21:57:05 -0700
-In-Reply-To: <871u53swie.fsf@kamboji.qca.qualcomm.com>
-References: <1376939466-8282-1-git-send-email-kvalo@qca.qualcomm.com>
-	 <1376939466-8282-2-git-send-email-kvalo@qca.qualcomm.com>
-	 <CAB=NE6UCmO4QbFjtav8xPDAoebpTqDNwz_qQxg1TQ8cKGcbFGg@mail.gmail.com>
-	 <871u53swie.fsf@kamboji.qca.qualcomm.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
+Date: Mon, 02 Sep 2013 10:49:53 -0700
+In-Reply-To: <87ioyjux5w.fsf@purkki.adurom.net>
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+	 <1377248299-21007-14-git-send-email-k.eugene.e@gmail.com>
+	 <1377298929.2816.15.camel@joe-AO722> <87ioyjux5w.fsf@purkki.adurom.net>
 Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-09-05 at 07:49 +0300, Kalle Valo wrote:
-> "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com> writes:
-> > I just removed 3 trailing spaces on the 2 patches. One had two
-> > trailing spaces, the last patch had one.
+On Mon, 2013-09-02 at 17:15 +0300, Kalle Valo wrote:
+> Joe Perches <joe@perches.com> writes:
 > 
-> Oh, sorry about that. Any ideas how I could check for those myself?
+> >> +#define wcn36xx_dbg(mask, fmt, arg...) do {			\
+> >> +	if (debug_mask & mask)					\
+> >> +		printk(KERN_DEBUG pr_fmt(fmt), ##arg);	\
+> >> +} while (0)
+> >
+> > And maybe this one using pr_debug so dynamic_debug
+> > can work too.
+> 
+> Please, no dynamic_debug. It's useless on a wifi driver.
 
-scripts/checkpatch.pl <patch>
-git am <patch>
-
+Why is that?
 
