@@ -1,287 +1,366 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:55003 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826Ab3IQPli (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 11:41:38 -0400
-Received: by mail-ee0-f43.google.com with SMTP id e52so2843702eek.30
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 08:41:36 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 01/11] wlcore: ROC on AP channel before auth reply
-Date: Tue, 17 Sep 2013 18:41:20 +0300
-Message-Id: <1379432490-22157-1-git-send-email-eliad@wizery.com> (sfid-20130917_174142_114664_D4BDD798)
+Received: from ebb05.tieto.com ([131.207.168.36]:63107 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759746Ab3ICIVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 04:21:39 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v4 2/2] ath10k: implement per-VDEV FW statistics
+Date: Tue, 3 Sep 2013 10:21:21 +0200
+Message-ID: <1378196481-13983-3-git-send-email-bartosz.markowski@tieto.com> (sfid-20130903_102150_113875_0813164A)
+In-Reply-To: <1378196481-13983-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1378196481-13983-1-git-send-email-bartosz.markowski@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+The WMI_REQUEST_PEER_STAT command with latst (1.0.0.716) FW
+can return per-VDEV statistics. Using debugfs we can fetch this info now.
 
-Start a ROC on the AP channel beforing sending the authentication reply
-to a connecting STA. This ROC is held up to 1 second via a timer. If the
-station is authorized and added by mac80211, the ROC is extended until
-the station is fully authorized.
-We make sure not to ROC twice when several stations are connecting in
-parallel and to only release the ROC when both the pending-reply timer
-and the STA-state callbacks do not require it.
+This is a backward compatible change. In case of older FW the VDEV
+statistics are simply not returned.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c     | 101 +++++++++++++++++++++++++-----
- drivers/net/wireless/ti/wlcore/tx.c       |  25 ++++++--
- drivers/net/wireless/ti/wlcore/tx.h       |   3 +
- drivers/net/wireless/ti/wlcore/wlcore.h   |   2 +
- drivers/net/wireless/ti/wlcore/wlcore_i.h |   9 +++
- 5 files changed, 120 insertions(+), 20 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h  |   27 ++++++++++
+ drivers/net/wireless/ath/ath10k/debug.c |   70 ++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/wmi.c   |    4 +-
+ drivers/net/wireless/ath/ath10k/wmi.h   |   87 ++++++++++++++++++++++++++-----
+ 4 files changed, 167 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 38995f9..b64b465 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2008,6 +2008,47 @@ out:
- 	mutex_unlock(&wl->mutex);
- }
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 174c4b4..1a327a9 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -119,10 +119,32 @@ struct ath10k_wmi {
+ 	struct work_struct wmi_event_work;
+ };
  
-+static void wlcore_pending_auth_complete_work(struct work_struct *work)
-+{
-+	struct delayed_work *dwork;
-+	struct wl1271 *wl;
-+	struct wl12xx_vif *wlvif;
-+	unsigned long time_spare;
-+	int ret;
++struct ath10k_snr_info {
++	s32 beacon_snr;
++	s32 data_snr;
++};
 +
-+	dwork = container_of(work, struct delayed_work, work);
-+	wlvif = container_of(dwork, struct wl12xx_vif,
-+			     pending_auth_complete_work);
-+	wl = wlvif->wl;
++struct ath10k_vdev_stat {
++	u32 vdev_id;
++	struct ath10k_snr_info vdev_snr;
++	u32 tx_frames_count[MAX_AC];
++	u32 rx_frames_count;
++	u32 multiple_retry_cnt[MAX_AC];
++	u32 fail_count[MAX_AC];
++	u32 rts_fail_count;
++	u32 rts_success_count;
++	u32 rts_err_count;
++	u32 rx_discard_count;
++	u32 ack_fail_count;
++	u32 tx_rate_history[MAX_TX_RATE_VALUES];
++	u32 bcn_rssi_history[MAX_RSSI_VALUES];
++};
 +
-+	mutex_lock(&wl->mutex);
-+
-+	if (unlikely(wl->state != WLCORE_STATE_ON))
-+		goto out;
-+
-+	/*
-+	 * Make sure a second really passed since the last auth reply. Maybe
-+	 * a second auth reply arrived while we were stuck on the mutex.
-+	 * Check for a little less than the timeout to protect from scheduler
-+	 * irregularities.
-+	 */
-+	time_spare = jiffies +
-+			msecs_to_jiffies(WLCORE_PEND_AUTH_ROC_TIMEOUT - 50);
-+	if (!time_after(time_spare, wlvif->pending_auth_reply_time))
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	/* cancel the ROC if active */
-+	wlcore_update_inconn_sta(wl, wlvif, NULL, false);
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+}
-+
- static int wl12xx_allocate_rate_policy(struct wl1271 *wl, u8 *idx)
- {
- 	u8 policy = find_first_zero_bit(wl->rate_policies_map,
-@@ -2159,6 +2200,8 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
- 			  wlcore_channel_switch_work);
- 	INIT_DELAYED_WORK(&wlvif->connection_loss_work,
- 			  wlcore_connection_loss_work);
-+	INIT_DELAYED_WORK(&wlvif->pending_auth_complete_work,
-+			  wlcore_pending_auth_complete_work);
- 	INIT_LIST_HEAD(&wlvif->list);
+ struct ath10k_peer_stat {
+ 	u8 peer_macaddr[ETH_ALEN];
+ 	u32 peer_rssi;
+ 	u32 peer_tx_rate;
++	u32 peer_rx_rate;
+ };
  
- 	setup_timer(&wlvif->rx_streaming_timer, wl1271_rx_streaming_timer,
-@@ -2590,6 +2633,7 @@ unlock:
- 	cancel_work_sync(&wlvif->rx_streaming_disable_work);
- 	cancel_delayed_work_sync(&wlvif->connection_loss_work);
- 	cancel_delayed_work_sync(&wlvif->channel_switch_work);
-+	cancel_delayed_work_sync(&wlvif->pending_auth_complete_work);
+ struct ath10k_target_stats {
+@@ -176,6 +198,8 @@ struct ath10k_target_stats {
+ 	s32 mpdu_errs;
  
- 	mutex_lock(&wl->mutex);
- }
-@@ -3969,6 +4013,13 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
- 			}
- 		} else {
- 			if (test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
-+				/*
-+				 * AP might be in ROC in case we have just
-+				 * sent auth reply. handle it.
-+				 */
-+				if (test_bit(wlvif->role_id, wl->roc_map))
-+					wl12xx_croc(wl, wlvif->role_id);
+ 	/* VDEV STATS */
++	struct ath10k_vdev_stat vdev_stat[TARGET_NUM_VDEVS];
++	u8 vdevs;
+ 
+ 	/* PEER STATS */
+ 	u8 peers;
+@@ -274,6 +298,9 @@ enum ath10k_fw_features {
+ 	/* wmi_mgmt_rx_hdr contains extra RSSI information */
+ 	ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX = 0,
+ 
++	/* firmware support per-VEDV statistics */
++	ATH10K_FW_FEATURE_VDEV_STATS = 1,
 +
- 				ret = wl12xx_cmd_role_stop_ap(wl, wlvif);
- 				if (ret < 0)
- 					goto out;
-@@ -4656,29 +4707,49 @@ static void wlcore_roc_if_possible(struct wl1271 *wl,
- 	wl12xx_roc(wl, wlvif, wlvif->role_id, wlvif->band, wlvif->channel);
- }
- 
--static void wlcore_update_inconn_sta(struct wl1271 *wl,
--				     struct wl12xx_vif *wlvif,
--				     struct wl1271_station *wl_sta,
--				     bool in_connection)
-+/*
-+ * when wl_sta is NULL, we treat this call as if coming from a
-+ * pending auth reply.
-+ * wl->mutex must be taken and the FW must be awake when the call
-+ * takes place.
-+ */
-+void wlcore_update_inconn_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			      struct wl1271_station *wl_sta, bool in_conn)
- {
--	if (in_connection) {
--		if (WARN_ON(wl_sta->in_connection))
-+	if (in_conn) {
-+		if (WARN_ON(wl_sta && wl_sta->in_connection))
- 			return;
--		wl_sta->in_connection = true;
--		if (!wlvif->inconn_count++)
-+
-+		if (!wlvif->ap_pending_auth_reply &&
-+		    !wlvif->inconn_count)
- 			wlcore_roc_if_possible(wl, wlvif);
-+
-+		if (wl_sta) {
-+			wl_sta->in_connection = true;
-+			wlvif->inconn_count++;
-+		} else {
-+			wlvif->ap_pending_auth_reply = true;
-+		}
- 	} else {
--		if (!wl_sta->in_connection)
-+		if (wl_sta && !wl_sta->in_connection)
-+			return;
-+
-+		if (WARN_ON(!wl_sta && !wlvif->ap_pending_auth_reply))
- 			return;
- 
--		wl_sta->in_connection = false;
--		wlvif->inconn_count--;
--		if (WARN_ON(wlvif->inconn_count < 0))
-+		if (WARN_ON(wl_sta && !wlvif->inconn_count))
- 			return;
- 
--		if (!wlvif->inconn_count)
--			if (test_bit(wlvif->role_id, wl->roc_map))
--				wl12xx_croc(wl, wlvif->role_id);
-+		if (wl_sta) {
-+			wl_sta->in_connection = false;
-+			wlvif->inconn_count--;
-+		} else {
-+			wlvif->ap_pending_auth_reply = false;
-+		}
-+
-+		if (!wlvif->inconn_count && !wlvif->ap_pending_auth_reply &&
-+		    test_bit(wlvif->role_id, wl->roc_map))
-+			wl12xx_croc(wl, wlvif->role_id);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index 7e93fe6..03249da 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -86,19 +86,34 @@ void wl1271_free_tx_id(struct wl1271 *wl, int id)
- EXPORT_SYMBOL(wl1271_free_tx_id);
- 
- static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
-+						 struct wl12xx_vif *wlvif,
- 						 struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr;
- 
-+	hdr = (struct ieee80211_hdr *)(skb->data +
-+				       sizeof(struct wl1271_tx_hw_descr));
-+	if (!ieee80211_is_auth(hdr->frame_control))
-+		return;
-+
- 	/*
- 	 * add the station to the known list before transmitting the
- 	 * authentication response. this way it won't get de-authed by FW
- 	 * when transmitting too soon.
- 	 */
--	hdr = (struct ieee80211_hdr *)(skb->data +
--				       sizeof(struct wl1271_tx_hw_descr));
--	if (ieee80211_is_auth(hdr->frame_control))
--		wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
-+	wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
-+
-+	/*
-+	 * ROC for 1 second on the AP channel for completing the connection.
-+	 * Note the ROC will be continued by the update_sta_state callbacks
-+	 * once the station reaches the associated state.
-+	 */
-+	wlcore_update_inconn_sta(wl, wlvif, NULL, true);
-+	wlvif->pending_auth_reply_time = jiffies;
-+	cancel_delayed_work(&wlvif->pending_auth_complete_work);
-+	ieee80211_queue_delayed_work(wl->hw,
-+				&wlvif->pending_auth_complete_work,
-+				msecs_to_jiffies(WLCORE_PEND_AUTH_ROC_TIMEOUT));
- }
- 
- static void wl1271_tx_regulate_link(struct wl1271 *wl,
-@@ -404,7 +419,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	wl1271_tx_fill_hdr(wl, wlvif, skb, extra, info, hlid);
- 
- 	if (!is_dummy && wlvif && wlvif->bss_type == BSS_TYPE_AP_BSS) {
--		wl1271_tx_ap_update_inconnection_sta(wl, skb);
-+		wl1271_tx_ap_update_inconnection_sta(wl, wlvif, skb);
- 		wl1271_tx_regulate_link(wl, wlvif, hlid);
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 09f535a..1582a97 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -228,25 +228,39 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 		tmp += sizeof(struct wmi_pdev_stats);
  	}
  
-diff --git a/drivers/net/wireless/ti/wlcore/tx.h b/drivers/net/wireless/ti/wlcore/tx.h
-index 55aa4ac..35489c3 100644
---- a/drivers/net/wireless/ti/wlcore/tx.h
-+++ b/drivers/net/wireless/ti/wlcore/tx.h
-@@ -56,6 +56,9 @@
- /* Used for management frames and dummy packets */
- #define WL1271_TID_MGMT 7
+-	/* 0 or max vdevs */
+-	/* Currently firmware does not support VDEV stats */
+ 	if (num_vdev_stats) {
+ 		struct wmi_vdev_stats *vdev_stats;
++		struct ath10k_vdev_stat *s;
++
++		stats->vdevs = num_vdev_stats;
  
-+/* stop a ROC for pending authentication reply after this time (ms) */
-+#define WLCORE_PEND_AUTH_ROC_TIMEOUT     1000
+ 		for (i = 0; i < num_vdev_stats; i++) {
+ 			vdev_stats = (struct wmi_vdev_stats *)tmp;
++			s = &stats->vdev_stat[i];
 +
- struct wl127x_tx_mem {
- 	/*
- 	 * Number of extra memory blocks to allocate for this packet
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 0034979..54ce5d5 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -481,6 +481,8 @@ int wlcore_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
- 		   struct ieee80211_sta *sta,
- 		   struct ieee80211_key_conf *key_conf);
- void wlcore_regdomain_config(struct wl1271 *wl);
-+void wlcore_update_inconn_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			      struct wl1271_station *wl_sta, bool in_conn);
++			s->vdev_id = __le32_to_cpu(vdev_stats->vdev_id);
++			s->vdev_snr.beacon_snr =
++				__le32_to_cpu(vdev_stats->vdev_snr.beacon_snr);
++			s->vdev_snr.data_snr =
++				__le32_to_cpu(vdev_stats->vdev_snr.data_snr);
++
++			/* TODO:read remaining vdev stats */
++
+ 			tmp += sizeof(struct wmi_vdev_stats);
+ 		}
+ 	}
  
- static inline void
- wlcore_set_ht_cap(struct wl1271 *wl, enum ieee80211_band band,
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index e5e1464..14fd111 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -456,6 +456,15 @@ struct wl12xx_vif {
- 	 */
- 	int hw_queue_base;
+ 	if (num_peer_stats) {
+-		struct wmi_peer_stats *peer_stats;
+ 		struct ath10k_peer_stat *s;
++		struct wmi_peer_stats_common *peer_stats;
++		struct wmi_peer_stats_v1 *peer_v1;
++		struct wmi_peer_stats_v2 *peer_v2;
  
-+	/* do we have a pending auth reply? (and ROC) */
-+	bool ap_pending_auth_reply;
+ 		stats->peers = num_peer_stats;
+ 
+ 		for (i = 0; i < num_peer_stats; i++) {
+-			peer_stats = (struct wmi_peer_stats *)tmp;
++			peer_stats = (struct wmi_peer_stats_common *)tmp;
 +
-+	/* time when we sent the pending auth reply */
-+	unsigned long pending_auth_reply_time;
+ 			s = &stats->peer_stat[i];
+ 
+ 			WMI_MAC_ADDR_TO_CHAR_ARRAY(&peer_stats->peer_macaddr,
+@@ -255,7 +269,19 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 			s->peer_tx_rate =
+ 				__le32_to_cpu(peer_stats->peer_tx_rate);
+ 
+-			tmp += sizeof(struct wmi_peer_stats);
++			if (test_bit(ATH10K_FW_FEATURE_VDEV_STATS,
++				     ar->fw_features)) {
++				peer_v2 = (struct wmi_peer_stats_v2 *)tmp;
++				peer_stats = &peer_v2->common;
++				s->peer_rx_rate =
++				    __le32_to_cpu(peer_v2->peer_rx_rate);
 +
-+	/* work for canceling ROC after pending auth reply */
-+	struct delayed_work pending_auth_complete_work;
++				tmp += sizeof(*peer_v2);
++			} else {
++				peer_v1 = (struct wmi_peer_stats_v1 *)tmp;
++				peer_stats = &peer_v1->common;
++				tmp += sizeof(*peer_v1);
++			}
+ 		}
+ 	}
+ 
+@@ -269,7 +295,7 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 	struct ath10k *ar = file->private_data;
+ 	struct ath10k_target_stats *fw_stats;
+ 	char *buf = NULL;
+-	unsigned int len = 0, buf_len = 2500;
++	unsigned int len = 0, buf_len = 3000;
+ 	ssize_t ret_cnt = 0;
+ 	long left;
+ 	int i;
+@@ -407,6 +433,27 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
+ 			 "MPDU errors (FCS, MIC, ENC)", fw_stats->mpdu_errs);
+ 
++	if (fw_stats->vdevs) {
++		len += scnprintf(buf + len, buf_len - len, "\n");
++		len += scnprintf(buf + len, buf_len - len, "%30s\n",
++				 "ath10k VDEV stats");
++		len += scnprintf(buf + len, buf_len - len, "%30s\n\n",
++				 "=================");
++	}
 +
- 	/*
- 	 * This struct must be last!
- 	 * data that has to be saved acrossed reconfigs (e.g. recovery)
++	for (i = 0; i < fw_stats->vdevs; i++) {
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++				 "VDEV ID", fw_stats->vdev_stat[i].vdev_id);
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++				 "Beacon SNR",
++				 fw_stats->vdev_stat[i].vdev_snr.beacon_snr);
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++				 "Data SNR",
++				 fw_stats->vdev_stat[i].vdev_snr.data_snr);
++		len += scnprintf(buf + len, buf_len - len, "\n");
++	}
++
++
+ 	len += scnprintf(buf + len, buf_len - len, "\n");
+ 	len += scnprintf(buf + len, buf_len - len, "%30s\n",
+ 			 "ath10k PEER stats");
+@@ -417,11 +464,18 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 		len += scnprintf(buf + len, buf_len - len, "%30s %pM\n",
+ 				 "Peer MAC address",
+ 				 fw_stats->peer_stat[i].peer_macaddr);
+-		len += scnprintf(buf + len, buf_len - len, "%30s %u\n",
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
+ 				 "Peer RSSI", fw_stats->peer_stat[i].peer_rssi);
+-		len += scnprintf(buf + len, buf_len - len, "%30s %u\n",
++		len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
+ 				 "Peer TX rate",
+ 				 fw_stats->peer_stat[i].peer_tx_rate);
++
++		if (test_bit(ATH10K_FW_FEATURE_VDEV_STATS, ar->fw_features))
++			len += scnprintf(buf + len, buf_len - len,
++					 "%30s %10u\n",
++					 "Peer RX rate",
++					 fw_stats->peer_stat[i].peer_rx_rate);
++
+ 		len += scnprintf(buf + len, buf_len - len, "\n");
+ 	}
+ 	spin_unlock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 32fd5e7..3ebab3d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -957,8 +957,10 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
+ 	ar->phy_capability = __le32_to_cpu(ev->phy_capability);
+ 	ar->num_rf_chains = __le32_to_cpu(ev->num_rf_chains);
+ 
+-	if (ar->fw_version_build > 636)
++	if (ar->fw_version_build > 636) {
+ 		set_bit(ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX, ar->fw_features);
++		set_bit(ATH10K_FW_FEATURE_VDEV_STATS, ar->fw_features);
++	}
+ 
+ 	if (ar->num_rf_chains > WMI_MAX_SPATIAL_STREAM) {
+ 		ath10k_warn("hardware advertises support for more spatial streams than it should (%d > %d)\n",
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 5b94707..2b429e4 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -60,6 +60,11 @@
+  *
+  */
+ 
++#define MAX_AC 4 /* Maximum value of access category */
++
++#define MAX_TX_RATE_VALUES      10 /* Max Tx rates */
++#define MAX_RSSI_VALUES         10 /* Max RSSI values */
++
+ /* Control Path */
+ struct wmi_cmd_hdr {
+ 	__le32 cmd_id;
+@@ -1828,11 +1833,10 @@ enum wmi_stats_id {
+ 
+ struct wmi_request_stats_cmd {
+ 	__le32 stats_id;
+-
+-	/*
+-	 * Space to add parameters like
+-	 * peer mac addr
+-	 */
++	/* unique id identifying the VDEV, generated by the caller */
++	__le32 vdev_id;
++	/* peer MAC address */
++	struct wmi_mac_addr peer_macaddr;
+ } __packed;
+ 
+ /* Suspend option */
+@@ -1881,7 +1885,6 @@ struct wmi_stats_event {
+ 
+ /*
+  * PDEV statistics
+- * TODO: add all PDEV stats here
+  */
+ struct wmi_pdev_stats {
+ 	__le32 chan_nf;        /* Channel noise floor */
+@@ -1894,24 +1897,84 @@ struct wmi_pdev_stats {
+ 	struct wal_dbg_stats wal; /* WAL dbg stats */
+ } __packed;
+ 
+-/*
+- * VDEV statistics
+- * TODO: add all VDEV stats here
+- */
++struct wmi_snr_info {
++	__le32 beacon_snr;
++	__le32 data_snr;
++} __packed;
++
+ struct wmi_vdev_stats {
++	/* unique id identifying the VDEV, generated by the caller */
+ 	__le32 vdev_id;
++	struct wmi_snr_info vdev_snr;
++	/*
++	 * Total number of packets(per AC) that were successfully transmitted
++	 * (with and without retries, including multi-cast, broadcast)
++	 */
++	__le32 tx_frm_cnt[MAX_AC];
++	/*
++	 * Total number of packets that were successfully received
++	 * (after appropriate filter rules including multi-cast, broadcast)
++	 */
++	__le32 rx_frm_cnt;
++	/*
++	 * The number of MSDU packets and MMPDU frames per AC that the 802.11
++	 * station successfully transmitted after more than one retransmission
++	 * attempt
++	 */
++	__le32 multiple_retry_cnt[MAX_AC];
++	/* Total number packets(per AC) failed to transmit */
++	__le32 fail_cnt[MAX_AC];
++	/*
++	 * Total number of RTS/CTS sequence failures for transmission of a
++	 * packet
++	 */
++	__le32 rts_fail_cnt;
++	/*
++	 * Total number of RTS/CTS sequence success for transmission of a
++	 * packet
++	 */
++	__le32 rts_succ_cnt;
++	/*
++	 * The receive error count.
++	 * HAL will provide the RxP FCS error global
++	 */
++	__le32 rx_err_cnt;
++	/*
++	 * The sum of the receive error count and dropped-receive-buffer
++	 * error count. (FCS error)
++	 */
++	__le32 rx_discard_cnt;
++	/*
++	 * Total number packets failed transmit because of no ACK
++	 * from the remote entity
++	 */
++	__le32 ack_fail_cnt;
++	/* History of last ten transmit rate, in units of 500 kbit/sec */
++	__le32 tx_rate_history[MAX_TX_RATE_VALUES];
++	/* History of last ten Beacon rssi of the connected Bss */
++	__le32 bcn_rssi_history[MAX_RSSI_VALUES];
+ } __packed;
+ 
+ /*
+  * peer statistics.
+- * TODO: add more stats
+  */
+-struct wmi_peer_stats {
++struct wmi_peer_stats_common {
+ 	struct wmi_mac_addr peer_macaddr;
+ 	__le32 peer_rssi;
+ 	__le32 peer_tx_rate;
+ } __packed;
+ 
++struct wmi_peer_stats_v1 {
++	struct wmi_peer_stats_common common;
++} __packed;
++
++
++struct wmi_peer_stats_v2 {
++	struct wmi_peer_stats_common common;
++	__le32 peer_rx_rate;
++} __packed;
++
++
+ struct wmi_vdev_create_cmd {
+ 	__le32 vdev_id;
+ 	__le32 vdev_type;
 -- 
-1.8.3.rc1.35.g9b79519
+1.7.10
 
