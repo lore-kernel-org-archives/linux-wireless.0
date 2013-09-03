@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:35022 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542Ab3IPRFN (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:51718 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758348Ab3ICRne (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 13:05:13 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 0/7] ath10k: improve TX path
-References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
-	<1379074618-30534-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 16 Sep 2013 20:05:11 +0300
-In-Reply-To: <1379074618-30534-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 13 Sep 2013 14:16:51 +0200")
-Message-ID: <871u4on1dk.fsf@qca.qualcomm.com> (sfid-20130916_190524_933964_5ED61CAD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 3 Sep 2013 13:43:34 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 0/4] add IBSS-DFS support
+Date: Tue,  3 Sep 2013 19:43:17 +0200
+Message-Id: <1378230201-25446-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130903_194339_082211_60A72C44)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+This patchset adds DFS support for the IBSS mode. It builds on top of
+the previously sent AP DFS mode and channel switch announcement support.
 
-> Hi,
->
-> This patchset addresses two issues:
->
->  * system/userspace starvation on heavy briding
->    UDP TX
->  * unstable/inconsistent UDP TX throughput
->
-> In short the patchset simplifies TX path by
-> removing HTC TX workers, makes WMI commands block
-> and makes ath10k more responsive to queues
-> becoming full. This contributes to both improved
-> throughput and makes the system more responsive
-> under heavy UDP TX load.
->
-> Max stable briding TX (ath10k as TX):
->  UDP w/o patchset: 520mbps
->  UDP w/  patchset: 570mbps
->
->  TCP w/o patchset: 350mbps
->  TCP w/  patchset: 400mbps
->
-> Measured with two 2x2 cards, one acting as an AP
-> on AP135 board, the other as a STA on a core i5
-> laptop. The AP135 was passing traffic from a
-> station on LAN/eth1 to the STA/wlan0.
->
-> v2:
->  * use DIV_ROUND_UP
->  * comment usage of ath10k_wmi_tx_beacons_nowait
->  * additional check for tx_credits_flow_enabled
->
->
-> Michal Kazior (7):
->   ath10k: simplify HTC credits calculation
->   ath10k: add HTC TX credits replenishing notification
->   ath10k: make WMI commands block by design
->   ath10k: simplify HTC command submitting
->   ath10k: improve beacon submission latency
->   ath10k: remove wmi pending count limit
->   ath10k: remove wmi event worker thread
+The implementation differs from the DFS support as described in IEEE 802.11.
+It does not implement the DFS owner service or uses IBSS DFS elements as
+described in IEEE 802.11-2012 10.9.8.3. The DFS owner service has various
+shortcomings:
 
-Thanks, applied.
+ * it requires synchronization to find one central IBSS owner
+ * citation: "The potential for hidden nodes within an IBSS means that the
+   IBSS channel switch protocol is best effort."
+ * the mechanism does not provide any way to handle big adhoc cells like
+   mesh networks (which is a major target).
+
+Therefore, a stripped down approach is implemented:
+
+ * userspace must announce that it wants support for DFS and will handle
+   events using a flag for the ibss_join command.
+ * if a radar is detected, inform userspace. Userspace should then select
+   a channel (e.g. decide on it with the peers on higher level protocols
+   before, or wait a random backoff time) and start a channel switch process.
+ * if a channel switch announcement from another peeris received, adopt it
+   and re-transmit it (this has been implemented in the IBSS-CSA patchset
+   before)
+ * channel switch announcements on DFS channels are interpreted as
+   radar signals and will mark the channel as unusable.
+
+As always, any comments are appreciated.
+
+Cheers,
+        Simon
+
+Simon Wunderlich (4):
+  nl80211: allow CAC only if no operation is going on
+  nl80211/cfg80211: enable DFS for IBSS mode
+  mac80211: enable DFS for IBSS mode
+  ath9k: enable DFS for IBSS mode
+
+ drivers/net/wireless/ath/ath9k/init.c |    3 +-
+ include/net/cfg80211.h                |    6 ++++
+ include/uapi/linux/nl80211.h          |    7 +++++
+ net/mac80211/ibss.c                   |   50 +++++++++++++++++++++++++++++----
+ net/mac80211/ieee80211_i.h            |    1 +
+ net/wireless/chan.c                   |    3 +-
+ net/wireless/ibss.c                   |   24 +++++++++++++---
+ net/wireless/nl80211.c                |   11 ++++++--
+ net/wireless/util.c                   |   11 ++++++--
+ 9 files changed, 101 insertions(+), 15 deletions(-)
 
 -- 
-Kalle Valo
+1.7.10.4
+
