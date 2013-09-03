@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:21299 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750853Ab3IYXNm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 19:13:42 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Joe Perches <joe@perches.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Wed, 25 Sep 2013 16:13:32 -0700
-Subject: RE: [PATCH 09/11] mwifiex: Remove extern from function prototypes
-Message-ID: <477F20668A386D41ADCC57781B1F70430F45077E54@SC-VEXCH1.marvell.com> (sfid-20130926_011346_278082_37472DDB)
-References: <cover.1380137609.git.joe@perches.com>
- <b3a7cd194857b3dc099e8f8bb0ed97bb4a1b5fde.1380137610.git.joe@perches.com>
-In-Reply-To: <b3a7cd194857b3dc099e8f8bb0ed97bb4a1b5fde.1380137610.git.joe@perches.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:34691 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932756Ab3ICMwI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 08:52:08 -0400
+From: Masami Ichikawa <masami256@gmail.com>
+To: kvalo@adurom.com, IvDoorn@gmail.com, gwingerde@gmail.com,
+	helmut.schaa@googlemail.com, linville@tuxdriver.com
+Cc: Masami Ichikawa <masami256@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rt2x00: Add WLI-UC-G300HP's Product ID
+Date: Tue,  3 Sep 2013 21:51:56 +0900
+Message-Id: <1378212716-13525-1-git-send-email-masami256@gmail.com> (sfid-20130903_145230_445332_BFD72DFB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+Support Bufallo WLI-UC-G300HP.
 
-Thanks for your patch.
+Signed-off-by: Masami Ichikawa <masami256@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> There are a mix of function prototypes with and without extern
-> in the kernel sources.  Standardize on not using extern for
-> function prototypes.
-> 
-> Function prototypes don't need to be written with extern.
-> extern is assumed by the compiler.  Its use is as unnecessary as
-> using auto to declare automatic/local variables in a block.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-
-Acked-by: Bing Zhao <bzhao@marvell.com>
-
-Thanks,
-Bing
-
-> ---
->  drivers/net/wireless/mwifiex/wmm.h | 24 ++++++++++--------------
->  1 file changed, 10 insertions(+), 14 deletions(-)
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 840833b..518277d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -977,6 +977,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0411, 0x016f) },
+ 	{ USB_DEVICE(0x0411, 0x01a2) },
+ 	{ USB_DEVICE(0x0411, 0x01ee) },
++	{ USB_DEVICE(0x0411, 0x01a8) },
+ 	/* Corega */
+ 	{ USB_DEVICE(0x07aa, 0x002f) },
+ 	{ USB_DEVICE(0x07aa, 0x003c) },
+-- 
+1.8.3.1
 
