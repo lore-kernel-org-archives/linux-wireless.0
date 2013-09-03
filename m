@@ -1,73 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:58180 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029Ab3IPTCn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 15:02:43 -0400
-Received: by mail-la0-f48.google.com with SMTP id er20so3446290lab.7
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Sep 2013 12:02:42 -0700 (PDT)
-Message-ID: <523755D1.2010003@cogentembedded.com> (sfid-20130916_210248_621499_0686025C)
-Date: Mon, 16 Sep 2013 23:02:41 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4011 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932710Ab3ICMqU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 08:46:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>
+Subject: [PATCH] brcmfmac: fix bus interface selection in Kconfig
+Date: Tue, 3 Sep 2013 14:46:09 +0200
+Message-ID: <1378212369-17166-1-git-send-email-arend@broadcom.com> (sfid-20130903_144626_430457_55A1488F)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 4/8 V2] rtlwifi: rtl8192_common: Fix smatch errors and
- warnings in rtl8192c/dm_common.c
-References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net> <1379357722-17687-5-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1379357722-17687-5-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+The kernel configuration for the driver could result in
+compilation issues as reported by Randy Dunlap. His results
+are show below:
 
-On 09/16/2013 10:55 PM, Larry Finger wrote:
+"on x86_64:
 
-> Smatch lists the following:
->    CHECK   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:551 rtl92c_dm_pwdb_monitor() info: ignoring unreachable code.
-> drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:551 rtl92c_dm_pwdb_monitor() info: ignoring unreachable code.
-> drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:870 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-> drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:870 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-> drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:882 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-> drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:883 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-> drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:891 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-> drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:892 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
+when
+CONFIG_MMC=m
+CONFIG_BRCMUTIL=y
+CONFIG_BRCMFMAC=y
+CONFIG_BRCMFMAC_SDIO=y
 
-> The unreachable code message is fixed by commenting out the code that follows a return.
+This bool kconfig symbol:
 
-    You've commented out the whole function body, where is the *return* you're 
-talking about?
+config BRCMFMAC_SDIO
+	bool "SDIO bus interface support for FullMAC driver"
+	depends on MMC
 
-> The code is not deleted in case it is needed later.
+allows BRCMFMAC_SDIO to be y even when MMC=m.
 
-> The errors are fixed by increasing the size of txpwr_level.
+Is there a reasonable solution to this?
 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
+This causes many build errors:
 
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> index d2d57a2..0721756 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> @@ -541,6 +541,7 @@ EXPORT_SYMBOL(rtl92c_dm_write_dig);
->
->   static void rtl92c_dm_pwdb_monitor(struct ieee80211_hw *hw)
->   {
-> +/*
->   	struct rtl_priv *rtlpriv = rtl_priv(hw);
->   	long tmpentry_max_pwdb = 0, tmpentry_min_pwdb = 0xff;
->
-> @@ -564,6 +565,7 @@ static void rtl92c_dm_pwdb_monitor(struct ieee80211_hw *hw)
->   	h2c_parameter[0] = 0;
->
->   	rtl92c_fill_h2c_cmd(hw, H2C_RSSI_REPORT, 3, h2c_parameter);
-> + */
->   }
+drivers/built-in.o: In function `brcmf_sdio_assert_info':
+dhd_sdio.c:(.text+0x39609b): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x3960d9): undefined reference to `sdio_release_host'
+drivers/built-in.o: In function `brcmf_sdio_readframes':
+dhd_sdio.c:(.text+0x396a62): undefined reference to `sdio_claim_host'
+dhd_sdio.c:(.text+0x396a9b): undefined reference to `sdio_release_host'
+..."
 
-WBR, Sergei
+This patch adds the appropriate logic in Kconfig to resolve
+these issues. The solution was provided by Hauke Mehrtens.
+
+Reported-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Hi John,
+
+Probably the merge window has already been started after the surpirse release
+of 3.11, but this one was reported by Randy Dunlap on linux-next tree and
+earlier today by Fenguang Wu. Maybe good to take it in the wireless-next tree.
+
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/Kconfig |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
+index fc8a0fa..b00a7e9 100644
+--- a/drivers/net/wireless/brcm80211/Kconfig
++++ b/drivers/net/wireless/brcm80211/Kconfig
+@@ -28,7 +28,7 @@ config BRCMFMAC
+ 
+ config BRCMFMAC_SDIO
+ 	bool "SDIO bus interface support for FullMAC driver"
+-	depends on MMC
++	depends on (MMC = y || MMC = BRCMFMAC)
+ 	depends on BRCMFMAC
+ 	select FW_LOADER
+ 	default y
+@@ -39,7 +39,7 @@ config BRCMFMAC_SDIO
+ 
+ config BRCMFMAC_USB
+ 	bool "USB bus interface support for FullMAC driver"
+-	depends on USB
++	depends on (USB = y || USB = BRCMFMAC)
+ 	depends on BRCMFMAC
+ 	select FW_LOADER
+ 	---help---
+-- 
+1.7.10.4
+
 
