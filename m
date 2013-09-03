@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:38957 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831Ab3IFKVN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Sep 2013 06:21:13 -0400
-Received: by mail-ea0-f175.google.com with SMTP id m14so1485113eaj.20
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Sep 2013 03:21:12 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Brian O'Connor <bocon13@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: beginner build question
-Date: Fri, 06 Sep 2013 12:21:07 +0200
-Message-ID: <1781136.IRflOffuSs@blech> (sfid-20130906_122117_437499_A515032C)
-In-Reply-To: <CAHhaCVjomgED0WW1fyUQbePNS0DnPEfKb5uE-+rEMhx6zgO1ZA@mail.gmail.com>
-References: <CAHhaCVjomgED0WW1fyUQbePNS0DnPEfKb5uE-+rEMhx6zgO1ZA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from perches-mx.perches.com ([206.117.179.246]:36127 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752690Ab3ICFNx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 01:13:53 -0400
+Message-ID: <1378185231.29083.15.camel@joe-AO722> (sfid-20130903_071357_045061_88A19A5A)
+Subject: Re: [PATCH v2 13/16] wcn36xx: add wcn36xx.h
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
+Date: Mon, 02 Sep 2013 22:13:51 -0700
+In-Reply-To: <87bo4av6fj.fsf@purkki.adurom.net>
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+	 <1377248299-21007-14-git-send-email-k.eugene.e@gmail.com>
+	 <1377298929.2816.15.camel@joe-AO722> <87ioyjux5w.fsf@purkki.adurom.net>
+	 <1378144193.1953.88.camel@joe-AO722> <87bo4av6fj.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, 2013-09-03 at 08:08 +0300, Kalle Valo wrote:
+> Joe Perches <joe@perches.com> writes:
+> Please, no dynamic_debug. It's useless on a wifi driver.
+> > Why is that?
+> It's not really usable in practise, at least the last time I looked at
+> it.
 
-On Friday, September 06, 2013 02:27:26 AM Brian O'Connor wrote:
-> I am trying to compile rtl8192su in Ubuntu 13.04 and I get the
-> following error when I "make all":
-> 
-> make -C /lib/modules/3.10.10-031010-generic/build
-> M=/home/media/rtl8192su/r92su CONFIG_R92SU=m CONFIG_R92SU_DEBUGFS=y
-> CONFIG_R92SU_WPC=y all EXTRA_CFLAGS="-DDEBUG -DCONFIG_R92SU=m
-                     ^^^
-> -DCONFIG_R92SU_DEBUGFS=y -DCONFIG_R92SU_WPC=y"
-> make[1]: Entering directory `/usr/src/linux-headers-3.10.10-031010-generic'
-> make[1]: *** No rule to make target `vmlinux', needed by `all'.  Stop.
-> make[1]: Leaving directory `/usr/src/linux-headers-3.10.10-031010-generic'
-> make: *** [all] Error 2
-> 
-> Any suggestions?
-Thanks for reporting this. I fixed the project's readme.
-<https://github.com/chunkeey/rtl8192su/commit/d1934e155840ccd273a429d85f1f2aa407ba49b7>
+Then you probably haven't looked recently.
 
-Just run "make" instead of "make all".
+> It's cumbersome to enable log messages based on their line numbers
+> and line numbers change so you can't really make any scripts to help
+> with that.
 
-Regards
+Most don't do that.
+Generally it's enabled/disabled by module.
 
-Chr
+> And enabling log messages on the file level is sometimes too
+> much. So it would really need some sort of grouping feature with a
+> stable interface.
+
+Like by module?
+
+
 
