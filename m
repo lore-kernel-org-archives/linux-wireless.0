@@ -1,244 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:35994 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751348Ab3IKLKg (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:48503 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755739Ab3ICOef (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 07:10:36 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] ath9k: Fix PeakDetect calibration for AR9462
-Date: Wed, 11 Sep 2013 16:36:32 +0530
-Message-Id: <1378897592-19199-2-git-send-email-sujith@msujith.org> (sfid-20130911_131040_106043_F370E90A)
-In-Reply-To: <1378897592-19199-1-git-send-email-sujith@msujith.org>
-References: <1378897592-19199-1-git-send-email-sujith@msujith.org>
+	Tue, 3 Sep 2013 10:34:35 -0400
+Received: by mail-wg0-f52.google.com with SMTP id m14so3335460wgh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Sep 2013 07:34:34 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 11/12] wl18xx: print new RDL versions during boot
+Date: Tue,  3 Sep 2013 17:34:07 +0300
+Message-Id: <1378218848-7853-11-git-send-email-eliad@wizery.com> (sfid-20130903_163440_170043_242570FC)
+In-Reply-To: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Victor Goldenshtein <victorg@ti.com>
 
-Since HW PeakDetect calibration is turned on for AR9462,
-various conditions have to be handled in the driver:
+Extract and print info for the new RDL 5, 6, 7 and 8.
+Replace const struct with function which translates
+the RDL number to string.
 
-* Enable agc_cal when loading RTT fails.
-* Disable SW PeakDetect calibration when RTT calibration is not enabled.
-* Keep SW PeakDetect calibration result in driver.
-* Update RTT table according to the saved value.
-* Write RTT back after modifying SW RTT table.
-* Enable local mode for PeakDetect calibration and restore values.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Barak Bercovitz <barak@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 57 +++++++++++++++++++++------
- drivers/net/wireless/ath/ath9k/ar9003_rtt.c   | 52 +++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/hw.h           |  2 +
- 3 files changed, 99 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ti/wl18xx/main.c | 40 +++++++++++++++++++++++++++++------
+ drivers/net/wireless/ti/wl18xx/reg.h  | 20 +++++++++---------
+ 2 files changed, 44 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 687173c..22934d3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -965,18 +965,44 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
- }
- 
- static void ar9003_hw_do_manual_peak_cal(struct ath_hw *ah,
--					 struct ath9k_channel *chan)
-+					 struct ath9k_channel *chan,
-+					 bool run_rtt_cal)
- {
-+	struct ath9k_hw_cal_data *caldata = ah->caldata;
- 	int i;
- 
- 	if (!AR_SREV_9462(ah) && !AR_SREV_9565(ah) && !AR_SREV_9485(ah))
- 		return;
- 
-+	if ((ah->caps.hw_caps & ATH9K_HW_CAP_RTT) && !run_rtt_cal)
-+		return;
-+
- 	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
- 		if (!(ah->rxchainmask & (1 << i)))
- 			continue;
- 		ar9003_hw_manual_peak_cal(ah, i, IS_CHAN_2GHZ(chan));
- 	}
-+
-+	if (caldata)
-+		set_bit(SW_PKDET_DONE, &caldata->cal_flags);
-+
-+	if ((ah->caps.hw_caps & ATH9K_HW_CAP_RTT) && caldata) {
-+		if (IS_CHAN_2GHZ(chan)){
-+			caldata->caldac[0] = REG_READ_FIELD(ah,
-+						    AR_PHY_65NM_RXRF_AGC(0),
-+						    AR_PHY_65NM_RXRF_AGC_AGC2G_CALDAC_OVR);
-+			caldata->caldac[1] = REG_READ_FIELD(ah,
-+						    AR_PHY_65NM_RXRF_AGC(1),
-+						    AR_PHY_65NM_RXRF_AGC_AGC2G_CALDAC_OVR);
-+		} else {
-+			caldata->caldac[0] = REG_READ_FIELD(ah,
-+						    AR_PHY_65NM_RXRF_AGC(0),
-+						    AR_PHY_65NM_RXRF_AGC_AGC5G_CALDAC_OVR);
-+			caldata->caldac[1] = REG_READ_FIELD(ah,
-+						    AR_PHY_65NM_RXRF_AGC(1),
-+						    AR_PHY_65NM_RXRF_AGC_AGC5G_CALDAC_OVR);
-+		}
-+	}
- }
- 
- static void ar9003_hw_cl_cal_post_proc(struct ath_hw *ah, bool is_reusable)
-@@ -1047,13 +1073,18 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 		ar9003_hw_rtt_clear_hist(ah);
- 	}
- 
--	if (rtt && !run_rtt_cal) {
--		agc_ctrl = REG_READ(ah, AR_PHY_AGC_CONTROL);
--		agc_supp_cals &= agc_ctrl;
--		agc_ctrl &= ~(AR_PHY_AGC_CONTROL_OFFSET_CAL |
--			     AR_PHY_AGC_CONTROL_FLTR_CAL |
--			     AR_PHY_AGC_CONTROL_PKDET_CAL);
--		REG_WRITE(ah, AR_PHY_AGC_CONTROL, agc_ctrl);
-+	if (rtt) {
-+		if (!run_rtt_cal) {
-+			agc_ctrl = REG_READ(ah, AR_PHY_AGC_CONTROL);
-+			agc_supp_cals &= agc_ctrl;
-+			agc_ctrl &= ~(AR_PHY_AGC_CONTROL_OFFSET_CAL |
-+				      AR_PHY_AGC_CONTROL_FLTR_CAL |
-+				      AR_PHY_AGC_CONTROL_PKDET_CAL);
-+			REG_WRITE(ah, AR_PHY_AGC_CONTROL, agc_ctrl);
-+		} else {
-+			if (ah->ah_flags & AH_FASTCC)
-+				run_agc_cal = true;
-+		}
- 	}
- 
- 	if (ah->enabled_cals & TX_CL_CAL) {
-@@ -1124,7 +1155,7 @@ skip_tx_iqcal:
- 				       AR_PHY_AGC_CONTROL_CAL,
- 				       0, AH_WAIT_TIMEOUT);
- 
--		ar9003_hw_do_manual_peak_cal(ah, chan);
-+		ar9003_hw_do_manual_peak_cal(ah, chan, run_rtt_cal);
- 	}
- 
- 	if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE) {
-@@ -1159,12 +1190,16 @@ skip_tx_iqcal:
- 
- 	if (run_rtt_cal && caldata) {
- 		if (is_reusable) {
--			if (!ath9k_hw_rfbus_req(ah))
-+			if (!ath9k_hw_rfbus_req(ah)) {
- 				ath_err(ath9k_hw_common(ah),
- 					"Could not stop baseband\n");
--			else
-+			} else {
- 				ar9003_hw_rtt_fill_hist(ah);
- 
-+				if (test_bit(SW_PKDET_DONE, &caldata->cal_flags))
-+					ar9003_hw_rtt_load_hist(ah);
-+			}
-+
- 			ath9k_hw_rfbus_done(ah);
- 		}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_rtt.c b/drivers/net/wireless/ath/ath9k/ar9003_rtt.c
-index e398c18..9344188 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_rtt.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_rtt.c
-@@ -118,6 +118,27 @@ void ar9003_hw_rtt_load_hist(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index b47eb62..aef0c91 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1228,16 +1228,46 @@ static u32 wl18xx_ap_get_mimo_wide_rate_mask(struct wl1271 *wl,
  	}
  }
  
-+static void ar9003_hw_patch_rtt(struct ath_hw *ah, int index, int chain)
++static const char *wl18xx_rdl_name(enum wl18xx_rdl_num rdl_num)
 +{
-+	int agc, caldac;
-+
-+	if (!test_bit(SW_PKDET_DONE, &ah->caldata->cal_flags))
-+		return;
-+
-+	if ((index != 5) || (chain >= 2))
-+		return;
-+
-+	agc = REG_READ_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
-+			     AR_PHY_65NM_RXRF_AGC_AGC_OVERRIDE);
-+	if (!agc)
-+		return;
-+
-+	caldac = ah->caldata->caldac[chain];
-+	ah->caldata->rtt_table[chain][index] &= 0xFFFF05FF;
-+	caldac = (caldac & 0x20) | ((caldac & 0x1F) << 7);
-+	ah->caldata->rtt_table[chain][index] |= (caldac << 4);
++	switch (rdl_num) {
++	case RDL_1_HP:
++	    return "183xH";
++	case RDL_2_SP:
++	    return "183x or 180x";
++	case RDL_3_HP:
++	    return "187xH";
++	case RDL_4_SP:
++	    return "187x";
++	case RDL_5_SP:
++	    return "RDL11 - Not Supported";
++	case RDL_6_SP:
++	    return "180xD";
++	case RDL_7_SP:
++	    return "RDL13 - Not Supported (1893Q)";
++	case RDL_8_SP:
++	    return "18xxQ";
++	default:
++	    return "UNTRIMMED";
++	}
 +}
 +
- static int ar9003_hw_rtt_fill_hist_entry(struct ath_hw *ah, u8 chain, u32 index)
+ static int wl18xx_get_pg_ver(struct wl1271 *wl, s8 *ver)
  {
- 	u32 val;
-@@ -155,6 +176,9 @@ void ar9003_hw_rtt_fill_hist(struct ath_hw *ah)
- 		for (i = 0; i < MAX_RTT_TABLE_ENTRY; i++) {
- 			ah->caldata->rtt_table[chain][i] =
- 				ar9003_hw_rtt_fill_hist_entry(ah, chain, i);
-+
-+			ar9003_hw_patch_rtt(ah, i, chain);
-+
- 			ath_dbg(ath9k_hw_common(ah), CALIBRATE,
- 				"RTT value at idx %d, chain %d is: 0x%x\n",
- 				i, chain, ah->caldata->rtt_table[chain][i]);
-@@ -186,11 +210,37 @@ bool ar9003_hw_rtt_restore(struct ath_hw *ah, struct ath9k_channel *chan)
- 	if (!ah->caldata)
- 		return false;
+ 	u32 fuse;
+-	s8 rom = 0, metal = 0, pg_ver = 0, rdl_ver = 0;
++	s8 rom = 0, metal = 0, pg_ver = 0, rdl_ver = 0, package_type = 0;
+ 	int ret;
  
-+	if (test_bit(SW_PKDET_DONE, &ah->caldata->cal_flags)) {
-+		if (IS_CHAN_2GHZ(chan)){
-+			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(0),
-+				      AR_PHY_65NM_RXRF_AGC_AGC2G_CALDAC_OVR,
-+				      ah->caldata->caldac[0]);
-+			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(1),
-+				      AR_PHY_65NM_RXRF_AGC_AGC2G_CALDAC_OVR,
-+				      ah->caldata->caldac[1]);
-+		} else {
-+			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(0),
-+				      AR_PHY_65NM_RXRF_AGC_AGC5G_CALDAC_OVR,
-+				      ah->caldata->caldac[0]);
-+			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(1),
-+				      AR_PHY_65NM_RXRF_AGC_AGC5G_CALDAC_OVR,
-+				      ah->caldata->caldac[1]);
-+		}
-+		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(1),
-+			      AR_PHY_65NM_RXRF_AGC_AGC_OVERRIDE, 0x1);
-+		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(0),
-+			      AR_PHY_65NM_RXRF_AGC_AGC_OVERRIDE, 0x1);
-+	}
-+
- 	if (!test_bit(RTT_DONE, &ah->caldata->cal_flags))
- 		return false;
+ 	ret = wlcore_set_partition(wl, &wl->ptable[PART_TOP_PRCM_ELP_SOC]);
+ 	if (ret < 0)
+ 		goto out;
  
- 	ar9003_hw_rtt_enable(ah);
--	ar9003_hw_rtt_set_mask(ah, 0x10);
++	ret = wlcore_read32(wl, WL18XX_REG_FUSE_DATA_2_3, &fuse);
++	if (ret < 0)
++		goto out;
 +
-+	if (test_bit(SW_PKDET_DONE, &ah->caldata->cal_flags))
-+		ar9003_hw_rtt_set_mask(ah, 0x30);
-+	else
-+		ar9003_hw_rtt_set_mask(ah, 0x10);
++	package_type = (fuse >> WL18XX_PACKAGE_TYPE_OFFSET) & 1;
++
+ 	ret = wlcore_read32(wl, WL18XX_REG_FUSE_DATA_1_3, &fuse);
+ 	if (ret < 0)
+ 		goto out;
+@@ -1245,7 +1275,7 @@ static int wl18xx_get_pg_ver(struct wl1271 *wl, s8 *ver)
+ 	pg_ver = (fuse & WL18XX_PG_VER_MASK) >> WL18XX_PG_VER_OFFSET;
+ 	rom = (fuse & WL18XX_ROM_VER_MASK) >> WL18XX_ROM_VER_OFFSET;
  
- 	if (!ath9k_hw_rfbus_req(ah)) {
- 		ath_err(ath9k_hw_common(ah), "Could not stop baseband\n");
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 2df1095..cc27324 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -412,6 +412,7 @@ enum ath9k_cal_flags {
- 	NFCAL_INTF,
- 	TXIQCAL_DONE,
- 	TXCLCAL_DONE,
-+	SW_PKDET_DONE,
+-	if (rom <= 0xE)
++	if ((rom <= 0xE) && (package_type == WL18XX_PACKAGE_TYPE_WSP))
+ 		metal = (fuse & WL18XX_METAL_VER_MASK) >>
+ 			WL18XX_METAL_VER_OFFSET;
+ 	else
+@@ -1257,11 +1287,9 @@ static int wl18xx_get_pg_ver(struct wl1271 *wl, s8 *ver)
+ 		goto out;
+ 
+ 	rdl_ver = (fuse & WL18XX_RDL_VER_MASK) >> WL18XX_RDL_VER_OFFSET;
+-	if (rdl_ver > RDL_MAX)
+-		rdl_ver = RDL_NONE;
+ 
+-	wl1271_info("wl18xx HW: RDL %d, %s, PG %x.%x (ROM %x)",
+-		    rdl_ver, rdl_names[rdl_ver], pg_ver, metal, rom);
++	wl1271_info("wl18xx HW: %s, PG %d.%d (ROM 0x%x)",
++		    wl18xx_rdl_name(rdl_ver), pg_ver, metal, rom);
+ 
+ 	if (ver)
+ 		*ver = pg_ver;
+diff --git a/drivers/net/wireless/ti/wl18xx/reg.h b/drivers/net/wireless/ti/wl18xx/reg.h
+index 88de3f2..a433a75 100644
+--- a/drivers/net/wireless/ti/wl18xx/reg.h
++++ b/drivers/net/wireless/ti/wl18xx/reg.h
+@@ -147,13 +147,16 @@
+ #define WL18XX_REG_FUSE_DATA_1_3	0xA0260C
+ #define WL18XX_PG_VER_MASK		0x70
+ #define WL18XX_PG_VER_OFFSET		4
+-#define WL18XX_ROM_VER_MASK		0x3
+-#define WL18XX_ROM_VER_OFFSET		0
++#define WL18XX_ROM_VER_MASK		0x3e00
++#define WL18XX_ROM_VER_OFFSET		9
+ #define WL18XX_METAL_VER_MASK		0xC
+ #define WL18XX_METAL_VER_OFFSET		2
+ #define WL18XX_NEW_METAL_VER_MASK	0x180
+ #define WL18XX_NEW_METAL_VER_OFFSET	7
+ 
++#define WL18XX_PACKAGE_TYPE_OFFSET	13
++#define WL18XX_PACKAGE_TYPE_WSP		0
++
+ #define WL18XX_REG_FUSE_DATA_2_3	0xA02614
+ #define WL18XX_RDL_VER_MASK		0x1f00
+ #define WL18XX_RDL_VER_OFFSET		8
+@@ -214,24 +217,21 @@ enum {
+ 	NUM_BOARD_TYPES,
  };
  
- struct ath9k_hw_cal_data {
-@@ -422,6 +423,7 @@ struct ath9k_hw_cal_data {
- 	int32_t CalValid;
- 	int8_t iCoff;
- 	int8_t qCoff;
-+	u8 caldac[2];
- 	u16 small_signal_gain[AR9300_MAX_CHAINS];
- 	u32 pa_table[AR9300_MAX_CHAINS][PAPRD_TABLE_SZ];
- 	u32 num_measures[AR9300_MAX_CHAINS];
+-enum {
++enum wl18xx_rdl_num {
+ 	RDL_NONE	= 0,
+ 	RDL_1_HP	= 1,
+ 	RDL_2_SP	= 2,
+ 	RDL_3_HP	= 3,
+ 	RDL_4_SP	= 4,
++	RDL_5_SP	= 0x11,
++	RDL_6_SP	= 0x12,
++	RDL_7_SP	= 0x13,
++	RDL_8_SP	= 0x14,
+ 
+ 	_RDL_LAST,
+ 	RDL_MAX = _RDL_LAST - 1,
+ };
+ 
+-static const char * const rdl_names[] = {
+-	[RDL_NONE]	= "",
+-	[RDL_1_HP]	= "1853 SISO",
+-	[RDL_2_SP]	= "1857 MIMO",
+-	[RDL_3_HP]	= "1893 SISO",
+-	[RDL_4_SP]	= "1897 MIMO",
+-};
+ 
+ /* FPGA_SPARE_1 register - used to change the PHY ATPG clock at boot time */
+ #define WL18XX_PHY_FPGA_SPARE_1		0x8093CA40
 -- 
-1.8.4
+1.8.3.rc1.35.g9b79519
 
