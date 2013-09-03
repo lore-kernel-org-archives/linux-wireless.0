@@ -1,105 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:60137 "EHLO smtp.ring0.de"
+Received: from mail.ispras.ru ([83.149.199.45]:46453 "EHLO mail.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752383Ab3IUOQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Sep 2013 10:16:48 -0400
-Date: Sat, 21 Sep 2013 16:16:16 +0200
-From: Sebastian Reichel <sre@ring0.de>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Tony Lindgren <tony@atomide.com>, nsekhar@ti.com,
-	mturquette@linaro.org, mark.rutland@arm.com,
-	Felipe Balbi <balbi@ti.com>, grant.likely@linaro.org,
-	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
-	linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 0/9] wilink: add device tree support
-Message-ID: <20130921141614.GA21383@earth.universe> (sfid-20130921_161709_737161_54B42DA0)
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
- <CANOLnOPBHesTiV61zpQ_QS9c7E91K50EnbMnGhvgaViuA_3=Bw@mail.gmail.com>
- <1372859132.21065.111.camel@cumari.coelho.fi>
- <20130921122718.GA4431@amd.pavel.ucw.cz>
+	id S1759990Ab3ICUJF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 16:09:05 -0400
+Message-ID: <522641DE.70902@ispras.ru> (sfid-20130903_220930_473283_8C0D7875)
+Date: Wed, 04 Sep 2013 00:09:02 +0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="mP3DRpeJDSE+ciuQ"
-In-Reply-To: <20130921122718.GA4431@amd.pavel.ucw.cz>
+To: htl10@users.sourceforge.net
+CC: larry.finger@lwfinger.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org,
+	gregkh@linuxfoundation.org
+Subject: Re: [PATCH] rtl8187: fix use after free on failure path in rtl8187_init_urbs()
+References: <1378103685.43571.YahooMailBasic@web172301.mail.ir2.yahoo.com>
+In-Reply-To: <1378103685.43571.YahooMailBasic@web172301.mail.ir2.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 02.09.2013 10:34, Hin-Tak Leung wrote:
+> ------------------------------
+> On Mon, Sep 2, 2013 05:06 BST Alexey Khoroshilov wrote:
+>
+>> On 01.09.2013 10:51, Hin-Tak Leung wrote:
+>>> ------------------------------
+>>> On Sat, Aug 31, 2013 22:18 BST Alexey Khoroshilov wrote:
+>>>
+>>> In case of __dev_alloc_skb() failure rtl8187_init_urbs()
+>>> calls usb_free_urb(entry) where 'entry' can points to urb
+>>> allocated at the previous iteration. That means refcnt will be
+>>> decremented incorrectly and the urb can be used after memory
+>>> deallocation.
+>>>
+>>> The patch fixes the issue and implements error handling of init_urbs
+>>> in rtl8187_start().
+>>>
+>>> Found by Linux Driver Verification project (linuxtesting.org).
+>>>
+>>> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+>>> ---
+>>> drivers/net/wireless/rtl818x/rtl8187/dev.c | 15 ++++++++++-----
+>>> 1 file changed, 10 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>>> index f49220e..e83d53c 100644
+>>> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>>> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>>> @@ -438,17 +438,16 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
+>>>            skb_queue_tail(&priv->rx_queue, skb);
+>>>            usb_anchor_urb(entry, &priv->anchored);
+>>>            ret = usb_submit_urb(entry, GFP_KERNEL);
+>>> +        usb_free_urb(entry);
+>>>            if (ret) {
+>>>                skb_unlink(skb, &priv->rx_queue);
+>>>                usb_unanchor_urb(entry);
+>>>                goto err;
+>>>            }
+>>> -        usb_free_urb(entry);
+>>>        }
+>>>        return ret;
+>>>
+>>> err:
+>>> -    usb_free_urb(entry);
+>>>        kfree_skb(skb);
+>>>        usb_kill_anchored_urbs(&priv->anchored);
+>>>        return ret;
+>>> This part looks wrong - you free_urb(entry) then unanchor_urb(entry).
+>> I do not see any problems here.
+>> usb_free_urb() just decrements refcnt of the urb.
+>> While usb_anchor_urb() and usb_unanchor_urb() increment and decrement it
+>> as well.
+>> So actual memory deallocation will happen in usb_unanchor_urb().
+> If the routines work as you say, they probably are misnamed, and/or prototyped wrongly?
+> Also, you are making assumptions about how they are implemented, and relying
+> on the implementation details to be fixed for eternity.
+>
+> I am just saying,
+>
+> XXX_free(some_entity);
+> if(condtion)
+>       do_stuff(some_entity);
+>
+> looks wrong, and if that's intentional, those routines really shouldn't be named as such.
+There is an alias for usb_free_urb() named usb_put_urb().
+I will resend the patch with such substitution.
 
---mP3DRpeJDSE+ciuQ
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, Sep 21, 2013 at 02:27:18PM +0200, Pavel Machek wrote:
-> Hi!
->=20
-> > > > This is a follow-up on a previous patch set that had a smaller
-> > > > audience.  This time, I added the lists and people who were involved
-> > > > in the review of the bindings documentation, since most of my chang=
-es
-> > > > in v2 are coming from discussions there.
-> > > >
-> > > > This patch series adds device tree support to the wlcore_sdio drive=
-r,
-> > > > which is used by WiLink6, WiLink7 and WiLink8.
-> > >=20
-> > > Could you perhaps consider doing device tree conversion for wl1251
-> > > too? With the knowledge you have from working on this series, it would
-> > > be much easier for you to do it than for someone else, and I don't
-> > > have much hope someone will do it at all. It's WiLink series chip
-> > > after all. Without this pandora and N900 are going to lose wifi
-> > > support after the switch to dt-only kernel.
-> >=20
-> > Unfortunately I don't have much time to work on wl1251.  I think it
-> > wouldn't be too difficult to do though, so patches are welcome. ;)
-> >=20
-> > Maybe you could try to make this change and I could support you if
-> > needed?
-> >=20
-> >=20
-> > > I can offer you my help testing things on pandora and I'm sure someone
-> > > here could try it on N900.
-> >=20
-> > I could try it on the N900, if it is still bootable easily with the
-> > mainline. ;)
->=20
-> 3.11 should be bootable on mainline, including device tree and
-> video. (But excluding some other stuff, like MMC.)
-
-I got external MMC (=3D> =B5SD) working with some small modifications of
-the omap3-n900.dts file. I have not yet tried internal MMC, since
-its not important for me at the moment, but I guess its also just a
-small change in the dts file.
-
--- Sebastian
-
---mP3DRpeJDSE+ciuQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIcBAEBCAAGBQJSPaouAAoJENju1/PIO/qa6tMP/1MAZ94J9QoJEOmvx3/92OHt
-XYigYI/aoUk9JtWuO7NSBTNKl2H+XRGB63SsitRx864ogy1MKEIKNfd+aQdOMWmy
-+CuVhKGaIRUSOt9HpyJOu/hKH4QgGSbzDZZh5tZ1+X/ZUj5DlnXCkepeuJ3VXQWv
-D/fjjnWOnSLYWP/tGRAdBhsOFm1sVcEVHMnWZ8CpBRamjKp5HhHUjUXZctBsedB6
-MtM9BMSA//4iZeIWCQzHHBVWOiUV/Cn6foIeyQuI0vsUobHbOJRYAyDhjnVyNRMB
-PpU9bK5Ultfav30NejyNPKfueZKlUo/Q//HoTwJYdEMKYnEwjomDzXPDwJixsVSF
-mEeOQstZyGAcaz0q/fAsf4naPmiZJ9lj2i26R4fg8YnGQKrBf84oQmGViHnb0yff
-wW+4d4Xl97Z4aybVn8HxTqMrNC9kHaqZFu/sncNJK66wK1wkI2LKYSouhIpJ9Ywm
-+szbhVhNSpqTagD1DNf6G09GTbMB2Ruw4Rf3fbGdU3QJgak8l3+2YeI3NbKLf4TF
-ldXTdawgpOebByQJw4kQ61CmT/v8n+uOoeV5acQLEFyqYVLC6OmqtrbBhJUebRX8
-Uc5z9mn2Gimx1A3JwSNYTuSym6pJoUCXctLPUIXO55TvkjRmpozvaz3YkDQpv6dd
-pSR7gEkUpohisVZMz7HA
-=RJDB
------END PGP SIGNATURE-----
-
---mP3DRpeJDSE+ciuQ--
+--
+Alexey
