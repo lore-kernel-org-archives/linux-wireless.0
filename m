@@ -1,30 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43706 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751964Ab3IMLOF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 07:14:05 -0400
-Message-ID: <1379070837.14883.11.camel@jlt4.sipsolutions.net> (sfid-20130913_131409_392421_38A2A85C)
-Subject: Re: [RFC 4/5] mac80211: add generic quiesce procedure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Date: Fri, 13 Sep 2013 13:13:57 +0200
-In-Reply-To: <1379068568-27552-5-git-send-email-sgruszka@redhat.com> (sfid-20130913_123820_651597_6CC2956C)
-References: <1379068568-27552-1-git-send-email-sgruszka@redhat.com>
-	 <1379068568-27552-5-git-send-email-sgruszka@redhat.com>
-	 (sfid-20130913_123820_651597_6CC2956C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:49569 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759428Ab3ICGZo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 02:25:44 -0400
+Message-ID: <522580E2.2090501@openwrt.org> (sfid-20130903_082547_450612_F26E1F71)
+Date: Tue, 03 Sep 2013 08:25:38 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/4] initvals: Remove duplicate mapping for AR9485 arrays
+References: <1378184318-1169-1-git-send-email-sujith@msujith.org> <1378184318-1169-2-git-send-email-sujith@msujith.org>
+In-Reply-To: <1378184318-1169-2-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-09-13 at 12:36 +0200, Stanislaw Gruszka wrote:
-> Add function ieee80211_quiesce() end export it to allow be used by
-> drivers. It is intended to be used before restart_hw to stop mac80211
-> timers/works . Reverse quiesce on ieee80211_reconfig().
+On 2013-09-03 6:58 AM, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Why did you make this change? At least the mac_postamble is still
+identical, and with the other arrays you can just let the initvals tool
+detect if mappings are duplicate or not.
 
-Why can't this be done inside restart_hw()?
-
-johannes
-
+- Felix
