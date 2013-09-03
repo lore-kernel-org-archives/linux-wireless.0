@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39205 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754530Ab3ITLF7 (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38632 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756839Ab3ICRne (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 07:05:59 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Jens Axboe <axboe@kernel.dk>, Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 47/51] ARM: 7794/1: block: Rename parameter dma_mask to
- max_addr for blk_queue_bounce_limit()
-Message-Id: <E1VMnpO-0001Kt-E7@rmk-PC.arm.linux.org.uk> (sfid-20130920_130602_945943_A101157D)
-Date: Fri, 20 Sep 2013 00:40:06 +0100
+	Tue, 3 Sep 2013 13:43:34 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 4/4] ath9k: enable DFS for IBSS mode
+Date: Tue,  3 Sep 2013 19:43:21 +0200
+Message-Id: <1378230201-25446-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130903_194338_364844_ECE71988)
+In-Reply-To: <1378230201-25446-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1378230201-25446-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Santosh Shilimkar <santosh.shilimkar@ti.com>
-
-The blk_queue_bounce_limit() API parameter 'dma_mask' is actually the
-maximum address the device can handle rather than a dma_mask. Rename
-it accordingly to avoid it being interpreted as dma_mask.
-
-No functional change.
-
-The idea is to fix the bad assumptions about dma_mask wherever it could
-be miss-interpreted.
-
-Signed-off-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- block/blk-settings.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index c50ecf0..026c151 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -195,17 +195,17 @@ EXPORT_SYMBOL(blk_queue_make_request);
- /**
-  * blk_queue_bounce_limit - set bounce buffer limit for queue
-  * @q: the request queue for the device
-- * @dma_mask: the maximum address the device can handle
-+ * @max_addr: the maximum address the device can handle
-  *
-  * Description:
-  *    Different hardware can have different requirements as to what pages
-  *    it can do I/O directly to. A low level driver can call
-  *    blk_queue_bounce_limit to have lower memory pages allocated as bounce
-- *    buffers for doing I/O to pages residing above @dma_mask.
-+ *    buffers for doing I/O to pages residing above @max_addr.
-  **/
--void blk_queue_bounce_limit(struct request_queue *q, u64 dma_mask)
-+void blk_queue_bounce_limit(struct request_queue *q, u64 max_addr)
- {
--	unsigned long b_pfn = dma_mask >> PAGE_SHIFT;
-+	unsigned long b_pfn = max_addr >> PAGE_SHIFT;
- 	int dma = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 9a1f349..bcc5698 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -791,7 +791,8 @@ static const struct ieee80211_iface_limit if_limits[] = {
  
- 	q->bounce_gfp = GFP_NOIO;
+ 
+ static const struct ieee80211_iface_limit if_dfs_limits[] = {
+-	{ .max = 1,	.types = BIT(NL80211_IFTYPE_AP) },
++	{ .max = 1,	.types = BIT(NL80211_IFTYPE_AP) |
++				 BIT(NL80211_IFTYPE_ADHOC) },
+ };
+ 
+ static const struct ieee80211_iface_combination if_comb[] = {
 -- 
-1.7.4.4
+1.7.10.4
 
